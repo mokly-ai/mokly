@@ -2,9 +2,9 @@
 
 ## Active
 
-- [Mokly Viewer Library](./mokly-viewer-library.md) — Milestones 1–6 completed,
-  verified, pushed and reviewed. Milestone 7 implements the user's approved
-  recommended fixes for all ten recorded findings;
+- [Mokly Viewer Library](./mokly-viewer-library.md) — Milestones 1–7 completed,
+  verified, pushed and reviewed. Milestone 7 addresses all ten approved findings;
+  two new post-push recommendations await the user's decision, and
   the plan remains active until the implementation PR merges. Package publication
   and the published-package smoke are non-blocking post-merge follow-up.
 - [Publish Catalogue](./publish-catalogue.md)

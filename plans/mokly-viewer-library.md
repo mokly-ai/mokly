@@ -965,7 +965,7 @@ runtime/platform matrix, zero inspector budget headroom, and no live npm/OIDC or
 GitHub protection mutation. Recording this review is a documentation-only
 follow-up; publication and published-package verification remain post-merge.
 
-## Milestone 7: Review follow-up fixes
+## Milestone 7: Review follow-up fixes (completed)
 
 Implement the user's approved option A for all ten Milestone 3–6 findings.
 Preserve earlier review records, local Serve/export presentation, comparison
@@ -983,11 +983,13 @@ bug fix; record the addressing commit for every finding below.
 - [x] M4-2: Isolate overlay host and nodes from consumer CSS; verify preserved
       highlighted pixels under hostile universal, inherited and important rules.
       First absorb changes through safe minification/pooling within 8,192 bytes;
-      only if impossible, document and enforce the smallest fitting round budget. - [x] Keep the reset SVG pointer-inert; reproduce and cover hover/click
+      only if impossible, document and enforce the smallest fitting round budget.
+- [x] Keep the reset SVG pointer-inert; reproduce and cover hover/click
       delivery under every hostile-style case before the correction.
 - [x] M5-1: End active or pending picking once at frame replacement with the
       navigation reason and reset inspection; test viewport, scheme and variant
-      transitions on both adapters, including pending activation. - [x] Retain a mount failure as the pending pick's cancellation cause;
+      transitions on both adapters, including pending activation.
+- [x] Retain a mount failure as the pending pick's cancellation cause;
       reproduce and prevent duplicate error notifications for one failure.
 - [x] M5-2: Resolve first-step-only flow fragments at a shared descriptor/URL
       boundary used by markup and mounts; test multi-step flows on both adapters.
@@ -998,7 +1000,8 @@ bug fix; record the addressing commit for every finding below.
       metadata and exercise initial and later release versions.
 - [x] M6-2: Guarantee frame/runtime teardown despite host callback exceptions,
       preserve the original exception, and test disposal and callback fencing on
-      both adapters during source/adapter replacement. - [x] Stress cleanup with 20,000 actions, multiple failures and an undefined
+      both adapters during source/adapter replacement.
+- [x] Stress cleanup with 20,000 actions, multiple failures and an undefined
       thrown value; drain iteratively without masking the first exception.
 - [x] Update relevant READMEs and protocols; audit catalogue/viewer/frame delivery
       status references and verify earlier milestone records remain unchanged.
@@ -1008,10 +1011,10 @@ bug fix; record the addressing commit for every finding below.
       retain the existing scope checks and assert the public step index too.
 - [x] Run focused tests, local Serve/export smoke and byte comparisons, then
       `cargo xtask check`; fix failures and record counts, retries and skips.
-- [ ] After checks pass, `git add -A`, commit with Conventional Commits (title
+- [x] After checks pass, `git add -A`, commit with Conventional Commits (title
       at most 50 characters, body naming all findings and the Codex co-author
       trailer), and push `calummoore/tianjin-v6`.
-- [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
       against the complete local diff from `origin/main`; record numbered findings
       with severity, impact, lettered options and recommendations without fixing.
 
@@ -1019,6 +1022,31 @@ bug fix; record the addressing commit for every finding below.
 
 Baseline: `fcfb09c`. Inspector: 8,192 minified, uncompressed bytes; budget 8 KiB.
 Verification evidence is retained under `.context/viewer-m7/`.
+
+Implementation commit: `a8f212231b5e8de77ab1032183a2b66648260839`,
+`fix(viewer): resolve review follow-ups`, pushed to `calummoore/tianjin-v6`
+after the final complete gate passed. Each approved finding is addressed there:
+
+- **M3-1:** retained-component projection and four id/route-reuse Serve/export
+  regressions; commit `a8f2122`.
+- **M3-2:** non-renewing generation presence lookup and two controlled-clock
+  retention regressions; commit `a8f2122`.
+- **M3-3:** runtime/component-explorer delivery-status audit and documentation
+  clarification; commit `a8f2122`.
+- **M4-1:** shared clipping rules and eight fixed/text/transformed/inner-scroll
+  browser regressions across both adapters; commit `a8f2122`.
+- **M4-2:** isolated host/SVG presentation and three hostile-CSS pixel and pointer
+  regressions, with the measured 9 KiB budget; commit `a8f2122`.
+- **M5-1:** frame-replacement pick/reset boundary and twelve active/pending
+  browser cases, plus the pending mount-error unit regression; commit `a8f2122`.
+- **M5-2:** shared first-step-only fragment resolution and two multi-step browser
+  cases spanning both adapters and schemes; commit `a8f2122`.
+- **M5-3:** typed public frame scope for masks, labels and events, with six browser
+  cases covering Both, variants, schemes and repeated steps; commit `a8f2122`.
+- **M6-1:** archive mismatch versions derived from real metadata and a release
+  matrix including viewer 0.2.0 and 1.4.7; commit `a8f2122`.
+- **M6-2:** exception-safe frame/runtime cleanup, four browser replacement cases
+  and two cleanup unit cases including 20,000 actions; commit `a8f2122`.
 
 The ten recommended options A were approved together. This follow-up therefore
 groups the cross-cutting bug fixes without reopening earlier completed milestones
@@ -1136,6 +1164,76 @@ remain below 300 lines. The local-link audit checked 226 links; the only two
 unresolved paths are the immutable Milestone 4 review's historical pre-extraction
 `src/inspector` references. Earlier milestones and the post-merge section remain
 byte-identical. No new mockup or schema version was introduced.
+
+### Milestone 7 post-push review
+
+1. **P2 — A scoped highlight still depends on unrelated unavailable views.**
+   The public `highlightInstance` handle addresses one viewport/scheme/variant/
+   step. However, [frame_labels.ts:55](../packages/viewer/src/viewer/frame_labels.ts#L55)
+   queries every session's instance boundaries before filtering by that scope;
+   [frame_highlights.ts:56](../packages/viewer/src/viewer/frame_highlights.ts#L56)
+   supplies all sessions. With Both visible, ready Mobile usage and pending
+   Desktop usage, a valid Mobile highlight rejects with a frame error and renders
+   no host labels. Both real adapters reproduced the rejection; the same-origin
+   probe also retained the Mobile mask after rejection. Doing nothing prevents
+   inspection of a ready target whenever unrelated visible evidence is pending
+   or unavailable. **A (recommended):** select sessions from the typed request
+   before waiting for readiness or measuring geometry; clear unrelated masks
+   without querying their unavailable usage. Share scope selection across masks,
+   labels and asynchronous work, and add pending/unavailable sibling-view tests
+   for both adapters. This modest shared boundary prevents the same coupling
+   across inspection consumers; filtering labels alone is insufficient.
+   **B:** catch each unrelated measurement failure while rendering labels. This
+   is narrower but retains unnecessary waits and can conceal real target errors.
+
+2. **P2 — A late geometry failure from an old frame cancels replacement picking.**
+   [frames.ts:113](../packages/viewer/src/viewer/frames.ts#L113) sends every label
+   refresh rejection to `fail`, which ends the currently active pick.
+   [frame_highlights.ts:52](../packages/viewer/src/viewer/frame_highlights.ts#L52)
+   fences successful rendering by request revision but does not fence error
+   effects. Controlled probes wrapped both real adapters to hold an old Mobile
+   geometry measurement, replaced it with Desktop, started a fresh pick, then
+   rejected the old measurement as disposed. The correct start/end(navigation)/
+   start sequence gained an erroneous end(error) and `onError`, and replacement
+   labels were cleared. Doing nothing lets an ordinary asynchronous replacement
+   race interrupt newly activated picking and report an unrelated frame error.
+   **A (recommended):** apply generation/request ownership checks to both success
+   and error effects across asynchronous inspection paths. Obsolete caller-owned
+   promises should still settle appropriately, but stale internal work must not
+   mutate current picking or report against its replacement. Add delayed-failure
+   replacement regressions for both adapters. A shared ownership rule also
+   protects workspace/highlight paths that use the same error handling and avoids
+   repeated one-off guards. **B:** guard only this geometry catch against the
+   current frame. This fixes the demonstrated trigger with less code but leaves
+   analogous inspection error paths exposed.
+
+The required prompt reviewed the complete **634-file** branch diff at `a8f2122`
+after its push, using `git diff origin/main...HEAD` against fetched `origin/main`
+(`7ca301c04ca898db6ff60b110beb213ec740b004`). Scope: 313 modified, 213 added,
+106 renamed and two deleted paths, with 23,573 insertions and 3,403 deletions.
+The worktree, index and untracked-file inventory were clean when review began.
+Coverage included source capture and identity, comparison attribution, catalogue
+projection/privacy/strict reading, Serve/watch and generation retention, export
+ownership and inspector publication, both adapters and message validation,
+viewer source/routing/frame/pick/highlight lifecycles, release version/archive
+pairing and workflows, tests, generated output and protocol alignment.
+
+These two new findings were confirmed without changing implementation or test
+files. Ignored review evidence is in `.context/viewer-m7/review-highlight-probe.mjs`
+and `.log`, plus `review-stale-geometry.mjs` and `.log`; each probe exercised both
+adapters. They expose additional missing coverage after the complete gate passed.
+All ten previously approved findings are addressed in the implementation commit;
+the two new recommendations are recorded for the user's decision and have not
+been applied. Recording this review is a documentation-only follow-up.
+
+Residual verification limits: browser coverage is Chromium-only, the local gate
+used Node 24 rather than CI's entire runtime/platform matrix, and live npm/OIDC
+publication and GitHub protection changes were not exercised. The inspector has
+483 bytes of budget headroom. Main advanced independently; its 19 new paths are
+not branch deletions, and the read-only merge preview reports 12 conflicts that
+must be resolved before integration. No merge/rebase or mainline feature removal
+was performed. The plan stays active until the implementation PR merges;
+publication remains the non-blocking follow-up below.
 
 ## Post-merge follow-up (non-blocking)
 
