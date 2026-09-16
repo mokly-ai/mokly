@@ -1655,6 +1655,57 @@ publication or GitHub protection changes. Recording this review and updating the
 plan index are documentation-only follow-ups; the plan stays active until its
 implementation PR merges.
 
+## Milestone 11: Geometry activation ownership
+
+Tags: ui
+
+Make geometry refreshes join an in-flight inspection presentation so they cannot
+race pending pick activation past evidence cancellation.
+
+- [x] Clarify geometry coalescing in the viewer/frame protocols and viewer client
+      README without changing the adapter wire contract.
+- [x] Add a deterministic same-origin and postMessage regression first, then
+      coordinate geometry label refreshes with the activating presentation.
+- [x] Update the plan index and record focused/full verification evidence.
+- [x] Run focused tests and `cargo xtask check`; require zero failures, retries
+      and skips, and confirm formatting, docs and the complete browser suite.
+- [ ] After checks pass, run `git add -A`, commit with Conventional Commits and
+      push the branch.
+- [ ] After that push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+      against the complete local diff from `origin/main`; report numbered findings
+      with severity, impact, lettered options and a recommendation without fixing.
+
+### Milestone 11 verification notes
+
+Minimum-Node CI failed only
+`postMessage evidence cancels pending list activation without events`: a geometry
+notification raced the activation's own label render and started a second
+boundary read. The second read could settle `startPick` while the first remained
+blocked, so the following evidence update observed an active pick and the caller
+received `resolved` instead of `disposed`.
+
+The regression fixture now raises that geometry notification during initial
+highlighting and allows the competing work to advance before evidence changes.
+Before the production fix, both same-origin and postMessage cases failed with the
+CI's exact `resolved`/`disposed` mismatch. `FrameHighlights` now records the
+current presentation promise; geometry label refreshes join it, and only a later
+notification can begin another boundary read. The adapter wire contract and
+inspector bundle are unchanged.
+
+Focused verification passed under Node 22.14.0: both regression cases, three
+complete repetitions of all 18 evidence cases (**54/54**), and all viewer browser
+specs on the CI Chromium channel (**111/111**). The viewer package unit suite
+passed **42/42**. Formatting, lint, build and typechecking passed.
+
+The final `PLAYWRIGHT_CHANNEL=chromium cargo xtask check` passed on 16 September
+2026: **1,754 Node tests, 418 Chromium tests and three Rust tests**, with zero
+failures, retries, skips, ignored tests or todos. Dependency auditing reported
+zero vulnerabilities. Example build/check (278 files), both-package checks and
+all five packed-consumer smoke scenarios, Rust formatting, Clippy, workspace
+tests and the eight-file Rust length audit passed. `git diff --check` passed and
+the eight changed files remained the intended implementation, regression,
+protocol, README and plan updates.
+
 ## Post-merge follow-up (non-blocking)
 
 - Merge the combined release-please PR for viewer 0.1.0 and CLI 0.10.0, checking

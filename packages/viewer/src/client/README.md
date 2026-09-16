@@ -40,6 +40,8 @@ The viewer inspection owner restores valid presentation after adoption, retains
 explicit frame scope, and ends active picking with `evidence` when a referenced
 target or ready usage disappears. Pending activation is cancelled without events;
 subsequent inspection waits for refreshed usage. Superseded updates are fenced.
+Geometry raised during initial presentation shares that work instead of issuing
+a competing boundary read, so evidence cancellation retains one owner.
 Public operations recheck disposal after awaiting a reply so a just-resolved
 response cannot escape a replaced mount. Oversized usage maps keep content
 mountable and report inspection as unavailable with the `limit` code.

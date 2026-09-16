@@ -223,6 +223,7 @@ for (const cross of [false, true]) {
       await page.evaluate((hold) => {
         const probe = window.evidence;
         probe.hold = hold;
+        probe.geometryDuringHighlight = hold === "list";
         void probe.frames.startPick().then(
           () => {
             probe.outcome = "resolved";
@@ -236,7 +237,13 @@ for (const cross of [false, true]) {
         );
       }, hold);
       await page.waitForFunction(() => window.evidence.waiting);
-      await page.evaluate(() => window.evidence.update("mobile"));
+      await page.evaluate(async (hold) => {
+        if (hold === "list") {
+          await new Promise(requestAnimationFrame);
+          await new Promise(requestAnimationFrame);
+        }
+        window.evidence.update("mobile");
+      }, hold);
       await expect
         .poll(() => page.evaluate(() => window.evidence.outcome))
         .toBe("disposed");

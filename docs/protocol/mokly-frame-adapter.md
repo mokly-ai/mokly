@@ -91,6 +91,9 @@ Host inspection work retains request/generation ownership through both success
 and rejection, including custom adapters that settle after replacement. Obsolete
 caller promises reject with `disposed`; obsolete internal refreshes and errors
 cannot change replacement picking, labels or host events. No wire fields change.
+Geometry received while the current host presentation is still activating is
+coalesced into that presentation. It does not start a concurrent boundary list
+that can settle activation independently of its inspection owner.
 
 Automatic inspection subscriptions require that frame's own ready, validated,
 bounded usage. Pending/unavailable usage (or a usage limit failure) subscribes

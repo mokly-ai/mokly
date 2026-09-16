@@ -2,6 +2,7 @@ import type {
   CatalogueReadModel,
   CatalogueUsage,
 } from "../src/catalogue/types.js";
+import type { FrameEvent } from "../src/client/frame_adapter.js";
 import { postMessageAdapter } from "../src/client/post_message_adapter.js";
 import { sameOriginAdapter } from "../src/client/same_origin_adapter.js";
 import { ViewerFrames } from "../src/viewer/frames.js";
@@ -18,6 +19,7 @@ interface EvidenceProbe {
   mounts: number;
   updates: number;
   hold?: "highlight" | "list";
+  geometryDuringHighlight: boolean;
   waiting: boolean;
   release(): void;
   outcome?: string;
@@ -66,6 +68,7 @@ window.startEvidence = (model, origin, cross, sibling) => {
           probe.mounts++;
           const mounted = await adapter.mount(frame, options);
           const viewport = frame.dataset["workspaceFrame"]!;
+          const listeners = new Set<(event: FrameEvent) => void>();
           const hold = async (operation: "highlight" | "list") => {
             if (viewport !== "mobile" || probe.hold !== operation) return;
             delete probe.hold;
@@ -83,6 +86,17 @@ window.startEvidence = (model, origin, cross, sibling) => {
             async highlight(keys, mode) {
               probe.calls.push(`${viewport}:${mode}`);
               await mounted.highlight(keys, mode);
+              if (
+                viewport === "mobile" &&
+                mode !== "off" &&
+                probe.geometryDuringHighlight
+              ) {
+                probe.geometryDuringHighlight = false;
+                for (const listener of listeners)
+                  listener({ type: "geometry" });
+                await new Promise(requestAnimationFrame);
+                await new Promise(requestAnimationFrame);
+              }
               if (mode !== "off") await hold("highlight");
             },
             async listInstanceBoundaries() {
@@ -90,6 +104,14 @@ window.startEvidence = (model, origin, cross, sibling) => {
               const boundaries = await mounted.listInstanceBoundaries();
               await hold("list");
               return boundaries;
+            },
+            subscribe(listener) {
+              listeners.add(listener);
+              const unsubscribe = mounted.subscribe(listener);
+              return () => {
+                listeners.delete(listener);
+                unsubscribe();
+              };
             },
           };
         },
@@ -117,6 +139,7 @@ window.startEvidence = (model, origin, cross, sibling) => {
     calls: [],
     mounts: 0,
     updates: 0,
+    geometryDuringHighlight: false,
     waiting: false,
     release: () => {},
     update(viewport, evidence = "ready") {

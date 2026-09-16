@@ -3,8 +3,9 @@
 ## Active
 
 - [Mokly Viewer Library](./mokly-viewer-library.md) — Milestones 1–10 completed,
-  verified, pushed and reviewed. Milestone 10 implements the approved M9-1
-  inspection ownership fix; its post-push review reported no new findings.
+  verified, pushed and reviewed. Milestone 11 fixes and verifies the
+  geometry/activation race exposed by minimum-Node CI; commit and review are in
+  progress.
   The plan remains active until the implementation PR merges. Package publication
   and the published-package smoke are non-blocking post-merge follow-up.
 - [Mokabook Dependency Patch Upstreaming](./mokabook-dependency-patch-upstreaming.md)

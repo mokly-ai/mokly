@@ -20,6 +20,7 @@ import type { InspectionWork } from "./inspection_work.js";
 export class FrameHighlights {
   private scope: InspectionScope | undefined;
   private mode: "pick" | "highlight" = "highlight";
+  private presentation: Promise<void> | undefined;
   private ownership: InspectionOwnership;
   constructor(
     private root: HTMLElement,
@@ -67,10 +68,7 @@ export class FrameHighlights {
     }
     void this.show(scope.request, this.mode).catch(() => {});
   }
-  async show(
-    request: HighlightRequest,
-    mode: "pick" | "highlight",
-  ): Promise<void> {
+  show(request: HighlightRequest, mode: "pick" | "highlight"): Promise<void> {
     this.reset();
     const work = this.work();
     const scope = inspectionScope(this.sessions(), request);
@@ -82,7 +80,7 @@ export class FrameHighlights {
         .filter((session) => !sessions.includes(session))
         .map((session) => session.mounted?.highlight([], "off")),
     );
-    await work.run(
+    const presentation = work.run(
       async () => {
         await readyInspection(this.root, sessions, work);
         work.check();
@@ -101,8 +99,16 @@ export class FrameHighlights {
       },
       (error) => this.failed(error),
     );
+    this.presentation = presentation;
+    const settled = () => {
+      if (this.presentation === presentation) this.presentation = undefined;
+    };
+    void presentation.then(settled, settled);
+    return presentation;
   }
   async labels(frame?: ViewerFrame): Promise<void> {
+    const presentation = this.presentation;
+    if (presentation) return presentation;
     const scope = this.scope;
     if (!scope) return;
     const work = this.work();

@@ -180,6 +180,9 @@ pending activation's scope cancels that activation with `disposed`, clears its
 partial presentation and emits neither start nor end. A new `startPick` waits for
 the refreshed evidence and activates normally when the views are inspectable.
 Superseded update completions and failures cannot affect current inspection.
+Geometry notifications received while masks and labels are still activating
+join that presentation instead of starting a competing boundary read. They
+cannot make a pending pick active before an evidence update cancels its scope.
 
 `highlightInstance` and `scrollToInstance` operate on the referenced current
 view and reject missing/unavailable instances; neither guesses a replacement nor
