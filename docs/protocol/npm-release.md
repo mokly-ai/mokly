@@ -50,6 +50,9 @@ fixture, browser bundle boundaries and NodeNext declarations. Both manifests,
 packed metadata, export targets, allowlists, licenses, React peers and the exact
 viewer dependency are checked. Packed dependencies cannot use `workspace:` or
 `file:` links; local links exist only in the test consumer's install manifest.
+Archive regressions exercise the checkout version and several later viewer
+versions; intentionally mismatched dependencies are derived from each packed
+viewer's actual version, so future release PRs cannot invalidate the test.
 
 Runtime dependencies are intentional and minimal. Mokly does not take a
 runtime dependency on `@firna/ui`, Accounting, Juno, Playwright, or a consumer's

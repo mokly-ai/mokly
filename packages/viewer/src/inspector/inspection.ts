@@ -1,6 +1,7 @@
 import type { InstanceBoundary } from "../client/frame_adapter.js";
 
-import { geometry, edges, viewport } from "./geometry.js";
+import { edges, viewport } from "./clipping.js";
+import { geometry } from "./geometry.js";
 import { metadataKeys, type InspectorMetadata } from "./metadata.js";
 import { documentRanges } from "./ranges.js";
 export const inspection = (doc: Document, metadata: InspectorMetadata) => {

@@ -188,7 +188,11 @@ preparing, pending and disabled states never imply unmodified or a zero count.
 Retain removed routed entries with baseline ancestor labels outside the current
 ownership forest; current ids/routes win on conflicts under existing rules.
 Removed variants can remain on a surviving component. Historical missing usage
-is unavailable. Proven empty usage is ready with empty arrays, never inferred
+is unavailable. Historical screen or removed-variant usage is also unavailable
+when any referenced component's metadata is omitted under current-id/route
+precedence. The shared projection checks the components actually published in
+the model; it never publishes dangling references or weakens reader validation.
+Proven empty usage is ready with empty arrays, never inferred
 from a failed or incomplete render.
 
 `comparisonUrl` is null or `__mokly/diffs/__generations/<generation>/review.json`,
@@ -242,6 +246,9 @@ generations leave it null. A matching complete live generation gains a
 content-addressed alias while retaining its existing local URL. Public aliases
 serve their retained generation directly, return 404 when unavailable, and never
 redirect or generate work. Superseded completions cannot set the pointer.
+Alias bookkeeping never renews a generation's idle retention window; only an
+actual retained-generation read renews it. Unused generations expire even when
+complete captures continue.
 
 Public paths are `__mokly/catalogue.json`, `static/**`,
 `__mokly/client/**`, `__mokly/shell.css`, `__mokly/fonts/**`, and immutable

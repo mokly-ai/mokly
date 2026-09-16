@@ -20,7 +20,8 @@ Its private current-document capabilities support the synchronous local shell,
 scroll restoration and authenticated temporary control previews. Direct frame
 document/window access lives in the local transport, rather than workspace,
 Browse state, or controls. `component_geometry.ts` retains its existing geometry
-entrypoints and clipping behavior; `same_origin_highlight.ts` owns the unchanged
+entrypoints and shares containing-block-aware clipping with the inspector in
+`inspector/clipping.ts`; `same_origin_highlight.ts` owns the unchanged
 mask, labels, selection and observer lifecycle.
 
 `post_message_adapter.ts` explicitly opts into a separate HTTP(S) origin. It sets

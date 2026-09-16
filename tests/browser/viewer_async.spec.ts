@@ -150,6 +150,10 @@ test("frame failures end picking once and reject one handle with one safe error"
   const result = await page.evaluate(async () => {
     const host = window.viewerHarness.get("one");
     let emit: ((event: FrameEvent) => void) | undefined;
+    let installed!: () => void;
+    const installation = new Promise<void>((resolve) => {
+      installed = resolve;
+    });
     const adapter: FrameAdapter = {
       async mount() {
         return {
@@ -158,6 +162,7 @@ test("frame failures end picking once and reject one handle with one safe error"
           scrollTo: async () => {},
           subscribe(fn) {
             emit = fn;
+            installed();
             return () => {};
           },
           dispose() {},
@@ -166,7 +171,7 @@ test("frame failures end picking once and reject one handle with one safe error"
     };
     host.props.frameAdapter = adapter;
     host.render();
-    await new Promise(requestAnimationFrame);
+    await installation;
     await host.ref.current.startPick();
     emit?.({ type: "error", code: "timeout" });
     emit?.({ type: "pick-end", reason: "escape" });
@@ -178,13 +183,18 @@ test("frame failures end picking once and reject one handle with one safe error"
   const failures = await page.evaluate(async () => {
     const host = window.viewerHarness.get("one");
     host.events.length = 0;
+    let attempted!: () => void;
+    const attempt = new Promise<void>((resolve) => {
+      attempted = resolve;
+    });
     host.props.frameAdapter = {
       mount: async () => {
+        attempted();
         throw new Error("/private/user/source.ts");
       },
     };
     host.render();
-    await new Promise(requestAnimationFrame);
+    await attempt;
     try {
       await host.ref.current.startPick();
     } catch {

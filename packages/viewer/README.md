@@ -94,6 +94,9 @@ Events are `onSelectionChange`, `onScreenNavigate`, `onInstanceHover`,
 include screen, variant when applicable, viewport, scheme and key. Flow events
 also identify their owning entry and step. `resolveInstance` compares saved
 records without fetching evidence.
+Flow `InstanceRef` values include `stepIndex` to address an exact occurrence.
+Imperative highlighting applies masks, labels and events only to that reference's
+viewport, scheme, variant and step; workspace selection can still span Both.
 
 The ref exposes `select`, `highlightInstance` (null clears), `scrollToInstance`,
 `startPick`, and idempotent `cancelPick`. Async operations reject unavailable
@@ -101,6 +104,11 @@ instances/views and report one safe error. Picking uses existing inspection
 visuals; the default shell has no pick control. Unmount cancels pending work
 without later callbacks. The [viewer contract](../../docs/protocol/mokly-viewer.md)
 defines exact events, rejection and cancellation semantics.
+Replacing frames for viewport, scheme, variant or fragment changes ends an
+active pick with `navigation` and rejects pending activation without start/end
+events. Inspection is reset before new frames mount. Source/adapter teardown
+releases all frame/runtime resources even if a host callback throws, preserving
+the original exception. Flow fragments address only their first step.
 
 Import the stylesheet once. Override `--mokly-accent`,
 `--mokly-accent-contrast`, and `--mokly-accent-soft` on a containing element,

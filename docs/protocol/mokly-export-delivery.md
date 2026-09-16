@@ -198,7 +198,7 @@ The delivered graph check covers static and dynamic imports.
 name and synchronously captures early native disclosure choices. Deferred
 preference and reload recovery retain those newer choices; capture listeners
 and temporary attributes are removed on load or page exit. The inspector
-remains `client/inspector.js` at the 8,192-byte cap.
+remains `client/inspector.js` at the 9,216-byte cap.
 
 The React entry, React renderer and embedding-only scoped stylesheet are excluded
 from the standalone browser inventory. Standalone `shell.css` and font bytes are

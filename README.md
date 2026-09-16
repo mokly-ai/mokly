@@ -18,6 +18,9 @@ static renderer and vanilla enhancements; exported browsers contain no React.
 Both packages build, release and are tested together. The viewer publishes before
 the CLI, which depends on its exact version. Local Serve/export presentation is
 unchanged; first viewer registration remains post-merge.
+Viewer inspection references identify an exact viewport, scheme, variant and
+flow step. Frame replacement cancels picking and resets inspection; host callback
+exceptions do not prevent resource cleanup. See the viewer README for semantics.
 
 Shared components can have their own pages, saved variants and editable props in
 local Serve. Screens record their actual component usage for inspection and

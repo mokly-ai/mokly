@@ -30,6 +30,7 @@ export interface FrameTestWindow extends Window {
 }
 export async function crossOriginFixture(
   options?: Parameters<typeof componentEntrySource>[0],
+  extraConfig = "",
 ) {
   const fixture = await createFixture(
     componentEntrySource(
@@ -39,6 +40,7 @@ export async function crossOriginFixture(
           "(props) => props.hidden ? null : props.disabled ? <><span>First root</span> Text root <strong>Last root</strong></> : <button style={{width:160,height:40}}>{props.label}</button>",
       },
     ),
+    { extraConfig },
   );
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
   const catalogue = createCatalogue(compilation.manifest);

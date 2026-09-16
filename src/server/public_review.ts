@@ -66,7 +66,7 @@ export class PublicReviewAliases {
         return;
     }
     for (const [key, version] of this.aliases)
-      if (!this.generations.get(version)) this.aliases.delete(key);
+      if (!this.generations.peek(version)) this.aliases.delete(key);
     const identity = comparisonContentId(files);
     this.aliases.set(identity, generation.version);
     return {

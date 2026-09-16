@@ -272,7 +272,10 @@ navigation from URLs, `data-nav-href`, or visible labels.
 
 The implemented `sameOriginAdapter` preserves this existing behavior;
 direct `contentDocument` access lives behind the local transport interface.
-The viewer package exposes the same boundary. Logical target
+The viewer package exposes the same boundary. Logical fragment scope is resolved
+once in the frame URL boundary shared by public markup and adapter mounts:
+standalone views receive the fragment; flows apply it only to step zero,
+including across scheme and viewport changes. Logical target
 parsing, marker/ownership checks, modifier/target classification, canonical
 routes and safe degradation do not change. No adapter gains nested-frame access.
 The optional `postMessageAdapter` requires a separate, nonopaque frame origin

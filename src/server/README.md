@@ -28,6 +28,9 @@ comparisons leave the catalogue pointer null. Public aliases never regenerate or
 redirect to another generation; invalidation clears the pointer, and retained
 aliases continue to serve their original generation. These updates add no shell
 requests, UI, or changes to existing local comparison controls.
+Alias pruning uses the generation store's non-renewing `peek`; only serving a
+retained generation through `get` extends its idle lifetime. Repeated complete
+captures therefore cannot keep unused snapshot directories alive.
 
 `demand/baseline.ts` owns baseline preparation and its cancellation drain,
 independent of the content generations in `demand/generation.ts`.

@@ -2,7 +2,7 @@
 
 The inspector is a dependency-free browser IIFE for the optional cross-origin
 frame adapter. The viewer package build emits `dist/browser/inspector.js`, and the root
-`scripts/package-check.mjs` enforces its 8,192-byte minified, uncompressed budget.
+`scripts/package-check.mjs` enforces its 9,216-byte minified, uncompressed budget.
 Serve and export publish it at `/__mokly/client/inspector.js`.
 The build uses esbuild, then [`scripts/inspector-pool.mjs`](../../scripts/inspector-pool.mjs) shares repeated strings
 and native references before Terser minification. The output is ordinary
@@ -46,6 +46,12 @@ outlines without modifying consumer content or styles. Its shadow root isolates
 SVG styling and redraw mutations. The overlay host sits after the authored body,
 outside range and occlusion candidates. Text-only ranges scroll their real
 rectangles through inner containers and the document viewport.
+`clipping.ts` is shared with the local highlight measurer. It follows fixed
+containing blocks while retaining inner-scroll clipping and ancestor visibility.
+The overlay host resets consumer presentation with inline important styles;
+the shadow SVG resets inherited styles before drawing its mask and outlines.
+The 9 KiB budget accommodates these correctness fixes after safe pooling and
+minification; the Milestone 7 plan records the measured size and alternatives.
 
 ```bash
 npm run build

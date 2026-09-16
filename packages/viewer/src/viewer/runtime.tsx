@@ -5,6 +5,7 @@ import { initializeNavigationResize } from "../client/nav_resize.js";
 import { handleTagPickerKeydown } from "../client/tag_filter.js";
 import { installWorkspace } from "../client/workspace.js";
 
+import { runCleanup } from "./cleanup.js";
 import { viewerFailures } from "./failures.js";
 import { ViewerFrames } from "./frames.js";
 import { identifierScope } from "./identifiers.js";
@@ -243,12 +244,15 @@ export class ViewerRuntime implements MoklyViewerHandle {
     this.frames.end({ reason: "cancelled" });
   }
   dispose(reason?: "source-change"): void {
-    this.frames.dispose(reason);
+    if (this.disposed) return;
     this.disposed = true;
-    this.stopWorkspace();
-    this.diffs.reset();
-    this.stopResize();
-    this.slots.dispose();
-    this.scope.dispose();
+    runCleanup([
+      () => this.frames.dispose(reason),
+      () => this.stopWorkspace(),
+      () => this.diffs.reset(),
+      () => this.stopResize(),
+      () => this.slots.dispose(),
+      () => this.scope.dispose(),
+    ]);
   }
 }

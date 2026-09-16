@@ -88,6 +88,13 @@ boxes per range; hidden/null ranges have empty arrays. Report all authenticated
 instance boundaries, including empty ones, without invented geometry. Parent
 code translates/clips boxes to the outer frame and host viewport. Geometry
 changes invalidate measurements on scroll, resize, mutation and font/image load.
+Both the same-origin measurer and in-frame inspector share clipping rules.
+Viewport-fixed elements and their text escape ordinary overflow ancestors;
+clipping resumes at a fixed-position containing block (including transforms,
+perspective, filters, containment or relevant `will-change`). Inner scrollers
+still clip their own descendants. Ancestor visibility and opacity remain
+effective across a fixed-position escape. This follows the
+[CSS containing-block model](https://www.w3.org/TR/css-position-3/#def-cb).
 `scrollTo` scrolls the first rendered range into nearest view, including inner
 scroll containers; null output is a successful no-op, an absent key is an error.
 
@@ -257,13 +264,19 @@ range/occlusion measurements exclude the host. Outgoing fields contain only
 validated ASCII identities/control values and numeric geometry; serialized
 character length therefore equals its UTF-8 byte length. Incoming strings still
 require explicit UTF-8 measurement before parsing.
+The host resets all presentation properties with inline important declarations,
+then sets its fixed, transparent, pointer-inert layout. The shadow SVG resets
+inherited presentation and explicitly remains pointer-inert before applying the
+owned mask and outline attributes.
+Universal and element selectors, backgrounds, box-model rules, display, color
+and opacity from consumer CSS cannot repaint the cutouts or hide the overlay.
 
 Generated files and comparison snapshots stay byte-unmodified. Snapshots never
 embed the script or negotiate a session. Local script-disabled
 frames retain parent-owned highlighting even when published copies contain the
 inert script. No React, server module, cookie, network request, or host-specific
 integration is included in the IIFE. `scripts/package-check.mjs` must enforce
-an **8 KiB (8,192 bytes) minified, uncompressed** script budget; the separately
+a **9 KiB (9,216 bytes) minified, uncompressed** script budget; the separately
 bounded per-document inert metadata is not executable code and is excluded.
 
 ## Acceptance

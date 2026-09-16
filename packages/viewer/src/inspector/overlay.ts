@@ -13,9 +13,9 @@ export const drawOverlay = (
   if (!root) {
     layer.setAttribute("data-mokly-overlay", "");
     layer.style.cssText =
-      "position:fixed;inset:0;pointer-events:none;z-index:2147483647";
+      "all:initial!important;display:block!important;position:fixed!important;inset:0!important;pointer-events:none!important;z-index:2147483647!important";
     root = layer.attachShadow({ mode: "open" });
   }
-  root.innerHTML = `<svg aria-hidden=true width=100% height=100%><mask id=m maskUnits=userSpaceOnUse>${rectangle(viewport, "fill=#fff")}${boxes.map((box) => rectangle(box, "fill=#000")).join("")}</mask>${rectangle(viewport, "fill=rgba(244,246,244,.72) mask=url(#m)")}${boxes.map((box) => rectangle(box, "fill=none stroke=#336249 stroke-width=1.5 rx=3")).join("")}</svg>`;
+  root.innerHTML = `<style>svg{all:initial;display:block;pointer-events:none;width:100%;height:100%}</style><svg aria-hidden=true width=100% height=100%><mask id=m maskUnits=userSpaceOnUse>${rectangle(viewport, "fill=#fff")}${boxes.map((box) => rectangle(box, "fill=#000")).join("")}</mask>${rectangle(viewport, "fill=rgba(244,246,244,.72) mask=url(#m)")}${boxes.map((box) => rectangle(box, "fill=none stroke=#336249 stroke-width=1.5 rx=3")).join("")}</svg>`;
   if (!layer.isConnected) layer.ownerDocument.documentElement.append(layer);
 };

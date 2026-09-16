@@ -6,10 +6,16 @@ import type {
 } from "../client/frame_adapter.js";
 import { cancelFrameMount } from "../client/frame_mount.js";
 
-import { renderFrameLabels } from "./frame_labels.js";
+import { runCleanup } from "./cleanup.js";
+import { FrameHighlights } from "./frame_highlights.js";
 import { frameSession } from "./frame_session.js";
 import type { Session } from "./frame_session.js";
-import { frameDescriptors, frameInstance, hasInstance } from "./frame_views.js";
+import {
+  frameDescriptors,
+  frameInstance,
+  hasInstance,
+  matchesInstance,
+} from "./frame_views.js";
 import type { ViewerFrame } from "./frame_views.js";
 import { Picking } from "./picking.js";
 import type {
@@ -24,8 +30,7 @@ export class ViewerFrames {
   private disposed = false;
   private pick: Picking;
   private epoch = 0;
-  private highlighted: string | undefined;
-  private activeHighlight = false;
+  private highlights: FrameHighlights;
   private choose:
     ((key: string, viewport: "mobile" | "desktop") => void) | undefined;
   constructor(
@@ -38,12 +43,18 @@ export class ViewerFrames {
     private selection: ViewerSelection,
     private report: (error: unknown) => Error,
   ) {
+    this.highlights = new FrameHighlights(
+      root,
+      model,
+      () => this.sessions,
+      () => this.current(),
+      (frame, event) => this.receive(frame, event),
+    );
     this.pick = new Picking(
       events,
       () => !this.disposed,
       () => {
-        this.activeHighlight = false;
-        void this.off().catch(() => {});
+        void this.highlights.off().catch(() => {});
       },
       report,
     );
@@ -54,25 +65,26 @@ export class ViewerFrames {
     fragment?: string,
   ): void {
     this.selection = selection;
-    const frames = frameDescriptors(this.root, this.model, selection, variant);
+    const frames = frameDescriptors(
+      this.root,
+      this.model,
+      selection,
+      variant,
+      fragment,
+    );
     if (
       this.sessions.length === frames.length &&
       this.sessions.every(
         (session, i) =>
           session.frame.element === frames[i]?.element &&
           session.frame.view === frames[i]?.view &&
-          session.frame.element.dataset["viewerFragment"] === (fragment ?? ""),
+          session.frame.url === frames[i]?.url,
       )
     )
       return;
-    this.clear();
+    runCleanup([() => this.end({ reason: "navigation" }), () => this.clear()]);
     for (const frame of frames) {
-      frame.element.dataset["viewerFragment"] = fragment ?? "";
-      const url = new URL(
-        frame.path.split("/").map(encodeURIComponent).join("/"),
-        this.origin,
-      );
-      if (fragment) url.hash = fragment;
+      const url = new URL(frame.url, this.origin);
       this.sessions.push(
         frameSession(
           frame,
@@ -99,7 +111,7 @@ export class ViewerFrames {
       return;
     }
     if (event.type === "geometry") {
-      if (this.activeHighlight) void this.labels().catch(() => this.fail());
+      void this.highlights.labels().catch(() => this.fail());
       return;
     }
     if (event.key !== null && !hasInstance(frame.view?.usage, event.key)) {
@@ -126,7 +138,7 @@ export class ViewerFrames {
     }
   }
   private fail(error: unknown = new Error("Frame unavailable")): Error {
-    this.end({ reason: "error" });
+    this.pick.end({ reason: "error" }, error);
     return this.report(error);
   }
   private async current(): Promise<Session[]> {
@@ -149,13 +161,8 @@ export class ViewerFrames {
   }
   private async referenced(instance: InstanceRef): Promise<Session> {
     const sessions = await this.current();
-    const match = sessions.find(
-      ({ frame }) =>
-        frame.entry.id === instance.screenId &&
-        frame.variantId === instance.variantId &&
-        frame.view?.viewport === instance.viewport &&
-        frame.view?.colorScheme === instance.colorScheme &&
-        hasInstance(frame.view?.usage, instance.key),
+    const match = sessions.find(({ frame }) =>
+      matchesInstance(frame, instance),
     );
     if (!match)
       throw new Error("This instance is unavailable in the current view.");
@@ -164,22 +171,13 @@ export class ViewerFrames {
   async highlight(instance: InstanceRef | null): Promise<void> {
     if (this.disposed) throw new Error("The viewer is no longer available.");
     if (instance) {
-      const session = await this.referenced(instance);
-      await Promise.all(
-        (await this.current()).map((other) =>
-          other.mounted!.highlight(
-            other === session ? [instance.key] : [],
-            other === session ? "highlight" : "off",
-          ),
-        ),
+      await this.referenced(instance);
+      await this.highlights.show(
+        { kind: "instance", instance: { ...instance } },
+        "highlight",
       );
-      this.highlighted = instance.key;
-      this.activeHighlight = true;
-      await this.labels();
     } else {
-      this.activeHighlight = false;
-      this.highlighted = undefined;
-      await this.off();
+      await this.highlights.off();
     }
   }
   async scroll(instance: InstanceRef): Promise<void> {
@@ -195,7 +193,7 @@ export class ViewerFrames {
       )
         throw new Error("Component inspection is unavailable in this view.");
       if (!valid()) throw new Error("Picking was cancelled.");
-      await this.show("pick");
+      await this.highlights.show({ kind: "workspace", key: undefined }, "pick");
       if (valid()) this.root.focus({ preventScroll: true });
     });
   }
@@ -207,15 +205,16 @@ export class ViewerFrames {
     choose: (key: string, viewport: "mobile" | "desktop") => void,
   ): () => void {
     this.choose = choose;
-    this.highlighted = selected;
-    void this.show(this.pick.active ? "pick" : "highlight").catch(() =>
-      this.fail(),
-    );
+    void this.highlights
+      .show(
+        { kind: "workspace", key: selected },
+        this.pick.active ? "pick" : "highlight",
+      )
+      .catch(() => this.fail());
     return () => {
       this.choose = undefined;
       if (!this.pick.active) {
-        this.activeHighlight = false;
-        void this.off().catch(() => {});
+        void this.highlights.off().catch(() => {});
       }
     };
   }
@@ -228,61 +227,32 @@ export class ViewerFrames {
     if (frame)
       void this.scroll(frameInstance(frame, key)).catch(() => this.fail());
   }
-  private async show(mode: "pick" | "highlight"): Promise<void> {
-    const sessions = await this.current();
-    this.activeHighlight = true;
-    await Promise.all(
-      sessions.map(({ frame, mounted }) =>
-        mounted!.highlight(
-          frame.view?.usage.status === "ready"
-            ? frame.view?.usage.instances
-                .filter((instance) =>
-                  this.highlighted
-                    ? instance.key === this.highlighted
-                    : instance.owner.kind === "entry",
-                )
-                .map((instance) => instance.key)
-            : [],
-          mode,
-        ),
-      ),
-    );
-    await this.labels();
-  }
-  private async off(): Promise<void> {
-    this.root.querySelector("[data-mokly-label-layer]")?.replaceChildren();
-    await Promise.all(
-      this.sessions.map((session) => session.mounted?.highlight([], "off")),
-    );
-  }
-  private async labels(): Promise<void> {
-    const sessions = await this.current(),
-      epoch = this.epoch;
-    await renderFrameLabels(
-      this.root,
-      sessions,
-      this.model,
-      this.highlighted,
-      () => this.activeHighlight && !this.disposed && epoch === this.epoch,
-      (frame, event) => this.receive(frame, event),
-    );
-  }
-
   private clear(): void {
     this.epoch++;
-    for (const session of this.sessions) {
-      session.controller.abort();
-      session.unsubscribe?.();
-      session.mounted?.dispose();
-      cancelFrameMount(session.frame.element);
-    }
+    const sessions = this.sessions;
     this.sessions = [];
-    this.root.querySelector("[data-mokly-label-layer]")?.replaceChildren();
+    this.choose = undefined;
+    this.highlights.reset();
+    runCleanup(
+      sessions.flatMap((session) => [
+        () => session.controller.abort(),
+        () => session.unsubscribe?.(),
+        () => session.mounted?.dispose(),
+        () => cancelFrameMount(session.frame.element),
+      ]),
+    );
   }
   dispose(reason?: "source-change"): void {
-    if (reason) this.end({ reason });
-    this.disposed = true;
-    this.pick.end();
-    this.clear();
+    if (this.disposed) return;
+    runCleanup([
+      () => {
+        if (reason) this.end({ reason });
+      },
+      () => {
+        this.disposed = true;
+        this.pick.end();
+      },
+      () => this.clear(),
+    ]);
   }
 }

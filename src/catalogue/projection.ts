@@ -29,6 +29,16 @@ export function projectCatalogue(
   input: CatalogueProjectionInput,
 ): CatalogueReadModel {
   const { catalogue } = input;
+  const retainedComponents = new Set(
+    [
+      ...catalogue.manifest.entries,
+      ...(input.changesStatus === "ready"
+        ? catalogue.removedEntries.map(({ entry }) => entry)
+        : []),
+    ]
+      .filter((entry) => entry.kind === "component")
+      .map((entry) => entry.id),
+  );
   if (
     catalogue.manifest.schemaVersion !== 5 &&
     catalogue.manifest.schemaVersion !== "live-index-1"
@@ -82,7 +92,7 @@ export function projectCatalogue(
         route: entry.route,
         viewports: [...entry.viewports],
         colorSchemes: entry.darkFragments ? ["light", "dark"] : ["light"],
-        views: projectViews(input, entry, entry, removed),
+        views: projectViews(input, retainedComponents, entry, entry, removed),
         useCaseIds: [...entry.useCaseIds],
         ...(entry.address !== undefined ? { address: entry.address } : {}),
       };
@@ -115,7 +125,14 @@ export function projectCatalogue(
         title: variant.title,
         props: readProps(variant.props),
         suppliedSlots: [...variant.suppliedSlots],
-        views: projectViews(input, entry, variant, missing, variant.id),
+        views: projectViews(
+          input,
+          retainedComponents,
+          entry,
+          variant,
+          missing,
+          variant.id,
+        ),
         comparison: comparisonSelection(
           input,
           missing ? "removed" : review?.state,

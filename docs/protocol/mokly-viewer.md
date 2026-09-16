@@ -43,6 +43,7 @@ type CatalogueSource = CatalogueReadModel | string | URL | CatalogueFetcher;
 interface InstanceRef {
   screenId: string;
   variantId?: string;
+  stepIndex?: number;
   viewport: "mobile" | "desktop";
   colorScheme: "light" | "dark";
   key: string;
@@ -165,9 +166,25 @@ actually changes. No pick button is added to the default local shell.
 Concurrent `startPick` calls share one activation and one start event. Cancelling
 a pending activation rejects its promise; only an activated pick emits an end
 event. Starting pick focuses the viewer so keyboard cancellation stays scoped.
+Any actual frame replacement, including viewport, effective scheme, saved variant
+or fragment changes, ends active picking exactly once with `navigation`, cancels
+pending activation and clears inspection masks, labels and selection. A pending
+pick emits neither start nor end; a subsequent start activates the replacement
+frames. Changes that preserve the mounted views do not end picking.
+Public highlights retain the complete `InstanceRef` through masks, labels and
+events. Both displays only the requested viewport's highlight. Flow references
+include `stepIndex` to select one occurrence, even when a screen appears more
+than once; omitting it never guesses a flow step. Workspace key selection remains
+intentionally shared across its visible viewports. Scheme or variant mismatches
+reject. A null reference clears every frame's highlight.
 Async failures reject the handle promise and emit one `onError`; error messages
 are product-safe and contain no private paths. Unmount cancels without later
 callbacks. User callback exceptions are not reclassified as viewer errors.
+A mount failure and a pending pick awaiting that mount share one error report;
+cancelling that activation preserves the originating failure.
+During teardown every frame and runtime cleanup runs even when a host callback
+throws. Subscriptions, pending mounts, observers, resize/slot resources and scoped
+listeners are released, then the original exception is rethrown unchanged.
 
 ## Rendered Features And Slots
 

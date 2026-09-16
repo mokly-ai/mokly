@@ -6,6 +6,7 @@ export function componentEntrySource(
     extra?: string;
     exports?: string;
     paneRender?: string;
+    paneVariants?: string;
   } = {},
 ): string {
   return `import React from "react";
@@ -22,7 +23,7 @@ const pane = defineComponent({ ...metadata,
   id: "pane", title: "Pane", description: "A caller-owned content slot", route: "components/pane.html",
   propSchema: { kind: "object", properties: {} }, slots: ["children"],
   render: ${options.paneRender ?? '(props) => <section>{props.children}<action.Component label="Inside" /></section>'},
-  variants: [{ id: "default", title: "Default", props: { children: <strong>Saved content</strong> } }]
+  variants: ${options.paneVariants ?? '[{ id: "default", title: "Default", props: { children: <strong>Saved content</strong> } }]'}
 });
 ${options.extra ?? ""}
 export const mockups = [

@@ -38,9 +38,9 @@ if (!bin.startsWith("#!/usr/bin/env node"))
 const inspector = await fs.promises.readFile(
   path.join(repositoryRoot, "packages/viewer/dist/browser/inspector.js"),
 );
-if (inspector.length > 8192)
+if (inspector.length > 9216)
   throw new Error(
-    `Inspector exceeds 8,192-byte budget: ${inspector.length} bytes`,
+    `Inspector exceeds 9,216-byte budget: ${inspector.length} bytes`,
   );
 
 const viewer = JSON.parse(

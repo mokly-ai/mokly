@@ -1,18 +1,6 @@
 import type { Box } from "../client/frame_adapter.js";
-/** Viewport rectangles use edge tuples internally to share clipping arithmetic. */
-type Edges = [left: number, top: number, right: number, bottom: number];
-export const edges = (rect: DOMRect): Edges => [
-  rect.left,
-  rect.top,
-  rect.right,
-  rect.bottom,
-];
-export const viewport = (doc: Document): Edges => [
-  0,
-  0,
-  doc.defaultView!.innerWidth,
-  doc.defaultView!.innerHeight,
-];
+
+import { clipNode, edges, viewport, type Edges } from "./clipping.js";
 const intersect = (a: Edges, b: Edges): Edges =>
   a.map((value, axis) =>
     (axis < 2 ? Math.max : Math.min)(value, b[axis]!),
@@ -20,7 +8,6 @@ const intersect = (a: Edges, b: Edges): Edges =>
 const visible = (box: Edges) => box[2] > box[0] && box[3] > box[1];
 /** Read actual element/text rectangles, clipping each node's own ancestors. */
 export const geometry = (doc: Document) => {
-  const win = doc.defaultView!;
   const frame = viewport(doc);
   if (!frame.every((value) => value >= 0 && value <= 1000000)) throw "limit";
   const candidates = [...doc.querySelectorAll("body *")].map(
@@ -32,29 +19,7 @@ export const geometry = (doc: Document) => {
     let node: Node | null;
     while ((node = walker.nextNode())) {
       if (range.comparePoint(node, 0)) continue;
-      const clip: Edges = [...frame];
-      const element =
-        node.nodeType === 1 ? (node as Element) : node.parentElement;
-      let fixed = false;
-      for (let parent = element; parent; parent = parent.parentElement) {
-        const style = win.getComputedStyle(parent);
-        if (style.visibility !== "visible" || style.opacity === "0") {
-          clip[2] = clip[0];
-          break;
-        }
-        if (parent === node || fixed) continue;
-        const rect = edges(parent.getBoundingClientRect());
-        for (const axis of [0, 1])
-          if (
-            /(hidden|clip|scroll|auto)/.test(
-              axis ? style.overflowY : style.overflowX,
-            )
-          ) {
-            clip[axis] = Math.max(clip[axis]!, rect[axis]!);
-            clip[axis + 2] = Math.min(clip[axis + 2]!, rect[axis + 2]!);
-          }
-        fixed = style.position === "fixed";
-      }
+      const clip = clipNode(node, frame);
       let rendered = node as Element | Range;
       if (node.nodeType !== 1) {
         rendered = doc.createRange();

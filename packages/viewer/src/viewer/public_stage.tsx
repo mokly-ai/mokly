@@ -11,13 +11,15 @@ import { encodeUrlPath } from "../data/paths.js";
 import { BrowserFrame, PhoneFrame } from "../shell/frames.js";
 
 import { DisplaySelection } from "./display_context.js";
+import { frameLocation } from "./frame_location.js";
 
 function frameUrl(
   view: CatalogueView | undefined,
   fragment?: string,
+  stepIndex?: number,
 ): string | undefined {
   if (!view?.fragmentPath) return;
-  return `/${encodeUrlPath(view.fragmentPath)}${fragment ? `#${encodeURIComponent(fragment)}` : ""}`;
+  return frameLocation(view.fragmentPath, fragment, stepIndex);
 }
 function PublicFrame({
   entry,
@@ -25,12 +27,14 @@ function PublicFrame({
   viewport,
   flow = false,
   fragment,
+  stepIndex,
 }: {
   entry: CatalogueRoutedEntry;
   views: readonly CatalogueView[];
   viewport: "mobile" | "desktop";
   flow?: boolean;
   fragment?: string | undefined;
+  stepIndex?: number;
 }) {
   const selection = useContext(DisplaySelection);
   const light = views.find(
@@ -40,7 +44,7 @@ function PublicFrame({
     (view) => view.viewport === viewport && view.colorScheme === "dark",
   );
   const selected = selection.colorScheme === "dark" ? (dark ?? light) : light;
-  const src = frameUrl(selected, fragment);
+  const src = frameUrl(selected, fragment, stepIndex);
   const component = entry.kind === "component";
   const Frame = component
     ? ({ children }: { children: ReactNode }) => <>{children}</>
@@ -76,8 +80,8 @@ function PublicFrame({
             className="mbk-frag"
             data-mokly-fragment-frame=""
             data-workspace-frame={flow ? undefined : viewport}
-            data-fragment-light={frameUrl(light, fragment)}
-            data-fragment-dark={frameUrl(dark, fragment)}
+            data-fragment-light={frameUrl(light, fragment, stepIndex)}
+            data-fragment-dark={frameUrl(dark, fragment, stepIndex)}
             sandbox="allow-same-origin"
             src={src}
             title={`${entry.title} — ${viewport}`}
@@ -125,7 +129,8 @@ function Flow({
                 views={screen.views}
                 viewport="desktop"
                 flow
-                fragment={index === 0 ? fragment : undefined}
+                fragment={fragment}
+                stepIndex={index}
               />
             </section>
           );
@@ -153,7 +158,7 @@ export function PublicStage({
             className="mbk-frag"
             sandbox="allow-same-origin"
             data-mokly-fragment-frame=""
-            src={`/${encodeUrlPath(entry.documentPath)}${fragment ? `#${encodeURIComponent(fragment)}` : ""}`}
+            src={frameLocation(entry.documentPath, fragment)}
             title={entry.title}
           />
         ) : (

@@ -22,7 +22,7 @@ export class Picking {
     const cancelled = new Promise<never>((_resolve, reject) =>
       cancellation.signal.addEventListener(
         "abort",
-        () => reject(new Error("Picking was cancelled.")),
+        () => reject(cancellation.signal.reason),
         { once: true },
       ),
     );
@@ -45,10 +45,13 @@ export class Picking {
     void pending.then(settled, settled);
     return pending;
   }
-  end(event?: PickEnd): void {
+  end(
+    event?: PickEnd,
+    cause: unknown = new Error("Picking was cancelled."),
+  ): void {
     if (!this.active && !this.pending) return;
     this.epoch++;
-    this.cancellation?.abort();
+    this.cancellation?.abort(cause);
     this.cancellation = undefined;
     this.pending = undefined;
     const active = this.active;

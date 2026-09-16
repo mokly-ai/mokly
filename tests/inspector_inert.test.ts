@@ -143,7 +143,7 @@ function harness(query: string) {
 
 test("inspector bundle is a bounded standalone IIFE without top-window access", () => {
   assert.ok(
-    Buffer.byteLength(bundle) <= 8192,
+    Buffer.byteLength(bundle) <= 9216,
     `${Buffer.byteLength(bundle)} bytes`,
   );
   assert.doesNotMatch(

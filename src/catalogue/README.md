@@ -12,6 +12,9 @@ evidence; projection performs no filesystem reads, Git commands, or rendering.
 Changes membership comes from route/component attribution, independently of
 per-view comparison eligibility. Removed entries retain baseline labels and
 null current paths; uncomputed usage stays pending or unavailable.
+Historical usage also becomes unavailable when current id/route precedence
+omits any referenced component's metadata. Projection checks the retained
+component set once for screens and removed variants; readers remain strict.
 
 `@mokly/viewer` owns the public types and `readCatalogue`; its value/reference
 validators reject unsupported versions, malformed known fields, private evidence,

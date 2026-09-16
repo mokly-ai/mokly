@@ -5,8 +5,11 @@ import { build } from "esbuild";
 
 import { crossOriginFixture } from "../../../tests/browser/frame_adapter_fixture.js";
 
-export async function viewerFixture() {
-  const fixture = await crossOriginFixture();
+export async function viewerFixture(
+  extraConfig = "",
+  options?: Parameters<typeof crossOriginFixture>[0],
+) {
+  const fixture = await crossOriginFixture(options, extraConfig);
   await build({
     entryPoints: [path.resolve("packages/viewer/tests/browser_entry.tsx")],
     outfile: path.join(fixture.root, "viewer.js"),

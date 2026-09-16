@@ -28,9 +28,10 @@ fragment transport, ownership-aware preview adaptation, and active-tree
 disclosure are implemented. Their delivery history is recorded in the completed
 [in-frame catalogue link navigation plan](../../plans/in-frame-catalogue-link-navigation.md).
 
-Browse is a first-party host of [`@mokly/viewer`](./mokly-viewer.md). The package,
-public catalogue and optional frame transport are implemented through Milestone 5
-of the [viewer library plan](../../plans/mokly-viewer-library.md). The existing
+Browse is a first-party host of [`@mokly/viewer`](./mokly-viewer.md). The
+public catalogue (Milestone 3), optional frame transport (Milestone 4) and
+package extraction (Milestone 5) are implemented as recorded in the
+[viewer library plan](../../plans/mokly-viewer-library.md). The existing
 local shell, CSS, interactions and script-disabled sandbox remain unchanged.
 
 ## Component Workspaces

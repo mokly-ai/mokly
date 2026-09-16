@@ -13,7 +13,7 @@ interface Archive {
   report: PackageReport;
 }
 
-async function archiveFixture(t: test.TestContext) {
+async function archiveFixture(t: test.TestContext, viewerVersion?: string) {
   const fixture = await bootstrapFixture(t);
   for (const relative of [".", "packages/viewer"]) {
     const metadata = JSON.parse(
@@ -22,9 +22,15 @@ async function archiveFixture(t: test.TestContext) {
         "utf8",
       ),
     ) as {
+      version: string;
       scripts: Record<string, string>;
       dependencies: Record<string, string>;
     };
+    if (viewerVersion) {
+      if (relative === ".")
+        metadata.dependencies["@mokly/viewer"] = viewerVersion;
+      else metadata.version = viewerVersion;
+    }
     metadata.scripts = {
       prepack: relative === "." ? "node build.mjs" : "node ../../build.mjs",
     };
@@ -57,28 +63,33 @@ async function archiveFixture(t: test.TestContext) {
   return { ...fixture, viewer, packCli, inspectPackagePair };
 }
 
-test("packed manifest checks reject dependency links and stale version pairs inside real tarballs", async (t) => {
-  const fixture = await archiveFixture(t);
-  await fixture.inspectPackagePair(await fixture.packCli(), fixture.viewer);
-  const filename = path.join(fixture.root, "package.json");
-  const metadata = JSON.parse(await fs.readFile(filename, "utf8")) as {
-    dependencies: Record<string, string>;
-  };
-  for (const version of [
-    "workspace:*",
-    "file:packages/viewer",
-    "^0.1.0",
-    "0.2.0",
-  ]) {
-    metadata.dependencies["@mokly/viewer"] = version;
-    await fs.writeFile(filename, JSON.stringify(metadata));
-    const cli = await fixture.packCli();
-    await assert.rejects(
-      fixture.inspectPackagePair(cli, fixture.viewer),
-      /local dependency|exact viewer version/,
-    );
-  }
-});
+for (const version of [undefined, "0.1.0", "0.2.0", "1.4.7"]) {
+  test(`packed manifests reject stale pairs at viewer ${version ?? "checkout version"}`, async (t) => {
+    const fixture = await archiveFixture(t, version);
+    await fixture.inspectPackagePair(await fixture.packCli(), fixture.viewer);
+    const filename = path.join(fixture.root, "package.json");
+    const metadata = JSON.parse(await fs.readFile(filename, "utf8")) as {
+      dependencies: Record<string, string>;
+    };
+    const pairedVersion = fixture.viewer.report.version;
+    const [major, minor, patch] = pairedVersion.split(".").map(Number);
+    const mismatchedVersion = `${major}.${minor}.${patch! + 1}`;
+    for (const version of [
+      "workspace:*",
+      "file:packages/viewer",
+      `^${pairedVersion}`,
+      mismatchedVersion,
+    ]) {
+      metadata.dependencies["@mokly/viewer"] = version;
+      await fs.writeFile(filename, JSON.stringify(metadata));
+      const cli = await fixture.packCli();
+      await assert.rejects(
+        fixture.inspectPackagePair(cli, fixture.viewer),
+        /local dependency|exact viewer version/,
+      );
+    }
+  });
+}
 
 test("exact archive verification rejects changed bytes after packing", async (t) => {
   const fixture = await archiveFixture(t);

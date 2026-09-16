@@ -14,6 +14,7 @@ import type { CatalogueProjectionInput } from "./projection_input.js";
 
 export function projectViews(
   input: CatalogueProjectionInput,
+  retainedComponents: ReadonlySet<string>,
   entry: ManifestScreen | Extract<ManifestEntry, { kind: "component" }>,
   source: ManifestScreen | ManifestComponentVariant,
   removed: boolean,
@@ -31,8 +32,15 @@ export function projectViews(
             ?.variants.find((item) => item.id === variantId)?.views
         : undefined;
   return fragmentViews(source).map((view) => {
-    const usage =
+    const recordedUsage =
       (!removed ? input.usage?.get(view.path) : undefined) ?? view.usage;
+    const usage =
+      removed &&
+      recordedUsage?.instances.some(
+        (instance) => !retainedComponents.has(instance.componentId),
+      )
+        ? undefined
+        : recordedUsage;
     const live =
       !removed && input.catalogue.manifest.schemaVersion === "live-index-1";
     const provenEmpty =

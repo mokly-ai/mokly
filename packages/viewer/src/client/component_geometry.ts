@@ -1,5 +1,6 @@
 /** Read-only DOM range authentication and clipped geometry in immediate frames. */
 import type { ComponentViewRecord } from "../components/manifest_types.js";
+import { clipNode } from "../inspector/clipping.js";
 
 import { uncoveredBoxes } from "./component_occlusion.js";
 import { componentNodeRects } from "./component_range_nodes.js";
@@ -68,27 +69,14 @@ function intersect(a: Box, b: Box): Box | undefined {
   };
   return box.right > box.left && box.bottom > box.top ? box : undefined;
 }
-function clipAncestors(
-  box: Box,
-  node: Element | null,
-  win: Window,
-): Box | undefined {
-  let current: Box | undefined = box;
-  for (let parent = node; parent && current; parent = parent.parentElement) {
-    const style = win.getComputedStyle(parent);
-    const bounds = parent.getBoundingClientRect();
-    const clipX = /(hidden|clip|scroll|auto)/.test(style.overflowX);
-    const clipY = /(hidden|clip|scroll|auto)/.test(style.overflowY);
-    if (clipX || clipY)
-      current = intersect(current, {
-        left: clipX ? bounds.left : current.left,
-        right: clipX ? bounds.right : current.right,
-        top: clipY ? bounds.top : current.top,
-        bottom: clipY ? bounds.bottom : current.bottom,
-      });
-    if (style.position === "fixed") break;
-  }
-  return current;
+function clipAncestors(box: Box, node: Node): Box | undefined {
+  const [left, top, right, bottom] = clipNode(node, [
+    box.left,
+    box.top,
+    box.right,
+    box.bottom,
+  ]);
+  return intersect(box, { left, top, right, bottom });
 }
 /** Read each actual range without inserting wrappers or changing consumer styles. */
 export function rangeBounds(
@@ -98,7 +86,6 @@ export function rangeBounds(
   overlay?: Element,
 ): ComponentBounds[] {
   const { doc, ranges } = authenticated;
-  const win = doc.defaultView!;
   const result: ComponentBounds[] = [];
   const candidates = [...doc.querySelectorAll("body *")].filter(
     (node) => !overlay?.contains(node),
@@ -107,7 +94,7 @@ export function rangeBounds(
   for (const [key, values] of ranges) {
     if (!keys.has(key)) continue;
     for (const range of values) {
-      for (const { rect, parent } of componentNodeRects(range)) {
+      for (const { rect, node } of componentNodeRects(range)) {
         let box = intersect(rect, {
           left: 0,
           top: 0,
@@ -115,7 +102,7 @@ export function rangeBounds(
           bottom: frame.clientHeight,
         });
         if (!box) continue;
-        box = clipAncestors(box, parent, win);
+        box = clipAncestors(box, node);
         if (!box) continue;
         for (const visible of uncoveredBoxes(box, range, candidates, rects))
           result.push({
@@ -153,7 +140,5 @@ export function visibleFrameBox(frame: HTMLIFrameElement): Box | undefined {
     right: win.innerWidth,
     bottom: win.innerHeight,
   });
-  return viewport
-    ? clipAncestors(viewport, frame.parentElement, win)
-    : undefined;
+  return viewport ? clipAncestors(viewport, frame) : undefined;
 }

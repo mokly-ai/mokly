@@ -5,6 +5,7 @@ import type {
   CatalogueView,
 } from "../catalogue/types.js";
 
+import { frameLocation } from "./frame_location.js";
 import { routedEntries } from "./selection.js";
 import type { InstanceRef, ViewerSelection } from "./types.js";
 
@@ -13,7 +14,7 @@ export interface ViewerFrame {
   entry: CatalogueRoutedEntry;
   stepIndex?: number;
   view?: CatalogueView;
-  path: string;
+  url: string;
   variantId?: string;
 }
 export function frameDescriptors(
@@ -21,6 +22,7 @@ export function frameDescriptors(
   model: CatalogueReadModel,
   selection: ViewerSelection,
   variantId?: string,
+  fragment?: string,
 ): ViewerFrame[] {
   const entry = routedEntries(model).find(
     (entry) => entry.id === selection.screenId,
@@ -31,7 +33,7 @@ export function frameDescriptors(
       "iframe[data-mokly-fragment-frame]",
     );
     return element && entry.documentPath
-      ? [{ element, entry, path: entry.documentPath }]
+      ? [{ element, entry, url: frameLocation(entry.documentPath, fragment) }]
       : [];
   }
   const targets =
@@ -86,7 +88,7 @@ export function frameDescriptors(
               element,
               entry: owner,
               view,
-              path: view.fragmentPath,
+              url: frameLocation(view.fragmentPath, fragment, target.stepIndex),
               ...(target.stepIndex === undefined
                 ? {}
                 : { stepIndex: target.stepIndex }),
@@ -104,7 +106,23 @@ export function frameInstance(frame: ViewerFrame, key: string): InstanceRef {
     colorScheme: frame.view!.colorScheme,
     key,
     ...(frame.variantId ? { variantId: frame.variantId } : {}),
+    ...(frame.stepIndex === undefined ? {} : { stepIndex: frame.stepIndex }),
   };
+}
+
+/** An occurrence is scoped to one exact rendered frame, including repeated flow steps. */
+export function matchesInstance(
+  frame: ViewerFrame,
+  instance: InstanceRef,
+): boolean {
+  return (
+    frame.entry.id === instance.screenId &&
+    frame.variantId === instance.variantId &&
+    frame.stepIndex === instance.stepIndex &&
+    frame.view?.viewport === instance.viewport &&
+    frame.view?.colorScheme === instance.colorScheme &&
+    hasInstance(frame.view?.usage, instance.key)
+  );
 }
 export function hasInstance(
   usage: CatalogueUsage | undefined,

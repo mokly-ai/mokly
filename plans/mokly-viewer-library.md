@@ -965,6 +965,178 @@ runtime/platform matrix, zero inspector budget headroom, and no live npm/OIDC or
 GitHub protection mutation. Recording this review is a documentation-only
 follow-up; publication and published-package verification remain post-merge.
 
+## Milestone 7: Review follow-up fixes
+
+Implement the user's approved option A for all ten Milestone 3–6 findings.
+Preserve earlier review records, local Serve/export presentation, comparison
+snapshot bytes and public schema versions. Add a failing regression before each
+bug fix; record the addressing commit for every finding below.
+
+- [x] M3-1: Centralize historical-reference availability in catalogue projection;
+      publish unavailable usage for omitted component metadata and cover id and
+      route reuse in Serve and export without weakening the reader.
+- [x] M3-2: Add a non-renewing generation lookup for alias pruning; prove expiry
+      during repeated complete captures with a controlled clock.
+- [x] M3-3: Audit runtime catalogue delivery status and correct stale paragraphs.
+- [x] M4-1: Share containing-block-aware clipping between local and in-frame
+      geometry; cover fixed, transformed and nested-scroll instances.
+- [x] M4-2: Isolate overlay host and nodes from consumer CSS; verify preserved
+      highlighted pixels under hostile universal, inherited and important rules.
+      First absorb changes through safe minification/pooling within 8,192 bytes;
+      only if impossible, document and enforce the smallest fitting round budget. - [x] Keep the reset SVG pointer-inert; reproduce and cover hover/click
+      delivery under every hostile-style case before the correction.
+- [x] M5-1: End active or pending picking once at frame replacement with the
+      navigation reason and reset inspection; test viewport, scheme and variant
+      transitions on both adapters, including pending activation. - [x] Retain a mount failure as the pending pick's cancellation cause;
+      reproduce and prevent duplicate error notifications for one failure.
+- [x] M5-2: Resolve first-step-only flow fragments at a shared descriptor/URL
+      boundary used by markup and mounts; test multi-step flows on both adapters.
+- [x] M5-3: Preserve typed public InstanceRef frame scope through masks, labels
+      and events, separately from workspace multi-view highlighting; cover Both,
+      schemes, variants and repeated flow steps on both adapters.
+- [x] M6-1: Derive deliberately mismatched archive versions from real package
+      metadata and exercise initial and later release versions.
+- [x] M6-2: Guarantee frame/runtime teardown despite host callback exceptions,
+      preserve the original exception, and test disposal and callback fencing on
+      both adapters during source/adapter replacement. - [x] Stress cleanup with 20,000 actions, multiple failures and an undefined
+      thrown value; drain iteratively without masking the first exception.
+- [x] Update relevant READMEs and protocols; audit catalogue/viewer/frame delivery
+      status references and verify earlier milestone records remain unchanged.
+- [x] Replace the existing async adapter test's one-frame wait with explicit
+      installation/attempt signals while retaining every behavioral assertion.
+- [x] Wait for the cross-origin flow click event before asserting its payload;
+      retain the existing scope checks and assert the public step index too.
+- [x] Run focused tests, local Serve/export smoke and byte comparisons, then
+      `cargo xtask check`; fix failures and record counts, retries and skips.
+- [ ] After checks pass, `git add -A`, commit with Conventional Commits (title
+      at most 50 characters, body naming all findings and the Codex co-author
+      trailer), and push `calummoore/tianjin-v6`.
+- [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+      against the complete local diff from `origin/main`; record numbered findings
+      with severity, impact, lettered options and recommendations without fixing.
+
+### Milestone 7 verification notes
+
+Baseline: `fcfb09c`. Inspector: 8,192 minified, uncompressed bytes; budget 8 KiB.
+Verification evidence is retained under `.context/viewer-m7/`.
+
+The ten recommended options A were approved together. This follow-up therefore
+groups the cross-cutting bug fixes without reopening earlier completed milestones
+or adding product design work. Earlier milestone notes and reviews stay unchanged.
+M3-3's two cited runtime paragraphs were already corrected by Milestone 5; the
+delivery-status audit confirms them and removes the remaining "upcoming viewer"
+wording from the component explorer. No regression test is needed for that
+documentation-only finding.
+
+Inspector budget: **8,192 → 8,733 bytes**, uncompressed, after shared fixed
+containing-block clipping and consumer-style isolation. Twenty-eight minifier
+experiments varied string-pool thresholds and safe compression passes/options;
+the smallest result was 8,711 bytes, still above 8 KiB. Keep the established
+minifier settings and use the smallest fitting whole-KiB budget, **9 KiB (9,216
+bytes)**, in the protocol, package gate and inertness regression. No decoder,
+unsafe compression, protocol-limit relaxation or runtime import was introduced.
+The extra 541 bytes implement the required geometry and presentation boundaries;
+measured headroom is 483 bytes. `minify-probe.log` and `minify-probe-final.log` retain both sets of experiments.
+
+Regressions first reproduced all implementation findings: four id/route-reuse
+Serve/export cases, controlled-clock alias expiry, future viewer 0.2.0 archive
+pairing, fixed/text/transformed geometry, hostile CSS, pick replacements, flow
+fragment leakage, highlight scope and throwing-callback teardown. The nested
+component variant fixture was corrected to contain real inspectable children;
+leaf components intentionally have no nested usage. A cleanup stress regression
+also caught recursive cleanup exhausting the stack; cleanup now drains owners
+iteratively, preserves even an undefined thrown value, and handles 20,000 actions.
+Initial test fixtures also needed a string-returning whole-document page and a
+configured Serve comparison source. These were fixture corrections, not retries
+of intermittent product failures. Chromium's nested-opacity text compositing
+varied by one channel value; the hostile-style fixture isolates div opacity while
+retaining universal background/box-model rules and a separate inherited-opacity
+case, so all selected-pixel comparisons remain exact.
+
+Focused verification passed: **102 Node tests** and **35 new Chromium browser
+cases**, with no skips or retries. TypeScript and lint pass. The browser matrix
+covers both adapters for clipping, replacement, fragment scope, scoped highlights
+and callback-safe teardown; hostile-style cutouts are pixel-exact.
+
+The initial real Serve capture preserved both mobile and desktop response HTML exactly;
+the mobile PNG is byte-identical. Desktop differs at seven rounded-edge pixels
+by one channel value, with no layout or meaningful visual change. Export has
+1,169 files with no additions/removals: 982 are byte-identical and 182 differ
+only by the exact owned deployment/comparison identities. All **608 comparison
+snapshot/resource files** and **277 generated HTML hashes** match exactly, as do
+shell CSS and fonts. The other five files are four changed client bundles and
+`review.json`'s real changed-path inventory. Identity normalization uses only the
+two ids read from each catalogue, never a generic hash substitution.
+`byte-comparison.json` records paths and pixel evidence. A repeat capture with
+identical code varied at four desktop pixels by one channel value, confirming
+rasterization noise; mobile remained exact.
+
+The final fetch advanced `origin/main` from `87daaa4` to `7ca301c` (the Mokabook
+consumer patch). Main's 19 added paths are absent from this older branch but are
+not branch deletions; the merge-base diff still deletes only the two CSS modules
+already split during the approved viewer extraction. Milestone 7 deletes no
+files or features. A read-only merge preview identifies 12 conflicts for a future
+main integration; this follow-up does not silently resolve or discard that
+independent work. The final review uses the fetched `origin/main` and records
+this integration limit explicitly.
+
+The first complete gate passed 1,654 Node tests and all five packed-consumer
+scenarios, then reported 344 browser passes and four failures. Three failures
+shared a real overlay regression: `all: initial` restored SVG pointer handling,
+which intercepted consumer hover/clicks. One independent retry reproduced it.
+The hostile-CSS tests were extended with real hover/click assertions; all three
+failed before the SVG explicitly restored `pointer-events: none`. No force-click
+or weaker assertion was used. The other failure came from an existing async
+adapter fixture assuming one animation frame completed a React adapter swap;
+it passed all three independent repetitions. That fixture now waits for actual
+adapter subscription/mount attempts. The final full gate reruns all checks after
+these corrections; no failed result is treated as success.
+
+The broader affected-browser run then exposed two additional fixture/edge cases.
+Universal padding/borders made the fixture's unrelated inline multi-root component
+overlap the selected button's bottom seven pixels. Geometry correctly excluded
+those occluded pixels; the overlay regression now uses one unoccluded target
+and keeps exact, full-interior pixel equality plus hover/click assertions. The
+explicit adapter-attempt signal also reproducibly started picking before the
+failed mount settled, exposing duplicate reports for the mount error and its
+synthetic cancellation. A new unit regression failed first; pending cancellation
+now carries the originating failure so mount and handle share one report.
+
+Once pointer delivery worked, the existing flow-event test intermittently read
+its callback array before the postMessage arrived (two independent repetitions
+passed and one failed). It now polls the actual event and also checks the public
+`InstanceRef.stepIndex`; no timeout increase or retry policy change is used.
+
+After the full-gate follow-ups, **103 focused Node tests** and **70 affected
+Chromium tests** pass with no skips or retries, including all 35 new browser
+cases and the strengthened existing interactions. Lint and TypeScript pass.
+Final Serve HTML, shell CSS/fonts, all 608 comparison files and all 277 generated
+HTML hashes remain unchanged. Final visual captures differ only at rounded edges:
+mobile 19 pixels (maximum channel delta 11), desktop four pixels (delta 1).
+A repeated final capture has mobile 16 differing pixels and an exact desktop PNG;
+comparing those identical-code captures changes three mobile/four desktop pixels
+by at most one channel value. No layout, text, style or interaction change is
+visible. Both the initial exact mobile capture and these residual raster details
+are retained; `byte-comparison-final.json` records the final artifact comparison.
+Inspector SHA256: `1952cf0499da61d8041a88c2dd18e9525eebd947c3985f3f53ec7a9c157bb7b0`.
+
+Final `cargo xtask check` **passed** on 16 September 2026: **1,655 Node tests,
+348 Chromium tests and 3 Rust tests**, zero failures, retries, skips or ignored
+tests. Audit reports zero vulnerabilities. Both package builds/typechecks,
+formatting, lint, example check (278 files), package inventories, all five clean
+packed-consumer scenarios, Rust formatting/Clippy and the eight-file Rust length
+audit pass. The Node suite took 405.4 seconds and browser suite 10.3 minutes.
+The earlier gate failure and independent diagnostic repeats are recorded above;
+the final run is complete and green. Logs: `xtask-check-first.log`,
+`xtask-check-final.log`, `focused-node-final.log`, `affected-browser-green.log`,
+`hover-retry.log`, `async-retry.log`, `flow-retry.log` and the red regressions.
+
+Changed Markdown passes Prettier and `git diff --check`. All changed code files
+remain below 300 lines. The local-link audit checked 226 links; the only two
+unresolved paths are the immutable Milestone 4 review's historical pre-extraction
+`src/inspector` references. Earlier milestones and the post-merge section remain
+byte-identical. No new mockup or schema version was introduced.
+
 ## Post-merge follow-up (non-blocking)
 
 - Merge the combined release-please PR for viewer 0.1.0 and CLI 0.10.0, checking

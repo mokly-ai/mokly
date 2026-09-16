@@ -123,21 +123,25 @@ test("flow events preserve the screen key and identify the owning step", async (
     .frameLocator(".flow-step:nth-child(2) iframe")
     .getByText("Visible", { exact: true })
     .click();
-  const value = await page.evaluate(
-    () =>
-      window.viewerHarness
-        .get("one")
-        .events.find((event) => event.name === "click")!.value,
-  );
-  expect(value).toEqual(
-    expect.objectContaining({
-      instance: expect.objectContaining({
-        screenId: "home",
-        viewport: "desktop",
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          window.viewerHarness
+            .get("one")
+            .events.find((event) => event.name === "click")?.value,
+      ),
+    )
+    .toEqual(
+      expect.objectContaining({
+        instance: expect.objectContaining({
+          screenId: "home",
+          viewport: "desktop",
+          stepIndex: 1,
+        }),
+        frame: { entryId: "tour", stepIndex: 1 },
       }),
-      frame: { entryId: "tour", stepIndex: 1 },
-    }),
-  );
+    );
 });
 
 test("comparison is lazy, confined, and reports safe failures", async ({

@@ -1,7 +1,7 @@
 /** Enumerate owned element and text boxes with their actual clipping ancestors. */
 export function* componentNodeRects(
   range: Range,
-): Generator<{ rect: DOMRect; parent: Element | null }> {
+): Generator<{ rect: DOMRect; node: Node }> {
   const doc = range.startContainer.ownerDocument!;
   const win = doc.defaultView!;
   const walker = doc.createTreeWalker(range.commonAncestorContainer, 5);
@@ -26,12 +26,11 @@ export function* componentNodeRects(
     if (!visible) continue;
     if (node.nodeType === 1) {
       for (const rect of (node as Element).getClientRects())
-        yield { rect, parent: node.parentElement };
+        yield { rect, node };
     } else {
       const text = doc.createRange();
       text.selectNodeContents(node);
-      for (const rect of text.getClientRects())
-        yield { rect, parent: node.parentElement };
+      for (const rect of text.getClientRects()) yield { rect, node };
     }
   }
 }

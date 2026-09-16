@@ -3,6 +3,8 @@ import type { Box, FrameEvent } from "../client/frame_adapter.js";
 
 import type { Session } from "./frame_session.js";
 import type { ViewerFrame } from "./frame_views.js";
+import { highlightKeys } from "./highlight_request.js";
+import type { HighlightRequest } from "./highlight_request.js";
 
 /** Reuse the shell's label buttons; label text comes exclusively from catalogue data. */
 export function drawFrameLabels(
@@ -46,7 +48,7 @@ export async function renderFrameLabels(
   root: HTMLElement,
   sessions: readonly Session[],
   model: CatalogueReadModel,
-  selected: string | undefined,
+  selected: HighlightRequest,
   active: () => boolean,
   receive: (frame: ViewerFrame, event: FrameEvent) => void,
 ): Promise<void> {
@@ -54,15 +56,7 @@ export async function renderFrameLabels(
     sessions.map(async ({ frame, mounted }) => ({
       frame,
       boxes: (await mounted!.listInstanceBoundaries())
-        .filter((item) =>
-          selected
-            ? item.key === selected
-            : frame.view?.usage.status === "ready" &&
-              frame.view.usage.instances.some(
-                (instance) =>
-                  instance.key === item.key && instance.owner.kind === "entry",
-              ),
-        )
+        .filter((item) => highlightKeys(frame, selected).includes(item.key))
         .map((item) => ({
           key: item.key,
           boxes: item.ranges.flatMap((range) => range.boxes),
@@ -72,6 +66,7 @@ export async function renderFrameLabels(
   const layer = root.querySelector<HTMLElement>("[data-mokly-label-layer]");
   if (layer && active())
     drawFrameLabels(layer, regions, model, (frame, key) => {
+      if (!active()) return;
       const boxes =
         regions
           .find((item) => item.frame === frame)
