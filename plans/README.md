@@ -2,10 +2,10 @@
 
 ## Active
 
-- [Mokly Viewer Library](./mokly-viewer-library.md) — Milestones 1–10 completed,
-  verified, pushed and reviewed. Milestone 11 fixes and verifies the
-  geometry/activation race exposed by minimum-Node CI; commit and review are in
-  progress.
+- [Mokly Viewer Library](./mokly-viewer-library.md) — Milestones 1–11 completed,
+  verified, pushed and reviewed. Milestone 11 fixes the geometry/activation race
+  exposed by minimum-Node CI; its review reports one P2 follow-up for the user's
+  decision.
   The plan remains active until the implementation PR merges. Package publication
   and the published-package smoke are non-blocking post-merge follow-up.
 - [Mokabook Dependency Patch Upstreaming](./mokabook-dependency-patch-upstreaming.md)

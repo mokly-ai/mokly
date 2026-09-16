@@ -1669,9 +1669,9 @@ race pending pick activation past evidence cancellation.
 - [x] Update the plan index and record focused/full verification evidence.
 - [x] Run focused tests and `cargo xtask check`; require zero failures, retries
       and skips, and confirm formatting, docs and the complete browser suite.
-- [ ] After checks pass, run `git add -A`, commit with Conventional Commits and
+- [x] After checks pass, run `git add -A`, commit with Conventional Commits and
       push the branch.
-- [ ] After that push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After that push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
       against the complete local diff from `origin/main`; report numbered findings
       with severity, impact, lettered options and a recommendation without fixing.
 
@@ -1705,6 +1705,43 @@ all five packed-consumer smoke scenarios, Rust formatting, Clippy, workspace
 tests and the eight-file Rust length audit passed. `git diff --check` passed and
 the eight changed files remained the intended implementation, regression,
 protocol, README and plan updates.
+
+Implementation commit `d0eb791924de7345575c4506257782a2d26983ea`,
+`fix(viewer): coalesce geometry activation`, was pushed to
+`calummoore/tianjin-v6` before the following review.
+
+### Milestone 11 post-push review
+
+1. **P2 — Geometry during an asynchronous boundary snapshot can be lost.**
+   [`frame_highlights.ts:109`](../packages/viewer/src/viewer/frame_highlights.ts#L109)
+   returns the current presentation promise whenever a geometry event arrives
+   during activation, but it does not remember that another measurement is
+   needed. The public `FrameAdapter` contract permits a custom adapter's
+   asynchronous `listInstanceBoundaries()` to capture boundaries, emit
+   `geometry`, and resolve the now-stale snapshot afterward. The deterministic
+   regression emits geometry during `highlight`, before the first list starts,
+   so it proves the CI race is fixed but not this later ordering. **Impact of no
+   change:** host label buttons can retain stale positions or hit areas until a
+   later geometry notification, contrary to the adapter contract that geometry
+   invalidates measurements. **A (recommended):** add a generation or dirty-bit
+   coalescer in `FrameHighlights`; geometry during presentation should mark one
+   trailing refresh, and activation should await that coalesced refresh before
+   settling. Add a custom-adapter regression that emits geometry after capturing
+   the first boundary result and before resolving it. This broader ownership
+   rule prevents the same lost-wakeup class across built-in and third-party
+   adapters. **B:** defer geometry only inside the two built-in adapters; this is
+   narrower but leaves the public custom-adapter seam incorrect and duplicates
+   scheduling policy. Recommend **A**.
+
+The required prompt reviewed the complete **650-file** local diff at `d0eb791`
+against `origin/main` (`7ca301c04ca898db6ff60b110beb213ec740b004`) after the push,
+using `git diff origin/main...HEAD`. The diff contains 25,992 insertions and
+3,407 deletions. Worktree, index and untracked-file inventories were clean.
+Review covered the current geometry/presentation ownership path and regression,
+public adapter semantics, protocols, package boundary, release/publication and
+the earlier reviewed viewer extraction. The complete local gate and minimum-Node
+focused coverage remained the verification basis. No files were changed while
+performing the review, and the finding above was not automatically fixed.
 
 ## Post-merge follow-up (non-blocking)
 
