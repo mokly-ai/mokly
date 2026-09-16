@@ -465,6 +465,37 @@ Rust checks). The post-push review is recorded in
 [the review report](../docs/reviews/public-site-and-docs.md); its twelve
 findings await the user's decision. This plan stays active until merge.
 
+## Milestone 10: Review Follow-ups
+
+The user decided each finding of the
+[review report](../docs/reviews/public-site-and-docs.md): fix 1 (option B),
+2 (recommended), 3 (option C), 8 (option B), 9 (option B) and 10; leave 4, 5,
+6, 7, 11 and 12 as recorded.
+
+- [ ] Finding 1: correct the four upload-page statements and add a test that
+      cross-checks the CI pages' normative claims against
+      `docs/protocol/mokly-upload.md`.
+- [ ] Finding 2: enforce the Node floor with `npm ci --engine-strict` on the
+      minimum-runtime job, install Lighthouse and chrome-launcher only where
+      the Lighthouse job runs, add a test that every installed package's
+      `engines.node` satisfies the declared minimum, and correct
+      `docs/protocol/dependency-security.md`.
+- [ ] Finding 3: make `site-lighthouse` report-only (remove it from
+      `Required CI`, keep the job and its artifact) and move the
+      accessibility guarantee into deterministic browser assertions; update
+      `docs/protocol/site-delivery.md` and the workflow tests.
+- [ ] Finding 10: check out the default ref in the close job and make
+      `scripts/site/cleanup.sh` report a retained status on a non-numeric
+      page count and on a partial listing.
+- [ ] Finding 8: share the Folio tokens from one source that both the
+      example catalogue and the site consume, and add a test that the shared
+      layout rules agree until they are unified; update
+      `docs/protocol/site-design.md`.
+- [ ] Finding 9: fix the named accessibility and copy gaps and add the
+      mechanical tests (no removed outlines, strong boundaries on controls,
+      token contrast pairs, copy rules, `html lang`, a 320px browser project).
+- [ ] Run `cargo xtask check`, commit and push. Stop for review.
+
 ## Post-merge follow-up (non-blocking)
 
 - [ ] Create the host project, attach the production domain and confirm the
