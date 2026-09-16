@@ -406,7 +406,7 @@ Stop for review.
       docs and this repository's CLI to the user.
 - [x] Run `cargo xtask check`, commit and push. Stop for review.
 
-## Milestone 8: Deployment
+## Milestone 8: Deployment (Completed)
 
 Deploy the site on every push to `main` with pull request previews, and
 document the release process.
@@ -427,7 +427,7 @@ document the release process.
 - [x] Run the brief's npm checks, parse and lint the workflows, and smoke-test
       the site build and Lighthouse budget.
 - [x] Run `cargo xtask check`, commit and push.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       against `origin/main`; report findings without changing the implementation.
       Stop after this milestone.
@@ -440,6 +440,9 @@ CommonJS parser crashed while loading `watch_resource_boundaries.test.ts`.
 Both affected tests passed in isolation afterwards. Neither complete-gate
 attempt passed; these unrelated failures remain reported, without changing
 catalogue code or weakening checks.
+
+The post-push review was completed after `5e91468` against `origin/main`.
+Findings were reported separately without modifying the implementation.
 
 ## Milestone 9: Verification, Commit, Push And Review
 
