@@ -1,3 +1,4 @@
+import type { CatalogueUsage } from "../catalogue/types.js";
 import { parseLogicalMarker } from "../navigation/logical.js";
 import { parseBrowsingTarget } from "../navigation/target.js";
 
@@ -13,6 +14,8 @@ import { localFrameAccess } from "./same_origin_access.js";
 import { localPointer } from "./same_origin_pointer.js";
 
 interface LocalOperations {
+  updateUsage(usage: CatalogueUsage): void;
+  inspectable(): boolean;
   list(): readonly InstanceBoundary[];
   highlight(keys: readonly string[], mode: "off" | "highlight" | "pick"): void;
   scroll(key: string): void;
@@ -95,19 +98,21 @@ export function mountLocalDocument(
         }
         win.clearTimeout(timer);
         operations = create(doc, emit);
+        const inspecting = () =>
+          listeners.size > 0 && operations!.inspectable();
         localPointer(
           doc,
           () => operations!.list(),
           emit,
-          () => listeners.size > 0,
+          inspecting,
           () => operations!.selecting(),
           signal,
         );
         const changed = () => {
-          if (!pending)
+          if (inspecting() && !pending)
             pending = win.requestAnimationFrame(() => {
               pending = 0;
-              emit({ type: "geometry" });
+              if (inspecting()) emit({ type: "geometry" });
             });
         };
         doc.addEventListener("scroll", changed, {
@@ -182,6 +187,7 @@ export function mountLocalDocument(
         doc.addEventListener("click", activate, { signal });
         doc.addEventListener("auxclick", activate, { signal });
         resolve({
+          updateUsage: (usage) => run(() => operations!.updateUsage(usage)),
           listInstanceBoundaries: () => run(() => operations!.list()),
           highlight: (keys, mode) =>
             run(() => operations!.highlight(keys, mode)),

@@ -1,3 +1,4 @@
+import type { CatalogueUsage } from "../catalogue/types.js";
 import type {
   FrameAdapter,
   FrameEvent,
@@ -5,10 +6,11 @@ import type {
 } from "../client/frame_adapter.js";
 
 import type { ViewerFrame } from "./frame_views.js";
-import { ObsoleteInspection } from "./inspection_work.js";
+import { InspectionWork, ObsoleteInspection } from "./inspection_work.js";
 
 export interface Session {
   frame: ViewerFrame;
+  usage: CatalogueUsage | undefined;
   ready: Promise<MountedFrame>;
   mounted?: MountedFrame;
   controller: AbortController;
@@ -56,7 +58,54 @@ export function frameSession(
   }).catch((error) => {
     throw signal.aborted ? error : fail(error);
   });
-  const session: Session = { frame, controller, ready };
+  const session: Session = {
+    frame,
+    usage: frame.view?.usage,
+    controller,
+    ready,
+  };
   void ready.catch(() => {});
   return session;
+}
+
+/** Refresh evidence on retained documents; older custom adapters keep mount semantics. */
+export function refreshFrameSessions(
+  sessions: readonly Session[],
+  frames: readonly ViewerFrame[],
+  fail: (error: unknown) => Error,
+): boolean {
+  if (
+    sessions.length !== frames.length ||
+    sessions.some(({ frame, usage, mounted }, index) => {
+      const next = frames[index]!;
+      return (
+        frame.element !== next.element ||
+        frame.url !== next.url ||
+        frame.entry.id !== next.entry.id ||
+        frame.stepIndex !== next.stepIndex ||
+        frame.variantId !== next.variantId ||
+        frame.view?.viewport !== next.view?.viewport ||
+        frame.view?.colorScheme !== next.view?.colorScheme ||
+        (usage !== next.view?.usage && !mounted?.updateUsage)
+      );
+    })
+  )
+    return false;
+  for (const [index, session] of sessions.entries()) {
+    const next = frames[index]!;
+    const usage = next.view?.usage;
+    Object.assign(session.frame, next);
+    if (session.usage === usage) continue;
+    session.usage = usage;
+    const work = new InspectionWork(session.controller.signal, () => true);
+    const update = () =>
+      work.run(async () => {
+        const mounted = session.mounted!;
+        await mounted.updateUsage!(usage ?? { status: "unavailable" });
+        return mounted;
+      }, fail);
+    session.ready = session.ready.then(update, update);
+    void session.ready.catch(() => {});
+  }
+  return true;
 }

@@ -30,6 +30,12 @@ nonce after load. `message_transport.ts` owns the five-second request timeouts,
 16-request bound and response matching. A replacement or disposal invalidates
 the session and all pending work. Subscriptions share one remote event set;
 removing the final subscriber sends an empty replacement set.
+`frame_usage.ts` shares the automatic event capability rule: only validated ready
+usage enables pointer inspection and geometry events; other usage retains only
+navigation. Both built-in mounts accept `updateUsage` to refresh this capability
+without replacing their document/session. The update clears old inspection
+presentation and preserves navigation subscribers; no inspector wire change is
+needed. Viewer frame updates use it when the document identity is unchanged.
 Public operations recheck disposal after awaiting a reply so a just-resolved
 response cannot escape a replaced mount. Oversized usage maps keep content
 mountable and report inspection as unavailable with the `limit` code.

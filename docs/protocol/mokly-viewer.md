@@ -152,6 +152,13 @@ Instance hover/click reports scoped keys and current frame-relative boxes;
 hover exit uses null and empty boxes, clicks always have an instance. Flow
 events identify the owning use case and step without changing the screen's key.
 Titles/props come from the read model, never from cross-origin DOM messages.
+Automatic hover/click inspection and its geometry measurement require the frame's
+own `usage.status === "ready"` and valid bounded usage. Pending/unavailable
+siblings emit no instance events or inspection errors merely from pointer input;
+their in-frame navigation remains subscribed. Evidence updates for unchanged
+documents refresh the built-in adapters in place, enabling inspection when usage
+becomes ready without reloading the iframe or remounting the viewer. This does
+not change source-replacement semantics.
 
 `highlightInstance` and `scrollToInstance` operate on the referenced current
 view and reject missing/unavailable instances; neither guesses a replacement nor

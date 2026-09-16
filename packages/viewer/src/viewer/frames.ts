@@ -8,7 +8,7 @@ import { cancelFrameMount } from "../client/frame_mount.js";
 
 import { runCleanup } from "./cleanup.js";
 import { FrameHighlights } from "./frame_highlights.js";
-import { frameSession } from "./frame_session.js";
+import { frameSession, refreshFrameSessions } from "./frame_session.js";
 import type { Session } from "./frame_session.js";
 import { frameDescriptors, frameInstance, hasInstance } from "./frame_views.js";
 import type { ViewerFrame } from "./frame_views.js";
@@ -69,13 +69,7 @@ export class ViewerFrames {
       fragment,
     );
     if (
-      this.sessions.length === frames.length &&
-      this.sessions.every(
-        (session, i) =>
-          session.frame.element === frames[i]?.element &&
-          session.frame.view === frames[i]?.view &&
-          session.frame.url === frames[i]?.url,
-      )
+      refreshFrameSessions(this.sessions, frames, (error) => this.fail(error))
     )
       return;
     runCleanup([() => this.end({ reason: "navigation" }), () => this.clear()]);

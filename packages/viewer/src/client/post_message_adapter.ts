@@ -1,4 +1,4 @@
-import { origin, EVENTS } from "../inspector/values.js";
+import { origin } from "../inspector/values.js";
 
 import type {
   FrameAdapter,
@@ -7,7 +7,12 @@ import type {
 } from "./frame_adapter.js";
 import { FrameError } from "./frame_error.js";
 import { frameUrl, ownFrame } from "./frame_mount.js";
-import { frameUsage, knownKey, validateBoundaryUsage } from "./frame_usage.js";
+import {
+  frameEvents,
+  frameUsage,
+  knownKey,
+  validateBoundaryUsage,
+} from "./frame_usage.js";
 import { messageTransport } from "./message_transport.js";
 
 /** Explicit opt-in for a separately hosted, nonopaque consumer document. */
@@ -27,7 +32,7 @@ export function postMessageAdapter(options: {
       )
         throw new FrameError("origin");
       const url = frameUrl(frame, view, frameOrigin);
-      const usage = frameUsage(view.usage);
+      let usage = frameUsage(view.usage);
       url.searchParams.set("mokly-host", win.location.origin);
       const bytes = win.crypto.getRandomValues(new Uint8Array(16));
       const nonce = [...bytes]
@@ -83,18 +88,27 @@ export function postMessageAdapter(options: {
         if (keys.some((key) => !knownKey(usage, key)))
           throw new FrameError("missing-instance");
       };
+      const subscribeEvents = () =>
+        transport.request({
+          type: "subscribe",
+          events: listeners.size ? frameEvents(usage) : [],
+        });
       const subscribed = () => {
-        void transport
-          .request({ type: "subscribe", events: listeners.size ? EVENTS : [] })
-          .catch((error: unknown) => {
-            if (!disposed)
-              notify({
-                type: "error",
-                code: error instanceof FrameError ? error.code : "unavailable",
-              });
-          });
+        void subscribeEvents().catch((error: unknown) => {
+          if (!disposed)
+            notify({
+              type: "error",
+              code: error instanceof FrameError ? error.code : "unavailable",
+            });
+        });
       };
       const mounted: MountedFrame = {
+        async updateUsage(next) {
+          if (disposed) throw new FrameError("disposed");
+          usage = frameUsage(next);
+          await Promise.all([mounted.highlight([], "off"), subscribeEvents()]);
+          if (disposed) throw new FrameError("disposed");
+        },
         async listInstanceBoundaries() {
           check([]);
           const response = await transport.request({ type: "list" });
@@ -148,7 +162,8 @@ export function postMessageAdapter(options: {
         }
         if (message.type === "error" && message.requestId === null)
           notify({ type: "error", code: message.code });
-        if (!listeners.size) return;
+        const events: readonly string[] = frameEvents(usage);
+        if (!listeners.size || !events.includes(message.type)) return;
         if (message.type === "hover" || message.type === "click") {
           if (message.key !== null && !knownKey(usage, message.key)) {
             notify({ type: "error", code: "invalid-message" });

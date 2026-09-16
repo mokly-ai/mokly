@@ -1,3 +1,4 @@
+import type { CatalogueUsage } from "../catalogue/types.js";
 import type { ComponentViewRecord } from "../components/manifest_types.js";
 import { inspection } from "../inspector/inspection.js";
 
@@ -6,7 +7,7 @@ import type { HighlightFrame } from "./component_highlight.js";
 import type { FrameAdapter } from "./frame_adapter.js";
 import { FrameError } from "./frame_error.js";
 import { frameUrl } from "./frame_mount.js";
-import { frameUsage } from "./frame_usage.js";
+import { frameEvents, frameUsage } from "./frame_usage.js";
 import { localFrameAccess } from "./same_origin_access.js";
 import { installLocalHighlight } from "./same_origin_highlight.js";
 import { mountLocalDocument } from "./same_origin_mount.js";
@@ -65,31 +66,29 @@ export function sameOriginAdapter(): FrameAdapter {
       const win = frame.ownerDocument.defaultView;
       if (!win) throw new FrameError("unavailable");
       const url = frameUrl(frame, view, win.location.origin);
-      const usage = frameUsage(view.usage);
+      let usage = frameUsage(view.usage);
       view.signal?.throwIfAborted();
       const mounting = mountLocalDocument(
         frame,
         url,
         (doc, emit) => {
-          const reader = inspection(doc, usage);
+          let reader = inspection(doc, usage);
           let stop = () => {};
           let selecting = false;
-          const record: ComponentViewRecord | undefined =
-            view.usage.status === "ready"
-              ? {
-                  ...view.usage,
-                  viewport:
-                    frame.dataset["workspaceFrame"] === "mobile"
-                      ? "mobile"
-                      : "desktop",
-                  colorScheme: "light",
-                  styles: [],
-                  resources: [],
-                }
-              : undefined;
+          let record = localRecord(frame, view.usage);
           return {
-            list: reader.__list,
-            scroll: reader.__scroll,
+            list: () => reader.__list(),
+            scroll: (key) => reader.__scroll(key),
+            inspectable: () => frameEvents(usage).includes("hover"),
+            updateUsage(next) {
+              const metadata = frameUsage(next);
+              stop();
+              stop = () => {};
+              selecting = false;
+              usage = metadata;
+              reader = inspection(doc, usage);
+              record = localRecord(frame, next);
+            },
             selecting: () => selecting,
             highlight(keys, mode) {
               if (mode !== "off") reader.__keys(keys);
@@ -134,4 +133,20 @@ export function sameOriginAdapter(): FrameAdapter {
       return mounting;
     },
   };
+}
+
+function localRecord(
+  frame: HTMLIFrameElement,
+  usage: CatalogueUsage,
+): ComponentViewRecord | undefined {
+  return usage.status === "ready"
+    ? {
+        ...usage,
+        viewport:
+          frame.dataset["workspaceFrame"] === "mobile" ? "mobile" : "desktop",
+        colorScheme: "light",
+        styles: [],
+        resources: [],
+      }
+    : undefined;
 }

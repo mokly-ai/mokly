@@ -43,6 +43,8 @@ export type FrameEvent =
   | { type: "geometry" }
   | { type: "error"; code: FrameErrorCode };
 export interface MountedFrame {
+  /** Refresh validated usage for the same document without replacing its session. */
+  updateUsage?(usage: CatalogueUsage): Promise<void>;
   listInstanceBoundaries(): Promise<readonly InstanceBoundary[]>;
   highlight(
     keys: readonly string[],

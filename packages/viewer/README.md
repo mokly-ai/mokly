@@ -100,6 +100,13 @@ viewport, scheme, variant and step; workspace selection can still span Both.
 Scoped inspection waits for and measures only its target sessions, so pending or
 unavailable sibling views do not block it. Unrelated masks are cleared without
 inspecting their usage. A failed current highlight removes its masks and labels.
+Automatic hover/click inspection also requires each frame's own ready usage.
+Pending or unavailable siblings keep working links without emitting instance
+events or pointer-driven inspection errors. Built-in adapters implement optional
+`MountedFrame.updateUsage` so the frame update path can adopt validated evidence
+and enable inspection on the same document without remounting it. Custom adapters
+without this method retain replacement mounts for changed usage. Changing the
+React catalogue source still replaces the runtime as documented above.
 
 The ref exposes `select`, `highlightInstance` (null clears), `scrollToInstance`,
 `startPick`, and idempotent `cancelPick`. Async operations reject unavailable

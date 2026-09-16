@@ -52,6 +52,7 @@ type FrameEvent =
   | { type: "geometry" }
   | { type: "error"; code: FrameErrorCode };
 interface MountedFrame {
+  updateUsage?(usage: CatalogueUsage): Promise<void>;
   listInstanceBoundaries(): Promise<readonly InstanceBoundary[]>;
   highlight(
     keys: readonly string[],
@@ -90,6 +91,23 @@ Host inspection work retains request/generation ownership through both success
 and rejection, including custom adapters that settle after replacement. Obsolete
 caller promises reject with `disposed`; obsolete internal refreshes and errors
 cannot change replacement picking, labels or host events. No wire fields change.
+
+Automatic inspection subscriptions require that frame's own ready, validated,
+bounded usage. Pending/unavailable usage (or a usage limit failure) subscribes
+only to navigation: no hover/click measurements, geometry refreshes or instance
+events are triggered by ordinary pointer input. Both adapters share this rule;
+explicit inspection requests still reject unavailable usage normally.
+
+Both built-in adapters implement optional `updateUsage` for validated evidence
+on the same document. It clears that frame's old inspection presentation,
+replaces the usage snapshot and updates its existing event subscription. A
+pending/unavailable-to-ready update enables hover/click inspection without a
+document load or new session; the reverse transition disables it while preserving
+navigation. The viewer's frame update path uses this capability for unchanged
+URL/viewport/scheme/variant/step identities; custom adapters that omit it retain
+replacement-mount behavior for changed usage. Updates reject after disposal and
+their failures retain session cancellation ownership. This is a host-side method;
+the existing wire `subscribe` event set, schemas and inspector script are unchanged.
 
 Boxes are finite CSS pixels relative to the frame's visible content viewport,
 after internal scrolling, clipping ancestors and occlusion, before host scaling.

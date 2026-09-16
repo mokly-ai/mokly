@@ -6,7 +6,8 @@ import {
   compactRanges,
   type InspectorMetadata,
 } from "../inspector/metadata.js";
-import { BYTE_LIMIT } from "../inspector/values.js";
+import { BYTE_LIMIT, EVENTS } from "../inspector/values.js";
+import type { InspectorEventType } from "../inspector/values.js";
 
 import type { InstanceBoundary } from "./frame_adapter.js";
 import { FrameError } from "./frame_error.js";
@@ -33,6 +34,12 @@ export function frameUsage(usage: CatalogueUsage): InspectorMetadata {
 }
 export function knownKey(usage: InspectorMetadata, key: string): boolean {
   return !usage.error && metadataKeys(usage).includes(key);
+}
+/** Navigation is independent of inspection evidence and its bounded identities. */
+export function frameEvents(
+  usage: InspectorMetadata,
+): readonly InspectorEventType[] {
+  return usage.error ? ["navigation"] : EVENTS;
 }
 export function validateBoundaryUsage(
   boundaries: readonly InstanceBoundary[],

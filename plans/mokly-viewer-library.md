@@ -1392,6 +1392,94 @@ matrix, and no live npm/OIDC publication or GitHub protection mutation. The
 inspector retains 483 bytes of headroom. Recording the review is a documentation-
 only follow-up; the plan remains active until its PR merges.
 
+## Milestone 9: Automatic inspection readiness
+
+Tags: ui
+
+Address M8-1 with the approved option A: enable automatic inspection only for
+ready frame usage, preserving navigation and activating inspection after evidence
+updates without remounting the frame.
+
+- [x] Define the readiness and update contract in the viewer/frame protocols and
+      viewer README, retaining the existing wire schema and inspector bytes.
+- [x] Add failing regressions first, then gate automatic hover/click subscriptions
+      and their geometry measurement in both adapters. Cover Both with pending
+      and unavailable siblings, successful scoped highlights, no unrelated errors
+      or instance events, working sibling links, and readiness updates without
+      remounting; retain ready-frame picking and scrolling.
+- [x] Cover usage-update cancellation, failure recovery and custom-adapter
+      fallback while retaining the existing session ownership rules.
+- [x] Update the plan index to reflect this milestone's implementation and review.
+- [x] Run focused tests and `cargo xtask check`; record counts, retries and skips,
+      inspector size, and unchanged Serve/export shell and comparison bytes.
+- [ ] After checks pass, run `git add -A`, commit with Conventional Commits and
+      the requested co-author trailer, and push the branch.
+- [ ] After that push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+      against the complete local diff from `origin/main`; record each finding
+      with severity, impact, lettered options and a recommendation without fixing.
+
+### Milestone 9 verification notes
+
+The baseline is `6a98685` on `calummoore/tianjin-v6`. Earlier milestone notes and
+findings remain byte-identical. Refreshed `origin/main` remains `7ca301c`; no merge
+or rebase was performed. This milestone removes no files, tests or features.
+
+M8-1 uses the shared validated-usage event capability in both adapters. Pending,
+unavailable or over-limit usage retains navigation alone; pointer input cannot
+start inspection measurements or emit instance events. Ready usage retains all
+existing inspection operations. Optional `MountedFrame.updateUsage` refreshes
+the built-in adapters' evidence and subscriptions on the same document. The
+viewer frame update path adopts this capability for unchanged document identities;
+older custom adapters retain replacement mounts. Cancellation fences update
+completion and failures, and later evidence can retry a failed update. Wire and
+catalogue schemas are unchanged. Both viewer protocols and both viewer/client
+READMEs explain the readiness and update rules; the plan index is current.
+
+Twelve new Chromium regressions cover pending/unavailable usage on both adapters:
+Both-visible scoped highlighting, sibling hover/click without errors or instance
+events, actual `onScreenNavigate`, no early geometry measurement, readiness
+promotion on the same document, ready hover/click/scroll/pick, and navigation
+after disabling inspection again. Document handles and mount counts detect
+reloads. Five new Node tests cover custom-adapter fallback, changed-document
+replacement, cancelled success/failure and recovery from a current update error.
+
+Before the corresponding fixes, all four viewer pointer cases and all four
+adapter readiness cases failed on unwanted events; all four viewer-update cases
+failed because the document reloaded. The failure-recovery unit test also failed
+before its fix (the other four ownership/fallback cases were controls). An initial
+test syntax error and Playwright serialization typings were corrected before
+validation; no existing tests or assertions were removed or relaxed.
+
+Focused checks passed **65 Node tests and 111 Chromium tests**, with no skips or
+retries. The final `cargo xtask check` passed on 16 September 2026: **1,665 Node
+tests, 398 Chromium tests and three Rust tests**, with zero failures, retries,
+skips or ignored tests. Node took 412.7 seconds and Chromium 11.1 minutes. All five
+packed-consumer scenarios, dependency auditing (zero vulnerabilities), formatting,
+lint, package builds/typechecks, example validation (278 files), package checks,
+Rust formatting/Clippy and the eight-file Rust length audit passed. The working
+tree stayed stable throughout the complete gate. New/changed TypeScript files
+remain below 300 lines. Changed Markdown, 29 local documentation links and
+`git diff --check` were validated separately.
+
+Inspector source and output remain byte-identical: **8,733 bytes** of the
+**9,216-byte** budget, with 483 bytes of headroom and SHA-256
+`1952cf0499da61d8041a88c2dd18e9525eebd947c3985f3f53ec7a9c157bb7b0`.
+No inspector, shell, stylesheet, example or snapshot source changed. Actual Serve
+mobile/desktop HTML and screenshots match exactly, with zero differing pixels;
+visual inspection confirms unchanged presentation.
+
+Export retains all 1,169 paths: 982 byte-identical files, 182 differing only in
+owned deployment/comparison identities, four changed adapter bundles and the
+expected `review.json` changed-path inventory. All **180 shell HTML files** retain
+identical markup after replacing only those identities. All **608 comparison
+snapshot/resource files** and **277 generated HTML documents** match exactly.
+The changed bundles are `frame_usage.js` (4,060 → 4,238 bytes),
+`post_message_adapter.js` (6,788 → 7,167), `same_origin_adapter.js`
+(10,480 → 10,925), and `same_origin_mount.js` (6,092 → 6,269). No schema changed.
+
+Evidence is retained in `.context/viewer-m9/`: red regression logs, focused logs,
+`xtask-check.log`, Serve captures, both exports and `byte-comparison-final.json`.
+
 ## Post-merge follow-up (non-blocking)
 
 - Merge the combined release-please PR for viewer 0.1.0 and CLI 0.10.0, checking
