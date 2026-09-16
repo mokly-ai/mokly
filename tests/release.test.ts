@@ -117,6 +117,7 @@ test("CI pins actions and gates both supported Node runtimes", async () => {
     "minimum-runtime",
     "release-runtime",
     "export-platforms",
+    "site-lighthouse",
   ]);
   const exportPlatforms = workflow.jobs["export-platforms"];
   assert.ok(exportPlatforms);

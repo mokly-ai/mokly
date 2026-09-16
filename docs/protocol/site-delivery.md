@@ -116,7 +116,8 @@ serves `site/dist` through Astro's preview API and drives Chrome through
 `chrome-launcher`, honouring `CHROME_PATH` and
 `MOKLY_SITE_LIGHTHOUSE_PORT` (default `4612`). It prints one row per page and
 viewport and exits non-zero naming each category that missed its threshold.
-The site CI job and deployment workflow arrive in Milestone 8.
+CI retains the printed budget table and failure diagnostics as an artifact
+when the Lighthouse job fails.
 
 Lighthouse thresholds, per page and viewport: performance ≥ 0.95,
 accessibility = 1.0, best practices ≥ 0.95, SEO ≥ 0.95. Pages audited: `/`,
@@ -128,26 +129,57 @@ page is scored on the desktop curves against a connection it can meet.
 
 ## Continuous Integration
 
-`ci.yml` gains a `site-lighthouse` job that builds the site and runs the
-Lighthouse budget; the `Required CI` aggregator requires it. The complete
-gates already run `cargo xtask check`, which includes `site:check`, so a broken
-site fails CI on both Node versions.
+`ci.yml` runs `site-lighthouse` on Ubuntu with Node 24, npm 11.7.0 and `npm ci`.
+It installs Chromium with Playwright and sets `CHROME_PATH` to that executable.
+It runs `npm run build && npm run example:build && npm run site:build` before
+`npm run site:lighthouse`, using the local settings defaults. The budget table
+and diagnostics go to `test-results/site-lighthouse/report.txt`; Bash pipefail
+preserves the audit exit status, and `actions/upload-artifact` retains that
+directory on failure. This is a text budget report, not Lighthouse's full JSON.
+
+`Required CI` requires `site-lighthouse`, `minimum-runtime`, `release-runtime`
+and `export-platforms` to succeed, including every platform matrix entry.
+Both complete gates run `cargo xtask check`, which includes `site:check`.
+Workflow tests parse both YAML files and exercise guards, configuration errors,
+sticky comments, cleanup failures and the aggregator's failure handling.
 
 ## Deployment
 
 `.github/workflows/site.yml`:
 
-- On push to `main`: build the site with the production `SITE_ORIGIN` and
-  `SITE_APP_ORIGIN` from repository variables and deploy `site/dist` to the
-  Cloudflare Pages project `mokly-site` with `wrangler pages deploy`, using
-  the same credential variables and secrets as the catalogue preview
-  workflow.
-- On same-repository, non-release pull requests: deploy to the `pr-<number>`
-  branch alias and maintain one sticky comment marked `<!-- mokly-site -->`
-  with status, URL, commit and workflow run. Fork pull requests receive no
-  credentials. Closing the pull request marks the comment inactive and deletes
-  the alias's deployments, reporting cleanup failures rather than hiding them.
-- Actions are pinned to immutable commit hashes; Wrangler is lockfile-pinned.
+- Pushes to `main` deploy `site/dist` to the production branch `main` of the
+  direct-upload Cloudflare Pages project `mokly-site`. Builds require repository
+  variables `SITE_ORIGIN` and `SITE_APP_ORIGIN`; missing values produce a clear
+  `::error` before building. Invalid values fail settings validation.
+- Opened, synchronized and reopened same-repository pull requests build the
+  PR head commit and deploy to `pr-<number>`. `SITE_ORIGIN` becomes
+  `https://pr-<number>.mokly-site.pages.dev`; `SITE_APP_ORIGIN` still comes from
+  the repository variable. Forks and Release Please PRs (head branches starting
+  `release-please--` or labels containing `autorelease:`) skip deploy and close.
+- Both deploy jobs use repository variable `SITE_STAGE_PR`, falling back to
+  `71`, the merged PR named in `CHANGELOG.md`. This is an explicit workflow
+  fallback; the settings module still requires it for non-loopback origins.
+- Both install Node 24, npm 11.7.0 and the lockfile with `npm ci`, then run
+  `npm run build && npm run example:build && npm run site:build`. Deployment
+  uses `npx --no-install wrangler pages deploy`, with the root lockfile's
+  Wrangler and no registry fallback. Actions reuse the immutable pins in CI
+  and the catalogue preview workflow.
+- Credentials mirror `preview.yml`: repository variable `CLOUDFLARE_ACCOUNT_ID`
+  and secret `CLOUDFLARE_PAGES_API_TOKEN`, falling back to `CLOUDFLARE_API_TOKEN`,
+  enter only the validation, deploy and cleanup steps through `env`. Missing
+  credentials fail deployment with an error annotation. Forks receive none.
+- One bot-authored sticky comment marked `<!-- mokly-site -->` reports the
+  latest run status, target alias URL, PR head commit and workflow run, including
+  failures. The catalogue comment remains separate. Closing an eligible PR
+  marks this comment inactive even if cleanup fails; no comment is created
+  by the close job when none exists.
+- `scripts/site/cleanup.sh` ports the catalogue's curl cleanup and retained/
+  deleted status reporting. It gathers every page of deployments before
+  deleting only those whose branch matches `pr-<number>`, with `force=true`.
+  Missing credentials, transport, HTTP, API and parse failures report retained
+  status; delete failures also emit warnings and do not prevent other attempts.
+- Concurrency group `site-<PR number or ref>` cancels superseded runs, including
+  an open-PR deploy when the close event arrives, independently of the catalogue.
 
 The production domain is attached to the Pages project by a maintainer; DNS
 and the first production deployment are post-merge steps. The release process
@@ -160,6 +192,17 @@ changelog for the current `CHANGELOG.md`. There is no separate site version.
 npx --no-install wrangler pages project create mokly-site --production-branch main
 ```
 
-Then set the repository variables `SITE_ORIGIN` and `SITE_APP_ORIGIN`, reuse
-`CLOUDFLARE_ACCOUNT_ID` and the Pages API token secret, and attach the domain
-in the Cloudflare dashboard.
+Run the command from a checkout after `npm ci`, authenticated with the
+Cloudflare account and a token with Pages edit access. Configure repository
+Actions variables `SITE_ORIGIN` (the intended production HTTPS origin),
+`SITE_APP_ORIGIN` (the app origin, normally `https://app.mokly.ai`) and optionally
+`SITE_STAGE_PR` (defaults to `71`). Origins must have no path, query, fragment
+or credentials; a trailing slash is allowed. Reuse `CLOUDFLARE_ACCOUNT_ID` and
+`CLOUDFLARE_PAGES_API_TOKEN` or `CLOUDFLARE_API_TOKEN` from the catalogue workflow.
+
+In the Cloudflare dashboard, open `mokly-site` → Custom domains, attach the
+host in `SITE_ORIGIN`, and complete the prompted DNS setup after the go-live
+alignment pass. Domain attachment and the first production smoke test remain
+post-merge maintainer work. Keep `Required CI` as the required branch status.
+See Cloudflare's [direct-upload CI guide](https://developers.cloudflare.com/pages/how-to/use-direct-upload-with-continuous-integration/)
+and [custom domain guide](https://developers.cloudflare.com/pages/configuration/custom-domains/).

@@ -897,7 +897,7 @@ cleanup operations.
 npx --no-install wrangler pages project create mokabook --production-branch main
 ```
 
-## Website
+### Website
 
 The public website (marketing home, documentation, changelog, Terms and
 Privacy) is built from this repository as the `site/` workspace package and
@@ -911,7 +911,35 @@ Folio tokens and the mockups under the example design catalogue;
 [site docs](./docs/protocol/site-docs.md) defines the documentation
 architecture and verification; [site delivery](./docs/protocol/site-delivery.md)
 defines build, tests and deployment. The work is tracked in the
-[public site plan](./plans/public-site-and-docs.md).
+[plans index](./plans/README.md).
+
+The [Site workflow](./.github/workflows/site.yml) builds the package, example
+catalogue and site, then deploys `site/dist` to the direct-upload Cloudflare
+Pages project `mokly-site`. Every merge to `main` deploys production; there is
+no separate site version or release command. Same-repository, non-release PRs
+deploy to `https://pr-<number>.mokly-site.pages.dev` with a separate sticky
+`<!-- mokly-site -->` comment reporting status, URL, commit and workflow run.
+Forks and Release Please PRs are skipped. Closing a PR marks its comment
+inactive and removes its deployments, reporting cleanup failures in the comment.
+
+After `npm ci`, an authenticated maintainer creates the project:
+
+```bash
+npx --no-install wrangler pages project create mokly-site --production-branch main
+```
+
+Set repository Actions variables `SITE_ORIGIN` (required production origin),
+`SITE_APP_ORIGIN` (required app origin, normally `https://app.mokly.ai`) and
+optionally `SITE_STAGE_PR` (the stage's merged PR; workflow fallback `71`,
+verified against `CHANGELOG.md`). Origins have no path, query or fragment.
+Reuse `CLOUDFLARE_ACCOUNT_ID` and the Pages token described above. PR builds
+use their alias as `SITE_ORIGIN`; local verification uses localhost defaults.
+Attach the production host through `mokly-site` → Custom domains in Cloudflare
+and complete its DNS instructions after the go-live alignment pass. The first
+production deployment and domain smoke test are post-merge maintainer steps.
+The `Required CI` gate includes the site's Lighthouse budget alongside both
+full verification jobs and the platform checks. See [site setup](./site/README.md)
+for the package's commands and [delivery settings](./docs/protocol/site-delivery.md).
 
 ## Releasing
 

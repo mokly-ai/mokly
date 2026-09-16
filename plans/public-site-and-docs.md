@@ -411,16 +411,35 @@ Stop for review.
 Deploy the site on every push to `main` with pull request previews, and
 document the release process.
 
-- [ ] Add `.github/workflows/site.yml`: build the site on `main` and deploy
+- [x] Add `.github/workflows/site.yml`: build the site on `main` and deploy
       to the chosen host; deploy same-repository pull requests to a preview
       alias with a sticky comment, following the existing preview workflow's
       credential and fork rules; clean up on close.
-- [ ] Add a required `site-lighthouse` job to `ci.yml` and include it in the
+- [x] Add a required `site-lighthouse` job to `ci.yml` and include it in the
       `Required CI` aggregator.
-- [ ] Document the host project setup, the domain, `SITE_APP_ORIGIN` and the
+- [x] Document the host project setup, the domain, `SITE_APP_ORIGIN` and the
       release process in the root `README.md`, `site/README.md` and
       `docs/protocol/site-delivery.md`.
-- [ ] Run `cargo xtask check`, commit and push. Stop for review.
+- [x] Make site cleanup exhaust deployment pagination and reject unsuccessful
+      API responses, with regressions for both copied cleanup gaps.
+- [x] Add workflow contract and execution tests for action pins, PR guards,
+      credential placement, comments, cleanup and Lighthouse failure evidence.
+- [x] Run the brief's npm checks, parse and lint the workflows, and smoke-test
+      the site build and Lighthouse budget.
+- [x] Run `cargo xtask check`, commit and push.
+- [ ] After the push, use
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      against `origin/main`; report findings without changing the implementation.
+      Stop after this milestone.
+
+Verification record: the standalone npm suite, site checks, Lighthouse,
+workflow checks and Rust checks passed. The complete gate ran twice: the first
+attempt failed the existing `review_failure_reload.spec.ts:95` browser
+assertion (empty comparison stage); the retry stopped when Node's native
+CommonJS parser crashed while loading `watch_resource_boundaries.test.ts`.
+Both affected tests passed in isolation afterwards. Neither complete-gate
+attempt passed; these unrelated failures remain reported, without changing
+catalogue code or weakening checks.
 
 ## Milestone 9: Verification, Commit, Push And Review
 

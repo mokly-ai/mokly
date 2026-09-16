@@ -111,13 +111,17 @@ Both install Rust 1.95.0, install Chromium, and run `cargo xtask check`.
 Focused macOS and Windows jobs additionally run native export move,
 destination-race, and CSS rule parser/diff tests at the minimum Node version.
 The Ubuntu complete gates also exercise CSS parsing on Node 22.14 and 24.
-The `Required CI` aggregator
-fails unless both complete gates and both platform jobs succeed and is the
-branch-rule status to require. Both complete gates include the public site's
+The `Required CI` aggregator requires `minimum-runtime`, `release-runtime`,
+`export-platforms` (both matrix entries) and `site-lighthouse` to succeed and is
+the branch-rule status to require. Both complete gates include the public site's
 `site:check` through `cargo xtask check`; the root lockfile and dependency audit
-cover the site workspace. The [site delivery contract](./site-delivery.md)
-also specifies a separate required `site-lighthouse` job, added in Milestone 8
-after the Milestone 5 Lighthouse configuration. CI checks out complete Git history so the preview regression
+cover the site workspace. The separate Ubuntu `site-lighthouse` job uses Node
+24, npm 11.7.0, `npm ci` and Playwright-installed Chromium, builds the package,
+example catalogue and site in that order, and runs `npm run site:lighthouse`.
+It preserves a failing audit's exit status and uploads the text budget report
+and diagnostics from `test-results/site-lighthouse/` on failure. The
+[site delivery contract](./site-delivery.md) fixes its budget and settings.
+CI checks out complete Git history in both full verification jobs so the preview regression
 can resolve `origin/main`, and uses `npm ci` with the committed lockfile. Action
 revisions are immutable commit hashes with reviewed version comments; runtime
 versions are explicit. Fork pull requests receive no release secrets or write
@@ -181,6 +185,34 @@ failure. Superseded runs for the same main ref or pull request are cancelled.
 All workflow actions use immutable commit hashes and Wrangler is lockfile-pinned.
 The [dependency security contract](./dependency-security.md) owns the audit
 gate and scoped Miniflare overrides, including their removal conditions.
+
+### Website
+
+`.github/workflows/site.yml` independently deploys the public website from
+`site/dist` to the direct-upload Pages project `mokly-site`. Both deploy jobs
+use Node 24, npm 11.7.0 and `npm ci`, build Mokly and the example catalogue
+before the site, then use lockfile-pinned `npx --no-install wrangler pages deploy`.
+They reuse repository variable `CLOUDFLARE_ACCOUNT_ID` and secret
+`CLOUDFLARE_PAGES_API_TOKEN` or its fallback `CLOUDFLARE_API_TOKEN`, through
+step environments only. Missing deployment configuration fails explicitly.
+
+Pushes to `main` deploy production using repository variables `SITE_ORIGIN`
+and `SITE_APP_ORIGIN`. Same-repository, non-release PRs deploy their head commit
+to `https://pr-<number>.mokly-site.pages.dev`, also used as their build's
+`SITE_ORIGIN`. Both use repository variable `SITE_STAGE_PR` or the documented
+fallback `71` from `CHANGELOG.md`; PRs keep the configured app origin.
+Forks and Release Please branches/labels are excluded from deploy and close.
+Superseded runs share a `site-<PR number or ref>` cancellation group.
+
+The bot's separate `<!-- mokly-site -->` comment reports status, target URL,
+commit and run, including failures. Close marks it inactive and reports
+cleanup results. The ported `scripts/site/cleanup.sh` follows the catalogue's
+retained/deleted reporting, traverses every deployment page before deletion,
+checks API success as well as HTTP status, and deletes only the PR's branch
+deployments. No cleanup error is presented as successful deletion.
+The [site setup](./site-delivery.md#maintainer-setup) records the project creation
+command and domain attachment. A merge to `main` releases the site immediately;
+it has no separate version or npm publication.
 
 ## Release Management
 

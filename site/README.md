@@ -108,6 +108,42 @@ root dependencies and the publish allowlist with the committed pre-site fixture
 in `tests/fixtures/site-package-boundary.json`. Update that fixture only for
 deliberate package dependency maintenance, never to accommodate site tools.
 
+### Deployment
+
+The root [Site workflow](../.github/workflows/site.yml) uses Node 24 and npm
+11.7.0, installs the root lockfile with `npm ci`, then runs `npm run build &&
+npm run example:build && npm run site:build`. It uploads this workspace's
+`dist` with lockfile-pinned Wrangler to the direct-upload Pages project
+`mokly-site`. Every merge to `main` deploys; there is no separate site version.
+The changelog always comes from the checkout's `CHANGELOG.md`.
+
+From the repository root after `npm ci`, an authenticated maintainer runs:
+
+```bash
+npx --no-install wrangler pages project create mokly-site --production-branch main
+```
+
+Set repository Actions variables `SITE_ORIGIN` (required production origin),
+`SITE_APP_ORIGIN` (required application origin) and optionally `SITE_STAGE_PR`.
+The workflow explicitly supplies `71` when the stage variable is unset; this
+merged PR appears in `CHANGELOG.md`. The settings module's loopback-only
+default remains unchanged. Both origins obey the validation rules above.
+Reuse variable `CLOUDFLARE_ACCOUNT_ID` and secret `CLOUDFLARE_PAGES_API_TOKEN`
+(fallback `CLOUDFLARE_API_TOKEN`) with Pages edit access. Missing configuration
+fails deployment with an error annotation; credentials enter only step `env`.
+
+Same-repository PRs build their head commit with `SITE_ORIGIN` set to
+`https://pr-<number>.mokly-site.pages.dev`, deploy to `pr-<number>` and update one
+`<!-- mokly-site -->` bot comment with status, URL, commit and run. Forks and
+Release Please PRs skip deployment and cleanup. Superseded runs are cancelled.
+Closing a PR marks its comment inactive and deletes its branch deployments
+across all API pages; failures report retained status rather than success.
+
+After the go-live alignment pass, attach the `SITE_ORIGIN` host through the
+project's Custom domains page and follow its DNS instructions. Domain setup
+and the first production smoke test remain post-merge maintainer work; see
+[the delivery contract](../docs/protocol/site-delivery.md#maintainer-setup).
+
 ### The documentation
 
 `src/docs/` owns the content model: `sections.ts` fixes the section ids, their
@@ -176,6 +212,10 @@ page is scored on the desktop curves against a connection it can meet. Set `CHRO
 move the preview. The budget lives in `src/lighthouse.ts`; a unit test keeps
 it equal to the delivery contract. The run prints one row per page and
 viewport and exits non-zero naming each category that missed its threshold.
+CI's required `site-lighthouse` job selects Playwright's Chromium through
+`CHROME_PATH` and saves that text budget report and diagnostics to
+`test-results/site-lighthouse/report.txt` at the repository root. Failures
+retain the report as an artifact and fail `Required CI`.
 
 ### Capturing the pages
 
