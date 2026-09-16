@@ -1235,7 +1235,7 @@ must be resolved before integration. No merge/rebase or mainline feature removal
 was performed. The plan stays active until the implementation PR merges;
 publication remains the non-blocking follow-up below.
 
-## Milestone 8: Inspection scope and ownership fixes
+## Milestone 8: Inspection scope and ownership fixes (completed)
 
 Implement the approved option A for both Milestone 7 findings. Share request
 scope and asynchronous ownership across inspection consumers while preserving
@@ -1256,10 +1256,10 @@ public schemas. Earlier milestone notes and findings remain unchanged.
       no-error assertions.
 - [x] Run focused tests and smoke/byte checks, then `cargo xtask check`; fix all
       failures and record counts, retries, skips and inspector size.
-- [ ] After checks pass, `git add -A`, commit with Conventional Commits (title
+- [x] After checks pass, `git add -A`, commit with Conventional Commits (title
       at most 50 characters, body naming both findings and ending with the Codex
       co-author trailer), and push `calummoore/tianjin-v6`.
-- [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
       against the complete local diff from `origin/main`; record numbered findings
       with severity, impact, lettered options and recommendations without fixing.
 
@@ -1335,6 +1335,62 @@ Rust length audit pass. The tree stayed stable throughout this complete run.
 The earlier focused fixture failures and three independent diagnostic repeats
 are recorded above; no failed gate was treated as success. Full log:
 `.context/viewer-m8/xtask-check.log`.
+
+Implementation commit `11818b0981c64faad73d149df8929429026ed770`,
+`fix(viewer): scope inspection ownership`, addresses both M7-1 and M7-2 and was
+pushed before the following review. All six new source/test files are tracked in
+that commit. No implementation or test files changed during the review.
+
+### Milestone 8 post-push review
+
+1. **P2 — Automatic pointer inspection still reports errors from unrelated
+   unavailable views (M8-1).** The explicit scoped highlight now succeeds with
+   Both visible and ready Mobile/pending or unavailable Desktop usage. However,
+   every mounted frame subscribes to pointer inspection: the same-origin path
+   enables it whenever any subscriber exists
+   ([same_origin_mount.ts:102](../packages/viewer/src/client/same_origin_mount.ts#L102))
+   and measures on pointer movement
+   ([same_origin_pointer.ts:21](../packages/viewer/src/client/same_origin_pointer.ts#L21)).
+   The postMessage adapter likewise requests every event regardless of usage
+   ([post_message_adapter.ts:88](../packages/viewer/src/client/post_message_adapter.ts#L88))
+   and rejects returned sibling keys against its unavailable usage. Both paths
+   reach the viewer's unscoped error event handler
+   ([frames.ts:109](../packages/viewer/src/viewer/frames.ts#L109)). Four read-only
+   Chromium probes highlighted Mobile successfully with zero errors, then hovered
+   the actual Desktop button. Each produced one `onError` while the valid Mobile
+   label remained. Doing nothing lets ordinary pointer movement repeatedly show
+   hosts an inspection failure even though the requested target is available.
+   **A (recommended):** gate automatic pointer measurement/subscriptions by
+   validated inspection availability in both adapters, keeping navigation
+   subscriptions usable for unavailable usage; share that capability rule and add
+   Both-view hover/click and navigation regressions. This addresses the automatic
+   inspection boundary rather than hiding its downstream errors and can retain
+   the wire schema and inspector bytes. **B:** ignore error events from frames
+   outside the current highlight scope in `ViewerFrames`; this is smaller but
+   leaves unnecessary measurement and can conceal unrelated transport failures.
+
+The required prompt reviewed the complete **640-file** branch diff at `11818b0`
+after its push using `git diff origin/main...HEAD`, against `origin/main`
+(`7ca301c04ca898db6ff60b110beb213ec740b004`). The inventory contains 313 modified,
+219 added, 106 renamed and two deleted paths, with 24,375 insertions and 3,403
+deletions. Worktree, index and untracked-file inventory were clean at review
+start and after the probes. Coverage included source/identity capture, catalogue
+projection and strict reading, historical references and retention, Serve/watch
+and export ownership, browser/React package boundaries, both frame transports,
+request/pick/source lifetimes, release/archive pairing, tests and protocol/docs
+alignment. The two deletions remain the earlier approved CSS module split;
+main-only additions were not integrated or deleted by this milestone.
+
+The four automatic-pointer probes are in
+`.context/viewer-m8/review-pointer-scope.mjs` and `.log`; full-diff inventories
+and the patch are retained beside them. This is a newly confirmed event-path
+coverage gap after the complete gate passed, separate from the explicit-request
+and obsolete-work regressions that now pass. No finding was automatically fixed.
+The recommendation awaits the user's decision. Residual limits remain
+Chromium-only browser coverage, local Node 24 rather than the full CI platform
+matrix, and no live npm/OIDC publication or GitHub protection mutation. The
+inspector retains 483 bytes of headroom. Recording the review is a documentation-
+only follow-up; the plan remains active until its PR merges.
 
 ## Post-merge follow-up (non-blocking)
 
