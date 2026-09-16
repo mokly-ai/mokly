@@ -33,7 +33,9 @@ const FOOTER_LINKS = [
 ];
 
 const CURRENT_MARKS = new Map([
-  ["design-site-home", ["Home"]],
+  // The brand links home from the header and the footer, so the home marks it
+  // twice before the footer's own Home link.
+  ["design-site-home", ["mokly.", "mokly.", "Home"]],
   ["design-site-docs", ["Docs", "Install", "Docs"]],
   ["design-site-changelog", ["Changelog", "Changelog"]],
   ["design-site-terms", ["Terms"]],

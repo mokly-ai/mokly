@@ -63,8 +63,13 @@
   border-color: var(--site-accent-hover);
 }
 
+.site-button--primary:active {
+  background: var(--site-accent-active);
+  border-color: var(--site-accent-active);
+}
+
 .site-button--quiet {
-  border-color: var(--site-folio-line);
+  border-color: var(--site-folio-line-strong);
   color: var(--site-folio-ink);
 }
 

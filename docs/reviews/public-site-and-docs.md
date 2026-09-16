@@ -149,9 +149,9 @@ product code.
 
 ## Approved Follow-up
 
-The user approved findings 1 (B), 2 (B plus C), 3 (C) and 10 for this change.
-Findings 8 and 9 belong to a subsequent change; the remaining findings retain
-the user's recorded decisions.
+The user approved findings 1 (B), 2 (B plus C), 3 (C) and 10 for the first
+change, then 8 (B) and 9 (B) for the change recorded below it. The remaining
+findings retain the user's recorded decisions.
 
 - **Finding 1:** the upload page shows headers without an invented request
   path, requires null comparison fields and rejection of missing/extra fields,
@@ -237,3 +237,88 @@ Both changed documentation pages were served and captured at 390px/1440px in
 light/dark under `.context/site-followups/`: `docs-ci-the-upload-*.png` and
 `docs-reference-export-delivery-*.png`. The upload mobile/light and
 desktop/dark captures and the reference mobile/light capture were inspected.
+
+## Approved Follow-up: Findings 8 And 9
+
+The user approved 8 (B) and 9 (B). Both were implemented in one change.
+
+- **Finding 8:** the Folio tokens have one source, `design/folio/tokens.css`.
+  `site/src/styles/tokens.css` is an `@import` of it that the Astro build
+  inlines, and `npm run build` copies the same file to
+  `examples/basic/generated/site-tokens.css`, which the generated mockups link
+  by relative path. The copy stays tracked, as the example's derived-mode check
+  requires, and `tests/design_site_tokens.test.ts` compares it with its source
+  byte for byte. Every `--site-*` name and value was carried over unchanged by
+  the extraction; the deliberate value changes belong to finding 9 below and
+  now reach both sides at once. The source carries both responsive mechanisms:
+  the 768px breakpoint the site resolves, and the `data-site-viewport`
+  compositions a mockup fragment pins, which a test proves declare the same
+  roles. The mockup sheet no longer defines tokens of its own.
+  `tests/design_site_parity.test.ts` compares the two layout sheets rule by
+  rule at the wide and narrow compositions, expanding `padding` and `margin`
+  shorthands and ignoring a box the composition removes: 207 shared rules at
+  the wide composition and 209 at the narrow one. Fourteen selectors differ
+  structurally and are listed with their reason, and a third test fails when
+  one of those is resolved or disappears, so the list cannot go stale.
+- **Finding 8, drift found and fixed:** the mockups kept a 38px search control,
+  a 0.6-opacity trail separator, a code head without the minimum target size, a
+  literal 1120px changelog measure and literal 272px/256px/240px documentation
+  columns, and they lacked the site's skip-link box, version-link color and
+  copy-control width; the site lacked the mockups' trail flex row and chevron
+  transition. The documentation columns now resolve from `sidebarWidth` and
+  `onpageWidth` on both sides.
+- **Finding 9:** the documentation search keeps its place in the reading order.
+  It still follows the brand in the document, and below the breakpoint it now
+  shares the first row with the brand while the navigation takes the row
+  beneath, so nothing is painted before the control that precedes it. The brand
+  carries `aria-current="page"` on the home in the header and the footer. The
+  export page states what to serve the catalogue from instead of what is not
+  supported, and the upload page's rejection row names an unknown version.
+  `--site-hero-display` is gone: the hero uses `hero-size` and `hero-line`, so
+  the mobile hero is the documented 44px at 1.05. `--site-sidebar-width` is
+  272px, the measure the layout already used. The primary button has a pressed
+  state in `accentActive`. The search control, the quiet button, the search
+  field, the section disclosure, the version chip and the previous and next
+  cards take `folioLineStrong`. The rubrics, the version label and the
+  changelog's release rubric moved from the nano and micro roles to `caption`;
+  nano and micro now set only the depicted shell miniature.
+- **Finding 9, tests:** `site/tests/styles.test.ts` forbids `outline: none`
+  and `outline: 0` anywhere and requires the whole boundary of every control
+  rule — one naming a documented control, or any rule reserving the minimum
+  target size — to use `folioLineStrong`; it also reads the built stylesheet
+  back to prove the shared tokens were inlined rather than left as an import.
+  `site/tests/contrast.test.ts` measures nineteen documented pairs in both
+  schemes with a WCAG luminance function. `site/tests/copy.test.ts` reads the
+  built pages: no route outside Reference says "not supported", "coming soon"
+  or "roadmap" outside a code sample, and no marketing route uses the internal
+  nouns. A 320px light Playwright project runs the route walk and the shared
+  accessibility helper, whose `html[lang]` assertion is unchanged.
+- **Finding 9, the 320px walk found one overflow:** `/docs/reference/upload/`
+  pushed the page 22px wide because a grid item in the document body could not
+  shrink below its longest published path. Body children and list items may now
+  shrink, and a long path or URL breaks rather than widening the column.
+
+Verification on Node 24.14.1 and npm 11.7.0, all on the committed tree:
+
+| Command                                       | Observed result                                                                          |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `npm run lint`                                | Pass                                                                                     |
+| `npm run format`, then `npm run format:check` | Pass                                                                                     |
+| `npm run typecheck`, `npm run site:typecheck` | Pass, including `astro check` over 103 files                                             |
+| `npm test`                                    | Pass: 1,661 passed, none failed, skipped or cancelled                                    |
+| `npm run site:check`                          | Pass: build, types, 136 site unit tests, 6,447 link references and all 394 browser tests |
+| `npm run example:check`                       | Pass: valid and untracked, 298 files                                                     |
+| `cargo xtask check`                           | Pass on the first run, exit 0; no retry needed and neither recorded flake appeared       |
+
+Two regressions were reproduced before their fixes: the control-boundary test
+failed on the hairline it now forbids, and the 320px walk failed on the
+overflow above. Two existing tests needed updating for real behavior rather
+than to pass: the isolated example baseline fixture now copies the token source
+and its copy step, and the site screens test expects the home's brand to mark
+the current page twice.
+
+The home and `/docs/start/install/` were captured at 320px, 390px and 1440px in
+both schemes under `.context/site-screens/m10/`, alongside three regenerated
+mockups. Both 320px pages in both schemes and the documentation page at 1440px
+light were inspected, with the desktop home and documentation mockups, which
+confirmed the pinned compositions still resolve from the shared tokens.

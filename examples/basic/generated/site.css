@@ -37,13 +37,6 @@ html {
 }
 
 .site-root {
-  --site-wide-max: 1360px;
-  --site-doc-max: 768px;
-  --site-hero-display: 2.5rem;
-  --site-shell-height: 520px;
-  --site-micro-size: 0.6875rem;
-  --site-nano-size: 0.625rem;
-
   background: var(--site-folio);
   color: var(--site-folio-ink);
   display: flex;
@@ -53,11 +46,6 @@ html {
   line-height: var(--site-body-line);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
-}
-
-.site-root[data-site-viewport="desktop"] {
-  --site-hero-display: 4rem;
-  --site-shell-height: 624px;
 }
 
 .site-root h1,
@@ -111,7 +99,7 @@ html {
 .site-rubric {
   color: var(--site-folio-ink-muted);
   font-family: var(--site-font-mono);
-  font-size: var(--site-nano-size);
+  font-size: var(--site-caption-size);
   font-weight: var(--site-weight-semibold);
   letter-spacing: 0.12em;
   line-height: var(--site-caption-line);
@@ -193,12 +181,17 @@ html {
   border-color: var(--site-accent-hover);
 }
 
+.site-button--primary:active {
+  background: var(--site-accent-active);
+  border-color: var(--site-accent-active);
+}
+
 .site-button--secondary {
   color: var(--site-folio-ink);
 }
 
 .site-button--quiet {
-  border-color: var(--site-folio-line);
+  border-color: var(--site-folio-line-strong);
   color: var(--site-folio-ink);
 }
 
@@ -218,7 +211,7 @@ html {
 .site-search {
   align-items: center;
   background: var(--site-folio);
-  border: 1px solid var(--site-folio-line);
+  border: 1px solid var(--site-folio-line-strong);
   border-radius: var(--site-radius-small);
   color: var(--site-folio-ink-muted);
   display: inline-flex;
@@ -227,11 +220,15 @@ html {
   font-size: var(--site-small-size);
   gap: var(--site-space-2);
   justify-content: flex-start;
-  min-height: 38px;
+  min-height: var(--site-target-min);
   padding: 0 var(--site-space-3);
   transition:
     background var(--site-motion-fast) var(--site-motion-ease),
     border-color var(--site-motion-fast) var(--site-motion-ease);
+}
+
+.site-header--search .site-nav {
+  flex: 0 1 auto;
 }
 
 .site-search:hover {
@@ -254,8 +251,10 @@ html {
   align-items: center;
   border-bottom: 1px solid var(--site-folio-line);
   display: flex;
+  gap: var(--site-space-3);
   justify-content: space-between;
-  padding: var(--site-space-2) var(--site-space-3);
+  min-height: var(--site-target-min);
+  padding: 0 var(--site-space-3);
 }
 
 .site-code-language {
@@ -272,6 +271,7 @@ html {
   font: inherit;
   font-size: var(--site-caption-size);
   min-height: var(--site-target-min);
+  min-width: 76px;
   padding: 0 var(--site-space-3);
   transition:
     background var(--site-motion-fast) var(--site-motion-ease),
@@ -296,10 +296,12 @@ html {
 /* 3 -- Skip link, application band and header ---------------------------- */
 
 .site-skip {
+  align-items: center;
   background: var(--site-folio-surface);
   border: 1px solid var(--site-folio-line-strong);
   border-radius: var(--site-radius-small);
   color: var(--site-folio-ink);
+  display: inline-flex;
   left: -9999px;
   padding: var(--site-space-2) var(--site-space-4);
   position: absolute;
@@ -407,8 +409,7 @@ html {
 
 .site-trail-sep,
 .site-crumb-sep {
-  margin: 0 var(--site-space-2);
-  opacity: 0.6;
+  padding: 0 var(--site-space-2);
 }
 
 /* The published CLI version, shown as the quiet identity chip */
@@ -416,7 +417,7 @@ html {
 .site-version {
   align-items: center;
   background: var(--site-folio);
-  border: 1px solid var(--site-folio-line);
+  border: 1px solid var(--site-folio-line-strong);
   border-radius: var(--site-radius-small);
   color: var(--site-folio-ink);
   display: inline-flex;
@@ -429,7 +430,7 @@ html {
 .site-version-label {
   color: var(--site-folio-ink-muted);
   font-family: var(--site-font-sans);
-  font-size: var(--site-nano-size);
+  font-size: var(--site-caption-size);
   font-weight: var(--site-weight-semibold);
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -437,6 +438,7 @@ html {
 
 .site-version-link {
   align-items: center;
+  color: var(--site-folio-ink);
   display: inline-flex;
   min-height: var(--site-target-min);
   text-decoration: none;
@@ -472,10 +474,10 @@ html {
 }
 
 .site-hero h1 {
-  font-size: var(--site-hero-display);
+  font-size: var(--site-hero-size);
   font-weight: var(--site-weight-semibold);
   letter-spacing: var(--site-hero-tracking);
-  line-height: 1.04;
+  line-height: var(--site-hero-line);
 }
 
 .site-hero-lead {
@@ -1324,7 +1326,10 @@ html {
 
 .site-docs {
   display: grid;
-  grid-template-columns: 272px minmax(0, 1fr) 240px;
+  grid-template-columns:
+    var(--site-sidebar-width)
+    minmax(0, 1fr)
+    var(--site-onpage-width);
   margin: 0 auto;
   max-width: var(--site-wide-max);
   padding: 0 var(--site-gutter);
@@ -1334,6 +1339,7 @@ html {
 .site-docs-side {
   align-self: stretch;
   border-right: 1px solid var(--site-folio-line);
+  display: block;
   padding-right: var(--site-space-6);
 }
 
@@ -1411,7 +1417,7 @@ html {
 
 .site-doc-disclosure {
   background: var(--site-folio-surface);
-  border: 1px solid var(--site-folio-line);
+  border: 1px solid var(--site-folio-line-strong);
   border-radius: var(--site-radius-small);
   margin-top: var(--site-space-6);
   padding: 0 var(--site-space-2);
@@ -1447,7 +1453,6 @@ html {
 .site-document {
   min-width: 0;
   padding: var(--site-space-9);
-  padding-bottom: var(--site-space-11);
   width: 100%;
 }
 
@@ -1539,6 +1544,7 @@ html {
 .site-docs-rail {
   align-self: start;
   border-left: 1px solid var(--site-folio-line);
+  display: block;
   padding: var(--site-space-8) 0 var(--site-space-8) var(--site-space-6);
   position: sticky;
   top: var(--site-space-6);
@@ -1590,7 +1596,7 @@ html {
 }
 
 .site-pager-item {
-  border: 1px solid var(--site-folio-line);
+  border: 1px solid var(--site-folio-line-strong);
   border-radius: var(--site-radius-small);
   color: var(--site-folio-ink);
   display: grid;
@@ -1627,7 +1633,7 @@ html {
   display: grid;
   gap: var(--site-space-9);
   grid-template-columns: 220px minmax(0, 1fr);
-  max-width: 1120px;
+  max-width: var(--site-content-max);
 }
 
 .site-release-index {
@@ -1879,8 +1885,11 @@ html {
 }
 
 [data-site-viewport="mobile"] .site-search {
+  flex: 1 1 auto;
+}
+
+[data-site-viewport="mobile"] .site-header--search .site-nav {
   flex: 1 0 100%;
-  order: 1;
 }
 
 [data-site-viewport="mobile"] .site-hero {
@@ -2002,7 +2011,7 @@ html {
 
 @media (max-width: 1100px) {
   .site-docs {
-    grid-template-columns: 256px minmax(0, 1fr);
+    grid-template-columns: var(--site-sidebar-width) minmax(0, 1fr);
   }
 
   .site-docs-rail {

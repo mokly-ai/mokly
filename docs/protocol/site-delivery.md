@@ -89,14 +89,14 @@ route. Frames have titles. Images have alt text or are decorative.
 
 ## Tests
 
-| Check      | Script            | What it proves                                                                                                                                          |
-| ---------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Build      | `site:build`      | Astro builds, Pagefind indexes, settings validate                                                                                                       |
-| Typecheck  | `site:typecheck`  | `astro check` and `tsc --noEmit` pass                                                                                                                   |
-| Unit       | `site:test`       | Changelog parser, settings, sections, reference allowlist, CLI reference coverage                                                                       |
-| Links      | `site:links`      | Every internal href, anchor, asset and frame source in `site/dist` resolves                                                                             |
-| Browser    | `site:browser`    | Every route at 390px and 1440px, light and dark: deterministic accessibility, header/footer navigation, home actions, changelog, legal, docs and search |
-| Lighthouse | `site:lighthouse` | Report-only category scores at both viewports against the thresholds below                                                                              |
+| Check      | Script            | What it proves                                                                                                                                                             |
+| ---------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Build      | `site:build`      | Astro builds, Pagefind indexes, settings validate                                                                                                                          |
+| Typecheck  | `site:typecheck`  | `astro check` and `tsc --noEmit` pass                                                                                                                                      |
+| Unit       | `site:test`       | Changelog parser, settings, sections, reference allowlist, CLI reference coverage, stylesheet, contrast and copy rules                                                     |
+| Links      | `site:links`      | Every internal href, anchor, asset and frame source in `site/dist` resolves                                                                                                |
+| Browser    | `site:browser`    | Every route at 390px and 1440px, light and dark, and once at 320px: deterministic accessibility, header/footer navigation, home actions, changelog, legal, docs and search |
+| Lighthouse | `site:lighthouse` | Report-only category scores at both viewports against the thresholds below                                                                                                 |
 
 `site:check` runs build, typecheck, unit, links and browser in that order and
 is the step `cargo xtask check` runs after `package:smoke` and before
@@ -112,7 +112,22 @@ including authored docs, reference docs and the 404 page, must have exactly one
 `aria-hidden="true"` on every image. Every exposed button and link must have a
 nonempty accessible name. The first five keyboard-focusable elements must
 retain a visible, nonzero computed outline; pages must not overflow horizontally.
-These assertions are part of the required complete gates. Lighthouse runs as
+The route walk and those assertions also run once at 320px in the light scheme,
+the narrowest width the design contract keeps usable. These assertions are part
+of the required complete gates.
+
+The unit suite carries the rules a browser cannot prove cheaply. No stylesheet
+may remove a focus outline. Every control rule — one naming a documented
+control, or any rule reserving the minimum target size — must draw its whole
+boundary with `--site-folio-line-strong` rather than the decorative hairline.
+Each contrast pair documented in [Site design](./site-design.md) is measured
+from the token file in both schemes, at 4.5:1 for text and 3:1 for boundaries
+and the focus ring. The built pages are read back for the copy rules: no route
+outside the Reference section, which republishes protocol documents verbatim,
+may say "not supported", "coming soon" or "roadmap" outside a code sample, and
+marketing routes may not use the internal nouns the copy rules list. The built
+stylesheet must carry every Folio token, proving the shared token file was
+inlined rather than left as an unresolved import. Lighthouse runs as
 its own report-only CI job; its failure remains visible without blocking
 `Required CI`. For local audits on Node 22.19+ (Node 24 in CI), first run
 `npm ci --prefix site/lighthouse --engine-strict`, then `npm run site:lighthouse`.

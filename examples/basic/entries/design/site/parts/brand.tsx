@@ -1,6 +1,6 @@
 import { MockLink } from "@mokly/mokly";
 
-import { SITE_SCREENS } from "./links.js";
+import { SITE_SCREENS, type SiteScreen, currentPage } from "./links.js";
 
 /** The Mokly mark: two overlapping screens carrying two short rules. */
 export function MoklyMark({ size = 26 }: { size?: number }) {
@@ -27,9 +27,10 @@ export function MoklyMark({ size = 26 }: { size?: number }) {
 }
 
 /** The mark beside the serif wordmark, linking Home from every page. */
-export function SiteBrand() {
+export function SiteBrand({ active }: { active: SiteScreen }) {
   return (
     <MockLink
+      aria-current={currentPage(active, SITE_SCREENS.home)}
       aria-label="Mokly home"
       className="site-brand"
       to={SITE_SCREENS.home}

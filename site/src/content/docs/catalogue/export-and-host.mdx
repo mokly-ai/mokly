@@ -26,8 +26,9 @@ and never silently omits comparisons.
 
 Serve the directory's contents at the root of an HTTP(S) origin, with correct
 MIME types and directory indexes. No Mokly process, Git checkout, source tree
-or rewrite rule is needed there. Subpath hosting and opening the catalogue
-from the filesystem are not supported.
+or rewrite rule is needed there. Give the catalogue an origin of its own: it
+resolves every address from that root, so keep it off a path prefix and reach
+it over HTTP(S) rather than from a local folder.
 
 Configure revalidation for the shell and mutable assets, serve comparison
 files with `Cache-Control: no-store` and `X-Content-Type-Options: nosniff`,

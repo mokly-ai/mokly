@@ -87,9 +87,10 @@ top bar, catalogue navigation, screen header and stage — as its principal
 image, the documentation page puts search in the header with the section tree
 on the page canvas, and the footer groups the seven destinations into Product,
 Account and Legal columns. These screens use Folio rather than the Mokly
-shell: `generated/site-tokens.css` defines the `--site-*` properties for both
-schemes and `generated/site.css` holds the layout without a single literal
-color, matched ahead of the broader `design/**` stylesheet rule. The copy is
+shell: `generated/site-tokens.css`, copied from the shared
+`design/folio/tokens.css`, defines the `--site-*` properties for both schemes
+and `generated/site.css` holds the layout without a single literal color,
+matched ahead of the broader `design/**` stylesheet rule. The copy is
 the approved home copy and the real `CHANGELOG.md` releases; the contract is
 the [site design](../../docs/protocol/site-design.md) document.
 
@@ -242,9 +243,13 @@ Committed-mode stale and deterministic-output tests use isolated consumer fixtur
 Both `npm test` and `npm run test:browser` build the example before tests read its
 generated files. Baseline fixtures copy authored inputs and use the normal cached
 rebuild through the historical commit's own package source and lockfile. The
-hand-authored stylesheets (`styles.css`, `design.css`, `design-stage.css`,
-`design-review.css`, and the component design stylesheets) also live under `generated/` because it doubles as the
-public static root and remain tracked. The config's `review.baselineBuild` runs
+hand-authored stylesheets (`styles.css`, `example-components.css`,
+`design.css`, `design-library.css`, `design-stage.css`, `design-review.css`,
+`site.css`, and the component design stylesheets) also live under `generated/`
+because it doubles as the public static root and remain tracked.
+`site-tokens.css` is tracked too, but it is generated: `npm run build` copies
+it from `design/folio/tokens.css`, the Folio source the public site imports,
+and `tests/design_site_tokens.test.ts` fails when the copy is stale. The config's `review.baselineBuild` runs
 `npm ci`, `npm run build`, then `npm run example:build` in the historical commit's
 extraction. The package build step ensures comparisons use that commit's own
 Mokly code. The resulting baseline is cached under `.mokly-cache/`.

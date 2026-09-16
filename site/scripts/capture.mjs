@@ -1,8 +1,8 @@
 /**
- * Capture every published route, including the documentation, at both
- * inspection viewports in both schemes. Name routes to capture only those.
- * The captures are a development aid for comparing the built site with the
- * mockups; they are not part of any check.
+ * Capture every published route, including the documentation, at the two
+ * inspection viewports and the narrowest supported width, in both schemes.
+ * Name routes to capture only those. The captures are a development aid for
+ * comparing the built site with the mockups; they are not part of any check.
  */
 
 import { mkdir } from "node:fs/promises";
@@ -24,7 +24,7 @@ const browser = await chromium.launch({
   channel: process.env["PLAYWRIGHT_CHANNEL"] ?? "chrome",
 });
 try {
-  for (const width of [390, 1440]) {
+  for (const width of [320, 390, 1440]) {
     for (const colorScheme of /** @type {const} */ (["light", "dark"])) {
       const context = await browser.newContext({
         colorScheme,

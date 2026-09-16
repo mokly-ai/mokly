@@ -491,14 +491,14 @@ The user decided each finding of the
 - [x] Finding 10: check out the default ref in the close job and make
       `scripts/site/cleanup.sh` report a retained status on a non-numeric
       page count and on a partial listing.
-- [ ] Finding 8: share the Folio tokens from one source that both the
+- [x] Finding 8: share the Folio tokens from one source that both the
       example catalogue and the site consume, and add a test that the shared
       layout rules agree until they are unified; update
       `docs/protocol/site-design.md`.
-- [ ] Finding 9: fix the named accessibility and copy gaps and add the
+- [x] Finding 9: fix the named accessibility and copy gaps and add the
       mechanical tests (no removed outlines, strong boundaries on controls,
       token contrast pairs, copy rules, `html lang`, a 320px browser project).
-- [ ] Run `cargo xtask check`, commit and push. Stop for review.
+- [x] Run `cargo xtask check`, commit and push. Stop for review.
 
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)

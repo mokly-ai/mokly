@@ -62,6 +62,7 @@
   display: inline-grid;
   place-items: center;
   transform: rotate(90deg);
+  transition: transform var(--site-motion-fast) var(--site-motion-ease);
 }
 
 .site-row {

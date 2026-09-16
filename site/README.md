@@ -27,8 +27,11 @@ Everything the pages show comes from a real source. The stage renders this
 repository's own example catalogue, the changelog parses `CHANGELOG.md`, and
 the policy documents are checked-in Markdown.
 
-Colors come from `src/styles/tokens.css`, the only stylesheet with a literal
-color. Light and dark follow `prefers-color-scheme`; setting
+Colors come from `design/folio/tokens.css` at the repository root, the one
+file that declares the Folio tokens. `src/styles/tokens.css` imports it and the
+build inlines it; the example catalogue's site mockups read a generated copy of
+the same file, so both stay in step. Light and dark follow
+`prefers-color-scheme`; setting
 `data-color-scheme="light"` or `"dark"` on the document element pins a scheme
 for deterministic captures. The desktop composition resolves at 768px, the
 same switch the mockups select with `data-site-viewport`.
@@ -262,7 +265,8 @@ routes to capture only those. It is a development aid, not a check.
   marking shared by the header, footer, sitemap and browser walk.
 - `src/metadata.ts` and `src/sitemap.ts` — canonical URLs, social card images,
   `sitemap.xml` and `robots.txt`.
-- `src/styles/` — `tokens.css` (the only literal colors), `base.css`,
+- `src/styles/` — `tokens.css` (an import of the shared Folio source),
+  `base.css`,
   `controls.css`, `chrome.css`, `layout.css`, `footer.css`, `home.css`,
   `details.css`, `stage.css`, `tree.css`, `changelog.css`, `docs.css` and
   `document.css`.

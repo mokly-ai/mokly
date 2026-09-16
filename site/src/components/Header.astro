@@ -23,12 +23,13 @@ interface Props {
 }
 
 const { route, ruled = true } = Astro.props;
+const docs = isDocsRoute(route);
 ---
 
 <div class={ruled ? "site-band site-band--ruled" : "site-band"}>
-  <header class="site-header">
-    <Brand />
-    {isDocsRoute(route) && <Search client:idle />}
+  <header class={docs ? "site-header site-header--search" : "site-header"}>
+    <Brand route={route} />
+    {docs && <Search client:idle />}
     <nav aria-label="Main" class="site-nav">
       <a
         aria-current={currentPage(route, SITE_PATHS.docs)}

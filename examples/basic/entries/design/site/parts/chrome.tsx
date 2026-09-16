@@ -65,8 +65,10 @@ function SiteHeader({
   search: boolean;
 }) {
   return (
-    <header className="site-header">
-      <SiteBrand />
+    <header
+      className={search ? "site-header site-header--search" : "site-header"}
+    >
+      <SiteBrand active={active} />
       {search ? <SiteSearch /> : null}
       <nav aria-label="Main" className="site-nav">
         <MockLink
@@ -128,7 +130,7 @@ function SiteFooter({ active }: { active: SiteScreen }) {
     <footer className="site-footer">
       <div className="site-footer-inner">
         <div className="site-footer-brand">
-          <SiteBrand />
+          <SiteBrand active={active} />
           <p>The Mokly CLI is open source under the MIT license.</p>
         </div>
         <nav aria-label="Footer" className="site-footer-nav">

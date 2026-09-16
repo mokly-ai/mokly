@@ -10,13 +10,20 @@ visual source of truth. Routes and copy are in [Site](./site.md).
 
 ## Ownership
 
-Tokens are defined once as CSS custom properties on the document root in one
-site stylesheet, `site/src/styles/tokens.css`, as `--site-*` properties. The
-other sheets are `base.css` (reset, type roles, focus, targets, forced colors
-and reduced motion), `chrome.css` (skip link, header band, brand, navigation
-and search), `layout.css` (page and document columns) and `footer.css`, each
-loaded once by the page layout. Every one of them references those
-properties; a test fails the build when any other stylesheet contains a
+Tokens are defined once as CSS custom properties on the document root in
+`design/folio/tokens.css` at the repository root, as `--site-*` properties.
+That file is the single source both consumers read: `site/src/styles/tokens.css`
+is an `@import` of it, which the site build inlines into the published
+stylesheet, and the package build copies it to
+`examples/basic/generated/site-tokens.css`, which the generated mockups link by
+relative path. The copy is generated, not edited, and a test fails when it no
+longer matches its source byte for byte.
+
+The site's other sheets are `base.css` (reset, type roles, focus, targets,
+forced colors and reduced motion), `chrome.css` (skip link, header band, brand,
+navigation and search), `layout.css` (page and document columns) and
+`footer.css`, each loaded once by the page layout. Every one of them references
+those properties; a test fails the build when any other stylesheet contains a
 literal color. The site ships light and dark. Colors follow
 `prefers-color-scheme`, and the document root's
 `data-color-scheme="light" | "dark"` attribute overrides that preference for
@@ -55,10 +62,14 @@ tables; a published tokens package is not planned.
 | `infoSoft`     | `#e8f0ff` | `#182f4f` | Info background                  |
 
 Pair each status color with its soft background. Use `onAccent` on solid
-accent fills in every state. Underline links in body text. Never use a
-decorative `folioLine` as the sole boundary of a control, and never convey
-state by color alone. Normal text needs 4.5:1 contrast; large text, meaningful
-boundaries and focus rings need 3:1, checked in both schemes.
+accent fills in every state, including the pressed state, which fills with
+`accentActive`. Underline links in body text. Never use a decorative
+`folioLine` as the sole boundary of a control: the search control, the quiet
+button, the search field, the section disclosure, the version chip and the
+previous and next cards all take `folioLineStrong`. Never convey state by
+color alone. Normal text needs 4.5:1 contrast; large text, meaningful
+boundaries and focus rings need 3:1, checked in both schemes. A unit test
+measures each documented pair from the token file itself.
 
 ## Type
 
@@ -81,7 +92,9 @@ boundaries and focus rings need 3:1, checked in both schemes.
 
 Two smaller roles exist only for the depicted product chrome the home frame
 draws: `micro` at 11px and `nano` at 10px, both in `font.mono` or uppercase
-sans. They never set reader-facing prose.
+sans. They never set reader-facing text. Navigation the reader acts on —
+the section rubrics, the version label, the on-this-page heading, the previous
+and next labels and the changelog's release rubric — uses `caption`.
 
 Headings use `-0.02em` letter spacing; page headings on document pages use
 `-0.045em` and weight 700. The home hero is a semibold sans heading at 64px
@@ -102,11 +115,12 @@ within `65ch`.
   `80px` desktop.
 - Interactive targets at least `44px`. Controls use a 6px radius; panels, the
   catalogue frame and the feature modules use 10px.
-- Docs layout: a 272px section-tree column on the page canvas separated by a
-  vertical hairline, a document column at most `768px`, and a 240px
-  on-this-page rail hung from its own hairline. The rail drops below `1100px`;
-  below the breakpoint the tree becomes a disclosure above the document and
-  the on-this-page list moves under the title.
+- Docs layout: a 272px section-tree column (`sidebarWidth`) on the page canvas
+  separated by a vertical hairline, a document column at most `768px`
+  (`docMax`), and a 240px on-this-page rail (`onpageWidth`) hung from its own
+  hairline. The rail drops below `1100px`; below the breakpoint the tree
+  becomes a disclosure above the document and the on-this-page list moves under
+  the title. A published path or URL wraps rather than widening the column.
 - Layouts remain usable at 320px width and 200% text zoom. Inspection
   viewports are 390px mobile and 1440px desktop.
 
@@ -232,14 +246,19 @@ Controls are plain semantic elements — anchors, buttons, badges and the code
 panel's copy control — styled from the site tokens. The site ships no
 component library, so the mockups depict the markup the site implements rather
 than borrowing the example's `@firna/ui` controls, whose own theme cannot
-express Folio. Folio tokens live in `examples/basic/generated/site-tokens.css`;
-the site layout styles in `examples/basic/generated/site.css` reference only
-those properties.
+express Folio. The mockups link `examples/basic/generated/site-tokens.css`,
+which the package build copies from `design/folio/tokens.css`; the layout
+styles in `examples/basic/generated/site.css` reference only those properties
+and hold no token definition of their own. Until the two layout sheets are
+unified, a test compares them rule by rule at both compositions: every
+selector both sides declare must declare the same values, and the differences
+that are structural rather than drift are listed with their reason in
+`tests/design_site_parity.test.ts`.
 
 A fragment selects its composition from `data-site-viewport` on the root
 element rather than a viewport width, so a mobile fragment depicts the mobile
 composition at any preview width; the site implements the same rule as the
-768px breakpoint. Sign in and Get started are absolute links to the default
+768px breakpoint, and the shared token file carries both mechanisms. Sign in and Get started are absolute links to the default
 application origin. Destinations without an owning mockup — the other
 documentation pages, previous and next — render as plain text, the rule the
 rest of the design catalogue already follows.

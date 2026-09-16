@@ -17,12 +17,25 @@ export default defineConfig({
   forbidOnly: true,
   fullyParallel: true,
   outputDir: "../test-results/site",
-  projects: [390, 1440].flatMap((width) =>
-    (["light", "dark"] as const).map((colorScheme) => ({
-      name: `${width}-${colorScheme}`,
-      use: { colorScheme, viewport: { width, height: 900 } },
-    })),
-  ),
+  projects: [
+    ...[390, 1440].flatMap((width) =>
+      (["light", "dark"] as const).map((colorScheme) => ({
+        name: `${width}-${colorScheme}`,
+        use: { colorScheme, viewport: { width, height: 900 } },
+      })),
+    ),
+    // The narrowest width the design contract keeps usable. It walks every
+    // route once for the shared accessibility checks, including horizontal
+    // overflow; the scheme-dependent suites run at the two inspection widths.
+    {
+      name: "320-light",
+      testMatch: /pages\.spec\.ts/,
+      use: {
+        colorScheme: "light" as const,
+        viewport: { width: 320, height: 900 },
+      },
+    },
+  ],
   reporter: [["list"]],
   retries: 0,
   testDir: "./tests/browser",

@@ -69,10 +69,10 @@
 }
 
 .site-hero h1 {
-  font-size: var(--site-hero-display);
+  font-size: var(--site-hero-size);
   font-weight: var(--site-weight-semibold);
   letter-spacing: var(--site-hero-tracking);
-  line-height: 1.04;
+  line-height: var(--site-hero-line);
 }
 
 /* The desktop composition from the 768px breakpoint upward. */

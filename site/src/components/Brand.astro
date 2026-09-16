@@ -2,18 +2,24 @@
 /**
  * The Mokly mark beside the lowercase serif wordmark with its accent period.
  * Together they link Home from every page with the accessible name
- * "Mokly home".
+ * "Mokly home", and they mark the current page on the home itself.
  */
-import { SITE_PATHS } from "../navigation.js";
+import { SITE_PATHS, currentPage } from "../navigation.js";
 
 interface Props {
+  readonly route: string;
   readonly size?: number;
 }
 
-const { size = 26 } = Astro.props;
+const { route, size = 26 } = Astro.props;
 ---
 
-<a aria-label="Mokly home" class="site-brand" href={SITE_PATHS.home}>
+<a
+  aria-current={currentPage(route, SITE_PATHS.home)}
+  aria-label="Mokly home"
+  class="site-brand"
+  href={SITE_PATHS.home}
+>
   <svg aria-hidden="true" height={size} viewBox="0 0 32 32" width={size}>
     <rect
       x="3"

@@ -19,7 +19,7 @@
 
 .site-release-index-head {
   color: var(--site-folio-ink-muted);
-  font-size: var(--site-micro-size);
+  font-size: var(--site-caption-size);
   font-weight: var(--site-weight-bold);
   grid-column: 1 / -1;
   letter-spacing: 0.08em;

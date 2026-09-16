@@ -43,7 +43,7 @@
 .site-version {
   align-items: center;
   background: var(--site-folio);
-  border: 1px solid var(--site-folio-line);
+  border: 1px solid var(--site-folio-line-strong);
   border-radius: var(--site-radius-small);
   color: var(--site-folio-ink);
   display: inline-flex;
@@ -56,7 +56,7 @@
 .site-version-label {
   color: var(--site-folio-ink-muted);
   font-family: var(--site-font-sans);
-  font-size: var(--site-nano-size);
+  font-size: var(--site-caption-size);
   font-weight: var(--site-weight-semibold);
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -127,7 +127,7 @@
 
 .site-doc-disclosure {
   background: var(--site-folio-surface);
-  border: 1px solid var(--site-folio-line);
+  border: 1px solid var(--site-folio-line-strong);
   border-radius: var(--site-radius-small);
   margin-top: var(--site-space-6);
   padding: 0 var(--site-space-2);
@@ -170,9 +170,15 @@
   gap: var(--site-space-7);
 }
 
+/* Each part of the body is a grid item. Letting one shrink below its longest
+   word, and breaking that word, keeps a published path or URL inside the
+   column at the narrowest width the design contract supports. */
+
 .site-document-body > * {
   margin: 0;
   max-width: var(--site-prose-max);
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 
 .site-document-body h2 {
@@ -206,6 +212,10 @@
   display: grid;
   gap: var(--site-space-2);
   padding-left: var(--site-space-5);
+}
+
+.site-document-body li {
+  min-width: 0;
 }
 
 .site-document-body a {
@@ -319,7 +329,7 @@
 }
 
 .site-pager-item {
-  border: 1px solid var(--site-folio-line);
+  border: 1px solid var(--site-folio-line-strong);
   border-radius: var(--site-radius-small);
   color: var(--site-folio-ink);
   display: grid;
@@ -345,7 +355,7 @@
 .site-rubric {
   color: var(--site-folio-ink-muted);
   font-family: var(--site-font-mono);
-  font-size: var(--site-nano-size);
+  font-size: var(--site-caption-size);
   font-weight: var(--site-weight-semibold);
   letter-spacing: 0.12em;
   line-height: var(--site-caption-line);
@@ -353,7 +363,10 @@
 }
 
 .site-trail {
+  align-items: center;
   color: var(--site-folio-ink-muted);
+  display: flex;
+  flex-wrap: wrap;
   font-size: var(--site-small-size);
   line-height: var(--site-small-line);
 }
@@ -365,7 +378,7 @@
 /* The desktop composition from the 768px breakpoint upward. */
 @media (min-width: 768px) {
   .site-docs {
-    grid-template-columns: 272px minmax(0, 1fr);
+    grid-template-columns: var(--site-sidebar-width) minmax(0, 1fr);
   }
 
   .site-docs-side {
@@ -414,7 +427,10 @@
 /* The on-this-page rail joins the composition once the page has room. */
 @media (min-width: 1100px) {
   .site-docs {
-    grid-template-columns: 272px minmax(0, 1fr) 240px;
+    grid-template-columns:
+      var(--site-sidebar-width)
+      minmax(0, 1fr)
+      var(--site-onpage-width);
   }
 
   .site-docs-rail {
@@ -534,7 +550,7 @@
 
 .site-search-input {
   background: var(--site-folio);
-  border: 1px solid var(--site-folio-line);
+  border: 1px solid var(--site-folio-line-strong);
   border-radius: var(--site-radius-small);
   color: var(--site-folio-ink);
   flex: 1;

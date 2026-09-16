@@ -20,7 +20,9 @@ export async function createExampleBaseline(root: string) {
     "package-lock.json",
     "tsconfig.json",
     "tsconfig.build.json",
+    "design/folio/tokens.css",
     "scripts/copy-assets.mjs",
+    "scripts/design-tokens.mjs",
     "src",
   ])
     await fs.cp(path.join(repositoryRoot, name), path.join(root, name), {

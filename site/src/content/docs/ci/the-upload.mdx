@@ -54,7 +54,7 @@ publish for the repository the manifest names.
 | The token or the repository was refused | `upload-unauthorized`        |
 | The archive or manifest was rejected    | `upload-invalid-bundle`      |
 | An upload limit was exceeded            | `upload-too-large`           |
-| The upload version is not supported     | `upload-unsupported-version` |
+| The upload declares an unknown version  | `upload-unsupported-version` |
 | Anything else, including a timeout      | `upload-failed`              |
 
 A failed upload leaves the complete local export where it was written, so you

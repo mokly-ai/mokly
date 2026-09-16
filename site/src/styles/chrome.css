@@ -6,12 +6,12 @@
    the site resolves the same switch at 768px, so mobile is the default. */
 
 .site-skip {
+  align-items: center;
   background: var(--site-folio-surface);
   border: 1px solid var(--site-folio-line-strong);
   border-radius: var(--site-radius-small);
   color: var(--site-folio-ink);
   display: inline-flex;
-  align-items: center;
   left: -9999px;
   padding: var(--site-space-2) var(--site-space-4);
   position: absolute;
@@ -126,26 +126,32 @@
 }
 
 /* The documentation search control, shaped like the catalogue's own. It
-   appears in the header on documentation routes and nowhere else. */
+   appears in the header on documentation routes and nowhere else. It follows
+   the brand in the document and is painted there at every width: below the
+   breakpoint it shares the first row with the brand and the navigation takes
+   the row beneath, so the reading order and the keyboard order agree. */
 
 .site-search {
   align-items: center;
   background: var(--site-folio);
-  border: 1px solid var(--site-folio-line);
+  border: 1px solid var(--site-folio-line-strong);
   border-radius: var(--site-radius-small);
   color: var(--site-folio-ink-muted);
   display: inline-flex;
-  flex: 1 0 100%;
+  flex: 1 1 auto;
   font: inherit;
   font-size: var(--site-small-size);
   gap: var(--site-space-2);
   justify-content: flex-start;
   min-height: var(--site-target-min);
-  order: 1;
   padding: 0 var(--site-space-3);
   transition:
     background var(--site-motion-fast) var(--site-motion-ease),
     border-color var(--site-motion-fast) var(--site-motion-ease);
+}
+
+.site-header--search .site-nav {
+  flex: 1 0 100%;
 }
 
 .site-search:hover {
@@ -175,7 +181,10 @@
 
   .site-search {
     flex: 0 1 320px;
-    order: 0;
+  }
+
+  .site-header--search .site-nav {
+    flex: 0 1 auto;
   }
 
   .site-desktop-only {
