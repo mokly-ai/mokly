@@ -1,6 +1,8 @@
 /** Last-good runtime transfer over the watched child's private IPC channel. */
 import type { ComponentRuntime } from "../../build/component_runtime.js";
+import { validatePublicExclude } from "../../config/public_exclusions.js";
 import type { ResolvedConfig } from "../../config/types.js";
+import { MoklyError } from "../../errors.js";
 
 /** Accepted configuration and manifest transferred before watched readiness. */
 export interface RuntimeStartupMessage {
@@ -120,6 +122,7 @@ function parseRuntimeStartupMessage(
     typeof config.entriesDir !== "string" ||
     typeof config.mockupsDir !== "string" ||
     typeof config.repoRoot !== "string" ||
+    !Array.isArray(config.publicExclude) ||
     !manifest ||
     !Array.isArray(manifest.entries) ||
     (manifest.schemaVersion !== 5 &&
@@ -127,7 +130,17 @@ function parseRuntimeStartupMessage(
     !Array.isArray(manifest.sourceFiles)
   )
     return;
-  return { config, manifest, type: "component-runtime-startup" };
+  try {
+    const publicExclude = validatePublicExclude(config.publicExclude);
+    return {
+      config: { ...config, publicExclude },
+      manifest,
+      type: "component-runtime-startup",
+    };
+  } catch (error) {
+    if (error instanceof MoklyError) return;
+    throw error;
+  }
 }
 
 export function parseRuntimeMessage(

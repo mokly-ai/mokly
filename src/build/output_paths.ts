@@ -9,17 +9,16 @@ import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError, errorMessage } from "../errors.js";
 import { MANIFEST_NAME } from "../registry/manifest.js";
 
+import { sourceDenialMessage } from "./source_denial.js";
 import { isAuthoringSource } from "./source_inventory.js";
 
-/** Reject generated routes that escape output or target authored source trees. */
+/** Reject unsafe generated routes with the rule that protects their target. */
 export function validateGeneratedOutputPaths(
   routes: Iterable<string>,
   config: ResolvedConfig,
 ): void {
-  const authoredRoots = [config.entriesDir];
   const realRepoRoot = fs.realpathSync(config.repoRoot);
   const realMockupsRoot = projectRealPath(config.mockupsDir);
-  const realAuthoredRoots = authoredRoots.map((root) => fs.realpathSync(root));
   if (!isInside(realRepoRoot, realMockupsRoot)) {
     throw new MoklyError(
       "build-invalid",
@@ -50,15 +49,19 @@ export function validateGeneratedOutputPaths(
         `generated route escapes mockupsDir: ${route}`,
       );
     }
-    if (
-      (route !== MANIFEST_NAME && isInternalCatalogueFile(target, config)) ||
-      isAuthoringSource(target, config) ||
-      authoredRoots.some((root) => isInside(root, target)) ||
-      realAuthoredRoots.some((root) => isInside(root, projectedTarget))
-    ) {
+    if (route !== MANIFEST_NAME && isInternalCatalogueFile(target, config)) {
       throw new MoklyError(
         "build-invalid",
-        `generated route overlaps authored source root: ${route}`,
+        `generated route targets internal catalogue metadata: ${route}`,
+      );
+    }
+    const denial = isAuthoringSource(target, config, "all", {
+      ignorePublicExclusions: route === MANIFEST_NAME,
+    });
+    if (denial) {
+      throw new MoklyError(
+        "build-invalid",
+        `generated route ${sourceDenialMessage(denial)}: ${route}`,
       );
     }
     if (!isInside(realMockupsRoot, projectedTarget)) {

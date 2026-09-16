@@ -3,58 +3,141 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import type { Metafile } from "esbuild";
+import { Minimatch } from "minimatch";
 
 import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
 import { locatePath } from "../config/file_locations.js";
-import { isInside, projectRealPath } from "../config/paths.js";
+import { isInside, projectRealPath, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 
+import type { SourceDenial } from "./source_denial.js";
+
 /** Names reserved for authoring, including stale helpers no longer imported. */
-export function isReservedSource(candidate: string): boolean {
+function isReservedSource(candidate: string): boolean {
   return /\.source\.(?:html?|[cm]?[jt]sx?)$/i.test(candidate);
 }
 
 interface SourceIndex {
-  inventory: readonly string[] | undefined;
   files: Set<string>;
   aliases: string[];
 }
-const sourceIndexes = new WeakMap<ResolvedConfig, SourceIndex>();
+const sourceIndexes = new WeakMap<readonly string[], SourceIndex>();
+const logicalSourceIndexes = new WeakMap<
+  readonly string[],
+  ReadonlySet<string>
+>();
+const exclusionMatchers = new WeakMap<
+  readonly string[],
+  readonly Minimatch[]
+>();
 
-/** One shared classifier for build, serve, export and resource resolution. */
+/** Classification exceptions for internal generated metadata. */
+export interface SourceClassificationOptions {
+  /** Bypass public globs while retaining every authoring-source protection. */
+  readonly ignorePublicExclusions?: boolean;
+}
+
+/**
+ * Return the denial cause, or undefined for a public candidate.
+ * Historical readers use no filesystem aliases;
+ * Changes resolves exclusion aliases but leaves retargeted source aliases and
+ * unresolvable change paths for resource validation.
+ */
 export function isAuthoringSource(
   candidate: string,
   config: ResolvedConfig,
-): boolean {
-  const real = projectRealPath(candidate);
-  if (
-    isInside(config.entriesDir, candidate) ||
-    isInside(fs.realpathSync(config.entriesDir), real) ||
-    isReservedSource(candidate) ||
-    isReservedSource(real)
-  )
-    return true;
-  let index = sourceIndexes.get(config);
-  if (!index || index.inventory !== config.sourceFiles) {
-    const files = new Set<string>();
-    const aliases: string[] = [];
-    for (const source of config.sourceFiles ?? []) {
-      const logical = path.resolve(config.repoRoot, source);
-      const physical = projectRealPath(logical);
-      files.add(logical);
-      files.add(physical);
-      if (logical !== physical) aliases.push(logical);
-    }
-    index = { inventory: config.sourceFiles, files, aliases };
-    sourceIndexes.set(config, index);
+  aliases: "all" | "exclusions" | "none" = "all",
+  options: SourceClassificationOptions = {},
+): SourceDenial | undefined {
+  if (isInside(config.entriesDir, candidate)) return { kind: "entries" };
+  if (isReservedSource(candidate)) return { kind: "reserved" };
+  if (isListedSource(candidate, config)) return { kind: "listed" };
+  const logicalExclusion = options.ignorePublicExclusions
+    ? undefined
+    : matchingPublicExclusion(
+        candidate,
+        config.mockupsDir,
+        config.publicExclude,
+      );
+  if (logicalExclusion !== undefined)
+    return { kind: "exclusion", glob: logicalExclusion };
+  if (aliases === "none") return;
+  let real: string;
+  try {
+    real = projectRealPath(candidate);
+  } catch (error) {
+    if (aliases === "exclusions") return;
+    throw error;
   }
-  return (
+  const physicalExclusion = options.ignorePublicExclusions
+    ? undefined
+    : matchingPublicExclusion(
+        real,
+        projectRealPath(config.mockupsDir),
+        config.publicExclude,
+      );
+  if (physicalExclusion !== undefined)
+    return { kind: "exclusion", glob: physicalExclusion };
+  if (aliases === "exclusions") return;
+  if (isInside(projectRealPath(config.entriesDir), real))
+    return { kind: "entries" };
+  if (isReservedSource(real)) return { kind: "reserved" };
+  const index = sourceIndex(config);
+  if (
     index.files.has(candidate) ||
     index.files.has(real) ||
     index.aliases.some((alias) => projectRealPath(alias) === real)
-  );
+  )
+    return { kind: "listed" };
+}
+
+/** Cache source membership while rechecking live aliases at each lookup. */
+function sourceIndex(config: ResolvedConfig): SourceIndex {
+  const inventory = config.sourceFiles;
+  const cached = inventory && sourceIndexes.get(inventory);
+  if (cached) return cached;
+  const files = new Set<string>();
+  const sourceAliases: string[] = [];
+  for (const source of inventory ?? []) {
+    const logical = path.resolve(config.repoRoot, source);
+    const physical = projectRealPath(logical);
+    files.add(logical);
+    files.add(physical);
+    if (logical !== physical) sourceAliases.push(logical);
+  }
+  const index = { files, aliases: sourceAliases };
+  if (inventory) sourceIndexes.set(inventory, index);
+  return index;
+}
+
+function isListedSource(candidate: string, config: ResolvedConfig): boolean {
+  const inventory = config.sourceFiles;
+  if (!inventory) return false;
+  let files = logicalSourceIndexes.get(inventory);
+  if (!files) {
+    files = new Set(inventory);
+    logicalSourceIndexes.set(inventory, files);
+  }
+  return files.has(toPosixPath(path.relative(config.repoRoot, candidate)));
+}
+
+function matchingPublicExclusion(
+  candidate: string,
+  root: string,
+  globs: readonly string[],
+): string | undefined {
+  if (!isInside(root, candidate)) return;
+  const relative = toPosixPath(path.relative(root, candidate));
+  let matchers = exclusionMatchers.get(globs);
+  if (!matchers) {
+    matchers = globs.map(
+      (glob) => new Minimatch(glob, { nocase: true, dot: true }),
+    );
+    exclusionMatchers.set(globs, matchers);
+  }
+  return matchers.find((matcher) => matcher.match(relative))?.pattern;
 }
 
 /** Record actual graph inputs before tree shaking, including both path aliases. */

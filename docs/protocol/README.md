@@ -31,6 +31,9 @@ when the historical primary file is absent, never when it is invalid.
 
 - [Catalogue upload v1](./mokly-upload.md) — public CLI and hosted/self-hosted receiver boundary.
 - [Package and authoring contract](./mokly-package.md)
+- [Configuration contract](./mokly-configuration.md) — includes public-exclusion validation and defaults.
+- [Public authoring API](./mokly-authoring.md)
+- [Rendering and generated output](./mokly-rendering.md)
 - [Build and Browse runtime](./mokly-runtime.md)
 - [Component instance identity](./mokly-instances.md) — existing key/boundary
   rules and approved resolution/source-location target.

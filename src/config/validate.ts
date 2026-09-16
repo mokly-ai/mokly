@@ -16,6 +16,7 @@ import {
   validateSourceRoots,
 } from "./path_validation.js";
 import { resolveInside, validateRelativeRoute } from "./paths.js";
+import { resolvePublicExclude } from "./public_exclusions.js";
 import {
   requireString,
   validateColorSchemes,
@@ -43,6 +44,7 @@ export function resolveConfig(
       "legacy configuration was removed; register whole documents with definePage",
     );
   const input = value as unknown as MoklyConfig;
+  const publicExclude = resolvePublicExclude(input.publicExclude);
   const generatedOutput = generatedOutputMode(input.generatedOutput);
   requireString(input.entriesDir, "entriesDir");
   requireString(input.mockupsDir, "mockupsDir");
@@ -124,6 +126,7 @@ export function resolveConfig(
     repoRoot,
   });
   return {
+    publicExclude,
     generatedOutput,
     colorSchemes,
     compatibility: {

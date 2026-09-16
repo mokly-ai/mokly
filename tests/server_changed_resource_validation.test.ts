@@ -3,8 +3,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import { readManifest } from "../dist/registry/manifest.js";
+import { FileSystemReviewAssetReader } from "../dist/review/assets.js";
 import { committedReviewRepository } from "../dist/review/repository.js";
 import { computeChangedRoutes } from "../dist/server/changed.js";
+import { classifyChangedContent } from "../dist/server/changed_content.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
@@ -229,4 +232,35 @@ test("Changes retains a legitimate deleted resource directory", async (t) => {
     ),
     ["screens/home.html", "user-flows/tour.html"],
   );
+});
+
+test("README edits are not public content changes and require no resource traversal", async (t) => {
+  const fixture = await changedFixture(
+    t,
+    undefined,
+    undefined,
+    async ({ mockupsDir }) => {
+      await fs.writeFile(path.join(mockupsDir, "README.md"), "Before");
+    },
+  );
+  await fs.writeFile(path.join(fixture.mockupsDir, "README.md"), "After");
+  const reads: string[] = [];
+  class ObservedReader extends FileSystemReviewAssetReader {
+    override async read(route: string) {
+      reads.push(route);
+      return super.read(route);
+    }
+  }
+  const manifest = readManifest(fixture.config);
+  const result = await classifyChangedContent(
+    manifest,
+    manifest,
+    fixture.config,
+    committedReviewRepository(fixture.config).reader,
+    "HEAD",
+    ["mockups/README.md"],
+    new ObservedReader(fixture.config),
+  );
+  assert.deepEqual(result, { changedPaths: [], screens: [] });
+  assert.deepEqual(reads, []);
 });

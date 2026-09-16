@@ -8,7 +8,7 @@ import type {
   ViewResourceEvidence,
 } from "@mokly/viewer/data";
 
-import { isReservedSource } from "../build/source_inventory.js";
+import { isAuthoringSource } from "../build/source_inventory.js";
 import { isInside, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
@@ -90,9 +90,7 @@ export async function classifyChangedContent(
       const candidate = path.resolve(config.repoRoot, changed);
       if (
         !isInside(config.mockupsDir, candidate) ||
-        isInside(config.entriesDir, candidate) ||
-        isReservedSource(candidate) ||
-        config.sourceFiles?.includes(changed)
+        isAuthoringSource(candidate, config, "exclusions") !== undefined
       )
         return [];
       const route = toPosixPath(path.relative(config.mockupsDir, candidate));

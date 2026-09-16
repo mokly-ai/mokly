@@ -22,7 +22,9 @@ requesting repository evidence.
 
 `git_batch.ts` bounds literal tree queries and blob reads by pathspec bytes,
 object count and output bytes. `assets.ts` applies the baseline manifest's
-source policy and rejects non-regular files before using historical resources.
+source inventory and the active config’s public exclusions relative to the baseline
+mockups root. Historical reads reject non-regular files and do not resolve aliases
+through the current filesystem.
 `compare.ts` builds complete comparisons; `selected.ts` retains only a requested
 view's checked snapshot closure. Neither reader executes historical code.
 

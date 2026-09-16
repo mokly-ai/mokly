@@ -7,6 +7,7 @@
   inspection ownership fix; its post-push review reported no new findings.
   The plan remains active until the implementation PR merges. Package publication
   and the published-package smoke are non-blocking post-merge follow-up.
+- [Mokabook Dependency Patch Upstreaming](./mokabook-dependency-patch-upstreaming.md)
 - [Publish Catalogue](./publish-catalogue.md)
 - [App-Independent Mokabook Npm Library](./app-independent-mokabook-library.md)
 - [Accounting Shell Design Parity](./accounting-shell-design-parity.md)

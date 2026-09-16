@@ -7,7 +7,10 @@ import { MoklyError, errorMessage } from "../errors.js";
 
 import type { Compilation } from "./compile.js";
 import { validateGeneratedOutputPaths } from "./output_paths.js";
-import { isOwned, pendingGeneratedOrphanRoutes } from "./ownership.js";
+import {
+  generatedOwnershipDenial,
+  pendingGeneratedOrphanRoutes,
+} from "./ownership.js";
 
 /** Atomically replace owned generated files with rollback on any failure. */
 export async function writeCompilation(
@@ -95,10 +98,12 @@ function rejectUnsafeTargets(
   validateGeneratedOutputPaths(compilation.outputs.keys(), config);
   for (const route of compilation.outputs.keys()) {
     const target = path.join(config.mockupsDir, route);
-    if (fs.existsSync(target) && !isOwned(target, config)) {
+    if (!fs.existsSync(target)) continue;
+    const denial = generatedOwnershipDenial(target, config);
+    if (denial) {
       throw new MoklyError(
         "build-invalid",
-        `refusing to overwrite unowned file: ${route}`,
+        `refusing to overwrite unowned file: ${route} (${denial})`,
       );
     }
   }

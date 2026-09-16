@@ -44,6 +44,8 @@ export class ComponentRenderError extends Error {
   constructor(
     readonly code: RenderErrorCode,
     message: string,
+    /** Server-only diagnostic; never include this detail in client responses. */
+    readonly detail?: string,
   ) {
     super(message);
   }
