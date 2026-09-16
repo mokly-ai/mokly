@@ -10,13 +10,9 @@ import { runCleanup } from "./cleanup.js";
 import { FrameHighlights } from "./frame_highlights.js";
 import { frameSession } from "./frame_session.js";
 import type { Session } from "./frame_session.js";
-import {
-  frameDescriptors,
-  frameInstance,
-  hasInstance,
-  matchesInstance,
-} from "./frame_views.js";
+import { frameDescriptors, frameInstance, hasInstance } from "./frame_views.js";
 import type { ViewerFrame } from "./frame_views.js";
+import { inspectionScope, readyInspection } from "./inspection_scope.js";
 import { Picking } from "./picking.js";
 import type {
   InstanceRef,
@@ -29,7 +25,6 @@ export class ViewerFrames {
   private sessions: Session[] = [];
   private disposed = false;
   private pick: Picking;
-  private epoch = 0;
   private highlights: FrameHighlights;
   private choose:
     ((key: string, viewport: "mobile" | "desktop") => void) | undefined;
@@ -47,8 +42,9 @@ export class ViewerFrames {
       root,
       model,
       () => this.sessions,
-      () => this.current(),
+      () => !this.disposed,
       (frame, event) => this.receive(frame, event),
+      (error) => this.fail(error),
     );
     this.pick = new Picking(
       events,
@@ -97,7 +93,11 @@ export class ViewerFrames {
     }
   }
   private receive(frame: ViewerFrame, event: FrameEvent): void {
-    if (this.disposed) return;
+    if (
+      this.disposed ||
+      !this.sessions.some((session) => session.frame === frame)
+    )
+      return;
     if (event.type === "navigation") {
       this.navigate(event.navigation);
       return;
@@ -111,7 +111,7 @@ export class ViewerFrames {
       return;
     }
     if (event.type === "geometry") {
-      void this.highlights.labels().catch(() => this.fail());
+      void this.highlights.labels(frame).catch(() => {});
       return;
     }
     if (event.key !== null && !hasInstance(frame.view?.usage, event.key)) {
@@ -141,37 +141,8 @@ export class ViewerFrames {
     this.pick.end({ reason: "error" }, error);
     return this.report(error);
   }
-  private async current(): Promise<Session[]> {
-    if (this.disposed) throw new Error("The viewer is no longer available.");
-    if (
-      this.root
-        .querySelector('[data-diff-mode][aria-pressed="true"]')
-        ?.getAttribute("data-diff-mode") !== undefined &&
-      !this.root.querySelector(
-        '[data-diff-mode="current"][aria-pressed="true"]',
-      )
-    )
-      throw new Error("Choose Current to inspect this view.");
-    const sessions = this.sessions.slice(),
-      epoch = this.epoch;
-    await Promise.all(sessions.map((session) => session.ready));
-    if (this.disposed || epoch !== this.epoch)
-      throw new Error("The selected view changed.");
-    return sessions;
-  }
-  private async referenced(instance: InstanceRef): Promise<Session> {
-    const sessions = await this.current();
-    const match = sessions.find(({ frame }) =>
-      matchesInstance(frame, instance),
-    );
-    if (!match)
-      throw new Error("This instance is unavailable in the current view.");
-    return match;
-  }
   async highlight(instance: InstanceRef | null): Promise<void> {
-    if (this.disposed) throw new Error("The viewer is no longer available.");
     if (instance) {
-      await this.referenced(instance);
       await this.highlights.show(
         { kind: "instance", instance: { ...instance } },
         "highlight",
@@ -181,18 +152,22 @@ export class ViewerFrames {
     }
   }
   async scroll(instance: InstanceRef): Promise<void> {
-    const session = await this.referenced(instance);
-    await session.mounted!.scrollTo(instance.key);
+    const work = this.highlights.work();
+    const { sessions } = inspectionScope(this.sessions, {
+      kind: "instance",
+      instance,
+    });
+    await work.run(
+      async () => {
+        await readyInspection(this.root, sessions, work);
+        work.check();
+        await sessions[0]!.mounted!.scrollTo(instance.key);
+      },
+      (error) => this.fail(error),
+    );
   }
   startPick(): Promise<void> {
     return this.pick.start(async (valid) => {
-      const sessions = await this.current();
-      if (
-        !sessions.length ||
-        sessions.some(({ frame }) => frame.view?.usage.status !== "ready")
-      )
-        throw new Error("Component inspection is unavailable in this view.");
-      if (!valid()) throw new Error("Picking was cancelled.");
       await this.highlights.show({ kind: "workspace", key: undefined }, "pick");
       if (valid()) this.root.focus({ preventScroll: true });
     });
@@ -210,7 +185,7 @@ export class ViewerFrames {
         { kind: "workspace", key: selected },
         this.pick.active ? "pick" : "highlight",
       )
-      .catch(() => this.fail());
+      .catch(() => {});
     return () => {
       this.choose = undefined;
       if (!this.pick.active) {
@@ -224,11 +199,9 @@ export class ViewerFrames {
         session.frame.view?.viewport === viewport &&
         hasInstance(session.frame.view?.usage, key),
     )?.frame;
-    if (frame)
-      void this.scroll(frameInstance(frame, key)).catch(() => this.fail());
+    if (frame) void this.scroll(frameInstance(frame, key)).catch(() => {});
   }
   private clear(): void {
-    this.epoch++;
     const sessions = this.sessions;
     this.sessions = [];
     this.choose = undefined;

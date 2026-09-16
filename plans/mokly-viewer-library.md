@@ -1235,6 +1235,107 @@ must be resolved before integration. No merge/rebase or mainline feature removal
 was performed. The plan stays active until the implementation PR merges;
 publication remains the non-blocking follow-up below.
 
+## Milestone 8: Inspection scope and ownership fixes
+
+Implement the approved option A for both Milestone 7 findings. Share request
+scope and asynchronous ownership across inspection consumers while preserving
+local Serve/export presentation, shell and comparison bytes, inspector bytes and
+public schemas. Earlier milestone notes and findings remain unchanged.
+
+- [x] M7-1: Add failing same-origin and postMessage regressions for pending and
+      unavailable sibling views with Both visible; select typed request sessions
+      before readiness or geometry, share scope across masks and labels, and clear
+      unrelated masks without inspecting their usage, including rejection cleanup.
+- [x] M7-2: Add failing delayed-failure replacement regressions on both adapters;
+      fence success and error effects for label refresh, highlight, scroll and
+      geometry work by request/generation ownership. Settle obsolete caller
+      promises with `disposed` without changing replacement picking, labels or
+      events. Clarify scope and ownership in viewer/frame protocols and README.
+- [x] Verify callback installation in the existing lifecycle test after its
+      intermittent one-animation-frame wait; preserve exception identity and
+      no-error assertions.
+- [x] Run focused tests and smoke/byte checks, then `cargo xtask check`; fix all
+      failures and record counts, retries, skips and inspector size.
+- [ ] After checks pass, `git add -A`, commit with Conventional Commits (title
+      at most 50 characters, body naming both findings and ending with the Codex
+      co-author trailer), and push `calummoore/tianjin-v6`.
+- [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+      against the complete local diff from `origin/main`; record numbered findings
+      with severity, impact, lettered options and recommendations without fixing.
+
+### Milestone 8 verification notes
+
+Baseline: `80d151b995dbc78382451c0045674d2d30e0770c`. Evidence is retained
+under `.context/viewer-m8/`. Earlier milestone records and the post-merge section
+are byte-identical. Refreshed `origin/main` remains `7ca301c`; no merge or rebase
+was performed, and this milestone removes no files or features.
+
+M7-1 uses one captured typed inspection scope for readiness, masks, labels,
+geometry refreshes and scrolling. Unrelated mounted masks receive only the off
+operation; pending unrelated mounts are not awaited. Six new browser cases cover
+pending/unavailable usage and delayed mount completion across both real adapters,
+including target success, labels, scroll, geometry, no unrelated measurement or
+error, and partial-mask cleanup after a current failure.
+
+M7-2 uses cancellable request ownership around both success and error effects.
+Superseded caller promises reject with the existing `disposed` code immediately,
+even when a custom adapter has not settled. Internal cancellation is distinct
+from a current adapter failure, preserving valid error reports. Thirty-two new
+browser cases exercise delayed success/failure in geometry, label, highlight and
+scroll work across both adapters, frame replacement and a new pick on the same
+frame. They assert exact pick/error sequences and preservation of replacement
+label nodes. Five new Node cases cover cancellation, queued work, late completion
+and current-error reporting. Viewer/frame protocols and the package README now
+define these scope and ownership rules; no schema or adapter wire field changed.
+
+The original implementation failed 20 of the initial 22 browser regressions;
+the two passing cases were late-geometry-success controls. The pending-pick unit
+regression also failed before its fix. The first follow-up browser run passed
+19/22: automatic geometry pulses consumed a measurement intended for a caller
+and legitimately replaced label nodes. The fixture now forwards real adapter
+operations while triggering geometry explicitly, so each held operation has one
+known owner. All original assertions remain, including label-node identity.
+The initial 22 cases then passed before expanding to the 38-case matrix.
+
+Focused verification passes **60 Node tests and 110 Chromium browser tests**,
+including all 38 new browser cases, with no skips or retries in the final runs.
+The first broad browser run passed 109/110: the existing callback-exception test
+started picking before its callback update had rendered. Three independent
+unchanged repetitions passed. Its one-animation-frame assumption now waits for
+the actual slot update committed with the callback; exception identity and
+no-error assertions remain unchanged. The full 110-case rerun is green.
+Build, lint, TypeScript, changed Markdown and `git diff --check` pass. All changed
+TypeScript files stay within 300 lines. The local-link audit checked 52 links;
+only the two immutable Milestone 4 pre-extraction inspector links are unresolved.
+
+Inspector source and output remain byte-identical: **8,733 bytes**, within the
+**9,216-byte** budget (483 bytes of headroom), SHA-256
+`1952cf0499da61d8041a88c2dd18e9525eebd947c3985f3f53ec7a9c157bb7b0`.
+No client-adapter, inspector, shell, stylesheet, example or snapshot source was
+changed. Actual Serve mobile/desktop HTML matches exactly. The mobile screenshot
+is byte-identical; desktop differs at three rounded-edge pixels by one channel
+value. Visual smoke inspection found no layout or interaction change.
+
+Export retains 1,169 files: 986 byte-identical, 182 differing only in the exact
+owned deployment/comparison identities, and `review.json` reflecting the real
+changed-path inventory. There are no added/removed artifact paths. All **608
+comparison snapshot/resource files** and **277 generated HTML documents** match
+exactly; shell markup, CSS, fonts and every standalone client module are unchanged.
+`byte-comparison-final.json` records identities, path comparisons and pixel data.
+Logs include `red-browser.log`, `red-picking.log`, `focused-node-final.log`,
+`affected-browser-final.log`, `callback-retry.log` and the Serve/export captures.
+
+The final `cargo xtask check` **passed** on 16 September 2026: **1,660 Node
+unit/integration tests, 386 Chromium tests and three Rust tests**, with zero
+failures, retries, skipped or ignored tests. The Node suite took 412.7 seconds;
+Chromium took 10.8 minutes. All five packed-consumer scenarios, dependency audit
+(zero vulnerabilities), formatting, lint, both package builds/typechecks, example
+validation (278 files), package checks, Rust formatting/Clippy and the eight-file
+Rust length audit pass. The tree stayed stable throughout this complete run.
+The earlier focused fixture failures and three independent diagnostic repeats
+are recorded above; no failed gate was treated as success. Full log:
+`.context/viewer-m8/xtask-check.log`.
+
 ## Post-merge follow-up (non-blocking)
 
 - Merge the combined release-please PR for viewer 0.1.0 and CLI 0.10.0, checking

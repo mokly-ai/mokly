@@ -56,8 +56,13 @@ test("callback exceptions preserve identity and are not viewer failures", async 
     host.props.onPickStart = () => {
       throw error;
     };
+    host.props.slots = { topBarStart: "Callbacks installed" };
     host.render();
-    await new Promise(requestAnimationFrame);
+    while (
+      document.querySelector('[data-mokly-slot="topBarStart"]')?.textContent !==
+      "Callbacks installed"
+    )
+      await new Promise(requestAnimationFrame);
     try {
       await host.ref.current.startPick();
     } catch (caught) {

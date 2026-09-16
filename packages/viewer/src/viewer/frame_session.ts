@@ -5,6 +5,7 @@ import type {
 } from "../client/frame_adapter.js";
 
 import type { ViewerFrame } from "./frame_views.js";
+import { ObsoleteInspection } from "./inspection_work.js";
 
 export interface Session {
   frame: ViewerFrame;
@@ -25,7 +26,7 @@ export function frameSession(
   const controller = new AbortController();
   const signal = controller.signal;
   const ready = new Promise<MountedFrame>((resolve, reject) => {
-    const abort = () => reject(new Error("The selected view changed."));
+    const abort = () => reject(new ObsoleteInspection());
     signal.addEventListener("abort", abort, { once: true });
     void Promise.resolve()
       .then(() => {

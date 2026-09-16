@@ -1,10 +1,9 @@
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import type { Box, FrameEvent } from "../client/frame_adapter.js";
 
-import type { Session } from "./frame_session.js";
 import type { ViewerFrame } from "./frame_views.js";
 import { highlightKeys } from "./highlight_request.js";
-import type { HighlightRequest } from "./highlight_request.js";
+import type { InspectionScope } from "./inspection_scope.js";
 
 /** Reuse the shell's label buttons; label text comes exclusively from catalogue data. */
 export function drawFrameLabels(
@@ -46,17 +45,18 @@ export function drawFrameLabels(
 
 export async function renderFrameLabels(
   root: HTMLElement,
-  sessions: readonly Session[],
+  scope: InspectionScope,
   model: CatalogueReadModel,
-  selected: HighlightRequest,
   active: () => boolean,
   receive: (frame: ViewerFrame, event: FrameEvent) => void,
 ): Promise<void> {
   const regions = await Promise.all(
-    sessions.map(async ({ frame, mounted }) => ({
+    scope.sessions.map(async ({ frame, mounted }) => ({
       frame,
       boxes: (await mounted!.listInstanceBoundaries())
-        .filter((item) => highlightKeys(frame, selected).includes(item.key))
+        .filter((item) =>
+          highlightKeys(frame, scope.request).includes(item.key),
+        )
         .map((item) => ({
           key: item.key,
           boxes: item.ranges.flatMap((range) => range.boxes),

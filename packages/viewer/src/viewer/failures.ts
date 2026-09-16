@@ -1,3 +1,4 @@
+import { ObsoleteInspection } from "./inspection_work.js";
 import type { ViewerError, ViewerEvents } from "./types.js";
 
 /** Report an operation once, even when a mount and its waiting handle both fail. */
@@ -7,6 +8,7 @@ export function viewerFailures(
 ) {
   const reported = new Map<unknown, Error>();
   return (error: unknown, code: ViewerError["code"]): Error => {
+    if (error instanceof ObsoleteInspection) return error;
     const previous = reported.get(error);
     if (previous) return previous;
     const message =

@@ -47,3 +47,33 @@ test("a failed mount and its pending pick report the same failure once", async (
   assert.equal(errors.length, 1);
   assert.equal(picking.active, false);
 });
+
+test("cancelled activation cannot report a late failure against a fresh pick", async () => {
+  const errors: ViewerError[] = [];
+  const events: string[] = [];
+  const report = viewerFailures(
+    () => ({ onError: (error) => errors.push(error) }),
+    () => true,
+  );
+  const picking = new Picking(
+    () => ({ onPickStart: () => events.push("start") }),
+    () => true,
+    () => {},
+    (error) => report(error, "frame"),
+  );
+  let rejectActivation!: (error: Error) => void;
+  const pending = picking.start(
+    () =>
+      new Promise<void>((_resolve, reject) => {
+        rejectActivation = reject;
+      }),
+  );
+  const rejected = assert.rejects(pending, { code: "disposed" });
+  picking.end({ reason: "navigation" });
+  await picking.start(async () => {});
+  rejectActivation(new Error("Late failure"));
+  await rejected;
+  assert.deepEqual(errors, []);
+  assert.deepEqual(events, ["start"]);
+  assert.equal(picking.active, true);
+});

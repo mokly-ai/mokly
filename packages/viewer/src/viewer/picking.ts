@@ -1,3 +1,4 @@
+import { ObsoleteInspection } from "./inspection_work.js";
 import type { PickEnd, ViewerEvents } from "./types.js";
 
 /** A single cancellable activation shared by all concurrent start requests. */
@@ -28,14 +29,23 @@ export class Picking {
     );
     const pending = Promise.race([activate(valid), cancelled])
       .then(() => {
-        if (!valid()) throw new Error("Picking was cancelled.");
-        this.active = true;
+        if (!valid()) throw new ObsoleteInspection();
       })
       .catch((error) => {
-        if (valid()) this.off();
-        throw this.report(error);
+        if (error instanceof ObsoleteInspection) throw error;
+        if (valid()) {
+          this.off();
+          throw this.report(error);
+        }
+        throw this.report(
+          cancellation.signal.aborted
+            ? cancellation.signal.reason
+            : new ObsoleteInspection(),
+        );
       })
       .then(() => {
+        if (!valid()) throw new ObsoleteInspection();
+        this.active = true;
         this.events().onPickStart?.();
       });
     this.pending = pending;
@@ -45,10 +55,7 @@ export class Picking {
     void pending.then(settled, settled);
     return pending;
   }
-  end(
-    event?: PickEnd,
-    cause: unknown = new Error("Picking was cancelled."),
-  ): void {
+  end(event?: PickEnd, cause: unknown = new ObsoleteInspection()): void {
     if (!this.active && !this.pending) return;
     this.epoch++;
     this.cancellation?.abort(cause);

@@ -80,6 +80,16 @@ session and its pending work; responses from it never update a new mount.
 An optional mount signal cancels both pending initialization and an active
 session. Built-in adapters remove cancellation listeners on disposal. Viewer
 cleanup also fences late custom-adapter results and disposes them immediately.
+Viewer inspection selects sessions from the typed request before awaiting
+readiness or calling boundary/scroll operations. Clearing an unrelated mounted
+frame uses `highlight([], "off")`, which requires no available usage; pending
+unrelated mounts are not awaited. Masks, host labels and geometry refreshes use
+the same selected sessions, so a sibling's missing evidence cannot fail a scoped
+request. Current highlight failures remove partially applied masks and labels.
+Host inspection work retains request/generation ownership through both success
+and rejection, including custom adapters that settle after replacement. Obsolete
+caller promises reject with `disposed`; obsolete internal refreshes and errors
+cannot change replacement picking, labels or host events. No wire fields change.
 
 Boxes are finite CSS pixels relative to the frame's visible content viewport,
 after internal scrolling, clipping ancestors and occlusion, before host scaling.

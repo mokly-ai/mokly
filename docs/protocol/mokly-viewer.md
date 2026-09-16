@@ -177,7 +177,18 @@ include `stepIndex` to select one occurrence, even when a screen appears more
 than once; omitting it never guesses a flow step. Workspace key selection remains
 intentionally shared across its visible viewports. Scheme or variant mismatches
 reject. A null reference clears every frame's highlight.
-Async failures reject the handle promise and emit one `onError`; error messages
+Select the request's sessions before waiting for mount readiness or measuring
+geometry. Masks, labels, scrolls and geometry refreshes share that scope: pending
+or unavailable sibling views cannot block a ready public target. Clear unrelated
+masks without waiting for their mounts or reading their usage. A failed current
+highlight clears its masks and labels, including any partially applied mask.
+Every asynchronous inspection success and failure belongs to its request and
+frame generation. Replacement or cancellation invalidates that ownership;
+obsolete caller promises reject with the adapter's existing `disposed` code.
+Obsolete internal work never clears replacement labels, changes current picking,
+or emits `onPickEnd`/`onError`. This includes work that fails after replacement,
+not just successful late replies.
+Current async failures reject the handle promise and emit one `onError`; error messages
 are product-safe and contain no private paths. Unmount cancels without later
 callbacks. User callback exceptions are not reclassified as viewer errors.
 A mount failure and a pending pick awaiting that mount share one error report;

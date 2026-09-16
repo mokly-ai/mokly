@@ -97,6 +97,9 @@ records without fetching evidence.
 Flow `InstanceRef` values include `stepIndex` to address an exact occurrence.
 Imperative highlighting applies masks, labels and events only to that reference's
 viewport, scheme, variant and step; workspace selection can still span Both.
+Scoped inspection waits for and measures only its target sessions, so pending or
+unavailable sibling views do not block it. Unrelated masks are cleared without
+inspecting their usage. A failed current highlight removes its masks and labels.
 
 The ref exposes `select`, `highlightInstance` (null clears), `scrollToInstance`,
 `startPick`, and idempotent `cancelPick`. Async operations reject unavailable
@@ -109,6 +112,10 @@ active pick with `navigation` and rejects pending activation without start/end
 events. Inspection is reset before new frames mount. Source/adapter teardown
 releases all frame/runtime resources even if a host callback throws, preserving
 the original exception. Flow fragments address only their first step.
+Late inspection successes and failures are fenced by their request and frame
+generation. Superseded handle promises reject with `disposed`, while obsolete
+work cannot clear replacement labels, cancel a fresh pick or emit errors against
+it. The rule covers highlights, label refreshes, scrolls and geometry events.
 
 Import the stylesheet once. Override `--mokly-accent`,
 `--mokly-accent-contrast`, and `--mokly-accent-soft` on a containing element,
