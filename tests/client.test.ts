@@ -2,14 +2,14 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { setImmediate } from "node:timers/promises";
 
-import { parseBrowseRecoveryState } from "../dist/client/browse_recovery.js";
-import type { BrowseRecoveryState } from "../dist/client/browse_state.js";
 import {
   LiveUpdateController,
   type RecoveryStorage,
   type ReloadLocation,
   type UpdateEventStream,
 } from "../dist/client/live_updates.js";
+import { parseBrowseRecoveryState } from "../packages/viewer/dist/client/browse_recovery.js";
+import type { BrowseRecoveryState } from "../packages/viewer/dist/client/browse_state.js";
 
 test("live updates are latest-wins and recovery is consumed once", () => {
   const stream = new FakeStream();

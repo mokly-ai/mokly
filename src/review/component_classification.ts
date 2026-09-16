@@ -2,20 +2,30 @@ import path from "node:path";
 
 import { minimatch } from "minimatch";
 
-import { canonicalJson } from "../components/data.js";
-import { generatedViews } from "../components/views.js";
-import { toPosixPath } from "../config/paths.js";
-import type { ResolvedConfig } from "../config/types.js";
-import { timeAsync } from "../diagnostics/timings.js";
-import { analyzeHierarchy } from "../registry/hierarchy.js";
-import type { Manifest, ManifestEntry } from "../registry/types.js";
+import {
+  canonicalJson,
+  generatedViews,
+  analyzeHierarchy,
+} from "@mokly/viewer/data";
+import type {
+  ManifestEntry,
+  ChangedEntry,
+  ComponentReview,
+  ComponentVariantReview,
+  EntryChangeReason,
+  ReviewResultV3,
+  ScreenReviewV3,
+} from "@mokly/viewer/data";
 
-import type { ReviewAssetReader } from "./assets.js";
+import { toPosixPath } from "../config/paths.js";
+import { timeAsync } from "../diagnostics/timings.js";
+
 import { affectedConsumers } from "./component_affected.js";
 import {
   propagateImplementations,
   propagateUseCases,
 } from "./component_change_propagation.js";
+import type { ComponentClassificationInput } from "./component_classification_input.js";
 import {
   address,
   ComponentDependencyPolicy,
@@ -33,14 +43,6 @@ import {
 } from "./component_resource_attribution.js";
 import { ComponentMaterialReader } from "./component_resources.js";
 import { validateComponentReviewSources } from "./component_result_sources.js";
-import type {
-  ChangedEntry,
-  ComponentReview,
-  ComponentVariantReview,
-  EntryChangeReason,
-  ReviewResultV3,
-  ScreenReviewV3,
-} from "./component_types.js";
 import {
   compareComponentView,
   type ComponentViewContext,
@@ -50,21 +52,8 @@ import {
   assertViewAnalysisScope,
 } from "./css/paths.js";
 import { CssResourceAnalysis } from "./css/resource_analysis.js";
-import type { CssRuleParser } from "./css/types.js";
 import { ResourceComparison } from "./resource_comparison.js";
 import { aggregateIgnored, aggregateState } from "./screen_views.js";
-
-export interface ComponentClassificationInput {
-  before: Manifest;
-  after: Manifest;
-  beforeReader: ReviewAssetReader;
-  afterReader: ReviewAssetReader;
-  config: ResolvedConfig;
-  changedPaths: readonly string[];
-  baseCommit: string;
-  baseRef: string;
-  cssParser?: CssRuleParser;
-}
 
 /** The sole component-aware membership policy, shared by Browse, Review, and publishing. */
 export async function classifyComponents(

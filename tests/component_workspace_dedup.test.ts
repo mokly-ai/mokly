@@ -1,13 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import type { AffectedUsageEvidence } from "@mokly/viewer/data";
+
 import { compareReview } from "../dist/review/compare.js";
-import type { AffectedUsageEvidence } from "../dist/review/component_types.js";
-import { createCatalogue } from "../dist/server/catalogue.js";
+import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import {
   type UsageLink,
   workspaceData,
-} from "../dist/server/shell/workspace_data.js";
+} from "../packages/viewer/dist/shell/workspace_data.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 

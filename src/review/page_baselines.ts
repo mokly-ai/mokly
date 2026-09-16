@@ -1,4 +1,4 @@
-import type { HistoricalManifest, ManifestPage } from "../registry/types.js";
+import type { HistoricalManifest, ManifestPage } from "@mokly/viewer/data";
 
 /** Historical document identity; sourcePath stays subject to baseline source protection. */
 type PageBaseline = Pick<ManifestPage, "route" | "sourcePath">;

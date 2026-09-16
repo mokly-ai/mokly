@@ -1,26 +1,33 @@
-import { adaptBrowseDocument } from "../browse/document_adapter.js";
-import type { Compilation } from "../build/compile.js";
-import { canonicalJson } from "../components/data.js";
-import type { ResolvedConfig } from "../config/types.js";
+import path from "node:path";
+
+import type { Manifest, ReviewArtifact } from "@mokly/viewer/data";
 import {
+  canonicalJson,
   catalogueViewHref,
   parseStaticDelivery,
   type StaticDelivery,
-} from "../navigation/delivery.js";
+  parseReviewResult,
+} from "@mokly/viewer/data";
+import { createCatalogue, SHELL_CSS } from "@mokly/viewer/server";
+import type { ShellContext } from "@mokly/viewer/server";
+
+import { adaptBrowseDocument } from "../browse/document_adapter.js";
+import type { Compilation } from "../build/compile.js";
+import { projectCatalogue } from "../catalogue/projection.js";
+import {
+  CATALOGUE_PATH,
+  serializeCatalogue,
+} from "../catalogue/serialization.js";
+import { toPosixPath } from "../config/paths.js";
+import type { ResolvedConfig } from "../config/types.js";
 import { changedManifestRoutes } from "../registry/changed_routes.js";
 import { removedManifestEntries } from "../registry/changes.js";
-import type { Manifest } from "../registry/types.js";
-import { parseReviewResult } from "../review/result_validation.js";
-import type { ReviewArtifact } from "../review/types.js";
-import { createCatalogue } from "../server/catalogue.js";
 import {
   loadBrowserClientModules,
   loadBrowserNavigationModules,
   loadShellFontAssets,
 } from "../server/client_modules.js";
 import { homePage, notFoundPage, viewPage } from "../server/pages.js";
-import type { ShellContext } from "../server/shell/context.js";
-import { SHELL_CSS } from "../server/shell/css.js";
 
 import { comparisonContentId } from "./content_id.js";
 import { exportError } from "./error.js";
@@ -162,6 +169,18 @@ export function assembleExport(
     updateVersion: 0,
     delivery,
   };
+  const readModel = projectCatalogue({
+    configPath: toPosixPath(path.relative(config.repoRoot, config.configPath)),
+    catalogue,
+    changesStatus: comparison ? "ready" : "disabled",
+    changedRoutes: context.changedRoutes,
+    evidence: context.componentChanges,
+    comparison: comparison?.result,
+    comparisonUrl: delivery.comparisonUrl?.slice(1) ?? null,
+    revision: { content: 0, evidence: 0 },
+  });
+  context.readModel = readModel;
+  inventory.add(CATALOGUE_PATH, serializeCatalogue(readModel));
   addShell("index.html", homePage(catalogue, context), delivery);
   const notFoundDelivery = { ...delivery, canonicalPath: "/404.html" };
   addShell(

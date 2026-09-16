@@ -2,6 +2,8 @@
 
 import path from "node:path";
 
+import type { ReviewArtifactContent } from "@mokly/viewer/data";
+
 import type { Compilation } from "../build/compile.js";
 import { isOwned } from "../build/ownership.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -9,7 +11,6 @@ import { MoklyError } from "../errors.js";
 import { referencedRoutes } from "../review/asset_references.js";
 import { FileSystemReviewAssetReader } from "../review/assets.js";
 import { ResourceGraph } from "../review/resource_graph.js";
-import type { ReviewArtifactContent } from "../review/types.js";
 
 import {
   configuredStylesheetPaths,

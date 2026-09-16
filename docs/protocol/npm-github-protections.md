@@ -4,7 +4,7 @@ The [release workflow](../../.github/workflows/release.yml) runs on a push to
 `main` or a manual dispatch. Its publish job checks out a release tag, but GitHub
 environment rules evaluate the **workflow ref**, not that checkout. Permit only
 the `main` branch in environment `npm`; dispatch retries from `main` with the
-existing tag as `publish_ref`.
+existing paired tags as `publish_ref` and `viewer_ref`.
 
 ## Required State
 
@@ -14,11 +14,15 @@ existing tag as `publish_ref`.
   remains an explicit human step, not an independent-person control. When a
   second approved maintainer is available, add them and enable
   `prevent_self_review` to require independent approval.
-- Active tag ruleset `Immutable release tags`: match `refs/tags/v*`, prohibit
+- Active tag ruleset `Immutable release tags`: match `refs/tags/v*` and
+  `refs/tags/viewer-v*`, prohibit
   updates and deletion, and grant no bypass. Allow creation so release-please
   can create new tags without a special bypass credential.
 - Preserve the existing protected `main` branch and verify it requires the
   exact `Required CI` check. Do not replace branch rules as part of this setup.
+- Both npm packages need their own trusted-publisher and team-access settings.
+  They share environment `npm` and its reviewer/main-only policy; a second GitHub
+  environment is unnecessary. The CLI's existing trust does not cover the viewer.
 
 ## Apply With An Authorized Maintainer Credential
 
@@ -59,7 +63,7 @@ gh api --method POST repos/mokly-ai/mokly/rulesets --input - <<'JSON'
   "enforcement": "active",
   "bypass_actors": [],
   "conditions": {
-    "ref_name": { "include": ["refs/tags/v*"], "exclude": [] }
+    "ref_name": { "include": ["refs/tags/v*", "refs/tags/viewer-v*"], "exclude": [] }
   },
   "rules": [{ "type": "update" }, { "type": "deletion" }]
 }
@@ -85,7 +89,7 @@ Repeat the four read commands above. In the environment, require a
 policies enabled. The deployment policy list must contain only `main` with
 `type: branch`, not a tag pattern. Read the tag ruleset in full with
 `gh api repos/mokly-ai/mokly/rulesets/<ruleset-id>` and verify its active status,
-tag target, `v*` condition, both rules, and empty bypass list. Check `main`
+tag target, both `v*` and `viewer-v*` conditions, both rules, and empty bypass list. Check `main`
 protection's required status checks include `Required CI`.
 
 Retain the API read-back alongside release evidence. Do not test immutability
@@ -93,12 +97,13 @@ by trying to move or delete a real release tag.
 
 ## Workspace Credential Blocker
 
-The migration-review workspace credential can read the environment and ruleset
+At the migration review, the workspace credential could read the environment and ruleset
 list, but attempts to update the environment or create the tag ruleset return
-HTTP 403 `Resource not accessible by integration`. The environment remains
-unprotected and the ruleset list empty; reading detailed `main` protection is
-also denied, though `main` reports `protected: true`. These are unfinished
-external setup steps, not settings applied by committing this runbook.
+HTTP 403 `Resource not accessible by integration`. That read-back showed an
+unprotected environment and empty ruleset list; detailed `main` protection was
+also denied although `main` reported `protected: true`. This is historical
+evidence, not current state. Re-read and retain both streams' settings with an
+authorized credential. Committing this runbook applies no external protections.
 
 ## Primary References
 

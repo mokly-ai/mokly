@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { catalogueViewHref, parseStaticDelivery } from "@mokly/viewer/data";
+
 import { ownedEntries } from "../../dist/export/ownership.js";
 import { isExportPublicName } from "../../dist/export/resource_policy.js";
 import {
@@ -8,10 +10,6 @@ import {
   STAGED_DEPLOYMENT_ID,
 } from "../../dist/export/shell_metadata.js";
 import { stageExport } from "../../dist/export/stage.js";
-import {
-  catalogueViewHref,
-  parseStaticDelivery,
-} from "../../dist/navigation/delivery.js";
 
 import { comparisonMetadata } from "./comparisons.mjs";
 

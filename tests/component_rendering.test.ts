@@ -6,9 +6,9 @@ import { test } from "node:test";
 import { checkCompilation } from "../dist/build/check.js";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
-import { decodeProps } from "../dist/components/codec.js";
 import { validateComponentRanges } from "../dist/components/ranges.js";
 import { loadConfig } from "../dist/config/load.js";
+import { decodeProps } from "../packages/viewer/dist/components/codec.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";

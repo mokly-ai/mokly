@@ -1,4 +1,6 @@
 /** Optional changed-route detection powering the Browse changed/all filter. */
+import type { ManifestV5 } from "@mokly/viewer/data";
+
 import { compileCatalogue } from "../build/compile.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
@@ -7,7 +9,6 @@ import {
   type CatalogueChangeSnapshot,
 } from "../registry/changes.js";
 import { readManifest } from "../registry/manifest.js";
-import type { ManifestV5 } from "../registry/types.js";
 import type { ReadOnlyReviewRepository } from "../review/repository.js";
 
 import {

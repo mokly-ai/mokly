@@ -1,6 +1,6 @@
-import { MoklyError } from "../errors.js";
+import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
-import type { ReviewArtifactContent } from "./types.js";
+import { MoklyError } from "../errors.js";
 
 /** Preserve a source route beneath one isolated Review snapshot. */
 export function snapshotPath(side: "after" | "before", route: string): string {

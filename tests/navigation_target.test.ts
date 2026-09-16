@@ -4,7 +4,7 @@ import test from "node:test";
 import {
   parseBrowsingTarget,
   serializeBrowsingTarget,
-} from "../dist/navigation/target.js";
+} from "../packages/viewer/dist/navigation/target.js";
 
 test("browsing targets follow one strict shared grammar", () => {
   const cases = [

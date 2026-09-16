@@ -1,5 +1,5 @@
-import { isSafeCatalogueRoute } from "../config/paths.js";
-import type { ManifestV5 } from "../registry/types.js";
+import { isSafeCatalogueRoute } from "@mokly/viewer/data";
+import type { ManifestV5 } from "@mokly/viewer/data";
 
 import type { ComponentChangeSnapshot } from "./component_changes.js";
 import type {

@@ -1,12 +1,13 @@
 import type { ReactNode } from "react";
 
+import type { ComponentViewRecord } from "@mokly/viewer";
+import { invalidData } from "@mokly/viewer/data";
+
 import { serializeReviewSentinels } from "../renderer/sentinels.js";
 import type { RenderInput, Renderer, RenderResult } from "../renderer/types.js";
 
 import { ComponentCollector } from "./collector.js";
-import { invalidData } from "./data.js";
 import { componentInputs } from "./inputs.js";
-import type { ComponentViewRecord } from "./manifest_types.js";
 import { serializeComponentSentinels } from "./ranges.js";
 import { ComponentContext } from "./render_context.js";
 import { rebaseStyleOwnership } from "./style_ownership.js";

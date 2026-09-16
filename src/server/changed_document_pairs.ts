@@ -1,7 +1,8 @@
 /** Pair current view documents with their baseline paths and material-change eligibility. */
-import type { ColorScheme, Viewport } from "../authoring/types.js";
-import type { Manifest } from "../registry/types.js";
-import { VIEWPORTS } from "../registry/views.js";
+import type { ColorScheme, Viewport } from "@mokly/viewer";
+import type { Manifest } from "@mokly/viewer/data";
+import { VIEWPORTS } from "@mokly/viewer/data";
+
 import { pageBaselines } from "../review/page_baselines.js";
 import { fragmentForView, unionColorSchemes } from "../review/screen_views.js";
 

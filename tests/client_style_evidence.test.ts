@@ -9,9 +9,9 @@ import {
   isStyleOnlyView,
   retainedPaths,
   styleOutcomes,
-} from "../dist/client/style_evidence.js";
-import type { EntryChangeReason } from "../dist/review/component_types.js";
-import type { ViewReview } from "../dist/review/types.js";
+} from "../packages/viewer/dist/client/style_evidence.js";
+import type { EntryChangeReason } from "../packages/viewer/dist/review/component_types.js";
+import type { ViewReview } from "../packages/viewer/dist/review/types.js";
 
 import type { FakeMarkupElement } from "./helpers/fake_markup.js";
 import { FakeMarkupDocument, fakeMarkup } from "./helpers/fake_markup.js";

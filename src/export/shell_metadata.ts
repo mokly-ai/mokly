@@ -2,10 +2,7 @@ import { isDeepStrictEqual } from "node:util";
 
 import { parse } from "parse5";
 
-import {
-  parseStaticDelivery,
-  type StaticDelivery,
-} from "../navigation/delivery.js";
+import { parseStaticDelivery, type StaticDelivery } from "@mokly/viewer/data";
 
 import { exportError } from "./error.js";
 

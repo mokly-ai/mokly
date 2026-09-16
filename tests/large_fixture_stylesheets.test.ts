@@ -5,11 +5,11 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
-import { generatedViews } from "../dist/components/views.js";
 import { loadConfig } from "../dist/config/load.js";
 import { readManifest } from "../dist/registry/manifest.js";
 import { committedReviewRepository } from "../dist/review/repository.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
+import { generatedViews } from "../packages/viewer/dist/components/views.js";
 import { expectedStylesheetChanges } from "../scripts/large/browse.mjs";
 
 import { generateLargeFixture } from "./fixtures/large/generate.js";

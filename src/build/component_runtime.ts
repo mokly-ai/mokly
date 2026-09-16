@@ -1,10 +1,11 @@
 /** The last successfully compiled consumer graph, passed to Serve only in memory. */
 import { randomBytes } from "node:crypto";
 
+import type { ManifestV5 } from "@mokly/viewer/data";
+
 import type { ResolvedConfig } from "../config/types.js";
 import type { CatalogueIndex } from "../registry/catalogue_index.js";
 import { MANIFEST_NAME } from "../registry/manifest.js";
-import type { ManifestV5 } from "../registry/types.js";
 
 import type { Compilation } from "./compile.js";
 import { consumerBundle, type ConsumerBundle } from "./consumer_bundle.js";

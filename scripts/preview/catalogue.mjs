@@ -1,6 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { projectCatalogue } from "../../dist/catalogue/projection.js";
+import {
+  CATALOGUE_PATH,
+  serializeCatalogue,
+} from "../../dist/catalogue/serialization.js";
 import { isInside, projectRealPath } from "../../dist/config/paths.js";
 import { errorMessage } from "../../dist/errors.js";
 import { withExportCleanup } from "../../dist/export/cleanup.js";
@@ -109,6 +114,27 @@ export async function buildPreview(config, output, options = {}) {
         if (review && comparison)
           comparison = await publishComparison(review, comparison, stage);
         await copyPublicFiles(config, catalogue, stage, excludedRoots);
+        await writeText(
+          stage,
+          CATALOGUE_PATH,
+          serializeCatalogue(
+            projectCatalogue({
+              configPath: path
+                .relative(config.repoRoot, config.configPath)
+                .split(path.sep)
+                .join("/"),
+              catalogue,
+              changesStatus: comparison ? "ready" : "disabled",
+              changedRoutes: changes?.changedRoutes,
+              evidence: snapshot.componentChanges,
+              comparison: comparison?.result,
+              comparisonUrl: comparison
+                ? `${comparison.directory}/review.json`
+                : null,
+              revision: { content: 0, evidence: 0 },
+            }),
+          ),
+        );
         await stagePreviewArtifact(stage, manifest, removed, comparison);
         if (
           inputs.fingerprint !==

@@ -7,8 +7,8 @@ import type {
   SelectedReviewProvider,
   SelectedReviewSource,
 } from "../dist/review/selection_types.js";
-import type { ReviewArtifact } from "../dist/review/types.js";
 import { SelectedReviewRoutes } from "../dist/server/selected_review_routes.js";
+import type { ReviewArtifact } from "../packages/viewer/dist/review/types.js";
 
 const source: SelectedReviewSource = {
   before: {

@@ -25,7 +25,11 @@
     "tests/**/*.ts",
     "tests/**/*.tsx",
     "examples/**/*.ts",
-    "examples/**/*.tsx"
+    "examples/**/*.tsx",
+    "packages/viewer/src/**/*.ts",
+    "packages/viewer/src/**/*.tsx",
+    "packages/viewer/tests/**/*.ts",
+    "packages/viewer/tests/**/*.tsx"
   ],
   "exclude": ["node_modules", "tests/fixtures/consumers/**/*.tsx"]
 }

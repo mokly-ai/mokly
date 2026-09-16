@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 
 import { parse, type DefaultTreeAdapterTypes } from "parse5";
 
-import { parseStaticDelivery } from "../../dist/navigation/delivery.js";
-import type { ReviewArtifactContent } from "../../dist/review/types.js";
+import { parseStaticDelivery } from "../../packages/viewer/dist/navigation/delivery.js";
+import type { ReviewArtifactContent } from "../../packages/viewer/dist/review/types.js";
 
 /** Read the actual root descriptor from an exported shell document. */
 export function exportedDelivery(

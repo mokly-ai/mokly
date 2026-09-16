@@ -1,16 +1,21 @@
-import { isCatalogueId } from "../navigation/logical.js";
+import type { ObjectPropSchema } from "@mokly/viewer";
+import {
+  isCatalogueId,
+  validateControlledValues,
+  validateControls,
+  invalidData,
+  plainKeys,
+  validatePropSchema,
+} from "@mokly/viewer/data";
 
-import { validateControlledValues, validateControls } from "./controls.js";
-import { invalidData, plainKeys } from "./data.js";
 import { componentInputs } from "./inputs.js";
-import type { ObjectPropSchema } from "./prop_types.js";
-import { validatePropSchema } from "./schema.js";
 import type {
   ComponentDefinition,
   ComponentInput,
   RegisteredComponent,
 } from "./types.js";
 import { renderInstance } from "./wrapper.js";
+import { registerComponentWrapper } from "./wrapper_identity.js";
 
 /** Register one typed component with saved variants and an instrumented JSX wrapper. */
 export function defineComponent<
@@ -20,6 +25,7 @@ export function defineComponent<
   const definition = validateComponentDefinition(input);
   const Component = (props: Readonly<Record<string, unknown>>) =>
     renderInstance(definition, props);
+  registerComponentWrapper(Component);
   return { entry: definition, Component } as unknown as RegisteredComponent<
     S,
     Slots
@@ -50,6 +56,7 @@ export function validateComponentDefinition(
     if (
       [
         "moklyInstance",
+        "__moklySource",
         "key",
         "ref",
         "__proto__",

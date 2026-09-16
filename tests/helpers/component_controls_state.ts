@@ -1,4 +1,4 @@
-import type { RenderCapability } from "../../dist/components/render_types.js";
+import type { RenderCapability } from "../../packages/viewer/dist/components/render_types.js";
 
 export type WatchedRenderCapability = RenderCapability & {
   readonly version: string;

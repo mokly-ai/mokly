@@ -5,7 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
-import type { ReviewResult } from "../dist/review/types.js";
+import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
 import { createPreviewComparisonFixture } from "./helpers/preview_comparison_fixture.js";

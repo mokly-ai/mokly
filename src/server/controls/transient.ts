@@ -1,10 +1,11 @@
 /** Render temporary props through the same single-view compiler as saved previews. */
+import { encodeProps } from "@mokly/viewer/data";
+import type { ComponentRenderRequest } from "@mokly/viewer/data";
+
 import type { ComponentRuntime } from "../../build/component_runtime.js";
 import { DocumentCompiler } from "../../build/document_compiler.js";
 import type { LoadedGraph } from "../../build/load_graph.js";
-import { encodeProps } from "../../components/codec.js";
 import { validateRenderRequest } from "../../components/render_request.js";
-import type { ComponentRenderRequest } from "../../components/render_types.js";
 
 import {
   captureRenderBundle,

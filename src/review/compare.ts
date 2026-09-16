@@ -2,12 +2,20 @@ import path from "node:path";
 
 import { minimatch } from "minimatch";
 
+import type {
+  ManifestScreen,
+  Manifest,
+  ReviewArtifact,
+  ReviewArtifactContent,
+  ReviewResult,
+  ScreenReview,
+} from "@mokly/viewer/data";
+
 import type { Compilation } from "../build/compile.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
 import { hasRegisteredComponents } from "../registry/manifest_capabilities.js";
-import type { ManifestScreen, Manifest } from "../registry/types.js";
 
 import {
   copySnapshotDependencies,
@@ -24,12 +32,6 @@ import type { ReadOnlyReviewRepository } from "./repository.js";
 import { ResourceComparison } from "./resource_comparison.js";
 import { compareScreen } from "./screen_compare.js";
 import { aggregateIgnored, fragmentRoutes } from "./screen_views.js";
-import type {
-  ReviewArtifact,
-  ReviewArtifactContent,
-  ReviewResult,
-  ScreenReview,
-} from "./types.js";
 
 /** Compare checked head output to its Git branch point and retain pane artifacts. */
 export async function compareReview(

@@ -4,6 +4,7 @@ import path from "node:path";
 
 import { runCommand } from "./command.mjs";
 import { smokeRegisteredComponents } from "./components.mjs";
+import { consumerPackage } from "./consumer_package.mjs";
 import { inspectConsumerExport } from "./export.mjs";
 import {
   copyFixture,
@@ -13,6 +14,7 @@ import {
   smokeServer,
 } from "./fixture.mjs";
 import { smokeConsumerPublish } from "./publish.mjs";
+import { smokeViewer } from "./viewer.mjs";
 import { smokeExternalWatch } from "./watch.mjs";
 
 export async function smokeEsmConsumer(context) {
@@ -86,6 +88,7 @@ export async function smokeEsmConsumer(context) {
     exported.screens.find((screen) => screen.id === "packed-home")?.state,
     "changed",
   );
+  await smokeViewer(root);
   await smokeRegisteredComponents(context, root);
   await smokeConsumerPublish(context, root);
 }
@@ -140,6 +143,8 @@ export async function smokeCleanCacheExecution(context) {
     cache,
     "--package",
     packageSpec,
+    "--package",
+    `file:${context.viewerArchivePath}`,
     "--",
     "mokly",
   ];
@@ -288,24 +293,4 @@ export async function smokeJunoFixture(context) {
   await inspectConsumerExport(root, "tools/published", "HEAD", [
     "view/workspace/overview.html",
   ]);
-}
-
-function consumerPackage(name, context, installMokly) {
-  return {
-    name,
-    private: true,
-    type: "module",
-    dependencies: {
-      ...(installMokly
-        ? { "@mokly/mokly": `file:${context.archivePath}` }
-        : {}),
-      react: context.versions.react,
-      "react-dom": context.versions.reactDom,
-    },
-    devDependencies: {
-      "@types/react": context.versions.reactTypes,
-      "@types/react-dom": context.versions.reactDomTypes,
-      typescript: context.versions.typescript,
-    },
-  };
 }

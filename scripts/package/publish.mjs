@@ -3,6 +3,7 @@ import fs from "node:fs";
 import http from "node:http";
 import path from "node:path";
 
+import { inspectPublicCatalogue } from "./catalogue.mjs";
 import { runCommand } from "./command.mjs";
 import {
   assertCompleteInventory,
@@ -81,12 +82,19 @@ export async function smokeConsumerPublish(context, root) {
           file,
         );
       }
-      for (const file of ["index.html", "404.html", "mokly-upload.json"])
+      for (const file of [
+        "index.html",
+        "404.html",
+        "mokly-upload.json",
+        "__mokly/catalogue.json",
+        "__mokly/client/inspector.js",
+      ])
         assert.ok(
           marker.files.includes(file),
           `missing protocol artifact ${file}`,
         );
       assert.equal(marker.files.includes("static/mokly-manifest.json"), false);
+      await inspectPublicCatalogue(unpacked, manifest.comparisonPath);
       if (noChanges) {
         assert.equal(manifest.comparisonPath, null);
         assert.equal(manifest.baseSha, null);

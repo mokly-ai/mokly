@@ -1,7 +1,7 @@
 /** Load only displayed saved views; missing usage never becomes a fictional empty record. */
-import type { ComponentViewRecord } from "../components/manifest_types.js";
-import type { GeneratedComponentView } from "../components/views.js";
-import type { WorkspaceData } from "../server/shell/workspace_data.js";
+import type { ComponentViewRecord } from "@mokly/viewer";
+import type { GeneratedComponentView } from "@mokly/viewer/data";
+import type { WorkspaceData } from "@mokly/viewer/server";
 
 export function workspaceLoader(
   data: WorkspaceData,

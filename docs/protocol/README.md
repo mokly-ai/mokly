@@ -35,6 +35,14 @@ when the historical primary file is absent, never when it is invalid.
 - [Public authoring API](./mokly-authoring.md)
 - [Rendering and generated output](./mokly-rendering.md)
 - [Build and Browse runtime](./mokly-runtime.md)
+- [Component instance identity](./mokly-instances.md) — existing key/boundary
+  rules and approved resolution/source-location target.
+- [Public catalogue read model](./mokly-catalogue.md) — implemented:
+  public inventory v1 beside the private manifest.
+- [Embeddable viewer](./mokly-viewer.md) — approved `@mokly/viewer` API and
+  unchanged local shell extraction.
+- [Viewer frame adapter](./mokly-frame-adapter.md) — approved same-origin
+  interface and cross-origin inspector protocol v1.
 - [On-demand Serve](./mokly-on-demand.md)
 - [Selected live comparisons](./mokly-selected-comparisons.md)
 - [Live catalogue evidence updates](./mokly-live-evidence.md)

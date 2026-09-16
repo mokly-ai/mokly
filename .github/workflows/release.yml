@@ -6,7 +6,11 @@ on:
   workflow_dispatch:
     inputs:
       publish_ref:
-        description: Existing immutable vX.Y.Z tag to verify and publish
+        description: Existing immutable CLI vX.Y.Z tag to verify and publish
+        required: true
+        type: string
+      viewer_ref:
+        description: Paired immutable viewer-vX.Y.Z tag from the same commit
         required: true
         type: string
 
@@ -14,7 +18,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: release-${{ github.event_name == 'workflow_dispatch' && inputs.publish_ref || github.ref }}
+  group: npm-release
   cancel-in-progress: false
 
 jobs:
@@ -28,6 +32,8 @@ jobs:
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
+      viewer_release_created: ${{ steps.release.outputs['packages/viewer--release_created'] }}
+      viewer_tag_name: ${{ steps.release.outputs['packages/viewer--tag_name'] }}
     steps:
       - name: Create or update release pull request
         id: release
@@ -43,6 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       publish_ref: ${{ steps.select.outputs.publish_ref }}
+      viewer_ref: ${{ steps.select.outputs.viewer_ref }}
     steps:
       - name: Check out workflow scripts
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -50,19 +57,25 @@ jobs:
         id: select
         env:
           MANUAL_REF: ${{ inputs.publish_ref }}
+          MANUAL_VIEWER_REF: ${{ inputs.viewer_ref }}
           RELEASE_CREATED: ${{ needs.release-please.outputs.release_created }}
           RELEASE_EVENT: ${{ github.event_name }}
           RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
+          VIEWER_RELEASE_CREATED: ${{ needs.release-please.outputs.viewer_release_created }}
+          VIEWER_RELEASE_TAG: ${{ needs.release-please.outputs.viewer_tag_name }}
         run: node scripts/release/resolve-ref.mjs
 
   publish:
-    if: always() && needs.select-release.outputs.publish_ref != ''
+    if: always() && needs.select-release.result == 'success' && needs.select-release.outputs.publish_ref != '' && needs.select-release.outputs.viewer_ref != ''
     needs: [release-please, select-release]
     runs-on: ubuntu-latest
     environment: npm
     permissions:
       contents: read
       id-token: write
+    env:
+      CLI_REF: ${{ needs.select-release.outputs.publish_ref }}
+      VIEWER_REF: ${{ needs.select-release.outputs.viewer_ref }}
     steps:
       - name: Check out immutable release tag
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -81,32 +94,45 @@ jobs:
         run: |
           rustup toolchain install 1.95.0 --profile minimal --component rustfmt --component clippy
           rustup default 1.95.0
+      - name: Verify immutable tags
+        run: node scripts/release/verify-ref.mjs "$CLI_REF" "$VIEWER_REF"
       - name: Install dependencies
         run: npm ci
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
-      - name: Verify immutable tag
-        run: node scripts/release/verify-ref.mjs "${{ needs.select-release.outputs.publish_ref }}"
       - name: Run complete verification
         run: cargo xtask check
-      - name: Prepare exact publish artifact
+      - name: Prepare exact publish artifacts
         id: package
         run: node scripts/release/pack.mjs .context/release-artifact
-      - name: Guard an existing npm version
-        id: registry
-        run: node scripts/release/registry.mjs --mode guard --report .context/release-artifact/pack-report.json
-      - name: Preserve checked artifact
+      - name: Smoke-test exact publish artifacts
+        run: node scripts/package-smoke.mjs --artifacts .context/release-artifact
+      - name: Recheck immutable tags and source
+        run: node scripts/release/verify-ref.mjs "$CLI_REF" "$VIEWER_REF"
+      - name: Preserve checked artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: mokly-${{ steps.package.outputs.version }}
+          name: mokly-${{ steps.package.outputs.cli_version }}-viewer-${{ steps.package.outputs.viewer_version }}
           path: |
-            ${{ steps.package.outputs.archive_path }}
-            .context/release-artifact/pack-report.json
+            .context/release-artifact/
           if-no-files-found: error
-      - name: Publish with npm trusted publishing
-        if: steps.registry.outputs.published != 'true'
+      - name: Guard existing viewer version
+        id: viewer_registry
+        run: node scripts/release/registry.mjs --mode guard --report .context/release-artifact/viewer/pack-report.json
+      - name: Publish viewer with npm trusted publishing
+        if: steps.viewer_registry.outputs.published != 'true'
         env:
-          ARCHIVE_PATH: ${{ steps.package.outputs.archive_path }}
-        run: npm publish "$ARCHIVE_PATH" --access public
-      - name: Verify registry package and provenance
-        run: node scripts/release/registry.mjs --mode verify --report .context/release-artifact/pack-report.json --dist-tag latest
+          ARCHIVE_PATH: ${{ steps.package.outputs.viewer_archive_path }}
+        run: npm publish "$ARCHIVE_PATH" --access public --ignore-scripts
+      - name: Verify viewer registry package and provenance
+        run: node scripts/release/registry.mjs --mode verify --report .context/release-artifact/viewer/pack-report.json --dist-tag latest
+      - name: Guard existing CLI version
+        id: cli_registry
+        run: node scripts/release/registry.mjs --mode guard --report .context/release-artifact/cli/pack-report.json
+      - name: Publish CLI with npm trusted publishing
+        if: steps.cli_registry.outputs.published != 'true'
+        env:
+          ARCHIVE_PATH: ${{ steps.package.outputs.cli_archive_path }}
+        run: npm publish "$ARCHIVE_PATH" --access public --ignore-scripts
+      - name: Verify CLI registry package and provenance
+        run: node scripts/release/registry.mjs --mode verify --report .context/release-artifact/cli/pack-report.json --dist-tag latest

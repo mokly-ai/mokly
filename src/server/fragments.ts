@@ -3,15 +3,15 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import type { ManifestComponent } from "../components/manifest_types.js";
-import { generatedViews } from "../components/views.js";
+import type { ManifestComponent } from "@mokly/viewer";
+import { generatedViews, isLogicalFragment } from "@mokly/viewer/data";
+import type { ManifestEntry, ManifestScreen } from "@mokly/viewer/data";
+import type { Catalogue } from "@mokly/viewer/server";
+
 import { isPublicStaticFile } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { extractHtmlReferences } from "../html_references.js";
-import { isLogicalFragment } from "../navigation/logical.js";
-import type { ManifestEntry, ManifestScreen } from "../registry/types.js";
 
-import type { Catalogue } from "./catalogue.js";
 import type { DocumentService } from "./demand/service.js";
 
 /** Parse and cross-view validate the optional fragment query. */

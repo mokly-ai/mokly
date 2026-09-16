@@ -3,11 +3,19 @@ import path from "node:path";
 
 import { minimatch } from "minimatch";
 
+import { parseReviewResult } from "@mokly/viewer/data";
+import type {
+  ManifestScreen,
+  ReviewArtifact,
+  ReviewArtifactContent,
+  ReviewResult,
+  ViewReview,
+} from "@mokly/viewer/data";
+
 import { ConfiguredGitCommandRunner } from "../config/git.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
-import type { ManifestScreen } from "../registry/types.js";
 
 import { copySnapshotDependencies, GitReviewAssetReader } from "./assets.js";
 import { baselineResourceConfig } from "./base_manifest.js";
@@ -17,7 +25,6 @@ import type { BaselineReader } from "./git.js";
 import { CompiledReviewAssetReader } from "./head_assets.js";
 import { baselineReaderForCommit } from "./repository.js";
 import { ResourceComparison } from "./resource_comparison.js";
-import { parseReviewResult } from "./result_validation.js";
 import { compareScreen } from "./screen_compare.js";
 import { aggregateIgnored, fragmentRoutes } from "./screen_views.js";
 import {
@@ -29,12 +36,6 @@ import type {
   SelectedReviewProvider,
   SelectedReviewSource,
 } from "./selection_types.js";
-import type {
-  ReviewArtifact,
-  ReviewArtifactContent,
-  ReviewResult,
-  ViewReview,
-} from "./types.js";
 
 export class RepositorySelectedReview implements SelectedReviewProvider {
   constructor(

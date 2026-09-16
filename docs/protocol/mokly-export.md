@@ -8,6 +8,11 @@ shares its artifact validation, static delivery, and output transaction. The
 delivery of this contract and the [static delivery contract](./mokly-export-delivery.md).
 Normal build validation and the existing comparison schema remain authoritative.
 
+The [viewer library plan](../../plans/mokly-viewer-library.md) tracks the
+implemented public catalogue, inert published inspector and separate viewer
+package. Local Serve/export presentation
+is unchanged.
+
 ## Scope
 
 An installed consumer can create a complete static Mokly catalogue using
@@ -229,9 +234,28 @@ config modules, npm packages, `.git`, local environment files, comparison
 diagnostic summaries, or comparison ownership markers. The export's own
 public-safe inventory is distinct from private comparison metadata.
 
+[`__mokly/catalogue.json`](./mokly-catalogue.md) is implemented in the same
+collision-checked ownership/upload inventories, alongside the implemented
+`__mokly/client/inspector.js`. The read model is a public allowlist projection of manifest v5;
+`mokly-manifest.json` remains excluded. Ownership v1, upload v1, review v2/v3
+and delivery descriptor v2 keep their schema versions. Deployment identity
+includes the catalogue under the [delivery hashing rule](./mokly-export-delivery.md#deployment-identity)
+and includes the inspector and its inert maps.
+Only the ownership-aware adapter's current published HTML copies gain the
+Mokly-owned inspector script and bounded inert boundary metadata. The
+[inspector contract](./mokly-frame-adapter.md) requires a host handshake before
+activation. Authored/generated files on disk and comparison document bytes
+remain unchanged; consumer content and portable links are not rewritten to
+implement inspection. Default local frames keep scripts disabled.
+
 Core export modules belong under `src/export` and compile into `dist`. Consumers
 must not deep-import package internals or copy repository scripts. The CLI is
-the only new supported interface; no public JavaScript export API is added.
+the supported interface for export; no public JavaScript export engine API is
+added. The [`@mokly/viewer`](./mokly-viewer.md) package is a separate supported
+React/SSR viewer API consuming public catalogue data, not an export engine or
+permission to import CLI internals. Serve and export become its first hosts,
+retaining the existing shell, CSS and vanilla browser runtime without shipping
+React in exported browsers.
 Keep typed options/results and narrow testable filesystem, Git, and capture
 boundaries. Reuse existing generation/rendering rules rather than creating a
 second screen renderer or weakening build validation.

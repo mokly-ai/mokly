@@ -1,12 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import type { ReviewArtifactContent } from "@mokly/viewer/data";
+
 import { validateReviewOut } from "../config/path_validation.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
 import { MoklyError, errorMessage } from "../errors.js";
-
-import type { ReviewArtifactContent } from "./types.js";
 
 /** Replace an owned Review artifact directory as one filesystem transaction. */
 export async function writeReviewArtifact(

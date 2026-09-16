@@ -4,7 +4,7 @@ import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import {
   ComponentRenderError,
   type ComponentRenderSuccess,
-} from "../../components/render_types.js";
+} from "@mokly/viewer/data";
 
 import { RENDER_BYTES, type TransientRender } from "./transient_assets.js";
 

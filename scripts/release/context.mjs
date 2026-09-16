@@ -1,6 +1,6 @@
 import fs from "node:fs";
 
-const TAG_PATTERN = /^v\d+\.\d+\.\d+$/;
+const VERSION = "(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)";
 
 export function resolvePublishRef({
   eventName,
@@ -22,9 +22,27 @@ export function resolvePublishRef({
   throw new Error(`unsupported release event: ${eventName}`);
 }
 
-export function validateTagVersion(ref, version) {
-  validateTag(ref);
-  const expected = `v${version}`;
+export function resolvePublishRefs(input) {
+  const cli = resolvePublishRef(input);
+  if (!cli) {
+    if (input.viewerReleaseCreated === "true")
+      throw new Error("viewer release requires a paired CLI release");
+    return undefined;
+  }
+  const viewer =
+    input.eventName === "workflow_dispatch"
+      ? input.manualViewerRef
+      : input.viewerReleaseCreated === "true"
+        ? input.viewerReleaseTag
+        : undefined;
+  if (!viewer) throw new Error("a paired immutable viewer_ref is required");
+  validateTag(viewer, "viewer-");
+  return { cli, viewer };
+}
+
+export function validateTagVersion(ref, version, prefix = "") {
+  validateTag(ref, prefix);
+  const expected = `${prefix}v${version}`;
   if (ref !== expected) {
     throw new Error(
       `release ref ${ref} does not match package version ${version}`,
@@ -56,8 +74,10 @@ export function writeWorkflowOutput(
   fs.appendFileSync(outputPath, `${name}=${value}\n`, "utf8");
 }
 
-function validateTag(ref) {
-  if (!TAG_PATTERN.test(ref)) {
-    throw new Error(`publish_ref must be an immutable vX.Y.Z tag: ${ref}`);
+function validateTag(ref, prefix = "") {
+  if (!new RegExp(`^${prefix}v${VERSION}$`).test(ref)) {
+    throw new Error(
+      `publish_ref must be an immutable ${prefix}vX.Y.Z tag: ${ref}`,
+    );
   }
 }

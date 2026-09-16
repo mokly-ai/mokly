@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import type { ComponentRangeRecord } from "../dist/components/manifest_types.js";
 import { validateComponentRanges } from "../dist/components/ranges.js";
+import type { ComponentRangeRecord } from "../packages/viewer/dist/components/manifest_types.js";
 
 const records: readonly ComponentRangeRecord[] = [
   { id: "r-0", target: { kind: "instance", instanceKey: "instance" } },

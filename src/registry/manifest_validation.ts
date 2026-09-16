@@ -1,9 +1,11 @@
+import { isCatalogueId } from "@mokly/viewer/data";
+import type { HistoricalManifest } from "@mokly/viewer/data";
+
 import {
   componentFragmentPaths,
   validateManifestComponentUsage,
 } from "../components/manifest_validation.js";
 import { MoklyError } from "../errors.js";
-import { isCatalogueId } from "../navigation/logical.js";
 
 import { validateEntry, validateCurrentFields } from "./manifest_entries.js";
 import { validateManifestRelationships } from "./manifest_relationships.js";
@@ -13,7 +15,6 @@ import {
   validateRepoPath,
   validateRoute,
 } from "./manifest_values.js";
-import type { HistoricalManifest } from "./types.js";
 
 /** Validate unknown manifest JSON and normalize temporary schema version 2. */
 export function validateManifest(

@@ -1,11 +1,12 @@
-/** Latest snapshot delivery for same-content background updates, fenced against navigation. */
-import { applyNavigationEvidence } from "./browse_evidence.js";
 import {
+  loadCatalogueRevisionAdopter,
+  applyNavigationEvidence,
   navigationPending,
   readPageStamp,
   waitForNavigation,
-} from "./browse_update_state.js";
-import { workspaceEvidence } from "./workspace_updates.js";
+  workspaceEvidence,
+} from "@mokly/viewer/runtime";
+/** Latest snapshot delivery for same-content background updates, fenced against navigation. */
 
 export async function refreshBrowseEvidence(
   doc: Document,
@@ -48,6 +49,31 @@ export async function refreshBrowseEvidence(
           ?.getAttribute("data-mokly-baseline")
     )
       return;
+    const publicResponse = await win.fetch(
+      new URL("/__mokly/catalogue.json", href),
+      { signal, cache: "no-store", credentials: "omit" },
+    );
+    if (
+      !publicResponse.ok ||
+      signal.aborted ||
+      navigationPending(doc) ||
+      href !== win.location.href
+    )
+      return;
+    const catalogue: unknown = await publicResponse.json();
+    signal.throwIfAborted();
+    const adoptCatalogueRevision = await loadCatalogueRevisionAdopter();
+    signal.throwIfAborted();
+    if (
+      navigationPending(doc) ||
+      href !== win.location.href ||
+      view !== doc.querySelector("[data-mokly-view]")?.firstElementChild ||
+      readPageStamp(doc)?.version !== current.version
+    )
+      continue;
+    if (publicResponse.url !== new URL("/__mokly/catalogue.json", href).href)
+      return;
+    if (!adoptCatalogueRevision(doc, catalogue)) return;
     const evidence = workspaceEvidence(doc, next);
     if (!evidence) return;
     applyNavigationEvidence(doc, next);

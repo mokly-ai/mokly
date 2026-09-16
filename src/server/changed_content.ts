@@ -2,6 +2,12 @@
 
 import path from "node:path";
 
+import type {
+  Manifest,
+  ScreenResourceEvidence,
+  ViewResourceEvidence,
+} from "@mokly/viewer/data";
+
 import { isAuthoringSource } from "../build/source_inventory.js";
 import { isInside, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -12,7 +18,6 @@ import {
   LEGACY_MANIFEST_NAME,
   MANIFEST_NAME,
 } from "../registry/manifest.js";
-import type { Manifest } from "../registry/types.js";
 import {
   FileSystemReviewAssetReader,
   GitReviewAssetReader,
@@ -25,10 +30,6 @@ import {
   normalizeReviewPair,
   normalizeSingleDocument,
 } from "../review/ignore.js";
-import type {
-  ScreenResourceEvidence,
-  ViewResourceEvidence,
-} from "../review/types.js";
 
 import { documentPairs, type DocumentPair } from "./changed_document_pairs.js";
 import { ChangedResourceGraph } from "./changed_resources.js";

@@ -1,4 +1,4 @@
-import { isSafeRepositoryPath } from "../config/paths.js";
+import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
 import { exportError } from "./error.js";
 

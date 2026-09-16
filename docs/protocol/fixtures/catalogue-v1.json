@@ -1,0 +1,280 @@
+{
+  "changesStatus": "ready",
+  "collections": [
+    {
+      "changes": {
+        "included": false,
+        "kind": "unmodified",
+        "status": "ready"
+      },
+      "childIds": [
+        "home",
+        "action",
+        "guide",
+        "tour"
+      ],
+      "details": {
+        "dependencies": [],
+        "description": "Product",
+        "relatedDocs": [],
+        "sourcePath": "entries/catalogue.mockup.tsx"
+      },
+      "id": "product",
+      "kind": "collection",
+      "tags": [],
+      "title": "Product"
+    }
+  ],
+  "comparisonUrl": null,
+  "components": [
+    {
+      "changes": {
+        "included": false,
+        "kind": "unmodified",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {
+        "label": {
+          "kind": "text"
+        }
+      },
+      "details": {
+        "dependencies": [],
+        "description": "Action",
+        "relatedDocs": [],
+        "sourcePath": "entries/catalogue.mockup.tsx"
+      },
+      "id": "action",
+      "kind": "component",
+      "propSchema": {
+        "kind": "object",
+        "properties": {
+          "label": {
+            "schema": {
+              "kind": "string"
+            }
+          }
+        }
+      },
+      "route": "components/action.html",
+      "slots": [],
+      "tags": [],
+      "title": "Action",
+      "variants": [
+        {
+          "comparison": {
+            "eligible": false,
+            "kind": "unmodified",
+            "status": "ready"
+          },
+          "id": "default",
+          "props": {
+            "label": [
+              "string",
+              "Continue"
+            ]
+          },
+          "suppliedSlots": [],
+          "title": "Default",
+          "views": [
+            {
+              "colorScheme": "light",
+              "comparison": {
+                "eligible": false,
+                "kind": "unmodified",
+                "status": "ready"
+              },
+              "fragmentPath": "static/components/action.variants/default.mobile.html",
+              "usage": {
+                "instances": [],
+                "ranges": [],
+                "slots": [],
+                "status": "ready"
+              },
+              "viewport": "mobile"
+            },
+            {
+              "colorScheme": "light",
+              "comparison": {
+                "eligible": false,
+                "kind": "unmodified",
+                "status": "ready"
+              },
+              "fragmentPath": "static/components/action.variants/default.desktop.html",
+              "usage": {
+                "instances": [],
+                "ranges": [],
+                "slots": [],
+                "status": "ready"
+              },
+              "viewport": "desktop"
+            }
+          ]
+        }
+      ],
+      "viewports": [
+        "mobile",
+        "desktop"
+      ]
+    }
+  ],
+  "deploymentId": "0000000000000000000000000000000000000000000000000000000000000000",
+  "identity": {
+    "id": "05a4e44bb289d272f72d0b0b11816b9e756912791b577bcd97a2d90479b8e484",
+    "title": "Mokly"
+  },
+  "pages": [
+    {
+      "changes": {
+        "included": false,
+        "kind": "unmodified",
+        "status": "ready"
+      },
+      "details": {
+        "dependencies": [],
+        "description": "Guide",
+        "relatedDocs": [],
+        "sourcePath": "entries/catalogue.mockup.tsx"
+      },
+      "documentPath": "static/guide.html",
+      "id": "guide",
+      "kind": "page",
+      "route": "guide.html",
+      "tags": [],
+      "title": "Guide"
+    }
+  ],
+  "removedEntries": [],
+  "revision": {
+    "content": 0,
+    "evidence": 0
+  },
+  "schemaVersion": 1,
+  "screens": [
+    {
+      "changes": {
+        "included": false,
+        "kind": "unmodified",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "details": {
+        "dependencies": [],
+        "description": "Home",
+        "relatedDocs": [],
+        "sourcePath": "entries/catalogue.mockup.tsx"
+      },
+      "id": "home",
+      "kind": "screen",
+      "route": "screens/home.html",
+      "tags": [],
+      "title": "Home",
+      "useCaseIds": [
+        "tour"
+      ],
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": false,
+            "kind": "unmodified",
+            "status": "ready"
+          },
+          "fragmentPath": "static/screens/home.mobile.html",
+          "usage": {
+            "instances": [],
+            "ranges": [],
+            "slots": [],
+            "status": "ready"
+          },
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "eligible": false,
+            "kind": "unmodified",
+            "status": "ready"
+          },
+          "fragmentPath": "static/screens/home.desktop.html",
+          "usage": {
+            "instances": [],
+            "ranges": [],
+            "slots": [],
+            "status": "ready"
+          },
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": {
+    "components": [
+      {
+        "children": [
+          {
+            "id": "action",
+            "kind": "entry"
+          }
+        ],
+        "id": "product",
+        "kind": "collection"
+      }
+    ],
+    "pages": [
+      {
+        "children": [
+          {
+            "id": "home",
+            "kind": "entry"
+          },
+          {
+            "id": "guide",
+            "kind": "entry"
+          },
+          {
+            "id": "tour",
+            "kind": "entry"
+          }
+        ],
+        "id": "product",
+        "kind": "collection"
+      }
+    ]
+  },
+  "useCases": [
+    {
+      "changes": {
+        "included": false,
+        "kind": "unmodified",
+        "status": "ready"
+      },
+      "details": {
+        "dependencies": [],
+        "description": "Tour",
+        "relatedDocs": [],
+        "sourcePath": "entries/catalogue.mockup.tsx"
+      },
+      "id": "tour",
+      "kind": "use-case",
+      "route": "user-flows/tour.html",
+      "steps": [
+        {
+          "screenId": "home",
+          "title": "Open home"
+        }
+      ],
+      "tags": [],
+      "title": "Tour"
+    }
+  ]
+}

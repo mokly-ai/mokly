@@ -7,7 +7,7 @@ import { adaptBrowseDocument } from "../dist/browse/document_adapter.js";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { generatedHeader } from "../dist/build/ownership.js";
 import { loadConfig } from "../dist/config/load.js";
-import { createCatalogue } from "../dist/server/catalogue.js";
+import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 
 import {
   registerFixturePage,
@@ -52,17 +52,23 @@ test("Browse authenticates markers while preserving live navigation attributes",
 
   assert.match(
     adapted,
-    /href="\.\/details\.mobile\.html" data-mokly-link="details" data-mokly-target="InheritedFrame">Inherited/,
+    /href="\.\/details\.mobile\.html" data-mokly-link="details" data-mokly-target="InheritedFrame" data-mokly-inspector-link="0">Inherited/,
   );
   assert.match(
     adapted,
-    /href="\.\/details\.mobile\.html" target="" data-mokly-link="details">Own self/,
+    /href="\.\/details\.mobile\.html" target="" data-mokly-link="details" data-mokly-inspector-link="1">Own self/,
   );
-  assert.match(adapted, /target="_TOP"[^>]+data-mokly-target="_top">Top/);
-  assert.match(adapted, /target="_blank"[^>]+data-mokly-target="_blank">Blank/);
   assert.match(
     adapted,
-    /target="Named\.Frame:2"[^>]+data-mokly-target="Named\.Frame:2">Named/,
+    /target="_TOP"[^>]+data-mokly-target="_top" data-mokly-inspector-link="2">Top/,
+  );
+  assert.match(
+    adapted,
+    /target="_blank"[^>]+data-mokly-target="_blank" data-mokly-inspector-link="3">Blank/,
+  );
+  assert.match(
+    adapted,
+    /target="Named\.Frame:2"[^>]+data-mokly-target="Named\.Frame:2" data-mokly-inspector-link="4">Named/,
   );
   assert.match(adapted, /target=" invalid">Invalid/);
   assert.doesNotMatch(adapted, /target=" invalid"[^>]+data-mokly-link/);
@@ -91,7 +97,7 @@ test("Browse authenticates markers while preserving live navigation attributes",
   );
   assert.match(
     adapted,
-    /<a href="\.\/details\.mobile\.html" target="_blank"[^>]+data-mokly-target="_blank"><text>SVG/,
+    /<a href="\.\/details\.mobile\.html" target="_blank"[^>]+data-mokly-target="_blank" data-mokly-inspector-link="3"><text>SVG/,
   );
   assert.match(adapted, /<base target="InheritedFrame"/);
   assert.match(adapted, /<form target="_top"><button formTarget="_parent"/);

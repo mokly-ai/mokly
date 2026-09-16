@@ -1,12 +1,10 @@
 import path from "node:path";
 
+import { isSafeRepositoryPath } from "@mokly/viewer/data";
+
 import { sourceDenialMessage } from "../build/source_denial.js";
 import { isAuthoringSource } from "../build/source_inventory.js";
-import {
-  isInside,
-  isSafeRepositoryPath,
-  projectRealPath,
-} from "../config/paths.js";
+import { isInside, projectRealPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import {
   FORMER_MANIFEST_NAME,

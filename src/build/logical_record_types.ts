@@ -1,4 +1,4 @@
-import type { LogicalTarget } from "../navigation/logical.js";
+import type { LogicalTarget } from "@mokly/viewer/data";
 
 /** A navigation attribute whose logical value was rewritten. */
 export interface LogicalAttributeRecord {

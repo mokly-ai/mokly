@@ -1,13 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { isSafeRepositoryPath } from "@mokly/viewer/data";
+
 import { isBaselineCachePath } from "../config/cache_paths.js";
-import {
-  isInside,
-  isSafeRepositoryPath,
-  projectRealPath,
-  toPosixPath,
-} from "../config/paths.js";
+import { isInside, projectRealPath, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";

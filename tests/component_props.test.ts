@@ -1,17 +1,17 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { reviewMaterialKey } from "../dist/authoring/review_material.js";
 import {
   encodeProps,
   decodeProps,
   encodeValue,
   decodeValue,
-} from "../dist/components/codec.js";
-import { canonicalJson } from "../dist/components/data.js";
-import type { PropValue } from "../dist/components/prop_types.js";
-import { validateProps } from "../dist/components/props.js";
-import { validatePropSchema } from "../dist/components/schema.js";
+} from "../packages/viewer/dist/components/codec.js";
+import { canonicalJson } from "../packages/viewer/dist/components/data.js";
+import type { PropValue } from "../packages/viewer/dist/components/prop_types.js";
+import { validateProps } from "../packages/viewer/dist/components/props.js";
+import { validatePropSchema } from "../packages/viewer/dist/components/schema.js";
+import { reviewMaterialKey } from "../packages/viewer/dist/data/material_key.js";
 
 const schema = {
   kind: "object",

@@ -6,7 +6,7 @@ import type { GeneratedOutputStore } from "../build/output_store.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timingArguments } from "../diagnostics/timings.js";
 
-import type { RunningServer } from "./http.js";
+import type { RunningServer } from "./http_types.js";
 import type {
   PreparedResourceWatch,
   ResourceWatcher,

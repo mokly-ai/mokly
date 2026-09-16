@@ -1,9 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import type { StaticDelivery, ReviewArtifactContent } from "@mokly/viewer/data";
+
 import { timeAsync } from "../diagnostics/timings.js";
-import type { StaticDelivery } from "../navigation/delivery.js";
-import type { ReviewArtifactContent } from "../review/types.js";
 
 import { finalizeDeployment } from "./deployment.js";
 import { assertExportActive } from "./error.js";

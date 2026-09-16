@@ -1,14 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { navigationConstraintChanges } from "../dist/client/browse_navigation_state.js";
+import { navigationConstraintChanges } from "../packages/viewer/dist/client/browse_navigation_state.js";
 import {
   clearTagTerm,
   parseSearchQuery,
   queryConstrains,
   rowMatchesQuery,
   setTagTerm,
-} from "../dist/client/search_query.js";
+} from "../packages/viewer/dist/client/search_query.js";
 
 const welcome = {
   route: "screens/welcome.html",

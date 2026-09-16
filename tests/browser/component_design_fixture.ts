@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-import type { ManifestV5 } from "../../dist/registry/types.js";
+import type { ManifestV5 } from "../../packages/viewer/dist/registry/types.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 
 const generated = path.join(repositoryRoot, "examples/basic/generated");

@@ -1,14 +1,13 @@
 import path from "node:path";
 
+import type { ComponentViewRecord } from "@mokly/viewer";
+import { invalidData, validateResourcePath } from "@mokly/viewer/data";
+
 import {
   isPublicStaticFile,
   publicFileFailureReason,
 } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
-
-import { invalidData } from "./data.js";
-import type { ComponentViewRecord } from "./manifest_types.js";
-import { validateResourcePath } from "./validation_helpers.js";
 
 /** Metadata cannot grant ownership of source files or missing public resources. */
 export function validateComponentResources(

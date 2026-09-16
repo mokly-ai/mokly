@@ -6,9 +6,9 @@ import test from "node:test";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { compareReview } from "../dist/review/compare.js";
 import { prepareReviewRepository } from "../dist/review/prepare.js";
-import { parseReviewResult } from "../dist/review/result_validation.js";
 import { RepositorySelectedReview } from "../dist/review/selected.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
+import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { derivedFixture } from "./helpers/derived_fixture.js";

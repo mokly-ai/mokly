@@ -1,21 +1,23 @@
 import path from "node:path";
 
+import { ComponentValidationError } from "@mokly/viewer/data";
+
 import type {
   RegistryDefinition,
   ResolvedRegistryEntry,
 } from "../authoring/types.js";
-import { ComponentValidationError } from "../components/data.js";
 import { validateComponentDefinition } from "../components/definition.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 
-import { problem, validateEntry } from "./entry_validation.js";
+import { problem } from "./entry_metadata.js";
+import { validateEntry } from "./entry_validation.js";
+import type { PreparedRegistry, RegistryViolation } from "./prepared_types.js";
 import {
   crossReferenceViolations,
   duplicateViolations,
 } from "./relationships.js";
-import type { PreparedRegistry, RegistryViolation } from "./types.js";
 
 /** Validate loaded values and prepare stable source-attributed entries. */
 export function prepareRegistry(

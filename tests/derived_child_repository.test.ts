@@ -8,9 +8,9 @@ import ts from "typescript";
 import { CachedBaselineBuilder } from "../dist/baseline/rebuild.js";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { prepareReviewRepository } from "../dist/review/prepare.js";
-import { parseReviewResult } from "../dist/review/result_validation.js";
 import { runServerChild } from "../dist/server/child.js";
 import { childUpdateMessage } from "../dist/server/update_messages.js";
+import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 
 import { derivedFixture } from "./helpers/derived_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";

@@ -1,18 +1,18 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { parseBrowseRecoveryState } from "../dist/client/browse_recovery.js";
+import { parseBrowseRecoveryState } from "../packages/viewer/dist/client/browse_recovery.js";
 import {
   captureBrowseState,
   currentColorScheme,
   restoreBrowseState,
   setColorScheme,
   type BrowseRecoveryState,
-} from "../dist/client/browse_state.js";
+} from "../packages/viewer/dist/client/browse_state.js";
 import {
   isEligibleBrowseLink,
   NavigationSequencer,
-} from "../dist/client/navigation.js";
+} from "../packages/viewer/dist/client/navigation.js";
 
 import { FakeClassList } from "./helpers/fake_dom.js";
 

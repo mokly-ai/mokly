@@ -2,11 +2,11 @@
 import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
+import { analyzeHierarchy, type CatalogueHierarchy } from "@mokly/viewer/data";
+import type { Manifest, ManifestEntry } from "@mokly/viewer/data";
+
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
-
-import { analyzeHierarchy, type CatalogueHierarchy } from "./hierarchy.js";
-import type { Manifest, ManifestEntry } from "./types.js";
 
 /** Match manifest entries against repository-relative changed paths. */
 export function changedManifestRoutes(

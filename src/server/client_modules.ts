@@ -4,6 +4,8 @@
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 
+import { viewerAssetUrl } from "@mokly/viewer/server";
+
 import { MoklyError, errorMessage } from "../errors.js";
 
 /** Load the allowlisted browser modules before the HTTP server binds. */
@@ -11,6 +13,11 @@ export function loadBrowserClientModules(): ReadonlyMap<string, Buffer> {
   const modules = new Map<string, Buffer>();
   for (const filename of [
     "browse.js",
+    "browse_runtime.js",
+    "services.js",
+    "catalogue_updates.js",
+    "early_disclosures.js",
+    "workspace_inspection.js",
     "browse_controls.js",
     "browse_update_state.js",
     "browse_evidence.js",
@@ -23,9 +30,11 @@ export function loadBrowserClientModules(): ReadonlyMap<string, Buffer> {
     "workspace_loading.js",
     "component_controls.js",
     "control_fields.js",
+    "control_view_key.js",
     "control_transport.js",
     "control_surface.js",
     "workspace_events.js",
+    "workspace_props.js",
     "workspace_variants.js",
     "workspace_preview.js",
     "workspace_evidence.js",
@@ -36,6 +45,20 @@ export function loadBrowserClientModules(): ReadonlyMap<string, Buffer> {
     "inspector_resize.js",
     "inspector_tabs.js",
     "inspector_panels.js",
+    "frame_adapter.js",
+    "frame_error.js",
+    "frame_mount.js",
+    "frame_usage.js",
+    "message_transport.js",
+    "post_message_adapter.js",
+    "same_origin_adapter.js",
+    "same_origin_access.js",
+    "same_origin_mount.js",
+    "same_origin_pointer.js",
+    "same_origin_navigation.js",
+    "same_origin_highlight.js",
+    "document_ranges.js",
+    "inspector.js",
     "component_geometry.js",
     "component_range_nodes.js",
     "component_occlusion.js",
@@ -60,7 +83,16 @@ export function loadBrowserClientModules(): ReadonlyMap<string, Buffer> {
     "tag_filter.js",
   ]) {
     const candidate = fileURLToPath(
-      new URL(`../browser/${filename}`, import.meta.url),
+      [
+        "browse.js",
+        "browser.js",
+        "live_updates.js",
+        "control_transport.js",
+        "workspace_loading.js",
+        "browse_refresh.js",
+      ].includes(filename)
+        ? new URL(`../browser/${filename}`, import.meta.url)
+        : viewerAssetUrl("browser", filename),
     );
     try {
       modules.set(filename, fs.readFileSync(candidate));
@@ -88,9 +120,7 @@ export function loadBrowserNavigationModules(): ReadonlyMap<string, Buffer> {
 export function loadShellFontAssets(): ReadonlyMap<string, Buffer> {
   const fonts = new Map<string, Buffer>();
   for (const filename of ["InterVariable.woff2", "Inter-OFL.txt"]) {
-    const candidate = fileURLToPath(
-      new URL(`./shell/assets/fonts/${filename}`, import.meta.url),
-    );
+    const candidate = fileURLToPath(viewerAssetUrl("fonts", filename));
     try {
       fonts.set(filename, fs.readFileSync(candidate));
     } catch (error) {
@@ -105,14 +135,12 @@ export function loadShellFontAssets(): ReadonlyMap<string, Buffer> {
 }
 
 function loadModules(
-  relativeDirectory: string,
+  _relativeDirectory: string,
   filenames: readonly string[],
 ): ReadonlyMap<string, Buffer> {
   const modules = new Map<string, Buffer>();
   for (const filename of filenames) {
-    const candidate = fileURLToPath(
-      new URL(`${relativeDirectory}/${filename}`, import.meta.url),
-    );
+    const candidate = fileURLToPath(viewerAssetUrl("navigation", filename));
     try {
       modules.set(filename, fs.readFileSync(candidate));
     } catch (error) {

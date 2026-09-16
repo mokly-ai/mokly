@@ -7,6 +7,7 @@ import {
   stopCommand,
   waitForOutput,
 } from "./command.mjs";
+import { validatePackageManifest, validateVersionPair } from "./manifest.mjs";
 
 export async function copyFixture(source, root) {
   await fs.promises.cp(source, root, { recursive: true });
@@ -30,6 +31,22 @@ export async function installConsumer(root, archivePath, packageJson) {
   );
   if (installed.name !== "@mokly/mokly") {
     throw new Error(`consumer did not install ${archivePath}`);
+  }
+  const viewer = JSON.parse(
+    await fs.promises.readFile(
+      path.join(root, "node_modules/@mokly/viewer/package.json"),
+      "utf8",
+    ),
+  );
+  validatePackageManifest(installed, "@mokly/mokly");
+  validatePackageManifest(viewer, "@mokly/viewer");
+  validateVersionPair(installed, viewer);
+  for (const name of ["mokly", "viewer"]) {
+    const stat = await fs.promises.lstat(
+      path.join(root, "node_modules/@mokly", name),
+    );
+    if (stat.isSymbolicLink())
+      throw new Error(`consumer installed a ${name} workspace link`);
   }
 }
 

@@ -3,8 +3,8 @@ import test from "node:test";
 
 import { renderReviewArtifact } from "../dist/review/artifact.js";
 import { committedReviewRepository } from "../dist/review/repository.js";
-import { parseReviewResult } from "../dist/review/result_validation.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
+import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 

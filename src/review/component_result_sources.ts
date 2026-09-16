@@ -1,14 +1,15 @@
-import { generatedViews } from "../components/views.js";
-import type { Manifest } from "../registry/types.js";
+import {
+  generatedViews,
+  requireEqual,
+  reviewInvalid,
+  parseReviewResult,
+} from "@mokly/viewer/data";
+import type { Manifest, ReviewResultV3, ViewReview } from "@mokly/viewer/data";
 
 import { affectedConsumers } from "./component_affected.js";
 import { address, entryPairs, metadata } from "./component_metadata.js";
 import { variantAddress } from "./component_pairing.js";
-import type { ReviewResultV3 } from "./component_types.js";
 import { snapshotPath } from "./paths.js";
-import { requireEqual, reviewInvalid } from "./result_helpers.js";
-import { parseReviewResult } from "./result_validation.js";
-import type { ViewReview } from "./types.js";
 
 /** Validate result coverage, addresses, data, dependency and usage references against both manifests. */
 export function validateComponentReviewSources(

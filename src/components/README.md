@@ -34,6 +34,23 @@ in `propSchema`. The schema infers TypeScript props and validates actual values.
 revalidates exported definitions and snapshots component data before rendering,
 so malformed or mutated variants and controls produce author diagnostics.
 
+Instance keys remain stable across prop edits and sibling reorders. Changing the
+local id, input owner, or original slot changes the key. Keys are scoped to one
+entry/variant/viewport/scheme; keep that scope with any saved reference. The public
+`resolveInstance(previous, current)` accepts validated `ComponentInstanceRecord`
+values from the same view. It returns `missing` for an absent or different key,
+`present` for equal props keys, order and slot, and `moved` otherwise. It does not
+classify visual or material Changes.
+
+Compiled JSX invocations record optional `source: { path, line, column }` in
+manifest v5. The path identifies the caller inside the repository, with 1-based
+coordinates. Programmatic or already-compiled calls can omit it. The internal
+`__moklySource` prop is reserved from data schemas and slots and stripped before
+validation, hashing and rendering. Source metadata never affects identity or
+Changes and adds no source display to the local shell. Replayed slots keep their
+original location and have one matched comment pair per recorded placement,
+including empty output.
+
 Variants are explicit named examples, never inferred from screenshots or every
 combination of controls. Both viewports and every configured scheme are built
 for each variant. `MockLink to="action"` opens the default variant; canonical
@@ -70,11 +87,15 @@ node --import tsx --test tests/component_*.test.ts
 - `definition.ts`, `types.ts`: public authoring boundary and inference.
 - `props.ts`, `schema.ts`, `codec.ts`: declarative validation and lossless data.
 - `collector.ts`, `render.tsx`, `ranges.ts`: actual usage and neutral ranges.
+- `resolve_instance.ts`: pure resolution for scoped, validated instance records.
+- `source.ts`, `../build/jsx_dev_runtime.ts`: source validation and capture.
+- `instance_structure.ts`: explicit logical inputs, excluding source metadata.
 - `comparison_projection.ts`: caller versus implementation material.
 - `../server/controls`: supervised local rendering and transient storage.
 - `../client/workspace.ts`: shared saved-view explorer and inspector.
 
 See the [registered component contract](../../docs/protocol/mokly-components.md),
+[instance identity](../../docs/protocol/mokly-instances.md),
 [manifest](../../docs/protocol/mokly-component-manifest.md),
 [change attribution](../../docs/protocol/mokly-component-changes.md), and
 [local controls](../../docs/protocol/mokly-component-controls.md).

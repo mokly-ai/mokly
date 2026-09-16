@@ -3,8 +3,9 @@ import type {
   ComponentRenderRequest,
   ComponentRenderSuccess,
   RenderCapability,
-} from "../components/render_types.js";
-import type { GeneratedComponentView } from "../components/views.js";
+  GeneratedComponentView,
+} from "@mokly/viewer/data";
+import { localFramePath } from "@mokly/viewer/runtime";
 
 export async function requestComponentPreview(
   request: ComponentRenderRequest,
@@ -61,7 +62,7 @@ export async function componentPreviewExpired(
   signal: AbortSignal,
 ): Promise<boolean> {
   const preview = [...previews].find(
-    (result) => frame.contentWindow?.location.pathname === result.previewUrl,
+    (result) => localFramePath(frame) === result.previewUrl,
   );
   if (!preview) return false;
   const response = await fetch(preview.previewUrl, {

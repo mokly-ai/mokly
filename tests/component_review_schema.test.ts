@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import { compareReview } from "../dist/review/compare.js";
 import { validateComponentReviewSources } from "../dist/review/component_result_sources.js";
-import { parseReviewResult } from "../dist/review/result_validation.js";
+import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 

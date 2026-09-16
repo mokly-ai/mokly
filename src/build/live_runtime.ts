@@ -1,7 +1,8 @@
 /** Prepare a last-good routing generation without invoking a consumer renderer. */
 import { randomBytes } from "node:crypto";
 
-import { generatedViews } from "../components/views.js";
+import { generatedViews } from "@mokly/viewer/data";
+
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
 import { createCatalogueIndex } from "../registry/catalogue_index.js";

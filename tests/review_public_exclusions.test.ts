@@ -3,8 +3,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import type { HistoricalManifest } from "@mokly/viewer/data";
+
 import { loadConfig } from "../dist/config/load.js";
-import type { HistoricalManifest } from "../dist/registry/types.js";
 import { GitReviewAssetReader } from "../dist/review/assets.js";
 import { baselineResourceConfig } from "../dist/review/base_manifest.js";
 import type { BaselineReader } from "../dist/review/git.js";

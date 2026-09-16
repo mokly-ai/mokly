@@ -1,7 +1,13 @@
+import type { ComponentViewRecord } from "@mokly/viewer";
+import {
+  componentFragmentRoute,
+  effectiveColorSchemes,
+  VIEWPORTS,
+} from "@mokly/viewer/data";
+import type { ManifestV5, ArtifactView } from "@mokly/viewer/data";
+
 import { transformCompatibilityDocuments } from "../compatibility/transform.js";
-import type { ComponentViewRecord } from "../components/manifest_types.js";
 import { validateComponentResources } from "../components/output_validation.js";
-import { componentFragmentRoute } from "../components/paths.js";
 import { validateComponentRanges } from "../components/ranges.js";
 import { rebaseStyleOwnership } from "../components/style_ownership.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -15,9 +21,6 @@ import {
   serializeManifest,
 } from "../registry/manifest.js";
 import { prepareRegistry } from "../registry/prepare.js";
-import type { ManifestV5 } from "../registry/types.js";
-import type { ArtifactView } from "../registry/views.js";
-import { effectiveColorSchemes, VIEWPORTS } from "../registry/views.js";
 import { normalizeSingleDocument } from "../review/ignore.js";
 
 import { rememberRuntime } from "./component_runtime.js";

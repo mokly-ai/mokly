@@ -1,7 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { isSafeRepositoryPath } from "../config/paths.js";
+import { isSafeRepositoryPath } from "@mokly/viewer/data";
+
 import {
   isPrivateStaticPath,
   isPublicStaticFile,

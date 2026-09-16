@@ -1,10 +1,8 @@
 /** Private same-origin admission and immutable sandboxed memory responses. */
 import type { IncomingMessage, ServerResponse } from "node:http";
 
-import {
-  ComponentRenderError,
-  renderStatus,
-} from "../../components/render_types.js";
+import { ComponentRenderError, renderStatus } from "@mokly/viewer/data";
+
 import { safeDecodePath } from "../respond.js";
 
 import type { ComponentRenderService } from "./service.js";

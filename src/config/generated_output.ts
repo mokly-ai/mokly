@@ -1,9 +1,11 @@
 import path from "node:path";
 
+import { isSafeRepositoryPath } from "@mokly/viewer/data";
+
 import { validCommands } from "../baseline/cache_layout.js";
 import { MoklyError } from "../errors.js";
 
-import { isSafeRepositoryPath, toPosixPath } from "./paths.js";
+import { toPosixPath } from "./paths.js";
 import type { MoklyConfig } from "./types.js";
 
 /** Validate the explicit mode before resolving mode-dependent filesystem paths. */
