@@ -1539,7 +1539,7 @@ the full CI platform matrix, and no live npm/OIDC publication or GitHub protecti
 mutation. Recording this review and updating the plan index are documentation-only
 follow-ups; the plan remains active until its PR merges.
 
-## Milestone 10: Evidence updates during inspection
+## Milestone 10: Evidence updates during inspection (completed)
 
 Tags: ui
 
@@ -1559,10 +1559,10 @@ invalidated inspection exactly once without stale masks, labels or pick state.
       earlier milestones' notes or findings.
 - [x] Run focused tests and `cargo xtask check`; record counts, retries, skips,
       inspector size and unchanged Serve/export shell and comparison bytes.
-- [ ] After checks pass, run `git add -A`, commit with Conventional Commits
+- [x] After checks pass, run `git add -A`, commit with Conventional Commits
       (title at most 50 characters, body naming M9-1 and ending with the requested
       co-author trailer), and push the branch.
-- [ ] After that push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After that push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
       against the complete local diff from `origin/main`; record numbered findings
       with severity, impact, lettered options and a recommendation without fixing.
 
@@ -1625,6 +1625,35 @@ shell, stylesheet, example, snapshot or schema source changed.
 Evidence is retained in `.context/viewer-m10/`: failing regression logs, focused
 logs, `xtask-check.log`, before/after Serve captures and exports,
 `byte-comparison-final.json`, and the check-input stability audit.
+
+Implementation commit `76451b52d5674829ff9dc5d1955e688284df2cf3`,
+`fix(viewer): coordinate evidence inspection`, includes both new test/fixture
+files and was pushed before the following review.
+
+### Milestone 10 post-push review
+
+No new findings. M9-1 is addressed with the approved option A, including the
+documented `evidence` reason and pending-activation cancellation semantics.
+
+The required prompt reviewed the complete **647-file** local diff at `76451b5`
+against `origin/main` (`7ca301c04ca898db6ff60b110beb213ec740b004`) after the push,
+using `git diff origin/main...HEAD`. The inventory contains 313 modified,
+226 added, 106 renamed and two deleted paths, with 25,899 insertions and 3,403
+deletions. Worktree, index and untracked-file inventories were clean before and
+after review. Coverage included source capture and instance identity, public
+catalogue validation/privacy and projection, source/runtime lifetimes, inspection
+ownership and both transports, comparison publication/retention, Serve/watch
+lifecycle, export ownership, package isolation, release/archive pairing, tests
+and protocol alignment. The two branch-diff deletions remain the earlier approved
+CSS split; this milestone adds no deletion or main integration.
+
+The complete patch, diff statistics and path inventory are retained in
+`.context/viewer-m10/review-*`. No implementation or test files changed during
+review. Residual validation limits are Chromium-only browser coverage, local
+Node 24.14.1 instead of the entire CI platform matrix, and no live npm/OIDC
+publication or GitHub protection changes. Recording this review and updating the
+plan index are documentation-only follow-ups; the plan stays active until its
+implementation PR merges.
 
 ## Post-merge follow-up (non-blocking)
 
