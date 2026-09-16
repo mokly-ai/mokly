@@ -11,7 +11,6 @@ Publish posts one gzip-compressed tar archive of the export to the exact
 endpoint you gave it, with the token as a bearer credential:
 
 ```http
-POST /uploads HTTP/1.1
 Authorization: Bearer TOKEN
 Content-Type: application/gzip
 Accept: application/json
@@ -28,19 +27,24 @@ The complete static catalogue, exactly as `export` writes it, plus
 `mokly-upload.json` at its root. That manifest names the Mokly version, the
 repository, the branch, the head revision, the base ref and pinned base
 revision, the pull request number when the job is running on one, the config
-path and the time the export finished. Without comparisons, the base fields
-and the comparison path are all absent.
+path and the time the export finished. Without comparisons, `baseRef`,
+`baseSha` and `comparisonPath` are all `null`. Receivers must reject missing
+or extra manifest fields.
 
 The source manifest the build writes is deliberately not included: it holds
 your source inventory and is not a public artifact.
 
 ## What the receiver must do
 
-A service that accepts these uploads validates the archive before it exposes
-anything: the manifest's fields and version, the file inventory against the
-ownership marker, and the limits on size and file count. It rejects anything
-that is not a regular file, and it extracts into an empty private directory so
-no path can escape it. It then checks that the credential is allowed to
+A service first authenticates the bearer credential. Only then does it
+decompress the archive, enforcing size and file-count limits before reporting
+version or structural failures. It validates the manifest's fields and version
+and the file inventory against the ownership marker.
+
+Receivers accept only regular files and optional directories. They reject
+symlinks, hard links, devices, FIFOs, sparse files and other special entries,
+and extract into an empty private directory so no path can escape it. Before
+exposing any catalogue, the service checks that the credential is allowed to
 publish for the repository the manifest names.
 
 ## When it is refused

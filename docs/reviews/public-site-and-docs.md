@@ -6,7 +6,7 @@ Milestone 8 push (`85a02ff`), using the
 branch adds the `site/` Astro workspace, the site protocol documents, the
 Folio site mockups in the example design catalogue, two GitHub workflows and
 their tests, and changes no line of `src/`. Findings are recorded for the
-user's decision; none has been applied.
+user's decision. The approved follow-up below records later implementation.
 
 ## Findings
 
@@ -146,3 +146,94 @@ slower and the larger install changes the memory profile, which can make
 either marginally likelier without causing it. If the crash recurs, lower
 the test concurrency or raise the heap for `npm test` rather than changing
 product code.
+
+## Approved Follow-up
+
+The user approved findings 1 (B), 2 (B plus C), 3 (C) and 10 for this change.
+Findings 8 and 9 belong to a subsequent change; the remaining findings retain
+the user's recorded decisions.
+
+- **Finding 1:** the upload page shows headers without an invented request
+  path, requires null comparison fields and rejection of missing/extra fields,
+  accepts regular files and optional directories, and puts credential
+  authentication before decompression. `site/tests/docs_ci.test.ts` checks the
+  CI pages against the protocol, transport, manifest validator and CLI sources,
+  including headers, response categories, no retries, timeout and credentials.
+- **Finding 2:** minimum-runtime installs with `npm ci --engine-strict`.
+  Lighthouse and its launcher moved to the separately locked
+  `site/lighthouse/` package outside the root workspaces. The Node 24 audit job
+  alone installs, audits and typechecks those tools. The root command retains
+  explicit installation guidance when they are absent. React Native's existing
+  Node-compatible launcher remains a dependency of its own development tools.
+  Root dependencies and the published package allowlist are unchanged.
+- **Finding 3:** Lighthouse retains its failing job status and report artifact,
+  but `Required CI` no longer depends on it. Shared browser assertions cover
+  every route at 390px and 1440px in light and dark: one heading and main,
+  language, image alternatives, accessible names, computed focus outlines on
+  the first five keyboard targets and no horizontal overflow. Existing
+  structure checks were consolidated into that shared coverage.
+  The new route walk found a long inline path overflowing the static-export
+  reference at 390px; it now uses the existing scrollable code-block format,
+  without changing tokens or layout styles assigned to the later follow-up.
+- **Finding 10:** close uses the default checkout ref. Cleanup defaults
+  missing/null page counts to zero, reports malformed counts as retained, and
+  buffers a page's matching ids until parsing succeeds. Regressions exercise
+  malformed counts, fallback pagination and partial output after an earlier
+  successful page, proving that no deletion occurs on listing failure.
+
+Regressions reproduced the original documentation, CI and cleanup failures
+before their fixes. The dependency and delivery protocols, README guidance,
+workflow tests and Milestone 10 checklist accompany the implementation.
+
+The strict lockfile scan exposed one additional incompatibility:
+`@img/sharp-win32-ia32@0.35.4` declares `engines.node: ^20.9.0`. It is an
+optional Windows/ia32 artifact that no supported installation selects, so the
+engine test skips optional platform artifacts outside the installed platform
+set and the dependency-security contract records that rule. The other 522
+locked Node engine ranges accept 22.14.0. Isolating Lighthouse removed 79
+entries without changing any retained package version.
+
+Verification on Node 24.14.1 and npm 11.7.0:
+
+| Command                                                                                                               | Observed result                                                                                   |
+| --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `npm ci --engine-strict`                                                                                              | Pass, including a clean install from the final root lockfile                                      |
+| `npm ci --prefix site/lighthouse --engine-strict`                                                                     | Pass                                                                                              |
+| `npm run build --prefix site/lighthouse`                                                                              | Pass after enabling TypeScript source imports in this separately checked runner                   |
+| `npm audit --prefix site/lighthouse --audit-level=low --include=prod --include=dev --include=optional --include=peer` | Pass, no vulnerabilities                                                                          |
+| `npm run lint`                                                                                                        | Pass                                                                                              |
+| `npm run format`, then `npm run format:check`                                                                         | Pass                                                                                              |
+| `npm run typecheck`                                                                                                   | Pass                                                                                              |
+| Focused docs, Lighthouse installation, workflow, cleanup and release tests                                            | 31 passed; the strengthened CI and cleanup checks also passed separately                          |
+| `npm test`                                                                                                            | 1,653 passed, one failed: the Sharp engine range above; none skipped/cancelled                    |
+| `npm run site:check`                                                                                                  | Pass: build, types, 129 site unit tests, links and all 336 browser tests                          |
+| `npm run site:lighthouse`                                                                                             | Pass: all 12 route/viewport rows meet every threshold                                             |
+| `bash -n scripts/site/cleanup.sh`                                                                                     | Pass                                                                                              |
+| `cargo clippy --all-targets --all-features -- -D warnings`                                                            | Pass                                                                                              |
+| `cargo fmt --all -- --check`                                                                                          | Pass                                                                                              |
+| `cargo test --workspace`                                                                                              | Pass: all four tests                                                                              |
+| `cargo xtask rust-file-length-lint --all`                                                                             | Pass: all eight Rust files                                                                        |
+| `npm run example:check`, `npm run package:check`                                                                      | Pass                                                                                              |
+| `npm run package:smoke`                                                                                               | Pass: packed consumers, including real local upload/server smoke checks                           |
+| `npm run test:browser`                                                                                                | Pass: all 276 catalogue browser tests, including `review_failure_reload`                          |
+| `cargo xtask check` (1,800-second timeout, then one retry)                                                            | First run: Sharp assertion and known Node crash; retry: 1,653 passed, only Sharp assertion failed |
+| `git diff --check`                                                                                                    | Pass                                                                                              |
+
+The first site browser run exposed the reference-page overflow described above.
+A subsequent build overlapped a clean install and failed because `astro` was
+temporarily absent; verification was rerun sequentially. Another complete site
+run reported all 336 tests passing but exited with signal 143;
+the confirmation run passed with exit 0. The isolated runner's first build
+reported TS5097; its own tsconfig now permits the existing `.ts` imports and
+the build passes.
+
+The first complete gate hit the known Node 24 `cjs_lexer` fatal error in
+`tests/watch_resource_boundaries.test.ts`. The required retry completed that
+file successfully and reproduced only the Sharp assertion, which the platform
+rule above resolved; the closing gate on the committed tree is recorded in
+the plan.
+
+Both changed documentation pages were served and captured at 390px/1440px in
+light/dark under `.context/site-followups/`: `docs-ci-the-upload-*.png` and
+`docs-reference-export-delivery-*.png`. The upload mobile/light and
+desktop/dark captures and the reference mobile/light capture were inspected.

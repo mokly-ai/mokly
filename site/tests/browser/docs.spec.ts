@@ -24,8 +24,6 @@ test("the documentation page renders the tree, the lead and the pager", async ({
   const response = await page.goto(PAGE);
   expect(response?.status()).toBe(200);
   await expect(page).toHaveTitle("serve · Mokly");
-  await expect(page.locator("main")).toHaveCount(1);
-  await expect(page.locator("h1")).toHaveCount(1);
   await expect(
     page.getByRole("main").getByRole("heading", { level: 1 }),
   ).toHaveText("serve");
@@ -35,11 +33,6 @@ test("the documentation page renders the tree, the lead and the pager", async ({
   await expect(page.locator("nav[aria-label='Location']")).toContainText(
     "CLI reference",
   );
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= window.innerWidth,
-    ),
-  ).toBe(true);
 });
 
 test("the section tree marks the page and opens another one", async ({
@@ -143,7 +136,6 @@ test("a published protocol document reads as a documentation page", async ({
   await expect(
     page.getByRole("main").getByRole("heading", { level: 1 }),
   ).toHaveText("Catalogue upload");
-  await expect(page.locator("main h1")).toHaveCount(1);
   await expect(
     page.getByRole("main").getByRole("link", { name: "Publish Catalogue" }),
   ).toHaveAttribute(

@@ -35,11 +35,18 @@ while :; do
   fi
 
   if ! jq -e '.result | type == "array"' "${deployments_file}" > /dev/null 2>&1 ||
-    ! jq -r --arg branch "${PREVIEW_BRANCH}" '.result[] | select(.deployment_trigger.metadata.branch == $branch) | .id' "${deployments_file}" >> "${matches_file}"; then
+    ! page_matches="$(jq -r --arg branch "${PREVIEW_BRANCH}" '.result[] | select(.deployment_trigger.metadata.branch == $branch) | .id' "${deployments_file}")"; then
     echo "status=retained: failed to parse Cloudflare deployments response" >> "${GITHUB_OUTPUT}"
     exit 0
   fi
-  total_pages="$(jq -r '.result_info.total_pages // 0' "${deployments_file}")"
+  if ! total_pages="$(jq -r 'if .result_info.total_pages == null then 0 else .result_info.total_pages end' "${deployments_file}")" ||
+    ! [[ "${total_pages}" =~ ^[0-9]+$ ]] || ! [ "${total_pages}" -ge 0 ] 2>/dev/null; then
+    echo "status=retained: failed to parse Cloudflare deployment page count" >> "${GITHUB_OUTPUT}"
+    exit 0
+  fi
+  if [ -n "${page_matches}" ]; then
+    printf '%s\n' "${page_matches}" >> "${matches_file}"
+  fi
   page_count="$(jq '.result | length' "${deployments_file}")"
   if { [ "${total_pages}" -gt 0 ] && [ "${page}" -ge "${total_pages}" ]; } ||
     { [ "${total_pages}" -eq 0 ] && [ "${page_count}" -lt 100 ]; }; then

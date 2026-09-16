@@ -36,7 +36,7 @@ jobs:
           rustup toolchain install 1.95.0 --profile minimal --component rustfmt --component clippy
           rustup default 1.95.0
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --engine-strict
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: Run complete verification
@@ -111,6 +111,7 @@ jobs:
   site-lighthouse:
     name: Site Lighthouse
     runs-on: ubuntu-latest
+    continue-on-error: false
     steps:
       - name: Check out repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -123,6 +124,12 @@ jobs:
         run: npm install --global npm@11.7.0
       - name: Install dependencies
         run: npm ci
+      - name: Install Lighthouse dependencies
+        run: npm ci --prefix site/lighthouse --engine-strict
+      - name: Audit Lighthouse dependencies
+        run: npm audit --prefix site/lighthouse --audit-level=low --include=prod --include=dev --include=optional --include=peer
+      - name: Build Lighthouse runner
+        run: npm run build --prefix site/lighthouse
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: Select Chromium for Lighthouse
@@ -144,7 +151,7 @@ jobs:
   required:
     name: Required CI
     if: always()
-    needs: [minimum-runtime, release-runtime, export-platforms, site-lighthouse]
+    needs: [minimum-runtime, release-runtime, export-platforms]
     runs-on: ubuntu-latest
     steps:
       - name: Require every verification job
@@ -152,9 +159,7 @@ jobs:
           MINIMUM_RESULT: ${{ needs.minimum-runtime.result }}
           RELEASE_RESULT: ${{ needs.release-runtime.result }}
           EXPORT_PLATFORMS_RESULT: ${{ needs.export-platforms.result }}
-          SITE_LIGHTHOUSE_RESULT: ${{ needs.site-lighthouse.result }}
         run: |
           test "$MINIMUM_RESULT" = success
           test "$RELEASE_RESULT" = success
           test "$EXPORT_PLATFORMS_RESULT" = success
-          test "$SITE_LIGHTHOUSE_RESULT" = success

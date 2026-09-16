@@ -14,6 +14,16 @@ import {
 const site = await readWorkflow("site.yml");
 const ci = await readWorkflow("ci.yml");
 
+test("close cleanup checks out the default ref even after the PR head is deleted", () => {
+  const checkout = workflowStep(site.jobs["close-pr"]!, "Check out repository");
+  assert.equal(checkout.with?.ref, undefined);
+  assert.equal(checkout.with?.["persist-credentials"], false);
+  assert.equal(
+    workflowStep(site.jobs["deploy-pr"]!, "Check out repository").with?.ref,
+    "${{ github.event.pull_request.head.sha }}",
+  );
+});
+
 test("site and CI actions reuse immutable reviewed pins and secrets appear only in env", async () => {
   const preview = await readWorkflow("preview.yml");
   const approved = new Set([

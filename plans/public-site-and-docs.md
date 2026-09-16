@@ -44,7 +44,9 @@ pages with shipped scope before the domain goes live.
   cloud protocol doc and this repository's code disagree about the CLI, this
   repository's code is right and the disagreement is reported to the user.
 - **Checks.** Site build, typecheck, unit tests, link check and browser tests
-  run inside `cargo xtask check`. Lighthouse runs as its own required CI job.
+  run inside `cargo xtask check`. Lighthouse runs as its own report-only CI job
+  after the approved Milestone 10 follow-up; deterministic accessibility
+  assertions are part of the required site browser checks.
 
 ## Inputs From The Cloud Repository
 
@@ -472,19 +474,21 @@ The user decided each finding of the
 2 (recommended), 3 (option C), 8 (option B), 9 (option B) and 10; leave 4, 5,
 6, 7, 11 and 12 as recorded.
 
-- [ ] Finding 1: correct the four upload-page statements and add a test that
+- [x] Finding 1: correct the four upload-page statements and add a test that
       cross-checks the CI pages' normative claims against
       `docs/protocol/mokly-upload.md`.
-- [ ] Finding 2: enforce the Node floor with `npm ci --engine-strict` on the
+- [x] Finding 2: enforce the Node floor with `npm ci --engine-strict` on the
       minimum-runtime job, install Lighthouse and chrome-launcher only where
       the Lighthouse job runs, add a test that every installed package's
       `engines.node` satisfies the declared minimum, and correct
       `docs/protocol/dependency-security.md`.
-- [ ] Finding 3: make `site-lighthouse` report-only (remove it from
+- [x] Finding 3: make `site-lighthouse` report-only (remove it from
       `Required CI`, keep the job and its artifact) and move the
       accessibility guarantee into deterministic browser assertions; update
       `docs/protocol/site-delivery.md` and the workflow tests.
-- [ ] Finding 10: check out the default ref in the close job and make
+      Format the long comparison path in the static-export reference as a
+      scrollable code block to resolve the 390px overflow exposed by these checks.
+- [x] Finding 10: check out the default ref in the close job and make
       `scripts/site/cleanup.sh` report a retained status on a non-numeric
       page count and on a partial listing.
 - [ ] Finding 8: share the Folio tokens from one source that both the
@@ -495,6 +499,11 @@ The user decided each finding of the
       mechanical tests (no removed outlines, strong boundaries on controls,
       token contrast pairs, copy rules, `html lang`, a 320px browser project).
 - [ ] Run `cargo xtask check`, commit and push. Stop for review.
+
+- [ ] After the push, use
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      against the complete local diff from `origin/main`; report findings
+      without changing the implementation.
 
 ## Post-merge follow-up (non-blocking)
 

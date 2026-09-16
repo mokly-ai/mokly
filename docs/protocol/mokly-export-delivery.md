@@ -122,9 +122,13 @@ syntactically valid missing anchor retains the current static fallback.
 
 ## Static Comparisons
 
-Each export packages one complete comparison at
-`__mokly/diffs/__generations/<generation>/review.json` with all referenced
-before/after documents and transitive resources under the same generation root.
+Each export packages one complete comparison, with all referenced before/after
+documents and transitive resources under the same generation root:
+
+```text
+__mokly/diffs/__generations/<generation>/review.json
+```
+
 Retain the engine's JSON and document bytes and relative snapshot paths.
 Do not change the review schema or rebase only some of its resource references.
 

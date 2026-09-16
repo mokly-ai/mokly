@@ -10,6 +10,7 @@ import { parse } from "yaml";
 import { repositoryRoot } from "./fixture.js";
 
 export interface WorkflowStep {
+  "continue-on-error"?: boolean;
   env?: Record<string, string>;
   id?: string;
   if?: string;
@@ -21,6 +22,7 @@ export interface WorkflowStep {
 }
 
 export interface WorkflowJob {
+  "continue-on-error"?: boolean;
   env?: Record<string, string>;
   if?: string;
   name?: string;

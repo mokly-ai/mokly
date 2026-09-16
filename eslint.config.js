@@ -13,6 +13,7 @@ export default tseslint.config(
       "site/dist/**",
       "site/.astro/**",
       "site/node_modules/**",
+      "site/lighthouse/node_modules/**",
       "target/**",
     ],
   },

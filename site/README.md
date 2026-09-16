@@ -89,6 +89,9 @@ Browser checks use Astro's preview API in a foreground process with
 `4611`) and the root Playwright installation. They honor `PLAYWRIGHT_CHANNEL`
 (default `chrome`; CI uses `chromium`). Screenshots and failure traces go under
 `test-results/site`. Build before running links or browser checks individually.
+Every published route, including docs and the 404 page, is checked for a single
+heading and main landmark, language, image alternatives, accessible control
+names, outlines on the first five keyboard targets and horizontal overflow.
 
 The link checker resolves directory routes, relative and same-origin absolute
 URLs, queries and encoded fragments without fetching external destinations.
@@ -102,6 +105,9 @@ and workspace `node_modules` are ignored. Tooling shared with the CLI (TypeScrip
 Playwright, tsx and type definitions) remains in the root development dependencies;
 site-specific build dependencies belong here. Install new site dependencies from
 this directory with `npm install --save-dev <package>`; commit the root lockfile.
+Lighthouse tools instead belong to the independently locked `lighthouse/`
+package, outside the root workspaces and site typecheck. Its own build checks
+the runner after those optional development tools have been installed.
 
 `tests/site_package.test.ts` at the root checks the real tarball and compares
 root dependencies and the publish allowlist with the committed pre-site fixture
@@ -204,6 +210,14 @@ so the cards must be drawn before `astro build`.
 
 ### Lighthouse
 
+On Node 22.19+ (Node 24 in CI), install the separate tools from the repository root:
+
+```bash
+npm ci --prefix site/lighthouse --engine-strict
+npm run build --prefix site/lighthouse
+npm run site:lighthouse
+```
+
 `npm run site:lighthouse` serves `dist` through Astro's preview API and drives
 Chrome through `chrome-launcher`. The 390px audit keeps Lighthouse's simulated
 slow connection; the 1440px audit declares its desktop profile, so a desktop
@@ -212,10 +226,14 @@ page is scored on the desktop curves against a connection it can meet. Set `CHRO
 move the preview. The budget lives in `src/lighthouse.ts`; a unit test keeps
 it equal to the delivery contract. The run prints one row per page and
 viewport and exits non-zero naming each category that missed its threshold.
-CI's required `site-lighthouse` job selects Playwright's Chromium through
+CI's report-only `site-lighthouse` job selects Playwright's Chromium through
 `CHROME_PATH` and saves that text budget report and diagnostics to
 `test-results/site-lighthouse/report.txt` at the repository root. Failures
-retain the report as an artifact and fail `Required CI`.
+retain the report as an artifact and fail that job, with `continue-on-error:
+false`. `Required CI` is independent of Lighthouse; deterministic accessibility
+assertions run in its complete gates. The separate tools' lockfile is audited
+at all severities in the Lighthouse job. Normal `npm ci` and `site:check` do
+not require these tools; a local audit without them prints the install command.
 
 ### Capturing the pages
 

@@ -1,8 +1,8 @@
 /**
- * The Lighthouse budget the site is held to. The pages, the viewports and the
+ * The report-only Lighthouse budget. The pages, the viewports and the
  * minimum category scores are the delivery contract in
  * `docs/protocol/site-delivery.md`; this module owns them so the runner and
- * its tests read one table.
+ * its tests read one table. CI reports shortfalls without gating Required CI.
  */
 
 import { SITE_PATHS } from "./navigation.js";

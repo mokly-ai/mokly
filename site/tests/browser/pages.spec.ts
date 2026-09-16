@@ -1,5 +1,8 @@
 import { type Page, expect, test } from "@playwright/test";
 
+import { DOCS_PAGES } from "../../src/docs/pages.js";
+
+import { assertAccessibility } from "./accessibility.js";
 import { PAGES } from "./routes.js";
 
 /**
@@ -23,18 +26,12 @@ function watch(page: Page): string[] {
 
 /** Every page renders exactly one landmark and one heading. */
 async function assertStructure(page: Page, heading: string): Promise<void> {
-  await expect(page.locator("main")).toHaveCount(1);
-  await expect(page.locator("h1")).toHaveCount(1);
+  await assertAccessibility(page);
   await expect(
     page.getByRole("main").getByRole("heading", { level: 1 }),
   ).toHaveText(heading);
   await expect(page.getByRole("banner")).toBeVisible();
   await expect(page.getByRole("contentinfo")).toBeVisible();
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= window.innerWidth,
-    ),
-  ).toBe(true);
 }
 
 for (const { route, title, heading } of PAGES) {
@@ -68,6 +65,17 @@ for (const { route, title, heading } of PAGES) {
     expect(await page.evaluate(() => document.activeElement?.id ?? "")).toBe(
       "main",
     );
+  });
+}
+
+for (const { route, title } of DOCS_PAGES) {
+  test(`${route} meets the deterministic accessibility contract`, async ({
+    page,
+  }) => {
+    const response = await page.goto(route);
+    expect(response?.status()).toBe(200);
+    await expect(page.locator("astro-island[ssr]")).toHaveCount(0);
+    await assertStructure(page, title);
   });
 }
 

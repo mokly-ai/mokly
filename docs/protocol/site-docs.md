@@ -143,6 +143,11 @@ rewriting covers every relative link in the allowlisted set.
   authoring page; a test asserts coverage.
 - Config: the Config page's field list matches the `MoklyConfig` type; a test
   asserts every top-level field appears.
+- Continuous integration: `site/tests/docs_ci.test.ts` checks the CI pages
+  against the upload protocol and publisher: exact endpoint and headers,
+  acceptance and rejection behavior, timeout, required null comparison fields,
+  missing/extra-field rejection, optional directories, authentication before
+  decompression, CLI options and credential environment variables.
 - Cloud and review pages cite the cloud protocol document they were written
   from in a page-level comment, `{/* Source: mokly-cloud <path> */}`, listing
   one or more documents separated by `, ` and relative to `docs/` in that

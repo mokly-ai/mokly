@@ -89,6 +89,65 @@ test("cleanup reports list HTTP, transport and invalid-response failures", async
   }
 });
 
+test("cleanup retains deployments when the page count is malformed", async (t) => {
+  for (const totalPages of ["invalid", -1, 1.5, {}, false, "9".repeat(30)]) {
+    const result = await cleanup(t, [
+      {
+        body: {
+          ...listed([deployment("first", "pr-71")]),
+          result_info: { total_pages: totalPages },
+        },
+      },
+    ]);
+    assert.equal(result.code, 0);
+    assert.match(
+      await result.rootFiles("output"),
+      /retained: failed to parse Cloudflare deployment page count/,
+    );
+    assert.equal(
+      (await result.rootFiles("requests")).trim().split("\n").length,
+      1,
+    );
+  }
+});
+
+test("absent or null page counts default to zero and paginate by result length", async (t) => {
+  for (const info of [{}, { result_info: { total_pages: null } }]) {
+    const result = await cleanup(t, [
+      {
+        body: {
+          result: Array.from({ length: 100 }, (_, index) =>
+            deployment(`main-${index}`, "main"),
+          ),
+          success: true,
+          ...info,
+        },
+      },
+      { body: { result: [], success: true, ...info } },
+    ]);
+    assert.equal(result.code, 0);
+    assert.match(
+      await result.rootFiles("output"),
+      /deleted: no matching branch deployments/,
+    );
+    assert.match(await result.rootFiles("requests"), /page=2/);
+  }
+});
+
+test("a partially parsed page never appends ids or deletes earlier matches", async (t) => {
+  const result = await cleanup(t, [
+    { body: listed([deployment("first", "pr-71")], 2) },
+    { body: listed([deployment("partial", "pr-71"), "invalid entry"], 2) },
+  ]);
+  assert.equal(result.code, 0);
+  assert.match(
+    await result.rootFiles("output"),
+    /retained: failed to parse Cloudflare deployments response/,
+  );
+  assert.doesNotMatch(await result.rootFiles("requests"), /force=true/);
+  assert.equal(await result.rootFiles("matched-ids"), "first\n");
+});
+
 test("cleanup reports partial delete failure and still attempts every deployment", async (t) => {
   const result = await cleanup(t, [
     {
@@ -150,6 +209,12 @@ async function cleanup(
     : step.run!;
   const result = await runWorkflowShell(
     `
+    rm() {
+      if [ -n "\${matches_file:-}" ] && [ -f "$matches_file" ]; then
+        cp "$matches_file" matched-ids
+      fi
+      command rm "$@"
+    }
     curl() {
       local output_file request_url index
       while [ "$#" -gt 0 ]; do

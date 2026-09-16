@@ -16,6 +16,24 @@ to newly published advisories, even when source and lockfile have not changed.
 An audit is evidence about known advisories at execution time, not a guarantee
 that every dependency is safe.
 
+The minimum-runtime CI job installs the root workspace with
+`npm ci --engine-strict` on Node 22.14.0; the Node 24 complete gate uses
+`npm ci`. `tests/node_engines.test.ts` also checks locked Node engine ranges
+against the root package's minimum, even when tests run on a newer Node. It
+skips optional platform artifacts that no supported installation selects
+(Ubuntu x64, macOS x64 and arm64, Windows x64); such an artifact never
+installs, so its engine range cannot break a supported install. The one
+current example is `@img/sharp-win32-ia32`, whose `^20.9.0` range is not
+selected on any CI or developer platform.
+Lighthouse and Chrome launcher are isolated in `site/lighthouse/`, outside the
+root workspaces and lockfile, because Lighthouse requires Node 22.19+. Only
+the Node 24 `site-lighthouse` CI job installs them, using
+`npm ci --prefix site/lighthouse --engine-strict`, then audits that separate
+lockfile with all categories included and `--audit-level=low`. That job is
+report-only and preserves failures; it is not part of `Required CI`.
+React Native's existing `chrome-launcher@0.15.2` remains in the root tree for
+its development middleware; it supports Node 22.14 and is not used for site audits.
+
 The packed ESM-consumer smoke also audits its freshly resolved production,
 optional, and peer dependencies before exercising the installed CLI. This is a
 separate boundary: npm does not apply Mokly's workspace overrides or lockfile

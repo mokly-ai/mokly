@@ -1,0 +1,16 @@
+{
+  "name": "@mokly/site-lighthouse",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "scripts": {
+    "build": "tsc --noEmit"
+  },
+  "dependencies": {
+    "chrome-launcher": "1.2.1",
+    "lighthouse": "13.4.1"
+  }
+}

@@ -9,7 +9,8 @@ Routes are in [Site](./site.md); the CI gate for the package is in the
 
 - `site/` is an npm workspace listed in the root `package.json` `workspaces`
   field. One root lockfile covers it and `npm run dependencies:check` audits
-  it.
+  it. The report-only audit tools live separately in `site/lighthouse/`, with
+  their own lockfile outside the root workspaces and Node 22.19+ requirement.
 - Astro with `output: "static"`, the MDX integration, the React integration
   for islands, and Pagefind run as a post-build step. No documentation
   framework or theme.
@@ -88,14 +89,14 @@ route. Frames have titles. Images have alt text or are decorative.
 
 ## Tests
 
-| Check      | Script            | What it proves                                                                                                                                  |
-| ---------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Build      | `site:build`      | Astro builds, Pagefind indexes, settings validate                                                                                               |
-| Typecheck  | `site:typecheck`  | `astro check` and `tsc --noEmit` pass                                                                                                           |
-| Unit       | `site:test`       | Changelog parser, settings, sections, reference allowlist, CLI reference coverage                                                               |
-| Links      | `site:links`      | Every internal href, anchor, asset and frame source in `site/dist` resolves                                                                     |
-| Browser    | `site:browser`    | Playwright on Chromium at 390px and 1440px, light and dark; header and footer walk, both home actions, changelog, legal, docs layout and search |
-| Lighthouse | `site:lighthouse` | Category scores at both viewports meet the thresholds below                                                                                     |
+| Check      | Script            | What it proves                                                                                                                                          |
+| ---------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Build      | `site:build`      | Astro builds, Pagefind indexes, settings validate                                                                                                       |
+| Typecheck  | `site:typecheck`  | `astro check` and `tsc --noEmit` pass                                                                                                                   |
+| Unit       | `site:test`       | Changelog parser, settings, sections, reference allowlist, CLI reference coverage                                                                       |
+| Links      | `site:links`      | Every internal href, anchor, asset and frame source in `site/dist` resolves                                                                             |
+| Browser    | `site:browser`    | Every route at 390px and 1440px, light and dark: deterministic accessibility, header/footer navigation, home actions, changelog, legal, docs and search |
+| Lighthouse | `site:lighthouse` | Report-only category scores at both viewports against the thresholds below                                                                              |
 
 `site:check` runs build, typecheck, unit, links and browser in that order and
 is the step `cargo xtask check` runs after `package:smoke` and before
@@ -105,9 +106,16 @@ assets (including responsive images and CSS URLs) and frame sources. External
 URLs are not fetched. Missing output or an output tree without HTML fails.
 Playwright uses Astro's preview API in a foreground process to serve only
 `site/dist` on `MOKLY_SITE_PLAYWRIGHT_PORT` (default
-`4611`), independently of the catalogue browser suite. Lighthouse runs
-in CI as its own required job because it takes minutes; it can be run locally
-with the same script.
+`4611`), independently of the catalogue browser suite. Every published route,
+including authored docs, reference docs and the 404 page, must have exactly one
+`h1`, one `main`, a nonempty `html[lang]`, and an `alt` attribute or
+`aria-hidden="true"` on every image. Every exposed button and link must have a
+nonempty accessible name. The first five keyboard-focusable elements must
+retain a visible, nonzero computed outline; pages must not overflow horizontally.
+These assertions are part of the required complete gates. Lighthouse runs as
+its own report-only CI job; its failure remains visible without blocking
+`Required CI`. For local audits on Node 22.19+ (Node 24 in CI), first run
+`npm ci --prefix site/lighthouse --engine-strict`, then `npm run site:lighthouse`.
 
 Pagefind runs after every build over `docs/**/*.html` and must cover every
 published documentation page; `site:links` fails when the index is missing or
@@ -130,6 +138,10 @@ page is scored on the desktop curves against a connection it can meet.
 ## Continuous Integration
 
 `ci.yml` runs `site-lighthouse` on Ubuntu with Node 24, npm 11.7.0 and `npm ci`.
+Only this job installs the separate tools with
+`npm ci --prefix site/lighthouse --engine-strict`, audits their lockfile with
+`npm audit --prefix site/lighthouse --audit-level=low --include=prod --include=dev --include=optional --include=peer`,
+and typechecks the runner with `npm run build --prefix site/lighthouse`.
 It installs Chromium with Playwright and sets `CHROME_PATH` to that executable.
 It runs `npm run build && npm run example:build && npm run site:build` before
 `npm run site:lighthouse`, using the local settings defaults. The budget table
@@ -137,8 +149,10 @@ and diagnostics go to `test-results/site-lighthouse/report.txt`; Bash pipefail
 preserves the audit exit status, and `actions/upload-artifact` retains that
 directory on failure. This is a text budget report, not Lighthouse's full JSON.
 
-`Required CI` requires `site-lighthouse`, `minimum-runtime`, `release-runtime`
-and `export-platforms` to succeed, including every platform matrix entry.
+`Required CI` requires `minimum-runtime`, `release-runtime` and
+`export-platforms` to succeed, including every platform matrix entry.
+`site-lighthouse` has `continue-on-error: false` and keeps its own failing
+status and artifact when an audit fails; the aggregator never waits for it.
 Both complete gates run `cargo xtask check`, which includes `site:check`.
 Workflow tests parse both YAML files and exercise guards, configuration errors,
 sticky comments, cleanup failures and the aggregator's failure handling.
@@ -178,6 +192,10 @@ sticky comments, cleanup failures and the aggregator's failure handling.
   deleting only those whose branch matches `pr-<number>`, with `force=true`.
   Missing credentials, transport, HTTP, API and parse failures report retained
   status; delete failures also emit warnings and do not prevent other attempts.
+  Close checks out the event's default ref, without pinning a potentially
+  deleted PR head. Missing/null page counts default to zero and use page length
+  to determine completion; malformed page counts retain all deployments. A
+  page's matching ids are appended only after its entire listing parses.
 - Concurrency group `site-<PR number or ref>` cancels superseded runs, including
   an open-PR deploy when the close event arrives, independently of the catalogue.
 

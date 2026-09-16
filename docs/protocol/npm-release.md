@@ -108,18 +108,26 @@ gate on Ubuntu:
 - release Node 24 with npm 11.7.0.
 
 Both install Rust 1.95.0, install Chromium, and run `cargo xtask check`.
+The minimum-runtime job installs with `npm ci --engine-strict`; the release
+job uses `npm ci`. The lockfile engine test checks compatibility with the root
+package's declared Node 22.14.0 minimum independently of the running Node version.
 Focused macOS and Windows jobs additionally run native export move,
 destination-race, and CSS rule parser/diff tests at the minimum Node version.
 The Ubuntu complete gates also exercise CSS parsing on Node 22.14 and 24.
 The `Required CI` aggregator requires `minimum-runtime`, `release-runtime`,
-`export-platforms` (both matrix entries) and `site-lighthouse` to succeed and is
+`export-platforms` (both matrix entries) to succeed and is
 the branch-rule status to require. Both complete gates include the public site's
 `site:check` through `cargo xtask check`; the root lockfile and dependency audit
 cover the site workspace. The separate Ubuntu `site-lighthouse` job uses Node
-24, npm 11.7.0, `npm ci` and Playwright-installed Chromium, builds the package,
+24, npm 11.7.0, `npm ci` and Playwright-installed Chromium. Only this job installs
+the separately locked audit tools with `npm ci --prefix site/lighthouse --engine-strict`,
+audits their lockfile at all severities and typechecks their runner. It builds the package,
 example catalogue and site in that order, and runs `npm run site:lighthouse`.
 It preserves a failing audit's exit status and uploads the text budget report
-and diagnostics from `test-results/site-lighthouse/` on failure. The
+and diagnostics from `test-results/site-lighthouse/` on failure. This job is
+report-only, with `continue-on-error: false` so failures remain visible, and is
+excluded from `Required CI`. Deterministic accessibility assertions for every
+site route run in both required complete gates instead. The
 [site delivery contract](./site-delivery.md) fixes its budget and settings.
 CI checks out complete Git history in both full verification jobs so the preview regression
 can resolve `origin/main`, and uses `npm ci` with the committed lockfile. Action

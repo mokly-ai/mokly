@@ -628,7 +628,9 @@ typechecks it, runs site tests, checks built links and assets, then runs its
 browser smoke tests. For site development use `npm run dev --workspace site`;
 see [site setup and settings](./site/README.md). Its browser server uses
 `MOKLY_SITE_PLAYWRIGHT_PORT` (default `4611`) independently of the catalogue.
-`npm run site:lighthouse` audits the budget pages at both viewports.
+`npm run site:lighthouse` reports on the budget pages at both viewports. It
+requires separately installed [Lighthouse tools](./site/lighthouse/README.md)
+on Node 22.19+; normal site development retains the Node 22.14 floor.
 
 The example's generated HTML and manifest are ignored local artifacts; its
 authored CSS remains tracked. Both test entrypoints build the package and example
@@ -937,8 +939,9 @@ use their alias as `SITE_ORIGIN`; local verification uses localhost defaults.
 Attach the production host through `mokly-site` → Custom domains in Cloudflare
 and complete its DNS instructions after the go-live alignment pass. The first
 production deployment and domain smoke test are post-merge maintainer steps.
-The `Required CI` gate includes the site's Lighthouse budget alongside both
-full verification jobs and the platform checks. See [site setup](./site/README.md)
+The `Required CI` gate includes both full verification jobs, with deterministic
+site accessibility checks, and the platform checks. Lighthouse reports through
+its own job and failure artifact without blocking that gate. See [site setup](./site/README.md)
 for the package's commands and [delivery settings](./docs/protocol/site-delivery.md).
 
 ## Releasing
