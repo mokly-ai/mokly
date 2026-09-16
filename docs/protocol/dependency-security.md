@@ -39,8 +39,25 @@ update; an old override is not proof that the current tree is clean.
 
 The current maintenance choices are:
 
+- Astro 7.3.2 uses Unifont 0.7.5, whose Undici 8 dependency requires Node
+  22.19 even though Astro supports Node 22.12. The
+  `unifont` scoped override selects Undici 7.29.1 to preserve
+  Mokly's Node 22.14 minimum; the newer Unifont 0.8.3 still requires Undici 8.
+  Unifont uses only `Agent`, `EnvHttpProxyAgent`, `getGlobalDispatcher` and
+  `setGlobalDispatcher`, which are available in 7.29.1. Its dispatcher API
+  is smoke-tested by the site suite; minimum-Node installation uses
+  `npm ci --engine-strict`. The [upstream support table](https://github.com/nodejs/undici#long-term-support)
+  documents the two Node floors. Remove this override when Astro's font
+  dependency resolves a release supporting Node 22.14 without it and passes
+  the clean install, all-category audit and site checks on both CI runtimes.
+  This does not replace the independent Miniflare override or exempt the
+  site from the live audit. npm 11's [workspace override bug](https://github.com/npm/cli/issues/9514)
+  can report the applied override as invalid in `npm ls` and lose it on updates.
+  A site regression checks the actual resolved version against the approved
+  override. Recheck strict minimum-Node installation after lockfile updates;
+  do not accept Undici 8 merely to silence `npm ls`.
 - The runtime glob dependency is `minimatch` 10.2.6 or newer; the workspace locks
-  `brace-expansion` 5.0.9. A bounded behavioral regression checks total padded
+  `brace-expansion` 5.0.12. A bounded behavioral regression checks total padded
   output and preserves normal brace alternatives. The
   [upstream advisory](https://github.com/advisories/GHSA-rgw5-rvv9-x895)
   explains why the intermediate-allocation fix requires 5.0.9, not 5.0.8.

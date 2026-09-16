@@ -598,10 +598,19 @@ npm ci
 npm run build
 npm run example:build
 npm test
+npm run site:check
 npm run test:browser
 npm run example:check
 cargo xtask check
 ```
+
+The public site is the private `site/` npm workspace, installed by the same
+`npm ci` and audited from the root lockfile. `npm run site:check` builds it,
+typechecks it, runs site tests, checks built links and assets, then runs its
+browser smoke tests. For site development use `npm run dev --workspace site`;
+see [site setup and settings](./site/README.md). Its browser server uses
+`MOKLY_SITE_PLAYWRIGHT_PORT` (default `4611`) independently of the catalogue.
+`site:lighthouse` becomes available with the Milestone 5 budget configuration.
 
 The example's generated HTML and manifest are ignored local artifacts; its
 authored CSS remains tracked. Both test entrypoints build the package and example
@@ -678,7 +687,7 @@ recovery and reports the last published state if it times out.
 dependency audit (`npm run dependencies:check`), then includes formatting,
 lint, typechecking, unit/integration tests, the derived example, package
 allowlist and license checks, clean packed ESM/NodeNext/npx/Accounting/Juno
-consumers, Chromium tests, and all Rust checks. It also audits the freshly
+consumers, `site:check`, catalogue Chromium tests, and all Rust checks. It also audits the freshly
 resolved packed consumer's production dependencies. Registry access is required;
 known advisories or registry errors fail verification. See the
 [dependency security contract](./docs/protocol/dependency-security.md).

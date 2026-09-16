@@ -10,6 +10,9 @@ export default tseslint.config(
       "dist/**",
       "examples/basic/generated/**",
       "node_modules/**",
+      "site/dist/**",
+      "site/.astro/**",
+      "site/node_modules/**",
       "target/**",
     ],
   },
@@ -17,6 +20,7 @@ export default tseslint.config(
     files: ["**/*.mjs"],
     languageOptions: { globals: globals.node },
   },
+  // Astro templates are validated by site:typecheck (astro check).
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   {

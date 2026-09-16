@@ -5,6 +5,9 @@
 .wrangler/
 coverage/
 dist/
+site/dist/
+site/.astro/
+site/node_modules/
 examples/basic/generated/**/*.html
 examples/basic/generated/mokly-manifest.json
 node_modules/

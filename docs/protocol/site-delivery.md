@@ -29,7 +29,14 @@ Routes are in [Site](./site.md); the CI gate for the package is in the
 
 Settings are read once in `site/src/settings.ts`, validated, and exposed as a
 typed object. Invalid or missing required values fail the build with a message
-naming the setting.
+naming the setting. Both origins must be absolute HTTP(S) origins without a
+path, query, fragment or userinfo; an optional final slash is normalized away.
+Explicit empty values are invalid. `SITE_STAGE_PR` accepts decimal positive
+safe integers only. It defaults to `71` only when `SITE_ORIGIN` names
+`localhost`, `127.0.0.1` or `[::1]`; all other origins require it explicitly.
+CI verification uses the local defaults. Deployment must supply its canonical
+origin and stage pull request. Settings come from the process environment;
+the workspace does not load `.env` files.
 
 ## Output
 
@@ -70,9 +77,22 @@ route. Frames have titles. Images have alt text or are decorative.
 | Lighthouse | `site:lighthouse` | Category scores at both viewports meet the thresholds below                                                                                     |
 
 `site:check` runs build, typecheck, unit, links and browser in that order and
-is the step `cargo xtask check` runs after the package checks. Lighthouse runs
+is the step `cargo xtask check` runs after `package:smoke` and before
+`test:browser`. The link checker walks the built HTML and CSS, resolves relative
+and same-origin absolute URLs, validates HTML fragments, and checks local
+assets (including responsive images and CSS URLs) and frame sources. External
+URLs are not fetched. Missing output or an output tree without HTML fails.
+Playwright uses Astro's preview API in a foreground process to serve only
+`site/dist` on `MOKLY_SITE_PLAYWRIGHT_PORT` (default
+`4611`), independently of the catalogue browser suite. Lighthouse runs
 in CI as its own required job because it takes minutes; it can be run locally
 with the same script.
+
+Milestone 3 provides the unstyled index and these checks. Pagefind runs after
+every build over `docs/**/*.html`; until docs exist it reports zero pages
+and emits no search bundle. `site:lighthouse` fails with a clear Milestone 5 setup message until
+that milestone installs the budget configuration. The site CI job and
+deployment workflow arrive in Milestone 8.
 
 Lighthouse thresholds, per page and viewport: performance ≥ 0.95,
 accessibility = 1.0, best practices ≥ 0.95, SEO ≥ 0.95. Pages audited: `/`,

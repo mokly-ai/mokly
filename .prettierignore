@@ -1,5 +1,8 @@
 AGENTS.md
 dist
+site/dist
+site/.astro
+site/node_modules
 node_modules
 target
 examples/basic/generated

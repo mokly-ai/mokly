@@ -89,7 +89,10 @@ export async function inspectRuntimeLicenses(repositoryRoot) {
   const invalid = Object.entries(lock.packages)
     .filter(([key, value]) => key && value.dev !== true)
     .filter(([, value]) => {
-      const license = value.license;
+      const license =
+        value.link === true
+          ? lock.packages[value.resolved]?.license
+          : value.license;
       return (
         typeof license !== "string" ||
         license.trim().length === 0 ||

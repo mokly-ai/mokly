@@ -1,0 +1,45 @@
+import assert from "node:assert/strict";
+import { execFile } from "node:child_process";
+import {
+  access,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  writeFile,
+} from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import test from "node:test";
+import { promisify } from "node:util";
+
+test("Pagefind handles no docs and indexes only docs when present", async (t) => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "mokly-site-search-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await writeFile(
+    path.join(root, "index.html"),
+    '<html lang="en"><body><h1>Marketing</h1></body></html>',
+  );
+  const run = () =>
+    promisify(execFile)(process.execPath, ["scripts/index-search.mjs", root], {
+      cwd: path.resolve(import.meta.dirname, ".."),
+      timeout: 30_000,
+    });
+  assert.match((await run()).stdout, /indexed 0 documentation pages/);
+  await assert.rejects(access(path.join(root, "pagefind")), { code: "ENOENT" });
+  await mkdir(path.join(root, "docs", "start"), { recursive: true });
+  await writeFile(
+    path.join(root, "docs", "index.html"),
+    '<html lang="en"><body><h1>Documentation</h1></body></html>',
+  );
+  await writeFile(
+    path.join(root, "docs", "start", "index.html"),
+    '<html lang="en"><body><h1>Install</h1></body></html>',
+  );
+  assert.match((await run()).stdout, /indexed 2 documentation pages/);
+  await access(path.join(root, "pagefind", "pagefind.js"));
+  const entry = JSON.parse(
+    await readFile(path.join(root, "pagefind", "pagefind-entry.json"), "utf8"),
+  ) as { languages: Record<string, { page_count: number }> };
+  assert.equal(entry.languages["en"]?.page_count, 2);
+});

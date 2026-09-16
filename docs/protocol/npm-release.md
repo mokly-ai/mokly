@@ -73,6 +73,8 @@ to npm scripts and includes:
 - local-npx and clean-cache npx-style execution from the packed artifact;
 - consumer exports from the installed CLI, including custom configs/bases,
   cross-platform renderers, registered pages, and the compiled static client graph;
+- the site's build, typecheck, unit tests, static link check and browser smoke
+  tests through `npm run site:check`, after `package:smoke` and before `test:browser`;
 - installed `publish` uploads with and without comparisons to a local receiver,
   inspecting the gzip tarball, documented metadata and exact exported bytes;
 - source-tree ESM, declaration, CLI, workspace-resolution, server, Review, and
@@ -111,10 +113,11 @@ destination-race, and CSS rule parser/diff tests at the minimum Node version.
 The Ubuntu complete gates also exercise CSS parsing on Node 22.14 and 24.
 The `Required CI` aggregator
 fails unless both complete gates and both platform jobs succeed and is the
-branch-rule status to require. The [site delivery contract](./site-delivery.md)
-adds the public site's `site:check` step to `cargo xtask check` and a
-`site-lighthouse` job that the aggregator also requires once the site package
-lands. CI checks out complete Git history so the preview regression
+branch-rule status to require. Both complete gates include the public site's
+`site:check` through `cargo xtask check`; the root lockfile and dependency audit
+cover the site workspace. The [site delivery contract](./site-delivery.md)
+also specifies a separate required `site-lighthouse` job, added in Milestone 8
+after the Milestone 5 Lighthouse configuration. CI checks out complete Git history so the preview regression
 can resolve `origin/main`, and uses `npm ci` with the committed lockfile. Action
 revisions are immutable commit hashes with reviewed version comments; runtime
 versions are explicit. Fork pull requests receive no release secrets or write

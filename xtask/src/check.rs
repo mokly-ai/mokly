@@ -32,7 +32,7 @@ impl CheckRunner for DefaultCheckRunner {
     }
 }
 
-fn commands() -> [CommandSpec; 12] {
+fn commands() -> [CommandSpec; 13] {
     [
         npm(&["run", "dependencies:check"]),
         npm(&["run", "format:check"]),
@@ -42,6 +42,7 @@ fn commands() -> [CommandSpec; 12] {
         npm(&["run", "example:check"]),
         npm(&["run", "package:check"]),
         npm(&["run", "package:smoke"]),
+        npm(&["run", "site:check"]),
         npm(&["run", "test:browser"]),
         cargo(&["fmt", "--all", "--", "--check"]),
         cargo(&[

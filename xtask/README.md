@@ -5,7 +5,7 @@ internal binary and is not published to npm or crates.io.
 
 ## Responsibilities
 
-- Run the current source-level TypeScript, package, example, and Rust suite.
+- Run the current source-level TypeScript, package, example, site, and Rust suite.
 - Fail verification when the live dependency audit reports an advisory or error.
 - Enforce the Rust file-length limit.
 
@@ -19,6 +19,9 @@ The complete check starts with `npm run dependencies:check`, covering all
 workspace dependency categories. It requires registry access; an audit or network
 failure stops subsequent checks. Packed-consumer smokes separately audit the
 consumer's resolved production dependencies without workspace overrides.
+After `package:smoke`, `npm run site:check` builds and typechecks the public
+site, runs its unit tests and link checker, then exercises the built pages in
+Playwright. The catalogue's `test:browser` runs next on its separate port.
 
 ## Quick Start
 

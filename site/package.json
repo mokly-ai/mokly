@@ -1,0 +1,32 @@
+{
+  "name": "@mokly/site",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.14.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build && node scripts/index-search.mjs",
+    "typecheck": "astro check && tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "links": "node --import tsx scripts/check-links.mjs",
+    "browser": "playwright test --config playwright.config.ts",
+    "lighthouse": "node scripts/lighthouse.mjs",
+    "preview": "astro preview"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@astrojs/mdx": "^8.0.1",
+    "@astrojs/react": "^6.0.5",
+    "astro": "^7.3.2",
+    "lightningcss": "^1.33.0",
+    "pagefind": "^1.5.2",
+    "parse5": "^8.0.1",
+    "prettier-plugin-astro": "^1.0.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "srcset": "^5.0.3"
+  }
+}

@@ -253,28 +253,38 @@ Create the site package and wire its checks into the repository gate before
 any page is styled. At the end the site builds an unstyled placeholder index
 and every check passes locally and in CI.
 
-- [ ] Add `site/` with its own `package.json`, `astro.config.mjs`,
+- [x] Add `site/` with its own `package.json`, `astro.config.mjs`,
       `tsconfig.json` and `README.md`; add `workspaces: ["site"]` to the root
       `package.json`; install Astro, MDX, the React integration and Pagefind
       with `npm install` in the workspace so the newest versions are used.
-- [ ] Add the `SITE_APP_ORIGIN` build-time setting with its default and a
-      typed accessor; fail the build on a malformed origin.
-- [ ] Add root ignore entries for `site/dist`, `site/.astro` and
+- [x] Add typed `SITE_APP_ORIGIN`, `SITE_ORIGIN` and `SITE_STAGE_PR`
+      settings; validate origins and positive integer pull requests, with
+      the local-only defaults defined by the delivery contract.
+- [x] Add root ignore entries for `site/dist`, `site/.astro` and
       `site/node_modules` to `.gitignore`, `.prettierignore` and the ESLint
       config; keep root Prettier and ESLint covering site sources; use
       `astro check` for `.astro` files.
-- [ ] Add site scripts: `site:build`, `site:typecheck`, `site:test`,
-      `site:links`, `site:browser` and a `site:check` aggregate; add
+- [x] Add site scripts: `site:build`, `site:typecheck`, `site:test`,
+      `site:links`, `site:browser`, a clearly failing `site:lighthouse`
+      placeholder and an ordered `site:check` aggregate; add
       `site/scripts/check-links.mjs` walking `site/dist` for internal hrefs,
-      anchors and asset references.
-- [ ] Add a site Playwright configuration that serves `site/dist` and a
+      anchors, asset references and frame sources.
+- [x] Add a site Playwright configuration that serves `site/dist` and a
       smoke test that loads the placeholder at 390px and 1440px.
-- [ ] Extend `xtask/src/check.rs` and its tests so `cargo xtask check` runs
+- [x] Extend `xtask/src/check.rs` and its tests so `cargo xtask check` runs
       `site:check` after the package checks; update the README developer setup
       and `docs/protocol/npm-release.md`.
-- [ ] Add a package test proving the packed tarball contains no `site/`
+- [x] Add a package test proving the packed tarball contains no `site/`
       entries and that the root package's dependencies are unchanged.
-- [ ] Run `cargo xtask check`, commit and push. Stop for review.
+- [x] Verify a clean workspace install, the all-category dependency audit,
+      and the site checks on the minimum supported Node 22.14 runtime.
+- [x] Make package license inspection resolve npm workspace links, preserving
+      rejection of missing or unlicensed targets, with a regression test.
+- [x] Handle an empty docs set in the Pagefind post-build step without
+      indexing marketing content or inventing records.
+- [x] Scope and document the Astro/Unifont Undici override needed for Node
+      22.14, and smoke-test the dispatcher API used by Unifont.
+- [x] Run `cargo xtask check`, commit and push. Stop for review.
 
 ## Milestone 4: Design System, Header, Footer And Empty Routes
 

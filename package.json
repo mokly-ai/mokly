@@ -3,6 +3,9 @@
   "version": "0.9.0",
   "description": "App-independent static mockup catalogues, development browsing, and on-demand visual comparisons.",
   "type": "module",
+  "workspaces": [
+    "site"
+  ],
   "license": "MIT",
   "author": "Mokly",
   "homepage": "https://github.com/mokly-ai/mokly#readme",
@@ -55,6 +58,13 @@
     "package:smoke": "npm run build && node scripts/package-smoke.mjs",
     "prepack": "npm run build",
     "preview:build": "npm run build && npm run example:build && node scripts/preview/build.mjs",
+    "site:build": "npm run build --workspace site",
+    "site:typecheck": "npm run typecheck --workspace site",
+    "site:test": "npm run test --workspace site",
+    "site:links": "npm run links --workspace site",
+    "site:browser": "npm run browser --workspace site",
+    "site:lighthouse": "npm run lighthouse --workspace site",
+    "site:check": "npm run site:build && npm run site:typecheck && npm run site:test && npm run site:links && npm run site:browser",
     "test": "npm run build && npm run example:build && tsx --test --test-concurrency=2 tests/**/*.test.ts tests/**/*.test.tsx",
     "test:browser": "npm run build && npm run example:build && playwright test",
     "typecheck": "npm run build && tsc --project tsconfig.json --noEmit"
@@ -103,6 +113,9 @@
     "yaml": "^2.9.0"
   },
   "overrides": {
+    "unifont": {
+      "undici": "7.29.1"
+    },
     "miniflare": {
       "sharp": "0.35.4",
       "undici": "7.29.1"
