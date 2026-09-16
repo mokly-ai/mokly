@@ -5,6 +5,7 @@ import { isSafeRepositoryPath } from "../config/paths.js";
 import {
   isPrivateStaticPath,
   isPublicStaticFile,
+  privateStaticPathReason,
 } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
@@ -145,8 +146,11 @@ function validateReference(
     return { violation: `link escapes mockupsDir: ${reference}` };
   }
   const target = rawTarget.replace(/^\.\//, "");
-  if (isPrivateStaticPath(path.resolve(config.mockupsDir, target), config))
-    return { violation: `missing target ${reference} (protected file)` };
+  const denial = privateStaticPathReason(
+    path.resolve(config.mockupsDir, target),
+    config,
+  );
+  if (denial) return { violation: `protected target ${reference}: ${denial}` };
   let targetResource = parsed.get(target);
   if (context?.generatedRoutes.has(target)) {
     if (item.checkFragment && !reference.includes("#")) return {};

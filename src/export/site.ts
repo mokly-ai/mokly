@@ -25,7 +25,7 @@ import { SHELL_CSS } from "../server/shell/css.js";
 import { comparisonContentId } from "./content_id.js";
 import { exportError } from "./error.js";
 import { ExportInventory } from "./inventory.js";
-import { exportResourcePolicy } from "./resource_policy.js";
+import { exportResourceDenial } from "./resource_policy.js";
 import { STAGED_DEPLOYMENT_ID } from "./shell_metadata.js";
 
 /** Assemble one complete shell/resource/comparison tree without a live server. */
@@ -87,14 +87,14 @@ export function assembleExport(
     inventory.add(name, html);
     shells.set(name, descriptor);
   };
-  const isPublic = exportResourcePolicy(config);
+  const resourceDenial = exportResourceDenial(config, false);
   for (const [name, bytes] of comparisonFiles) {
-    if (
-      name.startsWith("snapshots/") &&
-      !isPublic(name.slice(name.indexOf("/", 10) + 1))
-    )
+    const denial = name.startsWith("snapshots/")
+      ? resourceDenial(name.slice(name.indexOf("/", 10) + 1))
+      : undefined;
+    if (denial)
       throw exportError(
-        `Comparison contains a private export resource: ${name}`,
+        `Comparison contains a private export resource: ${name} (${denial})`,
       );
     inventory.add(`${prefix}/${name}`, bytes);
   }

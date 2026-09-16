@@ -6,7 +6,9 @@ Local Serve implements temporary prop editing through the registered consumer
 renderer. Published catalogues keep saved variants and read-only controls. The
 [controls mockups](./mokly-component-controls-design.md) and
 [component explorer plan](../../plans/component-explorer.md) describe the same
-shared icon inspector and lifecycle.
+shared icon inspector and lifecycle. Forwarded loopback ports follow the
+admission rule below; verification is recorded in Milestone 4 of the
+[dependency patch upstreaming plan](../../plans/mokabook-dependency-patch-upstreaming.md).
 
 ## Scope And User Behavior
 
@@ -148,10 +150,29 @@ combinations, and validate unset operations against optional controlled props.
 Use structured error codes for invalid input, unknown entry, stale generation,
 render failure, and temporary capacity limits. Map them to 400, 404, 409, 422,
 and 429 respectively; oversized bodies return 413 and unsupported methods 405.
+Worker failures carry their caught message as server-only detail, written to
+stderr at the HTTP boundary; the response retains the generic preview failure
+message without resource paths, exclusion causes, or other internal details.
 
-Require the served origin, validated Host, and a shell-issued unpredictable
-request token, with no permissive CORS. The token is scoped to the server
-instance and unavailable to consumer frames. Missing or invalid authorization
+When controls are active, every Serve request requires Host to be exactly
+`localhost:<port>` or `127.0.0.1:<port>`, where `<port>` contains only decimal
+digits, has no leading zero, and is between 1 and 65535 inclusive. Require an
+explicit port; reject other hostnames, IP spellings, IPv6, whitespace, suffixes,
+and userinfo. A non-loopback Host returns 403 for the whole catalogue, including
+ordinary pages and static assets. The Host port need not equal the listening
+socket port: forwarded local ports are supported. Serve binds only to
+`127.0.0.1`, so `[::1]` cannot reach the socket directly and accepting it would
+widen the Host surface without a working path; IPv6 support is out of scope.
+Forwarded headers (`x-forwarded-*`) grant nothing; never use those headers to
+repair Host, Origin, or authorization.
+
+On render POST, Origin must equal `http://` plus the accepted Host exactly,
+including its explicit port, and `X-Mokly-Render-Token` must match the shell-issued
+unpredictable token. No case folding, default-port removal, trailing slash, or
+scheme substitution is allowed for this comparison. Preview GET/HEAD requires
+Host validation and the authenticated render id, without requiring Origin or the
+POST token. The token is scoped to the server instance and unavailable to consumer
+frames. There is no permissive CORS; missing or invalid required authorization
 returns 403. Loading a foreign web page must not cause consumer render code to
 execute through this endpoint.
 
@@ -208,7 +229,11 @@ watch/reload or comparison generation indefinitely.
 Add contract tests for every control type, optional/unset values, unknown props,
 type/constraint errors, preset resolution, malformed bodies, request size,
 origin/Host/token validation, old generations, worker failure/timeout, and queue
-bounds. Prove repeat renders use the same consumer providers and React runtime
+bounds. Cover both loopback names through a different forwarded port for POST
+and preview reads, missing/zero/oversized/leading-zero ports, non-loopback Host
+with loopback forwarded headers, and mismatched Origin or token. Cover ordinary
+catalogue routes with rejected non-loopback and accepted forwarded Hosts.
+Prove repeat renders use the same consumer providers and React runtime
 resolution as saved variants and never mutate generated output. Assert that
 control requests create no filesystem output, Git status change, watch event,
 rebuild/reload notification, Check orphan, or publication entry, including when

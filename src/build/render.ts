@@ -8,7 +8,10 @@ import { componentFragmentRoute } from "../components/paths.js";
 import type { ComponentGraphRenderer } from "../components/render.js";
 import { rebaseStyleOwnership } from "../components/style_ownership.js";
 import { encodeUrlPath, toPosixPath } from "../config/paths.js";
-import { isPublicStaticFile } from "../config/public_files.js";
+import {
+  isPublicStaticFile,
+  publicFileFailureReason,
+} from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError, errorMessage } from "../errors.js";
 import { fragmentRoute } from "../registry/manifest.js";
@@ -174,9 +177,10 @@ export function stylesheetsFor(
     if (/^https?:\/\//.test(stylesheet)) return stylesheet;
     const absolute = path.resolve(config.mockupsDir, stylesheet);
     if (!isPublicStaticFile(absolute, config)) {
+      const denial = publicFileFailureReason(absolute, config);
       throw new MoklyError(
         "build-invalid",
-        `stylesheet does not exist: ${stylesheet}`,
+        `${catalogueRoute}: ${denial ? `stylesheet ${stylesheet} ${denial}` : `stylesheet does not exist: ${stylesheet}`}`,
       );
     }
     const relative = path.posix.relative(

@@ -80,7 +80,19 @@ owned `.mokly-export-reservations` namespace, retaining only its metadata
 after cleanup. Case and symlink aliases cannot bypass an active lock. Legacy
 hashed reservations require explicit recovery before another export.
 `resource_policy.ts` applies the same package/source boundary to current and
-historical copies. Build and export share HTML anchor validation through
+historical copies. The
+[public-exclusion contract](../../docs/protocol/mokly-source-protection.md#public-exclusions)
+extends that one policy with resolved `publicExclude` globs. Defaults exclude
+README and tsconfig files case-insensitively; consumer globs only add exclusions.
+Capture, reference validation, Review reads and content-change classification
+must agree on candidate and realpath-alias matching relative to `mockupsDir`.
+Excluded files stay out of public inventory without becoming `sourceFiles`;
+manifest/cache privacy remains unconditional. Generated routes or references
+colliding with exclusions fail validation with the referring route, matched glob,
+and `publicExclude` field. The shared classifier retains distinct entries-root,
+reserved-name, listed-input, and exclusion causes for diagnostic boundaries;
+public HTTP continues returning 404 for protected paths.
+Build and export share HTML anchor validation through
 `html_link_validation.ts`. Watch traverses owned output directories to discover
 unlisted authored files while ignoring the recorded generated files.
 

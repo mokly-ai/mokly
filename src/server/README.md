@@ -41,6 +41,31 @@ Evidence updates invalidate comparison generations as well as classification.
 owns child shutdown. HTTP readiness precedes exhaustive compilation and baseline
 preparation, so All remains usable while Changes is pending or preparing.
 
+The [public-exclusion policy](../../docs/protocol/mokly-source-protection.md#public-exclusions)
+adds config-owned `publicExclude` globs to the shared source classifier.
+Case-insensitive README/tsconfig defaults remain when consumers add globs.
+Serve HTTP, generated-resource validation, Review reads, static export and
+public content-change classification test both candidate and realpath-alias
+paths relative to `mockupsDir`. Excluded requests return 404; excluded edits are
+not public content evidence, and exclusion alone never adds `sourceFiles`.
+Manifest/cache privacy and independently discovered authoring inputs remain protected.
+
+When controls are active, every Serve request uses the
+[Host contract](../../docs/protocol/mokly-component-controls.md#request-and-lifecycle-rules):
+accept only `localhost:<port>` or `127.0.0.1:<port>` with an explicit decimal
+port from 1 to 65535, without a leading zero. A non-loopback Host returns 403
+for the whole catalogue, including ordinary pages and static assets. A forwarded
+local port may differ from the listening socket port. Render POST Origin must
+equal `http://` plus Host exactly and the render token is still required.
+Preview GET/HEAD uses Host and its authenticated render id; it does
+not require the POST token or Origin. Non-loopback hosts and `x-forwarded-*`
+headers grant no access; invalid required authorization returns 403.
+
+`shell/usage_links.ts` deduplicates the shared served/published Affected list
+using complete serialized-link identity, keeping the first occurrence in evidence
+order and serializing each input only once. Distinct usage contexts retain their
+comparison eligibility; deduplication does not alter Changes membership.
+
 Run the server tests with `npm test` and the navigation/comparison smoke tests
 with `npm run test:browser`. `derived_child_repository.test.ts` covers revocation,
 reader replacement and the transitive child-module boundary; `derived_serve`

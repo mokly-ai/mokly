@@ -7,7 +7,10 @@ import type { ComponentViewRecord } from "../../components/manifest_types.js";
 import type { ComponentWireProps } from "../../components/prop_types.js";
 import { ComponentRenderError } from "../../components/render_types.js";
 import { isSafeRepositoryPath } from "../../config/paths.js";
-import { isPublicStaticFile } from "../../config/public_files.js";
+import {
+  isPublicStaticFile,
+  publicFileFailureReason,
+} from "../../config/public_files.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import {
   extractCssReferences,
@@ -47,7 +50,9 @@ export function captureRenderBundle(
     const generated = outputs.get(current) ?? readGenerated?.(current);
     const candidate = path.resolve(config.mockupsDir, current);
     if (generated === undefined && !isPublicStaticFile(candidate, config))
-      throw new Error("Preview resource is unavailable");
+      throw new Error(
+        `Preview resource is unavailable: ${current} (referenced by ${route}; ${publicFileFailureReason(candidate, config) ?? "missing, non-regular, or outside mockupsDir"})`,
+      );
     let bytes =
       generated === undefined
         ? fs.readFileSync(candidate)

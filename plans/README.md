@@ -2,6 +2,7 @@
 
 ## Active
 
+- [Mokabook Dependency Patch Upstreaming](./mokabook-dependency-patch-upstreaming.md)
 - [Publish Catalogue](./publish-catalogue.md)
 - [App-Independent Mokabook Npm Library](./app-independent-mokabook-library.md)
 - [Accounting Shell Design Parity](./accounting-shell-design-parity.md)
