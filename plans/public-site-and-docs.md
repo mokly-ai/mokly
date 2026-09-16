@@ -345,7 +345,7 @@ review with screenshots.
       `site:lighthouse` script; run it locally against `site/dist`.
 - [x] Capture the five routes at 390px and 1440px in both schemes and compare
       them with the promoted mockups.
-- [ ] Run `cargo xtask check`, commit and push. Stop for review.
+- [x] Run `cargo xtask check`, commit and push. Stop for review.
 
 ## Milestone 6: Docs Layout And CLI Documentation
 
