@@ -350,7 +350,8 @@ the new guards, recorded here for the user's decision; none has been applied.
    changelog from the marketing set; **B)** keep it but exempt the rendered
    release notes and check only the page's authored chrome, as the Reference
    section is already exempted; **C)** require release notes to avoid the
-   nouns. **Recommended: B.**
+   nouns. **Recommended: B.** The user chose to remove the internal-noun
+   check and keep the phrase check; finding 7 below falls away with it.
 
 3. **Medium-low — the close job now checks out the pull request merge ref
    and still runs the branch's cleanup script with the Pages token.** The

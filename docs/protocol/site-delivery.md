@@ -124,8 +124,9 @@ Each contrast pair documented in [Site design](./site-design.md) is measured
 from the token file in both schemes, at 4.5:1 for text and 3:1 for boundaries
 and the focus ring. The built pages are read back for the copy rules: no route
 outside the Reference section, which republishes protocol documents verbatim,
-may say "not supported", "coming soon" or "roadmap" outside a code sample, and
-marketing routes may not use the internal nouns the copy rules list. The built
+may say "not supported", "coming soon" or "roadmap" outside a code sample. The
+internal-noun rule is reviewed by hand, because the nouns are exact vocabulary
+on most pages and the changelog quotes release notes it does not author. The built
 stylesheet must carry every Folio token, proving the shared token file was
 inlined rather than left as an unresolved import. Lighthouse runs as
 its own report-only CI job; its failure remains visible without blocking
