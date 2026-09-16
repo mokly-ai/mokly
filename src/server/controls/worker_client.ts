@@ -7,6 +7,7 @@ import {
   ComponentRenderError,
   type ComponentRenderRequest,
 } from "../../components/render_types.js";
+import { errorMessage } from "../../errors.js";
 
 import type { TransientRender } from "./transient_assets.js";
 
@@ -37,26 +38,32 @@ class NodeRenderWorker implements RenderWorker {
     return new Promise((resolve, reject) => {
       const cleanup = () => {
         this.worker.off("message", message);
-        this.worker.off("error", failed);
-        this.worker.off("exit", failed);
+        this.worker.off("error", errored);
+        this.worker.off("exit", exited);
       };
-      const failed = () => {
+      const failed = (detail?: string) => {
         cleanup();
         reject(
           new ComponentRenderError(
             "render-failed",
             "The preview could not be rendered. Try again or reset the props.",
+            detail,
           ),
         );
       };
-      const message = (value: { ok: boolean; result: TransientRender }) => {
-        if (!value.ok) return failed();
+      const errored = (error: Error) => failed(errorMessage(error));
+      const exited = () => failed();
+      const message = (
+        value:
+          { ok: true; result: TransientRender } | { ok: false; reason: string },
+      ) => {
+        if (!value.ok) return failed(value.reason);
         cleanup();
         resolve(value.result);
       };
       this.worker.once("message", message);
-      this.worker.once("error", failed);
-      this.worker.once("exit", failed);
+      this.worker.once("error", errored);
+      this.worker.once("exit", exited);
       this.worker.postMessage(request);
     });
   }

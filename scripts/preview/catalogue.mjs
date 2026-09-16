@@ -32,22 +32,20 @@ const liveUpdateScript =
 
 /** Capture already-built output; the supported npm command builds before this boundary. */
 export async function buildPreview(config, output, options = {}) {
+  const ownership = previewOwnership(config);
   const capability = publicationOptions(options);
   assertSafeOutput(output, config.repoRoot);
   const contextRoot = path.join(config.repoRoot, ".context");
   const destination = resolveExportOutput(config, output, contextRoot);
   try {
-    await assertExportOwnership(destination, previewOwnership);
+    await assertExportOwnership(destination, ownership);
   } catch (cause) {
     throw new Error(
       `refusing to replace unowned preview directory: ${output}`,
       { cause },
     );
   }
-  const transaction = await ExportTransaction.open(
-    destination,
-    previewOwnership,
-  );
+  const transaction = await ExportTransaction.open(destination, ownership);
   try {
     await withExportCleanup(
       async () => {

@@ -16,18 +16,26 @@ import {
 import { comparisonMetadata } from "./comparisons.mjs";
 
 /** Only this repository adapter can adopt the previous preview marker. */
-export const previewOwnership = {
+const previewMarker = {
   marker: ".mokly-preview-artifact",
   contents: "schemaVersion=1\n",
+};
+
+/** Validate legacy preview names using the active config and historical path policy. */
+export const previewOwnership = (config) => ({
+  ...previewMarker,
   accepts: (name) =>
     ["index.html", "404.html", "_headers", "_redirects"].includes(name) ||
     (name.startsWith("view/") && name.endsWith(".html")) ||
     (name.startsWith("static/") &&
-      isExportPublicName(name.slice(7), { allowBuildDirectories: true })) ||
+      isExportPublicName(name.slice(7), config, {
+        allowBuildDirectories: true,
+        resolveAliases: false,
+      })) ||
     /^__mokly\/(?:shell\.css|client\/[^/]+\.js|navigation\/[^/]+\.js|fonts\/[^/]+|diffs\/__generations\/[A-Za-z0-9-]+\/.+)$/.test(
       name,
     ),
-};
+});
 
 /** Share the exporter's alias checks, ownership inventory, and deployment identity. */
 export async function stagePreviewArtifact(
@@ -101,6 +109,6 @@ export async function stagePreviewArtifact(
     `${[...(metadata ? [metadata.redirect] : []), ...redirects].join("\n")}\n`,
   );
   if (metadata) files.set("_headers", metadata.headers);
-  files.set(previewOwnership.marker, previewOwnership.contents);
+  files.set(previewMarker.marker, previewMarker.contents);
   await stageExport(stage, files, shells, aliases);
 }

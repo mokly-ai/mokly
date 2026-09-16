@@ -20,6 +20,7 @@ import type { ViewResourceEvidence } from "../../review/types.js";
 import type { Catalogue } from "../catalogue.js";
 
 import type { ShellContext } from "./context.js";
+import { dedupeUsageLinks } from "./usage_links.js";
 
 export type EntryStatus = "Added" | "Changed" | "Removed" | "Unmodified";
 export interface WorkspaceVariant {
@@ -279,12 +280,7 @@ export function workspaceData(
             })),
         ),
       ),
-    affected: affected.filter(
-      (item, index) =>
-        affected.findIndex(
-          (other) => JSON.stringify(other) === JSON.stringify(item),
-        ) === index,
-    ),
+    affected: dedupeUsageLinks(affected),
     ...(status ? { status } : {}),
     ...(change ? { change } : {}),
     ...(comparison ? { comparison } : {}),

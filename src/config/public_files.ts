@@ -1,7 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { sourceDenialMessage } from "../build/source_denial.js";
 import { isAuthoringSource } from "../build/source_inventory.js";
+import { errorMessage } from "../errors.js";
 import {
   FORMER_MANIFEST_NAME,
   LEGACY_MANIFEST_NAME,
@@ -17,6 +19,7 @@ import type { ResolvedConfig } from "./types.js";
 export function isInternalCatalogueFile(
   candidate: string,
   config: ResolvedConfig,
+  resolveAliases = true,
 ): boolean {
   const internal = [
     MANIFEST_NAME,
@@ -24,22 +27,52 @@ export function isInternalCatalogueFile(
     LEGACY_MANIFEST_NAME,
   ].map((name) => path.join(config.mockupsDir, name));
   if (internal.includes(candidate)) return true;
+  if (!resolveAliases) return false;
   const realCandidate = projectRealPath(candidate);
   return internal.some(
     (file) => fs.existsSync(file) && realCandidate === fs.realpathSync(file),
   );
 }
 
-/** Shared denial policy for generated references, HTTP, export, and Review. */
+/** Shared denial policy; historical readers disable current filesystem aliases. */
 export function isPrivateStaticPath(
   candidate: string,
   config: ResolvedConfig,
+  resolveAliases = true,
 ): boolean {
   return (
-    isBaselineCachePath(candidate, config.repoRoot) ||
-    isInternalCatalogueFile(candidate, config) ||
-    isAuthoringSource(candidate, config)
+    privateStaticPathReason(candidate, config, resolveAliases) !== undefined
   );
+}
+
+/** Preserve the protection cause for validation while HTTP readers return not found. */
+export function privateStaticPathReason(
+  candidate: string,
+  config: ResolvedConfig,
+  resolveAliases = true,
+): string | undefined {
+  if (isBaselineCachePath(candidate, config.repoRoot, resolveAliases))
+    return "targets the private .mokly-cache directory";
+  if (isInternalCatalogueFile(candidate, config, resolveAliases))
+    return "targets internal catalogue metadata";
+  const denial = isAuthoringSource(
+    candidate,
+    config,
+    resolveAliases ? "all" : "none",
+  );
+  return denial && sourceDenialMessage(denial);
+}
+
+/** Explain a failed public-file check without replacing its caller's typed error. */
+export function publicFileFailureReason(
+  candidate: string,
+  config: ResolvedConfig,
+): string | undefined {
+  try {
+    return privateStaticPathReason(candidate, config);
+  } catch (error) {
+    return `could not resolve public path: ${errorMessage(error)}`;
+  }
 }
 
 /** Locate a public path, retaining confined missing paths for deletion handling. */

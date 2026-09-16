@@ -74,7 +74,7 @@ test("a pending manifest is not a public resource on the first build", async (co
   context.after(() => removeFixture(fixture));
   await assert.rejects(
     compileCatalogue(await loadConfig(fixture.root)),
-    /missing target .*mokly-manifest.json/,
+    /target .*mokly-manifest.json.*internal catalogue metadata/,
   );
   assert.equal(
     fs.existsSync(path.join(fixture.mockupsDir, MANIFEST_NAME)),
@@ -93,7 +93,7 @@ test("generated page routes cannot overwrite a manifest through an alias", async
   );
   assert.throws(
     () => validateGeneratedOutputPaths(["page.html"], config),
-    /overlaps/,
+    /targets internal catalogue metadata/,
   );
   validateGeneratedOutputPaths([MANIFEST_NAME], config);
 });

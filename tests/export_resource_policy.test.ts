@@ -5,9 +5,15 @@ import test from "node:test";
 
 import { loadConfig } from "../dist/config/load.js";
 import { capturePublicFiles } from "../dist/export/public_files.js";
+import { exportResourcePolicy } from "../dist/export/resource_policy.js";
 import { exportCatalogue } from "../dist/export/run.js";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
+import {
+  excludedNames,
+  permittedNames,
+  writeExclusionFiles,
+} from "./helpers/public_exclusions.js";
 
 test("nested package payloads are excluded but ancestor package roots remain usable", async (context) => {
   const fixture = await createExportFixture();
@@ -93,4 +99,33 @@ test("baseline package resources cannot bypass current public-file exclusions", 
     /private export resource/,
   );
   assert.equal(fs.existsSync(fixture.output), false);
+});
+
+test("export resource policy excludes defaults and consumer globs while retaining public names", async (t) => {
+  const fixture = await createExportFixture(undefined, {
+    extraConfig: 'publicExclude: ["INTERNAL/**"],',
+  });
+  t.after(() => fixture.close());
+  await writeExclusionFiles(fixture.mockupsDir);
+  const policy = exportResourcePolicy(fixture.config);
+  for (const name of excludedNames) assert.equal(policy(name), false, name);
+  for (const name of permittedNames) assert.equal(policy(name), true, name);
+});
+
+test("export omits public-looking aliases of excluded resources", async (t) => {
+  const fixture = await createExportFixture(undefined, {
+    extraConfig: 'publicExclude: ["internal/**"],',
+  });
+  t.after(() => fixture.close());
+  await writeExclusionFiles(fixture.mockupsDir);
+  await fs.promises.symlink(
+    "README.md",
+    path.join(fixture.mockupsDir, "alias.txt"),
+  );
+  const policy = exportResourcePolicy(fixture.config);
+  assert.equal(policy("alias.txt"), false);
+  assert.equal(
+    (await capturePublicFiles(fixture.config)).has("alias.txt"),
+    false,
+  );
 });
