@@ -322,3 +322,76 @@ both schemes under `.context/site-screens/m10/`, alongside three regenerated
 mockups. Both 320px pages in both schemes and the documentation page at 1440px
 light were inspected, with the desktop home and documentation mockups, which
 confirmed the pinned compositions still resolve from the shared tokens.
+
+## Follow-up Review
+
+A second read-only review of the two follow-up commits (`848ff02`,
+`532c673`) confirmed that every approved item is implemented with a
+regression behind it and found no broken behavior. Its findings are gaps in
+the new guards, recorded here for the user's decision; none has been applied.
+
+1. **Medium — the control-boundary test inspects only `border:` and
+   `border-color:`.** Side-specific borders escape it, and two control rules
+   still carry the decorative hairline that way: `.site-code-head`
+   (`site/src/styles/docs.css`) and `.site-release-index-link`
+   (`site/src/styles/changelog.css`). Doing nothing leaves the delivery
+   contract's "whole boundary" rule untrue and unenforced. Options: **A)**
+   widen the regex to every `border*` property and fix the two rules;
+   **B)** A plus classify a control by a documented control selector rather
+   than by reserved target size, so containers such as the code head are not
+   miscounted; **C)** narrow the contract to full-shorthand borders; **D)**
+   parse the CSS with `lightningcss` and check resolved longhands.
+   **Recommended: B**, with D if the stylesheet tests keep growing.
+
+2. **Medium — the copy test holds `/changelog/` to the marketing noun
+   rules, but its text is release notes generated from commit messages.**
+   A future release note containing "manifest", "schema" or "worker" would
+   fail `Required CI` on every later pull request. Options: **A)** drop the
+   changelog from the marketing set; **B)** keep it but exempt the rendered
+   release notes and check only the page's authored chrome, as the Reference
+   section is already exempted; **C)** require release notes to avoid the
+   nouns. **Recommended: B.**
+
+3. **Medium-low — the close job now checks out the pull request merge ref
+   and still runs the branch's cleanup script with the Pages token.** The
+   merge ref is the one GitHub stops maintaining after close, and an
+   unmerged branch can run an edited `cleanup.sh` with the credential.
+   Options: **A)** leave; **B)** check out `pull_request.base.ref`; **C)**
+   check out the repository default branch; **D)** drop the checkout and
+   inline the cleanup. **Recommended: B**, and update the workflow test that
+   currently asserts no `ref`.
+
+4. **Medium-low — the parity test exempts whole selectors.** Fourteen
+   shared rules are excluded from comparison entirely, so new drift on them
+   is invisible. Options: **A)** leave; **B)** exempt listed properties per
+   selector and prove each still differs; **C)** unify the two sheets.
+   **Recommended: B** as the interim guard, C as the goal. The test also
+   concatenates the site sheets alphabetically rather than in the layout's
+   load order, and expands only `padding` and `margin` shorthands.
+
+5. **Low — the engine test's platform list omits Linux arm64.** The list
+   matches CI and the documented sentence, but ARM Linux is a realistic
+   developer platform. Options: **A)** leave; **B)** add linux/arm64 and
+   win32/arm64 and update `dependency-security.md`; **C)** invert to an
+   explicit exception list naming `@img/sharp-win32-ia32`. **Recommended:
+   B now, C if a second exception appears**; also add `--engine-strict` to
+   the `export-platforms` install.
+
+6. **Low — the Lighthouse runner is no longer typechecked by a required
+   gate.** `site/lighthouse/run.mjs` is excluded from the site typecheck and
+   its build and audit run only in the report-only job. Options: **A)**
+   record this in `site/README.md`; **B)** keep the logic in the typechecked
+   `site/src/lighthouse.ts` and reduce the runner to glue; **C)** split the
+   job's setup, audit and typecheck into a required job and keep only the
+   budget measurement report-only. **Recommended: C.**
+
+7. **Low — the marketing route list in the copy test is hardcoded.** A new
+   marketing route silently escapes the rule. Options: **A)** leave;
+   **B)** derive the set as every built route outside `/docs/`; **C)** assert
+   the literal list equals that derivation. **Recommended: B.**
+
+Areas with no findings: the upload page fix and its cross-check test, the
+cleanup script and its regressions, the isolated Lighthouse package and its
+documentation, the token-sharing mechanics, the accessibility stylesheet
+changes against the design contract, the contrast test, the `Required CI`
+change, and the documents.

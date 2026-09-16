@@ -500,10 +500,14 @@ The user decided each finding of the
       token contrast pairs, copy rules, `html lang`, a 320px browser project).
 - [x] Run `cargo xtask check`, commit and push. Stop for review.
 
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       against the complete local diff from `origin/main`; report findings
       without changing the implementation.
+
+The follow-up review is recorded in
+[the review report](../docs/reviews/public-site-and-docs.md#follow-up-review);
+its seven findings await the user's decision.
 
 ## Post-merge follow-up (non-blocking)
 
