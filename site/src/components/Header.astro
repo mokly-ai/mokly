@@ -1,0 +1,78 @@
+---
+/**
+ * The shared header: the brand, the navigation and the application links,
+ * inside a band aligned to the wide measure. Changelog and Get started leave
+ * the row below the breakpoint; there is no menu control. The documentation
+ * search control appears on documentation routes and nowhere else.
+ */
+import { settings } from "../settings.js";
+import {
+  APP_PATHS,
+  SITE_PATHS,
+  appLink,
+  currentPage,
+  isDocsRoute,
+} from "../navigation.js";
+
+import Brand from "./Brand.astro";
+
+interface Props {
+  readonly route: string;
+  readonly ruled?: boolean;
+}
+
+const { route, ruled = true } = Astro.props;
+---
+
+<div class={ruled ? "site-band site-band--ruled" : "site-band"}>
+  <header class="site-header">
+    <Brand />
+    {isDocsRoute(route) && (
+      <button class="site-search" type="button">
+        <svg
+          aria-hidden="true"
+          fill="none"
+          height="14"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="14"
+        >
+          <circle cx="11" cy="11" r="7" />
+          <path d="M20 20l-3.9-3.9" />
+        </svg>
+        Search docs
+      </button>
+    )}
+    <nav aria-label="Main" class="site-nav">
+      <a
+        aria-current={currentPage(route, SITE_PATHS.docs)}
+        class="site-nav-link"
+        href={SITE_PATHS.docs}
+      >
+        Docs
+      </a>
+      <a
+        aria-current={currentPage(route, SITE_PATHS.changelog)}
+        class="site-nav-link site-desktop-only"
+        href={SITE_PATHS.changelog}
+      >
+        Changelog
+      </a>
+      <a
+        class="site-nav-link"
+        href={appLink(settings.appOrigin, APP_PATHS.signIn)}
+      >
+        Sign in
+      </a>
+      <a
+        class="site-button site-button--secondary site-desktop-only"
+        href={appLink(settings.appOrigin, APP_PATHS.signUp)}
+      >
+        Get started <span aria-hidden="true">&#8594;</span>
+      </a>
+    </nav>
+  </header>
+</div>

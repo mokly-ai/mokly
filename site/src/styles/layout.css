@@ -1,0 +1,90 @@
+/* Page layout for the public site: the home's full-measure main, the
+   centered document column and its ruled intro, and the home hero type.
+   Ported from the promoted mockups in examples/basic/generated/site.css;
+   the mobile composition is the default and 768px raises the desktop one. */
+
+.site-main {
+  width: 100%;
+}
+
+.site-document {
+  min-width: 0;
+  padding: var(--site-space-7) var(--site-gutter) var(--site-space-9);
+  width: 100%;
+}
+
+/* Documents that span the wide measure keep the content measure for the
+   intro, so the changelog and the documentation align with the header. */
+
+.site-document--wide {
+  margin: 0 auto;
+  max-width: var(--site-wide-max);
+  padding-left: var(--site-gutter);
+  padding-right: var(--site-gutter);
+}
+
+.site-document--wide .site-document-intro {
+  max-width: var(--site-content-max);
+}
+
+.site-policy {
+  margin: 0 auto;
+  max-width: var(--site-policy-max);
+}
+
+.site-document-intro {
+  border-bottom: 1px solid var(--site-folio-line);
+  display: grid;
+  gap: var(--site-space-4);
+  margin-bottom: var(--site-space-8);
+  padding-bottom: var(--site-space-7);
+}
+
+.site-document-intro h1 {
+  font-size: var(--site-heading1-size);
+  font-weight: var(--site-weight-bold);
+  letter-spacing: var(--site-document-tracking);
+  line-height: var(--site-heading1-line);
+}
+
+.site-hero {
+  display: grid;
+  gap: var(--site-space-4);
+  justify-items: start;
+  margin: 0 auto;
+  max-width: 62rem;
+  padding: var(--site-space-8) var(--site-gutter) var(--site-space-7);
+  text-align: left;
+  width: 100%;
+}
+
+.site-hero-eyebrow {
+  background: var(--site-folio-surface);
+  border: 1px solid var(--site-folio-line);
+  border-radius: var(--site-radius-pill);
+  color: var(--site-folio-ink-muted);
+  font-size: var(--site-small-size);
+  line-height: var(--site-small-line);
+  padding: var(--site-space-1) var(--site-space-4);
+}
+
+.site-hero h1 {
+  font-size: var(--site-hero-display);
+  font-weight: var(--site-weight-semibold);
+  letter-spacing: var(--site-hero-tracking);
+  line-height: 1.04;
+}
+
+/* The desktop composition from the 768px breakpoint upward. */
+@media (min-width: 768px) {
+  .site-document {
+    padding: var(--site-space-9);
+  }
+
+  .site-hero {
+    gap: var(--site-space-5);
+    justify-items: center;
+    padding: var(--site-space-11) var(--site-gutter) var(--site-space-9);
+    text-align: center;
+  }
+}

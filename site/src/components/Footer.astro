@@ -1,0 +1,83 @@
+---
+/**
+ * The shared footer: the brand and the open-source line beside the Product,
+ * Account and Legal columns. Account holds the application links, so it
+ * never marks a current page.
+ */
+import { settings } from "../settings.js";
+import {
+  APP_PATHS,
+  SITE_PATHS,
+  type SitePath,
+  appLink,
+  currentPage,
+} from "../navigation.js";
+
+import Brand from "./Brand.astro";
+
+interface Props {
+  readonly route: string;
+}
+
+const { route } = Astro.props;
+
+const product: ReadonlyArray<readonly [SitePath, string]> = [
+  [SITE_PATHS.home, "Home"],
+  [SITE_PATHS.docs, "Docs"],
+  [SITE_PATHS.changelog, "Changelog"],
+];
+const legal: ReadonlyArray<readonly [SitePath, string]> = [
+  [SITE_PATHS.terms, "Terms"],
+  [SITE_PATHS.privacy, "Privacy"],
+];
+---
+
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <div class="site-footer-brand">
+      <Brand />
+      <p>The Mokly CLI is open source under the MIT license.</p>
+    </div>
+    <nav aria-label="Footer" class="site-footer-nav">
+      <div class="site-footer-group">
+        <p class="site-footer-heading">Product</p>
+        {product.map(([path, label]) => (
+          <a
+            aria-current={currentPage(route, path)}
+            class="site-footer-link"
+            href={path}
+          >
+            {label}
+          </a>
+        ))}
+      </div>
+      <div class="site-footer-group">
+        <p class="site-footer-heading">Account</p>
+        <a
+          class="site-footer-link"
+          href={appLink(settings.appOrigin, APP_PATHS.signIn)}
+        >
+          Sign in
+        </a>
+        <a
+          class="site-footer-link"
+          href={appLink(settings.appOrigin, APP_PATHS.signUp)}
+        >
+          Get started
+        </a>
+      </div>
+      <div class="site-footer-group">
+        <p class="site-footer-heading">Legal</p>
+        {legal.map(([path, label]) => (
+          <a
+            aria-current={currentPage(route, path)}
+            class="site-footer-link"
+            href={path}
+          >
+            {label}
+          </a>
+        ))}
+      </div>
+    </nav>
+  </div>
+</footer>

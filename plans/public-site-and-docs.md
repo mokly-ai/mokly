@@ -294,22 +294,24 @@ Implement Folio as CSS custom properties and the shared chrome, with an empty
 page for every route. Stop for review with screenshots at both viewports and
 schemes.
 
-- [ ] Emit the Folio tokens as `--site-*` custom properties on the document
+- [x] Emit the Folio tokens as `--site-*` custom properties on the document
       root for light and dark, following the OS preference and the
       `data-color-scheme` override; add a test that no site stylesheet
       contains a literal color outside the token file.
-- [ ] Implement base typography, spacing and layout utilities from the type
+- [x] Implement base typography, spacing and layout utilities from the type
       roles, spacing scale, `contentMax`, prose measure, gutters and section
       rhythm; add the visible focus ring and 44px target rules.
-- [ ] Implement the wordmark and mark, the desktop and mobile header, the
+- [x] Implement the wordmark and mark, the desktop and mobile header, the
       footer, the skip link, `aria-current` marking and the page layout.
-- [ ] Add empty pages for `/`, `/docs`, `/changelog`, `/terms` and `/privacy`
+- [x] Add empty pages for `/`, `/docs`, `/changelog`, `/terms` and `/privacy`
       with per-page metadata, `sitemap.xml` and `robots.txt`.
-- [ ] Extend the browser test to walk every header and footer link at 390px
+- [x] Add the SVG favicon drawn from the brand mark so no page requests a
+      missing icon, with a test tying its colors to the tokens.
+- [x] Extend the browser test to walk every header and footer link at 390px
       and 1440px in light and dark and to assert the app-origin links.
-- [ ] Capture screenshots at both viewports and schemes; compare with the
+- [x] Capture screenshots at both viewports and schemes; compare with the
       Milestone 2 mockups.
-- [ ] Run `cargo xtask check`, commit and push. Stop for review.
+- [x] Run `cargo xtask check`, commit and push. Stop for review.
 
 ## Milestone 5: Home, Changelog, Terms And Privacy
 

@@ -1,0 +1,38 @@
+---
+/**
+ * The Mokly mark beside the lowercase serif wordmark with its accent period.
+ * Together they link Home from every page with the accessible name
+ * "Mokly home".
+ */
+import { SITE_PATHS } from "../navigation.js";
+
+interface Props {
+  readonly size?: number;
+}
+
+const { size = 26 } = Astro.props;
+---
+
+<a aria-label="Mokly home" class="site-brand" href={SITE_PATHS.home}>
+  <svg aria-hidden="true" height={size} viewBox="0 0 32 32" width={size}>
+    <rect
+      x="3"
+      y="3"
+      width="20"
+      height="21"
+      rx="4"
+      fill="currentColor"
+      opacity="0.3"
+    ></rect>
+    <rect x="9" y="8" width="20" height="21" rx="4" fill="currentColor"></rect>
+    <path
+      d="M14 15h10M14 20h7"
+      stroke="var(--site-folio-surface)"
+      stroke-width="2"
+      stroke-linecap="round"
+    ></path>
+  </svg>
+  <span>
+    mokly<span class="site-brand-dot">.</span>
+  </span>
+</a>

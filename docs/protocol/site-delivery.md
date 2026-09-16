@@ -41,12 +41,17 @@ the workspace does not load `.env` files.
 ## Output
 
 - Static HTML per route with trailing-slash directories, `404.html`, hashed
-  assets, `sitemap.xml`, `robots.txt` allowing everything and naming the
-  sitemap, and `changelog.xml` (Atom).
+  assets, an SVG favicon drawing the brand mark in the accent for both
+  schemes, `sitemap.xml`, `robots.txt` allowing everything and naming the
+  sitemap, and `changelog.xml` (Atom). The sitemap and `robots.txt` are
+  endpoints rendered from the route table and `SITE_ORIGIN`, so a deployment
+  publishes its own absolute URLs; the sitemap omits the 404 document.
 - Per-page metadata: `title`, `description`, canonical URL, Open Graph
   (`title`, `description`, `type`, `url`, `image`) and Twitter card
   (`summary_large_image`). The image is generated at build time per page from
-  the page title on the Folio canvas at 1200×630 in the light scheme.
+  the page title on the Folio canvas at 1200×630 in the light scheme, is named
+  `/og/<slug>.png` after the route, and is advertised only once the build has
+  produced it. The 404 document carries `noindex` instead of a canonical URL.
 - No runtime API calls, no cookies, no third-party scripts. Islands hydrate
   only the docs search and the code-block copy control.
 - The home stage embeds documents from this repository's example catalogue
@@ -88,10 +93,11 @@ Playwright uses Astro's preview API in a foreground process to serve only
 in CI as its own required job because it takes minutes; it can be run locally
 with the same script.
 
-Milestone 3 provides the unstyled index and these checks. Pagefind runs after
-every build over `docs/**/*.html`; until docs exist it reports zero pages
-and emits no search bundle. `site:lighthouse` fails with a clear Milestone 5 setup message until
-that milestone installs the budget configuration. The site CI job and
+Milestone 4 provides the Folio tokens, the shared chrome and an empty page
+for every route. Pagefind runs after every build over `docs/**/*.html`; until
+documentation pages exist it indexes only the documentation landing page.
+`site:lighthouse` fails with a clear Milestone 5 setup message until that
+milestone installs the budget configuration. The site CI job and
 deployment workflow arrive in Milestone 8.
 
 Lighthouse thresholds, per page and viewport: performance ≥ 0.95,

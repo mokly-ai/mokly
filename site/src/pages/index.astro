@@ -1,13 +1,19 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Mokly</title>
-  </head>
-  <body>
-    <main id="main">
-      <h1>Mokly</h1>
-    </main>
-  </body>
-</html>
+---
+import Site from "../layouts/Site.astro";
+import { SITE_PATHS } from "../navigation.js";
+---
+
+<Site
+  description="Your mockups are React components in Git. Browse every branch as screens, review them with your team, and edit with an agent beside the screen."
+  route={SITE_PATHS.home}
+  ruled={false}
+  title="Mokly"
+>
+  <section class="site-hero">
+    <p class="site-hero-eyebrow">A design tool for teams that ship</p>
+    <h1>
+      Design in your repository.
+      <br /> <span class="site-accent">Decide in the pull request.</span>
+    </h1>
+  </section>
+</Site>

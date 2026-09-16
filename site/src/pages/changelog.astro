@@ -1,0 +1,18 @@
+---
+import Site from "../layouts/Site.astro";
+import { SITE_PATHS } from "../navigation.js";
+---
+
+<Site
+  description="Every release of the Mokly CLI, newest first."
+  main="site-document site-document--wide"
+  route={SITE_PATHS.changelog}
+  title="Changelog · Mokly"
+>
+  <div class="site-document-intro">
+    <p class="site-eyebrow">Changelog</p>
+    <h1>
+      What&#8217;s new in <span class="site-accent">Mokly</span>
+    </h1>
+  </div>
+</Site>

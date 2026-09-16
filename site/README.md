@@ -12,11 +12,18 @@ here for site configuration, pages and documentation. The published
 
 ## What This Package Does
 
-Milestone 3 supplies an unstyled index at `/`, static output in `site/dist`,
-and the repository checks. The approved Folio design and other public routes
-belong to later milestones. Pagefind runs after Astro and indexes only
-`dist/docs/**/*.html`; with no docs it reports zero pages and emits no bundle.
-No site service or API runs in production.
+It builds the Folio design system, the shared header and footer, and one page
+for every public route: `/`, `/docs/`, `/changelog/`, `/terms/`, `/privacy/`
+and the 404 document, plus `sitemap.xml`, `robots.txt` and the favicon. Page
+bodies beyond the eyebrow and heading belong to later milestones. Pagefind
+runs after Astro and indexes only `dist/docs/**/*.html`. No site service or
+API runs in production.
+
+Colors come from `src/styles/tokens.css`, the only stylesheet with a literal
+color. Light and dark follow `prefers-color-scheme`; setting
+`data-color-scheme="light"` or `"dark"` on the document element pins a scheme
+for deterministic captures. The desktop composition resolves at 768px, the
+same switch the mockups select with `data-site-viewport`.
 
 ## Quick Start
 
@@ -64,9 +71,9 @@ before the catalogue's `test:browser`.
 | ----------------- | --------------------------------------------------------------------------- |
 | `site:build`      | Astro static build, validated settings, Pagefind docs indexing              |
 | `site:typecheck`  | `astro check`, then strict `tsc --noEmit`, including scripts                |
-| `site:test`       | Settings, build failures, link checker and search-index tests               |
+| `site:test`       | Settings, styles, routes, metadata, build failures, links and search        |
 | `site:links`      | Check built HTML/SVG anchors, asset and frame sources, CSS imports and URLs |
-| `site:browser`    | Load the built index at 390px and 1440px in light and dark                  |
+| `site:browser`    | Walk the chrome at 390px and 1440px in light and dark                       |
 | `site:lighthouse` | Fails explicitly until Milestone 5 adds Lighthouse budgets                  |
 
 Browser checks use Astro's preview API in a foreground process with
@@ -97,7 +104,15 @@ deliberate package dependency maintenance, never to accommodate site tools.
 
 - `astro.config.mjs` — static build, MDX and React integrations.
 - `src/settings.ts` — typed, validated settings.
-- `src/pages/index.astro` — unstyled index.
+- `src/navigation.ts` — the route table, application links and current-route
+  marking shared by the header, footer, sitemap and browser walk.
+- `src/metadata.ts` and `src/sitemap.ts` — canonical URLs, social card images,
+  `sitemap.xml` and `robots.txt`.
+- `src/styles/` — `tokens.css` (the only literal colors), `base.css`,
+  `chrome.css`, `layout.css` and `footer.css`.
+- `src/components/` and `src/layouts/Site.astro` — brand, skip link, header,
+  footer and the page shell every route renders.
+- `src/pages/` — one page per public route.
 - `scripts/check-links.mjs` and `scripts/links/` — static output checks.
 - `scripts/index-search.mjs` — Pagefind post-build step.
 - `playwright.config.ts` and `tests/` — browser and unit/integration coverage.

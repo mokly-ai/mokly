@@ -11,10 +11,14 @@ visual source of truth. Routes and copy are in [Site](./site.md).
 ## Ownership
 
 Tokens are defined once as CSS custom properties on the document root in one
-site stylesheet, `site/src/styles/tokens.css`, as `--site-*` properties.
-Every other site stylesheet references those properties; a test fails the
-build when any other stylesheet contains a literal color. The site ships light
-and dark. Colors follow `prefers-color-scheme`, and the document root's
+site stylesheet, `site/src/styles/tokens.css`, as `--site-*` properties. The
+other sheets are `base.css` (reset, type roles, focus, targets, forced colors
+and reduced motion), `chrome.css` (skip link, header band, brand, navigation
+and search), `layout.css` (page and document columns) and `footer.css`, each
+loaded once by the page layout. Every one of them references those
+properties; a test fails the build when any other stylesheet contains a
+literal color. The site ships light and dark. Colors follow
+`prefers-color-scheme`, and the document root's
 `data-color-scheme="light" | "dark"` attribute overrides that preference for
 deterministic screenshots. The two repositories share Folio by copying these
 tables; a published tokens package is not planned.
@@ -121,7 +125,9 @@ keeps a system outline. Transitions use 120ms or 180ms with
 The mark is the two overlapping rounded rectangles with two short rules, drawn
 in `accent` with the rules in `folioSurface`. The wordmark is lowercase
 `mokly` in `font.display` at 1.75rem desktop and 1.5rem mobile with the period
-in `accent`. The mark and wordmark together link Home.
+in `accent`. The mark and wordmark together link Home. The site's favicon
+redraws the same mark as an SVG whose accent and surface follow the color
+scheme; a test keeps its values equal to the tokens.
 
 ## Components
 

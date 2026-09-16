@@ -1,0 +1,124 @@
+/* Foundations for the public site: the reset, the type roles from the Folio
+   type table, the shared measures and section rhythm, the focus ring, the
+   minimum target size, and the forced-colors and reduced-motion rules.
+
+   Every value here resolves from a --site-* property in tokens.css; this
+   sheet holds no literal color. Mobile is the default composition and the
+   768px breakpoint raises the desktop roles. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--site-folio);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--site-folio);
+  color: var(--site-folio-ink);
+  display: flex;
+  flex-direction: column;
+  font-family: var(--site-font-sans);
+  font-size: var(--site-body-size);
+  line-height: var(--site-body-line);
+  margin: 0;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+p,
+ul,
+ol,
+figure,
+pre {
+  margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: var(--site-heading-tracking);
+}
+
+h1 {
+  font-size: var(--site-heading1-size);
+  font-weight: var(--site-weight-semibold);
+  line-height: var(--site-heading1-line);
+}
+
+h2 {
+  font-size: var(--site-heading2-size);
+  font-weight: var(--site-weight-semibold);
+  line-height: var(--site-heading2-line);
+}
+
+h3 {
+  font-size: var(--site-heading3-size);
+  font-weight: var(--site-weight-semibold);
+  line-height: var(--site-heading3-line);
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+:focus-visible {
+  outline: var(--site-focus-width) solid var(--site-focus);
+  outline-offset: var(--site-focus-offset);
+}
+
+/* The minimum target height. Inline links in prose keep their line box
+   because min-height does not apply to non-replaced inline boxes; every
+   link and control the chrome lays out is at least this tall. */
+
+a,
+button {
+  min-height: var(--site-target-min);
+}
+
+/* Shared text roles */
+
+.site-accent {
+  color: var(--site-accent);
+  font-style: normal;
+}
+
+.site-eyebrow {
+  color: var(--site-folio-ink-muted);
+  font-size: var(--site-small-size);
+  line-height: var(--site-small-line);
+}
+
+.site-lead {
+  color: var(--site-folio-ink-muted);
+  font-size: var(--site-lead-size);
+  line-height: var(--site-lead-line);
+  max-width: var(--site-prose-max);
+}
+
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: var(--site-focus-width) solid CanvasText;
+    outline-offset: var(--site-focus-offset);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+  }
+}

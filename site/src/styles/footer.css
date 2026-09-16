@@ -1,0 +1,88 @@
+/* The site footer: the brand and the open-source line beside the Product,
+   Account and Legal columns. Ported from the promoted mockups in
+   examples/basic/generated/site.css; the columns become three at 768px. */
+
+.site-footer {
+  background: var(--site-folio-surface);
+  border-top: 1px solid var(--site-folio-line);
+  margin-top: auto;
+}
+
+.site-footer-inner {
+  display: grid;
+  gap: var(--site-space-7);
+  grid-template-columns: minmax(0, 1fr);
+  margin: 0 auto;
+  max-width: var(--site-wide-max);
+  padding: var(--site-space-8) var(--site-gutter);
+  width: 100%;
+}
+
+.site-footer-brand {
+  display: grid;
+  gap: var(--site-space-3);
+  justify-items: start;
+}
+
+.site-footer-brand p {
+  color: var(--site-folio-ink-muted);
+  font-size: var(--site-small-size);
+  line-height: var(--site-small-line);
+  max-width: 34ch;
+}
+
+.site-footer-nav {
+  align-items: start;
+  display: grid;
+  gap: var(--site-space-5);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.site-footer-group {
+  align-content: start;
+  display: grid;
+  justify-items: start;
+}
+
+.site-footer-heading {
+  color: var(--site-folio-ink);
+  font-size: var(--site-caption-size);
+  font-weight: var(--site-weight-bold);
+  letter-spacing: 0.08em;
+  margin-bottom: var(--site-space-1);
+  text-transform: uppercase;
+}
+
+.site-footer-link {
+  align-items: center;
+  color: var(--site-folio-ink-muted);
+  display: inline-flex;
+  font-size: var(--site-small-size);
+  min-height: var(--site-target-min);
+  text-decoration: none;
+  text-underline-offset: 4px;
+  transition: color var(--site-motion-fast) var(--site-motion-ease);
+}
+
+.site-footer-link:hover {
+  color: var(--site-folio-ink);
+  text-decoration: underline;
+}
+
+.site-footer-link[aria-current="page"] {
+  color: var(--site-folio-ink);
+}
+
+/* The desktop composition from the 768px breakpoint upward. */
+@media (min-width: 768px) {
+  .site-footer-inner {
+    gap: var(--site-space-9);
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 2fr);
+    padding: var(--site-space-10) var(--site-gutter);
+  }
+
+  .site-footer-nav {
+    gap: var(--site-space-6);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
