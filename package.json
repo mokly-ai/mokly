@@ -1,6 +1,6 @@
 {
   "name": "@mokly/mokly",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "App-independent static mockup catalogues, development browsing, and on-demand visual comparisons.",
   "type": "module",
   "license": "MIT",
