@@ -1392,7 +1392,7 @@ matrix, and no live npm/OIDC publication or GitHub protection mutation. The
 inspector retains 483 bytes of headroom. Recording the review is a documentation-
 only follow-up; the plan remains active until its PR merges.
 
-## Milestone 9: Automatic inspection readiness
+## Milestone 9: Automatic inspection readiness (completed)
 
 Tags: ui
 
@@ -1412,9 +1412,9 @@ updates without remounting the frame.
 - [x] Update the plan index to reflect this milestone's implementation and review.
 - [x] Run focused tests and `cargo xtask check`; record counts, retries and skips,
       inspector size, and unchanged Serve/export shell and comparison bytes.
-- [ ] After checks pass, run `git add -A`, commit with Conventional Commits and
+- [x] After checks pass, run `git add -A`, commit with Conventional Commits and
       the requested co-author trailer, and push the branch.
-- [ ] After that push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After that push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
       against the complete local diff from `origin/main`; record each finding
       with severity, impact, lettered options and a recommendation without fixing.
 
@@ -1479,6 +1479,65 @@ The changed bundles are `frame_usage.js` (4,060 → 4,238 bytes),
 
 Evidence is retained in `.context/viewer-m9/`: red regression logs, focused logs,
 `xtask-check.log`, Serve captures, both exports and `byte-comparison-final.json`.
+
+Implementation commit `7b0203f65a92076f869240168c3269af8a98bb65`,
+`fix(viewer): gate automatic inspection`, was pushed before the following review.
+All five new test/fixture files are tracked in that commit. No implementation or
+test files changed during review.
+
+### Milestone 9 post-push review
+
+1. **P2 — Ready evidence refresh can leave picking active without its masks
+   (M9-1).** The new same-document update path calls `updateUsage` for replaced
+   usage objects, including equivalent ready evidence
+   ([frame_session.ts:104](../packages/viewer/src/viewer/frame_session.ts#L104)).
+   Both built-in adapters clear their inspection presentation during that call
+   ([same_origin_adapter.ts:85](../packages/viewer/src/client/same_origin_adapter.ts#L85),
+   [post_message_adapter.ts:109](../packages/viewer/src/client/post_message_adapter.ts#L109)),
+   while [frames.ts:72](../packages/viewer/src/viewer/frames.ts#L72) retains the
+   existing pick and host-label owners. Two Chromium probes, one per adapter,
+   promoted the sibling to ready, started picking with Both visible, then supplied
+   cloned ready usage through `ViewerFrames.update`. Both changed from two masks
+   and two labels to zero masks and two labels, with picking still active and no
+   remount. Calling `startPick` again retained that broken state because
+   [picking.ts:17](../packages/viewer/src/viewer/picking.ts#L17) returns immediately
+   for an active pick. Doing nothing leaves users with labels but no required
+   inspection mask after an ordinary evidence refresh, and hosts cannot restore
+   it by starting pick again.
+   **A (recommended):** make evidence adoption participate in the existing
+   inspection ownership lifecycle. Preserve or reapply valid masks, labels and
+   active picking when equivalent ready usage arrives; explicitly cancel and
+   clear invalidated inspection when availability or identities change. Add
+   both-adapter regressions for ready-to-ready evidence during active picking and
+   capability loss. A shared lifecycle rule protects all presentation owners and
+   asynchronous refreshes; fixing only the mask would leave state/label drift.
+   **B:** conservatively end picking and clear all inspection before every changed
+   usage update, while retaining the iframe. This is smaller but discards valid
+   inspection state on otherwise harmless evidence revisions.
+
+The required prompt reviewed the complete **645-file** branch diff at `7b0203f`
+after its push against `origin/main` (`7ca301c04ca898db6ff60b110beb213ec740b004`),
+using `git diff origin/main...HEAD`. The inventory contains 313 modified,
+224 added, 106 renamed and two deleted paths, with 25,203 insertions and 3,403
+deletions. Worktree, index and untracked-file inventory were clean before and
+after review. Coverage included source/instance capture, catalogue projection and
+strict reading, public comparison identity/retention, Serve/watch and export
+lifecycle, generated-output ownership, browser/React package isolation, both frame
+transports, request/pick/source lifetimes, release/archive pairing, tests and
+protocol alignment. The two branch-diff deletions are the earlier approved CSS
+split. Tip-to-tip main-only differences also predate this milestone; no main
+integration or new deletion was performed.
+
+The confirmed probes and their output are retained in
+`.context/viewer-m9/review-evidence-pick.mjs` and `.log`, beside the full-diff
+inventory and patch. This finding concerns refreshing already-ready evidence
+during active picking, beyond the pending/unavailable promotion covered by the
+new regressions. It was recorded without fixing; the recommendation awaits the
+user's decision. Earlier milestone findings and notes remain unchanged.
+Residual limits are Chromium-only browser coverage, local Node 24 rather than
+the full CI platform matrix, and no live npm/OIDC publication or GitHub protection
+mutation. Recording this review and updating the plan index are documentation-only
+follow-ups; the plan remains active until its PR merges.
 
 ## Post-merge follow-up (non-blocking)
 
