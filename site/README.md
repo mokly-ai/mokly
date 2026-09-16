@@ -119,6 +119,14 @@ and the verification tests read. The build fails when that list and the content
 collection describe different pages, when two pages in a section take the same
 order, or when a page repeats a heading.
 
+The Mokly Cloud and Review and edit sections are written from the cloud
+repository's protocol documents before that product ships. Their pages carry
+`status: ahead`, which readers never see, and open with a
+`{/* Source: mokly-cloud <path> */}` comment naming the document they came
+from. `tests/docs.test.ts` fixes the list of those pages, checks each citation
+and keeps a section wholly ahead or wholly shipped, so the go-live alignment
+pass in `docs/protocol/site.md` can find every page it has to reconcile.
+
 `version.ts` reads the workspace `@mokly/mokly` version, which heads the
 section tree and writes every install snippet; pages never write an install
 command themselves, they render `Install` (with `pinned` for the exact version)

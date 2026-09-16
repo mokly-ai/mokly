@@ -395,16 +395,16 @@ Tags: ui
 Write the cloud sections from the cloud protocol docs, marked `status: ahead`.
 Stop for review.
 
-- [ ] Write Mokly Cloud: what the hosted service adds, connecting a GitHub
+- [x] Write Mokly Cloud: what the hosted service adds, connecting a GitHub
       repository through the GitHub App, project tokens, how a branch and pull
       request map to publications, the check on the pull request, sharing
       links and private access, organizations, projects and roles, settings.
-- [ ] Write Review and edit: comments on screens, approvals and pull request
+- [x] Write Review and edit: comments on screens, approvals and pull request
       sync, the agent session and click-to-reference.
-- [ ] Record every page in the go-live alignment checklist in
+- [x] Record every page in the go-live alignment checklist in
       `docs/protocol/site.md` and report any disagreement between the cloud
       docs and this repository's CLI to the user.
-- [ ] Run `cargo xtask check`, commit and push. Stop for review.
+- [x] Run `cargo xtask check`, commit and push. Stop for review.
 
 ## Milestone 8: Deployment
 

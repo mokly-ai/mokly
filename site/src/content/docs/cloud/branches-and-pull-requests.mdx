@@ -1,0 +1,60 @@
+---
+title: "Branches and pull requests"
+description: "How an upload becomes a publication, and what a branch or pull request link resolves to."
+section: "cloud"
+order: 3
+status: "ahead"
+---
+
+{/* Source: mokly-cloud docs/protocol/product-navigation.md, docs/protocol/viewer.md */}
+
+## Publications do not change
+
+Each accepted upload becomes one publication with its own address. A branch
+name and a pull request number are labels that point at a publication; a
+publication never points back at a branch, so a link to one always opens the
+screens that were published.
+
+Publication details name the head revision it was built from and when it was
+published.
+
+## The latest ready publication
+
+Opening a branch or a pull request resolves to its latest ready publication.
+Open it again after a new publish and you may get a newer one; open a
+publication address again and you always get the same screens.
+
+A failed upload never replaces the publication that is ready, so what your team
+is reading stays readable while a build is being fixed.
+
+## Before anything is published
+
+A branch with no publication shows Set up publishing to an administrator and a
+way back to the project for everyone else.
+
+## History
+
+A project's history lists its publications newest first, labelled Ready or
+Failed, each with its own link. A failed row offers its details instead of
+opening a catalogue that is not there.
+
+## What a viewer link carries
+
+The address of what you are reading holds the publication and your place in it:
+
+| Key        | Values                                              |
+| ---------- | --------------------------------------------------- |
+| `view`     | `all` or `changes`; a check link asks for `changes` |
+| `screen`   | The screen you have open; absent is the catalogue   |
+| `viewport` | `desktop` or `mobile`                               |
+| `scheme`   | `light` or `dark`                                   |
+
+A value that does not fit the publication falls back to the default rather than
+failing the page. Back and forward restore what you were reading. A link to a
+screen that the publication no longer has says so and offers the current
+catalogue.
+
+## While you are reading
+
+When a newer publication arrives, the one you are on stays on screen and View
+latest takes you to the new one. Nothing moves you to another head on its own.

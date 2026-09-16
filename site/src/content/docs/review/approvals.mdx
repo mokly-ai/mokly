@@ -1,0 +1,64 @@
+---
+title: "Approvals"
+description: "Record a decision on a publication, and what happens to it when the pull request moves on."
+section: "review"
+order: 2
+status: "ahead"
+---
+
+{/* Source: mokly-cloud docs/protocol/approvals.md */}
+
+## Approving a publication
+
+An approval records your decision on one publication. Reviewers, members and
+admins approve a ready publication that belongs to an open pull request. The
+author of that pull request comments on their own work but does not approve it.
+
+Approve sits beside Share above the stage. Confirming names the pull request
+and the publication you are approving and takes an optional summary; afterwards
+the decision reads **Approved** with who made it and when.
+
+Approving is not the same as resolving a discussion, and it never claims that
+every thread on the publication has been resolved. Nothing approves on your
+behalf when you open a page, post a comment or share a link.
+
+## A publication without a pull request
+
+A publication that is not linked to a pull request takes comments; the approval
+action explains that selecting a pull request is what makes approval available.
+
+## When the head moves
+
+A new ready publication with screens added, changed or removed makes earlier
+approvals stale. The earlier decision keeps its reviewer, its time and its own
+link, and reads **Approval is from an earlier version** with Review latest.
+Approving the newest publication records a new decision.
+
+If the comparison is definitely empty, the earlier decision stays effective and
+is carried forward with a record of both publications. If the two cannot be
+compared, the decision is kept as history and reads **Checking changes** rather
+than as an approval, until there is evidence or a new decision.
+
+A failed or unready upload never supersedes the publication under review.
+
+## Requiring an approval
+
+A project can require an approval. It is off by default and only an admin
+changes it. It asks for one effective approval from someone other than the
+author of the pull request.
+
+With it on, an open pull request whose publication has changes and no
+qualifying approval gets a check that asks for review, with Review changes. A
+ready publication that has one passes. A publication with no changes needs no
+new approval, and a comparison that is missing gives a neutral check that says
+Changes unavailable rather than a pass.
+
+With it off, an approval is still shown and does not gate the check. This
+setting is not branch protection: which checks a repository requires is chosen
+on GitHub.
+
+## Withdrawing and losing access
+
+Withdrawing an approval records a new decision rather than erasing the earlier
+one. Losing access to the project ends the effect of an approval and the
+requirement is worked out again. A closed or merged review is read-only.

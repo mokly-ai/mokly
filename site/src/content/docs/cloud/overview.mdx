@@ -1,0 +1,46 @@
+---
+title: "Overview"
+description: "What the hosted service adds to the catalogue your repository already builds."
+section: "cloud"
+order: 1
+status: "ahead"
+---
+
+{/* Source: mokly-cloud docs/product-direction.md, docs/protocol/product-navigation.md */}
+
+## A catalogue for every branch
+
+Mokly Cloud receives what `mokly publish` sends from your CI. Every branch and
+every pull request keeps its own hosted catalogue there, so the people who
+review your work open the screens in a browser instead of building them.
+
+Each accepted upload becomes a publication. A branch name and a pull request
+number point at the publication that is current for them, and the publication
+itself never changes.
+
+## The check on the pull request
+
+A pull request carries a Mokly check with the count of screens that changed.
+Its details link opens the publication the check covers with Changes selected,
+so the first thing a reviewer sees is what moved.
+
+## Organizations and projects
+
+An organization holds people and their roles. A project inside it is one
+repository and one config path, and it is where publications, tokens and
+access live. One organization can hold as many projects as it has repositories
+to publish.
+
+## The viewer
+
+Screens open in the viewer: Browse, Changes, search, the viewport and the
+color scheme, with the organization and project breadcrumb, the branch or pull
+request label, the publication you are reading and Share above the stage. A
+pull request shows its number, title, author and a link to GitHub.
+
+## Your repository stays yours
+
+The screens are React components in your repository. They build and serve
+locally with the open-source CLI, and the catalogue is the same static output
+either way. The cloud hosts it, keeps its history and carries the review; it
+never owns the source.

@@ -28,6 +28,31 @@ import { repositoryPath } from "../src/workspace.js";
 
 const page = (id: string) => DOCS_PAGES.find((entry) => entry.id === id);
 
+/** Every page written from the cloud protocol docs, in reading order. */
+const AHEAD_PAGES = [
+  "cloud/overview",
+  "cloud/connect-a-repository",
+  "cloud/branches-and-pull-requests",
+  "cloud/sharing-and-access",
+  "cloud/organizations-and-roles",
+  "cloud/settings",
+  "review/comments",
+  "review/approvals",
+  "review/pull-request-sync",
+  "review/agent-sessions",
+  "review/click-to-reference",
+];
+
+/** The cloud repository documents an ahead page may cite as its source. */
+const CLOUD_DOCUMENTS = [
+  "docs/product-direction.md",
+  "docs/protocol/approvals.md",
+  "docs/protocol/product-navigation.md",
+  "docs/protocol/screen-comments.md",
+  "docs/protocol/settings-dialog.md",
+  "docs/protocol/viewer.md",
+];
+
 test("frontmatter is read and validated against the content model", () => {
   const { data, body } = readFrontmatter(
     '---\ntitle: "Install"\ndescription: "Add Mokly."\nsection: "start"\norder: 1\n---\n\nBody.\n',
@@ -75,9 +100,41 @@ test("an ahead page keeps its status and it is never rendered", () => {
     DOCS_PAGES.filter((entry) => entry.status === "ahead").map(
       (entry) => entry.id,
     ),
-    [],
-    "no page is written ahead of release yet",
+    AHEAD_PAGES,
+    "the ahead pages are the cloud and review sections",
   );
+});
+
+test("every ahead page cites the cloud document it was written from", () => {
+  for (const entry of DOCS_PAGES.filter((page) => page.status === "ahead")) {
+    const { body } = readFrontmatter(
+      readFileSync(entry.source, "utf8"),
+      entry.id,
+    );
+    const cited =
+      /^\{\/\* Source: mokly-cloud (docs\/[\w./-]+\.md(?:, docs\/[\w./-]+\.md)*) \*\/\}$/m.exec(
+        body,
+      );
+    assert.ok(cited, `${entry.id} names no cloud protocol document`);
+    for (const document of (cited[1] ?? "").split(", ")) {
+      assert.ok(
+        CLOUD_DOCUMENTS.includes(document),
+        `${entry.id} cites ${document}, which is not a cloud protocol document`,
+      );
+    }
+  }
+});
+
+test("only the cloud and review sections are written ahead of release", () => {
+  const ahead = new Set(AHEAD_PAGES.map((id) => id.split("/")[0]));
+  assert.deepEqual([...ahead].sort(), ["cloud", "review"]);
+  for (const entry of DOCS_PAGES) {
+    assert.equal(
+      entry.status === "ahead",
+      ahead.has(entry.section),
+      `${entry.id} disagrees with its section's release status`,
+    );
+  }
 });
 
 test("every section has a title, a summary and its place in the order", () => {
@@ -88,7 +145,16 @@ test("every section has a title, a summary and its place in the order", () => {
   }
   assert.deepEqual(
     DOCS_SECTIONS.map((section) => section.id),
-    ["start", "authoring", "catalogue", "cli", "ci", "reference"],
+    [
+      "start",
+      "authoring",
+      "catalogue",
+      "cli",
+      "ci",
+      "cloud",
+      "reference",
+      "review",
+    ],
   );
 });
 

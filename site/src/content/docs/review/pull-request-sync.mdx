@@ -1,0 +1,64 @@
+---
+title: "Pull request sync"
+description: "How a comment or a decision made in Mokly reaches the pull request, and what comes back."
+section: "review"
+order: 3
+status: "ahead"
+---
+
+{/* Source: mokly-cloud docs/protocol/screen-comments.md, docs/protocol/approvals.md */}
+
+## Saved here first
+
+A comment is saved in Mokly before anything is sent to GitHub. Beside it the
+details say Saved, Syncing, Synced or Sync failed, with a link to GitHub once
+there is one. Delivery that fails never removes what you wrote, and retrying
+asks for the same comment to be delivered again rather than writing a second.
+
+## Whose name it carries
+
+The GitHub App writes the comment under its own identity, carrying your name,
+your words and a link back to the thread. It never presents itself as a review
+comment you left yourself.
+
+## Where it lands on the pull request
+
+A comment about a screen goes on the file that screen came from when that file
+has a place on the pull request's diff. The path, the side and the line come
+from the pull request as it stands, never from a guess. When there is no such
+place, the comment goes to the pull request conversation with a link back to
+the thread.
+
+## Replies and resolving
+
+Replies stay on the discussion they were mapped to. Where the comment lives in
+the conversation instead, replies follow it there.
+
+Resolving and reopening travel both ways where GitHub can resolve a thread. A
+conversation comment has nothing to resolve, so Mokly's state is the one that
+counts and no resolution is claimed on GitHub that did not happen.
+
+## What comes back
+
+Comments written on GitHub come back to Mokly when they belong to a thread it
+mapped. Their author keeps their GitHub identity even without a Mokly account,
+and having a comment imported gives them no access to the project. The App's
+own comments never return as a second copy, and an edit or a deletion on
+GitHub is recorded here.
+
+## Approvals
+
+A reviewer who has connected GitHub approves as themselves when GitHub allows
+that review. A reviewer who has not approves in Mokly, and the App reflects the
+decision in the check summary and a comment that links back. Both identities
+are named in the decision's details.
+
+A decision saved in Mokly stays saved when delivery fails. Syncing to GitHub
+and Sync failed sit beside it, and retrying delivers the same decision. A
+delivery that is pending or has failed is never shown as a GitHub approval.
+
+## When GitHub refuses
+
+Something GitHub cannot find, an installation that was removed and a rate limit
+are each reported as what they are. A failure that may pass is retried; one that
+will not is handed to an administrator to put right.

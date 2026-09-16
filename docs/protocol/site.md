@@ -211,8 +211,30 @@ restated here so this repository is self-contained:
 ## Ahead-Of-Release Pages
 
 Docs pages written from the cloud protocol docs before the cloud ships carry
-`status: ahead` in frontmatter. The status is never rendered. A test lists
-every ahead page so the alignment pass can find them.
+`status: ahead` in frontmatter. The status is never rendered. Every such page
+opens with `{/* Source: mokly-cloud <path> */}` naming the cloud repository
+document or documents it was written from. A test fixes the list below, checks
+each citation and holds the whole of a section to one release status.
+
+| Page                               | Written from                                              |
+| ---------------------------------- | --------------------------------------------------------- |
+| `cloud/overview`                   | `product-direction`, `protocol/product-navigation`        |
+| `cloud/connect-a-repository`       | `protocol/product-navigation`                             |
+| `cloud/branches-and-pull-requests` | `protocol/product-navigation`, `protocol/viewer`          |
+| `cloud/sharing-and-access`         | `protocol/viewer`, `protocol/product-navigation`          |
+| `cloud/organizations-and-roles`    | `protocol/product-navigation`                             |
+| `cloud/settings`                   | `protocol/settings-dialog`, `protocol/product-navigation` |
+| `review/comments`                  | `protocol/screen-comments`                                |
+| `review/approvals`                 | `protocol/approvals`                                      |
+| `review/pull-request-sync`         | `protocol/screen-comments`, `protocol/approvals`          |
+| `review/agent-sessions`            | `product-direction`                                       |
+| `review/click-to-reference`        | `product-direction`                                       |
+
+Paths are relative to `docs/` in the cloud repository. Deliberately left out of
+these pages, and to be reconsidered only when they ship: the withdrawn viewer
+mockup representation, the native iOS, Android and desktop surfaces, catalogue
+isolation and access-grant mechanics, request-level concurrency and audit
+records, and the cloud repository's own mockup fixtures.
 
 Go-live alignment checklist, run with the cloud repository before the domain
 goes live:
@@ -237,9 +259,17 @@ goes live:
 | Analytics             | Off; any later provider must be cookie-free and default to disabled         |
 
 Where a cloud protocol doc and this repository's code disagree about the CLI,
-this repository's code is right. Known disagreements at the time of writing:
-the cloud docs-landing mockup pins `@mokly/mokly@0.8.0` and its changelog
-fixture links the former `futex-ai/mokabook` repository; the site reads the
-workspace version and the real `CHANGELOG.md` instead. The cloud direction doc
-names an `@mokly/viewer` package and component-instance identity that this
-repository has not released; the docs describe neither until they exist.
+this repository's code is right. Known disagreements:
+
+| Cloud document                            | Disagreement                                                                                                                                                                                                                     | How the site resolves it                                                                                 |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Docs-landing mockup and changelog fixture | Pins `@mokly/mokly@0.8.0` and links the former `futex-ai/mokabook` repository                                                                                                                                                    | The site reads the workspace version and the real `CHANGELOG.md`                                         |
+| `product-direction`, `protocol/viewer`    | Name an `@mokly/viewer` package, component-instance identity and a frame inspector bridge that this repository has not released                                                                                                  | The viewer is described by what it does (Browse, Changes, search, viewport, scheme); no package is named |
+| `protocol/screen-comments`                | Anchors comments to element paths from a negotiated bridge; exported screens here carry no instance markers or inspector script                                                                                                  | Comments are described as pinned to a screen, and to an element only where the screen can identify it    |
+| `protocol/screen-comments` two-way sync   | Places a pull request comment from "the entry's exported `sourcePath`"; `mokly-manifest.json` is deliberately excluded from the upload and review metadata strips `sourcePath`, so nothing a publish uploads names a source file | The page says the comment goes on the file the screen came from without claiming the export carries it   |
+| `protocol/product-navigation` onboarding  | Treats publishing as unreleased and defers upload syntax to a future contract                                                                                                                                                    | The CI and CLI sections document the shipped `mokly publish`, upload v1 and the composite action         |
+
+The fourth row is the one that needs a decision before the review phase is
+built: either the cloud reads the source path from somewhere this repository
+actually uploads, or the export contract grows a public, non-source-inventory
+way to name the file a screen came from.

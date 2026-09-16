@@ -1,0 +1,60 @@
+---
+title: "Comments"
+description: "Pin a comment to the screen it is about, reply to it, resolve it, and see when it went out of date."
+section: "review"
+order: 1
+status: "ahead"
+---
+
+{/* Source: mokly-cloud docs/protocol/screen-comments.md */}
+
+## A comment belongs to a screen
+
+A comment is pinned to a publication and to the exact view you were reading:
+the screen, the viewport and the color scheme. Where the screen can identify
+the element under your cursor, the comment is pinned to that element as well,
+so it stays on the right part of the screen when the screen is rendered again.
+
+## Threads and replies
+
+The first comment opens a thread and every reply joins it, sharing its
+anchor. Replies read in order with their author and the time they were
+written. Comments are plain text of up to 5000 characters; line breaks are
+kept and only plain HTTP and HTTPS addresses become links.
+
+## Open and resolved
+
+A thread is open or resolved. The person who started it and a project admin
+resolve and reopen it; anyone else with access replies without taking it over.
+The panel filters by All, Open, Resolved and Outdated, each with its count.
+
+## Outdated threads
+
+Outdated is separate from open and resolved. A thread is outdated on a
+publication whose screen changed or was removed, that no longer has the
+viewport or color scheme the thread named, or where the element it was pinned
+to is no longer there. An outdated thread offers View original, and a comment
+on the current screen starts a new thread.
+
+A screen whose source file moved without changing what it renders has not
+changed. Where the two views cannot be compared at all, the thread is not
+treated as unchanged either; it says the comparison is still being worked out.
+
+## Writing one
+
+The composer takes the comment and posts it. An empty comment cannot be
+posted, and a comment that is being saved cannot be posted twice. A write that
+fails keeps your text and offers Retry, and moving to another screen with a
+draft asks whether to discard it. A screen with no comments says
+**Start the conversation** and offers Add comment.
+
+## Who can comment
+
+Reviewers, members and admins of the project comment and reply. You edit and
+delete your own comments; a project admin can moderate any of them and records
+why. Approving a publication grants no extra editing rights, and read access to
+a public project never grants writing.
+
+A thread on a closed or merged pull request is read-only. A thread on a
+publication that is not linked to a pull request has nothing to sync with and
+stays editable as long as you have access.

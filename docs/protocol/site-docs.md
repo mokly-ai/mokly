@@ -144,8 +144,11 @@ rewriting covers every relative link in the allowlisted set.
 - Config: the Config page's field list matches the `MoklyConfig` type; a test
   asserts every top-level field appears.
 - Cloud and review pages cite the cloud protocol document they were written
-  from in a page-level comment; the alignment pass in [Site](./site.md) uses
-  it.
+  from in a page-level comment, `{/* Source: mokly-cloud <path> */}`, listing
+  one or more documents separated by `, ` and relative to `docs/` in that
+  repository. A test fixes the set of `ahead` pages, checks every citation
+  names a known cloud document and rejects a section that is part shipped and
+  part ahead; the alignment pass in [Site](./site.md) reads the same list.
 - Link check covers every internal href and anchor across the built site.
 - Browser test opens a docs page at 390px and 1440px in light and dark, uses
   the sidebar, on-this-page and previous/next links, copies a code block and

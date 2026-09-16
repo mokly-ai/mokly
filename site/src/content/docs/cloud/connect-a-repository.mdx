@@ -1,0 +1,46 @@
+---
+title: "Connect a repository"
+description: "Sign in, install the GitHub App and turn a repository and config path into a project."
+section: "cloud"
+order: 2
+status: "ahead"
+---
+
+{/* Source: mokly-cloud docs/protocol/product-navigation.md */}
+
+## Sign in
+
+Signing in and signing up are the same one-use email link. Give your address,
+then open the link from your mail to finish. The sent page shows the address
+you submitted and offers Resend link and Change email. Sending a link never
+tells anyone whether an account already exists.
+
+## Connect GitHub
+
+Connecting GitHub authorizes your identity. You can also start with a personal
+organization of your own.
+
+## Install the GitHub App
+
+Access to repositories is a separate step: install the Mokly GitHub App on the
+account or organization that owns the code, and choose which repositories it
+reaches. Cancelling the installation returns you to the install step so you can
+choose a different account.
+
+Repository selection lists only the repositories that installation reaches. If
+none are there, Manage repository access takes you back to GitHub to add them.
+
+## Choose the repository and the config path
+
+A project is one organization, one repository and one config path. The path
+defaults to `mokly.config.ts` and may be any repository-relative `.ts` path;
+absolute paths and `..` segments are rejected.
+
+Creating a project for a repository and config path that already has one opens
+the existing project instead of making a second.
+
+## Set up publishing
+
+A new project names its repository and config path and shows what to add to
+your workflow. The Continuous integration section covers that side: the
+publish action, the command it runs and the token it presents.

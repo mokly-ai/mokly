@@ -1,0 +1,41 @@
+---
+title: "Sharing and access"
+description: "Share a publication, and what private and public mean for the people who open the link."
+section: "cloud"
+order: 4
+status: "ahead"
+---
+
+{/* Source: mokly-cloud docs/protocol/viewer.md, docs/protocol/product-navigation.md */}
+
+## Share pins what you are reading
+
+Share copies the address of the publication you have open, with the screen, the
+viewport and the color scheme you selected. A share link always pins that
+publication; it never follows the branch to a later one.
+
+Sharing changes nothing about who may open the link. It gives no one access
+they did not already have.
+
+## Private and public projects
+
+A project is private until you change it. Share from a private project and the
+dialog says **Project members can open this link**. Share from a public one and
+it says **Anyone with the link can view**.
+
+Public makes publications readable to anyone holding a link. It grants no
+write access, and making the project private again ends that reading on the
+next request.
+
+## Opening a link you were sent
+
+Opening a private link while signed out brings you back to that exact link once
+you sign in. If you still do not have access, the page says you need access to
+the project and offers a way back to your organizations; it tells you nothing
+about what is inside. A link to a publication that has been deleted or has
+expired says the publication is unavailable.
+
+## Access is checked on every request
+
+Every request checks access again. Removing someone from a project, or turning
+a public project private, takes effect the next time they ask for anything.
