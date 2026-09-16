@@ -44,7 +44,13 @@ export interface ScreenNavigateEvent {
 export type PickEnd =
   | { reason: "selected"; instance: InstanceRef }
   | {
-      reason: "cancelled" | "escape" | "navigation" | "source-change" | "error";
+      reason:
+        | "cancelled"
+        | "escape"
+        | "navigation"
+        | "source-change"
+        | "evidence"
+        | "error";
     };
 export interface ViewerError {
   code: "catalogue" | "selection" | "frame" | "comparison";

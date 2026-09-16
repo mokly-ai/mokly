@@ -13,6 +13,9 @@ export class Picking {
     private off: () => void,
     private report: (error: unknown) => Error,
   ) {}
+  get activating(): boolean {
+    return !this.active && this.pending !== undefined;
+  }
   start(activate: (valid: () => boolean) => Promise<void>): Promise<void> {
     if (this.active) return Promise.resolve();
     if (this.pending) return this.pending;

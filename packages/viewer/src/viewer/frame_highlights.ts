@@ -7,7 +7,11 @@ import type { Session } from "./frame_session.js";
 import type { ViewerFrame } from "./frame_views.js";
 import { highlightKeys } from "./highlight_request.js";
 import type { HighlightRequest } from "./highlight_request.js";
-import { inspectionScope, readyInspection } from "./inspection_scope.js";
+import {
+  inspectionScope,
+  readyInspection,
+  validInspection,
+} from "./inspection_scope.js";
 import type { InspectionScope } from "./inspection_scope.js";
 import { InspectionOwnership } from "./inspection_work.js";
 import type { InspectionWork } from "./inspection_work.js";
@@ -15,6 +19,7 @@ import type { InspectionWork } from "./inspection_work.js";
 /** One inspection request owns masks, host labels and their asynchronous lifetime. */
 export class FrameHighlights {
   private scope: InspectionScope | undefined;
+  private mode: "pick" | "highlight" = "highlight";
   private ownership: InspectionOwnership;
   constructor(
     private root: HTMLElement,
@@ -46,6 +51,22 @@ export class FrameHighlights {
     void this.off().catch(() => {});
     return this.fail(error);
   }
+  /** Evidence refresh shares the presentation owner rather than resetting masks alone. */
+  evidence(
+    changed: readonly Session[],
+    activating: boolean,
+    end: () => void,
+  ): void {
+    const scope = this.scope;
+    if (!scope || !scope.sessions.some((session) => changed.includes(session)))
+      return;
+    if (activating || !validInspection(scope)) {
+      void this.off().catch(() => {});
+      end();
+      return;
+    }
+    void this.show(scope.request, this.mode).catch(() => {});
+  }
   async show(
     request: HighlightRequest,
     mode: "pick" | "highlight",
@@ -54,6 +75,7 @@ export class FrameHighlights {
     const work = this.work();
     const scope = inspectionScope(this.sessions(), request);
     this.scope = scope;
+    this.mode = mode;
     const { sessions } = scope;
     void Promise.allSettled(
       this.sessions()

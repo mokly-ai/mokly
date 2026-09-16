@@ -3,9 +3,10 @@
 ## Active
 
 - [Mokly Viewer Library](./mokly-viewer-library.md) — Milestones 1–9 completed,
-  verified, pushed and reviewed. Milestone 9 implements automatic inspection
-  readiness; its post-push review records one new recommendation for the user's
-  decision. The plan remains active until the implementation PR merges. Package publication
+  verified, pushed and reviewed. Milestone 10 implements the approved M9-1
+  inspection ownership fix and has passed its complete verification; its push
+  and post-push review are next.
+  The plan remains active until the implementation PR merges. Package publication
   and the published-package smoke are non-blocking post-merge follow-up.
 - [Publish Catalogue](./publish-catalogue.md)
 - [App-Independent Mokabook Npm Library](./app-independent-mokabook-library.md)

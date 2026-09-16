@@ -63,7 +63,13 @@ interface ScreenNavigateEvent {
 type PickEnd =
   | { reason: "selected"; instance: InstanceRef }
   | {
-      reason: "cancelled" | "escape" | "navigation" | "source-change" | "error";
+      reason:
+        | "cancelled"
+        | "escape"
+        | "navigation"
+        | "source-change"
+        | "evidence"
+        | "error";
     };
 interface ViewerError {
   code: "catalogue" | "selection" | "frame" | "comparison";
@@ -160,6 +166,21 @@ documents refresh the built-in adapters in place, enabling inspection when usage
 becomes ready without reloading the iframe or remounting the viewer. This does
 not change source-replacement semantics.
 
+Evidence adoption is an inspection lifecycle event. The inspection owner fences
+old work before the adapter refresh and reapplies the current mask, outlines and
+catalogue labels when every referenced instance still exists in ready usage.
+An active pick retains its state without another start/end event. Explicit
+highlights keep their exact frame scope; an unrelated frame's update neither
+waits for nor redraws that presentation. Loss of ready evidence or a referenced
+instance clears the entire current presentation and ends an active pick once
+with `evidence`. This host-only reason distinguishes evidence invalidation from
+navigation and errors; it introduces no wire message. An explicit highlight
+without an active pick clears without emitting a pick end. Evidence changing a
+pending activation's scope cancels that activation with `disposed`, clears its
+partial presentation and emits neither start nor end. A new `startPick` waits for
+the refreshed evidence and activates normally when the views are inspectable.
+Superseded update completions and failures cannot affect current inspection.
+
 `highlightInstance` and `scrollToInstance` operate on the referenced current
 view and reject missing/unavailable instances; neither guesses a replacement nor
 silently navigates. Null clears highlighting. `startPick` starts only on an
@@ -167,7 +188,7 @@ inspectable Current view, emits `onPickStart` after activation, and reuses the
 Highlight components mask, outlines, labels and accessible instance list.
 The first accepted instance click emits `onInstanceClick`, ends pick, then emits
 `onPickEnd({ reason: "selected", instance })`. Cancel, Escape, navigation,
-source replacement and errors end an active pick exactly once with their reason.
+source replacement, evidence invalidation and errors end an active pick exactly once with their reason.
 `cancelPick` is idempotent. Pick emits no selection callback unless selection
 actually changes. No pick button is added to the default local shell.
 Concurrent `startPick` calls share one activation and one start event. Cancelling

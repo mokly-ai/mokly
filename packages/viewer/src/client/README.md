@@ -36,6 +36,10 @@ navigation. Both built-in mounts accept `updateUsage` to refresh this capability
 without replacing their document/session. The update clears old inspection
 presentation and preserves navigation subscribers; no inspector wire change is
 needed. Viewer frame updates use it when the document identity is unchanged.
+The viewer inspection owner restores valid presentation after adoption, retains
+explicit frame scope, and ends active picking with `evidence` when a referenced
+target or ready usage disappears. Pending activation is cancelled without events;
+subsequent inspection waits for refreshed usage. Superseded updates are fenced.
 Public operations recheck disposal after awaiting a reply so a just-resolved
 response cannot escape a replaced mount. Oversized usage maps keep content
 mountable and report inspection as unavailable with the `limit` code.

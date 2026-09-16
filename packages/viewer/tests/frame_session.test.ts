@@ -40,6 +40,7 @@ function sessionFixture(updateUsage?: MountedFrame["updateUsage"]) {
   const session: Session = {
     frame,
     usage: frame.view!.usage,
+    usageRevision: 0,
     controller: new AbortController(),
     mounted,
     ready: Promise.resolve(mounted),
@@ -114,3 +115,36 @@ test("a later evidence update retries a current usage-update failure", async () 
   assert.equal(calls, 2);
   assert.deepEqual(failures, [error]);
 });
+
+for (const reuse of [false, true]) {
+  for (const reject of [false, true]) {
+    test(`superseded evidence fences late ${reject ? "failure" : "success"}${reuse ? " when reusing an earlier snapshot" : ""}`, async () => {
+      let finish!: () => void;
+      let started!: () => void;
+      let calls = 0;
+      const entered = new Promise<void>((resolve) => {
+        started = resolve;
+      });
+      const { session, next, ready, fail, failures } = sessionFixture(
+        async () => {
+          if (++calls !== 1) return;
+          await new Promise<void>((resolve, fail) => {
+            finish = () =>
+              reject ? fail(new Error("Old evidence")) : resolve();
+            started();
+          });
+        },
+      );
+      refreshFrameSessions([session], [next(ready)], fail);
+      await entered;
+      const obsolete = assert.rejects(session.ready, { code: "disposed" });
+      refreshFrameSessions([session], [next({ ...ready })], fail);
+      if (reuse) refreshFrameSessions([session], [next(ready)], fail);
+      finish();
+      await obsolete;
+      await session.ready;
+      assert.equal(calls, 2);
+      assert.deepEqual(failures, []);
+    });
+  }
+}

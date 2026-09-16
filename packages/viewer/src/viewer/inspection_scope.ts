@@ -1,13 +1,16 @@
 import { FrameError } from "../client/frame_error.js";
+import { frameUsage } from "../client/frame_usage.js";
 
 import type { Session } from "./frame_session.js";
-import { matchesInstance } from "./frame_views.js";
+import { hasInstance, matchesInstance } from "./frame_views.js";
+import { highlightKeys } from "./highlight_request.js";
 import type { HighlightRequest } from "./highlight_request.js";
 import type { InspectionWork } from "./inspection_work.js";
 
 export interface InspectionScope {
   request: HighlightRequest;
   sessions: readonly Session[];
+  keys: ReadonlyMap<Session, readonly string[]>;
 }
 
 /** Select once before readiness, masks, geometry or scrolling access a session. */
@@ -15,14 +18,32 @@ export function inspectionScope(
   sessions: readonly Session[],
   request: HighlightRequest,
 ): InspectionScope {
+  const selected = sessions.filter(
+    ({ frame }) =>
+      request.kind === "workspace" || matchesInstance(frame, request.instance),
+  );
   return {
     request,
-    sessions: sessions.filter(
-      ({ frame }) =>
-        request.kind === "workspace" ||
-        matchesInstance(frame, request.instance),
+    sessions: selected,
+    keys: new Map(
+      selected.map((session) => [
+        session,
+        highlightKeys(session.frame, request),
+      ]),
     ),
   };
+}
+
+/** Retained sessions must still support every key owned before evidence adoption. */
+export function validInspection(scope: InspectionScope): boolean {
+  return scope.sessions.every((session) => {
+    const usage = session.frame.view?.usage;
+    return (
+      usage?.status === "ready" &&
+      !frameUsage(usage).error &&
+      scope.keys.get(session)!.every((key) => hasInstance(usage, key))
+    );
+  });
 }
 
 export async function readyInspection(

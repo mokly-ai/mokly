@@ -108,6 +108,16 @@ and enable inspection on the same document without remounting it. Custom adapter
 without this method retain replacement mounts for changed usage. Changing the
 React catalogue source still replaces the runtime as documented above.
 
+Evidence refreshes restore valid inspection masks, outlines and labels without
+ending an active pick. Explicit highlights retain their exact frame scope;
+unrelated or pending siblings do not disturb them. If ready evidence or any
+referenced instance disappears, the viewer clears the presentation and ends an
+active pick once with `onPickEnd({ reason: "evidence" })`. An idle explicit
+highlight clears without a pick event. Updating a pending activation's scope
+cancels it with `disposed` and no start/end events. A new `startPick` waits for
+the refreshed evidence and works once its views are inspectable. Superseded
+updates cannot overwrite current inspection or report obsolete errors.
+
 The ref exposes `select`, `highlightInstance` (null clears), `scrollToInstance`,
 `startPick`, and idempotent `cancelPick`. Async operations reject unavailable
 instances/views and report one safe error. Picking uses existing inspection

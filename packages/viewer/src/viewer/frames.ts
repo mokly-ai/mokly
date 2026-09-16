@@ -69,7 +69,15 @@ export class ViewerFrames {
       fragment,
     );
     if (
-      refreshFrameSessions(this.sessions, frames, (error) => this.fail(error))
+      refreshFrameSessions(
+        this.sessions,
+        frames,
+        (error) => this.fail(error),
+        (changed) =>
+          this.highlights.evidence(changed, this.pick.activating, () =>
+            this.end({ reason: "evidence" }),
+          ),
+      )
     )
       return;
     runCleanup([() => this.end({ reason: "navigation" }), () => this.clear()]);

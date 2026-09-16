@@ -11,6 +11,7 @@ import { InspectionWork, ObsoleteInspection } from "./inspection_work.js";
 export interface Session {
   frame: ViewerFrame;
   usage: CatalogueUsage | undefined;
+  usageRevision: number;
   ready: Promise<MountedFrame>;
   mounted?: MountedFrame;
   controller: AbortController;
@@ -61,6 +62,7 @@ export function frameSession(
   const session: Session = {
     frame,
     usage: frame.view?.usage,
+    usageRevision: 0,
     controller,
     ready,
   };
@@ -73,6 +75,7 @@ export function refreshFrameSessions(
   sessions: readonly Session[],
   frames: readonly ViewerFrame[],
   fail: (error: unknown) => Error,
+  evidence?: (changed: readonly Session[]) => void,
 ): boolean {
   if (
     sessions.length !== frames.length ||
@@ -91,13 +94,19 @@ export function refreshFrameSessions(
     })
   )
     return false;
+  const changed: Session[] = [];
   for (const [index, session] of sessions.entries()) {
     const next = frames[index]!;
     const usage = next.view?.usage;
     Object.assign(session.frame, next);
     if (session.usage === usage) continue;
     session.usage = usage;
-    const work = new InspectionWork(session.controller.signal, () => true);
+    const revision = ++session.usageRevision;
+    changed.push(session);
+    const work = new InspectionWork(
+      session.controller.signal,
+      () => session.usageRevision === revision,
+    );
     const update = () =>
       work.run(async () => {
         const mounted = session.mounted!;
@@ -107,5 +116,6 @@ export function refreshFrameSessions(
     session.ready = session.ready.then(update, update);
     void session.ready.catch(() => {});
   }
+  if (changed.length) evidence?.(changed);
   return true;
 }

@@ -1539,6 +1539,93 @@ the full CI platform matrix, and no live npm/OIDC publication or GitHub protecti
 mutation. Recording this review and updating the plan index are documentation-only
 follow-ups; the plan remains active until its PR merges.
 
+## Milestone 10: Evidence updates during inspection
+
+Tags: ui
+
+Address M9-1 with the approved option A: make retained-frame evidence updates
+part of inspection ownership, restoring valid picking/highlighting and ending
+invalidated inspection exactly once without stale masks, labels or pick state.
+
+- [x] Define evidence refresh and cancellation semantics in the viewer/frame
+      protocols and viewer README, retaining schemas and inspector bytes.
+- [x] Add failing regressions first on both adapters, then coordinate evidence
+      adoption with the inspection owner. Cover ready-to-ready updates during
+      picking and scoped explicit highlights, removed targets, pending activation,
+      and updates with a pending sibling; verify pick restart and exact events.
+- [x] Fence superseded evidence success/failure by revision, including reuse of
+      an earlier usage object; add failing unit regressions before the fix.
+- [x] Update the plan index and record verification evidence without changing
+      earlier milestones' notes or findings.
+- [x] Run focused tests and `cargo xtask check`; record counts, retries, skips,
+      inspector size and unchanged Serve/export shell and comparison bytes.
+- [ ] After checks pass, run `git add -A`, commit with Conventional Commits
+      (title at most 50 characters, body naming M9-1 and ending with the requested
+      co-author trailer), and push the branch.
+- [ ] After that push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+      against the complete local diff from `origin/main`; record numbered findings
+      with severity, impact, lettered options and a recommendation without fixing.
+
+### Milestone 10 verification notes
+
+The baseline is `a43a643535f138d5741dccee0f576f92923ea7d8` on
+`calummoore/tianjin-v6`. Refreshed `origin/main` remains
+`7ca301c04ca898db6ff60b110beb213ec740b004`; no merge or rebase was performed.
+Earlier milestone notes/findings remain byte-identical, and this milestone adds
+no deletions of files, tests, docs or features. Existing tip-to-tip main-only
+differences predate this work and were left untouched.
+
+M9-1 now routes retained-frame usage adoption through the inspection owner.
+The owner snapshots its referenced keys, fences obsolete work and restores valid
+masks, outlines and catalogue labels with the original request's frame scope.
+Unrelated evidence does not redraw or await that scope. Invalidated targets or
+ready capability clear presentation and end active picking once with the new
+host-only `evidence` reason. Pending activation is cancelled with `disposed`,
+without start/end events; subsequent picking waits for refreshed, inspectable
+usage. Per-session revisions fence superseded update success/failure even when a
+later update reuses an earlier usage object. The wire/catalogue schemas and both
+adapter implementations remain unchanged. Viewer/frame protocols, viewer/client
+READMEs and the plan index describe the lifecycle; the live-evidence contract's
+existing document-ownership rule remains applicable.
+
+Added **18 Chromium regressions** across both adapters for active pick refresh,
+scoped explicit highlights beside ready/pending siblings, unrelated sibling
+updates, removed targets, pending/unavailable capability loss, exact events,
+restart after valid evidence returns, and cancellation during both mask and label
+activation. Tests assert mask outlines, labels, retained document/mount identity
+and no unrelated geometry. Added **four Node regressions** for superseded update
+success/failure with fresh or reused snapshot objects. All 18 browser cases and
+the corresponding unit cases failed before their fixes. Typechecking identified
+a missing `slots` field in the new fixture; it was corrected without removing or
+relaxing tests. Earlier milestone tests are retained.
+
+Focused validation passed **69 Node tests and 129 Chromium tests**, with no
+failures, retries or skips. The final `cargo xtask check` passed on 16 September
+2026: **1,669 Node tests, 416 Chromium tests and three Rust tests**, with zero
+failures, retries, skips or ignored tests. No flaky-test rerun was needed. Node
+took 410.4 seconds; Chromium took 10.9 minutes. Dependency auditing reported zero
+vulnerabilities. Formatting, lint, builds/typechecks, example validation (278
+files), package checks, all five packed-consumer scenarios, Rust formatting,
+Clippy and the eight-file Rust length audit passed. The 15 changed files stayed
+stable during the gate. Every changed/new TypeScript file is below 300 lines.
+Changed Markdown, 50 current documentation links and `git diff --check` passed;
+historical review links were left unchanged with their owning milestone notes.
+
+The inspector is byte-identical at **8,733 / 9,216 bytes**, with SHA-256
+`1952cf0499da61d8041a88c2dd18e9525eebd947c3985f3f53ec7a9c157bb7b0`.
+Actual Serve HTML and screenshots match exactly on mobile/desktop, with zero
+changed pixels; visual inspection confirms unchanged presentation. Export keeps
+all **1,169 paths**: 986 byte-identical files, 182 differing only in generated
+deployment/comparison identities, and the expected changed-path `review.json`.
+All **180 shell HTML files** retain identical markup after replacing only those
+identities. All **608 comparison snapshot/resource files**, **277 generated HTML
+documents**, and every exported client asset are byte-identical. No inspector,
+shell, stylesheet, example, snapshot or schema source changed.
+
+Evidence is retained in `.context/viewer-m10/`: failing regression logs, focused
+logs, `xtask-check.log`, before/after Serve captures and exports,
+`byte-comparison-final.json`, and the check-input stability audit.
+
 ## Post-merge follow-up (non-blocking)
 
 - Merge the combined release-please PR for viewer 0.1.0 and CLI 0.10.0, checking
