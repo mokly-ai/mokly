@@ -1,0 +1,201 @@
+/* The home page below the header: the rest of the hero, the three numbered
+   feature modules with their framed details of the catalogue shell, and the
+   open-foundation closing. Ported from the promoted mockups in
+   examples/basic/generated/site.css; the mobile composition is the default
+   and 768px raises the desktop one. */
+
+.site-hero-lead {
+  color: var(--site-folio-ink-muted);
+  font-size: var(--site-lead-size);
+  line-height: var(--site-lead-line);
+  max-width: 52ch;
+}
+
+.site-hero .site-actions {
+  justify-content: flex-start;
+  margin-top: var(--site-space-2);
+}
+
+.site-hero-note {
+  color: var(--site-folio-ink-muted);
+  font-size: var(--site-small-size);
+  line-height: var(--site-small-line);
+}
+
+/* Feature modules */
+
+.site-modules {
+  border-top: 1px solid var(--site-folio-line);
+  margin: 0 auto;
+  max-width: var(--site-wide-max);
+  padding: var(--site-section-space) var(--site-gutter);
+  width: 100%;
+}
+
+.site-section-head {
+  display: grid;
+  gap: var(--site-space-4);
+  margin-bottom: var(--site-space-9);
+}
+
+.site-section-head h2 {
+  font-size: var(--site-heading2-size);
+  font-weight: var(--site-weight-semibold);
+  line-height: var(--site-heading2-line);
+}
+
+.site-section-head p {
+  color: var(--site-folio-ink-muted);
+  max-width: 42ch;
+}
+
+.site-module-grid {
+  display: grid;
+  gap: var(--site-space-6);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.site-module {
+  background: var(--site-folio-surface);
+  border: 1px solid var(--site-folio-line);
+  border-radius: var(--site-radius-medium);
+  display: grid;
+  gap: var(--site-space-3);
+  overflow: hidden;
+  padding: 0 var(--site-space-6) var(--site-space-6);
+  scroll-margin-top: var(--site-space-6);
+}
+
+.site-module-detail {
+  align-items: center;
+  background-color: var(--site-folio);
+  background-image: radial-gradient(
+    circle at center,
+    var(--site-folio-line) 1px,
+    transparent 1px
+  );
+  background-size: 18px 18px;
+  border-bottom: 1px solid var(--site-folio-line);
+  display: flex;
+  justify-content: center;
+  margin: 0 calc(-1 * var(--site-space-6)) var(--site-space-5);
+  min-height: 176px;
+  padding: var(--site-space-4);
+}
+
+.site-module-eyebrow {
+  align-items: baseline;
+  display: flex;
+  font-family: var(--site-font-mono);
+  font-size: var(--site-small-size);
+  gap: var(--site-space-2);
+}
+
+.site-module-number {
+  color: var(--site-accent);
+}
+
+.site-feature-label {
+  color: var(--site-folio-ink-muted);
+  letter-spacing: 0.08em;
+}
+
+.site-module h3 {
+  font-size: var(--site-lead-size);
+  font-weight: var(--site-weight-semibold);
+  line-height: var(--site-lead-line);
+}
+
+.site-module-body {
+  color: var(--site-folio-ink-muted);
+  font-size: var(--site-small-size);
+  line-height: 1.6;
+}
+
+/* The closing */
+
+.site-closing {
+  margin: 0 auto;
+  max-width: var(--site-wide-max);
+  padding: 0 var(--site-gutter) var(--site-section-space);
+  scroll-margin-top: var(--site-space-6);
+  width: 100%;
+}
+
+.site-closing-panel {
+  background: var(--site-folio-muted);
+  border: 1px solid var(--site-folio-line);
+  border-radius: var(--site-radius-medium);
+  display: grid;
+  gap: var(--site-space-8);
+  grid-template-columns: minmax(0, 1fr);
+  padding: var(--site-space-8) var(--site-space-5);
+}
+
+.site-closing-copy {
+  align-content: start;
+  display: grid;
+  gap: var(--site-space-5);
+}
+
+.site-closing-copy h2 {
+  font-size: var(--site-heading2-size);
+  font-weight: var(--site-weight-semibold);
+  line-height: var(--site-heading2-line);
+}
+
+.site-closing-copy p {
+  color: var(--site-folio-ink-muted);
+  max-width: 46ch;
+}
+
+.site-steps {
+  display: grid;
+  gap: var(--site-space-6);
+  list-style: none;
+  padding: 0;
+}
+
+.site-step {
+  border-top: 1px solid var(--site-folio-line-strong);
+  display: grid;
+  gap: var(--site-space-1);
+  padding-top: var(--site-space-4);
+}
+
+.site-step-number {
+  color: var(--site-accent);
+  font-family: var(--site-font-mono);
+  font-size: var(--site-small-size);
+}
+
+.site-step h3 {
+  font-size: var(--site-lead-size);
+  font-weight: var(--site-weight-semibold);
+  line-height: var(--site-lead-line);
+}
+
+.site-step p {
+  color: var(--site-folio-ink-muted);
+}
+
+/* The desktop composition from the 768px breakpoint upward. */
+@media (min-width: 768px) {
+  .site-hero .site-actions {
+    justify-content: center;
+  }
+
+  .site-module-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .site-module-detail {
+    padding: var(--site-space-5);
+  }
+
+  .site-closing-panel {
+    gap: var(--site-space-10);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    padding: var(--site-space-10) var(--site-space-9);
+  }
+}

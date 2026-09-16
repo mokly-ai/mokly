@@ -1,0 +1,144 @@
+/* The chrome of the shell inside the home's framed catalogue: the top bar
+   with the mark and the search field, and the screen header with its crumbs,
+   title and identifier chip. Ported from the promoted mockups in
+   examples/basic/generated/site.css. */
+
+.site-topbar {
+  align-items: center;
+  background: var(--site-folio-surface);
+  border-bottom: 1px solid var(--site-folio-line);
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--site-space-4);
+  height: 48px;
+  padding: 0 var(--site-space-4);
+}
+
+.site-topbar-brand {
+  align-items: center;
+  color: var(--site-folio-ink);
+  display: inline-flex;
+  font-size: var(--site-small-size);
+  font-weight: var(--site-weight-bold);
+  gap: var(--site-space-2);
+  letter-spacing: -0.01em;
+}
+
+.site-topbar-mark {
+  background: var(--site-accent);
+  border-radius: var(--site-radius-small);
+  color: var(--site-on-accent);
+  display: inline-grid;
+  flex-shrink: 0;
+  height: 24px;
+  place-items: center;
+  width: 24px;
+}
+
+.site-topbar-name {
+  display: none;
+}
+
+.site-topbar-menu {
+  align-content: center;
+  border: 1px solid var(--site-folio-line);
+  border-radius: var(--site-radius-small);
+  display: grid;
+  flex-shrink: 0;
+  gap: 3px;
+  height: 28px;
+  padding: 0 6px;
+  width: 28px;
+}
+
+.site-topbar-menu span {
+  background: var(--site-folio-ink-muted);
+  border-radius: var(--site-radius-pill);
+  height: 1.5px;
+  width: 100%;
+}
+
+.site-topbar-search {
+  align-items: center;
+  background: var(--site-folio);
+  border: 1px solid var(--site-folio-line);
+  border-radius: var(--site-radius-small);
+  color: var(--site-folio-ink-muted);
+  display: flex;
+  flex: 1;
+  font-size: var(--site-small-size);
+  gap: var(--site-space-2);
+  height: 30px;
+  max-width: 440px;
+  min-width: 0;
+  padding: 0 var(--site-space-3);
+}
+
+.site-topbar-tag {
+  display: inline-grid;
+  flex-shrink: 0;
+  margin-left: auto;
+  place-items: center;
+}
+
+.site-screen-head {
+  background: var(--site-folio-surface);
+  border-bottom: 1px solid var(--site-folio-line);
+  flex-shrink: 0;
+  padding: var(--site-space-3) var(--site-space-4);
+}
+
+.site-crumbs {
+  align-items: center;
+  color: var(--site-folio-ink-muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: var(--site-micro-size);
+}
+
+.site-crumb {
+  align-items: center;
+  display: inline-flex;
+}
+
+.site-crumb-sep {
+  padding: 0 var(--site-space-2);
+}
+
+.site-screen-title-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--site-space-3);
+  margin-top: var(--site-space-1);
+}
+
+.site-screen-title {
+  font-size: 1.1875rem;
+  font-weight: var(--site-weight-semibold);
+  letter-spacing: -0.01em;
+}
+
+.site-idchip {
+  background: var(--site-folio);
+  border: 1px solid var(--site-folio-line);
+  border-radius: var(--site-radius-small);
+  color: var(--site-folio-ink-muted);
+  font-family: var(--site-font-mono);
+  font-size: var(--site-micro-size);
+  padding: 2px var(--site-space-2);
+}
+
+@media (min-width: 768px) {
+  .site-topbar-menu {
+    display: none;
+  }
+
+  .site-topbar-name {
+    display: inline;
+  }
+
+  .site-screen-head {
+    padding: var(--site-space-3) var(--site-space-6);
+  }
+}

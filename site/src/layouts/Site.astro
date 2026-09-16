@@ -4,6 +4,7 @@
  * the header band, one `main` landmark and the footer. The `main` landmark
  * carries `tabindex="-1"` so the skip link moves focus to it.
  */
+import { FEED_PATH } from "../changelog/feed.js";
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
 import SkipLink from "../components/SkipLink.astro";
@@ -17,6 +18,7 @@ import { settings } from "../settings.js";
 
 import "../styles/tokens.css";
 import "../styles/base.css";
+import "../styles/controls.css";
 import "../styles/chrome.css";
 import "../styles/layout.css";
 import "../styles/footer.css";
@@ -56,6 +58,12 @@ const image = socialImageUrl(
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <link
+      href={FEED_PATH}
+      rel="alternate"
+      title="Mokly CLI releases"
+      type="application/atom+xml"
+    />
     {indexed && <link rel="canonical" href={canonical} />}
     {!indexed && <meta name="robots" content="noindex" />}
     <meta property="og:type" content="website" />

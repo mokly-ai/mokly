@@ -79,6 +79,10 @@ boundaries and focus rings need 3:1, checked in both schemes.
 | `heading2` | 28 / 36            | 32 / 40             | 600    |
 | `heading1` | 36 / 44            | 48 / 56             | 600    |
 
+Two smaller roles exist only for the depicted product chrome the home frame
+draws: `micro` at 11px and `nano` at 10px, both in `font.mono` or uppercase
+sans. They never set reader-facing prose.
+
 Headings use `-0.02em` letter spacing; page headings on document pages use
 `-0.045em` and weight 700. The home hero is a semibold sans heading at 64px
 desktop and 44px mobile, line height 1.05, letter spacing `-0.05em`, with its
@@ -156,7 +160,12 @@ scheme; a test keeps its values equal to the tokens.
   and Components sections, the All or Changes filter and depth-ruled rows, the
   screen header with crumbs, title and id chip, and the dotted stage holding
   the example screen. The shell is 624px tall on desktop and 520px on mobile,
-  where the navigation column is dropped.
+  where the navigation column is dropped. In the site the stage holds the real
+  screen document from the example catalogue in a sandboxed frame, drawn a
+  quarter smaller than life so the whole screen fits; the navigation rows, the
+  crumbs, the title and the id chip come from the example build manifest, and
+  the mockup's filter count and browser-chrome bar are not reproduced because
+  no real value backs them.
 - Feature modules: three columns on desktop, one on mobile. Each module is a
   `folioSurface` card with a `medium` radius whose head is a dotted panel
   framing one detail of the shell — the Changes filter, a comment pinned to a

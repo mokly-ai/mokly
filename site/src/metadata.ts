@@ -1,16 +1,60 @@
 /**
- * Per-page metadata: the canonical URL and the social card image. The image
- * is named after the route and is only advertised once the build has
- * produced it, so the link check never meets a card image that is missing.
+ * Per-page metadata: the title and description every route publishes, its
+ * canonical URL and its social card image. The image is named after the route
+ * and is only advertised once the build has produced it, so the link check
+ * never meets a card image that is missing.
  */
 
 import { existsSync, readdirSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+
+import { SITE_PATHS, type SitePath } from "./navigation.js";
+import { sitePath } from "./workspace.js";
 
 /** The directory whose PNG files the social card metadata may reference. */
-export const SOCIAL_IMAGE_DIRECTORY = fileURLToPath(
-  new URL("../public/og/", import.meta.url),
-);
+export const SOCIAL_IMAGE_DIRECTORY = sitePath("public", "og");
+
+/** The document title and description of one route. */
+export interface PageMetadata {
+  readonly description: string;
+  readonly title: string;
+}
+
+/** The route the not-found document publishes, which the sitemap omits. */
+export const NOT_FOUND_ROUTE = "/404";
+
+/** Every route that publishes a document, including the not-found page. */
+export type PageRoute = SitePath | typeof NOT_FOUND_ROUTE;
+
+/** Every published document, addressed by route. */
+export const PAGE_METADATA: Readonly<Record<PageRoute, PageMetadata>> =
+  Object.freeze({
+    [SITE_PATHS.home]: {
+      description:
+        "Your mockups are React components in Git. Browse every branch as screens, review them with your team, and edit with an agent beside the screen.",
+      title: "Mokly",
+    },
+    [SITE_PATHS.docs]: {
+      description:
+        "Documentation for the Mokly CLI, authoring, the catalogue and Mokly Cloud.",
+      title: "Documentation · Mokly",
+    },
+    [SITE_PATHS.changelog]: {
+      description: "Every release of the Mokly CLI, newest first.",
+      title: "Changelog · Mokly",
+    },
+    [SITE_PATHS.terms]: {
+      description: "Service terms for Mokly Cloud.",
+      title: "Terms · Mokly",
+    },
+    [SITE_PATHS.privacy]: {
+      description: "Privacy policy for Mokly Cloud.",
+      title: "Privacy · Mokly",
+    },
+    [NOT_FOUND_ROUTE]: {
+      description: "Start again from the home page or the documentation.",
+      title: "Page not found · Mokly",
+    },
+  });
 
 /** The canonical absolute URL of a route on the configured site origin. */
 export function canonicalUrl(route: string, origin: string): string {

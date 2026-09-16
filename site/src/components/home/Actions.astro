@@ -1,0 +1,20 @@
+---
+/**
+ * The action pair the hero and the closing both repeat: Get started, which
+ * leaves for the application, and Read the docs, which stays on the site.
+ */
+import { APP_PATHS, SITE_PATHS, appLink } from "../../navigation.js";
+import { settings } from "../../settings.js";
+---
+
+<div class="site-actions">
+  <a
+    class="site-button site-button--primary"
+    href={appLink(settings.appOrigin, APP_PATHS.signUp)}
+  >
+    Get started <span aria-hidden="true">&#8594;</span>
+  </a>
+  <a class="site-button site-button--quiet" href={SITE_PATHS.docs}>
+    Read the docs
+  </a>
+</div>

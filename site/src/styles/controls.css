@@ -1,0 +1,81 @@
+/* The controls the marketing pages, the changelog and the policy documents
+   share: status badges, the inline link with its trailing glyph, the solid
+   and quiet action buttons, and the action row that repeats in the hero and
+   the closing. Ported from the promoted mockups in
+   examples/basic/generated/site.css; every value resolves from tokens.css. */
+
+.site-badge {
+  align-items: center;
+  border-radius: var(--site-radius-pill);
+  display: inline-flex;
+  font-size: var(--site-caption-size);
+  font-weight: var(--site-weight-medium);
+  gap: var(--site-space-2);
+  line-height: var(--site-caption-line);
+  padding: var(--site-space-1) var(--site-space-3);
+}
+
+.site-badge--success {
+  background: var(--site-success-soft);
+  color: var(--site-success);
+}
+
+.site-badge--neutral {
+  background: var(--site-folio-muted);
+  color: var(--site-folio-ink);
+}
+
+.site-badge-dot {
+  background: var(--site-success);
+  border-radius: var(--site-radius-pill);
+  height: 6px;
+  width: 6px;
+}
+
+.site-link {
+  align-items: center;
+  color: var(--site-accent);
+  display: inline-flex;
+  gap: var(--site-space-2);
+  min-height: var(--site-target-min);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.site-link:hover {
+  color: var(--site-accent-hover);
+  text-decoration-thickness: 2px;
+}
+
+.site-link span {
+  display: inline-block;
+  text-decoration: none;
+}
+
+.site-button--primary {
+  background: var(--site-accent);
+  border-color: var(--site-accent);
+  color: var(--site-on-accent);
+}
+
+.site-button--primary:hover {
+  background: var(--site-accent-hover);
+  border-color: var(--site-accent-hover);
+}
+
+.site-button--quiet {
+  border-color: var(--site-folio-line);
+  color: var(--site-folio-ink);
+}
+
+.site-button--quiet:hover {
+  background: var(--site-folio-muted);
+  border-color: var(--site-folio-line-strong);
+}
+
+.site-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--site-space-3);
+}

@@ -1,3 +1,4 @@
+import { PAGE_METADATA } from "../../src/metadata.js";
 import {
   APP_PATHS,
   SITE_PATHS,
@@ -13,26 +14,23 @@ export interface SitePage {
   readonly heading: string;
 }
 
+/** The heading each route publishes; its title comes from the page table. */
+const HEADING: Readonly<Record<SitePath, string>> = {
+  [SITE_PATHS.home]: "Design in your repository. Decide in the pull request.",
+  [SITE_PATHS.docs]: "Getting started",
+  [SITE_PATHS.changelog]: "What’s new in Mokly",
+  [SITE_PATHS.terms]: "Terms",
+  [SITE_PATHS.privacy]: "Privacy",
+};
+
 /** Every route the header and footer can reach. */
-export const PAGES: readonly SitePage[] = [
-  {
-    route: SITE_PATHS.home,
-    title: "Mokly",
-    heading: "Design in your repository. Decide in the pull request.",
-  },
-  {
-    route: SITE_PATHS.docs,
-    title: "Documentation · Mokly",
-    heading: "Getting started",
-  },
-  {
-    route: SITE_PATHS.changelog,
-    title: "Changelog · Mokly",
-    heading: "What’s new in Mokly",
-  },
-  { route: SITE_PATHS.terms, title: "Terms · Mokly", heading: "Terms" },
-  { route: SITE_PATHS.privacy, title: "Privacy · Mokly", heading: "Privacy" },
-];
+export const PAGES: readonly SitePage[] = Object.values(SITE_PATHS).map(
+  (route) => ({
+    heading: HEADING[route],
+    route,
+    title: PAGE_METADATA[route].title,
+  }),
+);
 
 /** The heading each route must render, addressed by route. */
 export const HEADINGS: ReadonlyMap<string, string> = new Map(

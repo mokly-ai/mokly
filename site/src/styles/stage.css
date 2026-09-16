@@ -1,0 +1,213 @@
+/* The home's principal image: a framed panel carrying the pull request label
+   and the Ready for review status, the Mokly shell around it, and the dotted
+   stage holding the example catalogue's Welcome screen in a sandboxed frame.
+   Ported from the promoted mockups in examples/basic/generated/site.css. */
+
+.site-frame-wrap {
+  margin: 0 auto;
+  max-width: var(--site-wide-max);
+  padding: 0 var(--site-gutter) var(--site-space-9);
+  width: 100%;
+}
+
+.site-frame {
+  background: var(--site-folio-surface);
+  border: 1px solid var(--site-folio-line);
+  border-radius: var(--site-radius-medium);
+  box-shadow: var(--site-shadow-medium);
+  margin: 0;
+  overflow: hidden;
+}
+
+.site-frame-head {
+  align-items: center;
+  border-bottom: 1px solid var(--site-folio-line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--site-space-3);
+  justify-content: space-between;
+  padding: var(--site-space-3) var(--site-space-4);
+}
+
+.site-frame-label {
+  color: var(--site-folio-ink);
+  font-size: var(--site-small-size);
+  font-weight: var(--site-weight-medium);
+}
+
+.site-frame-foot {
+  align-items: center;
+  border-top: 1px solid var(--site-folio-line);
+  color: var(--site-folio-ink);
+  display: flex;
+  font-size: var(--site-small-size);
+  gap: var(--site-space-3);
+  padding: var(--site-space-3) var(--site-space-4);
+}
+
+.site-frame-foot-label {
+  color: var(--site-folio-ink-muted);
+  font-size: var(--site-nano-size);
+  font-weight: var(--site-weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.site-shell {
+  background: var(--site-folio);
+  display: flex;
+  flex-direction: column;
+  height: var(--site-shell-height);
+  overflow: hidden;
+}
+
+.site-shell-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.site-shell-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.site-stage {
+  background-color: var(--site-folio);
+  background-image: radial-gradient(
+    circle at center,
+    var(--site-folio-line) 1px,
+    transparent 1px
+  );
+  background-size: 22px 22px;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding: var(--site-space-4) var(--site-space-4) 0;
+}
+
+.site-stage-label {
+  color: var(--site-folio-ink-muted);
+  font-size: var(--site-micro-size);
+  font-weight: var(--site-weight-bold);
+  letter-spacing: 0.06em;
+  margin-bottom: var(--site-space-3);
+  text-transform: uppercase;
+}
+
+.site-stage-label-desktop {
+  display: none;
+}
+
+/* The published screen documents. Both schemes are in the document and the
+   one that does not match the current scheme stays hidden, so a scheme change
+   never waits on a request. Hidden frames are never fetched. */
+
+.site-stage-view {
+  --site-stage-light: block;
+  --site-stage-dark: none;
+
+  background: var(--site-folio-surface);
+  border: 1px solid var(--site-folio-line-strong);
+  border-radius: var(--site-radius-small);
+  flex: 1;
+  margin: 0 auto;
+  max-width: 940px;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+:root[data-color-scheme="dark"] /* The published screen documents. Both schemes are in the document and the
+   one that does not match the current scheme stays hidden, so a scheme change
+   never waits on a request. Hidden frames are never fetched. */
+
+.site-stage-view {
+  --site-stage-light: none;
+  --site-stage-dark: block;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-color-scheme="light"]) /* The published screen documents. Both schemes are in the document and the
+   one that does not match the current scheme stays hidden, so a scheme change
+   never waits on a request. Hidden frames are never fetched. */
+
+.site-stage-view {
+    --site-stage-light: none;
+    --site-stage-dark: block;
+  }
+}
+
+/* The screen is shown a quarter smaller than life so the stage holds more of
+   it, the way the catalogue itself fits a screen to the stage. */
+
+.site-stage-frame {
+  border: 0;
+  height: 125%;
+  left: 0;
+  position: absolute;
+  top: 0;
+  transform: scale(0.8);
+  transform-origin: top left;
+  width: 125%;
+}
+
+.site-stage-frame--mobile.site-stage-frame--light {
+  display: var(--site-stage-light);
+}
+
+.site-stage-frame--mobile.site-stage-frame--dark {
+  display: var(--site-stage-dark);
+}
+
+.site-stage-frame--desktop.site-stage-frame--light {
+  display: none;
+}
+
+.site-stage-frame--desktop.site-stage-frame--dark {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .site-frame-wrap {
+    padding-bottom: var(--site-space-11);
+  }
+
+  .site-frame-head,
+  .site-frame-foot {
+    padding: var(--site-space-3) var(--site-space-5);
+  }
+
+  .site-stage {
+    padding: var(--site-space-5) var(--site-space-6) 0;
+  }
+
+  .site-stage-label-mobile {
+    display: none;
+  }
+
+  .site-stage-label-desktop {
+    display: inline;
+  }
+
+  .site-stage-frame--mobile.site-stage-frame--light {
+    display: none;
+  }
+
+  .site-stage-frame--mobile.site-stage-frame--dark {
+    display: none;
+  }
+
+  .site-stage-frame--desktop.site-stage-frame--light {
+    display: var(--site-stage-light);
+  }
+
+  .site-stage-frame--desktop.site-stage-frame--dark {
+    display: var(--site-stage-dark);
+  }
+}

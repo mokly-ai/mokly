@@ -1,0 +1,26 @@
+/* The policy documents: the readable column already set by layout.css, the
+   published body and the link across to the other policy. Ported from the
+   promoted mockups in examples/basic/generated/site.css. */
+
+.site-policy-empty {
+  display: grid;
+  gap: var(--site-space-5);
+  justify-items: start;
+}
+
+.site-policy-empty h2 {
+  font-size: var(--site-heading3-size);
+  font-weight: var(--site-weight-semibold);
+  line-height: var(--site-heading3-line);
+}
+
+.site-policy-empty p {
+  color: var(--site-folio-ink-muted);
+  max-width: var(--site-prose-max);
+}
+
+.site-policy-date {
+  color: var(--site-folio-ink-muted);
+  font-size: var(--site-small-size);
+  line-height: var(--site-small-line);
+}

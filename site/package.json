@@ -7,26 +7,33 @@
     "node": ">=22.14.0"
   },
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build && node scripts/index-search.mjs",
-    "typecheck": "astro check && tsc --noEmit",
-    "test": "tsx --test tests/*.test.ts",
-    "links": "node --import tsx scripts/check-links.mjs",
     "browser": "playwright test --config playwright.config.ts",
-    "lighthouse": "node scripts/lighthouse.mjs",
-    "preview": "astro preview"
+    "build": "npm run stage && npm run og && astro build && node scripts/index-search.mjs",
+    "dev": "npm run stage && npm run og && astro dev",
+    "lighthouse": "node --import tsx scripts/lighthouse.mjs",
+    "links": "node --import tsx scripts/check-links.mjs",
+    "og": "node --import tsx scripts/og.mjs",
+    "preview": "astro preview",
+    "stage": "node --import tsx scripts/stage.mjs",
+    "test": "tsx --test tests/*.test.ts",
+    "typecheck": "astro check && tsc --noEmit"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
     "@astrojs/mdx": "^8.0.1",
     "@astrojs/react": "^6.0.5",
+    "@types/sax": "^1.2.7",
     "astro": "^7.3.2",
+    "chrome-launcher": "^1.2.1",
+    "lighthouse": "^13.4.1",
     "lightningcss": "^1.33.0",
     "pagefind": "^1.5.2",
     "parse5": "^8.0.1",
     "prettier-plugin-astro": "^1.0.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
+    "sax": "^1.6.1",
+    "sharp": "^0.35.4",
     "srcset": "^5.0.3"
   }
 }

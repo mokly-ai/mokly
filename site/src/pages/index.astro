@@ -1,19 +1,33 @@
 ---
+import Closing from "../components/home/Closing.astro";
+import Hero from "../components/home/Hero.astro";
+import Modules from "../components/home/Modules.astro";
+import Stage from "../components/home/Stage.astro";
 import Site from "../layouts/Site.astro";
+import { PAGE_METADATA } from "../metadata.js";
 import { SITE_PATHS } from "../navigation.js";
+import { readStageManifest } from "../stage.js";
+
+import "../styles/home.css";
+import "../styles/details.css";
+import "../styles/shell.css";
+import "../styles/stage.css";
+import "../styles/tree.css";
+
+const { description, title } = PAGE_METADATA[SITE_PATHS.home];
+const stage = readStageManifest();
 ---
 
 <Site
-  description="Your mockups are React components in Git. Browse every branch as screens, review them with your team, and edit with an agent beside the screen."
+  description={description}
   route={SITE_PATHS.home}
   ruled={false}
-  title="Mokly"
+  title={title}
 >
-  <section class="site-hero">
-    <p class="site-hero-eyebrow">A design tool for teams that ship</p>
-    <h1>
-      Design in your repository.
-      <br /> <span class="site-accent">Decide in the pull request.</span>
-    </h1>
-  </section>
+  <Hero />
+  <div class="site-frame-wrap">
+    <Stage manifest={stage} />
+  </div>
+  <Modules sections={stage.sections} />
+  <Closing />
 </Site>

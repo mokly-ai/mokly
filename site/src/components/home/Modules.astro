@@ -1,0 +1,78 @@
+---
+/**
+ * The three numbered feature modules: browse, review and edit. Each pairs the
+ * approved feature copy from docs/protocol/site.md with a framed detail of
+ * the catalogue redrawn from the tokens.
+ */
+import type { StageSection } from "../../stage.js";
+
+import Browse from "./details/Browse.astro";
+import Edit from "./details/Edit.astro";
+import Review from "./details/Review.astro";
+
+interface Props {
+  readonly sections: readonly StageSection[];
+}
+
+const screens = Astro.props.sections
+  .flatMap((section) => section.rows)
+  .filter((row) => row.kind !== "collection")
+  .slice(0, 3)
+  .map((row) => row.label);
+---
+
+<section class="site-modules">
+  <div class="site-section-head">
+    <h2>
+      Browse, review, edit.
+      <br /> <span class="site-accent">One place for all of it.</span>
+    </h2>
+    <p>Every branch becomes a catalogue your whole team can open.</p>
+  </div>
+  <div class="site-module-grid">
+    <article class="site-module" id="browse">
+      <div class="site-module-detail">
+        <Browse screens={screens} />
+      </div>
+      <p class="site-module-eyebrow">
+        <span class="site-module-number">01</span>
+        <span class="site-feature-label">BROWSE</span>
+      </p>
+      <h3>See every branch as screens.</h3>
+      <p class="site-module-body">
+        Each branch and pull request publishes a catalogue built from your real
+        components. Changes shows what moved, and the check on the pull request
+        counts it.
+      </p>
+    </article>
+    <article class="site-module" id="review">
+      <div class="site-module-detail">
+        <Review />
+      </div>
+      <p class="site-module-eyebrow">
+        <span class="site-module-number">02</span>
+        <span class="site-feature-label">REVIEW</span>
+      </p>
+      <h3>Comment on the screen itself.</h3>
+      <p class="site-module-body">
+        Pin a comment to the component it is about and approve when it is right.
+        The conversation stays in step with the pull request review.
+      </p>
+    </article>
+    <article class="site-module" id="edit">
+      <div class="site-module-detail">
+        <Edit />
+      </div>
+      <p class="site-module-eyebrow">
+        <span class="site-module-number">03</span>
+        <span class="site-feature-label">EDIT</span>
+      </p>
+      <h3>Ask for the change beside the screen.</h3>
+      <p class="site-module-body">
+        An agent edits the mockup source in a live branch session. Click an
+        element to bring it into the conversation, then publish back to the
+        branch.
+      </p>
+    </article>
+  </div>
+</section>

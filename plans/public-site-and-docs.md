@@ -320,29 +320,31 @@ Tags: ui
 Build the marketing pages from the approved copy and real sources. Stop for
 review with screenshots.
 
-- [ ] Implement the home page: hero with the approved copy and both actions,
+- [x] Implement the home page: hero with the approved copy and both actions,
       the framed catalogue stage, three numbered features in a column grid on
       desktop, and the closing with the three-step workflow and both actions.
-- [ ] Render the stage from this repository's example catalogue at build
+- [x] Render the stage from this repository's example catalogue at build
       time: run the example build, copy the chosen screen documents and their
       stylesheets for mobile and desktop in light and dark into the site
       output, and embed them in the framed stage with the configured pull
       request label and Ready for review status; add a test that the label
       names a pull request present in `CHANGELOG.md`.
-- [ ] Parse `CHANGELOG.md` into typed release entries (version, date,
+- [x] Parse `CHANGELOG.md` into typed release entries (version, date,
       compare or release link, grouped notes); render `/changelog` with the
       Mokly CLI label, the empty state, and the Atom feed; add unit tests
       including the empty file and a malformed heading.
-- [ ] Add `site/src/content/legal/terms.md` and `privacy.md` with the exact
+- [x] Add `site/src/content/legal/terms.md` and `privacy.md` with the exact
       placeholder bodies, render the readable document layout with navigation
       between the two policies, and show a date only when the file declares an
       approved one.
-- [ ] Generate Open Graph images at build time from the page title using
+- [x] Generate Open Graph images at build time from the page title using
       the Folio tokens; add card metadata to every page.
-- [ ] Extend the browser test to exercise both home actions and the
+- [x] Extend the browser test to exercise both home actions and the
       changelog, terms and privacy pages at both viewports and schemes.
-- [ ] Add the Lighthouse configuration with the agreed thresholds and a
+- [x] Add the Lighthouse configuration with the agreed thresholds and a
       `site:lighthouse` script; run it locally against `site/dist`.
+- [x] Capture the five routes at 390px and 1440px in both schemes and compare
+      them with the promoted mockups.
 - [ ] Run `cargo xtask check`, commit and push. Stop for review.
 
 ## Milestone 6: Docs Layout And CLI Documentation

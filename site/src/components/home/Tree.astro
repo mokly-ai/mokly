@@ -1,0 +1,63 @@
+---
+/**
+ * The catalogue navigation inside the framed shell. Every section, row,
+ * label and count comes from the example catalogue's own build manifest, so
+ * the depicted tree is the tree that repository publishes.
+ */
+import type { StageSection } from "../../stage.js";
+import Glyph from "../Glyph.astro";
+
+interface Props {
+  readonly sections: readonly StageSection[];
+}
+
+const { sections } = Astro.props;
+
+const GLYPHS = {
+  collection: "collection",
+  component: "component",
+  flow: "flow",
+  page: "page",
+  screen: "screen",
+} as const;
+---
+
+<nav aria-label="Catalogue" class="site-tree">
+  <div class="site-tree-head">
+    Catalogue<span>Collapse all</span>
+  </div>
+  <div aria-label="Catalogue filter" class="site-filter" role="group">
+    <span class="site-filter-option site-filter-option--current">All</span>
+    <span class="site-filter-option">Changes</span>
+  </div>
+  <div class="site-tree-scroll">
+    {sections.map((section) => (
+      <div class="site-tree-section">
+        <p class="site-tree-section-head">
+          <span aria-hidden="true" class="site-tree-chevron">
+            <Glyph name="chevron" />
+          </span>
+          {section.title}
+        </p>
+        {section.rows.map((row) => (
+          <span
+            class:list={[
+              "site-row",
+              row.kind === "collection" && "site-row--group",
+              row.current && "site-row--current",
+            ]}
+            data-site-depth={row.depth}
+          >
+            <span aria-hidden="true" class="site-row-ico">
+              <Glyph name={GLYPHS[row.kind]} />
+            </span>
+            <span class="site-row-label">{row.label}</span>
+            {row.count === null ? null : (
+              <span class="site-row-count">{row.count}</span>
+            )}
+          </span>
+        ))}
+      </div>
+    ))}
+  </div>
+</nav>

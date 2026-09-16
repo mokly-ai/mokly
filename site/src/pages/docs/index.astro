@@ -1,13 +1,16 @@
 ---
 import Site from "../../layouts/Site.astro";
+import { PAGE_METADATA } from "../../metadata.js";
 import { SITE_PATHS } from "../../navigation.js";
+
+const { description, title } = PAGE_METADATA[SITE_PATHS.docs];
 ---
 
 <Site
-  description="Documentation for the Mokly CLI, authoring, the catalogue and Mokly Cloud."
+  description={description}
   main="site-document site-document--wide"
   route={SITE_PATHS.docs}
-  title="Documentation · Mokly"
+  title={title}
 >
   <div class="site-document-intro">
     <p class="site-eyebrow">Documentation</p>

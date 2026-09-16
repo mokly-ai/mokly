@@ -44,16 +44,3 @@ for (const [setting, value] of [
     );
   });
 }
-
-test("Lighthouse fails clearly until the budget configuration lands", async () => {
-  await assert.rejects(
-    promisify(execFile)(process.execPath, ["scripts/lighthouse.mjs"], {
-      cwd: root,
-    }),
-    (error: Error & { code?: number; stderr?: string }) => {
-      assert.equal(error.code, 1);
-      assert.match(error.stderr ?? "", /site:lighthouse.*Milestone 5/);
-      return true;
-    },
-  );
-});

@@ -1,0 +1,195 @@
+/* The changelog: a sticky index of the published releases beside rows that
+   pair the Mokly CLI version badge, the release date and the release link
+   with the grouped notes of that release. Ported from the promoted mockups in
+   examples/basic/generated/site.css. */
+
+.site-changelog-body {
+  display: grid;
+  gap: var(--site-space-6);
+  grid-template-columns: minmax(0, 1fr);
+  max-width: var(--site-content-max);
+}
+
+.site-release-index {
+  align-self: start;
+  display: grid;
+  gap: var(--site-space-2);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.site-release-index-head {
+  color: var(--site-folio-ink-muted);
+  font-size: var(--site-micro-size);
+  font-weight: var(--site-weight-bold);
+  grid-column: 1 / -1;
+  letter-spacing: 0.08em;
+  padding: 0 0 var(--site-space-2);
+  text-transform: uppercase;
+}
+
+.site-release-index-link {
+  border-left: 2px solid var(--site-folio-line);
+  color: var(--site-folio-ink-muted);
+  display: grid;
+  gap: 1px;
+  min-height: var(--site-target-min);
+  padding: var(--site-space-2) var(--site-space-3);
+  text-decoration: none;
+  transition: background var(--site-motion-fast) var(--site-motion-ease);
+}
+
+.site-release-index-link:hover {
+  background: var(--site-folio-muted);
+  border-left-color: var(--site-folio-line-strong);
+  color: var(--site-folio-ink);
+}
+
+.site-release-index-link--current {
+  border-left-color: var(--site-accent);
+  color: var(--site-folio-ink);
+}
+
+.site-release-index-link--current:hover {
+  border-left-color: var(--site-accent);
+}
+
+.site-release-index-version {
+  font-family: var(--site-font-mono);
+  font-size: var(--site-small-size);
+  font-weight: var(--site-weight-medium);
+}
+
+.site-release-index-date {
+  font-size: var(--site-caption-size);
+}
+
+.site-releases {
+  display: grid;
+}
+
+.site-release {
+  border-top: 1px solid var(--site-folio-line);
+  display: grid;
+  gap: var(--site-space-4);
+  grid-template-columns: minmax(0, 1fr);
+  padding: var(--site-space-6) 0;
+  scroll-margin-top: var(--site-space-6);
+}
+
+.site-release-meta {
+  align-content: start;
+  display: grid;
+  gap: var(--site-space-2);
+  justify-items: start;
+}
+
+.site-release-meta h2 {
+  font-size: var(--site-body-size);
+  font-weight: var(--site-weight-medium);
+}
+
+.site-release-meta time {
+  color: var(--site-folio-ink-muted);
+  font-size: var(--site-small-size);
+}
+
+.site-release-link {
+  align-items: center;
+  color: var(--site-accent);
+  display: inline-flex;
+  font-size: var(--site-small-size);
+  gap: var(--site-space-1);
+  min-height: var(--site-target-min);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.site-release-link:hover {
+  color: var(--site-accent-hover);
+  text-decoration-thickness: 2px;
+}
+
+.site-release-notes {
+  display: grid;
+  gap: var(--site-space-6);
+  max-width: var(--site-prose-max);
+}
+
+.site-release-group {
+  display: grid;
+  gap: var(--site-space-3);
+}
+
+.site-release-group-head {
+  color: var(--site-folio-ink-muted);
+  font-size: var(--site-caption-size);
+  font-weight: var(--site-weight-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.site-release-notes ul {
+  color: var(--site-folio-ink);
+  display: grid;
+  gap: var(--site-space-2);
+  list-style: none;
+  padding: 0;
+}
+
+.site-release-notes li {
+  padding-left: var(--site-space-5);
+  position: relative;
+}
+
+.site-release-notes li::before {
+  background: var(--site-folio-line-strong);
+  border-radius: var(--site-radius-pill);
+  content: "";
+  height: 5px;
+  left: var(--site-space-2);
+  position: absolute;
+  top: 10px;
+  width: 5px;
+}
+
+.site-release-notes a {
+  color: var(--site-accent);
+  text-underline-offset: 3px;
+}
+
+.site-release-notes a:hover {
+  color: var(--site-accent-hover);
+  text-decoration-thickness: 2px;
+}
+
+.site-release-notes code {
+  font-family: var(--site-font-mono);
+  font-size: var(--site-small-size);
+}
+
+.site-changelog-empty {
+  color: var(--site-folio-ink-muted);
+  font-size: var(--site-lead-size);
+  line-height: var(--site-lead-line);
+}
+
+/* The desktop composition from the 768px breakpoint upward. */
+@media (min-width: 768px) {
+  .site-changelog-body {
+    gap: var(--site-space-9);
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+
+  .site-release-index {
+    gap: 2px;
+    grid-template-columns: minmax(0, 1fr);
+    position: sticky;
+    top: var(--site-space-6);
+  }
+
+  .site-release {
+    gap: var(--site-space-8);
+    grid-template-columns: 200px minmax(0, 1fr);
+    padding: var(--site-space-7) 0;
+  }
+}

@@ -1,0 +1,47 @@
+---
+/**
+ * The open-foundation closing: the copy and the repeated actions beside the
+ * three-step workflow. The copy is the approved home copy in
+ * docs/protocol/site.md.
+ */
+import Actions from "./Actions.astro";
+
+const STEPS: ReadonlyArray<readonly [string, string]> = [
+  ["Shape the next screen.", "Author with React and your shared components."],
+  [
+    "Publish the branch.",
+    "Open the pull request check to review the screens that changed.",
+  ],
+  [
+    "Build from a shared decision.",
+    "Keep comments and approvals with the pull request.",
+  ],
+];
+---
+
+<section class="site-closing" id="foundation">
+  <div class="site-closing-panel">
+    <div class="site-closing-copy">
+      <p class="site-eyebrow">An open foundation</p>
+      <h2>
+        Your screens.
+        <br /> <span class="site-accent">Your building blocks.</span>
+      </h2>
+      <p>
+        Author locally with the open-source Mokly CLI. Keep your screens in Git
+        and host the catalogue anywhere. The cloud adds hosting, review and the
+        agent; it never owns the source.
+      </p>
+      <Actions />
+    </div>
+    <ol class="site-steps">
+      {STEPS.map(([title, body], index) => (
+        <li class="site-step">
+          <span class="site-step-number">0{index + 1}</span>
+          <h3>{title}</h3>
+          <p>{body}</p>
+        </li>
+      ))}
+    </ol>
+  </div>
+</section>

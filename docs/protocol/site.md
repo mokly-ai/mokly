@@ -129,7 +129,10 @@ screen.`
 real screen from this repository's example catalogue, rendered at build time.
 Its head shows the pull request label and a green **Ready for review** status;
 its foot names the screen. The label names a merged pull request from this
-repository configured in the site and verified against `CHANGELOG.md`.
+repository configured in the site and verified against `CHANGELOG.md`. The
+screen itself is the document the example build produced, embedded in a
+sandboxed frame, and the catalogue chrome around it names only what that
+build's manifest states.
 
 **Features** — heading `Browse, review, edit.` / accent `One place for all
 of it.` Lead: `Every branch becomes a catalogue your whole team can open.`
@@ -167,8 +170,13 @@ the heading, the grouped notes (breaking changes, features, bug fixes,
 performance) with their links preserved, and one link to the GitHub compare or
 release view from the heading. Entries whose heading has no link show no link.
 If the file has no release headings, the page shows **Updates will appear
-here**. The page also publishes an Atom feed at `/changelog.xml`. The parser
-is typed and tested; it never guesses a date or invents a title.
+here**. The page also publishes an Atom feed at `/changelog.xml`, linked from
+every page. The parser is typed and tested; it never guesses a date or invents
+a title. A level-two heading that names a version but not a release date fails
+the build rather than publishing a half-read release; a level-two heading that
+names no version is prose the file keeps beside its releases and is skipped
+with everything under it. Notes keep their links, code spans and the emphasis
+the release tool writes around a commit scope.
 
 ## Terms And Privacy
 

@@ -1,0 +1,38 @@
+---
+/**
+ * One policy document: the location eyebrow, the page title, the effective
+ * date when the file declares one, the published body and the link across to
+ * the other policy.
+ */
+import { getEntry, render } from "astro:content";
+
+import { crossPolicy, effectiveDate, type PolicyId } from "../legal.js";
+
+interface Props {
+  readonly id: PolicyId;
+}
+
+const { id } = Astro.props;
+
+const entry = await getEntry("legal", id);
+if (!entry) throw new Error(`The site publishes no policy document for ${id}.`);
+const { Content } = await render(entry);
+const effective = effectiveDate(entry.data.effective);
+const cross = crossPolicy(id);
+---
+
+<div class="site-document-intro">
+  <p class="site-eyebrow">Using Mokly</p>
+  <h1>{entry.data.title}</h1>
+  {effective && (
+    <p class="site-policy-date">
+      Effective <time datetime={effective.datetime}>{effective.readable}</time>
+    </p>
+  )}
+</div>
+<div class="site-policy-empty">
+  <Content />
+  <a class="site-link" href={cross.route}>
+    {cross.label} <span aria-hidden="true">&#8594;</span>
+  </a>
+</div>

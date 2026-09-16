@@ -1,13 +1,16 @@
 ---
 import Site from "../layouts/Site.astro";
+import { NOT_FOUND_ROUTE, PAGE_METADATA } from "../metadata.js";
+
+const { description, title } = PAGE_METADATA[NOT_FOUND_ROUTE];
 ---
 
 <Site
-  description="Start again from the home page or the documentation."
+  description={description}
   indexed={false}
   main="site-document site-policy"
-  route="/404"
-  title="Page not found · Mokly"
+  route={NOT_FOUND_ROUTE}
+  title={title}
 >
   <div class="site-document-intro">
     <h1>Page not found</h1>

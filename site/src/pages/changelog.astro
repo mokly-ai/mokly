@@ -1,18 +1,82 @@
 ---
+import { readReleases } from "../changelog/releases.js";
+import Note from "../components/Note.astro";
 import Site from "../layouts/Site.astro";
+import { PAGE_METADATA } from "../metadata.js";
 import { SITE_PATHS } from "../navigation.js";
+
+import "../styles/changelog.css";
+
+const { description, title } = PAGE_METADATA[SITE_PATHS.changelog];
+const releases = readReleases();
 ---
 
 <Site
-  description="Every release of the Mokly CLI, newest first."
+  description={description}
   main="site-document site-document--wide"
   route={SITE_PATHS.changelog}
-  title="Changelog · Mokly"
+  title={title}
 >
   <div class="site-document-intro">
     <p class="site-eyebrow">Changelog</p>
     <h1>
       What&#8217;s new in <span class="site-accent">Mokly</span>
     </h1>
+    <p class="site-lead">{description}</p>
   </div>
+  {releases.length === 0 && (
+    <p class="site-changelog-empty">Updates will appear here</p>
+  )}
+  {releases.length > 0 && (
+    <div class="site-changelog-body">
+      <nav aria-label="Releases" class="site-release-index">
+        <p class="site-release-index-head">Releases</p>
+        {releases.map((release, index) => (
+          <a
+            class:list={[
+              "site-release-index-link",
+              index === 0 && "site-release-index-link--current",
+            ]}
+            href={`#${release.anchor}`}
+          >
+            <span class="site-release-index-version">{release.version}</span>
+            <span class="site-release-index-date">{release.readableDate}</span>
+          </a>
+        ))}
+      </nav>
+      <div class="site-releases">
+        {releases.map((release) => (
+          <article class="site-release" id={release.anchor}>
+            <div class="site-release-meta">
+              <h2>
+                <span class="site-badge site-badge--neutral">
+                  Mokly CLI {release.version}
+                </span>
+              </h2>
+              <time datetime={release.date}>{release.readableDate}</time>
+              {release.link && (
+                <a class="site-release-link" href={release.link}>
+                  Read release details <span aria-hidden="true">&#8599;</span>
+                </a>
+              )}
+            </div>
+            <div class="site-release-notes">
+              {release.sections.map((section) => (
+                <div class="site-release-group">
+                  <p class="site-release-group-head">{section.heading}</p>
+                  <ul>
+                    {section.items.map((item) => (
+                      <li>
+                        <Note segments={item} />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  )}
 </Site>

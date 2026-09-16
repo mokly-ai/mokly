@@ -2,13 +2,21 @@ import { type Page, expect, test } from "@playwright/test";
 
 import { PAGES } from "./routes.js";
 
+/**
+ * The home stage embeds catalogue documents in a frame with no permissions,
+ * so the browser reports every script it refuses to run there. That report is
+ * the sandbox working and is not a page failure.
+ */
+const SANDBOXED = /Blocked script execution in '[^']*\/stage\/[^']*'/;
+
 /** Collect the failures a page must not produce while it loads. */
 function watch(page: Page): string[] {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("requestfailed", (request) => errors.push(request.url()));
   page.on("console", (message) => {
-    if (message.type() === "error") errors.push(message.text());
+    if (message.type() === "error" && !SANDBOXED.test(message.text()))
+      errors.push(message.text());
   });
   return errors;
 }

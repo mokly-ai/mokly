@@ -5,12 +5,15 @@ import path from "node:path";
 import test from "node:test";
 
 import {
+  NOT_FOUND_ROUTE,
+  PAGE_METADATA,
   availableSocialImages,
   canonicalUrl,
   socialImagePath,
   socialSlug,
   socialImageUrl,
 } from "../src/metadata.js";
+import { SITE_PATHS } from "../src/navigation.js";
 
 test("canonical URLs resolve every route against the site origin", () => {
   assert.equal(
@@ -60,4 +63,19 @@ test("reading the card directory tolerates an absent or mixed set", async (t) =>
     availableSocialImages(path.join(root, "og")),
     new Set(["index"]),
   );
+});
+
+test("every route publishes a title and a description", () => {
+  assert.deepEqual(Object.keys(PAGE_METADATA), [
+    ...Object.values(SITE_PATHS),
+    NOT_FOUND_ROUTE,
+  ]);
+  const titles = new Set<string>();
+  for (const [route, { description, title }] of Object.entries(PAGE_METADATA)) {
+    assert.ok(title.length > 0, route);
+    assert.ok(description.length > 0 && description.length <= 180, route);
+    assert.ok(!titles.has(title), `${route} repeats the title ${title}`);
+    titles.add(title);
+  }
+  assert.equal(PAGE_METADATA[SITE_PATHS.home].title, "Mokly");
 });

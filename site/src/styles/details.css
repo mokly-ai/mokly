@@ -1,0 +1,211 @@
+/* The small framed details inside the three feature modules: the Changes
+   filter over a list of changed screens, a comment pinned to a screen, and
+   the agent rail beside a screen. They redraw one part of the catalogue from
+   the tokens, so they carry product labels and no other text. Ported from the
+   promoted mockups in examples/basic/generated/site.css. */
+
+.site-detail {
+  background: var(--site-folio-surface);
+  border: 1px solid var(--site-folio-line);
+  border-radius: var(--site-radius-small);
+  display: grid;
+  gap: var(--site-space-2);
+  padding: var(--site-space-2);
+  width: 100%;
+}
+
+.site-detail--split {
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+}
+
+.site-filter {
+  align-self: flex-start;
+  background: var(--site-folio);
+  border: 1px solid var(--site-folio-line);
+  border-radius: var(--site-radius-small);
+  display: inline-flex;
+  gap: 2px;
+  margin: 0;
+  padding: 3px;
+}
+
+.site-filter-option {
+  align-items: center;
+  border-radius: var(--site-radius-small);
+  color: var(--site-folio-ink-muted);
+  display: flex;
+  font-size: var(--site-caption-size);
+  font-weight: var(--site-weight-semibold);
+  gap: var(--site-space-2);
+  padding: var(--site-space-1) var(--site-space-3);
+}
+
+.site-filter-option--current {
+  background: var(--site-folio-surface);
+  border: 1px solid var(--site-folio-line);
+  color: var(--site-folio-ink);
+  padding: 3px 11px;
+}
+
+.site-filter-count {
+  background: var(--site-accent-soft);
+  border-radius: var(--site-radius-pill);
+  color: var(--site-accent);
+  font-family: var(--site-font-mono);
+  font-size: var(--site-nano-size);
+  padding: 1px var(--site-space-2);
+}
+
+.site-detail-rows {
+  display: grid;
+  gap: 2px;
+}
+
+.site-detail-row {
+  align-items: center;
+  border-radius: var(--site-radius-small);
+  color: var(--site-folio-ink);
+  display: flex;
+  font-size: var(--site-caption-size);
+  gap: var(--site-space-2);
+  padding: var(--site-space-1) var(--site-space-2);
+}
+
+.site-detail-dot {
+  background: var(--site-folio-line-strong);
+  border-radius: var(--site-radius-pill);
+  flex-shrink: 0;
+  height: 6px;
+  width: 6px;
+}
+
+.site-detail-chip {
+  background: var(--site-accent-soft);
+  border-radius: var(--site-radius-pill);
+  color: var(--site-accent);
+  font-size: var(--site-nano-size);
+  margin-left: auto;
+  padding: 1px var(--site-space-2);
+}
+
+.site-detail-screen {
+  background: var(--site-folio);
+  border: 1px solid var(--site-folio-line);
+  border-radius: var(--site-radius-small);
+  display: grid;
+  gap: var(--site-space-2);
+  padding: var(--site-space-3);
+  position: relative;
+}
+
+.site-detail-bar {
+  background: var(--site-folio-line);
+  border-radius: var(--site-radius-pill);
+  height: 6px;
+  width: 60%;
+}
+
+.site-detail-bar--wide {
+  width: 88%;
+}
+
+.site-detail-block {
+  background: var(--site-folio-muted);
+  border: 1px solid var(--site-folio-line);
+  border-radius: var(--site-radius-small);
+  height: 36px;
+}
+
+.site-pin {
+  align-items: center;
+  background: var(--site-accent);
+  border-radius: var(--site-radius-pill);
+  color: var(--site-on-accent);
+  display: inline-flex;
+  font-size: var(--site-nano-size);
+  font-weight: var(--site-weight-semibold);
+  height: 18px;
+  justify-content: center;
+  position: absolute;
+  right: -6px;
+  top: 34px;
+  width: 18px;
+}
+
+.site-pin--inline {
+  margin-right: var(--site-space-2);
+  position: static;
+}
+
+.site-comment,
+.site-agent {
+  background: var(--site-folio);
+  border: 1px solid var(--site-folio-line);
+  border-radius: var(--site-radius-small);
+  display: grid;
+  gap: var(--site-space-2);
+  padding: var(--site-space-3);
+}
+
+.site-comment-head {
+  align-items: center;
+  color: var(--site-folio-ink);
+  display: flex;
+  font-size: var(--site-caption-size);
+  font-weight: var(--site-weight-semibold);
+}
+
+.site-comment-approve {
+  background: var(--site-accent);
+  border-radius: var(--site-radius-small);
+  color: var(--site-on-accent);
+  font-size: var(--site-nano-size);
+  font-weight: var(--site-weight-medium);
+  justify-self: start;
+  padding: var(--site-space-1) var(--site-space-3);
+}
+
+.site-agent-turn {
+  background: var(--site-folio-muted);
+  border: 1px solid var(--site-folio-line);
+  border-radius: var(--site-radius-small);
+  height: 22px;
+}
+
+.site-agent-turn--reply {
+  background: var(--site-accent-soft);
+  border-color: var(--site-accent-soft);
+  margin-left: var(--site-space-5);
+}
+
+.site-agent-input {
+  align-items: center;
+  background: var(--site-folio-surface);
+  border: 1px solid var(--site-folio-line-strong);
+  border-radius: var(--site-radius-small);
+  color: var(--site-folio-ink-muted);
+  display: flex;
+  font-size: var(--site-nano-size);
+  gap: var(--site-space-2);
+  padding: var(--site-space-2);
+}
+
+.site-agent-send {
+  color: var(--site-accent);
+  display: inline-grid;
+  margin-left: auto;
+  place-items: center;
+}
+
+/* The desktop composition from the 768px breakpoint upward. */
+@media (min-width: 768px) {
+  .site-detail {
+    gap: var(--site-space-3);
+    padding: var(--site-space-3);
+  }
+
+  .site-detail--split {
+    gap: var(--site-space-3);
+  }
+}

@@ -1,0 +1,139 @@
+/* The catalogue navigation inside the home's framed shell: the head row, the
+   All or Changes filter, the Pages and Components sections and the
+   depth-ruled rows. The column is dropped below the breakpoint, where the
+   real shell keeps it behind the menu control. Ported from the promoted
+   mockups in examples/basic/generated/site.css. */
+
+.site-tree {
+  background: var(--site-folio-muted);
+  border-right: 1px solid var(--site-folio-line);
+  display: none;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 248px;
+}
+
+.site-tree-head {
+  align-items: center;
+  color: var(--site-folio-ink-muted);
+  display: flex;
+  font-size: var(--site-micro-size);
+  font-weight: var(--site-weight-bold);
+  justify-content: space-between;
+  letter-spacing: 0.08em;
+  padding: var(--site-space-3) var(--site-space-4) var(--site-space-2);
+  text-transform: uppercase;
+}
+
+.site-tree-head span {
+  font-size: var(--site-nano-size);
+  font-weight: var(--site-weight-semibold);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.site-tree .site-filter {
+  margin: 0 var(--site-space-2) var(--site-space-2);
+}
+
+.site-tree-scroll {
+  flex: 1;
+  overflow: hidden;
+  padding: 0 var(--site-space-2) var(--site-space-3);
+}
+
+.site-tree-section + .site-tree-section {
+  margin-top: var(--site-space-3);
+}
+
+.site-tree-section-head {
+  align-items: center;
+  color: var(--site-folio-ink-muted);
+  display: flex;
+  font-size: var(--site-nano-size);
+  font-weight: var(--site-weight-bold);
+  gap: var(--site-space-1);
+  letter-spacing: 0.08em;
+  padding: var(--site-space-2) var(--site-space-2) var(--site-space-1);
+  text-transform: uppercase;
+}
+
+.site-tree-chevron {
+  display: inline-grid;
+  place-items: center;
+  transform: rotate(90deg);
+}
+
+.site-row {
+  align-items: center;
+  border-radius: var(--site-radius-small);
+  color: var(--site-folio-ink-muted);
+  display: flex;
+  font-size: var(--site-caption-size);
+  gap: var(--site-space-2);
+  line-height: 1.35;
+  padding: var(--site-space-1) var(--site-space-2);
+}
+
+.site-row[data-site-depth="1"],
+.site-row[data-site-depth="2"] {
+  background-image: linear-gradient(
+    var(--site-folio-line),
+    var(--site-folio-line)
+  );
+  background-position: 15px 0;
+  background-repeat: no-repeat;
+  background-size: 1px 100%;
+  padding-left: var(--site-space-6);
+}
+
+.site-row[data-site-depth="2"] {
+  background-image:
+    linear-gradient(var(--site-folio-line), var(--site-folio-line)),
+    linear-gradient(var(--site-folio-line), var(--site-folio-line));
+  background-position:
+    15px 0,
+    31px 0;
+  background-size:
+    1px 100%,
+    1px 100%;
+  padding-left: var(--site-space-8);
+}
+
+.site-row--group .site-row-label {
+  color: var(--site-folio-ink);
+  font-weight: var(--site-weight-semibold);
+}
+
+.site-row--current {
+  background-color: var(--site-accent-soft);
+  color: var(--site-folio-ink);
+  font-weight: var(--site-weight-semibold);
+}
+
+.site-row--current .site-row-ico {
+  color: var(--site-accent);
+}
+
+.site-row-ico {
+  color: var(--site-folio-ink-muted);
+  display: inline-grid;
+  flex-shrink: 0;
+  height: 15px;
+  place-items: center;
+  width: 15px;
+}
+
+.site-row-count {
+  color: var(--site-folio-ink-muted);
+  font-family: var(--site-font-mono);
+  font-size: var(--site-nano-size);
+  margin-left: auto;
+}
+
+/* The desktop composition from the 768px breakpoint upward. */
+@media (min-width: 768px) {
+  .site-tree {
+    display: flex;
+  }
+}

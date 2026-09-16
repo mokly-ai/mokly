@@ -1,0 +1,28 @@
+---
+/**
+ * The Browse detail: the All or Changes filter over the rows that moved,
+ * redrawn from the tokens. The rows name screens from this repository's own
+ * example catalogue, read from the stage manifest.
+ */
+interface Props {
+  readonly screens: readonly string[];
+}
+
+const { screens } = Astro.props;
+---
+
+<div class="site-detail">
+  <div aria-hidden="true" class="site-filter">
+    <span class="site-filter-option site-filter-option--current">All</span>
+    <span class="site-filter-option">Changes</span>
+  </div>
+  <div aria-hidden="true" class="site-detail-rows">
+    {screens.map((screen) => (
+      <span class="site-detail-row">
+        <span class="site-detail-dot"></span>
+        {screen}
+        <span class="site-detail-chip">Changed</span>
+      </span>
+    ))}
+  </div>
+</div>

@@ -3,6 +3,8 @@ dist
 site/dist
 site/.astro
 site/node_modules
+site/public/og
+site/public/stage
 node_modules
 target
 examples/basic/generated

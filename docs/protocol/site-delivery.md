@@ -51,15 +51,28 @@ the workspace does not load `.env` files.
   (`summary_large_image`). The image is generated at build time per page from
   the page title on the Folio canvas at 1200×630 in the light scheme, is named
   `/og/<slug>.png` after the route, and is advertised only once the build has
-  produced it. The 404 document carries `noindex` instead of a canonical URL.
+  produced it. `site/scripts/og.mjs` runs before Astro, draws each card as an
+  SVG document and rasterizes it with `sharp`, which Astro already depends on,
+  so the site adds no image toolchain of its own. `site/public/og/` and
+  `site/public/stage/` are generated and are not committed. The 404 document
+  carries `noindex` instead of a canonical URL. Every page also links the
+  changelog feed with `rel="alternate"`.
 - No runtime API calls, no cookies, no third-party scripts. Islands hydrate
   only the docs search and the code-block copy control.
-- The home stage embeds documents from this repository's example catalogue
-  built during the site build: the Welcome screen's mobile and desktop
-  fragments in light and dark with their stylesheets copied into the site
-  output, shown in a sandboxed frame with no scripts. The stage label is the
-  configured pull request; a test asserts that number appears in
-  `CHANGELOG.md`.
+- The home stage embeds documents from this repository's example catalogue.
+  `site/scripts/stage.mjs` runs before Astro, builds the example catalogue
+  when its output is missing, and publishes the Welcome screen's mobile and
+  desktop documents in light and dark into `site/public/stage/` with every
+  stylesheet they load copied beside them and their links rewritten to that
+  directory. Catalogue destinations the site does not publish lose their
+  `href`; an unresolvable stylesheet, script or image fails the build. The
+  same script writes `stage/manifest.json` with the screen's title and
+  identifier and the catalogue trail and navigation rows, all read from the
+  example's own build manifest, so the depicted chrome states no fact of its
+  own. The page shows the document matching the current viewport and scheme
+  in a `sandbox=""` frame with a title and no scripts; the other three stay
+  hidden and are never fetched. The stage label is the configured pull
+  request; a test asserts that number appears in `CHANGELOG.md`.
 
 ## Accessibility
 
@@ -93,16 +106,19 @@ Playwright uses Astro's preview API in a foreground process to serve only
 in CI as its own required job because it takes minutes; it can be run locally
 with the same script.
 
-Milestone 4 provides the Folio tokens, the shared chrome and an empty page
-for every route. Pagefind runs after every build over `docs/**/*.html`; until
-documentation pages exist it indexes only the documentation landing page.
-`site:lighthouse` fails with a clear Milestone 5 setup message until that
-milestone installs the budget configuration. The site CI job and
-deployment workflow arrive in Milestone 8.
+Milestone 5 provides the home, the changelog and both policy documents.
+Pagefind runs after every build over `docs/**/*.html`; until documentation
+pages exist it indexes only the documentation landing page. `site:lighthouse`
+serves `site/dist` through Astro's preview API and drives Chrome through
+`chrome-launcher`, honouring `CHROME_PATH` and
+`MOKLY_SITE_LIGHTHOUSE_PORT` (default `4612`). It prints one row per page and
+viewport and exits non-zero naming each category that missed its threshold.
+The site CI job and deployment workflow arrive in Milestone 8.
 
 Lighthouse thresholds, per page and viewport: performance ≥ 0.95,
 accessibility = 1.0, best practices ≥ 0.95, SEO ≥ 0.95. Pages audited: `/`,
-`/docs`, one docs page, `/changelog`, `/terms`.
+`/docs`, `/changelog`, `/terms`. `/docs` becomes a written documentation page
+in Milestone 6 and the audited set grows with it.
 
 ## Continuous Integration
 

@@ -48,6 +48,8 @@
   --site-weight-semibold: 600;
   --site-weight-bold: 700;
 
+  --site-nano-size: 0.625rem;
+  --site-micro-size: 0.6875rem;
   --site-caption-size: 0.75rem;
   --site-caption-line: 1.125rem;
   --site-small-size: 0.875rem;
@@ -94,6 +96,7 @@
   --site-wide-max: 1360px;
   --site-doc-max: 768px;
   --site-hero-display: 2.5rem;
+  --site-shell-height: 520px;
 
   --site-radius-small: 6px;
   --site-radius-medium: 10px;
@@ -177,6 +180,7 @@
     --site-heading1-line: 3.5rem;
     --site-hero-size: 4rem;
     --site-hero-display: 4rem;
+    --site-shell-height: 624px;
     --site-gutter: var(--site-space-8);
     --site-section-space: var(--site-space-11);
   }

@@ -1,16 +1,19 @@
 ---
+import Policy from "../components/Policy.astro";
 import Site from "../layouts/Site.astro";
+import { PAGE_METADATA } from "../metadata.js";
 import { SITE_PATHS } from "../navigation.js";
+
+import "../styles/document.css";
+
+const { description, title } = PAGE_METADATA[SITE_PATHS.privacy];
 ---
 
 <Site
-  description="Privacy policy for Mokly Cloud."
+  description={description}
   main="site-document site-policy"
   route={SITE_PATHS.privacy}
-  title="Privacy · Mokly"
+  title={title}
 >
-  <div class="site-document-intro">
-    <p class="site-eyebrow">Using Mokly</p>
-    <h1>Privacy</h1>
-  </div>
+  <Policy id="privacy" />
 </Site>

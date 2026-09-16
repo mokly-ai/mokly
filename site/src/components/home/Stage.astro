@@ -1,0 +1,111 @@
+---
+/**
+ * The home's principal image: the configured pull request and its Ready for
+ * review status above the Mokly shell, with the example catalogue's own
+ * Welcome screen on the stage. The screen documents are published by
+ * `scripts/stage.mjs` and embedded in a sandboxed frame, so the page runs no
+ * script from them and the frame cannot navigate.
+ */
+import { settings } from "../../settings.js";
+import {
+  type StageManifest,
+  stageDocumentFor,
+  stageDocumentPath,
+} from "../../stage.js";
+
+import Glyph from "../Glyph.astro";
+
+import Tree from "./Tree.astro";
+
+interface Props {
+  readonly manifest: StageManifest;
+}
+
+const { manifest } = Astro.props;
+const frames = (["desktop", "mobile"] as const).flatMap((viewport) =>
+  (["light", "dark"] as const).map((scheme) => ({
+    scheme,
+    src: stageDocumentPath(stageDocumentFor(manifest, viewport, scheme)),
+    viewport,
+  })),
+);
+const title = `${manifest.screen} from the Mokly catalogue`;
+---
+
+<figure class="site-frame">
+  <div class="site-frame-head">
+    <span class="site-frame-label">Pull request #{settings.stagePr}</span>
+    <span class="site-badge site-badge--success">
+      <span aria-hidden="true" class="site-badge-dot"></span>
+      Ready for review
+    </span>
+  </div>
+  <div class="site-shell">
+    <div class="site-topbar">
+      <span aria-hidden="true" class="site-topbar-menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </span>
+      <span class="site-topbar-brand">
+        <span aria-hidden="true" class="site-topbar-mark">
+          <Glyph name="mark" />
+        </span>
+        <span class="site-topbar-name">Mokly</span>
+      </span>
+      <span class="site-topbar-search">
+        <Glyph name="search" />
+        Search catalogue&#8230;
+        <span aria-hidden="true" class="site-topbar-tag">
+          <Glyph name="tag" />
+        </span>
+      </span>
+    </div>
+    <div class="site-shell-body">
+      <Tree sections={manifest.sections} />
+      <div class="site-shell-main">
+        <div class="site-screen-head">
+          <nav aria-label="Catalogue location" class="site-crumbs">
+            {manifest.trail.map((step, index) => (
+              <span class="site-crumb">
+                {index > 0 && (
+                  <span aria-hidden="true" class="site-crumb-sep">
+                    &#8250;
+                  </span>
+                )}
+                {step}
+              </span>
+            ))}
+          </nav>
+          <div class="site-screen-title-row">
+            <span class="site-screen-title">{manifest.screen}</span>
+            <span class="site-idchip">#{manifest.screenId}</span>
+          </div>
+        </div>
+        <div class="site-stage">
+          <p class="site-stage-label">
+            <span class="site-stage-label-mobile">Mobile</span>
+            <span class="site-stage-label-desktop">Desktop</span>
+          </p>
+          <div class="site-stage-view">
+            {frames.map((frame) => <iframe
+              class:list={[
+                "site-stage-frame",
+                `site-stage-frame--${frame.viewport}`,
+                `site-stage-frame--${frame.scheme}`,
+              ]}
+              loading="lazy"
+              sandbox=""
+              src={frame.src}
+              title={title}
+            ></iframe>)}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <figcaption class="site-frame-foot">
+    <span class="site-frame-foot-label">Screen</span>
+    {manifest.screen}
+  </figcaption>
+</figure>
