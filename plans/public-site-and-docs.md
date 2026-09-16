@@ -196,7 +196,7 @@ and the others are retired in a later milestone.
 - [x] Capture every direction at 390px and 1440px in light and dark and
       review them together.
 - [x] Record the user's selection in `docs/protocol/site-directions.md`.
-- [ ] Run `cargo xtask check`, commit and push. Stop for review.
+- [x] Run `cargo xtask check`, commit and push. Stop for review.
 
 ## Milestone 2B: Refine The Selected Direction
 
@@ -245,7 +245,7 @@ protocol documents describe one design.
       protocol index, the example README and the inventory test list so they
       describe the promoted design only.
 - [x] Capture the five screens at 390px and 1440px in light and dark.
-- [ ] Run `cargo xtask check`, commit and push. Stop for review.
+- [x] Run `cargo xtask check`, commit and push. Stop for review.
 
 ## Milestone 3: Site Workspace Package And Checks
 
@@ -386,7 +386,7 @@ repository today. Stop for review.
 - [x] Audit the documentation against the Lighthouse budget, including a
       written page with a code panel and one with a wide table, and keep every
       threshold.
-- [ ] Run `cargo xtask check`, commit and push. Stop for review.
+- [x] Run `cargo xtask check`, commit and push. Stop for review.
 
 ## Milestone 7: Cloud Documentation Ahead Of Release
 
@@ -448,16 +448,22 @@ Findings were reported separately without modifying the implementation.
 
 Close the plan on the branch; merge is the completion boundary.
 
-- [ ] Inspect the complete diff and the deletion list against `origin/main`;
+- [x] Inspect the complete diff and the deletion list against `origin/main`;
       confirm nothing already on `main` is removed without approval.
-- [ ] Run `cargo xtask check` and resolve any failures.
-- [ ] After checks pass, `git add -A`, commit remaining work with
+- [x] Run `cargo xtask check` and resolve any failures.
+- [x] After checks pass, `git add -A`, commit remaining work with
       Conventional Commits and push with every new file tracked.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       against `origin/main` and report numbered findings with severity,
       context, impact, lettered options and a recommendation, without changing
       the implementation.
+
+The complete gate passed on the closing tree (`cargo xtask check`, exit 0:
+unit suite, site checks, 148 site browser tests, 276 catalogue browser tests,
+Rust checks). The post-push review is recorded in
+[the review report](../docs/reviews/public-site-and-docs.md); its twelve
+findings await the user's decision. This plan stays active until merge.
 
 ## Post-merge follow-up (non-blocking)
 

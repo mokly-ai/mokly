@@ -2,7 +2,9 @@
 
 ## Active
 
-- [Public Site And Docs](./public-site-and-docs.md)
+- [Public Site And Docs](./public-site-and-docs.md) — delivered through
+  deployment and reviewed; twelve findings are recorded for the user's
+  decision and the plan closes at merge.
 - [Mokabook Dependency Patch Upstreaming](./mokabook-dependency-patch-upstreaming.md)
 - [Publish Catalogue](./publish-catalogue.md)
 - [App-Independent Mokabook Npm Library](./app-independent-mokabook-library.md)
