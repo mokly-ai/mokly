@@ -5,6 +5,7 @@
  * `scripts/og.mjs` turns it into the PNG the metadata advertises.
  */
 
+import { DOCS_PAGES } from "./docs/pages.js";
 import { PAGE_METADATA, type PageRoute, socialSlug } from "./metadata.js";
 
 /** The card size the Open Graph and Twitter card metadata declares. */
@@ -96,12 +97,23 @@ export function cardDocument(title: string): string {
   ].join("");
 }
 
+/** The document title of one documentation page. */
+export function docsTitle(title: string): string {
+  return `${title} · Mokly`;
+}
+
 /** Every card the build produces, by the file name it takes. */
 export function cards(): ReadonlyMap<string, string> {
-  return new Map(
-    Object.entries(PAGE_METADATA).map(([route, { title }]) => [
-      `${socialSlug(route as PageRoute)}.png`,
-      cardDocument(title),
+  return new Map([
+    ...Object.entries(PAGE_METADATA).map(
+      ([route, { title }]): [string, string] => [
+        `${socialSlug(route as PageRoute)}.png`,
+        cardDocument(title),
+      ],
+    ),
+    ...DOCS_PAGES.map((page): [string, string] => [
+      `${socialSlug(page.route)}.png`,
+      cardDocument(docsTitle(page.title)),
     ]),
-  );
+  ]);
 }

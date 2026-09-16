@@ -22,7 +22,12 @@ Docs are MDX files in the Astro content collection `docs` under
 | `status`      | no       | `ahead` marks a page written before the cloud shipped |
 
 The schema rejects unknown sections, duplicate orders within a section and
-duplicate slugs. `status` is never rendered; a test lists every `ahead` page.
+duplicate slugs, and a page whose directory is not its section. `status` is
+never rendered; a test lists every `ahead` page. `site/src/docs/pages.ts` reads
+the same files from disk and joins them with the published protocol documents,
+so the section tree, previous and next, the sitemap, the social cards and the
+verification tests read one list; the build fails when that list and Astro's
+`docs` collection describe different pages.
 
 ## Information Architecture
 
@@ -43,13 +48,16 @@ a site route, not a docs section, and the sidebar's last item links to it.
 
 Install snippets read the version from the workspace `@mokly/mokly` package at
 build time and render `npm install --save-dev @mokly/mokly react react-dom`;
-pinned examples use that version. The Getting started overview is the Docs
-landing at `/docs`.
+pinned examples use that version. Pages never write an install command
+themselves: `Install` renders the command (with `pinned` for the exact
+version) and `Version` names the version in a sentence, both passed to MDX as
+components. The Getting started overview is the Docs landing at `/docs`.
 
 ## Docs Layout
 
 - Left section tree generated from the collection: section titles with their
-  pages in order, every section listed expanded under a mono rubric head. The
+  pages in order, every section that has pages listed expanded under a mono
+  rubric head. The
   tree sits on the page canvas rather than in a filled panel and is separated
   from the document by one vertical hairline. Rows are 44px targets with a
   `folioMuted` hover fill; the current page is marked with
@@ -76,21 +84,32 @@ landing at `/docs`.
 - Code blocks render in the Folio code panel with a language label when the
   fence names one and a copy control that writes the block's text to the
   clipboard and confirms "Copied" for two seconds. Shell commands appear only
-  in code blocks. Syntax highlighting uses Astro's built-in Shiki with one
-  light and one dark theme selected by the color scheme.
-- Search indexes every docs page with Pagefind after the site build. The
-  header search control on docs pages opens the Pagefind UI in a React
-  island; results link to the page and heading. The index excludes marketing
-  and legal pages.
-- Headings get stable ids from their text; duplicate heading text on one page
-  fails the build.
+  in code blocks. A Markdown-pipeline plugin wraps every block in the panel, so
+  authored pages and published protocol documents render the same panel, and
+  one React island per page places a copy control in each panel and copies that
+  panel's own text rather than a second copy carried in the page. Syntax
+  highlighting uses Shiki with `github-light-high-contrast` and
+  `github-dark-high-contrast` selected by the color scheme; both are held to
+  4.5:1 against the code panel surface in their scheme.
+- Search indexes every docs page with Pagefind after the site build. Each
+  document marks its `main` element as the indexed body and its chrome as
+  ignored, so the tree, the rail and the pager never answer a query. The header
+  search control on docs pages is a React island that loads the Pagefind
+  JavaScript interface on the first search and opens a modal dialog; results
+  link to the page and to the heading that matched. The index excludes
+  marketing and legal pages, and the link check fails when it does not cover
+  every published documentation page.
+- Headings get stable ids from their text; duplicate heading text on an
+  authored page fails the build.
 - Every docs page has one `h1`, the title; MDX content starts at `h2`.
 
 ## Reference Section
 
 Allowlisted documents from `docs/protocol` are published under
 `/docs/reference/<slug>` from their Markdown source at build time; they are
-never copied into `site/`. The allowlist lives in
+never copied into `site/`. A content collection reads them where they live and
+renders them through the same Markdown pipeline as the authored pages, so a
+published document takes the same code panel, heading ids and layout. The allowlist lives in
 `site/src/docs/reference-allowlist.ts` with, per document, the source path,
 slug, title and order. The initial allowlist:
 

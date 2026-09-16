@@ -1,0 +1,92 @@
+---
+/**
+ * The documentation page: the section tree beside the document on a wide
+ * screen and a disclosure above it on a narrow one, the ruled document with
+ * its location trail, heading and lead, the on-this-page list, and previous
+ * and next. Search sits in the site header on these routes.
+ */
+import CodeCopy from "../components/docs/CodeCopy.tsx";
+import OnThisPage from "../components/docs/OnThisPage.astro";
+import Pager from "../components/docs/Pager.astro";
+import Tree from "../components/docs/Tree.astro";
+import { onThisPage, type DocsHeading } from "../docs/headings.js";
+import Site from "./Site.astro";
+
+import "../styles/docs.css";
+
+interface Props {
+  readonly description: string;
+  readonly headings: readonly DocsHeading[];
+  readonly route: string;
+  /** The section title the location trail and the disclosure name. */
+  readonly section: string;
+  readonly title: string;
+}
+
+const { description, headings, route, section, title } = Astro.props;
+const list = onThisPage(headings);
+const trail = ["Documentation", section].filter(
+  (step, index, steps) => steps.indexOf(step) === index,
+);
+---
+
+<Site
+  description={description}
+  route={route}
+  title={`${title} · Mokly`}
+  wrapped={false}
+>
+  <div class="site-docs">
+    <div class="site-docs-side" data-pagefind-ignore>
+      <nav aria-label="Documentation" class="site-doc-tree">
+        <Tree route={route} />
+      </nav>
+    </div>
+    <details class="site-doc-disclosure" data-pagefind-ignore>
+      <summary>
+        {section}
+        <span aria-hidden="true" class="site-trail-sep">
+          &#8250;
+        </span>
+        {title}
+      </summary>
+      <nav aria-label="Documentation" class="site-doc-tree">
+        <Tree route={route} />
+      </nav>
+    </details>
+    <main
+      class="site-document site-docs-document"
+      data-pagefind-body
+      id="main"
+      tabindex="-1"
+    >
+      <div class="site-document-intro">
+        <nav aria-label="Location" class="site-trail" data-pagefind-ignore>
+          {trail.map((step, index) => (
+            <span class="site-trail-step">
+              {index > 0 && (
+                <span aria-hidden="true" class="site-trail-sep">
+                  &#8250;
+                </span>
+              )}
+              {step}
+            </span>
+          ))}
+        </nav>
+        <h1>{title}</h1>
+        <p class="site-pullquote">{description}</p>
+      </div>
+      {list.length > 1 && <OnThisPage headings={list} />}
+      <div class="site-document-body">
+        <slot />
+      </div>
+      <Pager route={route} />
+      <CodeCopy client:idle />
+    </main>
+    {list.length > 1 && (
+      <div class="site-docs-rail">
+        <OnThisPage headings={list} />
+      </div>
+    )}
+  </div>
+</Site>

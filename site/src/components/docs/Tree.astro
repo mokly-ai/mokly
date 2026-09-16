@@ -1,0 +1,50 @@
+---
+/**
+ * The documentation section tree: the published Mokly CLI version at the top,
+ * every section expanded under its rubric head, and the changelog at the
+ * foot. The page being read carries `aria-current="page"`.
+ */
+import { DOCS_SECTIONS } from "../../docs/pages.js";
+import { PACKAGE_VERSION } from "../../docs/version.js";
+import { SITE_PATHS } from "../../navigation.js";
+
+interface Props {
+  readonly route: string;
+}
+
+const { route } = Astro.props;
+---
+
+<div class="site-doc-tree-head">
+  <a class="site-version-link" href={SITE_PATHS.changelog}>
+    <span class="site-version">
+      <span class="site-version-label">Mokly CLI</span>
+      {PACKAGE_VERSION}
+    </span>
+  </a>
+</div>
+<div class="site-doc-tree-scroll">
+  {DOCS_SECTIONS.map((section) => (
+    <div class="site-doc-section">
+      <p class="site-doc-section-head site-rubric">{section.title}</p>
+      <ul>
+        {section.pages.map((page) => (
+          <li>
+            <a
+              aria-current={page.route === route ? "page" : undefined}
+              class="site-doc-link"
+              href={page.route}
+            >
+              {page.title}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  ))}
+</div>
+<div class="site-doc-tree-foot">
+  <a class="site-doc-link" href={SITE_PATHS.changelog}>
+    Changelog
+  </a>
+</div>

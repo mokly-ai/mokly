@@ -4,7 +4,9 @@
  * changes its origin publishes matching absolute URLs.
  */
 
+import { DOCS_PAGES } from "./docs/pages.js";
 import { canonicalUrl } from "./metadata.js";
+import { SITEMAP_PATHS } from "./navigation.js";
 
 /** Escape the five XML entities so a route can never break the document. */
 function escapeXml(value: string): string {
@@ -19,6 +21,14 @@ function escapeXml(value: string): string {
         "'": "&apos;",
       })[character] ?? character,
   );
+}
+
+/**
+ * Every indexed route: the site's own pages followed by the documentation,
+ * which is generated from the content collection rather than the route table.
+ */
+export function publishedPaths(): readonly string[] {
+  return [...SITEMAP_PATHS, ...DOCS_PAGES.map((page) => page.route)];
 }
 
 /** The sitemap listing every indexed route as an absolute URL. */

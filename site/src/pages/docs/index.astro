@@ -1,19 +1,45 @@
 ---
-import Site from "../../layouts/Site.astro";
-import { PAGE_METADATA } from "../../metadata.js";
-import { SITE_PATHS } from "../../navigation.js";
+/**
+ * The documentation landing page, which is the Getting started overview: the
+ * install command and the shape of the rest of the documentation.
+ */
+import Install from "../../components/docs/Install.astro";
+import type { DocsHeading } from "../../docs/headings.js";
+import { DOCS_OVERVIEW, DOCS_SECTIONS } from "../../docs/pages.js";
+import { SECTION_SUMMARIES } from "../../docs/sections.js";
+import Docs from "../../layouts/Docs.astro";
 
-const { description, title } = PAGE_METADATA[SITE_PATHS.docs];
+const headings: readonly DocsHeading[] = [
+  { depth: 2, slug: "install-mokly", text: "Install Mokly" },
+  { depth: 2, slug: "what-is-here", text: "What is here" },
+];
 ---
 
-<Site
-  description={description}
-  main="site-document site-document--wide"
-  route={SITE_PATHS.docs}
-  title={title}
+<Docs
+  description={DOCS_OVERVIEW.description}
+  headings={headings}
+  route={DOCS_OVERVIEW.route}
+  section="Documentation"
+  title={DOCS_OVERVIEW.title}
 >
-  <div class="site-document-intro">
-    <p class="site-eyebrow">Documentation</p>
-    <h1>Getting started</h1>
-  </div>
-</Site>
+  <h2 id="install-mokly">Install Mokly</h2>
+  <p>
+    Mokly runs from the repository that holds your components, as a development
+    dependency. React and React DOM render your screens.
+  </p>
+  <Install />
+  <p>
+    Next, describe where your screens live, author one screen and open the
+    catalogue in your browser. The five pages under Getting started take you
+    through it in order.
+  </p>
+  <h2 id="what-is-here">What is here</h2>
+  <ul>
+    {DOCS_SECTIONS.map((section) => (
+      <li>
+        <a href={section.pages[0]?.route}>{section.title}</a> —{" "}
+        {SECTION_SUMMARIES[section.id]}
+      </li>
+    ))}
+  </ul>
+</Docs>

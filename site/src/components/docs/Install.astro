@@ -1,0 +1,33 @@
+---
+/**
+ * The install snippet, written once from the workspace package so every page
+ * names the same command and the same published version. `pinned` installs
+ * the exact version this documentation describes.
+ */
+import { Code } from "astro:components";
+
+import { INSTALL_COMMAND, pinnedInstallCommand } from "../../docs/version.js";
+
+interface Props {
+  readonly pinned?: boolean;
+}
+
+const command = Astro.props.pinned ? pinnedInstallCommand() : INSTALL_COMMAND;
+---
+
+<div class="site-code">
+  <div class="site-code-head">
+    <span class="site-code-language">shell</span>
+    <span class="site-code-copy-slot"></span>
+  </div>
+  <Code
+    code={command}
+    defaultColor={false}
+    lang="shell"
+    themes={{
+      dark: "github-dark-high-contrast",
+      light: "github-light-high-contrast",
+    }}
+    wrap
+  />
+</div>

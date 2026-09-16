@@ -3,6 +3,7 @@ import { readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
+import { DOCS_PAGES } from "../src/docs/pages.js";
 import { PAGE_METADATA, socialSlug } from "../src/metadata.js";
 import {
   CARD_HEIGHT,
@@ -45,10 +46,11 @@ test("one card is drawn for every published document", () => {
   const drawn = cards();
   assert.deepEqual(
     [...drawn.keys()].sort(),
-    Object.keys(PAGE_METADATA)
+    [...Object.keys(PAGE_METADATA), ...DOCS_PAGES.map((page) => page.route)]
       .map((route) => `${socialSlug(route)}.png`)
       .sort(),
   );
+  assert.ok(drawn.has("docs-cli-serve.png"), "a documentation page has a card");
 });
 
 test("the build rasterized every card into the site output", () => {

@@ -628,7 +628,7 @@ typechecks it, runs site tests, checks built links and assets, then runs its
 browser smoke tests. For site development use `npm run dev --workspace site`;
 see [site setup and settings](./site/README.md). Its browser server uses
 `MOKLY_SITE_PLAYWRIGHT_PORT` (default `4611`) independently of the catalogue.
-`site:lighthouse` becomes available with the Milestone 5 budget configuration.
+`npm run site:lighthouse` audits the budget pages at both viewports.
 
 The example's generated HTML and manifest are ignored local artifacts; its
 authored CSS remains tracked. Both test entrypoints build the package and example
@@ -902,6 +902,9 @@ npx --no-install wrangler pages project create mokabook --production-branch main
 The public website (marketing home, documentation, changelog, Terms and
 Privacy) is built from this repository as the `site/` workspace package and
 deployed as static files; Mokly Cloud keeps only the logged-in application.
+The documentation under `/docs` is written from this repository's own behavior
+and verified against it by tests, and the allowlisted `docs/protocol`
+documents are published from their Markdown source under `/docs/reference`.
 The [site contract](./docs/protocol/site.md) defines routes, app-origin links
 and the home copy; [site design](./docs/protocol/site-design.md) fixes the
 Folio tokens and the mockups under the example design catalogue;

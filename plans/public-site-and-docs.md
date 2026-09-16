@@ -354,35 +354,38 @@ Tags: ui
 Build the docs layout and write the sections that can be verified against this
 repository today. Stop for review.
 
-- [ ] Implement the docs layout: sidebar generated from the content
+- [x] Implement the docs layout: sidebar generated from the content
       collection (section, order, title), on-this-page list from MDX headings,
       previous and next links, copyable code blocks in the Folio code panel
       style, and Pagefind search indexed after the build with a small island
       for the search control.
-- [ ] Add the content collection schema with `status: ahead` support hidden
+- [x] Add the content collection schema with `status: ahead` support hidden
       from readers, and read the current version from the workspace package
       for every install snippet.
-- [ ] Write Getting started: install, configure, author a first screen,
+- [x] Write Getting started: install, configure, author a first screen,
       `mokly build`, `mokly serve`.
-- [ ] Write Authoring, one page per concept: `defineConfig`, `screen` and
+- [x] Write Authoring, one page per concept: `defineConfig`, `screen` and
       `defineScreen`, `defineComponent`, viewports and color schemes,
       collections and tags, use-case flows, pages, links, fixtures and
       Review-ignore.
-- [ ] Write Catalogue: the Browse shell, search, the All and Changes filter,
+- [x] Write Catalogue: the Browse shell, search, the All and Changes filter,
       the details inspector, `mokly export` and hosting a static catalogue.
-- [ ] Write the CLI reference, one page per command, with exit codes and file
+- [x] Write the CLI reference, one page per command, with exit codes and file
       outputs; add a test that every documented command and option exists in
       `src/cli/help.ts` and the argument parser, and that no CLI option in the
       code is undocumented.
-- [ ] Write Continuous integration: the publish GitHub Action, the `publish`
+- [x] Write Continuous integration: the publish GitHub Action, the `publish`
       command, project tokens, the upload at the level a user needs, and how
       the check appears on a pull request.
-- [ ] Publish the allowlisted `docs/protocol` documents from their Markdown
+- [x] Publish the allowlisted `docs/protocol` documents from their Markdown
       source under Reference, rewriting links to excluded documents to their
       GitHub URLs; add a test for the allowlist and the link rewriting.
-- [ ] Extend the link check to docs anchors and Pagefind output; extend the
+- [x] Extend the link check to docs anchors and Pagefind output; extend the
       browser test to open a docs page, use the sidebar, on-this-page and
       previous and next links, copy a code block and run a search.
+- [x] Audit the documentation against the Lighthouse budget, including a
+      written page with a code panel and one with a wide table, and keep every
+      threshold.
 - [ ] Run `cargo xtask check`, commit and push. Stop for review.
 
 ## Milestone 7: Cloud Documentation Ahead Of Release

@@ -44,9 +44,12 @@ the workspace does not load `.env` files.
   assets, an SVG favicon drawing the brand mark in the accent for both
   schemes, `sitemap.xml`, `robots.txt` allowing everything and naming the
   sitemap, and `changelog.xml` (Atom). The sitemap and `robots.txt` are
-  endpoints rendered from the route table and `SITE_ORIGIN`, so a deployment
-  publishes its own absolute URLs; the sitemap omits the 404 document.
-- Per-page metadata: `title`, `description`, canonical URL, Open Graph
+  endpoints rendered from the route table, the documentation pages and
+  `SITE_ORIGIN`, so a deployment publishes its own absolute URLs; the sitemap
+  omits the 404 document. Stylesheets small enough to inline are inlined, so no
+  page waits on a render-blocking sheet.
+- Per-page metadata for every published document, including each
+  documentation page: `title`, `description`, canonical URL, Open Graph
   (`title`, `description`, `type`, `url`, `image`) and Twitter card
   (`summary_large_image`). The image is generated at build time per page from
   the page title on the Folio canvas at 1200×630 in the light scheme, is named
@@ -106,9 +109,9 @@ Playwright uses Astro's preview API in a foreground process to serve only
 in CI as its own required job because it takes minutes; it can be run locally
 with the same script.
 
-Milestone 5 provides the home, the changelog and both policy documents.
-Pagefind runs after every build over `docs/**/*.html`; until documentation
-pages exist it indexes only the documentation landing page. `site:lighthouse`
+Pagefind runs after every build over `docs/**/*.html` and must cover every
+published documentation page; `site:links` fails when the index is missing or
+one build behind the pages. `site:lighthouse`
 serves `site/dist` through Astro's preview API and drives Chrome through
 `chrome-launcher`, honouring `CHROME_PATH` and
 `MOKLY_SITE_LIGHTHOUSE_PORT` (default `4612`). It prints one row per page and
@@ -117,8 +120,11 @@ The site CI job and deployment workflow arrive in Milestone 8.
 
 Lighthouse thresholds, per page and viewport: performance ≥ 0.95,
 accessibility = 1.0, best practices ≥ 0.95, SEO ≥ 0.95. Pages audited: `/`,
-`/docs`, `/changelog`, `/terms`. `/docs` becomes a written documentation page
-in Milestone 6 and the audited set grows with it.
+`/docs`, `/docs/authoring/config`, `/docs/cli/serve`, `/changelog`, `/terms`,
+which covers every composition the site publishes. The 390px audit keeps
+Lighthouse's simulated slow connection; the 1440px audit declares Lighthouse's
+desktop profile (40ms round trip, 10Mbps, no processor slowdown) so a desktop
+page is scored on the desktop curves against a connection it can meet.
 
 ## Continuous Integration
 

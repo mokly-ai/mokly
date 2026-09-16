@@ -58,6 +58,7 @@ try {
               mobile: viewport.formFactor === "mobile",
               width: viewport.width,
             },
+            ...(viewport.throttling ? { throttling: viewport.throttling } : {}),
             throttlingMethod: "simulate",
           },
         },

@@ -2,7 +2,9 @@
 /**
  * The page shell every route renders: the document metadata, the skip link,
  * the header band, one `main` landmark and the footer. The `main` landmark
- * carries `tabindex="-1"` so the skip link moves focus to it.
+ * carries `tabindex="-1"` so the skip link moves focus to it. A layout that
+ * places its own landmark inside a wider composition, as the documentation
+ * does beside its section tree, renders unwrapped and owns that element.
  */
 import { FEED_PATH } from "../changelog/feed.js";
 import Footer from "../components/Footer.astro";
@@ -30,6 +32,7 @@ interface Props {
   readonly ruled?: boolean;
   readonly indexed?: boolean;
   readonly main?: string;
+  readonly wrapped?: boolean;
 }
 
 const {
@@ -39,6 +42,7 @@ const {
   ruled = true,
   indexed = true,
   main = "site-main",
+  wrapped = true,
 } = Astro.props;
 
 const canonical = canonicalUrl(route, settings.origin);
@@ -79,9 +83,13 @@ const image = socialImageUrl(
   <body>
     <SkipLink />
     <Header route={route} ruled={ruled} />
-    <main class={main} id="main" tabindex="-1">
+    {wrapped ? (
+      <main class={main} id="main" tabindex="-1">
+        <slot />
+      </main>
+    ) : (
       <slot />
-    </main>
+    )}
     <Footer route={route} />
   </body>
 </html>

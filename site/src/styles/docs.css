@@ -1,0 +1,590 @@
+/* The documentation layout: the section tree on the page canvas behind one
+   vertical hairline, the ruled document column, the on-this-page rail hung
+   from its own hairline, the previous and next cards, the code panel and the
+   search dialog. Ported from the promoted mockups in
+   examples/basic/generated/site.css; the mobile composition is the default,
+   768px raises the desktop one and 1100px hangs the rail. */
+
+.site-docs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  margin: 0 auto;
+  max-width: var(--site-wide-max);
+  padding: 0 var(--site-gutter);
+  width: 100%;
+}
+
+/* The tree: a version chip, every section expanded, the changelog at the foot */
+
+.site-docs-side {
+  display: none;
+}
+
+.site-doc-tree {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.site-doc-tree-scroll {
+  display: grid;
+  gap: var(--site-space-5);
+  margin: var(--site-space-4) 0;
+  padding-right: var(--site-space-2);
+  scrollbar-color: var(--site-folio-line-strong) transparent;
+  scrollbar-width: thin;
+}
+
+.site-doc-tree .site-version {
+  background: none;
+  border: 0;
+  padding: 0 var(--site-space-3);
+}
+
+.site-version {
+  align-items: center;
+  background: var(--site-folio);
+  border: 1px solid var(--site-folio-line);
+  border-radius: var(--site-radius-small);
+  color: var(--site-folio-ink);
+  display: inline-flex;
+  font-family: var(--site-font-mono);
+  font-size: var(--site-caption-size);
+  gap: var(--site-space-2);
+  padding: var(--site-space-1) var(--site-space-2);
+}
+
+.site-version-label {
+  color: var(--site-folio-ink-muted);
+  font-family: var(--site-font-sans);
+  font-size: var(--site-nano-size);
+  font-weight: var(--site-weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.site-version-link {
+  align-items: center;
+  color: var(--site-folio-ink);
+  display: inline-flex;
+  min-height: var(--site-target-min);
+  text-decoration: none;
+  text-underline-offset: 4px;
+}
+
+.site-version-link:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--site-folio-line-strong);
+}
+
+.site-doc-section-head {
+  padding: 0 var(--site-space-3) var(--site-space-2);
+}
+
+.site-doc-section ul {
+  display: grid;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.site-doc-link {
+  align-items: center;
+  border-radius: var(--site-radius-small);
+  color: var(--site-folio-ink-muted);
+  display: flex;
+  font-size: var(--site-small-size);
+  line-height: var(--site-small-line);
+  min-height: var(--site-target-min);
+  padding: var(--site-space-1) var(--site-space-3);
+  text-decoration: none;
+  transition: background var(--site-motion-fast) var(--site-motion-ease);
+}
+
+.site-doc-link:hover {
+  background: var(--site-folio-muted);
+  color: var(--site-folio-ink);
+}
+
+.site-doc-link[aria-current="page"],
+.site-doc-link[aria-current="page"]:hover {
+  background: var(--site-accent-soft);
+  color: var(--site-accent);
+  font-weight: var(--site-weight-medium);
+}
+
+.site-doc-tree-foot {
+  border-top: 1px solid var(--site-folio-line);
+  display: grid;
+  padding-top: var(--site-space-3);
+}
+
+.site-doc-tree-foot .site-doc-link {
+  color: var(--site-folio-ink);
+  font-weight: var(--site-weight-medium);
+}
+
+/* Below the breakpoint the tree is a native disclosure above the document */
+
+.site-doc-disclosure {
+  background: var(--site-folio-surface);
+  border: 1px solid var(--site-folio-line);
+  border-radius: var(--site-radius-small);
+  margin-top: var(--site-space-6);
+  padding: 0 var(--site-space-2);
+}
+
+.site-doc-disclosure > summary {
+  align-items: center;
+  border-radius: var(--site-radius-small);
+  cursor: pointer;
+  display: flex;
+  font-size: var(--site-small-size);
+  font-weight: var(--site-weight-medium);
+  min-height: var(--site-target-min);
+  padding: 0 var(--site-space-2);
+}
+
+.site-doc-disclosure > summary:hover {
+  background: var(--site-folio-muted);
+}
+
+/* The document: a ruled reading structure inside the reading measure */
+
+.site-docs-document {
+  max-width: var(--site-doc-max);
+  padding: var(--site-space-7) 0 var(--site-space-9);
+}
+
+.site-pullquote {
+  border-left: 2px solid var(--site-accent);
+  color: var(--site-folio-ink);
+  font-size: var(--site-lead-size);
+  line-height: var(--site-lead-line);
+  margin-top: var(--site-space-2);
+  max-width: 46ch;
+  padding-left: var(--site-space-4);
+}
+
+.site-document-body {
+  display: grid;
+  gap: var(--site-space-7);
+}
+
+.site-document-body > * {
+  margin: 0;
+  max-width: var(--site-prose-max);
+}
+
+.site-document-body h2 {
+  border-top: 1px solid var(--site-folio-line);
+  font-size: var(--site-heading3-size);
+  font-weight: var(--site-weight-semibold);
+  line-height: var(--site-heading3-line);
+  padding-top: var(--site-space-7);
+  scroll-margin-top: var(--site-space-6);
+}
+
+.site-document-body h2:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.site-document-body h3 {
+  font-size: var(--site-body-size);
+  font-weight: var(--site-weight-semibold);
+  line-height: var(--site-body-line);
+  scroll-margin-top: var(--site-space-6);
+}
+
+.site-document-body p,
+.site-document-body li {
+  color: var(--site-folio-ink-muted);
+}
+
+.site-document-body ul,
+.site-document-body ol {
+  display: grid;
+  gap: var(--site-space-2);
+  padding-left: var(--site-space-5);
+}
+
+.site-document-body a {
+  color: var(--site-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.site-document-body a:hover {
+  color: var(--site-accent-hover);
+  text-decoration-thickness: 2px;
+}
+
+.site-document-body code {
+  background: var(--site-folio-muted);
+  border-radius: var(--site-radius-small);
+  color: var(--site-folio-ink);
+  font-family: var(--site-font-mono);
+  font-size: 0.875em;
+  padding: 1px var(--site-space-1);
+}
+
+.site-document-body table {
+  border-collapse: collapse;
+  display: block;
+  font-size: var(--site-small-size);
+  overflow-x: auto;
+  width: 100%;
+}
+
+.site-document-body th,
+.site-document-body td {
+  border-bottom: 1px solid var(--site-folio-line);
+  color: var(--site-folio-ink-muted);
+  padding: var(--site-space-2) var(--site-space-4) var(--site-space-2) 0;
+  text-align: left;
+  vertical-align: top;
+}
+
+.site-document-body th {
+  color: var(--site-folio-ink);
+  font-weight: var(--site-weight-semibold);
+}
+
+.site-document-body blockquote {
+  border-left: 2px solid var(--site-folio-line);
+  color: var(--site-folio-ink-muted);
+  padding-left: var(--site-space-4);
+}
+
+/* The on-this-page list, under the lead on mobile and hung from a hairline
+   at the outer edge once the widest composition has room for it. */
+
+.site-docs-rail {
+  display: none;
+}
+
+.site-docs-document > .site-onpage {
+  border-left: 1px solid var(--site-folio-line);
+  margin-bottom: var(--site-space-8);
+  padding-left: var(--site-space-4);
+}
+
+.site-onpage {
+  display: grid;
+  gap: var(--site-space-2);
+}
+
+.site-onpage ol {
+  display: grid;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.site-onpage li + li {
+  border-top: 1px solid var(--site-folio-line);
+}
+
+.site-onpage-link {
+  align-items: center;
+  color: var(--site-folio-ink-muted);
+  display: flex;
+  font-size: var(--site-small-size);
+  line-height: var(--site-small-line);
+  min-height: var(--site-target-min);
+  padding: var(--site-space-1) 0;
+  text-decoration: none;
+  text-underline-offset: 4px;
+}
+
+.site-onpage-link--nested {
+  padding-left: var(--site-space-3);
+}
+
+.site-onpage-link:hover {
+  color: var(--site-folio-ink);
+  text-decoration: underline;
+}
+
+/* Previous and next, as cards that gain a stronger edge on hover */
+
+.site-pager {
+  border-top: 1px solid var(--site-folio-line);
+  display: flex;
+  flex-direction: column;
+  gap: var(--site-space-4);
+  justify-content: space-between;
+  margin-top: var(--site-space-8);
+  padding-top: var(--site-space-6);
+}
+
+.site-pager-item {
+  border: 1px solid var(--site-folio-line);
+  border-radius: var(--site-radius-small);
+  color: var(--site-folio-ink);
+  display: grid;
+  font-size: var(--site-small-size);
+  gap: var(--site-space-1);
+  min-height: var(--site-target-min);
+  min-width: 200px;
+  padding: var(--site-space-3) var(--site-space-4);
+  text-decoration: none;
+  transition: border-color var(--site-motion-fast) var(--site-motion-ease);
+}
+
+.site-pager-item:hover {
+  border-color: var(--site-folio-line-strong);
+}
+
+.site-pager-item--next {
+  text-align: right;
+}
+
+/* The rubric: the small mono label the tree, the rail and the pager share */
+
+.site-rubric {
+  color: var(--site-folio-ink-muted);
+  font-family: var(--site-font-mono);
+  font-size: var(--site-nano-size);
+  font-weight: var(--site-weight-semibold);
+  letter-spacing: 0.12em;
+  line-height: var(--site-caption-line);
+  text-transform: uppercase;
+}
+
+.site-trail {
+  color: var(--site-folio-ink-muted);
+  font-size: var(--site-small-size);
+  line-height: var(--site-small-line);
+}
+
+.site-trail-sep {
+  padding: 0 var(--site-space-2);
+}
+
+/* The desktop composition from the 768px breakpoint upward. */
+@media (min-width: 768px) {
+  .site-docs {
+    grid-template-columns: 272px minmax(0, 1fr);
+  }
+
+  .site-docs-side {
+    align-self: stretch;
+    border-right: 1px solid var(--site-folio-line);
+    display: block;
+    padding-right: var(--site-space-6);
+  }
+
+  .site-docs-side .site-doc-tree {
+    height: 100vh;
+    padding: var(--site-space-6) 0 var(--site-space-5);
+    position: sticky;
+    top: 0;
+  }
+
+  .site-docs-side .site-doc-tree-scroll {
+    overflow-y: auto;
+  }
+
+  .site-doc-disclosure,
+  .site-docs-document > .site-onpage {
+    display: none;
+  }
+
+  .site-docs-document {
+    padding: var(--site-space-8) var(--site-space-9) var(--site-space-11);
+  }
+
+  .site-pullquote {
+    font-size: var(--site-heading3-size);
+    line-height: var(--site-heading3-line);
+    padding-left: var(--site-space-5);
+  }
+
+  .site-pager {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .site-pager-item--next {
+    margin-left: auto;
+  }
+}
+
+/* The on-this-page rail joins the composition once the page has room. */
+@media (min-width: 1100px) {
+  .site-docs {
+    grid-template-columns: 272px minmax(0, 1fr) 240px;
+  }
+
+  .site-docs-rail {
+    align-self: start;
+    border-left: 1px solid var(--site-folio-line);
+    display: block;
+    padding: var(--site-space-8) 0 var(--site-space-8) var(--site-space-6);
+    position: sticky;
+    top: var(--site-space-6);
+  }
+}
+
+/* The code panel: the language label, the copy control and the highlighted
+   block. Shiki writes one light and one dark color per token as custom
+   properties on the element, and the color scheme decides which is used. */
+
+.site-code {
+  background: var(--site-folio-surface);
+  border: 1px solid var(--site-folio-line);
+  border-radius: var(--site-radius-small);
+  overflow: hidden;
+  width: 100%;
+}
+
+.site-code-head {
+  align-items: center;
+  border-bottom: 1px solid var(--site-folio-line);
+  display: flex;
+  gap: var(--site-space-3);
+  justify-content: space-between;
+  min-height: var(--site-target-min);
+  padding: 0 var(--site-space-3);
+}
+
+.site-code-language {
+  color: var(--site-folio-ink-muted);
+  font-family: var(--site-font-mono);
+  font-size: var(--site-caption-size);
+}
+
+.site-code-copy {
+  background: var(--site-folio-surface);
+  border: 1px solid var(--site-folio-line-strong);
+  border-radius: var(--site-radius-small);
+  color: var(--site-folio-ink);
+  font: inherit;
+  font-size: var(--site-caption-size);
+  min-height: var(--site-target-min);
+  min-width: 76px;
+  padding: 0 var(--site-space-3);
+  transition:
+    background var(--site-motion-fast) var(--site-motion-ease),
+    border-color var(--site-motion-fast) var(--site-motion-ease);
+}
+
+.site-code-copy:hover {
+  background: var(--site-folio-muted);
+  border-color: var(--site-folio-line-strong);
+}
+
+.site-code pre {
+  background: var(--site-folio-surface) !important;
+  font-family: var(--site-font-mono);
+  font-size: var(--site-small-size);
+  line-height: var(--site-small-line);
+  margin: 0;
+  overflow-x: auto;
+  padding: var(--site-space-4) var(--site-space-5);
+}
+
+.site-code code {
+  background: none;
+  font-family: inherit;
+  padding: 0;
+}
+
+.site-code span {
+  color: var(--shiki-light);
+}
+
+:root[data-color-scheme="dark"] .site-code span {
+  color: var(--shiki-dark);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-color-scheme="light"]) .site-code span {
+    color: var(--shiki-dark);
+  }
+}
+
+/* The documentation search: the header control opens a modal dialog whose
+   results link to the page and the heading that answered the query. */
+
+.site-search-dialog {
+  background: var(--site-folio-surface);
+  border: 1px solid var(--site-folio-line-strong);
+  border-radius: var(--site-radius-medium);
+  color: var(--site-folio-ink);
+  margin: var(--site-space-8) auto;
+  max-height: calc(100vh - var(--site-space-11));
+  max-width: 560px;
+  padding: 0;
+  width: calc(100% - var(--site-space-8));
+}
+
+.site-search-dialog::backdrop {
+  background: var(--site-folio-ink);
+  opacity: 0.4;
+}
+
+.site-search-field {
+  border-bottom: 1px solid var(--site-folio-line);
+  display: flex;
+  gap: var(--site-space-3);
+  padding: var(--site-space-3);
+}
+
+.site-search-input {
+  background: var(--site-folio);
+  border: 1px solid var(--site-folio-line);
+  border-radius: var(--site-radius-small);
+  color: var(--site-folio-ink);
+  flex: 1;
+  font: inherit;
+  font-size: var(--site-body-size);
+  min-height: var(--site-target-min);
+  padding: 0 var(--site-space-3);
+}
+
+.site-search-results {
+  display: grid;
+  list-style: none;
+  margin: 0;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: var(--site-space-2);
+}
+
+.site-search-result {
+  border-radius: var(--site-radius-small);
+  color: var(--site-folio-ink);
+  display: grid;
+  gap: var(--site-space-1);
+  padding: var(--site-space-3);
+  text-decoration: none;
+}
+
+.site-search-result:hover {
+  background: var(--site-folio-muted);
+}
+
+.site-search-result-heading {
+  color: var(--site-folio-ink-muted);
+  font-size: var(--site-small-size);
+}
+
+.site-search-empty {
+  color: var(--site-folio-ink-muted);
+  font-size: var(--site-small-size);
+  padding: var(--site-space-5);
+}
+
+/* A label kept for assistive technology where the control's shape is the
+   visible affordance. */
+
+.site-visually-hidden {
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}

@@ -13,14 +13,15 @@ here for site configuration, pages and documentation. The published
 ## What This Package Does
 
 It builds the Folio design system, the shared header and footer, and one page
-for every public route: `/`, `/docs/`, `/changelog/`, `/terms/`, `/privacy/`
+for every public route: `/`, `/docs/…`, `/changelog/`, `/terms/`, `/privacy/`
 and the 404 document, plus `sitemap.xml`, `robots.txt`, `changelog.xml`, one
-social card per route and the favicon. The home carries the hero, the framed
-catalogue stage, the three feature modules and the open-foundation closing;
-the changelog is parsed from the repository's `CHANGELOG.md`; Terms and
-Privacy are Markdown content. The documentation page body belongs to
-Milestone 6. Pagefind runs after Astro and indexes only
-`dist/docs/**/*.html`. No site service or API runs in production.
+social card per published document and the favicon. The home carries the hero,
+the framed catalogue stage, the three feature modules and the open-foundation
+closing; the changelog is parsed from the repository's `CHANGELOG.md`; Terms
+and Privacy are Markdown content. The documentation is MDX under
+`src/content/docs/<section>/` plus the allowlisted protocol documents, read
+from `docs/protocol` where they live. Pagefind runs after Astro and indexes
+only `dist/docs/**/*.html`. No site service or API runs in production.
 
 Everything the pages show comes from a real source. The stage renders this
 repository's own example catalogue, the changelog parses `CHANGELOG.md`, and
@@ -74,14 +75,14 @@ Root scripts forward to this workspace. `site:check` runs the first five checks
 below in order and is included in `cargo xtask check` after `package:smoke`,
 before the catalogue's `test:browser`.
 
-| Root script       | Behavior                                                                    |
-| ----------------- | --------------------------------------------------------------------------- |
-| `site:build`      | Stage, social cards, Astro static build, Pagefind docs indexing             |
-| `site:typecheck`  | `astro check`, then strict `tsc --noEmit`, including scripts                |
-| `site:test`       | Stage, changelog, legal, cards, settings, styles, routes, metadata, links   |
-| `site:links`      | Check built HTML/SVG anchors, asset and frame sources, CSS imports and URLs |
-| `site:browser`    | Walk the chrome and every page at 390px and 1440px in light and dark        |
-| `site:lighthouse` | Audit the budget pages at both viewports against the agreed thresholds      |
+| Root script       | Behavior                                                                  |
+| ----------------- | ------------------------------------------------------------------------- |
+| `site:build`      | Stage, social cards, Astro static build, Pagefind docs indexing           |
+| `site:typecheck`  | `astro check`, then strict `tsc --noEmit`, including scripts              |
+| `site:test`       | Stage, changelog, legal, cards, settings, styles, routes, metadata, links |
+| `site:links`      | Check built anchors, assets, frame sources, CSS URLs and the search index |
+| `site:browser`    | Walk the chrome and every page at 390px and 1440px in light and dark      |
+| `site:lighthouse` | Audit the budget pages at both viewports against the agreed thresholds    |
 
 Browser checks use Astro's preview API in a foreground process with
 `MOKLY_SITE_PLAYWRIGHT_PORT` (default
@@ -107,6 +108,36 @@ root dependencies and the publish allowlist with the committed pre-site fixture
 in `tests/fixtures/site-package-boundary.json`. Update that fixture only for
 deliberate package dependency maintenance, never to accommodate site tools.
 
+### The documentation
+
+`src/docs/` owns the content model: `sections.ts` fixes the section ids, their
+titles and their order; `frontmatter.ts` is the one schema Astro's `docs`
+collection and the build scripts validate against; `pages.ts` reads the MDX
+files from disk, joins them with the published protocol documents and is the
+single list the section tree, previous and next, the sitemap, the social cards
+and the verification tests read. The build fails when that list and the content
+collection describe different pages, when two pages in a section take the same
+order, or when a page repeats a heading.
+
+`version.ts` reads the workspace `@mokly/mokly` version, which heads the
+section tree and writes every install snippet; pages never write an install
+command themselves, they render `Install` (with `pinned` for the exact version)
+or `Version`, which `src/pages/docs/[...slug].astro` passes to MDX.
+
+`code-panel.ts` and `reference.ts` are Markdown-pipeline plugins: the first
+wraps every code block in the Folio code panel so authored pages and published
+documents look the same, the second drops a published document's own title
+heading and rewrites its links — to another published document's site route,
+or to the file on GitHub. `reference-allowlist.ts` is the allowlist; a document
+that is not on it is not readable on the site. Syntax highlighting uses the
+high-contrast GitHub themes for light and dark, which meet 4.5:1 on the code
+panel in both schemes.
+
+Two React islands hydrate on a documentation page: `CodeCopy` places a copy
+control in each panel and copies that panel's own text, and `Search` loads the
+Pagefind interface on the first search and opens the results in a dialog. The
+search control appears in the header on documentation routes and nowhere else.
+
 ### The home stage
 
 `scripts/stage.mjs` runs before Astro. It builds the example catalogue when
@@ -130,7 +161,9 @@ so the cards must be drawn before `astro build`.
 ### Lighthouse
 
 `npm run site:lighthouse` serves `dist` through Astro's preview API and drives
-Chrome through `chrome-launcher`. Set `CHROME_PATH` when Chrome is not at
+Chrome through `chrome-launcher`. The 390px audit keeps Lighthouse's simulated
+slow connection; the 1440px audit declares its desktop profile, so a desktop
+page is scored on the desktop curves against a connection it can meet. Set `CHROME_PATH` when Chrome is not at
 `/usr/bin/google-chrome` and `MOKLY_SITE_LIGHTHOUSE_PORT` (default `4612`) to
 move the preview. The budget lives in `src/lighthouse.ts`; a unit test keeps
 it equal to the delivery contract. The run prints one row per page and
@@ -138,9 +171,10 @@ viewport and exits non-zero naming each category that missed its threshold.
 
 ### Capturing the pages
 
-`node --import tsx scripts/capture.mjs <directory>` writes a full-page
-screenshot of every route at 390px and 1440px in both schemes, for comparing
-the built site with the mockups. It is a development aid, not a check.
+`node --import tsx scripts/capture.mjs <directory> [route ...]` writes a
+full-page screenshot of every published route, documentation included, at 390px
+and 1440px in both schemes, for comparing the built site with the mockups. Name
+routes to capture only those. It is a development aid, not a check.
 
 ### Key Code
 
@@ -153,13 +187,19 @@ the built site with the mockups. It is a development aid, not a check.
 - `src/legal.ts` and `src/content/legal/` — the policy documents.
 - `src/og.ts` and `src/lighthouse.ts` — the social card drawing and the
   Lighthouse budget.
+- `src/docs/` — the documentation content model, the version, the reference
+  allowlist and the Markdown-pipeline plugins.
+- `src/layouts/Docs.astro`, `src/components/docs/` and `src/pages/docs/` — the
+  section tree, the on-this-page list, previous and next, the code panel's copy
+  island and the search island.
 - `src/navigation.ts` — the route table, application links and current-route
   marking shared by the header, footer, sitemap and browser walk.
 - `src/metadata.ts` and `src/sitemap.ts` — canonical URLs, social card images,
   `sitemap.xml` and `robots.txt`.
 - `src/styles/` — `tokens.css` (the only literal colors), `base.css`,
   `controls.css`, `chrome.css`, `layout.css`, `footer.css`, `home.css`,
-  `details.css`, `stage.css`, `tree.css`, `changelog.css` and `document.css`.
+  `details.css`, `stage.css`, `tree.css`, `changelog.css`, `docs.css` and
+  `document.css`.
 - `src/components/` and `src/layouts/Site.astro` — brand, skip link, header,
   footer, glyphs, release notes, the policy document and the page shell every
   route renders; `src/components/home/` holds the hero, stage, modules and

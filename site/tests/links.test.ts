@@ -72,6 +72,31 @@ test("base href changes relative URL resolution", async (t) => {
   await checkLinks(root, origin);
 });
 
+test("documentation anchors resolve on the page and across pages", async (t) => {
+  const root = await output(t, {
+    "docs/cli/serve/index.html": `<main id="main">
+      <nav><a href="#usage">Usage</a><a href="#options">Options</a></nav>
+      <h2 id="usage">Usage</h2><h2 id="options">Options</h2>
+      <a href="../build/#what-it-writes">What build writes</a>
+      <a href="/docs/">Documentation</a></main>`,
+    "docs/cli/build/index.html":
+      '<main id="main"><h2 id="what-it-writes">What it writes</h2></main>',
+    "docs/index.html": '<main id="main"><h1>Documentation</h1></main>',
+  });
+  assert.equal(await checkLinks(root, origin), 4);
+});
+
+test("fails when a documentation page links to a heading that moved", async (t) => {
+  const root = await output(t, {
+    "docs/cli/serve/index.html": '<a href="../build/#renamed">Build</a>',
+    "docs/cli/build/index.html": '<h2 id="what-it-writes">What it writes</h2>',
+  });
+  await assert.rejects(
+    checkLinks(root, origin),
+    /missing anchor #renamed in docs\/cli\/build\/index.html/,
+  );
+});
+
 for (const [name, html, message] of [
   ["href", '<a href="/missing/">Missing</a>', "missing file"],
   [

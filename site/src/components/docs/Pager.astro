@@ -1,0 +1,35 @@
+---
+/**
+ * Previous and next at the foot of a document. They follow the section tree's
+ * order across section boundaries, so reading straight through covers the
+ * documentation once.
+ */
+import { neighbours } from "../../docs/pages.js";
+
+interface Props {
+  readonly route: string;
+}
+
+const { next, previous } = neighbours(Astro.props.route);
+---
+
+{(previous || next) && (
+  <nav aria-label="Pagination" class="site-pager" data-pagefind-ignore>
+    {previous && (
+      <a class="site-pager-item" href={previous.route} rel="prev">
+        <span class="site-pager-label site-rubric">Previous</span>
+        {previous.title}
+      </a>
+    )}
+    {next && (
+      <a
+        class="site-pager-item site-pager-item--next"
+        href={next.route}
+        rel="next"
+      >
+        <span class="site-pager-label site-rubric">Next</span>
+        {next.title}
+      </a>
+    )}
+  </nav>
+)}

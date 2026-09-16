@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
+import { pageAt } from "../src/docs/pages.js";
 import {
   AUDITED,
   CATEGORIES,
@@ -10,6 +11,7 @@ import {
   budgetTable,
   shortfalls,
 } from "../src/lighthouse.js";
+import { PAGE_METADATA } from "../src/metadata.js";
 import { SITE_PATHS } from "../src/navigation.js";
 import { repositoryPath } from "../src/workspace.js";
 
@@ -23,8 +25,21 @@ const PASSING = {
 test("the budget audits the contracted pages at both viewports", () => {
   assert.deepEqual(
     [...AUDITED],
-    [SITE_PATHS.home, SITE_PATHS.docs, SITE_PATHS.changelog, SITE_PATHS.terms],
+    [
+      SITE_PATHS.home,
+      SITE_PATHS.docs,
+      "/docs/authoring/config/",
+      "/docs/cli/serve/",
+      SITE_PATHS.changelog,
+      SITE_PATHS.terms,
+    ],
   );
+  for (const route of AUDITED) {
+    assert.ok(
+      route === SITE_PATHS.home || pageAt(route) || route in PAGE_METADATA,
+      `${route} is not a published route`,
+    );
+  }
   assert.deepEqual(
     VIEWPORTS.map((viewport) => viewport.width),
     [390, 1440],

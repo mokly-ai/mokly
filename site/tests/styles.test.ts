@@ -9,6 +9,13 @@ const TOKENS = "tokens.css";
 const NAMED_COLORS =
   /(?<![\w-])(?:aqua|black|blue|brown|fuchsia|gold|gray|green|grey|lime|maroon|navy|olive|orange|pink|purple|red|silver|teal|violet|white|yellow)(?![\w-])/i;
 
+/**
+ * The composition switches: the 768px breakpoint every page shares, and the
+ * width at which the documentation hangs its on-this-page rail, both fixed by
+ * docs/protocol/site-design.md.
+ */
+const WIDTH_QUERIES = ["min-width: 768px", "min-width: 1100px"];
+
 const REQUIRED_TOKENS = [
   "--site-folio",
   "--site-folio-muted",
@@ -130,7 +137,7 @@ test("the desktop composition resolves at the 768px breakpoint", async () => {
   for (const name of await stylesheets()) {
     const sheet = await readFile(path.join(styles, name), "utf8");
     for (const [, query] of sheet.matchAll(/@media \(([^)]*width[^)]*)\)/g)) {
-      assert.equal(query, "min-width: 768px", `${name}: ${query ?? ""}`);
+      assert.ok(WIDTH_QUERIES.includes(query ?? ""), `${name}: ${query ?? ""}`);
     }
   }
 });

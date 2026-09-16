@@ -5,26 +5,65 @@
  * its tests read one table.
  */
 
-import { SITE_PATHS, type SitePath } from "./navigation.js";
+import { SITE_PATHS } from "./navigation.js";
+
+/** The simulated network and processor one form factor is measured on. */
+export interface Throttling {
+  readonly cpuSlowdownMultiplier: number;
+  readonly downloadThroughputKbps: number;
+  readonly requestLatencyMs: number;
+  readonly rttMs: number;
+  readonly throughputKbps: number;
+  readonly uploadThroughputKbps: number;
+}
 
 /** One inspection viewport, with the Lighthouse form factor it audits as. */
 export interface Viewport {
   readonly formFactor: "desktop" | "mobile";
   readonly height: number;
   readonly label: string;
+  /** Absent for mobile, which keeps Lighthouse's simulated slow connection. */
+  readonly throttling?: Throttling;
   readonly width: number;
 }
+
+/**
+ * Lighthouse's desktop profile: a dense 4G connection and an unthrottled
+ * processor. A desktop page measured on the mobile profile is measured on a
+ * connection it never meets and scored on the stricter desktop curves, so the
+ * desktop viewport declares its own conditions while the mobile viewport keeps
+ * the slow connection that is the real stress case.
+ */
+const DESKTOP: Throttling = Object.freeze({
+  cpuSlowdownMultiplier: 1,
+  downloadThroughputKbps: 0,
+  requestLatencyMs: 0,
+  rttMs: 40,
+  throughputKbps: 10_240,
+  uploadThroughputKbps: 0,
+});
 
 /** The two viewports every audited page is measured at. */
 export const VIEWPORTS: readonly Viewport[] = Object.freeze([
   { formFactor: "mobile", height: 844, label: "390", width: 390 },
-  { formFactor: "desktop", height: 900, label: "1440", width: 1440 },
+  {
+    formFactor: "desktop",
+    height: 900,
+    label: "1440",
+    throttling: DESKTOP,
+    width: 1440,
+  },
 ]);
 
-/** The routes the budget audits. */
-export const AUDITED: readonly SitePath[] = Object.freeze([
+/**
+ * The routes the budget audits: one of each composition, including a written
+ * documentation page with a code panel and one with a wide table.
+ */
+export const AUDITED: readonly string[] = Object.freeze([
   SITE_PATHS.home,
   SITE_PATHS.docs,
+  "/docs/authoring/config/",
+  "/docs/cli/serve/",
   SITE_PATHS.changelog,
   SITE_PATHS.terms,
 ]);

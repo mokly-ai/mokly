@@ -35,8 +35,8 @@ export const PAGE_METADATA: Readonly<Record<PageRoute, PageMetadata>> =
     },
     [SITE_PATHS.docs]: {
       description:
-        "Documentation for the Mokly CLI, authoring, the catalogue and Mokly Cloud.",
-      title: "Documentation · Mokly",
+        "Install Mokly, describe your catalogue and open your screens in the browser.",
+      title: "Getting started · Mokly",
     },
     [SITE_PATHS.changelog]: {
       description: "Every release of the Mokly CLI, newest first.",

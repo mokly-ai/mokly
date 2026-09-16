@@ -1,0 +1,58 @@
+---
+/**
+ * Every documentation page: the authored MDX pages and the protocol
+ * documents published under Reference, both rendered in the docs layout.
+ */
+import { getCollection, render, type CollectionEntry } from "astro:content";
+
+import Install from "../../components/docs/Install.astro";
+import Version from "../../components/docs/Version.astro";
+import { assertUniqueHeadings } from "../../docs/headings.js";
+import {
+  DOCS_PAGES,
+  assertCollection,
+  type DocsPage,
+} from "../../docs/pages.js";
+import { documentForEntry } from "../../docs/reference-allowlist.js";
+import { SECTION_TITLES } from "../../docs/sections.js";
+import Docs from "../../layouts/Docs.astro";
+
+type Entry = CollectionEntry<"docs"> | CollectionEntry<"reference">;
+
+export async function getStaticPaths() {
+  const authored = await getCollection("docs");
+  assertCollection(authored.map((entry) => entry.id));
+  const published = await getCollection("reference");
+  const entries = new Map<string, Entry>([
+    ...authored.map((entry): [string, Entry] => [entry.id, entry]),
+    ...published.flatMap((entry): [string, Entry][] => {
+      const document = documentForEntry(entry.id);
+      return document ? [[`reference/${document.slug}`, entry]] : [];
+    }),
+  ]);
+  return DOCS_PAGES.map((page) => {
+    const entry = entries.get(page.id);
+    if (!entry) throw new Error(`${page.id}: no document to render`);
+    return { params: { slug: page.id }, props: { entry, page } };
+  });
+}
+
+interface Props {
+  readonly entry: Entry;
+  readonly page: DocsPage;
+}
+
+const { entry, page } = Astro.props;
+const { Content, headings } = await render(entry);
+assertUniqueHeadings(headings, page.id);
+---
+
+<Docs
+  description={page.description}
+  headings={headings}
+  route={page.route}
+  section={SECTION_TITLES[page.section]}
+  title={page.title}
+>
+  <Content components={{ Install, Version }} />
+</Docs>
