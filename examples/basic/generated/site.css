@@ -312,7 +312,10 @@ html {
 }
 
 .site-band {
-  background: var(--site-folio-surface);
+  background: none;
+}
+
+.site-band--ruled {
   border-bottom: 1px solid var(--site-folio-line);
 }
 
@@ -1336,14 +1339,21 @@ html {
 
 .site-doc-tree {
   display: grid;
-  grid-template-rows: auto auto auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100vh;
   padding: var(--site-space-6) 0 var(--site-space-5);
+  position: sticky;
+  top: 0;
 }
 
 .site-doc-tree-scroll {
   display: grid;
   gap: var(--site-space-5);
   margin: var(--site-space-4) 0;
+  overflow-y: auto;
+  padding-right: var(--site-space-2);
+  scrollbar-color: var(--site-folio-line-strong) transparent;
+  scrollbar-width: thin;
 }
 
 .site-doc-tree .site-version {
@@ -1423,7 +1433,13 @@ html {
 }
 
 .site-doc-disclosure .site-doc-tree {
+  height: auto;
   padding-top: 0;
+  position: static;
+}
+
+.site-doc-disclosure .site-doc-tree-scroll {
+  overflow: visible;
 }
 
 /* The document: a wide reading measure inside a ruled structure */

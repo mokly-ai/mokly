@@ -51,12 +51,19 @@ function label(node: Parameters<typeof textContent>[0]): string {
 }
 
 for (const viewport of ["mobile", "desktop"] as const) {
-  test(`${viewport}: the application band carries one header row and no utility bar`, async () => {
+  test(`${viewport}: the header band carries one header row and no utility bar`, async () => {
     for (const id of SCREENS) {
       const { document } = await designDocument(id, viewport);
       const band = byClass(document, "site-band")[0];
-      assert.ok(band, `${id}: missing the application band`);
+      assert.ok(band, `${id}: missing the header band`);
       assert.ok(byClass(band, "site-header")[0], id);
+      assert.equal(
+        (attribute(band, "class") ?? "")
+          .split(/\s+/)
+          .includes("site-band--ruled"),
+        id !== "design-site-home",
+        `${id}: only structured pages rule the band off`,
+      );
       assert.equal(
         elements(band, (node) => node.tagName === "header").length,
         1,

@@ -55,7 +55,10 @@ landing at `/docs`.
   `folioMuted` hover fill; the current page is marked with
   `aria-current="page"` and takes the `accentSoft` fill with `accent` text.
   The published Mokly CLI version heads the tree as a quiet chip linking the
-  changelog. Below the breakpoint the tree is a native disclosure labelled
+  changelog. On desktop the tree is pinned to the viewport and scrolls
+  independently of the document, with the version label fixed at its top and
+  the Changelog link fixed at its foot. Below the breakpoint the tree is a
+  native disclosure labelled
   with the current section and page.
 - The document is ruled: the location trail is the eyebrow above the page
   heading, the page description is set as an accent-ruled pull quote, and

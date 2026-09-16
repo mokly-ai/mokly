@@ -87,7 +87,7 @@ within `65ch`.
 
 - Spacing scale in pixels: 0, 4, 8, 12, 16, 20, 24, 32, 40, 48, 64, 80, 96.
 - Breakpoint `768px`; below it use the mobile composition.
-- Wide measure `1360px` centered for the application band, the home, the
+- Wide measure `1360px` centered for the header band, the home, the
   documentation and the changelog. `contentMax` `1120px` centers the
   changelog's index and entries. Prose measure `65ch`. Form width `440px`.
 - Gutters `20px` mobile, `40px` desktop. Section spacing `48px` mobile,
@@ -125,8 +125,10 @@ in `accent`. The mark and wordmark together link Home.
 
 ## Components
 
-- Header: one row inside a `folioSurface` application band with a `folioLine`
-  bottom hairline, aligned to the wide measure. There is no utility bar. Links
+- Header: one row inside a band on the page canvas with no fill, aligned to
+  the wide measure. Documentation, changelog, terms and privacy rule the band
+  off with a `folioLine` bottom hairline; the home has no rule so the hero
+  follows the header directly. There is no utility bar. Links
   are `small` in `folioInkMuted`, 44px tall and underlined on hover; the
   current route is `folioInk`. The documentation search control sits in that
   header beside the navigation and appears on no other route. The desktop
@@ -157,7 +159,9 @@ in `accent`. The mark and wordmark together link Home.
 - Closing: `folioMuted` panel with `medium` radius, two columns on desktop,
   copy and actions left, the ordered steps right with accent mono markers.
 - Documentation: the section tree sits on the page canvas rather than in a
-  filled panel, separated from the document by one vertical hairline. The
+  filled panel, separated from the document by one vertical hairline. On
+  desktop the tree is pinned to the viewport and scrolls on its own, with the
+  version label fixed at its top and the Changelog link fixed at its foot. The
   published Mokly CLI version heads it as a quiet chip linking the changelog,
   every section is listed expanded under a mono rubric head, rows are 44px
   targets with a `folioMuted` hover fill, and the current page takes
@@ -202,7 +206,7 @@ Screens compose shared parts under
 `examples/basic/entries/design/site/parts/`: `links.ts` (catalogue ids,
 application links and current-route marking), `metadata.ts` (the shared
 dependencies and related documents), `brand.tsx` (mark and wordmark),
-`chrome.tsx` (skip link, application band, header, search, location trail,
+`chrome.tsx` (skip link, header band, header, search, location trail,
 version chip and grouped footer), `actions.tsx`, `glyphs.tsx`, `shell.tsx`
 (the framed catalogue), `modules.tsx` (the feature modules and the closing),
 `docs_data.ts` (the documentation architecture), `docs_navigation.tsx` (the

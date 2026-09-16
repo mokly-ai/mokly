@@ -236,6 +236,19 @@ test("the documentation tree sits on the page canvas behind a hairline", async (
     /border-right: 1px solid var\(--site-folio-line\)/,
     "one hairline separates the tree from the document",
   );
+  const tree = parsed.find(
+    (entry) => entry.selector.trim() === ".site-doc-tree",
+  );
+  assert.ok(tree);
+  assert.match(tree.declarations, /position:\s*sticky/);
+  const scroll = parsed.find(
+    (entry) => entry.selector.trim() === ".site-doc-tree-scroll",
+  );
+  assert.ok(scroll);
+  assert.match(scroll.declarations, /overflow-y:\s*auto/);
+  const band = parsed.find((entry) => entry.selector.trim() === ".site-band");
+  assert.ok(band);
+  assert.doesNotMatch(band.declarations, /background:\s*var/);
   for (const selector of [".site-docs-side", ".site-doc-tree"]) {
     const rule = parsed.find((entry) => entry.selector.trim() === selector);
     assert.ok(rule, selector);

@@ -16,7 +16,7 @@ import { CatalogueFrame } from "./parts/shell.js";
 
 function SiteHome({ viewport }: { viewport: "mobile" | "desktop" }) {
   return (
-    <SiteLayout active={SITE_SCREENS.home} viewport={viewport}>
+    <SiteLayout active={SITE_SCREENS.home} ruled={false} viewport={viewport}>
       <main className="site-main" id="main">
         <section className="site-hero">
           <p className="site-hero-eyebrow">A design tool for teams that ship</p>

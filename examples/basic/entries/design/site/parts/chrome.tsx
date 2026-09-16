@@ -1,5 +1,5 @@
 /**
- * The shared site chrome: a white application band holding one
+ * The shared site chrome: a header band on the page canvas holding one
  * header row, and a footer whose seven site destinations are grouped into
  * columns. The documentation search sits in the header beside the
  * navigation; the location trail is set as the eyebrow above a page title.
@@ -164,15 +164,21 @@ function SiteFooter({ active }: { active: SiteScreen }) {
   );
 }
 
-/** Skip link, application band, page content and grouped footer, in order. */
+/**
+ * Skip link, header band, page content and grouped footer, in order. The
+ * band sits on the page canvas; structured pages rule it off from the
+ * content below, while the home lets the hero follow it directly.
+ */
 export function SiteLayout({
   active,
   children,
+  ruled = true,
   search = false,
   viewport,
 }: {
   active: SiteScreen;
   children: ReactNode;
+  ruled?: boolean;
   search?: boolean;
   viewport: "mobile" | "desktop";
 }) {
@@ -181,7 +187,7 @@ export function SiteLayout({
       <a className="site-skip" href="#main">
         Skip to content
       </a>
-      <div className="site-band">
+      <div className={ruled ? "site-band site-band--ruled" : "site-band"}>
         <SiteHeader active={active} search={search} />
       </div>
       {children}
