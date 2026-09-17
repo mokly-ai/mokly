@@ -922,6 +922,9 @@ PR for both packages, their independent versions and changelogs, and the CLI's
 exact viewer dependency. The first viewer release is **0.1.0**, paired with
 **CLI 0.10.0** because 0.9.0 is already published. Merging the release PR creates
 immutable `vX.Y.Z` CLI and `viewer-vX.Y.Z` viewer tags at the same commit.
+The viewer component pins `initial-version` to 0.1.0 because release-please's
+unconfigured initial-release fallback is 1.0.0; the 0.0.0 manifest entry remains
+only the marker that no viewer release exists yet.
 
 The [Release workflow](./.github/workflows/release.yml) verifies both tags,
 reruns the full gate and smoke-tests both exact tarballs in clean consumers.

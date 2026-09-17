@@ -40,10 +40,12 @@ publisher. An approved organization maintainer must have permission to create
 public scoped packages and grant `mokly:developers` read/write access to this
 package, with required 2FA and token bypass disabled.
 
-The first viewer version is **0.1.0**. The manifest's 0.0.0 is only
-release-please's pre-release seed; do not publish a 0.0.0 placeholder. Trusted
-publishing is package-specific and requires an existing package, so register
-the real 0.1.0 with interactive maintainer authentication:
+The first viewer version is **0.1.0**. The manifest's 0.0.0 is only the marker
+that no viewer release exists; the viewer release configuration explicitly sets
+`initial-version` to 0.1.0 because release-please otherwise falls back to 1.0.0.
+Do not publish a 0.0.0 placeholder. Trusted publishing is package-specific and
+requires an existing package, so register the real 0.1.0 with interactive
+maintainer authentication:
 
 1. Merge the reviewed implementation, then review the combined release PR.
    Confirm CLI 0.10.0, viewer 0.1.0, the CLI's exact dependency, both changelogs,

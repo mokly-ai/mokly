@@ -107,6 +107,7 @@ test("release-please owns the Node manifest and first release state", async () =
   assert.deepEqual(config.packages["packages/viewer"], {
     "release-type": "node",
     component: "viewer",
+    "initial-version": "0.1.0",
     "changelog-path": "CHANGELOG.md",
     "include-component-in-tag": true,
     "include-v-in-tag": true,

@@ -170,6 +170,8 @@ and the CLI's exact viewer dependency. Viewer tags are `viewer-vX.Y.Z`; CLI tags
 remain `vX.Y.Z`. The release workflow verifies both tags at one commit, checks
 and smokes both tarballs, then publishes and verifies the viewer before the CLI.
 Unchanged packages receive a patch when their paired package releases.
+Release Please explicitly pins the viewer's initial version to 0.1.0; its 0.0.0
+manifest entry means that no viewer release has been created yet.
 See the [release contract](../../docs/protocol/npm-release.md) and the
 [one-time viewer registration](../../docs/protocol/npm-bootstrap.md#viewer-first-publication).
 Preparation does not publish packages; first registration requires a maintainer
