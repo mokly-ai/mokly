@@ -33,6 +33,7 @@ export async function createFixture(
     configPath,
     `import { defineConfig } from "@mokly/mokly";
 export default defineConfig({
+  generatedOutput: "committed",
   entriesDir: "entries",
   mockupsDir: "mockups",
   repoRoot: ".",

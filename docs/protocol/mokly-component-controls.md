@@ -132,7 +132,7 @@ matching catalogue generation, a sandboxed preview URL, and validated usage
 records. Preview URLs are confined beneath
 `/__mokly/components/renders/<render-id>/`; render resources retain valid
 public relative resolution through the same adapter as normal Browse. Reject
-malformed or expired ids. This response never updates the committed manifest or
+malformed or expired ids. This response never updates the generated manifest or
 publishes watched changes.
 
 Preview documents stay script-disabled. The parent shell swaps only the matching

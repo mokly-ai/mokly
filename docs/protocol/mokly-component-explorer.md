@@ -195,7 +195,7 @@ host picking and clears stale inspection under the viewer lifecycle contract.
 ## Mockups And Verification
 
 Before UI implementation, extend the existing design catalogue under
-`examples/basic/entries/design` and regenerate its committed HTML. This is
+`examples/basic/entries/design` and regenerate its local derived HTML. This is
 Mokly's current owning mockup tree; do not introduce an unrelated Expo app
 or a second mockup generator. Provide mobile and desktop screen components for
 the component page/variants, changed component/Affected screens, screen inspector
