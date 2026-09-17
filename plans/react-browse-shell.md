@@ -245,8 +245,9 @@ yet; the vanilla runtime remains the default and keeps working.
       alongside `.`, `./server`, `./runtime`, `./data`, and `./styles.css`;
       the React host path uses the host's React.
 - [ ] Add the shell switch as a request-scoped, CLI-private selector: an
-      optional field on `ShellContext` in `packages/viewer/src/shell/context.ts`,
-      marked internal in its doc comment because that type is re-exported from
+      optional field on `ShellContext` in
+      `packages/viewer/src/shell/context.ts`, marked internal in its doc
+      comment because that type is re-exported from
       `@mokly/viewer/server`. It is set from a private request header or
       cookie where `src/server/http_routes.ts` calls `shellContext` (it
       threads to `view_routes.ts` as a parameter), set from a CLI-private
