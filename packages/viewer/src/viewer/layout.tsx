@@ -7,8 +7,10 @@ import { TopBar } from "../shell/top_bar.js";
 import { ShellMain } from "../shell/views.js";
 import type { ShellView } from "../shell/views.js";
 
+import { MarkerLayer } from "./marker_layer.js";
+import type { MarkerStore } from "./marker_store.js";
 import { islandMarkup } from "./markup.js";
-import type { ViewerSelection, ViewerSlots } from "./types.js";
+import type { ViewerMarker, ViewerSelection, ViewerSlots } from "./types.js";
 
 export interface LayoutProps {
   catalogue: Catalogue;
@@ -16,6 +18,8 @@ export interface LayoutProps {
   view: ShellView;
   selection: ViewerSelection;
   baseUrl: URL;
+  markerStore?: MarkerStore;
+  markers?: readonly ViewerMarker[];
   slots?: ViewerSlots;
 }
 // The runtime owns these islands after mount; React only updates the slots.
@@ -37,6 +41,8 @@ export function ViewerLayout({
   view,
   selection,
   baseUrl,
+  markerStore,
+  markers,
   slots,
 }: LayoutProps) {
   return (
@@ -103,13 +109,17 @@ export function ViewerLayout({
           {slots?.sidePanel?.content}
         </div>
       </div>
+      {markerStore ? (
+        <MarkerLayer markers={markers ?? []} store={markerStore} />
+      ) : (
+        <div data-mokly-marker-layer="" data-mokly-slot="markers" />
+      )}
       <div
         data-mokly-label-layer=""
         style={{
           position: "absolute",
           inset: 0,
           pointerEvents: "none",
-          zIndex: 11,
         }}
       />
       <p

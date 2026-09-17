@@ -8,6 +8,7 @@ import {
 } from "react";
 
 import { ViewerLayout } from "./layout.js";
+import { MarkerStore } from "./marker_store.js";
 import { viewerCatalogue, viewerContext, viewerView } from "./projection.js";
 import { ViewerRuntime } from "./runtime.js";
 import { defaultSelection, normalizeSelection } from "./selection.js";
@@ -64,6 +65,7 @@ function MountedViewer(
 ) {
   const container = useRef<HTMLDivElement>(null);
   const runtime = useRef<ViewerRuntime | null>(null);
+  const [markerStore] = useState(() => new MarkerStore());
   const callbacks = useRef(props);
   callbacks.current = props;
   const [initial] = useState(props.normalized);
@@ -77,6 +79,7 @@ function MountedViewer(
       initial,
       props.selection !== undefined,
       () => callbacks.current,
+      markerStore,
     );
     runtime.current = instance;
     return () => {
@@ -90,6 +93,9 @@ function MountedViewer(
   useLayoutEffect(() => {
     runtime.current?.refreshLayout();
   });
+  useLayoutEffect(() => {
+    runtime.current?.updateMarkers(props.markers ?? []);
+  }, [props.markers]);
   useImperativeHandle(
     props.ref,
     () => ({
@@ -118,6 +124,8 @@ function MountedViewer(
         view={viewerView(catalogue, initial)}
         selection={initial}
         baseUrl={props.loaded.url}
+        markerStore={markerStore}
+        markers={props.markers ?? []}
         {...(props.slots ? { slots: props.slots } : {})}
       />
     </div>

@@ -4,8 +4,8 @@
 
 The baseline API, static server entry and first-party hosts are implemented by
 the [viewer library plan](../../plans/mokly-viewer-library.md). Saved-variant
-selection, multi-instance highlights and markers are an approved target tracked
-by the [comment anchoring plan](../../plans/viewer-comment-anchoring.md). Local
+selection, multi-instance highlights and markers are implemented by the
+[comment anchoring plan](../../plans/viewer-comment-anchoring.md). Local
 Serve/export presentation remains unchanged.
 
 ## Package And Props

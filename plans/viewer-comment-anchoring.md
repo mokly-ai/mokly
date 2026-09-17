@@ -340,17 +340,17 @@ Tags: ui
 
 Position host-owned marker content on instances and keep it there.
 
-- [ ] Add a React-owned marker layer to `ViewerLayout` (empty in SSR) and a
+- [x] Add a React-owned marker layer to `ViewerLayout` (empty in SSR) and a
       runtime-owned placement store consumed with `useSyncExternalStore`;
       containers are keyed by marker id, positioned from store state, and carry
       `pointer-events: none`. Put new code in `packages/viewer/src/viewer/`
       modules such as `markers.ts`, `marker_store.ts`, `marker_layer.tsx` and
       `geometry_refresh.ts`, keeping every file near the length guideline.
-- [ ] Implement placement: match each marker against current sessions with
+- [x] Implement placement: match each marker against current sessions with
       `matchesInstance`, measure with `listInstanceBoundaries`, map boxes with
       the frame rectangle, chrome scale, `clientLeft`/`clientTop` and
       `visibleFrameBox` clipping, and derive `visible`/`hidden`/`unavailable`.
-- [ ] Implement the shared refresh scheduler: in-frame `geometry`
+- [x] Implement the shared refresh scheduler: in-frame `geometry`
       notifications, viewer-root capture-phase scroll, `ResizeObserver` on the
       root, stage and frames, frame expansion, frame replacement, evidence
       adoption and `markers` prop changes; coalesce to one measurement per
@@ -358,14 +358,14 @@ Position host-owned marker content on instances and keep it there.
       notification raised during an asynchronous list schedules one trailing
       refresh (viewer plan Milestone 11 P2, option A). Route package label
       refreshes through the same scheduler.
-- [ ] Raise the marker and label layers above an expanded frame while one is
+- [x] Raise the marker and label layers above an expanded frame while one is
       expanded; restore afterwards.
-- [ ] Wire `markers` and `onMarkerChange` through `MoklyViewer`, `ReadyViewer`
+- [x] Wire `markers` and `onMarkerChange` through `MoklyViewer`, `ReadyViewer`
       and `ViewerRuntime`; validate duplicate ids with the `markers` error code;
       emit states once after the first evaluation and then on change only;
       report measurement failures once per refresh generation; stop all marker
       work on dispose and source replacement with no later callbacks.
-- [ ] Extend `packages/viewer/tests/browser_entry.tsx` with marker fixtures
+- [x] Extend `packages/viewer/tests/browser_entry.tsx` with marker fixtures
       and add browser tests on both adapters: initial placement and status,
       position tracking through inner and outer scrolling, resize and frame
       expansion, Both with one viewport marker, flow step markers, variant
@@ -374,14 +374,16 @@ Position host-owned marker content on instances and keep it there.
       missing keys, evidence updates in both directions, duplicate ids,
       marker changes without remount, host content click handling, no
       instance or pick events from marker interaction, and clean unmount.
-- [ ] Node tests for status derivation, box union and coordinate mapping, and
+- [x] Node tests for status derivation, box union and coordinate mapping, and
       a custom-adapter regression for geometry raised during an asynchronous
       boundary list.
-- [ ] Confirm the standalone shell markup, CSS and Serve/export behavior are
+- [x] Confirm the standalone shell markup, CSS and Serve/export behavior are
       unchanged; document any vanilla bundle byte change. Run
       `npm run package:smoke` and confirm the packed viewer exposes the new
       API from a clean install.
-- [ ] Run focused tests, then `PLAYWRIGHT_CHANNEL=chromium cargo xtask check`;
+- [x] Update the viewer, marker and frame-adapter protocol delivery status now
+      that the complete comment-anchoring contract is implemented.
+- [x] Run focused tests, then `PLAYWRIGHT_CHANNEL=chromium cargo xtask check`;
       require zero failures, retries and skips.
 - [ ] After checks pass, run `git add -A`, commit with Conventional Commits and
       push the branch.
@@ -389,6 +391,23 @@ Position host-owned marker content on instances and keep it there.
       against the complete local diff from `origin/main`; report numbered
       findings with severity, impact, lettered options and a recommendation
       without fixing.
+
+### Milestone 4 verification notes
+
+Focused viewer package tests passed 50/50. The marker and evidence browser set
+passed 36/36, including same-origin and postMessage placement, state, evidence,
+lifecycle and lost-wakeup cases; the complete viewer browser subset passed
+144/144. The complete `PLAYWRIGHT_CHANNEL=chromium cargo xtask check` then
+passed 1,762 Node tests, 451 Playwright tests, all five clean-package consumer
+scenarios, Rust formatting, Clippy, three Rust tests and the Rust file-length
+audit of eight files, with zero failures, retries or skips.
+
+Standalone shell, client and inspector sources are unchanged from Milestone 3.
+The vanilla browser bundles remain `browse_runtime.js` 8,549 bytes,
+`workspace.js` 9,473 bytes, `workspace_variants.js` 4,132 bytes and
+`inspector.js` 8,733 bytes. The packed NodeNext consumer type-checks
+`ViewerMarker`, `MarkerState`, `markers`, `onMarkerChange` and
+`highlightInstances` from a clean install.
 
 ## Post-merge follow-up (non-blocking)
 

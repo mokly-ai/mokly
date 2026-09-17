@@ -80,6 +80,63 @@ async function presentation(page: Page, cross: boolean, count: number) {
 
 for (const cross of [false, true]) {
   const name = cross ? "postMessage" : "same-origin";
+  test(`${name} markers follow retained evidence in both directions`, async ({
+    page,
+  }) => {
+    await start(page, cross);
+    await page.evaluate(() =>
+      window.evidence.setMarkers(window.evidence.instances),
+    );
+    await expect
+      .poll(() => page.evaluate(() => window.evidence.markerStates))
+      .toEqual([
+        { id: "marker-0", status: "visible" },
+        { id: "marker-1", status: "visible" },
+      ]);
+    await page.evaluate(() => window.evidence.update("mobile", "empty"));
+    await expect
+      .poll(() => page.evaluate(() => window.evidence.markerStates))
+      .toEqual([
+        { id: "marker-0", status: "unavailable" },
+        { id: "marker-1", status: "visible" },
+      ]);
+    await page.evaluate(() => window.evidence.update("mobile"));
+    await expect
+      .poll(() => page.evaluate(() => window.evidence.markerStates))
+      .toEqual([
+        { id: "marker-0", status: "visible" },
+        { id: "marker-1", status: "visible" },
+      ]);
+    expect(await page.evaluate(() => window.evidence.markerErrors)).toBe(0);
+  });
+
+  test(`${name} geometry during an asynchronous boundary list schedules a trailing marker read`, async ({
+    page,
+  }) => {
+    await start(page, cross);
+    const before = await page.evaluate(
+      () =>
+        window.evidence.calls.filter((call) => call === "mobile:list").length,
+    );
+    await page.evaluate(() => {
+      window.evidence.geometryDuringList = true;
+      window.evidence.setMarkers();
+    });
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            window.evidence.calls.filter((call) => call === "mobile:list")
+              .length,
+        ),
+      )
+      .toBeGreaterThanOrEqual(before + 2);
+    await expect
+      .poll(() => page.evaluate(() => window.evidence.markerStates))
+      .toEqual([{ id: "marker-0", status: "visible" }]);
+    expect(await page.evaluate(() => window.evidence.markerErrors)).toBe(0);
+  });
+
   test(`${name} ready evidence restores active pick on retained frames`, async ({
     page,
   }) => {

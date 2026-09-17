@@ -5,9 +5,9 @@
 Implemented in `@mokly/viewer` through [viewer library Milestones 4–5](../../plans/mokly-viewer-library.md). Local
 Serve/export keep today's same-origin sandbox and visible behavior. Only an
 explicit cross-origin host uses the new inspector transport. Host marker
-consumption and the trailing geometry refresh are approved targets in the
+consumption and the trailing geometry refresh are implemented by the
 [comment anchoring plan](../../plans/viewer-comment-anchoring.md); the adapter
-interface and wire protocol do not change.
+interface and wire protocol remain unchanged.
 
 ## Public Interface
 

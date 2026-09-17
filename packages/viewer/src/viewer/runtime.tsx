@@ -10,6 +10,7 @@ import { viewerFailures } from "./failures.js";
 import { ViewerFrames } from "./frames.js";
 import { identifierScope } from "./identifiers.js";
 import { viewerInput } from "./input.js";
+import type { MarkerStore } from "./marker_store.js";
 import { viewerCatalogue } from "./projection.js";
 import { routeMarkup } from "./route_markup.js";
 import { ViewerRouting } from "./routing.js";
@@ -24,6 +25,7 @@ import { syncSelection } from "./selection_dom.js";
 import { slotLayout } from "./slot_layout.js";
 import type {
   MoklyViewerHandle,
+  MoklyViewerProps,
   ViewerEvents,
   ViewerSelection,
 } from "./types.js";
@@ -53,6 +55,7 @@ export class ViewerRuntime implements MoklyViewerHandle {
     selection: ViewerSelection,
     private controlled: boolean,
     private events: () => ViewerEvents,
+    markerStore: MarkerStore,
   ) {
     this.error = viewerFailures(events, () => !this.disposed);
     this.selection = normalizeSelection(model, selection);
@@ -78,6 +81,8 @@ export class ViewerRuntime implements MoklyViewerHandle {
       (navigation) => this.route.frame(navigation),
       this.selection,
       (error) => this.error(error, "frame"),
+      markerStore,
+      (error) => this.error(error, "markers"),
     );
     this.diffs = installDiffs(this.scope.doc, this.scope.win, (error) => {
       this.frames.end({ reason: "error" });
@@ -119,6 +124,7 @@ export class ViewerRuntime implements MoklyViewerHandle {
           ?.getAttribute("data-diff-mode") !== "current"
       )
         this.frames.end({ reason: "navigation" });
+      this.frames.refreshGeometry();
     });
     this.stopResize = initializeNavigationResize(doc, win);
     this.apply(true);
@@ -217,6 +223,9 @@ export class ViewerRuntime implements MoklyViewerHandle {
   }
   refreshLayout(): void {
     this.slots.update();
+  }
+  updateMarkers(markers: NonNullable<MoklyViewerProps["markers"]>): void {
+    this.frames.updateMarkers(markers);
   }
   async highlightInstance(
     instance: Parameters<MoklyViewerHandle["highlightInstance"]>[0],

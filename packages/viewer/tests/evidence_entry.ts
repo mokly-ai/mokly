@@ -6,8 +6,10 @@ import type { FrameEvent } from "../src/client/frame_adapter.js";
 import { postMessageAdapter } from "../src/client/post_message_adapter.js";
 import { sameOriginAdapter } from "../src/client/same_origin_adapter.js";
 import { ViewerFrames } from "../src/viewer/frames.js";
+import { MarkerStore } from "../src/viewer/marker_store.js";
+import type { MarkerPlacement } from "../src/viewer/marker_store.js";
 import { defaultSelection } from "../src/viewer/selection.js";
-import type { InstanceRef } from "../src/viewer/types.js";
+import type { InstanceRef, MarkerState } from "../src/viewer/types.js";
 
 type Viewport = "mobile" | "desktop";
 type Evidence = "ready" | "empty" | "pending" | "unavailable";
@@ -19,11 +21,16 @@ interface EvidenceProbe {
   calls: string[];
   mounts: number;
   updates: number;
+  markerErrors: number;
+  markerPlacements: readonly MarkerPlacement[];
+  markerStates: readonly MarkerState[];
   hold?: "highlight" | "list";
   geometryDuringHighlight: boolean;
+  geometryDuringList: boolean;
   waiting: boolean;
   release(): void;
   outcome?: string;
+  setMarkers(instances?: readonly InstanceRef[]): void;
   update(viewport: Viewport, evidence?: Evidence): void;
 }
 
@@ -44,7 +51,7 @@ window.startEvidence = (model, origin, cross, sibling) => {
   root.className = "mokly-viewer";
   root.tabIndex = -1;
   root.innerHTML =
-    '<iframe data-workspace-frame="mobile" style="width:390px;height:300px"></iframe><iframe data-workspace-frame="desktop" style="width:390px;height:300px"></iframe><div data-mokly-label-layer></div>';
+    '<iframe data-workspace-frame="mobile" style="width:390px;height:300px"></iframe><iframe data-workspace-frame="desktop" style="width:390px;height:300px"></iframe><div data-mokly-marker-layer style="position:absolute;inset:0;pointer-events:none"></div><div data-mokly-label-layer></div>';
   document.body.replaceChildren(root);
   const home = model.screens[0]!;
   const original = home.views.map((view) => ({ ...view }));
@@ -72,6 +79,7 @@ window.startEvidence = (model, origin, cross, sibling) => {
   const adapter = cross
     ? postMessageAdapter({ frameOrigin: origin })
     : sameOriginAdapter();
+  const markerStore = new MarkerStore();
   const probe: EvidenceProbe = {
     frames: new ViewerFrames(
       root,
@@ -116,6 +124,13 @@ window.startEvidence = (model, origin, cross, sibling) => {
             async listInstanceBoundaries() {
               probe.calls.push(`${viewport}:list`);
               const boundaries = await mounted.listInstanceBoundaries();
+              if (viewport === "mobile" && probe.geometryDuringList) {
+                probe.geometryDuringList = false;
+                for (const listener of listeners)
+                  listener({ type: "geometry" });
+                await new Promise(requestAnimationFrame);
+                await new Promise(requestAnimationFrame);
+              }
               await hold("list");
               return boundaries;
             },
@@ -135,11 +150,19 @@ window.startEvidence = (model, origin, cross, sibling) => {
         onPickEnd: (event) => probe.events.push(`end:${event.reason}`),
         onInstanceClick: (event) =>
           probe.events.push(`click:${event.instance?.viewport}`),
+        onMarkerChange: (states) => {
+          probe.markerStates = states;
+        },
       }),
       () => probe.events.push("navigation"),
       selection,
       (error) => {
         probe.events.push("error");
+        return error instanceof Error ? error : new Error("Unexpected failure");
+      },
+      markerStore,
+      (error) => {
+        probe.markerErrors++;
         return error instanceof Error ? error : new Error("Unexpected failure");
       },
     ),
@@ -149,9 +172,22 @@ window.startEvidence = (model, origin, cross, sibling) => {
     calls: [],
     mounts: 0,
     updates: 0,
+    markerErrors: 0,
+    markerPlacements: [],
+    markerStates: [],
     geometryDuringHighlight: false,
+    geometryDuringList: false,
     waiting: false,
     release: () => {},
+    setMarkers(values = [probe.instance]) {
+      probe.frames.updateMarkers(
+        values.map((instance, index) => ({
+          id: `marker-${index}`,
+          instance,
+          content: null,
+        })),
+      );
+    },
     update(viewport, evidence = "ready") {
       home.views = home.views.map((view) => {
         if (view.viewport !== viewport) return view;
@@ -169,5 +205,8 @@ window.startEvidence = (model, origin, cross, sibling) => {
     },
   };
   window.evidence = probe;
+  markerStore.subscribe(() => {
+    probe.markerPlacements = markerStore.getSnapshot();
+  });
   probe.frames.update(selection);
 };

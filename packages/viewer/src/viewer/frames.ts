@@ -13,16 +13,20 @@ import { frameSession, refreshFrameSessions } from "./frame_session.js";
 import type { Session } from "./frame_session.js";
 import { frameDescriptors, frameInstance, hasInstance } from "./frame_views.js";
 import type { ViewerFrame } from "./frame_views.js";
+import { GeometryRefresh } from "./geometry_refresh.js";
 import {
   inspectionScope,
   readyInspection,
   validInspection,
 } from "./inspection_scope.js";
+import { MarkerStore } from "./marker_store.js";
+import { FrameMarkers } from "./markers.js";
 import { Picking } from "./picking.js";
 import type {
   InstanceRef,
   PickEnd,
   ViewerEvents,
+  ViewerMarker,
   ViewerSelection,
 } from "./types.js";
 
@@ -31,6 +35,9 @@ export class ViewerFrames {
   private disposed = false;
   private pick: Picking;
   private highlights: FrameHighlights;
+  private geometry: GeometryRefresh;
+  private markers: FrameMarkers;
+  private stopGeometry: () => void;
   private choose:
     ((key: string, viewport: "mobile" | "desktop") => void) | undefined;
   constructor(
@@ -42,15 +49,34 @@ export class ViewerFrames {
     private navigate: (event: FrameNavigation) => void,
     private selection: ViewerSelection,
     private report: (error: unknown) => Error,
+    markerStore = new MarkerStore(),
+    reportMarker: (error: unknown) => Error = report,
   ) {
+    this.geometry = new GeometryRefresh(root);
     this.highlights = new FrameHighlights(
       root,
       model,
       () => this.sessions,
+      this.geometry,
       () => !this.disposed,
       (frame, event) => this.receive(frame, event),
       (error) => this.fail(error),
     );
+    this.markers = new FrameMarkers(
+      root,
+      this.geometry,
+      () => this.sessions,
+      markerStore,
+      events,
+      reportMarker,
+    );
+    this.geometry.setDemand(() => [
+      ...new Set([...this.highlights.demand(), ...this.markers.demand()]),
+    ]);
+    this.stopGeometry = this.geometry.subscribe(() => {
+      void this.highlights.labels().catch(() => {});
+      this.markers.changed();
+    });
     this.pick = new Picking(
       events,
       () => !this.disposed,
@@ -78,10 +104,14 @@ export class ViewerFrames {
         this.sessions,
         frames,
         (error) => this.fail(error),
-        (changed) =>
+        (changed) => {
+          this.geometry.supersede(changed);
           this.highlights.evidence(changed, this.pick.activating, () =>
             this.end({ reason: "evidence" }),
-          ),
+          );
+          void this.geometry.refresh(changed).catch(() => {});
+          this.markers.changed();
+        },
       )
     )
       return;
@@ -98,6 +128,9 @@ export class ViewerFrames {
         ),
       );
     }
+    this.geometry.sync(this.sessions);
+    void this.geometry.refresh().catch(() => {});
+    this.markers.changed();
   }
   private receive(frame: ViewerFrame, event: FrameEvent): void {
     if (
@@ -118,7 +151,8 @@ export class ViewerFrames {
       return;
     }
     if (event.type === "geometry") {
-      void this.highlights.labels(frame).catch(() => {});
+      const session = this.sessions.find((item) => item.frame === frame);
+      if (session) void this.geometry.refresh([session]).catch(() => {});
       return;
     }
     if (event.key !== null && !hasInstance(frame.view?.usage, event.key)) {
@@ -224,11 +258,20 @@ export class ViewerFrames {
     )?.frame;
     if (frame) void this.scroll(frameInstance(frame, key)).catch(() => {});
   }
+  updateMarkers(markers: readonly ViewerMarker[]): void {
+    this.markers.update(markers);
+  }
+  refreshGeometry(): void {
+    this.markers.changed();
+    void this.geometry.refresh().catch(() => {});
+  }
   private clear(): void {
     const sessions = this.sessions;
     this.sessions = [];
     this.choose = undefined;
     this.highlights.reset();
+    this.geometry.sync([]);
+    this.markers.changed();
     runCleanup(
       sessions.flatMap((session) => [
         () => session.controller.abort(),
@@ -248,7 +291,10 @@ export class ViewerFrames {
         this.disposed = true;
         this.pick.end();
       },
+      () => this.stopGeometry(),
+      () => this.markers.dispose(),
       () => this.clear(),
+      () => this.geometry.dispose(),
     ]);
   }
 }

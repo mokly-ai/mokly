@@ -2,10 +2,10 @@
 
 ## Delivery Status
 
-Approved target tracked by the active
+Implemented. Delivery and verification are tracked by the active
 [viewer comment anchoring plan](../../plans/viewer-comment-anchoring.md). The
-underlying instance identity, frame adapter and single-instance inspection are
-implemented; the APIs and scheduling rules in this document land in that plan.
+viewer composes the existing instance identity and frame adapter without adding
+a comment model or changing the adapter wire protocol.
 
 ## Purpose And Boundary
 
