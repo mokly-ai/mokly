@@ -188,7 +188,7 @@ Define the complete contract above before any implementation.
 - [x] Validate the changed Markdown with `npx prettier --check` on the changed
       files and review the diff for internal consistency.
 - [x] Run `git add -A`, commit with Conventional Commits and push the branch.
-- [ ] After that push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After that push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
       against the complete local diff from `origin/main`; report numbered
       findings with severity, impact, lettered options and a recommendation
       without fixing.
@@ -201,6 +201,15 @@ main viewer contract is 279 lines after relocating inspection detail. The diff
 was reviewed for selection, marker, multi-highlight, adapter and package-boundary
 consistency. This documentation-only milestone does not require `cargo xtask
 check` under the repository rules.
+
+### Milestone 1 post-push review
+
+No findings. The required prompt reviewed the complete nine-file diff against
+`origin/main` after commit `37a2995` was pushed. It checked the selection and
+marker contracts, adapter-wire invariants, host/package ownership, public README
+examples and plan alignment. Worktree, index and untracked inventories were
+clean, and the review made no changes. Residual risk is implementation
+conformance, covered by the focused and complete gates in Milestones 2–4.
 
 ## Milestone 2: Saved variant selection
 
