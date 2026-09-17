@@ -2,6 +2,8 @@
 
 ## Active
 
+- [Interactive Views](./interactive-views.md) — plan created; awaiting user
+  approval before Milestone 1 begins.
 - [Screen Variants Follow-up](./screen-variants-follow-up.md) — deferred
   design-catalogue conversion, five open review findings, and later navigation
   ideas from PR #101; planned for a separate PR, with no implementation started.
