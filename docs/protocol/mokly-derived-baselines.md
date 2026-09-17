@@ -26,16 +26,16 @@ Mokly package, and it never rebuilds the baseline on an HTTP request path.
 
 ```ts
 interface MoklyConfig {
-  generatedOutput?: "committed" | "derived"; // "committed"
+  generatedOutput?: "committed" | "derived"; // "derived"
   review?: {
     baselineBuild?: readonly (readonly string[])[];
   };
 }
 ```
 
-`generatedOutput` selects the mode for every command. `committed` is the
-default and keeps today's contract unchanged. `derived` is a typed value;
-unknown strings are config errors.
+`generatedOutput` selects the mode for every command. `derived` is the default;
+`committed` remains an explicit compatibility mode. Unknown strings are config
+errors.
 
 `review.baselineBuild` is an ordered list of argv arrays executed in the
 extracted base commit's root, in order, without a shell. Each array is
@@ -51,8 +51,8 @@ Arguments must be strings without NUL; the executable must not be blank.
 An explicit empty command list is allowed when the archived tree already has
 valid output. Derived `mockupsDir` must be below `repoRoot`; it may be absent
 in a fresh checkout. Existing ancestors and symlinks remain confined.
-The repository example uses derived mode with `npm ci`, `npm run build`, and
-`npm run example:build`, enabling its recipe together with the mode switch.
+The repository example uses the default derived mode with `npm ci`,
+`npm run build`, and `npm run example:build` as its explicit recipe.
 Generated HTML and the manifest are ignored; authored public CSS remains tracked.
 Committed mode never accepts inert commands.
 

@@ -96,7 +96,8 @@ cargo xtask check
 
 Open changed generated fragments directly from disk in both viewports. Check
 saved variants and local edit/unset/reset behavior in Serve, plus read-only
-inspection after export. Commit the generated HTML and manifest with the source.
+inspection after export. Keep the generated HTML and manifest as ignored local
+artifacts; commit their authored source instead.
 
 The tests retain the original 56 screen ids/routes, assert real consumers and
 owner chains, guard migrated composition points, and edit actual source files in

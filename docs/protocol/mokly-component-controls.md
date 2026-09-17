@@ -66,10 +66,10 @@ Temporary state is neither written to source/generated files nor encoded as
 arbitrary prop data in URLs, local storage, comparisons, or Changes counts.
 
 Temporary edits operate in Current. Selecting a comparison restores the saved
-variant and compares its committed baseline/current output; controls become
-unavailable while comparing. The product explains that the comparison shows
-the saved variant. Controls render responses cannot overwrite a comparison,
-another variant, a new viewport/theme, or a different route.
+variant and compares its baseline output with its current rendered output;
+controls become unavailable while comparing. The product explains that the
+comparison shows the saved variant. Controls render responses cannot overwrite
+a comparison, another variant, a new viewport/theme, or a different route.
 
 Published pages show the same saved variants and props with controls read-only
 and a secondary message, "Open this catalogue locally to edit props."
@@ -132,7 +132,7 @@ matching catalogue generation, a sandboxed preview URL, and validated usage
 records. Preview URLs are confined beneath
 `/__mokly/components/renders/<render-id>/`; render resources retain valid
 public relative resolution through the same adapter as normal Browse. Reject
-malformed or expired ids. This response never updates the committed manifest or
+malformed or expired ids. This response never updates the generated manifest or
 publishes watched changes.
 
 Preview documents stay script-disabled. The parent shell swaps only the matching

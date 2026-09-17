@@ -10,7 +10,7 @@ import type { MoklyConfig } from "./types.js";
 
 /** Validate the explicit mode before resolving mode-dependent filesystem paths. */
 export function generatedOutputMode(value: unknown): "committed" | "derived" {
-  if (value === undefined) return "committed";
+  if (value === undefined) return "derived";
   if (value === "committed" || value === "derived") return value;
   throw new MoklyError(
     "config-invalid",
@@ -21,11 +21,12 @@ export function generatedOutputMode(value: unknown): "committed" | "derived" {
 /** Resolve an exact, shell-free build recipe; explicit recipes have no implicit suffix. */
 export function baselineBuildCommands(
   input: MoklyConfig,
+  generatedOutput: "committed" | "derived",
   repoRoot: string,
   configPath: string,
 ): readonly (readonly string[])[] | undefined {
   const commands = input.review?.baselineBuild;
-  if (input.generatedOutput !== "derived") {
+  if (generatedOutput !== "derived") {
     if (commands !== undefined)
       throw new MoklyError(
         "config-invalid",

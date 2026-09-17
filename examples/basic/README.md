@@ -210,8 +210,8 @@ npm run example:check
 npm run preview:build
 ```
 
-This example uses `generatedOutput: "derived"`. Generated HTML and the schema-v5
-manifest under `generated/` are ignored local artifacts, absent in a fresh clone.
+This example uses the default `generatedOutput: "derived"`. Generated HTML and
+the schema-v5 manifest under `generated/` are ignored local artifacts, absent in a fresh clone.
 `example:build` writes them transactionally; `example:check` validates the current
 compilation and rejects tracked generated output without requiring files on disk.
 Committed-mode stale and deterministic-output tests use isolated consumer fixtures.

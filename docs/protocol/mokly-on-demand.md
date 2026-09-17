@@ -96,10 +96,10 @@ its parsing/comparison work remain outside the HTTP event loop.
 Background generation uses the ordinary exhaustive Build pipeline and render order,
 with checkpoints between documents and major validation phases. Forward-anchor
 validation cannot render a destination ahead of that order. Stateful style registries
-can include different unused CSS in on-demand previews; the committed background
+can include different unused CSS in on-demand previews; the exhaustive background
 artifacts retain Build's bytes and do not create artificial Changes.
 
-Full generated output is committed only through the existing transactional output
+Full generated output is finalized only through the existing transactional output
 store. It never substitutes for demand rendering of the current generation.
 Git-only baseline changes are observed off the HTTP request path, as is any
 derived-mode baseline rebuild. Ref observation

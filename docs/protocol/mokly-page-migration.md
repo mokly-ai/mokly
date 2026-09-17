@@ -62,9 +62,11 @@ whole output directories, or generated files outside the recorded inventory.
 
 On failure, restore the previous dependency/config, authoring tree, and artifacts;
 do not commit a half-migrated catalogue. On success, compare old and new route,
-anchor, resource, and rendered-content inventories and commit the regenerated
-pages with the new ownership headers and v5 manifest. A missing document is a
-migration failure even when the remaining catalogue builds successfully.
+anchor, resource, and rendered-content inventories. Derived mode keeps the
+regenerated pages and v5 manifest as ignored local artifacts and commits the
+authored migration; committed mode commits the regenerated pages with their new
+ownership headers and v5 manifest. A missing document is a migration failure even
+when the remaining catalogue builds successfully.
 
 Follow the [source-protection contract](./mokly-source-protection.md): record
 the complete config and consumer authoring graphs, validate inventory freshness,
@@ -74,11 +76,13 @@ unimported helpers under `entriesDir` or a reserved source name. Removing
 
 ## Manifest Readers And Git Baselines
 
-New successful builds emit only schema v5. `check` recomputes that output
-without rewriting files and reports a committed older manifest as stale. A
-current Browse or publication reader requires v5; encountering v2/v3/v4 reports
-that the catalogue must be migrated and rebuilt before serving. Watched Serve
-retains its last-good child if a candidate migration fails validation.
+New successful builds emit only schema v5. In committed mode, `check` recomputes
+that output without rewriting files and reports an older manifest as stale. In
+derived mode, `check` validates the current compilation and rejects a tracked
+manifest without comparing local artifact bytes. A current Browse or publication
+reader requires v5; encountering v2/v3/v4 reports that the catalogue must be
+migrated and rebuilt before serving. Watched Serve retains its last-good child if
+a candidate migration fails validation.
 
 Historical v3 manifests remain valid Git baselines; v2 keeps its existing
 `compatibility.readManifestV2` opt-in and filename fallback. A present malformed
@@ -138,6 +142,7 @@ workflow. Do not publish a release that implies unchanged consumer compatibility
 
 Actual npm publication and durable consumer adoption remain coordinated
 follow-ups after an available package version is selected. Deliver consumer
-changes and generated output through that repository's commit/push/review
-workflow. Package completion and a disposable rehearsal do not prove that an
-existing consumer catalogue has been updated.
+changes through that repository's commit/push/review workflow, including
+generated output only when the consumer explicitly uses committed mode. Package
+completion and a disposable rehearsal do not prove that an existing consumer
+catalogue has been updated.

@@ -240,7 +240,7 @@ highlighting, editable/reset and published read-only controls, and the attributi
 matrix. Preserve comparison-bar eligibility/backgrounds, icons/carets, desktop
 divider alignment, mobile sheets and bounded scrolling across the full inventory.
 
-Build/check committed output deterministically, open every changed HTML fragment
+Build/check derived output deterministically, open every changed HTML fragment
 directly from disk, smoke-test actual Serve and an exported catalogue, and verify
 that no consumer scripts or fake usage data were introduced. Measure the expanded
 catalogue's plain `npm run dev` startup and assert bounded baseline Git batching
