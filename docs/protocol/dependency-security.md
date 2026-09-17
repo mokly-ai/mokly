@@ -40,7 +40,7 @@ update; an old override is not proof that the current tree is clean.
 The current maintenance choices are:
 
 - The runtime glob dependency is `minimatch` 10.2.6 or newer; the workspace locks
-  `brace-expansion` 5.0.9. A bounded behavioral regression checks total padded
+  `brace-expansion` 5.0.12. A bounded behavioral regression checks total padded
   output and preserves normal brace alternatives. The
   [upstream advisory](https://github.com/advisories/GHSA-rgw5-rvv9-x895)
   explains why the intermediate-allocation fix requires 5.0.9, not 5.0.8.

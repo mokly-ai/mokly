@@ -29,6 +29,7 @@
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
+    "docs/guides",
     "docs/protocol",
     "CHANGELOG.md",
     "LICENSE",

@@ -9,6 +9,11 @@ The public [npm package](https://www.npmjs.com/package/@mokly/mokly) is
 `@mokly/mokly`; its executable remains `mokly`. Releases remain pre-1.0 while
 the consumer contract settles.
 
+Versioned CLI documentation lives in [`docs/guides`](./docs/guides) and ships
+inside that package beside the protocol documents and changelog. The public
+documentation site is built by the private `mokly-cloud` repository from an
+installed package release; this repository does not build or deploy the site.
+
 The [`@mokly/viewer`](./packages/viewer/README.md) workspace embeds the existing
 Browse shell in React hosts using the public
 [catalogue read model](./docs/protocol/mokly-catalogue.md). It provides controlled
@@ -1010,6 +1015,10 @@ canonical destinations and the controls that remain visual depictions.
 - [`xtask`](./xtask/README.md) — full repository verification.
 
 ### Related Docs
+
+The [packaged guides contract](./docs/protocol/mokly-guides.md) defines the
+Markdown source, versioning, linking, and publication boundary used by the
+cloud documentation site.
 
 The [registered components contract](./docs/protocol/mokly-components.md)
 links to the [change attribution](./docs/protocol/mokly-component-changes.md),

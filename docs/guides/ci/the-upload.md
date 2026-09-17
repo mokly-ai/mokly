@@ -1,0 +1,62 @@
+---
+title: "The upload"
+description: "What publish sends, and what the receiving service is responsible for."
+section: "ci"
+order: 4
+---
+
+## The request
+
+Publish posts one gzip-compressed tar archive of the export to the exact
+endpoint you gave it, with the token as a bearer credential:
+
+```http
+Authorization: Bearer TOKEN
+Content-Type: application/gzip
+Accept: application/json
+```
+
+The path is never extended, no redirect is followed and nothing is retried.
+Any 2xx response means the upload was accepted; publish then prints
+`Published Mokly catalogue.` and exits `0`. The upload times out after 120
+seconds.
+
+## What is in the archive
+
+The complete static catalogue, exactly as `export` writes it, plus
+`mokly-upload.json` at its root. That manifest names the Mokly version, the
+repository, the branch, the head revision, the base ref and pinned base
+revision, the pull request number when the job is running on one, the config
+path and the time the export finished. Without comparisons, `baseRef`,
+`baseSha` and `comparisonPath` are all `null`. Receivers must reject missing
+or extra manifest fields.
+
+The source manifest the build writes is deliberately not included: it holds
+your source inventory and is not a public artifact.
+
+## What the receiver must do
+
+A service first authenticates the bearer credential. Only then does it
+decompress the archive, enforcing size and file-count limits before reporting
+version or structural failures. It validates the manifest's fields and version
+and the file inventory against the ownership marker.
+
+Receivers accept only regular files and optional directories. They reject
+symlinks, hard links, devices, FIFOs, sparse files and other special entries,
+and extract into an empty private directory so no path can escape it. Before
+exposing any catalogue, the service checks that the credential is allowed to
+publish for the repository the manifest names.
+
+## When it is refused
+
+| Result                                  | Category                     |
+| --------------------------------------- | ---------------------------- |
+| The token or the repository was refused | `upload-unauthorized`        |
+| The archive or manifest was rejected    | `upload-invalid-bundle`      |
+| An upload limit was exceeded            | `upload-too-large`           |
+| The upload declares an unknown version  | `upload-unsupported-version` |
+| Anything else, including a timeout      | `upload-failed`              |
+
+A failed upload leaves the complete local export where it was written, so you
+can look at exactly what would have been sent. The full contract is published
+under Reference as the catalogue upload document.
