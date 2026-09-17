@@ -250,9 +250,9 @@ and round-trip it, then address instance refs on any variant.
       unchanged; document any vanilla bundle byte change.
 - [x] Run focused tests, then `PLAYWRIGHT_CHANNEL=chromium cargo xtask check`;
       require zero failures, retries and skips.
-- [ ] After checks pass, run `git add -A`, commit with Conventional Commits and
+- [x] After checks pass, run `git add -A`, commit with Conventional Commits and
       push the branch.
-- [ ] After that push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After that push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
       against the complete local diff from `origin/main`; report numbered
       findings with severity, impact, lettered options and a recommendation
       without fixing.
@@ -272,6 +272,17 @@ remains 63 files, and `inspector.js` remains byte-identical. Against a clean
 `origin/main` build, the documented vanilla bundle changes are
 `browse_runtime.js` 8,612 -> 8,549 bytes (-63), `workspace.js` 9,112 -> 9,473
 bytes (+361), and `workspace_variants.js` 3,698 -> 4,132 bytes (+434).
+
+### Milestone 2 post-push review
+
+No findings. The required prompt reviewed the complete 25-file pushed diff
+against `origin/main` after commit `f0f84f3`. It checked public selection and
+SSR behavior, controlled proposals, route/fragment ownership, standalone
+history isolation, adapter parity, lifecycle fencing, tests and documentation.
+Worktree, index and untracked inventories were clean, and the review made no
+implementation changes. Residual risk is limited to the marker and
+multi-highlight contracts that remain to be implemented and verified in
+Milestones 3 and 4.
 
 ## Milestone 3: Multi-instance highlight
 
