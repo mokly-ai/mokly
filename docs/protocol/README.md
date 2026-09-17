@@ -5,8 +5,7 @@ implemented pre-release behavior unless a document's Delivery Status explicitly
 labels an approved target that is still tracked by an active plan. Package,
 authoring, static build/check, responsive Browse, watched development, on-demand comparisons,
 packed consumer verification, CI, and npm release automation are implemented.
-The first public release and downstream Accounting cutover remain external
-delivery steps.
+The first public release remains an external delivery step.
 
 ## Supported Formats
 
@@ -24,7 +23,7 @@ otherwise they use v2. Pages participate in Browse Changes without visual compar
 The current primary file requires v5. Git baseline readers accept v3 and both
 historical v4 formats: pages with `sourceFiles`, or components with `legacyPages`.
 These envelopes are disjoint; combining them is invalid. Explicit
-`compatibility.readManifestV2` permits the old Accounting-format fallback only
+`compatibility.readManifestV2` permits the legacy v2-format fallback only
 when the historical primary file is absent, never when it is invalid.
 
 ## Contracts

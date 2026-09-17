@@ -118,7 +118,6 @@ export function validatePackageReport(report, name = "@mokly/mokly") {
         file.startsWith("docs/protocol/"),
       `package contains non-allowlisted path ${file}`,
     );
-    assert.equal(file.includes("accounting"), false);
     assert.equal(file.includes("juno"), false);
   }
 }

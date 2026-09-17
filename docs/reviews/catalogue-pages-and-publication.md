@@ -88,11 +88,10 @@ consumers, example freshness, clippy, and Rust file-length checks. The independe
 review ran read-only inspection and `git diff --check`; it did not rerun the
 build-writing test suite. All 60 design artifacts were visually inspected.
 
-The Accounting rehearsal and its preservation checks are recorded in the
-[consumer note](../migration/accounting-page-entries.md). Its compiled package
-matched the originally reviewed runtime. That tarball predates these follow-up
-fixes; durable adoption must use and validate the chosen package version.
-Durable adoption and npm publication remain separate.
+The external-consumer rehearsal used a compiled package matching the originally
+reviewed runtime. That tarball predates these follow-up fixes; durable adoption
+must use and validate the chosen package version. Durable adoption and npm
+publication remain separate.
 
 Reproductions for findings 1 and 2 use only disposable fixtures and clean them
 up afterward. Their script, results, original review output, and verification

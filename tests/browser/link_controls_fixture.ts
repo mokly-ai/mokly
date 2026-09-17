@@ -15,7 +15,7 @@ import {
   validEntrySource,
 } from "../helpers/fixture.js";
 
-/** Build real Firna controls through the same renderer boundary as Accounting. */
+/** Build real Firna controls through a custom consumer-renderer boundary. */
 export async function startLinkControlFixture() {
   const fixture = await createFixture(controlSource(), {
     extraConfig: `colorSchemes: ["light", "dark"], renderer: "renderer.tsx",

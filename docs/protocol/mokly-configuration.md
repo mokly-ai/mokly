@@ -46,8 +46,8 @@ read. All remains usable when history is unavailable; an explicit comparison
 request retains the typed configuration error. Missing refs or history keep
 their existing command-specific errors.
 
-No default may encode `docs/mockups` as a mandatory location, Accounting route
-families, Bookfolio/Firna product tokens, email-template paths, or a TypeScript
+No default may encode `docs/mockups` as a mandatory location, product route
+families, consumer design tokens, email-template paths, or a TypeScript
 workspace layout. A conventional `docs/mockups` layout may be offered by an
 explicit initializer or documented example, not hidden in runtime logic.
 
