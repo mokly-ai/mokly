@@ -7,6 +7,11 @@ import type {
 import { currentColorScheme, setColorScheme } from "./browse_state.js";
 import { element } from "./inspector_panels.js";
 
+export interface InstalledWorkspace {
+  dispose(): void;
+  setVariant(variantId: string | undefined): void;
+}
+
 export function selectedVariant(
   data: WorkspaceData,
   search: string,
@@ -32,6 +37,29 @@ export function selectedVariant(
         error: "This saved variant is unavailable. Choose another variant.",
         comparisonEligible: false,
       };
+}
+
+/** Resolve one host-owned variant value without changing browser history. */
+export function selectedVariantValue(
+  data: WorkspaceData,
+  href: string,
+  value: string | undefined,
+): ReturnType<typeof selectedVariant> {
+  const url = new URL(href);
+  if (value) url.searchParams.set("variant", value);
+  else url.searchParams.delete("variant");
+  return selectedVariant(data, url.search);
+}
+
+/** Restore the committed value after a controlled host receives a proposal. */
+export function syncVariantControl(
+  root: HTMLElement,
+  value: string | undefined,
+): void {
+  const selector = root.querySelector<HTMLSelectElement>(
+    "[data-workspace-variant]",
+  );
+  if (selector) selector.value = value ?? "";
 }
 
 /** Whether the selected saved view can open an on-demand comparison. */

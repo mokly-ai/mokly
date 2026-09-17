@@ -170,7 +170,8 @@ export function PublicStage({
     return <Flow entry={entry} catalogue={catalogue} fragment={fragment} />;
   const views =
     entry.kind === "component"
-      ? entry.variants[0]!.views
+      ? (entry.variants.find((variant) => variant.id === selection.variantId) ??
+          entry.variants[0])!.views
       : (entry as CatalogueScreen).views;
   return (
     <div

@@ -8,6 +8,7 @@ import {
 } from "react";
 
 import { ViewerLayout } from "./layout.js";
+import { MarkerStore } from "./marker_store.js";
 import { viewerCatalogue, viewerContext, viewerView } from "./projection.js";
 import { ViewerRuntime } from "./runtime.js";
 import { defaultSelection, normalizeSelection } from "./selection.js";
@@ -26,12 +27,13 @@ export function ReadyViewer(props: ReadyProps) {
   const normalized = useMemo(() => {
     try {
       return normalizeSelection(
+        props.loaded.catalogue,
         props.selection ?? { ...defaultSelection, ...defaults },
       );
     } catch {
       return undefined;
     }
-  }, [props.selection, defaults]);
+  }, [props.loaded.catalogue, props.selection, defaults]);
   const reported = useRef(false);
   const callbacks = useRef(props);
   callbacks.current = props;
@@ -63,6 +65,7 @@ function MountedViewer(
 ) {
   const container = useRef<HTMLDivElement>(null);
   const runtime = useRef<ViewerRuntime | null>(null);
+  const [markerStore] = useState(() => new MarkerStore());
   const callbacks = useRef(props);
   callbacks.current = props;
   const [initial] = useState(props.normalized);
@@ -76,6 +79,7 @@ function MountedViewer(
       initial,
       props.selection !== undefined,
       () => callbacks.current,
+      markerStore,
     );
     runtime.current = instance;
     return () => {
@@ -89,12 +93,18 @@ function MountedViewer(
   useLayoutEffect(() => {
     runtime.current?.refreshLayout();
   });
+  useLayoutEffect(() => {
+    runtime.current?.updateMarkers(props.markers ?? []);
+  }, [props.markers]);
   useImperativeHandle(
     props.ref,
     () => ({
       select: (selection) => runtime.current?.select(selection),
       highlightInstance: (instance) =>
         runtime.current?.highlightInstance(instance) ??
+        Promise.reject(new Error("The viewer is not ready.")),
+      highlightInstances: (instances) =>
+        runtime.current?.highlightInstances(instances) ??
         Promise.reject(new Error("The viewer is not ready.")),
       scrollToInstance: (instance) =>
         runtime.current?.scrollToInstance(instance) ??
@@ -114,6 +124,8 @@ function MountedViewer(
         view={viewerView(catalogue, initial)}
         selection={initial}
         baseUrl={props.loaded.url}
+        markerStore={markerStore}
+        markers={props.markers ?? []}
         {...(props.slots ? { slots: props.slots } : {})}
       />
     </div>

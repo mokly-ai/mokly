@@ -9,6 +9,8 @@ import type {
 
 export interface ViewerSelection {
   screenId: string | null;
+  /** Saved variant of a selected component; absent means its default variant. */
+  variantId?: string | undefined;
   view: "all" | "changes";
   viewport: "mobile" | "desktop" | "both";
   colorScheme: "light" | "dark";
@@ -34,6 +36,16 @@ export interface InstanceEvent {
   boxes: readonly Box[];
   frame: { entryId: string; stepIndex?: number };
 }
+export interface ViewerMarker {
+  id: string;
+  instance: InstanceRef;
+  content: ReactNode;
+}
+export type MarkerStatus = "visible" | "hidden" | "unavailable";
+export interface MarkerState {
+  id: string;
+  status: MarkerStatus;
+}
 export interface ScreenNavigateEvent {
   screenId: string;
   route: string;
@@ -53,7 +65,7 @@ export type PickEnd =
         | "error";
     };
 export interface ViewerError {
-  code: "catalogue" | "selection" | "frame" | "comparison";
+  code: "catalogue" | "selection" | "frame" | "comparison" | "markers";
   message: string;
 }
 export interface ViewerSlots {
@@ -68,6 +80,7 @@ export interface ViewerSlots {
 export interface MoklyViewerHandle {
   select(selection: Partial<ViewerSelection>): void;
   highlightInstance(instance: InstanceRef | null): Promise<void>;
+  highlightInstances(instances: readonly InstanceRef[]): Promise<void>;
   scrollToInstance(instance: InstanceRef): Promise<void>;
   startPick(): Promise<void>;
   cancelPick(): void;
@@ -79,6 +92,7 @@ export interface ViewerEvents {
   onInstanceClick?: (event: InstanceEvent) => void;
   onPickStart?: () => void;
   onPickEnd?: (event: PickEnd) => void;
+  onMarkerChange?: (states: readonly MarkerState[]) => void;
   onError?: (error: ViewerError) => void;
 }
 export type SelectionProps =
@@ -102,6 +116,7 @@ export type MoklyViewerProps = SourceProps &
   SelectionProps &
   ViewerEvents & {
     frameAdapter?: FrameAdapter;
+    markers?: readonly ViewerMarker[];
     slots?: ViewerSlots;
     ref?: Ref<MoklyViewerHandle>;
   };

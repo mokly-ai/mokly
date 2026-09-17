@@ -9,6 +9,9 @@ export const VIEWER_CSS = `
 .mokly-viewer .mokly-stage-host .mbk-main { flex:1; }
 .mokly-viewer [data-mokly-slot]:empty { display:none; }
 .mokly-viewer [data-mokly-slot="stageOverlay"] { position:absolute; z-index:10; }
+.mokly-viewer [data-mokly-marker-layer], .mokly-viewer [data-mokly-label-layer] { display:block; position:absolute; inset:0; pointer-events:none; z-index:11; }
+.mokly-viewer [data-mokly-slot="markers"]:empty { display:block; }
+.mokly-viewer.frame-expanded :is([data-mokly-marker-layer], [data-mokly-label-layer]) { z-index:952; }
 .mokly-viewer [data-mokly-slot="sidePanel"] { flex:none; overflow:auto; min-height:0; }
 .mokly-viewer [data-mokly-slot="emptyState"] { position:absolute; inset:0; background:var(--chrome-bg); overflow:auto; }
 .mokly-viewer [data-mokly-slot][hidden] { display:none; }

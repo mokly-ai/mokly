@@ -51,6 +51,12 @@ existing route/new-context handling. Events contain logical identities and
 activation metadata, never consumer URLs. The transport does not open windows.
 Local Serve/export do not select this adapter or expose a pick control.
 
+`installWorkspace` preserves standalone saved-variant history by default. The
+React viewer supplies a variant proposal hook instead: the control proposes
+public selection, and the returned `setVariant` operation applies only a
+committed controlled or uncontrolled selection. This avoids a second private
+variant state or direct history write inside embedded viewers.
+
 ```bash
 npm run build
 node --import tsx --test tests/inspector_schema.test.ts tests/post_message_adapter.test.ts

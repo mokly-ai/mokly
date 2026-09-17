@@ -1,6 +1,7 @@
 import type {
   MoklyViewerHandle,
   MoklyViewerProps,
+  ViewerMarker,
   ViewerSelection,
 } from "@mokly/viewer";
 
@@ -9,6 +10,7 @@ export interface ViewerHost {
   props: MoklyViewerProps;
   events: { name: string; value: unknown }[];
   render(): void;
+  setMarkers(markers: readonly Omit<ViewerMarker, "content">[]): void;
   setSelection(value: ViewerSelection): void;
 }
 interface Harness {

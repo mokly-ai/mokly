@@ -35,6 +35,7 @@ export function renderViewer(
   if (props.selection && props.defaultSelection)
     throw new Error("Choose one initial selection.");
   const selection = normalizeSelection(
+    loaded.catalogue,
     props.selection ?? { ...defaultSelection, ...props.defaultSelection },
   );
   const catalogue = viewerCatalogue(loaded.catalogue);
