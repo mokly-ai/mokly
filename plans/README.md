@@ -2,6 +2,8 @@
 
 ## Active
 
+- [Interactive Views](./interactive-views.md) — plan created; awaiting user
+  approval before Milestone 1 begins.
 - [Mokly Viewer Library](./mokly-viewer-library.md) — Milestones 1–11 completed,
   verified, pushed and reviewed. Milestone 11 fixes the geometry/activation race
   exposed by minimum-Node CI; its review reports one P2 follow-up for the user's
