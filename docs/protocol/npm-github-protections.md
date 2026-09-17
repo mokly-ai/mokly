@@ -4,16 +4,16 @@ The [release workflow](../../.github/workflows/release.yml) runs on a push to
 `main` or a manual dispatch. Its publish job checks out a release tag, but GitHub
 environment rules evaluate the **workflow ref**, not that checkout. Permit only
 the `main` branch in environment `npm`; dispatch retries from `main` with the
-existing paired tags as `publish_ref` and `viewer_ref`.
+existing paired tags as `publish_ref` and `viewer_ref`. Merging the combined
+Release Please PR authorizes its automatic npm publication. Starting a manual
+dispatch authorizes a retry of those already-created immutable tags.
 
 ## Required State
 
-- Environment `npm`: required reviewer `calummoore`, no administrator bypass,
-  no wait timer, and a custom branch-only deployment policy for `main`.
-- Self-review is allowed while `calummoore` is the sole maintainer. Approval
-  remains an explicit human step, not an independent-person control. When a
-  second approved maintainer is available, add them and enable
-  `prevent_self_review` to require independent approval.
+- Environment `npm`: no required reviewers, no administrator bypass, no wait
+  timer, and a custom branch-only deployment policy for `main`. Keep the
+  environment as the trusted-publisher identity and branch boundary; it is not
+  a second approval after the reviewed release PR.
 - Active tag ruleset `Immutable release tags`: match `refs/tags/v*` and
   `refs/tags/viewer-v*`, prohibit
   updates and deletion, and grant no bypass. Allow creation so release-please
@@ -21,14 +21,16 @@ existing paired tags as `publish_ref` and `viewer_ref`.
 - Preserve the existing protected `main` branch and verify it requires the
   exact `Required CI` check. Do not replace branch rules as part of this setup.
 - Both npm packages need their own trusted-publisher and team-access settings.
-  They share environment `npm` and its reviewer/main-only policy; a second GitHub
-  environment is unnecessary. The CLI's existing trust does not cover the viewer.
+  They share environment `npm` and its main-only policy; a second GitHub
+  environment is unnecessary. The CLI's trust does not cover the viewer.
 
 ## Apply With An Authorized Maintainer Credential
 
-First read the existing settings. Preserve unrelated reviewers/policies if
-the settings changed since this runbook was prepared; update an existing
-matching ruleset instead of creating duplicates.
+First read the existing settings. Preserve unrelated non-review protection
+rules if the settings changed since this runbook was prepared, and update an
+existing matching ruleset instead of creating duplicates. Confirm no release
+workflow is waiting for environment approval before removing reviewers, because
+changing the rule can immediately start that job.
 
 ```sh
 gh api repos/mokly-ai/mokly/environments/npm
@@ -38,15 +40,19 @@ gh api repos/mokly-ai/mokly/branches/main/protection
 ```
 
 Use a credential with repository Environments and Administration write access.
-Confirm `gh api users/calummoore --jq .id` is `4988117` before applying the reviewer.
-The repository's initial environment has no reviewers or deployment policies.
+The empty `reviewers` list intentionally removes the redundant approval stage.
+It does not remove the environment, its branch policy or npm's environment-bound
+trusted-publisher identity.
+
+Apply the environment update below. Run the deployment-policy `POST` only when
+the preceding read-back does not already contain the `main` branch policy.
 
 ```sh
 gh api --method PUT repos/mokly-ai/mokly/environments/npm --input - <<'JSON'
 {
   "wait_timer": 0,
   "prevent_self_review": false,
-  "reviewers": [{ "type": "User", "id": 4988117 }],
+  "reviewers": [],
   "deployment_branch_policy": {
     "protected_branches": false,
     "custom_branch_policies": true
@@ -83,14 +89,14 @@ Rulesets. These commands do not store tokens or change npm package ownership.
 
 ## Verify And Retain Evidence
 
-Repeat the four read commands above. In the environment, require a
-`required_reviewers` protection rule with the approved user, the intended
-`prevent_self_review` setting, `can_admins_bypass: false`, and custom branch
-policies enabled. The deployment policy list must contain only `main` with
-`type: branch`, not a tag pattern. Read the tag ruleset in full with
+Repeat the four read commands above. The environment must have no
+`required_reviewers` or wait-timer rule, must report `can_admins_bypass: false`,
+and must have custom branch policies enabled. The deployment policy list must
+contain only `main` with `type: branch`, not a tag pattern. Read the tag ruleset
+in full with
 `gh api repos/mokly-ai/mokly/rulesets/<ruleset-id>` and verify its active status,
-tag target, both `v*` and `viewer-v*` conditions, both rules, and empty bypass list. Check `main`
-protection's required status checks include `Required CI`.
+tag target, both `v*` and `viewer-v*` conditions, both rules, and empty bypass
+list. Check `main` protection's required status checks include `Required CI`.
 
 Retain the API read-back alongside release evidence. Do not test immutability
 by trying to move or delete a real release tag.

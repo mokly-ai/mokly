@@ -1745,16 +1745,17 @@ performing the review, and the finding above was not automatically fixed.
 
 ## Post-merge follow-up (non-blocking)
 
-- Merge the combined release-please PR for viewer 0.1.0 and CLI 0.10.0, checking
-  exact pairing, lockfile, both changelogs and required CI. Complete the
-  [viewer first publication](../docs/protocol/npm-bootstrap.md#viewer-first-publication)
-  from its immutable tagged commit and configure its separate trusted publisher
-  while the `npm` job awaits approval; verify both tag streams' protections.
-- Verify and report both published versions, tags/commit, exact CLI dependency,
-  tarball hashes/inventories, `latest` tags and signatures/provenance evidence.
-  Record the interactive viewer bootstrap's lack of OIDC provenance explicitly.
-- Smoke-test both published packages from a clean consumer: CLI export/build,
-  all viewer public imports and SSR, then mount the viewer with the postMessage
-  adapter against a published export on a second origin using its CORS contract.
-- Close this plan in `plans/README.md` when the implementation PR merges;
-  publication and the published-package smoke remain non-blocking follow-up.
+- [x] Merge the combined release-please PR for viewer 0.1.0 and CLI 0.10.0, checking
+      exact pairing, lockfile, both changelogs and required CI. Complete the
+      [viewer first publication](../docs/protocol/npm-bootstrap.md#completed-viewer-registration)
+      from its immutable tagged commit before retrying the paired workflow.
+- [ ] Read back the viewer's package-specific trusted publisher and both tag
+      streams' GitHub protections before the next viewer publication.
+- [ ] Verify and report both published versions, tags/commit, exact CLI dependency,
+      tarball hashes/inventories, `latest` tags and signatures/provenance evidence.
+      Record the interactive viewer bootstrap's lack of OIDC provenance explicitly.
+- [ ] Smoke-test both published packages from a clean consumer: CLI export/build,
+      all viewer public imports and SSR, then mount the viewer with the postMessage
+      adapter against a published export on a second origin using its CORS contract.
+- [x] Close this plan in `plans/README.md` when the implementation PR merges;
+      publication and the published-package smoke remain non-blocking follow-up.

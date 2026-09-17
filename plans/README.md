@@ -2,12 +2,6 @@
 
 ## Active
 
-- [Mokly Viewer Library](./mokly-viewer-library.md) — Milestones 1–11 completed,
-  verified, pushed and reviewed. Milestone 11 fixes the geometry/activation race
-  exposed by minimum-Node CI; its review reports one P2 follow-up for the user's
-  decision.
-  The plan remains active until the implementation PR merges. Package publication
-  and the published-package smoke are non-blocking post-merge follow-up.
 - [Mokabook Dependency Patch Upstreaming](./mokabook-dependency-patch-upstreaming.md)
 - [Publish Catalogue](./publish-catalogue.md)
 - [App-Independent Mokabook Npm Library](./app-independent-mokabook-library.md)
@@ -15,6 +9,9 @@
 
 ## Completed
 
+- [Mokly Viewer Library](./mokly-viewer-library.md) — implementation and release
+  PRs merged; viewer 0.1.0 and CLI 0.10.0 are published. One P2 review finding
+  and the remaining published-package smoke are recorded for follow-up.
 - [CSS Change Attribution](./css-change-attribution.md) — delivered, two
   rounds of review fixes applied, and reviewed three times; nine follow-up
   findings from the third review await the user's decision.
@@ -25,8 +22,8 @@
 - [Derived Baselines](./derived-baselines.md) — delivered and verified;
   review findings are recorded for the user's decision.
 - [Mokly Package Migration](./mokly-package-migration.md) — repository fixes
-  delivered and reviewed; authenticated GitHub publishing-protection setup
-  remains an external prerequisite.
+  delivered and reviewed; authenticated main-only GitHub publishing protections
+  are configured.
 - [Optional Published Changes](./optional-published-changes.md)
 - [Unified Catalogue Pages](./unified-catalogue-pages.md)
 - [Reuse Registered Components In Mokabook's Design Catalogue](./mokabook-design-components.md)

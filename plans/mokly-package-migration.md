@@ -234,8 +234,14 @@ all 78 changed Markdown files. No new implementation findings were identified.
    The durable fix is repository-level protection plus retained read-back
    evidence, not an npm token or a workflow-only approximation of approval.
 
-Repository work is delivered; the external setup blocker remains explicit.
-Residual verification limits: no live npm publication was attempted, and the
-bootstrap's macOS-style path handling was exercised through an isolated alias
-fixture on Linux rather than on a Mac. This documentation-only closeout is
-committed/pushed separately and receives a final read-only diff review.
+At that review, repository work was delivered and the external setup blocker
+remained explicit. No live npm publication was attempted, and the bootstrap's
+macOS-style path handling was exercised through an isolated alias fixture on
+Linux rather than on a Mac. That documentation-only closeout was committed and
+pushed separately and received a final read-only diff review.
+
+Post-completion status (17 September 2026): the immutable-tag ruleset and
+main-only `npm` environment are configured with administrator bypass disabled.
+The environment's sole-maintainer review rule was subsequently removed by
+explicit maintainer decision; merging the reviewed Release Please PR now
+authorizes publication without a duplicate self-approval step.

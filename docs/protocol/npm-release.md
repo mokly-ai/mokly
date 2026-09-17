@@ -263,6 +263,13 @@ A single concurrency group serializes automatic runs and manual retries without
 cancelling an in-progress publish. A completed viewer publication is verified
 and skipped on retry; the CLI cannot publish before that verification succeeds.
 
+Merging the combined Release Please PR is the human authorization to publish.
+The `npm` environment does not require a second reviewer: its purpose is to bind
+trusted publishing to this workflow and restrict the workflow ref to `main`.
+Starting a manual dispatch authorizes only a retry of the supplied immutable tag
+pair; the source, version and registry-content guards prevent it from selecting
+or rebuilding different release bytes.
+
 The publish job alone receives `id-token: write`, plus read-only contents, and
 runs in the protected GitHub environment named `npm`. Release-please receives
 only contents, pull-request, and issue write permissions. Prefer a
@@ -295,10 +302,13 @@ identity beside the archive hashes; ordinary `pack.mjs` does not supply this
 bootstrap source proof.
 
 The bootstrap used interactive maintainer authentication, not OIDC. The CLI
-has since published 0.9.0. Viewer registration is separate and remains pending:
-follow [the viewer bootstrap procedure](./npm-bootstrap.md#viewer-first-publication)
-for its first 0.1.0, then configure its own trusted publisher. Do not interpret
-the CLI's existing scope, access or trust settings as viewer setup evidence.
+subsequently published 0.9.0. Viewer 0.1.0 was registered separately with
+interactive authentication on 17 September 2026 from the same reviewed commit
+as CLI 0.10.0. The paired workflow verified and skipped the matching viewer
+archive before publishing the CLI through OIDC. The
+[bootstrap record](./npm-bootstrap.md#completed-viewer-registration) preserves
+that boundary. Verify each package's own trusted publisher before its next
+release; one package's trust configuration is not evidence for the other.
 
 ## Maintainer Setup
 
@@ -312,9 +322,9 @@ Before enabling publish, maintainers must configure and verify:
   repository secret `CLOUDFLARE_PAGES_API_TOKEN` or `CLOUDFLARE_API_TOKEN`
   holds a least-privilege token with Pages write access;
 - the protected `npm` environment allows only the workflow's `main` branch,
-  requires an approved reviewer, and disables administrator bypass, without
-  storing an npm token. Checking out a release tag does not change the workflow
-  deployment ref; manual retries must also dispatch from `main`;
+  has no required reviewer or wait timer, and disables administrator bypass,
+  without storing an npm token. Checking out a release tag does not change the
+  workflow deployment ref; manual retries must also dispatch from `main`;
 - the `RELEASE_PLEASE_TOKEN` credential owner, least-privilege repository
   access, expiry/rotation, and fallback behavior;
 - approved Mokly npm maintainer accounts and teams, enforced 2FA, public
@@ -326,7 +336,7 @@ Before enabling publish, maintainers must configure and verify:
 
 No long-lived npm write token is stored in GitHub Actions.
 See [GitHub publishing protections](./npm-github-protections.md) for exact setup,
-read-back verification, sole-maintainer approval policy, and credential blockers.
+read-back verification, merge-authorized publishing policy, and credential blockers.
 
 ## Release Evidence
 
