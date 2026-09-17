@@ -6,6 +6,7 @@ import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 
 import { repositoryRoot } from "./fixture.js";
+import { GUIDE_PATHS } from "./guides.js";
 import {
   packageReport,
   viewerPackageReport,
@@ -56,7 +57,14 @@ export async function bootstrapFixture(
     bin: { mokly: "./dist/cli/bin.js" },
     workspaces: ["packages/viewer"],
     dependencies: { "@mokly/viewer": "0.1.0" },
-    files: ["dist", "docs/protocol", "README.md", "LICENSE", "CHANGELOG.md"],
+    files: [
+      "dist",
+      "docs/guides",
+      "docs/protocol",
+      "README.md",
+      "LICENSE",
+      "CHANGELOG.md",
+    ],
     scripts: { prepack: "node build.mjs" },
   };
   const viewerPackage = {
@@ -97,6 +105,12 @@ export async function bootstrapFixture(
     "packages/viewer/CHANGELOG.md": "# Viewer test release\n",
     ".gitignore": "dist/\nnode_modules/\n.context/\n",
     "README.md": "# Bootstrap test fixture\n",
+    ...Object.fromEntries(
+      GUIDE_PATHS.map((guidePath) => [
+        guidePath,
+        "# Packaged guide test fixture\n",
+      ]),
+    ),
     "docs/protocol/mokly-upload.md": "# Upload protocol test fixture\n",
     "docs/protocol/mokly-export-ownership.md":
       "# Ownership protocol test fixture\n",

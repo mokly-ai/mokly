@@ -7,13 +7,13 @@ defines the required consumer upgrade.
 ## Source Of Truth
 
 Consumer-authored registry modules and imported render helpers are the source of
-truth. In the default committed mode, generated fragments, page HTML, and the
-manifest remain committed in consumer repositories so they can be reviewed
-without a server. In [derived mode](./mokly-derived-baselines.md) they are
-local artifacts and the baseline is rebuilt from the merge-base commit. Browsing
-and comparisons consume those same artifacts and definitions; neither may
-introduce a second screen renderer or catalogue.
-This repository's basic example uses derived mode: only its authored inputs,
+truth. In the default [derived mode](./mokly-derived-baselines.md), generated
+fragments, page HTML, and the manifest are local artifacts and the baseline is
+rebuilt from the merge-base commit. Explicit committed mode instead keeps those
+artifacts in Git so they can be reviewed without executing historical code.
+Browsing and comparisons consume the same rendered documents and definitions;
+neither may introduce a second screen renderer or catalogue. This repository's
+basic example uses the default derived mode: only its authored inputs,
 including public CSS, are tracked. Build generates its local HTML and manifest.
 
 ## Delivery Status

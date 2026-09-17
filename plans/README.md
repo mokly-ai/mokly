@@ -2,6 +2,9 @@
 
 ## Active
 
+- [Package Documentation](./package-documentation.md) — supersedes the
+  unmerged public-site plan and pull request #79 by shipping versioned Markdown
+  guides in `@mokly/mokly` for the cloud repository to render.
 - [Viewer Comment Anchoring](./viewer-comment-anchoring.md)
 - [Mokabook Dependency Patch Upstreaming](./mokabook-dependency-patch-upstreaming.md)
 - [Publish Catalogue](./publish-catalogue.md)

@@ -47,15 +47,17 @@ evidence, not sufficient reason to classify a registered consumer as changed.
 Component catalogues use the same ownership-aware classifier for Browse and
 detailed comparisons; unregistered catalogues retain `changedManifestRoutes`.
 
-Lightweight Browse classification reads committed/current manifests, validated
-usage metadata, and required fragment material from the Git branch point. It
-does not generate snapshots or copy comparison assets. Opening All/Changes,
-navigating, changing viewport/theme in Current, and watch notifications retain the
-no-eager-comparison-generation contract. Cache classification by catalogue
-generation and resolved baseline; invalidate it with source, config, stylesheet,
-resource, or Git-baseline changes that affect its inputs. No-watch Serve and
-publication instead reuse their validated startup snapshot, including ownership
-evidence and unavailable-history state, for the lifetime of that capture.
+Lightweight Browse classification reads the current compiled manifest and usage
+metadata together with the baseline manifest and required fragment material.
+Committed mode reads the baseline side from Git branch-point blobs; derived mode
+reads it from the validated rebuilt cache. It does not generate snapshots or copy
+comparison assets. Opening All/Changes, navigating, changing viewport/theme in
+Current, and watch notifications retain the no-eager-comparison-generation
+contract. Cache classification by catalogue generation and resolved baseline;
+invalidate it with source, config, stylesheet, resource, or Git-baseline changes
+that affect its inputs. No-watch Serve and publication instead reuse their
+validated startup snapshot, including ownership evidence and unavailable-history
+state, for the lifetime of that capture.
 
 The comparison artifact adds a versioned component/variant result and explicit
 affected-consumer evidence. New readers retain schema-v2 screen artifact support;

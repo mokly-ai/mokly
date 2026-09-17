@@ -37,8 +37,8 @@ Value options also accept --name=value. Use --token=-TOKEN for a leading dash.
 Boolean flags take no value.
 
 Configuration:
-  generatedOutput       "committed" (default) checks files match source;
-                        "derived" checks generated files are untracked
+  generatedOutput       "derived" (default) checks generated files are untracked;
+                        "committed" checks files match source
   review.baselineBuild  Derived-only argv arrays run without a shell using
                         trusted historical code. Defaults: npm ci, then
                         npx --no-install mokly build --config <config-path>
