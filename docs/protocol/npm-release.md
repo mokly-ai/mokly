@@ -202,11 +202,14 @@ the root lockfile and the release manifest. The CLI keeps `vX.Y.Z` tags
 `viewer-vX.Y.Z`, with component `viewer` and `packages/viewer/CHANGELOG.md`.
 Both tags must identify the same reviewed release commit.
 
-The viewer manifest is seeded at **0.0.0**, not 0.1.0: the extraction's `feat`
-commit bumps the prior manifest version to the first release **0.1.0**.
-The working viewer package is already 0.1.0 so clean local workspace installs
-can resolve the CLI's exact dependency before that release. Subsequent release
-PRs own both values; never retain a hardcoded 0.1.0 package gate.
+The viewer manifest is seeded at **0.0.0**, not 0.1.0, to record that it has no
+prior release. Its per-package `initial-version` is explicitly **0.1.0** because
+release-please 17.6.0 otherwise treats the missing prior release as 1.0.0 rather
+than applying a conventional bump to the 0.0.0 marker. The working viewer
+package is already 0.1.0 so clean local workspace installs can resolve the CLI's
+exact dependency before that release. Subsequent release PRs own both package
+versions; the initial-version setting is ignored after a release exists, and no
+runtime or packaging gate may remain hardcoded to 0.1.0.
 `bump-minor-pre-major` keeps breaking pre-1.0 changes on the minor stream.
 The requested 0.8.0 → 0.9.0 CLI pairing was overtaken by main's already
 published `v0.9.0` (`87daaa4`, release PR #73). The current manifest retains

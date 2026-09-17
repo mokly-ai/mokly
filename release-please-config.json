@@ -13,6 +13,7 @@
     "packages/viewer": {
       "release-type": "node",
       "component": "viewer",
+      "initial-version": "0.1.0",
       "changelog-path": "CHANGELOG.md",
       "include-component-in-tag": true,
       "include-v-in-tag": true,
