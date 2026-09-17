@@ -115,8 +115,10 @@ ones: `same_origin_mount` imports the pure `classifyFrameActivation` from
 `frame_navigation`, and `same_origin_adapter` imports a duplicate
 `HighlightFrame` from `component_highlight` that is structurally identical to
 the kept one. Milestone 2 moves the function into a kept transport module,
-deletes the duplicate interface, and repoints the adapter at the kept one,
-before the partition check lands.
+deletes the duplicate interface, and repoints every importer of it (found by
+grep, not by list; today that includes `workspace_preview` and
+`component_highlight`'s own signature) at the kept one, before the partition
+check lands.
 
 Move (pure helpers that become shell, store, or kept transport modules):
 `search_query`, `entry_wording`, the delivery-adoption logic inside
@@ -126,9 +128,11 @@ Viewer host modules deleted in Milestone 7 with the islands: `layout.tsx`,
 `markup.tsx`, `route_markup.tsx`, `runtime.tsx`, `scope.ts`, `slot_layout.ts`,
 `input.ts`, `selection_dom.ts`, `frames.ts`, `frame_views.ts`,
 `frame_session.ts`, `frame_highlights.ts`, `frame_labels.ts`,
-`frame_location.ts`, and `standalone/navigation_resize.ts`. Five viewer host
-modules that survive import deleted ones and must be reworked in the same
-change: `ready.tsx` (layout, runtime), `server.tsx` (layout),
+and `frame_location.ts`. `packages/viewer/src/standalone/navigation_resize.ts`
+is not deleted in Milestone 7; it stays the pre-hydration disclosure-capture
+script emitted by `shell/document.tsx`, and Milestone 8 decides its future.
+Five viewer host modules that survive import deleted ones and must be
+reworked in the same change: `ready.tsx` (layout, runtime), `server.tsx` (layout),
 `public_stage.tsx` (frame_location), `highlight_request.ts` (frame_views),
 and `inspection_scope.ts` (frame_session, frame_views). CLI composition
 deleted in Milestone 7: `src/client/browse.ts`, `browser.ts`,
@@ -200,18 +204,19 @@ host mode, and export; replace the hard-coded module allowlist; and add the
 development switch that selects the React shell. No shell component changes
 yet; the vanilla runtime remains the default and keeps working.
 
-- [ ] Replace the `loadBrowserClientModules` allowlist in
-      `src/server/client_modules.ts` with enumeration of the viewer and CLI
-      browser build outputs, the way `loadBrowserNavigationModules` already
-      enumerates its directory; keep the existing delivery names (including
-      `browse_runtime.js`), the export exclusions in `src/export/site.ts`
-      (`browser.js`, `live_updates.js`), and the navigation-module set. Add
-      failing tests first for a missing file, an unexpected file, and unchanged
-      delivery names.
+- [ ] Replace both hard-coded lists in `src/server/client_modules.ts`,
+      `loadBrowserClientModules` and `loadBrowserNavigationModules`, with
+      directory enumeration of the viewer and CLI browser build outputs; keep
+      the existing delivery names (including `browse_runtime.js`) and the
+      export exclusions in `src/export/site.ts` (`browser.js`,
+      `live_updates.js`). Add failing tests first for a missing file, an
+      unexpected file, and unchanged delivery names.
 - [ ] Move `classifyFrameActivation` from `frame_navigation` into a kept
-      transport module, delete the duplicate `HighlightFrame` interface in
-      `component_highlight`, and repoint `same_origin_mount` and
-      `same_origin_adapter` at the kept symbols; no behaviour changes.
+      transport module and repoint `same_origin_mount`. Delete the duplicate
+      `HighlightFrame` interface in `component_highlight` and repoint every
+      importer found by grepping `packages/viewer/src` and `src` (including
+      retired modules that survive until Milestone 7) at the kept one in
+      `same_origin_highlight`; no behaviour changes and typecheck stays green.
 - [ ] Add `scripts/package/shell_partition.mjs` exporting the keep and retire
       arrays from the module inventory in this plan, and a partition check in
       `scripts/package/browser_graph.mjs` that fails when a keep module imports
@@ -234,12 +239,13 @@ yet; the vanilla runtime remains the default and keeps working.
       documented export subpath for it in `packages/viewer/package.json`
       alongside `.`, `./server`, `./runtime`, `./data`, and `./styles.css`;
       the React host path uses the host's React.
-- [ ] Add the shell switch as a request-scoped, CLI-private selector: Serve
-      renders the hydrated document when a private request header or cookie
-      is present, read where `src/server/http_routes.ts` and
-      `src/server/view_routes.ts` build the shell context and applied in
-      `src/server/pages.ts`; export takes a CLI-private option applied in
-      `src/export/site.ts`. One Serve process serves both shells, so the
+- [ ] Add the shell switch as a request-scoped, CLI-private selector: a new
+      field on `ShellContext` in `packages/viewer/src/shell/context.ts`, set
+      from a private request header or cookie at the single construction site
+      in `src/server/http_routes.ts` (it threads to `view_routes.ts` as a
+      parameter), consumed in `src/server/pages.ts`; export sets the same
+      field from a CLI-private option where `src/export/site.ts` builds its
+      context literal. One Serve process serves both shells, so the
       browser suite keeps a single web server and the shared review output
       directory under `examples/basic` has one owner. The switch is not
       documented for users and is deleted in Milestone 7.
@@ -379,9 +385,9 @@ public host component is rewritten in the next milestone.
 - [ ] Add a temporary host adapter: `MoklyViewer` renders the hydrated shell
       tree through a minimal adapter that preserves its props, slots, handle,
       and events, and rework the five surviving viewer host modules named in
-      the inventory so the package compiles without the deleted modules. The
-      adapter is compatibility plumbing, not UI; the full rewrite is
-      Milestone 8.
+      the inventory so the package compiles without the deleted modules. Those
+      reworks repoint imports only and change no rendered markup; the adapter
+      is compatibility plumbing, not UI. The full rewrite is Milestone 8.
 - [ ] Rerun the packed-consumer smoke and the published-package layout checks
       for both tarballs.
 - [ ] Run `cargo xtask check` with the adapter in place, so the tree is green
@@ -477,3 +483,13 @@ a second server would leave setup unawaited and contend on the review output
 directory, the partition check gained a machine-readable source file, the
 `expect` tally was dropped, and the five surviving viewer host modules that
 import deleted ones are named.
+
+The third revision (`aff5872`) was reviewed a fourth time. Five findings were
+verified and applied: the duplicate `HighlightFrame` delete had a third
+importer (every importer is now found by grep), the standalone
+navigation-resize script was both kept and listed for deletion with a wrong
+path, the navigation-module loader was described as enumerating when it is a
+second hard-coded list (both are now enumerated), the selector was pointed at
+a context construction site that does not exist (it is now a `ShellContext`
+field set once), and the Milestone 7 host-module reworks are constrained to
+import repoints with no markup change.
