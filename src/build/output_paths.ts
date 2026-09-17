@@ -1,11 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import {
-  isInside,
-  isSafeCatalogueRoute,
-  projectRealPath,
-} from "../config/paths.js";
+import { isSafeCatalogueRoute } from "@mokly/viewer/data";
+
+import { isInside, projectRealPath } from "../config/paths.js";
 import { isInternalCatalogueFile } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError, errorMessage } from "../errors.js";

@@ -11,8 +11,8 @@ import {
   CommittedRepository,
 } from "../dist/review/git.js";
 import { committedReviewRepository } from "../dist/review/repository.js";
-import { parseReviewResult } from "../dist/review/result_validation.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
+import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";

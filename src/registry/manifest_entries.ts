@@ -1,6 +1,7 @@
+import { isCatalogueId } from "@mokly/viewer/data";
+
 import { validateManifestComponent } from "../components/manifest_validation.js";
 import { MoklyError } from "../errors.js";
-import { isCatalogueId } from "../navigation/logical.js";
 
 import {
   nonEmptyString,

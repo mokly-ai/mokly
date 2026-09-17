@@ -2,7 +2,8 @@
 import { randomUUID } from "node:crypto";
 import type { ServerResponse } from "node:http";
 
-import { isSafeCatalogueRoute } from "../config/paths.js";
+import { isSafeCatalogueRoute } from "@mokly/viewer/data";
+
 import { MoklyError } from "../errors.js";
 import type {
   ReviewSelection,

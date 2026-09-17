@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { applyPreviewFragmentQuery } from "../dist/client/preview_fragment.js";
+import { applyPreviewFragmentQuery } from "../packages/viewer/dist/client/preview_fragment.js";
 
 test("preview fragment queries update every applicable frame source", () => {
   const first = frame({

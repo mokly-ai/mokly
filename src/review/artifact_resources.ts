@@ -1,7 +1,8 @@
+import { reviewInvalid } from "@mokly/viewer/data";
+import type { ReviewArtifact, ViewReview } from "@mokly/viewer/data";
+
 import { referencedRoutes } from "./asset_references.js";
 import { normalizeHistoricalDocument, normalizeReviewPair } from "./ignore.js";
-import { reviewInvalid } from "./result_helpers.js";
-import type { ReviewArtifact, ViewReview } from "./types.js";
 
 /** Check graph-backed evidence against the actual retained snapshots before publication. */
 export function validateArtifactResources(artifact: ReviewArtifact): void {

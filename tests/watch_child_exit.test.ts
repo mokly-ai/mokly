@@ -14,7 +14,10 @@ import type {
   ChildHandle,
 } from "../dist/server/child_process.js";
 import type { CatalogueServerFactory } from "../dist/server/factory.js";
-import type { RunningServer, ServerOptions } from "../dist/server/http.js";
+import type {
+  RunningServer,
+  ServerOptions,
+} from "../dist/server/http_types.js";
 import { serve } from "../dist/server/serve.js";
 import {
   ReadyProcessSupervisor,

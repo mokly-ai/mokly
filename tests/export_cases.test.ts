@@ -5,7 +5,7 @@ import test from "node:test";
 
 import { validateExportReferences } from "../dist/export/references.js";
 import { exportCatalogue } from "../dist/export/run.js";
-import type { ReviewResult } from "../dist/review/types.js";
+import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";

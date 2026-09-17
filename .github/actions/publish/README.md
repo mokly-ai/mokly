@@ -10,6 +10,11 @@ Pin it to a reviewed commit SHA (or a release tag containing this directory).
 `version` is required: choose an exact published version containing `publish`;
 versions, ranges and `latest` from before this feature cannot provide it. The
 feature must be released to npm before remote consumers can use the action.
+The installed CLI resolves its exact `@mokly/viewer` dependency from npm; no
+separate viewer version input is needed. Installation fails if those versions
+disagree. Older CLI releases without that dependency remain supported. The
+repository release workflow publishes and verifies the viewer first so the CLI
+is installable when released.
 
 ## Usage
 

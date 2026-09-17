@@ -1,19 +1,22 @@
 /** Shared single-view render/validation with generation-local route and resource indexes. */
+import type { ComponentViewRecord } from "@mokly/viewer";
+import {
+  validateComponentViewRecord,
+  generatedViews,
+} from "@mokly/viewer/data";
+import type { ArtifactView } from "@mokly/viewer/data";
+
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import {
   transformCompatibilityDocuments,
   type CompatibilityContext,
 } from "../compatibility/transform.js";
-import type { ComponentViewRecord } from "../components/manifest_types.js";
 import { validateComponentResources } from "../components/output_validation.js";
 import { validateComponentRanges } from "../components/ranges.js";
 import { rebaseStyleOwnership } from "../components/style_ownership.js";
-import { validateComponentViewRecord } from "../components/view_validation.js";
-import { generatedViews } from "../components/views.js";
 import { MoklyError } from "../errors.js";
 import { extractHtmlReferences } from "../html_references.js";
 import { prepareRegistry } from "../registry/prepare.js";
-import type { ArtifactView } from "../registry/views.js";
 import { normalizeSingleDocument } from "../review/ignore.js";
 
 import type { ComponentRuntime } from "./component_runtime.js";

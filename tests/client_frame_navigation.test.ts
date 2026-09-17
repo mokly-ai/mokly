@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { classifyFrameActivation } from "../dist/client/frame_navigation.js";
+import { classifyFrameActivation } from "../packages/viewer/dist/client/frame_navigation.js";
 
 const primary = {
   altKey: false,

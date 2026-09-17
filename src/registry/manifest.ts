@@ -1,21 +1,20 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import type {
-  ColorScheme,
-  ResolvedRegistryEntry,
-  Viewport,
-} from "../authoring/types.js";
-import { canonicalJson } from "../components/data.js";
+import type { ColorScheme, Viewport, ComponentViewRecord } from "@mokly/viewer";
+import type { ManifestV5, HistoricalManifest } from "@mokly/viewer/data";
+import {
+  canonicalJson,
+  analyzeHierarchy,
+  effectiveColorSchemes,
+} from "@mokly/viewer/data";
+
+import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import { componentManifestEntry } from "../components/manifest_build.js";
-import type { ComponentViewRecord } from "../components/manifest_types.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError, errorMessage } from "../errors.js";
 
-import { analyzeHierarchy } from "./hierarchy.js";
 import { validateManifest } from "./manifest_validation.js";
-import type { ManifestV5, HistoricalManifest } from "./types.js";
-import { effectiveColorSchemes } from "./views.js";
 
 /** Canonical generated manifest filename. */
 export const MANIFEST_NAME = "mokly-manifest.json";

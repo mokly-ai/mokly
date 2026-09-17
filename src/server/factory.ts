@@ -1,10 +1,7 @@
 import type { ResolvedConfig } from "../config/types.js";
 
-import {
-  startCatalogueServer,
-  type RunningServer,
-  type ServerOptions,
-} from "./http.js";
+import { startCatalogueServer } from "./http.js";
+import type { RunningServer, ServerOptions } from "./http_types.js";
 
 /** Server construction seam used by the Serve runtime. */
 export interface CatalogueServerFactory {

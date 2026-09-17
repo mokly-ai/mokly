@@ -12,5 +12,9 @@ package-lock.json
 test-results
 playwright-report
 
+# Canonical protocol bytes are verified by catalogue conformance tests.
+docs/protocol/fixtures/catalogue-v1.json
+
 # release-please owns the changelog format
 CHANGELOG.md
+packages/viewer/CHANGELOG.md

@@ -1,10 +1,9 @@
+import type { ComponentInputOwner, ComponentViewRecord } from "@mokly/viewer";
+import { canonicalJson } from "@mokly/viewer/data";
+
 import { normalizeHistoricalDocument } from "../review/ignore.js";
 
-import { canonicalJson } from "./data.js";
-import type {
-  ComponentInputOwner,
-  ComponentViewRecord,
-} from "./manifest_types.js";
+import { instanceStructure } from "./instance_structure.js";
 import { validateComponentRanges, type RenderedRange } from "./ranges.js";
 
 /** Canonicalize historical material only after its original coordinates are consumed. */
@@ -29,7 +28,7 @@ export function structureSignals(
   return {
     instances: view.instances
       .filter((instance) => sameOwner(instance.owner, owner))
-      .map(({ props: _props, propsKey: _key, ...identity }) => identity),
+      .map(instanceStructure),
     slots: view.slots.filter(
       (slot) => sameOwner(slot.owner, owner) && !slot.sourceSlotKey,
     ),

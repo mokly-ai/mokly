@@ -2,7 +2,7 @@ import { mock } from "node:test";
 
 import { expect, test, type Page } from "@playwright/test";
 
-import type { RunningServer } from "../../dist/server/http.js";
+import type { RunningServer } from "../../dist/server/http_types.js";
 
 import { loadComparison } from "./comparison_actions.js";
 import { selectedComparisonFixture } from "./selected_comparison_fixture.js";

@@ -2,7 +2,7 @@ import path from "node:path";
 
 import { Header, Parser, type ReadEntry } from "tar";
 
-import { isSafeRepositoryPath } from "../config/paths.js";
+import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
 import { MAX_ARCHIVE_BYTES } from "./process.js";
 

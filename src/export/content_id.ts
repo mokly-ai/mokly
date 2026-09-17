@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 
-import type { ReviewArtifactContent } from "../review/types.js";
+import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
 /** Stable path/content hashes without locale- or insertion-order dependence. */
 export function contentIdentities(

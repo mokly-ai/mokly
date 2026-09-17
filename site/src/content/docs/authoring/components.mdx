@@ -73,6 +73,23 @@ belongs to it. A renderer may also return exact style and resource ownership,
 so a change to a component's implementation is attributed to the component and
 its consumers are listed as affected.
 
+## Resolve a saved instance
+
+Use `resolveInstance` to compare one validated instance record with the record
+that has the same key in another version of the same view.
+
+```ts
+import { resolveInstance } from "@mokly/mokly";
+import type { ComponentInstanceRecord, InstanceResolution } from "@mokly/mokly";
+
+const result: InstanceResolution = resolveInstance(previous, current);
+```
+
+The result is `present` when the saved inputs and order still match, `moved`
+when the key remains but those recorded inputs changed, and `missing` when no
+equal-key record exists. The helper compares records only; it does not load a
+catalogue, inspect rendered markup or classify a visual change.
+
 ## Exported types
 
 | Type                                                            | Use                                     |
@@ -85,3 +102,5 @@ its consumers are listed as affected.
 | `ObjectPropSchema`, `DataPropSchema`, `DataPropField`           | The schema of a component's data        |
 | `InferProp`, `ComponentPropsData`, `PropValue`, `PropPrimitive` | The values a schema allows              |
 | `ComponentStyleOwnership`, `ComponentResourceOwnership`         | Exact ownership a renderer may report   |
+| `ComponentInstanceRecord`, `ComponentSourceLocation`            | Saved instance identity and source      |
+| `InstanceResolution`                                            | The result of `resolveInstance`         |

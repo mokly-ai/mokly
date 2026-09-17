@@ -1,9 +1,10 @@
 /** Restart supervision retains ownership until each child's cleanup completes. */
 
+import type { ManifestV5 } from "@mokly/viewer/data";
+
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import { bindTimings, timeSync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
-import type { ManifestV5 } from "../registry/types.js";
 
 import { ManagedChild, type ChildShutdownTimings } from "./child_lifecycle.js";
 import { NodeChildFactory, type ChildFactory } from "./child_process.js";

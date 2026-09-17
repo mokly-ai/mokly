@@ -1,4 +1,4 @@
-import type { ColorScheme } from "../authoring/types.js";
+import type { ColorScheme } from "@mokly/viewer";
 
 /** Filesystem changes understood by the watched development runtime. */
 export type WatchAction = "ignore" | "rebuild" | "reload" | "restart";

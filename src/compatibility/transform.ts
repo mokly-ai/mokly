@@ -1,5 +1,7 @@
 import path from "node:path";
 
+import type { ArtifactView } from "@mokly/viewer/data";
+
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import { walkFiles } from "../build/discovery.js";
 import { validateControlMetadata } from "../build/link_control_metadata.js";
@@ -15,7 +17,6 @@ import { isPublicStaticFile } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError, errorMessage } from "../errors.js";
 import { MANIFEST_NAME } from "../registry/manifest.js";
-import type { ArtifactView } from "../registry/views.js";
 
 /** Resolve catalogue id links and apply an explicitly configured migration bridge. */
 export function transformCompatibilityDocuments(

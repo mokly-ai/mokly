@@ -11,7 +11,12 @@ test("Lighthouse stays outside the normal workspace install with exact independe
   const root = JSON.parse(
     await readFile(repositoryPath("package.json"), "utf8"),
   ) as { workspaces: string[] };
-  assert.deepEqual(root.workspaces, ["site"]);
+  assert.deepEqual(
+    root.workspaces.filter(
+      (workspace) => workspace === "site" || workspace.startsWith("site/"),
+    ),
+    ["site"],
+  );
   const lock = JSON.parse(
     await readFile(repositoryPath("package-lock.json"), "utf8"),
   ) as {

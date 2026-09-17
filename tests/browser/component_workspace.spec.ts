@@ -206,5 +206,9 @@ test("view controls and highlighting work inside sandboxed Browse frames", async
   expect(new Set(ids).size).toBe(ids.length);
   await toolbar.getByRole("switch", { name: "Highlight components" }).uncheck();
   await expect(frame.locator(".ce-highlight-layer:visible")).toHaveCount(0);
-  await expect(frame.locator("script")).toHaveCount(0);
+  await expect(frame.locator("script")).toHaveCount(1);
+  await expect(frame.locator("script")).toHaveAttribute(
+    "src",
+    "/__mokly/client/inspector.js",
+  );
 });

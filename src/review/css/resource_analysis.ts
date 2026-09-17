@@ -1,5 +1,6 @@
 /** Cache parsing and contain per-resource failures during evidence reduction. */
-import type { DependencyReason, ExcludedResource } from "../types.js";
+import type { DependencyReason, ExcludedResource } from "@mokly/viewer/data";
+import { isStylesheetPath } from "@mokly/viewer/data";
 
 import { analyzeStylesheetChange } from "./analyze.js";
 import { diffCssRules } from "./diff.js";
@@ -7,7 +8,6 @@ import type { CssDocumentPair } from "./document.js";
 import { matchCssRules } from "./match.js";
 import type { CssAnalysisOutcome } from "./match_types.js";
 import { LightningCssRuleParser } from "./rules.js";
-import { isStylesheetPath } from "./stylesheet_path.js";
 import {
   CssRuleParseError,
   type CssRuleParser,

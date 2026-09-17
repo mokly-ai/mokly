@@ -1,16 +1,14 @@
 import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
+import { isSafeRepositoryPath } from "@mokly/viewer/data";
+import type { Manifest } from "@mokly/viewer/data";
+
 import { compileCatalogue } from "../build/compile.js";
-import {
-  isInside,
-  isSafeRepositoryPath,
-  projectRealPath,
-} from "../config/paths.js";
+import { isInside, projectRealPath } from "../config/paths.js";
 import { privateStaticPathReason } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
-import type { Manifest } from "../registry/types.js";
 
 import {
   FileSystemReviewAssetReader,

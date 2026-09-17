@@ -4,7 +4,7 @@ import test from "node:test";
 import {
   isSameBrowseDocument,
   NavigationSequencer,
-} from "../dist/client/navigation.js";
+} from "../packages/viewer/dist/client/navigation.js";
 
 test("same-document identity includes origin, route and query but excludes hashes", () => {
   const current = new URL(

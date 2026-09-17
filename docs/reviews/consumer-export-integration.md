@@ -84,7 +84,7 @@ unresolved, and the two code recommendations below need a user decision.
 
 The exporter hashes `comparisonFiles` in [site.ts](../../src/export/site.ts),
 then adds shell HTML, navigation, public files, CSS, modules, fonts, and adapter
-output. [adoptStaticDelivery](../../src/client/static_delivery.ts) uses only
+output. [adoptStaticDelivery](../../packages/viewer/src/client/static_delivery.ts) uses only
 `comparisonUrl` to decide whether a page belongs to the current deployment.
 An independent in-memory check confirmed that changed route metadata with the
 same comparison URL is adopted without a full reload.

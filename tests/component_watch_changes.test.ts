@@ -4,7 +4,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { serve } from "../dist/server/serve.js";
-import type { WorkspaceData } from "../dist/server/shell/workspace_data.js";
+import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";

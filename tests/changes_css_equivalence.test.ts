@@ -4,8 +4,8 @@ import path from "node:path";
 import test from "node:test";
 
 import { committedReviewRepository } from "../dist/review/repository.js";
-import type { ViewResourceEvidence } from "../dist/review/types.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
+import type { ViewResourceEvidence } from "../packages/viewer/dist/review/types.js";
 
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 

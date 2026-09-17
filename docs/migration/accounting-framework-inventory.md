@@ -67,37 +67,37 @@ only if their props add real application policy.
 
 ## Browse Runtime Directory
 
-| Accounting file under `mockbook/` | Disposition   | Mokly owner or rationale                                        |
-| --------------------------------- | ------------- | --------------------------------------------------------------- |
-| `catalogue.ts`                    | Ported        | manifest indexes in `server/catalogue.ts`                       |
-| `server.ts`                       | Ported        | confined HTTP runtime in `server/http.ts`                       |
-| `server_cli.ts`                   | Ported        | typed CLI arguments and dispatch                                |
-| `server_options.ts`               | Ported        | validated CLI/config options                                    |
-| `server_updates.ts`               | Ported        | monotonic child update messages, readiness, and SSE endpoint    |
-| `dev/child_process.ts`            | Ported        | injected `ChildHandle`/`ChildFactory` boundary                  |
-| `dev/process_supervisor.ts`       | Ported        | serialized, readiness-aware stable-port/version supervisor      |
-| `dev/rebuild.ts`                  | Ported        | compile then transactional write before restart                 |
-| `dev/rebuild_worker.cjs`          | Obsolete      | rebuild runs through typed async APIs; no worker shim           |
-| `dev/run.ts`                      | Ported        | `server/serve.ts` orchestration                                 |
-| `dev/watch_notification_gate.ts`  | Ported        | generic `NotificationGate`                                      |
-| `dev/watch_paths.ts`              | Ported/Config | derived entries/legacy/renderer/styles plus explicit rules      |
-| `nav_tree.ts`                     | Ported        | manifest tree rendered by `src/server/shell/nav.ts`             |
-| `nav_guides.ts`                   | Ported        | neutral structural navigation and breadcrumbs                   |
-| `client_bundle.ts`                | Ported        | package client modules served by `server/client_modules.ts`     |
-| `client/browser_navigation.ts`    | Ported        | eligible interception/fallback in `src/client/browser.ts`       |
-| `client/directory_state.ts`       | Ported        | tolerant directory-state restoration in `src/client/browse.ts`  |
-| `client/entry.ts`                 | Ported        | package-owned browser and Browse entry modules                  |
-| `client/live_updates.ts`          | Ported        | latest-wins reload and one-shot recovery are package-owned      |
-| `client/navigation.ts`            | Ported        | progressive navigation in the neutral browser client            |
-| `client/route_dom.ts`             | Ported        | persistent-shell main-view replacement                          |
-| `icons.tsx`                       | Retained      | Accounting icons stay reference-only; Mokly owns neutral glyphs |
-| `shell.tsx`                       | Ported        | responsive neutral shell under `src/server/shell`               |
-| `shell_details.tsx`               | Ported        | accessible native details panel                                 |
-| `shell_head.tsx`                  | Ported        | package head, fonts, and self-contained shell assets            |
-| `shell_nav.tsx`                   | Ported        | responsive navigation tree and drawer                           |
-| `shell_scripts.ts`                | Ported        | package-owned progressive client modules                        |
-| `shell_stages.tsx`                | Ported        | sandboxed viewport/use-case stages                              |
-| `shell_view.tsx`                  | Ported        | screen, collection, use-case, legacy, and missing views         |
+| Accounting file under `mockbook/` | Disposition   | Mokly owner or rationale                                                       |
+| --------------------------------- | ------------- | ------------------------------------------------------------------------------ |
+| `catalogue.ts`                    | Ported        | manifest indexes in `packages/viewer/src/shell/catalogue.ts`                   |
+| `server.ts`                       | Ported        | confined HTTP runtime in `server/http.ts`                                      |
+| `server_cli.ts`                   | Ported        | typed CLI arguments and dispatch                                               |
+| `server_options.ts`               | Ported        | validated CLI/config options                                                   |
+| `server_updates.ts`               | Ported        | monotonic child update messages, readiness, and SSE endpoint                   |
+| `dev/child_process.ts`            | Ported        | injected `ChildHandle`/`ChildFactory` boundary                                 |
+| `dev/process_supervisor.ts`       | Ported        | serialized, readiness-aware stable-port/version supervisor                     |
+| `dev/rebuild.ts`                  | Ported        | compile then transactional write before restart                                |
+| `dev/rebuild_worker.cjs`          | Obsolete      | rebuild runs through typed async APIs; no worker shim                          |
+| `dev/run.ts`                      | Ported        | `server/serve.ts` orchestration                                                |
+| `dev/watch_notification_gate.ts`  | Ported        | generic `NotificationGate`                                                     |
+| `dev/watch_paths.ts`              | Ported/Config | derived entries/legacy/renderer/styles plus explicit rules                     |
+| `nav_tree.ts`                     | Ported        | manifest tree rendered by `packages/viewer/src/shell/nav.tsx`                  |
+| `nav_guides.ts`                   | Ported        | neutral structural navigation and breadcrumbs                                  |
+| `client_bundle.ts`                | Ported        | package client modules served by `server/client_modules.ts`                    |
+| `client/browser_navigation.ts`    | Ported        | eligible interception/fallback in `src/client/browser.ts`                      |
+| `client/directory_state.ts`       | Ported        | tolerant directory-state restoration in `packages/viewer/src/client/browse.ts` |
+| `client/entry.ts`                 | Ported        | package-owned browser and Browse entry modules                                 |
+| `client/live_updates.ts`          | Ported        | latest-wins reload and one-shot recovery are package-owned                     |
+| `client/navigation.ts`            | Ported        | progressive navigation in the neutral browser client                           |
+| `client/route_dom.ts`             | Ported        | persistent-shell main-view replacement                                         |
+| `icons.tsx`                       | Retained      | Accounting icons stay reference-only; Mokly owns neutral glyphs                |
+| `shell.tsx`                       | Ported        | responsive neutral shell under `packages/viewer/src/shell`                     |
+| `shell_details.tsx`               | Ported        | accessible native details panel                                                |
+| `shell_head.tsx`                  | Ported        | package head, fonts, and self-contained shell assets                           |
+| `shell_nav.tsx`                   | Ported        | responsive navigation tree and drawer                                          |
+| `shell_scripts.ts`                | Ported        | package-owned progressive client modules                                       |
+| `shell_stages.tsx`                | Ported        | sandboxed viewport/use-case stages                                             |
+| `shell_view.tsx`                  | Ported        | screen, collection, use-case, legacy, and missing views                        |
 
 ## Review Directory
 

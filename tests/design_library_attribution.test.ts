@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { generatedViews } from "../dist/components/views.js";
 import { compareReview } from "../dist/review/compare.js";
 import { computeChangedRoutes } from "../dist/server/changed.js";
+import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
 import { designLibrary } from "./helpers/design_library.js";
 import { designLibraryFixture } from "./helpers/design_library_fixture.js";

@@ -5,13 +5,10 @@ import { fileURLToPath } from "node:url";
 import type { Metafile } from "esbuild";
 import { Minimatch } from "minimatch";
 
+import { isSafeRepositoryPath } from "@mokly/viewer/data";
+
 import { locatePath } from "../config/file_locations.js";
-import {
-  isInside,
-  isSafeRepositoryPath,
-  projectRealPath,
-  toPosixPath,
-} from "../config/paths.js";
+import { isInside, projectRealPath, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 
@@ -150,11 +147,14 @@ export function graphSourceFiles(
   repoRoot: string,
 ): string[] {
   const runtime = path.resolve(fileURLToPath(new URL("../", import.meta.url)));
+  const viewerRuntime = fs.realpathSync(
+    path.dirname(fileURLToPath(import.meta.resolve("@mokly/viewer/data"))),
+  );
   const candidates = Object.keys(metafile.inputs).flatMap((input) => {
     const absolute = path.resolve(workingDir, input);
     if (!fs.existsSync(absolute) || !fs.statSync(absolute).isFile()) return [];
     const real = fs.realpathSync(absolute);
-    if (isInside(runtime, real)) return [];
+    if (isInside(runtime, real) || isInside(viewerRuntime, real)) return [];
     if (real.split(path.sep).includes("node_modules")) return [];
     return [absolute];
   });

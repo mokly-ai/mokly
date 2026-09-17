@@ -1,7 +1,8 @@
-import type { ManifestComponentVariant } from "../components/manifest_types.js";
-import type { GeneratedComponentView } from "../components/views.js";
-
-import type { ReviewVariantAddress } from "./component_types.js";
+import type { ManifestComponentVariant } from "@mokly/viewer";
+import type {
+  GeneratedComponentView,
+  ReviewVariantAddress,
+} from "@mokly/viewer/data";
 
 export function variantAddress(
   variant: ManifestComponentVariant,

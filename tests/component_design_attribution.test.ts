@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { generatedViews } from "../dist/components/views.js";
+import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
 import { designLibraryFixture } from "./helpers/design_library_fixture.js";
 

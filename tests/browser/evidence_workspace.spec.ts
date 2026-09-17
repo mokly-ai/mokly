@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import type { ReviewResultV3 } from "../../dist/review/component_types.js";
+import type { ReviewResultV3 } from "../../packages/viewer/dist/review/component_types.js";
 import { controlsEntrySource } from "../helpers/component_controls_fixture.js";
 import { startEvidenceFixture } from "../helpers/evidence_fixture.js";
 

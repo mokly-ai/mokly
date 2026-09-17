@@ -4,8 +4,9 @@ import { createGzip } from "node:zlib";
 
 import { pack } from "tar-stream";
 
+import type { ReviewArtifactContent } from "@mokly/viewer/data";
+
 import { MoklyError } from "../errors.js";
-import type { ReviewArtifactContent } from "../review/types.js";
 
 import { UPLOAD_MANIFEST } from "./manifest.js";
 import { uploadPath } from "./validation.js";

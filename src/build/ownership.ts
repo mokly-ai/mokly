@@ -1,11 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import {
-  isInside,
-  isSafeRepositoryPath,
-  toPosixPath,
-} from "../config/paths.js";
+import { isSafeRepositoryPath } from "@mokly/viewer/data";
+
+import { isInside, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError, errorMessage } from "../errors.js";
 import { MANIFEST_NAME } from "../registry/manifest.js";

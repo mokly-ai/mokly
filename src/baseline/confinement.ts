@@ -1,6 +1,8 @@
 import path from "node:path";
 
-import { isInside, isSafeRepositoryPath } from "../config/paths.js";
+import { isSafeRepositoryPath } from "@mokly/viewer/data";
+
+import { isInside } from "../config/paths.js";
 
 import { BaselineError, assertBaselineActive } from "./errors.js";
 import type { BaselineFileSystem, BaselineStat } from "./types.js";

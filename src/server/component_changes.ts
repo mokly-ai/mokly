@@ -1,12 +1,17 @@
 import path from "node:path";
 
-import { generatedViews } from "../components/views.js";
+import { generatedViews } from "@mokly/viewer/data";
+import type {
+  Manifest,
+  ReviewResultV3,
+  ScreenResourceEvidence,
+} from "@mokly/viewer/data";
+
 import { ConfiguredGitCommandRunner } from "../config/git.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { changedManifestRoutes } from "../registry/changed_routes.js";
 import { hasRegisteredComponents } from "../registry/manifest_capabilities.js";
-import type { Manifest } from "../registry/types.js";
 import { GitReviewAssetReader } from "../review/assets.js";
 import {
   baselineResourceConfig,
@@ -14,7 +19,6 @@ import {
 } from "../review/base_manifest.js";
 import { reviewChangedPaths } from "../review/changed_paths.js";
 import { classifyComponents } from "../review/component_classification.js";
-import type { ReviewResultV3 } from "../review/component_types.js";
 import { EvidenceAssetReader } from "../review/evidence_assets.js";
 import { CommittedRepository, type GitCommandRunner } from "../review/git.js";
 import { derivedHeadOutputs } from "../review/head_assets.js";
@@ -24,9 +28,12 @@ import {
 } from "../review/repository.js";
 import type { ReadOnlyReviewRepository } from "../review/repository.js";
 import type { ReviewEvidence } from "../review/selection_types.js";
-import type { ScreenResourceEvidence } from "../review/types.js";
 
 import { classifyChangedContent } from "./changed_content.js";
+import {
+  screenViewChanges,
+  type ScreenViewChanges,
+} from "./screen_view_changes.js";
 
 export interface ComponentChangeSnapshot {
   baseline: Manifest;
@@ -34,6 +41,7 @@ export interface ComponentChangeSnapshot {
   result?: ReviewResultV3;
   comparison?: ReviewEvidence;
   screenEvidence?: readonly ScreenResourceEvidence[];
+  screenViews?: readonly ScreenViewChanges[];
 }
 export interface ComponentChangeSource {
   baseline(): Promise<string>;
@@ -237,6 +245,16 @@ export async function readCatalogueChanges(
       ...(outputs ? { headOutputs: [...outputs] } : {}),
     },
     ...(result ? { result } : {}),
+    ...(!components
+      ? {
+          screenViews: screenViewChanges(
+            manifest,
+            baseline,
+            config,
+            content.changedPaths,
+          ),
+        }
+      : {}),
     ...(!components && content.screens.length
       ? { screenEvidence: content.screens }
       : {}),

@@ -1,4 +1,5 @@
-import { isSafeCatalogueRoute, isSafeRepositoryPath } from "../config/paths.js";
+import { isSafeCatalogueRoute, isSafeRepositoryPath } from "@mokly/viewer/data";
+
 import { MoklyError } from "../errors.js";
 
 /** Validate a portable routed catalogue URL. */

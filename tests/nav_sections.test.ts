@@ -6,21 +6,21 @@ import {
   isNavDisclosureKey,
   NavDisclosurePreference,
   type NavPreferenceStorage,
-} from "../dist/client/browse_navigation.js";
-import type { ManifestComponent } from "../dist/components/manifest_types.js";
+} from "../packages/viewer/dist/client/browse_navigation.js";
+import type { ManifestComponent } from "../packages/viewer/dist/components/manifest_types.js";
 import type {
   ManifestCollection,
   ManifestEntry,
   ManifestScreen,
   ManifestV5,
-} from "../dist/registry/types.js";
-import { createCatalogue } from "../dist/server/catalogue.js";
+} from "../packages/viewer/dist/registry/types.js";
+import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import {
   buildNavSections,
   type NavGroupNode,
   type NavLeafNode,
   type NavNode,
-} from "../dist/server/shell/nav_tree.js";
+} from "../packages/viewer/dist/shell/nav_tree.js";
 
 import { asDocument, FakeNode } from "./helpers/fake_dom.js";
 

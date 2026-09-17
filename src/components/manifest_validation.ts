@@ -1,20 +1,25 @@
-import { isSafeCatalogueRoute } from "../config/paths.js";
-import { isCatalogueId } from "../navigation/logical.js";
-import type { Manifest } from "../registry/types.js";
-
-import { decodeProps } from "./codec.js";
-import { validateControlledValues, validateControls } from "./controls.js";
-import { canonicalJson, exactKeys, invalidData } from "./data.js";
-import { validateDependencyDeclarations } from "./dependency_validation.js";
 import type {
   ManifestComponent,
   ManifestComponentVariant,
-} from "./manifest_types.js";
-import { componentFragmentRoute } from "./paths.js";
-import { validateProps } from "./props.js";
-import { validatePropSchema } from "./schema.js";
-import { sortedStrings } from "./validation_helpers.js";
-import { validateComponentViews } from "./view_validation.js";
+} from "@mokly/viewer";
+import type { Manifest } from "@mokly/viewer/data";
+import {
+  isSafeCatalogueRoute,
+  isCatalogueId,
+  decodeProps,
+  validateControlledValues,
+  validateControls,
+  canonicalJson,
+  exactKeys,
+  invalidData,
+  componentFragmentRoute,
+  validateProps,
+  validatePropSchema,
+  sortedStrings,
+  validateComponentViews,
+} from "@mokly/viewer/data";
+
+import { validateDependencyDeclarations } from "./dependency_validation.js";
 
 const commonKeys = [
   "id",
@@ -60,6 +65,7 @@ export function validateManifestComponent(
     if (
       [
         "moklyInstance",
+        "__moklySource",
         "key",
         "ref",
         "__proto__",

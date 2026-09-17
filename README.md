@@ -9,11 +9,27 @@ The public [npm package](https://www.npmjs.com/package/@mokly/mokly) is
 `@mokly/mokly`; its executable remains `mokly`. Releases remain pre-1.0 while
 the consumer contract settles.
 
+The [`@mokly/viewer`](./packages/viewer/README.md) workspace embeds the existing
+Browse shell in React hosts using the public
+[catalogue read model](./docs/protocol/mokly-catalogue.md). It provides controlled
+selection, slots, inspection events, an imperative handle and
+[frame adapters](./docs/protocol/mokly-frame-adapter.md). Serve and export use its
+static renderer and vanilla enhancements; exported browsers contain no React.
+Both packages build, release and are tested together. The viewer publishes before
+the CLI, which depends on its exact version. Local Serve/export presentation is
+unchanged; first viewer registration remains post-merge.
+Viewer inspection references identify an exact viewport, scheme, variant and
+flow step. Frame replacement cancels picking and resets inspection; host callback
+exceptions do not prevent resource cleanup. See the viewer README for semantics.
+
 Shared components can have their own pages, saved variants and editable props in
 local Serve. Screens record their actual component usage for inspection and
 highlighting. Component implementation edits appear once in Changes; consumers
 are listed as affected, while changes to their supplied props remain screen
 changes. See the [component authoring guide](./src/components/README.md).
+The public `resolveInstance` helper resolves saved instance records within one
+view. Optional repository-relative invocation locations are captured in manifest
+v5 without affecting identity, Changes, or the local shell.
 
 Screen-only catalogues also show stylesheet evidence in Details before opening
 a comparison: changed styles that may apply and examined stylesheets whose
@@ -778,6 +794,17 @@ when the deployed catalogue, assets, or host aliases change, even if the
 comparison files are unchanged. Within one deployment, navigation remains
 progressive. Hosting must revalidate mutable files so that reload can fetch them.
 
+Exports also include an inert `__mokly/client/inspector.js` for explicit
+cross-origin hosts. Current owned copies contain its bounded identity map;
+local scripts stay disabled and comparison snapshots remain byte-unmodified.
+
+Exports include `__mokly/catalogue.json`: versioned public navigation, entry,
+instance, Changes and comparison-pointer data. It shares the shell's deployment
+identity and appears in `.mokly-export-artifact` and publish archives. Serve
+provides the same URL as an atomic snapshot with content/evidence revisions and
+no-store caching. The private `mokly-manifest.json` remains excluded. The
+[public v1 fixture](./docs/protocol/fixtures/catalogue-v1.json) ships with the package.
+
 Concurrent exports to filesystem aliases of the same destination share one
 reservation. The internal `.mokly-export-reservations` directory retains
 small ownership metadata after cleanup; keep authored files out of it. Old
@@ -946,27 +973,32 @@ for the package's commands and [delivery settings](./docs/protocol/site-delivery
 
 ## Releasing
 
-Changes use Conventional Commits. On `main`, release-please maintains the
-reviewed version/changelog PR; merging that PR creates an immutable `vX.Y.Z`
-release. The same [Release workflow](./.github/workflows/release.yml) checks the
-tag, reruns the full gate, packs and smoke-tests the exact tarball, guards an
-already-published version, and publishes through npm trusted publishing. A
-bounded post-publish check tolerates npm metadata, tarball, dist-tag, and
-signature propagation before proving the registry artifact. A manual
-`publish_ref` retries only an existing tag. See the
-[release protocol](./docs/protocol/npm-release.md) for the current release/retry
-procedure and maintainer settings. Package versions are release-managed.
+Changes use Conventional Commits. On `main`, release-please maintains one reviewed
+PR for both packages, their independent versions and changelogs, and the CLI's
+exact viewer dependency. The first viewer release is **0.1.0**, paired with
+**CLI 0.10.0** because 0.9.0 is already published. Merging the release PR creates
+immutable `vX.Y.Z` CLI and `viewer-vX.Y.Z` viewer tags at the same commit.
+
+The [Release workflow](./.github/workflows/release.yml) verifies both tags,
+reruns the full gate and smoke-tests both exact tarballs in clean consumers.
+It publishes and verifies the viewer before the CLI, retaining both inventories,
+hashes and registry signature/provenance results. A manual dispatch from `main`
+retries the existing `publish_ref` and `viewer_ref` pair, skipping only a matching
+already-published archive. See the [release protocol](./docs/protocol/npm-release.md)
+for version pairing, evidence and the complete retry procedure.
 
 The one-time [Mokly registry bootstrap](./docs/protocol/npm-bootstrap.md) is
 complete: `@mokly/mokly@0.8.0` is the accepted initial `latest` release and also
 retains the `bootstrap` tag. Do not repeat registration or reset release state.
 Later reviewed releases advance `latest`; `bootstrap` remains on `0.8.0`. The
 bootstrap record retains the isolated-build procedure and reviewed source SHA.
-Before the first automated release, complete and verify the GitHub release
-token's repository access and the
-[GitHub publishing protections](./docs/protocol/npm-github-protections.md)
-with an authorized maintainer account. The interactive bootstrap does not prove
-OIDC publishing works. Do not add an npm write token to GitHub.
+The viewer is a separate public scoped package and needs its own
+[first publication and trusted publisher](./docs/protocol/npm-bootstrap.md#viewer-first-publication)
+after the release PR merges. Verify organization package-creation/team access,
+2FA and [both tag streams' GitHub protections](./docs/protocol/npm-github-protections.md)
+with an authorized maintainer. Initial interactive registration has npm signature
+and reviewed-source evidence, not OIDC provenance. Do not store an npm write token
+in GitHub. Release preparation itself publishes nothing and creates no tags.
 
 The synthetic fixture at [`examples/basic`](./examples/basic/README.md) proves
 custom rendering, stylesheets, id links, collections, use cases, and
@@ -1003,12 +1035,13 @@ canonical destinations and the controls that remain visual depictions.
   Git identity and the injectable HTTP boundary.
 - [`src/build`](./src/build) — single-graph bundling, compilation, links, check,
   and transactional writes.
-- [`src/server`](./src/server) — manifest-backed HTTP, the responsive shell,
-  and the watched child lifecycle.
-- [`src/client`](./src/client) — progressive Browse navigation and versioned
-  live updates served to the browser.
-- [`src/navigation`](./src/navigation) and [`src/browse`](./src/browse) — shared
-  logical-target grammar and ownership-aware HTML adaptation.
+- [`packages/viewer`](./packages/viewer/README.md) — React/SSR shell, catalogue
+  readers, navigation, adapters, inspection and reusable browser enhancements.
+- [`src/server`](./src/server) — manifest-backed HTTP and the watched child lifecycle.
+- [`src/client`](./src/client) — private Serve updates, controls and on-demand loading.
+- [`packages/viewer/src/navigation`](./packages/viewer/src/navigation) and
+  [`src/browse`](./src/browse) — shared logical-target grammar and ownership-aware
+  HTML adaptation.
 - [`src/review`](./src/review/README.md) — Git extraction, comparison, ignore
   normalization, isolated snapshots, and CSS rule attribution shared by Changes.
 - [`src/build/source_inventory.ts`](./src/build/source_inventory.ts) — resolved
@@ -1035,6 +1068,12 @@ variants, comparisons and read-only inspection. Development plans are indexed
 in the [plans index](./plans/README.md).
 
 - [Protocol index](./docs/protocol/README.md)
+- [Instance identity](./docs/protocol/mokly-instances.md),
+  [public catalogue](./docs/protocol/mokly-catalogue.md),
+  [viewer API](./docs/protocol/mokly-viewer.md), and
+  [frame adapters](./docs/protocol/mokly-frame-adapter.md) — identity, catalogue and
+  adapters are implemented; the viewer package is verified and awaiting its
+  first release.
 - [Package ownership boundary](./docs/architecture/package-boundary.md)
 - [Accounting migration inventory](./docs/migration/accounting-framework-inventory.md)
 - [Styled control migration guide](./docs/migration/accounting-link-controls.md)

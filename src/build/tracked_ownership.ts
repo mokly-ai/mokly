@@ -1,6 +1,8 @@
 import path from "node:path";
 
-import { isInside, isSafeRepositoryPath } from "../config/paths.js";
+import { isSafeRepositoryPath } from "@mokly/viewer/data";
+
+import { isInside } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import type { GitCommandRunner } from "../review/git.js";
 import { GitProcessError } from "../review/git_process.js";

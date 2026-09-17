@@ -1,10 +1,7 @@
 import { parse, type DefaultTreeAdapterMap } from "parse5";
 
-import { canonicalJson, invalidData } from "./data.js";
-import type {
-  ComponentRangeRecord,
-  ComponentRangeTarget,
-} from "./manifest_types.js";
+import type { ComponentRangeRecord, ComponentRangeTarget } from "@mokly/viewer";
+import { canonicalJson, invalidData } from "@mokly/viewer/data";
 
 type Node = DefaultTreeAdapterMap["node"];
 export interface RenderedRange {

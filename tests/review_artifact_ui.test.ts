@@ -5,7 +5,10 @@ import {
   renderReviewArtifact,
   summaryMarkdown,
 } from "../dist/review/artifact.js";
-import type { ReviewResult, ReviewState } from "../dist/review/types.js";
+import type {
+  ReviewResult,
+  ReviewState,
+} from "../packages/viewer/dist/review/types.js";
 
 const result: ReviewResult = {
   baseCommit: "a".repeat(40),

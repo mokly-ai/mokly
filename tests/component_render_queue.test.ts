@@ -2,13 +2,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
 
-import type { ComponentRenderRequest } from "../dist/components/render_types.js";
 import { RenderQueue } from "../dist/server/controls/queue.js";
 import type { TransientRender } from "../dist/server/controls/transient_assets.js";
 import type {
   RenderWorker,
   RenderWorkerFactory,
 } from "../dist/server/controls/worker_client.js";
+import type { ComponentRenderRequest } from "../packages/viewer/dist/components/render_types.js";
 
 const result = { route: "result" } as TransientRender;
 const request = (id: number): ComponentRenderRequest => ({

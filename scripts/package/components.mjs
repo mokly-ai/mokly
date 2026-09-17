@@ -33,6 +33,19 @@ export async function smokeRegisteredComponents(
     manifest.entries.filter((entry) => entry.kind === "component").length,
     2,
   );
+  const consumer = manifest.entries.find(
+    (entry) => entry.id === "packed-components",
+  );
+  for (const view of consumer.componentViews) {
+    assert.ok(view.instances.length > 0);
+    for (const instance of view.instances) {
+      assert.equal(instance.source.path, `${entries}/components.mockup.tsx`);
+      const invocationLine = source.split("\n")[instance.source.line - 1];
+      assert.ok(
+        invocationLine.slice(instance.source.column - 1).startsWith("<"),
+      );
+    }
+  }
   const before = await fs.readFile(
     path.join(root, output, "mokly-manifest.json"),
     "utf8",

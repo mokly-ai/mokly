@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { parseReviewResult } from "../../dist/review/result_validation.js";
+import { parseReviewResult } from "../../packages/viewer/dist/review/result_validation.js";
 
 import { cssEvidenceFixture } from "./css_evidence_fixture.js";
 import {

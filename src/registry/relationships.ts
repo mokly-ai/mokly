@@ -1,8 +1,9 @@
+import { analyzeHierarchy } from "@mokly/viewer/data";
+
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
 
-import { problem } from "./entry_validation.js";
-import { analyzeHierarchy } from "./hierarchy.js";
-import type { RegistryViolation } from "./types.js";
+import { problem } from "./entry_metadata.js";
+import type { RegistryViolation } from "./prepared_types.js";
 
 /** Validate collection and reciprocal use-case references. */
 export function crossReferenceViolations(

@@ -7,7 +7,7 @@ export default tseslint.config(
   {
     ignores: [
       "**/.context/**",
-      "dist/**",
+      "**/dist/**",
       "examples/basic/generated/**",
       "node_modules/**",
       "site/dist/**",
@@ -27,7 +27,7 @@ export default tseslint.config(
   {
     plugins: { import: importPlugin },
     settings: {
-      "import-x/internal-regex": "^@mokly/mokly(?:/|$)",
+      "import-x/internal-regex": "^@mokly/(?:mokly|viewer)(?:/|$)",
     },
     rules: {
       "import/first": "error",

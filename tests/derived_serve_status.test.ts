@@ -12,7 +12,10 @@ import {
   NodeCatalogueServerFactory,
   type CatalogueServerFactory,
 } from "../dist/server/factory.js";
-import type { RunningServer, ServerOptions } from "../dist/server/http.js";
+import type {
+  RunningServer,
+  ServerOptions,
+} from "../dist/server/http_types.js";
 import { serve, type ServeDependencies } from "../dist/server/serve.js";
 import { NodeProcessSupervisorFactory } from "../dist/server/supervisor.js";
 import type { ChangesStatus } from "../dist/server/update_messages.js";

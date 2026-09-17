@@ -1,14 +1,19 @@
-import type { ColorScheme, ResolvedRegistryEntry } from "../authoring/types.js";
-import type { ManifestEntryBase } from "../registry/types.js";
-import { effectiveColorSchemes, VIEWPORTS } from "../registry/views.js";
-
-import { encodeProps } from "./codec.js";
-import { componentInputs } from "./inputs.js";
 import type {
+  ColorScheme,
   ComponentViewRecord,
   ManifestComponent,
-} from "./manifest_types.js";
-import { componentFragmentRoute } from "./paths.js";
+} from "@mokly/viewer";
+import type { ManifestEntryBase } from "@mokly/viewer/data";
+import {
+  effectiveColorSchemes,
+  VIEWPORTS,
+  encodeProps,
+  componentFragmentRoute,
+} from "@mokly/viewer/data";
+
+import type { ResolvedRegistryEntry } from "../authoring/types.js";
+
+import { componentInputs } from "./inputs.js";
 
 export function componentManifestEntry(
   entry: Extract<ResolvedRegistryEntry, { kind: "component" }>,

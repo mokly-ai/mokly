@@ -15,6 +15,7 @@ export async function createBootstrapArchive({
   repositoryRoot,
   expectedCommit,
   destination,
+  packageName = "@mokly/mokly",
 }) {
   assert.match(
     expectedCommit,
@@ -24,7 +25,8 @@ export async function createBootstrapArchive({
   repositoryRoot = await fs.realpath(repositoryRoot);
   destination = path.resolve(destination);
   await verifySource(repositoryRoot, expectedCommit);
-  await verifyPackage(repositoryRoot);
+  const { relative, version, filename } = bootstrapTarget(packageName);
+  await verifyPackage(repositoryRoot, relative, packageName, version);
   await requireMissingDestination(destination);
   const temporaryRoot = await fs.mkdtemp(
     path.join(os.tmpdir(), "mokly-bootstrap-"),
@@ -49,21 +51,22 @@ export async function createBootstrapArchive({
       cwd: checkout,
     });
     await verifySource(checkout, expectedCommit);
-    await verifyPackage(checkout);
+    await verifyPackage(checkout, relative, packageName, version);
     await runCommand("npm", ["ci", "--no-audit", "--no-fund"], {
       cwd: checkout,
     });
     await inspectRuntimeLicenses(checkout);
     const packed = await createPackageArchive(
-      checkout,
+      path.join(checkout, relative),
       path.join(temporaryRoot, "artifact"),
+      packageName,
     );
     assert.equal(
       packed.report.version,
-      "0.8.0",
-      "bootstrap is restricted to @mokly/mokly@0.8.0",
+      version,
+      `bootstrap is restricted to ${packageName}@${version}`,
     );
-    assert.equal(packed.report.filename, "mokly-mokly-0.8.0.tgz");
+    assert.equal(packed.report.filename, filename);
     const sourceTree = await verifySource(checkout, expectedCommit);
     await verifySource(repositoryRoot, expectedCommit);
     const bytes = await fs.readFile(packed.archivePath);
@@ -121,14 +124,32 @@ async function verifySource(repositoryRoot, expectedCommit) {
   return await git("rev-parse", "HEAD^{tree}");
 }
 
-async function verifyPackage(repositoryRoot) {
+function bootstrapTarget(packageName) {
+  if (packageName === "@mokly/mokly")
+    return {
+      relative: ".",
+      version: "0.8.0",
+      filename: "mokly-mokly-0.8.0.tgz",
+    };
+  assert.equal(packageName, "@mokly/viewer", "unknown bootstrap package");
+  return {
+    relative: "packages/viewer",
+    version: "0.1.0",
+    filename: "mokly-viewer-0.1.0.tgz",
+  };
+}
+
+async function verifyPackage(repositoryRoot, relative, packageName, version) {
   const metadata = JSON.parse(
-    await fs.readFile(path.join(repositoryRoot, "package.json"), "utf8"),
+    await fs.readFile(
+      path.join(repositoryRoot, relative, "package.json"),
+      "utf8",
+    ),
   );
   assert.equal(
     `${metadata.name}@${metadata.version}`,
-    "@mokly/mokly@0.8.0",
-    "bootstrap is restricted to @mokly/mokly@0.8.0",
+    `${packageName}@${version}`,
+    `bootstrap is restricted to ${packageName}@${version}`,
   );
 }
 

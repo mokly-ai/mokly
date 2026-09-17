@@ -26,7 +26,7 @@ import {
   screen,
 } from "../dist/index.js";
 import { validateEntry } from "../dist/registry/entry_validation.js";
-import type { RegistryViolation } from "../dist/registry/types.js";
+import type { RegistryViolation } from "../dist/registry/prepared_types.js";
 import { serializeReviewSentinels } from "../dist/renderer/sentinels.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";

@@ -1,13 +1,13 @@
 /** Shared ownership boundary for rule-aware stylesheet attribution. */
 import path from "node:path";
 
+import type { ViewReview } from "@mokly/viewer/data";
+import { isStylesheetPath } from "@mokly/viewer/data";
+
 import { isInside } from "../../config/paths.js";
 import { isPrivateStaticPath } from "../../config/public_files.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { MoklyError } from "../../errors.js";
-import type { ViewReview } from "../types.js";
-
-import { isStylesheetPath } from "./stylesheet_path.js";
 
 /** Only public stylesheets inside the rendered output root can be analysed. */
 export function analysisOwnsStylesheet(

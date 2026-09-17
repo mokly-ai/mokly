@@ -2,10 +2,13 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
-import type { ManifestComponent } from "../dist/components/manifest_types.js";
 import { loadConfig } from "../dist/config/load.js";
 import { parseManifest } from "../dist/registry/manifest.js";
-import type { ManifestV5, ManifestScreenV4 } from "../dist/registry/types.js";
+import type { ManifestComponent } from "../packages/viewer/dist/components/manifest_types.js";
+import type {
+  ManifestV5,
+  ManifestScreenV4,
+} from "../packages/viewer/dist/registry/types.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";

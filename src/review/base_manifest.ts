@@ -1,5 +1,7 @@
 import path from "node:path";
 
+import type { HistoricalManifest } from "@mokly/viewer/data";
+
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
@@ -9,7 +11,6 @@ import {
   parseHistoricalManifest,
   selectManifestInput,
 } from "../registry/manifest.js";
-import type { HistoricalManifest } from "../registry/types.js";
 
 import type { BaselineReader } from "./git.js";
 

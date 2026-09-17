@@ -1,3 +1,6 @@
+import type { ManifestV5 } from "@mokly/viewer/data";
+import { createCatalogue, type Catalogue } from "@mokly/viewer/server";
+
 import { assertFreshSourceInventory } from "../build/source_freshness.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timeSync } from "../diagnostics/timings.js";
@@ -8,10 +11,8 @@ import {
 } from "../registry/catalogue_index.js";
 import type { CatalogueChangeSnapshot } from "../registry/changes.js";
 import { parseManifest, readManifest } from "../registry/manifest.js";
-import type { ManifestV5 } from "../registry/types.js";
 import type { ReadOnlyReviewRepository } from "../review/repository.js";
 
-import { createCatalogue, type Catalogue } from "./catalogue.js";
 import {
   computeCatalogueChanges,
   type ResolvedCatalogueChanges,

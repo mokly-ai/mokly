@@ -1,12 +1,13 @@
 /** Preserve Build's render order while yielding to foreground work between documents. */
-import type { ResolvedRegistryEntry } from "../authoring/types.js";
-import type { ComponentViewRecord } from "../components/manifest_types.js";
-import type { ResolvedConfig } from "../config/types.js";
+import type { ComponentViewRecord } from "@mokly/viewer";
 import {
   effectiveColorSchemes,
   VIEWPORTS,
   type ArtifactView,
-} from "../registry/views.js";
+} from "@mokly/viewer/data";
+
+import type { ResolvedRegistryEntry } from "../authoring/types.js";
+import type { ResolvedConfig } from "../config/types.js";
 
 import type { LoadedGraph } from "./load_graph.js";
 import { renderFragments } from "./render.js";

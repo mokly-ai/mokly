@@ -1,6 +1,8 @@
 import path from "node:path";
 
-import { isSafeRepositoryPath } from "../config/paths.js";
+import { isSafeRepositoryPath } from "@mokly/viewer/data";
+import type { ReviewArtifactContent } from "@mokly/viewer/data";
+
 import {
   fragmentViolation,
   htmlResource,
@@ -10,7 +12,6 @@ import {
   extractCssReferences,
   extractHtmlReferences,
 } from "../html_references.js";
-import type { ReviewArtifactContent } from "../review/types.js";
 
 import { exportError } from "./error.js";
 import { ExportPathIndex } from "./path_index.js";

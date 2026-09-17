@@ -57,8 +57,8 @@ or checked against the implemented API, and their resolutions are recorded below
    and a symlinked repository root remain supported.
 
 3. **Low — common shell copy still describes screens only. Resolved.**
-   [Search accessibility and placeholder text](../../src/server/shell/document.tsx)
-   said “Search screens”; [home and missing-route copy](../../src/server/shell/views.tsx)
+   [Search accessibility and placeholder text](../../packages/viewer/src/shell/document.tsx)
+   said “Search screens”; [home and missing-route copy](../../packages/viewer/src/shell/views.tsx)
    omitted whole-document pages. Users searching for or opening a document received
    misleading guidance despite its first-class catalogue support.
    Options: **A.** Use catalogue-wide copy in shared shell controls, update the

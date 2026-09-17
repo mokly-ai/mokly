@@ -2,7 +2,7 @@ name: Publish Mokly catalogue
 description: Export and upload a catalogue using a pinned public Mokly npm release
 inputs:
   version:
-    description: Exact released version of @mokly/mokly supporting publish
+    description: Exact released CLI version (installs its exact @mokly/viewer dependency)
     required: true
   endpoint:
     description: Full upload endpoint URL
@@ -45,6 +45,24 @@ runs:
         JS
         MOKLY_INSTALL_DIR="$(mktemp -d "$RUNNER_TEMP/mokly-publish.XXXXXX")"
         npm install --prefix "$MOKLY_INSTALL_DIR" --no-save --package-lock=false --ignore-scripts --no-audit --no-fund "@mokly/mokly@$MOKLY_VERSION"
+        node --input-type=module - "$MOKLY_INSTALL_DIR" <<'JS'
+        import assert from "node:assert/strict";
+        import fs from "node:fs";
+        import path from "node:path";
+        import { createRequire } from "node:module";
+        const cliPath = path.join(process.argv[2], "node_modules/@mokly/mokly/package.json");
+        const cli = JSON.parse(fs.readFileSync(cliPath, "utf8"));
+        assert.equal(cli.name, "@mokly/mokly");
+        assert.equal(cli.version, process.env.MOKLY_VERSION);
+        const expected = cli.dependencies?.["@mokly/viewer"];
+        if (expected !== undefined) {
+          assert.match(expected, /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/);
+          const require = createRequire(cliPath);
+          const viewer = JSON.parse(fs.readFileSync(path.join(path.dirname(require.resolve("@mokly/viewer/server")), "../package.json"), "utf8"));
+          assert.equal(viewer.name, "@mokly/viewer");
+          assert.equal(viewer.version, expected);
+        }
+        JS
         echo "mokly_bin=$MOKLY_INSTALL_DIR/node_modules/.bin/mokly" >> "$GITHUB_OUTPUT"
     - name: Publish catalogue
       id: publish

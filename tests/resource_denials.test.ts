@@ -3,10 +3,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import type { ComponentViewRecord } from "@mokly/viewer";
+import { ComponentValidationError } from "@mokly/viewer/data";
+
 import { compileCatalogue } from "../dist/build/compile.js";
 import { stylesheetsFor } from "../dist/build/render.js";
-import { ComponentValidationError } from "../dist/components/data.js";
-import type { ComponentViewRecord } from "../dist/components/manifest_types.js";
 import { validateComponentResources } from "../dist/components/output_validation.js";
 import { loadConfig } from "../dist/config/load.js";
 import { MoklyError } from "../dist/errors.js";

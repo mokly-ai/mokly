@@ -1,6 +1,6 @@
 /** Adapt explicitly marked React controls before catalogue-link resolution. */
 
-import { parseLogicalTarget } from "../navigation/logical.js";
+import { parseLogicalTarget } from "@mokly/viewer/data";
 
 import {
   assertNoChildLinkMarkers,

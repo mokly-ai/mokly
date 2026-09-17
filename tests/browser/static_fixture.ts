@@ -41,6 +41,7 @@ export async function startStaticFixture(
     const server = await serveStaticFiles(isolated);
     return {
       ...server,
+      root: isolated,
       files,
       close: async () => {
         await server.close();

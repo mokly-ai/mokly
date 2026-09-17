@@ -32,12 +32,27 @@ release and also retains the `bootstrap` tag. Do not repeat the bootstrap
 publication; later reviewed releases advance `latest` through the normal
 release workflow.
 
-`publishConfig` targets the public npm registry with public access. The package
-contains compiled runtime code, declarations, package-owned shell assets,
+`publishConfig` targets the public npm registry with public access. The CLI package
+contains compiled runtime code, declarations, private host modules,
 README, LICENSE, CHANGELOG, package metadata and `docs/protocol`. The protocol
 documents ship with the exact package version so independent upload receivers
 can implement its documented file boundary. Source fixtures, tests, plans,
 caches, review artifacts and generated demo output are not published.
+
+The repository also builds the `@mokly/viewer` workspace, initially version 0.1.0. Its
+MIT ESM distribution owns shell assets, public data readers, adapters, React
+mounting and Node-only SSR. The CLI declares an exact registry version dependency.
+Root build, clean, formatting, lint, typecheck and package gates cover both
+packages. Pack the viewer first; local smoke and release fixtures install both
+tarballs explicitly so an unpublished viewer is never resolved from the registry.
+Consumer fixtures exercise every public viewer entry, SSR of the public v1
+fixture, browser bundle boundaries and NodeNext declarations. Both manifests,
+packed metadata, export targets, allowlists, licenses, React peers and the exact
+viewer dependency are checked. Packed dependencies cannot use `workspace:` or
+`file:` links; local links exist only in the test consumer's install manifest.
+Archive regressions exercise the checkout version and several later viewer
+versions; intentionally mismatched dependencies are derived from each packed
+viewer's actual version, so future release PRs cannot invalidate the test.
 
 Runtime dependencies are intentional and minimal. Mokly does not take a
 runtime dependency on `@firna/ui`, Accounting, Juno, Playwright, or a consumer's
@@ -224,31 +239,59 @@ it has no separate version or npm publication.
 
 ## Release Management
 
-Conventional Commits feed release-please's Node release strategy through
+Conventional Commits feed two release-please Node components through
 `release-please-config.json` and `.release-please-manifest.json`. A push to
 `main` creates or updates a release PR; an ordinary push with no release does
-not publish. The release PR owns `CHANGELOG.md`, `package.json`,
-`package-lock.json`, and the release-please manifest. A maintainer reviews and
-merges it after required checks pass to create the immutable
-`vX.Y.Z` tag and GitHub release.
+not publish. The single release PR owns both package versions and changelogs,
+the root lockfile and the release manifest. The CLI keeps `vX.Y.Z` tags
+(`include-component-in-tag: false`, `include-v-in-tag: true`). The viewer uses
+`viewer-vX.Y.Z`, with component `viewer` and `packages/viewer/CHANGELOG.md`.
+Both tags must identify the same reviewed release commit.
+
+The viewer manifest is seeded at **0.0.0**, not 0.1.0: the extraction's `feat`
+commit bumps the prior manifest version to the first release **0.1.0**.
+The working viewer package is already 0.1.0 so clean local workspace installs
+can resolve the CLI's exact dependency before that release. Subsequent release
+PRs own both values; never retain a hardcoded 0.1.0 package gate.
+`bump-minor-pre-major` keeps breaking pre-1.0 changes on the minor stream.
+The requested 0.8.0 → 0.9.0 CLI pairing was overtaken by main's already
+published `v0.9.0` (`87daaa4`, release PR #73). The current manifest retains
+that released **0.9.0** state, so this feature proposes **CLI 0.10.0** with
+**viewer 0.1.0**, tagged `v0.10.0` and `viewer-v0.1.0`. Never reuse 0.9.0 or
+move its tag; release-managed package versions advance in the release PR.
+
+The `node-workspace` plugin uses `updateAllPackages: true` to propose both
+packages whenever either releases, including a patch of an otherwise unchanged
+package. It preserves the CLI's exact dependency (no caret or local link).
+Versions remain independent; `linked-versions` would incorrectly force them
+equal and is unnecessary for a combined PR. A viewer `extra-files` JSON updater
+also sets the root lockfile's `packages[""].dependencies["@mokly/viewer"]`:
+release-please 17.6.0's workspace updater handles linked workspace versions but
+does not update that root dependency edge. Release PR checks must pass `npm ci`
+and the same version-pair gate before merge.
 
 The release workflow then:
 
-1. Selects only the release-please tag, or an explicitly supplied manual tag.
-2. Checks out that tag with history on a GitHub-hosted runner.
+1. Selects both release-please tags (the viewer uses the path-prefixed action
+   output), or explicit manual `publish_ref` and `viewer_ref` inputs. An
+   incomplete pair fails closed; ordinary pushes do nothing.
+2. Checks out the CLI tag with history on a GitHub-hosted runner.
 3. Installs Node 24, npm 11.7.0, Rust 1.95.0, and Chromium without a package
    cache.
-4. Verifies the local and remote tag identify `HEAD`, the tree is clean, and
-   the tag exactly matches the package version.
+4. Verifies both local and remote tags identify `HEAD`, the source tree is clean
+   including untracked files, and each tag matches its package version.
 5. Runs `npm ci` and the complete `cargo xtask check` gate.
-6. Creates one exact tarball, validates its allowlist and license closure, and
-   records its integrity, shasum, file inventory, and size report.
+6. Packs viewer then CLI, validates both packed manifests and inventories plus
+   the runtime license closure, and smoke-tests those exact paths in clean
+   consumers. Each archive has its own integrity, shasum, inventory and size
+   report under `release-artifact/viewer` or `release-artifact/cli`. Rechecks the
+   source and tags after lifecycle scripts and preserves both artifacts.
 7. Queries npm. A recognized missing-version response (`E404` or `ETARGET`)
    permits a publish; any other lookup failure stops the workflow. An existing
    version must byte-for-byte match the checked report and commit or the
    workflow fails.
-8. Uploads the exact checked artifact, then publishes that same path publicly
-   with npm trusted publishing when it is not already present.
+8. Publishes the checked viewer path publicly with npm trusted publishing when
+   absent; completes its registry verification before publishing the CLI path.
 9. Downloads the registry artifact and rechecks integrity, shasum, file
    inventory, version, optional `gitHead`, the `latest` dist-tag, and npm
    signatures/provenance. Because npm metadata and tarball endpoints may become
@@ -256,10 +299,12 @@ The release workflow then:
    responses retry the complete check with bounded backoff; content,
    provenance, and unexpected transport failures remain fail-closed.
 
-Publishing occurs in the same workflow invocation that creates the GitHub
-release. A manual `publish_ref` dispatch from workflow ref `main` may retry an existing `vX.Y.Z` tag and
-runs the identical verification path. Concurrency never cancels an in-progress
-publish.
+Publishing occurs in the workflow invocation that creates both GitHub releases.
+A manual dispatch from workflow ref `main` retries an existing `publish_ref`
+(`vX.Y.Z`) and `viewer_ref` (`viewer-vX.Y.Z`) pair through the identical path.
+A single concurrency group serializes automatic runs and manual retries without
+cancelling an in-progress publish. A completed viewer publication is verified
+and skipped on retry; the CLI cannot publish before that verification succeeds.
 
 The publish job alone receives `id-token: write`, plus read-only contents, and
 runs in the protected GitHub environment named `npm`. Release-please receives
@@ -292,11 +337,11 @@ isolated checkout of an explicit reviewed full commit SHA and records source
 identity beside the archive hashes; ordinary `pack.mjs` does not supply this
 bootstrap source proof.
 
-The bootstrap used interactive maintainer authentication, not OIDC. Trusted
-publishing is configured, but GitHub release-token permissions and publishing
-protections still need verification, followed by a successful automated release
-and its provenance verification. Accepting initial `latest` does not waive any
-of those requirements or reset release-please state.
+The bootstrap used interactive maintainer authentication, not OIDC. The CLI
+has since published 0.9.0. Viewer registration is separate and remains pending:
+follow [the viewer bootstrap procedure](./npm-bootstrap.md#viewer-first-publication)
+for its first 0.1.0, then configure its own trusted publisher. Do not interpret
+the CLI's existing scope, access or trust settings as viewer setup evidence.
 
 ## Maintainer Setup
 
@@ -317,9 +362,10 @@ Before enabling publish, maintainers must configure and verify:
   access, expiry/rotation, and fallback behavior;
 - approved Mokly npm maintainer accounts and teams, enforced 2FA, public
   scoped-package access, and the intended initial owner list;
-- the trusted-publisher repository, workflow filename, environment, and publish
-  action exactly match the values above; and
-- immutable `v*` tag update/deletion protection and who may invoke the manual retry.
+- each package's trusted-publisher repository, workflow filename, environment,
+  and allowed publish action exactly match the values above; and
+- immutable `v*` and `viewer-v*` tag update/deletion protection and who may invoke
+  the manual retry with both tags.
 
 No long-lived npm write token is stored in GitHub Actions.
 See [GitHub publishing protections](./npm-github-protections.md) for exact setup,
@@ -327,11 +373,15 @@ read-back verification, sole-maintainer approval policy, and credential blockers
 
 ## Release Evidence
 
-Each release records the checked commit, package version, uploaded tarball and
-pack report, verification result, GitHub release, npm URL, provenance/signature
-result, and smoke-test result. A failed publish never changes the tag or
-rebuilds from a branch; the manual retry accepts only the existing immutable
-`vX.Y.Z` tag and repeats the identical path.
+Each pair records one checked commit, both immutable tags and versions, the
+CLI's exact viewer dependency, both uploaded tarballs and pack reports, both
+registry verification results, GitHub releases, npm URLs, provenance/signature
+results and the five clean-consumer smoke results. Retain the workflow run and
+protection read-backs. The first interactive viewer registration has source/hash
+and npm signature evidence, **not OIDC provenance**; later trusted publications
+generate provenance automatically. Do not claim a signature check proves an
+attestation exists. A failed publish never changes a tag or rebuilds from a
+branch; retries accept only the existing immutable pair.
 
 ## Current External Requirements
 
@@ -343,10 +393,11 @@ changes over time:
 - [npm package executables](https://docs.npmjs.com/cli/npm-exec/)
 - [npm package metadata](https://docs.npmjs.com/files/package.json/)
 - [release-please action](https://github.com/googleapis/release-please-action)
+- [release-please manifest and workspace plugins](https://github.com/googleapis/release-please/blob/v17.6.0/docs/manifest-releaser.md)
 
-As rechecked on 20 July 2026, npm trusted publishing requires Node 22.14 or
-newer and npm 11.5.1 or newer; the `npm trust` management command requires npm
-11.15 or newer.
+As rechecked on 15 September 2026, npm trusted publishing requires Node 22.14 or
+newer and npm 11.5.1 or newer. Use npm 11.15 or newer for `npm trust` management,
+including allowed-action permissions added in 11.15.
 The package must already exist before a trust relationship can be configured.
 The workflow's npm 11.7.0 satisfies publishing; use npm 11.15 or newer only for
 the separate interactive trust-management command. Trusted publishing creates

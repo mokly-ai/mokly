@@ -6,7 +6,7 @@ The producer, source validator, artifact publisher, exporter, and browser decode
 implement this component-aware Review schema v3 for [change attribution](./mokly-component-changes.md).
 `ReviewResult`, `ScreenReview`, `ViewReview`, and `ReviewState` refer to the
 existing [schema-v2 contract](./mokly-changes.md) and
-[named result interfaces](../../src/review/types.ts). Manifest/usage types come
+[named result interfaces](../../packages/viewer/src/review/types.ts). Manifest/usage types come
 from the [component manifest](./mokly-component-manifest.md).
 
 ## Normative Result

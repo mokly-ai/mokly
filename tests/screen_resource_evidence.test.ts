@@ -2,25 +2,25 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
-import { renderWorkspaceEvidence } from "../dist/client/workspace_evidence.js";
-import { mergeWorkspaceEvidence } from "../dist/client/workspace_updates.js";
 import { capturePublicFiles } from "../dist/export/public_files.js";
 import { assembleExport } from "../dist/export/site.js";
 import { committedReviewRepository } from "../dist/review/repository.js";
-import type {
-  ScreenReview,
-  ViewResourceEvidence,
-} from "../dist/review/types.js";
-import { createCatalogue } from "../dist/server/catalogue.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
-import {
-  workspaceData,
-  type WorkspaceData,
-} from "../dist/server/shell/workspace_data.js";
 import {
   childUpdateMessage,
   parseChildUpdateMessage,
 } from "../dist/server/update_messages.js";
+import { renderWorkspaceEvidence } from "../packages/viewer/dist/client/workspace_evidence.js";
+import { mergeWorkspaceEvidence } from "../packages/viewer/dist/client/workspace_updates.js";
+import type {
+  ScreenReview,
+  ViewResourceEvidence,
+} from "../packages/viewer/dist/review/types.js";
+import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
+import {
+  workspaceData,
+  type WorkspaceData,
+} from "../packages/viewer/dist/shell/workspace_data.js";
 
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 import { FakeMarkupDocument, fakeMarkup } from "./helpers/fake_markup.js";

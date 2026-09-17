@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { renderWorkspaceEvidence } from "../dist/client/workspace_evidence.js";
-import { parseReviewResult } from "../dist/review/result_validation.js";
-import type { ReviewResultV2 } from "../dist/review/types.js";
-import type { WorkspaceData } from "../dist/server/shell/workspace_data.js";
+import { renderWorkspaceEvidence } from "../packages/viewer/dist/client/workspace_evidence.js";
+import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
+import type { ReviewResultV2 } from "../packages/viewer/dist/review/types.js";
+import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 
 import { FakeMarkupDocument, fakeMarkup } from "./helpers/fake_markup.js";
 

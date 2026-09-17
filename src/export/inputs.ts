@@ -1,9 +1,10 @@
 import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
+import { isSafeRepositoryPath } from "@mokly/viewer/data";
+
 import { compileCatalogue, type Compilation } from "../build/compile.js";
 import { loadConfig } from "../config/load.js";
-import { isSafeRepositoryPath } from "../config/paths.js";
 import { publicPathLocation } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
 import type { OptionalReviewAssetReader } from "../review/assets.js";

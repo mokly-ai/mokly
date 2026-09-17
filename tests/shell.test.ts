@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { ManifestV5 } from "../dist/registry/types.js";
-import type { Catalogue } from "../dist/server/catalogue.js";
-import { createCatalogue } from "../dist/server/catalogue.js";
 import { homePage, notFoundPage, viewPage } from "../dist/server/pages.js";
-import { SHELL_CSS } from "../dist/server/shell/css.js";
-import { buildNavTree } from "../dist/server/shell/nav_tree.js";
+import type { ManifestV5 } from "../packages/viewer/dist/registry/types.js";
+import type { Catalogue } from "../packages/viewer/dist/shell/catalogue.js";
+import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
+import { SHELL_CSS } from "../packages/viewer/dist/shell/css.js";
+import { buildNavTree } from "../packages/viewer/dist/shell/nav_tree.js";
 
 const manifest: ManifestV5 = {
   entries: [

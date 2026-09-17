@@ -5,11 +5,11 @@ import {
   isNavDisclosureKey,
   NavDisclosurePreference,
   type NavPreferenceStorage,
-} from "../dist/client/browse_navigation.js";
+} from "../packages/viewer/dist/client/browse_navigation.js";
 import {
   applyNavVisibility,
   selectAndRevealRoute,
-} from "../dist/client/browse_navigation_state.js";
+} from "../packages/viewer/dist/client/browse_navigation_state.js";
 
 import { asAnchor, asDocument, FakeNode } from "./helpers/fake_dom.js";
 

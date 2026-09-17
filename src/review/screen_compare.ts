@@ -1,13 +1,19 @@
 /** Shared screen comparison policy for complete artifacts and selected live panes. */
 import crypto from "node:crypto";
 
-import type { ColorScheme, Viewport } from "../authoring/types.js";
+import type { ColorScheme, Viewport } from "@mokly/viewer";
+import type {
+  ManifestScreen,
+  ReviewArtifactContent,
+  ScreenReview,
+  ViewReview,
+} from "@mokly/viewer/data";
+import { VIEWPORTS } from "@mokly/viewer/data";
+
 import type { Compilation } from "../build/compile.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 import { dependencyContainsChangedPath } from "../registry/dependency_paths.js";
-import type { ManifestScreen } from "../registry/types.js";
-import { VIEWPORTS } from "../registry/views.js";
 
 import {
   analysisOwnsStylesheet,
@@ -25,11 +31,6 @@ import {
   fragmentForView,
   unionColorSchemes,
 } from "./screen_views.js";
-import type {
-  ReviewArtifactContent,
-  ScreenReview,
-  ViewReview,
-} from "./types.js";
 
 /** Compare every viewport/scheme of one route, preserving its original documents. */
 export async function compareScreen(

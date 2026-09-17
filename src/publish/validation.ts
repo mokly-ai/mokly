@@ -1,4 +1,4 @@
-import { isSafeRepositoryPath } from "../config/paths.js";
+import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
 /** Full Git SHA-1 or SHA-256 object id. */
 export const GIT_SHA = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/;

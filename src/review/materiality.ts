@@ -1,6 +1,6 @@
 /** Separate comparison output changes from diagnostic impact evidence. */
 
-import type { ScreenReview } from "./types.js";
+import type { ScreenReview } from "@mokly/viewer/data";
 
 /** Return whether a screen has impact evidence without a material output change. */
 export function isImpactOnly(screen: ScreenReview): boolean {

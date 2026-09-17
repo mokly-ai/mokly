@@ -4,7 +4,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { exportCatalogue } from "../dist/export/run.js";
-import type { ReviewResult } from "../dist/review/types.js";
+import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
 import {
   createExportFixture,

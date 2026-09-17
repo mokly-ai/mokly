@@ -1,5 +1,4 @@
-import type { StaticDelivery } from "../navigation/delivery.js";
-import type { ReviewArtifactContent } from "../review/types.js";
+import type { StaticDelivery, ReviewArtifactContent } from "@mokly/viewer/data";
 
 import type { LegacyExportOwnership } from "./ownership.js";
 

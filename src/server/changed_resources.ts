@@ -4,6 +4,8 @@ import path from "node:path";
 
 import { parse } from "parse5";
 
+import { isStylesheetPath } from "@mokly/viewer/data";
+
 import { timeAsync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
 import { referencedRoutes } from "../review/asset_references.js";
@@ -18,7 +20,6 @@ import {
   type ChangedResource,
   type ResourceEvidence,
 } from "../review/css/resource_analysis.js";
-import { isStylesheetPath } from "../review/css/stylesheet_path.js";
 import { normalizeReviewPair } from "../review/ignore.js";
 import { ResourceGraph } from "../review/resource_graph.js";
 

@@ -2,7 +2,7 @@
 import {
   ComponentRenderError,
   type ComponentRenderRequest,
-} from "../../components/render_types.js";
+} from "@mokly/viewer/data";
 
 import type { TransientRender } from "./transient_assets.js";
 import type { RenderWorker, RenderWorkerFactory } from "./worker_client.js";

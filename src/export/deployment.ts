@@ -1,5 +1,8 @@
-import type { StaticDelivery } from "../navigation/delivery.js";
-import type { ReviewArtifactContent } from "../review/types.js";
+import { readCatalogue } from "@mokly/viewer";
+import { canonicalJson } from "@mokly/viewer/data";
+import type { StaticDelivery, ReviewArtifactContent } from "@mokly/viewer/data";
+
+import { CATALOGUE_PATH } from "../catalogue/serialization.js";
 
 import { deploymentContentId } from "./content_id.js";
 import { exportError } from "./error.js";
@@ -16,6 +19,15 @@ export function finalizeDeployment(
   shells: ReadonlyMap<string, StaticDelivery>,
   aliases: ReadonlyMap<string, string>,
 ): string {
+  const catalogueBytes = files.get(CATALOGUE_PATH);
+  if (catalogueBytes === undefined)
+    throw exportError("Missing owned public catalogue.");
+  const catalogue: Record<string, unknown> = JSON.parse(
+    Buffer.from(catalogueBytes).toString("utf8"),
+  );
+  readCatalogue(catalogue);
+  catalogue.deploymentId = STAGED_DEPLOYMENT_ID;
+  files.set(CATALOGUE_PATH, `${canonicalJson(catalogue, 2)}\n`);
   const metadata = new Map<string, ExportShellMetadata>();
   for (const [name, expected] of shells) {
     const bytes = files.get(name);
@@ -32,5 +44,7 @@ export function finalizeDeployment(
   const deploymentId = deploymentContentId(files, aliases);
   for (const [name, shell] of metadata)
     files.set(name, stampExportShell(shell, deploymentId));
+  catalogue.deploymentId = deploymentId;
+  files.set(CATALOGUE_PATH, `${canonicalJson(catalogue, 2)}\n`);
   return deploymentId;
 }

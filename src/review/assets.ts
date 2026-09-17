@@ -1,8 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { isSafeRepositoryPath } from "@mokly/viewer/data";
+import type { ReviewArtifactContent } from "@mokly/viewer/data";
+
 import type { FileLocation } from "../config/file_locations.js";
-import { isInside, isSafeRepositoryPath } from "../config/paths.js";
+import { isInside } from "../config/paths.js";
 import {
   privateStaticPathReason,
   publicPathLocation,
@@ -14,7 +17,6 @@ import { MoklyError, errorMessage } from "../errors.js";
 import { referencedRoutes } from "./asset_references.js";
 import type { BaselineReader, GitFile } from "./git.js";
 import { addArtifactFile, snapshotPath } from "./paths.js";
-import type { ReviewArtifactContent } from "./types.js";
 
 /** Filesystem boundary for current-worktree Review assets. */
 export interface ReviewAssetReader {

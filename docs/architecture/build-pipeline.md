@@ -220,10 +220,24 @@ never recursively replaces the consumer's mixed source/asset root.
 
 ## Package Browser Assets
 
-The package build bundles pure schema/codec and comparison validation code into
-browser modules while retaining shared shell and navigation module imports.
-Served and published catalogues load the same allowlisted files from
-`dist/browser`; no consumer runtime is bundled into preview frames. Browser
+The root build compiles the viewer workspace before the CLI. Viewer TypeScript
+emits declarations and ESM modules; its asset step bundles the inspector, shared
+vanilla modules, navigation, fonts and scoped embedding CSS. The CLI asset step
+builds only private Serve/update/control composition modules and rewrites their
+public runtime imports to the existing delivery paths.
+
+Serve's live-state restoration does not depend on the catalogue validator.
+An evidence refresh loads the public revision adopter dynamically after its
+response arrives, then rechecks cancellation and navigation before adoption.
+The package graph gate validates both static and dynamic import destinations.
+
+Serve/export combine package-owned assets from both distributions under the
+existing `__mokly/client`, `__mokly/navigation`, shell CSS and font paths. The
+standalone stylesheet is unchanged; embedding CSS is a separate scoped artifact.
+No React, hydration or consumer runtime is bundled into exported browsers.
+Shared catalogue validation uses synchronous browser-safe SHA-256, checked against
+Node digests; source inventory excludes the resolved viewer runtime even when
+npm installs it as a workspace symlink. Browser
 packaging fails if a client imports Node-only code. Comparison JSON is decoded
 with the same new-record validator used by its producer; v2 artifacts remain
 supported without adding component suppression.

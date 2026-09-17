@@ -1,10 +1,13 @@
 /** View enumeration and aggregation helpers for Review screen comparisons. */
 
-import type { ColorScheme, Viewport } from "../authoring/types.js";
-import type { ManifestScreen } from "../registry/types.js";
-import { VIEWPORTS } from "../registry/views.js";
-
-import type { ReviewResult, ReviewState, ScreenReview } from "./types.js";
+import type { ColorScheme, Viewport } from "@mokly/viewer";
+import { VIEWPORTS } from "@mokly/viewer/data";
+import type {
+  ManifestScreen,
+  ReviewResult,
+  ReviewState,
+  ScreenReview,
+} from "@mokly/viewer/data";
 
 const COLOR_SCHEMES: readonly ColorScheme[] = ["light", "dark"];
 const COLOR_SCHEME_RANK: Readonly<Record<ColorScheme, number>> = {

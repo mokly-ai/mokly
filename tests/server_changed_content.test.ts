@@ -4,9 +4,9 @@ import path from "node:path";
 import test from "node:test";
 
 import { committedReviewRepository } from "../dist/review/repository.js";
-import type { ReviewResult } from "../dist/review/types.js";
 import { computeChangedRoutes } from "../dist/server/changed.js";
 import { serve } from "../dist/server/serve.js";
+import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";

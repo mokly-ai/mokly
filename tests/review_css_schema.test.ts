@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { renderReviewArtifact } from "../dist/review/artifact.js";
-import { parseReviewResult } from "../dist/review/result_validation.js";
+import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 
 import {
   cssSchemaFiles,

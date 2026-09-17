@@ -2,7 +2,7 @@ import React from "react";
 
 import { defineCollection, defineScreen } from "@mokly/mokly";
 
-import { WorkspacePanel } from "../ui/workspace-panel.tsx";
+import { WorkspacePanel } from "../ui/workspace-panel.js";
 
 const metadata = {
   dependencies: ["spec/ui/workspace-panel.tsx"],

@@ -2,12 +2,14 @@ import type { ComponentType, ReactNode } from "react";
 
 import type {
   ColorScheme,
-  RoutedEntryInput,
   Viewport,
-} from "../authoring/types.js";
+  ComponentControl,
+  ControlFor,
+  InferProp,
+  ObjectPropSchema,
+} from "@mokly/viewer";
 
-import type { ComponentControl, ControlFor } from "./control_types.js";
-import type { InferProp, ObjectPropSchema } from "./prop_types.js";
+import type { RoutedEntryInput } from "../authoring/types.js";
 
 export interface ComponentRenderContext {
   viewport: Viewport;

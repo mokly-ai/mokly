@@ -1,16 +1,19 @@
 /** Strict shared validation for private control edits, separate from renderer execution. */
-import type { CatalogueMetadata } from "../registry/catalogue_index.js";
 
-import { decodeProps, decodeValue } from "./codec.js";
-import { validateControlledValues } from "./controls.js";
-import { exactKeys, plainKeys } from "./data.js";
-import type { ComponentPropsData, PropValue } from "./prop_types.js";
-import { validateProps } from "./props.js";
+import type { ComponentPropsData, PropValue } from "@mokly/viewer";
 import {
+  decodeProps,
+  decodeValue,
+  validateControlledValues,
+  exactKeys,
+  plainKeys,
+  validateProps,
   ComponentRenderError,
   type ComponentRenderRequest,
-} from "./render_types.js";
-import { generatedViews } from "./views.js";
+  generatedViews,
+} from "@mokly/viewer/data";
+
+import type { CatalogueMetadata } from "../registry/catalogue_index.js";
 
 export function validateRenderRequest(
   value: unknown,

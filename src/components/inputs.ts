@@ -1,8 +1,13 @@
 import { isValidElement, type ReactNode } from "react";
 
-import { DataBudget, invalidData, plainKeys } from "./data.js";
-import type { ComponentPropsData } from "./prop_types.js";
-import { validateProps } from "./props.js";
+import type { ComponentPropsData } from "@mokly/viewer";
+import {
+  DataBudget,
+  invalidData,
+  plainKeys,
+  validateProps,
+} from "@mokly/viewer/data";
+
 import type { ComponentDefinition } from "./types.js";
 
 /** Split data from optional React slots without evaluating any property accessor. */

@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { applyNavVisibility } from "../dist/client/browse_navigation_state.js";
+import { applyNavVisibility } from "../packages/viewer/dist/client/browse_navigation_state.js";
 import {
   handleTagControlClick,
   handleTagPickerKeydown,
   syncTagChips,
-} from "../dist/client/tag_filter.js";
+} from "../packages/viewer/dist/client/tag_filter.js";
 
 import { asDocument, asElement, FakeNode } from "./helpers/fake_dom.js";
 

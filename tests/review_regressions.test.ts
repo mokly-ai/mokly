@@ -8,11 +8,14 @@ import { promisify } from "node:util";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
-import type { ManifestScreen, ManifestV3 } from "../dist/registry/types.js";
 import { compareReview } from "../dist/review/compare.js";
 import { CommittedRepository } from "../dist/review/git.js";
 import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
 import { runReview } from "../dist/review/run.js";
+import type {
+  ManifestScreen,
+  ManifestV3,
+} from "../packages/viewer/dist/registry/types.js";
 
 import {
   createFixture,

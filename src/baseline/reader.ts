@@ -1,6 +1,7 @@
 import path from "node:path";
 
-import { isSafeRepositoryPath } from "../config/paths.js";
+import { isSafeRepositoryPath } from "@mokly/viewer/data";
+
 import { errorMessage } from "../errors.js";
 import type { BaselineReader, GitFile, GitFileKind } from "../review/git.js";
 import {
