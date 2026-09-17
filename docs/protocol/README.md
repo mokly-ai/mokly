@@ -72,6 +72,8 @@ when the historical primary file is absent, never when it is invalid.
 - [Component controls design catalogue](./mokly-component-controls-design.md)
 - [Component workspace design](./mokly-component-workspace-design.md) (view controls, resizing, and comparison eligibility)
 - [Component controls](./mokly-component-controls.md)
+- [Storybook stories as registered components](./mokly-storybook.md) —
+  approved target tracked by an active plan.
 - [Consumer static export](./mokly-export.md) — consumer CLI and
   transactional artifact-generation contract.
 - [Static export delivery](./mokly-export-delivery.md) — portable
