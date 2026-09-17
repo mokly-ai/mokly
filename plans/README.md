@@ -2,6 +2,7 @@
 
 ## Active
 
+- [Unchanged View Fast Path](./unchanged-view-fast-path.md)
 - [Publish Catalogue](./publish-catalogue.md)
 - [App-Independent Mokabook Npm Library](./app-independent-mokabook-library.md)
 - [Accounting Shell Design Parity](./accounting-shell-design-parity.md)
