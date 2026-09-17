@@ -147,11 +147,16 @@ scenarios, 418 Chromium tests, and all Rust checks. The diff has no deletions an
 contains none of the excluded site, Folio, Lighthouse, Astro-tooling, site-test,
 or site-mockup material from pull request #79.
 
-- [ ] After all checks pass, run `git add -A`, commit with Conventional Commit
+- [x] After all checks pass, run `git add -A`, commit with Conventional Commit
       title `feat(docs): ship CLI guides in package`, push the current branch,
       open a pull request with that title against `main`, then comment on and
       close #79 unmerged with a link to the replacement pull request; keep its
       branch intact.
+
+Delivery: commit `61d0322` is pushed on `calummoore/houston-v5`; replacement
+pull request #82 is open against `main`. Pull request #79 was linked to #82 and
+closed with no merge, and its `calummoore/mogadishu-v5` branch remains intact.
+
 - [ ] After the push, use `docs/implementation-review-prompt.md` to review the
       complete local diff against `origin/main` without changing files; report
       every finding with a number, severity, context, impact, lettered solution
