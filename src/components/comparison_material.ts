@@ -1,15 +1,8 @@
 import type { ComponentInputOwner, ComponentViewRecord } from "@mokly/viewer";
 import { canonicalJson } from "@mokly/viewer/data";
 
-import { normalizeHistoricalDocument } from "../review/ignore.js";
-
 import { instanceStructure } from "./instance_structure.js";
 import { validateComponentRanges, type RenderedRange } from "./ranges.js";
-
-/** Canonicalize historical material only after its original coordinates are consumed. */
-export function stripHistoricalMarkers(html: string): string {
-  return stripMarkers(normalizeHistoricalDocument(html));
-}
 
 /** Validate ownership before stripping layout-neutral markers for conservative migration. */
 export function stripMarkers(

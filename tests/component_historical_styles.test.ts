@@ -6,10 +6,7 @@ import { test } from "node:test";
 import { compileCatalogue, type Compilation } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
-import {
-  FORMER_MANIFEST_NAME,
-  MANIFEST_NAME,
-} from "../dist/registry/manifest.js";
+import { MANIFEST_NAME } from "../dist/registry/manifest.js";
 import { compareReview } from "../dist/review/compare.js";
 import { computeChangedRoutes } from "../dist/server/changed.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
@@ -130,22 +127,15 @@ export default (input) => {
 };`;
 }
 
-/** Reconstruct old comment bytes with legitimate text-only UTF-16 style offsets. */
+/** Reconstruct committed output with legitimate text-only UTF-16 style offsets. */
 function historical(compilation: Compilation): Compilation {
   const manifest = structuredClone(compilation.manifest);
-  const outputs = new Map(
-    [...compilation.outputs].map(([route, html]) => [
-      route,
-      html
-        .replaceAll("<!--mokly-component:", "<!--mokabook-component:")
-        .replaceAll("<!--mokly-review-", "<!--mokabook-review-"),
-    ]),
-  );
+  const outputs = new Map(compilation.outputs);
   for (const entry of manifest.entries)
     for (const view of generatedViews(entry)) {
       const html = outputs.get(view.path)!;
       const startOffset = html.indexOf(originalCss);
-      assert.ok(startOffset > html.indexOf("<!--mokabook-component:"));
+      assert.ok(startOffset > html.indexOf("<!--mokly-component:"));
       assert.equal(
         html.slice(startOffset, startOffset + originalCss.length),
         originalCss,
@@ -158,10 +148,6 @@ function historical(compilation: Compilation): Compilation {
         },
       ];
     }
-  outputs.delete(MANIFEST_NAME);
-  outputs.set(
-    FORMER_MANIFEST_NAME,
-    JSON.stringify({ ...manifest, generatedBy: "mokabook" }),
-  );
+  outputs.set(MANIFEST_NAME, JSON.stringify(manifest));
   return { ...compilation, manifest, outputs };
 }

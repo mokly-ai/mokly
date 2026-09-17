@@ -24,6 +24,7 @@ export function validateComponentViews(
   >,
   at: string,
   rootId?: string,
+  historical = false,
 ): asserts value is readonly ComponentViewRecord[] {
   const axes = ["mobile", "desktop"].flatMap((viewport) =>
     (dark ? ["light", "dark"] : ["light"]).map(
@@ -56,6 +57,7 @@ export function validateComponentViews(
       components,
       `${at} / ${axes[i]}`,
       rootId,
+      historical,
     );
   });
 }
@@ -99,8 +101,9 @@ export function validateComponentViewRecord(
     if (instance.slotKey !== undefined && !isComponentKey(instance.slotKey))
       invalidData(at, "invalid instance slot key");
     if (
+      !historical &&
       instance.key !==
-      instanceKey(instance.owner, instance.slotKey, instance.id)
+        instanceKey(instance.owner, instance.slotKey, instance.id)
     )
       invalidData(at, "instance key mismatch");
     if (!Number.isSafeInteger(instance.order) || instance.order < 0)
@@ -134,7 +137,7 @@ export function validateComponentViewRecord(
       !isComponentKey(slot.key) ||
       !isComponentKey(slot.instanceKey) ||
       typeof slot.name !== "string" ||
-      slot.key !== slotKey(slot.instanceKey, slot.name)
+      (!historical && slot.key !== slotKey(slot.instanceKey, slot.name))
     )
       invalidData(at, "invalid slot identity");
     validateOwner(slot.owner, at);

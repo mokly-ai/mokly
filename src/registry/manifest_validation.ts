@@ -23,7 +23,7 @@ export function validateManifest(
   historical = false,
 ): HistoricalManifest {
   const manifest = validateManifestMetadata(value, allowV2, historical);
-  validateManifestComponentUsage(manifest);
+  validateManifestComponentUsage(manifest, historical);
   return manifest;
 }
 
@@ -41,8 +41,6 @@ export function validateManifestMetadata(
   let normalized = value;
   if (value.schemaVersion === 2 && allowV2 && historical) {
     normalized = { ...value, generatedBy: "mokly", schemaVersion: 3 };
-  } else if (historical && value.generatedBy === "mokabook") {
-    normalized = { ...value, generatedBy: "mokly" };
   }
   const current = normalized.schemaVersion === 5;
   const pages =

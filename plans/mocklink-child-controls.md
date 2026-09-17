@@ -1,15 +1,15 @@
 # MockLink Child Controls
 
 Implement the approved [styled link controls contract](../docs/protocol/mokly-link-controls.md)
-so consumers can use their existing styled controls with Mokabook navigation.
-Scope is the Mokabook package, documentation, and consumer/browser fixtures.
+so consumers can use their existing styled controls with Mokly navigation.
+Scope is the Mokly package, documentation, and consumer/browser fixtures.
 Accounting adoption and publishing a package release are subsequent work.
 
 ## Milestone 1: Define the contract — completed
 
 Specify a complete opt-in API and its ownership, accessibility, and build rules.
 
-- [x] Audit the Accounting failure and current Mokabook navigation boundary.
+- [x] Audit the Accounting failure and current Mokly navigation boundary.
 - [x] Fetch and preserve current main before integration. Source tip was
       `b5ed6dfa8d82ea8ef532f7873443ddaa9fca1440`; audit showed the navigation
       resize feature, which was retained by fast-forwarding to `b45327a`.
@@ -78,7 +78,7 @@ already-planned post-review bookkeeping.
 
 1. **Severity: Medium — child markers can bypass safety checks by changing attribute case.**
 
-   Context: [src/build/link_controls.ts](../src/build/link_controls.ts#L30) only enters the adapter when `html.includes(CHILD_MARKER)`, and [src/build/link_controls.ts](../src/build/link_controls.ts#L166) uses the same case-sensitive check after compatibility output. HTML attribute names are case-insensitive, so `DATA-MOKABOOK-LINK-CHILD-START` can ship unconsumed if emitted by a renderer or compatibility transformer.
+   Context: [src/build/link_controls.ts](../src/build/link_controls.ts#L30) only enters the adapter when `html.includes(CHILD_MARKER)`, and [src/build/link_controls.ts](../src/build/link_controls.ts#L166) uses the same case-sensitive check after compatibility output. HTML attribute names are case-insensitive, so `DATA-MOKLY-LINK-CHILD-START` can ship unconsumed if emitted by a renderer or compatibility transformer.
 
    Impact of doing nothing: internal reserved markers can leak into generated output, and the documented “unconsumed markers fail the build” contract is not actually enforced.
 
@@ -86,9 +86,9 @@ already-planned post-review bookkeeping.
 
    Recommended: A.
 
-2. **Severity: Medium — `data-mokabook-link-control` is only reserved on the adapted root.**
+2. **Severity: Medium — `data-mokly-link-control` is only reserved on the adapted root.**
 
-   Context: the injected stylesheet targets every `a[data-mokabook-link-control]` in the document at [src/build/link_control_patches.ts](../src/build/link_control_patches.ts#L15), but the reserved-metadata check only rejects the attribute on the root being adapted at [src/build/link_control_patches.ts](../src/build/link_control_patches.ts#L88).
+   Context: the injected stylesheet targets every `a[data-mokly-link-control]` in the document at [src/build/link_control_patches.ts](../src/build/link_control_patches.ts#L15), but the reserved-metadata check only rejects the attribute on the root being adapted at [src/build/link_control_patches.ts](../src/build/link_control_patches.ts#L88).
 
    Impact of doing nothing: an unrelated consumer-authored anchor with that attribute can be restyled whenever any active child control causes the stylesheet to be injected, violating the “patch only marked controls” safety boundary.
 
@@ -110,7 +110,7 @@ already-planned post-review bookkeeping.
 
    Context: [README.md](../README.md#L118) puts Accounting-specific Firna `Button` instructions in the package README.
 
-   Impact of doing nothing: app-independent Mokabook docs remain coupled to one consumer app/framework, which can confuse package users and make future README maintenance noisier.
+   Impact of doing nothing: app-independent Mokly docs remain coupled to one consumer app/framework, which can confuse package users and make future README maintenance noisier.
 
    Options: A. Move that migration guidance to `docs/migration` or the plan, and keep the README generic. B. Reword it as a generic custom-component note.
 
@@ -209,15 +209,15 @@ original report.
 
    **Impact of doing nothing:** a compatibility bridge can ship output that violates the documented “no inline handlers / no nested controls / no interactive ancestor” contract, especially in standalone files and Review snapshots.
 
-   **Options:** A. Add a post-transform validator for `data-mokabook-link-control` owners that rechecks native anchor shape, inline handlers, descendants, and ancestors. B. Document compatibility transformers as fully trusted and allowed to break adapted-control safety.
+   **Options:** A. Add a post-transform validator for `data-mokly-link-control` owners that rechecks native anchor shape, inline handlers, descendants, and ancestors. B. Document compatibility transformers as fully trusted and allowed to break adapted-control safety.
 
    **Recommended:** A, with regression cases in `tests/compatibility_link_controls.test.ts`.
 
 3. **Severity: Medium — control metadata ownership is not bound strongly enough.**
 
-   **Context:** [src/build/link_control_metadata.ts](../src/build/link_control_metadata.ts#L104) records only control metadata plus `id`, `href`, `data-nav-href`, and `data-mokabook-link`. It ignores preserved owner attributes such as `class`, `style`, labels, and DOM position. The existing test at [tests/compatibility_link_controls.test.ts](../tests/compatibility_link_controls.test.ts#L51) catches moving metadata only because the ordinary link has a distinguishing `id`; the same move to a no-id same-destination link passes.
+   **Context:** [src/build/link_control_metadata.ts](../src/build/link_control_metadata.ts#L104) records only control metadata plus `id`, `href`, `data-nav-href`, and `data-mokly-link`. It ignores preserved owner attributes such as `class`, `style`, labels, and DOM position. The existing test at [tests/compatibility_link_controls.test.ts](../tests/compatibility_link_controls.test.ts#L51) catches moving metadata only because the ordinary link has a distinguishing `id`; the same move to a no-id same-destination link passes.
 
-   **Impact of doing nothing:** compatibility transforms can move `data-mokabook-link-control` from the styled adapted control to a plain same-destination link without detection, breaking the documented “moving metadata to a different logical owner fails” guarantee.
+   **Impact of doing nothing:** compatibility transforms can move `data-mokly-link-control` from the styled adapted control to a plain same-destination link without detection, breaking the documented “moving metadata to a different logical owner fails” guarantee.
 
    **Options:** A. Strengthen owner records with the adapted root’s non-package attributes, and add no-id same-destination regression coverage. B. Add an opaque generated owner token and treat any missing/duplicated/moved token as invalid. C. Weaken the docs to describe the current best-effort record matching.
 

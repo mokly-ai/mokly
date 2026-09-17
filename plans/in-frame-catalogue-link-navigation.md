@@ -2,7 +2,7 @@
 
 **Status:** Completed.
 
-**Goal:** Make an explicit catalogue link activated inside a Mokabook fragment
+**Goal:** Make an explicit catalogue link activated inside a Mokly fragment
 navigate the outer Browse shell to the destination's canonical page, while
 keeping that destination selected, expanded, and visible in the catalogue
 tree.
@@ -449,7 +449,7 @@ existing portable artifact links; Browse behavior is not activated yet.
       overloaded inputs such as `id#fragment`, `id%23fragment`, and `mock:id`
       through both the function argument and component `to` prop.
 - [x] Add failure-first cases to `tests/build_links.test.ts` for a reserved
-      `data-mokabook-link` marker on `MockLink` and raw `mock:` hrefs in HTML
+      `data-mokly-link` marker on `MockLink` and raw `mock:` hrefs in HTML
       anchors/areas and SVG anchors; prove a `data-nav-href`-only span remains
       marker-free; reject logical `href` values on an arbitrary HTML element,
       HTML `link`, and SVG `use`/`image`; prove `data-nav-href` on those owners
@@ -488,7 +488,7 @@ existing portable artifact links; Browse behavior is not activated yet.
       across `transformCompatibilityDocuments`: expected marker presence and
       value, namespace/native-link class, logical attribute names, and their
       exact resolved portable values. Fail through the existing typed
-      `MokabookError` contract on divergence.
+      `MoklyError` contract on divergence.
 - [x] After all compatibility transforms, index anchors from the final output
       documents and repeat cross-view anchor validation for every logical
       reference, including sibling viewports and applicable dark output.
@@ -528,7 +528,7 @@ Browse carries logical fragments through request-visible queries.
 - [x] Add security cases for unmarked external, raw relative, same-document,
       `_top`, `_parent`, HTML/SVG anchors and areas, `<base target>`, forms and
       `formtarget`, plus marked targets, mixed-case keywords, matching names,
-      whitespace/control and invalid values, spoofed `data-mokabook-target`, and
+      whitespace/control and invalid values, spoofed `data-mokly-target`, and
       `download target="_top"`; prove adaptation preserves consumer-owned live
       attributes while the frame cannot target the shell or open a popup.
 - [x] Add browser security regressions for `_top`/`_parent` activation from the
@@ -557,7 +557,7 @@ Browse carries logical fragments through request-visible queries.
       `/id` and `/view`; decode once, validate grammar and cross-view anchors,
       return HTTP 400 on failure, and render encoded iframe hashes through
       scheme swaps or the first use-case step.
-- [x] Reuse the adapter while building `.context/mokabook-preview`, preserving
+- [x] Reuse the adapter while building `.context/mokly-preview`, preserving
       extensionless Cloudflare routes and queries, stripping untrusted reserved
       metadata, and failing the build for invalid trusted markers without
       claiming static request-time validation or injection.
@@ -631,7 +631,7 @@ No backend response transformation is included in this milestone.
       keep imports and public internal test seams typed.
 - [x] Add a frame-navigation module that attaches on initial load, scheme
       swaps, flow frames, legacy embeds, and progressively installed views. It
-      must read only validated `data-mokabook-link` markers and delegate to the
+      must read only validated `data-mokly-link` markers and delegate to the
       outer route navigator through `/id/<id>`. Attach only to the immediate
       document of each shell-owned frame; never traverse or bind descendant
       iframe documents.
@@ -657,7 +657,7 @@ No backend response transformation is included in this milestone.
       step. Assert the outer URL, heading, breadcrumbs, active row, disclosed
       ancestors, Back/Forward, and preserved shell state.
 - [x] In the same spec, prove modified and explicit non-self activation opens
-      the canonical Mokabook page through parent enhancement. Cover Meta/Ctrl/
+      the canonical Mokly page through parent enhancement. Cover Meta/Ctrl/
       Shift-click, middle-button `auxclick`, `_blank`, and a named target, while
       the iframe sandbox still lacks popup, script, and top-navigation
       permissions.

@@ -2,7 +2,7 @@
 
 The user approved both findings in the
 [preceding review](./consumer-export-followup.md). This record tracks their
-implementation on [PR #49](https://github.com/futex-ai/mokabook/pull/49), without
+implementation on [PR #49](https://github.com/mokly-ai/mokly/pull/49), without
 reopening completed milestones or authorizing an automatic new-finding cycle.
 
 The user subsequently approved the separate dependency item below. Its
@@ -111,10 +111,10 @@ not run tests; the independent local and CI verification reported here supplies
 that evidence. Native/filesystem differences remain a release consideration,
 covered by real Linux, macOS, and Windows tests rather than assumed from review.
 
-[CI on the integrated commit](https://github.com/futex-ai/mokabook/actions/runs/34409892855)
+[CI on the integrated commit](https://github.com/mokly-ai/mokly/actions/runs/34409892855)
 passed both complete Node 22/24 gates, both native platform jobs, and Required CI.
 Each complete gate passed 598 unit/integration tests, 107 browser tests, and
-three Rust tests. The [PR preview](https://github.com/futex-ai/mokabook/actions/runs/34409892871)
+three Rust tests. The [PR preview](https://github.com/mokly-ai/mokly/actions/runs/34409892871)
 also deployed successfully.
 The first Node 24 attempt passed all 598 unit/integration tests and 106 browser
 tests, but one unchanged mobile sandbox-navigation test could not observe the

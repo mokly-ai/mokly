@@ -51,7 +51,7 @@ watcher checks passed; a four-worker run then passed all 10 affected watch tests
 The npm test entrypoint now bounds file parallelism at four without changing
 coverage, individual concurrency cases, or any timeout.
 
-With Node 24.2.0 selected, `MOKABOOK_PLAYWRIGHT_PORT=60219 cargo xtask check`
+With Node 24.2.0 selected, `MOKLY_PLAYWRIGHT_PORT=60219 cargo xtask check`
 passed all 553 unit/integration tests, 104 browser tests, packed consumers,
 package/license checks, current generated-example verification, formatting,
 lint, typechecking, Rust formatting/Clippy, three Rust tests, and the file-length
@@ -65,14 +65,14 @@ post-push `cargo xtask review` completed successfully on 2026-09-09 against
 `origin/main` (`a5ecbc0`), with the three observations below. Its read-only audit
 confirmed 99 changed files and no committed deletions.
 
-[PR #49](https://github.com/futex-ai/mokabook/pull/49) targets `main` and is open,
+[PR #49](https://github.com/mokly-ai/mokly/pull/49) targets `main` and is open,
 not merged. No npm release was performed. PR preview deployment and Node 24 CI
 passed. The first Node 22.14 CI attempt passed 552/553 unit/integration tests,
 failing the existing symlink-recovery Changes-count assertion in
 `tests/watch_resource_boundaries.test.ts:84`. That file and its resource-watcher
 implementation are unchanged from main. Both tests in the file passed on a
 focused local rerun. The
-[Node 22 retry](https://github.com/futex-ai/mokabook/actions/runs/34387519308/job/102590264620)
+[Node 22 retry](https://github.com/mokly-ai/mokly/actions/runs/34387519308/job/102590264620)
 failed at the same assertion, again with 552/553 tests passing. This is not
 established as a flake, and its cause has not been isolated. The requested PR
 delivery is complete, but the PR is not merge-ready: this CI failure remains
@@ -194,7 +194,7 @@ npm 11.7.0 passed all 578 unit/integration tests, with none failed, skipped, or
 cancelled. The initial archive transfer accidentally included macOS metadata
 files; that invalid run was discarded and the complete clean run passed. The
 complete Node 24.2.0 gate also passed with
-`MOKABOOK_PLAYWRIGHT_PORT=62330 cargo xtask check`: all 578 unit/integration
+`MOKLY_PLAYWRIGHT_PORT=62330 cargo xtask check`: all 578 unit/integration
 tests, 105 browser tests, 3 Rust tests, formatting, lint, typechecking, generated
 examples, package/license checks, and packed ESM/NodeNext/npx/Accounting/Juno
 consumer smoke tests. The Rust file-length audit passed for all 10 files.

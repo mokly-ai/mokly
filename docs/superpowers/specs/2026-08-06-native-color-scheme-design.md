@@ -2,12 +2,12 @@
 
 - Date: 2026-08-06
 - Status: Implemented (plans/native-color-scheme-support.md, all milestones)
-- Scope: Mokabook package (authoring, config, build/check, Browse, Review,
+- Scope: Mokly package (authoring, config, build/check, Browse, Review,
   shell design, example)
 
 ## Goal
 
-Make color scheme a first-class variant axis in Mokabook, alongside the
+Make color scheme a first-class variant axis in Mokly, alongside the
 mobile/desktop viewport axis. A consumer adopts dark mode with one config
 change and one renderer change — no per-screen authoring, no duplicated
 entries, and no consumer-side stage-prop or theme-context glue.
@@ -18,11 +18,11 @@ and resource validation.
 
 ## Consumer Integration Story
 
-1. Set `colorSchemes: ["light", "dark"]` in `mokabook.config.ts`.
+1. Set `colorSchemes: ["light", "dark"]` in `mokly.config.ts`.
 2. Read `input.colorScheme` in the configured renderer and apply the matching
    theme (for example a dark `SharedUiTheme`), typically also setting
    `color-scheme` and a `data-*` hook on the emitted document.
-3. Run `mokabook build`.
+3. Run `mokly build`.
 
 Every screen then generates dark fragments, Browse offers a Light/Dark
 switch, and Review compares both schemes. A screen whose design is
@@ -105,7 +105,7 @@ output.
 ```ts
 type ColorScheme = "light" | "dark";
 
-interface MokabookConfig {
+interface MoklyConfig {
   // existing fields unchanged
   colorSchemes?: readonly ColorScheme[]; // default ["light"]
   stylesheets?: readonly {
@@ -247,7 +247,7 @@ interface ReviewResultV2 {
 
 ## Check And Validation
 
-`mokabook check` extends its existing failure classes over dark fragments
+`mokly check` extends its existing failure classes over dark fragments
 (stale/missing/orphan output, link and resource resolution, anchors,
 collisions) and adds:
 

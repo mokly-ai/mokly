@@ -6,11 +6,7 @@ import { sourceDenialMessage } from "../build/source_denial.js";
 import { isAuthoringSource } from "../build/source_inventory.js";
 import { isInside, projectRealPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
-import {
-  FORMER_MANIFEST_NAME,
-  LEGACY_MANIFEST_NAME,
-  MANIFEST_NAME,
-} from "../registry/manifest.js";
+import { LEGACY_MANIFEST_NAME, MANIFEST_NAME } from "../registry/manifest.js";
 
 import { exportError } from "./error.js";
 
@@ -45,9 +41,7 @@ function exportPublicNameDenial(
     options.resolveAliases === false ? "none" : "all",
   );
   if (denial) return sourceDenialMessage(denial);
-  if (
-    [MANIFEST_NAME, FORMER_MANIFEST_NAME, LEGACY_MANIFEST_NAME].includes(name)
-  )
+  if ([MANIFEST_NAME, LEGACY_MANIFEST_NAME].includes(name))
     return "targets internal catalogue metadata";
   for (const part of name.split("/")) {
     if (part.startsWith(".")) return "contains a hidden path segment";

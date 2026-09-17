@@ -1,9 +1,9 @@
-# Mokabook Dependency Patch Upstreaming
+# Mokly Dependency Patch Upstreaming
 
 ## Summary
 
-The juno repository carries `ts/patches/mokabook+0.8.0.patch` against the
-published Mokabook 0.8.0 runtime. None of its three fixes exist on Mokly
+The juno repository carries `ts/patches/mokly+0.8.0.patch` against the
+published Mokly 0.8.0 runtime. None of its three fixes exist on Mokly
 `main` at 0.9.0, so every consumer upgrade must re-carry the patch. This plan
 lands equivalent behaviour in Mokly, using the recommended option for each
 hunk, so the consumer patch can be deleted on the next upgrade:
@@ -587,7 +587,7 @@ seams and the README note remain open for the user's decision.
   responsible allocation without raising the heap limit. Raw logs from the
   measurement session were kept under `.context/m2-*.log`.
 - Upgrade juno to the Mokly release containing this work, delete
-  `ts/patches/mokabook+0.8.0.patch` and its README section, remove
+  `ts/patches/mokly+0.8.0.patch` and its README section, remove
   `patch-package` from the postinstall if no other patches remain, and either
   move `docs/mockups/README.md` and `docs/mockups/tsconfig*.json` out of the
   published root or rely on the shipped defaults.

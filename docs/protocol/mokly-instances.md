@@ -4,8 +4,9 @@
 
 Implemented through [viewer library Milestone 2](../../plans/mokly-viewer-library.md),
 including resolution and source capture. The key derivation and rendered boundaries
-retain their existing format. No new UI,
-changed key format, or visible local behavior is approved by this document.
+use the current Mokly domains. Historical manifests retain their recorded keys
+at the Git comparison boundary. No new UI or visible local behavior is approved
+by this document.
 
 ## Identity And Scope
 
@@ -19,7 +20,7 @@ The exact algorithm in [`keys.ts`](../../packages/viewer/src/components/keys.ts)
 
 ```ts
 const preimage = [
-  "mokabook-instance-v1",
+  "mokly-instance-v1",
   owner.kind,
   owner.kind === "instance" ? owner.instanceKey : null,
   slotKey ?? null,
@@ -29,12 +30,12 @@ const key = createHash("sha256").update(JSON.stringify(preimage)).digest("hex");
 ```
 
 Hash UTF-8 bytes with no trailing newline, salt, whitespace, or path prefix.
-The result is exactly 64 lowercase hexadecimal characters. The historical
-`mokabook-instance-v1` domain string is frozen, including its spelling.
+The result is exactly 64 lowercase hexadecimal characters. The
+`mokly-instance-v1` domain string is frozen, including its spelling.
 `id` is the validated local `moklyInstance` value, defaulting to the registered
 component id when omitted. `owner` is `{ kind: "entry" }` or
 `{ kind: "instance", instanceKey }`. The separate receiving-slot key is the
-same digest operation over `["mokabook-slot-v1", instanceKey, name]`.
+same digest operation over `["mokly-slot-v1", instanceKey, name]`.
 
 The containing entry id, variant id, viewport, color scheme, `componentId`,
 props, and source location are **not** in the instance preimage. In particular,

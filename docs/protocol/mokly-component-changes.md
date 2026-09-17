@@ -163,14 +163,11 @@ consumer document to make a component-only example pass.
 
 ## Baselines And Migration
 
-Historical Git documents may carry retired `mokabook-component` and
-`mokabook-review-*` comments. Parse their boundaries against the original HTML:
-style ownership offsets and component ranges must share its UTF-16 coordinate
-space. Normalize retired comments only in comparison material after projection,
-never before applying stored style offsets. Current output remains `mokly`-only;
-historical and current snapshots retain their original bytes. A marker-only
-rename is not a content change, while owned CSS edits still affect the component
-and independent caller edits still affect the consumer.
+Parse historical Git document boundaries against the original HTML: style
+ownership offsets and component ranges must share its UTF-16 coordinate space.
+Historical and current snapshots retain their original bytes. Owned CSS edits
+still affect the component and independent caller edits still affect the
+consumer.
 
 Use the existing merge base with `origin/main` or the configured base; staged,
 unstaged, and untracked current edits still participate. Pair component entries

@@ -132,7 +132,7 @@ authorized by the user. They are resolved as described below.
 
 1. **Medium — public manifests expose the source-file inventory. Resolved.**
    The [public asset classifier](../../src/config/public_files.ts) permitted
-   `mokabook-manifest.json`, and publication copied it into `static/`.
+   `mokly-manifest.json`, and publication copied it into `static/`.
    A disposable probe confirmed a live HTTP 200 and published JSON containing
    an imported `mockups/private/renderer-helper.ts` path. Its source contents
    remained protected: the helper returned 404 and was not copied. The issue

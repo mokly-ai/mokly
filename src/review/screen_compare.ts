@@ -19,11 +19,7 @@ import {
   analysisOwnsStylesheet,
   assertViewAnalysisScope,
 } from "./css/paths.js";
-import {
-  normalizeHistoricalDocument,
-  normalizeReviewPair,
-  normalizeSingleDocument,
-} from "./ignore.js";
+import { normalizeReviewPair, normalizeSingleDocument } from "./ignore.js";
 import { addArtifactFile, snapshotPath } from "./paths.js";
 import type { ResourceComparison } from "./resource_comparison.js";
 import {
@@ -104,19 +100,12 @@ export async function compareScreen(
       );
       const normalized =
         before !== undefined && after !== undefined
-          ? normalizeReviewPair(
-              normalizeHistoricalDocument(before),
-              after,
-              entry.route,
-            )
+          ? normalizeReviewPair(before, after, entry.route)
           : {
               base:
                 before === undefined
                   ? undefined
-                  : normalizeSingleDocument(
-                      normalizeHistoricalDocument(before),
-                      entry.route,
-                    ),
+                  : normalizeSingleDocument(before, entry.route),
               head:
                 after === undefined
                   ? undefined
@@ -181,12 +170,8 @@ function compareView(
   afterPath: string | undefined,
 ): ViewReview {
   const context = `${route} (${viewport}, ${colorScheme})`;
-  const historicalBefore =
-    before === undefined ? undefined : normalizeHistoricalDocument(before);
   const normalizedBefore =
-    historicalBefore === undefined
-      ? undefined
-      : normalizeSingleDocument(historicalBefore, context);
+    before === undefined ? undefined : normalizeSingleDocument(before, context);
   const normalizedAfter =
     after === undefined ? undefined : normalizeSingleDocument(after, context);
   if (before === undefined)
@@ -207,11 +192,7 @@ function compareView(
       state: "removed",
       viewport,
     };
-  const normalized = normalizeReviewPair(
-    normalizeHistoricalDocument(before),
-    after,
-    context,
-  );
+  const normalized = normalizeReviewPair(before, after, context);
   const normalizedEqual = digest(normalized.base) === digest(normalized.head);
   const rawEqual =
     digest(normalizedBefore ?? "") === digest(normalizedAfter ?? "");

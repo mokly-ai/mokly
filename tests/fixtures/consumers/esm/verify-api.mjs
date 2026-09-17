@@ -33,7 +33,7 @@ assert.throws(() => api.mockLink("packed-home#packed-section"), /kebab-case/);
 const instance = {
   key: createHash("sha256")
     .update(
-      JSON.stringify(["mokabook-instance-v1", "entry", null, null, "action"]),
+      JSON.stringify(["mokly-instance-v1", "entry", null, null, "action"]),
     )
     .digest("hex"),
   id: "action",

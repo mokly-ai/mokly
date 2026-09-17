@@ -144,7 +144,7 @@ test("bootstrap refuses release-managed versions after registration", async (t) 
   await assert.rejects(fs.stat(fixture.destination), { code: "ENOENT" });
 });
 
-for (const name of ["mokly", "mokabook", "@other/mokly"])
+for (const name of ["mokly", "other-package", "@other/mokly"])
   test(`bootstrap refuses the wrong package identity ${name}`, async (t) => {
     const fixture = await bootstrapFixture(t, { name });
     const { createBootstrapArchive } = await bootstrapModule();

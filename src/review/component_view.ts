@@ -4,10 +4,7 @@ import type {
   ViewReview,
 } from "@mokly/viewer/data";
 
-import {
-  stripHistoricalMarkers,
-  stripMarkers,
-} from "../components/comparison_material.js";
+import { stripMarkers } from "../components/comparison_material.js";
 import {
   changedComponentImplementations,
   projectComponentPair,
@@ -60,7 +57,7 @@ export async function compareComponentView(
   const head = after ? await context.afterReader.text(after.path) : undefined;
   const baseRanges =
     base !== undefined && before?.usage
-      ? validateComponentRanges(base, before.usage.ranges, "historical")
+      ? validateComponentRanges(base, before.usage.ranges)
       : undefined;
   const headRanges =
     head !== undefined && after?.usage
@@ -77,7 +74,7 @@ export async function compareComponentView(
   if (base === undefined || head === undefined) {
     const normalized = normalizeSingleDocument(
       base !== undefined
-        ? stripHistoricalMarkers(base)
+        ? stripMarkers(base)
         : stripMarkers(head!, after!.usage, headRanges),
       selected.path,
     );
@@ -114,7 +111,7 @@ export async function compareComponentView(
   if (projected.inputs) reasons.push({ kind: "inputs" });
   if (projected.structure) reasons.push({ kind: "structure" });
   const actual = normalizeReviewPair(
-    stripHistoricalMarkers(base),
+    stripMarkers(base),
     stripMarkers(head, after?.usage, headRanges),
     selected.path,
   );

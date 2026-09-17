@@ -16,11 +16,9 @@ export async function copyExampleSources(root: string): Promise<void> {
         !(
           source.startsWith(generated + path.sep) &&
           (source.endsWith(".html") ||
-            [
-              "mockbook-manifest.json",
-              "mokabook-manifest.json",
-              "mokly-manifest.json",
-            ].includes(path.basename(source)))
+            ["mockbook-manifest.json", "mokly-manifest.json"].includes(
+              path.basename(source),
+            ))
         ),
     });
 }

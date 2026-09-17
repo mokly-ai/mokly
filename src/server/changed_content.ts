@@ -13,11 +13,7 @@ import { isInside, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
-import {
-  FORMER_MANIFEST_NAME,
-  LEGACY_MANIFEST_NAME,
-  MANIFEST_NAME,
-} from "../registry/manifest.js";
+import { LEGACY_MANIFEST_NAME, MANIFEST_NAME } from "../registry/manifest.js";
 import {
   FileSystemReviewAssetReader,
   GitReviewAssetReader,
@@ -26,7 +22,6 @@ import {
 import { baselineResourceConfig } from "../review/base_manifest.js";
 import type { BaselineReader } from "../review/git.js";
 import {
-  normalizeHistoricalDocument,
   normalizeReviewPair,
   normalizeSingleDocument,
 } from "../review/ignore.js";
@@ -94,9 +89,7 @@ export async function classifyChangedContent(
       )
         return [];
       const route = toPosixPath(path.relative(config.mockupsDir, candidate));
-      return route === MANIFEST_NAME ||
-        route === FORMER_MANIFEST_NAME ||
-        route === LEGACY_MANIFEST_NAME
+      return route === MANIFEST_NAME || route === LEGACY_MANIFEST_NAME
         ? []
         : [route];
     }),
@@ -134,9 +127,7 @@ export async function classifyChangedContent(
           "review-invalid",
           `base fragment is missing: ${pair.base}`,
         );
-      const before = normalizeHistoricalDocument(
-        Buffer.from(base).toString("utf8"),
-      );
+      const before = Buffer.from(base).toString("utf8");
       const after =
         headDocuments.get(pair.head) ??
         Buffer.from(await headReader.read(pair.head)).toString("utf8");

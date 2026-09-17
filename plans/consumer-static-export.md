@@ -19,7 +19,7 @@ Earlier milestones remain completed and retain their historical validation.
 
 Milestones 1–16 completed, including the approved transaction, adapter-alias,
 deployment-identity, preview-confinement, and CI follow-ups, latest-main
-integration, and [PR #49](https://github.com/futex-ai/mokabook/pull/49).
+integration, and [PR #49](https://github.com/mokly-ai/mokly/pull/49).
 The [integration review](../docs/reviews/consumer-export-integration.md) records
 the preceding delivery and original findings. The
 [preceding review](../docs/reviews/consumer-static-export.md) retains earlier context.
@@ -27,7 +27,7 @@ The user subsequently approved both code follow-ups and investigation of Node 22
 CI. Milestones 10–13 track that work without reopening completed milestones.
 Milestones 14–16 complete the approved exclusive-destination and release-doc
 follow-ups, subsequent main integration, verification, and review.
-The supported consumer CLI exports the complete Mokabook catalogue and comparisons
+The supported consumer CLI exports the complete Mokly catalogue and comparisons
 into a directory the consumer can deploy through their own hosting workflow.
 The user approved fixing all four review findings, followed by merging latest main.
 
@@ -38,7 +38,7 @@ Those documents describe the implemented contract on this branch, not a new npm 
 Consumer invocation:
 
 ```bash
-npx mokabook export --out .context/mokabook-site
+npx mokly export --out .context/mokly-site
 ```
 
 Export builds the consumer's current mockups, packages the same Browse shell
@@ -172,7 +172,7 @@ approved appearance and all served navigation/comparison behavior.
       badges or copy changes. Keep both viewports, schemes, search, tags, Changes,
       details, flows, active-tree state, and history/scroll behavior.
 - [x] Add focused client/rendering tests and browser tests against exact static
-      files and directory indexes, with no rewrite rules or live Mokabook routes.
+      files and directory indexes, with no rewrite rules or live Mokly routes.
 - [x] Visually smoke-test the existing mobile/desktop owning screens in Current
       and all comparison modes, including alias/deep-link and fragment entry.
       Retain baseline served browser tests.
@@ -237,7 +237,7 @@ documentation without actually uploading a site or releasing a package.
       the fixture's source/Git access before browser checks. Crawl local route,
       module, CSS, image/font, alias, and snapshot references and require success.
 - [x] Assert no comparison requests in Current and no live-update/network
-      dependency on a Mokabook server. Exercise comparisons after source removal,
+      dependency on a Mokly server. Exercise comparisons after source removal,
       refresh, interrupted navigation, failure/retry, and all schemes/viewports.
 - [x] Retain real Cloudflare compatibility checks as a second serving mode;
       do not replace portable-host checks with provider-only success.
@@ -375,7 +375,7 @@ See the [integration record](../docs/reviews/consumer-export-integration.md).
 
 Delivery: merged implementation `43b6de0` was committed and pushed before the
 completed independent review. Seven additional static/preview browser smoke
-tests passed. [PR #49](https://github.com/futex-ai/mokabook/pull/49) is open against
+tests passed. [PR #49](https://github.com/mokly-ai/mokly/pull/49) is open against
 `main`. The review reported one Medium and two Low observations; the two code
 recommendations remain unapproved, while the pre-existing documentation closeout
 records the delivery status. No PR merge or npm release was performed.

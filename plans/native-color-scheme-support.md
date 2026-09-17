@@ -39,7 +39,7 @@ tests import from `../dist`), React 19 static rendering, parse5, Playwright
   authored CSS files under `generated/` (`design.css`, `design-stage.css`,
   `design-review.css`, `example.css` if present) are consumer-authored public
   static files and ARE hand-edited.
-- All new failures use `MokabookError` with existing code families
+- All new failures use `MoklyError` with existing code families
   (`config-invalid`, `build-invalid`, `manifest-invalid`, `review-invalid`).
   Registry violations use kebab `<verb>-<subject>` codes via `problem(...)`.
 - No `serde`-style untyped blobs: new fields are typed on the existing
@@ -77,7 +77,7 @@ as today, and all existing tests plus new unit/integration tests pass.
 /** Light or dark color-scheme rendering target. */
 export type ColorScheme = "dark" | "light";
 
-// src/config/types.ts — MokabookConfig gains:
+// src/config/types.ts — MoklyConfig gains:
 colorSchemes?: readonly ColorScheme[]; // default ["light"]
 // ResolvedConfig gains (required, normalized light-first):
 colorSchemes: readonly ColorScheme[];
@@ -98,7 +98,7 @@ test("colorSchemes rejects invalid sets", async () => {
   // ["dark"] → 'colorSchemes must include "light"'
   // ["light", "light"] → "duplicate colorSchemes value: light"
   // ["light", "sepia"] → "colorSchemes contains an unknown value: sepia"
-  // each throws MokabookError code "config-invalid"
+  // each throws MoklyError code "config-invalid"
 });
 ```
 
@@ -416,7 +416,7 @@ darkStylesheets?: readonly string[];
       `createFixture(entrySource?: string, options?: { extraConfig?: string })`,
       appending `options.extraConfig` lines (e.g.
       `colorSchemes: ["light", "dark"],`) inside the generated
-      `mokabook.config.ts` object literal. Existing callers stay valid.
+      `mokly.config.ts` object literal. Existing callers stay valid.
 - [x] Write failing test in `tests/build_attribution.test.ts`:
 
 ```ts
@@ -449,7 +449,7 @@ if (candidate.darkFragments) {
 
 **Files:**
 
-- Modify: `examples/basic/mokabook.config.ts`, `examples/basic/theme.ts`,
+- Modify: `examples/basic/mokly.config.ts`, `examples/basic/theme.ts`,
   `examples/basic/renderer.tsx`,
   `examples/basic/entries/design/browse_screens.tsx`,
   `examples/basic/entries/design/review_outcome_screens.tsx`,
@@ -493,13 +493,13 @@ if (candidate.darkFragments) {
 - Modify: `docs/protocol/mokly-package.md`, `README.md` (config/authoring
   usage), `plans/native-color-scheme-support.md` (tick boxes)
 
-- [x] Update `mokabook-package.md`: config shape (`colorSchemes`,
+- [x] Update `mokly-package.md`: config shape (`colorSchemes`,
       stylesheet rule lists), authoring (`colorSchemes` opt-out rule),
       rendering boundary (`RenderInput.colorScheme`,
       `CompatibilityTransformInput.colorScheme`), generated contract (dark
       fragment names, `darkFragments` in the normative v3 shape, orphan
       lifecycle when dark turns off).
-- [x] Update the README "Use Mokabook" + Configuration sections with the
+- [x] Update the README "Use Mokly" + Configuration sections with the
       two-step consumer story.
 - [x] Run `cargo xtask check` (full gate; ~15 min; use a 1800000 ms timeout).
 - [x] `git add -A`, commit
@@ -771,7 +771,7 @@ test("screen stage carries per-frame scheme fragment data", ...);
   - `Catalogue` gains `hasDarkFragments: boolean` (any screen entry with
     `darkFragments`).
   - `SchemeSwitch()` in `head.tsx`, mirroring `ViewportSwitch`:
-    `<span aria-label="Color scheme" className="mbk-seg" data-mokabook-schemeswitch="" role="group">`
+    `<span aria-label="Color scheme" className="mbk-seg" data-mokly-schemeswitch="" role="group">`
     with buttons `data-color-scheme-option="light" | "dark"`, light
     `aria-pressed="true"` server-side. Render it in the `document.tsx` top
     bar (right of search, before the Browse/Review mode switch) when
@@ -808,7 +808,7 @@ test("screen stage carries per-frame scheme fragment data", ...);
   --mbk-dark-screen-bg: #121514;
   --mbk-dark-screen-ink: #eef1ef;
 }
-body[data-mokabook-color-scheme="dark"] .phone-screen {
+body[data-mokly-color-scheme="dark"] .phone-screen {
   background: var(--mbk-dark-screen-bg);
   box-shadow: inset 0 0 0 1px
     color-mix(
@@ -817,16 +817,16 @@ body[data-mokabook-color-scheme="dark"] .phone-screen {
       var(--mbk-dark-screen-bg)
     );
 }
-body[data-mokabook-color-scheme="dark"] .phone-status {
+body[data-mokly-color-scheme="dark"] .phone-status {
   color: var(--mbk-dark-screen-ink);
 }
-body[data-mokabook-color-scheme="dark"] .browser-viewport {
+body[data-mokly-color-scheme="dark"] .browser-viewport {
   background: var(--mbk-dark-screen-bg);
 }
 .mbk-frame-scheme-note {
   display: none;
 }
-body[data-mokabook-color-scheme="dark"]
+body[data-mokly-color-scheme="dark"]
   .mbk-frame-wrap[data-color-scheme-fallback]
   .mbk-frame-scheme-note {
   display: inline;
@@ -859,7 +859,7 @@ export function currentColorScheme(doc: Document): BrowseColorScheme;
 
 ```ts
 test("setColorScheme swaps fragment sources and marks the body", ...);
-// body data-mokabook-color-scheme set; iframes with data-fragment-dark get
+// body data-mokly-color-scheme set; iframes with data-fragment-dark get
 // the dark src; fallback iframes keep light; switch buttons aria-pressed sync
 test("recovery state restores color scheme strictly", ...);
 // capture includes colorScheme; parse rejects an invalid value (whole
@@ -867,7 +867,7 @@ test("recovery state restores color scheme strictly", ...);
 ```
 
 - [x] Run — FAIL.
-- [x] Implement: `setColorScheme` sets `body` `data-mokabook-color-scheme`,
+- [x] Implement: `setColorScheme` sets `body` `data-mokly-color-scheme`,
       syncs `[data-color-scheme-option]` `aria-pressed`, and for every
       `iframe[data-fragment-light]` assigns
       `value === "dark" && data-fragment-dark ? data-fragment-dark : data-fragment-light`
@@ -932,7 +932,7 @@ Extend the existing watched-reload state restoration test in
 one matching its pattern).
 
 - [x] Run `npm run test:browser` — PASS.
-- [x] Update `mokabook-runtime.md` Browse Shell section (scheme switch,
+- [x] Update `mokly-runtime.md` Browse Shell section (scheme switch,
       fallback label, details rows) and the watched-reload restored-state
       list (add color scheme).
 - [x] Run `cargo xtask check`; commit with title
@@ -956,10 +956,10 @@ plan is filed complete.
       from manifest fragment fields, extend it with `darkFragments`; if it
       crawls served documents, verify `data-fragment-dark` URLs are captured.
       Add/adjust so `.dark.html` fragments land in the artifact.
-- [x] Run `npm run preview:build`; verify `.context/mokabook-preview`
+- [x] Run `npm run preview:build`; verify `.context/mokly-preview`
       contains dark fragments and the scheme switch works when serving the
       artifact directory statically (e.g.
-      `npx --no-install wrangler pages dev .context/mokabook-preview` or any
+      `npx --no-install wrangler pages dev .context/mokly-preview` or any
       static file server; from-disk `file://` is not required for the
       snapshot).
 - [x] Commit: `fix(preview): snapshot dark fragments` (or note no change was
@@ -978,7 +978,7 @@ plan is filed complete.
       Task 4.5).
 - [x] Re-read the spec end to end and verify each requirement has landed;
       re-read `README.md`, `docs/protocol/mokly-package.md`,
-      `mokabook-runtime.md`, `mokabook-shell-design.md`,
+      `mokly-runtime.md`, `mokly-shell-design.md`,
       `examples/basic/README.md`, `examples/basic/notes.md` for consistency
       (no conflicting statements; consumer story reads: config + renderer +
       build).

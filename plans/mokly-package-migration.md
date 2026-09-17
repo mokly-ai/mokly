@@ -1,13 +1,13 @@
 # Mokly Package Migration
 
-Migrate the repository's public distribution identity from `mokabook` to the
-unscoped `mokly` npm package and executable. There are no supported external
-Mokabook consumers, so the cutover is intentionally breaking and does not ship
+Migrate the repository's pre-Mokly public distribution identity to the `mokly`
+npm package and executable. There are no supported external consumers of the
+pre-rename package, so the cutover is intentionally breaking and does not ship
 a compatibility package, alias executable, or dual config discovery.
 
-The existing `mokabook` registry package remains reserved after cutover and is
-deprecated only after `mokly` has been published and verified. Historical Git
-tags, changelog entries, and review evidence remain history; current repository
+The pre-rename registry package remains reserved after cutover and is deprecated
+only after `mokly` has been published and verified. Historical Git tags,
+changelog entries, and review evidence remain history; current repository
 metadata and release provenance move to `mokly-ai/mokly`.
 
 ## Milestone 1: Distribution And Protocol Contract (Completed)
@@ -18,7 +18,7 @@ before changing implementation behavior.
 - [x] Specify `mokly` as the package and executable, `mokly.config.*` as config
       discovery, and the renamed generated/public identifiers that consumers
       can observe.
-- [x] Document that old Mokabook inputs are rejected rather than silently
+- [x] Document that pre-rename inputs are rejected rather than silently
       supported, while historical release records remain intact.
 - [x] Document npm organization access, first-package bootstrap, trusted
       publishing for `mokly-ai/mokly`, legacy package deprecation, and release
@@ -32,8 +32,8 @@ Tags: mockup
 Summary: rename the checked design catalogue before changing the served product
 shell that implements it.
 
-- [x] Update canonical design catalogue source copy and metadata from Mokabook
-      to Mokly without changing unrelated screen behavior.
+- [x] Update canonical design catalogue source copy and metadata to Mokly
+      without changing unrelated screen behavior.
 - [x] Regenerate checked catalogue HTML and manifests from source.
 - [x] Run design, generated-output, type, and browser smoke checks for every
       changed canonical page.
@@ -48,8 +48,8 @@ and generated-output contract.
 - [x] Rename public TypeScript identities and consumer examples to Mokly.
 - [x] Rename config discovery, generated artifacts, owned metadata, local
       directories, diagnostics, and static runtime identifiers without public
-      Mokabook aliases; retain only narrowly scoped historical Git and ownership
-      readers needed to compare or replace committed output safely.
+      pre-rename aliases; retain only narrowly scoped historical Git and
+      ownership readers needed to compare or replace committed output safely.
 - [x] Update clean packed-consumer fixtures and package inspection to prove the
       new import and `npx mokly` behavior.
 - [x] Keep implementation files within repository size limits and update nearby
@@ -62,7 +62,7 @@ Tags: ui
 Summary: align the actual Browse, Review, and export surfaces with the canonical
 Mokly design while leaving feature behavior unchanged.
 
-- [x] Replace user-facing Mokabook product copy, accessibility names, titles,
+- [x] Replace pre-rename product copy, accessibility names, titles,
       status output, and shell-owned selectors with Mokly equivalents.
 - [x] Update client/server route contracts and static delivery tests together.
 - [x] Smoke Browse, Review, watch, build, check, and export through the `mokly`

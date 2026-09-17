@@ -18,15 +18,14 @@ and its resolved repository-relative target. A public-looking symlink cannot
 make a protected target public. Existing regular-file and root-confinement
 checks remain mandatory.
 
-The canonical `mokly-manifest.json`, former `mokabook-manifest.json`, and legacy
-v2 `mockbook-manifest.json` at `mockupsDir` are internal metadata. Deny all
-three configured paths and their realpath aliases at every public-resource
-boundary, even when their inventory is absent or they are pending generated
-output. Keep them readable by internal build, freshness, and Git-baseline
-readers. They are not authoring inputs and must not be added to `sourceFiles`
-merely to make them private. Ordinary public JSON remains supported. Browsers
-receive the catalogue data they need through the shell; no public manifest
-endpoint is provided.
+The canonical `mokly-manifest.json` and legacy v2 `mockbook-manifest.json` at
+`mockupsDir` are internal metadata. Deny both configured paths and their
+realpath aliases at every public-resource boundary, even when their inventory
+is absent or they are pending generated output. Keep them readable by internal
+build, freshness, and Git-baseline readers. They are not authoring inputs and
+must not be added to `sourceFiles` merely to make them private. Ordinary public
+JSON remains supported. Browsers receive the catalogue data they need through
+the shell; no public manifest endpoint is provided.
 The implemented [public catalogue](./mokly-catalogue.md) adds
 `/__mokly/catalogue.json` beside this private boundary; it is not a manifest
 endpoint. Serve/export allowlist its viewer fields and omit `sourceFiles`,

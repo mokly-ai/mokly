@@ -207,7 +207,7 @@ test("published-version guard compares bytes, inventory, and commit", async () =
     { gitHead: "c".repeat(40) },
     "c".repeat(40),
   );
-  for (const name of ["mokly", "mokabook", "@other/mokly"]) {
+  for (const name of ["mokly", "other-package", "@other/mokly"]) {
     assert.throws(() =>
       registry.comparePublishedPackage(
         report,

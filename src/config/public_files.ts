@@ -4,11 +4,7 @@ import path from "node:path";
 import { sourceDenialMessage } from "../build/source_denial.js";
 import { isAuthoringSource } from "../build/source_inventory.js";
 import { errorMessage } from "../errors.js";
-import {
-  FORMER_MANIFEST_NAME,
-  LEGACY_MANIFEST_NAME,
-  MANIFEST_NAME,
-} from "../registry/manifest.js";
+import { LEGACY_MANIFEST_NAME, MANIFEST_NAME } from "../registry/manifest.js";
 
 import { isBaselineCachePath } from "./cache_paths.js";
 import { locatePath, type FileLocation } from "./file_locations.js";
@@ -21,11 +17,9 @@ export function isInternalCatalogueFile(
   config: ResolvedConfig,
   resolveAliases = true,
 ): boolean {
-  const internal = [
-    MANIFEST_NAME,
-    FORMER_MANIFEST_NAME,
-    LEGACY_MANIFEST_NAME,
-  ].map((name) => path.join(config.mockupsDir, name));
+  const internal = [MANIFEST_NAME, LEGACY_MANIFEST_NAME].map((name) =>
+    path.join(config.mockupsDir, name),
+  );
   if (internal.includes(candidate)) return true;
   if (!resolveAliases) return false;
   const realCandidate = projectRealPath(candidate);

@@ -19,9 +19,6 @@ import { validateManifest } from "./manifest_validation.js";
 /** Canonical generated manifest filename. */
 export const MANIFEST_NAME = "mokly-manifest.json";
 
-/** Former package manifest filename accepted only from Git history. */
-export const FORMER_MANIFEST_NAME = "mokabook-manifest.json";
-
 /** Legacy version 2 manifest filename accepted only during migration. */
 export const LEGACY_MANIFEST_NAME = "mockbook-manifest.json";
 
@@ -81,14 +78,10 @@ export function readManifest(config: ResolvedConfig): ManifestV5 {
 /** Select the strict canonical input or the explicitly enabled legacy input. */
 export function selectManifestInput(
   canonicalExists: boolean,
-  formerExists: boolean,
   allowLegacyV2: boolean,
 ): { allowV2: boolean; filename: string } {
   if (canonicalExists) {
     return { allowV2: false, filename: MANIFEST_NAME };
-  }
-  if (formerExists) {
-    return { allowV2: false, filename: FORMER_MANIFEST_NAME };
   }
   if (!allowLegacyV2) return { allowV2: false, filename: MANIFEST_NAME };
   return { allowV2: true, filename: LEGACY_MANIFEST_NAME };

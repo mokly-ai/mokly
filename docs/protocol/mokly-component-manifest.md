@@ -149,16 +149,17 @@ which reference registered entries. `id` is the local `moklyInstance` value
 or its component-id default. Instance and slot keys are lowercase 64-hex SHA-256
 digests of UTF-8 JSON preimages, without a trailing newline. For an instance,
 the preimage is the array
-`["mokabook-instance-v1", owner.kind, owner.kind === "instance" ? owner.instanceKey : null, slotKey ?? null, id]`.
-For a slot it is `["mokabook-slot-v1", instanceKey, name]`, using its receiving
-instance and declared slot name. Those two historical domain strings are
-frozen protocol identifiers so a product rename cannot invalidate stored
-component identity; they are not accepted package, executable, configuration,
-or markup names. Serialize the arrays with `JSON.stringify`.
+`["mokly-instance-v1", owner.kind, owner.kind === "instance" ? owner.instanceKey : null, slotKey ?? null, id]`.
+For a slot it is `["mokly-slot-v1", instanceKey, name]`, using its receiving
+instance and declared slot name. Those two domain strings are frozen protocol
+identifiers; they are not accepted package, executable, configuration, or
+markup names. Serialize the arrays with `JSON.stringify`.
 An entry owner means the containing screen or component variant. Parent/slot
 references are their fixed-size digests, never recursively embedded JSON keys.
-Readers recompute keys from the record fields and reject mismatches or conflicting
-duplicate keys. Neither key is a filesystem path, selector, catalogue id, or
+Current readers recompute keys from the record fields and reject mismatches or
+conflicting duplicate keys. Historical Git readers retain structurally valid
+64-hex keys so earlier domain versions remain comparable without becoming valid
+current output. Neither key is a filesystem path, selector, catalogue id, or
 route segment. This bounds key length independently of nesting depth.
 
 The [instance contract](./mokly-instances.md) owns the complete stability list,

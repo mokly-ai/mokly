@@ -211,22 +211,6 @@ test("missing config reports every attempted filename", () => {
   assert.throws(() => discoverConfig(root), /mokly\.config\.ts/);
 });
 
-test("config discovery does not accept the former package filename", async (context) => {
-  const fixture = await createFixture();
-  context.after(() => removeFixture(fixture));
-  await fs.promises.rename(
-    fixture.configPath,
-    path.join(fixture.root, "mokabook.config.ts"),
-  );
-
-  assert.throws(
-    () => discoverConfig(fixture.root),
-    (error: Error) =>
-      error.message.includes("no Mokly config found") &&
-      !error.message.includes("mokabook.config.ts"),
-  );
-});
-
 test("config rejects traversal and overlapping roots", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));

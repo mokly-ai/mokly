@@ -1,7 +1,7 @@
 # Hierarchy-Inferred Breadcrumbs
 
 **Goal:** Make collection membership the single source of truth for structured
-catalogue navigation and breadcrumbs, so Mokabook authors never provide a
+catalogue navigation and breadcrumbs, so Mokly authors never provide a
 separate `navPath` that can drift from the hierarchy.
 
 **Architecture:** Build one validated collection forest from `childIds`. Every
@@ -32,7 +32,7 @@ Rust `xtask` verification/review gate.
   own routes. Legacy-page crumbs keep their existing route-directory inference
   and link to a directory's real Overview page when one exists.
 - `navPath` is removed from `EntryInput`, routed entry inputs, and `RootInput`.
-  Schema-v3 manifests continue to emit `navPath`, but Mokabook derives it and
+  Schema-v3 manifests continue to emit `navPath`, but Mokly derives it and
   ignores historical values when building the served hierarchy.
 - `defineRoot` without root collection metadata places its children at the
   catalogue root. Root collection `title` moves into
@@ -198,7 +198,7 @@ example's intentional visible groups through real collection relationships.
 - [x] Run `npm run example:check`, `npm run package:check`,
       `npm run package:smoke`, and the full Node test suite with a 100% pass
       rate.
-- [x] Start `mokabook serve --no-watch --port 0` against `examples/basic`, open
+- [x] Start `mokly serve --no-watch --port 0` against `examples/basic`, open
       representative deep screen/use-case/legacy routes, verify breadcrumb and
       navigation alignment, then shut the server down cleanly.
 

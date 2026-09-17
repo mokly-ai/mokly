@@ -8,6 +8,11 @@ import {
   parseHistoricalManifest,
   parseManifest,
 } from "../dist/registry/manifest.js";
+import type {
+  ComponentInputOwner,
+  ComponentViewRecord,
+} from "../packages/viewer/dist/components/manifest_types.js";
+import type { ManifestV5 } from "../packages/viewer/dist/registry/types.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
@@ -29,6 +34,16 @@ test("the current manifest combines pages and complete component usage without l
   const screen = current.entries.find((entry) => entry.kind === "screen");
   assert.ok(screen?.componentViews?.every((view) => view.instances.length > 0));
   assert.match(compilation.outputs.get("handbook.html") ?? "", /Handbook/);
+});
+
+test("historical component identities remain readable across domain cutovers", async (context) => {
+  const fixture = await createFixture(componentEntrySource());
+  context.after(() => removeFixture(fixture));
+  const compilation = await compileCatalogue(await loadConfig(fixture.root));
+  const historical = remapComponentKeys(compilation.manifest);
+
+  assert.equal(parseHistoricalManifest(historical).schemaVersion, 5);
+  assert.throws(() => parseManifest(historical), /key mismatch/);
 });
 
 test("both disjoint historical v4 formats remain readable only at the Git boundary", async (context) => {
@@ -68,3 +83,68 @@ test("both disjoint historical v4 formats remain readable only at the Git bounda
   Reflect.deleteProperty(screen, "componentViews");
   assert.throws(() => parseHistoricalManifest(invalidUsage));
 });
+
+function remapComponentKeys(manifest: ManifestV5): ManifestV5 {
+  const result = structuredClone(manifest);
+  const views = result.entries.flatMap((entry) =>
+    entry.kind === "screen"
+      ? (entry.componentViews ?? [])
+      : entry.kind === "component"
+        ? entry.variants.flatMap((variant) => variant.componentViews)
+        : [],
+  );
+  for (const view of views) remapViewKeys(view);
+  return result;
+}
+
+function remapViewKeys(view: ComponentViewRecord): void {
+  const instanceKeys = new Map(
+    view.instances.map((instance) => [instance.key, remapKey(instance.key)]),
+  );
+  const slotKeys = new Map(
+    view.slots.map((slot) => [slot.key, remapKey(slot.key)]),
+  );
+  const owner = (value: ComponentInputOwner): ComponentInputOwner =>
+    value.kind === "entry"
+      ? value
+      : { kind: "instance", instanceKey: instanceKeys.get(value.instanceKey)! };
+  const instances = view.instances
+    .map((instance) => ({
+      ...instance,
+      key: instanceKeys.get(instance.key)!,
+      owner: owner(instance.owner),
+      ...(instance.slotKey ? { slotKey: slotKeys.get(instance.slotKey)! } : {}),
+    }))
+    .sort((left, right) => left.key.localeCompare(right.key));
+  const slots = view.slots
+    .map((slot) => ({
+      ...slot,
+      instanceKey: instanceKeys.get(slot.instanceKey)!,
+      key: slotKeys.get(slot.key)!,
+      owner: owner(slot.owner),
+      ...(slot.sourceSlotKey
+        ? { sourceSlotKey: slotKeys.get(slot.sourceSlotKey)! }
+        : {}),
+    }))
+    .sort((left, right) => left.key.localeCompare(right.key));
+  const ranges = view.ranges.map((range) => ({
+    ...range,
+    target:
+      range.target.kind === "instance"
+        ? {
+            kind: "instance" as const,
+            instanceKey: instanceKeys.get(range.target.instanceKey)!,
+          }
+        : {
+            kind: "slot" as const,
+            slotKey: slotKeys.get(range.target.slotKey)!,
+          },
+  }));
+  Object.assign(view, { instances, ranges, slots });
+}
+
+function remapKey(key: string): string {
+  return [...key]
+    .map((digit) => (15 - Number.parseInt(digit, 16)).toString(16))
+    .join("");
+}

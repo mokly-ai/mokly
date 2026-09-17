@@ -108,14 +108,14 @@ the metadata-only qualification for affected-consumer completeness. Its log is
   its mobile/desktop context with scripts disabled, resource/overflow assertions
   and visual capture. All 56 original screen ids/routes remain. The removed
   legacy variant leaves fifteen shared components and 55 saved variants.
-- The [deployed preview](https://pr-48.mokabook.pages.dev) passed desktop/mobile
+- The [deployed preview](https://pr-48.mokly.pages.dev) passed desktop/mobile
   smoke checks for current footer variants, native Details opening/closing,
   actual viewport selection, read-only exported props and nested usage. It made
   no local rendering/watch requests. Deployment:
-  [34522747292](https://github.com/futex-ai/mokabook/actions/runs/34522747292).
+  [34522747292](https://github.com/mokly-ai/mokly/actions/runs/34522747292).
 - Local evidence is retained under `.context/design-modern-controls-*`, including
   the final check, direct-file audit, published smoke and complete review logs.
-- [Earlier adoption reviews](./mokabook-design-components.md) remain recorded.
+- [Earlier adoption reviews](./mokly-design-components.md) remain recorded.
   The inherited-v4 unknown-field suggestion was not repeated in this review;
   it still calls for contract clarification before changing compatibility.
   The earlier runtime review's broader delivery-wording follow-up remains open.
@@ -123,7 +123,7 @@ the metadata-only qualification for affected-consumer completeness. Its log is
 Node 24, macOS and Windows passed CI for `4e81ca0`; Node 22.14 passed all 747
 Node tests and 199 of 200 browser tests, but exposed a skip-link history race.
 The follow-up is tracked in milestones 11–12 of
-[the shared-component adoption plan](../../plans/mokabook-design-components.md).
+[the shared-component adoption plan](../../plans/mokly-design-components.md).
 It is separate from the six review findings, which remain for the user's decision.
 
 ## Keyboard History Correction
@@ -142,14 +142,14 @@ original keyboard test. Logs: `.context/design-keyboard-history-red-complete.log
 `.context/design-keyboard-history-browser-final.log` and
 `.context/design-keyboard-history-full-check.log`.
 
-The corrected [preview deployment](https://github.com/futex-ai/mokabook/actions/runs/34526980834)
+The corrected [preview deployment](https://github.com/mokly-ai/mokly/actions/runs/34526980834)
 passed desktop/mobile smoke checks: native skip-link history makes no page
 requests, saved-variant Back/Forward remains correct, and the unified footer,
 viewport, read-only props and nested-usage journeys still pass. Evidence:
 `.context/design-keyboard-history-published-smoke.log` and
 `.context/design-modern-controls-published-smoke-final.log`.
 
-Implementation commit `aed1d70` passed [all required CI jobs](https://github.com/futex-ai/mokabook/actions/runs/34526980945):
+Implementation commit `aed1d70` passed [all required CI jobs](https://github.com/mokly-ai/mokly/actions/runs/34526980945):
 Node 22.14, Node 24, macOS, Windows and Required CI. The repeated post-push review
 is complete. All adoption milestones, including the CI correction, are delivered;
 the six review follow-ups remain for the user's decision. The final documentation

@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CLOUDFLARE_PROJECT_NAME: mokabook
+  CLOUDFLARE_PROJECT_NAME: mokly
   MOKLY_COMMENT_MARKER: "<!-- mokly-preview -->"
 
 jobs:

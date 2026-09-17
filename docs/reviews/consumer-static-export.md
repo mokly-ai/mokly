@@ -144,7 +144,7 @@ passed before integration. Main was fetched and audited from captured source tip
 plans. Main's design sources, generated screens, and new tests match main exactly;
 the combined diff deletes no files from main.
 
-Merged verification: `MOKABOOK_PLAYWRIGHT_PORT=54861 cargo xtask check` passed
+Merged verification: `MOKLY_PLAYWRIGHT_PORT=54861 cargo xtask check` passed
 all 465 unit/integration tests, 104 browser tests, packed consumers, package and
 license checks, generated example verification, formatting, lint, typechecking,
 Rust formatting/Clippy, three Rust tests, and the file-length audit. Another
@@ -170,7 +170,7 @@ remain below as historical context. These were not fixed automatically by review
 
 In [transaction.ts](../../src/export/transaction.ts), `install()` checks output
 ownership before separately moving the destination to `backup/`, installing the
-stage, and deleting the backup. The reservation excludes other Mokabook writers,
+stage, and deleting the backup. The reservation excludes other Mokly writers,
 but an unrelated editor or process can introduce unowned destination contents
 after validation and before that move. Those contents can reach the backup and
 then be recursively deleted. Doing nothing retains a potential user-data-loss
@@ -233,7 +233,7 @@ One cleanup policy retains primary and secondary failures, ordered cause objects
 and visible CLI diagnostics through partial setup, cancellation, rollback, and
 post-install cleanup. Twenty new tests cover these boundaries, including four
 real subprocess CLI failure cases. All 59 focused export/static-delivery tests
-passed. `MOKABOOK_PLAYWRIGHT_PORT=54861 cargo xtask check` passed all 485
+passed. `MOKLY_PLAYWRIGHT_PORT=54861 cargo xtask check` passed all 485
 unit/integration tests, 104 browser tests, packed consumers, package/license
 checks, example verification, formatting, lint, typechecking, Rust formatting
 and Clippy, three Rust tests, and the Rust file-length audit.

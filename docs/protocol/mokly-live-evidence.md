@@ -4,7 +4,7 @@
 
 Live evidence updates and bounded affected-usage deduplication are implemented.
 Deduplication verification is recorded in Milestone 2 of the
-[dependency patch upstreaming plan](../../plans/mokabook-dependency-patch-upstreaming.md).
+[dependency patch upstreaming plan](../../plans/mokly-dependency-patch-upstreaming.md).
 
 ## Revisions and publication
 

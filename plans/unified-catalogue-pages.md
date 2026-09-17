@@ -26,9 +26,9 @@ publication consume one hierarchy. Do not merge collections by display name.
   verified consumer revision, five mappings, and its separate delivery checks.
 - [Shell design](../docs/protocol/mokly-shell-design.md) owns reusable design
   components and responsive presentation. Its example catalogue is the
-  established Mokabook mockup source of truth.
+  established Mokly mockup source of truth.
 
-Scope: Mokabook, generic packed consumers, and an isolated Accounting rehearsal.
+Scope: Mokly, generic packed consumers, and an isolated Accounting rehearsal.
 Publication, deployment, and durable consumer adoption are separate follow-ups;
 the synced inspection checkout remains read-only.
 
@@ -310,7 +310,7 @@ complete new source, tests, docs, and generated artifacts in the reviewed diff.
 The pre-integration `cargo xtask check` passed on 2026-09-09: 425 Node tests, 82 Chromium tests,
 packed ESM/NodeNext/npx/Juno/Accounting consumers, example freshness, formatting,
 lint, typechecking, Rust fmt/clippy, three Rust tests, and file-length checks.
-No Mokabook Rust implementation changed. Regression tests also preserve the
+No Mokly Rust implementation changed. Regression tests also preserve the
 post-screen render context of complete documents and their ReviewIgnore
 serialization. All eight new page design artifacts were opened directly from
 disk and visually inspected; the four publication designs passed the same check.

@@ -2,9 +2,9 @@
 
 ## Active
 
-- [Mokabook Dependency Patch Upstreaming](./mokabook-dependency-patch-upstreaming.md)
+- [Mokly Dependency Patch Upstreaming](./mokly-dependency-patch-upstreaming.md)
 - [Publish Catalogue](./publish-catalogue.md)
-- [App-Independent Mokabook Npm Library](./app-independent-mokabook-library.md)
+- [App-Independent Mokly Npm Library](./app-independent-mokly-library.md)
 - [Accounting Shell Design Parity](./accounting-shell-design-parity.md)
 
 ## Completed
@@ -26,12 +26,12 @@
   are configured.
 - [Optional Published Changes](./optional-published-changes.md)
 - [Unified Catalogue Pages](./unified-catalogue-pages.md)
-- [Reuse Registered Components In Mokabook's Design Catalogue](./mokabook-design-components.md)
+- [Reuse Registered Components In Mokly's Design Catalogue](./mokly-design-components.md)
   — delivered and verified; review follow-ups are recorded for the user's decision.
 - [Component Explorer](./component-explorer.md) — delivered and verified;
   review follow-ups are recorded for the user's decision.
 - [Consumer Static Export](./consumer-static-export.md)
-- [Mokabook Design MockLinks](./mokabook-design-mocklinks.md)
+- [Mokly Design MockLinks](./mokly-design-mocklinks.md)
 - [MockLink Child Controls](./mocklink-child-controls.md)
 - [Hierarchy-Inferred Breadcrumbs](./hierarchy-inferred-breadcrumbs.md)
 - [In-Frame Catalogue Link Navigation](./in-frame-catalogue-link-navigation.md)

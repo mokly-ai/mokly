@@ -18,7 +18,7 @@ they neither appear in Changes nor increase its count unless their own inputs,
 content, structure, or other independent material changes. Existing propagation
 from directly changed screens to their use cases remains intact.
 
-Scope includes the Mokabook package, protocol docs, existing design catalogue,
+Scope includes the Mokly package, protocol docs, existing design catalogue,
 consumer fixtures, and served/published verification. Saved variants work in
 both delivery modes. Editable props use local server rendering. A browser React runtime, hosted arbitrary rendering, downstream app
 migrations, and publishing an npm release are outside this change.
@@ -192,7 +192,7 @@ the latest mainline design catalogue and its working navigation links.
       validation, and any remaining review findings.
 
 Delivered in `231a451`, merging main at `93ac778`, with all 56 mainline artboards
-preserved byte for byte. [PR #48](https://github.com/futex-ai/mokabook/pull/48)
+preserved byte for byte. [PR #48](https://github.com/mokly-ai/mokly/pull/48)
 records the completed post-push review and its four findings for user decision;
 no review-driven code fixes were applied. The pending delivery checklist observed
 during review is now complete. `cargo xtask check` passed with 431 TypeScript,
@@ -228,7 +228,7 @@ byte for byte. `cargo xtask check` passed with 439 TypeScript, 122 browser, and
 3 Rust tests, including build, formatting, lint, typechecking, generated-output,
 package smokes, and Rust checks. Implementation commit `646bb43` is pushed;
 the post-push `cargo xtask review` completed and its findings are recorded in
-[PR #48](https://github.com/futex-ai/mokabook/pull/48). The review's pending
+[PR #48](https://github.com/mokly-ai/mokly/pull/48). The review's pending
 handoff observation is closed by this delivery record. Three low-priority
 follow-ups remain for user decision: stale counts in neighboring docs,
 incomplete focused-test guidance, and a manually maintained browser route list.
@@ -271,7 +271,7 @@ Both/Dark/resized states were visually checked. Main at `a5ecbc0` is integrated
 with its runtime source and 56 artboards preserved. The local check used Xcode’s
 Git executable directly to avoid launcher delays; test deadlines are unchanged.
 Implementation commit `80195d6` is pushed and its post-push `cargo xtask review`
-completed. [PR #48](https://github.com/futex-ai/mokabook/pull/48) contains the full
+completed. [PR #48](https://github.com/mokly-ai/mokly/pull/48) contains the full
 sign-off inventory, validation, and review findings. The review found stale
 inventory counts in two neighboring protocol summaries; those remain unchanged
 for user decision. Its pending-handoff observation is closed by this delivery
@@ -309,7 +309,7 @@ by this record. Neither of those first two passes reported implementation findin
 Release Node 24 CI passed the complete gate. The unchanged mainline resource
 watcher test intermittently observed a replacement's temporary missing-file state
 on Node 22 and was retried; CI history and current status are recorded in
-[PR #48](https://github.com/futex-ai/mokabook/pull/48). The published artboards are
+[PR #48](https://github.com/mokly-ai/mokly/pull/48). The published artboards are
 unchanged from the verified Milestone 4c preview.
 
 ## Milestone 4e: Await completed resource replacements in tests — completed
@@ -333,7 +333,7 @@ then passed, followed by `cargo xtask check` with all 493 TypeScript, 133 Chromi
 and 3 Rust tests, package smokes, and format/lint/type/generated-output checks.
 The 20-second wait deadline, final assertions, runtime, and artboards are intact.
 
-Commit `5cdd78e` is pushed. Its [CI run](https://github.com/futex-ai/mokabook/actions/runs/34390399505)
+Commit `5cdd78e` is pushed. Its [CI run](https://github.com/mokly-ai/mokly/actions/runs/34390399505)
 passed the full gate on Node 22.14 and Node 24, including Required CI; Preview
 also deployed successfully. The third required post-push review completed with
 three follow-ups for user decision: comparison controls with no action (Medium),
@@ -341,7 +341,7 @@ a duplicated browser route inventory (Medium), and stale secondary document
 counts (Low). All 31 current routes are covered; the inventory finding concerns
 future additions. The review's fourth finding, pending handoff bookkeeping (Low),
 is closed by this delivery record. Findings and recommendations are recorded in
-[PR #48](https://github.com/futex-ai/mokabook/pull/48); no new review fixes were
+[PR #48](https://github.com/mokly-ai/mokly/pull/48); no new review fixes were
 automatically applied.
 
 ## Milestone 4f: Clarify comparison and highlight mockups — completed
@@ -376,9 +376,9 @@ mainline HTML artboards remain byte-identical; no runtime code or mainline file
 was removed.
 
 Commit `63d0634` is pushed and its required post-push review is complete.
-[CI](https://github.com/futex-ai/mokabook/actions/runs/34401740976) passed on Node
+[CI](https://github.com/mokly-ai/mokly/actions/runs/34401740976) passed on Node
 22.14 and Node 24, including Required CI. The
-[preview](https://pr-48.mokabook.pages.dev/view/design/components/overview)
+[preview](https://pr-48.mokly.pages.dev/view/design/components/overview)
 deployed successfully; published checks verified comparison Details, status
 badges, empty highlighting, and Both/Dark highlighting in mobile/desktop frames.
 
@@ -389,7 +389,7 @@ verification confirms all 32 routes are covered today; deriving that list from
 the manifest and replacing duplicate prose counts with a canonical inventory
 link remain recommendations for user decision. No new review fixes were applied.
 The complete findings and options are recorded in
-[PR #48](https://github.com/futex-ai/mokabook/pull/48).
+[PR #48](https://github.com/mokly-ai/mokly/pull/48).
 
 ## Milestone 4g: Refine inspector surfaces and icons — completed
 
@@ -428,12 +428,12 @@ All 32 current routes match the manifest; neither recommendation has been
 automatically applied. Its delivery-bookkeeping finding is covered by this
 existing handoff task. Published smoke checks pass for desktop/mobile icons,
 mobile sheet sizing, close/reopen retention, Usage, and Both/Dark highlighting.
-[CI](https://github.com/futex-ai/mokabook/actions/runs/34406794097) passed on Node 22.14
+[CI](https://github.com/mokly-ai/mokly/actions/runs/34406794097) passed on Node 22.14
 and Node 24, including Required CI. Node 24 passed after retries for an npm
 connection reset and one existing published-navigation timeout. Six focused
 navigation repetitions passed unchanged locally; test timeouts and assertions
 remain intact.
-The [preview deployment](https://github.com/futex-ai/mokabook/actions/runs/34406794146)
+The [preview deployment](https://github.com/mokly-ai/mokly/actions/runs/34406794146)
 succeeded.
 
 ## Milestone 4h: Divider alignment and comparison eligibility — completed
@@ -646,7 +646,7 @@ Implementation commit `f27b8ae` contains the integration with main `a0e349a`,
 preserving the captured source tip `b68e84a` as its other parent. Its full check,
 post-push review, green Node 22/24 and macOS/Windows CI, and published mobile and
 desktop smokes are recorded in the [delivery review](../docs/reviews/component-explorer-runtime.md).
-[PR #48](https://github.com/futex-ai/mokabook/pull/48) now describes the complete
+[PR #48](https://github.com/mokly-ai/mokly/pull/48) now describes the complete
 implementation. Review follow-ups are recorded separately; none were
 automatically fixed.
 

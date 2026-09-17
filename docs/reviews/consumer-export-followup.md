@@ -10,7 +10,7 @@ The user approved the two code recommendations from the
 [integration review](./consumer-export-integration.md) and investigation of its
 Node 22 CI failure. Those changes are committed and pushed as
 `38e0aaae796e750c4a2f96124c9e468e5774c543` on PR
-[#49](https://github.com/futex-ai/mokabook/pull/49), targeting `main`.
+[#49](https://github.com/mokly-ai/mokly/pull/49), targeting `main`.
 Main remains `a5ecbc06d6169ec4af5329d52b6f13b2cd2f0276`, already merged into the
 branch. Before/after-commit audits found no mainline file deletions.
 
@@ -30,11 +30,11 @@ package/license checks, packed ESM/NodeNext/npx/Accounting/Juno consumers, and
 the Rust file-length audit. Clean Linux Node 22.14.0/npm 11.7.0 also passed all
 578 unit/integration tests. Mobile and desktop owning screens were inspected.
 
-[GitHub CI](https://github.com/futex-ai/mokabook/actions/runs/34394071462) passed
+[GitHub CI](https://github.com/mokly-ai/mokly/actions/runs/34394071462) passed
 the complete gate on both Node 22.14 and Node 24: each ran all 578
 unit/integration tests, 105 browser tests, and 3 Rust tests, with no failures,
 cancellations, or skipped tests. Required CI and the
-[PR preview](https://github.com/futex-ai/mokabook/actions/runs/34394071420) passed.
+[PR preview](https://github.com/mokly-ai/mokly/actions/runs/34394071420) passed.
 
 The required post-push `cargo xtask review` completed successfully on 2026-09-09
 against `origin/main`, reporting the two new findings below. The reviewer
@@ -54,7 +54,7 @@ validates output but does not retain its initial presence or identity.
 `install()` accepts the current state, and
 [ownership.ts](../../src/export/ownership.ts) permits an empty or valid
 marker-owned directory. Stage installation uses ordinary replacing rename.
-The reservation coordinates Mokabook writers, not unrelated filesystem edits.
+The reservation coordinates Mokly writers, not unrelated filesystem edits.
 
 Three isolated diagnostic probes confirmed that an initially absent output is
 replaced when it appears as an empty directory or a copied marker-owned export

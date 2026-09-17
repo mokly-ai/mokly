@@ -6,11 +6,6 @@ const MARKER_SCAN = /<!--mokly-review-ignore:[\s\S]*?-->/g;
 const MARKER = new RegExp(`^<!--mokly-review-ignore:(start|end):(${ID})-->$`);
 const MATERIAL_SCAN = /<!--mokly-review-material:[\s\S]*?-->/g;
 const MATERIAL = new RegExp(`^<!--mokly-review-material:(${ID}):(${KEY})-->$`);
-const FORMER_MARKERS = [
-  ["<!--mokabook-component:", "<!--mokly-component:"],
-  ["<!--mokabook-review-ignore:", "<!--mokly-review-ignore:"],
-  ["<!--mokabook-review-material:", "<!--mokly-review-material:"],
-] as const;
 
 interface TextSegment {
   content: string;
@@ -36,13 +31,6 @@ export interface NormalizedReviewPair {
   base: string;
   head: string;
   ignoredIds: readonly string[];
-}
-
-/** Normalize historical comparison material, never HTML with unconsumed offsets. */
-export function normalizeHistoricalDocument(content: string): string {
-  for (const [former, current] of FORMER_MARKERS)
-    content = content.replaceAll(former, current);
-  return content;
 }
 
 /** Normalize only well-formed ignored regions present on both sides. */

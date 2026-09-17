@@ -898,12 +898,10 @@ A symlinked scratch root is supported within the repository's safe boundaries,
 but an inner symlink cannot redirect output elsewhere. The same checks run before
 generation and before installation, and the resolved destination is pinned.
 
-The Preview workflow keeps deploying `main` to the existing Cloudflare Pages
-project `mokabook` at `https://mokabook.pages.dev`. The infrastructure name is
-retained so the package migration does not interrupt previews. Same-repository,
-non-release pull requests use
+The Preview workflow deploys `main` to the Cloudflare Pages project `mokly` at
+`https://mokly.pages.dev`. Same-repository, non-release pull requests use
 the stable `pr-<number>` branch alias at
-`https://pr-<number>.mokabook.pages.dev`; a sticky `<!-- mokly-preview -->`
+`https://pr-<number>.mokly.pages.dev`; a sticky `<!-- mokly-preview -->`
 comment reports the deployment status and link. Preview checkouts retain full
 Git history so `origin/main` and route-level changes can be resolved. Closing a
 pull request marks that comment inactive and attempts to remove its
@@ -918,7 +916,7 @@ and repository secret `CLOUDFLARE_PAGES_API_TOKEN` (or
 cleanup operations.
 
 ```bash
-npx --no-install wrangler pages project create mokabook --production-branch main
+npx --no-install wrangler pages project create mokly --production-branch main
 ```
 
 ## Releasing

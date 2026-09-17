@@ -7,32 +7,7 @@ import {
   parseCompletionMarker,
 } from "../dist/baseline/cache_layout.js";
 
-import {
-  baselineFixture,
-  baselineManifest,
-} from "./helpers/baseline_fixture.js";
-
-test("a former Mokabook manifest remains valid rebuilt history", async () => {
-  const fixture = baselineFixture();
-  const run = fixture.runner.run;
-  fixture.runner.run = async (command) => {
-    const result = await run(command);
-    if (command.argv[0] !== "git") {
-      await fixture.fs.remove(
-        path.join(command.cwd, "mockups/mokly-manifest.json"),
-      );
-      await fixture.fs.write(
-        path.join(command.cwd, "mockups/mokabook-manifest.json"),
-        Buffer.from(
-          JSON.stringify({ ...baselineManifest, generatedBy: "mokabook" }),
-        ),
-      );
-    }
-    return result;
-  };
-  const result = await fixture.builder.build(fixture.request);
-  assert.equal(result.marker.manifestVersion, 5);
-});
+import { baselineFixture } from "./helpers/baseline_fixture.js";
 
 test("legacy rebuilt manifests retain version 2 and require explicit compatibility", async () => {
   const fixture = baselineFixture();

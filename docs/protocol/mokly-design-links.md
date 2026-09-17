@@ -4,7 +4,7 @@
 
 Implemented in the 33 design screens and two real example screens using
 `MockLink` and `MockLink asChild`. Verification and delivery are tracked by the
-[implementation plan](../../plans/mokabook-design-mocklinks.md).
+[implementation plan](../../plans/mokly-design-mocklinks.md).
 
 The [component design inventory](./mokly-component-design.md) extend the
 catalogue with their own state contract and native component/control depictions.

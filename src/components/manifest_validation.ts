@@ -155,7 +155,10 @@ export function validateManifestComponent(
 }
 
 /** Validate every per-view record against the complete registered component set. */
-export function validateManifestComponentUsage(manifest: Manifest): void {
+export function validateManifestComponentUsage(
+  manifest: Manifest,
+  historical = false,
+): void {
   if (
     manifest.schemaVersion !== 5 &&
     (manifest.schemaVersion !== 4 || "sourceFiles" in manifest)
@@ -187,6 +190,8 @@ export function validateManifestComponentUsage(manifest: Manifest): void {
           entry.darkFragments !== undefined,
           components,
           entry.id,
+          undefined,
+          historical,
         );
       else if (entry.componentViews !== undefined)
         invalidData(entry.id, "component usage requires registered components");
@@ -199,6 +204,7 @@ export function validateManifestComponentUsage(manifest: Manifest): void {
           components,
           `${entry.id} / ${variant.id}`,
           entry.id,
+          historical,
         );
   }
 }

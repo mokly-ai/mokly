@@ -2,7 +2,7 @@ import { reviewInvalid } from "@mokly/viewer/data";
 import type { ReviewArtifact, ViewReview } from "@mokly/viewer/data";
 
 import { referencedRoutes } from "./asset_references.js";
-import { normalizeHistoricalDocument, normalizeReviewPair } from "./ignore.js";
+import { normalizeReviewPair } from "./ignore.js";
 
 /** Check graph-backed evidence against the actual retained snapshots before publication. */
 export function validateArtifactResources(artifact: ReviewArtifact): void {
@@ -31,9 +31,7 @@ export function validateArtifactResources(artifact: ReviewArtifact): void {
     ];
     if (!evidence.length) continue;
     const reachable = new Set<string>();
-    const before = view.beforePath
-      ? normalizeHistoricalDocument(text(view.beforePath))
-      : undefined;
+    const before = view.beforePath ? text(view.beforePath) : undefined;
     const after = view.afterPath ? text(view.afterPath) : undefined;
     const normalized = normalizeReviewPair(
       before ?? after ?? "",

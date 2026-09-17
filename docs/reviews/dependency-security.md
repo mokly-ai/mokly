@@ -3,7 +3,7 @@
 The user approved the separate dependency-maintenance finding from the
 [export review](./consumer-export-exclusive.md#separate-dependency-audit--needs-decision).
 This record tracks that focused follow-up on
-[PR #49](https://github.com/futex-ai/mokabook/pull/49), without reopening the
+[PR #49](https://github.com/mokly-ai/mokly/pull/49), without reopening the
 completed export plan.
 
 ## Approved Finding
@@ -11,7 +11,7 @@ completed export plan.
 1. **High — Known advisories remained in runtime and development dependencies.**
    Group: dependency maintenance. A fresh audit on 2026-09-10 reproduced 11 High
    and one Moderate affected packages. The production-only finding was
-   `brace-expansion@5.0.7` through Mokabook's glob matcher. Development paths
+   `brace-expansion@5.0.7` through Mokly's glob matcher. Development paths
    included browser-target data, Nano ID, Metro's image parser, and Miniflare's
    image and HTTP libraries. Doing nothing retained the reported memory/CPU
    exhaustion and HTTP-processing risks, and verification did not prevent a
@@ -62,7 +62,7 @@ Rust formatting/Clippy, and the 10-file Rust length audit. Browser verification
 includes the actual Cloudflare preview runtime. No assertion, timeout, retry
 configuration, or product behavior was changed to obtain this result.
 
-The [PR](https://github.com/futex-ai/mokabook/pull/49) records the subsequent
+The [PR](https://github.com/mokly-ai/mokly/pull/49) records the subsequent
 commit/push, independent `cargo xtask review`, and supported-runtime/native
 platform CI results. This document records the verified pre-commit checkpoint;
 review output is not assumed from passing tests, and new findings require a

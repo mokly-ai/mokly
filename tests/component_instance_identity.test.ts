@@ -23,23 +23,14 @@ test("instance and slot digests retain the frozen UTF-8 JSON preimages", () => {
   const slot = slotKey(owner.instanceKey, "children");
   const digest = (value: unknown) =>
     createHash("sha256").update(JSON.stringify(value), "utf8").digest("hex");
-  assert.equal(
-    slot,
-    digest(["mokabook-slot-v1", owner.instanceKey, "children"]),
-  );
+  assert.equal(slot, digest(["mokly-slot-v1", owner.instanceKey, "children"]));
   assert.equal(
     instanceKey(owner, slot, "child"),
-    digest([
-      "mokabook-instance-v1",
-      "instance",
-      owner.instanceKey,
-      slot,
-      "child",
-    ]),
+    digest(["mokly-instance-v1", "instance", owner.instanceKey, slot, "child"]),
   );
   assert.equal(
     instanceKey({ kind: "entry" }, undefined, "child"),
-    digest(["mokabook-instance-v1", "entry", null, null, "child"]),
+    digest(["mokly-instance-v1", "entry", null, null, "child"]),
   );
 });
 

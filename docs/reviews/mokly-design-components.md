@@ -1,7 +1,7 @@
 # Shared Design Component Adoption Review
 
 The later footer/control normalization and its final post-push review are in
-[Shared Design Controls Delivery Review](./mokabook-design-controls.md).
+[Shared Design Controls Delivery Review](./mokly-design-controls.md).
 This record retains the initial adoption evidence and earlier findings.
 
 The implementation at `7dc0d50` adds fifteen registered components and 56 saved
@@ -12,7 +12,7 @@ at `a0e349a`. The reviewer worked read-only; no review fixes were applied.
 The local complete gate passed 744 Node tests, 193 browser tests and four Rust
 tests. A subsequent CI run identified separate test setup, navigation timing
 and mobile comparison-button sizing failures. Their verification follow-up is
-tracked in [the adoption plan](../../plans/mokabook-design-components.md).
+tracked in [the adoption plan](../../plans/mokly-design-components.md).
 The complete gate passed again after those fixes: 744 Node tests, 194 browser
 tests and four Rust tests, with all package, formatting, lint, type, generated
 output and Rust checks passing. The direct-file audit covers all 224 design
@@ -157,7 +157,7 @@ The portability follow-up `87df9b7` passed the required CI jobs on Node 22.14,
 Node 24, macOS and Windows, and its Pages deployment passed desktop/mobile
 published smoke checks. Its post-push `cargo xtask review` repeated the four
 Earlier Follow-ups above; it reported no additional findings. No review fixes
-were applied. CI run: [34506214953](https://github.com/futex-ai/mokabook/actions/runs/34506214953).
+were applied. CI run: [34506214953](https://github.com/mokly-ai/mokly/actions/runs/34506214953).
 
 ## Footer And View-Control Normalization Verification
 

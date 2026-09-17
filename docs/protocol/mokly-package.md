@@ -35,8 +35,8 @@ discovery, and rendering adapters; consumers use ordinary page definitions.
 - The scoped package is always public. Mokly is its author, and the `mokly`
   npm organization manages approved maintainer-team access and the release
   workflow.
-- The unscoped `mokly`, `mokabook`, and `mockbook` names are not package aliases.
-  The latter two are not executable aliases either. Config discovery continues
+- The unscoped `mokly` and `mockbook` package names are not package aliases.
+  `mockbook` is not an executable alias either. Config discovery continues
   to use `mokly.config.*`; generator identities, ownership markers, and
   `MOKLY_*` environment variables do not include the npm scope.
 
@@ -139,12 +139,11 @@ of verified old artifacts without weakening generated-file ownership.
 Current reads accept only canonical `mokly-manifest.json` schema v5 with a
 `mokly` generator identity and validate the
 [resolved source inventory](./mokly-source-protection.md). Git comparisons
-prefer that filename, then accept the former `mokabook-manifest.json` and
-normalize its `mokabook` generator identity. They accept v5, historical v3, and
-both disjoint historical v4 formats. A v2 `mockbook-manifest.json` is considered
-only when both newer historical filenames are absent and
-`compatibility.readManifestV2` is enabled. Invalid higher-precedence history
-never falls back. Historical readers never execute consumer code.
+read that filename and accept v5, historical v3, and both disjoint historical
+v4 formats. A v2 `mockbook-manifest.json` is considered only when the canonical
+filename is absent and `compatibility.readManifestV2` is enabled. Invalid
+canonical history never falls back. Historical readers never execute consumer
+code.
 
 The [page contract](./mokly-pages.md) defines the public page inputs,
 rendering pipeline, exact routes, inheritance, and schema validation.

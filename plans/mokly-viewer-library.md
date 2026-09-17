@@ -34,7 +34,7 @@ an interaction locally stops for user approval first.
   `component_highlight.ts`, `frame_navigation.ts`, `browse_state.ts`,
   `control_transport.ts`, and `workspace_preview.ts`.
 - Instance keys (`src/components/keys.ts`) are SHA-256 digests of
-  `["mokabook-instance-v1", owner.kind, ownerInstanceKey|null, slotKey|null, id]`.
+  `["mokly-instance-v1", owner.kind, ownerInstanceKey|null, slotKey|null, id]`.
   Props and `order` are not part of the key. Boundary markers are rewritten to
   `<!--mokly-component:(start|end):r-<n>-->` comments by `src/components/ranges.ts`.
 - The consumer bundle (`src/build/load_graph.ts`) uses esbuild `jsx: "automatic"`
@@ -1099,7 +1099,7 @@ two ids read from each catalogue, never a generic hash substitution.
 identical code varied at four desktop pixels by one channel value, confirming
 rasterization noise; mobile remained exact.
 
-The final fetch advanced `origin/main` from `87daaa4` to `7ca301c` (the Mokabook
+The final fetch advanced `origin/main` from `87daaa4` to `7ca301c` (the Mokly
 consumer patch). Main's 19 added paths are absent from this older branch but are
 not branch deletions; the merge-base diff still deletes only the two CSS modules
 already split during the approved viewer extraction. Milestone 7 deletes no

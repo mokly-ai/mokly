@@ -8,7 +8,7 @@ renderer. Published catalogues keep saved variants and read-only controls. The
 [component explorer plan](../../plans/component-explorer.md) describe the same
 shared icon inspector and lifecycle. Forwarded loopback ports follow the
 admission rule below; verification is recorded in Milestone 4 of the
-[dependency patch upstreaming plan](../../plans/mokabook-dependency-patch-upstreaming.md).
+[dependency patch upstreaming plan](../../plans/mokly-dependency-patch-upstreaming.md).
 
 ## Scope And User Behavior
 

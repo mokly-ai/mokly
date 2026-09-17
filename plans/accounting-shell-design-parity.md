@@ -1,6 +1,6 @@
 # Accounting Shell Design Parity
 
-Bring the served Mokabook Browse shell back to the refined design that lives in
+Bring the served Mokly Browse shell back to the refined design that lives in
 the Accounting repository (`docs/mockups/src/mockbook` plus `mockbook.css` and
 `styles.css` at `/Users/calummoore/projects/futex/accounting`), and adopt
 `@firna/ui` in the example catalogue the same way Accounting's product screens
@@ -68,7 +68,7 @@ Backend groundwork the redesigned shell needs; no visual changes yet.
       legacy-page directory folding with Overview leaves, crumb-trail route
       resolution) into `src/server/shell/nav_tree.ts` with unit tests.
 - [x] Package and serve the Inter variable font (OFL license file included) at
-      `/__mokabook/fonts/InterVariable.woff2` via a build asset-copy step, and
+      `/__mokly/fonts/InterVariable.woff2` via a build asset-copy step, and
       register the new client module in the served-module allowlist.
 - [x] Keep the review-artifact CSS contract working: preserve `--mb-*` tokens
       and the legacy class subset the generated Review pages inline.

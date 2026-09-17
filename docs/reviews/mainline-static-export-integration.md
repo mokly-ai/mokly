@@ -7,7 +7,7 @@ static delivery and recovery safeguards, and dependency-security verification.
 
 ## Preserved Contracts
 
-- The installed `mokabook export` command builds its consumer, includes pinned
+- The installed `mokly export` command builds its consumer, includes pinned
   comparisons, and produces exact file routes and real id aliases. Its output
   reservation, destination identity checks, native non-replacing moves, validated
   backup recovery, cancellation, and primary/cleanup diagnostics remain intact.
@@ -101,11 +101,11 @@ No further review cycle or automatic finding fix was performed.
 
 1. **Low — active migration guidance names an unsupported CLI command.
    Confirmed, pre-existing documentation drift.** The
-   [active extraction plan](../../plans/app-independent-mokabook-library.md)
+   [active extraction plan](../../plans/app-independent-mokly-library.md)
    tells future Accounting cutover work to invoke `build/check/test/serve/review`
    through the installed executable. The
    [migration inventory](../migration/accounting-framework-inventory.md) maps
-   Accounting's `review.cjs` to a public `mokabook review` command and labels the
+   Accounting's `review.cjs` to a public `mokly review` command and labels the
    behavior as ported. Both files are unchanged from main. The
    [current command parser](../../src/cli/arguments.ts) rejects `review` and
    `test`; the supported comparison surfaces are Browse's on-demand diffs and

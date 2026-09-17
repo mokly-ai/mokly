@@ -1,8 +1,8 @@
-# Mokabook Design MockLinks
+# Mokly Design MockLinks
 
 ## Outcome And Status
 
-Make Mokabook's own design catalogue navigable through its pictured links,
+Make Mokly's own design catalogue navigable through its pictured links,
 rows, and supported state controls, in both mobile and desktop variants.
 The basic example's prominent buttons also demonstrate `MockLink asChild`.
 

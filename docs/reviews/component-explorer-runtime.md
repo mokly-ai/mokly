@@ -71,9 +71,9 @@ no automatic review fixes were applied.
   inspected in 23 paired contact sheets. Actual mobile/desktop component
   controls were exercised with real Firna providers, edited values, dark mode,
   consumer navigation, and nested highlighting.
-- [CI](https://github.com/futex-ai/mokabook/actions/runs/34470928866) passes on
+- [CI](https://github.com/mokly-ai/mokly/actions/runs/34470928866) passes on
   Node 22.14 and Node 24, including Required CI and macOS/Windows export checks.
-  [Preview deployment](https://github.com/futex-ai/mokabook/actions/runs/34470928847)
+  [Preview deployment](https://github.com/mokly-ai/mokly/actions/runs/34470928847)
   succeeds. Published mobile/desktop smoke checks pass saved variants, read-only
   props, themes, Usage links, nested highlighting, and absence of local rendering
   or watch requests.

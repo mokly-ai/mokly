@@ -1,7 +1,6 @@
 import path from "node:path";
 
 import {
-  FORMER_MANIFEST_NAME,
   MANIFEST_NAME,
   parseHistoricalManifest,
   selectManifestInput,
@@ -26,17 +25,7 @@ export async function baselineManifestVersion(
     `${prefix}/${MANIFEST_NAME}`,
     signal,
   );
-  const former = await confinedBaselineStat(
-    fs,
-    root,
-    `${prefix}/${FORMER_MANIFEST_NAME}`,
-    signal,
-  );
-  const selection = selectManifestInput(
-    canonical !== undefined,
-    former !== undefined,
-    allowV2,
-  );
+  const selection = selectManifestInput(canonical !== undefined, allowV2);
   const relative = `${prefix}/${selection.filename}`;
   const stat = await confinedBaselineStat(fs, root, relative, signal);
   if (stat?.kind !== "regular")

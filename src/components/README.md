@@ -73,7 +73,7 @@ changes still count directly. Exact `ownedDependencies` and renderer style or
 resource ownership records handle material outside the component's body. Global
 or mixed resources remain conservatively attributed. Dependency declarations
 and adopting an unrelated component alone do not invent a visible screen change.
-Historical Mokabook comparisons preserve the original document coordinates when
+Historical Mokly comparisons preserve the original document coordinates when
 applying recorded style ownership; internal marker renames alone do not create
 consumer changes or alter the retained snapshots.
 

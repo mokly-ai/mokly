@@ -138,8 +138,8 @@ release-managed version state. Before the next release:
    are satisfied. Its new `vX.Y.Z` tag identifies the next release; the verified
    trusted publication advances `latest` while `bootstrap` stays on `0.8.0`.
 5. Verify package contents, owner/team access, metadata, provenance, dist-tags,
-   `npx --package @mokly/mokly mokly --version`, and a minimal clean build/serve fixture. Only then
-   deprecate every `mokabook` version with a move notice; do not unpublish it.
+   `npx --package @mokly/mokly mokly --version`, and a minimal clean build/serve
+   fixture.
 
 ## Development Evidence
 

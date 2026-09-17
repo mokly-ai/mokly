@@ -8,7 +8,7 @@ registered components and 56 saved variants live under Components → Design →
 alongside the separate Example Action and Toolbar.
 
 This contract and the [library inventory](./mokly-design-component-library.md)
-define the delivered behavior tracked by the [adoption plan](../../plans/mokabook-design-components.md).
+define the delivered behavior tracked by the [adoption plan](../../plans/mokly-design-components.md).
 The existing [shell design](./mokly-shell-design.md),
 [design links](./mokly-design-links.md), and component design contracts retain
 their current screen behavior and navigation authority.

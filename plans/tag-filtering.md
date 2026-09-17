@@ -183,7 +183,7 @@ tags?: readonly string[];
 
 - Modify: `examples/basic/entries/catalogue.mockup.tsx`,
   `docs/protocol/mokly-package.md`, `examples/basic/notes.md`
-- Regenerate: `examples/basic/generated/mokabook-manifest.json`
+- Regenerate: `examples/basic/generated/mokly-manifest.json`
 
 **Steps:**
 
@@ -191,7 +191,7 @@ tags?: readonly string[];
       `tags: ["forms"]` on the Details screen entry, matching the mockup
       depiction from Milestone 1.
 - [x] Document the authoring field and manifest addition in
-      `mokabook-package.md` (grammar, screens/use-cases-only rule, omitted
+      `mokly-package.md` (grammar, screens/use-cases-only rule, omitted
       when absent, no nested inheritance); remove the notes.md caveat that no
       example entry declares tags.
 - [x] `npm run example:build && npm run example:check`; confirm via
@@ -290,15 +290,15 @@ export function clearTagTerm(raw: string, tag: string): string;
 **Files:**
 
 - Modify: `src/server/shell/details.tsx` (Tags MetaRow between Schemes and
-  Related docs: `<button className="mbk-chip tag" data-mokabook-tag={tag} type="button">`
+  Related docs: `<button className="mbk-chip tag" data-mokly-tag={tag} type="button">`
   with `TagIcon`; omitted when the entry has no tags),
   `src/server/shell/icons.tsx` (TagIcon, same path as the mockup icon),
   `src/server/shell/css_details.ts` (tag chip + accent active styles using
-  `var(--mokabook-accent)` / `var(--mokabook-accent-contrast)`),
+  `var(--mokly-accent)` / `var(--mokly-accent-contrast)`),
   `src/server/shell/css_nav.ts` (`.mbk-topbar { position: relative; z-index: 11; }`
   — above the drawer's 10, below the skip link's 20)
 - Create: `src/client/tag_filter.ts` (delegated click on
-  `[data-mokabook-tag]`: toggle `setTagTerm`/`clearTagTerm` on the search
+  `[data-mokly-tag]`: toggle `setTagTerm`/`clearTagTerm` on the search
   input, dispatch an `input` event so visibility reapplies, sync the
   `active` chip class from the parsed query), wired from `src/client/browse.ts`
 - Test: `tests/client_browse_details.test.ts`, `tests/shell.test.ts`,
@@ -307,7 +307,7 @@ export function clearTagTerm(raw: string, tag: string): string;
 **Steps:**
 
 - [x] Write failing tests: shell HTML for a tagged screen contains the Tags
-      row and `data-mokabook-tag` buttons and omits the row for untagged
+      row and `data-mokly-tag` buttons and omits the row for untagged
       entries; clicking a chip sets the input to `tag:forms` and hides
       untagged rows; clicking the active chip clears the term; browser test:
       served details chips filter the tree and the chip gains the active
@@ -321,7 +321,7 @@ export function clearTagTerm(raw: string, tag: string): string;
       the shell-design Delivery Status pending list to implemented; the
       stacking fix item too.
 - [x] `npm test && npm run test:browser` — green.
-- [x] Smoke test: `node dist/cli/bin.js serve --config examples/basic/mokabook.config.ts`,
+- [x] Smoke test: `node dist/cli/bin.js serve --config examples/basic/mokly.config.ts`,
       type `tag:forms`, click chips on the Welcome details, verify tree and
       active states by hand.
 - [x] Milestone close-out per Global Constraints (gate, commit
@@ -346,10 +346,10 @@ picker; the plan moves to completed.
 - Modify: `src/server/catalogue.ts` (Catalogue exposes
   `tags: readonly string[]` — sorted unique union of entry tags),
   `src/server/shell/document.tsx` (inside the `.mbk-search` div, after the
-  input: `<button aria-controls="mb-tag-picker" aria-expanded="false" className="mbk-search-tag" data-mokabook-tag-toggle type="button">`
+  input: `<button aria-controls="mb-tag-picker" aria-expanded="false" className="mbk-search-tag" data-mokly-tag-toggle type="button">`
   with `TagIcon`, then
   `<div className="mbk-tag-picker" hidden id="mb-tag-picker">` with the
-  uppercase `Tags` head and one `data-mokabook-tag` chip button per tag;
+  uppercase `Tags` head and one `data-mokly-tag` chip button per tag;
   both rendered only when `catalogue.tags.length > 0`),
   `src/server/shell/css_nav.ts` (button, panel, scroll cap, narrow
   full-width sheet per the contract's Tag picker bullet)
@@ -408,12 +408,12 @@ picker; the plan moves to completed.
       stacking fix ("The served shell still dims its top bar with the
       scrim…") — the served shell now stacks the bar above the scrim;
       regenerate the example output this touches.
-- [x] Correct free-text wording in `mokabook-runtime.md` and the
+- [x] Correct free-text wording in `mokly-runtime.md` and the
       shell-design Top bar bullet: remaining words match titles/routes as
       ONE contiguous phrase (single substring), while every `tag:` term must
       match — not per-word AND.
 - [x] Reconcile mockup drift from the served chips: the implementation adds
-      a `:hover` accent-soft affordance and uses `--mokabook-accent-contrast`
+      a `:hover` accent-soft affordance and uses `--mokly-accent-contrast`
       for the active glyph where the mockup CSS has no hover rule and a
       literal white; note it in the mockup notes or align the mockup CSS.
 - [x] Also reconcile the Task 4.1 additions: the served `.mbk-chip.tag:active`

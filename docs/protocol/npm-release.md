@@ -144,9 +144,8 @@ delivery. This section describes the repository's deployment adapter;
 consumer `mokly export` produces files without deploying or publishing npm.
 
 `.github/workflows/preview.yml` deploys a browsable copy of the synthetic basic
-consumer to the existing direct-upload Cloudflare Pages project `mokabook`. The
-infrastructure identifier remains unchanged during the npm rename. A `main`
-push updates the production deployment at `https://mokabook.pages.dev`.
+consumer to the direct-upload Cloudflare Pages project `mokly`. A `main` push
+updates the production deployment at `https://mokly.pages.dev`.
 Same-repository pull requests, except Release Please pull requests, deploy to a
 stable `pr-<number>` branch alias and receive one updated sticky comment with
 the deployment result, URL, commit, and workflow run. Fork pull requests never
@@ -282,12 +281,10 @@ required checks when using the fallback.
 
 ## Mokly Registry Bootstrap
 
-The repository and release history moved from `futex-ai/mokabook` to
-`mokly-ai/mokly`, but npm package names do not move with GitHub repositories.
-The former unscoped `mokabook` package remains reserved at `0.8.0`; it is not a
-runtime alias or a second publication target. Because npm trusted publishing can
-only be configured after a package exists, the scoped `@mokly/mokly` package
-required one reviewed bootstrap publication before normal releases could use OIDC.
+The repository and release history live at `mokly-ai/mokly`. Because npm trusted
+publishing can only be configured after a package exists, the scoped
+`@mokly/mokly` package required one reviewed bootstrap publication before normal
+releases could use OIDC.
 The attempted unscoped `mokly` registration was rejected by npm's name-similarity
 policy; it was never published. The scope change does not reset release history
 or rename the `mokly` executable.
@@ -318,7 +315,7 @@ Before enabling publish, maintainers must configure and verify:
 - repository Actions may create pull requests, and the default workflow token
   has only the permissions declared in each workflow;
 - the branch rule requires the exact `Required CI` status;
-- the direct-upload Cloudflare Pages project `mokabook` exists with production
+- the direct-upload Cloudflare Pages project `mokly` exists with production
   branch `main`, repository variable `CLOUDFLARE_ACCOUNT_ID` is set, and
   repository secret `CLOUDFLARE_PAGES_API_TOKEN` or `CLOUDFLARE_API_TOKEN`
   holds a least-privilege token with Pages write access;

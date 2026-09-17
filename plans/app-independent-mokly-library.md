@@ -1,4 +1,4 @@
-# App-Independent Mokabook Npm Library
+# App-Independent Mokly Npm Library
 
 <!-- markdownlint-disable MD013 -->
 
@@ -9,16 +9,16 @@ framework, neutral design and UI, packed-consumer and real-Accounting parity,
 and CI/release automation. Milestone 10 verification completed and its
 post-push review fixes are implemented in milestones 10A–10D; milestone 10E is
 running the required commit, push, and repeated-review workflow.
-The milestone-2 GitHub repository rename to `futex-ai/mokabook` is complete.
+The milestone-2 GitHub repository rename to `mokly-ai/mokly` is complete.
 Milestones 11–13 require a merged release, explicit approval for the first npm
 publish, and work in a separate Accounting workspace, so they cannot be closed
 from this feature branch.
 
 ## Summary
 
-Extract the reusable Mokabook framework from Accounting into this repository,
+Extract the reusable Mokly framework from Accounting into this repository,
 remove its assumptions about Bookfolio and Accounting's filesystem, publish it
-as `mokabook`, and prove it through neutral fixture catalogues. The
+as `mokly`, and prove it through neutral fixture catalogues. The
 package will own structured registry definitions, static build/check, the
 watched Browse server, Git-based Review artifacts, and public authoring helpers.
 
@@ -89,14 +89,14 @@ directory hierarchy differ. This confirms that renderer, paths, legacy policy,
 watch inputs, and shared-impact rules must be host configuration.
 
 Npm availability was rechecked after the name was confirmed: on 19 July 2026,
-`npm view mokabook` returned `E404`, so the unscoped name appeared unclaimed.
-Unscoped `mockbook@0.0.1` existed under another owner. Recheck `mokabook`
+`npm view mokly` returned `E404`, so the unscoped name appeared unclaimed.
+Unscoped `mockbook@0.0.1` existed under another owner. Recheck `mokly`
 immediately before the bootstrap publish because availability is not reserved
 by this plan.
 
 ## Ownership Boundary
 
-| Move into `mokabook`                             | Keep in Accounting                        | Make configurable                           |
+| Move into `mokly`                                | Keep in Accounting                        | Make configurable                           |
 | ------------------------------------------------ | ----------------------------------------- | ------------------------------------------- |
 | Registry types/helpers and tree flattening       | `src/entries/**` definitions              | Mockups, entries, legacy, and repo roots    |
 | Manifest, fragments, discovery, validation       | `src/pages/**` and generated product HTML | Renderer module and stylesheet rules        |
@@ -114,13 +114,13 @@ silently dropping behavior does not.
 
 ## Decisions
 
-- Publish one public ESM package, `mokabook`, with one `mokabook` bin.
-- Use the intentional Mokabook spelling for package, executable, configuration,
+- Publish one public ESM package, `mokly`, with one `mokly` bin.
+- Use the intentional Mokly spelling for package, executable, configuration,
   manifest, shell, and new documentation. Do not publish `mockbook` aliases.
-- Document `npx mokabook` for both zero-install and local dependency use.
+- Document `npx mokly` for both zero-install and local dependency use.
 - No-argument CLI behavior is watched `serve`; explicit `build`, `check`, and
   `review` subcommands preserve the current complete workflow.
-- Discover a typed `mokabook.config.*` from the working directory. All consumer
+- Discover a typed `mokly.config.*` from the working directory. All consumer
   paths resolve from that file.
 - Emit manifest schema version 3 with repo-relative paths. Read version 2 only
   during the Accounting transition.
@@ -139,7 +139,7 @@ silently dropping behavior does not.
 - Preserve all reusable Build, Check, Browse, watched-development, Review, and
   Review-ignore behavior from the audited Accounting snapshot.
 - Make repository shape, renderer, styles, and app compatibility explicit.
-- Support a clean `npx mokabook` path and deterministic local dependency
+- Support a clean `npx mokly` path and deterministic local dependency
   use in CI.
 - Provide fully typed public APIs, actionable errors, complete docs, and packed
   package tests.
@@ -150,8 +150,8 @@ silently dropping behavior does not.
 
 - Moving Accounting or Juno screens, product use cases, generated HTML, product
   CSS, theme tokens, email data, or application components into this repo.
-- Migrating Juno to Mokabook in this change.
-- Hosting Mokabook as a deployed service or adding cloud visual-diff storage.
+- Migrating Juno to Mokly in this change.
+- Hosting Mokly as a deployed service or adding cloud visual-diff storage.
 - Making product fragments interactive or replacing consumer component tests.
 - Preserving undocumented Accounting path-repair behavior as a global default.
 - Publishing the package before a packed-tarball Accounting compatibility run.
@@ -170,7 +170,7 @@ Summary: establish a complete, reviewable target contract before implementation.
 - [x] Record the move/keep/configure boundary and explicitly exclude real
       product screens.
 - [x] Expand the root README and create `plans/README.md` with this active plan.
-- [x] Verify current npm name availability and confirm `mokabook` is the
+- [x] Verify current npm name availability and confirm `mokly` is the
       intentional package, executable, and product spelling.
 
 At this milestone the target behavior is specified without changing runtime
@@ -185,12 +185,12 @@ public exports work before framework behavior is ported.
       source tip has not moved; if it has, audit the new framework diff and
       update the baseline before copying code.
 - [x] Coordinate renaming the GitHub repository from `futex-ai/mockbook` to
-      `futex-ai/mokabook`, update the local `origin`, and verify redirects and
+      `mokly-ai/mokly`, update the local `origin`, and verify redirects and
       repository settings without renaming the current branch.
       Completed with maintainer authorization via `gh repo rename`; the
-      repository is `futex-ai/mokabook`, the local `origin` points at the new
+      repository is `mokly-ai/mokly`, the local `origin` points at the new
       URL, old URLs redirect, and the current branch name is unchanged.
-- [x] Create `package.json`/lockfile for public ESM `mokabook@0.0.0`,
+- [x] Create `package.json`/lockfile for public ESM `mokly@0.0.0`,
       using npm commands to add current dependencies rather than guessing
       versions.
 - [x] Add exact repository metadata, MIT `LICENSE`, `CHANGELOG.md`, Node engine,
@@ -199,7 +199,7 @@ public exports work before framework behavior is ported.
 - [x] Establish short, cohesive `src` module families for CLI, config,
       authoring, build, registry, legacy, server, client, review, and errors;
       target about 200 lines and do not transplant the Accounting monoliths.
-- [x] Add a shebang-safe `mokabook` executable with `--help`, `--version`,
+- [x] Add a shebang-safe `mokly` executable with `--help`, `--version`,
       default-serve dispatch, explicit subcommands, and typed option errors.
 - [x] Add TypeScript build/typecheck, formatter/linter, and test scripts with no
       unexplained exclusions from typechecking.
@@ -211,7 +211,7 @@ public exports work before framework behavior is ported.
 - [x] Update README developer setup and code-jumping points for the real
       scaffold without claiming unfinished commands work.
 
-At this milestone `npm run build`, package imports, `mokabook --help`, and the
+At this milestone `npm run build`, package imports, `mokly --help`, and the
 initial `xtask` tests work even though catalogue commands may report a clear
 not-yet-configured error.
 
@@ -265,7 +265,7 @@ with transactional output and explicit legacy extensions.
       may remain in framework defaults.
 - [x] Implement an in-memory/staged generation transaction so failed rendering,
       validation, or linking preserves all last-good files.
-- [x] Implement `mokabook build` and read-only `mokabook check` with sorted,
+- [x] Implement `mokly build` and read-only `mokly check` with sorted,
       grouped, actionable diagnostics and non-zero failure behavior.
 - [x] Prove deterministic paths/bytes on macOS and Linux path semantics and
       ensure absolute checkout paths never enter output.
@@ -374,7 +374,7 @@ the deferred Browse/Review UI.
 At this milestone the milestone-5 engines satisfy their safety and lifecycle
 contracts and have no remaining valid post-push review findings.
 
-## Milestone 6: Neutral Mokabook And Fixture Design
+## Milestone 6: Neutral Mokly And Fixture Design
 
 Tags: mockup
 
@@ -387,14 +387,14 @@ synthetic catalogue data before UI implementation.
 - [x] Give every synthetic screen a distinct mobile and web/desktop component;
       keep fixture data under examples/tests and never present it as real
       product data.
-- [x] Create standalone mobile and desktop Mokabook Browse mockups for home,
+- [x] Create standalone mobile and desktop Mokly Browse mockups for home,
       selected screen/use case, details, missing route, and narrow navigation.
 - [x] Create separate mobile and desktop Review mockups for changed, added,
       removed, shared-impact, ignored-only, and empty comparison states; split
       pages before any generated screen-spec page exceeds five screens.
       A difference-mode mockup was added beside the required states, and the
       design screens are split across four collections of at most four screens.
-- [x] Use the existing Accounting Mokabook prototypes only as behavioral/visual
+- [x] Use the existing Accounting Mokly prototypes only as behavioral/visual
       reference; remove Bookfolio names, product screens, routes, data, colors,
       and theme dependencies from the new designs.
 - [x] Ensure each design is reachable from the example navigation and that
@@ -444,7 +444,7 @@ If missing backend work is discovered here, insert a new backend milestone and
 then a new `Tags: ui` milestone as required by repository rules; do not mix it
 into this milestone.
 
-At this milestone `mokabook serve` is a complete, accessible, watched Browse and
+At this milestone `mokly serve` is a complete, accessible, watched Browse and
 Review experience over the neutral catalogue.
 
 ## Milestone 8: Packed Package And Cross-Repository Parity
@@ -457,10 +457,10 @@ enabled.
       against an explicit allowlist; verify no Accounting/Juno source, examples,
       tests, plans, caches, or review artifacts enter the tarball.
 - [x] Install the real tarball in clean ESM and NodeNext consumers and test all
-      public exports, declarations, `mokabook` bin, help/version, config
-      discovery, build/check/serve/review, and local `npx mokabook` behavior.
+      public exports, declarations, `mokly` bin, help/version, config
+      discovery, build/check/serve/review, and local `npx mokly` behavior.
 - [x] Add a clean-cache smoke that executes the package the way
-      `npx mokabook` does and proves entry imports still resolve the
+      `npx mokly` does and proves entry imports still resolve the
       executing package plus consumer dependencies.
 - [x] Add typed consumer module-resolution configuration for aliases,
       conditions, loaders, package roots, main fields, and extensions so
@@ -474,7 +474,7 @@ enabled.
       legacy exclude globs so the version 2 bridge is consumer-owned and cannot
       leak Accounting rules into framework defaults.
 - [x] In a temporary Accounting worktree, install the tarball and draft only the
-      app-owned config/renderer/compatibility bridge; run existing Mokabook
+      app-owned config/renderer/compatibility bridge; run existing Mokly
       gates and compare ids, routes, fragment DOM/styles, Browse behavior, and
       Review classification with the source implementation.
 - [x] Treat schema/header/path changes documented by the version 3 migration as
@@ -544,7 +544,7 @@ the library pull request.
       tests, clean-cache npx-style smoke, and dependency/license inspection.
 - [x] Run `cargo fmt --all -- --check`, Clippy with warnings denied, all Rust
       tests, and applicable Rust source/file-length audits.
-- [ ] Start `mokabook serve` from the packed example and manually smoke home,
+- [ ] Start `mokly serve` from the packed example and manually smoke home,
       screen, collection expansion, use case, id redirect, missing route,
       static fragment, Review, watch rebuild/reload/failure recovery, and clean
       shutdown.
@@ -567,7 +567,7 @@ the library pull request.
       nothing, lettered solution options, and a recommended option that
       considers class-wide prevention.
 
-At this milestone the Mokabook library PR is fully verified, pushed, and
+At this milestone the Mokly library PR is fully verified, pushed, and
 reviewed. The plan remains active until release/bootstrap and Accounting cutover
 are complete.
 
@@ -697,7 +697,7 @@ lifecycle findings from the second Codex review cycle.
 - [x] Add failure-first coverage for shutdown during replacement-watcher
       readiness, then make candidate adoption cancellable without orphaning a
       watcher or restarting a child after shutdown.
-- [x] Add failure-first coverage proving `HEAD /__mokabook/events` completes,
+- [x] Add failure-first coverage proving `HEAD /__mokly/events` completes,
       then make the SSE endpoint method-aware.
 - [x] Update runtime and package protocol documentation for the strengthened
       contracts.
@@ -772,7 +772,7 @@ findings from the fourth Codex review cycle.
       and termination, then require supervisor close to wait for confirmed
       exit through a bounded graceful, terminate, and force-kill sequence.
 - [x] Add failure-first coverage for authored static HTML beneath `mockupsDir`,
-      then ignore only HTML proven to be Mokabook-owned while allowing explicit
+      then ignore only HTML proven to be Mokly-owned while allowing explicit
       consumer watch rules to classify unowned public files.
 - [x] Update runtime, package, and architecture documentation for the completed
       shutdown and output-ownership contracts.
@@ -827,13 +827,13 @@ approval for the irreversible first public publish.
 
 - [ ] Confirm the merge commit on `main` matches the reviewed code and all
       required GitHub checks passed.
-- [ ] Recheck that `mokabook` is available and pause for explicit
+- [ ] Recheck that `mokly` is available and pause for explicit
       maintainer approval before the irreversible first publish.
 - [ ] From the exact checked `main` commit at `0.0.0`, rerun all checks, inspect
       the tarball, and manually publish it publicly under the documented
       bootstrap dist-tag solely to create the package.
-- [ ] Configure the npm trusted publisher for the unscoped `mokabook` package,
-      `futex-ai/mokabook`, the exact release workflow filename, optional
+- [ ] Configure the npm trusted publisher for the unscoped `mokly` package,
+      `mokly-ai/mokly`, the exact release workflow filename, optional
       protected environment, and `npm publish`; verify approved Firna
       maintainers, package owners, and 2FA.
 - [ ] Restrict traditional token publishing and remove any obsolete npm write
@@ -841,11 +841,11 @@ approval for the irreversible first public publish.
 - [ ] Merge the release-please `0.1.0` PR and verify the same workflow creates
       the immutable tag/GitHub release and publishes with provenance.
 - [ ] From a clean directory, verify npm metadata, README, license, tarball
-      contents, provenance, dist tags, `npx mokabook --version`, and a
+      contents, provenance, dist tags, `npx mokly --version`, and a
       minimal generated/served fixture.
 - [ ] Record release evidence and any manual recovery step in the release docs.
 
-At this milestone `mokabook@0.1.0` is the first supported public version
+At this milestone `mokly@0.1.0` is the first supported public version
 and future releases are tokenless and release-PR controlled.
 
 ## Milestone 12: Accounting Consumer Cutover
@@ -858,20 +858,20 @@ Blocked here by milestone 11 and by the requirement to perform this change in a
 separate Accounting Conductor workspace after a supported package is released.
 
 - [ ] Create and index an Accounting consumer-migration plan, update its
-      Mokabook protocol/README first, and capture the latest source tip and
+      Mokly protocol/README first, and capture the latest source tip and
       `origin/main` additions before editing.
-- [ ] Install an explicit compatible `mokabook` development dependency
+- [ ] Install an explicit compatible `mokly` development dependency
       and update the Accounting lockfile using npm.
-- [ ] Add Accounting-owned `mokabook.config.ts`, Firna UI/React Native Web
+- [ ] Add Accounting-owned `mokly.config.ts`, Firna UI/React Native Web
       renderer, stylesheet rules, external email watch input, Review impact
       globs, legacy aliases/allowlists, and any temporary version 2 bridge.
-- [ ] Update root and TypeScript npm scripts to call the installed `mokabook`
+- [ ] Update root and TypeScript npm scripts to call the installed `mokly`
       bin for build/check/test/serve/review, retaining stable developer command
       names where useful.
 - [ ] Update Accounting CI's blocking mockup gates and non-blocking
-      `mokabook-review` artifact/summary job to use the package and PR merge base.
+      `mokly-review` artifact/summary job to use the package and PR merge base.
 - [ ] Preserve every Accounting entry, page, component, product style/asset,
-      Mokabook-related protocol requirement, generated fragment, route, id,
+      Mokly-related protocol requirement, generated fragment, route, id,
       relationship, and actual screen; regenerate only documented schema/header
       differences.
 - [ ] Delete only framework files marked “ported” in the migration ledger after
@@ -889,7 +889,7 @@ separate Accounting Conductor workspace after a supported package is released.
 - [ ] Do not modify Juno in this milestone; add only a concise future migration
       handoff if its fixture exposed consumer work.
 
-At this milestone Accounting contains no duplicate generic Mokabook framework,
+At this milestone Accounting contains no duplicate generic Mokly framework,
 uses the public package, and retains all real screen/spec content.
 
 ## Milestone 13: Close The Extraction Plan
@@ -900,7 +900,7 @@ plan only after both delivery repositories are verified.
 Blocked until milestones 11 and 12 supply the release and Accounting cutover
 evidence required for an honest closeout.
 
-- [ ] Update the migration ledger with the released version, Mokabook merge/tag,
+- [ ] Update the migration ledger with the released version, Mokly merge/tag,
       Accounting cutover commit, intentional output changes, and any deferred
       compatibility removal.
 - [ ] Update README/protocol docs with the proven install and consumer behavior;
@@ -915,11 +915,11 @@ evidence required for an honest closeout.
 
 ## Definition Of Done
 
-- `mokabook` contains every reusable behavior in the migration ledger,
+- `mokly` contains every reusable behavior in the migration ledger,
   has no product screen dependency, and passes all source and packed-artifact
   tests.
-- `npx mokabook` serves a configured consumer catalogue; a local install
-  supports `npx mokabook` and all explicit subcommands.
+- `npx mokly` serves a configured consumer catalogue; a local install
+  supports `npx mokly` and all explicit subcommands.
 - Neutral and Juno-shaped fixtures prove app independence; a real Accounting
   cutover proves production-scale parity.
 - CI blocks broken code/generated output, Review provides non-blocking visual
