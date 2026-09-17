@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/mokly-ai/mokly/compare/viewer-v0.1.0...viewer-v0.2.0) (2026-09-17)
+
+
+### Features
+
+* **viewer:** add comment anchoring primitives ([#84](https://github.com/mokly-ai/mokly/issues/84)) ([adac9e1](https://github.com/mokly-ai/mokly/commit/adac9e1d56549a5ba164bf90508a93fd59d34e44))
+
 ## 0.1.0 (2026-09-17)
 
 
