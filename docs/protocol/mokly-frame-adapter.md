@@ -4,7 +4,10 @@
 
 Implemented in `@mokly/viewer` through [viewer library Milestones 4–5](../../plans/mokly-viewer-library.md). Local
 Serve/export keep today's same-origin sandbox and visible behavior. Only an
-explicit cross-origin host uses the new inspector transport.
+explicit cross-origin host uses the new inspector transport. Host marker
+consumption and the trailing geometry refresh are approved targets in the
+[comment anchoring plan](../../plans/viewer-comment-anchoring.md); the adapter
+interface and wire protocol do not change.
 
 ## Public Interface
 
@@ -84,16 +87,18 @@ cleanup also fences late custom-adapter results and disposes them immediately.
 Viewer inspection selects sessions from the typed request before awaiting
 readiness or calling boundary/scroll operations. Clearing an unrelated mounted
 frame uses `highlight([], "off")`, which requires no available usage; pending
-unrelated mounts are not awaited. Masks, host labels and geometry refreshes use
-the same selected sessions, so a sibling's missing evidence cannot fail a scoped
-request. Current highlight failures remove partially applied masks and labels.
+unrelated mounts are not awaited. Masks, package labels, host markers and
+geometry refreshes use the same selected sessions, so a sibling's missing
+evidence cannot fail a scoped request. `listInstanceBoundaries()` supplies both
+labels and marker placement; current highlight failures remove partially applied
+masks and labels.
 Host inspection work retains request/generation ownership through both success
 and rejection, including custom adapters that settle after replacement. Obsolete
 caller promises reject with `disposed`; obsolete internal refreshes and errors
 cannot change replacement picking, labels or host events. No wire fields change.
-Geometry received while the current host presentation is still activating is
-coalesced into that presentation. It does not start a concurrent boundary list
-that can settle activation independently of its inspection owner.
+Geometry received while host presentation is activating or measurement is in
+flight marks one trailing refresh on the current session generation. It does not
+start a competing boundary list or lose an invalidation behind a stale result.
 
 Automatic inspection subscriptions require that frame's own ready, validated,
 bounded usage. Pending/unavailable usage (or a usage limit failure) subscribes
@@ -269,6 +274,9 @@ ids and the bounded control/navigation metadata above: never consumer text,
 HTML, prop values, source paths, selectors, or arbitrary attributes. Labels come
 from the catalogue in the host, not DOM text. Host validation rejects unknown
 keys even after a valid handshake; the nonce binds a mount, not content honesty.
+The viewer uses the same `geometry` notification and `list` response to refresh
+package labels and host marker placement. This adds no wire field, message type
+or inspector-bundle behavior.
 
 ## Published Inspector And Overlay
 

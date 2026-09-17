@@ -168,30 +168,39 @@ picking and superseded-work fencing behave exactly as for one ref.
 
 Define the complete contract above before any implementation.
 
-- [ ] Add `docs/protocol/mokly-viewer-markers.md` covering markers, marker
+- [x] Add `docs/protocol/mokly-viewer-markers.md` covering markers, marker
       states, positioning, refresh triggers, error and lifecycle rules, and
       `highlightInstances` scope semantics; keep it under ~250 lines.
-- [ ] Update `docs/protocol/mokly-viewer.md`: add `variantId` to the selection
+- [x] Update `docs/protocol/mokly-viewer.md`: add `variantId` to the selection
       contract and its validation, reset and proposal rules; add the new handle
       method, props, event and error code to the API listing; link the markers
       document; state that outer scroll, resize and frame expansion refresh
       package labels and markers. Trim or relocate text so the file stays near
       the length guideline.
-- [ ] Update `docs/protocol/mokly-frame-adapter.md` to state that
+- [x] Update `docs/protocol/mokly-frame-adapter.md` to state that
       `listInstanceBoundaries` and `geometry` notifications also feed host
       markers and that the wire schema and inspector bundle are unchanged.
-- [ ] Update `packages/viewer/README.md` (Public API, Quick Start marker
+- [x] Update `packages/viewer/README.md` (Public API, Quick Start marker
       example), the root `README.md` viewer paragraph, and
       `docs/architecture/package-boundary.md` (markers are host content; the
       viewer still knows no comment model).
-- [ ] Add this plan to `plans/README.md` under Active.
-- [ ] Validate the changed Markdown with `npx prettier --check` on the changed
+- [x] Add this plan to `plans/README.md` under Active.
+- [x] Validate the changed Markdown with `npx prettier --check` on the changed
       files and review the diff for internal consistency.
-- [ ] Run `git add -A`, commit with Conventional Commits and push the branch.
+- [x] Run `git add -A`, commit with Conventional Commits and push the branch.
 - [ ] After that push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
       against the complete local diff from `origin/main`; report numbered
       findings with severity, impact, lettered options and a recommendation
       without fixing.
+
+### Milestone 1 verification notes
+
+Prettier passed for all eight changed Markdown files. Relative links resolve,
+`git diff --check` passes, the dedicated marker contract is 158 lines and the
+main viewer contract is 279 lines after relocating inspection detail. The diff
+was reviewed for selection, marker, multi-highlight, adapter and package-boundary
+consistency. This documentation-only milestone does not require `cargo xtask
+check` under the repository rules.
 
 ## Milestone 2: Saved variant selection
 
