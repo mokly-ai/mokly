@@ -942,10 +942,12 @@ boundary and does not add a second reviewer stage.
 The [Release workflow](./.github/workflows/release.yml) verifies both tags,
 reruns the full gate and smoke-tests both exact tarballs in clean consumers.
 It publishes and verifies the viewer before the CLI, retaining both inventories,
-hashes and registry signature/provenance results. A manual dispatch from `main`
-retries the existing `publish_ref` and `viewer_ref` pair, skipping only a matching
-already-published archive. See the [release protocol](./docs/protocol/npm-release.md)
-for version pairing, evidence and the complete retry procedure.
+hashes and registry signature/provenance results. Post-publish verification
+allows five minutes for npm registry propagation. A manual dispatch from `main`
+retries the existing `publish_ref` and `viewer_ref` pair, skipping only a
+matching already-published archive. See the
+[release protocol](./docs/protocol/npm-release.md) for version pairing, evidence
+and the complete retry procedure.
 
 The one-time [Mokly registry bootstrap](./docs/protocol/npm-bootstrap.md) is
 complete: `@mokly/mokly@0.8.0` is the accepted initial `latest` release and also

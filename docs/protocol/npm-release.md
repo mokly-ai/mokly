@@ -263,7 +263,8 @@ The release workflow then:
    inventory, version, optional `gitHead`, the `latest` dist-tag, and npm
    signatures/provenance. Because npm metadata and tarball endpoints may become
    consistent at different times, recognized missing-version or stale dist-tag
-   responses retry the complete check with bounded backoff; content,
+   responses retry the complete check after 2, 4, 8, and 16 seconds, then every
+   30 seconds until the cumulative delay reaches five minutes. Content,
    provenance, and unexpected transport failures remain fail-closed.
 
 Publishing occurs in the workflow invocation that creates both GitHub releases.
