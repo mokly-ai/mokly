@@ -35,6 +35,11 @@ export async function runServerChild(
     base,
     changesStatus: "pending",
     onForeground: (active) => process.send?.({ type: "foreground", active }),
+    onDiagnostic: (error) => {
+      const message = typeof error === "string" ? error : String(error);
+      if (process.send) process.send({ type: "diagnostic", message });
+      else process.stderr.write(`${message}\n`);
+    },
     onPreviewResources: (observation) =>
       process.send?.({ type: "preview-resources", ...observation }),
     ...(manifest ? { manifest } : {}),

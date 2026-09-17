@@ -6,30 +6,54 @@ import { publishCatalogue } from "../publish/run.js";
 import { NodeGitCommandRunner } from "../review/git.js";
 
 import type { CliArguments } from "./arguments.js";
+import { reportPhase } from "./reporter/phase.js";
+import type { CliReporter } from "./reporter/types.js";
 import { packageVersion } from "./version.js";
 
 /** Validate credentials first and drain export/upload work on termination signals. */
 export async function runPublish(
   arguments_: CliArguments,
   cwd: string,
+  reporter: CliReporter,
+  env: NodeJS.ProcessEnv,
 ): Promise<void> {
-  const options = resolvePublishOptions(arguments_, process.env);
+  const options = resolvePublishOptions(arguments_, env);
   const controller = new AbortController();
   const cancel = (): void => controller.abort();
   process.on("SIGINT", cancel);
   process.on("SIGTERM", cancel);
   try {
-    const config = await loadConfig(cwd, arguments_.config);
+    const config = await reportPhase(
+      reporter,
+      "Loading configuration",
+      "Configuration loaded",
+      () => loadConfig(cwd, arguments_.config),
+    );
     await publishCatalogue(
       config,
-      { ...arguments_, ...options },
+      {
+        ...arguments_,
+        ...options,
+        diagnostic: (message) => reporter.runtimeDiagnostic(message),
+      },
       packageVersion(),
-      process.env,
+      env,
       {
         git: new NodeGitCommandRunner(config.repoRoot, controller.signal),
         export: exportCatalogue,
         fetch,
         now: () => new Date(),
+        progress: {
+          run: (phase, action) => {
+            const copy = {
+              export: ["Exporting catalogue", "Catalogue exported"],
+              prepare: ["Preparing upload", "Upload prepared"],
+              upload: ["Uploading catalogue", "Catalogue uploaded"],
+            } as const;
+            const [label, success] = copy[phase];
+            return reportPhase(reporter, label, success, action);
+          },
+        },
       },
       controller.signal,
     );

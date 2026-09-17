@@ -54,11 +54,10 @@ async function generateExport(
     const base = options.base ?? config.review.base;
     const prepared = options.noChanges
       ? undefined
-      : await prepareReviewRepository(
-          config,
-          base,
-          options.signal ? { signal: options.signal } : {},
-        );
+      : await prepareReviewRepository(config, base, {
+          ...(options.signal ? { signal: options.signal } : {}),
+          ...(options.diagnostic ? { diagnostic: options.diagnostic } : {}),
+        });
     const baseline = prepared
       ? await readBaseManifest(prepared.reader, prepared.commit, config)
       : undefined;

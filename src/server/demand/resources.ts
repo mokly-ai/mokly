@@ -1,6 +1,6 @@
 /** Observe visited resource closures without waiting for all catalogue documents. */
 import type { ComponentRuntime } from "../../build/component_runtime.js";
-import { errorMessage } from "../../errors.js";
+import { PlainServeReporter } from "../reporter.js";
 import { ResourceWatcher } from "../resource_watcher.js";
 import type { ConsumerWatcherFactory } from "../watcher.js";
 
@@ -16,10 +16,10 @@ export class PreviewResources {
     changed: (path: string) => void,
     private readonly current: () => ComponentRuntime,
     private readonly shutdown: Promise<void>,
+    private readonly diagnostic: (error: unknown) => void = (error) =>
+      new PlainServeReporter().runtimeDiagnostic(error),
   ) {
-    this.resources = new ResourceWatcher(factory, changed, (error) =>
-      process.stderr.write(`${errorMessage(error)}\n`),
-    );
+    this.resources = new ResourceWatcher(factory, changed, diagnostic);
   }
   get paths(): ReadonlySet<string> {
     return this.resources.paths;
@@ -49,7 +49,7 @@ export class PreviewResources {
         }
       })
       .catch((error) => {
-        if (!this.closed) process.stderr.write(`${errorMessage(error)}\n`);
+        if (!this.closed) this.diagnostic(error);
       });
   }
 

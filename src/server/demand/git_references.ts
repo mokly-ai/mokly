@@ -52,7 +52,7 @@ export class GitReferenceObserver {
   private closed = false;
   constructor(
     private readonly source: GitReferenceSource,
-    private readonly changed: () => void,
+    private readonly changed: (initial: boolean) => void,
     private readonly intervalMs = 1000,
   ) {}
 
@@ -74,9 +74,10 @@ export class GitReferenceObserver {
       }
       if (!current()) return;
       if (!initialized || value !== previous) {
+        const initial = !initialized;
         initialized = true;
         previous = value;
-        this.changed();
+        this.changed(initial);
       }
       if (current())
         this.timer = setTimeout(() => void poll(), this.intervalMs).unref();

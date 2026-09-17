@@ -67,6 +67,12 @@ Evidence updates invalidate comparison generations as well as classification.
 `update_messages.ts` validates IPC envelopes. `supervisor.ts` orders delivery and
 owns child shutdown. HTTP readiness precedes exhaustive compilation and baseline
 preparation, so All remains usable while Changes is pending or preparing.
+The CLI injects the terminal reporter's server-facing subset into both Serve
+compositions. Plain mode emits only the historical readiness and diagnostic
+bytes. Rich mode presents accepted catalogue, baseline, Changes, reference, and
+watch-action boundaries. Diagnostics originating in a supervised child cross a
+validated IPC message so the parent remains the sole terminal owner; a child
+without IPC retains direct diagnostic output.
 
 The [public-exclusion policy](../../docs/protocol/mokly-source-protection.md#public-exclusions)
 adds config-owned `publicExclude` globs to the shared source classifier.

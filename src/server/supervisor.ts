@@ -16,6 +16,7 @@ import {
 } from "./demand/observation.js";
 import {
   childUpdateMessage,
+  parseChildDiagnosticMessage,
   type ChangesStatus,
   type CatalogueUpdateKind,
 } from "./update_messages.js";
@@ -24,6 +25,7 @@ import {
 export interface ProcessSupervisor {
   completeCatalogue?(manifest: ManifestV5, generation: string): void;
   onForeground?(callback: (active: boolean) => void): void;
+  onDiagnostic?(callback: (message: string) => void): void;
   onPreviewResources?(
     callback: (observation: PreviewObservation) => void,
   ): void;
@@ -78,6 +80,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
   #updateVersion = 0;
   #runtime: ComponentRuntime | undefined;
   #foreground: ((active: boolean) => void) | undefined;
+  #diagnostic: ((message: string) => void) | undefined;
   #previewResources: ((observation: PreviewObservation) => void) | undefined;
 
   constructor(
@@ -117,6 +120,9 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
     this.#child = child;
     child.onMessage(
       bindTimings((message: unknown) => {
+        const diagnostic = parseChildDiagnosticMessage(message);
+        if (diagnostic && this.#child === child)
+          this.#diagnostic?.(diagnostic.message);
         if (
           message &&
           typeof message === "object" &&
@@ -235,6 +241,9 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
   }
   onForeground(callback: (active: boolean) => void): void {
     this.#foreground = callback;
+  }
+  onDiagnostic(callback: (message: string) => void): void {
+    this.#diagnostic = callback;
   }
   onPreviewResources(
     callback: (observation: PreviewObservation) => void,

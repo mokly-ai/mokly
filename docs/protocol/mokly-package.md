@@ -61,7 +61,7 @@ mokly --version       Show the installed package version
 
 Common options include `--config <path>` and opt-in `--debug-timings`
 ([diagnostic contract](./mokly-timings.md)). Serve accepts `--port`, `--base`,
-`--watch`, and `--no-watch`. Export requires `--out` and accepts `--base`;
+`--watch`, `--no-watch`, and `--open`. Export requires `--out` and accepts `--base`;
 Publish accepts an optional `--out` and the options in the
 [upload contract](./mokly-upload.md). `--out` on other commands and the removed
 `review` command are rejected.
@@ -88,6 +88,11 @@ system.
 Unknown commands, invalid values, absent configuration, and invalid catalogue
 data exit non-zero. Expected author errors do not print JavaScript stacks unless
 diagnostic output is explicitly requested.
+
+The [terminal output contract](./mokly-terminal-output.md) defines plain output
+compatibility, rich progress and errors, watched lifecycle events, keyboard
+shortcuts, and browser opening. `--help` and `--version` retain their established
+bytes and do not render progress in either output mode.
 
 ## Configuration Discovery
 
