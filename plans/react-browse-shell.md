@@ -54,7 +54,7 @@ Decisions taken with the user before planning:
 
 ## Retirement rules
 
-These rules govern Milestones 3 to 7 and were added after review.
+These rules govern Milestones 2 to 7 and were added after review.
 
 - A vanilla module is deleted only in Milestone 7, after the switch flips.
   Milestones 3 to 6 add React capability; they never delete or modify a
@@ -62,13 +62,19 @@ These rules govern Milestones 3 to 7 and were added after review.
 - The React shell is exercised by running the browser suite with the switch on
   in addition to the default run. A milestone is complete when the specs it
   names pass in both runs.
-- `src/server/client_modules.ts` is a hard-coded allowlist of 79 delivered
-  filenames, including `browse_runtime.js` (the built name of `browse.ts`),
-  and Serve throws before binding if any file is missing. The package graph
-  check reads the same list. The allowlist is replaced by build-output
-  enumeration in Milestone 2 so a later deletion cannot strand a stale entry.
+- `loadBrowserClientModules` in `src/server/client_modules.ts` is a
+  hard-coded allowlist of delivered filenames, including `browse_runtime.js`
+  (the built name of `browse.ts`), and Serve throws before binding if any
+  file is missing. The package graph check reads the same list. The allowlist
+  is replaced by build-output enumeration in Milestone 2 so a later deletion
+  cannot strand a stale entry.
 - Every module under `packages/viewer/src/client` is classified in the
   inventory below. A module not listed there may not be deleted.
+- A kept module must never import a retired module. Milestone 2 adds a check
+  that derives the partition from the real import graph and fails when it is
+  crossed, so the inventory cannot drift silently.
+- Counts in this plan are illustrative. Where a number matters, the plan
+  names the symbol, file, or command that produces it.
 
 ## Module inventory
 
@@ -81,26 +87,38 @@ store):
   `nav_resize`, `early_disclosures`, `static_delivery`, `preview_fragment`,
   `tag_filter`, `clipboard`.
 - Stage and comparisons: `browse_frames`, `browse_details`, `browse_evidence`,
-  `frame_navigation`, `same_origin_navigation`, `diffs`, `diff_views`.
+  `frame_navigation` (except `classifyFrameActivation`, which moves),
+  `same_origin_navigation`, `diffs`, `diff_views`.
 - Workspace and inspection UI: `workspace`, `workspace_events`,
   `workspace_evidence`, `workspace_evidence_data`, `workspace_inspection`,
   `workspace_preview`, `workspace_props`, `workspace_updates`,
   `workspace_variants`, `component_controls`, `control_fields`,
   `control_surface`, `control_view_key`, `inspector_panels`,
-  `inspector_tabs`, `inspector_resize`, `component_highlight`,
-  `component_overlay`, the presentation half of `same_origin_highlight`,
-  `style_evidence`, `prop_display`, `services`.
+  `inspector_tabs`, `inspector_resize`, `component_highlight` (except the
+  `HighlightFrame` type, which moves), `style_evidence`, `prop_display`,
+  `services`.
 
 Keep unchanged (transport, geometry, protocol; consumed through hooks):
 `frame_adapter`, `frame_error`, `frame_mount`, `frame_usage`,
 `message_transport`, `post_message_adapter`, `same_origin_adapter`,
 `same_origin_access`, `same_origin_mount`, `same_origin_pointer`,
-`same_origin_highlight` mask/observer lifecycle, `component_geometry`,
+`same_origin_highlight`, `component_overlay`, `component_geometry`,
 `component_occlusion`, `component_range_nodes`, `document_ranges`,
 `catalogue_updates`.
 
-Move (pure helpers that become shell or store modules): `search_query`,
-`entry_wording`, and the delivery-adoption logic inside `static_delivery`.
+`same_origin_highlight` is kept whole. Its single export,
+`installLocalHighlight`, owns the overlay mask, labels, observers, and
+teardown in one closure, so there is no seam to split. It stays the
+imperative same-origin mask driven by a hook; `component_overlay` is its SVG
+factory and is kept with it. `same_origin_mount` imports the pure
+`classifyFrameActivation` from `frame_navigation`, and `same_origin_adapter`
+imports the `HighlightFrame` type from `component_highlight`; both symbols
+move to kept modules in Milestone 4 before their owners are retired.
+
+Move (pure helpers that become shell, store, or kept transport modules):
+`search_query`, `entry_wording`, the delivery-adoption logic inside
+`static_delivery`, `classifyFrameActivation` from `frame_navigation`, and the
+`HighlightFrame` type from `component_highlight`.
 
 Viewer host modules deleted in Milestone 7 with the islands: `layout.tsx`,
 `markup.tsx`, `route_markup.tsx`, `runtime.tsx`, `scope.ts`, `slot_layout.ts`,
@@ -111,8 +129,11 @@ deleted in Milestone 7: `src/client/browse.ts`, `browser.ts`,
 `live_updates.ts`, `browse_refresh.ts`, `control_transport.ts`,
 `workspace_loading.ts`.
 
-The 22 unit test files that import retired modules are rewritten against the
-replacement components, hooks, or pure helpers in Milestone 7.
+Unit tests that import any retired client, viewer host, or CLI composition
+module are rewritten against the replacement components, hooks, or pure
+helpers in Milestone 8. The set is produced by grepping `tests/` and
+`packages/viewer/tests/` for imports of the retired module paths; the plan
+records no count because the set changes as modules move.
 
 ## Milestone 1: Protocol and architecture documentation
 
@@ -173,12 +194,18 @@ host mode, and export; replace the hard-coded module allowlist; and add the
 development switch that selects the React shell. No shell component changes
 yet; the vanilla runtime remains the default and keeps working.
 
-- [ ] Replace the served-module allowlist in `src/server/client_modules.ts`
-      with enumeration of the viewer and CLI browser build outputs, keeping the
-      existing delivery names (including `browse_runtime.js`), the
-      export-excluded private modules (`browser.js`, `live_updates.js`), and
-      the navigation-module set; add failing tests first for a missing file,
-      an unexpected file, and unchanged delivery names.
+- [ ] Replace the `loadBrowserClientModules` allowlist in
+      `src/server/client_modules.ts` with enumeration of the viewer and CLI
+      browser build outputs, the way `loadBrowserNavigationModules` already
+      enumerates its directory; keep the existing delivery names (including
+      `browse_runtime.js`), the export exclusions in `src/export/site.ts`
+      (`browser.js`, `live_updates.js`), and the navigation-module set. Add
+      failing tests first for a missing file, an unexpected file, and unchanged
+      delivery names.
+- [ ] Add a partition check to `scripts/package/browser_graph.mjs` driven by
+      the module inventory in this plan: it fails when a module in the keep set
+      imports a module in the retire set. Run it as part of the package check
+      from Milestone 2 onward.
 - [ ] Rewrite `scripts/package/browser_graph.mjs`: it currently forbids
       `react-dom`, `hydrateRoot`, `react.production`, and bare imports of
       `react` or `node:` in every delivered module, and requires each relative
@@ -197,17 +224,22 @@ yet; the vanilla runtime remains the default and keeps working.
       the React host path uses the host's React.
 - [ ] Add the shell switch: a CLI-private option read by `src/server/pages.ts`
       and `src/export/site.ts` that renders the hydrated document instead of
-      the current one, plus a Playwright project or environment variable that
-      runs the browser suite against it. Serve and export ignore the switch
-      unless set; it is not documented for users and is deleted in
-      Milestone 7.
+      the current one. Serve and export ignore the switch unless set; it is
+      not documented for users and is deleted in Milestone 7.
+- [ ] Add the switched browser run to `playwright.config.ts`: turn `webServer`
+      into an array with a second Serve started with the switch on a second
+      port, and add a second project with its own `baseURL` and a `testMatch`
+      list that names the spec files the hydrated shell must pass. Milestone 2
+      lists only a new hydrated-shell smoke spec; each later milestone adds its
+      spec files to that list, and Milestone 7 replaces the list with the whole
+      suite. Add a second `npm run test:browser` invocation, or a project
+      argument, to the check gate in `xtask/src/check.rs`.
 - [ ] Add failing tests first: export inventory includes the hydration bundle
       when the switch is on and excludes it when off, served module paths
       resolve, the inspector bundle stays under its cap, and the
       packed-consumer smoke installs and serves both inventories.
-- [ ] Run `cargo xtask check`; both the default and the switched browser runs
-      must pass (the switched run renders an empty hydrated shell that only
-      the smoke specs exercise at this point).
+- [ ] Run `cargo xtask check`; the default run and the switched run (only the
+      smoke spec at this point) must both pass.
 
 ## Milestone 3: Shell state model and hydrated navigation
 
@@ -239,10 +271,10 @@ vanilla is deleted.
 - [ ] Preserve accessibility behaviour the specs assert: focus management on
       navigation, live-region announcements, keyboard handling in the tag
       picker and rail, reduced-motion, and the mobile drawer/bottom sheet.
-- [ ] Run the Browse, history, navigation, security, tags, pages, static
+- [ ] Add the Browse, history, navigation, security, tags, pages, static
       export, static deployment, phone chrome, and viewer selection/lifecycle
-      browser specs with the switch on; fix regressions until they pass. The
-      default run stays green throughout.
+      spec files to the switched project's `testMatch`; fix regressions until
+      they pass there. The default run stays green throughout.
 
 ## Milestone 4: Frames, comparisons, and stage in React
 
@@ -264,9 +296,13 @@ comparisons become components and hooks over the unchanged frame adapters.
       comparison routes and immutable generation URLs.
 - [ ] Keep in-frame logical link activation routing through the shell store;
       retain the sandbox and no top-navigation capability.
-- [ ] Run the frame adapter, frame readiness/clipping/overlay, comparison,
-      preview, review, and design-link browser specs with the switch on; fix
-      regressions until they pass. The default run stays green throughout.
+- [ ] Move `classifyFrameActivation` into a kept transport module and the
+      `HighlightFrame` type beside `same_origin_highlight`, updating the kept
+      importers; the partition check must pass.
+- [ ] Add the frame adapter, frame readiness/clipping/overlay, comparison,
+      preview, review, and design-link spec files to the switched project's
+      `testMatch`; fix regressions until they pass there. The default run
+      stays green throughout.
 
 ## Milestone 5: Host capability context for live Serve
 
@@ -300,34 +336,52 @@ the React tree behind the switch, consuming the Milestone 5 context.
       keep the `MoklyViewerHandle` and every documented event.
 - [ ] Reimplement watched reload recovery and evidence refresh on the shell
       store through the capability context.
-- [ ] Run the component, evidence, controls, inspector, workspace, viewer
-      inspection/readiness/replacement/teardown, watch, and changes browser
-      specs with the switch on; fix regressions until they pass. The default
-      run stays green throughout.
+- [ ] Add the component, evidence, controls, inspector, workspace, viewer
+      inspection/readiness/replacement/teardown, watch, and changes spec files
+      to the switched project's `testMatch`; fix regressions until they pass
+      there. The default run stays green throughout.
 
-## Milestone 7: Flip, delete, and align the host API
-
-Tags: ui
+## Milestone 7: Flip and delete
 
 Summary: make the React shell the only shell. Flip the default, delete the
 vanilla runtime, the islands, the switch, and the old CLI composition in one
-change, and finish the public React host on the new tree.
+change. This is delivery, packaging, and CLI work, so it is untagged; the
+public host component is rewritten in the next milestone.
 
-- [ ] Reimplement `MoklyViewer` on the shell tree: slots as ordinary children,
-      controlled/uncontrolled selection, source/adapter replacement remount,
-      handle methods, events, theming variables, and the scoped embedded
-      stylesheet.
-- [ ] Flip Serve, export, and the Playwright configuration to the hydrated
-      document and delete the switch.
+- [ ] Flip Serve and export to the hydrated document; collapse the Playwright
+      configuration back to one web server and one project running the whole
+      suite; remove the second check-gate invocation; delete the switch.
 - [ ] Delete every module in the retire list, the viewer host island modules,
       the CLI composition modules, the `installViewerServices` seam, the
       `#markup-renderer` import map, and the client-side
       `react-dom/server.browser` dependency; the enumerated module delivery
-      and export inventory update themselves.
+      and export inventory update themselves, and the partition check is
+      retired with the inventory it guarded.
 - [ ] Fold `navigation-resize.js` behaviour into the hydrated shell or keep it
       as a documented pre-hydration script; delete the standalone module if it
       is no longer needed.
-- [ ] Rewrite the 22 unit test files that import retired modules against the
+- [ ] Rerun the packed-consumer smoke and the published-package layout checks
+      for both tarballs.
+- [ ] Run `cargo xtask check` with the temporary host-component shim below in
+      place, so the tree is green before the host rewrite starts.
+
+The React host must keep compiling across this milestone. If `MoklyViewer`
+cannot be rewritten in the same change, it renders the hydrated shell tree
+through a minimal adapter that preserves its props, slots, handle, and events,
+and the full rewrite lands in Milestone 8.
+
+## Milestone 8: React host rewrite and documentation sync
+
+Tags: ui
+
+Summary: finish the public React host on the new tree and bring
+code-adjacent docs and tests into line with the implementation.
+
+- [ ] Reimplement `MoklyViewer` on the shell tree: slots as ordinary children,
+      controlled/uncontrolled selection, source/adapter replacement remount,
+      handle methods, events, theming variables, and the scoped embedded
+      stylesheet; remove any Milestone 7 adapter shim.
+- [ ] Rewrite every unit test that imports a retired module against the
       replacement components, hooks, or pure helpers; keep a 100% pass rate
       with no skipped tests.
 - [ ] Re-run the design catalogue and shell design comparisons: the served
@@ -336,10 +390,8 @@ change, and finish the public React host on the new tree.
 - [ ] Update the viewer package README, CLI READMEs, and protocol docs for any
       contract clarifications discovered during implementation; remove every
       remaining reference to the switch and the vanilla runtime.
-- [ ] Rerun the packed-consumer smoke and the published-package layout checks
-      for both tarballs.
 
-## Milestone 8: Verification and delivery
+## Milestone 9: Verification and delivery
 
 Summary: complete branch work before review; the PR merge is the completion
 boundary.
@@ -382,3 +434,14 @@ TODO (now an explicit inspector exception), milestone tagging (host capability
 work split into an untagged milestone; the flip milestone tagged), the missing
 export subpath and package-check scan, and the unclassified modules (now a
 complete inventory).
+
+The revised plan (`7717577`) was reviewed again. Eight findings were verified
+and applied: kept modules importing retired symbols (two symbols now move in
+Milestone 4 and a partition check guards the boundary), the incoherent
+`same_origin_highlight` split (now kept whole with `component_overlay`), the
+stale allowlist count and unreproducible test count (replaced by symbol and
+command references), the unspecified switched browser run (now a second
+Playwright web server and project with a per-milestone `testMatch` list and a
+check-gate step), the UI-tagged flip milestone (split into an untagged flip
+and a tagged host rewrite), the doc sweep list (left open-ended), and the
+retirement-rule scope line.
