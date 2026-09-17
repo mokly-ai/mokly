@@ -919,12 +919,11 @@ npx --no-install wrangler pages project create mokabook --production-branch main
 
 Changes use Conventional Commits. On `main`, release-please maintains one reviewed
 PR for both packages, their independent versions and changelogs, and the CLI's
-exact viewer dependency. The first viewer release is **0.1.0**, paired with
-**CLI 0.10.0** because 0.9.0 is already published. Merging the release PR creates
-immutable `vX.Y.Z` CLI and `viewer-vX.Y.Z` viewer tags at the same commit.
-The viewer component pins `initial-version` to 0.1.0 because release-please's
-unconfigured initial-release fallback is 1.0.0; the 0.0.0 manifest entry remains
-only the marker that no viewer release exists yet.
+exact viewer dependency. Viewer **0.1.0** and CLI **0.10.0** were released from
+the same commit. Merging each later release PR is the authorization to create
+immutable `vX.Y.Z` CLI and `viewer-vX.Y.Z` viewer tags at the same commit and
+publish them automatically; the `npm` environment remains a main-only OIDC trust
+boundary and does not add a second reviewer stage.
 
 The [Release workflow](./.github/workflows/release.yml) verifies both tags,
 reruns the full gate and smoke-tests both exact tarballs in clean consumers.
@@ -939,13 +938,14 @@ complete: `@mokly/mokly@0.8.0` is the accepted initial `latest` release and also
 retains the `bootstrap` tag. Do not repeat registration or reset release state.
 Later reviewed releases advance `latest`; `bootstrap` remains on `0.8.0`. The
 bootstrap record retains the isolated-build procedure and reviewed source SHA.
-The viewer is a separate public scoped package and needs its own
-[first publication and trusted publisher](./docs/protocol/npm-bootstrap.md#viewer-first-publication)
-after the release PR merges. Verify organization package-creation/team access,
+The viewer is a separate public scoped package; its
+[first publication](./docs/protocol/npm-bootstrap.md#completed-viewer-registration)
+is complete. Verify both packages' trusted publishers, organization team access,
 2FA and [both tag streams' GitHub protections](./docs/protocol/npm-github-protections.md)
-with an authorized maintainer. Initial interactive registration has npm signature
-and reviewed-source evidence, not OIDC provenance. Do not store an npm write token
-in GitHub. Release preparation itself publishes nothing and creates no tags.
+with an authorized maintainer. Each initial interactive registration has npm
+signature and reviewed-source evidence, not OIDC provenance. Do not store an npm
+write token in GitHub. Release preparation itself publishes nothing and creates
+no tags.
 
 The synthetic fixture at [`examples/basic`](./examples/basic/README.md) proves
 custom rendering, stylesheets, id links, collections, use cases, and

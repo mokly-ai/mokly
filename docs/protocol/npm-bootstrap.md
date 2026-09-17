@@ -27,70 +27,43 @@ accepted registration. This was an interactive maintainer publication, not an
 OIDC publication; npm signatures alone do not prove workflow provenance.
 
 Trusted publishing, team access and the package's 2FA requirement are configured.
-The CLI has subsequently published 0.9.0. Read back current GitHub protections
-before publishing the new viewer package; the historical setup record is not
-evidence that both tag streams or both npm packages are protected.
+The CLI has subsequently published 0.9.0 and 0.10.0, and the viewer registration
+is recorded below. Read back current GitHub and npm settings before any later
+release; historical setup evidence does not prove that either package's current
+publisher, team access or tag protections remain configured.
 
-## Viewer First Publication
+## Completed Viewer Registration
 
-`@mokly/viewer` is a second public package in the existing `@mokly` npm
-organization. It returned E404 on 15 September 2026. Scope ownership alone does
-not grant every member package creation, team write access or a trusted
-publisher. An approved organization maintainer must have permission to create
-public scoped packages and grant `mokly:developers` read/write access to this
-package, with required 2FA and token bypass disabled.
+`@mokly/viewer@0.1.0` was registered on 17 September 2026 from reviewed commit
+`37724a8d62d5f68a76c2fddc3bed92425a1740e0`, shared by tags `v0.10.0` and
+`viewer-v0.1.0`. Registration is complete; do not repeat it or publish a 0.0.0
+placeholder. The accepted viewer dist-tags are:
 
-The first viewer version is **0.1.0**. The manifest's 0.0.0 is only the marker
-that no viewer release exists; the viewer release configuration explicitly sets
-`initial-version` to 0.1.0 because release-please otherwise falls back to 1.0.0.
-Do not publish a 0.0.0 placeholder. Trusted publishing is package-specific and
-requires an existing package, so register the real 0.1.0 with interactive
-maintainer authentication:
+```json
+{ "bootstrap": "0.1.0", "latest": "0.1.0" }
+```
 
-1. Merge the reviewed implementation, then review the combined release PR.
-   Confirm CLI 0.10.0, viewer 0.1.0, the CLI's exact dependency, both changelogs,
-   lockfile and required checks. CLI 0.9.0 already exists and cannot be reused.
-2. Merge that release PR to create `v0.10.0` and `viewer-v0.1.0`. Keep the
-   protected `npm` job awaiting approval during registration. Check both local
-   and origin tags identify the same reviewed commit; do not create tags by hand.
-3. Check out that commit cleanly, `npm ci`, run `cargo xtask check`, and verify
-   both refs with `node scripts/release/verify-ref.mjs v0.10.0 viewer-v0.1.0`.
-   Confirm `npm view @mokly/viewer` still returns recognized E404; other errors
-   stop registration. If it exists, inspect its versions, ownership and retained
-   evidence instead of repeating bootstrap.
-4. Supply the independently reviewed full commit SHA to the isolated builder:
+The viewer archive was built in an isolated checkout with the explicit reviewed
+commit, then published using interactive maintainer authentication and 2FA. The
+paired release workflow rebuilt the viewer from the same commit, required an
+exact registry-byte match, verified its npm signatures, skipped republishing it,
+and then published `@mokly/mokly@0.10.0` through trusted publishing. Retain
+`bootstrap` on viewer 0.1.0 as the registration record.
 
-   ```sh
-   node scripts/release/bootstrap.mjs <reviewed-full-commit-sha> .context/viewer-bootstrap @mokly/viewer
-   ```
+The initial viewer publication has reviewed-source, inventory, hash and npm
+signature evidence, but no OIDC provenance. Its next publication through the
+package's own trusted publisher supplies the first viewer OIDC attestation.
+Before that release, verify the `@mokly/viewer` publisher names GitHub
+organization `mokly-ai`, repository `mokly`, workflow `release.yml`, environment
+`npm`, and direct `npm publish`; also verify `mokly:developers` access, public
+access, required 2FA and disabled token bypass. The CLI package's trust does not
+establish any of those package-specific settings.
 
-   This packs only `packages/viewer` from a fresh checkout after `npm ci`, runs
-   its real prepack build and license/inventory checks, and records `sourceCommit`
-   and `sourceTree`. The destination contains `mokly-viewer-0.1.0.tgz` and
-   `pack-report.json`. The command never publishes. It rejects any other viewer
-   version, dirty sources, lifecycle mutations or an existing destination.
-
-5. Inspect those bytes and source hashes, then use interactive 2FA to publish
-   that retained tarball with `--access public --tag bootstrap --ignore-scripts`.
-   Verify registry hashes, inventory and npm signatures against the report.
-   Ensure `latest` identifies 0.1.0 before the paired workflow proceeds; npm may
-   assign it on registration, otherwise an authorized maintainer sets it after
-   verification. Retain `bootstrap` on 0.1.0. Do not repeat the CLI bootstrap.
-6. Add a **separate** trusted publisher on `@mokly/viewer`: GitHub organization
-   `mokly-ai`, repository `mokly`, workflow `release.yml`, environment `npm`,
-   direct `npm publish` allowed. Verify owner/team access, public access and 2FA.
-   The shared GitHub environment needs no duplicate entry; its tag ruleset must
-   cover `viewer-v*` as well as `v*`.
-7. Approve the pending workflow or dispatch its retry from `main` with both
-   tags. It builds and smokes both exact archives, verifies and skips the
-   existing viewer, and only then publishes the CLI. Any byte/commit mismatch
-   is a blocker, never a reason to overwrite a version or weaken the guard.
-
-The interactive viewer registration proves reviewed source, hashes and npm
-signatures, not OIDC provenance. Record that distinction; the next viewer
-publication through trusted publishing supplies its first OIDC attestation.
-No npm write token belongs in GitHub Actions. This procedure is post-merge work;
-preparation of the implementation publishes nothing and creates no release tags.
+The shared GitHub environment remains the main-only OIDC boundary for both
+packages, with no required reviewer. Merging a combined Release Please PR
+authorizes automatic publication; a manual dispatch from `main` may only retry
+an existing immutable tag pair through the same byte and source guards. No npm
+write token belongs in GitHub Actions.
 
 ## Reviewed Source And Archive
 
