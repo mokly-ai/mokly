@@ -31,7 +31,7 @@ export class ResourceComparison {
   async compare(
     before: ResourceDocument | undefined,
     after: ResourceDocument | undefined,
-    excluded: (path: string) => boolean = () => false,
+    excluded?: (path: string) => boolean,
     matching: { before?: string | undefined; after?: string | undefined } = {
       before: before?.html,
       after: after?.html,
@@ -46,7 +46,7 @@ export class ResourceComparison {
     const resources: ChangedResource[] = [];
     const changedCss = [...new Set([...bases, ...heads])].filter(
       (route) =>
-        !excluded(route) &&
+        !excluded?.(route) &&
         isStylesheetPath(route) &&
         this.changed.has(this.prefix ? `${this.prefix}/${route}` : route),
     );
@@ -65,7 +65,7 @@ export class ResourceComparison {
         ]
       : [];
     for (const route of new Set([...bases, ...heads])) {
-      if (excluded(route)) continue;
+      if (excluded?.(route)) continue;
       const path = this.prefix ? `${this.prefix}/${route}` : route;
       if (this.changed.has(path))
         resources.push({

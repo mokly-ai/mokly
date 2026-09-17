@@ -192,33 +192,33 @@ path needs the stripped text without the parse.
 
 ## Milestone 3: Implement the fast path
 
-- [ ] In `src/review/component_view.ts`, before range validation for a
+- [x] In `src/review/component_view.ts`, before range validation for a
       two-sided view, compute the actual normalized pair using the new
       marker-strip helper and compare the strings.
-- [ ] When equal, discover head resources once through
+- [x] When equal, discover head resources once through
       `context.afterReader.resources`, check `context.changed` for each
       prefixed route, and in `compareResourceBytes` mode run
       `changedResourceBytes` over the discovered set against both readers.
-- [ ] When no resource is changed, return the fast-path result: state from
+- [x] When no resource is changed, return the fast-path result: state from
       the raw-equality check, `ignoredIds` from the normalized pair, reasons
       limited to `inputs`/`structure` from the extracted helper, empty
       `changedImplementations` and `ownedResources`, no `material`,
       `reasons`, or `excludedResources` on the view.
-- [ ] When any check fails, continue into the existing complete path
+- [x] When any check fails, continue into the existing complete path
       unchanged, passing the already-discovered head resource set through so
       `ResourceComparison.compare` on the actual pair does not repeat it.
       This requires an optional `resources` override on
       `ComponentMaterialReader.resources()` or a cache keyed by
       `(route, html)`; choose the cache, since it also benefits the complete
       path and mirrors `ChangedResourceGraph#viewResources`.
-- [ ] Emit `timingCounts("review.compare-screens", ...)` from
+- [x] Emit `timingCounts("review.compare-screens", ...)` from
       `classifyComponents` with `views`, `fastPath`, and `completePath`.
-- [ ] Keep `src/review/component_view.ts` under 300 lines; if the fast path
+- [x] Keep `src/review/component_view.ts` under 300 lines; if the fast path
       pushes it over, move the decision into
       `src/review/component_view_fast_path.ts`.
-- [ ] Run `npm run build`, `npm run example:build`, `npm run example:check`.
-- [ ] Run `cargo xtask check`.
-- [ ] `git add -A`, commit, push.
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`.
+- [x] Run `cargo xtask check`.
+- [x] `git add -A`, commit, push.
 
 ## Milestone 4: Prove equivalence and cover edge cases
 

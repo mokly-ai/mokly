@@ -95,6 +95,7 @@ for (const version of [2, 3])
                 changedPaths: [resource],
                 baseCommit: "a".repeat(40),
                 baseRef: "main",
+                useFastPath: false,
               });
         if (valid) await assert.doesNotReject(compare);
         else

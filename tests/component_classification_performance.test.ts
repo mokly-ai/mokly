@@ -115,6 +115,7 @@ test("component views validate each retained document range index once", async (
       changed: new Set(),
       prefix: "mockups",
       resources: new ResourceComparison(reader, reader, new Set(), "mockups"),
+      useFastPath: false,
     },
     observed,
     observed,

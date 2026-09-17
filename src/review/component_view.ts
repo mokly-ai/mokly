@@ -18,12 +18,14 @@ import {
 import { changedResourceBytes } from "./component_resource_changes.js";
 import type { ComponentMaterialReader } from "./component_resources.js";
 import type { EntryChangeReason } from "./component_types.js";
+import { compareUnchangedComponentView } from "./component_view_fast_path.js";
 import { normalizeReviewPair, normalizeSingleDocument } from "./ignore.js";
 import { snapshotPath } from "./paths.js";
 import type { ResourceComparison } from "./resource_comparison.js";
 import type { ViewReview } from "./types.js";
 
 export interface ComparedComponentView {
+  comparisonPath: "fast" | "complete";
   view: ViewReview;
   reasons: readonly EntryChangeReason[];
   changedImplementations: ReadonlySet<string>;
@@ -37,6 +39,7 @@ export interface ComponentViewContext {
   prefix: string;
   resources: ResourceComparison;
   compareResourceBytes?: boolean;
+  useFastPath?: boolean;
 }
 /** Compare material and declared inputs without altering the retained view documents. */
 export async function compareComponentView(
@@ -55,14 +58,6 @@ export async function compareComponentView(
     ? await context.beforeReader.text(before.path)
     : undefined;
   const head = after ? await context.afterReader.text(after.path) : undefined;
-  const baseRanges =
-    base !== undefined && before?.usage
-      ? validateComponentRanges(base, before.usage.ranges, "historical")
-      : undefined;
-  const headRanges =
-    head !== undefined && after?.usage
-      ? validateComponentRanges(head, after.usage.ranges)
-      : undefined;
   const view: ViewReview = {
     viewport: selected.viewport,
     colorScheme: selected.colorScheme,
@@ -72,6 +67,10 @@ export async function compareComponentView(
     state: before ? "removed" : "added",
   };
   if (base === undefined || head === undefined) {
+    const headRanges =
+      head !== undefined && after?.usage
+        ? validateComponentRanges(head, after.usage.ranges)
+        : undefined;
     const normalized = normalizeSingleDocument(
       base !== undefined
         ? stripHistoricalMarkers(base)
@@ -83,6 +82,7 @@ export async function compareComponentView(
       after ? { path: after.path, html: normalized } : undefined,
     );
     return {
+      comparisonPath: "complete",
       view: { ...view, ...evidence, material: true },
       reasons: [{ kind: "material" }, ...(evidence.reasons ?? [])],
       changedImplementations: new Set(),
@@ -96,6 +96,23 @@ export async function compareComponentView(
       ),
     };
   }
+  if (context.useFastPath !== false) {
+    const fast = await compareUnchangedComponentView(
+      context,
+      before!,
+      after!,
+      view,
+      base,
+      head,
+    );
+    if (fast) return fast;
+  }
+  const baseRanges = before?.usage
+    ? validateComponentRanges(base, before.usage.ranges, "historical")
+    : undefined;
+  const headRanges = after?.usage
+    ? validateComponentRanges(head, after.usage.ranges)
+    : undefined;
   const projected = projectComponentPair(
     base,
     head,
@@ -177,6 +194,7 @@ export async function compareComponentView(
       (route) => !context.changed.has(repoPath(route)),
     );
   return {
+    comparisonPath: "complete",
     ownedResources: ownedCssReasons(
       actualEvidence.reasons ?? [],
       context.dependencies,

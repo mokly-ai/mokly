@@ -43,7 +43,7 @@ export function assertReviewTimings(
     assert.ok(Number.isInteger(event.pid) && event.pid > 0);
     assert.ok(Number.isInteger(event.id) && event.id > 0);
     assert.ok(Number.isFinite(event.elapsedMs) && event.elapsedMs >= 0);
-    assert.ok(["start", "end"].includes(event.event));
+    assert.ok(["start", "end", "counts"].includes(event.event));
     assert.deepEqual(
       Object.keys(event).sort(),
       [
@@ -57,8 +57,10 @@ export function assertReviewTimings(
         "elapsedMs",
         "event",
         ...(event.event === "end" ? ["durationMs", "status"] : []),
+        ...(event.event === "counts" ? ["counts"] : []),
       ].sort(),
     );
+    if (event.event === "counts") continue;
     if (event.event !== "start") continue;
     const session = events.filter((item) => item.session === event.session);
     const ends = session.filter(

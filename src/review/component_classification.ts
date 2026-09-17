@@ -6,7 +6,7 @@ import { canonicalJson } from "../components/data.js";
 import { generatedViews } from "../components/views.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
-import { timeAsync } from "../diagnostics/timings.js";
+import { timeAsync, timingCounts } from "../diagnostics/timings.js";
 import { analyzeHierarchy } from "../registry/hierarchy.js";
 import type { Manifest, ManifestEntry } from "../registry/types.js";
 
@@ -64,6 +64,7 @@ export interface ComponentClassificationInput {
   baseCommit: string;
   baseRef: string;
   cssParser?: CssRuleParser;
+  useFastPath?: boolean;
 }
 
 /** The sole component-aware membership policy, shared by Browse, Review, and publishing. */
@@ -94,6 +95,9 @@ export async function classifyComponents(
       new CssResourceAnalysis(input.cssParser),
     ),
     compareResourceBytes: config.generatedOutput === "derived",
+    ...(input.useFastPath === undefined
+      ? {}
+      : { useFastPath: input.useFastPath }),
   };
   const prefetchBefore = () =>
     context.beforeReader.prefetch(
@@ -129,6 +133,7 @@ export async function classifyComponents(
   const afterHierarchy = analyzeHierarchy<ManifestEntry>(
     after.entries as readonly ManifestEntry[],
   ).hierarchy;
+  const comparisonCounts = { views: 0, fastPath: 0, completePath: 0 };
   await timeAsync("review.compare-screens", async () => {
     for (const pair of pairs) {
       const entry = (pair.after ?? pair.before)!;
@@ -179,6 +184,13 @@ export async function classifyComponents(
           ),
         ),
       );
+      comparisonCounts.views += compared.length;
+      comparisonCounts.fastPath += compared.filter(
+        (result) => result.comparisonPath === "fast",
+      ).length;
+      comparisonCounts.completePath += compared.filter(
+        (result) => result.comparisonPath === "complete",
+      ).length;
       assertViewAnalysisScope(
         compared.map((result) => result.view),
         config,
@@ -266,6 +278,7 @@ export async function classifyComponents(
           reasons: uniqueReasons(reasons),
         });
     }
+    timingCounts("review.compare-screens", () => comparisonCounts);
   });
   propagateOwnedCss(ownedResources, impacting, components, changes);
   propagateImplementations(
