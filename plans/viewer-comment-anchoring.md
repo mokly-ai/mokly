@@ -306,9 +306,9 @@ Highlight every commented instance at once using the existing masks and labels.
       an empty list.
 - [x] Run focused tests, then `PLAYWRIGHT_CHANNEL=chromium cargo xtask check`;
       require zero failures, retries and skips.
-- [ ] After checks pass, run `git add -A`, commit with Conventional Commits and
+- [x] After checks pass, run `git add -A`, commit with Conventional Commits and
       push the branch.
-- [ ] After that push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After that push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
       against the complete local diff from `origin/main`; report numbered
       findings with severity, impact, lettered options and a recommendation
       without fixing.
@@ -322,6 +322,17 @@ complete `PLAYWRIGHT_CHANNEL=chromium cargo xtask check` then passed 1,760 Node
 tests, 435 Playwright tests, all five clean-package consumer scenarios, Rust
 formatting, Clippy, three Rust tests and the Rust file-length audit, with zero
 failures, retries or skips.
+
+### Milestone 3 post-push review
+
+No findings. The required prompt reviewed the complete 32-file pushed diff
+against `origin/main` after commit `832103c`. It checked exact frame matching,
+atomic mismatch preservation, evidence invalidation, adapter parity, public API
+wiring, saved-variant interactions and focused regression coverage. Worktree,
+index and untracked inventories were clean, and the review made no changes.
+Residual risk is unusual custom-adapter and evidence timing beyond the covered
+activation and geometry races; Milestone 4 adds the shared generation and
+dirty-bit scheduler plus its dedicated lost-wakeup regression.
 
 ## Milestone 4: Host markers
 
