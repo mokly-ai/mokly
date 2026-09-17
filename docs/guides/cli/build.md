@@ -36,7 +36,7 @@ file, or choose a route that does not collide.
 
 ## Committed and derived output
 
-With the default `generatedOutput: "committed"`, commit what build writes.
-With `generatedOutput: "derived"`, keep the generated routes, the manifest and
-`.mokly-cache/` out of Git; build still writes them locally in the same
-transaction.
+With the default `generatedOutput: "derived"`, keep the generated routes, the
+manifest and `.mokly-cache/` out of Git; build still writes them locally in the
+same transaction. With `generatedOutput: "committed"`, commit what build
+writes.

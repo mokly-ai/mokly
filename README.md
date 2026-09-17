@@ -75,11 +75,12 @@ stylesheets and their imports are attributed by rule automatically: a view keeps
 the dependency only when a changed rule could match or cannot be resolved.
 Unmatched rules are examined and excluded; a broad stylesheet glob cannot
 override that exclusion or add unreferenced public files to Changes.
-This configuration uses the default `generatedOutput: "committed"`. Commit the
-generated HTML and manifest alongside their source. Check verifies that generated
-bytes match the current compilation; comparisons read their baseline from Git
-without executing historical code. [Derived output](#derived-output) is an
-optional mode for repositories that want to keep generated files out of Git.
+This configuration uses the default `generatedOutput: "derived"`. Build writes
+the generated HTML and manifest as ignored local artifacts, Check validates the
+current compilation and rejects tracked generated output, and comparisons
+rebuild their baseline from the merge-base commit. See
+[generated output modes](#generated-output-modes) for the required ignore rules,
+historical-build trust boundary, and committed-mode alternative.
 
 An entry module ends in `.mockup.ts` or `.mockup.tsx` and exports `mockups`:
 
@@ -203,16 +204,16 @@ Value options also accept `--name=value`, which supports values beginning with
 `-`, such as `--config=-catalogue.config.ts`. Empty values and assignments to
 boolean flags are rejected.
 
-| Command                     | Outcome                                                      |
-| --------------------------- | ------------------------------------------------------------ |
-| `mokly`                     | Browse on demand and watch using a stable development URL    |
-| `mokly serve`               | Serve the catalogue and on-demand diffs; watch by default    |
-| `mokly build`               | Validate and transactionally write generated output          |
-| `mokly check`               | Validate committed bytes or require untracked derived output |
-| `mokly export --out <path>` | Build a complete static catalogue for your host              |
-| `mokly publish`             | Export and upload a catalogue to your chosen service         |
-| `mokly --help`              | Show commands and their supported options                    |
-| `mokly --version`           | Print the installed package version                          |
+| Command                     | Outcome                                                    |
+| --------------------------- | ---------------------------------------------------------- |
+| `mokly`                     | Browse on demand and watch using a stable development URL  |
+| `mokly serve`               | Serve the catalogue and on-demand diffs; watch by default  |
+| `mokly build`               | Validate and transactionally write generated output        |
+| `mokly check`               | Validate output according to the configured ownership mode |
+| `mokly export --out <path>` | Build a complete static catalogue for your host            |
+| `mokly publish`             | Export and upload a catalogue to your chosen service       |
+| `mokly --help`              | Show commands and their supported options                  |
+| `mokly --version`           | Print the installed package version                        |
 
 Serve starts at port `4173`. If that port, or a concrete `--port` value, is
 already occupied, Mokly tries each following port in order until one is
@@ -484,11 +485,11 @@ Use `MockLink` for catalogue destinations. Raw relative links remain suitable
 for real static assets and complete documents, but logical screen/use-case routes
 do not name generated files in schema v5.
 
-### Derived output
+### Generated output modes
 
-Set `generatedOutput: "derived"` to keep generated HTML out of Git, as this
-repository's example does.
-Build still writes transactionally; Check validates the
+Derived output is the default and keeps generated HTML out of Git, as this
+repository's example does. You may set `generatedOutput: "derived"` explicitly,
+but omitting the field has the same behavior. Build still writes transactionally; Check validates the
 compilation and rejects tracked generated files or cache contents, without
 requiring local generated files to exist or match. Authored public CSS and HTML
 remain allowed in Git. Add ignore rules for your generated routes and manifest,
@@ -506,7 +507,6 @@ Override the exact ordered argv list when your project needs additional steps:
 
 ```ts
 export default defineConfig({
-  generatedOutput: "derived",
   entriesDir: "docs/mockups/entries",
   mockupsDir: "docs/mockups/generated",
   renderer: "docs/mockups/renderer.tsx",
@@ -519,6 +519,12 @@ export default defineConfig({
   },
 });
 ```
+
+Set `generatedOutput: "committed"` when the configured base is not trusted to
+execute historical code. In committed mode, commit the generated HTML and
+manifest alongside their source. Check requires their bytes to match the current
+compilation, comparisons read the baseline from Git blobs, and
+`review.baselineBuild` is invalid.
 
 Commands run from the historical repository root without a shell; no commands
 are appended to an explicit list. `baselineBuild` is rejected in committed
@@ -603,8 +609,8 @@ forcing React peers to the consumer's one runtime.
   this is separate from a Mokly render or validation error.
 - **No config found:** run from the consumer repository or pass `--config`
   after the command.
-- **A generated file is stale:** run `mokly build`, inspect the diff, then
-  rerun `mokly check`.
+- **A committed generated file is stale:** run `mokly build`, inspect the diff,
+  then rerun `mokly check`. Derived Check ignores local artifact bytes.
 - **Mokly refuses an overwrite:** the existing HTML lacks a valid Mokly
   ownership header. Current headers encode their source identity so every valid
   repository filename remains safe inside an HTML comment. Move an unowned file

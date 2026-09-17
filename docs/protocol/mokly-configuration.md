@@ -73,7 +73,7 @@ type ModuleLoader =
 interface MoklyConfig {
   colorSchemes?: readonly ColorScheme[]; // ["light"]
   entriesDir: string;
-  generatedOutput?: "committed" | "derived"; // "committed"
+  generatedOutput?: "committed" | "derived"; // "derived"
   mockupsDir: string;
   publicExclude?: readonly string[]; // extends shipped public exclusions
   repoRoot?: string; // config directory
@@ -121,11 +121,12 @@ that must include `"light"`; it defaults to `["light"]` and normalizes to
 light-first order. Shared `stylesheets` apply to every generated view, with a
 matching `lightStylesheets` or `darkStylesheets` list appended in declaration
 order.
-`generatedOutput` defaults to `"committed"`; `"derived"` and the derived-only
-`review.baselineBuild` argv list follow the
+`generatedOutput` defaults to `"derived"`; the derived-only
+`review.baselineBuild` argv list and explicit `"committed"` alternative follow the
 [derived baselines contract](./mokly-derived-baselines.md).
 `baselineBuild` is invalid in committed mode, including a staged migration;
-enable a repository-specific recipe together with the derived mode switch.
+omit `generatedOutput` or set it to `"derived"` when supplying a
+repository-specific recipe.
 Derived Check accepts absent local generated output, rejects Git-tracked routes,
 the manifest and cache files, and prints their paths plus ignore guidance.
 Build writes transactionally in both modes. Serve and export await preparation

@@ -82,7 +82,8 @@ to npm scripts and includes:
 - TypeScript typechecking with no unexplained source exclusions;
 - unit and integration tests with a 100% pass rate;
 - production build and declaration generation;
-- a byte-stable example `check` against committed generated output;
+- an example `check` that validates the derived compilation and rejects tracked
+  generated output;
 - package-file inspection with `npm pack --dry-run --json`;
 - packed-tarball installs in clean ESM, NodeNext, Accounting-shaped, and
   Juno-shaped consumers;
@@ -153,8 +154,8 @@ stable `pr-<number>` branch alias and receive one updated sticky comment with
 the deployment result, URL, commit, and workflow run. Fork pull requests never
 receive Cloudflare credentials or write-capable execution.
 
-`npm run preview:build` first rebuilds Mokly and its committed basic
-consumer. The repository-only preview builder starts the real Browse server on
+`npm run preview:build` first rebuilds Mokly and its derived basic consumer.
+The repository-only preview builder starts the real Browse server on
 an ephemeral loopback port and snapshots the home, not-found, current catalogue
 routes, plus removed-entry routes only when Changes is included. It copies the shell stylesheet, browser and
 shared navigation modules, fonts, id redirects, and every validated public

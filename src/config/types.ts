@@ -83,7 +83,7 @@ export interface ModuleResolutionConfig {
 
 /** Public, serializable host configuration. */
 export interface MoklyConfig {
-  /** Retain generated files in Git or rebuild historical output; defaults to committed. */
+  /** Rebuild historical output or retain generated files in Git; defaults to derived. */
   generatedOutput?: "committed" | "derived";
   /** Color schemes rendered for screens; defaults to light only. */
   colorSchemes?: readonly ColorScheme[];

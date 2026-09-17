@@ -52,7 +52,12 @@ export function resolveConfig(
   const configDir = path.dirname(configPath);
   const repoRoot = path.resolve(configDir, input.repoRoot ?? ".");
   requireDirectory(repoRoot, "repoRoot");
-  const baselineBuild = baselineBuildCommands(input, repoRoot, configPath);
+  const baselineBuild = baselineBuildCommands(
+    input,
+    generatedOutput,
+    repoRoot,
+    configPath,
+  );
   const entriesDir = resolveInside(
     repoRoot,
     configDir,

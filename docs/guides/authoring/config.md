@@ -14,7 +14,6 @@ order: 1
 import { defineConfig } from "@mokly/mokly";
 
 export default defineConfig({
-  generatedOutput: "committed",
   colorSchemes: ["light", "dark"],
   entriesDir: "docs/mockups/entries",
   mockupsDir: "docs/mockups/generated",
@@ -33,20 +32,20 @@ Paths are relative to the config file and stay inside `repoRoot`.
 
 ## Fields
 
-| Field              | Meaning                                                                    |
-| ------------------ | -------------------------------------------------------------------------- |
-| `entriesDir`       | Where your entry modules live                                              |
-| `mockupsDir`       | Where the generated catalogue is written                                   |
-| `generatedOutput`  | `"committed"` (default) keeps generated files in Git; `"derived"` does not |
-| `colorSchemes`     | Schemes rendered for every screen; defaults to `["light"]`                 |
-| `repoRoot`         | The root every path is confined to; defaults to the config directory       |
-| `renderer`         | Your module that wraps a screen in your theme and returns a document       |
-| `stylesheets`      | Ordered route-to-stylesheet rules                                          |
-| `publicExclude`    | Extra globs under `mockupsDir` that stay private                           |
-| `moduleResolution` | Aliases, conditions, fields, extensions and loaders for your sources       |
-| `review`           | The Git base, the artifact directory and shared-impact globs               |
-| `watch`            | Extra inputs the watched server reacts to                                  |
-| `compatibility`    | Temporary bridges while a repository moves to the current output           |
+| Field              | Meaning                                                                           |
+| ------------------ | --------------------------------------------------------------------------------- |
+| `entriesDir`       | Where your entry modules live                                                     |
+| `mockupsDir`       | Where the generated catalogue is written                                          |
+| `generatedOutput`  | `"derived"` (default) requires untracked output; `"committed"` verifies Git bytes |
+| `colorSchemes`     | Schemes rendered for every screen; defaults to `["light"]`                        |
+| `repoRoot`         | The root every path is confined to; defaults to the config directory              |
+| `renderer`         | Your module that wraps a screen in your theme and returns a document              |
+| `stylesheets`      | Ordered route-to-stylesheet rules                                                 |
+| `publicExclude`    | Extra globs under `mockupsDir` that stay private                                  |
+| `moduleResolution` | Aliases, conditions, fields, extensions and loaders for your sources              |
+| `review`           | The Git base, the artifact directory and shared-impact globs                      |
+| `watch`            | Extra inputs the watched server reacts to                                         |
+| `compatibility`    | Temporary bridges while a repository moves to the current output                  |
 
 ## Stylesheets
 

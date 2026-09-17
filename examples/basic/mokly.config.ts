@@ -11,7 +11,6 @@ import {
 } from "./entries/design/library/style_files.js";
 
 export default defineConfig({
-  generatedOutput: "derived",
   colorSchemes: ["light", "dark"],
   entriesDir: "entries",
   mockupsDir: "generated",

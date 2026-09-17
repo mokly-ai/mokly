@@ -153,7 +153,7 @@ spreads the shared stylesheet dependency set before adding its own stylesheet.
 Shared fixtures and reusable screen parts live beside the owning screen modules.
 
 `tests/component_design_attribution.test.ts` exercises each component stylesheet
-against the real example configuration and committed manifest through the rendered-resource graph and changed-route projection. It requires exact
+against the real example configuration and current compiled manifest through the rendered-resource graph and changed-route projection. It requires exact
 Changes membership for the component routes, excluding unrelated design screens,
 product screens, and their use case.
 
