@@ -176,19 +176,19 @@ existing protocol remains internally consistent.
 as a side effect when given `usage` without pre-validated ranges. The fast
 path needs the stripped text without the parse.
 
-- [ ] Add a pure `stripComponentMarkers(html)` that only performs the regex
+- [x] Add a pure `stripComponentMarkers(html)` that only performs the regex
       replacement, and make `stripMarkers` call it after its optional
       validation. Keep `stripHistoricalMarkers` behavior unchanged.
-- [ ] Extract the `inputs` and `structure` signal computation from
+- [x] Extract the `inputs` and `structure` signal computation from
       `projectComponentPair` into a pure helper that takes only the two
       `ComponentViewRecord`s, and have `projectComponentPair` call it. Its
       output must be unchanged.
-- [ ] Add unit tests under `tests/` for both helpers, including a case where
+- [x] Add unit tests under `tests/` for both helpers, including a case where
       `inputs` is true with identical documents.
-- [ ] Run the existing component comparison tests to confirm no behavior
+- [x] Run the existing component comparison tests to confirm no behavior
       change.
-- [ ] Run `cargo xtask check`.
-- [ ] `git add -A`, commit with a Conventional Commits message, push.
+- [x] Run `cargo xtask check`.
+- [x] `git add -A`, commit with a Conventional Commits message, push.
 
 ## Milestone 3: Implement the fast path
 

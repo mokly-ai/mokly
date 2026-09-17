@@ -12,6 +12,11 @@ export function stripHistoricalMarkers(html: string): string {
   return stripMarkers(normalizeHistoricalDocument(html));
 }
 
+/** Strip current component boundary comments without validating ownership ranges. */
+export function stripComponentMarkers(html: string): string {
+  return html.replace(/<!--mokly-component:(?:start|end):r-[0-9]+-->/g, "");
+}
+
 /** Validate ownership before stripping layout-neutral markers for conservative migration. */
 export function stripMarkers(
   html: string,
@@ -19,7 +24,34 @@ export function stripMarkers(
   validatedRanges?: readonly RenderedRange[],
 ): string {
   if (usage && !validatedRanges) validateComponentRanges(html, usage.ranges);
-  return html.replace(/<!--mokly-component:(?:start|end):r-[0-9]+-->/g, "");
+  return stripComponentMarkers(html);
+}
+
+/** Compare caller-owned component inputs and structure without reading documents. */
+export function componentUsageSignals(
+  beforeView: ComponentViewRecord | undefined,
+  afterView: ComponentViewRecord | undefined,
+): { inputs: boolean; structure: boolean } {
+  const currentInputs = new Map(
+    afterView?.instances
+      .filter((item) => item.owner.kind === "entry")
+      .map((item) => [item.key, item]),
+  );
+  const inputs = Boolean(
+    beforeView?.instances.some(
+      (item) =>
+        item.owner.kind === "entry" &&
+        currentInputs.get(item.key)?.componentId === item.componentId &&
+        currentInputs.get(item.key)?.propsKey !== item.propsKey,
+    ),
+  );
+  const structure = Boolean(
+    beforeView &&
+    afterView &&
+    canonicalJson(structureSignals(beforeView)) !==
+      canonicalJson(structureSignals(afterView)),
+  );
+  return { inputs, structure };
 }
 
 export function structureSignals(
