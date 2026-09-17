@@ -2,13 +2,15 @@
 
 ## Active
 
-- [Unchanged View Fast Path](./unchanged-view-fast-path.md)
 - [Publish Catalogue](./publish-catalogue.md)
 - [App-Independent Mokabook Npm Library](./app-independent-mokabook-library.md)
 - [Accounting Shell Design Parity](./accounting-shell-design-parity.md)
 
 ## Completed
 
+- [Unchanged View Fast Path](./unchanged-view-fast-path.md) — delivered and
+  verified; the required post-push review is reported in the implementation
+  handoff.
 - [CSS Change Attribution](./css-change-attribution.md) — delivered, two
   rounds of review fixes applied, and reviewed three times; nine follow-up
   findings from the third review await the user's decision.

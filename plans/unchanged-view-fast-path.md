@@ -2,13 +2,36 @@
 
 ## Status And Outcome
 
-Milestone 1 is complete: the protocol docs, review README, and workspace
-README now define the unchanged view decision, its output equivalence
-requirement, the derived-mode byte gate, and the `review.compare-screens`
-counts record. Implementation has not started. Created after profiling the background Changes classification on
-the example catalogue: a run with zero changed paths costs the same as a run
-with real changes, because every paired view goes through the complete
-comparison regardless of whether anything could differ.
+The implementation and measurement milestones are complete. The fast path
+preserves complete-path output across the differential fixture matrix, keeps
+resource and derived-byte gates intact, and emits explicit path counts.
+
+Measurements on the same VM compare the background worker's
+`changes.classify` span, excluding baseline preparation:
+
+| Example zero-change run | Cold process | Warm restart | `review.resource-graph` |
+| ----------------------- | -----------: | -----------: | ----------------------: |
+| Before                  |        3.2 s |        3.1 s |           2,208 per run |
+| After                   |     909.5 ms |    902.26 ms |             277 per run |
+
+The current result is about 72% faster cold and 71% faster warm, with 87%
+fewer resource discoveries. Both after runs sent all 276 paired views through
+the fast path. The historical derived-baseline preparation was 18.4 seconds
+cold and 0.3 seconds on a warm cache hit; that separate cost is unchanged and
+out of scope.
+
+The regenerated default large fixture contained 1,410 routes and 5,550
+documents. Its deliberate shared-stylesheet edit produced a mixed workload:
+5,520 paired views, 3,120 fast-path views, 2,400 complete-path views, and
+12,750 resource discoveries. `changes.classify` took 31.2906 seconds on the
+cold process and 32.16244 seconds on the warm restart; the benchmark completed
+with zero changed routes as expected. This is a scale smoke test, not the
+zero-change acceptance workload above.
+
+A watched title edit to `design-browse-tag-forms` reclassified in 925.27 ms
+with 274 fast-path and two complete-path views and 287 resource discoveries.
+Browse reported exactly one changed screen, that screen alone, and returned to
+zero after the source was restored byte-for-byte.
 
 ## Problem
 
@@ -250,20 +273,20 @@ path needs the stripped text without the parse.
 
 ## Milestone 5: Measure and record
 
-- [ ] Rebuild the large fixture (`npm run fixture:large`) and run
+- [x] Rebuild the large fixture (`npm run fixture:large`) and run
       `npm run benchmark:large`; record cold and warm `changes.classify`
       durations and the `review.resource-graph` count before and after in
       this plan's status section.
-- [ ] Serve the example catalogue with `--no-watch`, `--port 0`, and
+- [x] Serve the example catalogue with `--no-watch`, `--port 0`, and
       `--debug-timings` and record the zero-change `changes.classify`
       duration.
-- [ ] Smoke test watched Serve on the example: edit one screen entry, confirm
+- [x] Smoke test watched Serve on the example: edit one screen entry, confirm
       the Changes filter shows only that screen and that the reclassification
       completes visibly faster than before.
-- [ ] Update `plans/README.md` to move this plan to Completed on merge.
-- [ ] Run `cargo xtask check`.
-- [ ] `git add -A`, commit, push.
-- [ ] Review: after the push, use `docs/implementation-review-prompt.md` to
+- [x] Update `plans/README.md` to move this plan to Completed on merge.
+- [x] Run `cargo xtask check`.
+- [x] `git add -A`, commit, push.
+- [x] Review: after the push, use `docs/implementation-review-prompt.md` to
       review the complete local diff against `origin/main` and report
       findings without changing the implementation.
 
