@@ -70,6 +70,7 @@ export interface ViewerSlots {
 export interface MoklyViewerHandle {
   select(selection: Partial<ViewerSelection>): void;
   highlightInstance(instance: InstanceRef | null): Promise<void>;
+  highlightInstances(instances: readonly InstanceRef[]): Promise<void>;
   scrollToInstance(instance: InstanceRef): Promise<void>;
   startPick(): Promise<void>;
   cancelPick(): void;

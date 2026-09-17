@@ -215,6 +215,35 @@ for (const cross of [false, true]) {
     ]);
   });
 
+  test(`${name} one lost multi-highlight ref clears every frame and still ends a later pick`, async ({
+    page,
+  }) => {
+    await start(page, cross);
+    await page.evaluate(() =>
+      window.evidence.frames.highlightInstances(window.evidence.instances),
+    );
+    await presentation(page, cross, 2);
+    await page.evaluate(() => window.evidence.update("mobile", "empty"));
+    await expect
+      .poll(() => page.evaluate(() => window.evidence.updates))
+      .toBe(1);
+    await presentation(page, cross, 0);
+    expect(await page.evaluate(() => window.evidence.events)).toEqual([]);
+    await page.evaluate(async () => {
+      window.evidence.update("mobile");
+      await window.evidence.frames.startPick();
+      window.evidence.update("desktop", "empty");
+    });
+    await expect
+      .poll(() => page.evaluate(() => window.evidence.updates))
+      .toBe(3);
+    await presentation(page, cross, 0);
+    expect(await page.evaluate(() => window.evidence.events)).toEqual([
+      "start",
+      "end:evidence",
+    ]);
+  });
+
   for (const hold of ["highlight", "list"] as const) {
     test(`${name} evidence cancels pending ${hold} activation without events`, async ({
       page,

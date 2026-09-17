@@ -14,6 +14,7 @@ type Evidence = "ready" | "empty" | "pending" | "unavailable";
 interface EvidenceProbe {
   frames: ViewerFrames;
   instance: InstanceRef;
+  instances: readonly InstanceRef[];
   events: string[];
   calls: string[];
   mounts: number;
@@ -49,6 +50,19 @@ window.startEvidence = (model, origin, cross, sibling) => {
   const original = home.views.map((view) => ({ ...view }));
   const usage = original.find((view) => view.viewport === "mobile")!.usage;
   if (usage.status !== "ready") throw new Error("Expected ready fixture");
+  const instances = original
+    .filter((view) => view.colorScheme === "light")
+    .map((view): InstanceRef => {
+      if (view.usage.status !== "ready")
+        throw new Error("Expected ready fixture");
+      return {
+        screenId: "home",
+        viewport: view.viewport,
+        colorScheme: view.colorScheme,
+        key: view.usage.instances.find((instance) => instance.id === "action")!
+          .key,
+      };
+    });
   home.views = home.views.map((view) =>
     view.viewport === "desktop" && sibling === "pending"
       ? { ...view, usage: { status: "pending" } }
@@ -129,12 +143,8 @@ window.startEvidence = (model, origin, cross, sibling) => {
         return error instanceof Error ? error : new Error("Unexpected failure");
       },
     ),
-    instance: {
-      screenId: "home",
-      viewport: "mobile",
-      colorScheme: "light",
-      key: usage.instances.find((instance) => instance.id === "action")!.key,
-    },
+    instance: instances[0]!,
+    instances,
     events: [],
     calls: [],
     mounts: 0,

@@ -97,6 +97,9 @@ function MountedViewer(
       highlightInstance: (instance) =>
         runtime.current?.highlightInstance(instance) ??
         Promise.reject(new Error("The viewer is not ready.")),
+      highlightInstances: (instances) =>
+        runtime.current?.highlightInstances(instances) ??
+        Promise.reject(new Error("The viewer is not ready.")),
       scrollToInstance: (instance) =>
         runtime.current?.scrollToInstance(instance) ??
         Promise.reject(new Error("The viewer is not ready.")),

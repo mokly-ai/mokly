@@ -290,21 +290,21 @@ Tags: ui
 
 Highlight every commented instance at once using the existing masks and labels.
 
-- [ ] Add `{ kind: "instances"; instances: readonly InstanceRef[] }` to
+- [x] Add `{ kind: "instances"; instances: readonly InstanceRef[] }` to
       `HighlightRequest`; `highlightKeys` returns the keys of refs matching each
       frame; `inspectionScope` selects the union of matched sessions.
-- [ ] Add `highlightInstances` to `ViewerFrames`, `ViewerRuntime`, the
+- [x] Add `highlightInstances` to `ViewerFrames`, `ViewerRuntime`, the
       imperative handle and `MoklyViewerHandle`; reject atomically with the
       adapter's `missing-instance` semantics when any ref has no matching ready
       current view; keep `highlightInstance` as sugar over it.
-- [ ] Keep evidence validation (`validInspection`), pick interplay, replacement
+- [x] Keep evidence validation (`validInspection`), pick interplay, replacement
       and superseded-work fencing correct for multi-session scopes.
-- [ ] Node tests for request scoping and key partitioning; browser tests on
+- [x] Node tests for request scoping and key partitioning; browser tests on
       both adapters covering Both, two flow steps, mixed schemes, atomic
       rejection leaving prior highlights untouched, evidence loss of one ref
       clearing all masks and ending a pick with `evidence`, and clearing with
       an empty list.
-- [ ] Run focused tests, then `PLAYWRIGHT_CHANNEL=chromium cargo xtask check`;
+- [x] Run focused tests, then `PLAYWRIGHT_CHANNEL=chromium cargo xtask check`;
       require zero failures, retries and skips.
 - [ ] After checks pass, run `git add -A`, commit with Conventional Commits and
       push the branch.
@@ -312,6 +312,16 @@ Highlight every commented instance at once using the existing masks and labels.
       against the complete local diff from `origin/main`; report numbered
       findings with severity, impact, lettered options and a recommendation
       without fixing.
+
+### Milestone 3 verification notes
+
+Focused viewer package tests passed 48/48. The evidence and multi-highlight
+browser set passed 26/26, including the six new same-origin and postMessage
+multi-highlight cases; the complete viewer browser subset passed 128/128. The
+complete `PLAYWRIGHT_CHANNEL=chromium cargo xtask check` then passed 1,760 Node
+tests, 435 Playwright tests, all five clean-package consumer scenarios, Rust
+formatting, Clippy, three Rust tests and the Rust file-length audit, with zero
+failures, retries or skips.
 
 ## Milestone 4: Host markers
 

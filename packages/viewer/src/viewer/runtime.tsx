@@ -221,8 +221,13 @@ export class ViewerRuntime implements MoklyViewerHandle {
   async highlightInstance(
     instance: Parameters<MoklyViewerHandle["highlightInstance"]>[0],
   ): Promise<void> {
+    await this.highlightInstances(instance ? [instance] : []);
+  }
+  async highlightInstances(
+    instances: Parameters<MoklyViewerHandle["highlightInstances"]>[0],
+  ): Promise<void> {
     try {
-      await this.frames.highlight(instance);
+      await this.frames.highlightInstances(instances);
     } catch (error) {
       throw this.error(error, "frame");
     }

@@ -4,6 +4,7 @@ import type { InstanceRef } from "./types.js";
 
 export type HighlightRequest =
   | { kind: "instance"; instance: InstanceRef }
+  | { kind: "instances"; instances: readonly InstanceRef[] }
   | { kind: "workspace"; key: string | undefined };
 
 /** Public references select one frame; workspace keys intentionally span visible views. */
@@ -15,6 +16,14 @@ export function highlightKeys(
     return matchesInstance(frame, request.instance)
       ? [request.instance.key]
       : [];
+  if (request.kind === "instances")
+    return [
+      ...new Set(
+        request.instances
+          .filter((instance) => matchesInstance(frame, instance))
+          .map((instance) => instance.key),
+      ),
+    ];
   return frame.view?.usage.status === "ready"
     ? frame.view.usage.instances
         .filter((instance) =>

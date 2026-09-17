@@ -4,6 +4,7 @@ import type {
   FrameEvent,
   FrameNavigation,
 } from "../client/frame_adapter.js";
+import { FrameError } from "../client/frame_error.js";
 import { cancelFrameMount } from "../client/frame_mount.js";
 
 import { runCleanup } from "./cleanup.js";
@@ -12,7 +13,11 @@ import { frameSession, refreshFrameSessions } from "./frame_session.js";
 import type { Session } from "./frame_session.js";
 import { frameDescriptors, frameInstance, hasInstance } from "./frame_views.js";
 import type { ViewerFrame } from "./frame_views.js";
-import { inspectionScope, readyInspection } from "./inspection_scope.js";
+import {
+  inspectionScope,
+  readyInspection,
+  validInspection,
+} from "./inspection_scope.js";
 import { Picking } from "./picking.js";
 import type {
   InstanceRef,
@@ -144,14 +149,30 @@ export class ViewerFrames {
     return this.report(error);
   }
   async highlight(instance: InstanceRef | null): Promise<void> {
-    if (instance) {
-      await this.highlights.show(
-        { kind: "instance", instance: { ...instance } },
-        "highlight",
-      );
-    } else {
+    await this.highlightInstances(instance ? [instance] : []);
+  }
+  async highlightInstances(instances: readonly InstanceRef[]): Promise<void> {
+    if (!instances.length) {
       await this.highlights.off();
+      return;
     }
+    const request = {
+      kind: "instances" as const,
+      instances: instances.map((instance) => ({ ...instance })),
+    };
+    const work = this.highlights.work();
+    const scope = inspectionScope(this.sessions, request);
+    try {
+      await work.run(async () => {
+        if (!scope.complete) throw new FrameError("missing-instance");
+        await readyInspection(this.root, scope.sessions, work);
+        work.check();
+        if (!validInspection(scope)) throw new FrameError("missing-instance");
+      });
+    } catch (error) {
+      throw this.report(error);
+    }
+    await this.highlights.show(request, "highlight");
   }
   async scroll(instance: InstanceRef): Promise<void> {
     const work = this.highlights.work();
