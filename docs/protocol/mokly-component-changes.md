@@ -104,6 +104,47 @@ not enclose component boundaries or caller-owned slots and erase their signals.
 Reject that ambiguous composition with a migration diagnostic. Existing
 catalogues without component boundaries remain byte-compatible.
 
+### Unchanged view decision
+
+Classification cost must follow the size of the change, not the size of the
+catalogue. For a view present on both sides, the classifier first decides
+whether the view can differ at all and only then performs projection, range
+validation, CSS rule analysis, and implementation diffing. That decision is
+part of the materiality policy and must produce output equal to the complete
+comparison for every view; a differential test over the shared fixtures is
+required evidence.
+
+The decision, in order:
+
+1. Normalize the actual pair: strip historical markers from the base document,
+   strip component markers from the head document, and apply the paired
+   manual-ignore normalization. This uses the same normalization as the
+   complete comparison's actual pair. Stripping markers here must not
+   validate component ranges; validation is deferred to the complete path.
+2. If the normalized documents differ, take the complete path.
+3. Otherwise discover the head document's reachable resources once.
+4. If any reachable resource is a changed Git path, take the complete path;
+   ownership, exclusion, and rule analysis are decided there.
+5. In derived mode, also compare the bytes of every reachable resource
+   between the two sides. Any difference takes the complete path.
+6. Otherwise the view is unchanged by content and resources. Its state is
+   `unchanged` when the single-document normalizations of both stripped sides
+   are equal and `ignored-only` otherwise; `ignoredIds` come from the paired
+   normalization. The view carries no `material`, `reasons`, or
+   `excludedResources` fields and contributes no owned-resource or
+   implementation-impact evidence, exactly as the complete path would.
+
+`inputs` and `structure` reasons are derived from validated usage records,
+never from document text, so an input edit that renders identical HTML keeps
+its `inputs` reason on either path. The fast decision must compute those two
+signals from the same usage projection the complete path uses. Entry-level
+`metadata`, `added`, `removed`, and dependency reasons are unaffected because
+they are computed outside the per-view comparison.
+
+The resource discovery performed by the decision is reused when the view
+falls through to the complete path; it is never repeated for the same route
+and document text within one classification.
+
 ## Dependencies And Styles
 
 Component registration declares implementation dependency paths. Ownership must

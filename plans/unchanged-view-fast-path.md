@@ -2,7 +2,10 @@
 
 ## Status And Outcome
 
-Not started. Created after profiling the background Changes classification on
+Milestone 1 is complete: the protocol docs, review README, and workspace
+README now define the unchanged view decision, its output equivalence
+requirement, the derived-mode byte gate, and the `review.compare-screens`
+counts record. Implementation has not started. Created after profiling the background Changes classification on
 the example catalogue: a run with zero changed paths costs the same as a run
 with real changes, because every paired view goes through the complete
 comparison regardless of whether anything could differ.
@@ -141,30 +144,30 @@ does not change the render would silently drop its `inputs` reason.
 Document the decision rule so implementation needs no guesswork and so the
 existing protocol remains internally consistent.
 
-- [ ] In `docs/protocol/mokly-component-changes.md`, add a "Unchanged view
+- [x] In `docs/protocol/mokly-component-changes.md`, add a "Unchanged view
       decision" subsection under the materiality policy stating the six-step
       rule above, that it must produce output equal to the complete
       comparison, and that `inputs`/`structure` reasons are derived from
       usage records independently of document text.
-- [ ] In `docs/protocol/mokly-component-review.md`, state under "Reasons And
+- [x] In `docs/protocol/mokly-component-review.md`, state under "Reasons And
       Secondary Evidence" that a view reported `unchanged` or `ignored-only`
       through the fast path carries no `material`, `reasons`, or
       `excludedResources` fields and an empty implementation-impact
       contribution, identical to the complete path.
-- [ ] In `docs/protocol/mokly-derived-baselines.md`, "Head side", note that
+- [x] In `docs/protocol/mokly-derived-baselines.md`, "Head side", note that
       derived membership's reachable-resource byte comparison also gates the
       fast path, so a byte difference without Git evidence still takes the
       complete comparison.
-- [ ] In `docs/protocol/mokly-timings.md`, define a `review.compare-screens`
+- [x] In `docs/protocol/mokly-timings.md`, define a `review.compare-screens`
       counts record with `views`, `fastPath`, and `completePath` totals, and
       state the zero-change bound on `review.resource-graph` occurrences (at
       most one per paired view plus one per one-sided view).
-- [ ] Update `src/review/README.md` with a short description of the two paths
+- [x] Update `src/review/README.md` with a short description of the two paths
       in `compareComponentView` and where the decision lives.
-- [ ] Update the workspace `README.md` performance paragraph to say that
+- [x] Update the workspace `README.md` performance paragraph to say that
       classification cost follows the size of the change once the baseline is
       cached.
-- [ ] Validate the changed Markdown (`npm run format:check`, `npm run lint`)
+- [x] Validate the changed Markdown (`npm run format:check`, `npm run lint`)
       and review the diff.
 
 ## Milestone 2: Separate marker stripping from range validation

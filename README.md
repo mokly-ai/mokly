@@ -205,6 +205,10 @@ output and generated files unchanged. It separates bundling, rendering,
 validation, file writes, watcher setup, child readiness, and background Changes.
 Review timings distinguish Git baseline and document reads, comparison loops,
 resource traversal, CSS rule analysis, and artifact writes. Build and Check do not run review.
+Once the baseline is cached, classification cost follows the size of the
+change: views whose normalized documents and reachable resources are unchanged
+are settled without the complete comparison, and the `review.compare-screens`
+counts record reports how many views took each path.
 Parent timings include child phases; overlapping timings must not be added
 together. See the [diagnostic contract](./docs/protocol/mokly-timings.md).
 

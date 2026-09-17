@@ -156,6 +156,13 @@ only affected component evidence cannot produce a use-case screen reason.
 An affected-only consumer has no ChangedEntry unless it has another direct
 reason. Its full comparison remains available through the other result arrays.
 
+A view reported `unchanged` or `ignored-only` through the
+[unchanged view decision](./mokly-component-changes.md#unchanged-view-decision)
+carries no `material`, `reasons`, or `excludedResources` fields, contributes
+nothing to the implementation-impact set or owned-resource aggregation, and
+retains its `ignoredIds`. Its record is identical to the one the complete
+comparison produces for that view; the decision changes cost, not output.
+
 Views carry optional dependency-only `reasons` alongside optional
 `excludedResources` in both schemas. Omit either list when empty and sort it
 uniquely by path. `matched` analysis requires selectors; `unresolved` permits an

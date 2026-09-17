@@ -227,6 +227,12 @@ Key code:
 
 - `compare.ts`, `screen_compare.ts`: screen comparisons and retained artifacts.
 - `component_classification.ts`, `component_view.ts`: component ownership policy.
+  `compareComponentView` has two paths: an unchanged decision that settles a
+  paired view after one normalized string comparison and one head resource
+  discovery, and the complete comparison (projection, range validation, CSS
+  analysis, implementation diffing) for views that can differ. Both produce
+  identical records; the decision rule lives in the
+  [component change attribution contract](../../docs/protocol/mokly-component-changes.md#unchanged-view-decision).
 - `component_resource_attribution.ts`: actual-invocation CSS ownership and entry
   evidence aggregation without inventing saved variants.
 - `assets.ts`, `component_resources.ts`, `resource_graph.ts`: confined reads and

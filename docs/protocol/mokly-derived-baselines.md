@@ -111,6 +111,10 @@ are retained privately across classification and selected comparisons; they
 are not exposed in shell metadata.
 Component resource-byte differences without a changed Git path use a `material`
 reason; `changedPaths` and `dependency` reasons retain actual Git evidence.
+The same reachable-resource byte comparison gates the
+[unchanged view decision](./mokly-component-changes.md#unchanged-view-decision):
+a view with identical normalized documents still takes the complete comparison
+when any reachable resource's bytes differ, even without Git evidence.
 
 ## Preparation And Storage
 

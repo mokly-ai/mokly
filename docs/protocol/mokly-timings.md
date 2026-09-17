@@ -57,10 +57,19 @@ Review phases use the same session, role and parent context as their caller:
   component-aware loop also compares saved variants and entry metadata. Live
   document checks use separate occurrences for material and resource comparison
   loops; a baseline-document batch span can therefore be nested inside one.
+  The component-aware loop ends with one `review.compare-screens` counts record
+  carrying `views` (paired and one-sided views compared), `fastPath` (views
+  settled by the [unchanged view decision](./mokly-component-changes.md#unchanged-view-decision))
+  and `completePath` (views that ran the complete comparison);
+  `fastPath + completePath` equals `views`. Live document checks emit no
+  counts record.
 - `review.resource-graph` covers reference discovery and transitive traversal
   for each material view or live document, and each before/after snapshot-copy
   closure. It includes resource reads and copying into the in-memory artifact.
   Cached traversals are still measured; watcher inventory keeps its own stages.
+  In a component-aware classification where no view differs, the loop emits at
+  most one occurrence per paired view plus one per one-sided view; a repeated
+  discovery for the same route and document text is a defect.
 - `review.css-analysis` measures the synchronous parse/diff/match/reduce pass
   for one changed, reachable stylesheet and one before/after document pair.
   It includes parser-cache lookups or parsing, and runs for cache hits and empty
