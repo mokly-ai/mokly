@@ -17,7 +17,7 @@ npm install --save-dev @mokly/mokly react react-dom
 <!-- x-release-please-start-version -->
 
 The package is `@mokly/mokly` and its executable is `mokly`. This
-documentation describes version 0.10.0.
+documentation describes version 0.11.0.
 <!-- x-release-please-end -->
 
 ## Run the command
@@ -44,7 +44,7 @@ version rather than the range:
 <!-- x-release-please-start-version -->
 
 ```shell
-npm install --save-dev @mokly/mokly@0.10.0
+npm install --save-dev @mokly/mokly@0.11.0
 ```
 
 <!-- x-release-please-end -->
