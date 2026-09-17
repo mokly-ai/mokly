@@ -385,9 +385,9 @@ Position host-owned marker content on instances and keep it there.
       that the complete comment-anchoring contract is implemented.
 - [x] Run focused tests, then `PLAYWRIGHT_CHANNEL=chromium cargo xtask check`;
       require zero failures, retries and skips.
-- [ ] After checks pass, run `git add -A`, commit with Conventional Commits and
+- [x] After checks pass, run `git add -A`, commit with Conventional Commits and
       push the branch.
-- [ ] After that push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After that push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
       against the complete local diff from `origin/main`; report numbered
       findings with severity, impact, lettered options and a recommendation
       without fixing.
@@ -408,6 +408,19 @@ The vanilla browser bundles remain `browse_runtime.js` 8,549 bytes,
 `inspector.js` 8,733 bytes. The packed NodeNext consumer type-checks
 `ViewerMarker`, `MarkerState`, `markers`, `onMarkerChange` and
 `highlightInstances` from a clean install.
+
+### Milestone 4 post-push review
+
+No findings. The required prompt reviewed the complete 51-file pushed diff
+against `origin/main` after commit `f7ba311`. It checked protocol and public API
+alignment, controlled saved-variant routing, atomic multi-highlight behavior,
+marker matching and placement, the shared geometry scheduler, adapter parity,
+lifecycle fencing, package exports, generated-output safety, tests and
+documentation. Worktree, index and untracked inventories were clean, and the
+review made no implementation changes. Residual risk is limited to unusual
+custom-adapter timing and host layouts beyond the covered same-origin,
+postMessage, scroll, resize, expansion, evidence, replacement and lost-wakeup
+cases.
 
 ## Post-merge follow-up (non-blocking)
 
