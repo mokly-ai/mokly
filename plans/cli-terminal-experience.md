@@ -18,8 +18,10 @@ per lifecycle event; the spinner line rewrites in place until the event ends:
   mokly 0.10.0                          derived · comparing against origin/main
   examples/basic/mokly.config.ts
 
-  ➜  http://127.0.0.1:4175              watching entries, renderer and styles
-     press h for shortcuts
+  ┌─────────────────────────┐
+  │  http://127.0.0.1:4175  │
+  └─────────────────────────┘
+  watching entries, renderer and styles · press h for shortcuts
 
   ✔ Catalogue ready · 96 screens · 12 pages · 18 components            4.9s
   ✔ Baseline ready · rebuilt a1b2c3d                                  23.0s
@@ -121,6 +123,28 @@ Quiet the npm banners, smoke-test the real terminal, and deliver.
 - [x] Run `npm run typecheck`, `npm run lint`, `npm run format:check`, the full `npm test`, `npm run test:browser` and `cargo xtask check`; resolve failures.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits and push the branch.
 - [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md) to review the complete local diff against `origin/main`; report numbered, severity-rated findings with lettered options and a recommendation without changing the implementation.
+
+## Milestone 6: Prominent Serve URL panel
+
+Make the local address the unmistakable primary action in rich Serve output
+without changing plain-mode bytes or lifecycle behavior.
+
+- [x] Update the terminal protocol and target experience to put only the URL in
+      a compact bordered panel, with watch state and shortcut guidance as
+      secondary copy beneath it.
+- [x] Add reporter tests first for watched, snapshot, non-interactive, and
+      narrow-terminal URL panel output.
+- [x] Implement the width-aware URL panel and dim secondary status line, then
+      smoke-test watched Serve in a pseudo-terminal and save a capture under
+      `.context/`.
+- [x] Run focused tests, `npm run typecheck`, `npm run lint`,
+      `npm run format:check`, the full `npm test`, `npm run test:browser`, and
+      `cargo xtask check`; resolve failures.
+- [x] After checks pass, `git add -A`, commit with Conventional Commits, and
+      push the branch.
+- [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main`; report findings
+      without changing the implementation.
 
 ## Post-merge follow-up (non-blocking)
 

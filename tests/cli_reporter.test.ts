@@ -83,6 +83,85 @@ test("rich reporter clears one spinner before durable output and bounds lines", 
   assert.match(terminal.stdout(), /Generated 278 files/);
 });
 
+test("rich Serve makes its URL the sole content of a bordered panel", () => {
+  const terminal = memoryTerminal({ columns: 80, isTTY: true });
+  const reporter = new RichReporter(terminal.environment);
+  reporter.serveReady({
+    base: "origin/main",
+    configPath: "examples/basic/mokly.config.ts",
+    generatedOutput: "derived",
+    url: "http://127.0.0.1:4173",
+    version: "0.10.0",
+    watch: true,
+  });
+  assert.equal(
+    terminal.stdout(),
+    "  mokly 0.10.0  derived · comparing against origin/main\n" +
+      "  examples/basic/mokly.config.ts\n" +
+      "\n" +
+      `  ┌${"─".repeat(25)}┐\n` +
+      "  │  http://127.0.0.1:4173  │\n" +
+      `  └${"─".repeat(25)}┘\n` +
+      "  watching entries, renderer and styles · press h for shortcuts\n" +
+      "\n",
+  );
+});
+
+test("rich Serve keeps snapshot and non-interactive status secondary", () => {
+  const snapshotTerminal = memoryTerminal({ columns: 80, isTTY: true });
+  const snapshotReporter = new RichReporter(snapshotTerminal.environment);
+  snapshotReporter.serveReady({
+    base: "origin/main",
+    configPath: "mokly.config.ts",
+    generatedOutput: "committed",
+    url: "http://127.0.0.1:4173",
+    version: "0.10.0",
+    watch: false,
+  });
+  assert.match(snapshotTerminal.stdout(), /\n {2}snapshot\n\n$/);
+  assert.doesNotMatch(snapshotTerminal.stdout(), /press h/);
+
+  const watchedTerminal = memoryTerminal({
+    columns: 80,
+    inputTTY: false,
+    isTTY: true,
+  });
+  const watchedReporter = new RichReporter(watchedTerminal.environment);
+  watchedReporter.serveReady({
+    base: "origin/main",
+    configPath: "mokly.config.ts",
+    generatedOutput: "committed",
+    url: "http://127.0.0.1:4173",
+    version: "0.10.0",
+    watch: true,
+  });
+  assert.match(
+    watchedTerminal.stdout(),
+    /\n {2}watching entries, renderer and styles\n\n$/,
+  );
+  assert.doesNotMatch(watchedTerminal.stdout(), /press h/);
+});
+
+test("rich Serve contracts its URL panel to a narrow terminal", () => {
+  const terminal = memoryTerminal({ columns: 24, isTTY: true });
+  const reporter = new RichReporter(terminal.environment);
+  reporter.serveReady({
+    base: "origin/main",
+    configPath: "mokly.config.ts",
+    generatedOutput: "committed",
+    url: "http://127.0.0.1:4173",
+    version: "0.10.0",
+    watch: false,
+  });
+  const lines = terminal.stdout().split("\n");
+  assert.deepEqual(lines.slice(3, 6), [
+    `  ┌${"─".repeat(20)}┐`,
+    "  │  http://127.0.0.…  │",
+    `  └${"─".repeat(20)}┘`,
+  ]);
+  assert.ok(lines.every((line) => line.length <= 24));
+});
+
 test("terminal helpers format durations and width deterministically", () => {
   assert.equal(formatDuration(0), "0ms");
   assert.equal(formatDuration(312.4), "312ms");

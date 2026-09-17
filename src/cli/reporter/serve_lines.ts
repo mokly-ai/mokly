@@ -4,7 +4,7 @@ import type { ManifestV5 } from "@mokly/viewer/data";
 
 import type { WatchReport } from "../../server/reporter.js";
 
-import type { TerminalGlyphs } from "./terminal.js";
+import { truncateTerminalLine, type TerminalGlyphs } from "./terminal.js";
 
 /** Render nonzero user-facing kinds from one accepted manifest. */
 export function catalogueCounts(manifest: ManifestV5): string[] {
@@ -33,6 +33,27 @@ export function reportPaths(report: WatchReport): string {
   const visible = paths.slice(0, 3);
   if (paths.length > 3) visible.push(`+${paths.length - 3} more`);
   return visible.join(", ") || "catalogue";
+}
+
+/** Render a content-width URL panel within the available terminal columns. */
+export function serveUrlPanel(
+  url: string,
+  columns: number,
+  glyphs: TerminalGlyphs,
+): readonly [string, string, string] {
+  const indent = "  ";
+  const maximumInnerWidth = Math.max(1, columns - indent.length - 2);
+  const innerWidth = Math.min(url.length + 4, maximumInnerWidth);
+  const paddingWidth = innerWidth >= 5 ? 2 : innerWidth >= 3 ? 1 : 0;
+  const urlWidth = Math.max(1, innerWidth - paddingWidth * 2);
+  const visibleUrl = truncateTerminalLine(url, urlWidth).padEnd(urlWidth);
+  const padding = " ".repeat(paddingWidth);
+  const horizontal = glyphs.box.horizontal.repeat(innerWidth);
+  return [
+    `${indent}${glyphs.box.topLeft}${horizontal}${glyphs.box.topRight}`,
+    `${indent}${glyphs.box.vertical}${padding}${visibleUrl}${padding}${glyphs.box.vertical}`,
+    `${indent}${glyphs.box.bottomLeft}${horizontal}${glyphs.box.bottomRight}`,
+  ];
 }
 
 /** Format one local watch timestamp. */

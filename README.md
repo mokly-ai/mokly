@@ -200,12 +200,12 @@ Value options also accept `--name=value`, which supports values beginning with
 `-`, such as `--config=-catalogue.config.ts`. Empty values and assignments to
 boolean flags are rejected.
 
-An interactive terminal shows progress, accepted catalogue and comparison
-status, watched file actions, and friendly error hints. Press `h` during watched
-Serve to see shortcuts: `o` opens the browser, `r` rebuilds, `c` clears, and `q`
-quits. Piped and CI output keeps the stable plain strings used by automation;
-`MOKLY_OUTPUT=plain|rich` selects a mode explicitly. `--debug-timings` always
-uses plain mode.
+An interactive terminal highlights the local URL in a bordered panel and shows
+progress, accepted catalogue and comparison status, watched file actions, and
+friendly error hints. Press `h` during watched Serve to see shortcuts: `o`
+opens the browser, `r` rebuilds, `c` clears, and `q` quits. Piped and CI output
+keeps the stable plain strings used by automation; `MOKLY_OUTPUT=plain|rich`
+selects a mode explicitly. `--debug-timings` always uses plain mode.
 
 | Command                     | Outcome                                                    |
 | --------------------------- | ---------------------------------------------------------- |

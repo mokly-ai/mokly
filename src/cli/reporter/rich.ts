@@ -10,6 +10,7 @@ import {
   watchCopy,
   watchTimestamp,
 } from "./serve_lines.js";
+import { renderServeReady } from "./serve_ready.js";
 import {
   formatDuration,
   terminalGlyphs,
@@ -147,19 +148,9 @@ export class RichReporter implements CliReporter {
   serveReady(report: ServeReadyReport): void {
     this.clearPhase();
     this.#serveReport = report;
-    this.line(
-      this.environment.stdout,
-      `  mokly ${report.version}  ${report.generatedOutput} · comparing against ${report.base}`,
+    renderServeReady(report, this.environment, this.#glyphs, (value) =>
+      this.line(this.environment.stdout, value),
     );
-    this.line(this.environment.stdout, `  ${report.configPath}`);
-    this.environment.stdout.write("\n");
-    this.line(
-      this.environment.stdout,
-      `  ${this.#glyphs.url}  ${report.url}  ${report.watch ? "watching entries, renderer and styles" : "snapshot"}`,
-    );
-    if (report.watch && this.environment.stdin.isTTY)
-      this.line(this.environment.stdout, "     press h for shortcuts");
-    this.environment.stdout.write("\n");
   }
 
   startPhase(label: string): ReporterPhase {

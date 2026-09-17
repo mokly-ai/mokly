@@ -6,6 +6,14 @@ const ANSI_PATTERN = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, "g");
 
 /** Reporter symbols selected for the capabilities of this terminal. */
 export interface TerminalGlyphs {
+  readonly box: {
+    readonly bottomLeft: string;
+    readonly bottomRight: string;
+    readonly horizontal: string;
+    readonly topLeft: string;
+    readonly topRight: string;
+    readonly vertical: string;
+  };
   readonly evidence: string;
   readonly failure: string;
   readonly reload: string;
@@ -13,7 +21,6 @@ export interface TerminalGlyphs {
   readonly rebuild: string;
   readonly spinner: readonly string[];
   readonly success: string;
-  readonly url: string;
   readonly warning: string;
 }
 
@@ -26,6 +33,14 @@ export function terminalGlyphs(
     platform === "win32" && !env.WT_SESSION && !env.TERM_PROGRAM && !env.TERM;
   return ascii
     ? {
+        box: {
+          bottomLeft: "+",
+          bottomRight: "+",
+          horizontal: "-",
+          topLeft: "+",
+          topRight: "+",
+          vertical: "|",
+        },
         evidence: "G",
         failure: "x",
         rebuild: "R",
@@ -33,10 +48,17 @@ export function terminalGlyphs(
         restart: "S",
         spinner: ["|", "/", "-", "\\"],
         success: "+",
-        url: ">",
         warning: "!",
       }
     : {
+        box: {
+          bottomLeft: "└",
+          bottomRight: "┘",
+          horizontal: "─",
+          topLeft: "┌",
+          topRight: "┐",
+          vertical: "│",
+        },
         evidence: "⟲",
         failure: "✖",
         rebuild: "↻",
@@ -44,7 +66,6 @@ export function terminalGlyphs(
         restart: "↺",
         spinner: ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"],
         success: "✔",
-        url: "➜",
         warning: "!",
       };
 }

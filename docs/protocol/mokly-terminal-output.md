@@ -32,7 +32,6 @@ Modern terminals use these glyphs:
 
 | Meaning              | Glyph |
 | -------------------- | ----- |
-| URL / next action    | `➜`   |
 | Success              | `✔`   |
 | Failure              | `✖`   |
 | Warning              | `!`   |
@@ -42,7 +41,7 @@ Modern terminals use these glyphs:
 | Git evidence refresh | `⟲`   |
 
 A legacy Windows console without Windows Terminal or a known terminal host uses
-ASCII: `>`, `+`, `x`, `!`, `R`, `L`, `S`, and `G`. The spinner uses Braille
+ASCII: `+`, `x`, `!`, `R`, `L`, `S`, and `G`. The spinner uses Braille
 frames in modern terminals and `|`, `/`, `-`, `\\` in the fallback.
 
 Every rich line is bounded by stdout's current positive `columns` value, or 80
@@ -73,18 +72,27 @@ Watch timestamps use the local `HH:mm:ss` clock.
 ## Serve layout
 
 Rich Serve begins with the installed version, generation mode, comparison base,
-and config path, followed by its stable URL:
+and config path, followed by its stable URL in a compact bordered panel. The
+panel contains only the address so it remains the primary action; watch state
+and shortcut guidance are dim secondary copy beneath it:
 
 ```text
   mokly 0.10.0                          derived · comparing against origin/main
   examples/basic/mokly.config.ts
 
-  ➜  http://127.0.0.1:4175              watching entries, renderer and styles
-     press h for shortcuts
+  ┌─────────────────────────┐
+  │  http://127.0.0.1:4175  │
+  └─────────────────────────┘
+  watching entries, renderer and styles · press h for shortcuts
 ```
 
-`--no-watch` replaces the right-hand description with `snapshot`. A watched
-catalogue then reports existing lifecycle boundaries:
+The borders are cyan and the middle URL line is bold cyan when colour is
+enabled. Borders use the Unicode box glyphs shown above and fall back to `+`,
+`-`, and `|` on legacy Windows consoles. The panel contracts to the available
+terminal width and truncates a long address with an ellipsis without breaking
+its border. `--no-watch` replaces the secondary description with `snapshot`;
+shortcut guidance appears only when watched Serve owns an interactive stdin. A
+watched catalogue then reports existing lifecycle boundaries:
 
 ```text
   ✔ Catalogue ready · 96 screens · 12 pages · 18 components            4.9s
