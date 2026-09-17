@@ -124,7 +124,7 @@ Quiet the npm banners, smoke-test the real terminal, and deliver.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits and push the branch.
 - [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md) to review the complete local diff against `origin/main`; report numbered, severity-rated findings with lettered options and a recommendation without changing the implementation.
 
-## Milestone 6: Prominent Serve URL panel
+## Milestone 6: Prominent Serve URL panel — completed
 
 Make the local address the unmistakable primary action in rich Serve output
 without changing plain-mode bytes or lifecycle behavior.
@@ -142,7 +142,7 @@ without changing plain-mode bytes or lifecycle behavior.
       `cargo xtask check`; resolve failures.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
-- [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report findings
       without changing the implementation.
 
