@@ -34,10 +34,12 @@ release workflow.
 
 `publishConfig` targets the public npm registry with public access. The CLI package
 contains compiled runtime code, declarations, private host modules,
-README, LICENSE, CHANGELOG, package metadata and `docs/protocol`. The protocol
-documents ship with the exact package version so independent upload receivers
-can implement its documented file boundary. Source fixtures, tests, plans,
-caches, review artifacts and generated demo output are not published.
+README, LICENSE, CHANGELOG, package metadata, `docs/guides`, and
+`docs/protocol`. The CLI guides and protocol documents ship with the exact
+package version so the cloud documentation site and independent upload
+receivers can implement that release's documented boundaries. Source fixtures,
+tests, plans, caches, review artifacts and generated demo output are not
+published.
 
 The repository also builds the `@mokly/viewer` workspace, initially version 0.1.0. Its
 MIT ESM distribution owns shell assets, public data readers, adapters, React
@@ -201,6 +203,13 @@ the root lockfile and the release manifest. The CLI keeps `vX.Y.Z` tags
 (`include-component-in-tag: false`, `include-v-in-tag: true`). The viewer uses
 `viewer-vX.Y.Z`, with component `viewer` and `packages/viewer/CHANGELOG.md`.
 Both tags must identify the same reviewed release commit.
+
+The root component also owns the literal documentation version in
+`docs/guides/start/install.md` and `docs/guides/ci/github-action.md` through
+`generic` `extra-files`. Each version-bearing region is bounded by the
+Release Please HTML markers defined in the
+[guides contract](./mokly-guides.md#versions-and-releases). Release PRs update
+those literals with the root package version; root tests reject drift.
 
 The viewer manifest is seeded at **0.0.0**, not 0.1.0, to record that it has no
 prior release. Its per-package `initial-version` is explicitly **0.1.0** because

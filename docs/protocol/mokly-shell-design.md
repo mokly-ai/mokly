@@ -33,7 +33,8 @@ while preserving the same navigation, search, tags, and screen variants.
 The approved screens are authored in `examples/basic/entries/design/` and
 generated under `examples/basic/generated/design/`. This Browse/Changes table
 and the [component design inventory](./mokly-component-design.md#owning-catalogue)
-together define the complete set of design-screen ids and routes, matching the
+together define the complete set of Mokly shell design-screen ids and routes,
+matching the
 [committed manifest](../../examples/basic/generated/mokly-manifest.json).
 Update the owning inventory when design entries change and verify exact id/route
 agreement with the manifest. Planned destinations stay in their feature

@@ -15,6 +15,7 @@ import {
 } from "../dist/index.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
+import { GUIDE_PATHS } from "./helpers/guides.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -159,11 +160,18 @@ test("packed package contains only the declared public surface", async () => {
   assert.ok(files.has("docs/protocol/mokly-upload.md"));
   assert.ok(files.has("docs/protocol/mokly-export-ownership.md"));
   assert.ok(files.has("docs/protocol/fixtures/export-ownership-v1.json"));
-  assert.ok(files.has("README.md"));
+  for (const guidePath of GUIDE_PATHS) assert.ok(files.has(guidePath));
   assert.equal(
-    [...files].some((file) => file.startsWith("tests/")),
-    false,
+    [...files].filter((file) => file.startsWith("docs/guides/")).length,
+    30,
   );
+  assert.ok(files.has("README.md"));
+  for (const excluded of ["examples/", "plans/", "site/", "tests/"])
+    assert.equal(
+      [...files].some((file) => file.startsWith(excluded)),
+      false,
+      `${excluded} must stay outside the package`,
+    );
   const bin = await fs.promises.readFile(
     path.join(repositoryRoot, "dist/cli/bin.js"),
     "utf8",

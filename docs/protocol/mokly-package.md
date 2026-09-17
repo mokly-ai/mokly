@@ -149,6 +149,18 @@ never falls back. Historical readers never execute consumer code.
 The [page contract](./mokly-pages.md) defines the public page inputs,
 rendering pipeline, exact routes, inheritance, and schema validation.
 
+## Packaged Documentation
+
+The root package ships the plain-Markdown CLI guides under `docs/guides` and
+the protocol sources under `docs/protocol`. The package version is the
+documentation version. The private cloud repository renders those files into
+the public documentation site and owns its cloud, review, changelog, legal, and
+marketing pages; this repository owns no site runtime or deployment.
+
+The [guides contract](./mokly-guides.md) defines the source tree, frontmatter,
+sections, link mapping, published Reference allowlist, release-managed version
+literals, and package boundary.
+
 ## Non-Goals
 
 - Owning or publishing Accounting, Bookfolio, or Juno screens.
@@ -160,4 +172,5 @@ rendering pipeline, exact routes, inheritance, and schema validation.
 ## Related Docs
 
 - [Build, Browse, and Review runtime](./mokly-runtime.md)
+- [Packaged CLI guides](./mokly-guides.md)
 - [CI and npm release](./npm-release.md)
