@@ -72,12 +72,7 @@ export function initializeBrowseShell(
     displayedUrl = new URL(win.location.href);
   };
   const diffs = installDiffs(doc, win);
-  let disposeWorkspace = installWorkspace(
-    doc,
-    win,
-    diffs.update,
-    rememberDocument,
-  );
+  let workspace = installWorkspace(doc, win, diffs.update, rememberDocument);
   const persistScroll = (): void => {
     win.history.replaceState(
       { scrolls: captureRegionScrolls(doc) } satisfies ScrollState,
@@ -128,7 +123,7 @@ export function initializeBrowseShell(
     const { parsed, view: nextMain, url: finalUrl } = destination;
     const nextStamp = readPageStamp(parsed);
     const viewport = currentViewport(doc);
-    disposeWorkspace();
+    workspace.dispose();
     for (const frame of main.querySelectorAll("iframe")) frame.remove();
     collapseFrame(doc, expandedFrame(doc));
     if (push) persistScroll();
@@ -157,12 +152,7 @@ export function initializeBrowseShell(
         "",
         finalUrl,
       );
-    disposeWorkspace = installWorkspace(
-      doc,
-      win,
-      diffs.update,
-      rememberDocument,
-    );
+    workspace = installWorkspace(doc, win, diffs.update, rememberDocument);
     selectAndRevealRoute(
       doc,
       new URL(finalUrl, win.location.href).pathname,

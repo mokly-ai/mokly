@@ -218,27 +218,27 @@ Tags: ui
 Make the saved variant part of viewer selection so hosts can propose, restore
 and round-trip it, then address instance refs on any variant.
 
-- [ ] Add `variantId` to `ViewerSelection`, `defaultSelection`,
+- [x] Add `variantId` to `ViewerSelection`, `defaultSelection`,
       `normalizeSelection` (now model-aware), `sameSelection` and
       `revealSelection` in `packages/viewer/src/viewer/selection.ts`; drop the
       variant on `screenId` changes that omit it. Split the file if it exceeds
       the length guideline.
-- [ ] Replace `ViewerRouting`'s private variant with selection-owned state:
+- [x] Replace `ViewerRouting`'s private variant with selection-owned state:
       shell links with `?variant=` and pending route intents propose
       `{ screenId, variantId }` atomically; `commit` applies the variant, updates
       the scoped URL, replaces frames and announces once.
-- [ ] Extend `installWorkspace` with an optional variant proposal hook and a
+- [x] Extend `installWorkspace` with an optional variant proposal hook and a
       returned `setVariant` operation so the viewer intercepts the
       `[data-workspace-variant]` change, proposes a selection, and applies the
       committed variant without re-installing the workspace or pushing history
       itself. Standalone Serve/export keep the current direct behavior.
-- [ ] Render the initial variant in `islandMarkup` and `routeMarkup` so SSR and
+- [x] Render the initial variant in `islandMarkup` and `routeMarkup` so SSR and
       route replacement select the requested option, and accept `variantId` in
       `renderViewer` initial selections.
-- [ ] Node tests in `packages/viewer/tests/selection.test.ts` and
+- [x] Node tests in `packages/viewer/tests/selection.test.ts` and
       `server.test.tsx`: normalization, invalid variants, drop-on-screen-change,
       equality, SSR option selection.
-- [ ] Browser tests (`tests/browser/viewer_selection.spec.ts` or a new
+- [x] Browser tests (`tests/browser/viewer_selection.spec.ts` or a new
       `viewer_variants.spec.ts`) on both adapters: uncontrolled select via the
       workspace control and via `select`; controlled proposal without change
       until supplied back; invalid imperative variant rejects with one selection
@@ -246,9 +246,9 @@ and round-trip it, then address instance refs on any variant.
       `scrollToInstance` succeed on a non-default variant after selection and
       still reject on a mismatched variant; frame replacement ends an active
       pick with `navigation`.
-- [ ] Confirm the standalone shell markup, CSS and Serve/export behavior are
+- [x] Confirm the standalone shell markup, CSS and Serve/export behavior are
       unchanged; document any vanilla bundle byte change.
-- [ ] Run focused tests, then `PLAYWRIGHT_CHANNEL=chromium cargo xtask check`;
+- [x] Run focused tests, then `PLAYWRIGHT_CHANNEL=chromium cargo xtask check`;
       require zero failures, retries and skips.
 - [ ] After checks pass, run `git add -A`, commit with Conventional Commits and
       push the branch.
@@ -256,6 +256,22 @@ and round-trip it, then address instance refs on any variant.
       against the complete local diff from `origin/main`; report numbered
       findings with severity, impact, lettered options and a recommendation
       without fixing.
+
+### Milestone 2 verification notes
+
+Focused viewer package tests passed 46/46; the new selection and variant browser
+suite passed 11/11; replacement, routing and frame regressions passed 27/27;
+and standalone workspace/history regressions passed 21/21. The complete
+`PLAYWRIGHT_CHANNEL=chromium cargo xtask check` then passed 1,758 Node tests,
+427 Playwright tests, all five clean-package consumer scenarios, Rust formatting,
+Clippy, three Rust tests and the Rust file-length audit, with zero failures,
+retries or skips.
+
+Standalone shell and style sources are unchanged, the browser asset inventory
+remains 63 files, and `inspector.js` remains byte-identical. Against a clean
+`origin/main` build, the documented vanilla bundle changes are
+`browse_runtime.js` 8,612 -> 8,549 bytes (-63), `workspace.js` 9,112 -> 9,473
+bytes (+361), and `workspace_variants.js` 3,698 -> 4,132 bytes (+434).
 
 ## Milestone 3: Multi-instance highlight
 

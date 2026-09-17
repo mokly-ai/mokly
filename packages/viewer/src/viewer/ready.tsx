@@ -26,12 +26,13 @@ export function ReadyViewer(props: ReadyProps) {
   const normalized = useMemo(() => {
     try {
       return normalizeSelection(
+        props.loaded.catalogue,
         props.selection ?? { ...defaultSelection, ...defaults },
       );
     } catch {
       return undefined;
     }
-  }, [props.selection, defaults]);
+  }, [props.loaded.catalogue, props.selection, defaults]);
   const reported = useRef(false);
   const callbacks = useRef(props);
   callbacks.current = props;

@@ -9,6 +9,8 @@ import type {
 
 export interface ViewerSelection {
   screenId: string | null;
+  /** Saved variant of a selected component; absent means its default variant. */
+  variantId?: string | undefined;
   view: "all" | "changes";
   viewport: "mobile" | "desktop" | "both";
   colorScheme: "light" | "dark";

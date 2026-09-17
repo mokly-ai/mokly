@@ -15,8 +15,8 @@ import { routeMarkup } from "./route_markup.js";
 import { ViewerRouting } from "./routing.js";
 import { runtimeScope } from "./scope.js";
 import {
+  mergeSelection,
   normalizeSelection,
-  revealSelection,
   routedEntries,
   sameSelection,
 } from "./selection.js";
@@ -38,7 +38,10 @@ export class ViewerRuntime implements MoklyViewerHandle {
   private catalogue: ReturnType<typeof viewerCatalogue>;
   private diffs: ReturnType<typeof installDiffs>;
   private stopResize: () => void;
-  private stopWorkspace = () => {};
+  private workspace: ReturnType<typeof installWorkspace> = {
+    dispose: () => {},
+    setVariant: () => {},
+  };
   private disposed = false;
   private route: ViewerRouting;
   private selection: ViewerSelection;
@@ -52,7 +55,7 @@ export class ViewerRuntime implements MoklyViewerHandle {
     private events: () => ViewerEvents,
   ) {
     this.error = viewerFailures(events, () => !this.disposed);
-    this.selection = normalizeSelection(selection);
+    this.selection = normalizeSelection(model, selection);
     this.catalogue = viewerCatalogue(model);
     this.scope = runtimeScope(root, baseUrl, model.comparisonUrl);
     this.route = new ViewerRouting(model, baseUrl, {
@@ -124,9 +127,7 @@ export class ViewerRuntime implements MoklyViewerHandle {
     if (this.disposed) return;
     let next: ViewerSelection;
     try {
-      next = normalizeSelection({ ...this.selection, ...partial });
-      if (partial.screenId !== undefined)
-        next = revealSelection(this.model, next);
+      next = mergeSelection(this.model, this.selection, partial);
     } catch (error) {
       throw this.error(error, "selection");
     }
@@ -138,24 +139,25 @@ export class ViewerRuntime implements MoklyViewerHandle {
     if (this.disposed) return;
     const previous = this.selection;
     try {
-      next = normalizeSelection(next);
+      next = normalizeSelection(this.model, next);
     } catch (error) {
       throw this.error(error, "selection");
     }
     if (sameSelection(previous, next)) return;
     const routeChanged = previous.screenId !== next.screenId;
+    const variantChanged = previous.variantId !== next.variantId;
     this.selection = next;
-    if (routeChanged) {
+    if (routeChanged || variantChanged) {
       this.frames.end({ reason: "navigation" });
-      this.route.commit(next.screenId);
+      this.route.commit(next, routeChanged);
     }
-    this.apply(routeChanged);
-    if (routeChanged) this.route.announce();
+    this.apply(routeChanged, variantChanged);
+    if (routeChanged || variantChanged) this.route.announce();
   }
-  private apply(routeChanged: boolean): void {
+  private apply(routeChanged: boolean, variantChanged = false): void {
     const { doc, win } = this.scope;
     if (routeChanged) {
-      this.stopWorkspace();
+      this.workspace.dispose();
       this.diffs.reset();
       const main = doc.querySelector<HTMLElement>("[data-mokly-view]")!;
       const next = routeMarkup(
@@ -172,7 +174,8 @@ export class ViewerRuntime implements MoklyViewerHandle {
       (entry) => entry.id === this.selection.screenId,
     );
     const url = new URL(entry ? `/view/${entry.route}` : "/", this.baseUrl);
-    if (this.route.variant) url.searchParams.set("variant", this.route.variant);
+    if (this.selection.variantId)
+      url.searchParams.set("variant", this.selection.variantId);
     if (this.route.fragment)
       url.searchParams.set("fragment", this.route.fragment);
     this.scope.setUrl(url);
@@ -192,29 +195,25 @@ export class ViewerRuntime implements MoklyViewerHandle {
         : null,
     });
     syncSelection(doc, this.selection, routeChanged && entry ? url : undefined);
-    this.frames.update(this.selection, this.route.variant, this.route.fragment);
+    const workspaceUpdated = !routeChanged && variantChanged;
+    if (workspaceUpdated) this.workspace.setVariant(this.selection.variantId);
+    this.frames.update(
+      this.selection,
+      this.selection.variantId,
+      this.route.fragment,
+    );
     this.identify();
     if (routeChanged)
-      this.stopWorkspace = installWorkspace(
+      this.workspace = installWorkspace(
         doc,
         win,
         this.diffs.update,
-        () => {
-          const variant =
-            new URL(win.location.href).searchParams.get("variant") ?? undefined;
-          if (!this.route.selectVariant(variant)) return;
-          this.frames.end({ reason: "navigation" });
-          this.frames.update(
-            this.selection,
-            this.route.variant,
-            this.route.fragment,
-          );
-          this.route.announce();
-        },
+        () => {},
         this.frames,
+        (variantId) => this.select({ variantId }),
       );
     this.slots.update();
-    this.diffs.update();
+    if (!workspaceUpdated) this.diffs.update();
   }
   refreshLayout(): void {
     this.slots.update();
@@ -248,7 +247,7 @@ export class ViewerRuntime implements MoklyViewerHandle {
     this.disposed = true;
     runCleanup([
       () => this.frames.dispose(reason),
-      () => this.stopWorkspace(),
+      () => this.workspace.dispose(),
       () => this.diffs.reset(),
       () => this.stopResize(),
       () => this.slots.dispose(),

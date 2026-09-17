@@ -57,5 +57,17 @@ export function islandMarkup(
             ? cleaned.replace(/>$/, ' selected="">')
             : cleaned;
         }),
+    )
+    .replace(
+      /<select\b[^>]*data-workspace-variant[^>]*>[\s\S]*?<\/select>/g,
+      (html) =>
+        selection.variantId === undefined
+          ? html
+          : html.replace(/<option\b[^>]*>/g, (tag) => {
+              const cleaned = tag.replace(/ selected=""/g, "");
+              return tag.includes(`value="${selection.variantId}"`)
+                ? cleaned.replace(/>$/, ' selected="">')
+                : cleaned;
+            }),
     );
 }

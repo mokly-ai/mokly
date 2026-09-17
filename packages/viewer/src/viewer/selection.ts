@@ -11,12 +11,33 @@ export const defaultSelection: ViewerSelection = {
   search: "",
   tags: [],
 };
+const selectionKeys = new Set([
+  "screenId",
+  "variantId",
+  "view",
+  "viewport",
+  "colorScheme",
+  "search",
+  "tags",
+]);
 /** Normalize without mutating either the caller's object or tag array. */
-export function normalizeSelection(value: ViewerSelection): ViewerSelection {
+export function normalizeSelection(
+  model: CatalogueReadModel,
+  value: ViewerSelection,
+): ViewerSelection {
+  const entry = routedEntries(model).find(
+    (candidate) => candidate.id === value?.screenId,
+  );
   if (
     !value ||
-    !Object.keys(value).every((key) => key in defaultSelection) ||
+    !Object.keys(value).every((key) => selectionKeys.has(key)) ||
     !(value.screenId === null || typeof value.screenId === "string") ||
+    !(
+      value.variantId === undefined ||
+      (typeof value.variantId === "string" &&
+        entry?.kind === "component" &&
+        entry.variants.some((variant) => variant.id === value.variantId))
+    ) ||
     !["all", "changes"].includes(value.view) ||
     !["mobile", "desktop", "both"].includes(value.viewport) ||
     !["light", "dark"].includes(value.colorScheme) ||
@@ -30,7 +51,11 @@ export function normalizeSelection(value: ViewerSelection): ViewerSelection {
     throw new Error("The requested catalogue selection is unavailable.");
   const query = parseSearchQuery(value.search);
   return {
-    ...value,
+    screenId: value.screenId,
+    ...(value.variantId === undefined ? {} : { variantId: value.variantId }),
+    view: value.view,
+    viewport: value.viewport,
+    colorScheme: value.colorScheme,
     search: query.freeText,
     tags: [
       ...new Set([
@@ -41,12 +66,32 @@ export function normalizeSelection(value: ViewerSelection): ViewerSelection {
   };
 }
 export function sameSelection(a: ViewerSelection, b: ViewerSelection): boolean {
-  return Object.keys(defaultSelection).every((key) =>
-    key === "tags"
-      ? a.tags.length === b.tags.length &&
-        a.tags.every((tag, i) => tag === b.tags[i])
-      : a[key as keyof ViewerSelection] === b[key as keyof ViewerSelection],
+  return (
+    a.screenId === b.screenId &&
+    a.variantId === b.variantId &&
+    a.view === b.view &&
+    a.viewport === b.viewport &&
+    a.colorScheme === b.colorScheme &&
+    a.search === b.search &&
+    a.tags.length === b.tags.length &&
+    a.tags.every((tag, index) => tag === b.tags[index])
   );
+}
+/** Merge one public proposal and reset a saved variant on entry changes. */
+export function mergeSelection(
+  model: CatalogueReadModel,
+  current: ViewerSelection,
+  partial: Partial<ViewerSelection>,
+): ViewerSelection {
+  const candidate: ViewerSelection = { ...current, ...partial };
+  if (
+    partial.screenId !== undefined &&
+    partial.screenId !== current.screenId &&
+    !Object.hasOwn(partial, "variantId")
+  )
+    delete candidate.variantId;
+  const next = normalizeSelection(model, candidate);
+  return partial.screenId === undefined ? next : revealSelection(model, next);
 }
 export function selectionQuery(value: ViewerSelection): string {
   return [value.search, ...value.tags.map((tag) => `tag:${tag}`)]
