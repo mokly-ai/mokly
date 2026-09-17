@@ -254,9 +254,10 @@ yet; the vanilla runtime remains the default and keeps working.
       option where `src/export/site.ts` builds its context literal, and left
       unset by `viewerContext` in `packages/viewer/src/viewer/projection.ts`,
       the React host path. `src/server/pages.ts` consumes it. The field is
-      removed with the switch in Milestone 7. One Serve process serves both shells, so the
-      browser suite keeps a single web server and the shared review output
-      directory under `examples/basic` has one owner. The switch is not
+      removed with the switch in Milestone 7. One Serve process serves both
+      shells, so the browser suite keeps a single web server and the shared
+      review output directory under `examples/basic` has one owner. The
+      switch is not
       documented for users and is deleted in Milestone 7.
 - [ ] Add the switched browser run to `playwright.config.ts` as a second
       project against the same web server: its `use.extraHTTPHeaders` (or a
