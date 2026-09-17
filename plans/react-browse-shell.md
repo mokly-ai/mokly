@@ -42,8 +42,8 @@ Decisions taken with the user before planning:
    direct URLs, refresh, and JavaScript-disabled navigation keep working as the
    runtime contract requires.
 3. Behavioural parity is the acceptance bar, proven by the existing browser
-   suite (81 specs, 1,641 `expect` calls), not by byte or pixel identity of
-   shell modules.
+   suite under `tests/browser` (81 spec files), not by byte or pixel identity
+   of shell modules.
 4. The `@firna/ui` question is out of scope. Nothing here adds a design-system
    dependency to the viewer; it only removes the architectural reason one could
    not be used later.
@@ -94,9 +94,9 @@ store):
   `workspace_preview`, `workspace_props`, `workspace_updates`,
   `workspace_variants`, `component_controls`, `control_fields`,
   `control_surface`, `control_view_key`, `inspector_panels`,
-  `inspector_tabs`, `inspector_resize`, `component_highlight` (except the
-  `HighlightFrame` type, which moves), `style_evidence`, `prop_display`,
-  `services`.
+  `inspector_tabs`, `inspector_resize`, `component_highlight` (its duplicate
+  `HighlightFrame` interface is deleted in Milestone 2), `style_evidence`,
+  `prop_display`, `services`.
 
 Keep unchanged (transport, geometry, protocol; consumed through hooks):
 `frame_adapter`, `frame_error`, `frame_mount`, `frame_usage`,
@@ -106,25 +106,31 @@ Keep unchanged (transport, geometry, protocol; consumed through hooks):
 `component_occlusion`, `component_range_nodes`, `document_ranges`,
 `catalogue_updates`.
 
-`same_origin_highlight` is kept whole. Its single export,
-`installLocalHighlight`, owns the overlay mask, labels, observers, and
-teardown in one closure, so there is no seam to split. It stays the
-imperative same-origin mask driven by a hook; `component_overlay` is its SVG
-factory and is kept with it. `same_origin_mount` imports the pure
-`classifyFrameActivation` from `frame_navigation`, and `same_origin_adapter`
-imports the `HighlightFrame` type from `component_highlight`; both symbols
-move to kept modules in Milestone 4 before their owners are retired.
+`same_origin_highlight` is kept whole. It exports `installLocalHighlight`,
+which owns the overlay mask, labels, observers, and teardown in one closure,
+so there is no seam to split, and its own `HighlightFrame` interface. It stays
+the imperative same-origin mask driven by a hook; `component_overlay` is its
+SVG factory and is kept with it. Two kept modules currently import retired
+ones: `same_origin_mount` imports the pure `classifyFrameActivation` from
+`frame_navigation`, and `same_origin_adapter` imports a duplicate
+`HighlightFrame` from `component_highlight` that is structurally identical to
+the kept one. Milestone 2 moves the function into a kept transport module,
+deletes the duplicate interface, and repoints the adapter at the kept one,
+before the partition check lands.
 
 Move (pure helpers that become shell, store, or kept transport modules):
 `search_query`, `entry_wording`, the delivery-adoption logic inside
-`static_delivery`, `classifyFrameActivation` from `frame_navigation`, and the
-`HighlightFrame` type from `component_highlight`.
+`static_delivery`, and `classifyFrameActivation` from `frame_navigation`.
 
 Viewer host modules deleted in Milestone 7 with the islands: `layout.tsx`,
 `markup.tsx`, `route_markup.tsx`, `runtime.tsx`, `scope.ts`, `slot_layout.ts`,
 `input.ts`, `selection_dom.ts`, `frames.ts`, `frame_views.ts`,
 `frame_session.ts`, `frame_highlights.ts`, `frame_labels.ts`,
-`frame_location.ts`, and `standalone/navigation_resize.ts`. CLI composition
+`frame_location.ts`, and `standalone/navigation_resize.ts`. Five viewer host
+modules that survive import deleted ones and must be reworked in the same
+change: `ready.tsx` (layout, runtime), `server.tsx` (layout),
+`public_stage.tsx` (frame_location), `highlight_request.ts` (frame_views),
+and `inspection_scope.ts` (frame_session, frame_views). CLI composition
 deleted in Milestone 7: `src/client/browse.ts`, `browser.ts`,
 `live_updates.ts`, `browse_refresh.ts`, `control_transport.ts`,
 `workspace_loading.ts`.
@@ -202,10 +208,16 @@ yet; the vanilla runtime remains the default and keeps working.
       (`browser.js`, `live_updates.js`), and the navigation-module set. Add
       failing tests first for a missing file, an unexpected file, and unchanged
       delivery names.
-- [ ] Add a partition check to `scripts/package/browser_graph.mjs` driven by
-      the module inventory in this plan: it fails when a module in the keep set
-      imports a module in the retire set. Run it as part of the package check
-      from Milestone 2 onward.
+- [ ] Move `classifyFrameActivation` from `frame_navigation` into a kept
+      transport module, delete the duplicate `HighlightFrame` interface in
+      `component_highlight`, and repoint `same_origin_mount` and
+      `same_origin_adapter` at the kept symbols; no behaviour changes.
+- [ ] Add `scripts/package/shell_partition.mjs` exporting the keep and retire
+      arrays from the module inventory in this plan, and a partition check in
+      `scripts/package/browser_graph.mjs` that fails when a keep module imports
+      a retire module. Run it as part of the package check from Milestone 2
+      onward; the plan's inventory references that file as the source of
+      truth.
 - [ ] Rewrite `scripts/package/browser_graph.mjs`: it currently forbids
       `react-dom`, `hydrateRoot`, `react.production`, and bare imports of
       `react` or `node:` in every delivered module, and requires each relative
@@ -222,18 +234,25 @@ yet; the vanilla runtime remains the default and keeps working.
       documented export subpath for it in `packages/viewer/package.json`
       alongside `.`, `./server`, `./runtime`, `./data`, and `./styles.css`;
       the React host path uses the host's React.
-- [ ] Add the shell switch: a CLI-private option read by `src/server/pages.ts`
-      and `src/export/site.ts` that renders the hydrated document instead of
-      the current one. Serve and export ignore the switch unless set; it is
-      not documented for users and is deleted in Milestone 7.
-- [ ] Add the switched browser run to `playwright.config.ts`: turn `webServer`
-      into an array with a second Serve started with the switch on a second
-      port, and add a second project with its own `baseURL` and a `testMatch`
-      list that names the spec files the hydrated shell must pass. Milestone 2
-      lists only a new hydrated-shell smoke spec; each later milestone adds its
-      spec files to that list, and Milestone 7 replaces the list with the whole
-      suite. Add a second `npm run test:browser` invocation, or a project
-      argument, to the check gate in `xtask/src/check.rs`.
+- [ ] Add the shell switch as a request-scoped, CLI-private selector: Serve
+      renders the hydrated document when a private request header or cookie
+      is present, read where `src/server/http_routes.ts` and
+      `src/server/view_routes.ts` build the shell context and applied in
+      `src/server/pages.ts`; export takes a CLI-private option applied in
+      `src/export/site.ts`. One Serve process serves both shells, so the
+      browser suite keeps a single web server and the shared review output
+      directory under `examples/basic` has one owner. The switch is not
+      documented for users and is deleted in Milestone 7.
+- [ ] Add the switched browser run to `playwright.config.ts` as a second
+      project against the same web server: its `use.extraHTTPHeaders` (or a
+      storage-state cookie) sets the selector, and its `testMatch` names the
+      spec files the hydrated shell must pass. Milestone 2 lists only a new
+      hydrated-shell smoke spec; each later milestone adds its spec files to
+      that list, and Milestone 7 replaces the list with the whole suite.
+      `tests/browser/setup.ts` awaits the first project's base URL only; keep
+      that, since both projects share it. Run the second project through the
+      existing `npm run test:browser` invocation in `xtask/src/check.rs`, or
+      add a project argument if isolation is needed.
 - [ ] Add failing tests first: export inventory includes the hydration bundle
       when the switch is on and excludes it when off, served module paths
       resolve, the inspector bundle stays under its cap, and the
@@ -296,9 +315,6 @@ comparisons become components and hooks over the unchanged frame adapters.
       comparison routes and immutable generation URLs.
 - [ ] Keep in-frame logical link activation routing through the shell store;
       retain the sandbox and no top-navigation capability.
-- [ ] Move `classifyFrameActivation` into a kept transport module and the
-      `HighlightFrame` type beside `same_origin_highlight`, updating the kept
-      importers; the partition check must pass.
 - [ ] Add the frame adapter, frame readiness/clipping/overlay, comparison,
       preview, review, and design-link spec files to the switched project's
       `testMatch`; fix regressions until they pass there. The default run
@@ -349,26 +365,27 @@ change. This is delivery, packaging, and CLI work, so it is untagged; the
 public host component is rewritten in the next milestone.
 
 - [ ] Flip Serve and export to the hydrated document; collapse the Playwright
-      configuration back to one web server and one project running the whole
-      suite; remove the second check-gate invocation; delete the switch.
+      configuration back to one project running the whole suite; delete the
+      switch and the selector header.
 - [ ] Delete every module in the retire list, the viewer host island modules,
       the CLI composition modules, the `installViewerServices` seam, the
       `#markup-renderer` import map, and the client-side
       `react-dom/server.browser` dependency; the enumerated module delivery
       and export inventory update themselves, and the partition check is
       retired with the inventory it guarded.
-- [ ] Fold `navigation-resize.js` behaviour into the hydrated shell or keep it
-      as a documented pre-hydration script; delete the standalone module if it
-      is no longer needed.
+- [ ] Keep `navigation-resize.js` delivered unchanged as the pre-hydration
+      disclosure-capture script; Milestone 8 decides whether it folds into the
+      shell.
+- [ ] Add a temporary host adapter: `MoklyViewer` renders the hydrated shell
+      tree through a minimal adapter that preserves its props, slots, handle,
+      and events, and rework the five surviving viewer host modules named in
+      the inventory so the package compiles without the deleted modules. The
+      adapter is compatibility plumbing, not UI; the full rewrite is
+      Milestone 8.
 - [ ] Rerun the packed-consumer smoke and the published-package layout checks
       for both tarballs.
-- [ ] Run `cargo xtask check` with the temporary host-component shim below in
-      place, so the tree is green before the host rewrite starts.
-
-The React host must keep compiling across this milestone. If `MoklyViewer`
-cannot be rewritten in the same change, it renders the hydrated shell tree
-through a minimal adapter that preserves its props, slots, handle, and events,
-and the full rewrite lands in Milestone 8.
+- [ ] Run `cargo xtask check` with the adapter in place, so the tree is green
+      before the host rewrite starts.
 
 ## Milestone 8: React host rewrite and documentation sync
 
@@ -380,7 +397,10 @@ code-adjacent docs and tests into line with the implementation.
 - [ ] Reimplement `MoklyViewer` on the shell tree: slots as ordinary children,
       controlled/uncontrolled selection, source/adapter replacement remount,
       handle methods, events, theming variables, and the scoped embedded
-      stylesheet; remove any Milestone 7 adapter shim.
+      stylesheet; remove the Milestone 7 adapter.
+- [ ] Fold `navigation-resize.js` behaviour into the hydrated shell or keep it
+      as a documented pre-hydration script; delete the standalone module if it
+      is no longer needed.
 - [ ] Rewrite every unit test that imports a retired module against the
       replacement components, hooks, or pure helpers; keep a 100% pass rate
       with no skipped tests.
@@ -445,3 +465,15 @@ Playwright web server and project with a per-milestone `testMatch` list and a
 check-gate step), the UI-tagged flip milestone (split into an untagged flip
 and a tagged host rewrite), the doc sweep list (left open-ended), and the
 retirement-rule scope line.
+
+The second revision (`75188d7`) was reviewed a third time. Six findings and
+one residual note were verified and applied: the `HighlightFrame` move was
+wrong because the kept module already exports an identical interface (the
+duplicate is now deleted and the adapter repointed), the symbol moves left a
+UI-tagged milestone for the untagged Milestone 2, the host adapter and the
+navigation-resize fold gained explicit TODOs in the right milestones, the
+switched run now shares one Serve through a request-scoped selector because
+a second server would leave setup unawaited and contend on the review output
+directory, the partition check gained a machine-readable source file, the
+`expect` tally was dropped, and the five surviving viewer host modules that
+import deleted ones are named.
