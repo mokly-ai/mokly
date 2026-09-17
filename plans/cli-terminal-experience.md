@@ -111,7 +111,7 @@ Add interactive controls to rich watched Serve without affecting piped runs.
 - [x] Wire `r` to the watch action queue via a `RunningServe` hook so it cannot race authored changes, and make `c` clear the screen then reprint the header and URL.
 - [x] Update the terminal contract, package contract and README if any shortcut behaviour changed during implementation.
 
-## Milestone 5: npm scripts, verification and delivery
+## Milestone 5: npm scripts, verification and delivery — completed
 
 Quiet the npm banners, smoke-test the real terminal, and deliver.
 
@@ -120,7 +120,7 @@ Quiet the npm banners, smoke-test the real terminal, and deliver.
 - [x] Update `CHANGELOG`-adjacent release notes only if the release tooling requires it; otherwise leave release-please to generate them from the commit.
 - [x] Run `npm run typecheck`, `npm run lint`, `npm run format:check`, the full `npm test`, `npm run test:browser` and `cargo xtask check`; resolve failures.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits and push the branch.
-- [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md) to review the complete local diff against `origin/main`; report numbered, severity-rated findings with lettered options and a recommendation without changing the implementation.
+- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md) to review the complete local diff against `origin/main`; report numbered, severity-rated findings with lettered options and a recommendation without changing the implementation.
 
 ## Post-merge follow-up (non-blocking)
 
