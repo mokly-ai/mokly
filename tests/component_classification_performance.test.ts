@@ -2,6 +2,10 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { generatedViews } from "../dist/components/views.js";
+import {
+  runWithTimings,
+  type TimingEvent,
+} from "../dist/diagnostics/timings.js";
 import { analyzeHierarchy } from "../dist/registry/hierarchy.js";
 import type { Manifest } from "../dist/registry/types.js";
 import { classifyComponents } from "../dist/review/component_classification.js";
@@ -122,6 +126,53 @@ test("component views validate each retained document range index once", async (
   );
 
   assert.equal(validations, 2);
+});
+
+test("zero-change component classification settles every view through one discovery", async (t) => {
+  const fixture = await componentReviewFixture(t, (source) => source);
+  const events: TimingEvent[] = [];
+  const reader = (outputs: ReadonlyMap<string, string>) => ({
+    read: async (route: string) => {
+      const content = outputs.get(route);
+      assert.notEqual(content, undefined, route);
+      return Buffer.from(content!);
+    },
+  });
+  await runWithTimings(
+    true,
+    "test",
+    () =>
+      classifyComponents({
+        before: fixture.before.manifest,
+        after: fixture.after.manifest,
+        beforeReader: reader(fixture.before.outputs),
+        afterReader: reader(fixture.after.outputs),
+        config: fixture.config,
+        changedPaths: [],
+        baseCommit: "a".repeat(40),
+        baseRef: "main",
+      }),
+    { write: (event) => events.push(event) },
+  );
+  const views = fixture.after.manifest.entries.reduce(
+    (count, entry) => count + generatedViews(entry).length,
+    0,
+  );
+  const counts = events.find(
+    (event) =>
+      event.stage === "review.compare-screens" && event.event === "counts",
+  );
+  assert.deepEqual(counts?.counts, {
+    views,
+    fastPath: views,
+    completePath: 0,
+  });
+  assert.ok(
+    events.filter(
+      (event) =>
+        event.stage === "review.resource-graph" && event.event === "start",
+    ).length <= views,
+  );
 });
 
 for (const baseline of ["screens", "components"] as const)

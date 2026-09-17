@@ -18,6 +18,7 @@ import { componentEntrySource } from "./helpers/component_fixture.js";
 import { directoryFiles } from "./helpers/export_fixture.js";
 import { repositoryRoot, validEntrySource } from "./helpers/fixture.js";
 import {
+  assertComparisonCounts,
   assertReviewTimings,
   reviewStages,
   timingEvents,
@@ -95,6 +96,7 @@ for (const components of [false, true]) {
         /shared\.css|unrelated-private-rule|Screen content|screens\/home/,
       );
       if (components) {
+        assertComparisonCounts(events, "export");
         const starts = events.filter((event) => event.event === "start");
         const loop = starts.find(
           (event) => event.stage === "review.compare-screens",
@@ -178,6 +180,7 @@ for (const [components, watch] of [
           (stage) => stage !== "review.write-artifact",
         ),
       );
+      if (components) assertComparisonCounts(events, "background");
       assert.ok(
         !events.some((event) => event.stage === "review.write-artifact"),
       );

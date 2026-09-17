@@ -222,14 +222,14 @@ path needs the stripped text without the parse.
 
 ## Milestone 4: Prove equivalence and cover edge cases
 
-- [ ] Add `tests/component_fast_path_equivalence.test.ts`: for each shared
+- [x] Add `tests/component_fast_path_equivalence.test.ts`: for each shared
       fixture used by `component_changes.test.ts`,
       `component_asset_changes.test.ts`, `changes_css_*.test.ts`, and the
       small large-fixture instance, run `classifyComponents` once normally and
       once with the fast path disabled through an injected flag on
       `ComponentViewContext`, and `assert.deepEqual` the two
       `ReviewResultV3` values. The flag is test-only and defaults to enabled.
-- [ ] Add explicit cases for: identical documents with a changed prop that
+- [x] Add explicit cases for: identical documents with a changed prop that
       does not alter the render (`inputs` reason must survive); identical
       documents with a changed reachable stylesheet (must take the complete
       path and report `dependency` or exclusion evidence); identical documents
@@ -239,14 +239,14 @@ path needs the stripped text without the parse.
       documents whose only changed resource is component-owned CSS on a
       screen (must still reach `ownedCssReasons`); historical `mokabook-`
       markers on the base side (marker-only rename stays unchanged).
-- [ ] Extend `tests/component_classification_performance.test.ts` with a
+- [x] Extend `tests/component_classification_performance.test.ts` with a
       zero-change classification that asserts the `review.resource-graph`
       span count bound and the `fastPath === views` count.
-- [ ] Extend `tests/cli_timings_review.test.ts` or `review_css_timings.test.ts`
+- [x] Extend `tests/cli_timings_review.test.ts` or `review_css_timings.test.ts`
       to assert the new counts record shape under `--debug-timings`.
-- [ ] Run the full suite (`npm test`), `npm run test:browser` for the
+- [x] Run the full suite (`npm test`), `npm run test:browser` for the
       `changes` browser specs, and `cargo xtask check`.
-- [ ] `git add -A`, commit, push.
+- [x] `git add -A`, commit, push.
 
 ## Milestone 5: Measure and record
 

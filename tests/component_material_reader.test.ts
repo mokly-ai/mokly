@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import {
+  runWithTimings,
+  type TimingEvent,
+} from "../dist/diagnostics/timings.js";
 import { ComponentMaterialReader } from "../dist/review/component_resources.js";
 
 test("prefetch retains empty files and discovers resources only when requested", async () => {
@@ -45,4 +49,31 @@ test("prefetch rejects an omitted view instead of falling back to unvalidated by
     code: "review-invalid",
     message: /missing.html: batch reader omitted the file/,
   });
+});
+
+test("resource discovery caches each document and exclusion policy", async () => {
+  const reader = new ComponentMaterialReader({
+    read: async () => Buffer.from(""),
+  });
+  const events: TimingEvent[] = [];
+  const html = '<link rel="stylesheet" href="used.css">';
+  const excluded = (route: string) => route === "excluded.css";
+  await runWithTimings(
+    true,
+    "test",
+    async () => {
+      await reader.resources("view.html", html);
+      await reader.resources("view.html", html);
+      await reader.resources("view.html", html, excluded);
+      await reader.resources("view.html", html, excluded);
+    },
+    { write: (event) => events.push(event) },
+  );
+  assert.equal(
+    events.filter(
+      (event) =>
+        event.stage === "review.resource-graph" && event.event === "start",
+    ).length,
+    2,
+  );
 });

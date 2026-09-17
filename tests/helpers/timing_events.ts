@@ -90,3 +90,29 @@ export function assertReviewTimings(
     assert.ok(ancestors.includes(ancestor), `${event.stage} under ${ancestor}`);
   }
 }
+
+/** Assert the component-view path counts emitted once per classification loop. */
+export function assertComparisonCounts(
+  events: readonly TimingEvent[],
+  role: string,
+): void {
+  const records = events.filter(
+    (event) =>
+      event.role === role &&
+      event.stage === "review.compare-screens" &&
+      event.event === "counts",
+  );
+  assert.equal(records.length, 1);
+  const counts = records[0]?.counts;
+  assert.deepEqual(Object.keys(counts ?? {}).sort(), [
+    "completePath",
+    "fastPath",
+    "views",
+  ]);
+  assert.ok(
+    [counts?.views, counts?.fastPath, counts?.completePath].every(
+      (value) => Number.isInteger(value) && value! >= 0,
+    ),
+  );
+  assert.equal(counts!.fastPath! + counts!.completePath!, counts!.views);
+}
