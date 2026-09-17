@@ -129,11 +129,11 @@ prevents Mokly from taking over product or asset navigation accidentally.
 
 ## Portable And Comparison Output
 
-Committed generated documents keep their relative artifact `href` values.
-They must remain navigable when opened directly or copied without the Browse
-shell. Comparison snapshot trees copy the same portable documents and do not
-promote their marked links into Browse routes; link activation inside a comparison
-pane retains the existing sandbox behavior.
+Generated documents in both output modes keep their relative artifact `href`
+values. They must remain navigable when opened directly or copied without the
+Browse shell. Comparison snapshot trees copy the same portable documents and do
+not promote their marked links into Browse routes; link activation inside a
+comparison pane retains the existing sandbox behavior.
 
 ## Browse Presentation
 
@@ -331,7 +331,7 @@ Coverage must prove:
   `href` on resource/non-link elements, rejection of `<base href>` before and
   after compatibility transformation, dual navigation attributes, hashes,
   use-case ids, dark-to-light fallback, conflicts, and reserved-marker errors;
-- served and preview adaptation without mutating committed fragments, including
+- served and preview adaptation without mutating generated fragments, including
   LF/CRLF ownership-gated promotion, unowned reserved-metadata removal, secure
   target parsing, portable live attributes, and request-visible fragment
   transport;

@@ -66,10 +66,10 @@ Temporary state is neither written to source/generated files nor encoded as
 arbitrary prop data in URLs, local storage, comparisons, or Changes counts.
 
 Temporary edits operate in Current. Selecting a comparison restores the saved
-variant and compares its committed baseline/current output; controls become
-unavailable while comparing. The product explains that the comparison shows
-the saved variant. Controls render responses cannot overwrite a comparison,
-another variant, a new viewport/theme, or a different route.
+variant and compares its baseline output with its current rendered output;
+controls become unavailable while comparing. The product explains that the
+comparison shows the saved variant. Controls render responses cannot overwrite
+a comparison, another variant, a new viewport/theme, or a different route.
 
 Published pages show the same saved variants and props with controls read-only
 and a secondary message, "Open this catalogue locally to edit props."
