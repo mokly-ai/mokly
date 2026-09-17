@@ -204,13 +204,18 @@ host mode, and export; replace the hard-coded module allowlist; and add the
 development switch that selects the React shell. No shell component changes
 yet; the vanilla runtime remains the default and keeps working.
 
-- [ ] Replace both hard-coded lists in `src/server/client_modules.ts`,
-      `loadBrowserClientModules` and `loadBrowserNavigationModules`, with
-      directory enumeration of the viewer and CLI browser build outputs; keep
-      the existing delivery names (including `browse_runtime.js`) and the
+- [ ] Replace the `loadBrowserClientModules` allowlist in
+      `src/server/client_modules.ts` with directory enumeration of the two
+      browser build outputs, `packages/viewer/dist/browser` and the CLI's
+      `dist/browser`, which contain exactly the delivered `.js` files today;
+      keep the existing delivery names (including `browse_runtime.js`) and the
       export exclusions in `src/export/site.ts` (`browser.js`,
-      `live_updates.js`). Add failing tests first for a missing file, an
-      unexpected file, and unchanged delivery names.
+      `live_updates.js`). Leave `loadBrowserNavigationModules` as a list: it
+      reads `packages/viewer/dist/navigation`, which is TypeScript output
+      holding declarations, source maps, and the server-only
+      `reserved_attributes.js`, and every navigation module is in the keep set
+      so it carries no retirement risk. Add failing tests first for a missing
+      file, an unexpected file, and unchanged delivery names.
 - [ ] Move `classifyFrameActivation` from `frame_navigation` into a kept
       transport module and repoint `same_origin_mount`. Delete the duplicate
       `HighlightFrame` interface in `component_highlight` and repoint every
@@ -239,13 +244,16 @@ yet; the vanilla runtime remains the default and keeps working.
       documented export subpath for it in `packages/viewer/package.json`
       alongside `.`, `./server`, `./runtime`, `./data`, and `./styles.css`;
       the React host path uses the host's React.
-- [ ] Add the shell switch as a request-scoped, CLI-private selector: a new
-      field on `ShellContext` in `packages/viewer/src/shell/context.ts`, set
-      from a private request header or cookie at the single construction site
-      in `src/server/http_routes.ts` (it threads to `view_routes.ts` as a
-      parameter), consumed in `src/server/pages.ts`; export sets the same
-      field from a CLI-private option where `src/export/site.ts` builds its
-      context literal. One Serve process serves both shells, so the
+- [ ] Add the shell switch as a request-scoped, CLI-private selector: an
+      optional field on `ShellContext` in `packages/viewer/src/shell/context.ts`,
+      marked internal in its doc comment because that type is re-exported from
+      `@mokly/viewer/server`. It is set from a private request header or
+      cookie where `src/server/http_routes.ts` calls `shellContext` (it
+      threads to `view_routes.ts` as a parameter), set from a CLI-private
+      option where `src/export/site.ts` builds its context literal, and left
+      unset by `viewerContext` in `packages/viewer/src/viewer/projection.ts`,
+      the React host path. `src/server/pages.ts` consumes it. The field is
+      removed with the switch in Milestone 7. One Serve process serves both shells, so the
       browser suite keeps a single web server and the shared review output
       directory under `examples/basic` has one owner. The switch is not
       documented for users and is deleted in Milestone 7.
@@ -493,3 +501,11 @@ second hard-coded list (both are now enumerated), the selector was pointed at
 a context construction site that does not exist (it is now a `ShellContext`
 field set once), and the Milestone 7 host-module reworks are constrained to
 import repoints with no markup change.
+
+The fourth revision (`b389e93`) was reviewed a fifth time. Two findings were
+verified and applied: enumerating the navigation loader would have shipped
+TypeScript output and a server-only module to browsers (that list is now
+kept, with the reason), and the selector field on the publicly re-exported
+`ShellContext` is now optional, marked internal, and named at all three
+construction sites. This closes the pre-implementation review rounds; the
+implementation review in Milestone 9 runs against the complete branch.
