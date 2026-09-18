@@ -72,8 +72,10 @@ Keep configured watch paths in sync when introducing an owned sheet.
 
 `host.tsx` supplies standalone layout and semantic parents without fixture data.
 Every inspector uses the ordinary preview workspace for its resizer and mobile
-sheet. Only icon tabs are supported; the legacy disclosure and saved variant
-have been removed. Inline samples retain
+sheet. The workspace dock owns placement and sizing, while the inspector owns
+the sheet border, rounded surface and shadow. Open mobile sheets span the
+workspace width without a dock inset. Only icon tabs are supported; the legacy
+disclosure and saved variant have been removed. Inline samples retain
 intrinsic width. Compact phone samples fit both viewports; full-size controls
 use the scrollable frame host. Every variant has actual mobile and desktop
 render contexts and uses the design catalogue's light-only scheme policy.
