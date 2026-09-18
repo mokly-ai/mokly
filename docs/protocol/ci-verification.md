@@ -3,10 +3,10 @@
 ## Delivery Status
 
 The suite CLI, inventory evidence, parallel workflow graph, and fixture reuse in
-this document are implemented. Hosted cold-cache and restored-cache acceptance
-measurements are tracked by
-[`plans/ci-performance.md`](../../plans/ci-performance.md). The authoritative
-complete local and release gate remains `cargo xtask check`.
+this document are implemented. The
+[hosted acceptance measurement](../reviews/ci-performance.md) records the
+delivered timing, capacity, cache, cost, and coverage evidence. The
+authoritative complete local and release gate remains `cargo xtask check`.
 
 ## Verification Boundary
 
@@ -220,3 +220,10 @@ jobs must be reported separately from execution. Compare shard balance and the
 measured setup/teardown phases of the slow export fixtures before changing
 partitioning. Coverage, assertion deadlines, worker limits, audits and zero
 retry behavior are never relaxed to meet the timing target.
+
+Candidate `992c6a1` passed an empty-start cache attempt and two restored-cache
+attempts with complete dynamic inventories on both runtimes. The
+[measurement record](../reviews/ci-performance.md) retains all three observed
+results, including two queue-constrained misses and a 9m06s `Required CI`
+success with all 20 downstream runner slots available. Native whole-file
+sharding remains appropriate for the measured workload.

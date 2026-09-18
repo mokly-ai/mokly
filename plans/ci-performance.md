@@ -8,8 +8,9 @@ keep this plan in the active index until then.
 Reduce the time to `Required CI` success while exercising the complete existing
 verification contract. Start with independent jobs and four shards per large
 suite, then reduce repeated preparation and enable npm download caching.
-The initial target is 6–10 minutes with sufficient runner capacity; this is an
-estimate to validate on the implementation PR, not a measured result.
+The 6–10 minute target is met at 9m06s with sufficient runner capacity; the
+[measurement record](../docs/reviews/ci-performance.md) retains the complete
+timing, coverage, queue, cache, and runner-use evidence.
 
 This change covers repository verification, CI configuration, test fixtures,
 and their documentation. It requires no product UI or mockup work. Release
@@ -166,13 +167,13 @@ Deliver the target job graph with every existing verification boundary required.
 - [x] Validate YAML and action expressions, run workflow regressions and every
       gate locally, and update protocol status and READMEs to match the workflow.
 
-Local evidence: actionlint passes, and `cargo xtask check` exits successfully on
-Node 24.14.1. Its complete unit report covers 351 files and 1,851 passing tests
-in 414.45s; its complete browser report covers 86 specs and 454 passing tests in
-673.39s. Both reports are complete with zero failures, skips, cancellations or
-reporter errors. Hosted workflow acceptance remains in Milestone 5.
+Final local evidence: actionlint passes, and `cargo xtask check` exits
+successfully on Node 24.14.1. Its complete unit report covers 352 files and
+1,855 passing tests in 440.842s; its complete browser report covers 86 specs and
+454 passing tests in 663.410s. Both reports are complete with zero failures,
+skips, cancellations or reporter errors.
 
-## Milestone 4: Reduce repeated read-only fixture preparation
+## Milestone 4: Reduce repeated read-only fixture preparation — completed
 
 Reduce setup work through reusable test fixtures while preserving independent
 mutation, historical-build and publication lifecycle coverage.
@@ -190,14 +191,14 @@ mutation, historical-build and publication lifecycle coverage.
       checks generated-output stability. Historical rebuild, source mutation,
       missing-source export, clean-install and cache-invalidation tests retain
       independently prepared inputs; optimize only work outside those contracts.
-- [ ] Run affected specs individually, together and on their assigned shards.
+- [x] Run affected specs individually, together and on their assigned shards.
       Compare preparation timings and document the fixture ownership in the
       developer README and verification protocol.
 - [x] Reproduce the hosted unit-shard preview publication race, identify the
       exact concurrent fingerprint mutation, add failure-first coverage, and
       isolate the static preview snapshot without reducing concurrency or cold
       build and publication coverage.
-- [ ] Prevent Node test-runner loader and concurrency flags from reaching the
+- [x] Prevent Node test-runner loader and concurrency flags from reaching the
       compiled watched-child fixtures, retain the existing startup bound, and
       confirm both affected unit shards on the hosted runtimes.
 - [x] Remove the browser preview fixture's port-selection race by letting
@@ -210,8 +211,7 @@ passes with one ordinary export (14.15s) and serve (1.25s). The dedicated cold
 preview preparation takes 27.43s plus 1.25s to serve and preserves the generated
 digest. Design/static historical fixtures record 6.8–7.1s installs, 14.8s
 builds, about 23s baselines, and about 94s full exports; nested phases are not
-additive. Hosted CI remains responsible for assigned shard 2 (design export)
-and shard 3 (cold preparation and static export) evidence.
+additive.
 
 Follow-up local evidence: the nested Playwright harness was proven to write the
 root `test-results/.last-run.json`, reproducing the publication failure with the
@@ -220,7 +220,11 @@ that pair pass 3/3 on Node 22.14.0 and 24.14.1. The compiled-child regression
 pair passes 4/4 on both runtimes with inherited execution flags absent. The
 Wrangler fixture passes its injected readiness tests and a real port-zero smoke,
 serving the expected catalogue over the reported endpoint before clean shutdown.
-Hosted confirmation of the corrected shards remains pending.
+Hosted attempts execute the corrected publication, wrapper-isolation,
+preview-port, child-startup, cold-preview, and shared-preview coverage on both
+runtimes with complete passing evidence. The
+[measurement record](../docs/reviews/ci-performance.md) retains their fixture
+phase ranges.
 
 ## Milestone 5: Validate, measure, commit, push and review
 
@@ -228,23 +232,23 @@ Collect all acceptance evidence on the implementation branch before merge.
 Mark completed milestones as work lands and keep this plan active until the
 implementation PR merges; arrange the index transition as part of that merge.
 
-- [ ] Run relevant regression suites with a 100% pass rate, Rust formatting,
+- [x] Run relevant regression suites with a 100% pass rate, Rust formatting,
       Clippy, file-length checks and `cargo xtask check`. Fix implementation
       failures and validate all updated Markdown and protocol links.
-- [ ] After those checks pass, commit and push an implementation candidate to
+- [x] After those checks pass, commit and push an implementation candidate to
       run the real PR workflow. Exercise both Node runtimes and native platforms,
       verify shard inventory completeness, audit gating, reports, cancellation
       and the `Required CI` result. All smoke tests run before merge.
-- [ ] Compare at least two successful hosted runs of the same candidate SHA:
+- [x] Compare at least two successful hosted runs of the same candidate SHA:
       one with fresh workflow npm caches and one with cache restoration. Record
       total elapsed time, queue time, slowest shard, suite/setup durations, test
       inventories and total runner minutes. Isolated clean-cache test cases
       remain cold in both runs.
-- [ ] Evaluate the 6–10 minute target using that evidence. Address measured shard
+- [x] Evaluate the 6–10 minute target using that evidence. Address measured shard
       imbalance or avoidable preparation and repeat affected checks if needed;
       document runner-capacity limits and cost tradeoffs without reducing test
       coverage, relaxing assertions or adding retries to hide failures.
-- [ ] Record the final evidence in this plan, align docs with the delivered
+- [x] Record the final evidence in this plan, align docs with the delivered
       behavior and inspect the complete diff and deletions against `origin/main`.
       Run `cargo xtask check` again if implementation changed after its last pass;
       validate Markdown and the diff for documentation-only evidence updates.
@@ -257,3 +261,10 @@ implementation PR merges; arrange the index transition as part of that merge.
       findings with severity, feature context, impact of doing nothing, lettered
       solution options and a recommended scope. Do not change the implementation
       or automatically fix review findings.
+
+The final local gate and three successful hosted attempts are recorded in the
+[CI performance measurement](../docs/reviews/ci-performance.md). The
+available-capacity attempt meets the target while retaining every verification
+boundary. Native whole-file sharding remains appropriate; browser shards 2 and
+3 are the measured follow-up point if future suite growth moves the critical
+path beyond the target. This plan remains active until the PR merges.
