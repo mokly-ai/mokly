@@ -36,7 +36,7 @@ interface RegistryVerifierModule {
         args: readonly string[],
         options: { cwd: string },
       ) => Promise<CommandResult>;
-      retryDelays: readonly number[];
+      retryDelays?: readonly number[];
       wait: (delay: number) => Promise<void>;
       write: (message: string) => void;
     },
@@ -104,6 +104,29 @@ test("post-publish verification retries a propagating tarball", async (context) 
   assert.equal(published, true);
   assert.equal(packAttempts, 2);
   assert.deepEqual(waits, [2_000]);
+});
+
+test("default propagation retries span five minutes", async () => {
+  const registry = await registryVerifier();
+  let waitedMilliseconds = 0;
+  await assert.rejects(
+    registry.verifyRegistry(
+      {
+        localReport: packageReport(),
+        mode: "verify",
+        repositoryRoot,
+      },
+      {
+        execute: async () => commandResult("", 1, "npm error code E404"),
+        wait: async (delay) => {
+          waitedMilliseconds += delay;
+        },
+        write: () => undefined,
+      },
+    ),
+    /metadata is not visible on npm/,
+  );
+  assert.equal(waitedMilliseconds, 5 * 60 * 1_000);
 });
 
 test("pre-publish guard treats ETARGET as an unpublished version", async () => {
