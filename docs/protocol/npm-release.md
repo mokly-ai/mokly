@@ -57,8 +57,8 @@ versions; intentionally mismatched dependencies are derived from each packed
 viewer's actual version, so future release PRs cannot invalidate the test.
 
 Runtime dependencies are intentional and minimal. Mokly does not take a
-runtime dependency on `@firna/ui`, Accounting, Juno, Playwright, or a consumer's
-component system. Development and browser-test packages remain development
+runtime dependency on consumer applications, their component systems, or
+Playwright. Development and browser-test packages remain development
 dependencies.
 The exporter's Koffi dependency supplies OS-enforced exclusive directory rename;
 its optional platform binaries must remain available for export. The native
@@ -85,8 +85,8 @@ to npm scripts and includes:
 - an example `check` that validates the derived compilation and rejects tracked
   generated output;
 - package-file inspection with `npm pack --dry-run --json`;
-- packed-tarball installs in clean ESM, NodeNext, Accounting-shaped, and
-  Juno-shaped consumers;
+- packed-tarball installs in clean ESM, NodeNext, themed, and alternate-layout
+  consumers;
 - a production-dependency audit of the freshly resolved packed ESM consumer;
 - local-npx and clean-cache npx-style execution from the packed artifact;
 - consumer exports from the installed CLI, including custom configs/bases,
@@ -101,8 +101,8 @@ to npm scripts and includes:
 
 Tests that mutate files use isolated temporary directories and clean up child
 processes. Package smokes execute the packed artifact, not the source tree or a
-workspace symlink. The temporary real-Accounting parity audit is release
-evidence rather than a recurring CI dependency on another repository.
+workspace symlink. Historical cross-repository parity audits are release
+evidence rather than recurring CI dependencies on other repositories.
 
 Browser assertions that depend on a navigated preview's layout wait for the
 expected frame URL and complete document state together, not only the outer

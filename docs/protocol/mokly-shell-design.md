@@ -3,10 +3,8 @@
 ## Scope
 
 This document records the approved design for the package-owned Browse shell
-and the optional in-place screen comparisons. The design is
-the refined Mockbook shell originally shipped inside the Accounting repository,
-ported here without any Accounting or Bookfolio content. The visual source of
-truth is the design catalogue in the basic example under the `design/` routes;
+and the optional in-place screen comparisons. The visual source of truth is the
+design catalogue in the basic example under the `design/` routes;
 this contract fixes the tokens, dimensions, and responsive behavior that
 implementation and tests must preserve. Runtime behavior stays in
 [mokly-runtime.md](./mokly-runtime.md).
@@ -153,8 +151,8 @@ Typography is **Inter** (a variable font packaged with the shell and served at
 `--sans: "Inter", ui-sans-serif, system-ui, …` at a 13px shell base, with
 `--mono: "SFMono-Regular", Consolas, …` for routes, ids, addresses, and paths.
 The nav indent guides use the faint `--mbk-guide: #dbded8` tint. The shell
-ships no consumer product fonts beyond Inter, and no Accounting or Bookfolio
-color, name, or route family may appear in shell styles or copy.
+ships no consumer product fonts beyond Inter, and no consumer-specific color,
+name, or route family may appear in shell styles or copy.
 
 ## Layout
 

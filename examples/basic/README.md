@@ -13,7 +13,7 @@ edit them. Published exports provide the same saved examples read-only.
 `example-components.css` declares exact shared ownership, separate from global
 styles and the design mockups. Registration and source ownership live in
 `entries/components/action.tsx` and `toolbar.tsx`.
-It contains no Accounting or Juno product screen.
+It contains no consumer product screens.
 
 Authoring imports use the public package `@mokly/mokly`. The local executable
 and configuration filename remain `mokly` and `mokly.config.ts`.

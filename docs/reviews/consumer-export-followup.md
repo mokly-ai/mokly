@@ -26,7 +26,7 @@ Implemented follow-ups:
 
 Local Node 24.2.0 `cargo xtask check` passed all 578 unit/integration tests,
 105 browser tests, 3 Rust tests, formatting, lint, typechecking, current examples,
-package/license checks, packed ESM/NodeNext/npx/Accounting/Juno consumers, and
+package/license checks, packed ESM/NodeNext/npx/themed/Juno consumers, and
 the Rust file-length audit. Clean Linux Node 22.14.0/npm 11.7.0 also passed all
 578 unit/integration tests. Mobile and desktop owning screens were inspected.
 

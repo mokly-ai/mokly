@@ -775,7 +775,6 @@ test("shell stylesheet stays aligned with the design contract", () => {
     SHELL_CSS,
     /\.mbk-idchip:active \{[\s\S]*transform: translateY\(1px\);/,
   );
-  assert.equal(SHELL_CSS.includes("bookfolio"), false);
 });
 
 test("tag chips select in the accent and the bar clears the scrim", () => {

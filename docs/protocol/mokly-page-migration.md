@@ -120,11 +120,8 @@ confinement, cancellation, and publication safeguards through schema changes.
 
 Mokly owns the API, schema/readers, shell, generic regression fixtures, packed
 consumers, and this generic migration procedure. Concrete application IDs,
-routes, counts, source policies, and adoption commands belong in consumer
-migration notes and in the owning repositories. The
-[Accounting note](../migration/accounting-page-entries.md) records one verified
-consumer snapshot and its rehearsal; it supplies no package defaults or
-universal catalogue assumptions. Retain multiple-consumer packed coverage.
+routes, counts, source policies, and adoption commands belong in the owning
+repositories. Retain multiple-consumer packed coverage.
 
 Before the feature branch is ready, pack the candidate and verify the API,
 obsolete-config rejection, mixed hierarchy, and migration against generic and

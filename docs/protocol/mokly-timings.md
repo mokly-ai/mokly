@@ -123,7 +123,7 @@ The fixture uses real React Native Web and Firna rendering, nested collections,
 saved component variants, repeated and nested component usage, caller-owned
 slots, both viewports and color schemes, logical links, whole-document pages,
 flows, local CSS imports, and images. Sizes are configurable. It is a repeatable
-workload for locating scaling costs, not a claim of identical Accounting data
+workload for locating scaling costs, not a claim of identical production data
 or timings. It must provide a Git baseline so Changes performs real comparison.
 Additional shared stylesheets have configurable count and per-area screen share
 (defaults: four and 0.5, rounded up). After the baseline commit, setup adds an

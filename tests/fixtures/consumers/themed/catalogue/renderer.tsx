@@ -14,7 +14,7 @@ function Document({ input }: { input: RenderInput }) {
         ))}
         <style>{collectFirnaStyles()}</style>
       </head>
-      <body data-accounting-renderer={input.viewport}>
+      <body data-themed-renderer={input.viewport}>
         <FirnaThemeProvider>{input.node as ReactNode}</FirnaThemeProvider>
       </body>
     </html>
