@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  COMPONENT_PANEL_VARIANTS,
   COMPONENT_PAGES,
   CONTROLS_PAGES,
   INSPECTION_PAGES,
@@ -18,10 +19,11 @@ for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: component controls preserve their own scenario after shell integration`, async () => {
     const destinations = [
       ...Object.values(COMPONENT_PAGES),
+      ...Object.values(COMPONENT_PANEL_VARIANTS),
       ...Object.values(CONTROLS_PAGES),
       ...Object.values(INSPECTION_PAGES),
     ];
-    assert.equal(new Set(destinations).size, 32);
+    assert.equal(new Set(destinations).size, 36);
     for (const id of destinations) {
       const { document } = await designDocument(id, viewport);
       assert.equal(

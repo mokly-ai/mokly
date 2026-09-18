@@ -1,8 +1,14 @@
+import type { ReactNode } from "react";
+
 import { ScreenHead, type ArtboardViewport } from "../../parts/shell.js";
 import { EmptyState } from "../../parts/stage_content.js";
 
 import { screenComparison } from "./comparison_fixtures.js";
-import { INSPECTION_PAGES } from "./destinations.js";
+import {
+  INSPECTION_PAGES,
+  type ComponentDesignDestination,
+} from "./destinations.js";
+import type { InspectorTab } from "./inspector_icons.js";
 import { SCREENS, screenIdentity } from "./metadata.js";
 import { ExplorerShell } from "./navigation.js";
 import { ScreenDetails } from "./screen_details.js";
@@ -11,9 +17,17 @@ import { ViewControls } from "./view_controls.js";
 import { PreviewWorkspace } from "./workspace.js";
 
 export function ScreenPage({
+  componentPanel,
+  componentSummary,
+  design,
+  inspectorInitial,
   state,
   viewport,
 }: {
+  componentPanel?: ReactNode;
+  componentSummary?: ReactNode;
+  design?: ComponentDesignDestination;
+  inspectorInitial?: InspectorTab | "closed";
   state: ScreenPageState;
   viewport: ArtboardViewport;
 }) {
@@ -25,7 +39,7 @@ export function ScreenPage({
   return (
     <>
       <ExplorerShell
-        design={INSPECTION_PAGES[state]}
+        design={design ?? INSPECTION_PAGES[state]}
         active={identity}
         scenario={
           removed ? "removed" : state === "direct-change" ? "screen" : "all"
@@ -55,7 +69,14 @@ export function ScreenPage({
           }
         />
         <PreviewWorkspace
-          inspector={<ScreenDetails state={state} />}
+          inspector={
+            <ScreenDetails
+              components={componentPanel}
+              componentSummary={componentSummary}
+              initial={inspectorInitial}
+              state={state}
+            />
+          }
           render={(previewViewport) =>
             removed ? (
               <EmptyState

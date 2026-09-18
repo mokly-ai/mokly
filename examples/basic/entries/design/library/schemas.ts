@@ -1,4 +1,5 @@
 import {
+  COMPONENT_PANEL_VARIANTS,
   COMPONENT_PAGES,
   CONTROLS_PAGES,
   INSPECTION_PAGES,
@@ -15,6 +16,7 @@ export const destination = {
     values: [
       ...Object.values(DESTINATIONS),
       ...Object.values(COMPONENT_PAGES),
+      ...Object.values(COMPONENT_PANEL_VARIANTS),
       ...Object.values(CONTROLS_PAGES),
       ...Object.values(INSPECTION_PAGES),
     ],

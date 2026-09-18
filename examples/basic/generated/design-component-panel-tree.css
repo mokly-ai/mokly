@@ -1,0 +1,86 @@
+/* Structural tree and expanded ownership-outline candidates. */
+.ce-panel-tree-children,
+.ce-panel-outline-children {
+  border-left: 1px solid #c5d6ca;
+  margin: 2px 0 4px 18px;
+  padding-left: 10px;
+}
+
+.ce-panel-tree-children > summary,
+.ce-panel-outline-children > summary {
+  border-radius: 5px;
+  color: var(--chrome-muted);
+  cursor: pointer;
+  font-size: 10.5px;
+  list-style: none;
+  padding: 4px 6px;
+}
+
+.ce-panel-tree-children > summary::-webkit-details-marker,
+.ce-panel-outline-children > summary::-webkit-details-marker {
+  display: none;
+}
+
+.ce-panel-tree-children > summary::before,
+.ce-panel-outline-children > summary::before {
+  color: var(--chrome-muted);
+  content: "▸";
+  display: inline-block;
+  margin-right: 6px;
+  transition: transform 120ms ease;
+}
+
+.ce-panel-tree-children[open] > summary::before,
+.ce-panel-outline-children[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.ce-panel-tree-children .ce-panel-tree-row,
+.ce-panel-outline-children .ce-panel-tree-row {
+  margin: 2px 0;
+}
+
+.ce-panel-tree-rail {
+  border-left: 1px solid #c5d6ca;
+  bottom: 0;
+  left: -11px;
+  position: absolute;
+  top: 0;
+}
+
+.ce-panel-type-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 7px;
+}
+
+.ce-panel-type-summary li {
+  background: var(--chrome-bg);
+  border: 1px solid var(--chrome-border);
+  border-radius: 999px;
+  color: var(--chrome-ink-2);
+  font-size: 10.5px;
+  line-height: 24px;
+  padding: 0 8px;
+}
+
+.ce-panel-type-summary span {
+  color: var(--chrome-muted);
+  font-variant-numeric: tabular-nums;
+  margin-left: 4px;
+}
+
+.ce-panel-outline-children {
+  background: #f8faf8;
+  border-radius: 0 7px 7px 0;
+  margin-right: 4px;
+  padding-bottom: 3px;
+  padding-top: 3px;
+}
+
+.mbk-shell--mobile .ce-panel-tree-children,
+.mbk-shell--mobile .ce-panel-outline-children {
+  margin-left: 12px;
+  padding-left: 8px;
+}

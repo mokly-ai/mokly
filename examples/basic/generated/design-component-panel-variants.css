@@ -1,0 +1,105 @@
+/* Evaluation-only Components panel layouts. */
+.ce-panel-status {
+  background: var(--chrome-bg);
+  border: 1px solid var(--chrome-border);
+  border-radius: 999px;
+  color: var(--chrome-muted);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 18px;
+  padding: 0 7px;
+  white-space: nowrap;
+}
+
+.ce-panel-tree,
+.ce-panel-tree ul,
+.ce-panel-groups ul,
+.ce-panel-ledger ul,
+.ce-panel-type-summary {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ce-panel-tree,
+.ce-panel-outline,
+.ce-panel-groups,
+.ce-panel-ledger {
+  max-width: 680px;
+}
+
+.ce-panel-tree > li {
+  border-bottom: 1px solid var(--chrome-border);
+  padding: 5px 0;
+}
+
+.ce-panel-tree-row {
+  align-items: center;
+  border-radius: 6px;
+  color: inherit;
+  column-gap: 12px;
+  display: grid;
+  grid-template-areas: "name meta" "owner meta";
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-height: 38px;
+  padding: 6px 8px;
+  position: relative;
+  row-gap: 2px;
+  text-decoration: none;
+}
+
+.ce-panel-tree-name {
+  color: var(--chrome-ink-2);
+  font-size: 12px;
+  grid-area: name;
+  overflow-wrap: anywhere;
+}
+
+.ce-panel-tree-name strong {
+  color: var(--chrome-ink);
+  font-weight: 600;
+}
+
+.ce-panel-tree-row > small {
+  color: var(--chrome-muted);
+  font-size: 10px;
+  grid-area: owner;
+}
+
+.ce-panel-tree-meta,
+.ce-panel-tree-row > .ce-panel-status {
+  font-variant-numeric: tabular-nums;
+  grid-area: meta;
+}
+
+.ce-panel-tree-row:hover,
+.ce-panel-group-row:hover,
+.ce-panel-ledger a:hover {
+  background: #f4f6f3;
+}
+
+.ce-panel-tree-row:focus-visible,
+.ce-panel-group-row:focus-visible,
+.ce-panel-ledger a:focus-visible {
+  outline: 2px solid var(--mbk-sage-deep);
+  outline-offset: -2px;
+}
+
+.ce-panel-tree-row[aria-current],
+.ce-panel-group-row[aria-current],
+.ce-panel-ledger a[aria-current] {
+  background: #edf3ef;
+  box-shadow: inset 2px 0 0 var(--mbk-sage);
+}
+
+.ce-panel-tree-row[aria-current] .ce-panel-tree-name strong,
+.ce-panel-group-row[aria-current] strong,
+.ce-panel-ledger a[aria-current] strong {
+  color: var(--mbk-sage-deep);
+}
+
+.mbk-shell--mobile .ce-panel-tree-row,
+.mbk-shell--mobile .ce-panel-group-row,
+.mbk-shell--mobile .ce-panel-ledger a {
+  min-height: 44px;
+}

@@ -3,6 +3,7 @@ import { defineConfig } from "@mokly/mokly";
 import {
   designBaseStyles,
   componentLayoutStyles,
+  componentPanelVariantStyles,
   workspaceLayoutStyles,
 } from "./entries/design/components/parts/styles.js";
 import {
@@ -57,6 +58,13 @@ export default defineConfig({
       ]),
     },
     {
+      match: "design/components/inspection/components-panel/**",
+      stylesheets: withLibraryStyles(designBaseStyles, [
+        ...componentLayoutStyles,
+        ...componentPanelVariantStyles,
+      ]),
+    },
+    {
       match: "design/components/controls/**",
       stylesheets: withLibraryStyles(designBaseStyles, [
         ...componentLayoutStyles,
@@ -99,6 +107,9 @@ export default defineConfig({
           "examples/basic/generated/design-component-inspection.css",
           "examples/basic/generated/design-component-details.css",
           "examples/basic/generated/design-component-inspector.css",
+          "examples/basic/generated/design-component-panel-index.css",
+          "examples/basic/generated/design-component-panel-tree.css",
+          "examples/basic/generated/design-component-panel-variants.css",
           "examples/basic/generated/design-component-controls.css",
           "examples/basic/generated/design-component-workspace.css",
           "examples/basic/generated/design-component-view.css",

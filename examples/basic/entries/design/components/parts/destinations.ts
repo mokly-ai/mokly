@@ -32,6 +32,13 @@ export const INSPECTION_PAGES = {
   "removed-consumer": "design-component-removed-consumer",
 } as const satisfies Record<ScreenPageState, string>;
 
+export const COMPONENT_PANEL_VARIANTS = {
+  tree: "design-component-components-panel-tree",
+  outline: "design-component-components-panel-outline",
+  groups: "design-component-components-panel-groups",
+  ledger: "design-component-components-panel-ledger",
+} as const;
+
 export const CONTROLS_PAGES = {
   default: "design-component-controls",
   edited: "design-component-controls-edited",
@@ -49,4 +56,5 @@ export const CONTROLS_PAGES = {
 export type ComponentDesignDestination =
   | (typeof CONTROLS_PAGES)[keyof typeof CONTROLS_PAGES]
   | (typeof COMPONENT_PAGES)[keyof typeof COMPONENT_PAGES]
+  | (typeof COMPONENT_PANEL_VARIANTS)[keyof typeof COMPONENT_PANEL_VARIANTS]
   | (typeof INSPECTION_PAGES)[keyof typeof INSPECTION_PAGES];

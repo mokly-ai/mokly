@@ -35,20 +35,34 @@ export const usageViews = [
 
 /** Logical instances in the depicted Welcome view, including a null render. */
 export const welcomeInstances = [
-  { component: "Toolbar", label: "Main", id: "main", parent: null },
+  {
+    component: "Toolbar",
+    label: "Main",
+    id: "main",
+    parent: null,
+    visible: true,
+  },
   {
     component: "Action",
     label: "Toolbar action",
     id: "toolbar-action",
     parent: "main",
+    visible: true,
   },
   {
     component: "Action",
     label: "Footer action",
     id: "footer-action",
     parent: null,
+    visible: true,
   },
-  { component: "Help hint", label: "Help", id: "help", parent: null },
+  {
+    component: "Help hint",
+    label: "Help",
+    id: "help",
+    parent: null,
+    visible: false,
+  },
 ] as const;
 
 export const componentDesignDocs = [

@@ -17,7 +17,16 @@ export const componentLayoutStyles = [
 ];
 
 export const componentStyles = [...designBaseStyles, ...componentLayoutStyles];
+export const componentPanelVariantStyles = [
+  "design-component-panel-index.css",
+  "design-component-panel-tree.css",
+  "design-component-panel-variants.css",
+];
 
 export const componentStyleDependencies = componentStyles.map(
   (stylesheet) => `examples/basic/generated/${stylesheet}`,
 );
+export const componentPanelVariantStyleDependencies =
+  componentPanelVariantStyles.map(
+    (stylesheet) => `examples/basic/generated/${stylesheet}`,
+  );

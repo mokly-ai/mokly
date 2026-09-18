@@ -1,15 +1,26 @@
+import type { ReactNode } from "react";
+
 import { MockLink } from "@mokly/mokly";
 
 import { ComparisonDetails } from "./comparison_details.js";
 import { screenComparison } from "./comparison_fixtures.js";
 import { welcomeInstances } from "./fixtures.js";
 import { Inspector, type InspectorPanel } from "./inspector.js";
+import type { InspectorTab } from "./inspector_icons.js";
 import { InstanceDetails } from "./instance_details.js";
 import { InstanceTree } from "./instance_tree.js";
 import { SCREENS, screenIdentity } from "./metadata.js";
 import type { ScreenPageState } from "./screen_preview.js";
 
-function ScreenComponents({ state }: { state: ScreenPageState }) {
+function ScreenComponents({
+  state,
+  instances,
+  summary,
+}: {
+  state: ScreenPageState;
+  instances?: ReactNode;
+  summary?: ReactNode;
+}) {
   const unavailable = state === "unavailable";
   const empty = state === "empty";
   const consumer = state === "consumer";
@@ -24,7 +35,7 @@ function ScreenComponents({ state }: { state: ScreenPageState }) {
               ? "0"
               : consumer
                 ? "1 instance"
-                : `${welcomeInstances.length} instances`}
+                : (summary ?? `${welcomeInstances.length} instances`)}
         </span>
       </h3>
       {empty || unavailable ? (
@@ -35,6 +46,8 @@ function ScreenComponents({ state }: { state: ScreenPageState }) {
         </p>
       ) : consumer ? (
         <MockLink to="design-component-overview">Action · Continue ↗</MockLink>
+      ) : instances ? (
+        instances
       ) : (
         <InstanceTree state={state} />
       )}
@@ -73,11 +86,21 @@ function ScreenUsage({ state }: { state: ScreenPageState }) {
   );
 }
 
-export function ScreenDetails({ state }: { state: ScreenPageState }) {
+export function ScreenDetails({
+  state,
+  components,
+  componentSummary,
+  initial,
+}: {
+  state: ScreenPageState;
+  components?: ReactNode;
+  componentSummary?: ReactNode;
+  initial?: InspectorTab | "closed" | undefined;
+}) {
   const screen = SCREENS[screenIdentity(state)];
   const removed = state === "removed-consumer";
   const noInstances = state === "empty" || state === "unavailable";
-  const initial =
+  const initialPanel =
     state === "closed" || removed
       ? "closed"
       : noInstances || state === "highlight"
@@ -85,7 +108,7 @@ export function ScreenDetails({ state }: { state: ScreenPageState }) {
         : "props";
   return (
     <Inspector
-      initial={initial}
+      initial={initial ?? initialPanel}
       panels={[
         {
           id: "info",
@@ -109,7 +132,13 @@ export function ScreenDetails({ state }: { state: ScreenPageState }) {
               {
                 id: "components",
                 label: "Components",
-                content: <ScreenComponents state={state} />,
+                content: (
+                  <ScreenComponents
+                    state={state}
+                    instances={components}
+                    summary={componentSummary}
+                  />
+                ),
               },
               {
                 id: "props",

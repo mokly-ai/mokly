@@ -1,0 +1,202 @@
+/* Component-grouped index and always-visible ledger candidates. */
+.ce-panel-group {
+  border-bottom: 1px solid var(--chrome-border);
+  padding: 6px 0;
+}
+
+.ce-panel-group > summary {
+  align-items: baseline;
+  border-radius: 6px;
+  cursor: pointer;
+  display: grid;
+  font-size: 12px;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  list-style: none;
+  padding: 5px 8px;
+}
+
+.ce-panel-group > summary::-webkit-details-marker {
+  display: none;
+}
+
+.ce-panel-group > summary > span {
+  color: var(--chrome-ink);
+  font-weight: 600;
+}
+
+.ce-panel-group > summary > span::before {
+  color: var(--chrome-muted);
+  content: "▸";
+  display: inline-block;
+  margin-right: 6px;
+  transition: transform 120ms ease;
+}
+
+.ce-panel-group[open] > summary > span::before {
+  transform: rotate(90deg);
+}
+
+.ce-panel-group > summary > small {
+  color: var(--chrome-muted);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.ce-panel-group > ul {
+  padding: 2px 0 0 16px;
+}
+
+.ce-panel-group-row {
+  align-items: center;
+  border-radius: 6px;
+  color: inherit;
+  display: grid;
+  font-size: 12px;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  min-height: 36px;
+  padding: 6px 8px;
+  text-decoration: none;
+}
+
+.ce-panel-group-row > small {
+  color: var(--chrome-muted);
+  font-size: 10.5px;
+  white-space: nowrap;
+}
+
+.ce-panel-group-note {
+  color: var(--chrome-muted);
+  font-size: 10px;
+  margin: 0 0 4px;
+  padding-left: 8px;
+}
+
+.ce-panel-group-note::before {
+  content: "↳ ";
+}
+
+.ce-panel-ledger-head {
+  color: var(--chrome-muted);
+  display: grid;
+  font-size: 10px;
+  gap: 12px;
+  grid-template-columns: 120px minmax(0, 1fr) 140px;
+  padding: 0 8px 6px;
+  text-transform: uppercase;
+}
+
+.ce-panel-ledger section {
+  border-top: 1px solid var(--chrome-border);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 120px minmax(0, 1fr);
+  padding: 6px 0;
+}
+
+.ce-panel-ledger h4 {
+  color: var(--chrome-ink);
+  font-size: 12px;
+  margin: 6px 8px;
+}
+
+.ce-panel-ledger h4 small {
+  color: var(--chrome-muted);
+  display: block;
+  font-size: 10px;
+  font-weight: 400;
+  margin-top: 3px;
+}
+
+.ce-panel-ledger a {
+  align-items: center;
+  border-radius: 6px;
+  color: inherit;
+  display: grid;
+  gap: 10px;
+  grid-template-areas: "instance status owner";
+  grid-template-columns: minmax(0, 1fr) auto 140px;
+  min-height: 40px;
+  padding: 6px 8px;
+  text-decoration: none;
+}
+
+.ce-panel-ledger-instance {
+  font-size: 12px;
+  grid-area: instance;
+  min-width: 0;
+}
+
+.ce-panel-ledger-instance small {
+  color: var(--chrome-muted);
+  display: block;
+  font-size: 10px;
+  margin-top: 2px;
+}
+
+.ce-panel-ledger-owner {
+  color: var(--chrome-muted);
+  font-size: 10.5px;
+  grid-area: owner;
+}
+
+.ce-panel-ledger a > .ce-panel-status {
+  grid-area: status;
+}
+
+.mbk-shell--mobile .ce-panel-group > ul {
+  padding-left: 8px;
+}
+
+.mbk-shell--mobile .ce-panel-group-row {
+  grid-template-areas: "label status" "owner owner";
+  grid-template-columns: minmax(0, 1fr) auto;
+  row-gap: 2px;
+}
+
+.mbk-shell--mobile .ce-panel-group-row > strong {
+  grid-area: label;
+}
+
+.mbk-shell--mobile .ce-panel-group-row > .ce-panel-status {
+  grid-area: status;
+}
+
+.mbk-shell--mobile .ce-panel-group-row > small {
+  grid-area: owner;
+  white-space: normal;
+}
+
+.mbk-shell--mobile .ce-panel-ledger-head {
+  display: none;
+}
+
+.mbk-shell--mobile .ce-panel-ledger section {
+  gap: 8px;
+  grid-template-columns: 80px minmax(0, 1fr);
+}
+
+.mbk-shell--mobile .ce-panel-ledger h4 {
+  font-size: 11px;
+  margin-inline: 4px;
+  overflow-wrap: anywhere;
+}
+
+.mbk-shell--mobile .ce-panel-ledger a {
+  grid-template-areas: "instance status" "owner owner";
+  grid-template-columns: minmax(0, 1fr) auto;
+  row-gap: 2px;
+}
+
+.mbk-shell--mobile .ce-panel-ledger-instance {
+  grid-area: instance;
+}
+
+.mbk-shell--mobile .ce-panel-ledger a > .ce-panel-status {
+  grid-area: status;
+}
+
+.mbk-shell--mobile .ce-panel-ledger-owner {
+  grid-area: owner;
+}

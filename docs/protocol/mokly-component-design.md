@@ -20,36 +20,41 @@ Pages → Design → Mokly design → Component explorer collection reaches ever
 screen.
 The canonical `overview` screen shows a component page, followed by links to the
 owning child pages outside the artboard. The original Pages, Inspection, and States child collections are gallery
-indexes, each with at most five direct owning screens; inspection also links a nested
-selection gallery with two owning screens. The Inspector gallery adds two closed
+indexes, each with at most five direct owning screens; inspection also links nested
+selection and Components panel variants galleries with two and four owning screens.
+The Inspector gallery adds two closed
 states. Controls has one canonical parent screen and Editing, States, and
 Published galleries with four, four, and two screens. The linked inspector and
 controls contracts own their additional route inventories. Every screen has a separate
 mobile component and desktop component; there are no new user-flow pages.
 
-| Entry id                                    | Route                                                 | State                                                   |
-| ------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------- |
-| `design-component-overview`                 | `design/components/overview.html`                     | Action page, default variant, props, and Used by        |
-| `design-component-variants`                 | `design/components/pages/variants.html`               | Disabled saved variant                                  |
-| `design-component-comparison`               | `design/components/pages/comparison.html`             | Saved variant before/current comparison                 |
-| `design-component-affected`                 | `design/components/pages/affected.html`               | One changed component and two affected screens          |
-| `design-component-toolbar`                  | `design/components/pages/toolbar.html`                | Component consuming Action                              |
-| `design-component-help`                     | `design/components/pages/help.html`                   | Invoked component with no visible region                |
-| `design-component-inspection-details`       | `design/components/inspection/details.html`           | Repeated instances and selected props                   |
-| `design-component-inspection-highlight`     | `design/components/inspection/highlight.html`         | Outermost component cutouts                             |
-| `design-component-inspection-nested`        | `design/components/inspection/nested.html`            | Nested Action selected in the screen and Props          |
-| `design-component-inspection-direct-change` | `design/components/inspection/direct-change.html`     | Independent screen prop change; two Changes             |
-| `design-component-inspection-consumer`      | `design/components/inspection/consumer.html`          | A second screen reached from Used by                    |
-| `design-component-inspection-toolbar`       | `design/components/inspection/selection/toolbar.html` | Selected container with its own props                   |
-| `design-component-inspection-help`          | `design/components/inspection/selection/help.html`    | Selected invisible instance                             |
-| `design-component-empty`                    | `design/components/states/empty.html`                 | Validated empty usage                                   |
-| `design-component-unavailable`              | `design/components/states/unavailable.html`           | Missing inspection metadata                             |
-| `design-component-unused`                   | `design/components/states/unused.html`                | Saved component with no consumers                       |
-| `design-component-removed`                  | `design/components/states/removed.html`               | Removed saved variant and former consumer               |
-| `design-component-removed-consumer`         | `design/components/states/removed-consumer.html`      | Removed badge and current empty screen state            |
-| `design-component-added`                    | `design/components/states/additions/added.html`       | Added Badge current preview without comparison controls |
+| Entry id                                    | Route                                                        | State                                                   |
+| ------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------- |
+| `design-component-overview`                 | `design/components/overview.html`                            | Action page, default variant, props, and Used by        |
+| `design-component-variants`                 | `design/components/pages/variants.html`                      | Disabled saved variant                                  |
+| `design-component-comparison`               | `design/components/pages/comparison.html`                    | Saved variant before/current comparison                 |
+| `design-component-affected`                 | `design/components/pages/affected.html`                      | One changed component and two affected screens          |
+| `design-component-toolbar`                  | `design/components/pages/toolbar.html`                       | Component consuming Action                              |
+| `design-component-help`                     | `design/components/pages/help.html`                          | Invoked component with no visible region                |
+| `design-component-inspection-details`       | `design/components/inspection/details.html`                  | Repeated instances and selected props                   |
+| `design-component-inspection-highlight`     | `design/components/inspection/highlight.html`                | Outermost component cutouts                             |
+| `design-component-inspection-nested`        | `design/components/inspection/nested.html`                   | Nested Action selected in the screen and Props          |
+| `design-component-inspection-direct-change` | `design/components/inspection/direct-change.html`            | Independent screen prop change; two Changes             |
+| `design-component-inspection-consumer`      | `design/components/inspection/consumer.html`                 | A second screen reached from Used by                    |
+| `design-component-inspection-toolbar`       | `design/components/inspection/selection/toolbar.html`        | Selected container with its own props                   |
+| `design-component-inspection-help`          | `design/components/inspection/selection/help.html`           | Selected invisible instance                             |
+| `design-component-components-panel-tree`    | `design/components/inspection/components-panel/tree.html`    | Structural tree with collapsed nested ownership         |
+| `design-component-components-panel-outline` | `design/components/inspection/components-panel/outline.html` | Expanded ownership outline                              |
+| `design-component-components-panel-groups`  | `design/components/inspection/components-panel/groups.html`  | Component-grouped index with owner metadata             |
+| `design-component-components-panel-ledger`  | `design/components/inspection/components-panel/ledger.html`  | Always-visible component ledger                         |
+| `design-component-empty`                    | `design/components/states/empty.html`                        | Validated empty usage                                   |
+| `design-component-unavailable`              | `design/components/states/unavailable.html`                  | Missing inspection metadata                             |
+| `design-component-unused`                   | `design/components/states/unused.html`                       | Saved component with no consumers                       |
+| `design-component-removed`                  | `design/components/states/removed.html`                      | Removed saved variant and former consumer               |
+| `design-component-removed-consumer`         | `design/components/states/removed-consumer.html`             | Removed badge and current empty screen state            |
+| `design-component-added`                    | `design/components/states/additions/added.html`              | Added Badge current preview without comparison controls |
 
-Standalone files insert `.mobile` or `.desktop` before `.html`. All thirty-two component
+Standalone files insert `.mobile` or `.desktop` before `.html`. All thirty-six component
 screens opt into light documents, matching the existing shell mockups. They
 start in the Light context and expose a native preview theme toggle. Links use
 the existing logical-id navigation contract so they work both directly from
@@ -124,6 +129,16 @@ has an inspection entry and component page, without an invented visible region.
 Toolbar and Help hint usage links lead to their own selected-instance artboards,
 with the correct prompt or visibility props and Open component destination.
 
+The Components panel variants gallery preserves that canonical artboard and
+adds four evaluation-only alternatives. Render tree and ownership outline place
+each instance once at its real owner depth. Component index groups unique
+instances by registered component and exposes ownership as row metadata.
+Component ledger removes disclosures and keeps all occurrences visible in
+component, instance, and owner columns. All counts are derived from the shared
+fixture, hidden Help remains selectable, and mobile layouts reflow instead of
+scrolling horizontally. These screens do not select a runtime direction or
+change the component-explorer behavior.
+
 Highlight components is a native switch grouped with viewport and theme beside the title. It toggles the overlay without navigation. The enabled artboards show a light mask at 78% coverage with cutouts over the visible
 components. Sage outlines and named labels expose the selected regions; a
 nested selection cuts out only the Toolbar action and dims the parent again.
@@ -144,8 +159,9 @@ small gap above an intact rounded outline, shared by all three region layouts.
 ## Verification And Maintenance
 
 Use the real generator; never hand-edit generated HTML. Six shared component
-stylesheets are hand-authored public inputs, confined to `design/components/**`.
-Route-scoped stylesheet matching links them only from the thirty-two component design routes; Changes follows those rendered resource references. The collection also declares inherited dependencies for comparison evidence. The controls stylesheet is scoped
+stylesheets are hand-authored public inputs, confined to `design/components/**`;
+three additional Components-panel stylesheets are confined to the four variant routes.
+Route-scoped stylesheet matching links the shared styles from the thirty-six component design routes; Changes follows those rendered resource references. The collection also declares inherited dependencies for comparison evidence. The controls stylesheet is scoped
 further to its eleven owning routes, with a matching dependency and watch rule. Keep them out of the global
 `review.sharedImpact` list; watched stylesheet rules still reload their edits.
 Child collection dependency lists replace inherited lists; Controls explicitly

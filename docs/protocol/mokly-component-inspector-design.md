@@ -55,6 +55,31 @@ Each owning artboard declares its initial panel explicitly; instance links open
 the supplied-props panel for that instance. Empty/unavailable screens open the
 Components panel. The canonical component page opens Details.
 
+## Components Panel Variants
+
+The screen-inspection catalogue includes a bounded **Components panel variants**
+gallery for evaluating four information architectures without changing the
+runtime contract. Every variant uses the same Welcome fixture: four unique
+instances across Toolbar, Action, and Help hint; Toolbar owns the Toolbar action,
+Footer action belongs directly to Welcome, and Help has no visible region.
+Footer action starts selected in every variant so selection treatments are
+comparable. No variant may duplicate a selectable instance.
+
+| Entry id                                    | Information architecture                                               |
+| ------------------------------------------- | ---------------------------------------------------------------------- |
+| `design-component-components-panel-tree`    | Render tree with collapsed nested ownership and repeat ordinals        |
+| `design-component-components-panel-outline` | Expanded ownership outline with separate disclosure and instance links |
+| `design-component-components-panel-groups`  | Component-grouped disclosures with explicit owner metadata             |
+| `design-component-components-panel-ledger`  | Always-visible component, instance, and owner columns                  |
+
+All four screens open Components inside the existing inspector and reuse its
+desktop divider, mobile sheet, icon strip, preview, and real instance
+destinations. Native disclosures retain normal keyboard behavior. Instance
+links retain `aria-current="true"` for the selected occurrence and open the
+canonical supplied-props screen. Hidden status and `No visible region` remain
+visible without inventing preview geometry. Variant names and evaluation notes
+belong to catalogue metadata, never inside the depicted product.
+
 ## Navigation And Metadata
 
 Artboards contain no navigation footer for browsing mockup states. The existing

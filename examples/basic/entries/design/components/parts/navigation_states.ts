@@ -1,6 +1,7 @@
 import type { NavigationState } from "../../parts/navigation_states.js";
 
 import {
+  COMPONENT_PANEL_VARIANTS,
   COMPONENT_PAGES,
   CONTROLS_PAGES,
   INSPECTION_PAGES,
@@ -41,4 +42,8 @@ export const COMPONENT_NAVIGATION_STATES = {
   [INSPECTION_PAGES.empty]: {},
   [INSPECTION_PAGES.unavailable]: {},
   [INSPECTION_PAGES["removed-consumer"]]: {},
+  [COMPONENT_PANEL_VARIANTS.tree]: {},
+  [COMPONENT_PANEL_VARIANTS.outline]: {},
+  [COMPONENT_PANEL_VARIANTS.groups]: {},
+  [COMPONENT_PANEL_VARIANTS.ledger]: {},
 } satisfies Record<ComponentDesignDestination, NavigationState>;

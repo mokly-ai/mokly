@@ -1,6 +1,7 @@
 import { collection, screen } from "@mokly/mokly";
 
 import { controlsDesign } from "./controls/index.js";
+import { componentsPanelVariants } from "./inspection/components_panel/screens.js";
 import { inspectionScreens } from "./inspection/screens.js";
 import { selectionScreens } from "./inspection/selection/screens.js";
 import { inspectorScreens } from "./inspector/screens.js";
@@ -71,6 +72,7 @@ export const componentDesign = collection({
             "Container and hidden instances reached from component usage links.",
           children: selectionScreens,
         }),
+        componentsPanelVariants,
       ],
     }),
     collection({
