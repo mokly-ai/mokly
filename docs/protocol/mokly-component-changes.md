@@ -134,17 +134,24 @@ The decision, in order:
    must match. Optional invocation `source` metadata is excluded from this
    comparison, as it is from every Changes projection. Any other difference
    takes the complete path.
-3. If the paired view routes differ, take the complete path. Otherwise form
+3. If either paired-normalized document contains a case-insensitive HTML
+   `template` opening candidate and its usage record contains an entry-owned
+   slot, take the complete path.
+   Projection can move that content out of an inert template and expose local
+   resource references that actual-document discovery cannot see. Compiler
+   boundary elements have already been serialized as comments at this stage
+   and do not disqualify a view.
+4. If the paired view routes differ, take the complete path. Otherwise form
    the actual normalized pair by stripping historical component markers
    from the base, stripping current component markers from the head, and
    applying paired manual-ignore normalization. Discover the head closure in
    committed mode and both closures independently in derived mode.
-4. If any discovered resource is a changed Git path, take the complete path;
+5. If any discovered resource is a changed Git path, take the complete path;
    ownership, exclusion, and rule analysis are decided there.
-5. In derived mode, compare the independently discovered closures and the
+6. In derived mode, compare the independently discovered closures and the
    bytes of every reachable resource present on both sides. Any closure or
    byte difference takes the complete path.
-6. Otherwise the view is unchanged by content and resources. Its state is
+7. Otherwise the view is unchanged by content and resources. Its state is
    `unchanged` when the single-document normalizations of both stripped sides
    are equal and `ignored-only` otherwise; `ignoredIds` come from the paired
    normalization. The view carries no `material`, `reasons`, or
@@ -160,6 +167,16 @@ Nested instance input changes and all topology or ownership changes require
 projection and implementation-impact analysis. Entry-level `metadata`,
 `added`, `removed`, and dependency reasons are unaffected because they are
 computed outside the per-view comparison.
+
+Projected resources are not always a subset of actual-document resources:
+caller-owned content projected out of an inert `template` is the counterexample.
+The inexpensive eligibility guard checks paired-normalized text for a
+case-insensitive template-opening candidate and checks the usage record for any
+entry-owned slot. It deliberately over-approximates: unrelated templates and
+template-looking raw text may also use the complete path, and it does not parse
+the DOM to prove containment. Eligible
+views retain the one-discovery committed and two-discovery derived bounds;
+guarded views use the complete path and its ordinary discovery count.
 
 Each resource discovery performed by the decision is reused when the view falls
 through to the complete path. Each side passes byte-identical route and

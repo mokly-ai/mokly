@@ -7,6 +7,7 @@ import {
   stripHistoricalMarkers,
 } from "../components/comparison_material.js";
 
+import { mayProjectCallerSlotFromTemplate } from "./component_fast_path_eligibility.js";
 import { changedResourceBytes } from "./component_resource_changes.js";
 import type {
   ComparedComponentView,
@@ -35,6 +36,11 @@ export async function compareUnchangedComponentView(
   );
   if (retained.base !== retained.head) return undefined;
   if (!componentUsageTopologyEqual(before.usage, after.usage)) return undefined;
+  if (
+    mayProjectCallerSlotFromTemplate(retained.base, before.usage) ||
+    mayProjectCallerSlotFromTemplate(retained.head, after.usage)
+  )
+    return undefined;
 
   const strippedBase = stripHistoricalMarkers(base);
   const strippedHead = stripComponentMarkers(head);

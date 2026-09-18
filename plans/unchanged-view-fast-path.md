@@ -6,10 +6,10 @@ The original implementation and measurement milestones are complete. The fast pa
 preserves complete-path output across the differential fixture matrix, keeps
 resource and derived-byte gates intact, and emits explicit path counts.
 
-The six approved findings are addressed and pushed. Milestone 7's post-push
-review found an additional equivalence gap for caller-slot resources inside
-inert templates, recorded below for the user's decision. This plan remains
-Active until the PR merges.
+The first six approved findings are addressed and pushed. Milestone 7's
+post-push review found an additional equivalence gap for caller-slot resources
+inside inert templates. The approved conservative eligibility guard is
+implemented in Milestone 8. This plan remains Active until the PR merges.
 
 These historical measurements predate the independent two-sided resource
 traversal added by Milestone 7. Measurements on the same VM compare the background worker's
@@ -77,8 +77,9 @@ Success criteria:
 - Zero-change classification of `examples/basic` completes `changes.classify`
   in well under one second on the same machine that measured 3.1 seconds.
 - `review.resource-graph` span count for a zero-change run is at most one per
-  paired view in committed mode and two in derived mode, plus one per added or
-  removed view.
+  fast-path-eligible paired view in committed mode and two in derived mode,
+  plus the complete-path work for guarded views and one per added or removed
+  view.
 - A differential test proves fast-path and complete-path results are deeply
   equal across the shared fixtures, including the large fixture generator's
   small instance.
@@ -121,16 +122,19 @@ as text by the material readers:
    keys, component ids, owners, slot keys and order; instance-owned props and
    prop keys; and all slots, ranges, styles, and resources must match.
    Invocation `source` metadata is excluded, as it is from every projection.
-3. If the view route changed, take the complete path. Otherwise compute the actual normalized pair by stripping historical component
+3. If either document has an authored HTML `template` and its usage record has
+   caller-owned slots, take the complete path. Projection can expose resources
+   hidden by the inert container.
+4. If the view route changed, take the complete path. Otherwise compute the actual normalized pair by stripping historical component
    markers from `B`, stripping current component markers from `H`, and applying
    paired manual-ignore normalization. Discover the head closure in committed
    mode and both closures independently in derived mode.
-4. If any discovered route, prefixed to a repository path, is in
+5. If any discovered route, prefixed to a repository path, is in
    `changedPaths`, take the complete path. Owned or excluded stylesheets may
    still produce evidence or exclusions there.
-5. In derived mode, compare the independently discovered closures and bytes
+6. In derived mode, compare the independently discovered closures and bytes
    with `changedResourceBytes`. Any difference takes the complete path.
-6. Otherwise the view is unchanged by resources. Its state is `unchanged` when
+7. Otherwise the view is unchanged by resources. Its state is `unchanged` when
    `projected.rawEqual` would be true and `ignored-only` otherwise. `rawEqual`
    compares `normalizeSingleDocument` of each stripped side; the fast path
    computes exactly that string equality, which needs no parse. `ignoredIds`
@@ -146,12 +150,12 @@ Why the shortcut is sound under the existing contract:
   slots, ranges, styles, and resources used by projection and
   `changedComponentImplementations`.
 - Dependency reasons and `excludedResources` require a path in `changedPaths`
-  that is reachable from the view. Step 4 rules that out. The complete path
-  discovers resources from the projected documents as well as the actual ones,
-  but projection only removes proven component-owned material from the actual
-  document, so the projected resource set is a subset of the actual one.
+  that is reachable from the view. Step 5 rules that out for eligible views.
+  Projection usually removes component-owned material, but can expose
+  caller-owned resources hidden inside inert templates; Step 3 sends those
+  views to the complete path before relying on actual-document discovery.
 - `resourceChanged` in derived mode requires a reachable byte difference.
-  Step 5 rules that out.
+  Step 6 rules that out.
 - Entry-owned prop values are the sole allowed usage difference. `inputs` and
   `structure` are still computed by the same usage-record helper used by
   `projectComponentPair`, so an unchanged render retains its `inputs` reason.
@@ -176,7 +180,7 @@ Document the decision rule so implementation needs no guesswork and so the
 existing protocol remains internally consistent.
 
 - [x] In `docs/protocol/mokly-component-changes.md`, add a "Unchanged view
-      decision" subsection under the materiality policy stating the six-step
+      decision" subsection under the materiality policy stating the decision
       rule above, that it must produce output equal to the complete
       comparison, and that `inputs`/`structure` reasons are derived from
       usage records independently of document text.
@@ -381,7 +385,35 @@ found one additional issue, independently reproduced by the owner:
    existing comparison behavior at the cost of less optimization for those
    views. **B:** redesign projection and discovery to preserve inert-container
    semantics, a broader behavior change requiring an agreed contract and more
-   regression coverage. The finding remains open for the user's decision.
+   regression coverage. The user approved Option A; Milestone 8 implements it.
+
+## Milestone 8: Inert template slot eligibility
+
+Prevent actual-document discovery from settling a view when projection can
+expose caller-owned resources hidden inside an inert HTML template.
+
+- [x] Correct the protocol and module READMEs: projected resources are not
+      universally a subset of actual resources, and eligible-view discovery
+      bounds exclude conservatively guarded template-slot views.
+- [x] Add compiler-backed committed and derived differential regressions plus
+      ordinary-slot and authored-template eligibility controls; capture the
+      pre-fix failures under `.context`.
+- [x] Add a reusable, inexpensive eligibility guard for caller-owned slots in
+      authored templates without an unconditional DOM parse.
+- [x] Run formatting, build, type checking, lint, focused tests, and the final
+      full `cargo xtask check` with a 100% pass rate.
+- [ ] `git add -A`, commit the completed work with a Conventional Commits
+      message, and push the branch.
+- [ ] Review: after the push, use `docs/implementation-review-prompt.md` against
+      `origin/main` and report findings without changing the implementation.
+
+Validation passed: `cargo xtask check` completed 1,872 Node tests, 452 Chromium
+tests, all five packed-consumer scenarios for both packages, and three Rust
+tests. The original two regression cases failed before the fix; the expanded
+focused suite passed all 34 tests. Independent verification found eight
+divergences in a 32-case matrix before the fix and none afterward. All 276
+example views still use the fast path and match the complete comparison in
+both modes, with 276 committed and 552 derived resource discoveries.
 
 ## Post-merge follow-up (non-blocking)
 

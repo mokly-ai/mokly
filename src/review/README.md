@@ -244,6 +244,13 @@ Key code:
   classification input and trailing `compareReview` options object exist only
   for differential tests and default to enabled. The decision rule lives in the
   [component change attribution contract](../../docs/protocol/mokly-component-changes.md#unchanged-view-decision).
+  Caller-owned slots combined with authored HTML `template` elements always
+  take the complete path: projection can move slot content out of the inert
+  container and expose resources absent from actual-document discovery. The
+  guard scans paired-normalized text case-insensitively and checks for any
+  entry-owned slot record. It conservatively accepts false positives such as
+  unrelated templates or template-looking raw text instead of parsing DOM
+  containment in the shortcut.
 - `component_resource_attribution.ts`: actual-invocation CSS ownership and entry
   evidence aggregation without inventing saved variants.
 - `assets.ts`, `component_resources.ts`, `resource_graph.ts`: confined reads and

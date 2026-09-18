@@ -116,7 +116,9 @@ The same reachable-resource byte comparison gates the
 a view with identical normalized documents still takes the complete comparison
 when independently discovered historical and current resource closures differ,
 or when any resource present on both sides has different bytes, even without
-Git evidence.
+Git evidence. Views where caller-owned slot projection can expose resources
+inside an authored inert `template` use the complete comparison before this
+actual-document byte gate.
 
 ## Preparation And Storage
 
