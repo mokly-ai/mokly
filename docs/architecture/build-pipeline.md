@@ -221,10 +221,13 @@ never recursively replaces the consumer's mixed source/asset root.
 ## Package Browser Assets
 
 The root build compiles the viewer workspace before the CLI. Viewer TypeScript
-emits declarations and ESM modules; its asset step bundles the inspector, shared
-vanilla modules, navigation, fonts and scoped embedding CSS. The CLI asset step
-builds only private Serve/update/control composition modules and rewrites their
-public runtime imports to the existing delivery paths.
+emits declarations and ESM modules; its asset step bundles the standalone
+hydration entry (the shell tree with React and React DOM), the transport and
+geometry modules it imports, the inspector, navigation, fonts and scoped
+embedding CSS. The CLI asset step builds only its private Serve capability
+composition and rewrites its public runtime imports to the existing delivery
+paths. Serve enumerates the delivered browser modules from those build
+outputs.
 
 Serve's live-state restoration does not depend on the catalogue validator.
 An evidence refresh loads the public revision adopter dynamically after its
@@ -234,7 +237,9 @@ The package graph gate validates both static and dynamic import destinations.
 Serve/export combine package-owned assets from both distributions under the
 existing `__mokly/client`, `__mokly/navigation`, shell CSS and font paths. The
 standalone stylesheet is unchanged; embedding CSS is a separate scoped artifact.
-No React, hydration or consumer runtime is bundled into exported browsers.
+Exported browsers receive the same hydration bundle as Serve, including React;
+no consumer runtime is ever bundled, and the in-frame inspector stays a
+React-free IIFE under its byte budget.
 Shared catalogue validation uses synchronous browser-safe SHA-256, checked against
 Node digests; source inventory excludes the resolved viewer runtime even when
 npm installs it as a workspace symlink. Browser

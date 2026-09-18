@@ -19,8 +19,10 @@ transport, surrounding product UI, authentication and selection routing.
 - Supports controlled selection, React slots, selection and inspection events,
   and an imperative handle for choosing, highlighting, scrolling and picking.
 - Provides same-origin and explicitly configured cross-origin frame adapters.
-- Renders static shell HTML through the Node-only `@mokly/viewer/server` entry.
-  Standalone exports run vanilla modules without React or hydration.
+- Renders the shell tree to HTML through the Node-only `@mokly/viewer/server`
+  entry, then hydrates it in the browser. Standalone Serve and export load the
+  package's hydration bundle, which includes React; React hosts hydrate with
+  their own.
 
 ## Quick Start
 
@@ -199,8 +201,10 @@ auditing includes both packages.
 ### Key Code
 
 - `src/viewer`: React lifecycle, selection, slots and adapter sessions.
-- `src/shell`: shared server markup and standalone CSS.
-- `src/client`: vanilla enhancements, adapters and first-party runtime seams.
+- `src/shell`: the shell component tree and standalone CSS.
+- `src/client`: frame adapters, message transport, geometry and revision
+  adoption consumed by the shell through hooks (the vanilla enhancement
+  modules there are retired by the React Browse shell plan).
 - `src/catalogue` and `src/components`: public readers and instance contracts.
 - `src/inspector` and `scripts`: bounded in-frame inspector and asset builds.
 - `tests` and root `tests/browser/viewer*.spec.ts`: package conformance tests.

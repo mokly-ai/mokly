@@ -145,57 +145,61 @@ helpers in Milestone 8. The set is produced by grepping `tests/` and
 `packages/viewer/tests/` for imports of the retired module paths; the plan
 records no count because the set changes as modules move.
 
-## Milestone 1: Protocol and architecture documentation
+## Milestone 1: Protocol and architecture documentation — completed
 
 Define the hydrated-shell contract completely before code, and withdraw every
 statement that promises a React-free browser, except the inspector rule.
 
-- [ ] Rewrite the viewer contract's React host and "SSR And Host Independence"
+- [x] Rewrite the viewer contract's React host and "SSR And Host Independence"
       sections in `docs/protocol/mokly-viewer.md`: one component tree rendered
       by `@mokly/viewer/server` and hydrated by the browser entry; slots are
       ordinary React children; the imperative handle and events are backed by
       shell state; source/adapter replacement remounts; no runtime-owned
       islands remain.
-- [ ] Define the state model in the same contract: selection (screen, view,
+- [x] Define the state model in the same contract: selection (screen, view,
       viewport, colour scheme, search, tags), disclosures, drawer, details,
       scroll restoration, and the reload-recovery snapshot, including what is
       URL-derived, what persists, and what survives a watched reload.
-- [ ] Update `docs/protocol/mokly-runtime.md` Browse shell and progressive
+- [x] Update `docs/protocol/mokly-runtime.md` Browse shell and progressive
       enhancement sections: SSR first paint with real anchors, hydration, the
       same route model, and the retained JavaScript-disabled behaviour (direct
       URLs, refresh, alias pages, native disclosure elements).
-- [ ] Update `docs/protocol/mokly-navigation.md`, which owns progressive
+- [x] Update `docs/protocol/mokly-navigation.md`, which owns progressive
       navigation, portable links, safe degradation, fragments, and the
       active-tree invariant: replace fetch-and-swap descriptions with
       read-model rendering while keeping every sandbox, link-marker, and
       outer-navigation rule.
-- [ ] Update `docs/protocol/mokly-export-delivery.md` and
+- [x] Update `docs/protocol/mokly-export-delivery.md` and
       `docs/protocol/mokly-export.md`: the browser inventory ships the hydrated
       shell bundle plus React; keep the inspector cap, comparison delivery,
       deployment identity, and static-page rules; state that module changes
       alter deployment identity as today.
-- [ ] Update `docs/architecture/package-boundary.md` and
+- [x] Update `docs/architecture/package-boundary.md` and
       `docs/architecture/build-pipeline.md`: remove "static SSR ships no React
       to browsers" and "no React, hydration or consumer runtime in exported
       browsers"; describe the new browser build (one hydration entry per
       delivery mode, React bundled for standalone delivery, host React for the
       React host) and keep the rule that consumer code never enters the
       browser.
-- [ ] Confirm `docs/protocol/mokly-frame-adapter.md` stays unchanged: the
+- [x] Confirm `docs/protocol/mokly-frame-adapter.md` stays unchanged: the
       inspector IIFE remains React-free and under its 9,216-byte budget. Record
       that exception explicitly in the viewer contract next to the withdrawn
       no-React rule.
-- [ ] Grep `docs/`, `README.md`, and every crate/package README for statements
+- [x] Grep `docs/`, `README.md`, and every crate/package README for statements
       about the vanilla runtime, framework-neutral enhancement, islands, or
       React-free browsers (known sites: the workspace `README.md`,
       `packages/viewer/README.md`, `src/client/README.md`,
       `packages/viewer/src/client/README.md`, and
       `packages/viewer/src/shell/README.md`); update each to describe the
       hydrated shell and the retained transport modules, and record any
-      further sites the sweep finds.
-- [ ] Record in `docs/protocol/mokly-shell-design.md` that the design is
+      further sites the sweep finds. The sweep also found and updated
+      `docs/protocol/mokly-live-evidence.md` (navigation wording); the
+      `mokly-component-manifest.md` "no React values" sentence and the
+      `mokly-package.md` non-goal about hydrating product fragments concern
+      consumer data and frames, not the shell, and are unchanged.
+- [x] Record in `docs/protocol/mokly-shell-design.md` that the design is
       unchanged by this work and remains binding on the React implementation.
-- [ ] Add this plan to `plans/README.md`; validate the changed Markdown.
+- [x] Add this plan to `plans/README.md`; validate the changed Markdown.
 
 ## Milestone 2: Delivery, packaging, and the shell switch
 

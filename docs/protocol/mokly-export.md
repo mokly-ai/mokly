@@ -253,9 +253,10 @@ must not deep-import package internals or copy repository scripts. The CLI is
 the supported interface for export; no public JavaScript export engine API is
 added. The [`@mokly/viewer`](./mokly-viewer.md) package is a separate supported
 React/SSR viewer API consuming public catalogue data, not an export engine or
-permission to import CLI internals. Serve and export become its first hosts,
-retaining the existing shell, CSS and vanilla browser runtime without shipping
-React in exported browsers.
+permission to import CLI internals. Serve and export are its first hosts:
+they render its shell tree on the server and ship its standalone hydration
+bundle, including React, so exported browsers run the same shell as Serve.
+Consumer code never enters that bundle.
 Keep typed options/results and narrow testable filesystem, Git, and capture
 boundaries. Reuse existing generation/rendering rules rather than creating a
 second screen renderer or weakening build validation.

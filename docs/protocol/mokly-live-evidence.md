@@ -72,7 +72,7 @@ deployment descriptor and does not start the live update client.
 
 ## Navigation races
 
-Progressive navigation announces its pending/settled state. Evidence refresh
+In-shell navigation announces its pending/settled state. Evidence refresh
 waits for pending navigation; a response captured for an old URL or replaced
 main view is discarded and retried for the current destination. Navigation
 adopts the destination's navigation evidence and update stamp with its main

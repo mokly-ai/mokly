@@ -1,9 +1,12 @@
 # Standalone viewer host
 
 These modules compose `@mokly/viewer/runtime` for local Serve and exported
-catalogues. `browse.ts` boots the shared vanilla enhancements; exported browsers
-never load React. Reusable navigation, inspection and frame adapters live in
-[the viewer package](../../packages/viewer/README.md).
+catalogues. Serve and export render the viewer's shell tree on the server and
+hydrate it with the package's bundled React; these CLI modules supply Serve's
+private capabilities to that tree. Reusable navigation, inspection and frame
+adapters live in [the viewer package](../../packages/viewer/README.md). The
+[React Browse shell plan](../../plans/react-browse-shell.md) replaces the
+vanilla boot described below with a typed capability context.
 
 `browser.ts` and `live_updates.ts` retain the private Serve event stream and reload
 recovery. `browse_refresh.ts` validates public evidence revisions through the

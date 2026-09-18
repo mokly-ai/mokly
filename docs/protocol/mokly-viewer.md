@@ -2,11 +2,17 @@
 
 ## Delivery Status
 
-Implemented by [viewer library Milestone 5](../../plans/mokly-viewer-library.md).
-The workspace package, React API, static server entry and first-party hosts are
-available in this checkout. [Coordinated release preparation](./npm-release.md)
-is implemented by Milestone 6; publication and the viewer's first registration
-remain post-merge. Local Serve/export presentation is unchanged.
+The package, React API, static server entry and first-party hosts were
+implemented by the [viewer library plan](../../plans/mokly-viewer-library.md),
+and [coordinated release preparation](./npm-release.md) by its Milestone 6.
+This document now defines the hydrated shell contract delivered by the
+[React Browse shell plan](../../plans/react-browse-shell.md): one React
+component tree rendered on the server and hydrated in every delivery mode.
+Until that plan's flip milestone lands, the shipped shell still renders the
+same markup as strings and enhances it with the vanilla runtime under
+`packages/viewer/src/client`; the contract below is the target, and the plan
+records which milestones deliver each part. Local Serve/export presentation
+is unchanged by the transition.
 
 ## Package And Props
 
@@ -15,9 +21,10 @@ with declarations and React/React DOM peers. `@mokly/mokly` depends on its
 released version; the viewer never imports the CLI, Node, Git or consumer code.
 The public React entry exports `MoklyViewer`, its types, the adapters and
 `readCatalogue` and `resolveInstance` from the public data contracts.
-The documented `./runtime` integration entry supplies standalone initialization,
-private-service injection, recovery and validated catalogue revision adoption.
-Its lazy revision-adopter loader keeps validation off Serve's startup path.
+The documented `./runtime` integration entry supplies standalone hydration,
+the capability context Serve provides, recovery and validated catalogue
+revision adoption. Its lazy revision-adopter loader keeps validation off
+Serve's startup path.
 `./data` owns shared pure value/validation contracts used by CLI producers.
 These are package entry points, not aliases for CLI modules. `./server` also
 exports typed standalone context and `viewerAssetUrl` for package assets.
@@ -254,8 +261,9 @@ covers only the stage; the host explicitly chooses pointer events, using `none`
 for passive annotations. It cannot silently intercept shell navigation.
 `emptyState` replaces only the no-selection/home body, not loading, fetch errors,
 missing current screens or unavailable evidence. Omitted slots add no visible
-space or controls. Slot children may rerender without resetting viewer state;
-the enhancement runtime never changes their DOM or React event handlers.
+space or controls. Slot children are ordinary React children of the shell
+tree and may rerender without resetting viewer state; the shell never reaches
+into their DOM or event handlers.
 
 ## Theming And Ownership
 
@@ -271,39 +279,89 @@ embedded stylesheet uses CSS `@scope` to exclude the host page and slot content,
 with a relative packaged font URL. Hosts need browsers with CSS scope support.
 Standalone CSS and font URLs remain unchanged.
 
-React renders the existing server shell TSX. An effect boots the existing
-framework-neutral enhancement runtime against that viewer's root. React owns
-the stable shell skeleton and slot containers; runtime-owned islands contain
-route markup, frames, inspector and interactive navigation state. After boot,
-React does not reconcile those islands or the attributes the runtime mutates.
-Controlled props/handle methods call runtime operations, not competing DOM
-renders. Slot portals remain outside replaceable islands. Cleanup must tolerate
-React effect setup/cleanup replay with no duplicate listeners or requests.
+## Shell Tree And State
+
+The shell is one React component tree under `packages/viewer/src/shell`. It is
+rendered on the server for first paint and hydrated in the browser by every
+delivery mode: `MoklyViewer` in React hosts, and the standalone hydration entry
+in Serve and export. There are no runtime-owned islands, no string-rendered
+markup injected into the tree, and no second implementation of any shell
+interaction. Route content renders from the validated catalogue read model;
+navigation never fetches and swaps shell HTML. Controlled props and handle
+methods update shell state, and every rendered attribute is owned by React.
+Frames remain static documents in script-disabled sandboxed iframes; hydration
+never reaches inside a frame.
+
+Shell state is one store scoped to a mounted viewer:
+
+- **Route** is derived from the URL and is the only source of route truth:
+  screen, saved variant, comparison selection and the validated `fragment`
+  query. Standalone modes own the document URL and history; React hosts
+  receive route changes through `onScreenNavigate` and own their own URL.
+- **Selection** is the public `ViewerSelection`: screen, All/Changes view,
+  viewport, colour scheme, search phrase and tags. Standalone modes keep
+  viewport, scheme and filters in memory across in-shell navigation.
+- **Disclosure** covers navigation groups (`section:*` and `collection:*`
+  identities), the details inspector, the navigation split width and the
+  responsive drawer. Navigation, details and split-width choices persist per
+  served origin in browser storage under the existing keys; the drawer and the
+  tag picker panel do not persist and reset on reload.
+- **Scroll** is tracked per `data-mokly-scroll` region and saved into the
+  history entry for Back/Forward restoration; route-change focus never
+  overrides a restored position.
+- **Workspace** state (component variant, props under edit, inspector tab and
+  pane size, active pick, highlight scope) lives with the mounted view and is
+  discarded on route change or source replacement.
+
+A watched reload captures search, view, viewport, scheme, disclosure
+(including the pre-filter baseline), drawer, catalogue scroll and per-region
+scroll into the one-shot recovery snapshot defined by the
+[watch contract](./mokly-watch.md); the hydrated shell restores it exactly as
+before. Native disclosure choices made before hydration completes are captured
+by the pre-hydration script and take precedence over older preferences and the
+snapshot; capture state is removed after load or exit. Hydration must produce
+no mismatches: the server tree and the initial client tree are the same
+function of the same read model, route, selection and delivery descriptor.
 
 A source change (object/fetcher identity, URL value, object base origin), or
-adapter change, disposes and remounts the whole runtime, cancelling stale loads,
-pick and frame sessions. Selection changes do not remount it. Within an unchanged
-source, first-party Serve's update bridge applies validated evidence revisions
-in place and content changes through the existing reload lifecycle. That host
-integration retains local controls, live CSS/comparison evidence and on-demand
-rendering; private tokens/evidence never enter catalogue JSON. Export supplies
-no such capability. Hosts do not need undocumented manifest access.
-Standalone native disclosure actions during startup take precedence over older
-preferences and reload snapshots; startup capture is removed after load or exit.
+adapter change, remounts the shell tree, cancelling stale loads, pick and frame
+sessions. Selection changes do not remount it. Cleanup tolerates React effect
+setup/cleanup replay with no duplicate listeners or requests. Within an
+unchanged source, first-party Serve supplies its private capabilities (update
+stream, reload recovery, evidence revisions, temporary control previews and
+on-demand rendering) through a typed React context that the CLI provides and
+export leaves unset. Evidence revisions apply in place; content changes use the
+reload lifecycle. Private tokens/evidence never enter catalogue JSON, and hosts
+do not need undocumented manifest access.
 
-## SSR And Host Independence
+## SSR, Hydration And Host Independence
 
 The Node-only `@mokly/viewer/server` entry exports `renderViewer` for Serve and
 export. It synchronously accepts a validated object source, its base URL and
-initial selection/slots, and returns static shell HTML; URL/fetcher sources and
-browser handles/effects are not accepted during SSR. CLI-owned context supplies
-the existing route, live capabilities or static delivery descriptor through its
-server integration. That context already contains accepted data; it bypasses
-public-source decoding. Serve validates each serialized public revision once and
-shares it across shell requests; asset delivery never decodes the catalogue.
-The browser graph never imports this entry. Export includes
-the same CSS and vanilla enhancement modules, with **no React or hydration in
-exported browsers**. Client React hosts boot that runtime in an effect instead.
+initial selection/slots, and returns the server-rendered shell tree as HTML;
+URL/fetcher sources and browser handles/effects are not accepted during SSR.
+CLI-owned context supplies the existing route, live capabilities or static
+delivery descriptor through its server integration. That context already
+contains accepted data; it bypasses public-source decoding. Serve validates
+each serialized public revision once and shares it across shell requests;
+asset delivery never decodes the catalogue. The browser graph never imports
+this entry.
+
+First paint is real: the server output is the complete shell with real anchors
+for every route, so direct URLs, refresh, alias pages and JavaScript-disabled
+use show the correct screen before any script runs. Serve and export then load
+the documented standalone hydration entry, which bundles React and hydrates
+that tree in place. React hosts render `MoklyViewer` with their own React and
+hydrate it the same way. **Exported catalogues ship React and hydrate**; the
+former rule that exported browsers contain no React is withdrawn so that one
+shell implementation serves every delivery mode. An SSR-only unhydrated export
+remains possible because first paint does not depend on hydration, but it is
+not a supported mode.
+
+One exception stands: the in-frame inspector script defined by the
+[frame adapter contract](./mokly-frame-adapter.md) stays a React-free IIFE
+under its 9,216-byte budget. It runs inside consumer documents, not the shell,
+and no shell dependency may enter it.
 
 The viewer knows no cloud tenant, auth, comment model, deployment provider or
 host route layout. Hosts own surrounding product UI and data. Viewer network
@@ -316,6 +374,8 @@ are read/written, and no `window.top` access occurs. Embedding never commandeers
 an ancestor router; standalone Serve/export retain their current URL lifecycle.
 
 Acceptance includes all props, slots, events, handle methods, controlled-state
-round trips, multiple independent mounts, SSR/client lifecycle cleanup, source
-replacement, same/cross-origin frames and unchanged local browser tests. Compare
-export shell markup/CSS and document every justified invisible byte change.
+round trips, multiple independent mounts, SSR/client lifecycle cleanup,
+hydration without mismatches on every fixture route, source replacement,
+same/cross-origin frames and the existing local browser tests passing against
+the hydrated shell. Behavioural parity under `tests/browser` is the bar; shell
+module bytes and export deployment identity are expected to change.

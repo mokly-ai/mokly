@@ -52,9 +52,9 @@ See the [component contract](../protocol/mokly-components.md).
 
 The repository uses npm workspaces with `packages/viewer` as `@mokly/viewer`
 (version 0.1.0); root `@mokly/mokly` depends on exactly that version, without
-`workspace:` or filesystem dependency specifiers. Shell TSX/CSS, enhancement
-runtime, navigation, frame adapters, inspector and public catalogue/instance
-readers belong to the viewer. Shared pure validation and DTOs live there too. The CLI retains config, authoring/build, comparisons,
+`workspace:` or filesystem dependency specifiers. The shell component tree
+and CSS, its hydration entries, navigation, frame adapters, inspector and
+public catalogue/instance readers belong to the viewer. Shared pure validation and DTOs live there too. The CLI retains config, authoring/build, comparisons,
 Serve/watch, export/upload and private control/evidence transports. The viewer
 never imports the CLI, Node built-ins, Git or consumer application code. Its `./server` entry
 is explicitly Node-only SSR and is excluded from the browser entry graph.
@@ -64,11 +64,15 @@ the [catalogue v1 projection](../protocol/mokly-catalogue.md), the
 [React/SSR viewer API](../protocol/mokly-viewer.md) and
 [FrameAdapter](../protocol/mokly-frame-adapter.md). Hosts consume packages and
 documented public artifacts, without private manifest access, deep imports or
-cloud-specific flags. The viewer owns stable shell markup and vanilla runtime
-islands; React slots remain host-owned. Static SSR ships no React to browsers.
-First-party Serve/export use the same-origin adapter and no slots, preserving
-every existing local pixel and interaction. Private live integrations stay in
-the CLI host; explicit cross-origin hosts use the bounded inspector protocol.
+cloud-specific flags. The viewer owns one shell component tree, rendered on the
+server and hydrated in the browser in every delivery mode; React slots are
+ordinary children the host owns. Serve and export load the viewer's standalone
+hydration bundle, which includes React; React hosts hydrate with their own
+React. Consumer code never enters the browser. First-party Serve/export use
+the same-origin adapter and no slots, preserving every existing local pixel
+and interaction. Private live integrations stay in the CLI host and reach the
+tree through a typed capability context; explicit cross-origin hosts use the
+bounded inspector protocol, whose in-frame script stays React-free.
 
 Public catalogue and inspector files join existing export/upload inventories
 without schema changes. The manifest/source inventory stays private. Build,

@@ -13,8 +13,10 @@ The [`@mokly/viewer`](./packages/viewer/README.md) workspace embeds the existing
 Browse shell in React hosts using the public
 [catalogue read model](./docs/protocol/mokly-catalogue.md). It provides controlled
 selection, slots, inspection events, an imperative handle and
-[frame adapters](./docs/protocol/mokly-frame-adapter.md). Serve and export use its
-static renderer and vanilla enhancements; exported browsers contain no React.
+[frame adapters](./docs/protocol/mokly-frame-adapter.md). Serve and export render
+its shell tree on the server and hydrate it in the browser with its bundled
+React, so every delivery mode runs one shell; the
+[React Browse shell plan](./plans/react-browse-shell.md) tracks that transition.
 Both packages build, release and are tested together. The viewer publishes before
 the CLI, which depends on its exact version. Local Serve/export presentation is
 unchanged; first viewer registration remains post-merge.

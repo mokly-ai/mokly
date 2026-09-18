@@ -1,9 +1,14 @@
 # Browse client and frame adapters
 
-These browser modules enhance the existing server-rendered Browse shell. They
-own navigation, viewport and theme state, comparisons, and component inspection.
-The package build bundles their pure dependencies into `dist/browser`; the
-server's explicit client-module allowlist also supplies the export inventory.
+These browser modules serve the Browse shell. The frame adapters, message
+transport, geometry and revision-adoption modules are consumed by the hydrated
+React shell through hooks. The remaining modules are the vanilla enhancement
+runtime that owned navigation, viewport and theme state, comparisons and
+component inspection before the [React Browse shell plan](../../../../plans/react-browse-shell.md);
+that plan's module inventory classifies each file, and the retired ones are
+deleted when the hydrated shell becomes the default. The package build bundles
+`dist/browser`; Serve enumerates the delivered modules from it for the export
+inventory.
 
 `early_disclosures.ts` bridges native disclosure clicks through deferred startup.
 The synchronous navigation bootstrap starts capture; Browse initialization and

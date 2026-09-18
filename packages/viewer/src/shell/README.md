@@ -1,9 +1,13 @@
 # Shared Browse shell
 
-These React components render the existing catalogue, stages, navigation and
-inspector. `document.tsx` supplies the standalone document envelope used through
-`@mokly/viewer/server`; React hosts render the same components into stable runtime
-islands with separate host-owned slots.
+These React components are the Browse shell tree: catalogue, stages,
+navigation and inspector. `document.tsx` supplies the standalone document
+envelope used through `@mokly/viewer/server`, and the same tree is hydrated in
+the browser by Serve, export and React hosts, with host-owned slots as ordinary
+children. The [viewer contract](../../../../docs/protocol/mokly-viewer.md#shell-tree-and-state)
+defines the tree and its state model; the
+[React Browse shell plan](../../../../plans/react-browse-shell.md) tracks the
+move from string-rendered islands to that hydrated tree.
 
 `css.ts` concatenates the standalone stylesheet. Split string modules preserve
 its exact bytes. The package build scopes an embedded stylesheet separately and
