@@ -2,6 +2,7 @@
 
 ## Active
 
+- [Removed Content Previews](./removed-content-previews.md)
 - [CLI Terminal Experience](./cli-terminal-experience.md)
 - [Package Documentation](./package-documentation.md) — supersedes the
   unmerged public-site plan and pull request #79 by shipping versioned Markdown
