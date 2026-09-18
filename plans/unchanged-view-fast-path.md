@@ -6,6 +6,11 @@ The original implementation and measurement milestones are complete. The fast pa
 preserves complete-path output across the differential fixture matrix, keeps
 resource and derived-byte gates intact, and emits explicit path counts.
 
+The six approved findings are addressed and pushed. Milestone 7's post-push
+review found an additional equivalence gap for caller-slot resources inside
+inert templates, recorded below for the user's decision. This plan remains
+Active until the PR merges.
+
 These historical measurements predate the independent two-sided resource
 traversal added by Milestone 7. Measurements on the same VM compare the background worker's
 `changes.classify` span, excluding baseline preparation:
@@ -344,9 +349,9 @@ the shortcut only when it is equivalent for valid builder output.
 - [x] Extract comparison-count tallying from `component_classification.ts`.
 - [x] Run formatting, build, type checking, and all relevant tests with a 100%
       pass rate; run the final full `cargo xtask check`.
-- [ ] `git add -A`, commit the completed work with a Conventional Commits
+- [x] `git add -A`, commit the completed work with a Conventional Commits
       message, and push the branch.
-- [ ] Review: after the push, use `docs/implementation-review-prompt.md` against
+- [x] Review: after the push, use `docs/implementation-review-prompt.md` against
       `origin/main` and report findings without changing the implementation.
 
 Validation passed: `cargo xtask check` ran 1,865 Node tests, 452 Chromium tests,
@@ -356,6 +361,27 @@ and complete-path equivalence for all 276 example views in both modes. The
 example used 276 resource discoveries in committed mode and 552 in derived
 mode. The added-import and both route-move regressions fail with the original
 fast path and pass with the fix; the removed-import control passes both.
+
+The implementation was pushed as `3e671bb`. The post-push review used
+`docs/implementation-review-prompt.md` against the complete branch diff and
+found one additional issue, independently reproduced by the owner:
+
+7. **Medium — Caller-slot projection can expose resources inside inert templates.**
+   The [fast-path resource gate](../src/review/component_view_fast_path.ts#L44)
+   discovers actual-document resources only. Valid compiler output with a
+   component rendering `<template>{props.children}</template>` and a caller
+   supplying `<img loading="lazy" src="../image.svg" />` has no actual resource
+   references, but projection moves that slot into ordinary document content.
+   The fast path omits a screen dependency in committed mode and a material
+   change in derived mode when the image changes. Doing nothing leaves Changes
+   membership dependent on the optimization and invalidates the projected-set
+   subset assumption above. **A (recommended):** add a conservative reusable
+   eligibility guard for template-bearing caller-slot views, compiler-backed
+   differential tests in both modes, and a corrected contract. This preserves
+   existing comparison behavior at the cost of less optimization for those
+   views. **B:** redesign projection and discovery to preserve inert-container
+   semantics, a broader behavior change requiring an agreed contract and more
+   regression coverage. The finding remains open for the user's decision.
 
 ## Post-merge follow-up (non-blocking)
 
