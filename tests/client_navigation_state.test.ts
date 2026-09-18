@@ -28,7 +28,7 @@ const glossary = {
 const transferReady = {
   id: "transactions-list-transfer-ready",
   route: "screens/transfer-ready.html",
-  tags: ["accounting"],
+  tags: ["operations"],
   text: "Ready to transfer",
 };
 

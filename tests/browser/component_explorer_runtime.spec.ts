@@ -189,6 +189,47 @@ test("desktop divider stays centered while resizing and mobile sheet keeps the p
   ).toBe(true);
 });
 
+test("the inspector divider lights up like the navigation divider", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto(`${server.url}/view/components/pane.html`);
+  await page.addStyleTag({
+    content: "*, *::after { transition: none !important; }",
+  });
+  const grip = (node: Element) => {
+    const style = getComputedStyle(node, "::after");
+    return {
+      background: style.backgroundColor,
+      shadow: style.boxShadow,
+      line: [style.width, style.height].sort().join(" "),
+    };
+  };
+  const dividers = {
+    navigation: page.getByRole("separator", {
+      name: "Resize navigation panel",
+    }),
+    inspector: page.getByRole("separator", { name: "Resize inspector" }),
+  };
+  await expect(dividers.inspector).toBeVisible();
+  const resting = await dividers.inspector.evaluate(grip);
+  expect(resting).toEqual(await dividers.navigation.evaluate(grip));
+
+  const box = (await dividers.inspector.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  const hovered = await dividers.inspector.evaluate(grip);
+  expect(hovered).not.toEqual(resting);
+  await dividers.navigation.hover();
+  expect(await dividers.navigation.evaluate(grip)).toEqual(hovered);
+
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2, box.y - 60, { steps: 8 });
+  await expect(page.locator("body")).toHaveClass(/mbk-inspector-resizing/);
+  await page.mouse.up();
+  await expect(page.locator("body")).not.toHaveClass(/mbk-inspector-resizing/);
+});
+
 test("component comparisons follow changed variants while added variants stay current", async ({
   page,
 }) => {

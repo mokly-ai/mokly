@@ -154,7 +154,7 @@ selection after the UI is ready.
 
 The pre-integration `cargo xtask check` passed on 2026-09-09: formatting, lint, TypeScript, 425
 Node tests, example freshness, package contents, packed ESM/NodeNext/npx/Juno/
-Accounting consumers, 82 Chromium tests, Rust fmt/clippy, three Rust tests, and
+themed consumers, 82 Chromium tests, Rust fmt/clippy, three Rust tests, and
 the Rust file-length audit. Both publication options were built and served.
 Tests cover a ref advancing during capture, input-mutation rollback, replacement
 of review output with an ordinary export, removed pages, fragments, preserved

@@ -3,6 +3,7 @@
 
 import { SHELL_CHROME_CSS } from "./css_chrome.js";
 import { SHELL_DETAILS_CSS } from "./css_details.js";
+import { SHELL_INSPECTOR_RESIZE_CSS } from "./css_inspector_resize.js";
 import { SHELL_NAV_CSS } from "./css_nav.js";
 import { SHELL_NAV_RESIZE_CSS } from "./css_nav_resize.js";
 import { SHELL_NAV_STATUS_CSS } from "./css_nav_status.js";
@@ -21,4 +22,5 @@ export const SHELL_CSS =
   SHELL_DETAILS_CSS +
   SHELL_CHROME_CSS +
   SHELL_REVIEW_CSS +
-  SHELL_WORKSPACE_CSS;
+  SHELL_WORKSPACE_CSS +
+  SHELL_INSPECTOR_RESIZE_CSS;

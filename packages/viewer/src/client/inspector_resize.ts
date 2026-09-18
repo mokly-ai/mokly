@@ -10,6 +10,7 @@ export function installInspectorResize(
   const divider = root.querySelector<HTMLElement>("[data-inspector-resize]")!;
   const grab = root.querySelector<HTMLButtonElement>("[data-inspector-size]")!;
   const panes = root.querySelector<HTMLElement>(".mbk-workspace-panes")!;
+  const body = root.ownerDocument.body;
   let height = 260;
   const narrow = () => win.matchMedia("(max-width: 56.25rem)").matches;
   const bounds = () => ({
@@ -45,7 +46,9 @@ export function installInspectorResize(
       moved: false,
     };
     target.setPointerCapture(event.pointerId);
-    if (!narrow()) event.preventDefault();
+    if (narrow()) return;
+    event.preventDefault();
+    body.classList.add("mbk-inspector-resizing");
   };
   const move = (event: PointerEvent) => {
     if (!drag || drag.pointer !== event.pointerId) return;
@@ -64,12 +67,14 @@ export function installInspectorResize(
     suppressClick = drag.moved;
     inspector.style.removeProperty("height");
     drag = undefined;
+    body.classList.remove("mbk-inspector-resizing");
   };
   for (const handle of [divider, grab]) {
     handle.addEventListener("pointerdown", begin, { signal });
     handle.addEventListener("pointermove", move, { signal });
     handle.addEventListener("pointerup", end, { signal });
     handle.addEventListener("pointercancel", end, { signal });
+    handle.addEventListener("lostpointercapture", end, { signal });
   }
   grab.addEventListener(
     "click",
@@ -96,7 +101,14 @@ export function installInspectorResize(
   );
   const observer = new ResizeObserver(clamp);
   observer.observe(panes);
-  signal.addEventListener("abort", () => observer.disconnect(), { once: true });
+  signal.addEventListener(
+    "abort",
+    () => {
+      observer.disconnect();
+      body.classList.remove("mbk-inspector-resizing");
+    },
+    { once: true },
+  );
   clamp();
   return clamp;
 }

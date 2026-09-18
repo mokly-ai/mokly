@@ -59,7 +59,7 @@ output.
 5. **Manifest schema v3 with one additive optional field**, not a v4
    restructure. Screen entries gain `darkFragments?: { mobile; desktop }`,
    present exactly when the screen's effective schemes include dark. Why:
-   committed base manifests (and the Accounting v2 compat path) keep parsing
+   committed base manifests (and the legacy v2 compatibility path) keep parsing
    with no third version branch in Review base reading; light-only manifests
    stay byte-identical. Internally, code normalizes entries into a uniform
    view list (viewport × scheme) at the read boundary so downstream logic

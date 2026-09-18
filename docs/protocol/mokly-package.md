@@ -8,8 +8,8 @@ generation, validation, browsing, and on-demand comparisons. A consumer owns all
 screens, product copy, product components, styling, theme setup, and generated
 product output.
 
-The package must be usable by Accounting and Juno without importing either
-application or recognizing application-specific route names. Synthetic screens
+The package must be usable by structurally different applications without
+importing them or recognizing application-specific route names. Synthetic screens
 may exist only under examples and test fixtures.
 
 ## Delivery Status
@@ -168,7 +168,7 @@ literals, and package boundary.
 
 ## Non-Goals
 
-- Owning or publishing Accounting, Bookfolio, or Juno screens.
+- Owning or publishing consumer application screens.
 - Replacing a consumer's product component library or design tokens.
 - Deploying a hosted Mokly service.
 - Hydrating product fragments into interactive application replicas.

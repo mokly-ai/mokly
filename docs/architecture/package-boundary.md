@@ -20,8 +20,8 @@ paths, and synthetic tests.
 ## Dependency Direction
 
 `@mokly/mokly` has React and React DOM peer dependencies. It does not depend on
-React Native, React Native Web, `@firna/ui`, Accounting, Juno, or a consumer's
-workspace layout. At build time, React imports are resolved from the consumer's
+React Native, React Native Web, `@firna/ui`, consumer applications, or their
+workspace layouts. At build time, React imports are resolved from the consumer's
 config file and every React-bearing source is bundled in one graph.
 
 The renderer is synchronous and returns a complete HTML document, either as a
@@ -34,7 +34,7 @@ library would make Mokly app-specific and risk two React runtimes.
 Module-resolution configuration is likewise consumer-owned: aliases,
 conditions, package fields, extensions, loaders, and package roots describe the
 consumer component tree. Mokly validates and applies them without supplying
-React Native Web, Accounting, or Juno defaults.
+React Native Web or application-specific defaults.
 
 ## Registered Components
 

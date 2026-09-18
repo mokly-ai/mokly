@@ -112,8 +112,8 @@ on the same prepared fixture, run
 The output must stay inside the fixture; review timing rows are inclusive, and
 overlapping traversals must not be added to their parent duration.
 
-This is representative structure and volume, not Accounting's private data or
-an exact prediction of its timing. OS, hardware, cache state, markup complexity
+This is representative structure and volume, not private consumer data or an
+exact prediction of production timing. OS, hardware, cache state, markup complexity
 and instance counts matter. Benchmark while other heavy checks are idle. There
 are no fixed timing thresholds in CI's small correctness suite. Small fixtures exercise the same generator
 in `tests/large_fixture.test.ts`; CLI timing tests cover stdout/byte stability,

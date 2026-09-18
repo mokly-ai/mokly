@@ -1,15 +1,13 @@
-# Accounting Shell Design Parity
+# Browse Shell Design Parity
 
-Bring the served Mokabook Browse shell back to the refined design that lives in
-the Accounting repository (`docs/mockups/src/mockbook` plus `mockbook.css` and
-`styles.css` at `/Users/calummoore/projects/futex/accounting`), and adopt
-`@firna/ui` in the example catalogue the same way Accounting's product screens
-use it. The extracted shell drifted from that design: flat device frames, a
-too-small fluid desktop viewport, glyph-character nav icons, non-interactive
-breadcrumbs, a different top bar and details panel, and no expand-to-wide-view
-control on the browser frame.
+Bring the served Mokabook Browse shell to the refined design recorded in the
+design catalogue, and use `@firna/ui` in the example catalogue to prove the
+custom renderer boundary. The earlier shell had flat device frames, a too-small
+fluid desktop viewport, glyph-character nav icons, non-interactive breadcrumbs,
+a different top bar and details panel, and no expand-to-wide-view control on the
+browser frame.
 
-Target design (from Accounting, treated as the source of truth):
+Target design:
 
 - Full-height application shell (`100vh`, internal scrolling) with a 48px top
   bar: sage brand mark, centred search, Browse/Review segmented modes.
@@ -29,7 +27,7 @@ Target design (from Accounting, treated as the source of truth):
 
 ## Milestone 1 — Shell design protocol docs
 
-Rewrite the shell design contract to specify the Accounting-parity design and
+Rewrite the shell design contract to specify the approved parity design and
 align the runtime contract's Browse Shell section with it.
 
 - [x] Rewrite `docs/protocol/mokly-shell-design.md`: tokens (`--chrome-*`
@@ -48,7 +46,7 @@ align the runtime contract's Browse Shell section with it.
 Tags: mockup
 
 Update the example design catalogue (the visual spec for the shell) to depict
-the Accounting-parity design before implementation.
+the approved parity design before implementation.
 
 - [x] Update `examples/basic/entries/design/parts/*` (shell, nav, stage,
       review) to the new top bar, nav (SVG icons, guides, filter, counts),
@@ -64,7 +62,7 @@ the Accounting-parity design before implementation.
 
 Backend groundwork the redesigned shell needs; no visual changes yet.
 
-- [x] Port the Accounting nav-tree model (nested groups from `navPath`,
+- [x] Implement the nav-tree model (nested groups from `navPath`,
       legacy-page directory folding with Overview leaves, crumb-trail route
       resolution) into `src/server/shell/nav_tree.ts` with unit tests.
 - [x] Package and serve the Inter variable font (OFL license file included) at
@@ -80,11 +78,11 @@ Tags: ui
 Implement the ported design in the served shell.
 
 - [x] Replace the shell markup modules with React SSR components
-      (`renderToStaticMarkup`) ported from Accounting: document scaffold, top
-      bar, catalogue nav with inline SVG icons and indent guides, screen head
+      (`renderToStaticMarkup`) based on the approved design: document scaffold,
+      top bar, catalogue nav with inline SVG icons and indent guides, screen head
       with linked breadcrumbs and id chip, frames stage, use-case flow, legacy
       embed, details inspector, home/missing/review-launcher views.
-- [x] Replace the shell stylesheet with the ported Accounting CSS (tokens,
+- [x] Replace the shell stylesheet with the approved design CSS (tokens,
       top bar, nav, stage and device frames, expand overlay, flow, details,
       empty states) split into ≤~350-line modules, with `aria-current` /
       `aria-pressed` selectors for the shell's accessible state hooks, the
@@ -100,12 +98,12 @@ Implement the ported design in the served shell.
 
 ## Milestone 5 — @firna/ui in the example catalogue
 
-Adopt `@firna/ui` in the bundled example the way Accounting consumes it, so the
-package proves the consumer contract against the real Firna stack.
+Adopt `@firna/ui` in the bundled example so the package proves the consumer
+contract against the real Firna stack.
 
 - [x] Add `@firna/ui`, `react-native-web`, and the peers its used subpaths
       need as development dependencies.
-- [x] Give `examples/basic` an Accounting-style renderer adapter: sage theme
+- [x] Give `examples/basic` a custom renderer adapter: sage theme
       tokens, `SharedUiThemeProvider`, `renderToStaticMarkup`, and
       react-native-web `AppRegistry` style collection.
 - [x] Configure `moduleResolution` aliases/conditions/mainFields in the
@@ -129,7 +127,7 @@ toolbars) is deferred here.
 ## Milestone 7 — Verification and handoff
 
 - [x] Run `npm test`, `npm run test:browser`, `npm run example:check`, and
-      smoke-test the served shell against the Accounting reference
+      smoke-test the served shell against the design-catalogue reference
       screenshots.
 - [x] Run `cargo xtask check`.
 - [x] Commit with Conventional Commits, push the branch.

@@ -238,7 +238,7 @@ resolution as saved variants and never mutate generated output. Assert that
 control requests create no filesystem output, Git status change, watch event,
 rebuild/reload notification, Check orphan, or publication entry, including when
 a consumer explicitly watches its repository root. Test aggregate bundle byte
-accounting, expiration/eviction, MIME/headers, and memory release on shutdown.
+tracking, expiration/eviction, MIME/headers, and memory release on shutdown.
 
 Browser tests cover actual prop changes, reset, variant switching, viewport/theme
 retention, rapid edits, stale responses, navigation, comparison selection,

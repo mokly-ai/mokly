@@ -597,8 +597,8 @@ unmatched historical documents never become removed catalogue entries.
 ## Rendering Boundary
 
 The default renderer produces neutral static HTML. A consumer renderer can wrap
-the React node in its theme/context and return a complete document. Accounting,
-for example, will keep React Native Web style collection in that adapter rather
+the React node in its theme/context and return a complete document. Custom
+renderers keep React Native Web style collection in the consumer adapter rather
 than making React Native Web a Mokly dependency.
 
 Entries, the renderer, and imported document helpers are bundled into one
@@ -743,7 +743,7 @@ recovery and reports the last published state if it times out.
 dependency audit (`npm run dependencies:check`), then checks commit titles in
 `origin/main..HEAD` against the 50-character limit and includes formatting,
 lint, typechecking, unit/integration tests, the derived example, package
-allowlist and license checks, clean packed ESM/NodeNext/npx/Accounting/Juno
+allowlist and license checks, clean packed ESM/NodeNext/npx/themed/Juno
 consumers, Chromium tests, and all Rust checks. It also audits the freshly
 resolved packed consumer's production dependencies. Registry access is required;
 known advisories or registry errors fail verification. See the
@@ -995,7 +995,9 @@ The [controls designs](./docs/protocol/mokly-component-controls-design.md) show
 saved variants and temporary edits, implemented by the local rendering service. The catalogue hierarchy reaches each design without
 adding navigation footers to the artboards. The [workspace designs](./docs/protocol/mokly-component-workspace-design.md) add working viewport/theme/highlight controls, a fixed shell with a resizable inspector, entry change-status badges, and comparison evidence inside Details. Unmodified examples and ordinary Browse/tag-picker designs omit comparison tabs;
 eligible comparisons retain an opaque toolbar. The desktop grip sits on its
-divider line.
+divider line and shares the navigation separator's affordance, rotated: the same
+rounded short line that turns accent-colored with a soft halo on hover, focus,
+and drag.
 
 All 68 design screens reuse the 15 registered components in
 **Components → Design → Shared components**, including the footer tabs panel. The library
@@ -1061,12 +1063,9 @@ in the [plans index](./plans/README.md).
   adapters are implemented; the viewer package is verified and awaiting its
   first release.
 - [Package ownership boundary](./docs/architecture/package-boundary.md)
-- [Accounting migration inventory](./docs/migration/accounting-framework-inventory.md)
-- [Styled control migration guide](./docs/migration/accounting-link-controls.md)
 - [Implementation review prompt](./docs/implementation-review-prompt.md)
 - [Implementation plans](./plans/README.md)
 - [Unified catalogue pages](./docs/protocol/mokly-pages.md) and
   [required breaking upgrade](./docs/protocol/mokly-page-migration.md)
 - [Authoring source protection](./docs/protocol/mokly-source-protection.md) and
   [catalogue change metadata](./docs/protocol/mokly-catalogue-changes.md)
-- [Versioned Accounting page migration](./docs/migration/accounting-page-entries.md)

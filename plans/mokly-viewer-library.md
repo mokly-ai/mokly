@@ -200,7 +200,7 @@ component tests passed. The first full gate stopped on a test assertion lint
 error; that assertion was corrected and the gate restarted.
 The next run passed all 1,532 unit/integration tests and reached the packed ESM
 API allowlist, which needed the new resolver export. The updated ESM, NodeNext,
-clean-cache npx, Accounting and Juno consumers passed independently, including
+clean-cache npx, themed and Juno consumers passed independently, including
 installed-package source capture.
 The final `cargo xtask check` passed: 1,532 unit/integration tests, 274 Chromium
 tests, all five packed-consumer scenarios and three Rust tests, plus dependency

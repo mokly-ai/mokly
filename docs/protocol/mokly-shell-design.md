@@ -3,10 +3,8 @@
 ## Scope
 
 This document records the approved design for the package-owned Browse shell
-and the optional in-place screen comparisons. The design is
-the refined Mockbook shell originally shipped inside the Accounting repository,
-ported here without any Accounting or Bookfolio content. The visual source of
-truth is the design catalogue in the basic example under the `design/` routes;
+and the optional in-place screen comparisons. The visual source of truth is the
+design catalogue in the basic example under the `design/` routes;
 this contract fixes the tokens, dimensions, and responsive behavior that
 implementation and tests must preserve. Runtime behavior stays in
 [mokly-runtime.md](./mokly-runtime.md).
@@ -153,8 +151,8 @@ Typography is **Inter** (a variable font packaged with the shell and served at
 `--sans: "Inter", ui-sans-serif, system-ui, …` at a 13px shell base, with
 `--mono: "SFMono-Regular", Consolas, …` for routes, ids, addresses, and paths.
 The nav indent guides use the faint `--mbk-guide: #dbded8` tint. The shell
-ships no consumer product fonts beyond Inter, and no Accounting or Bookfolio
-color, name, or route family may appear in shell styles or copy.
+ships no consumer product fonts beyond Inter, and no consumer-specific color,
+name, or route family may appear in shell styles or copy.
 
 ## Layout
 
@@ -209,8 +207,12 @@ scrollable region scrolls internally:
   resizes the column from 192px to 480px without exceeding half the viewport.
   Dragging resizes continuously; Left/Right change it by 16px, Home/End choose
   its bounds, and double-click restores 248px. Served pages remember the last
-  chosen width. The separator is absent from the mobile drawer and without
-  JavaScript. The head row is `CATALOGUE` (uppercase, 11px) with a text button
+  chosen width. The grip rests in the strong border color and turns
+  accent-colored with a soft accent halo while hovered, keyboard-focused, or
+  being dragged; the
+  [workspace inspector divider](./mokly-component-workspace-design.md) reuses
+  that affordance rotated. The separator is absent from the mobile drawer and
+  without JavaScript. The head row is `CATALOGUE` (uppercase, 11px) with a text button
   labelled `Collapse all`; an All/Changes segmented filter (with a monospace
   changed count) is always present in live Serve, followed by the scrollable tree.
   While a comparison is being prepared or detection is pending, an 11px spinner
