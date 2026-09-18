@@ -17,7 +17,7 @@ export const SHELL_WORKSPACE_CSS = `
 .mbk-icon-select svg:last-of-type { width: 12px; }
 .mbk-icon-select select { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; }
 .mbk-icon-button:hover, .mbk-icon-select:hover { background: var(--chrome-bg); }
-.mbk-icon-button:focus-visible, .mbk-icon-select:focus-within, .mbk-inspector-resize:focus-visible {
+.mbk-icon-button:focus-visible, .mbk-icon-select:focus-within {
   outline: 2px solid var(--mokly-accent); outline-offset: 2px;
 }
 .mbk-icon-button[aria-selected="true"], .mbk-icon-button[aria-pressed="true"] {
@@ -51,9 +51,6 @@ export const SHELL_WORKSPACE_CSS = `
 .mbk-inspector-content h3 { font-size: 13px; margin: 0 0 12px; }
 .mbk-inspector-content p { line-height: 1.5; }
 .mbk-inspector-content a { color: var(--mokly-accent); }
-.mbk-inspector-resize { position: absolute; top: -8.5px; left: 0; right: 0; height: 16px; cursor: row-resize; touch-action: none; z-index: 2; }
-.mbk-inspector-resize::after { content: ''; position: absolute; width: 42px; height: 3px; border-radius: 9px; background: var(--chrome-muted); left: 50%; top: 6.5px; transform: translateX(-50%); }
-.mbk-inspector:not([data-open="true"]) .mbk-inspector-resize { display: none; }
 .mbk-sheet-grab { display: none; }
 .mbk-component-stage { align-items: flex-start; overflow: auto; }
 .mbk-component-canvas { flex: none; }
@@ -104,7 +101,6 @@ export const SHELL_WORKSPACE_CSS = `
   .mbk-inspector { position: absolute; left: 8px; right: 8px; bottom: 0; border: 1px solid var(--chrome-border); border-bottom: 0; border-radius: 14px 14px 0 0; padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -5px 20px #0000000a; }
   .mbk-inspector[data-open="true"] { height: min(42%, 320px); min-height: 190px; max-height: calc(100% - 36px); }
   .mbk-inspector[data-expanded="true"][data-open="true"] { height: 80%; }
-  .mbk-inspector-resize { display: none; }
   .mbk-inspector-tabs { padding: 4px 10px; }
   .mbk-inspector-content > section { padding: 8px 14px 20px; }
   .mbk-sheet-grab { display: grid; flex: none; place-items: center; height: 22px; padding: 0; border: 0; border-radius: 14px 14px 0 0; background: transparent; touch-action: none; cursor: ns-resize; }

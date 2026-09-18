@@ -991,7 +991,9 @@ The [controls designs](./docs/protocol/mokly-component-controls-design.md) show
 saved variants and temporary edits, implemented by the local rendering service. The catalogue hierarchy reaches each design without
 adding navigation footers to the artboards. The [workspace designs](./docs/protocol/mokly-component-workspace-design.md) add working viewport/theme/highlight controls, a fixed shell with a resizable inspector, entry change-status badges, and comparison evidence inside Details. Unmodified examples and ordinary Browse/tag-picker designs omit comparison tabs;
 eligible comparisons retain an opaque toolbar. The desktop grip sits on its
-divider line.
+divider line and shares the navigation separator's affordance, rotated: the same
+rounded short line that turns accent-colored with a soft halo on hover, focus,
+and drag.
 
 All 68 design screens reuse the 15 registered components in
 **Components → Design → Shared components**, including the footer tabs panel. The library
