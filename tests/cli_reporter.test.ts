@@ -99,6 +99,17 @@ test("rich reporter colours only success ticks when stdout supports colour", () 
   );
 });
 
+test("rich reporter preserves a green success tick when its line is truncated", () => {
+  const terminal = memoryTerminal({ columns: 20, env: {}, isTTY: true });
+  const reporter = new RichReporter(terminal.environment);
+  reporter.summary("plain\n", "Generated 278 files in a long directory", 5_940);
+  reporter.close();
+
+  const output = terminal.stdout();
+  assert.ok(output.includes(`${ESCAPE}[32m✔${ESCAPE}[39m`));
+  assert.equal(output.replace(ANSI, ""), "  ✔ Generated 278 f…\n");
+});
+
 test("rich Serve makes its URL the sole content of a bordered panel", () => {
   const terminal = memoryTerminal({ columns: 80, isTTY: true });
   const reporter = new RichReporter(terminal.environment);
@@ -185,6 +196,10 @@ test("terminal helpers format durations and width deterministically", () => {
   assert.equal(formatDuration(123_000), "2m 03s");
   assert.equal(truncateTerminalLine("0123456789", 8), "0123456…");
   assert.equal(truncateTerminalLine("short", 8), "short");
+  assert.equal(
+    truncateTerminalLine(`${ESCAPE}[36m0123456789${ESCAPE}[39m`, 8),
+    `${ESCAPE}[36m0123456…${ESCAPE}[0m`,
+  );
 });
 
 test("rich error rendering redacts secrets before writing", () => {
