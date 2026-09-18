@@ -67,16 +67,10 @@ export async function compareComponentView(
     state: before ? "removed" : "added",
   };
   if (base === undefined || head === undefined) {
-    const headRanges =
-      head !== undefined && after?.usage
-        ? validateComponentRanges(head, after.usage.ranges)
-        : undefined;
-    const normalized = normalizeSingleDocument(
+    const normalized =
       base !== undefined
-        ? stripHistoricalMarkers(base)
-        : stripMarkers(head!, after!.usage, headRanges),
-      selected.path,
-    );
+        ? normalizeOneSidedView(base, before!, "historical")
+        : normalizeOneSidedView(head!, after!, "current");
     const evidence = await context.resources.compare(
       before ? { path: before.path, html: normalized } : undefined,
       after ? { path: after.path, html: normalized } : undefined,
@@ -174,16 +168,8 @@ export async function compareComponentView(
     reasons.push({ kind: "material" });
   const actualByteChanges = context.compareResourceBytes
     ? await changedResourceBytes(
-        await context.beforeReader.resources(
-          before!.path,
-          actual.base,
-          () => false,
-        ),
-        await context.afterReader.resources(
-          after!.path,
-          actual.head,
-          () => false,
-        ),
+        await context.beforeReader.resources(before!.path, actual.base),
+        await context.afterReader.resources(after!.path, actual.head),
         context.beforeReader,
         context.afterReader,
       )
@@ -225,4 +211,19 @@ export async function compareComponentView(
     },
     reasons,
   };
+}
+
+function normalizeOneSidedView(
+  html: string,
+  view: GeneratedComponentView,
+  dialect: "current" | "historical",
+): string {
+  const ranges = view.usage
+    ? validateComponentRanges(html, view.usage.ranges, dialect)
+    : undefined;
+  const material =
+    dialect === "historical"
+      ? stripHistoricalMarkers(html)
+      : stripMarkers(html, view.usage, ranges);
+  return normalizeSingleDocument(material, view.path);
 }

@@ -9,6 +9,7 @@ import { loadConfig } from "../dist/config/load.js";
 import type { ReviewResultV3 } from "../dist/review/component_types.js";
 
 import { generateLargeFixture } from "./fixtures/large/generate.js";
+import { componentChangeCases } from "./helpers/component_change_cases.js";
 import {
   assertFastPathEquivalent,
   compilationFiles,
@@ -22,25 +23,7 @@ import {
   repositoryRoot,
 } from "./helpers/fixture.js";
 
-for (const [name, change] of [
-  ["unchanged components", (source: string) => source],
-  [
-    "component implementation",
-    (source: string) =>
-      source.replace(
-        "<button data-viewport=",
-        '<button className="changed" data-viewport=',
-      ),
-  ],
-  [
-    "identical render with changed inputs",
-    (source: string) =>
-      source.replaceAll(
-        'label="Hidden" hidden',
-        'label="Invisible edit" hidden',
-      ),
-  ],
-] as const)
+for (const [name, change, routes] of componentChangeCases)
   test(`fast and complete paths agree for ${name}`, async (t) => {
     const fixture = await componentReviewFixture(t, change);
     const result = await assertFastPathEquivalent({
@@ -51,7 +34,11 @@ for (const [name, change] of [
       changedPaths: fixture.changedPaths,
       config: fixture.config,
     });
-    if (name === "identical render with changed inputs")
+    assert.deepEqual(
+      result.changes.map((entry) => (entry.after ?? entry.before)!.route),
+      routes,
+    );
+    if (name === "screen-owned invisible data")
       assert.ok(
         result.changes.some((entry) =>
           entry.reasons.some((reason) => reason.kind === "inputs"),

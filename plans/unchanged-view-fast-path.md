@@ -102,16 +102,20 @@ Out of scope, tracked separately:
 For a paired view with base document `B` and head document `H`, both retained
 as text by the material readers:
 
-1. Compute the actual normalized pair with `normalizeReviewPair`, passing the
-   historical-marker-stripped base and the marker-stripped head. This is the
-   same normalization the complete path uses for its actual comparison. `stripMarkers` currently
-   validates ranges when `usage` is present and no ranges are supplied; the
-   fast path must not pay that parse, so the marker strip must be separable
-   from validation (see Milestone 2).
-2. If `actual.base !== actual.head`, take the complete path. The view is
-   `changed` under the existing contract.
-3. Otherwise discover the head document's reachable resources once through
-   `afterReader.resources(after.path, actual.head, () => false)`.
+1. Normalize historical marker prefixes in `B`, retain component markers on
+   both sides, and apply paired manual-ignore normalization. If the results
+   differ outside paired ignored regions, take the complete path. This guards
+   the marker positions consumed by ownership projection.
+2. Compare usage records canonically. Both absent records qualify and one
+   absent record does not. With records on both sides, only `props` and
+   `propsKey` on entry-owned instances may differ. View axes; instance ids,
+   keys, component ids, owners, slot keys and order; instance-owned props and
+   prop keys; and all slots, ranges, styles, and resources must match.
+3. Compute the actual normalized pair by stripping historical component
+   markers from `B`, stripping current component markers from `H`, and applying
+   paired manual-ignore normalization. Discover head resources once through
+   `afterReader.resources(after.path, actual.head)`; this is byte-identical to
+   the text used by the complete path's actual comparison.
 4. If any discovered route, prefixed to a repository path, is in
    `changedPaths`, take the complete path. Owned or excluded stylesheets may
    still produce evidence or exclusions there.
@@ -130,10 +134,11 @@ as text by the material readers:
 
 Why the shortcut is sound under the existing contract:
 
-- `material` on a view means normalized documents differ. Equal `actual`
-  strings means no material change.
-- `changedComponentImplementations` compares range contents of paired
-  instances. Identical documents have identical ranges, so the set is empty.
+- Marker-retaining equality protects every range boundary and projection
+  position; marker-stripped equality alone does not.
+- Usage-topology equality protects nested inputs, ownership, instance identity,
+  slots, ranges, styles, and resources used by projection and
+  `changedComponentImplementations`.
 - Dependency reasons and `excludedResources` require a path in `changedPaths`
   that is reachable from the view. Step 4 rules that out. The complete path
   discovers resources from the projected documents as well as the actual ones,
@@ -141,18 +146,15 @@ Why the shortcut is sound under the existing contract:
   document, so the projected resource set is a subset of the actual one.
 - `resourceChanged` in derived mode requires a reachable byte difference.
   Step 5 rules that out.
-- Entry-level `metadata`, `inputs`, `structure`, `added`, and `removed`
-  reasons do not depend on `compareComponentView` output for equal documents:
-  `inputs` and `structure` are computed by `projectComponentPair` from the
-  manifest usage records, not the HTML. The fast path must still compute
-  those two signals from usage records so `reasons` stays complete. They are
-  cheap `canonicalJson` comparisons of instance metadata and need no parse.
+- Entry-owned prop values are the sole allowed usage difference. `inputs` and
+  `structure` are still computed by the same usage-record helper used by
+  `projectComponentPair`, so an unchanged render retains its `inputs` reason.
+- Entry-level `metadata`, `added`, `removed`, and dependency reasons are
+  computed outside the per-view comparison.
 
-The last point is the one real subtlety: `projectComponentPair` reports
-`inputs` and `structure` from manifest usage even when the HTML is identical.
-The fast path must call the same helper logic (extracted so it does not require
-the projected documents) and push those reasons, otherwise a prop edit that
-does not change the render would silently drop its `inputs` reason.
+Added and removed views do not use this decision. Their shared one-sided
+normalization validates recorded ranges before stripping markers, using the
+historical dialect for the base and the current dialect for the head.
 
 ## Related Contracts
 
@@ -289,6 +291,32 @@ path needs the stripped text without the parse.
 - [x] Review: after the push, use `docs/implementation-review-prompt.md` to
       review the complete local diff against `origin/main` and report
       findings without changing the implementation.
+
+## Milestone 6: Review fixes
+
+Close the four validated post-push findings without changing the public
+classification contract or the zero-change performance bound.
+
+- [x] Update the component attribution protocol, comparison schema, review
+      README, and this decision rule with marker-retaining equality, the exact
+      usage-topology precondition, cache reuse, and one-sided validation.
+- [x] Add unit and differential regressions for usage topology, all three
+      identical-render topology reproductions, malformed and well-formed
+      one-sided views, fall-through discovery reuse, and derived discovery
+      counts; observe the bug regressions fail before implementation.
+- [x] Expand differential coverage over every shared component-change case,
+      added and removed component views and screens, CSS attribution scenarios,
+      a Git-backed asset-byte change, the historical marker case, and the small
+      generated catalogue.
+- [x] Implement the conservative fast-path eligibility helper, marker-retaining
+      document gate, shared one-sided normalization, and unfiltered derived
+      resource-cache reuse while keeping `component_view.ts` under 300 lines.
+- [x] Run `npm run build`, targeted tests, `npm test`, and
+      `cargo xtask check`, requiring a 100% pass rate.
+- [x] `git add -A`, commit the completed work with a Conventional Commits
+      message, and push `origin/calummoore/trenton-v2`.
+- [ ] Review: after the push, use `docs/implementation-review-prompt.md` against
+      `origin/main` and report findings without changing the implementation.
 
 ## Post-merge follow-up (non-blocking)
 

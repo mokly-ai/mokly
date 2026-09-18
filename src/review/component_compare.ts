@@ -24,6 +24,7 @@ export async function compareComponentCatalogue(
   changedPaths: readonly string[],
   baseCommit: string,
   baseRef: string,
+  useFastPath?: boolean,
 ): Promise<ReviewArtifact> {
   const basePaths = baseline.entries.flatMap((entry) =>
     generatedViews(entry).map((view) => view.path),
@@ -63,6 +64,7 @@ export async function compareComponentCatalogue(
     changedPaths,
     baseCommit,
     baseRef,
+    ...(useFastPath === undefined ? {} : { useFastPath }),
   });
   const files = new Map<string, ReviewArtifactContent>();
   for (const route of basePaths)

@@ -1,11 +1,17 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { generatedViews } from "../dist/components/views.js";
 import {
   runWithTimings,
   type TimingEvent,
 } from "../dist/diagnostics/timings.js";
+import { ComponentDependencyPolicy } from "../dist/review/component_metadata.js";
 import { ComponentMaterialReader } from "../dist/review/component_resources.js";
+import { compareComponentView } from "../dist/review/component_view.js";
+import { ResourceComparison } from "../dist/review/resource_comparison.js";
+
+import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 
 test("prefetch retains empty files and discovers resources only when requested", async () => {
   const reads: string[] = [];
@@ -76,4 +82,64 @@ test("resource discovery caches each document and exclusion policy", async () =>
     ).length,
     2,
   );
+});
+
+test("fall-through views reuse actual discovery in derived mode", async (t) => {
+  const fixture = await componentReviewFixture(t, (source) => source);
+  const screen = fixture.after.manifest.entries.find(
+    (entry) => entry.kind === "screen",
+  );
+  assert.ok(screen);
+  const view = generatedViews(screen)[0];
+  assert.ok(view);
+  const source = fixture.after.outputs.get(view.path);
+  assert.notEqual(source, undefined);
+  const document = `${source}<img src="../image.svg">`;
+
+  const discoveryCount = async (compareResourceBytes: boolean) => {
+    const events: TimingEvent[] = [];
+    const reader = () =>
+      new ComponentMaterialReader({
+        read: async (route) =>
+          Buffer.from(route === view.path ? document : "same image bytes"),
+      });
+    const beforeReader = reader();
+    const afterReader = reader();
+    const comparison = await runWithTimings(
+      true,
+      "test",
+      () =>
+        compareComponentView(
+          {
+            beforeReader,
+            afterReader,
+            dependencies: new ComponentDependencyPolicy(
+              fixture.before.manifest,
+              fixture.after.manifest,
+              [],
+            ),
+            changed: new Set(["mockups/image.svg"]),
+            prefix: "mockups",
+            resources: new ResourceComparison(
+              beforeReader,
+              afterReader,
+              new Set(["mockups/image.svg"]),
+              "mockups",
+            ),
+            compareResourceBytes,
+          },
+          view,
+          view,
+        ),
+      { write: (event) => events.push(event) },
+    );
+    assert.equal(comparison.comparisonPath, "complete");
+    return events.filter(
+      (event) =>
+        event.stage === "review.resource-graph" && event.event === "start",
+    ).length;
+  };
+
+  assert.equal(await discoveryCount(false), 4);
+  assert.equal(await discoveryCount(true), 4);
 });

@@ -162,6 +162,13 @@ carries no `material`, `reasons`, or `excludedResources` fields, contributes
 nothing to the implementation-impact set or owned-resource aggregation, and
 retains its `ignoredIds`. Its record is identical to the one the complete
 comparison produces for that view; the decision changes cost, not output.
+Eligibility requires equality with component markers retained outside paired
+ignored regions and canonical equality of usage topology. Only `props` and
+`propsKey` on entry-owned instances may differ; nested inputs, ownership,
+identity, slots, ranges, styles, and resources require the complete comparison.
+One-sided views always validate their available range records in the side's
+current or historical marker dialect before producing an added or removed
+record.
 
 Views carry optional dependency-only `reasons` alongside optional
 `excludedResources` in both schemas. Omit either list when empty and sort it

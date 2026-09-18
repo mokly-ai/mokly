@@ -116,13 +116,22 @@ required evidence.
 
 The decision, in order:
 
-1. Normalize the actual pair: strip historical markers from the base document,
-   strip component markers from the head document, and apply the paired
-   manual-ignore normalization. This uses the same normalization as the
-   complete comparison's actual pair. Stripping markers here must not
-   validate component ranges; validation is deferred to the complete path.
-2. If the normalized documents differ, take the complete path.
-3. Otherwise discover the head document's reachable resources once.
+1. Normalize historical marker prefixes in the base document, retain component
+   markers on both sides, and apply paired manual-ignore normalization. If the
+   resulting documents differ outside paired ignored regions, take the
+   complete path. Marker-stripped equality is not sufficient because marker
+   positions participate in ownership projection.
+2. Compare the two usage records canonically. Neither side having usage is
+   eligible; exactly one side having usage takes the complete path. When both
+   records exist, every field must match except `props` and `propsKey` on
+   entry-owned instances. In particular, viewport, color scheme, instance
+   `componentId`, `key`, `id`, `owner`, `slotKey`, and `order`, instance-owned
+   `props` and `propsKey`, and every slot, range, style, and resource record
+   must match. Any other difference takes the complete path.
+3. Form the actual normalized pair by stripping historical component markers
+   from the base, stripping current component markers from the head, and
+   applying paired manual-ignore normalization. Discover the head document's
+   reachable resources once using exactly this normalized head text.
 4. If any reachable resource is a changed Git path, take the complete path;
    ownership, exclusion, and rule analysis are decided there.
 5. In derived mode, also compare the bytes of every reachable resource
@@ -135,15 +144,26 @@ The decision, in order:
    implementation-impact evidence, exactly as the complete path would.
 
 `inputs` and `structure` reasons are derived from validated usage records,
-never from document text, so an input edit that renders identical HTML keeps
-its `inputs` reason on either path. The fast decision must compute those two
-signals from the same usage projection the complete path uses. Entry-level
-`metadata`, `added`, `removed`, and dependency reasons are unaffected because
-they are computed outside the per-view comparison.
+never from document text, so an entry-owned input edit that renders identical
+HTML keeps its `inputs` reason on either path. Those entry-owned `props` and
+`propsKey` values are the only usage fields allowed to differ because the fast
+decision computes their signals with the same projection as the complete path.
+Nested instance input changes and all topology or ownership changes require
+projection and implementation-impact analysis. Entry-level `metadata`,
+`added`, `removed`, and dependency reasons are unaffected because they are
+computed outside the per-view comparison.
 
 The resource discovery performed by the decision is reused when the view
-falls through to the complete path; it is never repeated for the same route
-and document text within one classification.
+falls through to the complete path. The decision and complete path pass
+byte-identical normalized head text to the unfiltered `(route, html)` cache, so
+discovery is never repeated for that document within one classification.
+
+Added and removed views do not use the paired fast decision. Before their
+one-sided document is normalized, the classifier validates all recorded
+component ranges against that document. Removed base documents use the
+historical marker dialect; added head documents use the current dialect. A
+malformed one-sided ownership tree fails closed with a `$document` validation
+error rather than being reported as an ordinary addition or removal.
 
 ## Dependencies And Styles
 

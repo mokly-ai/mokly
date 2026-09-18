@@ -54,6 +54,25 @@ export function componentUsageSignals(
   return { inputs, structure };
 }
 
+/** Require projection topology to agree while permitting entry-owned input edits. */
+export function componentUsageTopologyEqual(
+  beforeView: ComponentViewRecord | undefined,
+  afterView: ComponentViewRecord | undefined,
+): boolean {
+  if (!beforeView || !afterView) return !beforeView && !afterView;
+  const topology = (view: ComponentViewRecord) => ({
+    ...view,
+    instances: view.instances.map((instance) => {
+      if (instance.owner.kind !== "entry") return instance;
+      const { props: _props, propsKey: _propsKey, ...identity } = instance;
+      return identity;
+    }),
+  });
+  return (
+    canonicalJson(topology(beforeView)) === canonicalJson(topology(afterView))
+  );
+}
+
 export function structureSignals(
   view: ComponentViewRecord,
   owner: ComponentInputOwner = { kind: "entry" },

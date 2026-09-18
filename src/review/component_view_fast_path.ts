@@ -1,5 +1,6 @@
 import {
   componentUsageSignals,
+  componentUsageTopologyEqual,
   stripComponentMarkers,
   stripHistoricalMarkers,
 } from "../components/comparison_material.js";
@@ -10,7 +11,11 @@ import type {
   ComparedComponentView,
   ComponentViewContext,
 } from "./component_view.js";
-import { normalizeReviewPair, normalizeSingleDocument } from "./ignore.js";
+import {
+  normalizeHistoricalDocument,
+  normalizeReviewPair,
+  normalizeSingleDocument,
+} from "./ignore.js";
 import type { ViewReview } from "./types.js";
 
 /** Settle a paired view when neither its documents nor reachable resources can differ. */
@@ -22,6 +27,14 @@ export async function compareUnchangedComponentView(
   base: string,
   head: string,
 ): Promise<ComparedComponentView | undefined> {
+  const retained = normalizeReviewPair(
+    normalizeHistoricalDocument(base),
+    head,
+    after.path,
+  );
+  if (retained.base !== retained.head) return undefined;
+  if (!componentUsageTopologyEqual(before.usage, after.usage)) return undefined;
+
   const strippedBase = stripHistoricalMarkers(base);
   const strippedHead = stripComponentMarkers(head);
   const actual = normalizeReviewPair(strippedBase, strippedHead, after.path);
