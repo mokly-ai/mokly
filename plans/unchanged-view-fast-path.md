@@ -9,7 +9,9 @@ resource and derived-byte gates intact, and emits explicit path counts.
 The first six approved findings are addressed and pushed. Milestone 7's
 post-push review found an additional equivalence gap for caller-slot resources
 inside inert templates. The approved conservative eligibility guard is
-implemented in Milestone 8. This plan remains Active until the PR merges.
+implemented, verified, pushed, and reviewed in Milestone 8. Its post-push review
+found another projection gap for select content, recorded as finding 8 below
+for the user's decision. This plan remains Active until the PR merges.
 
 These historical measurements predate the independent two-sided resource
 traversal added by Milestone 7. Measurements on the same VM compare the background worker's
@@ -402,9 +404,9 @@ expose caller-owned resources hidden inside an inert HTML template.
       authored templates without an unconditional DOM parse.
 - [x] Run formatting, build, type checking, lint, focused tests, and the final
       full `cargo xtask check` with a 100% pass rate.
-- [ ] `git add -A`, commit the completed work with a Conventional Commits
+- [x] `git add -A`, commit the completed work with a Conventional Commits
       message, and push the branch.
-- [ ] Review: after the push, use `docs/implementation-review-prompt.md` against
+- [x] Review: after the push, use `docs/implementation-review-prompt.md` against
       `origin/main` and report findings without changing the implementation.
 
 Validation passed: `cargo xtask check` completed 1,872 Node tests, 452 Chromium
@@ -414,6 +416,32 @@ focused suite passed all 34 tests. Independent verification found eight
 divergences in a 32-case matrix before the fix and none afterward. All 276
 example views still use the fast path and match the complete comparison in
 both modes, with 276 committed and 552 derived resource discoveries.
+
+The implementation was pushed as `c76288c`. The complete branch review against
+`origin/main` confirmed finding 7 is fixed and identified one new issue,
+independently reproduced by the owner:
+
+8. **Medium — Select content exposes the same resource-projection gap.**
+   The [template guard](../src/review/component_fast_path_eligibility.ts#L5)
+   does not cover a component rendering `<select>{props.children}</select>`
+   with a caller-supplied lazy image. Compilation succeeds, but HTML parsing
+   discards the image from actual select contents while caller-slot projection
+   exposes it. The fast path then omits the dependency or material change
+   reported by complete comparison in committed or derived mode respectively.
+   Doing nothing leaves Changes membership dependent on the optimization.
+   **A:** use complete comparison for every view with entry-owned slots. This
+   covers the broader class, but removes 146 of 276 example views from the fast
+   path, including 138 of 144 screen views. A scratch-only, single-run comparison
+   increased committed time from 702 to 2,164 ms and derived time from 1,059 to
+   2,310 ms; these timings are indicative, not a formal benchmark.
+   **B (recommended):** establish and validate projection-aware resource
+   eligibility before allowing the shortcut, with compiler-backed differential
+   coverage across HTML contexts and both comparison modes. This broader design
+   addresses the underlying assumption while retaining the optimization for
+   views that can be proven safe, including a defined fallback when evidence
+   is unavailable on either side. **C:** add `select` to the tag guard; this
+   treats another example without establishing the general resource guarantee
+   and is not recommended. The finding remains open for the user's decision.
 
 ## Post-merge follow-up (non-blocking)
 
