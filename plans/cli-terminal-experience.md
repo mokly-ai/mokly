@@ -146,7 +146,7 @@ without changing plain-mode bytes or lifecycle behavior.
       to review the complete local diff against `origin/main`; report findings
       without changing the implementation.
 
-## Milestone 7: Mainline packaged-guide integration
+## Milestone 7: Mainline packaged-guide integration — completed
 
 Reconcile the packaged CLI guides added on `main` with this branch's terminal
 interface before the pull request merges.
@@ -158,7 +158,7 @@ interface before the pull request merges.
 - [x] Run the focused packaged-guide test and `cargo xtask check`.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
-- [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report findings
       without changing the implementation.
 
