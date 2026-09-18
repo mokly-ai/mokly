@@ -15,6 +15,7 @@ export function consumerPackage(name, context, installMokly) {
     devDependencies: {
       "@types/react": context.versions.reactTypes,
       "@types/react-dom": context.versions.reactDomTypes,
+      esbuild: context.versions.esbuild,
       typescript: context.versions.typescript,
     },
   };

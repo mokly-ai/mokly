@@ -2,11 +2,13 @@
 
 import { readCatalogue } from "../catalogue/reader.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
+import { canonicalJson } from "../components/data.js";
 import {
   parseStaticDelivery,
   type StaticDelivery,
 } from "../navigation/delivery.js";
 import { isLogicalFragment } from "../navigation/logical.js";
+import { catalogueRouteEntry } from "../shell/catalogue.js";
 import type { ShellContext } from "../shell/context.js";
 import { toRouteTarget } from "../shell/target.js";
 import type { ShellView } from "../shell/views.js";
@@ -74,10 +76,15 @@ export function readShellBootstrap(value: unknown): ShellBootstrap {
   const view = readView(value.view);
   if (
     view.kind === "target" &&
-    !catalogueEntryRoutes(catalogue).has(view.route)
+    !catalogueRouteEntry(viewerCatalogue(catalogue), view.route)
   )
     throw new Error("Invalid shell hydration target.");
   return { catalogue, context, view };
+}
+
+/** Encode hydration state with stable lexical object-key ordering. */
+export function serializeShellBootstrap(bootstrap: ShellBootstrap): string {
+  return canonicalJson(bootstrap).replaceAll("<", "\\u003c");
 }
 
 /** Recreate the exact component inputs used by standalone SSR. */
@@ -85,7 +92,7 @@ export function shellBootstrapProps(bootstrap: ShellBootstrap) {
   const catalogue = viewerCatalogue(bootstrap.catalogue);
   const selectedEntry =
     bootstrap.view.kind === "target"
-      ? catalogue.byRoute.get(bootstrap.view.route)
+      ? catalogueRouteEntry(catalogue, bootstrap.view.route)
       : undefined;
   const selectedId = selectedEntry?.id ?? null;
   const selection = { ...defaultSelection, screenId: selectedId };
@@ -179,22 +186,10 @@ function targetView(
   catalogue: ReturnType<typeof viewerCatalogue>,
   route: string,
 ): ShellView {
-  const entry = catalogue.byRoute.get(route);
+  const entry = catalogueRouteEntry(catalogue, route);
   const target = entry && toRouteTarget(entry);
   if (!target) throw new Error("Invalid shell hydration target.");
   return { kind: "target", target };
-}
-
-function catalogueEntryRoutes(catalogue: CatalogueReadModel): Set<string> {
-  return new Set(
-    [
-      ...catalogue.screens,
-      ...catalogue.pages,
-      ...catalogue.useCases,
-      ...catalogue.components,
-      ...catalogue.removedEntries.map(({ entry }) => entry),
-    ].map(({ route }) => route),
-  );
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

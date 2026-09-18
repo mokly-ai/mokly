@@ -88,8 +88,8 @@ export function renderDiff(
     panes.dataset["compareMode"] =
       view.beforePath && view.afterPath ? mode : "side";
     panes.append(
-      pane(doc, loaded.url, view, "before"),
-      pane(doc, loaded.url, view, "after"),
+      pane(doc, stage, loaded.url, view, "before"),
+      pane(doc, stage, loaded.url, view, "after"),
     );
     section.append(panes);
     stage.append(section);
@@ -98,6 +98,7 @@ export function renderDiff(
 
 function pane(
   doc: Document,
+  stage: HTMLElement,
   base: string,
   view: ViewReview,
   side: "before" | "after",
@@ -132,11 +133,7 @@ function pane(
     source.split("/").map(encodeURIComponent).join("/"),
     base,
   ).href;
-  const template = doc.querySelector<HTMLTemplateElement>(
-    `[data-diff-template="${view.viewport}"]`,
-  );
-  const chrome = template?.content.firstElementChild?.cloneNode(true) as
-    HTMLElement | undefined;
+  const chrome = cloneCurrentChrome(stage, view.viewport);
   const viewport = chrome?.querySelector(".phone-screen, .browser-viewport");
   if (chrome && viewport) {
     viewport.append(frame);
@@ -144,6 +141,26 @@ function pane(
   } else body.append(frame);
   container.append(body);
   return container;
+}
+
+function cloneCurrentChrome(
+  stage: HTMLElement,
+  viewport: ViewReview["viewport"],
+): HTMLElement | undefined {
+  const current = stage.parentElement?.querySelector<HTMLElement>(
+    ":scope > [data-current-screen]",
+  );
+  const selector =
+    viewport === "mobile"
+      ? ".mbk-frame-mobile > .phone-frame"
+      : ".mbk-frame-desktop > .browser-frame";
+  const source = current?.querySelector<HTMLElement>(selector);
+  if (!source) return undefined;
+  const chrome = source.cloneNode(true) as HTMLElement;
+  chrome.classList.remove("is-expanded");
+  chrome.querySelector(".browser-expand")?.remove();
+  for (const frame of chrome.querySelectorAll("iframe")) frame.remove();
+  return chrome;
 }
 
 function message(doc: Document, text: string): HTMLElement {

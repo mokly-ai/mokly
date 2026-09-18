@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { build } from "esbuild";
 
-import { buildBrowserModules } from "./browser.mjs";
+import { buildBrowserModules, writeBrowserManifest } from "./browser.mjs";
 import { bundleInspector } from "./inspector-bundle.mjs";
 import { embeddedStyles } from "./styles.mjs";
 
@@ -41,6 +41,7 @@ await bundleInspector(
   path.join(root, "src/inspector/index.ts"),
   path.join(target, "browser/inspector.js"),
 );
+await writeBrowserManifest(path.join(target, "browser"));
 const { SHELL_CSS } = await import("../dist/shell/css.js");
 const { VIEWER_CSS } = await import("../dist/viewer/styles.js");
 await fs.writeFile(

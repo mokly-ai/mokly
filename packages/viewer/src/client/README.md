@@ -7,15 +7,20 @@ runtime that owned navigation, viewport and theme state, comparisons and
 component inspection before the [React Browse shell plan](../../../../plans/react-browse-shell.md);
 that plan's module inventory classifies each file, and the retired ones are
 deleted when the hydrated shell becomes the default. The package build bundles
-`dist/browser`; Serve enumerates the delivered modules from it for the export
-inventory. `scripts/package/shell_partition.mjs` is the machine-readable
-keep/retire/move inventory, and the package graph check rejects any kept module
-that imports a retired one.
+`dist/browser` and generates an adjacent manifest from the completed esbuild
+outputs. Serve validates exact manifest/directory equality before binding and
+uses that inventory for delivery and export. `scripts/package/shell_partition.mjs`
+is the machine-readable keep/retire/move inventory. The package graph check
+rejects partition crossings in both delivered JavaScript and source imports,
+including type-only and side-effect imports.
 
-`early_disclosures.ts` bridges native disclosure clicks through deferred startup.
-The synchronous navigation bootstrap starts capture; Browse initialization and
-reload recovery reapply the latest native choices. Load or page exit cleans up
-capture state, and unfiltered choices use the existing durable preference.
+`early_disclosures.ts` and `nav_resize.ts` are compatibility exports for the
+vanilla runtime. Retained ownership lives under `src/standalone`: the synchronous
+navigation bootstrap records native disclosure choices outside the React-owned
+DOM, and React reads that state for its initial hydration render. Navigation
+resizing starts only after hydration for React-shell documents, while vanilla
+documents retain immediate initialization. Load or page exit cleans up capture
+state, and unfiltered choices use the existing durable preference.
 
 `frame_adapter.ts` defines the transport-independent mount, boundary, highlight,
 scroll and event interfaces in the [frame contract](../../../../docs/protocol/mokly-frame-adapter.md).

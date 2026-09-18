@@ -5,6 +5,7 @@
   "license": "MIT",
   "type": "module",
   "sideEffects": [
+    "./dist/browser.js",
     "./dist/styles.css"
   ],
   "types": "./dist/index.d.ts",

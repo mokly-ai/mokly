@@ -7,6 +7,7 @@ import { runCommand } from "./command.mjs";
 export async function smokeViewer(root) {
   const script = `import assert from "node:assert/strict";
 import fs from "node:fs";
+import { build } from "esbuild";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MoklyViewer, readCatalogue, sameOriginAdapter, postMessageAdapter } from "@mokly/viewer";
@@ -27,6 +28,9 @@ assert.ok(html.includes(catalogue.screens[0].title));
 assert.equal(typeof sameOriginAdapter().mount, "function");
 assert.equal(typeof postMessageAdapter({frameOrigin: "https://frames.example"}).mount, "function");
 assert.ok(fs.readFileSync(new URL(import.meta.resolve("@mokly/viewer/styles.css")), "utf8").includes("@scope (.mokly-viewer)"));
+const browserBundle = await build({bundle: true, format: "esm", logLevel: "silent", platform: "browser", stdin: {contents: 'import "@mokly/viewer/browser";', resolveDir: process.cwd(), sourcefile: "browser-entry.js"}, treeShaking: true, write: false});
+assert.ok(browserBundle.outputFiles[0].contents.length > 0);
+assert.match(browserBundle.outputFiles[0].text, /hydrateRoot/);
 `;
   const filename = path.join(root, "verify-viewer.mjs");
   await fs.writeFile(filename, script);

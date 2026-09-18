@@ -99,9 +99,25 @@ test("browser build enumeration reports a missing output directory", (context) =
   const cli = path.join(root, "cli");
   fs.mkdirSync(cli);
   fs.writeFileSync(path.join(cli, "browser.js"), "export {};\n");
+  writeBrowserManifest(cli, ["browser.js"]);
   assert.throws(
     () => loadBrowserClientModulesFrom(path.join(root, "missing"), cli),
-    /could not enumerate browser client modules/,
+    /could not enumerate browser client modules|could not read browser build manifest/,
+  );
+});
+
+test("browser build enumeration reports a missing listed file", (context) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "mokly-browser-modules-"));
+  context.after(() => fs.rmSync(root, { force: true, recursive: true }));
+  const viewer = path.join(root, "viewer");
+  const cli = path.join(root, "cli");
+  fs.mkdirSync(viewer);
+  fs.mkdirSync(cli);
+  writeBrowserManifest(viewer, ["missing.js"]);
+  writeBrowserManifest(cli, []);
+  assert.throws(
+    () => loadBrowserClientModulesFrom(viewer, cli),
+    /missing browser build output: missing\.js/,
   );
 });
 
@@ -115,17 +131,27 @@ test("browser build enumeration rejects unexpected output files", (context) => {
   fs.writeFileSync(path.join(viewer, "viewer.js"), "export {};\n");
   fs.writeFileSync(path.join(viewer, "viewer.js.map"), "{}");
   fs.writeFileSync(path.join(cli, "browser.js"), "export {};\n");
+  writeBrowserManifest(viewer, ["viewer.js"]);
+  writeBrowserManifest(cli, ["browser.js"]);
   assert.throws(
     () => loadBrowserClientModulesFrom(viewer, cli),
     /unexpected browser build output: viewer\.js\.map/,
   );
 });
 
+function writeBrowserManifest(directory: string, modules: readonly string[]) {
+  fs.writeFileSync(
+    `${directory}.manifest.json`,
+    `${JSON.stringify({ schemaVersion: 1, modules })}\n`,
+  );
+}
+
 test("shell partition rejects kept modules importing retired modules", async () => {
   const module = (await import(
     pathToFileURL(path.resolve("scripts/package/browser_graph.mjs")).href
   )) as {
     assertShellPartitionEdge(importer: string, target: string): void;
+    sourceImportSpecifiers(code: string): string[];
   };
   assert.throws(
     () =>
@@ -140,6 +166,12 @@ test("shell partition rejects kept modules importing retired modules", async () 
       "/__mokly/client/same_origin_adapter.js",
       "/__mokly/client/same_origin_highlight.js",
     ),
+  );
+  assert.deepEqual(
+    module.sourceImportSpecifiers(
+      'import type { One } from "./one.js";\nimport "./side-effect.js";\nexport { two } from "./two.js";\nvoid import("./dynamic.js");\n',
+    ),
+    ["./one.js", "./side-effect.js", "./two.js", "./dynamic.js"],
   );
 });
 

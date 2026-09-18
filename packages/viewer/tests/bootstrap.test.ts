@@ -6,8 +6,11 @@ import { readCatalogue } from "../src/catalogue/reader.js";
 import type { StaticDelivery } from "../src/navigation/delivery.js";
 import {
   readShellBootstrap,
+  serializeShellBootstrap,
+  shellBootstrap,
   shellBootstrapWithDelivery,
 } from "../src/standalone/bootstrap.js";
+import { viewerCatalogue, viewerView } from "../src/viewer/projection.js";
 import { viewerContext } from "../src/viewer/projection.js";
 import { defaultSelection } from "../src/viewer/selection.js";
 
@@ -58,4 +61,22 @@ test("the React host projection never selects the temporary standalone switch", 
   const context = viewerContext(catalogue, defaultSelection);
   assert.equal(context.reactShell, undefined);
   assert.equal(Object.hasOwn(context, "reactShell"), false);
+});
+
+test("validated shell bootstrap JSON retains its canonical bytes", () => {
+  const display = viewerCatalogue(catalogue);
+  const bootstrap = shellBootstrap(
+    catalogue,
+    viewerView(display, { ...defaultSelection, screenId: "home" }),
+    {
+      base: "origin/main",
+      comparisons: false,
+      updateVersion: 2,
+    },
+  );
+  const serialized = serializeShellBootstrap(bootstrap);
+  assert.equal(
+    serializeShellBootstrap(readShellBootstrap(JSON.parse(serialized))),
+    serialized,
+  );
 });

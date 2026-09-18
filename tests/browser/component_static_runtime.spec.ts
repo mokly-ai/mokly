@@ -9,9 +9,15 @@ import { createExportFixture } from "../helpers/export_fixture.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 
+import {
+  assertServedShellMarker,
+  reactShellForProject,
+} from "./export_shell.js";
+
 let site: Awaited<ReturnType<typeof serveStaticFiles>>;
 let directory: string;
-test.beforeAll(async () => {
+test.beforeAll(async ({ browser: _browser }, info) => {
+  const reactShell = reactShellForProject(info.project.name);
   const source = componentEntrySource();
   const fixture = await createExportFixture(source, {
     extraConfig: 'colorSchemes: ["light", "dark"],',
@@ -24,12 +30,17 @@ test.beforeAll(async () => {
         '<button className="revised" data-viewport=',
       ),
     );
-    await exportCatalogue(fixture.config, { outDir: "site" });
+    await exportCatalogue(fixture.config, { outDir: "site", reactShell });
     directory = await fs.mkdtemp(
       path.join(repositoryRoot, ".context/component-static-"),
     );
     await fs.cp(fixture.output, directory, { recursive: true });
     site = await serveStaticFiles(directory);
+    await assertServedShellMarker(
+      site.url,
+      "/view/components/action.html?variant=disabled",
+      reactShell,
+    );
   } finally {
     await fixture.close();
   }

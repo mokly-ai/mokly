@@ -2,8 +2,6 @@
 
 import type { ReactNode } from "react";
 
-import { BrowserFrame, PhoneFrame } from "./frames.js";
-
 /** Keep the live screen available while a requested comparison loads. */
 export function DiffScreen(props: {
   children: ReactNode;
@@ -55,16 +53,6 @@ export function DiffScreen(props: {
         data-diff-stage=""
         hidden
       />
-      {!props.component ? (
-        <>
-          <template data-diff-template="mobile">
-            <PhoneFrame />
-          </template>
-          <template data-diff-template="desktop">
-            <BrowserFrame address={props.route} expandable={false} />
-          </template>
-        </>
-      ) : null}
     </section>
   );
 }

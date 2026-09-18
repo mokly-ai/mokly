@@ -34,8 +34,15 @@ export function loadBrowserClientModulesFrom(
         { cause: error },
       );
     }
+    const expected = readBrowserManifest(directory);
+    const actual = entries.map((entry) => entry.name).sort();
     for (const entry of entries) {
       if (!entry.isFile() || !entry.name.endsWith(".js"))
+        throw new MoklyError(
+          "server-failed",
+          `unexpected browser build output: ${entry.name}`,
+        );
+      if (!expected.includes(entry.name))
         throw new MoklyError(
           "server-failed",
           `unexpected browser build output: ${entry.name}`,
@@ -47,6 +54,12 @@ export function loadBrowserClientModulesFrom(
         );
       candidates.set(entry.name, path.join(directory, entry.name));
     }
+    for (const filename of expected)
+      if (!actual.includes(filename))
+        throw new MoklyError(
+          "server-failed",
+          `missing browser build output: ${filename}`,
+        );
   }
   const modules = new Map<string, Buffer>();
   for (const [filename, candidate] of [...candidates].sort(([left], [right]) =>
@@ -63,6 +76,48 @@ export function loadBrowserClientModulesFrom(
     }
   }
   return modules;
+}
+
+function readBrowserManifest(directory: string): readonly string[] {
+  const manifestPath = `${path.resolve(directory)}.manifest.json`;
+  let value: unknown;
+  try {
+    value = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  } catch (error) {
+    throw new MoklyError(
+      "server-failed",
+      `could not read browser build manifest: ${errorMessage(error)}`,
+      { cause: error },
+    );
+  }
+  if (!isBrowserManifest(value))
+    throw new MoklyError("server-failed", "invalid browser build manifest");
+  const sorted = [...value.modules].sort();
+  if (
+    new Set(sorted).size !== sorted.length ||
+    sorted.some((name, index) => name !== value.modules[index])
+  )
+    throw new MoklyError("server-failed", "invalid browser build manifest");
+  return sorted;
+}
+
+function isBrowserManifest(
+  value: unknown,
+): value is { schemaVersion: 1; modules: string[] } {
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    "schemaVersion" in value &&
+    value.schemaVersion === 1 &&
+    "modules" in value &&
+    Array.isArray(value.modules) &&
+    value.modules.every(
+      (name) =>
+        typeof name === "string" &&
+        /^[A-Za-z0-9_.-]+\.js$/.test(name) &&
+        !name.includes(".."),
+    )
+  );
 }
 
 /** Load shared pure navigation modules imported by the browser client. */

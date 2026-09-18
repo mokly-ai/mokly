@@ -68,3 +68,10 @@ export const retire = Object.freeze([
 
 /** Pure helpers that move beside the hydrated shell before retirement. */
 export const move = Object.freeze(["entry_wording", "search_query"]);
+
+/** Standalone pre-hydration modules that survive the vanilla shell deletion. */
+export const retainedStandalone = Object.freeze([
+  "standalone/early_disclosures",
+  "standalone/nav_resize",
+  "standalone/navigation_resize",
+]);

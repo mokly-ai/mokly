@@ -2,14 +2,18 @@ import { expect, test } from "@playwright/test";
 
 import { serveStaticFiles } from "../helpers/static_server.js";
 
+import { reactShellForProject } from "./export_shell.js";
 import { startStaticFixture } from "./static_fixture.js";
 
 test("a second origin can fetch catalogue and fragment with exact-origin headers and no credentials", async ({
   page,
   request,
   context,
-}) => {
-  const site = await startStaticFixture(false, true);
+}, info) => {
+  const site = await startStaticFixture({
+    noChanges: true,
+    reactShell: reactShellForProject(info.project.name),
+  });
   const host = await serveStaticFiles(site.root);
   const source = await serveStaticFiles(site.root, { allowedOrigin: host.url });
   try {
@@ -68,8 +72,11 @@ test("a second origin can fetch catalogue and fragment with exact-origin headers
 
 test("same-origin reads need no CORS or wildcard and the shell never requests the read model", async ({
   page,
-}) => {
-  const site = await startStaticFixture(false, true);
+}, info) => {
+  const site = await startStaticFixture({
+    noChanges: true,
+    reactShell: reactShellForProject(info.project.name),
+  });
   const other = await serveStaticFiles(site.root);
   try {
     await page.goto(`${site.url}/view/screens/home.html`);

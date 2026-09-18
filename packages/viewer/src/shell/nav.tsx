@@ -93,17 +93,20 @@ function LeafRow(props: {
 function GroupRow(props: {
   context: ShellContext;
   depth: number;
+  initialDisclosures?: ReadonlyMap<string, boolean> | undefined;
   node: NavGroupNode;
   sectionId: NavSectionNode["id"];
 }) {
   const node = props.node;
-  const open =
+  const defaultOpen =
     props.depth === 0 || containsRoute(node, props.context.activeRoute);
+  const disclosureKey = collectionDisclosureKey(props.sectionId, node.key);
+  const open = props.initialDisclosures?.get(disclosureKey) ?? defaultOpen;
   return (
     <details
       className="mbk-nav-group"
       data-nav-collection={node.key}
-      data-nav-disclosure={collectionDisclosureKey(props.sectionId, node.key)}
+      data-nav-disclosure={disclosureKey}
       open={open ? true : undefined}
     >
       <summary className="mbk-nav-row" style={navRowStyle(props.depth)}>
@@ -119,6 +122,7 @@ function GroupRow(props: {
       <NavRows
         context={props.context}
         depth={props.depth + 1}
+        initialDisclosures={props.initialDisclosures}
         nodes={node.children}
         sectionId={props.sectionId}
       />
@@ -129,6 +133,7 @@ function GroupRow(props: {
 function NavRows(props: {
   context: ShellContext;
   depth: number;
+  initialDisclosures?: ReadonlyMap<string, boolean> | undefined;
   nodes: readonly NavNode[];
   sectionId: NavSectionNode["id"];
 }) {
@@ -139,6 +144,7 @@ function NavRows(props: {
           <GroupRow
             context={props.context}
             depth={props.depth}
+            initialDisclosures={props.initialDisclosures}
             key={node.key}
             node={node}
             sectionId={props.sectionId}
@@ -158,14 +164,16 @@ function NavRows(props: {
 
 function SectionRows(props: {
   context: ShellContext;
+  initialDisclosures?: ReadonlyMap<string, boolean> | undefined;
   section: NavSectionNode;
 }) {
+  const open = props.initialDisclosures?.get(props.section.key) ?? true;
   return (
     <details
       className="mbk-nav-section"
       data-nav-disclosure={props.section.key}
       data-nav-section={props.section.id}
-      open
+      open={open}
     >
       <summary className="mbk-nav-section-head">
         <span className="mbk-nav-section-chevron" aria-hidden="true">
@@ -176,6 +184,7 @@ function SectionRows(props: {
       <NavRows
         context={props.context}
         depth={0}
+        initialDisclosures={props.initialDisclosures}
         nodes={props.section.children}
         sectionId={props.section.id}
       />
@@ -197,6 +206,7 @@ function collectionDisclosureKey(
 export function CatalogueNav(props: {
   catalogue: Catalogue;
   context: ShellContext;
+  initialDisclosures?: ReadonlyMap<string, boolean> | undefined;
 }) {
   const removedLeaves = props.catalogue.removedEntries.map(
     ({ entry }): NavLeafNode => ({
@@ -234,6 +244,7 @@ export function CatalogueNav(props: {
         {sections.map((section) => (
           <SectionRows
             context={props.context}
+            initialDisclosures={props.initialDisclosures}
             key={section.key}
             section={section}
           />

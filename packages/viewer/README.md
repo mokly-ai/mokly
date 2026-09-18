@@ -167,7 +167,9 @@ stylesheet.
 `@mokly/viewer/browser` is the standalone browser entry paired with full
 documents rendered by `@mokly/viewer/server`. Serve and export bundle that entry
 with React as `react-shell.js`; application-owned React hosts continue to use
-the root `MoklyViewer` entry instead.
+the root `MoklyViewer` entry instead. Importing the browser entry automatically
+hydrates a matching document, so the published manifest marks its JavaScript
+output as side-effectful and bundlers must retain a side-effect-only import.
 
 ## Releases
 

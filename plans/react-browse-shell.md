@@ -110,6 +110,16 @@ Keep unchanged (transport, geometry, protocol; consumed through hooks):
 `component_occlusion`, `component_range_nodes`, `document_ranges`,
 `catalogue_updates`.
 
+Retained standalone pre-hydration ownership:
+`standalone/early_disclosures`, `standalone/nav_resize`, and
+`standalone/navigation_resize`. The latter is the delivered
+`navigation-resize.js` entry. The compatibility modules named
+`client/early_disclosures` and `client/nav_resize`, plus
+`client/browse_navigation`, remain in the retire set for the vanilla shell,
+but the retained entry imports none of them. The package check reads source
+imports, including type-only and side-effect imports, for both the client
+partition and these retained modules.
+
 `same_origin_highlight` is kept whole. It exports `installLocalHighlight`,
 which owns the overlay mask, labels, observers, and teardown in one closure,
 so there is no seam to split, and its own `HighlightFrame` interface. It stays
@@ -295,6 +305,32 @@ yet; the vanilla runtime remains the default and keeps working.
       packed-consumer smoke installs and serves both inventories.
 - [x] Run `cargo xtask check`; the default run and the switched run (only the
       smoke spec at this point) must both pass.
+- [x] Resolve current and removed catalogue routes through one shared helper
+      with current-entry precedence, and cover removed and renamed entries in
+      switched Serve and switched export regressions.
+- [x] Make pre-hydration disclosure and resize handoff hydration-safe, encode
+      bootstrap JSON canonically with byte-identical validation round trips,
+      and cover desktop, persisted width, mobile, early disclosure, and
+      finalized-export hydration with development React warnings enabled.
+- [x] Keep finalized comparison and workspace markup hydratable by cloning
+      current React-owned frame chrome on demand instead of hydrating
+      parser-owned template contents or exposing duplicate hidden controls, and
+      use canonical JSON for embedded workspace data.
+- [x] Generate browser delivery manifests from the completed viewer and CLI
+      build outputs, validate manifest/directory equality before Serve binds
+      and during package checks, and cover a missing listed file.
+- [x] Move retained disclosure capture and navigation resizing into standalone
+      ownership, record that ownership in the partition inventory, and check
+      source imports (including type-only and side-effect imports) as well as
+      delivered JavaScript edges.
+- [x] Thread the Playwright project shell selection through every browser
+      export fixture and assert each served fixture's shell marker.
+- [x] Preserve the automatic `@mokly/viewer/browser` side effect in package
+      metadata and prove a packed consumer's side-effect-only esbuild bundle
+      retains `hydrateRoot`.
+- [x] Commit the fix round without rewriting history, using real paragraph
+      breaks, a title no longer than 50 characters, and the required
+      `Co-Authored-By` trailer, then push the branch.
 
 ## Milestone 3: Shell state model and hydrated navigation
 

@@ -187,14 +187,16 @@ The standalone browser inventory under `__mokly/client/` is the hydrated shell:
 the documented standalone hydration entry, which bundles React and React DOM
 with the shell tree, plus the transport, geometry and protocol modules it
 imports (frame adapters, message transport, geometry, catalogue revision
-adoption). Serve and export deliver the same inventory, enumerated from the
-package build outputs rather than a hand-maintained list; static mode never
-activates private capabilities or starts update requests, because export
-leaves the capability context unset. `navigation-resize.js` retains its
-delivery name as the pre-hydration script that synchronously captures early
-native disclosure choices; the hydrated shell adopts those choices over stored
-preferences and the reload snapshot, and capture listeners and temporary
-attributes are removed on load or page exit. The inspector remains
+adoption). Serve and export deliver the same inventory from generated manifests
+of the completed package build outputs rather than a hand-maintained list;
+manifest entries and directory files must match exactly. Static mode never
+activates private capabilities or starts update requests, because export leaves
+the capability context unset. `navigation-resize.js` retains its delivery name
+as the pre-hydration script that synchronously captures early native disclosure
+choices without mutating React-owned DOM. The hydrated shell reads those choices
+for its initial render so they win over stored preferences and the reload
+snapshot; capture listeners and transient out-of-tree state are removed on load
+or page exit. The inspector remains
 `client/inspector.js`, React-free, at the 9,216-byte cap; it runs inside
 consumer documents and shares nothing with the shell bundle.
 

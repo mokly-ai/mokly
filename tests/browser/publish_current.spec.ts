@@ -1,10 +1,14 @@
 import { expect, test } from "@playwright/test";
 
+import { reactShellForProject } from "./export_shell.js";
 import { startStaticFixture } from "./static_fixture.js";
 
 let site: Awaited<ReturnType<typeof startStaticFixture>>;
-test.beforeAll(async () => {
-  site = await startStaticFixture(false, true);
+test.beforeAll(async ({ browser: _browser }, info) => {
+  site = await startStaticFixture({
+    noChanges: true,
+    reactShell: reactShellForProject(info.project.name),
+  });
 });
 test.afterAll(async () => {
   await site?.close();

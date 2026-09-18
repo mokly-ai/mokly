@@ -226,8 +226,13 @@ hydration entry (the shell tree with React and React DOM), the transport and
 geometry modules it imports, the inspector, navigation, fonts and scoped
 embedding CSS. The CLI asset step builds only its private Serve capability
 composition and rewrites its public runtime imports to the existing delivery
-paths. Serve enumerates the delivered browser modules from those build
-outputs.
+paths. After each browser directory is complete, its build writes an adjacent
+generated manifest containing the sorted delivered module names. Serve and the
+package gate require exact manifest/directory equality, so a missing or extra
+output fails before delivery rather than silently changing the inventory.
+The shell retirement gate also reads TypeScript source imports—including
+type-only, side-effect, re-export and dynamic imports—in addition to checking
+the delivered JavaScript graph.
 
 Serve's live-state restoration does not depend on the catalogue validator.
 An evidence refresh loads the public revision adopter dynamically after its

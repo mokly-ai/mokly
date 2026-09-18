@@ -1,4 +1,6 @@
 /** One bounded component/screen workspace with saved previews and an inspector. */
+import { canonicalJson } from "../components/data.js";
+
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import { DiffScreen } from "./diffs.js";
@@ -108,7 +110,7 @@ export function ComponentWorkspace({
         type="application/json"
         data-workspace-data=""
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(data).replace(/</g, "\\u003c"),
+          __html: canonicalJson(data).replaceAll("<", "\\u003c"),
         }}
       />
     </section>

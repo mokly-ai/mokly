@@ -65,7 +65,10 @@ export function validatePackageManifest(metadata, name) {
   }
   if (viewer) {
     assert.equal(metadata.dependencies?.["@mokly/mokly"], undefined);
-    assert.deepEqual(metadata.sideEffects, ["./dist/styles.css"]);
+    assert.deepEqual(metadata.sideEffects, [
+      "./dist/browser.js",
+      "./dist/styles.css",
+    ]);
     assert.equal(metadata.bin, undefined);
   } else {
     assert.deepEqual(metadata.bin, { mokly: "./dist/cli/bin.js" });

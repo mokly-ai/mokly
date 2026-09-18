@@ -320,9 +320,11 @@ snapshot defined by the [watch contract](./mokly-watch.md); the hydrated shell
 restores it exactly as before. Native disclosure choices made before hydration
 completes are captured by the pre-hydration script and take precedence over
 older preferences and the snapshot; capture state is removed after load or
-exit. Hydration must produce
-no mismatches: the server tree and the initial client tree are the same
-function of the same read model, route, selection and delivery descriptor.
+exit. Hydration must produce no mismatches: the server tree and the initial
+client tree are the same function of the same read model, route, selection and
+delivery descriptor. Embedded hydration and workspace state uses canonical
+object-key ordering, and validating then serializing hydration state must
+reproduce the embedded bytes exactly.
 
 A source change (object/fetcher identity, URL value, object base origin), or
 adapter change, remounts the shell tree, cancelling stale loads, pick and frame

@@ -362,12 +362,14 @@ test("screen page renders device chrome, viewport switch, and details", () => {
     /class="mbk-frag"[^>]*sandbox="allow-same-origin"[^>]*welcome\.desktop/,
   );
   assert.match(html, /class="phone-frame"/);
+  assert.equal(html.match(/class="phone-frame"/g)?.length, 1);
   assert.match(html, /class="phone-notch"/);
   assert.match(
     html,
     /class="phone-status"><span>9:41<\/span><span class="phone-status-icons">(<svg[\s\S]*?<\/svg>){3}<\/span><\/div><iframe/,
   );
   assert.match(html, /class="browser-frame"/);
+  assert.equal(html.match(/class="browser-frame"/g)?.length, 1);
   assert.match(html, /class="browser-expand"/);
   assert.match(html, /class="address-url">example\.test\/welcome</);
   assert.match(html, /data-mokly-stage="" data-viewport="both"/);

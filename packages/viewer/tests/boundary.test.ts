@@ -10,11 +10,12 @@ const root = path.resolve(import.meta.dirname, "..");
 test("the browser hydration entry is a documented package subpath", async () => {
   const manifest = JSON.parse(
     await fs.readFile(path.join(root, "package.json"), "utf8"),
-  ) as { exports: Record<string, unknown> };
+  ) as { exports: Record<string, unknown>; sideEffects: string[] };
   assert.deepEqual(manifest.exports["./browser"], {
     types: "./dist/browser.d.ts",
     import: "./dist/browser.js",
   });
+  assert.ok(manifest.sideEffects.includes("./dist/browser.js"));
 });
 
 test("React entry bundles for browsers without CLI, server or Node code", async () => {

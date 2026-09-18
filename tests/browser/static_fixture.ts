@@ -10,11 +10,20 @@ import {
 import { repositoryRoot, validEntrySource } from "../helpers/fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 
+import { assertServedShellMarker } from "./export_shell.js";
+
+interface StaticFixtureOptions {
+  comparisons?: boolean;
+  noChanges?: boolean;
+  reactShell: boolean;
+}
+
 /** Export an independent consumer, then remove its entire source/Git repository. */
-export async function startStaticFixture(
+export async function startStaticFixture({
   comparisons = false,
   noChanges = false,
-) {
+  reactShell,
+}: StaticFixtureOptions) {
   const source = (changed: boolean) =>
     comparisons
       ? comparisonEntrySource(changed).replaceAll(
@@ -34,11 +43,25 @@ export async function startStaticFixture(
   );
   try {
     await fs.promises.writeFile(fixture.entryPath, source(true));
-    await exportCatalogue(fixture.config, { outDir: "site", noChanges });
+    await exportCatalogue(fixture.config, {
+      outDir: "site",
+      noChanges,
+      reactShell,
+    });
     await fs.promises.cp(fixture.output, isolated, { recursive: true });
     await fixture.close();
     const files = await directoryFiles(isolated);
     const server = await serveStaticFiles(isolated);
+    try {
+      await assertServedShellMarker(
+        server.url,
+        "/view/screens/home.html",
+        reactShell,
+      );
+    } catch (error) {
+      await server.close();
+      throw error;
+    }
     return {
       ...server,
       root: isolated,

@@ -10,12 +10,17 @@ import { createExampleBaseline } from "../helpers/example_baseline.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 
+import {
+  assertServedShellMarker,
+  reactShellForProject,
+} from "./export_shell.js";
 import { chooseViewport } from "./workspace_actions.js";
 
 let site: Awaited<ReturnType<typeof serveStaticFiles>>;
 let root: string;
-test.beforeAll(async () => {
+test.beforeAll(async ({ browser: _browser }, info) => {
   test.setTimeout(180_000);
+  const reactShell = reactShellForProject(info.project.name);
   await fs.mkdir(path.join(repositoryRoot, ".context"), { recursive: true });
   root = await fs.mkdtemp(path.join(repositoryRoot, ".context/design-export-"));
   const config = await createExampleBaseline(root);
@@ -34,8 +39,17 @@ test.beforeAll(async () => {
   expect(source).toContain("{label}");
   await fs.writeFile(file, source.replace("{label}", "{label} revised"));
   const output = path.join(root, "site");
-  await exportCatalogue(config, { base: "HEAD", outDir: output });
+  await exportCatalogue(config, {
+    base: "HEAD",
+    outDir: output,
+    reactShell,
+  });
   site = await serveStaticFiles(output);
+  await assertServedShellMarker(
+    site.url,
+    "/view/design/library/chrome/top-bar.html?variant=search",
+    reactShell,
+  );
 });
 test.afterAll(async () => {
   await site?.close();

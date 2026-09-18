@@ -9,7 +9,8 @@ import { TopBar } from "../shell/top_bar.js";
 import { ShellMain, viewTitle } from "../shell/views.js";
 import type { ShellView } from "../shell/views.js";
 
-import type { ShellBootstrap } from "./bootstrap.js";
+import { serializeShellBootstrap, type ShellBootstrap } from "./bootstrap.js";
+import { HYDRATED_EVENT } from "./nav_resize.js";
 
 export const REACT_SHELL_BUNDLE = "react-shell.js";
 
@@ -18,11 +19,13 @@ export function StandaloneShellDocument({
   bootstrap,
   catalogue,
   context,
+  initialDisclosures,
   view,
 }: {
   bootstrap?: ShellBootstrap;
   catalogue: Catalogue;
   context: ShellContext;
+  initialDisclosures?: ReadonlyMap<string, boolean> | undefined;
   view: ShellView;
 }) {
   const hydrated = bootstrap !== undefined;
@@ -54,7 +57,11 @@ export function StandaloneShellDocument({
           </a>
           <TopBar catalogue={catalogue} />
           <div className="mbk-body">
-            <CatalogueNav catalogue={catalogue} context={context} />
+            <CatalogueNav
+              catalogue={catalogue}
+              context={context}
+              initialDisclosures={initialDisclosures}
+            />
             <ShellMain catalogue={catalogue} context={context} view={view} />
           </div>
           <p
@@ -70,7 +77,7 @@ export function StandaloneShellDocument({
             data-mokly-shell-bootstrap=""
             type="application/json"
             dangerouslySetInnerHTML={{
-              __html: JSON.stringify(bootstrap).replaceAll("<", "\\u003c"),
+              __html: serializeShellBootstrap(bootstrap),
             }}
           />
         ) : null}
@@ -91,6 +98,7 @@ export function StandaloneShellDocument({
 function HydrationMarker() {
   useEffect(() => {
     document.documentElement.dataset["moklyHydrated"] = "";
+    window.dispatchEvent(new Event(HYDRATED_EVENT));
   }, []);
   return null;
 }
