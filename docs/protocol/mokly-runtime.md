@@ -332,14 +332,14 @@ leading update per animation frame, and route-change focus never overrides the
 restored positions. Overlapping requests are latest-wins. Download,
 external, hash-only, metadata-only, and unmarked links retain their existing
 frame-owned behavior. Trusted parent code owns primary and new-context
-navigation for a marked catalogue link inside a Browse frame when enhancement
-is available.
-There is no native outer-navigation fallback; failed or disabled enhancement
+navigation for a marked catalogue link inside a Browse frame when the shell
+is hydrated.
+There is no native outer-navigation fallback; an unhydrated or failed shell
 keeps the portable link frame-owned and the sandbox prevents direct or nested
 content from replacing the shell. Served Browse applies a request-visible
-logical fragment during server rendering. The static deployed preview applies
-it progressively to each current and light/dark swap source so scheme changes
-retain the anchor.
+logical fragment during server rendering. In the static deployed preview the
+hydrated shell renders it into each current and light/dark swap source so
+scheme changes retain the anchor.
 
 The shell meets keyboard, focus, reduced-motion, contrast, semantics, and status
 announcement requirements. Mobile and desktop shell variants are specified by

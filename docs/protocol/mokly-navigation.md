@@ -239,8 +239,8 @@ through those outer route entries and restore their route-owned scroll.
 Outer same-document links, including the shell's skip link, keep native fragment
 focus and scrolling. Document identity includes origin, pathname and query but
 excludes the hash. A history event within the displayed document must not
-re-render that view, reinstall its workspace, or move focus away from the
-native target. It invalidates any pending route transition so an obsolete
+change the rendered route, reinstall its workspace, or move focus away from
+the native target. It invalidates any pending route transition so an obsolete
 result cannot replace the retained view. Saved scroll positions may be
 restored without a reload. A changed route or query still uses in-shell
 navigation and its normal history restoration.

@@ -21,10 +21,10 @@ with declarations and React/React DOM peers. `@mokly/mokly` depends on its
 released version; the viewer never imports the CLI, Node, Git or consumer code.
 The public React entry exports `MoklyViewer`, its types, the adapters and
 `readCatalogue` and `resolveInstance` from the public data contracts.
-The documented `./runtime` integration entry supplies standalone hydration,
-the capability context Serve provides, recovery and validated catalogue
-revision adoption. Its lazy revision-adopter loader keeps validation off
-Serve's startup path.
+The documented `./runtime` integration entry supplies recovery and validated
+catalogue revision adoption today, and after the flip also standalone
+hydration and the capability context Serve provides. Its lazy
+revision-adopter loader keeps validation off Serve's startup path.
 `./data` owns shared pure value/validation contracts used by CLI producers.
 These are package entry points, not aliases for CLI modules. `./server` also
 exports typed standalone context and `viewerAssetUrl` for package assets.
@@ -314,12 +314,13 @@ Shell state is one store scoped to a mounted viewer:
   discarded on route change or source replacement.
 
 A watched reload captures search, view, viewport, scheme, disclosure
-(including the pre-filter baseline), drawer, catalogue scroll and per-region
-scroll into the one-shot recovery snapshot defined by the
-[watch contract](./mokly-watch.md); the hydrated shell restores it exactly as
-before. Native disclosure choices made before hydration completes are captured
-by the pre-hydration script and take precedence over older preferences and the
-snapshot; capture state is removed after load or exit. Hydration must produce
+(including the pre-filter baseline), drawer, catalogue scroll, per-region
+scroll and the optional validated Changes status into the one-shot recovery
+snapshot defined by the [watch contract](./mokly-watch.md); the hydrated shell
+restores it exactly as before. Native disclosure choices made before hydration
+completes are captured by the pre-hydration script and take precedence over
+older preferences and the snapshot; capture state is removed after load or
+exit. Hydration must produce
 no mismatches: the server tree and the initial client tree are the same
 function of the same read model, route, selection and delivery descriptor.
 

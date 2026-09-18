@@ -197,6 +197,12 @@ statement that promises a React-free browser, except the inspector rule.
       `mokly-component-manifest.md` "no React values" sentence and the
       `mokly-package.md` non-goal about hydrating product fragments concern
       consumer data and frames, not the shell, and are unchanged.
+- [x] Exit criterion: grep `docs/protocol`, `docs/architecture`, `README.md`
+      and every package/crate README for `progressive`, `vanilla`,
+      `islands`, `no React` and `enhancement runtime`; every remaining hit
+      must be either the inspector exception, a consumer-data statement, a
+      frame-link "parent enhancement" rule, or an explicit "until the flip"
+      status note. Added after the Milestone 1 review found one missed hunk.
 - [x] Record in `docs/protocol/mokly-shell-design.md` that the design is
       unchanged by this work and remains binding on the React implementation.
 - [x] Add this plan to `plans/README.md`; validate the changed Markdown.
@@ -515,3 +521,14 @@ kept, with the reason), and the selector field on the publicly re-exported
 `ShellContext` is now optional, marked internal, and named at all three
 construction sites. This closes the pre-implementation review rounds; the
 implementation review in Milestone 9 runs against the complete branch.
+
+Milestone 1 (`c596278`) was reviewed with the implementation review prompt.
+Five findings were reported; the four wording findings were applied: a stale
+"progressive navigation" sentence in export delivery (the term sweep above
+was added as an exit criterion and also caught two more in the runtime
+contract and the workspace README), a preserved navigation rule that had
+changed meaning under React (now stated as "must not change the rendered
+route"), the `./runtime` entry described as already shipping hydration (now
+"after the flip"), and the reload snapshot omitting the optional Changes
+status. The fifth, the viewer contract growing to 381 lines, is noted for a
+later split once the store exists in code.

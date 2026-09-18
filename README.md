@@ -788,8 +788,8 @@ bridge; unsupported platforms or filesystems fail without a replacing fallback.
 Each complete export has its own content-derived deployment identity, separate
 from comparison generations. Navigation from an old tab performs a full reload
 when the deployed catalogue, assets, or host aliases change, even if the
-comparison files are unchanged. Within one deployment, navigation remains
-progressive. Hosting must revalidate mutable files so that reload can fetch them.
+comparison files are unchanged. Within one deployment, navigation stays
+in-shell. Hosting must revalidate mutable files so that reload can fetch them.
 
 Exports also include an inert `__mokly/client/inspector.js` for explicit
 cross-origin hosts. Current owned copies contain its bounded identity map;

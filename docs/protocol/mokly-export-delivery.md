@@ -168,7 +168,7 @@ screens retain their current empty state without comparison modes. Side by side,
 Overlay, and Difference retain the existing UI and missing-current state for
 Removed component variants. Refresh/retry reload the same exported generation; only
 another export and deployment produces new comparison content. An open tab
-retains its loaded deployment's descriptor; reload the page to adopt a newer deployment. Progressive
+retains its loaded deployment's descriptor; reload the page to adopt a newer deployment. In-shell
 navigation encountering a different deployment identity performs a full page load rather
 than mixing its new route with the old catalogue navigation. Hosts may
 retain prior generations for old tabs; if they remove them, the existing
