@@ -140,9 +140,11 @@ Mobile comparison buttons, links and static labels share the same compact
 sizing so the control remains usable with different system fonts.
 No renderer imports of entire screen registries or circular variant imports.
 
-All new design components use `colorSchemes: ["light"]`, like the owning
-artboards. A depicted dark-preview state is an explicit prop, distinct from the
-outer catalogue's color scheme. Select real mobile/desktop render contexts;
+Design components use `colorSchemes: ["light"]`, like the artboards that own
+them, except the appearance selector and the top bar that composes it: their own
+subject is the catalogue's appearance, so they render in both schemes alongside
+the appearance screens. A depicted dark-preview state is an explicit prop,
+distinct from the outer catalogue's color scheme. Select real mobile/desktop render contexts;
 device-frame `device` chooses a pictured phone/browser independently of the
 artboard viewport, so a mobile artboard may still depict a desktop comparison.
 
