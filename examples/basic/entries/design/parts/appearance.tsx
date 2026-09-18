@@ -1,25 +1,45 @@
-import type { ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
+
+import type { ColorScheme } from "@mokly/mokly";
 
 /** The interface appearance an artboard depicts, independent of preview scheme. */
-export type DesignAppearance = "light" | "dark";
+export type DesignAppearance = ColorScheme;
 
 /** The appearance selector setting a standalone catalogue can hold. */
 export type AppearanceChoice = "auto" | "light" | "dark";
 
 /**
- * Every artboard states the appearance it draws on its own root, so a generated
- * design page reads the same whatever appearance the browser showing it uses.
- * This is the one place that stamps it.
+ * Carries the renderer's `input.colorScheme` to the artboards below it. This is
+ * a pass-through of the scheme Mokly already asks the renderer for, not a
+ * second theme setting: a design page has exactly one requested scheme, and
+ * `mokly build` generates one file per scheme from it.
  */
-export function DesignAppearanceScope({
-  appearance,
+const RenderedScheme = createContext<DesignAppearance>("light");
+
+/** The example renderer supplies the scheme Mokly requested for this file. */
+export function DesignRenderedScheme({
+  scheme,
   children,
 }: {
-  appearance: DesignAppearance;
+  scheme: DesignAppearance;
   children: ReactNode;
 }) {
+  return <RenderedScheme value={scheme}>{children}</RenderedScheme>;
+}
+
+/** The scheme this generated file was rendered for. */
+export function useRenderedAppearance(): DesignAppearance {
+  return useContext(RenderedScheme);
+}
+
+/**
+ * Every artboard states the appearance it draws on its own root, taken from the
+ * scheme Mokly requested, so Browse's existing Light/Dark preview control swaps
+ * to the matching generated file.
+ */
+export function DesignAppearanceScope({ children }: { children: ReactNode }) {
   return (
-    <div className="ce-design" data-mbk-appearance={appearance}>
+    <div className="ce-design" data-mbk-appearance={useRenderedAppearance()}>
       {children}
     </div>
   );

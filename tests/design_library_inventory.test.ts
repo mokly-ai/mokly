@@ -8,6 +8,9 @@ import { NAV_TREE } from "../examples/basic/entries/design/parts/nav_data.js";
 import { designCatalogue } from "./helpers/design_catalogue.js";
 import { designLibrary } from "./helpers/design_library.js";
 
+/** Samples Mokly's preview control switches, like the appearance screens. */
+const dualSchemeSamples = new Set(["appearance-selector", "top-bar"]);
+
 test("catalogue navigation's All example matches its in-screen navigation", () => {
   const all = catalogueNavigation.entry.variants.find(
     (variant) => variant.id === "all",
@@ -64,12 +67,24 @@ test("all sixteen shared components have connected pages, controls and saved exa
     assert.ok(collection.childIds.includes(id));
     assert.ok(collection.childIds.length <= 5);
     for (const variant of entry.variants) {
-      assert.equal(variant.darkFragments, undefined);
+      // Only the samples whose own subject is appearance render in both schemes.
+      assert.equal(
+        variant.darkFragments === undefined,
+        !dualSchemeSamples.has(slug),
+        `${id}/${variant.id}`,
+      );
+      const schemes = dualSchemeSamples.has(slug) ? 2 : 1;
       assert.deepEqual(
-        variant.componentViews.map((view) => view.viewport).sort(),
+        [
+          ...new Set(variant.componentViews.map((view) => view.viewport)),
+        ].sort(),
         ["desktop", "mobile"],
       );
-      for (const route of Object.values(variant.fragments))
+      assert.equal(variant.componentViews.length, 2 * schemes, id);
+      for (const route of [
+        ...Object.values(variant.fragments),
+        ...Object.values(variant.darkFragments ?? {}),
+      ])
         assert.ok(outputs.has(route), route);
     }
   }

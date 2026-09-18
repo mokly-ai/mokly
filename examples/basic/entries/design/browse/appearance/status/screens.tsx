@@ -20,12 +20,7 @@ import {
 
 function HomeAndEmpty({ viewport }: { viewport: ArtboardViewport }) {
   return (
-    <AppearanceShell
-      appearance="dark"
-      appearanceChoice="dark"
-      design={DESTINATIONS.appearanceHome}
-      viewport={viewport}
-    >
+    <AppearanceShell design={DESTINATIONS.appearanceHome} viewport={viewport}>
       <EmptyState
         to={DESTINATIONS.appearance}
         title="Mokly"
@@ -40,8 +35,6 @@ function ErrorAndRetry({ viewport }: { viewport: ArtboardViewport }) {
   return (
     <AppearanceShell
       activeLabel="Welcome"
-      appearance="dark"
-      appearanceChoice="dark"
       design={DESTINATIONS.appearanceError}
       viewport={viewport}
     >
@@ -77,8 +70,6 @@ function AvailabilityScreen({
 }) {
   return (
     <AppearanceShell
-      appearance="dark"
-      appearanceChoice="dark"
       aside={
         viewport === "mobile" ? (
           <AvailabilityNav drawer status={status} />
@@ -105,8 +96,6 @@ function UseCaseFlow({ viewport }: { viewport: ArtboardViewport }) {
   return (
     <AppearanceShell
       activeLabel="Example tour"
-      appearance="dark"
-      appearanceChoice="dark"
       design={DESTINATIONS.appearanceFlow}
       viewport={viewport}
     >
@@ -162,21 +151,19 @@ function UseCaseFlow({ viewport }: { viewport: ArtboardViewport }) {
 /** Appearance on the routes that carry no preview, or none yet. */
 export const appearanceStatusScreens = [
   screen({
-    colorSchemes: ["light"],
     description:
-      "The catalogue home guidance drawn in the dark interface with nothing selected.",
+      "The catalogue home guidance with nothing selected, in either appearance.",
     desktop: <HomeAndEmpty viewport="desktop" />,
     id: "design-appearance-home",
     mobile: <HomeAndEmpty viewport="mobile" />,
     rationale:
-      "Home is the first paint a reader sees, so the dark interface has to be complete before any screen is chosen rather than appearing once a preview loads.",
+      "Home is the first paint a reader sees, so each appearance has to be complete before any screen is chosen rather than arriving once a preview loads.",
     slug: "home",
     title: "Home and empty",
   }),
   screen({
-    colorSchemes: ["light"],
     description:
-      "The catalogue checking for changes while the dark interface stays usable.",
+      "The catalogue checking for changes while it stays usable, in either appearance.",
     desktop: (
       <AvailabilityScreen
         design={DESTINATIONS.appearanceLoading}
@@ -193,12 +180,11 @@ export const appearanceStatusScreens = [
       />
     ),
     rationale:
-      "The spinner, the reserved count slot and the waiting message are drawn from the interface palette, so a loading catalogue never falls back to light chrome around a dark page.",
+      "The spinner, the reserved count slot and the waiting message are drawn from the catalogue palette, so a loading catalogue never falls back to the other appearance's chrome around a page.",
     slug: "loading",
     title: "Catalogue loading",
   }),
   screen({
-    colorSchemes: ["light"],
     description:
       "A screen that could not be shown, offering another attempt without leaving the catalogue.",
     desktop: <ErrorAndRetry viewport="desktop" />,
@@ -210,9 +196,8 @@ export const appearanceStatusScreens = [
     title: "Error and retry",
   }),
   screen({
-    colorSchemes: ["light"],
     description:
-      "Changes selected after the comparison could not be made, in the dark interface.",
+      "Changes selected after the comparison could not be made, in either appearance.",
     desktop: (
       <AvailabilityScreen
         design={DESTINATIONS.appearanceUnavailable}
@@ -229,19 +214,18 @@ export const appearanceStatusScreens = [
       />
     ),
     rationale:
-      "The one unavailable message and the dash in the count slot have to read as ordinary secondary text in the dark interface, not as an error colour the light interface never uses.",
+      "The one unavailable message and the dash in the count slot have to read as ordinary secondary text in both appearances, not as an error colour only one of them uses.",
     slug: "unavailable",
     title: "Changes unavailable",
   }),
   screen({
-    colorSchemes: ["light"],
     description:
-      "A use case's ordered steps drawn in the dark interface around light screens.",
+      "A use case's ordered steps around light screens, in either appearance.",
     desktop: <UseCaseFlow viewport="desktop" />,
     id: "design-appearance-flow",
     mobile: <UseCaseFlow viewport="mobile" />,
     rationale:
-      "Flow steps carry their own numbered tiles, connector line and links, so they prove the interface palette reaches content that sits on the stage rather than in a panel.",
+      "Flow steps carry their own numbered tiles, connector line and links, so they prove the catalogue palette reaches content that sits on the stage rather than in a panel.",
     slug: "flow",
     title: "Use-case flow",
   }),

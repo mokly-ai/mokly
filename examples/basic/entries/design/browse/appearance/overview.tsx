@@ -6,13 +6,11 @@ import type { ArtboardViewport } from "../../parts/shell.js";
 
 import { AppearanceHead, AppearanceShell } from "./parts/scaffold.js";
 
-/** The canonical appearance state: a dark interface holding a light preview. */
+/** The canonical appearance state: a selected screen in either appearance. */
 function AppearanceOverview({ viewport }: { viewport: ArtboardViewport }) {
   return (
     <AppearanceShell
       activeLabel="Welcome"
-      appearance="dark"
-      appearanceChoice="dark"
       design={DESTINATIONS.appearance}
       viewport={viewport}
     >
@@ -27,14 +25,13 @@ function AppearanceOverview({ viewport }: { viewport: ArtboardViewport }) {
 }
 
 export const appearanceOverviewScreen = screen({
-  colorSchemes: ["light"],
   description:
-    "The catalogue drawn in the dark interface while the screen it shows stays light.",
+    "The catalogue around a selected screen, drawn in Light and in Dark.",
   desktop: <AppearanceOverview viewport="desktop" />,
   id: "design-appearance-overview",
   mobile: <AppearanceOverview viewport="mobile" />,
   rationale:
-    "Appearance and preview colour scheme are separate settings, so the canonical state proves a dark catalogue can hold a light screen: the navigation, header, stage and inspector follow the interface palette while the phone and browser previews keep their own light surfaces, status indicators and ink.",
+    "Appearance and preview colour scheme are separate settings, so the canonical state proves the catalogue can change appearance while the screen it shows keeps its own light surfaces, status indicators and ink. Use the preview control above to move between the two renderings.",
   slug: "overview",
-  title: "Dark interface",
+  title: "Catalogue appearance",
 });

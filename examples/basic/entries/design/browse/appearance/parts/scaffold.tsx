@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 
-import type {
-  AppearanceChoice,
-  DesignAppearance,
+import {
+  useRenderedAppearance,
+  type AppearanceChoice,
 } from "../../../parts/appearance.js";
 import type { DesignDestination } from "../../../parts/destinations.js";
 import { MiniWelcome } from "../../../parts/mini_screens.js";
@@ -17,8 +17,8 @@ import { BrowserFrame, PhoneFrame } from "../../../parts/stage.js";
 
 interface AppearanceShellProps {
   activeLabel?: string | undefined;
-  appearance: DesignAppearance;
-  appearanceChoice: AppearanceChoice;
+  /** The depicted selector's value; it follows the rendered scheme by default. */
+  appearanceChoice?: AppearanceChoice | undefined;
   aside?: ReactNode;
   children: ReactNode;
   design: DesignDestination;
@@ -28,11 +28,11 @@ interface AppearanceShellProps {
 
 /**
  * Appearance artboards share one scaffold, so each screen differs only in the
- * state it depicts rather than in how the catalogue is assembled.
+ * state it depicts rather than in how the catalogue is assembled. The depicted
+ * appearance comes from the scheme Mokly requested for this generated file.
  */
 export function AppearanceShell({
   activeLabel,
-  appearance,
   appearanceChoice,
   aside,
   children,
@@ -40,11 +40,11 @@ export function AppearanceShell({
   nav,
   viewport,
 }: AppearanceShellProps) {
+  const rendered = useRenderedAppearance();
   return (
     <Shell
       design={design}
-      appearance={appearance}
-      appearanceChoice={appearanceChoice}
+      appearanceChoice={appearanceChoice ?? rendered}
       viewport={viewport}
       nav={
         viewport === "desktop"

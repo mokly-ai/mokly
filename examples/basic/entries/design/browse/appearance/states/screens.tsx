@@ -5,13 +5,11 @@ import { ExampleWorkspace } from "../../../parts/example_workspace.js";
 import type { ArtboardViewport } from "../../../parts/shell.js";
 import { AppearanceHead, AppearanceShell } from "../parts/scaffold.js";
 
-function LightInterface({ viewport }: { viewport: ArtboardViewport }) {
+function LightPreview({ viewport }: { viewport: ArtboardViewport }) {
   return (
     <AppearanceShell
       activeLabel="Welcome"
-      appearance="light"
-      appearanceChoice="light"
-      design={DESTINATIONS.appearanceLight}
+      design={DESTINATIONS.appearanceLightPreview}
       viewport={viewport}
     >
       <AppearanceHead
@@ -24,17 +22,11 @@ function LightInterface({ viewport }: { viewport: ArtboardViewport }) {
   );
 }
 
-function LightInterfaceDarkPreview({
-  viewport,
-}: {
-  viewport: ArtboardViewport;
-}) {
+function DarkPreview({ viewport }: { viewport: ArtboardViewport }) {
   return (
     <AppearanceShell
       activeLabel="Welcome"
-      appearance="light"
-      appearanceChoice="light"
-      design={DESTINATIONS.appearanceLightDark}
+      design={DESTINATIONS.appearanceDarkPreview}
       viewport={viewport}
     >
       <AppearanceHead
@@ -47,31 +39,10 @@ function LightInterfaceDarkPreview({
   );
 }
 
-function DarkInterface({ viewport }: { viewport: ArtboardViewport }) {
-  return (
-    <AppearanceShell
-      activeLabel="Welcome"
-      appearance="dark"
-      appearanceChoice="dark"
-      design={DESTINATIONS.appearanceDark}
-      viewport={viewport}
-    >
-      <AppearanceHead
-        idChip="example-welcome"
-        title="Welcome"
-        viewport={viewport}
-      />
-      <ExampleWorkspace subject="welcome" viewport={viewport} dark />
-    </AppearanceShell>
-  );
-}
-
-function DarkInterfaceLightOnly({ viewport }: { viewport: ArtboardViewport }) {
+function LightOnlyScreen({ viewport }: { viewport: ArtboardViewport }) {
   return (
     <AppearanceShell
       activeLabel="Details"
-      appearance="dark"
-      appearanceChoice="dark"
       design={DESTINATIONS.appearanceLightOnly}
       viewport={viewport}
     >
@@ -89,7 +60,6 @@ function AutoAppearance({ viewport }: { viewport: ArtboardViewport }) {
   return (
     <AppearanceShell
       activeLabel="Welcome"
-      appearance="light"
       appearanceChoice="auto"
       design={DESTINATIONS.appearanceAuto}
       viewport={viewport}
@@ -104,65 +74,49 @@ function AutoAppearance({ viewport }: { viewport: ArtboardViewport }) {
   );
 }
 
-/** The four interface and preview pairings, plus the Auto setting itself. */
+/** The preview scheme a mockup holds, and the Auto setting, in both appearances. */
 export const appearanceStateScreens = [
   screen({
-    colorSchemes: ["light"],
     description:
-      "The light interface holding the light view of a screen, with Light chosen.",
-    desktop: <LightInterface viewport="desktop" />,
-    id: "design-appearance-light",
-    mobile: <LightInterface viewport="mobile" />,
+      "A screen showing its light view, with the catalogue in either appearance.",
+    desktop: <LightPreview viewport="desktop" />,
+    id: "design-appearance-light-preview",
+    mobile: <LightPreview viewport="mobile" />,
     rationale:
-      "Choosing Light keeps the established catalogue layout, spacing and colours, so an existing reviewer sees no change beyond the new setting.",
-    slug: "light",
-    title: "Light interface",
+      "The preview colour scheme is chosen in the depicted screen header and reaches only the device screens, so a light screen reads the same whichever appearance the catalogue around it is using.",
+    slug: "light-preview",
+    title: "Light preview",
   }),
   screen({
-    colorSchemes: ["light"],
     description:
-      "The light interface holding the dark view of a screen, with Light chosen.",
-    desktop: <LightInterfaceDarkPreview viewport="desktop" />,
-    id: "design-appearance-light-dark",
-    mobile: <LightInterfaceDarkPreview viewport="mobile" />,
+      "A screen showing its dark view, with the catalogue in either appearance.",
+    desktop: <DarkPreview viewport="desktop" />,
+    id: "design-appearance-dark-preview",
+    mobile: <DarkPreview viewport="mobile" />,
     rationale:
-      "The preview colour scheme is chosen in the screen header and reaches only the device screens, so a light catalogue can show a dark screen exactly as it does today.",
-    slug: "light-dark",
-    title: "Light interface, dark screen",
+      "A dark screen inside a light catalogue and inside a dark one are both supported, so the phone screen edge and the browser toolbar still have to separate the preview from the catalogue around it.",
+    slug: "dark-preview",
+    title: "Dark preview",
   }),
   screen({
-    colorSchemes: ["light"],
     description:
-      "The dark interface holding the dark view of a screen, with Dark chosen.",
-    desktop: <DarkInterface viewport="desktop" />,
-    id: "design-appearance-dark",
-    mobile: <DarkInterface viewport="mobile" />,
-    rationale:
-      "Both settings are dark here, so the phone screen edge, the browser toolbar and the stage still have to separate the preview from the surrounding catalogue.",
-    slug: "dark",
-    title: "Dark interface, dark screen",
-  }),
-  screen({
-    colorSchemes: ["light"],
-    description:
-      "A screen with no dark view keeping its light frames inside the dark interface.",
-    desktop: <DarkInterfaceLightOnly viewport="desktop" />,
+      "A screen with no dark view keeping its light frames in either appearance.",
+    desktop: <LightOnlyScreen viewport="desktop" />,
     id: "design-appearance-light-only",
-    mobile: <DarkInterfaceLightOnly viewport="mobile" />,
+    mobile: <LightOnlyScreen viewport="mobile" />,
     rationale:
-      "A screen that renders in light only keeps its real light frames and states that fallback in the frame caption, so a reviewer can tell a light screen from a missing dark one whatever the interface is set to.",
+      "A screen that renders in light only keeps its real light frames and states that fallback in its frame caption. That is a fact about the screen, so it never makes the catalogue around it light-only.",
     slug: "light-only",
     title: "Light-only screen",
   }),
   screen({
-    colorSchemes: ["light"],
     description:
       "The Appearance setting left on Auto, following the reader's system.",
     desktop: <AutoAppearance viewport="desktop" />,
     id: "design-appearance-auto",
     mobile: <AutoAppearance viewport="mobile" />,
     rationale:
-      "Auto is the default and follows the system, including a change made while the catalogue is open; this artboard records how it reads on a system currently set to light.",
+      "Auto is the default and follows the system, including a change made while the catalogue is open. Each generated file depicts the system resolving to the scheme it was rendered for, so the example never reads the building or viewing machine's own setting.",
     slug: "auto",
     title: "Auto appearance",
   }),

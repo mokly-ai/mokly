@@ -5,11 +5,7 @@ import { screenHeader } from "../library/chrome/screen-header.js";
 import { optional, useDesignInstance } from "../library/composition.js";
 import { viewControls } from "../library/controls/view-controls.js";
 
-import {
-  DesignAppearanceScope,
-  type AppearanceChoice,
-  type DesignAppearance,
-} from "./appearance.js";
+import { DesignAppearanceScope, type AppearanceChoice } from "./appearance.js";
 import { DesignNavigation, useDesignNavigation } from "./design_navigation.js";
 import { DESTINATIONS, type DesignDestination } from "./destinations.js";
 import { TopBar } from "./top_bar.js";
@@ -19,9 +15,7 @@ export type ArtboardViewport = "desktop" | "mobile";
 
 interface ShellProps {
   design: DesignDestination;
-  /** Interface appearance this artboard draws; Light unless stated otherwise. */
-  appearance?: DesignAppearance;
-  /** Shows the standalone Appearance selector holding this setting. */
+  /** Draws the depicted Appearance selector holding this setting. */
   appearanceChoice?: AppearanceChoice | undefined;
   searchPlaceholder?: string | undefined;
   activeTag?: string | undefined;
@@ -37,7 +31,6 @@ interface ShellProps {
 /** The Mokly shell scaffold for one design mockup. */
 export function Shell({
   activeTag,
-  appearance = "light",
   appearanceChoice,
   aside,
   children,
@@ -63,7 +56,7 @@ export function Shell({
   );
   return (
     <DesignNavigation design={design}>
-      <DesignAppearanceScope appearance={appearance}>
+      <DesignAppearanceScope>
         {viewport === "desktop" ? (
           <div className="mbk-shell mbk-shell--desktop">
             {bar}

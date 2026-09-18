@@ -24,7 +24,7 @@ The [large fixture](../../tests/fixtures/large/README.md)
 uses the same Firna/React Native Web rendering stack with configurable volume,
 without expanding this example or slowing ordinary development startup.
 
-Mokly's 84 design screens now use 16 registered shared components, including
+Mokly's 83 design screens now use 16 registered shared components, including
 the footer tabs panel and the appearance selector. Open **Components → Design → Shared components** for Chrome, Controls,
 Inspector and Preview galleries with 63 saved variants, real mobile/desktop
 previews and editable local props. The outer Components and Usage tabs show actual
@@ -88,7 +88,7 @@ render plain React DOM need none of this and can keep a plain
 `renderToStaticMarkup` adapter.
 
 The `Design` navigation group is the owning design catalogue for Mokly's
-Browse and Changes views. Its fifty-two Browse, page, publication, appearance and Changes
+Browse and Changes views. Its fifty-one Browse, page, publication, appearance and Changes
 screens cover navigation, Details, tags, color schemes, comparison outcomes,
 stylesheet evidence, and the preparing and unavailable comparison states. Thirty-two component
 explorer screens add component pages, saved variants, affected screens,
@@ -134,10 +134,12 @@ galleries; `inspector` shows both closed-panel layouts.
 Each child gallery lists at most five owning screens; inspection also links
 two selected-instance screens in a nested gallery.
 
-All eighty-four design screens use `colorSchemes: ["light"]`: they draw the
-Mokly shell, including the existing dark-selection examples and the dark
-interface artboards, which state their appearance explicitly. The two product
-screens inherit the catalogue's light/dark settings and prove dark generation.
+Sixty-eight design screens use `colorSchemes: ["light"]`: they draw the
+Mokly shell, including the existing dark-selection examples. The fifteen
+appearance screens instead inherit the catalogue's light/dark settings, so
+`mokly build` writes a Light and a Dark file for each of their viewports and
+Browse's own preview control moves between them. The two product
+screens inherit the same settings and prove dark generation.
 Design headers retain the approved screen-stack logo: 17px overlapping mobile
 and desktop outlines in a 24px sage square. Desktop keeps the navigation resize
 grip; mobile keeps its fixed drawer. The component designs reuse the existing shell, frames, controls,
@@ -152,7 +154,7 @@ A shared implementation edit appears on its component page and lists consuming
 screens as affected; independent screen inputs, slots or instance changes still
 appear in Changes. This is tested against fully registered baseline snapshots.
 
-The shared inspector/workspace sheets cover all 84 design screens and standalone
+The shared inspector/workspace sheets cover all 83 design screens and standalone
 library hosts. Other mixed component-design sheets remain scoped to the 32
 component-design routes and hosts; the controls sheet additionally remains
 scoped to its eleven owning screen routes. `review.sharedImpact` is fallback
@@ -240,15 +242,21 @@ do not request actual comparison snapshots. There is no separate Review section
 or comparison CLI command.
 
 `design/browse/appearance/` designs the planned Auto/Light/Dark interface
-appearance. `overview.html` is its canonical screen; the `states/`,
-`workspaces/` and `status/` groups each own five more. Appearance is the
-catalogue's own setting and is deliberately separate from the preview colour
-scheme chosen in the screen header: a dark catalogue keeps light previews
-light, including their status indicators, and a comparison in Difference mode
-blends on a base taken from the compared screens rather than the interface.
-Artboards state their appearance through `data-mbk-appearance`, so a generated
-page reads the same whatever appearance the browser showing it uses. The
-approved swatches and their contrast are the
+appearance. `overview.html` is its canonical screen; `states/` owns four more
+and `workspaces/` and `status/` own five each. Every one of them is an ordinary
+dual-scheme entry, so `mokly build` writes a Light and a Dark file per viewport
+and Browse's own Light/Dark preview control switches the mockup you are looking
+at, at the same route. The renderer passes `input.colorScheme` to the shared
+artboard scope, which stamps `data-mbk-appearance`; there is no second theme
+mechanism, no extra control and no script inside a mockup.
+
+Appearance is the catalogue's own setting and is deliberately separate from the
+preview colour scheme chosen in the depicted screen header: a dark catalogue
+keeps light previews light, including their status indicators, a screen with no
+dark render keeps its light frames and says so in its own caption without making
+the catalogue light-only, and a comparison in Difference mode blends on a base
+taken from the compared screens rather than the catalogue. The approved swatches
+and their contrast are the
 [semantic palette](../../docs/protocol/mokly-viewer-palette.md); the behavior
 is the [appearance contract](../../docs/protocol/mokly-viewer-appearance.md).
 The shipped viewer is still light-only around previews.

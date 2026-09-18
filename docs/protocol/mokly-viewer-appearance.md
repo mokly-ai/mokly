@@ -2,12 +2,14 @@
 
 ## Delivery Status
 
-Designed, not implemented. The [dark-mode plan](../../plans/viewer-dark-mode.md)
-tracks this target for `@mokly/viewer`, local Serve and static exports. The
-mockups under `design/browse/appearance/` and the
-[semantic palette](./mokly-viewer-palette.md) are delivered; the current
-[viewer](./mokly-viewer.md) and [shell design](./mokly-shell-design.md) remain
-light-only around previews until the runtime implementation lands.
+Runtime not implemented. The [dark-mode plan](../../plans/viewer-dark-mode.md)
+tracks this target for `@mokly/viewer`, local Serve and static exports. Initial
+mockups and the [semantic palette](./mokly-viewer-palette.md) are delivered.
+The generated Light/Dark mockup variants described below are delivered: the
+appearance entries render in both schemes and the existing preview control
+switches them. The current [viewer](./mokly-viewer.md) and
+[shell design](./mokly-shell-design.md) remain light-only around previews until
+the later runtime implementation lands.
 
 ## Two Independent Settings
 
@@ -181,10 +183,26 @@ difference result.
 
 The owning catalogue is `examples/basic/entries/design`, generated under
 `examples/basic/generated/design`; use its registered shared components and
-existing screen compositions. Theme context must be explicit per artboard so
-examples remain deterministic and independent of the outer viewer's appearance.
-Design artboards may retain their `colorSchemes: ["light"]` generation policy
-while depicting either shell appearance through that explicit context.
+existing screen compositions. Appearance screens and their affected shared
+component samples must publish Light and Dark fragments for both viewports.
+Use the renderer's `input.colorScheme` through a shared render context to set
+each artboard's appearance. Render the same screen tree in both schemes;
+do not make these entries light-only or hardcode their shell to one theme.
+
+This is Mokly's existing authoring and rendering behavior, not a new mechanism:
+the entries inherit the configured `colorSchemes`, `mokly build` writes one file
+per scheme, and Browse's existing outer Light/Dark preview control swaps between
+them at the same entry and route. A shared render context may carry
+`input.colorScheme` to the artboard roots, but it stays a pass-through of that
+input rather than a second theme setting. No extra control, fixed-theme
+destination, frame-local script or interaction inside the depicted screen is
+needed to choose the mockup appearance.
+
+This outer selection describes the authored mockup being previewed. It does not
+couple the real viewer's own `theme` prop to `ViewerSelection.colorScheme`.
+Within the mockup, keep the nested preview's Light, Dark or light-only fallback
+scenario independent of its depicted shell. A light-only inner screen still
+has a Light and a Dark rendering of the surrounding mockup interface.
 
 A linked Appearance section sits under Browse, with matching source directories
 under `examples/basic/entries/design/browse/appearance/`. Each page's canonical
@@ -192,8 +210,8 @@ route is the group's own collection; its children are the owning screens.
 
 | Page                         | Owning screens                                                                             |
 | ---------------------------- | ------------------------------------------------------------------------------------------ |
-| `design/browse/appearance/`  | `overview.html`: the canonical dark interface holding a light preview                      |
-| `.../appearance/states/`     | Light/light, light/dark, dark/dark, light-only fallback, Auto selector                     |
+| `design/browse/appearance/`  | `overview.html`: the canonical interface holding a light preview in either appearance      |
+| `.../appearance/states/`     | Light preview, Dark preview, light-only fallback, Auto selector                            |
 | `.../appearance/workspaces/` | Props validation, selected-instance inspector, navigation drawer, Side by side, Difference |
 | `.../appearance/status/`     | Home/empty, catalogue loading, error/retry, Changes unavailable, use-case flow             |
 
@@ -203,16 +221,26 @@ component and reuses the registered shared components, including a registered
 `chrome/appearance-selector` composed into the top bar. Do not inline duplicate
 screen markup. Keep no more than five owning screen definitions per page.
 Existing light-shell/dark-preview destinations stay valid. The exact ids and
-routes are listed in the [shell design inventory](./mokly-shell-design.md#design-mockups).
+routes of the initial delivery are listed in the
+[shell design inventory](./mokly-shell-design.md#design-mockups). Consolidate
+redundant branch-added fixed-theme scenes into theme-neutral scenario entries
+as Milestone 2A lands; preserve destinations already present on `origin/main`.
 Update inventories, style ownership and example documentation, and keep notes
 outside the screens.
 
-Artboards select their appearance explicitly through a `data-mbk-appearance`
-attribute on the artboard root, so a generated design page never follows the
-appearance of the browser showing it.
+The artboard's `data-mbk-appearance` must reflect its requested render scheme.
+The Auto example uses that scheme as its deterministic system-theme fixture;
+generated pages must not read the building or viewing machine's system theme.
+The Appearance selector drawn inside the artboard depicts the planned standalone
+UI; it is not the control used to choose these authored Light/Dark variants.
 
 ## Required Verification
 
+- For the mockups, use the existing preview toggle to switch Dark → Light → Dark
+  on the same entry in both viewports. Assert actual fragment URLs, computed
+  artboard colors and absence of false outer Light only labels. Include panel
+  or comparison scenes and nested light-only examples, whose inner preview
+  behavior must remain correct. Validate all four generated view variants.
 - Test preference normalization, storage failures, startup ordering and cleanup;
   SSR markup and exports; semantic contrast and inherited accent overrides.
 - In browsers, cross Light/Dark appearance with Light/Dark previews, both

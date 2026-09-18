@@ -11,6 +11,12 @@ interface setting. The top bar composes it when a screen supplies an
 It is the interface setting, not the preview colour scheme the screen header's
 theme control selects.
 
+Those two samples — the appearance selector and the top bar that composes it —
+are the only ones that render in both schemes, because their own subject is the
+catalogue's appearance. Every other sample stays light. `metadata.ts` owns that
+list, `LibraryHost` stamps the requested scheme on the sample root, and Browse's
+existing preview control switches between the two generated files.
+
 Catalogue navigation saves each Changes availability state: **Checking for
 changes**, **Preparing comparison** and **Changes unavailable**, in both
 viewports. All and Changes retain their positions while the count shows a spinner

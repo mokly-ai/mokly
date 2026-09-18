@@ -31,8 +31,10 @@ canonical state; prior inspector, query, drawer, and depicted viewport state
 are not transported implicitly. Only the explicitly paired states below
 promise to retain their named subject, comparison mode, or color selection.
 
-Every design screen remains a light-only generated document with mobile and
-desktop variants, including artboards depicting a dark product screen. Link
+Every design screen has mobile and desktop variants. They are light-only
+generated documents, including artboards depicting a dark product screen, except
+the appearance screens under `design/browse/appearance/`, which render in both
+schemes so the existing preview control switches the depicted catalogue. Link
 targets use design entry ids independently of the example ids printed in the
 depicted shell's metadata. Existing ids, routes, screens, and text links remain
 available. `example-farewell` remains an intentionally absent product entry.
@@ -149,22 +151,23 @@ view controls. Its accessible label is “Switch to dark mode” or “Switch to
 mode”. The top bar contains no theme control. Unsupported pairs use a disabled
 icon with an explanatory tooltip:
 
-| Light state                    | Dark-selected state            |
-| ------------------------------ | ------------------------------ |
-| `design-browse-screen`         | `design-browse-dark-scheme`    |
-| `design-browse-details-screen` | `design-browse-light-only`     |
-| `design-review-changed`        | `design-review-dark-scheme`    |
-| `design-appearance-light`      | `design-appearance-light-dark` |
-| `design-appearance-overview`   | `design-appearance-dark`       |
-| `design-appearance-auto`       | `design-appearance-light-dark` |
+| Light state                       | Dark-selected state              |
+| --------------------------------- | -------------------------------- |
+| `design-browse-screen`            | `design-browse-dark-scheme`      |
+| `design-browse-details-screen`    | `design-browse-light-only`       |
+| `design-review-changed`           | `design-review-dark-scheme`      |
+| `design-appearance-light-preview` | `design-appearance-dark-preview` |
+| `design-appearance-overview`      | `design-appearance-dark-preview` |
+| `design-appearance-auto`          | `design-appearance-dark-preview` |
 
-The appearance screens carry the same preview theme icon, because the setting
-it changes is the preview's colour scheme, not the interface appearance. The
-dark-interface screens `design-appearance-dark` and
-`design-appearance-light-only` return to `design-appearance-overview`. The
-Appearance selector in the top bar holds its value and is otherwise a
-depiction; it has no authored transitions, so no artboard changes the interface
-appearance by following a link. Appearance comparison controls map Side by side
+The theme icon drawn inside an appearance artboard changes the depicted
+preview's colour scheme, not the catalogue appearance around it;
+`design-appearance-dark-preview` and `design-appearance-light-only` return to
+`design-appearance-light-preview`. The catalogue appearance itself is not a
+link: each appearance entry renders in Light and in Dark, and Browse's own
+preview control moves between those two generated files at the same route. The
+Appearance selector drawn in the top bar depicts the planned standalone control
+and has no authored transitions. Appearance comparison controls map Side by side
 to `design-appearance-side-by-side` and Difference to
 `design-appearance-difference`, with Current returning to
 `design-appearance-overview`; Overlay stays a depiction. Their All filter opens

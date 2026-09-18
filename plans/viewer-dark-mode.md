@@ -1,7 +1,8 @@
 # Viewer Dark Mode
 
-Status: in progress; documentation and mockup milestones complete, runtime
-implementation not started.
+Status: in progress; the documentation and mockup milestones are complete,
+including the Milestone 2A correction that lets Mokly's built-in preview
+color-scheme toggle switch the mockups. Runtime implementation has not started.
 The implementation PR's merge is this plan's completion boundary.
 
 Give `@mokly/viewer`, local Serve and static exports a complete Auto/Light/Dark
@@ -13,6 +14,13 @@ defines the target; [viewer ownership](../docs/protocol/mokly-viewer.md) and
 
 - Default viewer appearance to Auto. Keep it independent of preview
   `colorScheme`, which retains its existing default, URLs and fallback behavior.
+- Author the appearance mockups as ordinary dual-scheme entries, using the
+  `colorSchemes` configuration, per-entry inheritance, renderer
+  `input.colorScheme` and generated light/dark fragments Mokly already has. Its
+  existing preview toggle then selects the variant; separate fixed-theme routes
+  and the selector depicted inside an artboard are not substitutes for that
+  interaction. Keep each mockup's depicted preview scenario independent. This
+  changes mockup authoring, not the public viewer theme API.
 - Add `theme?: ViewerTheme` to React and server rendering. Embedded hosts own
   the surrounding appearance control and persistence; standalone Browse gets
   an Appearance selector and a saved preference.
@@ -116,6 +124,72 @@ for every role, `design-stage.css` carries independent preview tokens, and
 contrast and the three Light corrections, guarded by
 `tests/design_appearance.test.ts`. The prop field's native input styling moved
 into its own stylesheet so the component renders correctly in any host.
+
+## Milestone 2A: Switch mockups with Mokly's built-in toggle (complete)
+
+Tags: mockup
+
+The initial mockups hardcode Light or Dark on each artboard and opt out of dark
+rendering, so the existing preview toggle leaves them unchanged and shows Light
+only. Correct that authoring choice by adopting behavior Mokly already has:
+per-entry `colorSchemes`, the renderer's `input.colorScheme`, generated
+light/dark fragments and the preview control that swaps between them. No new
+switching mechanism, theme state or viewer runtime change is involved.
+Milestone 2 stays completed as the historical delivery; this follow-up is
+required before runtime UI work begins.
+
+- [x] Update the plan and appearance contract to require generated light/dark
+      mockup variants controlled by the existing outer preview toggle, preserving
+      the separately agreed `theme="auto" | "light" | "dark"` runtime API.
+- [x] Add failing regression tests before the fix: appearance entries must
+      publish mobile/desktop × light/dark fragments, and the existing preview
+      toggle must change the current artboard's actual colors at the same route.
+- [x] Remove the light-only opt-out from the appearance screens and the two
+      shared component samples whose subject is appearance, so they inherit the
+      configured schemes. Pass the renderer's existing `input.colorScheme`
+      through one shared context to their artboard roots instead of hardcoding
+      the depicted appearance or copying a screen's JSX for each theme. That
+      context carries the render input only; it is not a second theme system.
+- [x] Keep each screen's nested preview scenario independent: Light preview,
+      Dark preview and light-only fallback examples must keep the intended inner
+      screen while their surrounding artboard changes with the outer toggle.
+      An inner light-only example must not make the entire mockup light-only.
+- [x] Consolidate redundant branch-added fixed-theme scenes into scenario-based
+      entries and use theme-neutral titles/descriptions. Update links, hierarchy,
+      inventories, registered samples and READMEs. Preserve routes and features
+      already present on `origin/main`, both viewport components, the canonical
+      overview, and the maximum of five owning screens per page.
+- [x] Treat the Appearance selector drawn inside an artboard as the design of
+      the future standalone control. Do not use it, a new outer control, route
+      navigation or frame-local scripts to replace Mokly's existing toggle.
+      Keep generated examples deterministic from the requested render scheme,
+      including the Auto scenario, without reading the machine's system theme.
+- [x] Run the existing-toggle browser regression on a normal screen, a panel or
+      comparison, and the nested light-only example in both viewports. Verify
+      Dark → Light → Dark changes generated fragment URLs and computed artboard
+      colors without changing the selected entry, and that the outer frames no
+      longer show a false Light only fallback for these dual-scheme mockups.
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
+      relevant tests and `cargo xtask check`. Visually smoke through `npm run dev`
+      using the existing toggle, inspect mobile/desktop screenshots in
+      `.context/`, and include regenerated HTML/manifest output in the change.
+- [x] After checks pass, include all updated docs, sources, tests and generated
+      artifacts with `git add -A`, commit and push this branch. Then review the
+      complete diff against `origin/main` with
+      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md),
+      report findings without automatic fixes, and stop before Milestone 3.
+
+Delivered: the fifteen appearance screens and the two appearance-related
+registered samples dropped their `colorSchemes: ["light"]` opt-out, so
+`mokly build` writes Light and Dark files for both viewports and Browse's
+existing preview control swaps them at the same route.
+`parts/appearance.tsx` now passes the renderer's `input.colorScheme` to
+`DesignAppearanceScope`, which stamps `data-mbk-appearance`; no artboard names a
+theme. The States page consolidated five fixed-theme scenes into four scenarios:
+`light-preview`, `dark-preview`, `light-only` and `auto`.
+`tests/design_appearance_variants.test.ts` and
+`tests/browser/design_appearance_toggle.spec.ts` guard the fragments, the
+artboard colors and the Dark → Light → Dark interaction.
 
 ## Milestone 3: Implement shared viewer appearance
 

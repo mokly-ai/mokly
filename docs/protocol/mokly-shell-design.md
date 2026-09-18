@@ -81,22 +81,21 @@ contract until their standalone screens are implemented.
 | `design-page-removed`                 | `design/browse/pages/removed.html`                      | Removed document with baseline ancestry                   |
 | `design-publication-catalogue`        | `design/browse/publication/catalogue.html`              | Current catalogue with review omitted                     |
 | `design-publication-changes`          | `design/browse/publication/changes.html`                | Catalogue with optional comparisons                       |
-| `design-appearance-overview`          | `design/browse/appearance/overview.html`                | Dark interface holding a light preview                    |
-| `design-appearance-light`             | `design/browse/appearance/states/light.html`            | Light interface, light preview                            |
-| `design-appearance-light-dark`        | `design/browse/appearance/states/light-dark.html`       | Light interface, dark preview                             |
-| `design-appearance-dark`              | `design/browse/appearance/states/dark.html`             | Dark interface, dark preview                              |
-| `design-appearance-light-only`        | `design/browse/appearance/states/light-only.html`       | Light-only screen inside the dark interface               |
+| `design-appearance-overview`          | `design/browse/appearance/overview.html`                | Canonical catalogue appearance around a selected screen   |
+| `design-appearance-light-preview`     | `design/browse/appearance/states/light-preview.html`    | A screen showing its light view                           |
+| `design-appearance-dark-preview`      | `design/browse/appearance/states/dark-preview.html`     | A screen showing its dark view                            |
+| `design-appearance-light-only`        | `design/browse/appearance/states/light-only.html`       | A screen with no dark view keeping its light frames       |
 | `design-appearance-auto`              | `design/browse/appearance/states/auto.html`             | Appearance left on Auto                                   |
 | `design-appearance-props`             | `design/browse/appearance/workspaces/props.html`        | Props panel with a rejected value                         |
 | `design-appearance-instance`          | `design/browse/appearance/workspaces/instance.html`     | Selected component instance panel                         |
-| `design-appearance-drawer`            | `design/browse/appearance/workspaces/drawer.html`       | Catalogue drawer over the dark interface                  |
-| `design-appearance-side-by-side`      | `design/browse/appearance/workspaces/side-by-side.html` | Side-by-side comparison in the dark interface             |
-| `design-appearance-difference`        | `design/browse/appearance/workspaces/difference.html`   | Difference comparison in the dark interface               |
+| `design-appearance-drawer`            | `design/browse/appearance/workspaces/drawer.html`       | Catalogue drawer on a narrow layout                       |
+| `design-appearance-side-by-side`      | `design/browse/appearance/workspaces/side-by-side.html` | Side-by-side comparison                                   |
+| `design-appearance-difference`        | `design/browse/appearance/workspaces/difference.html`   | Difference comparison                                     |
 | `design-appearance-home`              | `design/browse/appearance/status/home.html`             | Home guidance with nothing selected                       |
 | `design-appearance-loading`           | `design/browse/appearance/status/loading.html`          | Catalogue checking for changes                            |
 | `design-appearance-error`             | `design/browse/appearance/status/error.html`            | A screen that could not be shown, with another attempt    |
-| `design-appearance-unavailable`       | `design/browse/appearance/status/unavailable.html`      | Changes unavailable in the dark interface                 |
-| `design-appearance-flow`              | `design/browse/appearance/status/flow.html`             | Use-case steps in the dark interface                      |
+| `design-appearance-unavailable`       | `design/browse/appearance/status/unavailable.html`      | Changes unavailable                                       |
+| `design-appearance-flow`              | `design/browse/appearance/status/flow.html`             | Use-case steps around light screens                       |
 
 Additional owning groups keep each new page at no more than five screens:
 
@@ -119,11 +118,13 @@ Additional owning groups keep each new page at no more than five screens:
   two Changes states that carry no comparison data yet, keeping the impact group
   to its own three aggregate outcomes.
 - `design/browse/appearance/overview.html` is the canonical appearance screen;
-  the `states/`, `workspaces/` and `status/` groups beneath it own five screens
-  each. They specify the planned Auto/Light/Dark interface appearance from
-  [viewer appearance](./mokly-viewer-appearance.md), which the implemented shell
-  does not offer yet; their preview colour-scheme behavior is the implemented
-  behavior recorded below. Existing light-interface routes keep their ids.
+  the `states/` group beneath it owns four screens and `workspaces/` and
+  `status/` own five each. They specify the planned Auto/Light/Dark interface
+  appearance from [viewer appearance](./mokly-viewer-appearance.md), which the
+  implemented shell does not offer yet; their preview colour-scheme behavior is
+  the implemented behavior recorded below. Every one of them renders in both
+  schemes, so the existing preview control moves between its two generated
+  files at the same route. Existing light-interface routes keep their ids.
 
 Every screen ships one mobile and one desktop variant. Mockup implementation
 notes live in entry descriptions, rationale, and related docs — never inside

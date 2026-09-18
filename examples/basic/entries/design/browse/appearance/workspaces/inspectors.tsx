@@ -66,8 +66,6 @@ function PropsValidation({ viewport }: { viewport: ArtboardViewport }) {
   return (
     <AppearanceShell
       activeLabel="Welcome"
-      appearance="dark"
-      appearanceChoice="dark"
       design={DESTINATIONS.appearanceProps}
       viewport={viewport}
     >
@@ -119,8 +117,6 @@ function SelectedInstance({ viewport }: { viewport: ArtboardViewport }) {
   return (
     <AppearanceShell
       activeLabel="Welcome"
-      appearance="dark"
-      appearanceChoice="dark"
       design={DESTINATIONS.appearanceInstance}
       viewport={viewport}
     >
@@ -152,21 +148,19 @@ function SelectedInstance({ viewport }: { viewport: ArtboardViewport }) {
 /** The two inspector panels an appearance change has to keep readable. */
 export const appearanceInspectorScreens = [
   screen({
-    colorSchemes: ["light"],
     description:
-      "Editable props in the dark interface, including a value that fails its rule.",
+      "Editable props in either appearance, including a value that fails its rule.",
     desktop: <PropsValidation viewport="desktop" />,
     id: "design-appearance-props",
     mobile: <PropsValidation viewport="mobile" />,
     rationale:
-      "Native fields, their descriptions and the message for a rejected value all have to stay legible in the dark interface, so the field frame, the input surface and the error text each need their own dark value rather than a tint of the light one.",
+      "Native fields, their descriptions and the message for a rejected value all have to stay legible in both appearances, so the field frame, the input surface and the error text each need their own value rather than a tint of the other one.",
     slug: "props",
     title: "Props validation",
   }),
   screen({
-    colorSchemes: ["light"],
     description:
-      "The selected component instance and its recorded facts in the dark interface.",
+      "The selected component instance and its recorded facts, in either appearance.",
     desktop: <SelectedInstance viewport="desktop" />,
     id: "design-appearance-instance",
     mobile: <SelectedInstance viewport="mobile" />,

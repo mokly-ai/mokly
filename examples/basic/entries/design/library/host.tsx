@@ -28,7 +28,11 @@ export function LibraryHost({
       children
     );
   return (
-    <div className="ce-design mbk-library" data-library-component={slug}>
+    <div
+      className="ce-design mbk-library"
+      data-library-component={slug}
+      data-mbk-appearance={input.colorScheme}
+    >
       <div className={`mbk-library-host mbk-shell--${input.viewport}`}>
         {content}
       </div>

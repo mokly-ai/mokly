@@ -1,6 +1,9 @@
 import { screen } from "@mokly/mokly";
 
-import { DesignAppearanceScope } from "../../../parts/appearance.js";
+import {
+  DesignAppearanceScope,
+  useRenderedAppearance,
+} from "../../../parts/appearance.js";
 import { CompareGrid, Pane } from "../../../parts/compare.js";
 import {
   ComparePage,
@@ -18,6 +21,17 @@ import { AppearanceShell } from "../parts/scaffold.js";
 
 import { appearanceInspectorScreens } from "./inspectors.js";
 
+/** The drawer artboard draws the selector holding the scheme it renders for. */
+function DrawerTopBar() {
+  return (
+    <TopBar
+      viewport="mobile"
+      drawerOpen
+      appearanceChoice={useRenderedAppearance()}
+    />
+  );
+}
+
 function DrawerBody() {
   return (
     <EmptyState
@@ -32,9 +46,9 @@ function DrawerBody() {
 function NavigationDrawerDesktop() {
   return (
     <DesignNavigation design={DESTINATIONS.appearanceDrawer}>
-      <DesignAppearanceScope appearance="dark">
+      <DesignAppearanceScope>
         <div className="mbk-shell mbk-shell--collapsed">
-          <TopBar viewport="mobile" drawerOpen appearanceChoice="dark" />
+          <DrawerTopBar />
           <main className="mbk-main">
             <DrawerBody />
           </main>
@@ -48,8 +62,6 @@ function NavigationDrawerDesktop() {
 function NavigationDrawerMobile() {
   return (
     <AppearanceShell
-      appearance="dark"
-      appearanceChoice="dark"
       aside={<NavDrawer activeLabel="Welcome" />}
       design={DESTINATIONS.appearanceDrawer}
       viewport="mobile"
@@ -79,8 +91,7 @@ function WelcomePanes({ viewport }: { viewport: CompareViewport }) {
 function SideBySideCompare({ viewport }: { viewport: CompareViewport }) {
   return (
     <ComparePage
-      appearance="dark"
-      appearanceChoice="dark"
+      appearanceChoice={useRenderedAppearance()}
       activeTitle="Welcome"
       design={DESTINATIONS.appearanceSideBySide}
       idChip="example-welcome"
@@ -101,8 +112,7 @@ function SideBySideCompare({ viewport }: { viewport: CompareViewport }) {
 function DifferenceCompare({ viewport }: { viewport: CompareViewport }) {
   return (
     <ComparePage
-      appearance="dark"
-      appearanceChoice="dark"
+      appearanceChoice={useRenderedAppearance()}
       activeTitle="Welcome"
       design={DESTINATIONS.appearanceDifference}
       idChip="example-welcome"
@@ -125,33 +135,30 @@ function DifferenceCompare({ viewport }: { viewport: CompareViewport }) {
 export const appearanceWorkspaceScreens = [
   ...appearanceInspectorScreens,
   screen({
-    colorSchemes: ["light"],
     description:
-      "The catalogue drawer open over the dark interface on a narrow layout.",
+      "The catalogue drawer open over a narrow layout, in either appearance.",
     desktop: <NavigationDrawerDesktop />,
     id: "design-appearance-drawer",
     mobile: <NavigationDrawerMobile />,
     rationale:
-      "The drawer dims the catalogue behind it while the top bar stays at full strength, so the scrim and the drawer's own elevation need dark values that still separate the two layers.",
+      "The drawer dims the catalogue behind it while the top bar stays at full strength, so the scrim and the drawer's own elevation need values in each appearance that still separate the two layers.",
     slug: "drawer",
     title: "Navigation drawer",
   }),
   screen({
-    colorSchemes: ["light"],
     description:
-      "Two versions of a screen compared side by side inside the dark interface.",
+      "Two versions of a screen compared side by side, in either appearance.",
     desktop: <SideBySideCompare viewport="desktop" />,
     id: "design-appearance-side-by-side",
     mobile: <SideBySideCompare viewport="mobile" />,
     rationale:
-      "The comparison band, the Before and Current captions and the stage behind the frames follow the interface, while both compared screens keep the light surfaces they actually render.",
+      "The comparison band, the Before and Current captions and the stage behind the frames follow the catalogue appearance, while both compared screens keep the light surfaces they actually render.",
     slug: "side-by-side",
     title: "Side by side",
   }),
   screen({
-    colorSchemes: ["light"],
     description:
-      "The blended difference of two screen versions inside the dark interface.",
+      "The blended difference of two screen versions, in either appearance.",
     desktop: <DifferenceCompare viewport="desktop" />,
     id: "design-appearance-difference",
     mobile: <DifferenceCompare viewport="mobile" />,

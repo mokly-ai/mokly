@@ -12,8 +12,12 @@ those implementations.
 
 Each row defines `design-ui-{slug}` at `design/library/{group}/{slug}.html`.
 The first listed variant is the default. Every variant has mobile and desktop
-light-only output; the existing shell selects one saved variant at a time.
+output; the existing shell selects one saved variant at a time.
 Group indexes are pure galleries, containing at most five component entries.
+Samples are light-only except the appearance selector and the top bar that
+composes it, whose own subject is the catalogue's appearance: those render in
+both schemes so the existing preview control switches them like the appearance
+screens.
 
 | Group / slug                  | Existing implementation                                             | Saved variant ids                                                          |
 | ----------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------- |
