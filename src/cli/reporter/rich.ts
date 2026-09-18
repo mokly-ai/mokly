@@ -36,12 +36,19 @@ interface ActivePhase {
 export class RichReporter implements CliReporter {
   readonly mode = "rich" as const;
   readonly #glyphs;
+  readonly #success;
   #active: ActivePhase | undefined;
   #serveReport: ServeReadyReport | undefined;
   #servePhase: ReporterPhase | undefined;
 
   constructor(readonly environment: TerminalEnvironment) {
     this.#glyphs = terminalGlyphs(environment.platform, environment.env);
+    this.#success = terminalStyle(
+      environment,
+      environment.stdout,
+      "green",
+      this.#glyphs.success,
+    );
   }
 
   close(): void {
@@ -66,7 +73,7 @@ export class RichReporter implements CliReporter {
     this.settleServePhase();
     this.line(
       this.environment.stdout,
-      `  ${this.#glyphs.success} Baseline ready · ${cacheHit ? "reused" : "rebuilt"} ${commit.slice(0, 8)} (${formatDuration(durationMs)})`,
+      `  ${this.#success} Baseline ready · ${cacheHit ? "reused" : "rebuilt"} ${commit.slice(0, 8)} (${formatDuration(durationMs)})`,
     );
     this.#servePhase = this.startPhase("Checking changes");
   }
@@ -76,7 +83,7 @@ export class RichReporter implements CliReporter {
     const counts = catalogueCounts(manifest);
     this.line(
       this.environment.stdout,
-      `  ${this.#glyphs.success} Catalogue ready${counts.length > 0 ? ` · ${counts.join(" · ")}` : ""} (${formatDuration(durationMs)})`,
+      `  ${this.#success} Catalogue ready${counts.length > 0 ? ` · ${counts.join(" · ")}` : ""} (${formatDuration(durationMs)})`,
     );
     this.#servePhase = this.startPhase("Checking changes");
   }
@@ -85,7 +92,7 @@ export class RichReporter implements CliReporter {
     this.settleServePhase();
     this.line(
       this.environment.stdout,
-      `  ${this.#glyphs.success} Changes ready · ${changed} changed ${changed === 1 ? "screen" : "screens"} (${formatDuration(durationMs)})`,
+      `  ${this.#success} Changes ready · ${changed} changed ${changed === 1 ? "screen" : "screens"} (${formatDuration(durationMs)})`,
     );
   }
 
@@ -185,7 +192,7 @@ export class RichReporter implements CliReporter {
         if (this.#active === active) this.clearPhase();
         this.line(
           this.environment.stdout,
-          `  ${this.#glyphs.success} ${message} (${formatDuration(duration)})`,
+          `  ${this.#success} ${message} (${formatDuration(duration)})`,
         );
       },
     };
@@ -208,7 +215,7 @@ export class RichReporter implements CliReporter {
     this.clearPhase();
     this.line(
       this.environment.stdout,
-      `  ${this.#glyphs.success} ${rich} (${formatDuration(durationMs)})`,
+      `  ${this.#success} ${rich} (${formatDuration(durationMs)})`,
     );
   }
 
