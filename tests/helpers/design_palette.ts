@@ -6,7 +6,7 @@ import { repositoryRoot } from "./fixture.js";
 /** The two interface palettes the design mockups select between. */
 export type Appearance = "light" | "dark";
 
-const LIGHT_BLOCK = /:root\s*\{([^}]*)\}/;
+const LIGHT_BLOCK = /\[data-mbk-appearance="light"\]\s*\{([^}]*)\}/;
 const DARK_BLOCK = /\[data-mbk-appearance="dark"\]\s*\{([^}]*)\}/;
 
 function readTokens(block: string): Map<string, string> {

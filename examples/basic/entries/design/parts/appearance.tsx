@@ -1,4 +1,4 @@
-import { createContext, useContext, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 /** The interface appearance an artboard depicts, independent of preview scheme. */
 export type DesignAppearance = "light" | "dark";
@@ -6,11 +6,10 @@ export type DesignAppearance = "light" | "dark";
 /** The appearance selector setting a standalone catalogue can hold. */
 export type AppearanceChoice = "auto" | "light" | "dark";
 
-const AppearanceContext = createContext<DesignAppearance>("light");
-
 /**
- * Every artboard states the appearance it draws, so a generated design page
- * reads the same whatever appearance the surrounding browser is using.
+ * Every artboard states the appearance it draws on its own root, so a generated
+ * design page reads the same whatever appearance the browser showing it uses.
+ * This is the one place that stamps it.
  */
 export function DesignAppearanceScope({
   appearance,
@@ -20,22 +19,8 @@ export function DesignAppearanceScope({
   children: ReactNode;
 }) {
   return (
-    <AppearanceContext value={appearance}>
-      <div className="ce-design" data-mbk-appearance={appearance}>
-        {children}
-      </div>
-    </AppearanceContext>
+    <div className="ce-design" data-mbk-appearance={appearance}>
+      {children}
+    </div>
   );
-}
-
-export function useDesignAppearance(): DesignAppearance {
-  return useContext(AppearanceContext);
-}
-
-/** Auto resolves through the system, so it needs the appearance it resolves to. */
-export function resolveAppearance(
-  choice: AppearanceChoice,
-  system: DesignAppearance,
-): DesignAppearance {
-  return choice === "auto" ? system : choice;
 }

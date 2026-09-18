@@ -15,8 +15,9 @@ and required control, state and focus graphics 3:1 against adjacent colors.
 
 ## Interface Palette
 
-One palette serves both appearances; Dark is selected on the root and every
-role keeps its meaning. Names below are the mockup token names.
+One palette serves both appearances; each artboard selects one on its own root
+through `data-mbk-appearance`, and every role keeps its meaning. Names below are
+the mockup token names.
 
 | Role                     | Light                                    | Dark                                  |
 | ------------------------ | ---------------------------------------- | ------------------------------------- |

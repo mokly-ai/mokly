@@ -5,7 +5,8 @@
    an override sheet. Device-screen colors are preview tokens and live in
    design-stage.css, independent of the interface appearance. */
 
-:root {
+:root,
+[data-mbk-appearance="light"] {
   --chrome-bg: #f4f4f1;
   --chrome-surface: #ffffff;
   --chrome-raised: #fbfbfa;

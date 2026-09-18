@@ -56,10 +56,18 @@ align-items: center;
   height: 30px;
   max-width: 440px;
   min-width: 0;
-  overflow: hidden;
   padding: 0 12px;
   position: relative;
   white-space: nowrap;
+}
+
+/* The query truncates inside the field; the field itself cannot clip, because
+   it is the containing block for the tag picker panel anchored below it. */
+.mbk-search-placeholder,
+.mbk-search-value {
+min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .mbk-search > svg {
@@ -68,9 +76,6 @@ flex-shrink: 0;
 
 .mbk-search-value {
 color: var(--chrome-ink);
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 

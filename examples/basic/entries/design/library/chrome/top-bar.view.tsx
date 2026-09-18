@@ -57,7 +57,7 @@ export function TopBarView({
       <div className="mbk-search">
         <SearchIcon />
         {query === undefined ? (
-          placeholder
+          <span className="mbk-search-placeholder">{placeholder}</span>
         ) : (
           <span className="mbk-search-value">{query}</span>
         )}

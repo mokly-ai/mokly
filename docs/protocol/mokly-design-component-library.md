@@ -114,7 +114,9 @@ Controls below use text, boolean, number and primitive enum selections only.
 11. **Prop field:** label, stable input id, optional description/error and
     optional-field/supplied flags; a `control` slot contains the native input or
     selection control. Controls: label and optional description/error. Typed
-    field values and disabled/read-only behavior remain with the caller's slot.
+    field values and disabled/read-only behavior remain with the caller's slot,
+    while the field frames that control's surface, border and invalid state so
+    a prop panel reads the same in every host.
     Preserve label/input/error associations and assign unique ids for repeated
     forms. This is reusable field framing, not a new forms or schema engine.
 12. **Device frame:** device `phone/browser`, optional caption, depicted dark

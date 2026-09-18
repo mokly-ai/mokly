@@ -43,7 +43,9 @@ Use explicit semantic `moklyInstance` names for repeated siblings. The
 `DesignInstances` context supplies a stable prefix for simultaneous viewport
 regions. Flow-step names must be independent of destinations or ordering.
 Input ids, label associations and description/error ids belong to the form caller;
-the prop-field component supplies framing and matching description/error nodes.
+the prop-field component supplies framing and matching description/error nodes,
+including the surface, border and invalid state of whatever native control the
+caller puts in its slot, so a prop panel reads the same in every host.
 
 Components may compose registered children. Top bar → Tag picker → Tag chip
 records the full nested ownership chain. Components supplied in a caller's slot
