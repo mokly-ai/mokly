@@ -154,6 +154,10 @@ generation. Superseded handle promises reject with `disposed`, while obsolete
 work cannot clear replacement labels, cancel a fresh pick or emit errors against
 it. The rule covers highlights, label refreshes, scrolls and geometry events.
 
+The viewer interface is currently Light-only; `selection.colorScheme` changes
+the mockup previews. Independent Auto/Light/Dark appearance is
+[planned](../../docs/protocol/mokly-viewer-appearance.md) and is not yet an API.
+
 Import the stylesheet once. Override `--mokly-accent`,
 `--mokly-accent-contrast`, and `--mokly-accent-soft` on a containing element,
 maintaining readable contrast. Scoped styles exclude host slots and the

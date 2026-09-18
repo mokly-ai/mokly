@@ -2,7 +2,7 @@
 
 These documents define Mokly's implementation contract. They describe
 implemented pre-release behavior unless a document's Delivery Status explicitly
-labels an approved target that is still tracked by an active plan. Package,
+labels a target that is still tracked by an active plan. Package,
 authoring, static build/check, responsive Browse, watched development, on-demand comparisons,
 packed consumer verification, CI, and npm release automation are implemented.
 The first public release remains an external delivery step.
@@ -44,6 +44,8 @@ when the historical primary file is absent, never when it is invalid.
   public inventory v1 beside the private manifest.
 - [Embeddable viewer](./mokly-viewer.md) — approved `@mokly/viewer` API and
   unchanged local shell extraction.
+- [Viewer appearance](./mokly-viewer-appearance.md) — planned Auto/Light/Dark
+  interface, independent preview schemes and standalone appearance preferences.
 - [Viewer markers and multi-instance highlights](./mokly-viewer-markers.md) —
   host-owned anchored content and exact atomic highlight behavior.
 - [Viewer frame adapter](./mokly-frame-adapter.md) — approved same-origin

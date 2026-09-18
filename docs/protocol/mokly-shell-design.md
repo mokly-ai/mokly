@@ -19,6 +19,10 @@ stacking above the navigation drawer scrim. Every state recorded here is
 implemented. The separate [component explorer designs](./mokly-component-design.md)
 are target mockups delivered before their runtime implementation.
 
+Independent Auto/Light/Dark interface appearance is a
+[planned extension](./mokly-viewer-appearance.md). The Light-only shell tokens
+and preview-scheme behavior below describe the current implementation.
+
 The page and publication designs are now recorded in the example catalogue.
 Their runtime implementation is tracked in the linked plans. Whole documents
 use a plain bordered pane and omit device/comparison controls. Removed pages

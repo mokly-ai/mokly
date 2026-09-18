@@ -8,6 +8,9 @@ selection, multi-instance highlights and markers are implemented by the
 [comment anchoring plan](../../plans/viewer-comment-anchoring.md). Local
 Serve/export presentation remains unchanged.
 
+The [viewer appearance contract](./mokly-viewer-appearance.md) defines planned
+Auto/Light/Dark interface support, separate from preview color schemes.
+
 ## Package And Props
 
 `@mokly/viewer` is an MIT ESM package with React peers. Its public entry exports
@@ -239,6 +242,10 @@ The separate marker layer positions host React content on exact instances; it is
 not a general stage overlay and exposes no raw geometry.
 
 ## Theming And Ownership
+
+The interface currently uses Light styling; `selection.colorScheme` selects
+the preview documents. Independent interface appearance is a
+[planned extension](./mokly-viewer-appearance.md), not an implemented prop.
 
 Import `@mokly/viewer/styles.css` once. The supported overrides are
 `--mokly-accent`, `--mokly-accent-contrast` and `--mokly-accent-soft`, subject to
