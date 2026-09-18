@@ -1,5 +1,5 @@
 import type { CatalogueUsage } from "../catalogue/types.js";
-import { parseLogicalMarker } from "../navigation/logical.js";
+import { logicalMarker, parseLogicalMarker } from "../navigation/logical.js";
 import { parseBrowsingTarget } from "../navigation/target.js";
 
 import type {
@@ -9,9 +9,56 @@ import type {
 } from "./frame_adapter.js";
 import { FrameError } from "./frame_error.js";
 import { ownFrame } from "./frame_mount.js";
-import { classifyFrameActivation } from "./frame_navigation.js";
 import { localFrameAccess } from "./same_origin_access.js";
 import { localPointer } from "./same_origin_pointer.js";
+
+/** Input facts for one marked frame-link activation. */
+export interface FrameActivationCandidate {
+  altKey: boolean;
+  button: number;
+  ctrlKey: boolean;
+  download: boolean;
+  eventType: "auxclick" | "click";
+  marker: string;
+  metaKey: boolean;
+  shiftKey: boolean;
+  target: string | null;
+}
+
+/** Parent-owned action derived from a trusted marked link. */
+export type FrameActivation =
+  | { href: string; kind: "navigate" }
+  | { href: string; kind: "open"; target: string };
+
+/** Classify an activation without trusting a portable href. */
+export function classifyFrameActivation(
+  candidate: FrameActivationCandidate,
+): FrameActivation | undefined {
+  const destination = parseLogicalMarker(candidate.marker);
+  if (!destination || logicalMarker(destination) !== candidate.marker)
+    return undefined;
+  if (candidate.download || candidate.altKey) return undefined;
+  if (candidate.eventType === "click" && candidate.button !== 0)
+    return undefined;
+  if (candidate.eventType === "auxclick" && candidate.button !== 1)
+    return undefined;
+  const target = parseBrowsingTarget(candidate.target);
+  if (target.kind === "invalid") return undefined;
+  const href = `/id/${encodeURIComponent(destination.id)}${
+    destination.fragment
+      ? `?fragment=${encodeURIComponent(destination.fragment)}`
+      : ""
+  }`;
+  if (target.kind === "top" || target.kind === "parent")
+    return { href, kind: "navigate" };
+  if (target.kind === "blank") return { href, kind: "open", target: "_blank" };
+  if (target.kind === "named")
+    return { href, kind: "open", target: target.name };
+  const modified = candidate.metaKey || candidate.ctrlKey || candidate.shiftKey;
+  return modified || candidate.eventType === "auxclick"
+    ? { href, kind: "open", target: "_blank" }
+    : { href, kind: "navigate" };
+}
 
 interface LocalOperations {
   updateUsage(usage: CatalogueUsage): void;

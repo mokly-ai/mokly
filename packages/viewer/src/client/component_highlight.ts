@@ -1,13 +1,8 @@
 /** Existing shell presentation supplied by the private local adapter capability. */
-import type { ComponentViewRecord } from "../components/manifest_types.js";
 
 import { localPresentation } from "./same_origin_adapter.js";
+import type { HighlightFrame } from "./same_origin_highlight.js";
 
-export interface HighlightFrame {
-  frame: HTMLIFrameElement;
-  path: string;
-  usage: ComponentViewRecord;
-}
 export function installComponentHighlight(
   root: HTMLElement,
   frames: readonly HighlightFrame[],

@@ -78,6 +78,7 @@ test("ordinary publication needs no Git and omits review and watch artifacts", a
     "__mokly/events",
     "__mokly/client/browser.js",
     "__mokly/client/live_updates.js",
+    "__mokly/client/react-shell.js",
   ])
     assert.equal(fs.existsSync(path.join(output, file)), false, file);
   assert.doesNotMatch(

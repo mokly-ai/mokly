@@ -37,6 +37,19 @@ test("every served document loads the browser update client", async (context) =>
     '<script src="/__mokly/client/browser.js" type="module"></script>',
   );
   assert.ok(browseClient >= 0 && browseClient < updateClient);
+  const reactDocument = await (
+    await fetch(`${server.url}/view/screens/home.html`, {
+      headers: { "x-mokly-shell": "react" },
+    })
+  ).text();
+  assert.match(
+    reactDocument,
+    /<script src="\/__mokly\/client\/react-shell\.js" type="module"><\/script>/,
+  );
+  assert.doesNotMatch(
+    reactDocument,
+    /<script src="\/__mokly\/client\/(?:browse|browser)\.js"/,
+  );
   const browser = await fetch(`${server.url}/__mokly/client/browser.js`);
   assert.equal(browser.status, 200);
   assert.match(browser.headers.get("content-type") ?? "", /javascript/);
@@ -51,6 +64,10 @@ test("every served document loads the browser update client", async (context) =>
   );
   assert.equal(
     (await fetch(`${server.url}/__mokly/client/live_updates.js`)).status,
+    200,
+  );
+  assert.equal(
+    (await fetch(`${server.url}/__mokly/client/react-shell.js`)).status,
     200,
   );
   assert.equal(

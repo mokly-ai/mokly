@@ -36,6 +36,7 @@ export async function inspectConsumerExport(
     assert.equal(/\.(?:tsx?|map)$/.test(name), false);
     assert.ok((await fs.promises.stat(path.join(output, name))).isFile());
   }
+  assert.equal(marker.files.includes("__mokly/client/react-shell.js"), false);
   const home = await read("index.html");
   assert.match(home, /data-mokly-static=""/);
   assert.doesNotMatch(home, /client\/browser\.js/);

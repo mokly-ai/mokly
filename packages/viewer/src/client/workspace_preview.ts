@@ -3,9 +3,9 @@ import type { GeneratedComponentView } from "../components/views.js";
 import type { WorkspaceData } from "../shell/workspace_data.js";
 
 import { currentColorScheme, currentViewport } from "./browse_state.js";
-import type { HighlightFrame } from "./component_highlight.js";
 import { element } from "./inspector_panels.js";
 import { localInspection, localFrameReady } from "./same_origin_adapter.js";
+import type { HighlightFrame } from "./same_origin_highlight.js";
 
 export function workspaceViews(
   doc: Document,

@@ -3,13 +3,15 @@ import type { ComponentViewRecord } from "../components/manifest_types.js";
 import { inspection } from "../inspector/inspection.js";
 
 import { authenticateRanges, rangeBounds } from "./component_geometry.js";
-import type { HighlightFrame } from "./component_highlight.js";
 import type { FrameAdapter } from "./frame_adapter.js";
 import { FrameError } from "./frame_error.js";
 import { frameUrl } from "./frame_mount.js";
 import { frameEvents, frameUsage } from "./frame_usage.js";
 import { localFrameAccess } from "./same_origin_access.js";
-import { installLocalHighlight } from "./same_origin_highlight.js";
+import {
+  installLocalHighlight,
+  type HighlightFrame,
+} from "./same_origin_highlight.js";
 import { mountLocalDocument } from "./same_origin_mount.js";
 
 /** Current-document capability used by the synchronous, SSR-enhanced local shell. */

@@ -192,6 +192,7 @@ export async function startCatalogueServer(
       options.liveChanges === false ? undefined : changesStatus,
       contentVersion,
       publicCatalogue,
+      request.headers["x-mokly-shell"],
     ).catch(() => {
       if (!response.destroyed && !response.headersSent)
         send(

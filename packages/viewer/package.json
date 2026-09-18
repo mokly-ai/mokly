@@ -21,6 +21,10 @@
       "types": "./dist/runtime.d.ts",
       "import": "./dist/runtime.js"
     },
+    "./browser": {
+      "types": "./dist/browser.d.ts",
+      "import": "./dist/browser.js"
+    },
     "./data": {
       "types": "./dist/data.d.ts",
       "import": "./dist/data.js"

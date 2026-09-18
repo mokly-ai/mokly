@@ -16,8 +16,17 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
+      testIgnore: "react_shell_smoke.spec.ts",
       use: {
         channel: process.env["PLAYWRIGHT_CHANNEL"] ?? "chrome",
+      },
+    },
+    {
+      name: "react-shell",
+      testMatch: "react_shell_smoke.spec.ts",
+      use: {
+        channel: process.env["PLAYWRIGHT_CHANNEL"] ?? "chrome",
+        extraHTTPHeaders: { "x-mokly-shell": "react" },
       },
     },
   ],

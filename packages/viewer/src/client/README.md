@@ -8,7 +8,9 @@ component inspection before the [React Browse shell plan](../../../../plans/reac
 that plan's module inventory classifies each file, and the retired ones are
 deleted when the hydrated shell becomes the default. The package build bundles
 `dist/browser`; Serve enumerates the delivered modules from it for the export
-inventory.
+inventory. `scripts/package/shell_partition.mjs` is the machine-readable
+keep/retire/move inventory, and the package graph check rejects any kept module
+that imports a retired one.
 
 `early_disclosures.ts` bridges native disclosure clicks through deferred startup.
 The synchronous navigation bootstrap starts capture; Browse initialization and

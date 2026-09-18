@@ -42,6 +42,35 @@ test("current-only exports skip Git and capture exactly the installed finalized 
   );
 });
 
+test("the private shell selector changes only the hydration inventory", async (context) => {
+  const fixture = await createExportFixture();
+  context.after(() => fixture.close());
+  await fs.promises.rm(path.join(fixture.root, ".git"), { recursive: true });
+  await exportCatalogue(fixture.config, {
+    outDir: "vanilla-site",
+    noChanges: true,
+  });
+  await exportCatalogue(fixture.config, {
+    outDir: "react-site",
+    noChanges: true,
+    reactShell: true,
+  });
+  const vanilla = await directoryFiles(path.join(fixture.root, "vanilla-site"));
+  const react = await directoryFiles(path.join(fixture.root, "react-site"));
+  assert.equal(vanilla.has("__mokly/client/react-shell.js"), false);
+  assert.equal(react.has("__mokly/client/react-shell.js"), true);
+  assert.match(vanilla.get("index.html")!.toString(), /client\/browse\.js/);
+  assert.doesNotMatch(
+    vanilla.get("index.html")!.toString(),
+    /client\/react-shell\.js/,
+  );
+  assert.match(react.get("index.html")!.toString(), /client\/react-shell\.js/);
+  assert.doesNotMatch(
+    react.get("index.html")!.toString(),
+    /client\/(?:browse|browser)\.js/,
+  );
+});
+
 test("bundle capture failure preserves the previous export transaction", async (context) => {
   const fixture = await createExportFixture();
   context.after(() => fixture.close());

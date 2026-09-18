@@ -78,6 +78,10 @@ These rules govern Milestones 2 to 7 and were added after review.
 
 ## Module inventory
 
+The machine-readable keep, retire, and move sets live in
+`scripts/package/shell_partition.mjs`; the lists below explain that source of
+truth and must change with it.
+
 Retire (delete in Milestone 7, replaced by shell components, hooks, or the
 store):
 
@@ -214,7 +218,7 @@ host mode, and export; replace the hard-coded module allowlist; and add the
 development switch that selects the React shell. No shell component changes
 yet; the vanilla runtime remains the default and keeps working.
 
-- [ ] Replace the `loadBrowserClientModules` allowlist in
+- [x] Replace the `loadBrowserClientModules` allowlist in
       `src/server/client_modules.ts` with directory enumeration of the two
       browser build outputs, `packages/viewer/dist/browser` and the CLI's
       `dist/browser`, which contain exactly the delivered `.js` files today;
@@ -226,35 +230,41 @@ yet; the vanilla runtime remains the default and keeps working.
       `reserved_attributes.js`, and every navigation module is in the keep set
       so it carries no retirement risk. Add failing tests first for a missing
       file, an unexpected file, and unchanged delivery names.
-- [ ] Move `classifyFrameActivation` from `frame_navigation` into a kept
+- [x] Move `classifyFrameActivation` from `frame_navigation` into a kept
       transport module and repoint `same_origin_mount`. Delete the duplicate
       `HighlightFrame` interface in `component_highlight` and repoint every
       importer found by grepping `packages/viewer/src` and `src` (including
       retired modules that survive until Milestone 7) at the kept one in
       `same_origin_highlight`; no behaviour changes and typecheck stays green.
-- [ ] Add `scripts/package/shell_partition.mjs` exporting the keep and retire
+- [x] Add `scripts/package/shell_partition.mjs` exporting the keep and retire
       arrays from the module inventory in this plan, and a partition check in
       `scripts/package/browser_graph.mjs` that fails when a keep module imports
       a retire module. Run it as part of the package check from Milestone 2
       onward; the plan's inventory references that file as the source of
       truth.
-- [ ] Rewrite `scripts/package/browser_graph.mjs`: it currently forbids
+- [x] Rewrite `scripts/package/browser_graph.mjs`: it currently forbids
       `react-dom`, `hydrateRoot`, `react.production`, and bare imports of
       `react` or `node:` in every delivered module, and requires each relative
       import to resolve inside the delivered inventory. Allow exactly the
       documented React runtime in the hydration bundle(s), keep the `node:`
       and bare-import bans for all other modules, and keep inventory-resolved
       relative imports.
-- [ ] Extend `scripts/package-check.mjs`: it scans every built viewer file for
+- [x] Extend `scripts/package-check.mjs`: it scans every built viewer file for
       `node:` and `@mokly/mokly` imports except three server files; add the
       hydration entry to that scan's expectations and keep the inspector
       budget check unchanged.
-- [ ] Add the viewer browser entry that hydrates the shell (`hydrateRoot`)
+- [x] Add the viewer browser entry that hydrates the shell (`hydrateRoot`)
       and its bundle with React for standalone Serve/export delivery; add a
       documented export subpath for it in `packages/viewer/package.json`
       alongside `.`, `./server`, `./runtime`, `./data`, and `./styles.css`;
       the React host path uses the host's React.
-- [ ] Add the shell switch as a request-scoped, CLI-private selector: an
+- [x] Keep static hydration on the finalized deployment identity by adopting
+      the authenticated root delivery descriptor over the staged inline
+      bootstrap identity, without mutating the hashed bootstrap snapshot.
+- [x] Keep the switched standalone document console-clean by declaring an
+      embedded inert favicon instead of allowing the browser to request an
+      unavailable `/favicon.ico` resource.
+- [x] Add the shell switch as a request-scoped, CLI-private selector: an
       optional field on `ShellContext` in
       `packages/viewer/src/shell/context.ts`, marked internal in its doc
       comment because that type is re-exported from
@@ -269,7 +279,7 @@ yet; the vanilla runtime remains the default and keeps working.
       review output directory under `examples/basic` has one owner. The
       switch is not
       documented for users and is deleted in Milestone 7.
-- [ ] Add the switched browser run to `playwright.config.ts` as a second
+- [x] Add the switched browser run to `playwright.config.ts` as a second
       project against the same web server: its `use.extraHTTPHeaders` (or a
       storage-state cookie) sets the selector, and its `testMatch` names the
       spec files the hydrated shell must pass. Milestone 2 lists only a new
@@ -279,11 +289,11 @@ yet; the vanilla runtime remains the default and keeps working.
       that, since both projects share it. Run the second project through the
       existing `npm run test:browser` invocation in `xtask/src/check.rs`, or
       add a project argument if isolation is needed.
-- [ ] Add failing tests first: export inventory includes the hydration bundle
+- [x] Add failing tests first: export inventory includes the hydration bundle
       when the switch is on and excludes it when off, served module paths
       resolve, the inspector bundle stays under its cap, and the
       packed-consumer smoke installs and serves both inventories.
-- [ ] Run `cargo xtask check`; the default run and the switched run (only the
+- [x] Run `cargo xtask check`; the default run and the switched run (only the
       smoke spec at this point) must both pass.
 
 ## Milestone 3: Shell state model and hydrated navigation

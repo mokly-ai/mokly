@@ -181,7 +181,12 @@ function shellAssets() {
   return [
     "/__mokly/shell.css",
     ...[...loadBrowserClientModules().keys()]
-      .filter((name) => name !== "browser.js" && name !== "live_updates.js")
+      .filter(
+        (name) =>
+          name !== "browser.js" &&
+          name !== "live_updates.js" &&
+          name !== "react-shell.js",
+      )
       .map((name) => `/__mokly/client/${name}`),
     ...[...loadBrowserNavigationModules().keys()].map(
       (name) => `/__mokly/navigation/${name}`,

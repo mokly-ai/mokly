@@ -19,6 +19,17 @@ await buildBrowserModules(
 );
 await build({
   bundle: true,
+  define: { "process.env.NODE_ENV": '"production"' },
+  entryPoints: [path.join(root, "src/browser.tsx")],
+  format: "esm",
+  logLevel: "silent",
+  minify: true,
+  outfile: path.join(target, "browser/react-shell.js"),
+  platform: "browser",
+  target: "es2023",
+});
+await build({
+  bundle: true,
   entryPoints: [path.join(root, "src/standalone/navigation_resize.ts")],
   format: "iife",
   logLevel: "silent",

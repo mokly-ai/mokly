@@ -2,6 +2,7 @@
 
 import type { ManifestEntry } from "@mokly/viewer/data";
 import {
+  renderHydratedShellPage,
   renderShellPage,
   renderViewer,
   toRouteTarget,
@@ -45,10 +46,12 @@ function renderHosted(
   view: ShellView,
   context: ShellContext,
 ): string {
-  return context.readModel
-    ? renderViewer(
-        { catalogue: context.readModel, baseUrl: "http://mokly.invalid" },
-        { catalogue, view, context },
-      )
-    : renderShellPage(catalogue, view, context);
+  return context.reactShell
+    ? renderHydratedShellPage(view, context)
+    : context.readModel
+      ? renderViewer(
+          { catalogue: context.readModel, baseUrl: "http://mokly.invalid" },
+          { catalogue, view, context },
+        )
+      : renderShellPage(catalogue, view, context);
 }

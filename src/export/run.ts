@@ -114,6 +114,7 @@ async function generateExport(
       comparison,
       publicFiles,
       contentChanges,
+      options.reactShell ?? false,
     );
     if (!options.noChanges && site.delivery.comparisonUrl === null)
       throw exportError("Consumer export comparison metadata is missing.");

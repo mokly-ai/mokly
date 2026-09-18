@@ -1,7 +1,7 @@
 export { SHELL_CSS } from "./shell/css.js";
 export { shellContext } from "./shell/context.js";
 export type { ShellContext } from "./shell/context.js";
-export { renderShellPage } from "./shell/document.js";
+export { renderHydratedShellPage, renderShellPage } from "./shell/document.js";
 export { toRouteTarget } from "./shell/target.js";
 export type { ShellView } from "./shell/views.js";
 export type { WorkspaceData } from "./shell/workspace_data.js";

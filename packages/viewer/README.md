@@ -164,6 +164,11 @@ shared pure build/comparison value contracts; it contains no CLI execution or
 filesystem access. Hosts embedding React normally use only the root entry and
 stylesheet.
 
+`@mokly/viewer/browser` is the standalone browser entry paired with full
+documents rendered by `@mokly/viewer/server`. Serve and export bundle that entry
+with React as `react-shell.js`; application-owned React hosts continue to use
+the root `MoklyViewer` entry instead.
+
 ## Releases
 
 The first viewer release is 0.1.0, paired with CLI 0.10.0 (CLI 0.9.0 is already
@@ -202,6 +207,8 @@ auditing includes both packages.
 
 - `src/viewer`: React lifecycle, selection, slots and adapter sessions.
 - `src/shell`: the shell component tree and standalone CSS.
+- `src/browser.tsx` and `src/standalone`: standalone bootstrap validation,
+  full-document hydration, and its browser entry.
 - `src/client`: frame adapters, message transport, geometry and revision
   adoption consumed by the shell through hooks (the vanilla enhancement
   modules there are retired by the React Browse shell plan).

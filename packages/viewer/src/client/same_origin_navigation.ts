@@ -1,8 +1,6 @@
-import {
-  classifyFrameActivation,
-  type FrameNavigationActions,
-} from "./frame_navigation.js";
+import type { FrameNavigationActions } from "./frame_navigation.js";
 import { localFrameAccess } from "./same_origin_access.js";
+import { classifyFrameActivation } from "./same_origin_mount.js";
 
 const attachedFrames = new WeakSet<HTMLIFrameElement>();
 const attachedDocuments = new WeakSet<Document>();

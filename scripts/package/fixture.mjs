@@ -72,6 +72,26 @@ export async function smokeServer(root, args = [], inspect) {
     const response = await fetch(match[1]);
     if (!response.ok) throw new Error(`server returned ${response.status}`);
     const html = await response.text();
+    const reactResponse = await fetch(match[1], {
+      headers: { "x-mokly-shell": "react" },
+    });
+    if (!reactResponse.ok)
+      throw new Error(`React shell returned ${reactResponse.status}`);
+    const reactHtml = await reactResponse.text();
+    if (
+      !html.includes("/__mokly/client/browse.js") ||
+      html.includes("/__mokly/client/react-shell.js") ||
+      !reactHtml.includes("/__mokly/client/react-shell.js") ||
+      reactHtml.includes("/__mokly/client/browse.js") ||
+      reactHtml.includes("/__mokly/client/browser.js")
+    )
+      throw new Error("server did not keep the two shell inventories isolated");
+    const hydration = await fetch(`${match[1]}/__mokly/client/react-shell.js`);
+    if (!hydration.ok)
+      throw new Error(`hydration bundle returned ${hydration.status}`);
+    const inspector = await fetch(`${match[1]}/__mokly/client/inspector.js`);
+    if (!inspector.ok || (await inspector.arrayBuffer()).byteLength > 9216)
+      throw new Error("inspector bundle exceeded its delivery budget");
     if (inspect) {
       await waitForReadyChanges(match[1]);
       await inspect(match[1]);

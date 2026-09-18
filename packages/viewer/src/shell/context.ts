@@ -5,8 +5,6 @@ import type { StaticDelivery } from "../navigation/delivery.js";
 import type { ShellEvidence } from "./metadata.js";
 import type { LiveChangesStatus } from "./metadata.js";
 
-/** Server-side context shared by every served Mokly shell page. */
-
 /** Server-side context shared by every shell page. */
 export interface ShellContext {
   /** Accepted public snapshot supplied by the first-party server integration. */
@@ -34,6 +32,8 @@ export interface ShellContext {
   fragment?: string;
   /** Update-stream version captured when this page request began. */
   updateVersion: number;
+  /** @internal Temporary request-scoped selector removed with the shell flip. */
+  reactShell?: boolean;
 }
 
 /** Create one page context from the current mutable server snapshot. */
@@ -41,10 +41,12 @@ export function shellContext(
   base: string,
   changedRoutes: readonly string[] | undefined,
   updateVersion: number,
+  reactShell = false,
 ): ShellContext {
   return {
     base,
     ...(changedRoutes ? { changedRoutes } : {}),
+    ...(reactShell ? { reactShell: true } : {}),
     updateVersion,
   };
 }
