@@ -1,8 +1,7 @@
 import { execFile, type ChildProcess } from "node:child_process";
-import net from "node:net";
 import path from "node:path";
 import { setTimeout as pause } from "node:timers/promises";
-import { promisify } from "node:util";
+import { promisify, stripVTControlCharacters } from "node:util";
 
 import {
   NodeBaselineProcessScopeFactory,
@@ -22,6 +21,9 @@ import {
 const execute = promisify(execFile);
 const MAX_DIAGNOSTIC_BYTES = 64 * 1_024;
 const STARTUP_ATTEMPTS = 150;
+const WRANGLER_EPHEMERAL_PORT = 0;
+const WRANGLER_READY_ENDPOINT =
+  /\[wrangler:info\]\s+Ready on (http:\/\/127\.0\.0\.1:\d+)\r?\n/;
 
 /** Running Cloudflare Pages preview used by browser integration tests. */
 export type PreviewFixture = PreviewEndpoint;
@@ -34,7 +36,6 @@ export interface PreviewServerProcess {
 }
 
 interface PreviewServerOptions {
-  readonly allocatePort?: () => Promise<number>;
   readonly launch?: (
     artifact: string,
     port: number,
@@ -91,11 +92,12 @@ export async function servePreviewFixture(
   artifact: string,
   options: PreviewServerOptions = {},
 ): Promise<PreviewFixture> {
-  const port = await (options.allocatePort ?? availablePort)();
-  const child = await (options.launch ?? launchPreviewProcess)(artifact, port);
-  const url = `http://127.0.0.1:${port}`;
+  const child = await (options.launch ?? launchPreviewProcess)(
+    artifact,
+    WRANGLER_EPHEMERAL_PORT,
+  );
   try {
-    await waitUntilReady(child, url, options);
+    const url = await waitUntilReady(child, options);
     return { close: () => child.close(), url };
   } catch (error) {
     try {
@@ -273,37 +275,30 @@ async function boundedWait(
   return completed;
 }
 
-async function availablePort(): Promise<number> {
-  const server = net.createServer();
-  await new Promise<void>((resolve, reject) => {
-    server.once("error", reject);
-    server.listen(0, "127.0.0.1", resolve);
-  });
-  const address = server.address();
-  await new Promise<void>((resolve, reject) =>
-    server.close((error) => (error ? reject(error) : resolve())),
-  );
-  if (!address || typeof address === "string")
-    throw new Error("preview test could not allocate a TCP port");
-  return address.port;
-}
-
 async function waitUntilReady(
   child: PreviewServerProcess,
-  url: string,
   options: PreviewServerOptions,
-): Promise<void> {
+): Promise<string> {
   const request = options.request ?? fetch;
   const wait = options.pause ?? pause;
   const attempts = options.startupAttempts ?? STARTUP_ATTEMPTS;
+  let url: string | undefined;
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     if (child.exited)
       throw new Error(`preview exited before startup: ${child.output}`);
+    // Port zero stays owned by workerd from selection through listen. Wrangler
+    // reports the resulting loopback endpoint only after that bind succeeds;
+    // Playwright may force terminal colours into the captured log stream.
+    url ??= stripVTControlCharacters(child.output).match(
+      WRANGLER_READY_ENDPOINT,
+    )?.[1];
     try {
-      const response = await request(url);
-      if (response.ok) return;
+      if (url) {
+        const response = await request(url);
+        if (response.ok) return url;
+      }
     } catch {
-      // The port is expected to refuse connections until workerd is ready.
+      // Wrangler can report the endpoint just before it accepts requests.
     }
     await wait(200);
   }

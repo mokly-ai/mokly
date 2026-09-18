@@ -174,6 +174,14 @@ independent inputs because preparation is part of what those tests verify.
 Fixture phases emit `[mokly:fixture-timing]` JSON with the fixture, phase,
 duration, status, and whether the operation itself is under test.
 
+Wrangler Pages fixtures pass port zero and adopt the exact readiness URL
+Wrangler reports; they do not release a probe socket before server startup.
+Miniature Playwright projects used inside unit tests set an explicit output
+directory beneath their temporary harness so runner metadata cannot enter the
+consumer repository's publication fingerprint. Unit tests that fork compiled
+CLI entrypoints set an empty `execArgv`, preventing the parent test runner's
+loader and concurrency flags from changing child startup behavior.
+
 ## Failure, Cancellation And Cleanup
 
 Commands stop their local sequence at the first failure and propagate the

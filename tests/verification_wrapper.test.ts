@@ -12,9 +12,19 @@ const execute = promisify(execFile);
 
 test("verification wrappers retain real reporter evidence and fail closed", async () => {
   const root = await createHarness();
+  const sharedPlaywrightMarker = path.join(
+    repositoryRoot,
+    "test-results/.last-run.json",
+  );
+  const sharedPlaywrightState = await fileState(sharedPlaywrightMarker);
   try {
     const browserReport = path.join(root, "browser-report.json");
     await runWrapper(root, "run-browser.mjs", browserReport);
+    await assertPlaywrightOutputIsConfined(
+      root,
+      sharedPlaywrightMarker,
+      sharedPlaywrightState,
+    );
     const successful = await readJson(browserReport);
     assert.equal(successful.reporterComplete, true);
     assert.equal(successful.outcome.status, "passed");
@@ -49,6 +59,11 @@ fs.writeFileSync = function (file, ...args) {
           `--import=${pathToFileURL(preload).href}`,
         ),
       }),
+    );
+    await assertPlaywrightOutputIsConfined(
+      root,
+      sharedPlaywrightMarker,
+      sharedPlaywrightState,
     );
     const failed = await readJson(browserReport);
     assert.equal(failed.marker, undefined);
@@ -93,6 +108,7 @@ async function createHarness(): Promise<string> {
       "playwright.config.mjs",
       `export default {
   fullyParallel: false,
+  outputDir: ${JSON.stringify(path.join(root, "playwright-output"))},
   projects: [{ name: "chromium" }],
   retries: 0,
   testDir: "tests/browser",
@@ -151,6 +167,40 @@ async function runWrapper(
 
 async function readJson(file: string) {
   return JSON.parse(await fs.readFile(file, "utf8"));
+}
+
+async function fileState(file: string) {
+  try {
+    const [contents, metadata] = await Promise.all([
+      fs.readFile(file, "base64"),
+      fs.stat(file),
+    ]);
+    return {
+      contents,
+      modifiedAtMs: metadata.mtimeMs,
+      size: metadata.size,
+    };
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
+    throw error;
+  }
+}
+
+async function assertPlaywrightOutputIsConfined(
+  root: string,
+  sharedMarker: string,
+  sharedState: Awaited<ReturnType<typeof fileState>>,
+): Promise<void> {
+  assert.deepEqual(await fileState(sharedMarker), sharedState);
+  assert.deepEqual(
+    JSON.parse(
+      await fs.readFile(
+        path.join(root, "playwright-output/.last-run.json"),
+        "utf8",
+      ),
+    ),
+    { failedTests: [], status: "passed" },
+  );
 }
 
 function appendNodeOption(current: string | undefined, next: string): string {

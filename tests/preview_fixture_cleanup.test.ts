@@ -27,33 +27,6 @@ import {
   readProcessField,
 } from "./helpers/process_state.js";
 
-test("preview server startup failure closes its process scope", async () => {
-  let closes = 0;
-  const process: PreviewServerProcess = {
-    get exited() {
-      return false;
-    },
-    get output() {
-      return "not ready";
-    },
-    close: async () => {
-      closes += 1;
-    },
-  };
-
-  await assert.rejects(
-    servePreviewFixture("/fixture/site", {
-      allocatePort: async () => 43_217,
-      launch: async () => process,
-      pause: async () => {},
-      request: async () => new Response(undefined, { status: 503 }),
-      startupAttempts: 1,
-    }),
-    /preview did not start: not ready/,
-  );
-  assert.equal(closes, 1);
-});
-
 test("startup process cleanup failure retains its owned artifact", async (context) => {
   const contextRoot = await fs.mkdtemp(
     path.join(os.tmpdir(), "mokly-preview-startup-failure-"),
@@ -85,7 +58,6 @@ test("startup process cleanup failure retains its owned artifact", async (contex
       prefix: "worker-",
       serve: (output) =>
         servePreviewFixture(output, {
-          allocatePort: async () => 43_218,
           launch: async () => process,
           pause: async () => {},
           request: async () => new Response(undefined, { status: 503 }),

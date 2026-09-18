@@ -193,6 +193,16 @@ mutation, historical-build and publication lifecycle coverage.
 - [ ] Run affected specs individually, together and on their assigned shards.
       Compare preparation timings and document the fixture ownership in the
       developer README and verification protocol.
+- [x] Reproduce the hosted unit-shard preview publication race, identify the
+      exact concurrent fingerprint mutation, add failure-first coverage, and
+      isolate the static preview snapshot without reducing concurrency or cold
+      build and publication coverage.
+- [ ] Prevent Node test-runner loader and concurrency flags from reaching the
+      compiled watched-child fixtures, retain the existing startup bound, and
+      confirm both affected unit shards on the hosted runtimes.
+- [x] Remove the browser preview fixture's port-selection race by letting
+      Wrangler bind an operating-system-selected port, then verify the reported
+      endpoint without retries or relaxed startup deadlines.
 
 Local evidence: all five affected specs pass individually; the shared
 navigation/design-link pair passes 13 tests in 43.2s; prepared browser shard 4
@@ -202,6 +212,15 @@ digest. Design/static historical fixtures record 6.8–7.1s installs, 14.8s
 builds, about 23s baselines, and about 94s full exports; nested phases are not
 additive. Hosted CI remains responsible for assigned shard 2 (design export)
 and shard 3 (cold preparation and static export) evidence.
+
+Follow-up local evidence: the nested Playwright harness was proven to write the
+root `test-results/.last-run.json`, reproducing the publication failure with the
+preview test alone at concurrency two. Explicit harness output ownership makes
+that pair pass 3/3 on Node 22.14.0 and 24.14.1. The compiled-child regression
+pair passes 4/4 on both runtimes with inherited execution flags absent. The
+Wrangler fixture passes its injected readiness tests and a real port-zero smoke,
+serving the expected catalogue over the reported endpoint before clean shutdown.
+Hosted confirmation of the corrected shards remains pending.
 
 ## Milestone 5: Validate, measure, commit, push and review
 

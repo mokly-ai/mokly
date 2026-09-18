@@ -724,6 +724,12 @@ spec still runs the cold `npm run preview:build` path and checks that generated
 output stays byte-stable. Fixture setup emits structured
 `[mokly:fixture-timing]` phase records and identifies operations that are
 themselves under test.
+Wrangler Pages fixtures pass port zero and use the exact readiness URL Wrangler
+reports, so the serving process owns port selection through binding. Nested
+Playwright verification harnesses set an explicit output directory inside their
+temporary root because an implicit directory can resolve at the nearest package
+root. Tests that fork a compiled CLI set `execArgv: []`; test-runner loaders and
+concurrency flags belong only to the parent test process.
 Run the full browser suite separately from other top-level
 checks: publication fixtures rebuild shared package and example output.
 Watched tests that assert a stable update version also wait for final Changes
