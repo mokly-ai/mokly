@@ -26,7 +26,21 @@ export default defineConfig({
     },
     {
       name: "react-shell",
-      testMatch: ["react_shell_hydration.spec.ts", "react_shell_smoke.spec.ts"],
+      testMatch: [
+        "browse.spec.ts",
+        "browse_history.spec.ts",
+        "browse_navigation.spec.ts",
+        "browse_navigation_security.spec.ts",
+        "browse_tags.spec.ts",
+        "pages.spec.ts",
+        "phone_chrome.spec.ts",
+        "react_shell_hydration.spec.ts",
+        "react_shell_smoke.spec.ts",
+        "static_deployment.spec.ts",
+        "static_export.spec.ts",
+        "viewer_lifecycle.spec.ts",
+        "viewer_selection.spec.ts",
+      ],
       use: {
         channel: process.env["PLAYWRIGHT_CHANNEL"] ?? "chrome",
         extraHTTPHeaders: { "x-mokly-shell": "react" },

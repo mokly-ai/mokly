@@ -136,7 +136,7 @@ function FramesStage(props: {
         data-color-scheme-fallback={fallback ? "" : undefined}
       >
         <FrameLabel fallback={fallback} text="Desktop" />
-        <BrowserFrame address={address}>
+        <BrowserFrame address={address} frameKey={`${screen.id}:desktop`}>
           <iframe
             className="mbk-frag"
             data-mokly-fragment-frame=""
@@ -155,7 +155,7 @@ function FramesStage(props: {
 
 function FlowScreen(props: {
   fragment?: string;
-  fragmentFrame: boolean;
+  stepIndex: number;
   hasDarkFragments: boolean;
   screen: ManifestScreen;
 }) {
@@ -172,10 +172,13 @@ function FlowScreen(props: {
       className="mbk-flow-screen"
       data-color-scheme-fallback={fallback ? "" : undefined}
     >
-      <BrowserFrame address={screen.address ?? screen.route}>
+      <BrowserFrame
+        address={screen.address ?? screen.route}
+        frameKey={`${screen.id}:flow:${props.stepIndex}`}
+      >
         <iframe
           className="mbk-frag"
-          data-mokly-fragment-frame={props.fragmentFrame ? "" : undefined}
+          data-mokly-fragment-frame={props.stepIndex === 0 ? "" : undefined}
           data-fragment-dark={desktop.dark}
           data-fragment-light={desktop.light}
           sandbox="allow-same-origin"
@@ -220,9 +223,9 @@ function UseCaseFlowStage(props: {
                   {...(index === 0 && props.fragment
                     ? { fragment: props.fragment }
                     : {})}
-                  fragmentFrame={index === 0}
                   hasDarkFragments={props.catalogue.hasDarkFragments}
                   screen={screen}
+                  stepIndex={index}
                 />
               ) : null}
             </section>
@@ -248,6 +251,7 @@ export function TargetStage(props: {
   catalogue: Catalogue;
   fragment?: string;
   target: RouteTarget;
+  variantId?: string | undefined;
 }) {
   const entry = props.target.entry;
   const model = props.catalogue.publicModel;
@@ -258,6 +262,7 @@ export function TargetStage(props: {
         catalogue={model}
         entry={current}
         fragment={props.fragment}
+        variantId={props.variantId}
       />
     );
   }

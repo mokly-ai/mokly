@@ -17,6 +17,7 @@ export function captureEarlyDisclosures(
   const state = owner[stateKey] ?? new Map<string, boolean>();
   owner[stateKey] = state;
   const reactShell = doc.documentElement.hasAttribute("data-mokly-react-shell");
+  if (reactShell) applyStoredDisclosures(doc, win);
   const controller = new win.AbortController();
   const signal = controller.signal;
   doc.addEventListener(
@@ -57,6 +58,23 @@ export function readEarlyDisclosures(
   return new Map(win?.[stateKey] ?? []);
 }
 
+/** Read the actual disclosure DOM handed to React after preference capture. */
+export function readHydrationDisclosures(
+  doc: Document,
+): Readonly<Record<string, boolean>> {
+  return Object.fromEntries(
+    [...doc.querySelectorAll<HTMLDetailsElement>("[data-nav-disclosure]")]
+      .map((group) => [group.getAttribute("data-nav-disclosure"), group.open])
+      .filter((entry): entry is [string, boolean] => entry[0] !== null),
+  );
+}
+
+/** Persist the disclosure DOM that React adopts, including an early choice. */
+export function persistHydrationDisclosures(doc: Document): void {
+  const win = doc.defaultView;
+  if (win) rememberDisclosures(doc, win);
+}
+
 /** A native activation is newer than any stored preference or snapshot. */
 export function restoreEarlyDisclosures(doc: Document): void {
   const win = doc.defaultView as StateWindow | null;
@@ -86,6 +104,42 @@ function rememberDisclosures(
   } catch {
     return;
   }
+}
+
+function applyStoredDisclosures(
+  doc: Document,
+  win: Window & typeof globalThis,
+): void {
+  let closed: ReadonlySet<string> | undefined;
+  try {
+    const raw = win.localStorage.getItem(storageKey);
+    if (raw === null) return;
+    const value: unknown = JSON.parse(raw);
+    if (
+      !Array.isArray(value) ||
+      !value.every((item) => typeof item === "string")
+    )
+      return;
+    closed = new Set(value.filter(isDisclosureKey));
+  } catch {
+    return;
+  }
+  for (const group of doc.querySelectorAll<HTMLDetailsElement>(
+    "[data-nav-disclosure]",
+  )) {
+    const key = group.getAttribute("data-nav-disclosure");
+    if (!key || !isDisclosureKey(key)) continue;
+    group.open = !isDisclosureClosed(closed, key);
+  }
+}
+
+function isDisclosureClosed(closed: ReadonlySet<string>, key: string): boolean {
+  if (closed.has(key)) return true;
+  for (const prefix of ["collection:pages:", "collection:components:"]) {
+    if (key.startsWith(prefix))
+      return closed.has(`collection:${key.slice(prefix.length)}`);
+  }
+  return false;
 }
 
 function isDisclosureKey(value: string): boolean {

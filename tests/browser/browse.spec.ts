@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { reactShellForProject } from "./export_shell.js";
 import { chooseScheme, chooseViewport } from "./workspace_actions.js";
 import { expectFrameSource } from "./workspace_actions.js";
 
@@ -339,18 +340,27 @@ test("overlapping navigations are latest-wins", async ({ page }) => {
   expect(await hasMarker(page)).toBe(true);
 });
 
-test("failed enhancement falls back to native navigation", async ({ page }) => {
+test("failed enhancement falls back to native navigation", async ({
+  page,
+}, info) => {
   await page.goto("/");
   await markPage(page);
   await openScreensGroup(page);
+  let fetches = 0;
   await page.route("**/view/screens/welcome.html", (route) =>
     route.request().resourceType() === "fetch"
-      ? route.abort()
+      ? ((fetches += 1), route.abort())
       : route.continue(),
   );
   await page.click(welcomeRow);
   await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
-  expect(await hasMarker(page)).toBe(false);
+  if (reactShellForProject(info.project.name)) {
+    expect(fetches).toBe(0);
+    expect(await hasMarker(page)).toBe(true);
+  } else {
+    expect(fetches).toBe(1);
+    expect(await hasMarker(page)).toBe(false);
+  }
 });
 
 test("viewport controls switch device frames", async ({ page }) => {

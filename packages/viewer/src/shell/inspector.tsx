@@ -1,6 +1,7 @@
 /** Shared tabbed inspector, kept outside the scrolling preview. */
 import type { Catalogue } from "./catalogue.js";
 import { EntryDetailsBody } from "./details.js";
+import { useOptionalShellStore } from "./store_context.js";
 import type { WorkspaceData } from "./workspace_data.js";
 import { WorkspaceIcon, type WorkspaceIconName } from "./workspace_icons.js";
 
@@ -11,6 +12,7 @@ export function Inspector({
   catalogue: Catalogue;
   data: WorkspaceData;
 }) {
+  const store = useOptionalShellStore();
   const nested =
     data.previewGeneration !== undefined ||
     data.entry.kind === "screen" ||
@@ -31,10 +33,13 @@ export function Inspector({
     { id: "props", title: "Props" },
     { id: "usage", title: "Usage" },
   ];
+  const active = store?.state.inspectorTab;
+  const open = store?.state.detailsOpen ?? false;
   return (
     <section
       className="mbk-inspector"
       data-workspace-inspector=""
+      data-open={store?.interactive ? String(open) : undefined}
       aria-label="Inspector"
     >
       <div
@@ -72,21 +77,27 @@ export function Inspector({
             id={`mb-tab-${tab.id}`}
             aria-label={tab.title}
             title={tab.title}
-            aria-selected="false"
+            aria-selected={open && active === tab.id}
             aria-controls={`mb-panel-${tab.id}`}
             data-inspector-tab={tab.id}
+            onClick={() =>
+              store?.setDetails(!(open && active === tab.id), tab.id)
+            }
           >
             <WorkspaceIcon name={tab.id} />
           </button>
         ))}
-        <span className="mbk-inspector-title" data-inspector-title="" />
+        <span className="mbk-inspector-title" data-inspector-title="">
+          {open ? tabs.find((tab) => tab.id === active)?.title : null}
+        </span>
         <button
           className="mbk-icon-button"
           type="button"
           data-inspector-close=""
           aria-label="Close inspector"
           title="Close inspector"
-          hidden
+          hidden={!open}
+          onClick={() => store?.setDetails(false)}
         >
           <WorkspaceIcon name="close" />
         </button>
@@ -95,7 +106,7 @@ export function Inspector({
         className="mbk-inspector-content"
         id="mb-inspector-content"
         data-mokly-scroll="inspector"
-        hidden
+        hidden={!open}
       >
         {tabs.map((tab) => (
           <section
@@ -104,7 +115,7 @@ export function Inspector({
             id={`mb-panel-${tab.id}`}
             aria-labelledby={`mb-tab-${tab.id}`}
             data-inspector-panel={tab.id}
-            hidden
+            hidden={!open || active !== tab.id}
           >
             {tab.id === "details" ? (
               <>

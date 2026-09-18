@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 
 import type {
@@ -45,6 +45,17 @@ function PublicFrame({
   );
   const selected = selection.colorScheme === "dark" ? (dark ?? light) : light;
   const src = frameUrl(selected, fragment, stepIndex);
+  const frame = useRef<HTMLIFrameElement>(null);
+  const initialSource = useRef(src);
+  const appliedSource = useRef(src);
+  useEffect(() => {
+    if (!src || src === appliedSource.current || !frame.current) return;
+    frame.current.contentWindow?.location.replace(
+      new URL(src, frame.current.ownerDocument.baseURI).href,
+    );
+    frame.current.dataset["fragmentCurrent"] = src;
+    appliedSource.current = src;
+  }, [src]);
   const component = entry.kind === "component";
   const Frame = component
     ? ({ children }: { children: ReactNode }) => <>{children}</>
@@ -75,6 +86,7 @@ function PublicFrame({
               ? (entry.address ?? entry.route)
               : entry.route
           }
+          frameKey={`${entry.id}:${stepIndex ?? "single"}:${viewport}`}
         >
           <iframe
             className="mbk-frag"
@@ -82,8 +94,9 @@ function PublicFrame({
             data-workspace-frame={flow ? undefined : viewport}
             data-fragment-light={frameUrl(light, fragment, stepIndex)}
             data-fragment-dark={frameUrl(dark, fragment, stepIndex)}
+            ref={frame}
             sandbox="allow-same-origin"
-            src={src}
+            src={initialSource.current}
             title={`${entry.title} — ${viewport}`}
           />
         </Frame>
@@ -144,15 +157,17 @@ export function PublicStage({
   catalogue,
   entry,
   fragment,
+  variantId,
 }: {
   catalogue: CatalogueReadModel;
   entry: CatalogueRoutedEntry;
   fragment?: string | undefined;
+  variantId?: string | undefined;
 }) {
   const selection = useContext(DisplaySelection);
   if (entry.kind === "page")
     return (
-      <div className="mbk-stage-embed" data-mokly-scroll="embed">
+      <div className="mbk-stage-embed" data-mokly-scroll="embed" key={entry.id}>
         {entry.documentPath ? (
           <iframe
             className="mbk-frag"
@@ -167,10 +182,18 @@ export function PublicStage({
       </div>
     );
   if (entry.kind === "use-case")
-    return <Flow entry={entry} catalogue={catalogue} fragment={fragment} />;
+    return (
+      <Flow
+        key={entry.id}
+        entry={entry}
+        catalogue={catalogue}
+        fragment={fragment}
+      />
+    );
   const views =
     entry.kind === "component"
-      ? entry.variants[0]!.views
+      ? (entry.variants.find((variant) => variant.id === variantId) ??
+          entry.variants[0])!.views
       : (entry as CatalogueScreen).views;
   return (
     <div
@@ -178,10 +201,11 @@ export function PublicStage({
       data-mokly-scroll="stage"
       data-mokly-stage=""
       data-viewport={selection.viewport}
+      key={`${entry.id}:${variantId ?? ""}`}
     >
       {entry.viewports.map((viewport) => (
         <PublicFrame
-          key={viewport}
+          key={`${entry.id}:${variantId ?? ""}:${viewport}`}
           entry={entry}
           views={views}
           viewport={viewport}

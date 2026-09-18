@@ -320,7 +320,13 @@ snapshot defined by the [watch contract](./mokly-watch.md); the hydrated shell
 restores it exactly as before. Native disclosure choices made before hydration
 completes are captured by the pre-hydration script and take precedence over
 older preferences and the snapshot; capture state is removed after load or
-exit. Hydration must produce no mismatches: the server tree and the initial
+exit. The ordering is strict: the pre-hydration entry first reflects stored
+disclosure and split-width preferences into the server DOM, native disclosure
+activations may then update that DOM, the browser entry passes the resulting
+values to React as initial store state and persists the adopted disclosure
+state, and only then is temporary capture discarded. React does not replay or
+overwrite those values after mounting. Hydration must produce no mismatches:
+the server tree and the initial
 client tree are the same function of the same read model, route, selection and
 delivery descriptor. Embedded hydration and workspace state uses canonical
 object-key ordering, and validating then serializing hydration state must

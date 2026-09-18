@@ -341,28 +341,28 @@ switch. Route, selection, and preference state live in React; navigation
 renders from the read model instead of fetching and swapping HTML. Nothing
 vanilla is deleted.
 
-- [ ] Introduce a shell store/context owning selection, disclosures, drawer,
+- [x] Introduce a shell store/context owning selection, disclosures, drawer,
       details, scroll positions, and the reload-recovery snapshot, with the
       URL as the source of route truth and history integration (push, replace,
       Back/Forward, scroll restoration). Move `search_query` and
       `entry_wording` beside it as pure helpers.
-- [ ] Render top bar, navigation rail, filter, tag picker, breadcrumbs, stage
+- [x] Render top bar, navigation rail, filter, tag picker, breadcrumbs, stage
       head, viewport and colour-scheme controls, and the details inspector as
       stateful components; keep their markup, classes, roles, and ids so the
       shell CSS and the design contract apply unchanged.
-- [ ] Implement route rendering from `CatalogueReadModel` for home, targets,
+- [x] Implement route rendering from `CatalogueReadModel` for home, targets,
       missing routes, alias pages, and static delivery descriptors; keep real
       anchors and the `/id/<id>` redirect behaviour; port delivery adoption
       from `static_delivery` into the store.
-- [ ] Hydrate in Serve and export with no hydration mismatches; add a test that
+- [x] Hydrate in Serve and export with no hydration mismatches; add a test that
       renders every fixture route on the server and hydrates it under a DOM
       with React's mismatch warnings treated as failures.
-- [ ] Preserve early native disclosure capture and preference persistence
+- [x] Preserve early native disclosure capture and preference persistence
       semantics (choices made before hydration win) and document the ordering.
-- [ ] Preserve accessibility behaviour the specs assert: focus management on
+- [x] Preserve accessibility behaviour the specs assert: focus management on
       navigation, live-region announcements, keyboard handling in the tag
       picker and rail, reduced-motion, and the mobile drawer/bottom sheet.
-- [ ] Add the Browse, history, navigation, security, tags, pages, static
+- [x] Add the Browse, history, navigation, security, tags, pages, static
       export, static deployment, phone chrome, and viewer selection/lifecycle
       spec files to the switched project's `testMatch`; fix regressions until
       they pass there. The default run stays green throughout.

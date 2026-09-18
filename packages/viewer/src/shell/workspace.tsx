@@ -7,6 +7,7 @@ import { DiffScreen } from "./diffs.js";
 import { ScreenHead, targetHead } from "./head.js";
 import { Inspector } from "./inspector.js";
 import { TargetStage } from "./stages.js";
+import { useOptionalShellStore } from "./store_context.js";
 import { WorkspaceControls } from "./workspace_controls.js";
 import { workspaceData, type WorkspaceData } from "./workspace_data.js";
 
@@ -19,12 +20,19 @@ export function ComponentWorkspace({
   context: ShellContext;
   entry: WorkspaceData["entry"];
 }) {
+  const store = useOptionalShellStore();
   const target = { kind: "entry" as const, entry };
   const head = targetHead(catalogue, target);
   const data = workspaceData(catalogue, context, entry);
+  const selectedVariant =
+    entry.kind === "component"
+      ? (data.variants.find(
+          (variant) => variant.value.id === store?.state.route.variant,
+        ) ?? data.variants[0])
+      : undefined;
   const eligible =
     entry.kind === "component"
-      ? (data.variants[0]?.comparisonEligible ?? false)
+      ? (selectedVariant?.comparisonEligible ?? false)
       : data.comparisonEligible;
   const stage = data.removed ? (
     <div className="mbk-empty" data-mokly-stage="" data-viewport="both">
@@ -39,7 +47,7 @@ export function ComponentWorkspace({
     <TargetStage
       catalogue={catalogue}
       target={target}
-
+      variantId={selectedVariant?.value.id}
       {...(context.fragment ? { fragment: context.fragment } : {})}
     />
   );
@@ -67,7 +75,10 @@ export function ComponentWorkspace({
             <select
               aria-label="Saved variant"
               data-workspace-variant=""
-              defaultValue={data.variants[0]?.value.id}
+              onChange={(event) =>
+                store?.selectVariant(event.currentTarget.value)
+              }
+              value={selectedVariant?.value.id}
             >
               {data.variants.map((variant) => (
                 <option key={variant.value.id} value={variant.value.id}>

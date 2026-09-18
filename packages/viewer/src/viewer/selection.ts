@@ -1,5 +1,5 @@
 import type { CatalogueReadModel } from "../catalogue/types.js";
-import { parseSearchQuery, rowMatchesQuery } from "../client/search_query.js";
+import { parseSearchQuery, rowMatchesQuery } from "../shell/search_query.js";
 
 import type { ViewerSelection } from "./types.js";
 

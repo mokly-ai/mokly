@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { reactShellForProject } from "./export_shell.js";
+
 test("native skip-link history preserves the view without refetching it", async ({
   page,
 }) => {
@@ -32,7 +34,7 @@ test("native skip-link history preserves the view without refetching it", async 
 
 test("saved-variant query history stays separate from native fragment history", async ({
   page,
-}) => {
+}, info) => {
   const path = "/view/design/library/inspector/inspector.html";
   await page.goto(path);
   await page.locator("html").evaluate((element) => {
@@ -65,12 +67,14 @@ test("saved-variant query history stays separate from native fragment history", 
     "data-history-session",
     "retained",
   );
-  expect(requests).toEqual(["", "?variant=props"]);
+  expect(requests).toEqual(
+    reactShellForProject(info.project.name) ? [] : ["", "?variant=props"],
+  );
 });
 
 test("same-document Back cancels a pending screen navigation", async ({
   page,
-}) => {
+}, info) => {
   await page.goto("/view/screens/welcome.html");
   await page.locator(".mbk-skip-link").focus();
   await page.keyboard.press("Enter");
@@ -80,9 +84,32 @@ test("same-document Back cancels a pending screen navigation", async ({
     release = resolve;
   });
   await page.route("**/view/screens/details.html", async (route) => {
+    if (reactShellForProject(info.project.name)) {
+      await route.abort();
+      return;
+    }
     await gate;
     await route.continue();
   });
+  if (reactShellForProject(info.project.name)) {
+    const requests: string[] = [];
+    page.on("request", (request) => {
+      if (
+        request.resourceType() === "fetch" &&
+        request.url().endsWith("/view/screens/details.html")
+      )
+        requests.push(request.url());
+    });
+    await page
+      .locator('a[data-nav-row][data-route="screens/details.html"]')
+      .click();
+    await expect(page.locator("#mb-main h2")).toHaveText("Details");
+    expect(requests).toEqual([]);
+    await page.goBack();
+    await expect(page).toHaveURL(/welcome\.html#mb-main$/);
+    await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
+    return;
+  }
   const pending = page.waitForRequest((request) =>
     request.url().endsWith("/view/screens/details.html"),
   );

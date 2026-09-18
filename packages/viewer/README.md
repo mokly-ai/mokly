@@ -208,7 +208,8 @@ auditing includes both packages.
 ### Key Code
 
 - `src/viewer`: React lifecycle, selection, slots and adapter sessions.
-- `src/shell`: the shell component tree and standalone CSS.
+- `src/shell`: the shell component tree, scoped state/history store, pure
+  route/filter helpers and standalone CSS.
 - `src/browser.tsx` and `src/standalone`: standalone bootstrap validation,
   full-document hydration, and its browser entry.
 - `src/client`: frame adapters, message transport, geometry and revision

@@ -2,6 +2,67 @@
 
 export const HYDRATED_EVENT = "mokly:hydrated";
 
+const widthStateKey = "__moklyNavigationWidthV1";
+const widthStorageKey = "mokly:navigation-width:v1";
+
+/** Navigation width already reflected in the DOM before hydration starts. */
+export interface InitialNavigationWidth {
+  maximum: number;
+  width: number;
+}
+
+type WidthStateWindow = Window &
+  typeof globalThis & { [widthStateKey]?: InitialNavigationWidth };
+
+/** Apply a valid persisted width before React reads its initial state. */
+export function captureInitialNavigationWidth(
+  doc: Document,
+  win: Window & typeof globalThis,
+): void {
+  const nav = doc.querySelector<HTMLElement>(".mbk-nav");
+  const handle = nav?.querySelector<HTMLElement>("[data-mokly-nav-resize]");
+  if (!nav || !handle) return;
+  const minimum = numericAttribute(handle, "aria-valuemin");
+  const initial = numericAttribute(handle, "aria-valuenow");
+  const maximum = numericAttribute(handle, "aria-valuemax");
+  if (
+    minimum === undefined ||
+    initial === undefined ||
+    maximum === undefined ||
+    minimum > initial ||
+    initial > maximum
+  )
+    return;
+  let stored = initial;
+  try {
+    const value = win.localStorage.getItem(widthStorageKey);
+    const parsed = value === null ? NaN : Number(value);
+    if (Number.isFinite(parsed)) stored = parsed;
+  } catch {
+    stored = initial;
+  }
+  const upper = Math.max(
+    minimum,
+    Math.min(maximum, Math.floor(win.innerWidth / 2)),
+  );
+  const width = Math.round(Math.max(minimum, Math.min(upper, stored)));
+  nav.setAttribute("style", `--mbk-nav-width:${width}px`);
+  handle.setAttribute("aria-valuemax", String(upper));
+  handle.setAttribute("aria-valuenow", String(width));
+  handle.setAttribute("aria-valuetext", `${width} pixels`);
+  (win as WidthStateWindow)[widthStateKey] = { maximum: upper, width };
+  const clear = () => delete (win as WidthStateWindow)[widthStateKey];
+  win.addEventListener("load", clear, { once: true });
+  win.addEventListener("pagehide", clear, { once: true });
+}
+
+/** Read the width captured by the synchronous standalone entry. */
+export function readInitialNavigationWidth(
+  doc: Document,
+): InitialNavigationWidth | undefined {
+  return (doc.defaultView as WidthStateWindow | null)?.[widthStateKey];
+}
+
 /** Attach pointer, keyboard, viewport, and persistence behavior to the nav. */
 export function initializeNavigationResize(
   doc: Document,
@@ -165,4 +226,11 @@ export function initializeNavigationResize(
     delete handle.dataset["resizeInitialized"];
     delete nav.dataset["resizeReady"];
   };
+}
+
+function numericAttribute(element: Element, name: string): number | undefined {
+  const value = element.getAttribute(name);
+  if (value === null || value.trim() === "") return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
 }

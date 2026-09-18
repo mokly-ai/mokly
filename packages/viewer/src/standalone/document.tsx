@@ -4,7 +4,11 @@ import { useEffect } from "react";
 
 import type { Catalogue } from "../shell/catalogue.js";
 import type { ShellContext } from "../shell/context.js";
+import { FrameNavigationBridge } from "../shell/frame_navigation.js";
 import { CatalogueNav } from "../shell/nav.js";
+import { ShellStoreProvider } from "../shell/store.js";
+import { useShellStore } from "../shell/store_context.js";
+import type { ShellInitialState } from "../shell/store_state.js";
 import { TopBar } from "../shell/top_bar.js";
 import { ShellMain, viewTitle } from "../shell/views.js";
 import type { ShellView } from "../shell/views.js";
@@ -19,16 +23,42 @@ export function StandaloneShellDocument({
   bootstrap,
   catalogue,
   context,
-  initialDisclosures,
+  initialState,
   view,
 }: {
   bootstrap?: ShellBootstrap;
   catalogue: Catalogue;
   context: ShellContext;
-  initialDisclosures?: ReadonlyMap<string, boolean> | undefined;
+  initialState?: ShellInitialState | undefined;
   view: ShellView;
 }) {
-  const hydrated = bootstrap !== undefined;
+  return (
+    <ShellStoreProvider
+      catalogue={catalogue}
+      context={context}
+      interactive={bootstrap !== undefined}
+      view={view}
+      {...(initialState ? { initialState } : {})}
+    >
+      <StandaloneDocumentContents
+        catalogue={catalogue}
+        {...(bootstrap ? { bootstrap } : {})}
+      />
+    </ShellStoreProvider>
+  );
+}
+
+function StandaloneDocumentContents({
+  bootstrap,
+  catalogue,
+}: {
+  bootstrap?: ShellBootstrap;
+  catalogue: Catalogue;
+}) {
+  const store = useShellStore();
+  const hydrated = store.interactive;
+  const context = store.context;
+  const view = store.state.route.view;
   return (
     <html
       data-mokly-base={context.base}
@@ -50,18 +80,25 @@ export function StandaloneShellDocument({
         {hydrated ? <link href="data:," rel="icon" /> : null}
         <link href="/__mokly/shell.css" rel="stylesheet" />
       </head>
-      <body className="mbk-fs">
-        <div className="mbk" data-drawer="closed" data-mokly-shell="">
+      <body
+        className={`mbk-fs${store.state.expandedFrame ? " frame-expanded" : ""}`}
+        data-mokly-color-scheme={
+          hydrated ? store.state.selection.colorScheme : undefined
+        }
+        onClick={store.onShellClick}
+        onKeyDown={store.onShellKeyDown}
+      >
+        <div
+          className="mbk"
+          data-drawer={store.state.drawerOpen ? "open" : "closed"}
+          data-mokly-shell=""
+        >
           <a className="mbk-skip-link" href="#mb-main">
             Skip to content
           </a>
           <TopBar catalogue={catalogue} />
           <div className="mbk-body">
-            <CatalogueNav
-              catalogue={catalogue}
-              context={context}
-              initialDisclosures={initialDisclosures}
-            />
+            <CatalogueNav catalogue={catalogue} context={context} />
             <ShellMain catalogue={catalogue} context={context} view={view} />
           </div>
           <p
@@ -70,7 +107,10 @@ export function StandaloneShellDocument({
             className="mbk-route-status"
             id="mb-status"
             role="status"
-          />
+          >
+            {store.state.announcement}
+          </p>
+          {hydrated ? <FrameNavigationBridge /> : null}
         </div>
         {bootstrap ? (
           <script

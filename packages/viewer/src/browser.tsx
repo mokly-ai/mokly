@@ -9,7 +9,7 @@ import {
   shellBootstrapWithDelivery,
 } from "./standalone/bootstrap.js";
 import { StandaloneShellDocument } from "./standalone/document.js";
-import { readEarlyDisclosures } from "./standalone/early_disclosures.js";
+import { prepareHydrationState } from "./standalone/preferences.js";
 
 const hydratedDocuments = new WeakSet<Document>();
 
@@ -42,7 +42,7 @@ export function hydrateMoklyShell(doc: Document = document): void {
     <StandaloneShellDocument
       {...props}
       bootstrap={bootstrap}
-      initialDisclosures={readEarlyDisclosures(doc)}
+      initialState={prepareHydrationState(doc)}
     />,
   );
 }

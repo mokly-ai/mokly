@@ -615,7 +615,7 @@ test("the search field carries a tag control over a closed picker", () => {
   const html = homePage(createCatalogue(manifest), context);
   assert.ok(
     html.includes(
-      'aria-label="Search catalogue" data-mokly-search="" placeholder="Search catalogue…" type="search"/>' +
+      'aria-label="Search catalogue" data-mokly-search="" placeholder="Search catalogue…" type="search" value=""/>' +
         TAG_TOGGLE +
         tagPicker("billing", "forms", "onboarding") +
         "</div>",

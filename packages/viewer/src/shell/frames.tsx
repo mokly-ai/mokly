@@ -3,10 +3,12 @@
 // and a browser window with traffic lights, a monospace address pill carrying
 // a copy icon, and the expand-to-overlay toggle handled by the Browse client.
 
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
 import { CollapseIcon, CopyIcon, ExpandIcon } from "./icons.js";
 import { PhoneStatusBar } from "./status_bar.js";
+import { useOptionalShellStore } from "./store_context.js";
 
 /** A 390×844 phone body whose screen area hosts the mobile fragment. */
 export function PhoneFrame(props: { children?: ReactNode }) {
@@ -27,27 +29,52 @@ export function BrowserFrame(props: {
   address: string;
   children?: ReactNode;
   expandable?: boolean;
+  frameKey?: string;
 }) {
+  const store = useOptionalShellStore();
+  const [copied, setCopied] = useState(false);
+  const expanded =
+    props.frameKey !== undefined &&
+    store?.state.expandedFrame === props.frameKey;
+  useEffect(() => {
+    if (!copied) return;
+    const timer = window.setTimeout(() => setCopied(false), 1400);
+    return () => window.clearTimeout(timer);
+  }, [copied]);
   return (
-    <div className="browser-frame">
+    <div className={`browser-frame${expanded ? " is-expanded" : ""}`}>
       <div className="browser-bar">
         <span className="lights">
           <i />
           <i />
           <i />
         </span>
-        <span className="address">
+        <span
+          className="address"
+          onClick={() => {
+            store?.copy(props.address);
+            setCopied(true);
+          }}
+        >
           <span className="address-url">{props.address}</span>
           <span aria-hidden="true" className="address-copy">
             <CopyIcon />
           </span>
         </span>
+        {copied ? <span className="address-copied">URL copied</span> : null}
         {props.expandable !== false ? (
           <button
-            aria-expanded="false"
-            aria-label="Expand to a wider viewport"
+            aria-expanded={expanded}
+            aria-label={
+              expanded ? "Collapse viewport" : "Expand to a wider viewport"
+            }
             className="browser-expand"
-            title="Expand to a wider viewport"
+            onClick={() =>
+              store?.setExpandedFrame(expanded ? undefined : props.frameKey)
+            }
+            title={
+              expanded ? "Collapse viewport" : "Expand to a wider viewport"
+            }
             type="button"
           >
             <span aria-hidden="true" className="i-expand">
