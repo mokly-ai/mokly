@@ -44,7 +44,6 @@ const DELIVERED_CLIENT_MODULES = [
   "diff_views.js",
   "diffs.js",
   "document_ranges.js",
-  "early_disclosures.js",
   "entry_wording.js",
   "frame_adapter.js",
   "frame_error.js",
@@ -146,11 +145,12 @@ function writeBrowserManifest(directory: string, modules: readonly string[]) {
   );
 }
 
-test("shell partition rejects kept modules importing retired modules", async () => {
+test("shell partition rejects kept modules importing retired modules", async (context) => {
   const module = (await import(
     pathToFileURL(path.resolve("scripts/package/browser_graph.mjs")).href
   )) as {
     assertShellPartitionEdge(importer: string, target: string): void;
+    inspectSourcePartitionAt(sourceDirectory: string): void;
     sourceImportSpecifiers(code: string): string[];
   };
   assert.throws(
@@ -169,10 +169,52 @@ test("shell partition rejects kept modules importing retired modules", async () 
   );
   assert.deepEqual(
     module.sourceImportSpecifiers(
-      'import type { One } from "./one.js";\nimport "./side-effect.js";\nexport { two } from "./two.js";\nvoid import("./dynamic.js");\n',
+      'import type { One } from "./one.js";\nimport "./side-effect.js";\nexport { two } from "./two.js";\nvoid import("./dynamic.js");\ntype Five = import("./import-type.js").Five;\n',
     ),
-    ["./one.js", "./side-effect.js", "./two.js", "./dynamic.js"],
+    [
+      "./one.js",
+      "./side-effect.js",
+      "./two.js",
+      "./dynamic.js",
+      "./import-type.js",
+    ],
   );
+
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "mokly-partition-"));
+  try {
+    const source = path.join(root, "src");
+    fs.cpSync(path.resolve("packages/viewer/src"), source, { recursive: true });
+    const importer = path.join(source, "client/same_origin_adapter.ts");
+    const original = fs.readFileSync(importer, "utf8");
+    const crossings = new Map([
+      [
+        "declaration",
+        'import { captureBrowseState } from "./browse_state.js";',
+      ],
+      [
+        "type-only declaration",
+        'import type { BrowseRecoveryState } from "./browse_state.js";',
+      ],
+      ["side-effect", 'import "./browse_state.js";'],
+      ["dynamic", 'void import("./browse_state.js");'],
+      [
+        "import-type",
+        'type Crossing = import("./browse_state.js").BrowseRecoveryState;',
+      ],
+    ]);
+    for (const [form, crossing] of crossings) {
+      await context.test(form, () => {
+        fs.writeFileSync(importer, `${original}\n${crossing}\n`);
+        assert.throws(
+          () => module.inspectSourcePartitionAt(source),
+          /Kept shell source imports retired module/,
+          `${form} crossing was accepted`,
+        );
+      });
+    }
+  } finally {
+    fs.rmSync(root, { force: true, recursive: true });
+  }
 });
 
 test("served browser modules import only modules served beside them", () => {

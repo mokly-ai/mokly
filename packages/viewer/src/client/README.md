@@ -12,15 +12,18 @@ outputs. Serve validates exact manifest/directory equality before binding and
 uses that inventory for delivery and export. `scripts/package/shell_partition.mjs`
 is the machine-readable keep/retire/move inventory. The package graph check
 rejects partition crossings in both delivered JavaScript and source imports,
-including type-only and side-effect imports.
+including type-only declarations, import-type nodes, side-effect imports, and
+dynamic imports.
 
-`early_disclosures.ts` and `nav_resize.ts` are compatibility exports for the
-vanilla runtime. Retained ownership lives under `src/standalone`: the synchronous
-navigation bootstrap records native disclosure choices outside the React-owned
-DOM, and React reads that state for its initial hydration render. Navigation
-resizing starts only after hydration for React-shell documents, while vanilla
-documents retain immediate initialization. Load or page exit cleans up capture
-state, and unfiltered choices use the existing durable preference.
+Disclosure capture and imperative navigation resizing are owned directly under
+`src/standalone`; vanilla and viewer callers import those owners without client
+pass-through modules. The synchronous navigation bootstrap records native
+disclosure choices outside the React-owned DOM, and React reads that state for
+its initial hydration render. Navigation resizing starts only after hydration
+for React-shell documents, while vanilla documents retain immediate
+initialization. Load or page exit cleans up capture state, and unfiltered
+choices use the existing durable preference. The standalone build continues to
+deliver this entry as `navigation-resize.js`.
 
 `frame_adapter.ts` defines the transport-independent mount, boundary, highlight,
 scroll and event interfaces in the [frame contract](../../../../docs/protocol/mokly-frame-adapter.md).

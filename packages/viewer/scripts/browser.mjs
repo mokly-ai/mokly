@@ -27,7 +27,7 @@ export async function writeBrowserManifest(target) {
 export async function buildBrowserModules(sourceRoot, target, options = {}) {
   const entryPoints = Object.fromEntries(
     (await fs.readdir(sourceRoot))
-      .filter((name) => name.endsWith(".ts") && name !== "nav_resize.ts")
+      .filter((name) => name.endsWith(".ts"))
       .map((name) => [
         name === "browse.ts" && options.viewer
           ? "browse_runtime"

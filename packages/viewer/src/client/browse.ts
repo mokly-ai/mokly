@@ -1,5 +1,7 @@
 /** Progressive Browse shell enhancement served at /__mokly/client/browse.js. */
 
+import { restoreEarlyDisclosures } from "../standalone/early_disclosures.js";
+
 import { handleBrowseControl } from "./browse_controls.js";
 import { createBrowserDetailsPreference } from "./browse_details.js";
 import { applyNavigationEvidence } from "./browse_evidence.js";
@@ -32,7 +34,6 @@ import {
 } from "./browse_update_state.js";
 import { copyText } from "./clipboard.js";
 import { installDiffs } from "./diffs.js";
-import { restoreEarlyDisclosures } from "./early_disclosures.js";
 import { attachFrameNavigation } from "./frame_navigation.js";
 import { isSameBrowseDocument, NavigationSequencer } from "./navigation.js";
 import { applyPreviewFragmentQuery } from "./preview_fragment.js";

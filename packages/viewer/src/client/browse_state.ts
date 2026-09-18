@@ -1,6 +1,7 @@
 /** Typed Browse state captured across one automatic watched reload. */
 
 import type { LiveChangesStatus } from "../shell/metadata.js";
+import { restoreEarlyDisclosures } from "../standalone/early_disclosures.js";
 
 import {
   isNavDisclosureClosed,
@@ -10,7 +11,6 @@ import {
   applyNavVisibility,
   selectAndRevealRoute,
 } from "./browse_navigation_state.js";
-import { restoreEarlyDisclosures } from "./early_disclosures.js";
 import { replaceLocalFrame } from "./same_origin_adapter.js";
 import { syncTagChips } from "./tag_filter.js";
 

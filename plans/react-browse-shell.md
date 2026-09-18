@@ -88,8 +88,7 @@ store):
 - Boot and navigation: `browse`, `browse_fetch`, `browse_links`,
   `browse_navigation`, `browse_navigation_state`, `browse_state`,
   `browse_recovery`, `browse_update_state`, `browse_controls`, `navigation`,
-  `nav_resize`, `early_disclosures`, `static_delivery`, `preview_fragment`,
-  `tag_filter`, `clipboard`.
+  `static_delivery`, `preview_fragment`, `tag_filter`, `clipboard`.
 - Stage and comparisons: `browse_frames`, `browse_details`, `browse_evidence`,
   `frame_navigation` (except `classifyFrameActivation`, which moves),
   `same_origin_navigation`, `diffs`, `diff_views`.
@@ -113,12 +112,13 @@ Keep unchanged (transport, geometry, protocol; consumed through hooks):
 Retained standalone pre-hydration ownership:
 `standalone/early_disclosures`, `standalone/nav_resize`, and
 `standalone/navigation_resize`. The latter is the delivered
-`navigation-resize.js` entry. The compatibility modules named
-`client/early_disclosures` and `client/nav_resize`, plus
-`client/browse_navigation`, remain in the retire set for the vanilla shell,
-but the retained entry imports none of them. The package check reads source
-imports, including type-only and side-effect imports, for both the client
-partition and these retained modules.
+`navigation-resize.js` entry. The former compatibility modules named
+`client/early_disclosures` and `client/nav_resize` are deleted; their remaining
+callers import the standalone owners directly. `client/browse_navigation`
+remains in the retire set for the vanilla shell, but the retained entry imports
+none of it. The package check reads source imports, including type-only,
+import-type, and side-effect imports, for both the client partition and these
+retained modules.
 
 `same_origin_highlight` is kept whole. It exports `installLocalHighlight`,
 which owns the overlay mask, labels, observers, and teardown in one closure,
@@ -328,6 +328,13 @@ yet; the vanilla runtime remains the default and keeps working.
 - [x] Preserve the automatic `@mokly/viewer/browser` side effect in package
       metadata and prove a packed consumer's side-effect-only esbuild bundle
       retains `hydrateRoot`.
+- [x] Hash historical route baselines from canonical JSON and hydrate removed
+      and renamed routes from a finalized export under development React.
+- [x] Make the source partition check inspect TypeScript import-type nodes and
+      reject real keep-to-retire crossings in every supported import form.
+- [x] Delete the standalone compatibility re-export shims, repoint their
+      remaining importers to the standalone owners, and update partition and
+      browser-delivery inventories without renaming `navigation-resize.js`.
 - [x] Commit the fix round without rewriting history, using real paragraph
       breaks, a title no longer than 50 characters, and the required
       `Co-Authored-By` trailer, then push the branch.

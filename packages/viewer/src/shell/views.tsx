@@ -2,6 +2,7 @@
 // home, missing-route, and target views, plus the title and
 // active-route helpers the document scaffold and progressive navigation use.
 
+import { canonicalJson } from "../components/data.js";
 import { sha256 } from "../data/sha256.js";
 
 import type { Catalogue } from "./catalogue.js";
@@ -174,7 +175,7 @@ export function ShellMain(props: {
       className="mbk-main"
       data-mokly-view=""
       data-mokly-baseline={
-        baseline ? sha256(JSON.stringify(baseline)) : undefined
+        baseline ? sha256(canonicalJson(baseline)) : undefined
       }
       id="mb-main"
       tabIndex={-1}

@@ -6,10 +6,14 @@ import type { Page } from "@playwright/test";
 import { build } from "esbuild";
 
 import { reactShellForProject } from "./export_shell.js";
-import { startStaticFixture } from "./static_fixture.js";
+import {
+  startHistoricalStaticFixture,
+  startStaticFixture,
+} from "./static_fixture.js";
 
 let developmentBundle: string;
 let exported: Awaited<ReturnType<typeof startStaticFixture>>;
+let historical: Awaited<ReturnType<typeof startHistoricalStaticFixture>>;
 let fixtureRoutes: readonly string[];
 
 test.beforeAll(async ({ browser: _browser }, info) => {
@@ -37,9 +41,12 @@ test.beforeAll(async ({ browser: _browser }, info) => {
   const reactShell = reactShellForProject(info.project.name);
   expect(reactShell).toBe(true);
   exported = await startStaticFixture({ reactShell });
+  historical = await startHistoricalStaticFixture(reactShell);
 });
 
-test.afterAll(async () => exported?.close());
+test.afterAll(async () => {
+  await Promise.all([exported?.close(), historical?.close()]);
+});
 
 test("development React hydrates a fresh desktop document cleanly", async ({
   page,
@@ -239,6 +246,24 @@ test("development React hydrates a finalized export cleanly", async ({
   await page.goto(`${exported.url}/view/screens/home.html`);
   await expect(page.locator("html")).toHaveAttribute("data-mokly-static", "");
   await expectCleanHydration(page, errors);
+});
+
+test("development React hydrates removed and renamed finalized routes", async ({
+  page,
+}) => {
+  const errors = captureBrowserErrors(page);
+  await installDevelopmentBundle(page);
+  for (const route of ["removed.html", "guides/original.html"]) {
+    const response = await page.goto(
+      `${historical.url}/view/${encodeRoute(route)}`,
+    );
+    expect(response?.status(), route).toBe(200);
+    await expect(page.locator("html")).toHaveAttribute("data-mokly-static", "");
+    await expect(
+      page.getByText("This document is no longer in the catalogue."),
+    ).toBeVisible();
+    await expectCleanHydration(page, errors, route);
+  }
 });
 
 async function installDevelopmentBundle(page: Page): Promise<void> {

@@ -1,9 +1,9 @@
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import { installDiffs } from "../client/diffs.js";
 import type { FrameAdapter } from "../client/frame_adapter.js";
-import { initializeNavigationResize } from "../client/nav_resize.js";
 import { handleTagPickerKeydown } from "../client/tag_filter.js";
 import { installWorkspace } from "../client/workspace.js";
+import { initializeNavigationResize } from "../standalone/nav_resize.js";
 
 import { runCleanup } from "./cleanup.js";
 import { viewerFailures } from "./failures.js";

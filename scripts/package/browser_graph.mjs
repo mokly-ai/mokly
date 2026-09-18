@@ -65,7 +65,7 @@ function inspectModule(modules, name, bytes) {
   }
 }
 
-/** Read static, side-effect, type-only, re-export, and dynamic imports. */
+/** Read every static, type, side-effect, re-export, and dynamic import. */
 export function sourceImportSpecifiers(code, filename = "source.ts") {
   const source = ts.createSourceFile(
     filename,
@@ -89,6 +89,12 @@ export function sourceImportSpecifiers(code, filename = "source.ts") {
       ts.isStringLiteral(node.arguments[0])
     )
       specifiers.push(node.arguments[0].text);
+    if (
+      ts.isImportTypeNode(node) &&
+      ts.isLiteralTypeNode(node.argument) &&
+      ts.isStringLiteral(node.argument.literal)
+    )
+      specifiers.push(node.argument.literal.text);
     ts.forEachChild(node, visit);
   };
   visit(source);
@@ -114,30 +120,34 @@ function inspectPartitionInventory(modules) {
     "Shell partition contains duplicate modules",
   );
   for (const module of sourceModules) {
-    const output =
-      module === "browse"
-        ? "browse_runtime"
-        : module === "nav_resize"
-          ? "navigation-resize"
-          : module;
+    const output = module === "browse" ? "browse_runtime" : module;
     assert.ok(
       modules.has(`/__mokly/client/${output}.js`),
       `Missing browser output for ${module}`,
     );
   }
+  assert.ok(
+    modules.has("/__mokly/client/navigation-resize.js"),
+    "Missing retained navigation-resize.js browser entry",
+  );
 }
 
 function inspectSourcePartition() {
+  inspectSourcePartitionAt(viewerSource);
+}
+
+/** Inspect source partition edges beneath an explicit viewer source root. */
+export function inspectSourcePartitionAt(sourceDirectory) {
   for (const importer of [...keep, ...retire, ...move].map(
     (name) => `client/${name}`,
   ))
-    inspectSourceModule(importer, false);
+    inspectSourceModule(sourceDirectory, importer, false);
   for (const importer of retainedStandalone)
-    inspectSourceModule(importer, true);
+    inspectSourceModule(sourceDirectory, importer, true);
 }
 
-function inspectSourceModule(importer, retained) {
-  const filename = sourceFilename(importer);
+function inspectSourceModule(sourceDirectory, importer, retained) {
+  const filename = sourceFilename(sourceDirectory, importer);
   const code = fs.readFileSync(filename, "utf8");
   for (const specifier of sourceImportSpecifiers(code, filename)) {
     if (!specifier.startsWith(".")) continue;
@@ -156,9 +166,9 @@ function inspectSourceModule(importer, retained) {
   }
 }
 
-function sourceFilename(module) {
+function sourceFilename(sourceDirectory, module) {
   for (const extension of [".ts", ".tsx"]) {
-    const filename = path.join(viewerSource, `${module}${extension}`);
+    const filename = path.join(sourceDirectory, `${module}${extension}`);
     if (fs.existsSync(filename)) return filename;
   }
   throw new Error(`Missing partition source module: ${module}`);
