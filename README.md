@@ -714,6 +714,16 @@ The shared browser example also waits for terminal Changes in global setup
 before tests begin, so comparison and navigation assertions start with complete
 evidence. Loading-state and continuity tests own explicit pending fixtures to
 exercise evidence completion during browsing and editing.
+Navigation and design-link specs share one unique read-only ordinary preview per
+worker. Its owned output must be absent before preparation, and a current-build
+marker proves freshness before the server starts. Setup failures and normal
+teardown drain the full process tree before removing the artifact. If process
+termination cannot be confirmed, teardown fails, retains the owned output, and
+returns the same failure to repeated close calls. A separate preview-preparation
+spec still runs the cold `npm run preview:build` path and checks that generated
+output stays byte-stable. Fixture setup emits structured
+`[mokly:fixture-timing]` phase records and identifies operations that are
+themselves under test.
 Run the full browser suite separately from other top-level
 checks: publication fixtures rebuild shared package and example output.
 Watched tests that assert a stable update version also wait for final Changes
@@ -744,6 +754,21 @@ consumers, Chromium tests, and all Rust checks. It also audits the freshly
 resolved packed consumer's production dependencies. Registry access is required;
 known advisories or registry errors fail verification. See the
 [dependency security contract](./docs/protocol/dependency-security.md).
+Individual gates can be exercised with `cargo xtask check --suite repository`,
+`package`, `unit`, or `browser`. The unit and browser suites accept a one-based
+`--shard INDEX/TOTAL`; selected suites and shards are partial checks and do not
+replace the complete command.
+
+The public `npm test` and `npm run test:browser` commands prepare their required
+output and retain their native Node and Playwright entrypoints. Browser runner
+arguments such as `npm run test:browser -- --list` or a selected spec path are
+available during development; filtered runs are partial checks. `npm test`
+retains the repository's complete explicit file inventory and two-file
+concurrency. Xtask uses the strict `test:prepared` and
+`test:browser:prepared` scripts after preparing output; those internal scripts
+accept only the optional CI shard argument and write inventory reports for
+completeness validation.
+
 `npm test` limits test-file parallelism to two workers to keep subprocess-heavy
 fixtures within their existing startup deadlines on shared developer machines.
 All tests still run, including their explicit concurrent-writer and race cases.

@@ -23,10 +23,15 @@ interface WorkflowStep {
 
 interface WorkflowJob {
   environment?: string;
+  if?: string;
+  name?: string;
   needs?: readonly string[];
   permissions?: Readonly<Record<string, string>>;
   steps: readonly WorkflowStep[];
-  strategy?: { matrix: { os: readonly string[] } };
+  strategy?: {
+    "fail-fast"?: boolean;
+    matrix: Readonly<Record<string, readonly (string | number)[]>>;
+  };
 }
 
 interface Workflow {
@@ -60,48 +65,6 @@ interface RegistryContractModule {
     stdout: string;
   }): boolean;
 }
-
-test("CI pins actions and gates both supported Node runtimes", async () => {
-  const source = await workflowSource("ci.yml");
-  const workflow = parse(source) as Workflow;
-  assert.deepEqual(Object.keys(workflow.on).sort(), ["pull_request", "push"]);
-  assert.deepEqual(workflow.permissions, { contents: "read" });
-  assert.equal(workflow.concurrency["cancel-in-progress"], true);
-  assert.match(source, /node-version: 22\.14\.0/);
-  assert.match(source, /node-version: 24\n/);
-  assert.equal((source.match(/cargo xtask check/g) ?? []).length, 2);
-  assert.match(source, /playwright install --with-deps chromium/);
-  const required = workflow.jobs.required;
-  const minimumRuntime = workflow.jobs["minimum-runtime"];
-  const releaseRuntime = workflow.jobs["release-runtime"];
-  assert.ok(required);
-  assert.ok(minimumRuntime);
-  assert.ok(releaseRuntime);
-  assert.deepEqual(required.needs, [
-    "minimum-runtime",
-    "release-runtime",
-    "export-platforms",
-  ]);
-  const exportPlatforms = workflow.jobs["export-platforms"];
-  assert.ok(exportPlatforms);
-  assert.deepEqual(exportPlatforms.strategy?.matrix.os, [
-    "macos-latest",
-    "windows-latest",
-  ]);
-  assert.ok(
-    exportPlatforms.steps.some((step) =>
-      step.run?.includes("tests/export_rename.test.ts"),
-    ),
-  );
-  assert.ok(
-    exportPlatforms.steps.some((step) =>
-      step.run?.includes("tests/export_destination_races.test.ts"),
-    ),
-  );
-  assertFullHistoryCheckout(minimumRuntime);
-  assertFullHistoryCheckout(releaseRuntime);
-  assertPinnedActions(workflow);
-});
 
 test("release workflow selects only releases and isolates OIDC publish", async () => {
   const source = await workflowSource("release.yml");
@@ -256,14 +219,6 @@ function assertPinnedActions(workflow: Workflow): void {
   );
   assert.ok(actions.length > 0);
   for (const action of actions) assert.match(action, /@[a-f0-9]{40}$/);
-}
-
-function assertFullHistoryCheckout(job: WorkflowJob): void {
-  const checkout = job.steps.find((step) =>
-    step.uses?.startsWith("actions/checkout@"),
-  );
-  assert.ok(checkout);
-  assert.equal(checkout.with?.["fetch-depth"], 0);
 }
 
 async function releaseContext(): Promise<ReleaseContextModule> {

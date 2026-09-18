@@ -2,7 +2,7 @@
 
 ## Status And Outcome
 
-Status: planned. The implementation PR's merge is the completion boundary;
+Status: implementation in progress. The implementation PR's merge is the completion boundary;
 keep this plan in the active index until then.
 
 Reduce the time to `Required CI` success while exercising the complete existing
@@ -79,109 +79,129 @@ Keep `fullyParallel: false`, current worker limits, assertion deadlines, and
 zero browser retries. Partition whole files and use measured durations to
 identify imbalanced shards before considering a different partition strategy.
 
-## Milestone 1: Specify verification ownership and acceptance
+## Milestone 1: Specify verification ownership and acceptance — completed
 
 Define the complete contract before changing executable verification.
 
-- [ ] Add a focused `docs/protocol/ci-verification.md` describing the gate table,
+- [x] Add a focused `docs/protocol/ci-verification.md` describing the gate table,
       suite/shard CLI, prerequisite ordering, test inventories, artifact ownership,
       cache behavior, failure semantics, and measurement procedure. Clearly mark
       the target as pending until the corresponding implementation lands.
-- [ ] Link it from `docs/protocol/README.md` and `npm-release.md`; update the
+- [x] Link it from `docs/protocol/README.md` and `npm-release.md`; update the
       security contract to assign the live workspace audit to the shared CI
       prerequisite while preserving audit-first local/release verification and
       the separate freshly resolved packed-consumer audit on both runtimes.
-- [ ] Map every command and side effect in `xtask/src/check.rs`,
+- [x] Map every command and side effect in `xtask/src/check.rs`,
       `xtask/src/cli.rs`, npm scripts and native-platform jobs to a target gate.
       Include the file-length auditor executed outside the command list.
-- [ ] Specify cold-build and cold-install coverage, prepared-output lifetime,
+- [x] Specify cold-build and cold-install coverage, prepared-output lifetime,
       cancellation, cleanup, and fail-closed handling of missing reports or
       failed, skipped, and cancelled jobs. Cache hits never replace an audit.
-- [ ] Record the baseline run links, phase timings, runner availability and
+- [x] Record the baseline run links, phase timings, runner availability and
       cost measures to compare. Keep README and xtask guidance accurate as each
       later milestone lands; the root README already links to the plans index.
-- [ ] Validate changed Markdown, local links and the contract diff.
+- [x] Validate changed Markdown, local links and the contract diff.
 
-## Milestone 2: Add reusable verification suites and preparation
+## Milestone 2: Add reusable verification suites and preparation — completed
 
 Deliver independently callable suites while the existing CI and release
 workflows continue to use the complete local command successfully.
 
-- [ ] Add failure-first regression coverage for suite selection, missing and
+- [x] Add failure-first regression coverage for suite selection, missing and
       invalid shard arguments, sharding an unsupported suite, subprocess error
       propagation, audit-first ordering, and complete-gate coverage. Use unimock
       at the Rust command-runner boundary and keep tests outside source files.
-- [ ] Implement the suite/shard CLI and common gate definitions in xtask.
+- [x] Implement the suite/shard CLI and common gate definitions in xtask.
       Derive both the complete command and suite commands from those definitions
       so CI cannot silently lose a check as local verification evolves.
-- [ ] Separate package/example preparation from commands that consume prepared
+- [x] Separate package/example preparation from commands that consume prepared
       output. Existing public npm test/typecheck/browser entrypoints must still
       work from a clean checkout. Suite invocations prepare their own outputs;
       internal prepared commands document prerequisites and fail when missing.
-- [ ] Reuse prepared output within a suite invocation to remove redundant
+- [x] Reuse prepared output within a suite invocation to remove redundant
       top-level builds. Preserve builds intentionally exercised by prepack,
       historical reconstruction, clean installation and startup regressions.
-- [ ] Inspect and smoke-test the same CLI/viewer tarball pair within the package
+- [x] Inspect and smoke-test the same CLI/viewer tarball pair within the package
       gate, using the existing artifact-input support where appropriate. Retain
       real prepack behavior, both package allowlists/licenses, all five consumers,
       their production audit, and the release workflow's exact-artifact checks.
-- [ ] Add test-file inventory and timing output for Node shards and browser test
+- [x] Add test-file inventory and timing output for Node shards and browser test
       inventory/reports. Prove disjoint shard assignments and complete union per
       runtime against current unsharded discovery; reject empty/missing shards.
-- [ ] Run focused xtask and package regressions, clean-entrypoint smokes, all
+- [x] Run focused xtask and package regressions, clean-entrypoint smokes, all
       suite commands and the complete `cargo xtask check`. Update documentation
       for the now-implemented CLI and preparation behavior.
 
-## Milestone 3: Parallelize CI and enable dependency caching
+Local evidence: all 10 xtask tests, root TypeScript checking, focused workflow,
+evidence, process, reporter and fixture regressions, package inspection, and all
+five packed-consumer scenarios pass. The final complete gate also exercises the
+repository, package, unit and browser suites successfully from one checkout.
+
+## Milestone 3: Parallelize CI and enable dependency caching — completed
 
 Deliver the target job graph with every existing verification boundary required.
 
-- [ ] Add workflow regressions before changing `.github/workflows/ci.yml`.
+- [x] Add workflow regressions before changing `.github/workflows/ci.yml`.
       Update `tests/release.test.ts` and `tests/deployment.test.ts` to check gate
       coverage and prerequisites rather than two monolithic job names. Cover
       both runtimes, every shard, native tests and stable `Required CI` naming.
-- [ ] Implement the repository gate and package, unit, browser and native jobs
+- [x] Implement the repository gate and package, unit, browser and native jobs
       from the target table. Use npm 11.7.0, Rust 1.95.0, immutable action pins,
       read-only permissions and existing superseded-run cancellation. Every
       job requiring baselines or `origin/main` receives full Git history.
-- [ ] Configure four unit and four browser shards per Node runtime, with
+- [x] Configure four unit and four browser shards per Node runtime, with
       `fail-fast: false`. Install Chromium only for browser jobs. Keep Rust
       checks in the repository gate; suite jobs only need the xtask toolchain.
-- [ ] Enable explicit `cache: npm` in read-only CI jobs using the committed
+- [x] Enable explicit `cache: npm` in read-only CI jobs using the committed
       lockfile; include the resolved baseline lockfile where historical installs
       occur, following the existing PR-preview cache pattern. Run `npm ci`
       regardless of cache hits and preserve native optional packages.
-- [ ] Cache npm downloads only. Preserve intentionally isolated clean-cache
+- [x] Cache npm downloads only. Preserve intentionally isolated clean-cache
       consumer tests and release publishing's cache/permission boundary. Treat
       a missing cache as an ordinary install, never as permission to skip work.
-- [ ] Make the always-running `Required CI` aggregate reject every unsuccessful
+- [x] Make the always-running `Required CI` aggregate reject every unsuccessful
       prerequisite. Verify failed, skipped, cancelled and missing-result cases,
       including incomplete shard evidence. Give artifacts unique runtime/shard
       names and retain browser failure traces plus test/timing reports.
-- [ ] Validate YAML and action expressions, run workflow regressions and every
+- [x] Validate YAML and action expressions, run workflow regressions and every
       gate locally, and update protocol status and READMEs to match the workflow.
+
+Local evidence: actionlint passes, and `cargo xtask check` exits successfully on
+Node 24.14.1. Its complete unit report covers 351 files and 1,851 passing tests
+in 414.45s; its complete browser report covers 86 specs and 454 passing tests in
+673.39s. Both reports are complete with zero failures, skips, cancellations or
+reporter errors. Hosted workflow acceptance remains in Milestone 5.
 
 ## Milestone 4: Reduce repeated read-only fixture preparation
 
 Reduce setup work through reusable test fixtures while preserving independent
 mutation, historical-build and publication lifecycle coverage.
 
-- [ ] Measure install, build, baseline and export preparation separately for
+- [x] Measure install, build, baseline and export preparation separately for
       the two slow export specs and `tests/browser/preview_fixture.ts`; record
       which operations are themselves the behavior being tested.
-- [ ] Add regression coverage for fixture isolation, cleanup on setup failure,
+- [x] Add regression coverage for fixture isolation, cleanup on setup failure,
       repeated consumers and output freshness before introducing reuse.
-- [ ] Extract a worker-scoped ordinary-preview fixture for read-only navigation
+- [x] Extract a worker-scoped ordinary-preview fixture for read-only navigation
       and design-link specs so they can consume one prepared artifact. Keep
       mutable state and writable outputs local to the worker/job and close all
       servers and child processes at teardown.
-- [ ] Preserve dedicated coverage that really runs preview preparation and
+- [x] Preserve dedicated coverage that really runs preview preparation and
       checks generated-output stability. Historical rebuild, source mutation,
       missing-source export, clean-install and cache-invalidation tests retain
       independently prepared inputs; optimize only work outside those contracts.
 - [ ] Run affected specs individually, together and on their assigned shards.
       Compare preparation timings and document the fixture ownership in the
       developer README and verification protocol.
+
+Local evidence: all five affected specs pass individually; the shared
+navigation/design-link pair passes 13 tests in 43.2s; prepared browser shard 4
+passes with one ordinary export (14.15s) and serve (1.25s). The dedicated cold
+preview preparation takes 27.43s plus 1.25s to serve and preserves the generated
+digest. Design/static historical fixtures record 6.8–7.1s installs, 14.8s
+builds, about 23s baselines, and about 94s full exports; nested phases are not
+additive. Hosted CI remains responsible for assigned shard 2 (design export)
+and shard 3 (cold preparation and static export) evidence.
 
 ## Milestone 5: Validate, measure, commit, push and review
 

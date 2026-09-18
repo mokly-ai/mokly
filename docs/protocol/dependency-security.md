@@ -9,20 +9,25 @@ would otherwise omit a category. Any reported Low, Moderate, High, or Critical
 vulnerability fails the command. Registry or transport errors also fail; they
 are not an audit exemption or a successful security result.
 
-`cargo xtask check` runs this audit first and stops on failure. The existing
-Node 22.14 and Node 24 CI jobs and the release workflow therefore enforce the
-same check. Verification requires registry access and is deliberately sensitive
-to newly published advisories, even when source and lockfile have not changed.
-An audit is evidence about known advisories at execution time, not a guarantee
-that every dependency is safe.
+`cargo xtask check` runs this audit first and stops on failure. The release
+workflow retains that complete audit-first command. Parallel CI assigns the
+same live audit to the shared repository prerequisite, which
+must succeed before any package, unit, browser or native job starts. A cache hit
+never replaces an audit. Verification requires registry access and is
+deliberately sensitive to newly published advisories, even when source and
+lockfile have not changed. An audit is evidence about known advisories at
+execution time, not a guarantee that every dependency is safe. See the
+[CI verification contract](./ci-verification.md) for the job graph and its
+fail-closed aggregate.
 
 The packed ESM-consumer smoke also audits its freshly resolved production,
-optional, and peer dependencies before exercising the installed CLI. This is a
-separate boundary: npm does not apply Mokly's workspace overrides or lockfile
-to downstream installations. Other consumer fixtures continue to exercise
-their respective integration contracts without duplicating registry requests.
-Consumers must maintain and audit their own lockfiles, including dependencies
-they bring to their renderer or application.
+optional, and peer dependencies before exercising the installed CLI on both
+supported Node runtimes in CI. This is a separate boundary: npm does not apply
+Mokly's workspace overrides or lockfile to downstream installations. Other
+consumer fixtures continue to exercise their respective integration contracts
+without duplicating registry requests. Consumers must maintain and audit their
+own lockfiles, including dependencies they bring to their renderer or
+application.
 
 ## Update Policy
 

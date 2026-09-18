@@ -28,6 +28,9 @@ when the historical primary file is absent, never when it is invalid.
 
 ## Contracts
 
+- [CI verification](./ci-verification.md) — implemented suite, shard, evidence,
+  cache and aggregation contract; hosted acceptance measurements remain tracked
+  by the active CI performance plan.
 - [Catalogue upload v1](./mokly-upload.md) — public CLI and hosted/self-hosted receiver boundary.
 - [Package and authoring contract](./mokly-package.md)
 - [CLI terminal output](./mokly-terminal-output.md) — plain compatibility,

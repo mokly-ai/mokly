@@ -4,12 +4,31 @@ use std::io;
 
 use thiserror::Error;
 
+use crate::check::VerificationSuite;
+
 /// Result returned by xtask operations.
 pub(crate) type Result<T> = std::result::Result<T, Error>;
 
 /// Failures surfaced by xtask commands.
 #[derive(Debug, Error)]
 pub(crate) enum Error {
+    /// A shard did not use the required one-based `INDEX/TOTAL` form.
+    #[error(
+        "[xtask/check] invalid shard `{shard}`; expected one-based INDEX/TOTAL within JavaScript safe integers"
+    )]
+    InvalidShard {
+        /// Rejected argument.
+        shard: String,
+    },
+    /// Sharding was requested without selecting a suite.
+    #[error("[xtask/check] --shard requires --suite unit or --suite browser")]
+    ShardRequiresSuite,
+    /// Sharding was requested for an unsupported suite.
+    #[error("[xtask/check] --shard is not supported with suite {suite}")]
+    UnsupportedShard {
+        /// Selected unsupported suite.
+        suite: VerificationSuite,
+    },
     /// The workspace root could not be derived from the crate manifest.
     #[error("[xtask/root] could not resolve the workspace root")]
     WorkspaceRoot,
