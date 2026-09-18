@@ -209,8 +209,12 @@ scrollable region scrolls internally:
   resizes the column from 192px to 480px without exceeding half the viewport.
   Dragging resizes continuously; Left/Right change it by 16px, Home/End choose
   its bounds, and double-click restores 248px. Served pages remember the last
-  chosen width. The separator is absent from the mobile drawer and without
-  JavaScript. The head row is `CATALOGUE` (uppercase, 11px) with a text button
+  chosen width. The grip rests in the strong border color and turns
+  accent-colored with a soft accent halo while hovered, keyboard-focused, or
+  being dragged; the
+  [workspace inspector divider](./mokly-component-workspace-design.md) reuses
+  that affordance rotated. The separator is absent from the mobile drawer and
+  without JavaScript. The head row is `CATALOGUE` (uppercase, 11px) with a text button
   labelled `Collapse all`; an All/Changes segmented filter (with a monospace
   changed count) is always present in live Serve, followed by the scrollable tree.
   While a comparison is being prepared or detection is pending, an 11px spinner

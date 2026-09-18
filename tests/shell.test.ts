@@ -778,6 +778,68 @@ test("shell stylesheet stays aligned with the design contract", () => {
   assert.equal(SHELL_CSS.includes("bookfolio"), false);
 });
 
+test("both split dividers share one grip affordance", () => {
+  const css = flatCss(SHELL_CSS);
+  for (const grip of [
+    '.mbk-nav-resize::after { content: ""; position: absolute; ' +
+      "top: calc(50% - 16px); left: 3px; width: 2px; height: 32px; " +
+      "border-radius: 999px; background: var(--chrome-border-strong); " +
+      "transition: background 120ms ease, box-shadow 120ms ease; }",
+    '.mbk-inspector-resize::after { content: ""; position: absolute; ' +
+      "top: 7px; left: calc(50% - 16px); width: 32px; height: 2px; " +
+      "border-radius: 999px; background: var(--chrome-border-strong); " +
+      "transition: background 120ms ease, box-shadow 120ms ease; }",
+  ])
+    assert.ok(css.includes(grip), grip);
+  assert.ok(
+    css.includes(
+      ".mbk-inspector-resize { position: absolute; z-index: 2; top: -8.5px; " +
+        "right: 0; left: 0; display: none; height: 16px;",
+    ),
+    "the handle clears the 1px border its padding box hides",
+  );
+  for (const handle of ["nav", "inspector"])
+    assert.ok(
+      css.includes(
+        `.mbk-${handle}-resize:hover::after, ` +
+          `.mbk-${handle}-resize:focus-visible::after, ` +
+          `body.mbk-${handle}-resizing .mbk-${handle}-resize::after ` +
+          "{ background: var(--mokly-accent); " +
+          "box-shadow: 0 0 0 3px var(--mokly-accent-soft); }",
+      ),
+      handle,
+    );
+  assert.ok(
+    css.includes(
+      ".mbk-inspector-resize:focus-visible " +
+        "{ box-shadow: inset 0 2px 0 var(--mokly-accent); }",
+    ),
+  );
+  assert.equal(
+    css.includes(".mbk-inspector-resize:focus-visible { outline"),
+    false,
+  );
+  for (const axis of ["col", "row"]) {
+    const scope = axis === "col" ? "nav" : "inspector";
+    assert.ok(
+      css.includes(
+        `body.mbk-${scope}-resizing * { cursor: ${axis}-resize !important; }`,
+      ),
+      scope,
+    );
+    assert.ok(
+      css.includes(
+        `body.mbk-${scope}-resizing iframe { pointer-events: none; }`,
+      ),
+      scope,
+    );
+  }
+  assert.match(
+    SHELL_CSS,
+    /@media \(max-width: 56\.25rem\) \{[\s\S]*\.mbk-inspector\[data-open="true"\] \.mbk-inspector-resize \{[\s\S]*display: none;/,
+  );
+});
+
 test("tag chips select in the accent and the bar clears the scrim", () => {
   const css = flatCss(SHELL_CSS);
   assert.match(
