@@ -44,6 +44,15 @@ export function ChevronIcon({ size }: IconProps) {
   );
 }
 
+/** Downward chevron marking a control that opens a list of choices. */
+export function ChevronDownIcon({ size }: IconProps) {
+  return (
+    <IconSvg size={size ?? 13}>
+      <polyline points="6 9 12 15 18 9" />
+    </IconSvg>
+  );
+}
+
 /** A collapsed collection: a closed folder grouping child screens. */
 export function FolderIcon({ size }: IconProps) {
   return (
@@ -121,6 +130,35 @@ export function FlowIcon({ size }: IconProps) {
       <rect height={8} rx={2} width={8} x={3} y={3} />
       <path d="M7 11v4a2 2 0 0 0 2 2h4" />
       <rect height={8} rx={2} width={8} x={13} y={13} />
+    </IconSvg>
+  );
+}
+
+/** Appearance left to the system: a disc split between light and dark. */
+export function AutoAppearanceIcon({ size }: IconProps) {
+  return (
+    <IconSvg size={size ?? 13}>
+      <circle cx={12} cy={12} r={9} />
+      <path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor" strokeWidth={0} />
+    </IconSvg>
+  );
+}
+
+/** Explicit light appearance, shown when the selector holds Light. */
+export function LightAppearanceIcon({ size }: IconProps) {
+  return (
+    <IconSvg size={size ?? 13}>
+      <circle cx={12} cy={12} r={4.5} />
+      <path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+    </IconSvg>
+  );
+}
+
+/** Explicit dark appearance, shown when the selector holds Dark. */
+export function DarkAppearanceIcon({ size }: IconProps) {
+  return (
+    <IconSvg size={size ?? 13}>
+      <path d="M21 13a9 9 0 0 1-10-10 9 9 0 1 0 10 10z" />
     </IconSvg>
   );
 }

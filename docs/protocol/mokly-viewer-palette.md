@@ -1,0 +1,141 @@
+# Viewer Semantic Palette
+
+## Delivery Status
+
+These are the approved swatches for the [appearance contract](./mokly-viewer-appearance.md).
+They are implemented in the design mockups under `examples/basic/generated/`
+(`design.css` for the interface palette, `design-stage.css` for preview tokens).
+The package's own `SHELL_CSS` and scoped embedded stylesheet adopt them in the
+runtime milestone; until then the shipped shell remains light-only.
+
+Contrast ratios below are computed from the listed sRGB values using the
+[WCAG relative-luminance formula](https://www.w3.org/WAI/GL/wiki/Relative_luminance)
+and are rounded down to two decimals. Normal text needs 4.5:1, large text 3:1,
+and required control, state and focus graphics 3:1 against adjacent colors.
+
+## Interface Palette
+
+One palette serves both appearances; Dark is selected on the root and every
+role keeps its meaning. Names below are the mockup token names.
+
+| Role                     | Light                                    | Dark                                  |
+| ------------------------ | ---------------------------------------- | ------------------------------------- |
+| `--chrome-bg`            | `#f4f4f1`                                | `#141816`                             |
+| `--chrome-surface`       | `#ffffff`                                | `#1e2421`                             |
+| `--chrome-raised`        | `#fbfbfa`                                | `#191e1b`                             |
+| `--chrome-hover`         | `#f4f6f3`                                | `#28302c`                             |
+| `--chrome-ink`           | `#1a1d1c`                                | `#eef1ef`                             |
+| `--chrome-ink-2`         | `#4a4f4d`                                | `#c3ccc7`                             |
+| `--chrome-muted`         | `#676e6a`                                | `#98a29c`                             |
+| `--chrome-border`        | `#e3e5e0`                                | `#313a35`                             |
+| `--chrome-border-strong` | `#c8ccc4`                                | `#4b5650`                             |
+| `--chrome-control-edge`  | `#868e88`                                | `#6f7a74`                             |
+| `--chrome-accent`        | `#2a4733`                                | `#a5cdb6`                             |
+| `--mbk-sage`             | `#4f7864`                                | `#86b79b`                             |
+| `--mbk-sage-deep`        | `#2f5945`                                | `#b6d8c4`                             |
+| `--mbk-accent-contrast`  | `#ffffff`                                | `#0e1a14`                             |
+| `--mbk-accent-soft`      | `rgba(79, 120, 100, 0.1)`                | `rgba(134, 183, 155, 0.16)`           |
+| `--mbk-accent-surface`   | `#edf3ef`                                | `#24312a`                             |
+| `--mbk-accent-edge`      | `#b9cfc2`                                | `#3c5648`                             |
+| `--mbk-guide`            | `#dbded8`                                | `#2b342f`                             |
+| `--mbk-dot`              | `rgba(20, 28, 22, 0.05)`                 | `rgba(238, 241, 239, 0.07)`           |
+| `--mbk-browser-bar`      | `#ecede9`                                | `#262d29`                             |
+| `--chrome-count-bg`      | `rgba(20, 28, 22, 0.08)`                 | `rgba(238, 241, 239, 0.1)`            |
+| `--chrome-scrim`         | `rgba(20, 28, 22, 0.45)`                 | `rgba(0, 0, 0, 0.55)`                 |
+| `--chrome-shadow`        | `0 30px 90px rgba(20, 28, 22, 0.14)`     | `0 30px 90px rgba(0, 0, 0, 0.6)`      |
+| `--chrome-shadow-soft`   | `0 1px 2px rgba(20, 28, 22, 0.1)`        | `0 1px 2px rgba(0, 0, 0, 0.5)`        |
+| `--chrome-shadow-press`  | `inset 0 1px 2px rgba(20, 28, 22, 0.14)` | `inset 0 1px 2px rgba(0, 0, 0, 0.55)` |
+| `--chrome-shadow-drawer` | `0 18px 50px rgba(20, 28, 22, 0.3)`      | `0 18px 50px rgba(0, 0, 0, 0.6)`      |
+| `--chrome-shadow-sheet`  | `0 6px 28px rgba(36, 55, 43, 0.15)`      | `0 6px 28px rgba(0, 0, 0, 0.55)`      |
+
+Status and validation pairs. Added reuses the accent surface, edge and deep
+accent ink so one selected-state family covers both jobs. Unmodified and
+Ignored use `--chrome-muted` on `--chrome-surface` inside `--chrome-border`.
+
+| Role                        | Light     | Dark      |
+| --------------------------- | --------- | --------- |
+| `--mbk-status-changed-bg`   | `#fff7e6` | `#332a15` |
+| `--mbk-status-changed-edge` | `#ead6ac` | `#5d4d24` |
+| `--mbk-status-changed-ink`  | `#805d1d` | `#e6c179` |
+| `--mbk-status-removed-bg`   | `#fcefee` | `#331f1d` |
+| `--mbk-status-removed-edge` | `#ecc5c1` | `#5e3b37` |
+| `--mbk-status-removed-ink`  | `#9b433c` | `#f1a99c` |
+| `--mbk-danger-ink`          | `#964334` | `#f1a99c` |
+
+## Recorded Contrast
+
+| Pair                                    | Light | Dark  | Requirement |
+| --------------------------------------- | ----- | ----- | ----------- |
+| ink on surface                          | 16.98 | 13.88 | 4.5 text    |
+| ink on background                       | 15.41 | 15.75 | 4.5 text    |
+| secondary ink on surface                | 8.34  | 9.61  | 4.5 text    |
+| muted on surface                        | 5.23  | 6.00  | 4.5 text    |
+| muted on background                     | 4.74  | 6.81  | 4.5 text    |
+| muted on raised (navigation)            | 5.05  | 6.42  | 4.5 text    |
+| muted on hover surface                  | 4.81  | 5.15  | 4.5 text    |
+| accent link on surface                  | 10.25 | 9.03  | 4.5 text    |
+| sage on surface                         | 4.99  | 6.96  | 4.5 text    |
+| deep sage on surface                    | 7.96  | 10.23 | 4.5 text    |
+| deep sage on accent surface             | 7.08  | 8.79  | 4.5 text    |
+| accent contrast on sage (active row)    | 4.99  | 7.87  | 4.5 text    |
+| control edge on surface                 | 3.36  | 3.54  | 3 non-text  |
+| control edge on background              | 3.05  | 4.02  | 3 non-text  |
+| control edge on raised (navigation)     | 3.25  | 3.79  | 3 non-text  |
+| focus outline (deep sage) on background | 7.23  | 11.61 | 3 non-text  |
+| changed status ink on its surface       | 5.62  | 8.27  | 4.5 text    |
+| removed status ink on its surface       | 5.73  | 8.04  | 4.5 text    |
+| added status ink on its surface         | 7.08  | 8.79  | 4.5 text    |
+| validation message on surface           | 6.66  | 8.19  | 4.5 text    |
+
+`--chrome-border`, `--chrome-border-strong` and `--mbk-guide` are decorative
+hairlines separating adjacent surfaces, not control boundaries, so they are not
+held to 3:1. Every control outline, grip, field border and focus ring uses
+`--chrome-control-edge` or `--mbk-sage-deep` instead.
+
+## Light Corrections
+
+Adopting these roles changed three Light values that did not meet the criteria.
+The mockups record the corrected appearance.
+
+1. `--chrome-muted` moved from `#7d8480` to `#676e6a`. It carries breadcrumbs,
+   frame captions, navigation heads, counts and field hints as normal text, and
+   reached only 3.83:1 on `--chrome-surface`.
+2. Control boundaries moved from `--chrome-border-strong` `#c8ccc4` (1.63:1) and
+   the prop field's own `#cbd2cc` input border (1.53:1) to the new
+   `--chrome-control-edge` `#868e88`. This covers the preview and appearance
+   controls, the navigation and inspector resize grips, the mobile sheet grabber
+   and native fields. `--chrome-border-strong` keeps the device and pane frames.
+3. The invalid-field border moved from `#b55646` to `--mbk-danger-ink` `#964334`,
+   matching the message it accompanies.
+
+## Preview Tokens
+
+Preview tokens describe what a device screen shows and never change with the
+interface appearance, so a light phone inside a dark catalogue keeps light
+surfaces, ink and status indicators.
+
+| Role                       | Light preview | Dark preview                        |
+| -------------------------- | ------------- | ----------------------------------- |
+| `--mbk-screen-bg`          | `#ffffff`     | `--mbk-dark-screen-bg` `#121514`    |
+| `--mbk-screen-ink`         | `#1a1d1c`     | `--mbk-dark-screen-ink` `#eef1ef`   |
+| `--mbk-screen-ink-2`       | `#4a4f4d`     | 78% ink mixed into the dark surface |
+| `--mbk-screen-muted`       | `#7d8480`     | 62% ink mixed into the dark surface |
+| `--mbk-screen-border`      | `#e3e5e0`     | 12% ink mixed into the dark surface |
+| `--mbk-screen-link`        | `#4f7864`     | `#7fae95`                           |
+| `--mbk-screen-link-strong` | `#2f5945`     | `#a4c9b3`                           |
+
+These values are the authored fragment's own colors, not the viewer interface,
+so they keep their existing Light values and are outside the corrections above.
+Each device screen also sets its own CSS `color-scheme`, so native controls and
+scrollbars inside a preview follow the preview rather than the interface. Fixed
+phone hardware (`#171a18` body, `#0b0d0c` notch, the home pill) and the browser
+traffic lights keep their intended colors in both appearances.
+
+A comparison in Difference mode paints an opaque base behind the compared
+frames, taken from the compared preview scheme, so the blended result is
+identical in both appearances.
+
+## Related Docs
+
+- [Viewer appearance](./mokly-viewer-appearance.md)
+- [Shell design contract](./mokly-shell-design.md)

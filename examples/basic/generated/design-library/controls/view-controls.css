@@ -25,8 +25,8 @@ align-items: center;
 
 .ce-icon-control {
 align-items: center;
-  background: white;
-  border: 1px solid var(--chrome-border-strong);
+  background: var(--chrome-surface);
+  border: 1px solid var(--chrome-control-edge);
   border-radius: 6px;
   color: var(--chrome-ink-2);
   cursor: pointer;
@@ -60,8 +60,8 @@ cursor: inherit;
 
 .ce-icon-control:hover,
 .ce-icon-control:has(input:checked) {
-background: #edf3ef;
-  border-color: #b9cfc2;
+background: var(--mbk-accent-surface);
+  border-color: var(--mbk-accent-edge);
   color: var(--mbk-sage-deep);
 }
 

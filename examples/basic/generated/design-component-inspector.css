@@ -17,6 +17,7 @@
 }
 .ce-inspector .ce-usage-list,
 .ce-inspector .ce-props,
+.ce-inspector .ce-control-row,
 .ce-inspector .ce-instance-tree {
   max-width: 680px;
 }
@@ -39,7 +40,7 @@
   border: 1px solid var(--chrome-border);
   border-radius: 20px;
   bottom: max(12px, env(safe-area-inset-bottom));
-  box-shadow: 0 6px 28px #24372b26;
+  box-shadow: var(--chrome-shadow-sheet);
   height: 55cqh;
   left: 12px;
   max-height: calc(100cqh - 24px);

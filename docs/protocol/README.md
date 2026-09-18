@@ -46,6 +46,8 @@ when the historical primary file is absent, never when it is invalid.
   unchanged local shell extraction.
 - [Viewer appearance](./mokly-viewer-appearance.md) — planned Auto/Light/Dark
   interface, independent preview schemes and standalone appearance preferences.
+- [Viewer semantic palette](./mokly-viewer-palette.md) — approved Light and Dark
+  swatches, their recorded contrast and the Light corrections they required.
 - [Viewer markers and multi-instance highlights](./mokly-viewer-markers.md) —
   host-owned anchored content and exact atomic highlight behavior.
 - [Viewer frame adapter](./mokly-frame-adapter.md) — approved same-origin

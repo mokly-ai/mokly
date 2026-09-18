@@ -1,6 +1,7 @@
 import { topBar } from "../library/chrome/top-bar.js";
 import { optional, useDesignInstance } from "../library/composition.js";
 
+import type { AppearanceChoice } from "./appearance.js";
 import { useDesignNavigation } from "./design_navigation.js";
 import { DESTINATIONS } from "./destinations.js";
 import { tagPickerTarget } from "./navigation_states.js";
@@ -11,6 +12,7 @@ interface TopBarProps {
   menuPresentation?: "text" | "icon" | undefined;
   searchPlaceholder?: string | undefined;
   activeTag?: string | undefined;
+  appearanceChoice?: AppearanceChoice | undefined;
   searchValue?: string | undefined;
   tagPickerOpen?: boolean | undefined;
   viewport: ArtboardViewport;
@@ -20,6 +22,7 @@ interface TopBarProps {
 /** Map this screen's navigation and query into recorded top-bar inputs. */
 export function TopBar({
   activeTag,
+  appearanceChoice,
   drawerOpen,
   menuPresentation,
   searchValue,
@@ -45,6 +48,7 @@ export function TopBar({
       }
       {...optional("query", searchValue)}
       {...optional("activeTag", activeTag)}
+      {...optional("appearance", appearanceChoice)}
       {...optional("pickerDestination", tagPickerTarget(navigation.tags))}
     />
   );

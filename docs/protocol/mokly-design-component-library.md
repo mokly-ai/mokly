@@ -17,9 +17,10 @@ Group indexes are pure galleries, containing at most five component entries.
 
 | Group / slug                  | Existing implementation                                             | Saved variant ids                                                          |
 | ----------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| chrome / top-bar              | `parts/top_bar.tsx`, `parts/tag_filter.tsx`                         | `default`, `search`, `tag-picker`, `drawer-open`                           |
+| chrome / top-bar              | `parts/top_bar.tsx`, `parts/tag_filter.tsx`                         | `default`, `search`, `tag-picker`, `drawer-open`, `appearance`             |
 | chrome / catalogue-navigation | `parts/nav.tsx`, scenario data in `components/parts/navigation.tsx` | `all`, `changes`, `empty`, `drawer`, `loading`, `preparing`, `unavailable` |
 | chrome / screen-header        | `parts/shell.tsx: ScreenHead`                                       | `screen`, `component`, `changed`, `removed`                                |
+| chrome / appearance-selector  | new for the appearance mockups                                      | `auto`, `light`, `dark`, `compact`                                         |
 | controls / comparison-toolbar | `parts/compare.tsx: CompareToolbar`                                 | `current`, `side-by-side`, `overlay`, `difference`                         |
 | controls / view-controls      | `components/parts/view_controls.tsx`, `parts/shell.tsx: ViewSwitch` | `default`, `both`, `highlighted`, `unavailable`                            |
 | controls / tag-picker         | `parts/tag_filter.tsx: TagPicker`                                   | `all`, `selected`, `empty`                                                 |
@@ -51,9 +52,12 @@ Controls below use text, boolean, number and primitive enum selections only.
 
 1. **Top bar:** query and placeholder strings; menu state `none/open/close`;
    existing text/icon menu presentation; available tag records, optional active
-   tag and picker-open flag; explicit navigation destinations. Controls: query,
-   picker-open and menu state. Theme controls belong in the screen header. Brand/search structure belongs to this component;
-   it composes the registered picker and chip. Preserve compact mobile branding.
+   tag and picker-open flag; explicit navigation destinations; and an optional
+   `auto/light/dark` interface appearance. Controls: query, picker-open, menu
+   state and appearance. Preview theme controls belong in the screen header;
+   the appearance setting is the catalogue's own and renders only when a screen
+   supplies it. Brand/search structure belongs to this component;
+   it composes the registered picker, chip and appearance selector. Preserve compact mobile branding.
 2. **Catalogue navigation:** row records with stable key, label, kind
    `collection/screen/component/flow`, depth, optional count/open/destination;
    selected destination, All/Changes state, changed count and presentation
@@ -129,6 +133,10 @@ Controls below use text, boolean, number and primitive enum selections only.
     and `children` slot containing the reused screen preview. Controls: number,
     title and description. References still point to the standalone owning
     screen, and flows never become the original home of screen markup.
+16. **Appearance selector:** the catalogue's `auto/light/dark` setting and a
+    compact flag for narrow bars. Controls: setting and compact. It is a native
+    selection control named Appearance, holding one value; it does not change
+    any preview's colour scheme and does not fabricate a native open list.
 
 Scenario adapters explicitly map current names to these semantic fields. Do not
 add uncontrolled catch-all objects, per-screen CSS strings or function props to
@@ -157,13 +165,14 @@ required semantic parents (such as a `dl` for prop rows), bounded panel dimensio
 and enough overflow space for popovers and frames.
 The host must not supply hidden scenario data or another full-screen component.
 
-| Existing design family                               | Required reuse                                                                                                           |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Browse, tag, scheme, missing-route and drawer states | Top bar, navigation, header, relevant tag/control/frame/inspector/empty components                                       |
-| Changes and review outcomes                          | Shared chrome, eligible comparison toolbar, device frames, comparison panes and inspector; empty states where applicable |
-| Component pages, states and inspection               | Shared chrome/status/view controls, inspector/metadata and comparison parts; existing fixture previews remain content    |
-| Component controls states                            | Shared chrome/inspector plus repeated prop-field framing; fixture values and validation outcomes remain explicit         |
-| Use-case depiction                                   | Shared chrome, flow steps and framed owning screen content                                                               |
+| Existing design family                               | Required reuse                                                                                                                     |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Browse, tag, scheme, missing-route and drawer states | Top bar, navigation, header, relevant tag/control/frame/inspector/empty components                                                 |
+| Changes and review outcomes                          | Shared chrome, eligible comparison toolbar, device frames, comparison panes and inspector; empty states where applicable           |
+| Component pages, states and inspection               | Shared chrome/status/view controls, inspector/metadata and comparison parts; existing fixture previews remain content              |
+| Component controls states                            | Shared chrome/inspector plus repeated prop-field framing; fixture values and validation outcomes remain explicit                   |
+| Use-case depiction                                   | Shared chrome, flow steps and framed owning screen content                                                                         |
+| Appearance states, panels and status                 | Shared chrome plus the appearance selector, and the existing navigation, header, frame, inspector, comparison and empty components |
 
 Adoption tests enumerate the actual owning screen inventory, assert the expected
 component ids per viewport, and verify there are no calls bypassing the registered

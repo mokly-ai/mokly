@@ -149,11 +149,27 @@ view controls. Its accessible label is “Switch to dark mode” or “Switch to
 mode”. The top bar contains no theme control. Unsupported pairs use a disabled
 icon with an explanatory tooltip:
 
-| Light state                    | Dark-selected state         |
-| ------------------------------ | --------------------------- |
-| `design-browse-screen`         | `design-browse-dark-scheme` |
-| `design-browse-details-screen` | `design-browse-light-only`  |
-| `design-review-changed`        | `design-review-dark-scheme` |
+| Light state                    | Dark-selected state            |
+| ------------------------------ | ------------------------------ |
+| `design-browse-screen`         | `design-browse-dark-scheme`    |
+| `design-browse-details-screen` | `design-browse-light-only`     |
+| `design-review-changed`        | `design-review-dark-scheme`    |
+| `design-appearance-light`      | `design-appearance-light-dark` |
+| `design-appearance-overview`   | `design-appearance-dark`       |
+| `design-appearance-auto`       | `design-appearance-light-dark` |
+
+The appearance screens carry the same preview theme icon, because the setting
+it changes is the preview's colour scheme, not the interface appearance. The
+dark-interface screens `design-appearance-dark` and
+`design-appearance-light-only` return to `design-appearance-overview`. The
+Appearance selector in the top bar holds its value and is otherwise a
+depiction; it has no authored transitions, so no artboard changes the interface
+appearance by following a link. Appearance comparison controls map Side by side
+to `design-appearance-side-by-side` and Difference to
+`design-appearance-difference`, with Current returning to
+`design-appearance-overview`; Overlay stays a depiction. Their All filter opens
+`design-appearance-overview` and Changes opens
+`design-appearance-side-by-side`.
 
 The Welcome light comparison controls map Side by side to
 `design-review-changed`, Overlay to `design-changes-overlay`, and Difference

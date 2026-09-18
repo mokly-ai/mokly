@@ -6,6 +6,7 @@ import { BrandIcon, SearchIcon, TagIcon } from "../../parts/icons.js";
 import { tagPicker } from "../controls/tag-picker.js";
 import { useDesignStyle } from "../style_context.js";
 
+import { appearanceSelector } from "./appearance-selector.js";
 import type { TopBarProps } from "./top-bar.js";
 
 export function TopBarView({
@@ -15,6 +16,7 @@ export function TopBarView({
   menuPresentation,
   tags,
   activeTag,
+  appearance,
   pickerOpen,
   brandDestination,
   menuDestination,
@@ -76,6 +78,12 @@ export function TopBarView({
           />
         ) : null}
       </div>
+      {appearance === undefined ? null : (
+        <appearanceSelector.Component
+          value={appearance}
+          compact={viewport === "mobile"}
+        />
+      )}
     </header>
   );
 }

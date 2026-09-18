@@ -13,7 +13,7 @@ test("every owning artboard records its shared chrome and real component consume
   const screens = manifest.entries.flatMap((entry) =>
     entry.kind === "screen" && entry.route.startsWith("design/") ? [entry] : [],
   );
-  assert.equal(screens.length, 68);
+  assert.equal(screens.length, 84);
   for (const entry of screens) {
     assert.ok(entry.componentViews);
     for (const view of entry.componentViews) {
@@ -28,6 +28,8 @@ test("every owning artboard records its shared chrome and real component consume
           "design-browse-home",
           "design-browse-navigation",
           "design-browse-missing-route",
+          "design-appearance-home",
+          "design-appearance-drawer",
         ]).has(entry.id)
       )
         assert.ok(ids.has("design-ui-screen-header"), entry.id);

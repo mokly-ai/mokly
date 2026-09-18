@@ -1,22 +1,90 @@
-/* Mokly shell design language for the design mockups: tokens, the top
-   bar, the catalogue navigation, the screen head band, and shared controls. */
+/* Mokly shell design language for the design mockups: the semantic interface
+   palette, the top bar, the catalogue navigation, the screen head band, and
+   shared controls. Every interface role below has a Light and a Dark value, so
+   an artboard changes appearance by selecting a palette rather than by adding
+   an override sheet. Device-screen colors are preview tokens and live in
+   design-stage.css, independent of the interface appearance. */
 
 :root {
   --chrome-bg: #f4f4f1;
   --chrome-surface: #ffffff;
+  --chrome-raised: #fbfbfa;
+  --chrome-hover: #f4f6f3;
   --chrome-ink: #1a1d1c;
   --chrome-ink-2: #4a4f4d;
-  --chrome-muted: #7d8480;
+  --chrome-muted: #676e6a;
   --chrome-border: #e3e5e0;
   --chrome-border-strong: #c8ccc4;
+  --chrome-control-edge: #868e88;
   --chrome-accent: #2a4733;
   --chrome-shadow: 0 30px 90px rgba(20, 28, 22, 0.14);
+  --chrome-shadow-soft: 0 1px 2px rgba(20, 28, 22, 0.1);
+  --chrome-shadow-press: inset 0 1px 2px rgba(20, 28, 22, 0.14);
+  --chrome-shadow-drawer: 0 18px 50px rgba(20, 28, 22, 0.3);
+  --chrome-shadow-sheet: 0 6px 28px rgba(36, 55, 43, 0.15);
+  --chrome-scrim: rgba(20, 28, 22, 0.45);
+  --chrome-count-bg: rgba(20, 28, 22, 0.08);
   --mbk-sage: #4f7864;
   --mbk-sage-deep: #2f5945;
+  --mbk-accent-contrast: #ffffff;
+  --mbk-accent-soft: rgba(79, 120, 100, 0.1);
+  --mbk-accent-surface: #edf3ef;
+  --mbk-accent-edge: #b9cfc2;
+  --mbk-guide: #dbded8;
+  --mbk-dot: rgba(20, 28, 22, 0.05);
+  --mbk-danger-ink: #964334;
+  --mbk-status-changed-bg: #fff7e6;
+  --mbk-status-changed-edge: #ead6ac;
+  --mbk-status-changed-ink: #805d1d;
+  --mbk-status-removed-bg: #fcefee;
+  --mbk-status-removed-edge: #ecc5c1;
+  --mbk-status-removed-ink: #9b433c;
+  --mbk-browser-bar: #ecede9;
   --sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
   --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   color-scheme: light;
+}
+
+/* An artboard states its own appearance, so a generated design page reads the
+   same whatever appearance the surrounding browser is using. */
+:root:has([data-mbk-appearance="dark"]),
+[data-mbk-appearance="dark"] {
+  --chrome-bg: #141816;
+  --chrome-surface: #1e2421;
+  --chrome-raised: #191e1b;
+  --chrome-hover: #28302c;
+  --chrome-ink: #eef1ef;
+  --chrome-ink-2: #c3ccc7;
+  --chrome-muted: #98a29c;
+  --chrome-border: #313a35;
+  --chrome-border-strong: #4b5650;
+  --chrome-control-edge: #6f7a74;
+  --chrome-accent: #a5cdb6;
+  --chrome-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
+  --chrome-shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --chrome-shadow-press: inset 0 1px 2px rgba(0, 0, 0, 0.55);
+  --chrome-shadow-drawer: 0 18px 50px rgba(0, 0, 0, 0.6);
+  --chrome-shadow-sheet: 0 6px 28px rgba(0, 0, 0, 0.55);
+  --chrome-scrim: rgba(0, 0, 0, 0.55);
+  --chrome-count-bg: rgba(238, 241, 239, 0.1);
+  --mbk-sage: #86b79b;
+  --mbk-sage-deep: #b6d8c4;
+  --mbk-accent-contrast: #0e1a14;
+  --mbk-accent-soft: rgba(134, 183, 155, 0.16);
+  --mbk-accent-surface: #24312a;
+  --mbk-accent-edge: #3c5648;
+  --mbk-guide: #2b342f;
+  --mbk-dot: rgba(238, 241, 239, 0.07);
+  --mbk-danger-ink: #f1a99c;
+  --mbk-status-changed-bg: #332a15;
+  --mbk-status-changed-edge: #5d4d24;
+  --mbk-status-changed-ink: #e6c179;
+  --mbk-status-removed-bg: #331f1d;
+  --mbk-status-removed-edge: #5e3b37;
+  --mbk-status-removed-ink: #f1a99c;
+  --mbk-browser-bar: #262d29;
+  color-scheme: dark;
 }
 
 *,
@@ -90,8 +158,15 @@ body {
 
 .mbk-mode.active {
   background: var(--chrome-surface);
-  box-shadow: 0 1px 2px rgba(20, 28, 22, 0.08);
+  box-shadow: var(--chrome-shadow-soft);
   color: var(--chrome-ink);
+}
+
+/* The compact appearance selector shares the narrow bar with the menu, brand
+   and search, so the bar tightens its gaps rather than squeezing the query. */
+.mbk-topbar:has(.mbk-appearance[data-compact]) {
+  gap: 10px;
+  padding: 0 12px;
 }
 
 /* ---- Body split ------------------------------------------------------- */
@@ -125,7 +200,7 @@ body {
 }
 
 .mbk-nav-resize::after {
-  background: var(--chrome-border-strong);
+  background: var(--chrome-control-edge);
   border-radius: 999px;
   content: "";
   height: 32px;
@@ -156,6 +231,6 @@ body {
 
 .mbk-seg > :is(span, a).active {
   background: var(--chrome-surface);
-  box-shadow: 0 1px 2px rgba(20, 28, 22, 0.1);
+  box-shadow: var(--chrome-shadow-soft);
   color: var(--chrome-ink);
 }

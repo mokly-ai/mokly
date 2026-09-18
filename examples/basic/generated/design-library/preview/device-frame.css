@@ -57,7 +57,7 @@ background: #0b0d0c;
 }
 
 .phone-screen {
-background: #ffffff;
+background: var(--mbk-screen-bg);
   border-radius: 36px;
   display: flex;
   flex-direction: column;
@@ -68,7 +68,7 @@ background: #ffffff;
 
 .phone-status {
 align-items: flex-start;
-  color: var(--chrome-ink);
+  color: var(--mbk-screen-ink);
   display: flex;
   flex: 0 0 44px;
   font-feature-settings: "tnum";
@@ -152,7 +152,7 @@ background: var(--chrome-surface);
 
 .browser-bar {
 align-items: center;
-  background: #ecede9;
+  background: var(--mbk-browser-bar);
   border-bottom: 1px solid var(--chrome-border);
   display: flex;
   gap: 12px;
@@ -228,15 +228,24 @@ align-items: center;
 }
 
 .browser-viewport {
-background: var(--chrome-surface);
+background: var(--mbk-screen-bg);
+  color: var(--mbk-screen-ink);
   height: calc(100% - 40px);
   overflow: hidden;
 }
 
+/* A preview keeps its own scheme: light screens stay light inside a dark
+   interface, and dark screens stay dark inside a light one. */
 .phone-screen.mbk-screen-dark,
 .browser-viewport.mbk-screen-dark {
 background: var(--mbk-dark-screen-bg);
   color: var(--mbk-dark-screen-ink);
+  color-scheme: dark;
+}
+
+.phone-screen:not(.mbk-screen-dark),
+.browser-viewport:not(.mbk-screen-dark) {
+color-scheme: light;
 }
 
 .phone-screen.mbk-screen-dark {

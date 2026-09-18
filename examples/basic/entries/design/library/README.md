@@ -1,9 +1,15 @@
 # Shared Design Components
 
-These fifteen registered components render both Mokly's design artboards and
+These sixteen registered components render both Mokly's design artboards and
 the independent pages under **Components → Design → Shared components**. The
 footer tabs panel is `inspector/inspector`. This is the consumer's mockup
 library; the actual Mokly browser shell remains in the package source.
+
+`chrome/appearance-selector` is the standalone catalogue's Auto/Light/Dark
+interface setting. The top bar composes it when a screen supplies an
+`appearance` value and omits it otherwise, so existing artboards are unchanged.
+It is the interface setting, not the preview colour scheme the screen header's
+theme control selects.
 
 Catalogue navigation saves each Changes availability state: **Checking for
 changes**, **Preparing comparison** and **Changes unavailable**, in both
@@ -99,7 +105,8 @@ saved variants and local edit/unset/reset behavior in Serve, plus read-only
 inspection after export. Keep the generated HTML and manifest as ignored local
 artifacts; commit their authored source instead.
 
-The tests retain the original 56 screen ids/routes, assert real consumers and
+The tests retain the original 56 screen ids/routes from before the shared
+library existed, assert real consumers and
 owner chains, guard migrated composition points, and edit actual source files in
 isolated copies. They distinguish implementation changes, saved metadata changes,
 screen inputs/slots/order, exclusive CSS and conservative global dependencies.

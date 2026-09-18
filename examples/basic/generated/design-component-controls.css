@@ -39,46 +39,6 @@
   cursor: default;
   text-decoration: none;
 }
-.ce-control-row input:not([type="checkbox"]),
-.ce-control-row select {
-  background: white;
-  border: 1px solid #cbd2cc;
-  border-radius: 5px;
-  color: var(--chrome-ink);
-  font: inherit;
-  font-size: 12px;
-  height: 32px;
-  max-width: 100%;
-  padding: 5px 8px;
-  width: 100%;
-}
-.ce-control-row input[type="checkbox"] {
-  accent-color: var(--mbk-sage-deep);
-  height: 16px;
-  margin: 0;
-  width: 16px;
-}
-.ce-control-row .ce-check-value {
-  align-items: center;
-  display: flex;
-  font: inherit;
-  font-size: 11px;
-  gap: 8px;
-  min-height: 32px;
-  padding: 0;
-}
-.ce-control-row input[aria-invalid="true"] {
-  border-color: #b55646;
-}
-.ce-optional-control .ce-unset-value {
-  color: var(--chrome-muted);
-  font-size: 11px;
-  margin: 3px 0 0;
-}
-.ce-optional-control:has(input[type="checkbox"]:checked) .ce-unset-value,
-.ce-optional-control:has(input[type="checkbox"]:not(:checked)) .ce-hint-value {
-  display: none;
-}
 .ce-controls-notice {
   background: #f4f6f3;
   border-radius: 6px;

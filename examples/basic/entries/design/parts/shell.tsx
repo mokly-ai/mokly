@@ -5,6 +5,11 @@ import { screenHeader } from "../library/chrome/screen-header.js";
 import { optional, useDesignInstance } from "../library/composition.js";
 import { viewControls } from "../library/controls/view-controls.js";
 
+import {
+  DesignAppearanceScope,
+  type AppearanceChoice,
+  type DesignAppearance,
+} from "./appearance.js";
 import { DesignNavigation, useDesignNavigation } from "./design_navigation.js";
 import { DESTINATIONS, type DesignDestination } from "./destinations.js";
 import { TopBar } from "./top_bar.js";
@@ -14,6 +19,10 @@ export type ArtboardViewport = "desktop" | "mobile";
 
 interface ShellProps {
   design: DesignDestination;
+  /** Interface appearance this artboard draws; Light unless stated otherwise. */
+  appearance?: DesignAppearance;
+  /** Shows the standalone Appearance selector holding this setting. */
+  appearanceChoice?: AppearanceChoice | undefined;
   searchPlaceholder?: string | undefined;
   activeTag?: string | undefined;
   aside?: ReactNode;
@@ -28,6 +37,8 @@ interface ShellProps {
 /** The Mokly shell scaffold for one design mockup. */
 export function Shell({
   activeTag,
+  appearance = "light",
+  appearanceChoice,
   aside,
   children,
   design,
@@ -38,46 +49,37 @@ export function Shell({
   tagPickerOpen,
   viewport,
 }: ShellProps) {
-  if (viewport === "desktop") {
-    return (
-      <DesignNavigation design={design}>
-        <div className="ce-design">
+  const bar = (
+    <TopBar
+      menuPresentation={menuPresentation}
+      searchPlaceholder={searchPlaceholder}
+      drawerOpen={design === DESTINATIONS.navigation}
+      activeTag={activeTag}
+      appearanceChoice={appearanceChoice}
+      searchValue={searchValue}
+      tagPickerOpen={tagPickerOpen}
+      viewport={viewport}
+    />
+  );
+  return (
+    <DesignNavigation design={design}>
+      <DesignAppearanceScope appearance={appearance}>
+        {viewport === "desktop" ? (
           <div className="mbk-shell mbk-shell--desktop">
-            <TopBar
-              menuPresentation={menuPresentation}
-              searchPlaceholder={searchPlaceholder}
-              drawerOpen={design === DESTINATIONS.navigation}
-              activeTag={activeTag}
-              searchValue={searchValue}
-              tagPickerOpen={tagPickerOpen}
-              viewport={viewport}
-            />
+            {bar}
             <div className="mbk-body">
               {nav}
               <main className="mbk-main">{children}</main>
             </div>
           </div>
-        </div>
-      </DesignNavigation>
-    );
-  }
-  return (
-    <DesignNavigation design={design}>
-      <div className="ce-design">
-        <div className="mbk-shell mbk-shell--mobile">
-          <TopBar
-            menuPresentation={menuPresentation}
-            searchPlaceholder={searchPlaceholder}
-            drawerOpen={design === DESTINATIONS.navigation}
-            activeTag={activeTag}
-            searchValue={searchValue}
-            tagPickerOpen={tagPickerOpen}
-            viewport={viewport}
-          />
-          <main className="mbk-main">{children}</main>
-          {aside}
-        </div>
-      </div>
+        ) : (
+          <div className="mbk-shell mbk-shell--mobile">
+            {bar}
+            <main className="mbk-main">{children}</main>
+            {aside}
+          </div>
+        )}
+      </DesignAppearanceScope>
     </DesignNavigation>
   );
 }

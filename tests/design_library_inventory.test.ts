@@ -38,12 +38,12 @@ test("the shared library preserves every existing design screen and viewport rou
   }
 });
 
-test("all fifteen shared components have connected pages, controls and saved examples", async () => {
+test("all sixteen shared components have connected pages, controls and saved examples", async () => {
   const { manifest, outputs } = await designCatalogue;
   const components = manifest.entries.filter(
     (entry) => entry.kind === "component" && entry.id.startsWith("design-ui-"),
   );
-  assert.equal(components.length, 15);
+  assert.equal(components.length, 16);
   const root = manifest.entries.find((entry) => entry.id === "design-root");
   assert.ok(root?.kind === "collection");
   assert.ok(root.childIds.includes("design-library"));

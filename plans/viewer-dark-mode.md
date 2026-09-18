@@ -1,6 +1,7 @@
 # Viewer Dark Mode
 
-Status: planned; documentation milestone complete, implementation not started.
+Status: in progress; documentation and mockup milestones complete, runtime
+implementation not started.
 The implementation PR's merge is this plan's completion boundary.
 
 Give `@mokly/viewer`, local Serve and static exports a complete Auto/Light/Dark
@@ -39,6 +40,9 @@ defines the target; [viewer ownership](../docs/protocol/mokly-viewer.md) and
   and `src/export/site.ts` own standalone startup and asset delivery.
 - `examples/basic/entries/design/` owns mockups, including registered shared
   components; the cloud site's Astro shell is not the viewer implementation.
+  The approved mockup palette and its Light corrections are recorded in
+  [the semantic palette](../docs/protocol/mokly-viewer-palette.md); the shell's
+  own `css_tokens.ts` still ships the uncorrected Light values.
 
 ## Execution Rules
 
@@ -74,32 +78,44 @@ Record the behavior before changing the product or its mockups.
       README without claiming that dark appearance is already implemented.
 - [x] Add this plan to the active index and record remaining work below.
 
-## Milestone 2: Design the complete appearance states
+## Milestone 2: Design the complete appearance states (complete)
 
 Tags: mockup
 
 Deliver deterministic mobile and desktop mockups for the full target before
 changing runtime UI. Existing examples remain usable throughout.
 
-- [ ] Audit the registered components in
+- [x] Audit the registered components in
       `examples/basic/entries/design/library` and shared shell/workspace helpers.
       Add explicit appearance context and reusable selector composition there.
-- [ ] Record Light/Dark semantic swatches and status/control pairs in the
+- [x] Record Light/Dark semantic swatches and status/control pairs in the
       appearance contract, with contrast calculations; document any necessary
       Light contrast corrections. Keep device-screen tokens independent.
-- [ ] Add the Appearance overview and the States, Workspaces and Status pages
+- [x] Add the Appearance overview and the States, Workspaces and Status pages
       specified in the contract, each with matching source directories, at most
       five owning screens, and distinct mobile/desktop screen components.
-- [ ] Reuse existing screen and registered component implementations, retain
+- [x] Reuse existing screen and registered component implementations, retain
       existing scheme destinations, and link new screens from Browse and the
       relevant inspector/comparison contexts. Flows reuse owning screens only.
-- [ ] Update design inventories, configured stylesheet ownership, destinations,
+- [x] Update design inventories, configured stylesheet ownership, destinations,
       relevant design protocols, `examples/basic/README.md` and library guidance.
       Clarify Appearance versus Preview color scheme in all affected copy.
-- [ ] Run `npm run build`, `npm run example:build`, `npm run example:check`
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`
       and relevant design/library tests. Visually smoke changed pages using
       `npm run dev`, in both viewport variants. Keep matching generated output
       tracked and include it in the final commit; never hand-edit generated HTML.
+
+Delivered: `examples/basic/entries/design/browse/appearance/` adds sixteen
+screens across the overview and the States, Workspaces and Status groups, each
+with its own mobile and desktop component. `parts/appearance.tsx` gives every
+artboard an explicit appearance, and `library/chrome/appearance-selector` is a
+new registered component the top bar composes when a screen supplies the
+setting. `design.css` now carries one semantic palette with a Dark counterpart
+for every role, `design-stage.css` carries independent preview tokens, and
+`docs/protocol/mokly-viewer-palette.md` records the swatches, the computed
+contrast and the three Light corrections, guarded by
+`tests/design_appearance.test.ts`. The prop field's native input styling moved
+into its own stylesheet so the component renders correctly in any host.
 
 ## Milestone 3: Implement shared viewer appearance
 
@@ -118,7 +134,9 @@ manual preference controls are connected after the asset-delivery milestone.
       helper. Guard it to opted-in standalone documents; restore on the root
       before paint, then bind opted-in Appearance controls when the DOM is ready.
       Do not reference an undelivered asset from production markup.
-- [ ] Implement one package-owned semantic palette and replace theme-dependent
+- [ ] Implement one package-owned semantic palette from
+      [the recorded swatches](../docs/protocol/mokly-viewer-palette.md),
+      including its three Light corrections, and replace theme-dependent
       literals in shell CSS, embedded extensions and viewer-owned overlays.
       Add a focused color-literal rule and token-pair contrast tests to prevent
       the same class of missing-theme styles from recurring.

@@ -21,6 +21,8 @@ const changedDesigns = new Set([
   "design-review-style-unresolved",
   "design-review-style-unnamed",
   "design-publication-changes",
+  "design-appearance-side-by-side",
+  "design-appearance-difference",
 ]);
 
 for (const viewport of ["desktop", "mobile"] as const) {
@@ -55,10 +57,19 @@ for (const viewport of ["desktop", "mobile"] as const) {
           entry.id,
         ).toHaveCount(0);
       } else {
-        await expect(toolbar, entry.id).toHaveCSS(
-          "background-color",
-          "rgb(255, 255, 255)",
-        );
+        // The band stays opaque in whichever appearance the artboard draws.
+        const surface = await page.evaluate(() => {
+          const root =
+            document.querySelector("[data-mbk-appearance]") ??
+            document.documentElement;
+          const probe = document.createElement("span");
+          probe.style.backgroundColor = "var(--chrome-surface)";
+          root.append(probe);
+          const value = getComputedStyle(probe).backgroundColor;
+          probe.remove();
+          return value;
+        });
+        await expect(toolbar, entry.id).toHaveCSS("background-color", surface);
         await expect(toolbar, entry.id).toHaveCSS("display", "flex");
         const bounds = (await toolbar.boundingBox())!;
         for (const control of await toolbar.locator(".mbk-seg").all()) {

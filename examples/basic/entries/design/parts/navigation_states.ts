@@ -37,6 +37,15 @@ const welcomeBrowse: NavigationState = {
   ...welcomeFilters,
   tags: { active: null, picker: false },
 };
+const appearanceFilters = {
+  all: D.appearance,
+  changes: D.appearanceSideBySide,
+};
+const appearanceModes = {
+  current: D.appearance,
+  "side-by-side": D.appearanceSideBySide,
+  difference: D.appearanceDifference,
+};
 
 /** Canonical states for the entire design registry, never inferred from labels. */
 export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
@@ -77,6 +86,53 @@ export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
     scheme: "dark",
     schemeLinks: { light: D.details },
   },
+  [D.appearance]: {
+    ...appearanceFilters,
+    comparison: appearanceModes,
+    schemeLinks: { dark: D.appearanceDark },
+  },
+  [D.appearanceLight]: {
+    ...appearanceFilters,
+    schemeLinks: { dark: D.appearanceLightDark },
+  },
+  [D.appearanceLightDark]: {
+    ...appearanceFilters,
+    scheme: "dark",
+    schemeLinks: { light: D.appearanceLight },
+  },
+  [D.appearanceDark]: {
+    ...appearanceFilters,
+    scheme: "dark",
+    schemeLinks: { light: D.appearance },
+  },
+  [D.appearanceLightOnly]: {
+    ...appearanceFilters,
+    scheme: "dark",
+    schemeLinks: { light: D.appearance },
+  },
+  [D.appearanceAuto]: {
+    ...appearanceFilters,
+    schemeLinks: { dark: D.appearanceLightDark },
+  },
+  [D.appearanceProps]: { ...appearanceFilters },
+  [D.appearanceInstance]: { ...appearanceFilters },
+  [D.appearanceDrawer]: {
+    ...appearanceFilters,
+    drawer: { open: true, to: D.appearance },
+  },
+  [D.appearanceSideBySide]: {
+    ...appearanceFilters,
+    comparison: appearanceModes,
+  },
+  [D.appearanceDifference]: {
+    ...appearanceFilters,
+    comparison: appearanceModes,
+  },
+  [D.appearanceHome]: { all: D.appearance },
+  [D.appearanceLoading]: { all: D.appearance },
+  [D.appearanceError]: { all: D.appearance },
+  [D.appearanceUnavailable]: { all: D.appearance },
+  [D.appearanceFlow]: { all: D.appearance },
   [D.tagPicker]: {
     ...welcomeBrowse,
     tags: { active: null, picker: true },

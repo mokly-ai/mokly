@@ -24,7 +24,7 @@ align-items: center;
 .mbk-mark {
 background: var(--mbk-sage);
   border-radius: 6px;
-  color: #fff;
+  color: var(--mbk-accent-contrast);
   display: inline-grid;
   flex-shrink: 0;
   height: 24px;
@@ -55,8 +55,11 @@ align-items: center;
   gap: 8px;
   height: 30px;
   max-width: 440px;
+  min-width: 0;
+  overflow: hidden;
   padding: 0 12px;
   position: relative;
+  white-space: nowrap;
 }
 
 .mbk-search > svg {

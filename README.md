@@ -995,10 +995,17 @@ divider line and shares the navigation separator's affordance, rotated: the same
 rounded short line that turns accent-colored with a soft halo on hover, focus,
 and drag.
 
-All 68 design screens reuse the 15 registered components in
+All 84 design screens reuse the 16 registered components in
 **Components → Design → Shared components**, including the footer tabs panel. The library
-provides 56 saved variants, local prop controls, real usage and component-owned
+provides 63 saved variants, local prop controls, real usage and component-owned
 change attribution. See the [shared design library guide](./examples/basic/entries/design/library/README.md).
+
+**Browse shell → Appearance** designs the planned Auto/Light/Dark interface
+appearance around previews, which stays independent of each preview's own
+colour scheme. Its swatches and contrast live in the
+[semantic palette](./docs/protocol/mokly-viewer-palette.md) and its behavior in
+the [appearance contract](./docs/protocol/mokly-viewer-appearance.md); the
+shipped viewer is still light-only around previews.
 
 The design mockups use `MockLink` for supported navigation and state transitions;
 the two example buttons demonstrate `MockLink asChild`. See the

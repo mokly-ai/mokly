@@ -20,8 +20,10 @@ implemented. The separate [component explorer designs](./mokly-component-design.
 are target mockups delivered before their runtime implementation.
 
 Independent Auto/Light/Dark interface appearance is a
-[planned extension](./mokly-viewer-appearance.md). The Light-only shell tokens
-and preview-scheme behavior below describe the current implementation.
+[planned extension](./mokly-viewer-appearance.md), designed in the
+`design/browse/appearance/` mockups and specified by the
+[semantic palette](./mokly-viewer-palette.md). The Light-only shell tokens and
+preview-scheme behavior below describe the current implementation.
 
 The page and publication designs are now recorded in the example catalogue.
 Their runtime implementation is tracked in the linked plans. Whole documents
@@ -41,44 +43,60 @@ inventory when design entries change and verify exact id/route agreement with
 that local derived manifest. Planned destinations stay in their feature
 contract until their standalone screens are implemented.
 
-| Entry id                              | Route                                              | State                                                     |
-| ------------------------------------- | -------------------------------------------------- | --------------------------------------------------------- |
-| `design-browse-home`                  | `design/browse/views/home.html`                    | Catalogue home with navigation tree                       |
-| `design-browse-screen`                | `design/browse/views/screen.html`                  | Selected screen with framed fragments                     |
-| `design-browse-details-screen`        | `design/browse/views/details-screen.html`          | Normal Details screen, light selected                     |
-| `design-browse-use-case`              | `design/browse/views/use-case.html`                | Selected use case with ordered steps                      |
-| `design-browse-details`               | `design/browse/states/details.html`                | Expanded details inspector                                |
-| `design-browse-missing-route`         | `design/browse/states/missing-route.html`          | Not-found view with navigation                            |
-| `design-browse-navigation`            | `design/browse/states/navigation.html`             | Collapsed navigation drawer                               |
-| `design-browse-tag-filter`            | `design/browse/states/tag-filter.html`             | Tag picker over a filtered tree                           |
-| `design-browse-tag-picker`            | `design/browse/states/tags/picker.html`            | Empty query, tag picker open                              |
-| `design-browse-tag-forms`             | `design/browse/states/tags/forms.html`             | Forms filter, picker closed                               |
-| `design-browse-tag-onboarding`        | `design/browse/states/tags/onboarding.html`        | Onboarding filter, picker closed                          |
-| `design-browse-tag-onboarding-picker` | `design/browse/states/tags/onboarding-picker.html` | Onboarding filter, picker open                            |
-| `design-browse-dark-scheme`           | `design/browse/states/dark-scheme.html`            | Dark selected, dark device screens                        |
-| `design-browse-light-only`            | `design/browse/states/light-only.html`             | Light-only screen under dark                              |
-| `design-changes-current`              | `design/review/controls/current.html`              | Current screen in Changes                                 |
-| `design-changes-overlay`              | `design/review/controls/overlay.html`              | On-demand overlay comparison                              |
-| `design-review-changed`               | `design/review/outcomes/changed.html`              | Changed screen, side-by-side compare                      |
-| `design-review-added`                 | `design/review/outcomes/added.html`                | Added screen current preview without comparison controls  |
-| `design-review-removed`               | `design/review/outcomes/removed.html`              | Removed badge and current empty state without comparisons |
-| `design-review-difference`            | `design/review/outcomes/difference.html`           | Blend-mode difference comparison                          |
-| `design-review-dark-scheme`           | `design/review/outcomes/dark-scheme.html`          | Dark view compared side by side                           |
-| `design-review-shared-impact`         | `design/review/impact/shared-impact.html`          | Unchanged screen from All with evidence                   |
-| `design-review-ignored-only`          | `design/review/impact/ignored-only.html`           | Ignored-only Current view with evidence                   |
-| `design-review-empty`                 | `design/review/impact/empty.html`                  | Empty Changes filter retaining Current                    |
-| `design-review-style-matched`         | `design/review/impact/stylesheets/matched.html`    | Changed styles that apply to the screen                   |
-| `design-review-style-unresolved`      | `design/review/impact/stylesheets/unresolved.html` | A style change that can reach anything on the screen      |
-| `design-review-style-unnamed`         | `design/review/impact/stylesheets/unnamed.html`    | The same reach with no style name to list                 |
-| `design-review-style-excluded`        | `design/review/impact/stylesheets/excluded.html`   | Changed stylesheet examined and excluded                  |
-| `design-review-preparing`             | `design/review/availability/preparing.html`        | Changes selected while the comparison is prepared         |
-| `design-review-unavailable`           | `design/review/availability/unavailable.html`      | Changes selected after the comparison could not be made   |
-| `design-page-view`                    | `design/browse/pages/view.html`                    | Complete document in its declared collection              |
-| `design-page-details`                 | `design/browse/pages/details.html`                 | Document metadata and close action                        |
-| `design-page-navigation`              | `design/browse/pages/navigation.html`              | Document with its narrow drawer open                      |
-| `design-page-removed`                 | `design/browse/pages/removed.html`                 | Removed document with baseline ancestry                   |
-| `design-publication-catalogue`        | `design/browse/publication/catalogue.html`         | Current catalogue with review omitted                     |
-| `design-publication-changes`          | `design/browse/publication/changes.html`           | Catalogue with optional comparisons                       |
+| Entry id                              | Route                                                   | State                                                     |
+| ------------------------------------- | ------------------------------------------------------- | --------------------------------------------------------- |
+| `design-browse-home`                  | `design/browse/views/home.html`                         | Catalogue home with navigation tree                       |
+| `design-browse-screen`                | `design/browse/views/screen.html`                       | Selected screen with framed fragments                     |
+| `design-browse-details-screen`        | `design/browse/views/details-screen.html`               | Normal Details screen, light selected                     |
+| `design-browse-use-case`              | `design/browse/views/use-case.html`                     | Selected use case with ordered steps                      |
+| `design-browse-details`               | `design/browse/states/details.html`                     | Expanded details inspector                                |
+| `design-browse-missing-route`         | `design/browse/states/missing-route.html`               | Not-found view with navigation                            |
+| `design-browse-navigation`            | `design/browse/states/navigation.html`                  | Collapsed navigation drawer                               |
+| `design-browse-tag-filter`            | `design/browse/states/tag-filter.html`                  | Tag picker over a filtered tree                           |
+| `design-browse-tag-picker`            | `design/browse/states/tags/picker.html`                 | Empty query, tag picker open                              |
+| `design-browse-tag-forms`             | `design/browse/states/tags/forms.html`                  | Forms filter, picker closed                               |
+| `design-browse-tag-onboarding`        | `design/browse/states/tags/onboarding.html`             | Onboarding filter, picker closed                          |
+| `design-browse-tag-onboarding-picker` | `design/browse/states/tags/onboarding-picker.html`      | Onboarding filter, picker open                            |
+| `design-browse-dark-scheme`           | `design/browse/states/dark-scheme.html`                 | Dark selected, dark device screens                        |
+| `design-browse-light-only`            | `design/browse/states/light-only.html`                  | Light-only screen under dark                              |
+| `design-changes-current`              | `design/review/controls/current.html`                   | Current screen in Changes                                 |
+| `design-changes-overlay`              | `design/review/controls/overlay.html`                   | On-demand overlay comparison                              |
+| `design-review-changed`               | `design/review/outcomes/changed.html`                   | Changed screen, side-by-side compare                      |
+| `design-review-added`                 | `design/review/outcomes/added.html`                     | Added screen current preview without comparison controls  |
+| `design-review-removed`               | `design/review/outcomes/removed.html`                   | Removed badge and current empty state without comparisons |
+| `design-review-difference`            | `design/review/outcomes/difference.html`                | Blend-mode difference comparison                          |
+| `design-review-dark-scheme`           | `design/review/outcomes/dark-scheme.html`               | Dark view compared side by side                           |
+| `design-review-shared-impact`         | `design/review/impact/shared-impact.html`               | Unchanged screen from All with evidence                   |
+| `design-review-ignored-only`          | `design/review/impact/ignored-only.html`                | Ignored-only Current view with evidence                   |
+| `design-review-empty`                 | `design/review/impact/empty.html`                       | Empty Changes filter retaining Current                    |
+| `design-review-style-matched`         | `design/review/impact/stylesheets/matched.html`         | Changed styles that apply to the screen                   |
+| `design-review-style-unresolved`      | `design/review/impact/stylesheets/unresolved.html`      | A style change that can reach anything on the screen      |
+| `design-review-style-unnamed`         | `design/review/impact/stylesheets/unnamed.html`         | The same reach with no style name to list                 |
+| `design-review-style-excluded`        | `design/review/impact/stylesheets/excluded.html`        | Changed stylesheet examined and excluded                  |
+| `design-review-preparing`             | `design/review/availability/preparing.html`             | Changes selected while the comparison is prepared         |
+| `design-review-unavailable`           | `design/review/availability/unavailable.html`           | Changes selected after the comparison could not be made   |
+| `design-page-view`                    | `design/browse/pages/view.html`                         | Complete document in its declared collection              |
+| `design-page-details`                 | `design/browse/pages/details.html`                      | Document metadata and close action                        |
+| `design-page-navigation`              | `design/browse/pages/navigation.html`                   | Document with its narrow drawer open                      |
+| `design-page-removed`                 | `design/browse/pages/removed.html`                      | Removed document with baseline ancestry                   |
+| `design-publication-catalogue`        | `design/browse/publication/catalogue.html`              | Current catalogue with review omitted                     |
+| `design-publication-changes`          | `design/browse/publication/changes.html`                | Catalogue with optional comparisons                       |
+| `design-appearance-overview`          | `design/browse/appearance/overview.html`                | Dark interface holding a light preview                    |
+| `design-appearance-light`             | `design/browse/appearance/states/light.html`            | Light interface, light preview                            |
+| `design-appearance-light-dark`        | `design/browse/appearance/states/light-dark.html`       | Light interface, dark preview                             |
+| `design-appearance-dark`              | `design/browse/appearance/states/dark.html`             | Dark interface, dark preview                              |
+| `design-appearance-light-only`        | `design/browse/appearance/states/light-only.html`       | Light-only screen inside the dark interface               |
+| `design-appearance-auto`              | `design/browse/appearance/states/auto.html`             | Appearance left on Auto                                   |
+| `design-appearance-props`             | `design/browse/appearance/workspaces/props.html`        | Props panel with a rejected value                         |
+| `design-appearance-instance`          | `design/browse/appearance/workspaces/instance.html`     | Selected component instance panel                         |
+| `design-appearance-drawer`            | `design/browse/appearance/workspaces/drawer.html`       | Catalogue drawer over the dark interface                  |
+| `design-appearance-side-by-side`      | `design/browse/appearance/workspaces/side-by-side.html` | Side-by-side comparison in the dark interface             |
+| `design-appearance-difference`        | `design/browse/appearance/workspaces/difference.html`   | Difference comparison in the dark interface               |
+| `design-appearance-home`              | `design/browse/appearance/status/home.html`             | Home guidance with nothing selected                       |
+| `design-appearance-loading`           | `design/browse/appearance/status/loading.html`          | Catalogue checking for changes                            |
+| `design-appearance-error`             | `design/browse/appearance/status/error.html`            | A screen that could not be shown, with another attempt    |
+| `design-appearance-unavailable`       | `design/browse/appearance/status/unavailable.html`      | Changes unavailable in the dark interface                 |
+| `design-appearance-flow`              | `design/browse/appearance/status/flow.html`             | Use-case steps in the dark interface                      |
 
 Additional owning groups keep each new page at no more than five screens:
 
@@ -100,6 +118,12 @@ Additional owning groups keep each new page at no more than five screens:
 - `design/review/availability/preparing.html` and `unavailable.html` specify the
   two Changes states that carry no comparison data yet, keeping the impact group
   to its own three aggregate outcomes.
+- `design/browse/appearance/overview.html` is the canonical appearance screen;
+  the `states/`, `workspaces/` and `status/` groups beneath it own five screens
+  each. They specify the planned Auto/Light/Dark interface appearance from
+  [viewer appearance](./mokly-viewer-appearance.md), which the implemented shell
+  does not offer yet; their preview colour-scheme behavior is the implemented
+  behavior recorded below. Existing light-interface routes keep their ids.
 
 Every screen ships one mobile and one desktop variant. Mockup implementation
 notes live in entry descriptions, rationale, and related docs — never inside
@@ -149,6 +173,14 @@ chrome family is neutral and sage-tinted:
 | `--chrome-border-strong` | `#c8ccc4`                        | Frame and strong borders |
 | `--chrome-accent`        | `#2a4733`                        | Deep-accent prose links  |
 | `--chrome-shadow`        | `0 30px 90px rgba(20,28,22,.14)` | Overlay elevation        |
+
+The appearance mockups already draw two corrected Light values that the shipped
+shell adopts in its runtime milestone: `--chrome-muted` becomes `#676e6a`, and
+control outlines, grips and field borders move to a new `--chrome-control-edge`
+`#868e88` so `--chrome-border-strong` is left to device and pane frames. Both
+are recorded, with their contrast, in the
+[semantic palette](./mokly-viewer-palette.md). Until that milestone the values
+in the table above are what the shell ships.
 
 Typography is **Inter** (a variable font packaged with the shell and served at
 `/__mokly/fonts/InterVariable.woff2` under its SIL OFL license) via

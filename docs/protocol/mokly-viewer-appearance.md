@@ -2,10 +2,12 @@
 
 ## Delivery Status
 
-Planned, not implemented. The [dark-mode plan](../../plans/viewer-dark-mode.md)
+Designed, not implemented. The [dark-mode plan](../../plans/viewer-dark-mode.md)
 tracks this target for `@mokly/viewer`, local Serve and static exports. The
-current [viewer](./mokly-viewer.md) and [shell design](./mokly-shell-design.md)
-remain light-only around previews until that implementation lands.
+mockups under `design/browse/appearance/` and the
+[semantic palette](./mokly-viewer-palette.md) are delivered; the current
+[viewer](./mokly-viewer.md) and [shell design](./mokly-shell-design.md) remain
+light-only around previews until the runtime implementation lands.
 
 ## Two Independent Settings
 
@@ -104,7 +106,10 @@ the startup asset.
 One package-owned semantic palette supplies both `SHELL_CSS` and the scoped
 embedded stylesheet. Use the existing neutral/sage family, with a dark surface
 hierarchy; the cloud marketing site's separate Folio palette is not a runtime
-dependency. Record final swatches with the appearance mockups before UI work.
+dependency. The approved swatches, their recorded contrast and the Light
+corrections they required are the
+[semantic palette](./mokly-viewer-palette.md), already implemented in the
+appearance mockups.
 
 Provide Light and Dark values for these responsibilities:
 
@@ -137,7 +142,7 @@ Support readable default palettes in both modes: normal text at least 4.5:1,
 large text at least 3:1, and required control/state/focus graphics at least 3:1
 against adjacent colors. Decorative hairlines are not control boundaries.
 Existing Light colors may change where a touched semantic role fails these
-criteria; record such changes in the mockups. These targets follow
+criteria; the three such changes are recorded in the palette contract. These targets follow
 [WCAG text contrast](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html)
 and [non-text contrast](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html).
 Consumer overrides retain the existing consumer contrast responsibility.
@@ -181,20 +186,30 @@ examples remain deterministic and independent of the outer viewer's appearance.
 Design artboards may retain their `colorSchemes: ["light"]` generation policy
 while depicting either shell appearance through that explicit context.
 
-Add a linked Appearance section under Browse, with matching source directories:
+A linked Appearance section sits under Browse, with matching source directories
+under `examples/basic/entries/design/browse/appearance/`. Each page's canonical
+route is the group's own collection; its children are the owning screens.
 
-| Page under `design/browse/appearance/` | Owning screens                                                                             |
-| -------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `index.html`                           | Canonical dark interface with light preview; links to children                             |
-| `states/index.html`                    | Light/light, light/dark, dark/dark, light-only fallback, Auto selector                     |
-| `workspaces/index.html`                | Props validation, selected-instance inspector, navigation drawer, Side by side, Difference |
-| `status/index.html`                    | Home/empty, catalogue loading, error/retry, Changes unavailable, use-case flow             |
+| Page                         | Owning screens                                                                             |
+| ---------------------------- | ------------------------------------------------------------------------------------------ |
+| `design/browse/appearance/`  | `overview.html`: the canonical dark interface holding a light preview                      |
+| `.../appearance/states/`     | Light/light, light/dark, dark/dark, light-only fallback, Auto selector                     |
+| `.../appearance/workspaces/` | Props validation, selected-instance inspector, navigation drawer, Side by side, Difference |
+| `.../appearance/status/`     | Home/empty, catalogue loading, error/retry, Changes unavailable, use-case flow             |
 
-Each screen has its own mobile and desktop component. Reuse them in overview
-compositions and any flows, with links to owning pages; do not inline duplicate
+The catalogue hierarchy links the overview to its three child pages; artboards
+carry no navigation footer. Each screen has its own mobile and desktop
+component and reuses the registered shared components, including a registered
+`chrome/appearance-selector` composed into the top bar. Do not inline duplicate
 screen markup. Keep no more than five owning screen definitions per page.
-Existing light-shell/dark-preview destinations stay valid. Update inventories,
-style ownership and example documentation, and keep notes outside the screens.
+Existing light-shell/dark-preview destinations stay valid. The exact ids and
+routes are listed in the [shell design inventory](./mokly-shell-design.md#design-mockups).
+Update inventories, style ownership and example documentation, and keep notes
+outside the screens.
+
+Artboards select their appearance explicitly through a `data-mbk-appearance`
+attribute on the artboard root, so a generated design page never follows the
+appearance of the browser showing it.
 
 ## Required Verification
 

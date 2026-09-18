@@ -30,6 +30,10 @@ const propSchema = {
     menuPresentation: { schema: { kind: "enum", values: ["text", "icon"] } },
     tags: tagRecords,
     activeTag: optionalText,
+    appearance: {
+      schema: { kind: "enum", values: ["auto", "light", "dark"] },
+      optional: true,
+    },
     pickerOpen: flag,
     brandDestination: destination,
     menuDestination: destination,
@@ -58,6 +62,15 @@ export const topBar = defineComponent({
   controls: {
     query: { kind: "text", label: "Query" },
     pickerOpen: { kind: "boolean", label: "Tag picker open" },
+    appearance: {
+      kind: "select",
+      label: "Appearance selector",
+      options: [
+        { label: "auto", value: "auto" },
+        { label: "light", value: "light" },
+        { label: "dark", value: "dark" },
+      ],
+    },
     menu: {
       kind: "select",
       label: "Menu",
@@ -86,6 +99,11 @@ export const topBar = defineComponent({
       id: "drawer-open",
       title: "Drawer open",
       props: { ...sample, menu: "close", menuDestination: DESTINATIONS.home },
+    },
+    {
+      id: "appearance",
+      title: "Appearance",
+      props: { ...sample, appearance: "auto" },
     },
   ],
 });
