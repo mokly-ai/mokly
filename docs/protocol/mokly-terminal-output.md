@@ -26,7 +26,9 @@ interactive developer experience. Stdin is never claimed in plain mode.
 
 Rich colour uses Node's `util.styleText` with stdout or stderr as the validation
 stream. Node therefore applies its normal TTY, `NO_COLOR`, and `FORCE_COLOR`
-rules. Mokly adds no colour dependency and never emits styling in plain mode.
+rules. Success glyphs are green when colour is supported and remain unstyled
+when colour is disabled or unavailable. Mokly adds no colour dependency and
+never emits styling in plain mode.
 
 Modern terminals use these glyphs:
 
