@@ -11,6 +11,7 @@ export interface InspectionScope {
   request: HighlightRequest;
   sessions: readonly Session[];
   keys: ReadonlyMap<Session, readonly string[]>;
+  complete: boolean;
 }
 
 /** Select once before readiness, masks, geometry or scrolling access a session. */
@@ -18,9 +19,16 @@ export function inspectionScope(
   sessions: readonly Session[],
   request: HighlightRequest,
 ): InspectionScope {
+  const instances =
+    request.kind === "instance"
+      ? [request.instance]
+      : request.kind === "instances"
+        ? request.instances
+        : undefined;
   const selected = sessions.filter(
     ({ frame }) =>
-      request.kind === "workspace" || matchesInstance(frame, request.instance),
+      instances === undefined ||
+      instances.some((instance) => matchesInstance(frame, instance)),
   );
   return {
     request,
@@ -31,19 +39,27 @@ export function inspectionScope(
         highlightKeys(session.frame, request),
       ]),
     ),
+    complete:
+      instances === undefined ||
+      instances.every((instance) =>
+        selected.some((session) => matchesInstance(session.frame, instance)),
+      ),
   };
 }
 
 /** Retained sessions must still support every key owned before evidence adoption. */
 export function validInspection(scope: InspectionScope): boolean {
-  return scope.sessions.every((session) => {
-    const usage = session.frame.view?.usage;
-    return (
-      usage?.status === "ready" &&
-      !frameUsage(usage).error &&
-      scope.keys.get(session)!.every((key) => hasInstance(usage, key))
-    );
-  });
+  return (
+    scope.complete &&
+    scope.sessions.every((session) => {
+      const usage = session.frame.view?.usage;
+      return (
+        usage?.status === "ready" &&
+        !frameUsage(usage).error &&
+        scope.keys.get(session)!.every((key) => hasInstance(usage, key))
+      );
+    })
+  );
 }
 
 export async function readyInspection(

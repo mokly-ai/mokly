@@ -116,12 +116,21 @@ export function matchesInstance(
   instance: InstanceRef,
 ): boolean {
   return (
+    matchesInstanceFrame(frame, instance) &&
+    hasInstance(frame.view?.usage, instance.key)
+  );
+}
+/** Match the exact mounted view before usage readiness or key presence is known. */
+export function matchesInstanceFrame(
+  frame: ViewerFrame,
+  instance: InstanceRef,
+): boolean {
+  return (
     frame.entry.id === instance.screenId &&
     frame.variantId === instance.variantId &&
     frame.stepIndex === instance.stepIndex &&
     frame.view?.viewport === instance.viewport &&
-    frame.view?.colorScheme === instance.colorScheme &&
-    hasInstance(frame.view?.usage, instance.key)
+    frame.view?.colorScheme === instance.colorScheme
   );
 }
 export function hasInstance(

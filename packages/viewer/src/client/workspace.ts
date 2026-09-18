@@ -36,7 +36,13 @@ import {
   mergeWorkspaceEvidence,
   updateWorkspaceEvidence,
 } from "./workspace_updates.js";
-import { applyVariant, selectedVariant } from "./workspace_variants.js";
+import {
+  applyVariant,
+  selectedVariant,
+  selectedVariantValue,
+  syncVariantControl,
+} from "./workspace_variants.js";
+import type { InstalledWorkspace } from "./workspace_variants.js";
 
 export function installWorkspace(
   doc: Document,
@@ -44,10 +50,11 @@ export function installWorkspace(
   updateDiffs: () => void,
   onHistoryChange: () => void,
   inspection?: WorkspaceInspection,
-): () => void {
+  onVariantProposal?: (variantId: string) => void,
+): InstalledWorkspace {
   const root = doc.querySelector<HTMLElement>("[data-workspace]");
   const json = root?.querySelector("[data-workspace-data]")?.textContent;
-  if (!root || !json) return () => {};
+  if (!root || !json) return { dispose: () => {}, setVariant: () => {} };
   const data = JSON.parse(json) as WorkspaceData;
   const controller = new AbortController();
   const { signal } = controller;
@@ -227,6 +234,12 @@ export function installWorkspace(
     refresh();
     updateDiffs();
   };
+  const setVariant = (value: string | undefined) => {
+    variant = selectedVariantValue(data, win.location.href, value);
+    selected = undefined;
+    expanded.clear();
+    activateVariant();
+  };
   if (["mobile", "desktop", "both"].includes(query.get("viewport") ?? ""))
     setViewport(doc, query.get("viewport")!);
   if (query.get("scheme") === "light" || query.get("scheme") === "dark")
@@ -265,14 +278,16 @@ export function installWorkspace(
         updateDiffs();
       },
       variant(value) {
+        if (onVariantProposal) {
+          onVariantProposal(value);
+          syncVariantControl(root, variant.variant?.value.id);
+          return;
+        }
         const url = new URL(win.location.href);
         url.searchParams.set("variant", value);
         url.searchParams.delete("instance");
         win.history.pushState({}, "", url);
-        variant = selectedVariant(data, url.search);
-        selected = undefined;
-        expanded.clear();
-        activateVariant();
+        setVariant(value);
         onHistoryChange();
       },
       escape(event) {
@@ -293,5 +308,5 @@ export function installWorkspace(
     open("details", false);
   if (query.get("comparison") === "side" && variant.comparisonEligible)
     root.querySelector<HTMLButtonElement>('[data-diff-mode="side"]')?.click();
-  return () => controller.abort();
+  return { dispose: () => controller.abort(), setVariant };
 }

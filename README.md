@@ -9,18 +9,26 @@ The public [npm package](https://www.npmjs.com/package/@mokly/mokly) is
 `@mokly/mokly`; its executable remains `mokly`. Releases remain pre-1.0 while
 the consumer contract settles.
 
+Versioned CLI documentation lives in [`docs/guides`](./docs/guides) and ships
+inside that package beside the protocol documents and changelog. The public
+documentation site is built by the private `mokly-cloud` repository from an
+installed package release; this repository does not build or deploy the site.
+
 The [`@mokly/viewer`](./packages/viewer/README.md) workspace embeds the existing
 Browse shell in React hosts using the public
 [catalogue read model](./docs/protocol/mokly-catalogue.md). It provides controlled
-selection, slots, inspection events, an imperative handle and
+screen and saved-variant selection, slots, inspection events, exact multi-instance
+highlighting, host-owned instance markers, an imperative handle and
 [frame adapters](./docs/protocol/mokly-frame-adapter.md). Serve and export use its
 static renderer and vanilla enhancements; exported browsers contain no React.
 Both packages build, release and are tested together. The viewer publishes before
-the CLI, which depends on its exact version. Local Serve/export presentation is
-unchanged; first viewer registration remains post-merge.
+the CLI, which depends on its exact version. Viewer 0.1.0 and CLI 0.10.0 were
+published together; local Serve/export presentation remains unchanged.
 Viewer inspection references identify an exact viewport, scheme, variant and
-flow step. Frame replacement cancels picking and resets inspection; host callback
-exceptions do not prevent resource cleanup. See the viewer README for semantics.
+flow step. The viewer positions marker content without owning comments or exposing
+raw geometry. Frame replacement cancels picking and resets inspection; host
+callback exceptions do not prevent resource cleanup. See the viewer README for
+semantics.
 
 Shared components can have their own pages, saved variants and editable props in
 local Serve. Screens record their actual component usage for inspection and
@@ -1025,6 +1033,10 @@ canonical destinations and the controls that remain visual depictions.
 - [`xtask`](./xtask/README.md) — full repository verification.
 
 ### Related Docs
+
+The [packaged guides contract](./docs/protocol/mokly-guides.md) defines the
+Markdown source, versioning, linking, and publication boundary used by the
+cloud documentation site.
 
 The [registered components contract](./docs/protocol/mokly-components.md)
 links to the [change attribution](./docs/protocol/mokly-component-changes.md),

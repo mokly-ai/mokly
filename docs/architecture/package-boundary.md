@@ -69,6 +69,10 @@ islands; React slots remain host-owned. Static SSR ships no React to browsers.
 First-party Serve/export use the same-origin adapter and no slots, preserving
 every existing local pixel and interaction. Private live integrations stay in
 the CLI host; explicit cross-origin hosts use the bounded inspector protocol.
+React slots and marker content remain host-owned. The viewer may position that
+content from authenticated instance geometry, but it owns no comment model,
+tenant, auth or persistence and exposes no raw geometry API. Multi-instance
+highlighting and marker placement compose the same public frame adapter boundary.
 
 Public catalogue and inspector files join existing export/upload inventories
 without schema changes. The manifest/source inventory stays private. Build,

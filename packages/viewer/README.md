@@ -31,10 +31,16 @@ npm install @mokly/viewer react react-dom
 ```tsx
 import { useMemo, useRef } from "react";
 import { MoklyViewer, postMessageAdapter } from "@mokly/viewer";
-import type { MoklyViewerHandle } from "@mokly/viewer";
+import type { MoklyViewerHandle, ViewerMarker } from "@mokly/viewer";
 import "@mokly/viewer/styles.css";
 
-export function Catalogue({ artifactOrigin }: { artifactOrigin: string }) {
+export function Catalogue({
+  artifactOrigin,
+  commentMarker,
+}: {
+  artifactOrigin: string;
+  commentMarker?: ViewerMarker;
+}) {
   const viewer = useRef<MoklyViewerHandle>(null);
   const adapter = useMemo(
     () => postMessageAdapter({ frameOrigin: artifactOrigin }),
@@ -46,6 +52,7 @@ export function Catalogue({ artifactOrigin }: { artifactOrigin: string }) {
         ref={viewer}
         catalogue={`${artifactOrigin}/__mokly/catalogue.json`}
         frameAdapter={adapter}
+        markers={commentMarker ? [commentMarker] : []}
         slots={{
           topBarEnd: (
             <button onClick={() => viewer.current?.select({ screenId: null })}>
@@ -58,6 +65,11 @@ export function Catalogue({ artifactOrigin }: { artifactOrigin: string }) {
   );
 }
 ```
+
+The host creates each `ViewerMarker` from a saved `InstanceRef` and supplies any
+React content, for example a comment-count button with
+`style={{ pointerEvents: "auto" }}`. The viewer positions it on that instance;
+the host owns the comment data and interaction.
 
 The example requires a separate, nonopaque HTTP(S) artifact origin with the
 [documented CORS headers](../../docs/protocol/mokly-export-delivery.md).
@@ -79,10 +91,17 @@ not the embedding page. Failed loads show a retry action and emit `onError`.
 
 `defaultSelection` initializes uncontrolled state. Controlled `selection` requires
 `onSelectionChange` and forbids `defaultSelection`. Selection comprises `screenId`
-(null means home), `view` (All/Changes filter), `viewport`, `colorScheme`, `search`
-and `tags`. Partial handle updates merge, validate and normalize `tag:` terms;
+(null means home), optional saved `variantId`, `view` (All/Changes filter),
+`viewport`, `colorScheme`, `search` and `tags`. Partial handle updates merge,
+validate and normalize `tag:` terms;
 controlled changes remain proposals until supplied back. Incoming props do not
 echo callbacks. Remount to change control mode.
+
+`markers` supplies unique host marker ids, exact instance references and React
+content. `onMarkerChange` reports each marker as visible, hidden or unavailable
+without exposing geometry. Marker content is pointer-inert unless it opts in.
+Duplicate ids render no markers and emit a `markers` error. See the
+[marker and multi-highlight contract](../../docs/protocol/mokly-viewer-markers.md).
 
 Slots are `topBarStart`, `topBarEnd`, `railStart`, `railEnd`, `sidePanel` (content
 and width), `stageOverlay` (content and explicit pointer events), and `emptyState`
@@ -118,8 +137,9 @@ cancels it with `disposed` and no start/end events. A new `startPick` waits for
 the refreshed evidence and works once its views are inspectable. Superseded
 updates cannot overwrite current inspection or report obsolete errors.
 
-The ref exposes `select`, `highlightInstance` (null clears), `scrollToInstance`,
-`startPick`, and idempotent `cancelPick`. Async operations reject unavailable
+The ref exposes `select`, `highlightInstance` (null clears), atomic
+`highlightInstances` (empty clears), `scrollToInstance`, `startPick`, and
+idempotent `cancelPick`. Async operations reject unavailable
 instances/views and report one safe error. Picking uses existing inspection
 visuals; the default shell has no pick control. Unmount cancels pending work
 without later callbacks. The [viewer contract](../../docs/protocol/mokly-viewer.md)
@@ -164,18 +184,12 @@ stylesheet.
 
 ## Releases
 
-The first viewer release is 0.1.0, paired with CLI 0.10.0 (CLI 0.9.0 is already
-published). One release-please PR updates independent versions, both changelogs
-and the CLI's exact viewer dependency. Viewer tags are `viewer-vX.Y.Z`; CLI tags
-remain `vX.Y.Z`. The release workflow verifies both tags at one commit, checks
-and smokes both tarballs, then publishes and verifies the viewer before the CLI.
-Unchanged packages receive a patch when their paired package releases.
-Release Please explicitly pins the viewer's initial version to 0.1.0; its 0.0.0
-manifest entry means that no viewer release has been created yet.
-See the [release contract](../../docs/protocol/npm-release.md) and the
-[one-time viewer registration](../../docs/protocol/npm-bootstrap.md#viewer-first-publication).
-Preparation does not publish packages; first registration requires a maintainer
-after the release PR merges.
+Viewer 0.1.0 and CLI 0.10.0 were published together. Release Please maintains
+their independent versions, both changelogs and the CLI's exact viewer
+dependency. Viewer tags are `viewer-vX.Y.Z`; CLI tags remain `vX.Y.Z`. The
+workflow verifies both tags at one commit, checks and smokes both tarballs, then
+publishes and verifies the viewer before the CLI. See the
+[release contract](../../docs/protocol/npm-release.md).
 
 ## Development
 
@@ -208,6 +222,7 @@ auditing includes both packages.
 ### Related Docs
 
 [Viewer API](../../docs/protocol/mokly-viewer.md),
+[markers and multi-instance highlights](../../docs/protocol/mokly-viewer-markers.md),
 [catalogue format](../../docs/protocol/mokly-catalogue.md),
 [frame adapters](../../docs/protocol/mokly-frame-adapter.md),
 [instances](../../docs/protocol/mokly-instances.md),

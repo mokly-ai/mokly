@@ -56,41 +56,46 @@ test("invalid initial and incoming selection report a safe state without crashin
   expect(errors).toEqual([]);
 });
 
-test("shell links retain variants and fragments and unchanged variants do not emit", async ({
-  page,
-}) => {
-  await page.evaluate(() => window.viewerHarness.start("one"));
-  const action = page.getByRole("link", { name: "Action", exact: true });
-  await action.evaluate((link) => {
-    (link as HTMLAnchorElement).href += "?variant=disabled&fragment=details";
+for (const cross of [false, true])
+  test(`${cross ? "postMessage" : "same-origin"} shell links retain variants and fragments without duplicate navigation`, async ({
+    page,
+  }) => {
+    await page.evaluate(
+      (cross) => window.viewerHarness.start("one", { cross }),
+      cross,
+    );
+    const action = page.getByRole("link", { name: "Action", exact: true });
+    await action.evaluate((link) => {
+      (link as HTMLAnchorElement).href += "?variant=disabled&fragment=details";
+    });
+    await action.click();
+    await expect(
+      page.getByRole("combobox", { name: "Saved variant" }),
+    ).toHaveValue("disabled");
+    await expect
+      .poll(async () => {
+        const element = await page
+          .locator('iframe[data-workspace-frame="mobile"]')
+          .elementHandle();
+        return (await element?.contentFrame())?.url();
+      })
+      .toMatch(/disabled\.mobile\.html(?:\?[^#]*)?#details$/);
+    await page
+      .getByRole("combobox", { name: "Saved variant" })
+      .dispatchEvent("change");
+    expect(
+      await page.evaluate(() =>
+        window.viewerHarness
+          .get("one")
+          .events.filter((event) => event.name === "navigate")
+          .map((event) => event.value),
+      ),
+    ).toEqual([
+      {
+        screenId: "action",
+        route: "components/action.html",
+        variantId: "disabled",
+        fragment: "details",
+      },
+    ]);
   });
-  await action.click();
-  await expect(
-    page.getByRole("combobox", { name: "Saved variant" }),
-  ).toHaveValue("disabled");
-  await expect
-    .poll(() =>
-      page
-        .locator('iframe[data-workspace-frame="mobile"]')
-        .evaluate((frame) => (frame as HTMLIFrameElement).contentDocument?.URL),
-    )
-    .toMatch(/disabled\.mobile\.html#details$/);
-  await page
-    .getByRole("combobox", { name: "Saved variant" })
-    .dispatchEvent("change");
-  expect(
-    await page.evaluate(() =>
-      window.viewerHarness
-        .get("one")
-        .events.filter((e) => e.name === "navigate")
-        .map((e) => e.value),
-    ),
-  ).toEqual([
-    {
-      screenId: "action",
-      route: "components/action.html",
-      variantId: "disabled",
-      fragment: "details",
-    },
-  ]);
-});

@@ -5,6 +5,7 @@ import { FrameError } from "../client/frame_error.js";
 import { renderFrameLabels } from "./frame_labels.js";
 import type { Session } from "./frame_session.js";
 import type { ViewerFrame } from "./frame_views.js";
+import type { GeometryRefresh } from "./geometry_refresh.js";
 import { highlightKeys } from "./highlight_request.js";
 import type { HighlightRequest } from "./highlight_request.js";
 import {
@@ -26,6 +27,7 @@ export class FrameHighlights {
     private root: HTMLElement,
     private model: CatalogueReadModel,
     private sessions: () => readonly Session[],
+    private geometry: GeometryRefresh,
     available: () => boolean,
     private receive: (frame: ViewerFrame, event: FrameEvent) => void,
     private fail: (error: unknown) => Error,
@@ -35,9 +37,15 @@ export class FrameHighlights {
   work(): InspectionWork {
     return this.ownership.work();
   }
+  demand(): readonly Session[] {
+    return this.scope?.sessions ?? [];
+  }
   reset(): void {
+    const sessions = this.scope?.sessions ?? [];
     this.ownership.reset();
     this.scope = undefined;
+    this.geometry.supersede(sessions);
+    void this.geometry.refresh().catch(() => {});
     this.root.querySelector("[data-mokly-label-layer]")?.replaceChildren();
   }
   async off(): Promise<void> {
@@ -95,6 +103,8 @@ export class FrameHighlights {
           ),
         );
         work.check();
+        await work.run(() => this.geometry.refresh(sessions));
+        work.check();
         await this.renderLabels(scope, work);
       },
       (error) => this.failed(error),
@@ -116,20 +126,17 @@ export class FrameHighlights {
     if (frame && !sessions.some((session) => session.frame === frame)) return;
     await work.run(
       async () => {
-        await readyInspection(this.root, sessions, work);
         work.check();
         await this.renderLabels(scope, work);
       },
       (error) => this.failed(error),
     );
   }
-  private renderLabels(
-    scope: InspectionScope,
-    work: InspectionWork,
-  ): Promise<void> {
-    return renderFrameLabels(
+  private renderLabels(scope: InspectionScope, work: InspectionWork): void {
+    renderFrameLabels(
       this.root,
       scope,
+      this.geometry,
       this.model,
       work.current,
       this.receive,

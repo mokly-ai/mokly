@@ -106,6 +106,31 @@ test("SSR and initial React render agree for selection and all slots", async () 
   assert.match(html, /value="phrase tag:forms"/);
 });
 
+test("SSR selects a requested saved variant in its control and preview", () => {
+  const model = structuredClone(fixture);
+  const component = model.components[0]!;
+  const original = component.variants[0]!;
+  component.variants = [
+    original,
+    {
+      ...structuredClone(original),
+      id: "second",
+      title: "Second",
+      views: original.views.map((view) => ({
+        ...structuredClone(view),
+        fragmentPath: view.fragmentPath?.replace("default", "second") ?? null,
+      })),
+    },
+  ];
+  const html = renderViewer({
+    catalogue: model,
+    baseUrl: "https://catalogue.example",
+    defaultSelection: { screenId: component.id, variantId: "second" },
+  });
+  assert.match(html, /<option value="second" selected="">Second<\/option>/);
+  assert.match(html, /action\.variants\/second\.(?:mobile|desktop)\.html/);
+});
+
 test("invalid current paths are rejected instead of replaced with guessed URLs", () => {
   const model = structuredClone(fixture);
   const screen = model.screens[0]!;

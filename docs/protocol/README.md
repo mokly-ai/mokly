@@ -33,6 +33,8 @@ when the historical primary file is absent, never when it is invalid.
 - [Package and authoring contract](./mokly-package.md)
 - [CLI terminal output](./mokly-terminal-output.md) — plain compatibility,
   interactive progress, errors, watched events, and shortcuts.
+- [Packaged CLI guides](./mokly-guides.md) — versioned Markdown consumed by the
+  cloud documentation site.
 - [Configuration contract](./mokly-configuration.md) — includes public-exclusion validation and defaults.
 - [Public authoring API](./mokly-authoring.md)
 - [Rendering and generated output](./mokly-rendering.md)
@@ -43,6 +45,8 @@ when the historical primary file is absent, never when it is invalid.
   public inventory v1 beside the private manifest.
 - [Embeddable viewer](./mokly-viewer.md) — approved `@mokly/viewer` API and
   unchanged local shell extraction.
+- [Viewer markers and multi-instance highlights](./mokly-viewer-markers.md) —
+  host-owned anchored content and exact atomic highlight behavior.
 - [Viewer frame adapter](./mokly-frame-adapter.md) — approved same-origin
   interface and cross-origin inspector protocol v1.
 - [On-demand Serve](./mokly-on-demand.md)
