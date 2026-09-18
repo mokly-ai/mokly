@@ -1,8 +1,9 @@
 /** Latest-wins repository classification for a watched catalogue. */
 
+import type { Manifest } from "@mokly/viewer/data";
+
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timingCounts } from "../diagnostics/timings.js";
-import type { Manifest } from "../registry/types.js";
 
 import type {
   CatalogueChangeClassifier,

@@ -1,5 +1,5 @@
 /** Generation-tagged generated inputs for incremental resource watch discovery. */
-import { isSafeCatalogueRoute } from "../../config/paths.js";
+import { isSafeCatalogueRoute } from "@mokly/viewer/data";
 
 export interface PreviewObservation {
   generation: string;

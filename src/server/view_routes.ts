@@ -1,14 +1,14 @@
 import type { ServerResponse } from "node:http";
 
-import { encodeUrlPath } from "../config/paths.js";
+import { encodeUrlPath } from "@mokly/viewer/data";
+import type { Catalogue, ShellContext } from "@mokly/viewer/server";
+
 import type { ResolvedConfig } from "../config/types.js";
 
-import type { Catalogue } from "./catalogue.js";
 import type { DocumentService } from "./demand/service.js";
 import { requestedFragment, withFragmentQuery } from "./fragments.js";
 import { notFoundPage, viewPage } from "./pages.js";
 import { safeDecode, safeDecodePath, send } from "./respond.js";
-import type { ShellContext } from "./shell/context.js";
 
 export async function redirectId(
   response: ServerResponse,

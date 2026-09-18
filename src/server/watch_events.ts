@@ -69,17 +69,22 @@ const ACTION_PRIORITY: readonly RuntimeWatchAction[] = [
 /** Coalesce filesystem notifications into one highest-impact action. */
 export class WatchDebouncer {
   readonly #actions = new Set<RuntimeWatchAction>();
+  readonly #paths = new Set<string>();
   #handle: ReturnType<typeof setTimeout> | undefined;
 
   constructor(
     private readonly delay: number,
-    private readonly callback: (action: RuntimeWatchAction) => void,
+    private readonly callback: (
+      action: RuntimeWatchAction,
+      paths: readonly string[],
+    ) => void,
     private readonly clock: DebounceClock = systemDebounceClock,
   ) {}
 
   /** Add one classified notification to the current burst. */
-  notify(action: RuntimeWatchAction): void {
+  notify(action: RuntimeWatchAction, candidate?: string): void {
     this.#actions.add(action);
+    if (action !== "ignore" && candidate) this.#paths.add(candidate);
     if (this.#handle) this.clock.clear(this.#handle);
     this.#handle = this.clock.schedule(() => this.flush(), this.delay);
   }
@@ -89,6 +94,7 @@ export class WatchDebouncer {
     if (this.#handle) this.clock.clear(this.#handle);
     this.#handle = undefined;
     this.#actions.clear();
+    this.#paths.clear();
   }
 
   private flush(): void {
@@ -97,25 +103,32 @@ export class WatchDebouncer {
       this.#actions.has(candidate),
     );
     this.#actions.clear();
-    if (action && action !== "ignore") this.callback(action);
+    const paths = [...this.#paths];
+    this.#paths.clear();
+    if (action && action !== "ignore") this.callback(action, paths);
   }
 }
 
 /** Serialize watch work and coalesce changes received during active work. */
 export class WatchActionQueue {
   readonly #pending = new Set<RuntimeWatchAction>();
+  readonly #paths = new Set<string>();
   #closed = false;
   #draining: Promise<void> | undefined;
 
   constructor(
-    private readonly process: (action: RuntimeWatchAction) => Promise<void>,
+    private readonly process: (
+      action: RuntimeWatchAction,
+      paths: readonly string[],
+    ) => Promise<void>,
     private readonly reportError: (error: unknown) => void,
   ) {}
 
   /** Queue one action; a stronger pending action subsumes weaker actions. */
-  notify(action: RuntimeWatchAction): void {
+  notify(action: RuntimeWatchAction, paths: readonly string[] = []): void {
     if (this.#closed || action === "ignore") return;
     this.#pending.add(action);
+    for (const candidate of paths) this.#paths.add(candidate);
     if (!this.#draining) this.#draining = this.drain();
   }
 
@@ -128,6 +141,7 @@ export class WatchActionQueue {
   async close(): Promise<void> {
     this.#closed = true;
     this.#pending.clear();
+    this.#paths.clear();
     await this.#draining;
   }
 
@@ -137,10 +151,12 @@ export class WatchActionQueue {
         const action = ACTION_PRIORITY.find((candidate) =>
           this.#pending.has(candidate),
         );
+        const paths = [...this.#paths];
         this.#pending.clear();
+        this.#paths.clear();
         if (!action || action === "ignore") continue;
         try {
-          await this.process(action);
+          await this.process(action, paths);
         } catch (error) {
           this.reportError(error);
         }

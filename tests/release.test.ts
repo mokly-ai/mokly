@@ -61,42 +61,6 @@ interface RegistryContractModule {
   }): boolean;
 }
 
-test("scoped npm identity preserves the Mokly executable", async () => {
-  const packageJson = JSON.parse(
-    await fs.promises.readFile(
-      path.join(repositoryRoot, "package.json"),
-      "utf8",
-    ),
-  );
-  assert.equal(packageJson.name, "@mokly/mokly");
-  assert.equal(packageJson.author, "Mokly");
-  assert.deepEqual(packageJson.bin, { mokly: "./dist/cli/bin.js" });
-  assert.equal(
-    packageJson.homepage,
-    "https://github.com/mokly-ai/mokly#readme",
-  );
-  assert.deepEqual(packageJson.repository, {
-    type: "git",
-    url: "git+https://github.com/mokly-ai/mokly.git",
-  });
-  assert.deepEqual(packageJson.bugs, {
-    url: "https://github.com/mokly-ai/mokly/issues",
-  });
-  assert.deepEqual(packageJson.publishConfig, {
-    access: "public",
-    registry: "https://registry.npmjs.org/",
-  });
-  const lock = JSON.parse(
-    await fs.promises.readFile(
-      path.join(repositoryRoot, "package-lock.json"),
-      "utf8",
-    ),
-  );
-  assert.equal(lock.name, packageJson.name);
-  assert.equal(lock.packages[""].name, packageJson.name);
-  assert.deepEqual(lock.packages[""].bin, { mokly: "dist/cli/bin.js" });
-});
-
 test("CI pins actions and gates both supported Node runtimes", async () => {
   const source = await workflowSource("ci.yml");
   const workflow = parse(source) as Workflow;
@@ -158,15 +122,37 @@ test("release workflow selects only releases and isolates OIDC publish", async (
   assert.match(source, /--mode guard/);
   assert.match(source, /--mode verify/);
   assert.match(source, /release-please-action@[a-f0-9]{40}/);
+  assert.match(source, /outputs\['packages\/viewer--release_created'\]/);
+  assert.match(source, /outputs\['packages\/viewer--tag_name'\]/);
   const names = publish.steps.map((step) => step.name);
   assert.ok(
     names.indexOf("Run complete verification") <
-      names.indexOf("Prepare exact publish artifact"),
+      names.indexOf("Prepare exact publish artifacts"),
   );
   assert.ok(
-    names.indexOf("Guard an existing npm version") <
-      names.indexOf("Publish with npm trusted publishing"),
+    names.indexOf("Guard existing viewer version") <
+      names.indexOf("Publish viewer with npm trusted publishing"),
   );
+  const ordered = [
+    "Prepare exact publish artifacts",
+    "Smoke-test exact publish artifacts",
+    "Recheck immutable tags and source",
+    "Preserve checked artifacts",
+    "Guard existing viewer version",
+    "Publish viewer with npm trusted publishing",
+    "Verify viewer registry package and provenance",
+    "Guard existing CLI version",
+    "Publish CLI with npm trusted publishing",
+    "Verify CLI registry package and provenance",
+  ];
+  for (const [index, name] of ordered.entries()) {
+    assert.ok(names.includes(name), name);
+    if (index > 0)
+      assert.ok(names.indexOf(ordered[index - 1]) < names.indexOf(name), name);
+  }
+  assert.match(source, /group: npm-release/);
+  assert.match(source, /verify-ref\.mjs "\$CLI_REF" "\$VIEWER_REF"/);
+  assert.match(source, /--artifacts .context\/release-artifact/);
   assertPinnedActions(workflow);
 });
 
@@ -255,55 +241,6 @@ test("published-version guard compares bytes, inventory, and commit", async () =
     registry.isMissingPackage({ code: 1, stderr: "network reset", stdout: "" }),
     false,
   );
-});
-
-test("release-please owns the Node manifest and first release state", async () => {
-  const config = JSON.parse(
-    await fs.promises.readFile(
-      path.join(repositoryRoot, "release-please-config.json"),
-      "utf8",
-    ),
-  );
-  const manifest = JSON.parse(
-    await fs.promises.readFile(
-      path.join(repositoryRoot, ".release-please-manifest.json"),
-      "utf8",
-    ),
-  );
-  assert.equal(
-    config.packages["."].releaseType ?? config.packages["."]["release-type"],
-    "node",
-  );
-  assert.equal(config.packages["."]["include-v-in-tag"], true);
-  assert.equal(
-    config["bootstrap-sha"],
-    "896a6ecfd26236b1695c7683e7acac73dc4efbc9",
-  );
-  assert.equal(config.packages["."]["bump-minor-pre-major"], true);
-  const releaseAs = config.packages["."]["release-as"];
-  if (releaseAs !== undefined) {
-    assert.match(releaseAs, /^0\.\d+\.\d+$/);
-  }
-  assert.equal(config.packages["."]["include-component-in-tag"], false);
-  assert.deepEqual(
-    Object.keys(config.packages["."])
-      .filter((key) => key !== "release-as")
-      .sort(),
-    [
-      "bump-minor-pre-major",
-      "changelog-path",
-      "include-component-in-tag",
-      "include-v-in-tag",
-      "release-type",
-    ],
-  );
-  const packageVersion = JSON.parse(
-    await fs.promises.readFile(
-      path.join(repositoryRoot, "package.json"),
-      "utf8",
-    ),
-  ).version;
-  assert.deepEqual(manifest, { ".": packageVersion });
 });
 
 async function workflowSource(name: string): Promise<string> {

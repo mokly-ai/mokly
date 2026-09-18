@@ -4,9 +4,9 @@ import path from "node:path";
 import test, { type TestContext } from "node:test";
 
 import { compileCatalogue, type Compilation } from "../dist/build/compile.js";
-import { generatedViews } from "../dist/components/views.js";
 import { loadConfig } from "../dist/config/load.js";
-import type { ReviewResultV3 } from "../dist/review/component_types.js";
+import { generatedViews } from "../packages/viewer/dist/components/views.js";
+import type { ReviewResultV3 } from "../packages/viewer/dist/review/component_types.js";
 
 import { generateLargeFixture } from "./fixtures/large/generate.js";
 import { componentChangeCases } from "./helpers/component_change_cases.js";

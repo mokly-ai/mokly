@@ -1,11 +1,11 @@
-import type {
-  ColorScheme,
-  ResolvedRegistryEntry,
-  Viewport,
-} from "../authoring/types.js";
-import { componentFragmentRoute } from "../components/paths.js";
+import type { ColorScheme, Viewport } from "@mokly/viewer";
+import {
+  componentFragmentRoute,
+  effectiveColorSchemes,
+} from "@mokly/viewer/data";
+
+import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import { fragmentRoute } from "../registry/manifest.js";
-import { effectiveColorSchemes } from "../registry/views.js";
 
 /** Resolve a registry entry to the static artifact appropriate for a view. */
 export function artifactRouteForEntry(

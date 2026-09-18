@@ -7,7 +7,7 @@ import { capturePublicFiles } from "../dist/export/public_files.js";
 import { assembleExport } from "../dist/export/site.js";
 import { committedReviewRepository } from "../dist/review/repository.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
-import type { WorkspaceData } from "../dist/server/shell/workspace_data.js";
+import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 

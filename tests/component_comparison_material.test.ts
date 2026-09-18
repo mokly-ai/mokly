@@ -7,7 +7,7 @@ import {
   stripComponentMarkers,
 } from "../dist/components/comparison_material.js";
 import { projectComponentPair } from "../dist/components/comparison_projection.js";
-import type { ComponentViewRecord } from "../dist/components/manifest_types.js";
+import type { ComponentViewRecord } from "../packages/viewer/dist/components/manifest_types.js";
 
 test("component marker stripping removes only current valid boundaries", () => {
   const html =
@@ -43,6 +43,20 @@ test("component usage signals retain input changes for identical documents", () 
     },
     { inputs: true, structure: false },
   );
+});
+
+test("usage topology ignores invocation source metadata", () => {
+  const before = topologyView();
+  const after = {
+    ...before,
+    instances: before.instances.map((instance) => ({
+      ...instance,
+      source: { path: "entries/moved.tsx", line: 9, column: 1 },
+    })),
+  };
+
+  assert.equal(componentUsageTopologyEqual(before, after), true);
+  assert.equal(componentUsageTopologyEqual(after, before), true);
 });
 
 test("usage topology permits only entry-owned prop differences", () => {

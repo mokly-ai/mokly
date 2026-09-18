@@ -2,7 +2,7 @@
 export const HELP = `Mokly — app-independent React mockup catalogues
 
 Usage:
-  mokly [serve] [--config <path>] [--port <port>] [--base <ref>] [--no-watch]
+  mokly [serve] [--config <path>] [--port <port>] [--base <ref>] [--no-watch] [--open]
   mokly build [--config <path>]
   mokly check [--config <path>]
   mokly export --out <path> [--config <path>] [--base <ref>]
@@ -30,6 +30,7 @@ Options:
   --no-changes     Publish current catalogue without a comparison baseline
   --watch          Watch consumer inputs (serve default)
   --no-watch       Serve one deterministic snapshot
+  --open           Open the served URL in the default browser
   -h, --help       Show help
   -v, --version    Show installed version
 
@@ -37,8 +38,8 @@ Value options also accept --name=value. Use --token=-TOKEN for a leading dash.
 Boolean flags take no value.
 
 Configuration:
-  generatedOutput       "committed" (default) checks files match source;
-                        "derived" checks generated files are untracked
+  generatedOutput       "derived" (default) checks generated files are untracked;
+                        "committed" checks files match source
   review.baselineBuild  Derived-only argv arrays run without a shell using
                         trusted historical code. Defaults: npm ci, then
                         npx --no-install mokly build --config <config-path>

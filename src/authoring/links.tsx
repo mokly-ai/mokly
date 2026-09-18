@@ -6,7 +6,7 @@ import {
   type ReactNode,
 } from "react";
 
-import { isCatalogueId, isLogicalFragment } from "../navigation/logical.js";
+import { isCatalogueId, isLogicalFragment } from "@mokly/viewer/data";
 
 /** Create an id-addressed link resolved during static generation. */
 export function mockLink(id: string, fragment?: string): string {

@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { defineComponent } from "../dist/components/definition.js";
 import {
   validateControls,
   validateControlledValues,
-} from "../dist/components/controls.js";
-import { defineComponent } from "../dist/components/definition.js";
+} from "../packages/viewer/dist/components/controls.js";
 
 const schema = {
   kind: "object",

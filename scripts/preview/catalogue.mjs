@@ -1,6 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { projectCatalogue } from "../../dist/catalogue/projection.js";
+import {
+  CATALOGUE_PATH,
+  serializeCatalogue,
+} from "../../dist/catalogue/serialization.js";
 import { isInside, projectRealPath } from "../../dist/config/paths.js";
 import { errorMessage } from "../../dist/errors.js";
 import { withExportCleanup } from "../../dist/export/cleanup.js";
@@ -32,22 +37,20 @@ const liveUpdateScript =
 
 /** Capture already-built output; the supported npm command builds before this boundary. */
 export async function buildPreview(config, output, options = {}) {
+  const ownership = previewOwnership(config);
   const capability = publicationOptions(options);
   assertSafeOutput(output, config.repoRoot);
   const contextRoot = path.join(config.repoRoot, ".context");
   const destination = resolveExportOutput(config, output, contextRoot);
   try {
-    await assertExportOwnership(destination, previewOwnership);
+    await assertExportOwnership(destination, ownership);
   } catch (cause) {
     throw new Error(
       `refusing to replace unowned preview directory: ${output}`,
       { cause },
     );
   }
-  const transaction = await ExportTransaction.open(
-    destination,
-    previewOwnership,
-  );
+  const transaction = await ExportTransaction.open(destination, ownership);
   try {
     await withExportCleanup(
       async () => {
@@ -111,6 +114,27 @@ export async function buildPreview(config, output, options = {}) {
         if (review && comparison)
           comparison = await publishComparison(review, comparison, stage);
         await copyPublicFiles(config, catalogue, stage, excludedRoots);
+        await writeText(
+          stage,
+          CATALOGUE_PATH,
+          serializeCatalogue(
+            projectCatalogue({
+              configPath: path
+                .relative(config.repoRoot, config.configPath)
+                .split(path.sep)
+                .join("/"),
+              catalogue,
+              changesStatus: comparison ? "ready" : "disabled",
+              changedRoutes: changes?.changedRoutes,
+              evidence: snapshot.componentChanges,
+              comparison: comparison?.result,
+              comparisonUrl: comparison
+                ? `${comparison.directory}/review.json`
+                : null,
+              revision: { content: 0, evidence: 0 },
+            }),
+          ),
+        );
         await stagePreviewArtifact(stage, manifest, removed, comparison);
         if (
           inputs.fingerprint !==

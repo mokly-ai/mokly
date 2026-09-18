@@ -1,6 +1,6 @@
-import { MoklyError } from "../errors.js";
+import { analyzeHierarchy, type HierarchyEntry } from "@mokly/viewer/data";
 
-import { analyzeHierarchy, type HierarchyEntry } from "./hierarchy.js";
+import { MoklyError } from "../errors.js";
 
 type ValidatedManifestEntry = Record<string, unknown> & HierarchyEntry;
 

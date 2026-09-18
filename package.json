@@ -1,6 +1,6 @@
 {
   "name": "@mokly/mokly",
-  "version": "0.9.0",
+  "version": "0.11.0",
   "description": "App-independent static mockup catalogues, development browsing, and on-demand visual comparisons.",
   "type": "module",
   "license": "MIT",
@@ -29,6 +29,7 @@
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
+    "docs/guides",
     "docs/protocol",
     "CHANGELOG.md",
     "LICENSE",
@@ -39,10 +40,10 @@
     "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
-    "build": "tsc --project tsconfig.build.json && node scripts/copy-assets.mjs",
+    "build": "npm run -s build --workspace @mokly/viewer && tsc --project tsconfig.build.json && node scripts/copy-assets.mjs",
     "clean": "node scripts/clean.mjs",
     "dependencies:check": "npm audit --audit-level=low --include=prod --include=dev --include=optional --include=peer",
-    "dev": "npm run build && node dist/cli/bin.js serve --config examples/basic/mokly.config.ts",
+    "dev": "npm run -s build && node dist/cli/bin.js serve --config examples/basic/mokly.config.ts",
     "dev:large": "node scripts/large/cli.mjs serve",
     "fixture:large": "npm run build && tsx scripts/large/cli.mjs generate",
     "benchmark:large": "node scripts/large/cli.mjs benchmark",
@@ -55,9 +56,9 @@
     "package:smoke": "npm run build && node scripts/package-smoke.mjs",
     "prepack": "npm run build",
     "preview:build": "npm run build && npm run example:build && node scripts/preview/build.mjs",
-    "test": "npm run build && npm run example:build && tsx --test --test-concurrency=2 tests/**/*.test.ts tests/**/*.test.tsx",
+    "test": "npm run build && npm run example:build && tsx --test --test-concurrency=2 tests/**/*.test.ts tests/**/*.test.tsx packages/viewer/tests/*.test.ts packages/viewer/tests/*.test.tsx",
     "test:browser": "npm run build && npm run example:build && playwright test",
-    "typecheck": "npm run build && tsc --project tsconfig.json --noEmit"
+    "typecheck": "npm run build && tsc --project tsconfig.json --noEmit && npm run typecheck --workspace @mokly/viewer"
   },
   "dependencies": {
     "chokidar": "^5.0.0",
@@ -69,7 +70,8 @@
     "minimatch": "^10.2.6",
     "parse5": "^8.0.1",
     "tar": "^7.5.22",
-    "tar-stream": "^3.2.1"
+    "tar-stream": "^3.2.1",
+    "@mokly/viewer": "0.2.0"
   },
   "peerDependencies": {
     "react": ">=19.0.0",
@@ -96,6 +98,7 @@
     "react-native-svg": "^15.15.4",
     "react-native-web": "^0.21.2",
     "react-native-worklets": "^0.8.3",
+    "terser": "^5.51.2",
     "tsx": "^4.23.1",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.64.0",
@@ -107,5 +110,8 @@
       "sharp": "0.35.4",
       "undici": "7.29.1"
     }
-  }
+  },
+  "workspaces": [
+    "packages/viewer"
+  ]
 }

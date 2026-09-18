@@ -1,9 +1,10 @@
-import { refreshBrowseEvidence } from "./browse_refresh.js";
 import {
   captureBrowseState,
   restoreBrowseState,
   type BrowseRecoveryState,
-} from "./browse_state.js";
+} from "@mokly/viewer/runtime";
+
+import { refreshBrowseEvidence } from "./browse_refresh.js";
 import {
   LiveUpdateController,
   type RecoveryStorage,

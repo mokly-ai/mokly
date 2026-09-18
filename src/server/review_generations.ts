@@ -47,10 +47,15 @@ export class ReviewGenerationStore {
 
   /** Find a retained generation and extend its idle retention window. */
   get(version: string): ReviewGeneration | undefined {
-    const generation = this.generations.get(version);
+    const generation = this.peek(version);
     if (generation && generation.version !== this.currentGeneration?.version)
       this.scheduleExpiry(generation);
     return generation;
+  }
+
+  /** Check retention without renewing it; bookkeeping must not keep artifacts alive. */
+  peek(version: string): ReviewGeneration | undefined {
+    return this.generations.get(version);
   }
 
   /** Replace the current artifact while retaining its immutable predecessor. */

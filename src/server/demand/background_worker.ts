@@ -2,11 +2,12 @@
 import { setImmediate, setTimeout } from "node:timers/promises";
 import { parentPort, workerData, type MessagePort } from "node:worker_threads";
 
+import type { ManifestV5 } from "@mokly/viewer/data";
+
 import { compileRuntime } from "../../build/compile_runtime.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
 import { runWithTimings, timeAsync } from "../../diagnostics/timings.js";
 import { errorMessage } from "../../errors.js";
-import type { ManifestV5 } from "../../registry/types.js";
 import { RepositoryCatalogueChangeClassifier } from "../component_changes.js";
 
 import { WorkerGitCommandRunner } from "./git_worker.js";

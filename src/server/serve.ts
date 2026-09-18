@@ -16,6 +16,7 @@ import {
   NodeCatalogueServerFactory,
   type CatalogueServerFactory,
 } from "./factory.js";
+import { PlainServeReporter, type ServeReporter } from "./reporter.js";
 import { ServedReviewRepository } from "./review_repository.js";
 import { configuredServedReview } from "./review_routes.js";
 import { serveWatched } from "./serve_watched.js";
@@ -39,6 +40,8 @@ export interface ServeOptions {
 export interface RunningServe {
   close(): Promise<void>;
   port: number;
+  /** Enqueue the same serialized source rebuild used by watched edits. */
+  rebuild?(): void;
   url: string;
 }
 
@@ -50,6 +53,7 @@ export interface ServeDependencies {
   configLoader: ConfigLoader;
   outputStore: GeneratedOutputStore;
   processSupervisorFactory: ProcessSupervisorFactory;
+  reporter?: ServeReporter;
   serverFactory: CatalogueServerFactory;
   watcherFactory: ConsumerWatcherFactory;
 }
@@ -60,6 +64,7 @@ const DEFAULT_DEPENDENCIES: ServeDependencies = {
   configLoader: new FileSystemConfigLoader(),
   outputStore: new FileSystemGeneratedOutputStore(),
   processSupervisorFactory: new NodeProcessSupervisorFactory(),
+  reporter: new PlainServeReporter(),
   serverFactory: new NodeCatalogueServerFactory(),
   watcherFactory: new ChokidarWatcherFactory(),
 };
@@ -68,9 +73,14 @@ const DEFAULT_DEPENDENCIES: ServeDependencies = {
 export async function serve(
   config: ResolvedConfig,
   options: ServeOptions,
-  dependencies: ServeDependencies = DEFAULT_DEPENDENCIES,
+  provided: Partial<ServeDependencies> = {},
 ): Promise<RunningServe> {
+  const dependencies = { ...DEFAULT_DEPENDENCIES, ...provided };
+  const reporter = dependencies.reporter ?? DEFAULT_DEPENDENCIES.reporter!;
   if (!options.watch) {
+    const generationStartedAt = Date.now();
+    let changesStartedAt = generationStartedAt;
+    let baselineStartedAt = generationStartedAt;
     const runtime = await prepareLiveRuntime(config);
     config = runtime.config;
     const base = options.base ?? config.review.base;
@@ -79,16 +89,26 @@ export async function serve(
       dependencies.outputStore,
       dependencies.changeClassifier ?? DEFAULT_CHANGE_CLASSIFIER,
       (compilation, accepted) => {
+        changesStartedAt = Date.now();
+        reporter.catalogueReady(
+          compilation.manifest,
+          changesStartedAt - generationStartedAt,
+        );
         server.completeCatalogue?.(compilation.manifest, accepted.generation);
         server.publishUpdate({ kind: "evidence" });
       },
-      (snapshot) =>
+      (snapshot) => {
+        const duration = Date.now() - changesStartedAt;
+        if (snapshot)
+          reporter.changesReady(snapshot.changedRoutes?.length ?? 0, duration);
+        else reporter.changesUnavailable(duration);
         server.publishUpdate({
           kind: "evidence",
           changedRoutes: snapshot?.changedRoutes ?? null,
           componentChanges: snapshot ?? null,
           changesStatus: snapshot ? "ready" : "unavailable",
-        }),
+        });
+      },
       {
         baselinePrepared: (commit) => {
           repository.accept(commit);
@@ -99,6 +119,19 @@ export async function serve(
         },
         baselineStatus: (changesStatus) =>
           server.publishUpdate({ kind: "evidence", changesStatus }),
+        baselineProgress: (event) => {
+          if (event.type === "start") {
+            baselineStartedAt = Date.now();
+            reporter.baselinePreparing(base);
+          }
+          if (event.type === "complete")
+            reporter.baselineReady(
+              event.commit,
+              event.cacheHit,
+              Date.now() - baselineStartedAt,
+            );
+        },
+        diagnostic: (error) => reporter.runtimeDiagnostic(error),
         ...(dependencies.baselineBuilder
           ? { builder: dependencies.baselineBuilder }
           : {}),
@@ -112,6 +145,7 @@ export async function serve(
       componentRuntime: runtime,
       port: options.port,
       review: configuredServedReview(config, base, repository),
+      onDiagnostic: (error) => reporter.runtimeDiagnostic(error),
     });
     background.start(runtime, base);
     return {

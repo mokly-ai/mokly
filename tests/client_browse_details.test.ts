@@ -4,7 +4,7 @@ import test from "node:test";
 import {
   DetailsDisclosurePreference,
   type DetailsPreferenceStorage,
-} from "../dist/client/browse_details.js";
+} from "../packages/viewer/dist/client/browse_details.js";
 
 test("details preference restores and updates explicit disclosure", () => {
   const storage = new FakeStorage("closed");

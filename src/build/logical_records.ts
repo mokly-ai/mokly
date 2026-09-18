@@ -1,16 +1,18 @@
 import { parse } from "parse5";
 
+import {
+  componentFragmentRoute,
+  duplicateReservedAttributeName,
+  type HtmlSourceLocation,
+  effectiveColorSchemes,
+  VIEWPORTS,
+} from "@mokly/viewer/data";
+
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
-import { componentFragmentRoute } from "../components/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 import { extractHtmlReferences } from "../html_references.js";
-import {
-  duplicateReservedAttributeName,
-  type HtmlSourceLocation,
-} from "../navigation/reserved_attributes.js";
 import { fragmentRoute } from "../registry/manifest.js";
-import { effectiveColorSchemes, VIEWPORTS } from "../registry/views.js";
 
 import {
   logicalNamespace,

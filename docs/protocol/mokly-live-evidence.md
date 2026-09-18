@@ -1,5 +1,11 @@
 # Live catalogue evidence updates
 
+## Delivery Status
+
+Live evidence updates and bounded affected-usage deduplication are implemented.
+Deduplication verification is recorded in Milestone 2 of the
+[dependency patch upstreaming plan](../../plans/mokabook-dependency-patch-upstreaming.md).
+
 ## Revisions and publication
 
 Live Serve distinguishes authored content changes from background evidence.
@@ -96,6 +102,25 @@ views still request their own records when displayed; exhaustive render-order
 records cannot substitute for those documents. Exhaustive catalogue records
 supply the complete Used by list.
 
+### Affected-Usage Identity And Ordering
+
+The shared served/published workspace deduplicates Affected usage links after
+projecting the selected component's affected-consumer evidence. Two links are
+duplicates exactly when `JSON.stringify` of each complete link produces the same
+string: every serialized field must match. The fields are `title`, `route`,
+optional `variantId`, `viewport`, `colorScheme`, `instanceKey`, `direct`, `removed`,
+and `comparisonEligible`; future serialized fields also participate. Preserve
+normal JSON field order and omission semantics; do not replace this identity with
+route-only, instance-only, or a sorted/subset key.
+
+Keep the first occurrence in evidence order: affected-consumer record order,
+then each record's evidence order. Do not sort the result or merge distinct
+viewport, color scheme, saved variant, instance, ownership (`direct`), removal,
+or comparison-eligibility contexts. Deduplication performs at most one
+serialization per input usage link and tracks previously seen keys in one pass;
+it must not rescan or reserialize prior links. This changes neither Changes
+membership nor comparison eligibility and does not rewrite upstream evidence.
+
 ## Acceptance
 
 Desktop/mobile browser regressions assert retained document, navigation-row and
@@ -107,3 +132,6 @@ completion during a temporary prop edit, later variant/scheme switches, removed
 row membership/order, superseded responses, navigation races, reconnect catch-up
 and content updates followed immediately by evidence updates. Genuine source
 and resource edits must still refresh the rendered content.
+Test affected-link duplicates across evidence records, first-occurrence order,
+and distinct fields/contexts; assert at most one serialization per input link,
+including duplicates, with the same projection for served and published shells.

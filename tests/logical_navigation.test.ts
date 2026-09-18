@@ -6,7 +6,7 @@ import {
   isLogicalFragment,
   parseLogicalMarker,
   parseLogicalTarget,
-} from "../dist/navigation/logical.js";
+} from "../packages/viewer/dist/navigation/logical.js";
 
 test("logical navigation validators fail closed for non-string values", () => {
   for (const value of [null, true, 42, ["valid-id"], { value: "valid-id" }]) {

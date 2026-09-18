@@ -27,53 +27,59 @@ test("the example rebuilds derived baselines with its own package tooling", asyn
     ["npm", "run", "example:build"],
   ];
   assert.deepEqual(config.review.baselineBuild, recipe);
-  for (const generatedOutput of [undefined, "committed"])
-    assert.throws(
-      () =>
-        resolveConfig(
-          {
-            entriesDir: "entries",
-            mockupsDir: "generated",
-            repoRoot: "../..",
-            generatedOutput,
-            review: { baselineBuild: recipe },
-          },
-          configPath,
-        ),
-      { code: "config-invalid" },
-    );
   assert.deepEqual(
     resolveConfig(
       {
         entriesDir: "entries",
         mockupsDir: "generated",
         repoRoot: "../..",
-        generatedOutput: "derived",
         review: { baselineBuild: recipe },
       },
       configPath,
     ).review.baselineBuild,
     recipe,
   );
+  assert.throws(
+    () =>
+      resolveConfig(
+        {
+          entriesDir: "entries",
+          mockupsDir: "generated",
+          repoRoot: "../..",
+          generatedOutput: "committed",
+          review: { baselineBuild: recipe },
+        },
+        configPath,
+      ),
+    { code: "config-invalid" },
+  );
 });
 
-test("generated output defaults to committed and derives exact default argv", async (t) => {
+test("generated output defaults to derived and derives exact default argv", async (t) => {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
-  const committed = resolveConfig(input, fixture.configPath);
+  const derived = resolveConfig(input, fixture.configPath);
+  assert.equal(derived.generatedOutput, "derived");
+  assert.deepEqual(derived.review.baselineBuild, [
+    ["npm", "ci"],
+    ["npx", "--no-install", "mokly", "build", "--config", "mokly.config.ts"],
+  ]);
+  const committed = resolveConfig(
+    { ...input, generatedOutput: "committed" },
+    fixture.configPath,
+  );
   assert.equal(committed.generatedOutput, "committed");
   assert.equal(committed.review.baselineBuild, undefined);
   const configPath = path.join(fixture.root, "config", "catalogue.ts");
-  const derived = resolveConfig(
+  const nested = resolveConfig(
     {
       entriesDir: "../entries",
       mockupsDir: "../mockups",
       repoRoot: "..",
-      generatedOutput: "derived",
     },
     configPath,
   );
-  assert.deepEqual(derived.review.baselineBuild, [
+  assert.deepEqual(nested.review.baselineBuild, [
     ["npm", "ci"],
     [
       "npx",
@@ -125,30 +131,35 @@ test("generated output rejects unknown modes and malformed or committed commands
         ),
       { code: "config-invalid" },
     );
-  for (const generatedOutput of [undefined, "committed"])
-    assert.throws(
-      () =>
-        resolveConfig(
-          { ...input, generatedOutput, review: { baselineBuild: [] } },
-          fixture.configPath,
-        ),
-      { code: "config-invalid" },
-    );
+  assert.throws(
+    () =>
+      resolveConfig(
+        {
+          ...input,
+          generatedOutput: "committed",
+          review: { baselineBuild: [] },
+        },
+        fixture.configPath,
+      ),
+    { code: "config-invalid" },
+  );
 });
 
 test("only derived output may be absent and its projected root stays confined", async (t) => {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
   const missing = { ...input, mockupsDir: "new/nested/output" };
-  assert.throws(() => resolveConfig(missing, fixture.configPath), {
-    code: "config-invalid",
-  });
   assert.equal(
-    resolveConfig(
-      { ...missing, generatedOutput: "derived" },
-      fixture.configPath,
-    ).mockupsDir,
+    resolveConfig(missing, fixture.configPath).mockupsDir,
     path.join(fixture.root, missing.mockupsDir),
+  );
+  assert.throws(
+    () =>
+      resolveConfig(
+        { ...missing, generatedOutput: "committed" },
+        fixture.configPath,
+      ),
+    { code: "config-invalid" },
   );
   await fs.symlink(
     path.dirname(fixture.root),

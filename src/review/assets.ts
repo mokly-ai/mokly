@@ -1,10 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { isSafeRepositoryPath } from "@mokly/viewer/data";
+import type { ReviewArtifactContent } from "@mokly/viewer/data";
+
 import type { FileLocation } from "../config/file_locations.js";
-import { isInside, isSafeRepositoryPath } from "../config/paths.js";
+import { isInside } from "../config/paths.js";
 import {
-  isPrivateStaticPath,
+  privateStaticPathReason,
   publicPathLocation,
 } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -14,7 +17,6 @@ import { MoklyError, errorMessage } from "../errors.js";
 import { referencedRoutes } from "./asset_references.js";
 import type { BaselineReader, GitFile } from "./git.js";
 import { addArtifactFile, snapshotPath } from "./paths.js";
-import type { ReviewArtifactContent } from "./types.js";
 
 /** Filesystem boundary for current-worktree Review assets. */
 export interface ReviewAssetReader {
@@ -66,7 +68,11 @@ export class FileSystemReviewAssetReader implements OptionalReviewAssetReader {
     try {
       const location = publicPathLocation(candidate, this.config);
       if (!location) {
-        throw assetError(route, "not a public static file");
+        const denial = privateStaticPathReason(candidate, this.config);
+        throw assetError(
+          route,
+          `not a public static file${denial ? `: ${denial}` : ""}`,
+        );
       }
       let stat;
       try {
@@ -91,11 +97,18 @@ export class FileSystemReviewAssetReader implements OptionalReviewAssetReader {
 /** Confined Git implementation for base-commit Review assets. */
 export class GitReviewAssetReader implements ReviewAssetReader {
   constructor(
-    private readonly config: ResolvedConfig,
+    config: ResolvedConfig,
     private readonly git: BaselineReader,
     private readonly commit: string,
     private readonly mockupsPrefix: string,
-  ) {}
+  ) {
+    this.config = {
+      ...config,
+      mockupsDir: path.resolve(config.repoRoot, mockupsPrefix),
+    };
+  }
+
+  private readonly config: ResolvedConfig;
 
   async readIfExists(route: string): Promise<Uint8Array | undefined> {
     assertPublicStaticRoute(route, this.config);
@@ -251,11 +264,12 @@ function assertPublicStaticRoute(
 ): string {
   if (!isSafeRepositoryPath(route)) throw assetError(route, "unsafe path");
   const candidate = path.resolve(config.mockupsDir, route);
-  if (
-    !isInside(config.mockupsDir, candidate) ||
-    isPrivateStaticPath(candidate, config)
-  ) {
-    throw assetError(route, "not a public static file");
+  const denial = privateStaticPathReason(candidate, config, false);
+  if (!isInside(config.mockupsDir, candidate) || denial) {
+    throw assetError(
+      route,
+      `not a public static file${denial ? `: ${denial}` : ""}`,
+    );
   }
   return candidate;
 }

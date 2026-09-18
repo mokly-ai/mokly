@@ -1,4 +1,5 @@
-import type { ColorScheme } from "../authoring/types.js";
+import type { ColorScheme } from "@mokly/viewer";
+
 import { MoklyError } from "../errors.js";
 
 import { validateRelativeRoute } from "./paths.js";

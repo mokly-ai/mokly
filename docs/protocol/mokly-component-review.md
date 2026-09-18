@@ -6,7 +6,7 @@ The producer, source validator, artifact publisher, exporter, and browser decode
 implement this component-aware Review schema v3 for [change attribution](./mokly-component-changes.md).
 `ReviewResult`, `ScreenReview`, `ViewReview`, and `ReviewState` refer to the
 existing [schema-v2 contract](./mokly-changes.md) and
-[named result interfaces](../../src/review/types.ts). Manifest/usage types come
+[named result interfaces](../../packages/viewer/src/review/types.ts). Manifest/usage types come
 from the [component manifest](./mokly-component-manifest.md).
 
 ## Normative Result
@@ -164,8 +164,9 @@ retains its `ignoredIds`. Its record is identical to the one the complete
 comparison produces for that view; the decision changes cost, not output.
 Eligibility requires equality with component markers retained outside paired
 ignored regions and canonical equality of usage topology. Only `props` and
-`propsKey` on entry-owned instances may differ; nested inputs, ownership,
-identity, slots, ranges, styles, and resources require the complete comparison.
+`propsKey` on entry-owned instances may differ, and invocation `source`
+metadata is ignored; nested inputs, ownership, identity, slots, ranges, styles,
+and resources require the complete comparison.
 One-sided views always validate their available range records in the side's
 current or historical marker dialect before producing an added or removed
 record.

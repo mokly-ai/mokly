@@ -1,14 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { ComponentValidationError } from "../dist/components/data.js";
-import type { ComponentRangeRecord } from "../dist/components/manifest_types.js";
+import { ComponentValidationError } from "@mokly/viewer/data";
+
 import { validateComponentRanges } from "../dist/components/ranges.js";
-import {
-  generatedViews,
-  type GeneratedComponentView,
-} from "../dist/components/views.js";
-import type { Manifest } from "../dist/registry/types.js";
 import { ComponentDependencyPolicy } from "../dist/review/component_metadata.js";
 import { ComponentMaterialReader } from "../dist/review/component_resources.js";
 import {
@@ -16,6 +11,12 @@ import {
   type ComponentViewContext,
 } from "../dist/review/component_view.js";
 import { ResourceComparison } from "../dist/review/resource_comparison.js";
+import type { ComponentRangeRecord } from "../packages/viewer/dist/components/manifest_types.js";
+import {
+  generatedViews,
+  type GeneratedComponentView,
+} from "../packages/viewer/dist/components/views.js";
+import type { Manifest } from "../packages/viewer/dist/registry/types.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 

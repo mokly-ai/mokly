@@ -137,6 +137,10 @@ ranges, with dimming-mask cutouts for the selected regions. Do not set opacity
 on a consumer ancestor and try to restore opacity on its descendants. Do not
 clone component DOM, change its position, insert layout wrappers, or alter its
 computed styles. Component pixels, layout, and original opacity remain intact.
+Cross-origin overlays reset the package host's presentation with important
+styles and isolate/reset their SVG in a shadow root, so consumer CSS cannot
+paint over selected regions. Both measurers share containing-block-aware
+clipping for fixed elements, transformed ancestors and inner scrollers.
 
 Bounds come from the active generated document, support multi-root/text ranges,
 and follow scroll, nested scroll containers, frame resize/expansion, fonts/images
@@ -161,7 +165,7 @@ Component-page nested inspection can reuse this same mechanism.
 
 ## Frame And Publishing Boundary
 
-Only package-owned shell code inspects its immediate, same-origin, authenticated
+By default, package-owned shell code inspects its immediate, same-origin, authenticated
 generated frame. Component metadata extends the existing Browse ownership
 validation. Arbitrary legacy documents, nested frames, and comparison snapshots
 receive no new inspection privileges. Consumer scripts, forms, popups, and top
@@ -173,10 +177,25 @@ development server. Standalone generated fragments retain normal content and
 portable links; they do not require the interactive inspector. Temporary local
 controls are governed separately by the [controls contract](./mokly-component-controls.md).
 
+The implemented frame boundary lets the [viewer](./mokly-viewer.md) access boundaries,
+highlighting, scrolling and frame events through [FrameAdapter](./mokly-frame-adapter.md).
+`sameOriginAdapter` encapsulates today's document access without changing
+authentication, visuals or sandbox. An explicit cross-origin host instead uses
+the nonce/origin-checked inspector in current published copies on a separate
+origin with `allow-same-origin allow-scripts`. That host exception enables
+document scripts; local frames and comparison snapshots keep their existing
+restrictions. Host-only pick mode reuses Highlight components and adds no local
+control. Instance lookup uses the [scoped identity contract](./mokly-instances.md),
+not source locations, DOM text or guessed geometry.
+Public imperative highlighting keeps viewport, scheme, variant and flow-step
+scope through masks, labels and emitted events. This differs from the workspace's
+intentional multi-view highlighting of one selected key. Frame replacement ends
+host picking and clears stale inspection under the viewer lifecycle contract.
+
 ## Mockups And Verification
 
 Before UI implementation, extend the existing design catalogue under
-`examples/basic/entries/design` and regenerate its committed HTML. This is
+`examples/basic/entries/design` and regenerate its local derived HTML. This is
 Mokly's current owning mockup tree; do not introduce an unrelated Expo app
 or a second mockup generator. Provide mobile and desktop screen components for
 the component page/variants, changed component/Affected screens, screen inspector

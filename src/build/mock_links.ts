@@ -2,22 +2,18 @@ import path from "node:path";
 
 import { parse } from "parse5";
 
-import type {
-  ColorScheme,
-  ResolvedRegistryEntry,
-  Viewport,
-} from "../authoring/types.js";
-import { encodeUrlPath } from "../config/paths.js";
-import { MoklyError } from "../errors.js";
+import type { ColorScheme, Viewport } from "@mokly/viewer";
 import {
+  encodeUrlPath,
   logicalMarker,
   parseLogicalTarget,
   type LogicalTarget,
-} from "../navigation/logical.js";
-import {
   duplicateReservedAttributeName,
   type HtmlSourceLocation,
-} from "../navigation/reserved_attributes.js";
+} from "@mokly/viewer/data";
+
+import type { ResolvedRegistryEntry } from "../authoring/types.js";
+import { MoklyError } from "../errors.js";
 
 import {
   logicalNamespace,

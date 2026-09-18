@@ -1,0 +1,61 @@
+{
+  "name": "@mokly/viewer",
+  "version": "0.2.0",
+  "description": "Embeddable Mokly catalogue viewer, frame adapters, and static shell rendering.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": [
+    "./dist/styles.css"
+  ],
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "node": "./dist/server.js"
+    },
+    "./runtime": {
+      "types": "./dist/runtime.d.ts",
+      "import": "./dist/runtime.js"
+    },
+    "./data": {
+      "types": "./dist/data.d.ts",
+      "import": "./dist/data.js"
+    },
+    "./styles.css": "./dist/styles.css"
+  },
+  "peerDependencies": {
+    "react": ">=19.0.0",
+    "react-dom": ">=19.0.0"
+  },
+  "files": [
+    "dist",
+    "CHANGELOG.md",
+    "LICENSE",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mokly-ai/mokly.git",
+    "directory": "packages/viewer"
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json && node scripts/build.mjs",
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "test": "tsx --test tests/*.test.ts tests/*.test.tsx",
+    "prepack": "npm run build"
+  },
+  "imports": {
+    "#markup-renderer": {
+      "node": "react-dom/server",
+      "default": "react-dom/server.browser"
+    }
+  }
+}

@@ -48,6 +48,40 @@ and in memory; controls do not change source, committed fragments or Changes.
 Static export carries saved variants and inspection without the local capability.
 See the [component contract](../protocol/mokly-components.md).
 
+## Viewer Package Boundary
+
+The repository uses npm workspaces with `packages/viewer` as `@mokly/viewer`
+(version 0.1.0); root `@mokly/mokly` depends on exactly that version, without
+`workspace:` or filesystem dependency specifiers. Shell TSX/CSS, enhancement
+runtime, navigation, frame adapters, inspector and public catalogue/instance
+readers belong to the viewer. Shared pure validation and DTOs live there too. The CLI retains config, authoring/build, comparisons,
+Serve/watch, export/upload and private control/evidence transports. The viewer
+never imports the CLI, Node built-ins, Git or consumer application code. Its `./server` entry
+is explicitly Node-only SSR and is excluded from the browser entry graph.
+
+The public boundary consists of [scoped instances](../protocol/mokly-instances.md),
+the [catalogue v1 projection](../protocol/mokly-catalogue.md), the
+[React/SSR viewer API](../protocol/mokly-viewer.md) and
+[FrameAdapter](../protocol/mokly-frame-adapter.md). Hosts consume packages and
+documented public artifacts, without private manifest access, deep imports or
+cloud-specific flags. The viewer owns stable shell markup and vanilla runtime
+islands; React slots remain host-owned. Static SSR ships no React to browsers.
+First-party Serve/export use the same-origin adapter and no slots, preserving
+every existing local pixel and interaction. Private live integrations stay in
+the CLI host; explicit cross-origin hosts use the bounded inspector protocol.
+React slots and marker content remain host-owned. The viewer may position that
+content from authenticated instance geometry, but it owns no comment model,
+tenant, auth or persistence and exposes no raw geometry API. Multi-instance
+highlighting and marker placement compose the same public frame adapter boundary.
+
+Public catalogue and inspector files join existing export/upload inventories
+without schema changes. The manifest/source inventory stays private. Build,
+package and packed-consumer checks must cover both tarballs and their dependency
+direction. Pack the viewer first and install both archives in clean consumers.
+The documented root, `./server`, `./runtime`, `./data` and stylesheet exports
+replace source deep imports. Release-please configuration for coordinated releases
+remains Milestone 6; this extraction does not modify release automation.
+
 ## Complete-Document Boundary
 
 Consumers register complete HTML with `definePage` or nested `page`. A callback
@@ -69,7 +103,9 @@ supervisor shutdown waits for confirmed exit while escalating from IPC to
 SIGTERM and SIGKILL. On-demand comparisons read the base
 tree through bounded Git object batches, matches directory dependencies
 recursively, rejects non-portable base resource URLs, and never checks the base
-out over the worktree. No separate report pages or navigation payload are generated.
+out over the worktree. No separate comparison report pages or comparison
+navigation payload are generated. The approved public catalogue is the additive
+browsing projection described above.
 The comparison server redirects metadata requests to immutable generation URLs and retains
 superseded directories for a bounded idle window. Responses disable HTTP
 caching, while the versioned paths keep a comparison's panes and assets
@@ -106,6 +142,9 @@ artifact validation, deployment identity, and the output transaction, and reuse
 the same shell renderer and comparison engine. Watch ignores inventory-listed
 export files while traversing output directories for new authored files.
 
+The viewer is a separate public rendering API; it does not expose
+the export engine as a JavaScript API or take over deployment/authentication.
+
 ## Related Docs
 
 - [Build pipeline](./build-pipeline.md)
@@ -113,3 +152,5 @@ export files while traversing output directories for new authored files.
 - [Runtime protocol](../protocol/mokly-runtime.md)
 - [Static export contract](../protocol/mokly-export.md)
 - [Static delivery contract](../protocol/mokly-export-delivery.md)
+- [Viewer API](../protocol/mokly-viewer.md)
+- [Public catalogue](../protocol/mokly-catalogue.md)

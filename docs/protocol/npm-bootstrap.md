@@ -27,8 +27,43 @@ accepted registration. This was an interactive maintainer publication, not an
 OIDC publication; npm signatures alone do not prove workflow provenance.
 
 Trusted publishing, team access and the package's 2FA requirement are configured.
-GitHub release-token permissions and publishing protections still need to be
-completed and verified before the first automated release.
+The CLI has subsequently published 0.9.0 and 0.10.0, and the viewer registration
+is recorded below. Read back current GitHub and npm settings before any later
+release; historical setup evidence does not prove that either package's current
+publisher, team access or tag protections remain configured.
+
+## Completed Viewer Registration
+
+`@mokly/viewer@0.1.0` was registered on 17 September 2026 from reviewed commit
+`37724a8d62d5f68a76c2fddc3bed92425a1740e0`, shared by tags `v0.10.0` and
+`viewer-v0.1.0`. Registration is complete; do not repeat it or publish a 0.0.0
+placeholder. The accepted viewer dist-tags are:
+
+```json
+{ "bootstrap": "0.1.0", "latest": "0.1.0" }
+```
+
+The viewer archive was built in an isolated checkout with the explicit reviewed
+commit, then published using interactive maintainer authentication and 2FA. The
+paired release workflow rebuilt the viewer from the same commit, required an
+exact registry-byte match, verified its npm signatures, skipped republishing it,
+and then published `@mokly/mokly@0.10.0` through trusted publishing. Retain
+`bootstrap` on viewer 0.1.0 as the registration record.
+
+The initial viewer publication has reviewed-source, inventory, hash and npm
+signature evidence, but no OIDC provenance. Its next publication through the
+package's own trusted publisher supplies the first viewer OIDC attestation.
+Before that release, verify the `@mokly/viewer` publisher names GitHub
+organization `mokly-ai`, repository `mokly`, workflow `release.yml`, environment
+`npm`, and direct `npm publish`; also verify `mokly:developers` access, public
+access, required 2FA and disabled token bypass. The CLI package's trust does not
+establish any of those package-specific settings.
+
+The shared GitHub environment remains the main-only OIDC boundary for both
+packages, with no required reviewer. Merging a combined Release Please PR
+authorizes automatic publication; a manual dispatch from `main` may only retry
+an existing immutable tag pair through the same byte and source guards. No npm
+write token belongs in GitHub Actions.
 
 ## Reviewed Source And Archive
 
@@ -114,3 +149,5 @@ dirty/ref/name/version rejection, scoped archive naming with the unchanged
 evidence, destination preservation, symlinked temporary roots, partial source
 clones with missing historical blobs, and rejection of lifecycle input mutations.
 Run it with `node --import tsx --test tests/release_bootstrap.test.ts`.
+`tests/release_bootstrap_viewer.test.ts` additionally proves the isolated viewer
+first-publish identity, version restriction and lifecycle mutation rejection.

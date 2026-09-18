@@ -1,8 +1,13 @@
+import { generatedViews } from "@mokly/viewer/data";
+import type {
+  Manifest,
+  ReviewArtifact,
+  ReviewArtifactContent,
+} from "@mokly/viewer/data";
+
 import type { Compilation } from "../build/compile.js";
-import { generatedViews } from "../components/views.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
-import type { Manifest } from "../registry/types.js";
 
 import {
   copySnapshotDependencies,
@@ -12,7 +17,6 @@ import {
 import { CompilationAssetReader } from "./compilation_assets.js";
 import { classifyComponents } from "./component_classification.js";
 import { addArtifactFile, snapshotPath } from "./paths.js";
-import type { ReviewArtifact, ReviewArtifactContent } from "./types.js";
 
 /** Retain every component variant and affected screen, then classify the same immutable bytes. */
 export async function compareComponentCatalogue(

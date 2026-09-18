@@ -7,7 +7,7 @@ import { promisify } from "node:util";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
-import type { ReviewResult } from "../dist/review/types.js";
+import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
 import { createPreviewComparisonFixture } from "./helpers/preview_comparison_fixture.js";

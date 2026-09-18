@@ -4,7 +4,7 @@ import { parse, type DefaultTreeAdapterMap } from "parse5";
 
 import { compileCatalogue } from "../../dist/build/compile.js";
 import { loadConfig } from "../../dist/config/load.js";
-import type { ManifestScreen } from "../../dist/registry/types.js";
+import type { ManifestScreen } from "../../packages/viewer/dist/registry/types.js";
 
 import { repositoryRoot } from "./fixture.js";
 

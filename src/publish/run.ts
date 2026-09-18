@@ -1,11 +1,12 @@
 import path from "node:path";
 
+import { parseReviewResult } from "@mokly/viewer/data";
+
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 import type { exportCatalogue } from "../export/run.js";
 import type { GitCommandRunner } from "../review/git.js";
-import { parseReviewResult } from "../review/result_validation.js";
 
 import { bundleUpload } from "./bundle.js";
 import { uploadCatalogue } from "./http.js";
@@ -19,6 +20,7 @@ export interface PublishOptions extends UploadOptions {
   base?: string;
   noChanges?: boolean;
   repository?: string;
+  diagnostic?: (message: string) => void;
 }
 
 /** Injectable runtime boundaries for publish orchestration. */
@@ -27,6 +29,15 @@ export interface PublishDependencies {
   export: typeof exportCatalogue;
   fetch: typeof fetch;
   now(): Date;
+  progress?: PublishProgress;
+}
+
+/** Optional command-presentation observer around publication work. */
+export interface PublishProgress {
+  run<Result>(
+    phase: "export" | "prepare" | "upload",
+    action: () => Promise<Result>,
+  ): Promise<Result>;
 }
 
 /** Export one pinned generation, then send exactly its finalized archive bytes. */
@@ -38,65 +49,81 @@ export async function publishCatalogue(
   dependencies: PublishDependencies,
   signal?: AbortSignal,
 ): Promise<void> {
-  const identity = await readUploadIdentity(
-    dependencies.git,
-    env,
-    options.repository,
+  const identity = await withProgress(dependencies, "prepare", () =>
+    readUploadIdentity(dependencies.git, env, options.repository),
   );
   let bundle: Buffer | undefined;
-  await dependencies.export(config, {
-    outDir: options.out ?? ".context/mokly-publish",
-    ...(options.base === undefined ? {} : { base: options.base }),
-    ...(signal === undefined ? {} : { signal }),
-    noChanges: options.noChanges ?? false,
-    adapter: {
-      transform(files, routes) {
-        const comparisonPath = routes.comparisonUrl?.slice(1) ?? null;
-        const reviewBytes = comparisonPath
-          ? files.get(comparisonPath)
-          : undefined;
-        const review =
-          reviewBytes === undefined
-            ? undefined
-            : parseReviewResult(
-                JSON.parse(Buffer.from(reviewBytes).toString("utf8")),
-              );
-        if ((comparisonPath !== null && !review) || files.has(UPLOAD_MANIFEST))
-          throw new MoklyError(
-            "upload-invalid-bundle",
-            "The export has missing comparison metadata or a reserved manifest path.",
-          );
-        const manifest = validateUploadManifest({
-          schemaVersion: 1,
-          moklyVersion: version,
-          repository: identity.repository,
-          branch: identity.branch,
-          headSha: identity.headSha,
-          pullRequest: identity.pullRequest,
-          baseRef: review?.baseRef ?? null,
-          baseSha: review?.baseCommit ?? null,
-          configPath: toPosixPath(
-            path.relative(identity.gitRoot, config.configPath),
-          ),
-          exportedAt: dependencies.now().toISOString(),
-          comparisonPath,
-        });
-        files.set(UPLOAD_MANIFEST, `${JSON.stringify(manifest, null, 2)}\n`);
+  await withProgress(dependencies, "export", () =>
+    dependencies.export(config, {
+      outDir: options.out ?? ".context/mokly-publish",
+      ...(options.base === undefined ? {} : { base: options.base }),
+      ...(signal === undefined ? {} : { signal }),
+      noChanges: options.noChanges ?? false,
+      ...(options.diagnostic ? { diagnostic: options.diagnostic } : {}),
+      adapter: {
+        transform(files, routes) {
+          const comparisonPath = routes.comparisonUrl?.slice(1) ?? null;
+          const reviewBytes = comparisonPath
+            ? files.get(comparisonPath)
+            : undefined;
+          const review =
+            reviewBytes === undefined
+              ? undefined
+              : parseReviewResult(
+                  JSON.parse(Buffer.from(reviewBytes).toString("utf8")),
+                );
+          if (
+            (comparisonPath !== null && !review) ||
+            files.has(UPLOAD_MANIFEST)
+          )
+            throw new MoklyError(
+              "upload-invalid-bundle",
+              "The export has missing comparison metadata or a reserved manifest path.",
+            );
+          const manifest = validateUploadManifest({
+            schemaVersion: 1,
+            moklyVersion: version,
+            repository: identity.repository,
+            branch: identity.branch,
+            headSha: identity.headSha,
+            pullRequest: identity.pullRequest,
+            baseRef: review?.baseRef ?? null,
+            baseSha: review?.baseCommit ?? null,
+            configPath: toPosixPath(
+              path.relative(identity.gitRoot, config.configPath),
+            ),
+            exportedAt: dependencies.now().toISOString(),
+            comparisonPath,
+          });
+          files.set(UPLOAD_MANIFEST, `${JSON.stringify(manifest, null, 2)}\n`);
+        },
       },
-    },
-    capture: async (files) => {
-      bundle = await bundleUpload(files, signal);
-    },
+      capture: async (files) => {
+        bundle = await bundleUpload(files, signal);
+      },
+    }),
+  );
+  await withProgress(dependencies, "upload", async () => {
+    if ((await readHeadSha(dependencies.git)) !== identity.headSha)
+      throw new MoklyError(
+        "git-failed",
+        "HEAD changed during export. Retry publication from a stable checkout.",
+      );
+    if (!bundle)
+      throw new MoklyError(
+        "upload-invalid-bundle",
+        "The export did not produce an upload bundle.",
+      );
+    await uploadCatalogue(options, bundle, dependencies.fetch, signal);
   });
-  if ((await readHeadSha(dependencies.git)) !== identity.headSha)
-    throw new MoklyError(
-      "git-failed",
-      "HEAD changed during export. Retry publication from a stable checkout.",
-    );
-  if (!bundle)
-    throw new MoklyError(
-      "upload-invalid-bundle",
-      "The export did not produce an upload bundle.",
-    );
-  await uploadCatalogue(options, bundle, dependencies.fetch, signal);
+}
+
+async function withProgress<Result>(
+  dependencies: PublishDependencies,
+  phase: "export" | "prepare" | "upload",
+  action: () => Promise<Result>,
+): Promise<Result> {
+  return dependencies.progress
+    ? dependencies.progress.run(phase, action)
+    : action();
 }

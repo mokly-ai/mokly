@@ -51,7 +51,11 @@ for (const viewport of ["mobile", "desktop"] as const) {
     await expect(page).toHaveURL(
       /\/view\/design\/browse\/views\/screen\.html$/,
     );
-    await expect(frame.locator("script")).toHaveCount(0);
+    await expect(frame.locator("script")).toHaveCount(1);
+    await expect(frame.locator("script")).toHaveAttribute(
+      "src",
+      "/__mokly/client/inspector.js",
+    );
     const iframe = page.locator(`.mbk-frame-${viewport} iframe`);
     expect((await iframe.getAttribute("sandbox"))?.split(/\s+/)).not.toContain(
       "allow-scripts",

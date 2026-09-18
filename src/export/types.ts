@@ -1,5 +1,4 @@
-import type { StaticDelivery } from "../navigation/delivery.js";
-import type { ReviewArtifactContent } from "../review/types.js";
+import type { StaticDelivery, ReviewArtifactContent } from "@mokly/viewer/data";
 
 import type { LegacyExportOwnership } from "./ownership.js";
 
@@ -33,6 +32,8 @@ export interface ExportAdapter {
 export interface ExportOptions {
   outDir: string;
   base?: string;
+  /** Route non-fatal baseline cleanup diagnostics through the CLI reporter. */
+  diagnostic?: (message: string) => void;
   /** Omit baseline reads and comparison artifacts; publish uses this capability. */
   noChanges?: boolean;
   /** Consume finalized bytes before installation, while the output is reserved. */

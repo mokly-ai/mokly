@@ -1,4 +1,4 @@
-import type { ColorScheme, Viewport } from "../authoring/types.js";
+import type { ColorScheme, Viewport } from "@mokly/viewer";
 
 /** Context supplied to a temporary consumer-owned document transformer. */
 export interface CompatibilityTransformInput {

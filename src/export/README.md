@@ -53,6 +53,29 @@ shell roots while preserving other bytes and rejecting adapter metadata drift.
 Descriptor version 2 lets both old and current clients reload across incompatible
 deployments. Comparison generation URLs retain their separate content identity.
 
+`site.ts` also writes the [public catalogue projection](../catalogue/README.md)
+at `__mokly/catalogue.json`. Its per-entry Changes state uses the same accepted
+attribution as the shell. It enters the normal collision-checked inventory,
+ownership v1 marker and upload v1 archive without changing either schema.
+Finalization validates the catalogue and canonicalizes only its top-level
+`deploymentId` to zeroes for hashing, then stamps the same identity as the shell.
+Other catalogue fields participate in the hash, including additive fields.
+Export revisions are zero; current-only exports have disabled Changes and a
+null comparison pointer. Repository preview capture uses the same projection
+and finalization. Shell HTML retains its existing bytes apart from the identity.
+
+The browser inventory also publishes `__mokly/client/inspector.js`. The Browse
+adapter adds its deferred script and bounded inert identity map only to owned
+current HTML copies. Generated files and immutable comparison snapshots remain
+byte-unmodified. Local frames retain `allow-same-origin`, with scripts disabled
+and parent-owned highlighting; an explicit cross-origin host uses the
+[frame adapter handshake](../../packages/viewer/src/inspector/README.md). The script and maps enter the
+existing ownership/upload inventories and deployment hash without schema changes.
+Repository preview validates the copied consumer resources before adding the
+inspector, then validates the complete export inventory. This preserves the
+portable-source rules without treating the package-owned script as a consumer
+resource or granting consumer documents root-relative resource access.
+
 `paths.ts`, `ownership.ts`, and `transaction.ts` constrain replacement to a
 validated, exclusively reserved output. `destination.ts` retains initial absence
 or exact bigint directory identity and checks it before and after capture.
@@ -80,7 +103,19 @@ owned `.mokly-export-reservations` namespace, retaining only its metadata
 after cleanup. Case and symlink aliases cannot bypass an active lock. Legacy
 hashed reservations require explicit recovery before another export.
 `resource_policy.ts` applies the same package/source boundary to current and
-historical copies. Build and export share HTML anchor validation through
+historical copies. The
+[public-exclusion contract](../../docs/protocol/mokly-source-protection.md#public-exclusions)
+extends that one policy with resolved `publicExclude` globs. Defaults exclude
+README and tsconfig files case-insensitively; consumer globs only add exclusions.
+Capture, reference validation, Review reads and content-change classification
+must agree on candidate and realpath-alias matching relative to `mockupsDir`.
+Excluded files stay out of public inventory without becoming `sourceFiles`;
+manifest/cache privacy remains unconditional. Generated routes or references
+colliding with exclusions fail validation with the referring route, matched glob,
+and `publicExclude` field. The shared classifier retains distinct entries-root,
+reserved-name, listed-input, and exclusion causes for diagnostic boundaries;
+public HTTP continues returning 404 for protected paths.
+Build and export share HTML anchor validation through
 `html_link_validation.ts`. Watch traverses owned output directories to discover
 unlisted authored files while ignoring the recorded generated files.
 

@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { generatedViews } from "../dist/components/views.js";
 import {
   runWithTimings,
   type TimingEvent,
@@ -10,6 +9,7 @@ import { ComponentDependencyPolicy } from "../dist/review/component_metadata.js"
 import { ComponentMaterialReader } from "../dist/review/component_resources.js";
 import { compareComponentView } from "../dist/review/component_view.js";
 import { ResourceComparison } from "../dist/review/resource_comparison.js";
+import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 

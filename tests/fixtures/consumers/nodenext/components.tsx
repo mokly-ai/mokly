@@ -1,8 +1,13 @@
 import {
   defineComponent,
+  resolveInstance,
+  reviewMaterialKey,
   type ComponentControl,
+  type ComponentInstanceRecord,
   type ComponentProps,
+  type ComponentSourceLocation,
   type DataPropSchema,
+  type InstanceResolution,
   type RenderResult,
 } from "@mokly/mokly";
 
@@ -50,3 +55,23 @@ const data: DataPropSchema = schema;
 const control: ComponentControl = { kind: "number", step: 1 };
 const result: RenderResult = { html: "<html><body>Typed</body></html>" };
 void [valid, missing, wrong, props, data, control, result];
+
+const source: ComponentSourceLocation = {
+  path: "entries/screen.tsx",
+  line: 1,
+  column: 1,
+};
+const instance: ComponentInstanceRecord = {
+  key: "a".repeat(64),
+  id: "action",
+  componentId: "typed-component",
+  owner: { kind: "entry" },
+  order: 0,
+  props: {},
+  propsKey: reviewMaterialKey({}),
+  source,
+};
+const resolution: InstanceResolution = resolveInstance(instance, undefined);
+// @ts-expect-error Invocation metadata belongs to the build runtime.
+const reserved = <component.Component label="Invalid" __moklySource={source} />;
+void [resolution, reserved];

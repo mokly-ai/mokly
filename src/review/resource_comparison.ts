@@ -1,5 +1,7 @@
 import { parse } from "parse5";
 
+import { isStylesheetPath } from "@mokly/viewer/data";
+
 import type { ComponentMaterialReader } from "./component_resources.js";
 import type { CssDocumentPair } from "./css/document.js";
 import {
@@ -7,7 +9,6 @@ import {
   type ChangedResource,
   type ResourceEvidence,
 } from "./css/resource_analysis.js";
-import { isStylesheetPath } from "./css/stylesheet_path.js";
 
 /** A view side after the comparison's paired normalization. */
 export interface ResourceDocument {

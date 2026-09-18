@@ -1,11 +1,13 @@
 /** Live routing metadata is deliberately not a publishable manifest. */
-import type { ColorScheme, ResolvedRegistryEntry } from "../authoring/types.js";
+import type { ColorScheme } from "@mokly/viewer";
+import type { Manifest, ManifestV5 } from "@mokly/viewer/data";
+
+import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import { validateDependencyDeclarations } from "../components/dependency_validation.js";
 import { MoklyError } from "../errors.js";
 
 import { createManifest } from "./manifest.js";
 import { validateManifestMetadata } from "./manifest_validation.js";
-import type { Manifest, ManifestV5 } from "./types.js";
 
 export interface CatalogueIndex {
   schemaVersion: "live-index-1";

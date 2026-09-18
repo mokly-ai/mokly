@@ -1,25 +1,33 @@
 /** Private same-origin admission and immutable sandboxed memory responses. */
 import type { IncomingMessage, ServerResponse } from "node:http";
 
-import {
-  ComponentRenderError,
-  renderStatus,
-} from "../../components/render_types.js";
+import { ComponentRenderError, renderStatus } from "@mokly/viewer/data";
+
+import { PlainServeReporter } from "../reporter.js";
 import { safeDecodePath } from "../respond.js";
 
 import type { ComponentRenderService } from "./service.js";
 
-export function localHost(request: IncomingMessage): string | undefined {
-  const port = request.socket.localPort;
+/**
+ * Accept exact loopback Host names with any canonical valid port, including
+ * forwarded ports. The regex is fully anchored; without multiline mode,
+ * JavaScript's $ admits no trailing newline.
+ */
+export function localHost(
+  request: Pick<IncomingMessage, "headers">,
+): string | undefined {
   const host = request.headers.host;
-  return host === `127.0.0.1:${port}` || host === `localhost:${port}`
-    ? host
-    : undefined;
+  const match = /^(?:localhost|127\.0\.0\.1):([1-9][0-9]{0,4})$/.exec(
+    host ?? "",
+  );
+  return match && Number(match[1]) <= 65_535 ? host : undefined;
 }
 export async function handleControls(
   request: IncomingMessage,
   response: ServerResponse,
   service: ComponentRenderService,
+  diagnostic: (message: string) => void = (message) =>
+    new PlainServeReporter().runtimeDiagnostic(message),
 ): Promise<void> {
   response.setHeader("cache-control", "no-store");
   response.setHeader("x-content-type-options", "nosniff");
@@ -89,6 +97,7 @@ export async function handleControls(
             "render-failed",
             "The preview could not be rendered. Try again or reset the props.",
           );
+    if (failure.detail !== undefined) diagnostic(failure.detail);
     if (!response.destroyed)
       json(
         response,

@@ -5,10 +5,10 @@ import test from "node:test";
 
 import { evaluateBundle } from "../dist/build/consumer_bundle.js";
 import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
-import type { ComponentRenderRequest } from "../dist/components/render_types.js";
 import { loadConfig } from "../dist/config/load.js";
 import { ComponentRenderService } from "../dist/server/controls/service.js";
 import { renderTransient } from "../dist/server/controls/transient.js";
+import type { ComponentRenderRequest } from "../packages/viewer/dist/components/render_types.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";

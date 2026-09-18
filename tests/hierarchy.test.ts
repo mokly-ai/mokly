@@ -6,13 +6,13 @@ import type {
   ResolvedRegistryEntry,
 } from "../dist/authoring/types.js";
 import { defineCollection, defineScreen } from "../dist/index.js";
-import { analyzeHierarchy } from "../dist/registry/hierarchy.js";
 import {
   createManifest,
   parseManifest,
   parseHistoricalManifest,
 } from "../dist/registry/manifest.js";
-import type { ManifestV5 } from "../dist/registry/types.js";
+import { analyzeHierarchy } from "../packages/viewer/dist/registry/hierarchy.js";
+import type { ManifestV5 } from "../packages/viewer/dist/registry/types.js";
 
 interface TestEntry {
   childIds?: readonly string[];

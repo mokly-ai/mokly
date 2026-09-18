@@ -1,18 +1,19 @@
 import { minimatch } from "minimatch";
 
-import { canonicalJson } from "../components/data.js";
-import type { ComponentViewRecord } from "../components/manifest_types.js";
-import { dependencyContainsChangedPath } from "../registry/dependency_paths.js";
+import type { ComponentViewRecord } from "@mokly/viewer";
 import {
+  canonicalJson,
   analyzeHierarchy,
   type CatalogueHierarchy,
-} from "../registry/hierarchy.js";
-import type { Manifest, ManifestEntry } from "../registry/types.js";
-
+} from "@mokly/viewer/data";
 import type {
+  Manifest,
+  ManifestEntry,
   EntryChangeReason,
   ReviewEntryAddress,
-} from "./component_types.js";
+} from "@mokly/viewer/data";
+
+import { dependencyContainsChangedPath } from "../registry/dependency_paths.js";
 
 export type RoutedEntry = Exclude<
   ManifestEntry,

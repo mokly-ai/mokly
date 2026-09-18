@@ -7,6 +7,7 @@ import {
   stopCommand,
   waitForOutput,
 } from "./command.mjs";
+import { validatePackageManifest, validateVersionPair } from "./manifest.mjs";
 
 export async function copyFixture(source, root) {
   await fs.promises.cp(source, root, { recursive: true });
@@ -30,6 +31,22 @@ export async function installConsumer(root, archivePath, packageJson) {
   );
   if (installed.name !== "@mokly/mokly") {
     throw new Error(`consumer did not install ${archivePath}`);
+  }
+  const viewer = JSON.parse(
+    await fs.promises.readFile(
+      path.join(root, "node_modules/@mokly/viewer/package.json"),
+      "utf8",
+    ),
+  );
+  validatePackageManifest(installed, "@mokly/mokly");
+  validatePackageManifest(viewer, "@mokly/viewer");
+  validateVersionPair(installed, viewer);
+  for (const name of ["mokly", "viewer"]) {
+    const stat = await fs.promises.lstat(
+      path.join(root, "node_modules/@mokly", name),
+    );
+    if (stat.isSymbolicLink())
+      throw new Error(`consumer installed a ${name} workspace link`);
   }
 }
 
@@ -55,7 +72,10 @@ export async function smokeServer(root, args = [], inspect) {
     const response = await fetch(match[1]);
     if (!response.ok) throw new Error(`server returned ${response.status}`);
     const html = await response.text();
-    if (inspect) await inspect(match[1]);
+    if (inspect) {
+      await waitForReadyChanges(match[1]);
+      await inspect(match[1]);
+    }
     if (!html.includes("data-mokly-shell")) {
       throw new Error("server response did not contain the Browse shell");
     }
@@ -63,8 +83,29 @@ export async function smokeServer(root, args = [], inspect) {
     failure = error;
   }
   const code = await stopCommand(running);
-  if (failure !== undefined) throw failure;
+  if (failure !== undefined) {
+    const output = running.output();
+    throw new Error(
+      `packed Mokly server inspection failed\n${output.stdout}${output.stderr}`,
+      { cause: failure },
+    );
+  }
   if (code !== 0) throw new Error(`server stopped with code ${code}`);
+}
+
+async function waitForReadyChanges(url) {
+  const deadline = Date.now() + 60_000;
+  while (Date.now() < deadline) {
+    const response = await fetch(url);
+    if (!response.ok)
+      throw new Error(`server returned ${response.status} while preparing`);
+    const html = await response.text();
+    if (html.includes('data-changes-status="ready"')) return;
+    if (html.includes('data-changes-status="unavailable"'))
+      throw new Error("packed Mokly comparison became unavailable");
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  throw new Error("packed Mokly comparison did not become ready");
 }
 
 export async function initializeGit(root) {
@@ -81,4 +122,12 @@ export async function initializeGit(root) {
   await runCommand("git", ["commit", "-qm", "test: fixture baseline"], {
     cwd: root,
   });
+}
+
+export async function initializeDerivedGit(root, generatedRoot) {
+  await fs.promises.appendFile(
+    path.join(root, ".gitignore"),
+    `.mokly-cache/\n${generatedRoot}/**/*.html\n${generatedRoot}/mokly-manifest.json\n`,
+  );
+  await initializeGit(root);
 }

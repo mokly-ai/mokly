@@ -1,12 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import {
-  isInside,
-  isSafeRepositoryPath,
-  projectRealPath,
-  toPosixPath,
-} from "../config/paths.js";
+import { isSafeRepositoryPath } from "@mokly/viewer/data";
+
+import { isInside, projectRealPath, toPosixPath } from "../config/paths.js";
 
 import { EXPORT_MARKER, parseExportOwnership } from "./ownership.js";
 import { isReservationDirectory } from "./reservation.js";

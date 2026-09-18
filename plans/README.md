@@ -2,6 +2,12 @@
 
 ## Active
 
+- [CLI Terminal Experience](./cli-terminal-experience.md)
+- [Package Documentation](./package-documentation.md) — supersedes the
+  unmerged public-site plan and pull request #79 by shipping versioned Markdown
+  guides in `@mokly/mokly` for the cloud repository to render.
+- [Viewer Comment Anchoring](./viewer-comment-anchoring.md)
+- [Mokabook Dependency Patch Upstreaming](./mokabook-dependency-patch-upstreaming.md)
 - [Publish Catalogue](./publish-catalogue.md)
 - [App-Independent Mokabook Npm Library](./app-independent-mokabook-library.md)
 - [Accounting Shell Design Parity](./accounting-shell-design-parity.md)
@@ -11,6 +17,9 @@
 - [Unchanged View Fast Path](./unchanged-view-fast-path.md) — delivered and
   verified; the required post-push review is reported in the implementation
   handoff.
+- [Mokly Viewer Library](./mokly-viewer-library.md) — implementation and release
+  PRs merged; viewer 0.1.0 and CLI 0.10.0 are published. One P2 review finding
+  and the remaining published-package smoke are recorded for follow-up.
 - [CSS Change Attribution](./css-change-attribution.md) — delivered, two
   rounds of review fixes applied, and reviewed three times; nine follow-up
   findings from the third review await the user's decision.
@@ -21,8 +30,8 @@
 - [Derived Baselines](./derived-baselines.md) — delivered and verified;
   review findings are recorded for the user's decision.
 - [Mokly Package Migration](./mokly-package-migration.md) — repository fixes
-  delivered and reviewed; authenticated GitHub publishing-protection setup
-  remains an external prerequisite.
+  delivered and reviewed; authenticated main-only GitHub publishing protections
+  are configured.
 - [Optional Published Changes](./optional-published-changes.md)
 - [Unified Catalogue Pages](./unified-catalogue-pages.md)
 - [Reuse Registered Components In Mokabook's Design Catalogue](./mokabook-design-components.md)

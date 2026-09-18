@@ -1,17 +1,16 @@
 /** Retain comparison JSON, snapshots, and a diagnostic summary. */
 
-import { canonicalJson } from "../components/data.js";
+import { canonicalJson, parseReviewResult } from "@mokly/viewer/data";
+import type {
+  ReviewArtifact,
+  ReviewArtifactContent,
+  ReviewResult,
+} from "@mokly/viewer/data";
 
 import { validateArtifactResources } from "./artifact_resources.js";
 import { markdownCode, markdownText } from "./markdown.js";
 import { hasOutputChange, isImpactOnly } from "./materiality.js";
 import { addArtifactFile } from "./paths.js";
-import { parseReviewResult } from "./result_validation.js";
-import type {
-  ReviewArtifact,
-  ReviewArtifactContent,
-  ReviewResult,
-} from "./types.js";
 
 /** Add comparison metadata to isolated snapshot files. */
 export function renderReviewArtifact(

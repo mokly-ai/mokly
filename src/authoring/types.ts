@@ -1,12 +1,8 @@
 import type { ReactNode } from "react";
 
+import type { ColorScheme } from "@mokly/viewer";
+
 import type { ComponentDefinition } from "../components/types.js";
-
-/** Light or dark color-scheme rendering target. */
-export type ColorScheme = "dark" | "light";
-
-/** Mobile or desktop rendering target. */
-export type Viewport = "desktop" | "mobile";
 
 /** Metadata shared by all structured catalogue entries. */
 export interface EntryInput {

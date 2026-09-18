@@ -8,6 +8,12 @@ import { exportCatalogue } from "../dist/export/run.js";
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { directoryFiles } from "./helpers/export_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
+import { buildPreviewFixture } from "./helpers/preview_fixture.js";
+import {
+  excludedNames,
+  permittedNames,
+  writeExclusionFiles,
+} from "./helpers/public_exclusions.js";
 
 test("consumer export omits unused reserved templates without treating them as public resources", async (context) => {
   const fixture = await changedFixture(context);
@@ -53,4 +59,47 @@ mockups.push(definePage({ id: "handbook", title: "Handbook", description: "Guida
     files.get("static/handbook.html")!.toString(),
     /<h1>Handbook<\/h1>/,
   );
+});
+
+for (const includeChanges of [true, false]) {
+  test(`export omits excluded files without extending source inventory (Changes ${includeChanges})`, async (t) => {
+    const fixture = await changedFixture(
+      t,
+      undefined,
+      { extraConfig: 'publicExclude: ["internal/**"],' },
+      ({ mockupsDir }) => writeExclusionFiles(mockupsDir),
+    );
+    const result = await exportCatalogue(fixture.config, {
+      outDir: "site",
+      base: "HEAD",
+      noChanges: !includeChanges,
+    });
+    const files = await directoryFiles(result.outDir);
+    for (const name of excludedNames) {
+      assert.equal(files.has(`static/${name}`), false, name);
+      assert.equal(
+        fixture.config.sourceFiles?.includes(`mockups/${name}`),
+        false,
+        name,
+      );
+    }
+    for (const name of permittedNames)
+      assert.equal(files.has(`static/${name}`), true, name);
+  });
+}
+
+test("repository preview omits public exclusions while retaining ordinary assets", async (t) => {
+  const fixture = await changedFixture(
+    t,
+    undefined,
+    { extraConfig: 'publicExclude: ["internal/**"],' },
+    ({ mockupsDir }) => writeExclusionFiles(mockupsDir),
+  );
+  const output = path.join(fixture.root, ".context/preview");
+  await buildPreviewFixture(fixture.root, output);
+  const files = await directoryFiles(output);
+  for (const name of excludedNames)
+    assert.equal(files.has(`static/${name}`), false, name);
+  for (const name of permittedNames)
+    assert.equal(files.has(`static/${name}`), true, name);
 });

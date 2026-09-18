@@ -1,12 +1,15 @@
 /** Preserve component implementation and use-case propagation after view comparison. */
-import type { Manifest } from "../registry/types.js";
+import type {
+  Manifest,
+  ChangedEntry,
+  ComponentReview,
+} from "@mokly/viewer/data";
 
 import {
   address,
   uniqueReasons,
   type RoutedEntry,
 } from "./component_metadata.js";
-import type { ChangedEntry, ComponentReview } from "./component_types.js";
 
 export function propagateImplementations(
   actualImplementations: ReadonlySet<string>,

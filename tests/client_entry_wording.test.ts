@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { entryWording } from "../dist/client/entry_wording.js";
+import { entryWording } from "../packages/viewer/dist/client/entry_wording.js";
 
 test("entry wording keeps screen copy and recasts it for a saved view", () => {
   const screen = entryWording("screen");

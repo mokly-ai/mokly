@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import type { ReviewResultV3 } from "../dist/review/component_types.js";
+import type { ReviewResultV3 } from "../packages/viewer/dist/review/component_types.js";
 
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 

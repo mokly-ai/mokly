@@ -9,6 +9,10 @@ in the completed
 [Whole-document pages](./mokly-pages.md) use the same logical links, IDs,
 source ownership, and collection ancestry as screens and use cases.
 
+The [frame adapters](./mokly-frame-adapter.md) and `@mokly/viewer` package
+are implemented. This document's same-origin interactions remain
+authoritative.
+
 ## Scope
 
 This document defines how links authored inside generated mockup documents
@@ -125,11 +129,11 @@ prevents Mokly from taking over product or asset navigation accidentally.
 
 ## Portable And Comparison Output
 
-Committed generated documents keep their relative artifact `href` values.
-They must remain navigable when opened directly or copied without the Browse
-shell. Comparison snapshot trees copy the same portable documents and do not
-promote their marked links into Browse routes; link activation inside a comparison
-pane retains the existing sandbox behavior.
+Generated documents in both output modes keep their relative artifact `href`
+values. They must remain navigable when opened directly or copied without the
+Browse shell. Comparison snapshot trees copy the same portable documents and do
+not promote their marked links into Browse routes; link activation inside a
+comparison pane retains the existing sandbox behavior.
 
 ## Browse Presentation
 
@@ -181,7 +185,7 @@ trim its input and returns exactly one typed state:
 The parent reparses adapter-produced target metadata with this same contract
 and declines an invalid or context-inappropriate state.
 
-Browse grants a fragment frame same-origin access only so trusted parent code
+Default same-origin Browse grants a fragment frame access only so trusted parent code
 can inspect its immediate document. It never grants `allow-top-navigation`,
 `allow-top-navigation-by-user-activation`, `allow-popups`, `allow-forms`,
 `allow-scripts`, or `allow-downloads`. The top-navigation restriction remains
@@ -253,7 +257,7 @@ frame. If enhancement is absent or fails, the portable live link remains
 frame-owned and subject to the sandbox; Mokly does not grant native
 outer-navigation fallback.
 
-Consumer scripts remain disabled. Browse permits same-origin inspection but
+Consumer scripts remain disabled in default Browse. It permits same-origin inspection but
 does not grant script, form, popup, download, or either top-navigation
 capability to consumer documents. Comparison panes retain their stricter existing
 sandbox.
@@ -263,6 +267,25 @@ unmarked links retain their existing frame-owned behavior subject to the
 sandbox. Consumer-authored targets remain byte-preserved, but the sandbox denies
 their access to the outer shell and to popups. Mokly must not infer product
 navigation from URLs, `data-nav-href`, or visible labels.
+
+### Frame Adapter Boundary
+
+The implemented `sameOriginAdapter` preserves this existing behavior;
+direct `contentDocument` access lives behind the local transport interface.
+The viewer package exposes the same boundary. Logical fragment scope is resolved
+once in the frame URL boundary shared by public markup and adapter mounts:
+standalone views receive the fragment; flows apply it only to step zero,
+including across scheme and viewport changes. Logical target
+parsing, marker/ownership checks, modifier/target classification, canonical
+routes and safe degradation do not change. No adapter gains nested-frame access.
+The optional `postMessageAdapter` requires a separate, nonopaque frame origin
+and the [inspector handshake](./mokly-frame-adapter.md#cross-origin-mount-and-handshake).
+It carries bounded logical ids/fragments and activation/target states, never
+consumer hrefs, labels or arbitrary navigation URLs. The host revalidates the
+destination against its catalogue and owns the navigation action; the inspector
+never reads or changes `window.top` or `parent.location`. Cross-origin hosts
+grant `allow-same-origin allow-scripts` only under that explicit contract;
+default local Browse and all comparison snapshot restrictions remain unchanged.
 
 ## Active Catalogue Visibility
 
@@ -308,7 +331,7 @@ Coverage must prove:
   `href` on resource/non-link elements, rejection of `<base href>` before and
   after compatibility transformation, dual navigation attributes, hashes,
   use-case ids, dark-to-light fallback, conflicts, and reserved-marker errors;
-- served and preview adaptation without mutating committed fragments, including
+- served and preview adaptation without mutating generated fragments, including
   LF/CRLF ownership-gated promotion, unowned reserved-metadata removal, secure
   target parsing, portable live attributes, and request-visible fragment
   transport;

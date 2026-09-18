@@ -31,7 +31,24 @@ when the historical primary file is absent, never when it is invalid.
 
 - [Catalogue upload v1](./mokly-upload.md) — public CLI and hosted/self-hosted receiver boundary.
 - [Package and authoring contract](./mokly-package.md)
+- [CLI terminal output](./mokly-terminal-output.md) — plain compatibility,
+  interactive progress, errors, watched events, and shortcuts.
+- [Packaged CLI guides](./mokly-guides.md) — versioned Markdown consumed by the
+  cloud documentation site.
+- [Configuration contract](./mokly-configuration.md) — includes public-exclusion validation and defaults.
+- [Public authoring API](./mokly-authoring.md)
+- [Rendering and generated output](./mokly-rendering.md)
 - [Build and Browse runtime](./mokly-runtime.md)
+- [Component instance identity](./mokly-instances.md) — existing key/boundary
+  rules and approved resolution/source-location target.
+- [Public catalogue read model](./mokly-catalogue.md) — implemented:
+  public inventory v1 beside the private manifest.
+- [Embeddable viewer](./mokly-viewer.md) — approved `@mokly/viewer` API and
+  unchanged local shell extraction.
+- [Viewer markers and multi-instance highlights](./mokly-viewer-markers.md) —
+  host-owned anchored content and exact atomic highlight behavior.
+- [Viewer frame adapter](./mokly-frame-adapter.md) — approved same-origin
+  interface and cross-origin inspector protocol v1.
 - [On-demand Serve](./mokly-on-demand.md)
 - [Selected live comparisons](./mokly-selected-comparisons.md)
 - [Live catalogue evidence updates](./mokly-live-evidence.md)
@@ -42,8 +59,8 @@ when the historical primary file is absent, never when it is invalid.
 - [Breaking page migration](./mokly-page-migration.md)
 - [Optional changes in publication](./mokly-publication.md)
 - [Changes and screen comparisons](./mokly-changes.md)
-- [Derived baselines](./mokly-derived-baselines.md) — approved target:
-  uncommitted generated output with per-commit rebuilt baselines.
+- [Derived baselines](./mokly-derived-baselines.md) — default uncommitted
+  generated output with per-commit rebuilt baselines.
   - [Baseline storage and execution](./mokly-baseline-storage.md) — archive limits,
     command environments, locking and crash cleanup.
 - [Registered components](./mokly-components.md)

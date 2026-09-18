@@ -21,10 +21,15 @@ export async function createExampleBaseline(root: string) {
     "tsconfig.json",
     "tsconfig.build.json",
     "scripts/copy-assets.mjs",
+    "packages/viewer",
     "src",
   ])
     await fs.cp(path.join(repositoryRoot, name), path.join(root, name), {
       recursive: true,
+      filter: (source) =>
+        !source
+          .split(path.sep)
+          .some((part) => part === "dist" || part === "node_modules"),
     });
   const config = await loadConfig(root, "examples/basic/mokly.config.ts");
   const git = (...args: string[]) => execute("git", args, { cwd: root });

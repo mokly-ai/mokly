@@ -1,15 +1,20 @@
-import { reviewMaterialKey } from "../authoring/review_material.js";
-
-import { encodeProps } from "./codec.js";
-import { canonicalJson, invalidData } from "./data.js";
-import { instanceKey } from "./keys.js";
 import type {
   ComponentInputOwner,
   ComponentInstanceRecord,
   ComponentRangeTarget,
   ComponentSlotRecord,
-} from "./manifest_types.js";
-import type { ComponentPropsData } from "./prop_types.js";
+  ComponentSourceLocation,
+  ComponentPropsData,
+} from "@mokly/viewer";
+import {
+  reviewMaterialKey,
+  encodeProps,
+  canonicalJson,
+  invalidData,
+  instanceKey,
+} from "@mokly/viewer/data";
+
+import { instanceInputs } from "./instance_structure.js";
 import type { ComponentDefinition, ComponentRenderContext } from "./types.js";
 
 export interface OwnershipScope {
@@ -38,6 +43,7 @@ export class ComponentCollector {
     id: string,
     data: ComponentPropsData,
     scope: OwnershipScope,
+    source?: ComponentSourceLocation,
   ): ComponentInstanceRecord {
     if (this.definitions.get(definition.id)?.render !== definition.render)
       invalidData(
@@ -61,6 +67,7 @@ export class ComponentCollector {
       order,
       props: encodeProps(data),
       propsKey: reviewMaterialKey(data),
+      ...(source ? { source: { ...source } } : {}),
     };
     const previous = this.instances.get(key);
     const placements = this.occurrences.get(key) ?? new Set<number>();
@@ -69,15 +76,19 @@ export class ComponentCollector {
         this.label,
         `duplicate component instance ${id}; repeated invocations need distinct moklyInstance ids`,
       );
-    if (previous && canonicalJson(previous) !== canonicalJson(instance))
+    if (
+      previous &&
+      canonicalJson(instanceInputs(previous)) !==
+        canonicalJson(instanceInputs(instance))
+    )
       invalidData(
         this.label,
         `conflicting inputs for replayed component ${id}; captured slot content must be deterministic`,
       );
     placements.add(scope.placement);
     this.occurrences.set(key, placements);
-    this.instances.set(key, instance);
-    return instance;
+    this.instances.set(key, previous ?? instance);
+    return previous ?? instance;
   }
 
   slot(record: ComponentSlotRecord): void {

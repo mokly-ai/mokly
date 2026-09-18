@@ -5,7 +5,6 @@ import { test } from "node:test";
 
 import { compileCatalogue, type Compilation } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
-import { generatedViews } from "../dist/components/views.js";
 import { loadConfig } from "../dist/config/load.js";
 import {
   FORMER_MANIFEST_NAME,
@@ -13,6 +12,7 @@ import {
 } from "../dist/registry/manifest.js";
 import { compareReview } from "../dist/review/compare.js";
 import { computeChangedRoutes } from "../dist/server/changed.js";
+import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentGit } from "./helpers/component_review_fixture.js";

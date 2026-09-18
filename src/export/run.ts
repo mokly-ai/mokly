@@ -1,3 +1,5 @@
+import type { ReviewArtifact } from "@mokly/viewer/data";
+
 import { compileCatalogue } from "../build/compile.js";
 import { writeCompilation } from "../build/transaction.js";
 import { projectRealPath } from "../config/paths.js";
@@ -7,7 +9,6 @@ import { readBaseManifest } from "../review/base_manifest.js";
 import { reviewChangedPaths } from "../review/changed_paths.js";
 import { compareReview } from "../review/compare.js";
 import { prepareReviewRepository } from "../review/prepare.js";
-import type { ReviewArtifact } from "../review/types.js";
 import { changedContentPaths } from "../server/changed_content.js";
 
 import { withExportCleanup } from "./cleanup.js";
@@ -53,11 +54,10 @@ async function generateExport(
     const base = options.base ?? config.review.base;
     const prepared = options.noChanges
       ? undefined
-      : await prepareReviewRepository(
-          config,
-          base,
-          options.signal ? { signal: options.signal } : {},
-        );
+      : await prepareReviewRepository(config, base, {
+          ...(options.signal ? { signal: options.signal } : {}),
+          ...(options.diagnostic ? { diagnostic: options.diagnostic } : {}),
+        });
     const baseline = prepared
       ? await readBaseManifest(prepared.reader, prepared.commit, config)
       : undefined;

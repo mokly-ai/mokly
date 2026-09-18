@@ -1,8 +1,6 @@
 /** Declaration invariants apply before any rendered usage is available. */
-import type { ManifestV5 } from "../registry/types.js";
-
-import { canonicalJson, invalidData } from "./data.js";
-import { sortedStrings } from "./validation_helpers.js";
+import type { ManifestV5 } from "@mokly/viewer/data";
+import { canonicalJson, invalidData, sortedStrings } from "@mokly/viewer/data";
 
 export function validateDependencyDeclarations(
   entry: ManifestV5["entries"][number],

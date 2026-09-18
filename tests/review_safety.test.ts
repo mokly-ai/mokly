@@ -10,7 +10,7 @@ import { compareReview } from "../dist/review/compare.js";
 import { normalizeReviewPair } from "../dist/review/ignore.js";
 import { committedReviewRepository } from "../dist/review/repository.js";
 import { runReview } from "../dist/review/run.js";
-import type { ReviewArtifact } from "../dist/review/types.js";
+import type { ReviewArtifact } from "../packages/viewer/dist/review/types.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 

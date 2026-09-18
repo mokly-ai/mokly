@@ -14,6 +14,7 @@ export interface CliArguments {
   token?: string;
   repository?: string;
   noChanges?: boolean;
+  open?: boolean;
   help: boolean;
   out?: string;
   port?: number;
@@ -56,6 +57,7 @@ export function parseArguments(argv: readonly string[]): CliArguments {
     else if (argument === "--debug-timings") parsed.debugTimings = true;
     else if (argument === "--watch") parsed.watch = true;
     else if (argument === "--no-watch") parsed.watch = false;
+    else if (argument === "--open") parsed.open = true;
     else if (argument === "--retained-runtime") parsed.retainedRuntime = true;
     else if (argument === "--strict-port") parsed.strictPort = true;
     else if (option === "--config")
@@ -165,6 +167,8 @@ function validateCommandOptions(arguments_: CliArguments): void {
       "--port and --watch options belong to serve",
     );
   }
+  if (arguments_.open && arguments_.command !== "serve")
+    throw new MoklyError("cli-invalid", "--open belongs to serve");
   if (
     arguments_.command !== "__serve-child" &&
     arguments_.updateVersion !== undefined

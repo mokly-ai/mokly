@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import type { ReviewResultV3 } from "../dist/review/component_types.js";
+import {
+  runWithTimings,
+  type TimingEvent,
+} from "../dist/diagnostics/timings.js";
+import { classifyComponents } from "../dist/review/component_classification.js";
+import { generatedViews } from "../packages/viewer/dist/components/views.js";
+import type { ReviewResultV3 } from "../packages/viewer/dist/review/component_types.js";
 
 import {
   assertFastPathEquivalent,
@@ -59,6 +65,47 @@ test("marker movement with identical stripped HTML preserves consumer material",
   const result = await assertFastPathEquivalent(reviewFixture(fixture));
 
   assert.deepEqual(reasonKinds(result, "home"), ["material"]);
+});
+
+test("invocation line shifts alone keep every view on the fast path", async (t) => {
+  const fixture = await componentReviewFixture(t, (source) => "\n\n" + source);
+  const reader = (outputs: ReadonlyMap<string, string>) => ({
+    read: async (route: string) => {
+      const content = outputs.get(route);
+      assert.notEqual(content, undefined, route);
+      return Buffer.from(content!);
+    },
+  });
+  const events: TimingEvent[] = [];
+  const result = await runWithTimings(
+    true,
+    "test",
+    () =>
+      classifyComponents({
+        before: fixture.before.manifest,
+        after: fixture.after.manifest,
+        beforeReader: reader(fixture.before.outputs),
+        afterReader: reader(fixture.after.outputs),
+        config: fixture.config,
+        changedPaths: fixture.changedPaths,
+        baseCommit: "a".repeat(40),
+        baseRef: "main",
+      }),
+    { write: (event) => events.push(event) },
+  );
+  const counts = events.find(
+    (event) =>
+      event.stage === "review.compare-screens" && event.event === "counts",
+  )?.counts;
+
+  const views = fixture.after.manifest.entries.reduce(
+    (count, entry) => count + generatedViews(entry).length,
+    0,
+  );
+
+  assert.deepEqual(result.changes, []);
+  assert.ok(views > 0);
+  assert.deepEqual(counts, { views, fastPath: views, completePath: 0 });
 });
 
 function reviewFixture(

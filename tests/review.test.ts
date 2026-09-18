@@ -9,7 +9,6 @@ import { compileCatalogue } from "../dist/build/compile.js";
 import type { Compilation } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
-import type { ManifestScreen, ManifestV5 } from "../dist/registry/types.js";
 import { renderReviewArtifact } from "../dist/review/artifact.js";
 import { compareReview } from "../dist/review/compare.js";
 import {
@@ -22,8 +21,12 @@ import {
 } from "../dist/review/ignore.js";
 import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
 import { runReview } from "../dist/review/run.js";
-import type { ReviewResult } from "../dist/review/types.js";
 import { writeReviewArtifact } from "../dist/review/write.js";
+import type {
+  ManifestScreen,
+  ManifestV5,
+} from "../packages/viewer/dist/registry/types.js";
+import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
 import {
   createFixture,

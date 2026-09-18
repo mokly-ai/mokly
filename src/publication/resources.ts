@@ -1,12 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import type { Catalogue } from "@mokly/viewer/server";
+
 import { adaptBrowseDocument } from "../browse/document_adapter.js";
 import { locatePath } from "../config/file_locations.js";
 import { publicFileLocation } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { referencedRoutes } from "../review/asset_references.js";
-import type { Catalogue } from "../server/catalogue.js";
 
 import { publicationFiles, readPublicationFile } from "./files.js";
 
@@ -32,19 +33,14 @@ export async function copyPublicFiles(
     const relative = location.relativePath;
     const target = path.join(root, relative);
     const content = await readPublicationFile(file, config.repoRoot);
-    const extension = path.extname(relative).toLowerCase();
-    const adapted = [".html", ".htm"].includes(extension)
-      ? Buffer.from(
-          adaptBrowseDocument(content.toString("utf8"), relative, catalogue),
-        )
-      : content;
     await fs.promises.mkdir(path.dirname(target), { recursive: true });
-    await fs.promises.writeFile(target, adapted);
+    await fs.promises.writeFile(target, content);
     copied.add(relative);
   }
   for (const route of catalogueDocuments(catalogue)) {
     if (!copied.has(route)) throw resourceError(route, "catalogue");
   }
+  const documents = new Map<string, string>();
   for (const route of copied) {
     const file = await exportedFile(root, stage, route);
     if (!/\.(?:html?|css)$/i.test(route)) continue;
@@ -53,7 +49,14 @@ export async function copyPublicFiles(
       if (!copied.has(resource)) throw resourceError(resource, route);
       await exportedFile(root, stage, resource, route);
     }
+    if (/\.html?$/i.test(route))
+      documents.set(
+        route,
+        adaptBrowseDocument(content.toString("utf8"), route, catalogue),
+      );
   }
+  for (const [route, html] of documents)
+    await fs.promises.writeFile(await exportedFile(root, stage, route), html);
 }
 
 /** Require current documents independently of the filesystem enumeration result. */

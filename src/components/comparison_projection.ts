@@ -1,3 +1,6 @@
+import type { ComponentInputOwner, ComponentViewRecord } from "@mokly/viewer";
+import { canonicalJson } from "@mokly/viewer/data";
+
 import {
   normalizeReviewPair,
   normalizeSingleDocument,
@@ -11,11 +14,6 @@ import {
   stripMarkers,
   structureSignals,
 } from "./comparison_material.js";
-import { canonicalJson } from "./data.js";
-import type {
-  ComponentInputOwner,
-  ComponentViewRecord,
-} from "./manifest_types.js";
 import { validateComponentRanges, type RenderedRange } from "./ranges.js";
 
 export interface ComponentProjection {

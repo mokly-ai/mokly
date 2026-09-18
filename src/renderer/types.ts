@@ -2,13 +2,12 @@ import type { ReactNode } from "react";
 
 import type {
   ColorScheme,
-  ScreenDefinition,
   Viewport,
-} from "../authoring/types.js";
-import type {
   ComponentResourceOwnership,
   ComponentStyleOwnership,
-} from "../components/manifest_types.js";
+} from "@mokly/viewer";
+
+import type { ScreenDefinition } from "../authoring/types.js";
 import type { ComponentDefinition } from "../components/types.js";
 
 /** Context passed by the builder to a consumer renderer. */

@@ -12,6 +12,7 @@ import type {
   ScreenInput,
   UseCaseInput,
 } from "../dist/authoring/types.js";
+import { DEFAULT_PUBLIC_EXCLUDE } from "../dist/config/public_exclusions.js";
 import type { ResolvedConfig } from "../dist/config/types.js";
 import {
   defineCollection,
@@ -25,7 +26,7 @@ import {
   screen,
 } from "../dist/index.js";
 import { validateEntry } from "../dist/registry/entry_validation.js";
-import type { RegistryViolation } from "../dist/registry/types.js";
+import type { RegistryViolation } from "../dist/registry/prepared_types.js";
 import { serializeReviewSentinels } from "../dist/renderer/sentinels.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
@@ -34,6 +35,7 @@ const sourceRelativePath = "tests/authoring.test.tsx";
 
 const validationConfig: ResolvedConfig = {
   generatedOutput: "committed",
+  publicExclude: DEFAULT_PUBLIC_EXCLUDE,
   colorSchemes: ["light"],
   compatibility: { readManifestV2: false },
   configPath: path.join(repositoryRoot, "mokly.config.ts"),

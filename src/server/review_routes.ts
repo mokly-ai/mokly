@@ -1,9 +1,7 @@
 /** Lazy comparison snapshots used by the catalogue diff controls. */
 import type { ServerResponse } from "node:http";
 
-import { encodeUrlPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
-import { MoklyError } from "../errors.js";
 import type { ReadOnlyReviewRepository } from "../review/repository.js";
 import { runReview } from "../review/run.js";
 import { RepositorySelectedReview } from "../review/selected.js";
@@ -12,6 +10,7 @@ import type {
   SelectedReviewSource,
 } from "../review/selection_types.js";
 
+import { PublicReviewAliases, type PublicComparison } from "./public_review.js";
 import { safeDecodePath, send } from "./respond.js";
 import {
   ReviewGenerationStore,
@@ -24,10 +23,16 @@ import {
   sendReviewFailure,
   serveReviewArtifactFile,
 } from "./review_responses.js";
+import {
+  DIFF_ROUTE,
+  GENERATION_ROUTE,
+  generationPath,
+  generationUrl,
+  isReviewDocument,
+  isSnapshot,
+  reviewServerClosing,
+} from "./review_urls.js";
 import { SelectedReviewRoutes } from "./selected_review_routes.js";
-
-const DIFF_ROUTE = "/__mokly/diffs/";
-const GENERATION_ROUTE = `${DIFF_ROUTE}__generations/`;
 
 /** How Browse obtains the Review artifact it serves under `/__mokly/diffs/`. */
 export interface ServedReview extends ReviewArtifactProvider {
@@ -75,12 +80,19 @@ export class ReviewRoutes {
   private readonly generations: ReviewGenerationStore;
   private stale = false;
   private readonly selected: SelectedReviewRoutes | undefined;
+  private readonly publicAliases: PublicReviewAliases;
+  private epoch = 0;
 
   constructor(
     private readonly review: ServedReview,
-    source: () => SelectedReviewSource | undefined = () => undefined,
+    private readonly source: () => SelectedReviewSource | undefined = () =>
+      undefined,
+    private readonly onPublicComparison?: (
+      comparison: PublicComparison,
+    ) => void,
   ) {
     this.generations = new ReviewGenerationStore(review);
+    this.publicAliases = new PublicReviewAliases(this.generations);
     this.selected = review.selected
       ? new SelectedReviewRoutes(review.selected, source, review.base)
       : undefined;
@@ -88,6 +100,7 @@ export class ReviewRoutes {
 
   /** Mark the cached artifact stale after an update that reloads browsers. */
   invalidate(): void {
+    this.epoch++;
     if (!this.closed) this.stale = true;
     this.selected?.invalidate();
   }
@@ -104,6 +117,7 @@ export class ReviewRoutes {
     response: ServerResponse,
     method: string,
   ): Promise<void> {
+    if (this.publicAliases.handle(url, response, method)) return;
     if (await this.selected?.handle(url, response, method)) return;
     if (url.pathname.startsWith(GENERATION_ROUTE)) {
       const requested = generationPath(url.pathname);
@@ -149,7 +163,21 @@ export class ReviewRoutes {
   ): Promise<ReviewGeneration> {
     if (this.closed) return Promise.reject(reviewServerClosing());
     this.stale = false;
-    const generation = this.generations.generate();
+    const epoch = this.epoch,
+      source = this.source();
+    const generation = this.generations.generate().then(async (generation) => {
+      if (
+        source &&
+        this.onPublicComparison &&
+        epoch === this.epoch &&
+        !this.closed
+      ) {
+        const comparison = await this.publicAliases.capture(generation, source);
+        if (comparison && epoch === this.epoch && !this.closed)
+          this.onPublicComparison(comparison);
+      }
+      return generation;
+    });
     this.trackGeneration(generation, kind);
     return generation;
   }
@@ -256,33 +284,4 @@ export class ReviewRoutes {
       return sendReviewFailure(response, error, this.review.base, method);
     }
   }
-}
-
-function generationPath(
-  pathname: string,
-): { readonly relative: string; readonly version: string } | undefined {
-  const remainder = pathname.slice(GENERATION_ROUTE.length);
-  const separator = remainder.indexOf("/");
-  if (separator < 1) return undefined;
-  const version = remainder.slice(0, separator);
-  const relative = safeDecodePath(remainder.slice(separator + 1));
-  return /^[A-Za-z0-9][A-Za-z0-9._~-]*$/.test(version) && relative
-    ? { relative, version }
-    : undefined;
-}
-
-function isReviewDocument(relative: string): boolean {
-  return relative === "review.json";
-}
-
-function isSnapshot(relative: string): boolean {
-  return relative.startsWith("snapshots/");
-}
-
-function generationUrl(generation: ReviewGeneration, relative: string): string {
-  return `${GENERATION_ROUTE}${generation.version}/${encodeUrlPath(relative)}`;
-}
-
-function reviewServerClosing(): MoklyError {
-  return new MoklyError("server-failed", "Comparison server is closing");
 }

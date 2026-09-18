@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { BrowseRecoveryState } from "../dist/client/browse_state.js";
 import { startBrowserLiveUpdates } from "../dist/client/browser.js";
+import type { BrowseRecoveryState } from "../packages/viewer/dist/client/browse_state.js";
 
 test("browser adapter connects updates to reload and shutdown", () => {
   const source = new FakeEventSource();

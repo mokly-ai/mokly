@@ -2,12 +2,10 @@ import assert from "node:assert/strict";
 
 import type { Compilation } from "../../dist/build/compile.js";
 import type { ResolvedConfig } from "../../dist/config/types.js";
-import type { Manifest } from "../../dist/registry/types.js";
-import {
-  classifyComponents,
-  type ComponentClassificationInput,
-} from "../../dist/review/component_classification.js";
-import type { ReviewResultV3 } from "../../dist/review/component_types.js";
+import { classifyComponents } from "../../dist/review/component_classification.js";
+import type { ComponentClassificationInput } from "../../dist/review/component_classification_input.js";
+import type { Manifest } from "../../packages/viewer/dist/registry/types.js";
+import type { ReviewResultV3 } from "../../packages/viewer/dist/review/component_types.js";
 
 type FixtureFile = string | Uint8Array;
 

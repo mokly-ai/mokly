@@ -1,5 +1,5 @@
-import { isSafeCatalogueRoute } from "../config/paths.js";
-import type { ManifestV5 } from "../registry/types.js";
+import { isSafeCatalogueRoute } from "@mokly/viewer/data";
+import type { ManifestV5 } from "@mokly/viewer/data";
 
 import type { ComponentChangeSnapshot } from "./component_changes.js";
 import type {
@@ -48,6 +48,30 @@ export interface CatalogueCompleteMessage {
   manifest: ManifestV5;
   generation: string;
   version: number;
+}
+
+/** Child-to-parent runtime diagnostic kept separate from command envelopes. */
+export interface ChildDiagnosticMessage {
+  readonly message: string;
+  readonly type: "diagnostic";
+}
+
+/** Validate one bounded diagnostic from the supervised child. */
+export function parseChildDiagnosticMessage(
+  value: unknown,
+): ChildDiagnosticMessage | undefined {
+  if (
+    !value ||
+    typeof value !== "object" ||
+    !("type" in value) ||
+    value.type !== "diagnostic" ||
+    !("message" in value) ||
+    typeof value.message !== "string" ||
+    value.message.length === 0 ||
+    Buffer.byteLength(value.message) > 65_536
+  )
+    return;
+  return { type: "diagnostic", message: value.message };
 }
 
 /** Validate the envelope here; the active server validates matching manifest contents. */

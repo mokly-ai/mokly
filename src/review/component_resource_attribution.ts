@@ -1,4 +1,13 @@
-import type { ComponentViewRecord } from "../components/manifest_types.js";
+import type { ComponentViewRecord } from "@mokly/viewer";
+import type {
+  ChangedEntry,
+  ComponentReview,
+  EntryChangeReason,
+  DependencyReason,
+  ViewReview,
+} from "@mokly/viewer/data";
+import { isStylesheetPath } from "@mokly/viewer/data";
+
 import { MoklyError } from "../errors.js";
 
 import {
@@ -6,13 +15,6 @@ import {
   type ComponentDependencyPolicy,
   type RoutedEntry,
 } from "./component_metadata.js";
-import type {
-  ChangedEntry,
-  ComponentReview,
-  EntryChangeReason,
-} from "./component_types.js";
-import { isStylesheetPath } from "./css/stylesheet_path.js";
-import type { DependencyReason, ViewReview } from "./types.js";
 
 /** Retained actual-invocation evidence can affect an owner without a saved variant. */
 export interface OwnedCssReason {

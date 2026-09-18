@@ -70,6 +70,7 @@ async function loadGraph(
         entryPoints: [CONSUMER_ENTRY_PATH],
         format: "cjs",
         jsx: "automatic",
+        jsxDev: true,
         loader: config.moduleResolution.loaders,
         logLevel: "silent",
         ...(config.moduleResolution.mainFields

@@ -7,10 +7,15 @@ through the public `defineComponent` API. These are the normative interfaces
 for the [component contract](./mokly-components.md). `ManifestEntryBase`,
 `ManifestScreen`, `ManifestPage`, `ManifestCollection`, `ManifestUseCase`,
 and `Viewport` retain the [package contract](./mokly-package.md) and the named
-[registry interfaces](../../src/registry/types.ts).
+[registry interfaces](../../packages/viewer/src/registry/types.ts).
 `ColorScheme` is `"light" | "dark"`. Prop/wire types come from the
 [prop schema](./mokly-component-props.md); `ComponentControl` comes from the
 [controls contract](./mokly-component-controls.md).
+
+The optional instance `source` field below is implemented in
+[viewer library Milestone 2](../../plans/mokly-viewer-library.md).
+All existing v5 fields retain their contracts. Updated readers accept
+instances with or without `source`; the manifest version remains 5.
 
 ## Entries And Variants
 
@@ -91,6 +96,13 @@ interface ComponentInstanceRecord {
   order: number;
   props: ComponentWireProps;
   propsKey: string;
+  source?: ComponentSourceLocation;
+}
+
+interface ComponentSourceLocation {
+  path: string;
+  line: number;
+  column: number;
 }
 
 interface ComponentSlotRecord {
@@ -149,6 +161,14 @@ Readers recompute keys from the record fields and reject mismatches or conflicti
 duplicate keys. Neither key is a filesystem path, selector, catalogue id, or
 route segment. This bounds key length independently of nesting depth.
 
+The [instance contract](./mokly-instances.md) owns the complete stability list,
+record-only resolution and sentinel/comment format. The containing entry id is
+not in the digest: references must retain entry/variant/view scope even when
+equal keys occur in different views. Optional `source` identifies the invocation
+with a repository-relative POSIX path and positive 1-based line/column. Absolute
+or escaping paths are invalid. Its build capture/stripping is specified there;
+source metadata never enters `propsKey`, input identity or Changes projections.
+
 `owner` identifies the caller whose inputs are compared. `slotKey`, when present,
 identifies the original slot scope in which the instance was supplied. The slot
 owner equals that instance's input owner. A forwarded slot names its prior
@@ -169,6 +189,9 @@ one matched boundary pair; `parentId` identifies its nearest enclosing registere
 range, including slots. Multi-root/text output occupies one enclosing range.
 An invoked null component has an empty range with no visible bounds. Unrendered
 slots have no range; repeated placements have different range ids.
+Every recorded instance has a matched comment pair for each of its rendered
+ranges in that view, including an empty pair for null output. A replayed
+instance can have multiple ranges; this does not create additional logical keys.
 
 Range ids, physical parentage, style offsets, and repeated placement counts are
 inspection coordinates, not direct input identity. A component implementation

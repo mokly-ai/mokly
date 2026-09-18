@@ -1,4 +1,7 @@
-import type { ReviewResult, ViewReview } from "../../dist/review/types.js";
+import type {
+  ReviewResult,
+  ViewReview,
+} from "../../packages/viewer/dist/review/types.js";
 
 /** Snapshot closure for both valid schema fixtures. */
 export function cssSchemaFiles(): Map<string, string> {

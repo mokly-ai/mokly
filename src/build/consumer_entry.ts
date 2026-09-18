@@ -131,6 +131,7 @@ function attributedApiContents(
     `export const ReviewIgnore = api.ReviewIgnore;`,
     `export const ReviewIgnoreScope = api.ReviewIgnoreScope;`,
     `export const reviewMaterialKey = api.reviewMaterialKey;`,
+    `export const resolveInstance = api.resolveInstance;`,
   ].join("\n");
 }
 
@@ -138,7 +139,8 @@ function quote(value: string): string {
   return JSON.stringify(value);
 }
 
-function runtimeModule(compiled: string, source: string): string {
+/** Resolve a Mokly-owned module in either the built or source runtime. */
+export function runtimeModule(compiled: string, source: string): string {
   const compiledPath = fileURLToPath(new URL(compiled, import.meta.url));
   return fs.existsSync(compiledPath)
     ? compiledPath

@@ -1,4 +1,4 @@
-import type { ReviewArtifactContent } from "../review/types.js";
+import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
 import { ExportPathIndex } from "./path_index.js";
 

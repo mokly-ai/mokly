@@ -7,13 +7,13 @@ defines the required consumer upgrade.
 ## Source Of Truth
 
 Consumer-authored registry modules and imported render helpers are the source of
-truth. In the default committed mode, generated fragments, page HTML, and the
-manifest remain committed in consumer repositories so they can be reviewed
-without a server. In [derived mode](./mokly-derived-baselines.md) they are
-local artifacts and the baseline is rebuilt from the merge-base commit. Browsing
-and comparisons consume those same artifacts and definitions; neither may
-introduce a second screen renderer or catalogue.
-This repository's basic example uses derived mode: only its authored inputs,
+truth. In the default [derived mode](./mokly-derived-baselines.md), generated
+fragments, page HTML, and the manifest are local artifacts and the baseline is
+rebuilt from the merge-base commit. Explicit committed mode instead keeps those
+artifacts in Git so they can be reviewed without executing historical code.
+Browsing and comparisons consume the same rendered documents and definitions;
+neither may introduce a second screen renderer or catalogue. This repository's
+basic example uses the default derived mode: only its authored inputs,
 including public CSS, are tracked. Build generates its local HTML and manifest.
 
 ## Delivery Status
@@ -27,6 +27,12 @@ Canonical outer navigation from links inside fragment frames, request-visible
 fragment transport, ownership-aware preview adaptation, and active-tree
 disclosure are implemented. Their delivery history is recorded in the completed
 [in-frame catalogue link navigation plan](../../plans/in-frame-catalogue-link-navigation.md).
+
+Browse is a first-party host of [`@mokly/viewer`](./mokly-viewer.md). The
+public catalogue (Milestone 3), optional frame transport (Milestone 4) and
+package extraction (Milestone 5) are implemented as recorded in the
+[viewer library plan](../../plans/mokly-viewer-library.md). The existing
+local shell, CSS, interactions and script-disabled sandbox remain unchanged.
 
 ## Component Workspaces
 
@@ -112,6 +118,10 @@ worker isolation and generation-local caches. Browse exposes:
   redirects to immutable generations and snapshot files beneath the same prefix;
 - package-owned client and update endpoints under `/__mokly/`.
 
+Serve also exposes [`/__mokly/catalogue.json`](./mokly-catalogue.md)
+as the public read model, refreshed atomically on watched content/evidence
+updates. It keeps the private manifest and on-demand readiness boundary intact.
+
 Browse does not run Git classification on its HTTP event loop or request path.
 The watched child receives the accepted config, live index and retained bundle
 before readiness, without rendered HTML or a full manifest-file read. It validates
@@ -146,6 +156,13 @@ same collection forest. Historical legacy records are comparison inputs only;
 source and route directories never create current navigation groups.
 
 ## Browse Shell
+
+This same shell is rendered by the viewer package's
+TSX/SSR entry and enhanced by its existing vanilla runtime. Serve/export mount
+it without slots using the [same-origin adapter](./mokly-frame-adapter.md).
+React remains absent from exported browsers. Slots, theming and host-triggered
+pick mode are public embedding APIs; they add no local UI. First-party Serve
+retains its private control/evidence integration outside the public catalogue.
 
 The package owns a neutral, responsive Mokly shell: a top bar with brand,
 search with its tag picker; a catalogue navigation
@@ -202,7 +219,7 @@ controls. All ancestors are structural collection crumbs and stay text. The deta
 source and fragment paths including dark renders, the schemes a screen renders
 in, the tags the entry declares, related docs, dependencies, use cases, and
 comparison context.
-Consumer fragments and document pages are sandboxed without script permission
+Default Browse fragments and document pages are sandboxed without script permission
 so they cannot alter the same-origin Browse shell. Package-owned same-origin
 inspection permits parent-owned outer navigation after explicit user
 activation. Browse does not grant either
@@ -224,8 +241,9 @@ trusted document that carries an activatable marker and `<base href>` also
 fails closed, including if post-build tampering introduced the base URL;
 consumer-authored `href`, `<base target>`, `target`, and `formtarget` values
 otherwise remain portable and sandbox-confined. Consumer scripts, forms,
-popups, downloads, and top navigation remain forbidden. Review panes retain
-their stricter sandbox and byte-unmodified documents.
+popups, downloads, and top navigation remain forbidden in this default mode. The
+explicit cross-origin host exception is confined to the frame-adapter contract.
+Review panes retain their stricter sandbox and byte-unmodified documents.
 
 The top-level disclosures use `section:pages` and `section:components` as their
 rendered and persisted identities. A collection projected into a section uses

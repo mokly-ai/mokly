@@ -5,6 +5,33 @@ comparison snapshots. `serve.ts` owns single-process Serve; `serve_watched.ts`
 owns watchers, background work and the supervised HTTP child. `http.ts` and
 `child.ts` serve accepted inputs and never prepare historical baselines.
 
+GET/HEAD `/__mokly/catalogue.json` returns the public v1
+[read model](../catalogue/README.md) as JSON with `Cache-Control: no-store`.
+`public_catalogue.ts` serializes an atomic snapshot when accepted content,
+background usage/Changes or actual on-demand view records arrive. Requests only
+read the retained bytes. Content revisions follow accepted content versions;
+evidence revisions advance independently. Failed candidates preserve the last
+snapshot, and superseded generations cannot replace it. `catalogue_update.ts`
+prepares updates before publication; `http_types.ts` owns the lifecycle types.
+
+Shell pages render through `@mokly/viewer/server` with CLI-owned live context.
+`public_catalogue_model.ts` validates each serialized public revision once and
+reuses it across shell requests until the bytes change. CSS, browser modules,
+fonts, events and static documents bypass that decoding entirely.
+
+`screen_view_changes.ts` retains per-view screen-only material decisions from
+the existing classification pass. The public projection does not infer Changes
+membership from visual comparisons or invent empty usage for unfinished views.
+`public_review.ts` adds content-addressed aliases for matching complete explicit
+comparisons, verifying snapshot bytes against accepted input digests. Selected
+comparisons leave the catalogue pointer null. Public aliases never regenerate or
+redirect to another generation; invalidation clears the pointer, and retained
+aliases continue to serve their original generation. These updates add no shell
+requests, UI, or changes to existing local comparison controls.
+Alias pruning uses the generation store's non-renewing `peek`; only serving a
+retained generation through `get` extends its idle lifetime. Repeated complete
+captures therefore cannot keep unused snapshot directories alive.
+
 `demand/baseline.ts` owns baseline preparation and its cancellation drain,
 independent of the content generations in `demand/generation.ts`.
 It calls `review/prepare.ts` after adopting current output, then supplies the
@@ -40,6 +67,37 @@ Evidence updates invalidate comparison generations as well as classification.
 `update_messages.ts` validates IPC envelopes. `supervisor.ts` orders delivery and
 owns child shutdown. HTTP readiness precedes exhaustive compilation and baseline
 preparation, so All remains usable while Changes is pending or preparing.
+The CLI injects the terminal reporter's server-facing subset into both Serve
+compositions. Plain mode emits only the historical readiness and diagnostic
+bytes. Rich mode presents accepted catalogue, baseline, Changes, reference, and
+watch-action boundaries. Diagnostics originating in a supervised child cross a
+validated IPC message so the parent remains the sole terminal owner; a child
+without IPC retains direct diagnostic output.
+
+The [public-exclusion policy](../../docs/protocol/mokly-source-protection.md#public-exclusions)
+adds config-owned `publicExclude` globs to the shared source classifier.
+Case-insensitive README/tsconfig defaults remain when consumers add globs.
+Serve HTTP, generated-resource validation, Review reads, static export and
+public content-change classification test both candidate and realpath-alias
+paths relative to `mockupsDir`. Excluded requests return 404; excluded edits are
+not public content evidence, and exclusion alone never adds `sourceFiles`.
+Manifest/cache privacy and independently discovered authoring inputs remain protected.
+
+When controls are active, every Serve request uses the
+[Host contract](../../docs/protocol/mokly-component-controls.md#request-and-lifecycle-rules):
+accept only `localhost:<port>` or `127.0.0.1:<port>` with an explicit decimal
+port from 1 to 65535, without a leading zero. A non-loopback Host returns 403
+for the whole catalogue, including ordinary pages and static assets. A forwarded
+local port may differ from the listening socket port. Render POST Origin must
+equal `http://` plus Host exactly and the render token is still required.
+Preview GET/HEAD uses Host and its authenticated render id; it does
+not require the POST token or Origin. Non-loopback hosts and `x-forwarded-*`
+headers grant no access; invalid required authorization returns 403.
+
+`shell/usage_links.ts` deduplicates the shared served/published Affected list
+using complete serialized-link identity, keeping the first occurrence in evidence
+order and serializing each input only once. Distinct usage contexts retain their
+comparison eligibility; deduplication does not alter Changes membership.
 
 Run the server tests with `npm test` and the navigation/comparison smoke tests
 with `npm run test:browser`. `derived_child_repository.test.ts` covers revocation,

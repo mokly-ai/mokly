@@ -1,9 +1,10 @@
 /** Restart supervision retains ownership until each child's cleanup completes. */
 
+import type { ManifestV5 } from "@mokly/viewer/data";
+
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import { bindTimings, timeSync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
-import type { ManifestV5 } from "../registry/types.js";
 
 import { ManagedChild, type ChildShutdownTimings } from "./child_lifecycle.js";
 import { NodeChildFactory, type ChildFactory } from "./child_process.js";
@@ -15,6 +16,7 @@ import {
 } from "./demand/observation.js";
 import {
   childUpdateMessage,
+  parseChildDiagnosticMessage,
   type ChangesStatus,
   type CatalogueUpdateKind,
 } from "./update_messages.js";
@@ -23,6 +25,7 @@ import {
 export interface ProcessSupervisor {
   completeCatalogue?(manifest: ManifestV5, generation: string): void;
   onForeground?(callback: (active: boolean) => void): void;
+  onDiagnostic?(callback: (message: string) => void): void;
   onPreviewResources?(
     callback: (observation: PreviewObservation) => void,
   ): void;
@@ -77,6 +80,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
   #updateVersion = 0;
   #runtime: ComponentRuntime | undefined;
   #foreground: ((active: boolean) => void) | undefined;
+  #diagnostic: ((message: string) => void) | undefined;
   #previewResources: ((observation: PreviewObservation) => void) | undefined;
 
   constructor(
@@ -116,6 +120,9 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
     this.#child = child;
     child.onMessage(
       bindTimings((message: unknown) => {
+        const diagnostic = parseChildDiagnosticMessage(message);
+        if (diagnostic && this.#child === child)
+          this.#diagnostic?.(diagnostic.message);
         if (
           message &&
           typeof message === "object" &&
@@ -234,6 +241,9 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
   }
   onForeground(callback: (active: boolean) => void): void {
     this.#foreground = callback;
+  }
+  onDiagnostic(callback: (message: string) => void): void {
+    this.#diagnostic = callback;
   }
   onPreviewResources(
     callback: (observation: PreviewObservation) => void,

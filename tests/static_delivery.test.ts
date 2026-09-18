@@ -4,12 +4,12 @@ import test from "node:test";
 import {
   adoptStaticDelivery,
   readStaticDelivery,
-} from "../dist/client/static_delivery.js";
+} from "../packages/viewer/dist/client/static_delivery.js";
 import {
   parseStaticDelivery,
   resolveDeliveryHref,
   validFragmentQuery,
-} from "../dist/navigation/delivery.js";
+} from "../packages/viewer/dist/navigation/delivery.js";
 
 const descriptor = {
   schemaVersion: 2,

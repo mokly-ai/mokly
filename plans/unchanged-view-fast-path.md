@@ -111,6 +111,7 @@ as text by the material readers:
    `propsKey` on entry-owned instances may differ. View axes; instance ids,
    keys, component ids, owners, slot keys and order; instance-owned props and
    prop keys; and all slots, ranges, styles, and resources must match.
+   Invocation `source` metadata is excluded, as it is from every projection.
 3. Compute the actual normalized pair by stripping historical component
    markers from `B`, stripping current component markers from `H`, and applying
    paired manual-ignore normalization. Discover head resources once through
@@ -315,6 +316,11 @@ classification contract or the zero-change performance bound.
       `cargo xtask check`, requiring a 100% pass rate.
 - [x] `git add -A`, commit the completed work with a Conventional Commits
       message, and push `origin/calummoore/trenton-v2`.
+- [x] Merge `origin/main` (viewer package extraction, invocation `source`
+      metadata) and exclude `source` from the usage-topology gate through the
+      shared `instanceStructure`/`instanceInputs` helpers, so a line shift alone
+      keeps every view on the fast path; cover it with a unit test and a
+      classification counts test.
 - [ ] Review: after the push, use `docs/implementation-review-prompt.md` against
       `origin/main` and report findings without changing the implementation.
 

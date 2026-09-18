@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { parse } from "parse5";
 
-import { encodeUrlPath, isSafeRepositoryPath } from "../../config/paths.js";
+import { encodeUrlPath, isSafeRepositoryPath } from "@mokly/viewer/data";
 
 interface Node {
   tagName?: string;

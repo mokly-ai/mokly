@@ -2,11 +2,12 @@
 import type { EventEmitter } from "node:events";
 import { Worker } from "node:worker_threads";
 
+import { generatedViews } from "@mokly/viewer/data";
+
 import { compactRuntime } from "../../build/compact_runtime.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
 import { DocumentCache } from "../../build/document_cache.js";
 import type { CompiledDocument } from "../../build/document_compiler.js";
-import { generatedViews } from "../../components/views.js";
 import { timeAsync } from "../../diagnostics/timings.js";
 import { MoklyError } from "../../errors.js";
 

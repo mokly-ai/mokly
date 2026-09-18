@@ -1,4 +1,4 @@
-import type { ColorScheme } from "../authoring/types.js";
+import type { ColorScheme } from "@mokly/viewer";
 
 /** Filesystem changes understood by the watched development runtime. */
 export type WatchAction = "ignore" | "rebuild" | "reload" | "restart";
@@ -83,7 +83,7 @@ export interface ModuleResolutionConfig {
 
 /** Public, serializable host configuration. */
 export interface MoklyConfig {
-  /** Retain generated files in Git or rebuild historical output; defaults to committed. */
+  /** Rebuild historical output or retain generated files in Git; defaults to derived. */
   generatedOutput?: "committed" | "derived";
   /** Color schemes rendered for screens; defaults to light only. */
   colorSchemes?: readonly ColorScheme[];
@@ -91,6 +91,8 @@ export interface MoklyConfig {
   entriesDir: string;
   /** Config-relative generated catalogue/output root. */
   mockupsDir: string;
+  /** Additional private POSIX globs relative to mockupsDir; extends shipped defaults. */
+  publicExclude?: readonly string[];
   /** Config-relative repository root; defaults to the config directory. */
   repoRoot?: string;
   /** Optional config-relative consumer renderer module. */
@@ -122,6 +124,8 @@ export interface ResolvedConfig {
   configSourceFiles?: readonly string[];
   entriesDir: string;
   mockupsDir: string;
+  /** Shipped defaults followed by validated consumer exclusions. */
+  readonly publicExclude: readonly string[];
   moduleResolution: ResolvedModuleResolutionConfig;
   renderer?: string;
   repoRoot: string;

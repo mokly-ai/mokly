@@ -1,3 +1,5 @@
+import type { ReviewResult } from "@mokly/viewer/data";
+
 import { compileCatalogue } from "../build/compile.js";
 import {
   FileSystemGeneratedOutputStore,
@@ -9,7 +11,6 @@ import type { ResolvedConfig } from "../config/types.js";
 import { renderReviewArtifact } from "./artifact.js";
 import { compareReview } from "./compare.js";
 import type { ReadOnlyReviewRepository } from "./repository.js";
-import type { ReviewResult } from "./types.js";
 import { writeReviewArtifact } from "./write.js";
 
 /** Build a Git comparison after proving head output is current. */

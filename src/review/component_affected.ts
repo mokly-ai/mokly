@@ -1,13 +1,12 @@
-import { canonicalJson } from "../components/data.js";
-import { generatedViews } from "../components/views.js";
-import type { Manifest } from "../registry/types.js";
-
-import { address, lexical } from "./component_metadata.js";
+import { canonicalJson, generatedViews } from "@mokly/viewer/data";
 import type {
+  Manifest,
   AffectedConsumer,
   AffectedUsageEvidence,
   ComponentUsageContext,
-} from "./component_types.js";
+} from "@mokly/viewer/data";
+
+import { address, lexical } from "./component_metadata.js";
 
 /** Derive consumer chains from input ownership, including slots and removed occurrences. */
 export function affectedConsumers(

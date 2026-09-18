@@ -1,14 +1,14 @@
 import { isValidElement, useContext, type ReactNode } from "react";
 
-import { isCatalogueId } from "../navigation/logical.js";
+import type { ComponentSlotRecord, ComponentRangeTarget } from "@mokly/viewer";
+import {
+  isCatalogueId,
+  invalidData,
+  slotKey,
+  validateComponentSource,
+} from "@mokly/viewer/data";
 
-import { invalidData } from "./data.js";
 import { componentInputs } from "./inputs.js";
-import { slotKey } from "./keys.js";
-import type {
-  ComponentSlotRecord,
-  ComponentRangeTarget,
-} from "./manifest_types.js";
 import { ComponentContext, type ComponentScope } from "./render_context.js";
 import type { ComponentDefinition } from "./types.js";
 
@@ -39,6 +39,13 @@ export function renderInstance(
       ? definition.id
       : instanceDescriptor.value;
   delete descriptors.moklyInstance;
+  const sourceDescriptor = descriptors.__moklySource;
+  if (sourceDescriptor && !("value" in sourceDescriptor))
+    invalidData(scope.collector.label, "instance source cannot be an accessor");
+  const source: unknown = sourceDescriptor?.value;
+  delete descriptors.__moklySource;
+  if (source !== undefined)
+    validateComponentSource(source, `${scope.collector.label}.source`);
   if (!isCatalogueId(id))
     invalidData(scope.collector.label, "moklyInstance must be a kebab-case id");
   const input = Object.defineProperties({}, descriptors) as Record<
@@ -50,7 +57,13 @@ export function renderInstance(
     input,
     `${scope.collector.label} / ${definition.id}`,
   );
-  const instance = scope.collector.register(definition, id, data, scope);
+  const instance = scope.collector.register(
+    definition,
+    id,
+    data,
+    scope,
+    source,
+  );
   const wrapped: Record<string, ReactNode> = {};
   for (const [name, node] of Object.entries(slots)) {
     const source =

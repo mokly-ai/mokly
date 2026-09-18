@@ -4,10 +4,10 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { parseReviewResult } from "../dist/review/result_validation.js";
 import { readCatalogueChanges } from "../dist/server/component_changes.js";
 import { startCatalogueServer } from "../dist/server/http.js";
 import { configuredServedReview } from "../dist/server/review_routes.js";
+import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";

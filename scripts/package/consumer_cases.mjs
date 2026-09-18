@@ -4,15 +4,18 @@ import path from "node:path";
 
 import { runCommand } from "./command.mjs";
 import { smokeRegisteredComponents } from "./components.mjs";
+import { consumerPackage } from "./consumer_package.mjs";
 import { inspectConsumerExport } from "./export.mjs";
 import {
   copyFixture,
+  initializeDerivedGit,
   initializeGit,
   installConsumer,
   runBin,
   smokeServer,
 } from "./fixture.mjs";
 import { smokeConsumerPublish } from "./publish.mjs";
+import { smokeViewer } from "./viewer.mjs";
 import { smokeExternalWatch } from "./watch.mjs";
 
 export async function smokeEsmConsumer(context) {
@@ -40,6 +43,7 @@ export async function smokeEsmConsumer(context) {
   assert.match(help.stdout, /mokly build/);
   const version = await runBin(root, ["--version"]);
   assert.equal(version.stdout.trim(), context.packageVersion);
+  await initializeDerivedGit(root, "mockups");
   const nested = path.join(root, "nested/config/discovery");
   await fs.promises.mkdir(nested, { recursive: true });
   await runBin(root, ["build"], { cwd: nested });
@@ -58,7 +62,6 @@ export async function smokeEsmConsumer(context) {
     cwd: root,
   });
 
-  await initializeGit(root);
   const entryPath = path.join(root, "entries/catalogue.mockup.tsx");
   const entry = await fs.promises.readFile(entryPath, "utf8");
   await fs.promises.writeFile(
@@ -86,6 +89,7 @@ export async function smokeEsmConsumer(context) {
     exported.screens.find((screen) => screen.id === "packed-home")?.state,
     "changed",
   );
+  await smokeViewer(root);
   await smokeRegisteredComponents(context, root);
   await smokeConsumerPublish(context, root);
 }
@@ -113,6 +117,14 @@ export async function smokeNodeNextConsumer(context) {
 export async function smokeCleanCacheExecution(context) {
   const root = path.join(context.workingRoot, "npx-consumer");
   await copyFixture(path.join(context.fixturesRoot, "esm"), root);
+  const configPath = path.join(root, "mokly.config.ts");
+  await fs.promises.writeFile(
+    configPath,
+    (await fs.promises.readFile(configPath, "utf8")).replace(
+      "export default defineConfig({",
+      'export default defineConfig({\n  generatedOutput: "committed",',
+    ),
+  );
   const packageJson = consumerPackage(
     "clean-cache-npx-consumer",
     context,
@@ -140,6 +152,8 @@ export async function smokeCleanCacheExecution(context) {
     cache,
     "--package",
     packageSpec,
+    "--package",
+    `file:${context.viewerArchivePath}`,
     "--",
     "mokly",
   ];
@@ -192,6 +206,7 @@ export async function smokeAccountingFixture(context) {
   packageJson.dependencies["react-native-web"] =
     "file:packages/react-native-web";
   await installConsumer(root, context.archivePath, packageJson);
+  await initializeDerivedGit(root, "docs/mockups");
   await runBin(root, ["build"]);
   await runBin(root, ["check"]);
   const appFragment = await fs.promises.readFile(
@@ -236,7 +251,6 @@ export async function smokeAccountingFixture(context) {
   await smokeServer(root);
   await smokeExternalWatch(root);
 
-  await initializeGit(root);
   await fs.promises.writeFile(
     path.join(root, "shared/tokens.ts"),
     'export const accent = "#6b4eff";\n',
@@ -266,6 +280,7 @@ export async function smokeJunoFixture(context) {
     context.archivePath,
     consumerPackage("juno-shaped-consumer", context, true),
   );
+  await initializeDerivedGit(root, "site/mockups");
   const config = ["--config", "tools/mokly.config.ts"];
   await runBin(root, ["build", ...config]);
   await runBin(root, ["check", ...config]);
@@ -276,7 +291,6 @@ export async function smokeJunoFixture(context) {
   assert.match(fragment, /data-juno-layout="compact"/);
   assert.match(fragment, /href="\.\.\/juno\.css"/);
   await smokeServer(root, config);
-  await initializeGit(root);
   await runBin(root, [
     "export",
     ...config,
@@ -288,24 +302,4 @@ export async function smokeJunoFixture(context) {
   await inspectConsumerExport(root, "tools/published", "HEAD", [
     "view/workspace/overview.html",
   ]);
-}
-
-function consumerPackage(name, context, installMokly) {
-  return {
-    name,
-    private: true,
-    type: "module",
-    dependencies: {
-      ...(installMokly
-        ? { "@mokly/mokly": `file:${context.archivePath}` }
-        : {}),
-      react: context.versions.react,
-      "react-dom": context.versions.reactDom,
-    },
-    devDependencies: {
-      "@types/react": context.versions.reactTypes,
-      "@types/react-dom": context.versions.reactDomTypes,
-      typescript: context.versions.typescript,
-    },
-  };
 }

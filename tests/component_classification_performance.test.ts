@@ -1,13 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { generatedViews } from "../dist/components/views.js";
 import {
   runWithTimings,
   type TimingEvent,
 } from "../dist/diagnostics/timings.js";
-import { analyzeHierarchy } from "../dist/registry/hierarchy.js";
-import type { Manifest } from "../dist/registry/types.js";
 import { classifyComponents } from "../dist/review/component_classification.js";
 import {
   ComponentDependencyPolicy,
@@ -19,6 +16,9 @@ import { compareComponentView } from "../dist/review/component_view.js";
 import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
 import { ResourceComparison } from "../dist/review/resource_comparison.js";
 import { computeChangedRoutes } from "../dist/server/changed.js";
+import { generatedViews } from "../packages/viewer/dist/components/views.js";
+import { analyzeHierarchy } from "../packages/viewer/dist/registry/hierarchy.js";
+import type { Manifest } from "../packages/viewer/dist/registry/types.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";

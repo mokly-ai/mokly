@@ -1,13 +1,13 @@
-import type { ManifestComponent } from "../components/manifest_types.js";
-
-import type { CatalogueMetadata } from "./catalogue_index.js";
-import { analyzeHierarchy } from "./hierarchy.js";
+import type { ManifestComponent } from "@mokly/viewer";
+import { analyzeHierarchy } from "@mokly/viewer/data";
 import type {
   ManifestEntry,
   HistoricalManifest,
   ManifestPage,
   ManifestScreen,
-} from "./types.js";
+} from "@mokly/viewer/data";
+
+import type { CatalogueMetadata } from "./catalogue_index.js";
 
 /** Baseline context retained independently of current collection membership. */
 export interface RemovedEntrySnapshot {

@@ -61,6 +61,10 @@ test("the shared inspector opens and closes inside sandboxed Browse frames", asy
     ).toBeVisible();
     await inspector.getByRole("button", { name: "Usage", exact: true }).click();
     await expect(inspector.locator(":scope > details[open]")).toHaveCount(0);
-    await expect(frame.locator("script")).toHaveCount(0);
+    await expect(frame.locator("script")).toHaveCount(1);
+    await expect(frame.locator("script")).toHaveAttribute(
+      "src",
+      "/__mokly/client/inspector.js",
+    );
   }
 });

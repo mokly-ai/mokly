@@ -4,8 +4,8 @@ import path from "node:path";
 import { test } from "node:test";
 
 import { exportCatalogue } from "../dist/export/run.js";
-import { parseReviewResult } from "../dist/review/result_validation.js";
-import type { WorkspaceData } from "../dist/server/shell/workspace_data.js";
+import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
+import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import {

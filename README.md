@@ -9,11 +9,35 @@ The public [npm package](https://www.npmjs.com/package/@mokly/mokly) is
 `@mokly/mokly`; its executable remains `mokly`. Releases remain pre-1.0 while
 the consumer contract settles.
 
+Versioned CLI documentation lives in [`docs/guides`](./docs/guides) and ships
+inside that package beside the protocol documents and changelog. The public
+documentation site is built by the private `mokly-cloud` repository from an
+installed package release; this repository does not build or deploy the site.
+
+The [`@mokly/viewer`](./packages/viewer/README.md) workspace embeds the existing
+Browse shell in React hosts using the public
+[catalogue read model](./docs/protocol/mokly-catalogue.md). It provides controlled
+screen and saved-variant selection, slots, inspection events, exact multi-instance
+highlighting, host-owned instance markers, an imperative handle and
+[frame adapters](./docs/protocol/mokly-frame-adapter.md). Serve and export use its
+static renderer and vanilla enhancements; exported browsers contain no React.
+Both packages build, release and are tested together. The viewer publishes before
+the CLI, which depends on its exact version. Viewer 0.1.0 and CLI 0.10.0 were
+published together; local Serve/export presentation remains unchanged.
+Viewer inspection references identify an exact viewport, scheme, variant and
+flow step. The viewer positions marker content without owning comments or exposing
+raw geometry. Frame replacement cancels picking and resets inspection; host
+callback exceptions do not prevent resource cleanup. See the viewer README for
+semantics.
+
 Shared components can have their own pages, saved variants and editable props in
 local Serve. Screens record their actual component usage for inspection and
 highlighting. Component implementation edits appear once in Changes; consumers
 are listed as affected, while changes to their supplied props remain screen
 changes. See the [component authoring guide](./src/components/README.md).
+The public `resolveInstance` helper resolves saved instance records within one
+view. Optional repository-relative invocation locations are captured in manifest
+v5 without affecting identity, Changes, or the local shell.
 
 Screen-only catalogues also show stylesheet evidence in Details before opening
 a comparison: changed styles that may apply and examined stylesheets whose
@@ -36,9 +60,9 @@ import { defineConfig } from "@mokly/mokly";
 export default defineConfig({
   colorSchemes: ["light", "dark"],
   repoRoot: ".",
-  entriesDir: "docs/mockups/src/entries",
-  mockupsDir: "docs/mockups",
-  renderer: "docs/mockups/src/renderer.tsx",
+  entriesDir: "docs/mockups/entries",
+  mockupsDir: "docs/mockups/generated",
+  renderer: "docs/mockups/renderer.tsx",
   stylesheets: [{ match: "app/**/*.html", stylesheets: ["app.css"] }],
   review: {
     base: "origin/main",
@@ -54,11 +78,12 @@ stylesheets and their imports are attributed by rule automatically: a view keeps
 the dependency only when a changed rule could match or cannot be resolved.
 Unmatched rules are examined and excluded; a broad stylesheet glob cannot
 override that exclusion or add unreferenced public files to Changes.
-This configuration uses the default `generatedOutput: "committed"`. Commit the
-generated HTML and manifest alongside their source. Check verifies that generated
-bytes match the current compilation; comparisons read their baseline from Git
-without executing historical code. [Derived output](#derived-output) is an
-optional mode for repositories that want to keep generated files out of Git.
+This configuration uses the default `generatedOutput: "derived"`. Build writes
+the generated HTML and manifest as ignored local artifacts, Check validates the
+current compilation and rejects tracked generated output, and comparisons
+rebuild their baseline from the merge-base commit. See
+[generated output modes](#generated-output-modes) for the required ignore rules,
+historical-build trust boundary, and committed-mode alternative.
 
 An entry module ends in `.mockup.ts` or `.mockup.tsx` and exports `mockups`:
 
@@ -164,6 +189,7 @@ After installing, run the local CLI with npx:
 
 ```bash
 npx mokly                         # browse immediately, render on demand, and watch
+npx mokly serve --open            # open the development URL after startup
 npx mokly serve --no-watch --port 0
 npx mokly serve --debug-timings
 npx mokly build
@@ -182,22 +208,34 @@ Value options also accept `--name=value`, which supports values beginning with
 `-`, such as `--config=-catalogue.config.ts`. Empty values and assignments to
 boolean flags are rejected.
 
-| Command                     | Outcome                                                      |
-| --------------------------- | ------------------------------------------------------------ |
-| `mokly`                     | Browse on demand and watch using a stable development URL    |
-| `mokly serve`               | Serve the catalogue and on-demand diffs; watch by default    |
-| `mokly build`               | Validate and transactionally write generated output          |
-| `mokly check`               | Validate committed bytes or require untracked derived output |
-| `mokly export --out <path>` | Build a complete static catalogue for your host              |
-| `mokly publish`             | Export and upload a catalogue to your chosen service         |
-| `mokly --help`              | Show commands and their supported options                    |
-| `mokly --version`           | Print the installed package version                          |
+An interactive terminal highlights the local URL in a bordered panel and shows
+progress, accepted catalogue and comparison status, watched file actions, and
+friendly error hints. Press `h` during watched Serve to see shortcuts: `o`
+opens the browser, `r` rebuilds, `c` clears, and `q` quits. Piped and CI output
+keeps the stable plain strings used by automation; `MOKLY_OUTPUT=plain|rich`
+selects a mode explicitly. `--debug-timings` always uses plain mode.
+
+| Command                     | Outcome                                                    |
+| --------------------------- | ---------------------------------------------------------- |
+| `mokly`                     | Browse on demand and watch using a stable development URL  |
+| `mokly serve`               | Serve the catalogue and on-demand diffs; watch by default  |
+| `mokly build`               | Validate and transactionally write generated output        |
+| `mokly check`               | Validate output according to the configured ownership mode |
+| `mokly export --out <path>` | Build a complete static catalogue for your host            |
+| `mokly publish`             | Export and upload a catalogue to your chosen service       |
+| `mokly --help`              | Show commands and their supported options                  |
+| `mokly --version`           | Print the installed package version                        |
 
 Serve starts at port `4173`. If that port, or a concrete `--port` value, is
 already occupied, Mokly tries each following port in order until one is
 free. `--port 0` instead asks the operating system to choose a free port.
 Watched Serve keeps the first resolved port for later child restarts so its URL
-stays stable.
+stays stable. When controls are active, every Serve request requires Host to be
+`localhost:<port>` or `127.0.0.1:<port>` with a decimal port from 1 to 65535 and
+no leading zero. Forwarding through another local port is supported; a
+non-loopback Host returns 403 for the whole catalogue. Render POST still requires
+the exact matching HTTP Origin and render token. See the
+[controls contract](./docs/protocol/mokly-component-controls.md).
 
 For slow startup, add `--debug-timings` to any command. It writes structured
 phase timings and aggregate catalogue sizes to stderr while leaving normal
@@ -414,6 +452,8 @@ output and withholds complete evidence; valid on-demand previews remain usable.
 Mokly discovers `mokly.config.ts`, `.mts`, `.js`, or `.mjs` by walking
 upward from the current directory. Every filesystem path is relative to that
 file and confined to `repoRoot`.
+Everything below `mockupsDir` is public unless protected by the
+[source policy](./docs/protocol/mokly-source-protection.md), including public exclusions.
 
 Transitive authoring imports must also remain inside that root. Config, entry,
 renderer, transformer, and page-helper imports outside it fail with the offending
@@ -422,9 +462,19 @@ code inside the root or explicitly configure a common root containing it;
 installed dependencies remain supported outside the root.
 All bundler file inputs are protected authoring sources, including images or
 data imported through asset loaders. Editing them rebuilds the catalogue.
-Assets referenced only by public HTML/CSS URLs remain public resources.
+Assets referenced only by public HTML/CSS URLs remain public resources unless
+another protection rule or public exclusion applies.
 
 - `entriesDir` and `mockupsDir` select structured source and generated output.
+  Prefer sibling `docs/mockups/entries` and `docs/mockups/generated` directories,
+  with `docs/mockups/renderer.tsx` beside them. Keep public assets such as `app.css`
+  in `generated` and developer README/tsconfig files beside it. Nested
+  `docs/mockups/src` layouts remain supported.
+- `publicExclude?: readonly string[]` adds safe POSIX globs matched relative to
+  `mockupsDir`. Defaults are `**/README`, `**/README.*`, `**/tsconfig.json`, and
+  `**/tsconfig.*.json`, all matched case-insensitively.
+  Consumer globs extend these defaults; `[]` retains them. See the
+  [configuration contract](./docs/protocol/mokly-configuration.md#public-exclusion-configuration).
 - `colorSchemes` defaults to `["light"]`; `["light", "dark"]` enables dark
   fragments catalogue-wide, with per-screen light-only opt-outs.
 - `renderer` and ordered `stylesheets` keep product themes and CSS
@@ -450,11 +500,11 @@ Use `MockLink` for catalogue destinations. Raw relative links remain suitable
 for real static assets and complete documents, but logical screen/use-case routes
 do not name generated files in schema v5.
 
-### Derived output
+### Generated output modes
 
-Set `generatedOutput: "derived"` to keep generated HTML out of Git, as this
-repository's example does.
-Build still writes transactionally; Check validates the
+Derived output is the default and keeps generated HTML out of Git, as this
+repository's example does. You may set `generatedOutput: "derived"` explicitly,
+but omitting the field has the same behavior. Build still writes transactionally; Check validates the
 compilation and rejects tracked generated files or cache contents, without
 requiring local generated files to exist or match. Authored public CSS and HTML
 remain allowed in Git. Add ignore rules for your generated routes and manifest,
@@ -472,9 +522,9 @@ Override the exact ordered argv list when your project needs additional steps:
 
 ```ts
 export default defineConfig({
-  generatedOutput: "derived",
-  entriesDir: "docs/mockups/src/entries",
-  mockupsDir: "docs/mockups",
+  entriesDir: "docs/mockups/entries",
+  mockupsDir: "docs/mockups/generated",
+  renderer: "docs/mockups/renderer.tsx",
   review: {
     baselineBuild: [
       ["npm", "ci"],
@@ -484,6 +534,12 @@ export default defineConfig({
   },
 });
 ```
+
+Set `generatedOutput: "committed"` when the configured base is not trusted to
+execute historical code. In committed mode, commit the generated HTML and
+manifest alongside their source. Check requires their bytes to match the current
+compilation, comparisons read the baseline from Git blobs, and
+`review.baselineBuild` is invalid.
 
 Commands run from the historical repository root without a shell; no commands
 are appended to an explicit list. `baselineBuild` is rejected in committed
@@ -568,8 +624,8 @@ forcing React peers to the consumer's one runtime.
   this is separate from a Mokly render or validation error.
 - **No config found:** run from the consumer repository or pass `--config`
   after the command.
-- **A generated file is stale:** run `mokly build`, inspect the diff, then
-  rerun `mokly check`.
+- **A committed generated file is stale:** run `mokly build`, inspect the diff,
+  then rerun `mokly check`. Derived Check ignores local artifact bytes.
 - **Mokly refuses an overwrite:** the existing HTML lacks a valid Mokly
   ownership header. Current headers encode their source identity so every valid
   repository filename remains safe inside an HTML comment. Move an unowned file
@@ -582,6 +638,9 @@ forcing React peers to the consumer's one runtime.
   portable.
 - **A watched edit fails:** fix the reported candidate build/config error. The
   last-good server remains active and adopts the next valid change.
+- **Terminal progress is missing or noisy:** rich progress requires TTY stdout
+  unless `MOKLY_OUTPUT=rich` is set. Use `MOKLY_OUTPUT=plain` for stable logs;
+  `NO_COLOR=1` disables colour without disabling progress.
 - **Export cannot find its baseline:** fetch the configured base with enough
   Git history. Committed mode needs its manifest/fragments in Git; derived mode
   needs a working historical install/build recipe. Export never fetches history
@@ -626,10 +685,12 @@ including before `dist/` has been built. `npm run lint -- --fix` applies the
 For local development after installing dependencies, run:
 
 ```bash
-npm run dev
+npm run -s dev
 ```
 
 This builds the local CLI and starts the example catalogue with watching enabled.
+The quiet npm form leaves the terminal to Mokly's reporter; `npm run dev` works
+too but retains npm's outer banner.
 Open the printed URL, starting at `http://127.0.0.1:4173`. Edits to example
 entries, the renderer, and configured stylesheets update the catalogue
 automatically; generated HTML is written to `examples/basic/generated/`.
@@ -679,7 +740,8 @@ alone may describe the temporary removal; the helper keeps a bounded wait for
 recovery and reports the last published state if it times out.
 
 `cargo xtask check` is the authoritative local gate. It starts with a live
-dependency audit (`npm run dependencies:check`), then includes formatting,
+dependency audit (`npm run dependencies:check`), then checks commit titles in
+`origin/main..HEAD` against the 50-character limit and includes formatting,
 lint, typechecking, unit/integration tests, the derived example, package
 allowlist and license checks, clean packed ESM/NodeNext/npx/Accounting/Juno
 consumers, Chromium tests, and all Rust checks. It also audits the freshly
@@ -751,6 +813,17 @@ from comparison generations. Navigation from an old tab performs a full reload
 when the deployed catalogue, assets, or host aliases change, even if the
 comparison files are unchanged. Within one deployment, navigation remains
 progressive. Hosting must revalidate mutable files so that reload can fetch them.
+
+Exports also include an inert `__mokly/client/inspector.js` for explicit
+cross-origin hosts. Current owned copies contain its bounded identity map;
+local scripts stay disabled and comparison snapshots remain byte-unmodified.
+
+Exports include `__mokly/catalogue.json`: versioned public navigation, entry,
+instance, Changes and comparison-pointer data. It shares the shell's deployment
+identity and appears in `.mokly-export-artifact` and publish archives. Serve
+provides the same URL as an atomic snapshot with content/evidence revisions and
+no-store caching. The private `mokly-manifest.json` remains excluded. The
+[public v1 fixture](./docs/protocol/fixtures/catalogue-v1.json) ships with the package.
 
 Concurrent exports to filesystem aliases of the same destination share one
 reservation. The internal `.mokly-export-reservations` directory retains
@@ -875,27 +948,37 @@ npx --no-install wrangler pages project create mokabook --production-branch main
 
 ## Releasing
 
-Changes use Conventional Commits. On `main`, release-please maintains the
-reviewed version/changelog PR; merging that PR creates an immutable `vX.Y.Z`
-release. The same [Release workflow](./.github/workflows/release.yml) checks the
-tag, reruns the full gate, packs and smoke-tests the exact tarball, guards an
-already-published version, and publishes through npm trusted publishing. A
-bounded post-publish check tolerates npm metadata, tarball, dist-tag, and
-signature propagation before proving the registry artifact. A manual
-`publish_ref` retries only an existing tag. See the
-[release protocol](./docs/protocol/npm-release.md) for the current release/retry
-procedure and maintainer settings. Package versions are release-managed.
+Changes use Conventional Commits. On `main`, release-please maintains one reviewed
+PR for both packages, their independent versions and changelogs, and the CLI's
+exact viewer dependency. Viewer **0.1.0** and CLI **0.10.0** were released from
+the same commit. Merging each later release PR is the authorization to create
+immutable `vX.Y.Z` CLI and `viewer-vX.Y.Z` viewer tags at the same commit and
+publish them automatically; the `npm` environment remains a main-only OIDC trust
+boundary and does not add a second reviewer stage.
+
+The [Release workflow](./.github/workflows/release.yml) verifies both tags,
+reruns the full gate and smoke-tests both exact tarballs in clean consumers.
+It publishes and verifies the viewer before the CLI, retaining both inventories,
+hashes and registry signature/provenance results. Post-publish verification
+allows five minutes for npm registry propagation. A manual dispatch from `main`
+retries the existing `publish_ref` and `viewer_ref` pair, skipping only a
+matching already-published archive. See the
+[release protocol](./docs/protocol/npm-release.md) for version pairing, evidence
+and the complete retry procedure.
 
 The one-time [Mokly registry bootstrap](./docs/protocol/npm-bootstrap.md) is
 complete: `@mokly/mokly@0.8.0` is the accepted initial `latest` release and also
 retains the `bootstrap` tag. Do not repeat registration or reset release state.
 Later reviewed releases advance `latest`; `bootstrap` remains on `0.8.0`. The
 bootstrap record retains the isolated-build procedure and reviewed source SHA.
-Before the first automated release, complete and verify the GitHub release
-token's repository access and the
-[GitHub publishing protections](./docs/protocol/npm-github-protections.md)
-with an authorized maintainer account. The interactive bootstrap does not prove
-OIDC publishing works. Do not add an npm write token to GitHub.
+The viewer is a separate public scoped package; its
+[first publication](./docs/protocol/npm-bootstrap.md#completed-viewer-registration)
+is complete. Verify both packages' trusted publishers, organization team access,
+2FA and [both tag streams' GitHub protections](./docs/protocol/npm-github-protections.md)
+with an authorized maintainer. Each initial interactive registration has npm
+signature and reviewed-source evidence, not OIDC provenance. Do not store an npm
+write token in GitHub. Release preparation itself publishes nothing and creates
+no tags.
 
 The synthetic fixture at [`examples/basic`](./examples/basic/README.md) proves
 custom rendering, stylesheets, id links, collections, use cases, and
@@ -928,16 +1011,19 @@ canonical destinations and the controls that remain visual depictions.
 
 - [`src/index.ts`](./src/index.ts) — supported public authoring API.
 - [`src/config`](./src/config) — config discovery, loading, and confinement.
+- [`src/cli`](./src/cli/README.md) — argument validation, terminal reporting,
+  interactive Serve controls, and command composition.
 - [`src/publish`](./src/publish/README.md) — upload manifests, archive limits,
   Git identity and the injectable HTTP boundary.
 - [`src/build`](./src/build) — single-graph bundling, compilation, links, check,
   and transactional writes.
-- [`src/server`](./src/server) — manifest-backed HTTP, the responsive shell,
-  and the watched child lifecycle.
-- [`src/client`](./src/client) — progressive Browse navigation and versioned
-  live updates served to the browser.
-- [`src/navigation`](./src/navigation) and [`src/browse`](./src/browse) — shared
-  logical-target grammar and ownership-aware HTML adaptation.
+- [`packages/viewer`](./packages/viewer/README.md) — React/SSR shell, catalogue
+  readers, navigation, adapters, inspection and reusable browser enhancements.
+- [`src/server`](./src/server) — manifest-backed HTTP and the watched child lifecycle.
+- [`src/client`](./src/client) — private Serve updates, controls and on-demand loading.
+- [`packages/viewer/src/navigation`](./packages/viewer/src/navigation) and
+  [`src/browse`](./src/browse) — shared logical-target grammar and ownership-aware
+  HTML adaptation.
 - [`src/review`](./src/review/README.md) — Git extraction, comparison, ignore
   normalization, isolated snapshots, and CSS rule attribution shared by Changes.
 - [`src/build/source_inventory.ts`](./src/build/source_inventory.ts) — resolved
@@ -954,6 +1040,10 @@ canonical destinations and the controls that remain visual depictions.
 
 ### Related Docs
 
+The [packaged guides contract](./docs/protocol/mokly-guides.md) defines the
+Markdown source, versioning, linking, and publication boundary used by the
+cloud documentation site.
+
 The [registered components contract](./docs/protocol/mokly-components.md)
 links to the [change attribution](./docs/protocol/mokly-component-changes.md),
 [pages and inspection](./docs/protocol/mokly-component-explorer.md), and
@@ -964,6 +1054,12 @@ variants, comparisons and read-only inspection. Development plans are indexed
 in the [plans index](./plans/README.md).
 
 - [Protocol index](./docs/protocol/README.md)
+- [Instance identity](./docs/protocol/mokly-instances.md),
+  [public catalogue](./docs/protocol/mokly-catalogue.md),
+  [viewer API](./docs/protocol/mokly-viewer.md), and
+  [frame adapters](./docs/protocol/mokly-frame-adapter.md) — identity, catalogue and
+  adapters are implemented; the viewer package is verified and awaiting its
+  first release.
 - [Package ownership boundary](./docs/architecture/package-boundary.md)
 - [Accounting migration inventory](./docs/migration/accounting-framework-inventory.md)
 - [Styled control migration guide](./docs/migration/accounting-link-controls.md)

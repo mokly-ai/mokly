@@ -6,13 +6,13 @@ import test from "node:test";
 import { exportCatalogue } from "../dist/export/run.js";
 import { readManifest } from "../dist/registry/manifest.js";
 import { committedReviewRepository } from "../dist/review/repository.js";
-import { parseReviewResult } from "../dist/review/result_validation.js";
 import {
   ComponentChangeCache,
   RepositoryComponentChanges,
 } from "../dist/server/component_changes.js";
 import { startCatalogueServer } from "../dist/server/http.js";
 import { configuredServedReview } from "../dist/server/review_routes.js";
+import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 

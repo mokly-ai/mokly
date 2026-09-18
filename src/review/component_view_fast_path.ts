@@ -1,10 +1,11 @@
+import type { GeneratedComponentView, ViewReview } from "@mokly/viewer/data";
+
 import {
   componentUsageSignals,
   componentUsageTopologyEqual,
   stripComponentMarkers,
   stripHistoricalMarkers,
 } from "../components/comparison_material.js";
-import type { GeneratedComponentView } from "../components/views.js";
 
 import { changedResourceBytes } from "./component_resource_changes.js";
 import type {
@@ -16,7 +17,6 @@ import {
   normalizeReviewPair,
   normalizeSingleDocument,
 } from "./ignore.js";
-import type { ViewReview } from "./types.js";
 
 /** Settle a paired view when neither its documents nor reachable resources can differ. */
 export async function compareUnchangedComponentView(

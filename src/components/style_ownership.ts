@@ -1,7 +1,7 @@
 import { parse, type DefaultTreeAdapterMap } from "parse5";
 
-import { invalidData } from "./data.js";
-import type { ComponentStyleOwnership } from "./manifest_types.js";
+import type { ComponentStyleOwnership } from "@mokly/viewer";
+import { invalidData } from "@mokly/viewer/data";
 
 type Node = DefaultTreeAdapterMap["node"];
 interface StyleText {

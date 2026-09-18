@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { renderDiff } from "../dist/client/diff_views.js";
-import { isStyleOnlyView } from "../dist/client/style_evidence.js";
+import { renderDiff } from "../packages/viewer/dist/client/diff_views.js";
+import { isStyleOnlyView } from "../packages/viewer/dist/client/style_evidence.js";
 
 import {
   FakeMarkupDocument,

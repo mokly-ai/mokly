@@ -1,12 +1,11 @@
 import path from "node:path";
 
-import type { Viewport } from "../authoring/types.js";
-import type { ComponentViewRecord } from "../components/manifest_types.js";
-import { generatedViews } from "../components/views.js";
-import { encodeUrlPath } from "../config/paths.js";
+import type { Viewport, ComponentViewRecord } from "@mokly/viewer";
+import { generatedViews, encodeUrlPath } from "@mokly/viewer/data";
+import type { LogicalTarget } from "@mokly/viewer/data";
+import type { Catalogue } from "@mokly/viewer/server";
+
 import { MoklyError } from "../errors.js";
-import type { LogicalTarget } from "../navigation/logical.js";
-import type { Catalogue } from "../server/catalogue.js";
 
 /** Manifest-derived identity for one generated Browse document. */
 export interface TrustedBrowseDocument {
