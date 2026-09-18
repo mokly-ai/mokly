@@ -160,8 +160,11 @@ A view reported `unchanged` or `ignored-only` through the
 [unchanged view decision](./mokly-component-changes.md#unchanged-view-decision)
 carries no `material`, `reasons`, or `excludedResources` fields, contributes
 nothing to the implementation-impact set or owned-resource aggregation, and
-retains its `ignoredIds`. Its record is identical to the one the complete
-comparison produces for that view; the decision changes cost, not output.
+retains its `ignoredIds`. For valid builder output its record is identical to
+the one the complete comparison produces for that view; the decision changes
+cost, not output. Identical handcrafted documents with identically malformed
+ownership markers are outside that guarantee because the shortcut does not
+repeat range validation.
 Eligibility requires equality with component markers retained outside paired
 ignored regions and canonical equality of usage topology. Only `props` and
 `propsKey` on entry-owned instances may differ, and invocation `source`

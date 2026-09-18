@@ -69,10 +69,14 @@ Review phases use the same session, role and parent context as their caller:
 - `review.resource-graph` covers reference discovery and transitive traversal
   for each material view or live document, and each before/after snapshot-copy
   closure. It includes resource reads and copying into the in-memory artifact.
-  Cached traversals are still measured; watcher inventory keeps its own stages.
+  Snapshot-copy traversals are measured even when their reads are cached;
+  classification discovery-cache hits emit no additional span. Watcher
+  inventory keeps its own stages.
   In a component-aware classification where no view differs, the loop emits at
-  most one occurrence per paired view plus one per one-sided view; a repeated
-  discovery for the same route and document text is a defect.
+  most one occurrence per paired view in committed mode and two in derived
+  mode, one for each independently discovered side, plus one per one-sided
+  view. A repeated discovery for the same side,
+  route, content digest, and exclusion callback identity is a defect.
 - `review.css-analysis` measures the synchronous parse/diff/match/reduce pass
   for one changed, reachable stylesheet and one before/after document pair.
   It includes parser-cache lookups or parsing, and runs for cache hits and empty

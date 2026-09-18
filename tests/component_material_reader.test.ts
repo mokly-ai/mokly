@@ -84,6 +84,59 @@ test("resource discovery caches each document and exclusion policy", async () =>
   );
 });
 
+test("resource discovery digest separates content, routes, and exclusion identities", async () => {
+  const reader = new ComponentMaterialReader({
+    read: async () => Buffer.from(""),
+  });
+  const events: TimingEvent[] = [];
+  const first = (route: string) => route.endsWith("first.svg");
+  const second = (route: string) => route.endsWith("second.svg");
+  const same = '<img src="same.svg">';
+  const pair = '<img src="first.svg"><img src="second.svg">';
+  await runWithTimings(
+    true,
+    "test",
+    async () => {
+      assert.deepEqual(
+        await reader.resources("one/view.html", same),
+        new Set(["one/same.svg"]),
+      );
+      assert.deepEqual(
+        await reader.resources("one/view.html", same),
+        new Set(["one/same.svg"]),
+      );
+      assert.deepEqual(
+        await reader.resources("one/view.html", '<img src="different.svg">'),
+        new Set(["one/different.svg"]),
+      );
+      assert.deepEqual(
+        await reader.resources("two/view.html", same),
+        new Set(["two/same.svg"]),
+      );
+      assert.deepEqual(
+        await reader.resources("one/view.html", pair, first),
+        new Set(["one/second.svg"]),
+      );
+      assert.deepEqual(
+        await reader.resources("one/view.html", pair, first),
+        new Set(["one/second.svg"]),
+      );
+      assert.deepEqual(
+        await reader.resources("one/view.html", pair, second),
+        new Set(["one/first.svg"]),
+      );
+    },
+    { write: (event) => events.push(event) },
+  );
+  assert.equal(
+    events.filter(
+      (event) =>
+        event.stage === "review.resource-graph" && event.event === "start",
+    ).length,
+    5,
+  );
+});
+
 test("fall-through views reuse actual discovery in derived mode", async (t) => {
   const fixture = await componentReviewFixture(t, (source) => source);
   const screen = fixture.after.manifest.entries.find(

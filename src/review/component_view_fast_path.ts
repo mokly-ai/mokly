@@ -27,6 +27,7 @@ export async function compareUnchangedComponentView(
   base: string,
   head: string,
 ): Promise<ComparedComponentView | undefined> {
+  if (before.path !== after.path) return undefined;
   const retained = normalizeReviewPair(
     normalizeHistoricalDocument(base),
     head,
@@ -40,10 +41,14 @@ export async function compareUnchangedComponentView(
   const actual = normalizeReviewPair(strippedBase, strippedHead, after.path);
   if (actual.base !== actual.head) return undefined;
 
-  const resources = await context.afterReader.resources(
+  const afterResources = await context.afterReader.resources(
     after.path,
     actual.head,
   );
+  const beforeResources = context.compareResourceBytes
+    ? await context.beforeReader.resources(before.path, actual.base)
+    : afterResources;
+  const resources = new Set([...beforeResources, ...afterResources]);
   const repoPath = (route: string) =>
     context.prefix ? `${context.prefix}/${route}` : route;
   if ([...resources].some((route) => context.changed.has(repoPath(route))))
@@ -52,8 +57,8 @@ export async function compareUnchangedComponentView(
     context.compareResourceBytes &&
     (
       await changedResourceBytes(
-        resources,
-        resources,
+        beforeResources,
+        afterResources,
         context.beforeReader,
         context.afterReader,
       )

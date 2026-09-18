@@ -2,11 +2,12 @@
 
 ## Status And Outcome
 
-The implementation and measurement milestones are complete. The fast path
+The original implementation and measurement milestones are complete. The fast path
 preserves complete-path output across the differential fixture matrix, keeps
 resource and derived-byte gates intact, and emits explicit path counts.
 
-Measurements on the same VM compare the background worker's
+These historical measurements predate the independent two-sided resource
+traversal added by Milestone 7. Measurements on the same VM compare the background worker's
 `changes.classify` span, excluding baseline preparation:
 
 | Example zero-change run | Cold process | Warm restart | `review.resource-graph` |
@@ -14,7 +15,7 @@ Measurements on the same VM compare the background worker's
 | Before                  |        3.2 s |        3.1 s |           2,208 per run |
 | After                   |     909.5 ms |    902.26 ms |             277 per run |
 
-The current result is about 72% faster cold and 71% faster warm, with 87%
+That historical result was about 72% faster cold and 71% faster warm, with 87%
 fewer resource discoveries. Both after runs sent all 276 paired views through
 the fast path. The historical derived-baseline preparation was 18.4 seconds
 cold and 0.3 seconds on a warm cache hit; that separate cost is unchanged and
@@ -62,14 +63,17 @@ Make the cost of classification scale with what changed. A paired view whose
 normalized documents are identical and whose reachable resources are
 unchanged must be reported `unchanged` (or `ignored-only`) without projection,
 range validation, CSS analysis, or implementation diffing. The result must be
-byte-identical to the result the complete path produces today for every view.
+byte-identical to the result the complete path produces today for every view
+from valid builder output. Identical handcrafted malformed ownership records
+are outside that guarantee.
 
 Success criteria:
 
 - Zero-change classification of `examples/basic` completes `changes.classify`
   in well under one second on the same machine that measured 3.1 seconds.
 - `review.resource-graph` span count for a zero-change run is at most one per
-  paired view plus one per added or removed view.
+  paired view in committed mode and two in derived mode, plus one per added or
+  removed view.
 - A differential test proves fast-path and complete-path results are deeply
   equal across the shared fixtures, including the large fixture generator's
   small instance.
@@ -80,7 +84,7 @@ In scope:
 
 - An early unchanged decision in `compareComponentView` for views present on
   both sides.
-- Reuse of the single resource discovery performed by that decision when the
+- Reuse of each side's resource discovery performed by that decision when the
   view falls through to the complete path.
 - Protocol and README updates that define the decision as part of the
   materiality contract.
@@ -112,19 +116,15 @@ as text by the material readers:
    keys, component ids, owners, slot keys and order; instance-owned props and
    prop keys; and all slots, ranges, styles, and resources must match.
    Invocation `source` metadata is excluded, as it is from every projection.
-3. Compute the actual normalized pair by stripping historical component
+3. If the view route changed, take the complete path. Otherwise compute the actual normalized pair by stripping historical component
    markers from `B`, stripping current component markers from `H`, and applying
-   paired manual-ignore normalization. Discover head resources once through
-   `afterReader.resources(after.path, actual.head)`; this is byte-identical to
-   the text used by the complete path's actual comparison.
+   paired manual-ignore normalization. Discover the head closure in committed
+   mode and both closures independently in derived mode.
 4. If any discovered route, prefixed to a repository path, is in
    `changedPaths`, take the complete path. Owned or excluded stylesheets may
    still produce evidence or exclusions there.
-5. In derived mode, additionally compare the bytes of every discovered route
-   between the two readers with `changedResourceBytes`. Any difference takes
-   the complete path. This is the same check the complete path applies to the
-   actual pair, so it cannot report a resource change the complete path would
-   not.
+5. In derived mode, compare the independently discovered closures and bytes
+   with `changedResourceBytes`. Any difference takes the complete path.
 6. Otherwise the view is unchanged by resources. Its state is `unchanged` when
    `projected.rawEqual` would be true and `ignored-only` otherwise. `rawEqual`
    compares `normalizeSingleDocument` of each stripped side; the fast path
@@ -187,7 +187,8 @@ existing protocol remains internally consistent.
 - [x] In `docs/protocol/mokly-timings.md`, define a `review.compare-screens`
       counts record with `views`, `fastPath`, and `completePath` totals, and
       state the zero-change bound on `review.resource-graph` occurrences (at
-      most one per paired view plus one per one-sided view).
+      most one per paired view in committed mode and two in derived mode, plus
+      one per one-sided view).
 - [x] Update `src/review/README.md` with a short description of the two paths
       in `compareComponentView` and where the decision lives.
 - [x] Update the workspace `README.md` performance paragraph to say that
@@ -321,8 +322,40 @@ classification contract or the zero-change performance bound.
       shared `instanceStructure`/`instanceInputs` helpers, so a line shift alone
       keeps every view on the fast path; cover it with a unit test and a
       classification counts test.
+- [x] Review: after the push, use `docs/implementation-review-prompt.md` against
+      `origin/main` and report findings without changing the implementation.
+
+## Milestone 7: Post-review correctness fixes
+
+Resolve the six approved findings from the completed review while preserving
+the shortcut only when it is equivalent for valid builder output.
+
+- [x] Update the protocol, review README, plan decision rule, performance
+      wording, and active-plan index before implementation.
+- [x] Add differential regressions for added and removed stylesheet imports,
+      relocated routes with relative assets, and committed historical-only
+      changed dependencies. Verify the added-import and both relocation cases
+      fail before the fix; cover cache identity and isolated fixture setup.
+- [x] Discover both actual resource closures independently in derived mode,
+      make route moves use the complete path in both modes, and preserve real
+      discovery/read failures.
+- [x] Key resource discovery by a content digest and exclusion callback identity,
+      without retaining whole HTML documents as map keys.
+- [x] Extract comparison-count tallying from `component_classification.ts`.
+- [x] Run formatting, build, type checking, and all relevant tests with a 100%
+      pass rate; run the final full `cargo xtask check`.
+- [ ] `git add -A`, commit the completed work with a Conventional Commits
+      message, and push the branch.
 - [ ] Review: after the push, use `docs/implementation-review-prompt.md` against
       `origin/main` and report findings without changing the implementation.
+
+Validation passed: `cargo xtask check` ran 1,865 Node tests, 452 Chromium tests,
+all five packed-consumer scenarios, and three Rust tests. Independent checks
+confirmed 24 resource edge cases, isolated fixture startup without `.context`,
+and complete-path equivalence for all 276 example views in both modes. The
+example used 276 resource discoveries in committed mode and 552 in derived
+mode. The added-import and both route-move regressions fail with the original
+fast path and pass with the fix; the removed-import control passes both.
 
 ## Post-merge follow-up (non-blocking)
 

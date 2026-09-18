@@ -114,7 +114,9 @@ reason; `changedPaths` and `dependency` reasons retain actual Git evidence.
 The same reachable-resource byte comparison gates the
 [unchanged view decision](./mokly-component-changes.md#unchanged-view-decision):
 a view with identical normalized documents still takes the complete comparison
-when any reachable resource's bytes differ, even without Git evidence.
+when independently discovered historical and current resource closures differ,
+or when any resource present on both sides has different bytes, even without
+Git evidence.
 
 ## Preparation And Storage
 

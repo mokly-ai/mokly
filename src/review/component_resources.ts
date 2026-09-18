@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import { timeAsync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
 
@@ -175,10 +177,11 @@ export class ComponentMaterialReader {
       documents = new Map();
       this.viewResources.set(route, documents);
     }
-    let cached = documents.get(html);
+    const digest = createHash("sha256").update(html).digest("base64url");
+    let cached = documents.get(digest);
     if (!cached) {
       cached = { filtered: new WeakMap() };
-      documents.set(html, cached);
+      documents.set(digest, cached);
     }
     const existing = excluded ? cached.filtered.get(excluded) : cached.all;
     if (existing) return existing;

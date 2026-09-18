@@ -157,6 +157,7 @@ test("historical component markers remain unchanged", async (t) => {
 });
 
 test("fast and complete paths agree on the small large-catalogue fixture", async (t) => {
+  await fs.mkdir(path.join(repositoryRoot, ".context"), { recursive: true });
   const root = await fs.mkdtemp(
     path.join(repositoryRoot, ".context/large-fast-path-"),
   );

@@ -11,12 +11,11 @@
 - [Publish Catalogue](./publish-catalogue.md)
 - [App-Independent Mokabook Npm Library](./app-independent-mokabook-library.md)
 - [Browse Shell Design Parity](./browse-shell-design-parity.md)
+- [Unchanged View Fast Path](./unchanged-view-fast-path.md) — post-review
+  correctness fixes are active until the PR merges.
 
 ## Completed
 
-- [Unchanged View Fast Path](./unchanged-view-fast-path.md) — delivered and
-  verified; the required post-push review is reported in the implementation
-  handoff.
 - [Mokly Viewer Library](./mokly-viewer-library.md) — implementation and release
   PRs merged; viewer 0.1.0 and CLI 0.10.0 are published. One P2 review finding
   and the remaining published-package smoke are recorded for follow-up.

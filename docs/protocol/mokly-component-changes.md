@@ -113,8 +113,10 @@ catalogue. For a view present on both sides, the classifier first decides
 whether the view can differ at all and only then performs projection, range
 validation, CSS rule analysis, and implementation diffing. That decision is
 part of the materiality policy and must produce output equal to the complete
-comparison for every view; a differential test over the shared fixtures is
-required evidence.
+comparison for every view produced by the validated builder; a differential
+test over the shared fixtures is required evidence. Identical handcrafted
+documents with the same malformed ownership markers are outside this equality
+guarantee because the shortcut does not repeat range validation.
 
 The decision, in order:
 
@@ -132,14 +134,16 @@ The decision, in order:
    must match. Optional invocation `source` metadata is excluded from this
    comparison, as it is from every Changes projection. Any other difference
    takes the complete path.
-3. Form the actual normalized pair by stripping historical component markers
+3. If the paired view routes differ, take the complete path. Otherwise form
+   the actual normalized pair by stripping historical component markers
    from the base, stripping current component markers from the head, and
-   applying paired manual-ignore normalization. Discover the head document's
-   reachable resources once using exactly this normalized head text.
-4. If any reachable resource is a changed Git path, take the complete path;
+   applying paired manual-ignore normalization. Discover the head closure in
+   committed mode and both closures independently in derived mode.
+4. If any discovered resource is a changed Git path, take the complete path;
    ownership, exclusion, and rule analysis are decided there.
-5. In derived mode, also compare the bytes of every reachable resource
-   between the two sides. Any difference takes the complete path.
+5. In derived mode, compare the independently discovered closures and the
+   bytes of every reachable resource present on both sides. Any closure or
+   byte difference takes the complete path.
 6. Otherwise the view is unchanged by content and resources. Its state is
    `unchanged` when the single-document normalizations of both stripped sides
    are equal and `ignored-only` otherwise; `ignoredIds` come from the paired
@@ -157,10 +161,12 @@ projection and implementation-impact analysis. Entry-level `metadata`,
 `added`, `removed`, and dependency reasons are unaffected because they are
 computed outside the per-view comparison.
 
-The resource discovery performed by the decision is reused when the view
-falls through to the complete path. The decision and complete path pass
-byte-identical normalized head text to the unfiltered `(route, html)` cache, so
-discovery is never repeated for that document within one classification.
+Each resource discovery performed by the decision is reused when the view falls
+through to the complete path. Each side passes byte-identical route and
+normalized text to a cache keyed by route, content digest, and exclusion
+callback identity, so discovery is never repeated for that document and
+policy within one classification without retaining the full document as a map
+key.
 
 Added and removed views do not use the paired fast decision. Before their
 one-sided document is normalized, the classifier validates all recorded

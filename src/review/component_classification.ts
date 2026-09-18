@@ -26,6 +26,7 @@ import {
   propagateUseCases,
 } from "./component_change_propagation.js";
 import type { ComponentClassificationInput } from "./component_classification_input.js";
+import { ComponentComparisonCounts } from "./component_comparison_counts.js";
 import {
   address,
   ComponentDependencyPolicy,
@@ -121,7 +122,7 @@ export async function classifyComponents(
   const afterHierarchy = analyzeHierarchy<ManifestEntry>(
     after.entries as readonly ManifestEntry[],
   ).hierarchy;
-  const comparisonCounts = { views: 0, fastPath: 0, completePath: 0 };
+  const comparisonCounts = new ComponentComparisonCounts();
   await timeAsync("review.compare-screens", async () => {
     for (const pair of pairs) {
       const entry = (pair.after ?? pair.before)!;
@@ -172,13 +173,7 @@ export async function classifyComponents(
           ),
         ),
       );
-      comparisonCounts.views += compared.length;
-      comparisonCounts.fastPath += compared.filter(
-        (result) => result.comparisonPath === "fast",
-      ).length;
-      comparisonCounts.completePath += compared.filter(
-        (result) => result.comparisonPath === "complete",
-      ).length;
+      comparisonCounts.add(compared);
       assertViewAnalysisScope(
         compared.map((result) => result.view),
         config,
@@ -266,7 +261,7 @@ export async function classifyComponents(
           reasons: uniqueReasons(reasons),
         });
     }
-    timingCounts("review.compare-screens", () => comparisonCounts);
+    timingCounts("review.compare-screens", () => comparisonCounts.record());
   });
   propagateOwnedCss(ownedResources, impacting, components, changes);
   propagateImplementations(
