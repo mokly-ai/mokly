@@ -167,9 +167,12 @@ export async function startCatalogueServer(
     if (controls && request.url?.startsWith("/__mokly/components/")) {
       const busy = activity.channel();
       busy(true);
-      void handleControls(request, response, controls).finally(() =>
-        busy(false),
-      );
+      void handleControls(
+        request,
+        response,
+        controls,
+        options.onDiagnostic,
+      ).finally(() => busy(false));
       return;
     }
     const requestedVersion = updateVersion;

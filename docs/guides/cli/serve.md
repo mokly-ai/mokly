@@ -12,7 +12,8 @@ npx mokly serve
 ```
 
 `serve` is the default command, so `npx mokly` does the same thing. It starts
-the catalogue, prints its URL and watches your sources.
+the catalogue, prints its URL and watches your sources. Add `--open` to open
+that URL in your default browser as soon as the server is ready.
 
 ## Options
 
@@ -23,6 +24,7 @@ the catalogue, prints its URL and watches your sources.
 | `--base <ref>`    | Git base ref used to find the branch point                     |
 | `--watch`         | Watch your inputs; this is the default                         |
 | `--no-watch`      | Serve one deterministic snapshot                               |
+| `--open`          | Open the served URL in your default browser                    |
 | `--debug-timings` | Report phase timings and catalogue counts on standard error    |
 
 ## The port

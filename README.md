@@ -189,6 +189,7 @@ After installing, run the local CLI with npx:
 
 ```bash
 npx mokly                         # browse immediately, render on demand, and watch
+npx mokly serve --open            # open the development URL after startup
 npx mokly serve --no-watch --port 0
 npx mokly serve --debug-timings
 npx mokly build
@@ -206,6 +207,13 @@ name is not a package alias; imports also use `@mokly/mokly`.
 Value options also accept `--name=value`, which supports values beginning with
 `-`, such as `--config=-catalogue.config.ts`. Empty values and assignments to
 boolean flags are rejected.
+
+An interactive terminal highlights the local URL in a bordered panel and shows
+progress, accepted catalogue and comparison status, watched file actions, and
+friendly error hints. Press `h` during watched Serve to see shortcuts: `o`
+opens the browser, `r` rebuilds, `c` clears, and `q` quits. Piped and CI output
+keeps the stable plain strings used by automation; `MOKLY_OUTPUT=plain|rich`
+selects a mode explicitly. `--debug-timings` always uses plain mode.
 
 | Command                     | Outcome                                                    |
 | --------------------------- | ---------------------------------------------------------- |
@@ -626,6 +634,9 @@ forcing React peers to the consumer's one runtime.
   portable.
 - **A watched edit fails:** fix the reported candidate build/config error. The
   last-good server remains active and adopts the next valid change.
+- **Terminal progress is missing or noisy:** rich progress requires TTY stdout
+  unless `MOKLY_OUTPUT=rich` is set. Use `MOKLY_OUTPUT=plain` for stable logs;
+  `NO_COLOR=1` disables colour without disabling progress.
 - **Export cannot find its baseline:** fetch the configured base with enough
   Git history. Committed mode needs its manifest/fragments in Git; derived mode
   needs a working historical install/build recipe. Export never fetches history
@@ -670,10 +681,12 @@ including before `dist/` has been built. `npm run lint -- --fix` applies the
 For local development after installing dependencies, run:
 
 ```bash
-npm run dev
+npm run -s dev
 ```
 
 This builds the local CLI and starts the example catalogue with watching enabled.
+The quiet npm form leaves the terminal to Mokly's reporter; `npm run dev` works
+too but retains npm's outer banner.
 Open the printed URL, starting at `http://127.0.0.1:4173`. Edits to example
 entries, the renderer, and configured stylesheets update the catalogue
 automatically; generated HTML is written to `examples/basic/generated/`.
@@ -994,6 +1007,8 @@ canonical destinations and the controls that remain visual depictions.
 
 - [`src/index.ts`](./src/index.ts) — supported public authoring API.
 - [`src/config`](./src/config) — config discovery, loading, and confinement.
+- [`src/cli`](./src/cli/README.md) — argument validation, terminal reporting,
+  interactive Serve controls, and command composition.
 - [`src/publish`](./src/publish/README.md) — upload manifests, archive limits,
   Git identity and the injectable HTTP boundary.
 - [`src/build`](./src/build) — single-graph bundling, compilation, links, check,

@@ -2,6 +2,7 @@
 
 ## Active
 
+- [CLI Terminal Experience](./cli-terminal-experience.md)
 - [Package Documentation](./package-documentation.md) — supersedes the
   unmerged public-site plan and pull request #79 by shipping versioned Markdown
   guides in `@mokly/mokly` for the cloud repository to render.

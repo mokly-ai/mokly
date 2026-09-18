@@ -16,6 +16,12 @@ and watches your sources. Navigation and previews are available immediately;
 each screen is rendered when you open it, and the complete build and the
 comparison with your Git base finish in the background.
 
+To open the URL in your default browser as soon as the server is ready, run:
+
+```shell
+npx mokly --open
+```
+
 ## Choose a port
 
 If `4173` is taken, Mokly tries each following port until one is free. Ask the

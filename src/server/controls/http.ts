@@ -3,6 +3,7 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 
 import { ComponentRenderError, renderStatus } from "@mokly/viewer/data";
 
+import { PlainServeReporter } from "../reporter.js";
 import { safeDecodePath } from "../respond.js";
 
 import type { ComponentRenderService } from "./service.js";
@@ -25,6 +26,8 @@ export async function handleControls(
   request: IncomingMessage,
   response: ServerResponse,
   service: ComponentRenderService,
+  diagnostic: (message: string) => void = (message) =>
+    new PlainServeReporter().runtimeDiagnostic(message),
 ): Promise<void> {
   response.setHeader("cache-control", "no-store");
   response.setHeader("x-content-type-options", "nosniff");
@@ -94,8 +97,7 @@ export async function handleControls(
             "render-failed",
             "The preview could not be rendered. Try again or reset the props.",
           );
-    if (failure.detail !== undefined)
-      process.stderr.write(`${failure.detail}\n`);
+    if (failure.detail !== undefined) diagnostic(failure.detail);
     if (!response.destroyed)
       json(
         response,

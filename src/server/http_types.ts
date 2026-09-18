@@ -17,6 +17,7 @@ export interface ServerOptions {
   /** Include live Changes states by default; static captures opt out. */
   liveChanges?: boolean;
   onForeground?: (active: boolean) => void;
+  onDiagnostic?: (error: unknown) => void;
   onPreviewResources?: (observation: PreviewObservation) => void;
   base: string;
   /** Reuse a validated startup or publication generation without rereading metadata. */

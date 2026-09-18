@@ -1,8 +1,8 @@
 import chokidar, { type FSWatcher } from "chokidar";
 
 import type { ResolvedConfig } from "../config/types.js";
-import { errorMessage } from "../errors.js";
 
+import { PlainServeReporter } from "./reporter.js";
 import {
   isPackageOwnedIgnoredWatchPath,
   watchTargets,
@@ -18,12 +18,14 @@ export function createSourceWatcher(
   factory: ConsumerWatcherFactory,
   config: ResolvedConfig,
   gate: NotificationGate<string>,
+  report: (error: unknown) => void = (error) =>
+    new PlainServeReporter().runtimeDiagnostic(error),
 ): ConsumerWatcher {
   const watcher = factory.create(watchTargets(config), (candidate) =>
     isPackageOwnedIgnoredWatchPath(candidate, config),
   );
   watcher.onChange((candidate) => gate.notify(candidate));
-  watcher.onError((error) => process.stderr.write(`${errorMessage(error)}\n`));
+  watcher.onError(report);
   return watcher;
 }
 
