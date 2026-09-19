@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/mokly-ai/mokly/compare/viewer-v0.2.0...viewer-v0.2.1) (2026-09-19)
+
+
+### Bug Fixes
+
+* **shell:** match inspector divider to nav divider ([#90](https://github.com/mokly-ai/mokly/issues/90)) ([9bd6f20](https://github.com/mokly-ai/mokly/commit/9bd6f20ab10cc8fb403de68359de59dd82d94141))
+
 ## [0.2.0](https://github.com/mokly-ai/mokly/compare/viewer-v0.1.0...viewer-v0.2.0) (2026-09-17)
 
 
