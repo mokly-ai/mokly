@@ -95,7 +95,7 @@ the metadata-only qualification for affected-consumer completeness. Its log is
    migration details into dedicated guidance; **C**, add focused contract
    consistency checks. **Recommended: A + C**, explicitly distinguishing legacy
    and component formats; use B where it reduces repeated historical text.
-   The review also noted Accounting-specific compatibility wording. That label
+   The review also noted application-specific compatibility wording. That label
    alone is not a runtime independence defect: retain any intentionally supported
    compatibility behavior, and clarify its scope instead of deleting it.
 

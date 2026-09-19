@@ -1,80 +1,55 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import {
-  DetailsDisclosurePreference,
-  type DetailsPreferenceStorage,
-} from "../packages/viewer/dist/client/browse_details.js";
+import type { ShellRecoverySnapshot } from "../packages/viewer/dist/shell/store_state.js";
 
-test("details preference restores and updates explicit disclosure", () => {
-  const storage = new FakeStorage("closed");
-  const preference = new DetailsDisclosurePreference(storage);
-  const first = { open: true } as HTMLDetailsElement;
-  preference.apply(fakeDocument(first));
-  assert.equal(first.open, false);
+import { fixtureShellState } from "./helpers/viewer_catalogue.js";
 
-  preference.remember(true);
-  assert.equal(storage.value, "open");
-  const second = { open: false } as HTMLDetailsElement;
-  preference.apply(fakeDocument(second));
-  assert.equal(second.open, true);
+test("details preference restores either explicit disclosure value", () => {
+  assert.equal(
+    fixtureShellState({ initial: { detailsOpen: false } }).detailsOpen,
+    false,
+  );
+  assert.equal(
+    fixtureShellState({ initial: { detailsOpen: true } }).detailsOpen,
+    true,
+  );
 });
 
-test("details preference keeps its in-memory state without storage", () => {
-  const preference = new DetailsDisclosurePreference(new FailingStorage());
-  const initial = { open: true } as HTMLDetailsElement;
-  preference.apply(fakeDocument(initial));
-  assert.equal(initial.open, true);
-
-  preference.remember(false);
-  const replacement = { open: true } as HTMLDetailsElement;
-  preference.apply(fakeDocument(replacement));
-  assert.equal(replacement.open, false);
+test("details defaults follow the routed workspace when no preference exists", () => {
+  assert.equal(fixtureShellState().detailsOpen, false);
+  assert.equal(
+    fixtureShellState({
+      href: "https://example.test/view/components/action.html",
+    }).detailsOpen,
+    true,
+  );
 });
 
-test("details preference records a completed activation before later tasks", async () => {
-  const storage = new FakeStorage("closed");
-  const preference = new DetailsDisclosurePreference(storage);
-  const details = { open: false } as HTMLDetailsElement;
-
-  preference.rememberActivation(details);
-  details.open = true;
-  await Promise.resolve();
-
-  assert.equal(storage.value, "open");
+test("a native activation captured before hydration wins over older state", () => {
+  assert.equal(
+    fixtureShellState({
+      initial: {
+        detailsOpen: false,
+        earlyDetailsOpen: true,
+        recovery: recovery(false),
+      },
+    }).detailsOpen,
+    true,
+  );
 });
 
-function fakeDocument(details: HTMLDetailsElement): Document {
+function recovery(detailsOpen: boolean): ShellRecoverySnapshot {
   return {
-    querySelector(selector: string) {
-      assert.equal(selector, "[data-mokly-details]");
-      return details;
-    },
-  } as unknown as Document;
-}
-
-class FakeStorage implements DetailsPreferenceStorage {
-  key: string | undefined;
-
-  constructor(public value: string | null) {}
-
-  getItem(key: string): string | null {
-    this.key = key;
-    return this.value;
-  }
-
-  setItem(key: string, value: string): void {
-    assert.equal(key, this.key);
-    this.value = value;
-  }
-}
-
-class FailingStorage implements DetailsPreferenceStorage {
-  getItem(): string | null {
-    throw new Error("storage unavailable");
-  }
-
-  setItem(): void {
-    throw new Error("storage unavailable");
-  }
+    closedCollectionIds: [],
+    colorScheme: "light",
+    detailsOpen,
+    drawerOpen: false,
+    filterBaselineClosedCollectionIds: null,
+    navScroll: 0,
+    query: "",
+    regionScrolls: {},
+    view: "all",
+    viewport: "both",
+  };
 }

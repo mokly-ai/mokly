@@ -15,6 +15,7 @@ import {
   targetHead,
   ViewportSwitch,
 } from "./head.js";
+import { useShellIdentifier } from "./identifier_context.js";
 import { EmptyStage, TargetStage } from "./stages.js";
 import type { RouteTarget } from "./target.js";
 import { ComponentWorkspace } from "./workspace.js";
@@ -166,6 +167,7 @@ export function ShellMain(props: {
   context: ShellContext;
   view: ShellView;
 }) {
+  const mainId = useShellIdentifier("mb-main");
   const route = activeRouteForView(props.view);
   const baseline = props.catalogue.removedEntries.find(
     ({ entry }) => entry.route === route,
@@ -177,7 +179,7 @@ export function ShellMain(props: {
       data-mokly-baseline={
         baseline ? sha256(canonicalJson(baseline)) : undefined
       }
-      id="mb-main"
+      id={mainId}
       tabIndex={-1}
     >
       {props.view.kind === "home" ? (
@@ -194,6 +196,7 @@ export function ShellMain(props: {
             catalogue={props.catalogue}
             context={props.context}
             entry={props.view.target.entry}
+            key={props.view.target.entry.route}
           />
         ) : (
           <TargetView

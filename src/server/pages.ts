@@ -1,12 +1,7 @@
 /** Served shell pages composed from the catalogue and shell views. */
 
 import type { ManifestEntry } from "@mokly/viewer/data";
-import {
-  renderHydratedShellPage,
-  renderShellPage,
-  renderViewer,
-  toRouteTarget,
-} from "@mokly/viewer/server";
+import { renderHydratedShellPage, toRouteTarget } from "@mokly/viewer/server";
 import type { Catalogue, ShellContext, ShellView } from "@mokly/viewer/server";
 
 /** Render the catalogue home page. */
@@ -46,12 +41,5 @@ function renderHosted(
   view: ShellView,
   context: ShellContext,
 ): string {
-  return context.reactShell
-    ? renderHydratedShellPage(view, context)
-    : context.readModel
-      ? renderViewer(
-          { catalogue: context.readModel, baseUrl: "http://mokly.invalid" },
-          { catalogue, view, context },
-        )
-      : renderShellPage(catalogue, view, context);
+  return renderHydratedShellPage(view, context, catalogue);
 }

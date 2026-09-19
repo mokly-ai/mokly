@@ -2,7 +2,7 @@
 export const HELP = `Mokly — app-independent React mockup catalogues
 
 Usage:
-  mokly [serve] [--config <path>] [--port <port>] [--base <ref>] [--no-watch]
+  mokly [serve] [--config <path>] [--port <port>] [--base <ref>] [--no-watch] [--open]
   mokly build [--config <path>]
   mokly check [--config <path>]
   mokly export --out <path> [--config <path>] [--base <ref>]
@@ -30,6 +30,7 @@ Options:
   --no-changes     Publish current catalogue without a comparison baseline
   --watch          Watch consumer inputs (serve default)
   --no-watch       Serve one deterministic snapshot
+  --open           Open the served URL in the default browser
   -h, --help       Show help
   -v, --version    Show installed version
 

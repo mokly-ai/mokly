@@ -5,8 +5,7 @@ implemented pre-release behavior unless a document's Delivery Status explicitly
 labels an approved target that is still tracked by an active plan. Package,
 authoring, static build/check, responsive Browse, watched development, on-demand comparisons,
 packed consumer verification, CI, and npm release automation are implemented.
-The first public release and downstream Accounting cutover remain external
-delivery steps.
+The first public release remains an external delivery step.
 
 ## Supported Formats
 
@@ -24,13 +23,17 @@ otherwise they use v2. Pages participate in Browse Changes without visual compar
 The current primary file requires v5. Git baseline readers accept v3 and both
 historical v4 formats: pages with `sourceFiles`, or components with `legacyPages`.
 These envelopes are disjoint; combining them is invalid. Explicit
-`compatibility.readManifestV2` permits the old Accounting-format fallback only
+`compatibility.readManifestV2` permits the legacy v2-format fallback only
 when the historical primary file is absent, never when it is invalid.
 
 ## Contracts
 
 - [Catalogue upload v1](./mokly-upload.md) — public CLI and hosted/self-hosted receiver boundary.
 - [Package and authoring contract](./mokly-package.md)
+- [CLI terminal output](./mokly-terminal-output.md) — plain compatibility,
+  interactive progress, errors, watched events, and shortcuts.
+- [Packaged CLI guides](./mokly-guides.md) — versioned Markdown consumed by the
+  cloud documentation site.
 - [Configuration contract](./mokly-configuration.md) — includes public-exclusion validation and defaults.
 - [Public authoring API](./mokly-authoring.md)
 - [Rendering and generated output](./mokly-rendering.md)
@@ -41,6 +44,10 @@ when the historical primary file is absent, never when it is invalid.
   public inventory v1 beside the private manifest.
 - [Embeddable viewer](./mokly-viewer.md) — approved `@mokly/viewer` API and
   unchanged local shell extraction.
+- [Live viewer capabilities](./mokly-live-capabilities.md) — private Serve
+  evidence, updates, recovery, previews and on-demand rendering for React.
+- [Viewer markers and multi-instance highlights](./mokly-viewer-markers.md) —
+  host-owned anchored content and exact atomic highlight behavior.
 - [Viewer frame adapter](./mokly-frame-adapter.md) — approved same-origin
   interface and cross-origin inspector protocol v1.
 - [On-demand Serve](./mokly-on-demand.md)

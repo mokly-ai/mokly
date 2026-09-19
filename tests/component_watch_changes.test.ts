@@ -49,7 +49,9 @@ test(
     const workspace = async (route: string): Promise<WorkspaceData> => {
       const page = await catalogue(server.url + "/view/" + route);
       return JSON.parse(
-        page.match(/data-workspace-data="">(.*?)<\/script>/s)![1]!,
+        page.match(
+          /<script[^>]*data-workspace-data=""[^>]*>(.*?)<\/script>/s,
+        )![1]!,
       );
     };
     const edited = source.replace(

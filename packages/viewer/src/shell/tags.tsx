@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import type { KeyboardEvent } from "react";
 
 import { TagIcon } from "./icons.js";
+import { useShellIdentifier } from "./identifier_context.js";
 import { useOptionalShellStore } from "./store_context.js";
 
 /** One tag control synchronized with the shell's parsed query. */
@@ -46,6 +47,7 @@ export function TagChip({
 /** Search-field tag button and ephemeral roving-focus picker. */
 export function SearchTagPicker({ tags }: { tags: readonly string[] }) {
   const store = useOptionalShellStore();
+  const pickerId = useShellIdentifier("mb-tag-picker");
   const toggle = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const open = store?.state.tagPickerOpen ?? false;
@@ -90,7 +92,7 @@ export function SearchTagPicker({ tags }: { tags: readonly string[] }) {
   return (
     <>
       <button
-        aria-controls="mb-tag-picker"
+        aria-controls={pickerId}
         aria-expanded={open}
         aria-label="Filter by tag"
         className="mbk-search-tag"
@@ -112,8 +114,9 @@ export function SearchTagPicker({ tags }: { tags: readonly string[] }) {
       <div
         aria-label="Tags"
         className="mbk-tag-picker"
+        data-mokly-tag-picker=""
         hidden={!open}
-        id="mb-tag-picker"
+        id={pickerId}
         ref={panel}
         role="group"
       >

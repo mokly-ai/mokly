@@ -11,7 +11,7 @@ export async function smokeExternalWatch(root) {
     const match = await waitForOutput(
       running,
       /Mokly listening at (http:\/\/[^\s]+)/,
-      "Accounting-shaped watched server",
+      "themed-consumer watched server",
     );
     const response = await fetch(`${match[1]}/__mokly/events`);
     assert.ok(response.body);

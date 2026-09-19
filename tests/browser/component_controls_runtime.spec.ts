@@ -12,6 +12,31 @@ import type { RunningServer } from "../../dist/server/http_types.js";
 import { controlsEntrySource } from "../helpers/component_controls_fixture.js";
 import { componentReviewFixture } from "../helpers/component_review_fixture.js";
 
+function withSecondControlledComponent(source: string): string {
+  const actionStart = source.indexOf("const action = defineComponent");
+  const paneStart = source.indexOf("const pane = defineComponent");
+  if (actionStart < 0 || paneStart < 0)
+    throw new Error("Expected the component controls fixture shape");
+  const alternate = source
+    .slice(actionStart, paneStart)
+    .replace("const action =", "const alternate =")
+    .replace('id: "action"', 'id: "alternate"')
+    .replace('title: "Action"', 'title: "Alternate"')
+    .replace(
+      'route: "components/action.html"',
+      'route: "components/alternate.html"',
+    );
+  return `${source.slice(0, paneStart)}${alternate}${source.slice(paneStart)}`
+    .replace(
+      'childIds: ["action", "pane"]',
+      'childIds: ["action", "alternate", "pane"]',
+    )
+    .replace(
+      "action.entry, pane.entry,",
+      "action.entry, alternate.entry, pane.entry,",
+    );
+}
+
 let server: RunningServer;
 const cleanup: (() => Promise<void>)[] = [];
 test.beforeAll(async () => {
@@ -26,7 +51,7 @@ test.beforeAll(async () => {
         "<button data-viewport=",
         '<button className="revised" data-viewport=',
       ),
-    controlsEntrySource(),
+    withSecondControlledComponent(controlsEntrySource()),
   );
   const compared = await compareReview(
     fixture.after,
@@ -197,6 +222,45 @@ test("expired previews can be rendered again and navigation discards temporary e
   await expect(page.getByLabel("Label", { exact: true })).toHaveValue(
     "Continue",
   );
+});
+
+test("component navigation discards a pending edit owned by the previous route", async ({
+  page,
+}) => {
+  await page.goto(`${server.url}/view/components/action.html`);
+  await page.getByLabel("Viewport", { exact: true }).selectOption("desktop");
+  await page.getByRole("tab", { name: "Props", exact: true }).click();
+  let release: () => void = () => undefined;
+  let received: () => void = () => undefined;
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const requested = new Promise<void>((resolve) => {
+    received = resolve;
+  });
+  await page.route("**/__mokly/components/render", async (route) => {
+    const response = await route.fetch();
+    received();
+    await held;
+    await route.fulfill({ response }).catch(() => undefined);
+  });
+  try {
+    await page.getByLabel("Label", { exact: true }).fill("Previous route");
+    await requested;
+    await page.locator('[data-nav-row][data-entry-id="alternate"]').click();
+    await expect(
+      page.getByRole("heading", { name: "Alternate", exact: true }),
+    ).toBeVisible();
+    await expect(page.getByLabel("Label", { exact: true })).toHaveValue(
+      "Continue",
+    );
+    release();
+    await expect(page.getByLabel("Label", { exact: true })).toHaveValue(
+      "Continue",
+    );
+  } finally {
+    release();
+  }
 });
 
 test("changing context while the first edit is pending cannot apply an obsolete preview", async ({

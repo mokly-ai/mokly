@@ -6,8 +6,8 @@ envelope used through `@mokly/viewer/server`, and the same tree is hydrated in
 the browser by Serve, export and React hosts, with host-owned slots as ordinary
 children. The [viewer contract](../../../../docs/protocol/mokly-viewer.md#shell-tree-and-state)
 defines the tree and its state model; the
-[React Browse shell plan](../../../../plans/react-browse-shell.md) tracks the
-move from string-rendered islands to that hydrated tree.
+[React Browse shell plan](../../../../plans/react-browse-shell.md) records how
+Serve, export and the public viewer converged on this tree.
 
 `css.ts` concatenates the standalone stylesheet. Split string modules preserve
 its exact bytes. The package build scopes an embedded stylesheet separately and
@@ -22,25 +22,55 @@ selection, disclosure, drawer, details, recovery and scroll state. `routes.ts`,
 `nav_model.ts`, `search_query.ts` and `entry_wording.ts` are deterministic
 helpers shared by SSR and the live tree; `delivery.ts` validates static
 deployment continuity before a read-model route transition. Frame documents
-remain static while `frame_navigation.tsx` subscribes their immediate logical
-links with effect-scoped listeners.
+remain static while `frame_event_router.tsx` routes authenticated logical-link
+events from visible sessions in the owning `frame_registry.tsx`.
 
 `workspace_data.ts` describes shell data; the public viewer projects it only
 from validated catalogue records. Embedded bootstrap and workspace JSON use
 canonical key ordering so their validated client projections retain the exact
-server bytes during hydration. Comparison panes clone the current React-owned
-frame chrome on demand, keeping parser-owned template contents and duplicate
-hidden controls out of the hydrated document. The CLI supplies its private live
-capabilities through typed server context. Standalone full-document composition
-lives in `src/standalone`: its bootstrap contains only the validated public
-catalogue and shell delivery state, and `src/browser.tsx` hydrates that exact
-server tree.
+server bytes during hydration. `comparison_views.tsx` renders React-owned frame
+chrome around the snapshots from validated comparison metadata. The CLI
+supplies its private live capabilities through typed server context. Standalone
+full-document composition lives in `src/standalone`: its bootstrap contains
+the validated public catalogue and shell delivery state for Serve. Static pages
+carry a compact identity/revision reference and resolve the shared finalized
+catalogue before `src/browser.tsx` hydrates that exact server tree. Live Serve places private
+route evidence in a separate descriptor; the capability store adopts the
+fetched page's public bootstrap, source and private workspace as one monotonic
+revision. `use_workspace_data.ts` keeps one route-owned workspace object so
+matching evidence refreshes retain already loaded usage and local editor state.
+Static export uses `src/standalone/static_workspace_evidence.ts` to read inert
+workspace JSON from a destination shell in the mounted deployment, validating
+the response route, compact catalogue reference, and delivery identities against
+the already installed catalogue without enabling live host behavior or fetching
+the catalogue again.
+
+`workspace.tsx` coordinates the React workspace without owning transport or
+frame internals. `component_controls.tsx` owns cancellable temporary prop edits;
+the focused `workspace_*` components render evidence, usage, instances and
+supplied props. `inspector.tsx` and `inspector_resize.ts` own the tab and sheet
+interaction. Each shell root owns one `frame_registry.tsx` instance, so frame
+identity, readiness, validated usage revisions and disposal cannot cross an
+independent embedded viewer. Public-handle inspection and
+`workspace_inspection.tsx` coordinate through the registry's inspection owner.
+Workspace labels and host markers acquire the registry's single geometry
+scheduler; a usage revision supersedes any unresolved measurement before fresh
+evidence is read. Navigation and inspector resize drag state stays on the
+owning shell root so independent embedded viewers cannot alter the host page or
+each other. Embedded roots also own their flex containment and measure host
+stage overlays against the current preview, keeping sibling viewers,
+navigation and the inspector outside an overlay's bounds. Browser transport
+remains behind `useViewerCapabilities`. The
+[live capability contract](../../../../docs/protocol/mokly-live-capabilities.md)
+defines route loading, revision fencing and export omission.
 
 Before standalone hydration, stored disclosure and split-width preferences are
 applied to the server DOM. A newer native disclosure activation then wins over
 that stored value. The browser entry reads the resulting DOM into the store's
-initial state and persists the adopted disclosure state; load or page exit
-removes the temporary capture. React therefore adopts the same attributes on
+initial state and persists the adopted disclosure state; hydration or page exit
+removes the temporary capture. Static catalogue resolution may finish after
+document load, so native choices remain authoritative until hydration starts.
+React therefore adopts the same attributes on
 its first render instead of replaying preferences after hydration.
 
 See [the package README](../../README.md), the

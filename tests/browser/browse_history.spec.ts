@@ -1,7 +1,5 @@
 import { expect, test } from "@playwright/test";
 
-import { reactShellForProject } from "./export_shell.js";
-
 test("native skip-link history preserves the view without refetching it", async ({
   page,
 }) => {
@@ -32,9 +30,32 @@ test("native skip-link history preserves the view without refetching it", async 
   expect(requests).toEqual([]);
 });
 
+test("same-document history leaves focus with the native fragment target", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.evaluate(() => {
+    const link = document.createElement("a");
+    link.href = "#native-history-target";
+    link.textContent = "Native history target";
+    const target = document.createElement("div");
+    target.id = "native-history-target";
+    target.tabIndex = -1;
+    document.body.append(link, target);
+  });
+  await page.getByRole("link", { name: "Native history target" }).click();
+  await expect(page.locator("#native-history-target")).toBeFocused();
+
+  await page.goBack();
+  await page.goForward();
+
+  await expect(page).toHaveURL(/\/#native-history-target$/);
+  await expect(page.locator("#native-history-target")).toBeFocused();
+});
+
 test("saved-variant query history stays separate from native fragment history", async ({
   page,
-}, info) => {
+}) => {
   const path = "/view/design/library/inspector/inspector.html";
   await page.goto(path);
   await page.locator("html").evaluate((element) => {
@@ -67,14 +88,12 @@ test("saved-variant query history stays separate from native fragment history", 
     "data-history-session",
     "retained",
   );
-  expect(requests).toEqual(
-    reactShellForProject(info.project.name) ? [] : ["", "?variant=props"],
-  );
+  expect(requests).toEqual([]);
 });
 
-test("same-document Back cancels a pending screen navigation", async ({
+test("same-document Back cancels pending route metadata or screen navigation", async ({
   page,
-}, info) => {
+}) => {
   await page.goto("/view/screens/welcome.html");
   await page.locator(".mbk-skip-link").focus();
   await page.keyboard.press("Enter");
@@ -83,40 +102,37 @@ test("same-document Back cancels a pending screen navigation", async ({
   const gate = new Promise<void>((resolve) => {
     release = resolve;
   });
+  let markMetadataRequested = (): void => undefined;
+  const metadataRequested = new Promise<void>((resolve) => {
+    markMetadataRequested = resolve;
+  });
   await page.route("**/view/screens/details.html", async (route) => {
-    if (reactShellForProject(info.project.name)) {
-      await route.abort();
-      return;
-    }
+    markMetadataRequested();
     await gate;
     await route.continue();
   });
-  if (reactShellForProject(info.project.name)) {
-    const requests: string[] = [];
-    page.on("request", (request) => {
-      if (
-        request.resourceType() === "fetch" &&
-        request.url().endsWith("/view/screens/details.html")
-      )
-        requests.push(request.url());
-    });
-    await page
-      .locator('a[data-nav-row][data-route="screens/details.html"]')
-      .click();
-    await expect(page.locator("#mb-main h2")).toHaveText("Details");
-    expect(requests).toEqual([]);
-    await page.goBack();
-    await expect(page).toHaveURL(/welcome\.html#mb-main$/);
-    await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
-    return;
-  }
-  const pending = page.waitForRequest((request) =>
-    request.url().endsWith("/view/screens/details.html"),
-  );
+  const requests: string[] = [];
+  page.on("request", (request) => {
+    if (
+      request.resourceType() === "fetch" &&
+      request.url().endsWith("/view/screens/details.html")
+    )
+      requests.push(request.url());
+  });
+  await page
+    .locator("[data-mokly-view]")
+    .evaluate((view) => view.setAttribute("data-route-owner", "retained"));
   await page
     .locator('a[data-nav-row][data-route="screens/details.html"]')
     .click();
-  await pending;
+  await metadataRequested;
+  await expect(page).toHaveURL(/details\.html$/);
+  await expect(page.locator("#mb-main h2")).toHaveText("Details");
+  await expect(page.locator("[data-mokly-view]")).toHaveAttribute(
+    "data-route-owner",
+    "retained",
+  );
+  expect(requests).toHaveLength(1);
   const aborted = page.waitForEvent("requestfailed", (request) =>
     request.url().endsWith("/view/screens/details.html"),
   );
@@ -126,6 +142,10 @@ test("same-document Back cancels a pending screen navigation", async ({
     release();
   }
   await aborted;
-  await expect(page).toHaveURL(/welcome\.html$/);
+  await expect(page).toHaveURL(/welcome\.html#mb-main$/);
   await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
+  await expect(page.locator("[data-mokly-view]")).toHaveAttribute(
+    "data-route-owner",
+    "retained",
+  );
 });

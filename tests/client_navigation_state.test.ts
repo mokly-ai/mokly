@@ -1,14 +1,20 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { navigationConstraintChanges } from "../packages/viewer/dist/client/browse_navigation_state.js";
+import type { CatalogueReadModel } from "../packages/viewer/dist/catalogue/types.js";
 import {
   clearTagTerm,
   parseSearchQuery,
   queryConstrains,
   rowMatchesQuery,
   setTagTerm,
-} from "../packages/viewer/dist/client/search_query.js";
+} from "../packages/viewer/dist/shell/search_query.js";
+import {
+  defaultSelection,
+  revealSelection,
+} from "../packages/viewer/dist/viewer/selection.js";
+
+import { catalogueModel } from "./helpers/viewer_catalogue.js";
 
 const welcome = {
   route: "screens/welcome.html",
@@ -28,83 +34,105 @@ const glossary = {
 const transferReady = {
   id: "transactions-list-transfer-ready",
   route: "screens/transfer-ready.html",
-  tags: ["accounting"],
+  tags: ["operations"],
   text: "Ready to transfer",
 };
 
-test("active-row constraint changes clear only controls that hide it", () => {
+function selectionModel(detailsChanged: boolean): CatalogueReadModel {
+  const model = catalogueModel();
+  const template = model.screens[0]!;
+  const changes = (included: boolean) => ({
+    included,
+    kind: included ? ("changed" as const) : ("unmodified" as const),
+    status: "ready" as const,
+  });
+  return {
+    ...model,
+    screens: [
+      {
+        ...template,
+        changes: changes(false),
+        id: "welcome",
+        route: welcome.route,
+        tags: welcome.tags,
+        title: welcome.text,
+      },
+      {
+        ...template,
+        changes: changes(detailsChanged),
+        id: "details",
+        route: details.route,
+        tags: details.tags,
+        title: details.text,
+      },
+    ],
+  };
+}
+
+test("active-row selection clears only constraints that hide it", () => {
+  const unchanged = selectionModel(false);
   assert.deepEqual(
-    navigationConstraintChanges({
-      changed: false,
-      changedOnly: true,
-      query: "welcome",
-      route: "screens/details.html",
-      tags: ["forms"],
-      text: "Details",
+    revealSelection(unchanged, {
+      ...defaultSelection,
+      screenId: "details",
+      search: "welcome",
+      view: "changes",
     }),
-    { clearQuery: true, showAll: true },
+    {
+      ...defaultSelection,
+      screenId: "details",
+      search: "",
+      view: "all",
+    },
   );
-  assert.deepEqual(
-    navigationConstraintChanges({
-      changed: true,
-      changedOnly: true,
-      query: "details",
-      route: "screens/details.html",
-      tags: ["forms"],
-      text: "Details",
-    }),
-    { clearQuery: false, showAll: false },
-  );
-  assert.deepEqual(
-    navigationConstraintChanges({
-      changed: false,
-      changedOnly: false,
-      query: "screens/details",
-      route: "screens/details.html",
-      tags: [],
-      text: "Something else",
-    }),
-    { clearQuery: false, showAll: false },
-  );
+  const changed = selectionModel(true);
+  const matching = {
+    ...defaultSelection,
+    screenId: "details",
+    search: "details",
+    view: "changes" as const,
+  };
+  assert.deepEqual(revealSelection(changed, matching), matching);
+  const routeMatch = {
+    ...defaultSelection,
+    screenId: "details",
+    search: "screens/details",
+  };
+  assert.deepEqual(revealSelection(unchanged, routeMatch), routeMatch);
 });
 
 test("a tag term clears the query only for a row that lacks the tag", () => {
-  assert.deepEqual(
-    navigationConstraintChanges({
-      changed: false,
-      changedOnly: false,
-      query: "tag:onboarding",
-      ...welcome,
-    }),
-    { clearQuery: false, showAll: false },
-  );
-  assert.deepEqual(
-    navigationConstraintChanges({
-      changed: false,
-      changedOnly: false,
-      query: "tag:onboarding",
-      ...details,
-    }),
-    { clearQuery: true, showAll: false },
-  );
-  assert.deepEqual(
-    navigationConstraintChanges({
-      changed: false,
-      changedOnly: false,
-      query: "tag:forms details",
-      ...details,
-    }),
-    { clearQuery: false, showAll: false },
-  );
-  assert.deepEqual(
-    navigationConstraintChanges({
-      changed: false,
-      changedOnly: false,
-      query: "tag:forms welcome",
-      ...details,
-    }),
-    { clearQuery: true, showAll: false },
-  );
+  const model = selectionModel(false);
+  const selected = (
+    screenId: string,
+    search: string,
+    tags: readonly string[],
+  ) =>
+    revealSelection(model, {
+      ...defaultSelection,
+      screenId,
+      search,
+      tags,
+    });
+  assert.deepEqual(selected("welcome", "", ["onboarding"]), {
+    ...defaultSelection,
+    screenId: "welcome",
+    tags: ["onboarding"],
+  });
+  assert.deepEqual(selected("details", "", ["onboarding"]), {
+    ...defaultSelection,
+    screenId: "details",
+  });
+  assert.deepEqual(selected("details", "details", ["forms"]), {
+    ...defaultSelection,
+    screenId: "details",
+    search: "details",
+    tags: ["forms"],
+  });
+  assert.deepEqual(selected("details", "welcome", ["forms"]), {
+    ...defaultSelection,
+    screenId: "details",
+  });
 });
 
 test("only text or tag terms constrain which rows stay visible", () => {

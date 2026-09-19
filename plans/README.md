@@ -3,10 +3,15 @@
 ## Active
 
 - [React Browse Shell](./react-browse-shell.md)
+- [CLI Terminal Experience](./cli-terminal-experience.md)
+- [Package Documentation](./package-documentation.md) — supersedes the
+  unmerged public-site plan and pull request #79 by shipping versioned Markdown
+  guides in `@mokly/mokly` for the cloud repository to render.
+- [Viewer Comment Anchoring](./viewer-comment-anchoring.md)
 - [Mokabook Dependency Patch Upstreaming](./mokabook-dependency-patch-upstreaming.md)
 - [Publish Catalogue](./publish-catalogue.md)
 - [App-Independent Mokabook Npm Library](./app-independent-mokabook-library.md)
-- [Accounting Shell Design Parity](./accounting-shell-design-parity.md)
+- [Browse Shell Design Parity](./browse-shell-design-parity.md)
 
 ## Completed
 

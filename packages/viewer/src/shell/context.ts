@@ -11,10 +11,11 @@ export interface ShellContext {
   readModel?: CatalogueReadModel;
   /** Revision of the rendered content, independent of background evidence. */
   contentVersion?: number;
-  /** Retained on-demand renderer used even after exhaustive Usage completes. */
+  /** Generation accepted by the on-demand document service. */
   previewGeneration?: string;
   /** Live calculation state; omitted by static catalogues without Changes. */
   changesStatus?: LiveChangesStatus;
+  /** Authenticated temporary renderer, independent of document availability. */
   renderCapability?: RenderCapability;
   /** Validated delivery information for a static export. */
   delivery?: StaticDelivery;
@@ -32,8 +33,6 @@ export interface ShellContext {
   fragment?: string;
   /** Update-stream version captured when this page request began. */
   updateVersion: number;
-  /** @internal Temporary request-scoped selector removed with the shell flip. */
-  reactShell?: boolean;
 }
 
 /** Create one page context from the current mutable server snapshot. */
@@ -41,12 +40,10 @@ export function shellContext(
   base: string,
   changedRoutes: readonly string[] | undefined,
   updateVersion: number,
-  reactShell = false,
 ): ShellContext {
   return {
     base,
     ...(changedRoutes ? { changedRoutes } : {}),
-    ...(reactShell ? { reactShell: true } : {}),
     updateVersion,
   };
 }

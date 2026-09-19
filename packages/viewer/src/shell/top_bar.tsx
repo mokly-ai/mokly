@@ -1,18 +1,18 @@
-import { selectionQuery } from "../viewer/selection.js";
-
 import type { Catalogue } from "./catalogue.js";
 import { SchemeSwitch } from "./head.js";
 import { BrandIcon, IconSvg, SearchIcon } from "./icons.js";
+import { useShellIdentifier } from "./identifier_context.js";
 import { useOptionalShellStore } from "./store_context.js";
 import { SearchTagPicker } from "./tags.js";
 
 /** The shared 48px catalogue header keeps search available at every width. */
 export function TopBar(props: { catalogue: Catalogue }) {
   const store = useOptionalShellStore();
+  const navigationId = useShellIdentifier("mb-nav");
   return (
     <header className="mbk-topbar" data-search="">
       <button
-        aria-controls="mb-nav"
+        aria-controls={navigationId}
         aria-expanded={store?.state.drawerOpen ?? false}
         aria-label="Open catalogue navigation"
         className="mbk-menu"
@@ -38,7 +38,7 @@ export function TopBar(props: { catalogue: Catalogue }) {
           onChange={(event) => store?.setSearch(event.currentTarget.value)}
           placeholder="Search catalogue…"
           type="search"
-          value={store ? selectionQuery(store.state.selection) : undefined}
+          value={store?.state.query}
         />
         <SearchTagPicker tags={props.catalogue.tags} />
       </div>

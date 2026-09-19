@@ -1,6 +1,8 @@
 /** Retained navigation split resizing installed after standalone hydration. */
 
-export const HYDRATED_EVENT = "mokly:hydrated";
+import { HYDRATED_EVENT } from "./hydration_event.js";
+
+export { HYDRATED_EVENT };
 
 const widthStateKey = "__moklyNavigationWidthV1";
 const widthStorageKey = "mokly:navigation-width:v1";
@@ -52,7 +54,13 @@ export function captureInitialNavigationWidth(
   handle.setAttribute("aria-valuetext", `${width} pixels`);
   (win as WidthStateWindow)[widthStateKey] = { maximum: upper, width };
   const clear = () => delete (win as WidthStateWindow)[widthStateKey];
-  win.addEventListener("load", clear, { once: true });
+  win.addEventListener(
+    doc.documentElement.hasAttribute("data-mokly-react-shell")
+      ? HYDRATED_EVENT
+      : "load",
+    clear,
+    { once: true },
+  );
   win.addEventListener("pagehide", clear, { once: true });
 }
 

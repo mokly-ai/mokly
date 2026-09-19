@@ -193,14 +193,10 @@ export async function smokeCleanCacheExecution(context) {
   );
 }
 
-export async function smokeAccountingFixture(context) {
-  const root = path.join(context.workingRoot, "accounting-consumer");
-  await copyFixture(path.join(context.fixturesRoot, "accounting"), root);
-  const packageJson = consumerPackage(
-    "accounting-shaped-consumer",
-    context,
-    true,
-  );
+export async function smokeThemedConsumer(context) {
+  const root = path.join(context.workingRoot, "themed-consumer");
+  await copyFixture(path.join(context.fixturesRoot, "themed"), root);
+  const packageJson = consumerPackage("themed-consumer", context, true);
   packageJson.workspaces = ["packages/*"];
   packageJson.dependencies["@firna/ui"] = "file:packages/firna-ui";
   packageJson.dependencies["react-native-web"] =
@@ -217,11 +213,11 @@ export async function smokeAccountingFixture(context) {
     path.join(root, "docs/mockups/marketing/campaign.desktop.html"),
     "utf8",
   );
-  assert.match(appFragment, /data-accounting-renderer="desktop"/);
+  assert.match(appFragment, /data-themed-renderer="desktop"/);
   assert.match(appFragment, /data-theme="fixture-theme"/);
   assert.match(
     appFragment,
-    /<a[^>]*class="fixture-button"[^>]*data-mokly-link="accounting-campaign"/,
+    /<a[^>]*class="fixture-button"[^>]*data-mokly-link="themed-campaign"/,
   );
   assert.doesNotMatch(appFragment, /data-mokly-link-child-/);
   assert.match(appFragment, /href="\.\.\/app\.css"/);
@@ -240,7 +236,7 @@ export async function smokeAccountingFixture(context) {
   assert.equal("legacyPages" in pageManifest, false);
   assert.ok(
     pageManifest.entries.some(
-      (entry) => entry.id === "accounting-notice" && entry.kind === "page",
+      (entry) => entry.id === "themed-notice" && entry.kind === "page",
     ),
   );
   assert.ok(

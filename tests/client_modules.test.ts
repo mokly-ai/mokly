@@ -5,92 +5,13 @@ import path from "node:path";
 import test from "node:test";
 import { pathToFileURL } from "node:url";
 
-import {
-  loadBrowserClientModules,
-  loadBrowserClientModulesFrom,
-  loadBrowserNavigationModules,
-} from "../dist/server/client_modules.js";
+import { loadBrowserClientModulesFrom } from "../dist/server/client_modules.js";
 
-const COMMENT = /\/\*[\s\S]*?\*\/|(?<!:)\/\/[^\n]*/g;
-const IMPORT = /\b(?:from|import)\s*\(?\s*"([^"]+)"/g;
-const DELIVERED_CLIENT_MODULES = [
-  "browse.js",
-  "browse_controls.js",
-  "browse_details.js",
-  "browse_evidence.js",
-  "browse_fetch.js",
-  "browse_frames.js",
-  "browse_links.js",
-  "browse_navigation.js",
-  "browse_navigation_state.js",
-  "browse_recovery.js",
-  "browse_refresh.js",
-  "browse_runtime.js",
-  "browse_state.js",
-  "browse_update_state.js",
-  "browser.js",
-  "catalogue_updates.js",
-  "clipboard.js",
-  "component_controls.js",
-  "component_geometry.js",
-  "component_highlight.js",
-  "component_occlusion.js",
-  "component_overlay.js",
-  "component_range_nodes.js",
-  "control_fields.js",
-  "control_surface.js",
-  "control_transport.js",
-  "control_view_key.js",
-  "diff_views.js",
-  "diffs.js",
-  "document_ranges.js",
-  "entry_wording.js",
-  "frame_adapter.js",
-  "frame_error.js",
-  "frame_mount.js",
-  "frame_navigation.js",
-  "frame_usage.js",
-  "inspector.js",
-  "inspector_panels.js",
-  "inspector_resize.js",
-  "inspector_tabs.js",
-  "live_updates.js",
-  "message_transport.js",
-  "navigation-resize.js",
-  "navigation.js",
-  "post_message_adapter.js",
-  "preview_fragment.js",
-  "prop_display.js",
-  "react-shell.js",
-  "same_origin_access.js",
-  "same_origin_adapter.js",
-  "same_origin_highlight.js",
-  "same_origin_mount.js",
-  "same_origin_navigation.js",
-  "same_origin_pointer.js",
-  "search_query.js",
-  "services.js",
-  "static_delivery.js",
-  "style_evidence.js",
-  "tag_filter.js",
-  "workspace.js",
-  "workspace_events.js",
-  "workspace_evidence.js",
-  "workspace_evidence_data.js",
-  "workspace_inspection.js",
-  "workspace_loading.js",
-  "workspace_preview.js",
-  "workspace_props.js",
-  "workspace_updates.js",
-  "workspace_variants.js",
-] as const;
-
-test("browser build enumeration retains every delivery name", () => {
-  assert.deepEqual(
-    [...loadBrowserClientModules().keys()],
-    DELIVERED_CLIENT_MODULES,
-  );
-});
+type BrowserGraphModule = {
+  inspectBrowserGraph(): number;
+  inspectDeliveredBrowserGraph(modules: ReadonlyMap<string, Buffer>): number;
+  sourceImportSpecifiers(code: string, filename?: string): string[];
+};
 
 test("browser build enumeration reports a missing output directory", (context) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "mokly-browser-modules-"));
@@ -138,37 +59,47 @@ test("browser build enumeration rejects unexpected output files", (context) => {
   );
 });
 
-function writeBrowserManifest(directory: string, modules: readonly string[]) {
-  fs.writeFileSync(
-    `${directory}.manifest.json`,
-    `${JSON.stringify({ schemaVersion: 1, modules })}\n`,
-  );
-}
+test("delivered browser graph resolves every import", async () => {
+  const graph = await loadBrowserGraph();
+  assert.ok(graph.inspectBrowserGraph() > 0);
+});
 
-test("shell partition rejects kept modules importing retired modules", async (context) => {
-  const module = (await import(
-    pathToFileURL(path.resolve("scripts/package/browser_graph.mjs")).href
-  )) as {
-    assertShellPartitionEdge(importer: string, target: string): void;
-    inspectSourcePartitionAt(sourceDirectory: string): void;
-    sourceImportSpecifiers(code: string): string[];
-  };
+test("delivered browser graph rejects a missing import target", async () => {
+  const graph = await loadBrowserGraph();
+  const modules = new Map([
+    [
+      "/__mokly/client/react-shell.js",
+      Buffer.from('const hydrateRoot = true;\nimport "./missing.js";\n'),
+    ],
+  ]);
   assert.throws(
-    () =>
-      module.assertShellPartitionEdge(
-        "/__mokly/client/same_origin_adapter.js",
-        "/__mokly/client/component_highlight.js",
-      ),
-    /Kept shell module imports retired module/,
+    () => graph.inspectDeliveredBrowserGraph(modules),
+    /Missing delivered module: \/__mokly\/client\/react-shell\.js -> \.\/missing\.js/,
   );
-  assert.doesNotThrow(() =>
-    module.assertShellPartitionEdge(
-      "/__mokly/client/same_origin_adapter.js",
-      "/__mokly/client/same_origin_highlight.js",
-    ),
+});
+
+test("delivered browser graph confines React to the hydration bundle", async () => {
+  const graph = await loadBrowserGraph();
+  const modules = new Map([
+    [
+      "/__mokly/client/react-shell.js",
+      Buffer.from("const hydrateRoot = true;\n"),
+    ],
+    [
+      "/__mokly/client/frame_adapter.js",
+      Buffer.from("const hydrateRoot = true;\n"),
+    ],
+  ]);
+  assert.throws(
+    () => graph.inspectDeliveredBrowserGraph(modules),
+    /Unexpected React runtime in \/__mokly\/client\/frame_adapter\.js/,
   );
+});
+
+test("delivered graph parser reads every import form", async () => {
+  const graph = await loadBrowserGraph();
   assert.deepEqual(
-    module.sourceImportSpecifiers(
+    graph.sourceImportSpecifiers(
       'import type { One } from "./one.js";\nimport "./side-effect.js";\nexport { two } from "./two.js";\nvoid import("./dynamic.js");\ntype Five = import("./import-type.js").Five;\n',
     ),
     [
@@ -179,88 +110,17 @@ test("shell partition rejects kept modules importing retired modules", async (co
       "./import-type.js",
     ],
   );
-
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "mokly-partition-"));
-  try {
-    const source = path.join(root, "src");
-    fs.cpSync(path.resolve("packages/viewer/src"), source, { recursive: true });
-    const importer = path.join(source, "client/same_origin_adapter.ts");
-    const original = fs.readFileSync(importer, "utf8");
-    const crossings = new Map([
-      [
-        "declaration",
-        'import { captureBrowseState } from "./browse_state.js";',
-      ],
-      [
-        "type-only declaration",
-        'import type { BrowseRecoveryState } from "./browse_state.js";',
-      ],
-      ["side-effect", 'import "./browse_state.js";'],
-      ["dynamic", 'void import("./browse_state.js");'],
-      [
-        "import-type",
-        'type Crossing = import("./browse_state.js").BrowseRecoveryState;',
-      ],
-    ]);
-    for (const [form, crossing] of crossings) {
-      await context.test(form, () => {
-        fs.writeFileSync(importer, `${original}\n${crossing}\n`);
-        assert.throws(
-          () => module.inspectSourcePartitionAt(source),
-          /Kept shell source imports retired module/,
-          `${form} crossing was accepted`,
-        );
-      });
-    }
-  } finally {
-    fs.rmSync(root, { force: true, recursive: true });
-  }
 });
 
-test("served browser modules import only modules served beside them", () => {
-  const served = new Map([
-    ["client", loadBrowserClientModules()],
-    ["navigation", loadBrowserNavigationModules()],
-  ]);
-  const inspected: string[] = [];
-  for (const [directory, modules] of served) {
-    for (const [filename, source] of modules) {
-      for (const specifier of importSpecifiers(source.toString("utf8"))) {
-        inspected.push(specifier);
-        const target = resolveSpecifier(specifier, directory);
-        assert.ok(
-          target,
-          `${directory}/${filename} imports non-relative module ${specifier}`,
-        );
-        assert.ok(
-          served.get(target.directory)?.has(target.filename),
-          `${directory}/${filename} imports unserved module ${specifier}`,
-        );
-      }
-    }
-  }
-  assert.ok(inspected.length > 0, "no browser import specifier was inspected");
-  assert.ok(
-    inspected.includes("../navigation/logical.js"),
-    "no served module still imports across the client and navigation directories",
-  );
-});
-
-function importSpecifiers(source: string): string[] {
-  return [...source.replace(COMMENT, "").matchAll(IMPORT)].flatMap((match) =>
-    match[1] === undefined ? [] : [match[1]],
-  );
+async function loadBrowserGraph(): Promise<BrowserGraphModule> {
+  return import(
+    pathToFileURL(path.resolve("scripts/package/browser_graph.mjs")).href
+  ) as Promise<BrowserGraphModule>;
 }
 
-function resolveSpecifier(
-  specifier: string,
-  directory: string,
-): { directory: string; filename: string } | undefined {
-  const sibling = /^\.\/([\w.-]+\.js)$/.exec(specifier)?.[1];
-  if (sibling !== undefined) return { directory, filename: sibling };
-  const across = /^\.\.\/([\w-]+)\/([\w.-]+\.js)$/.exec(specifier);
-  const [, acrossDirectory, acrossFilename] = across ?? [];
-  if (acrossDirectory !== undefined && acrossFilename !== undefined)
-    return { directory: acrossDirectory, filename: acrossFilename };
-  return undefined;
+function writeBrowserManifest(directory: string, modules: readonly string[]) {
+  fs.writeFileSync(
+    `${directory}.manifest.json`,
+    `${JSON.stringify({ schemaVersion: 1, modules })}\n`,
+  );
 }

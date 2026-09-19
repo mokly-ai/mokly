@@ -196,7 +196,7 @@ files; that invalid run was discarded and the complete clean run passed. The
 complete Node 24.2.0 gate also passed with
 `MOKABOOK_PLAYWRIGHT_PORT=62330 cargo xtask check`: all 578 unit/integration
 tests, 105 browser tests, 3 Rust tests, formatting, lint, typechecking, generated
-examples, package/license checks, and packed ESM/NodeNext/npx/Accounting/Juno
+examples, package/license checks, and packed ESM/NodeNext/npx/themed/Juno
 consumer smoke tests. The Rust file-length audit passed for all 10 files.
 Main was fetched again and remains `a5ecbc0`, already contained in this branch;
 the preservation audit found no mainline file deletions. The implementation was

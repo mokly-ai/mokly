@@ -45,7 +45,7 @@ export function validatePackageManifest(metadata, name) {
       "CHANGELOG.md",
       "LICENSE",
       "README.md",
-      ...(viewer ? [] : ["docs/protocol"]),
+      ...(viewer ? [] : ["docs/guides", "docs/protocol"]),
     ].sort(),
   );
   for (const field of [

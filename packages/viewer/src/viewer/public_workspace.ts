@@ -27,6 +27,7 @@ function status(entry: CatalogueRoutedEntry): EntryStatus | undefined {
 export function publicWorkspace(
   model: CatalogueReadModel,
   entry: WorkspaceData["entry"],
+  comparisons = model.comparisonUrl !== null,
 ): WorkspaceData {
   const original = routedEntries(model).find(
     (candidate) => candidate.id === entry.id,
@@ -92,7 +93,7 @@ export function publicWorkspace(
     usedBy,
     affected: [],
     base: "",
-    comparisons: model.comparisonUrl !== null,
+    comparisons,
     comparisonEligible:
       original.kind === "screen"
         ? original.views.some(

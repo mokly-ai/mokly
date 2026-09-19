@@ -9,6 +9,7 @@ import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
+import { documentText } from "./helpers/html.js";
 
 test("a clean HEAD matching origin/main exports only unmodified screens", async (context) => {
   const fixture = await createExportFixture();
@@ -107,9 +108,11 @@ test("renamed screens keep both routes but only the current id alias", async (co
   const result = await exportCatalogue(fixture.config, { outDir: "site" });
   assert.equal(result.idRoutes["home"], "/view/screens/renamed.html");
   assert.match(
-    await fs.promises.readFile(
-      path.join(fixture.output, "view/screens/home.html"),
-      "utf8",
+    documentText(
+      await fs.promises.readFile(
+        path.join(fixture.output, "view/screens/home.html"),
+        "utf8",
+      ),
     ),
     /This screen was removed/,
   );
@@ -117,7 +120,7 @@ test("renamed screens keep both routes but only the current id alias", async (co
     path.join(fixture.output, "id/home/index.html"),
     "utf8",
   );
-  assert.doesNotMatch(alias, /This screen was removed/);
+  assert.doesNotMatch(documentText(alias), /This screen was removed/);
   assert.match(alias, /screens\/renamed.html/);
 });
 

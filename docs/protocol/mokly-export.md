@@ -10,8 +10,9 @@ Normal build validation and the existing comparison schema remain authoritative.
 
 The [viewer library plan](../../plans/mokly-viewer-library.md) tracks the
 implemented public catalogue, inert published inspector and separate viewer
-package. Local Serve/export presentation
-is unchanged.
+package. Serve and export now share a server-rendered React shell that hydrates
+with the bundled viewer runtime. Consumer frames and comparison documents remain
+static, and the existing presentation and interactions are preserved.
 
 ## Scope
 

@@ -1,20 +1,19 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+
+import type { EntryChangeReason } from "../packages/viewer/dist/review/component_types.js";
+import type { ViewReview } from "../packages/viewer/dist/review/types.js";
+import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
+import { WorkspaceEvidence } from "../packages/viewer/dist/shell/workspace_evidence.js";
 import {
-  appendChangedFiles,
-  appendExcludedStylesheets,
-  appendStyleOutcomes,
   excludedStylesheets,
   isStyleOnlyView,
   retainedPaths,
   styleOutcomes,
-} from "../packages/viewer/dist/client/style_evidence.js";
-import type { EntryChangeReason } from "../packages/viewer/dist/review/component_types.js";
-import type { ViewReview } from "../packages/viewer/dist/review/types.js";
-
-import type { FakeMarkupElement } from "./helpers/fake_markup.js";
-import { FakeMarkupDocument, fakeMarkup } from "./helpers/fake_markup.js";
+} from "../packages/viewer/dist/shell/workspace_style_evidence.js";
 
 const SHARED = "mockups/shared.css";
 const TOKENS = "mockups/tokens.css";
@@ -136,82 +135,124 @@ test("only a changed view kept solely by stylesheet analysis reads as styles", (
 });
 
 test("matched evidence names the changed files and then the applying styles", () => {
-  const { doc, node, panel } = fakePanel();
+  const markup = renderEvidence({
+    reasons: [
+      {
+        kind: "dependency",
+        path: SHARED,
+        analysis: { status: "matched", selectors: [".auth", "main a"] },
+      },
+    ],
+  });
 
-  appendChangedFiles(doc, panel, [SHARED]);
-  appendStyleOutcomes(doc, panel, [
-    { status: "matched", selectors: [".auth", "main a"] },
-  ]);
-
-  assert.equal(
-    fakeMarkup(node),
-    "<p>Changes to these files may affect this screen:</p>" +
-      `<ul><li>${SHARED}</li></ul>` +
-      "<p>Changed styles that apply to this screen:</p>" +
-      '<ul><li><code class="mbk-code">.auth</code></li>' +
-      '<li><code class="mbk-code">main a</code></li></ul>',
+  assert.ok(
+    markup.includes(
+      "<p>Changes to these files may affect this screen:</p>" +
+        `<ul><li>${SHARED}</li></ul>` +
+        "<p>Changed styles that apply to this screen:</p>" +
+        '<ul><li><code class="mbk-code">.auth</code></li>' +
+        '<li><code class="mbk-code">main a</code></li></ul>',
+    ),
   );
 });
 
 test("unresolved evidence says the change can apply anywhere", () => {
-  const { doc, node, panel } = fakePanel();
+  const markup = renderEvidence({
+    reasons: [
+      {
+        kind: "dependency",
+        path: SHARED,
+        analysis: { status: "unresolved", selectors: [":root"] },
+      },
+    ],
+  });
 
-  appendStyleOutcomes(doc, panel, [
-    { status: "unresolved", selectors: [":root"] },
-  ]);
-
-  assert.equal(
-    fakeMarkup(node),
-    "<p>This change can apply anywhere on the screen, so the screen stays in Changes:</p>" +
-      '<ul><li><code class="mbk-code">:root</code></li></ul>',
+  assert.ok(
+    markup.includes(
+      "<p>This change can apply anywhere on the screen, so the screen stays in Changes:</p>" +
+        '<ul><li><code class="mbk-code">:root</code></li></ul>',
+    ),
   );
 });
 
 test("an unresolved outcome without selectors closes with a full stop", () => {
-  const { doc, node, panel } = fakePanel();
+  const markup = renderEvidence({
+    reasons: [
+      {
+        kind: "dependency",
+        path: SHARED,
+        analysis: { status: "unresolved", selectors: [] },
+      },
+    ],
+  });
 
-  appendStyleOutcomes(doc, panel, [{ status: "unresolved", selectors: [] }]);
-
-  assert.equal(
-    fakeMarkup(node),
-    "<p>This change can apply anywhere on the screen, so the screen stays in Changes.</p>",
+  assert.match(
+    markup,
+    /<p>This change can apply anywhere on the screen, so the screen stays in Changes\.<\/p>/,
   );
 });
 
 test("excluded stylesheets lead with the outcome and pluralize sensibly", () => {
-  const one = fakePanel();
-  appendExcludedStylesheets(one.doc, one.panel, [SHARED]);
-  assert.equal(
-    fakeMarkup(one.node),
-    "<p>This stylesheet changed, but none of the changed styles apply to this screen.</p>" +
-      "<p>Examined and excluded:</p>" +
-      `<ul><li>${SHARED}</li></ul>`,
+  const one = renderEvidence({ excluded: [SHARED] });
+  assert.ok(
+    one.includes(
+      "<p>This stylesheet changed, but none of the changed styles apply to this screen.</p>" +
+        "<p>Examined and excluded:</p>" +
+        `<ul><li>${SHARED}</li></ul>`,
+    ),
   );
 
-  const many = fakePanel();
-  appendExcludedStylesheets(many.doc, many.panel, [SHARED, TOKENS]);
-  assert.equal(
-    fakeMarkup(many.node),
-    "<p>These stylesheets changed, but none of the changed styles apply to this screen.</p>" +
-      "<p>Examined and excluded:</p>" +
-      `<ul><li>${SHARED}</li><li>${TOKENS}</li></ul>`,
+  const many = renderEvidence({ excluded: [SHARED, TOKENS] });
+  assert.ok(
+    many.includes(
+      "<p>These stylesheets changed, but none of the changed styles apply to this screen.</p>" +
+        "<p>Examined and excluded:</p>" +
+        `<ul><li>${SHARED}</li><li>${TOKENS}</li></ul>`,
+    ),
   );
 
-  const none = fakePanel();
-  appendExcludedStylesheets(none.doc, none.panel, []);
-  assert.equal(fakeMarkup(none.node), "");
+  const none = renderEvidence({});
+  assert.doesNotMatch(none, /stylesheets? changed|Examined and excluded/);
 });
 
-function fakePanel(): {
-  doc: Document;
-  node: FakeMarkupElement;
-  panel: Element;
-} {
-  const document = new FakeMarkupDocument();
-  const node = document.createElement("section");
-  return {
-    doc: document as unknown as Document,
-    node,
-    panel: node as unknown as Element,
-  };
+function renderEvidence({
+  excluded = [],
+  reasons = [],
+}: {
+  excluded?: readonly string[];
+  reasons?: readonly EntryChangeReason[];
+}): string {
+  const data = {
+    base: "main",
+    status: "Changed",
+    change: {
+      kind: "screen",
+      after: { id: "home", route: "screens/home.html", title: "Home" },
+      reasons,
+    },
+    components: [],
+    comparisonEligible: true,
+    comparisons: true,
+    entry: { id: "home", kind: "screen", route: "screens/home.html" },
+    inputChanges: [],
+    relatedComponents: [],
+    resourceEvidence: excluded.length
+      ? [
+          {
+            colorScheme: "light",
+            excludedResources: excluded.map((path) => ({
+              path,
+              reason: "no-matching-rule" as const,
+            })),
+            viewport: "mobile",
+          },
+        ]
+      : [],
+    usedBy: [],
+    affected: [],
+    removed: false,
+    variants: [],
+    views: [],
+  } as unknown as WorkspaceData;
+  return renderToStaticMarkup(createElement(WorkspaceEvidence, { data }));
 }

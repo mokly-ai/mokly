@@ -27,6 +27,8 @@ export class BackgroundBaseline {
     private readonly statusChanged?: (status: "preparing" | "pending") => void,
     private readonly revoked?: (commit: null) => void,
     private readonly builder?: BaselineBuilder,
+    private readonly progressChanged?: (event: BaselineProgress) => void,
+    private readonly diagnostic?: (message: string) => void,
   ) {}
 
   get status(): "preparing" | "pending" {
@@ -65,6 +67,7 @@ export class BackgroundBaseline {
         signal: controller.signal,
         onProgress: (event) => this.progress(controller, event),
         ...(this.builder ? { builder: this.builder } : {}),
+        ...(this.diagnostic ? { diagnostic: this.diagnostic } : {}),
       });
       this.active = { key, commit, controller, result };
       void result.catch(() => {
@@ -99,6 +102,7 @@ export class BackgroundBaseline {
       event.type === "fail"
     )
       return;
+    this.progressChanged?.(event);
     if (event.type === "start") {
       this.preparing = true;
       this.statusChanged?.("preparing");

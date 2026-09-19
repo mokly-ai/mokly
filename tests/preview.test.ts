@@ -34,7 +34,7 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
   assert.match(index, /<title>Mokly<\/title>/);
   assert.match(index, /data-mokly-filter/);
   assert.match(index, /class="mbk-nav-filter-count">\d+</);
-  assert.match(index, /\/__mokly\/client\/browse\.js/);
+  assert.match(index, /\/__mokly\/client\/react-shell\.js/);
   assert.doesNotMatch(index, /\/__mokly\/client\/browser\.js/);
   assert.match(index, /href="\/view\/screens\/welcome"/);
   assert.doesNotMatch(index, /href="\/view\/screens\/welcome\.html"/);

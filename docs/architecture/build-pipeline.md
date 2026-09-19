@@ -230,9 +230,11 @@ paths. After each browser directory is complete, its build writes an adjacent
 generated manifest containing the sorted delivered module names. Serve and the
 package gate require exact manifest/directory equality, so a missing or extra
 output fails before delivery rather than silently changing the inventory.
-The shell retirement gate also reads TypeScript source imports—including
-type-only, side-effect, re-export and dynamic imports—in addition to checking
-the delivered JavaScript graph.
+The package graph gate checks each delivered module's static and dynamic
+imports against that inventory. It rejects unresolved relative imports, bare
+package imports and Node dependencies, and confines React to the standalone
+hydration bundle. The temporary source partition used during the rewrite is
+retired with the old implementation.
 
 Serve's live-state restoration does not depend on the catalogue validator.
 An evidence refresh loads the public revision adopter dynamically after its
@@ -245,6 +247,10 @@ standalone stylesheet is unchanged; embedding CSS is a separate scoped artifact.
 Exported browsers receive the same hydration bundle as Serve, including React;
 no consumer runtime is ever bundled, and the in-frame inspector stays a
 React-free IIFE under its byte budget.
+Static shell documents reference the single owned catalogue JSON and validate
+its identity and finalized deployment before hydration. They still contain the
+complete server-rendered route, but do not repeat the full catalogue payload
+for every route and alias. Serve retains its inline accepted snapshot.
 Shared catalogue validation uses synchronous browser-safe SHA-256, checked against
 Node digests; source inventory excludes the resolved viewer runtime even when
 npm installs it as a workspace symlink. Browser

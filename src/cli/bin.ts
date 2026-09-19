@@ -2,21 +2,39 @@
 
 import { errorMessage } from "../errors.js";
 
+import {
+  processTerminalEnvironment,
+  selectReporter,
+} from "./reporter/index.js";
 import { run } from "./run.js";
 import { redactCliSecrets } from "./secrets.js";
 
+const argv = process.argv.slice(2);
+const environment = processTerminalEnvironment();
+const reporter = selectReporter(argv, environment);
 try {
-  process.exitCode = await run(process.argv.slice(2));
+  process.exitCode = await run(argv, process.cwd(), environment, reporter);
 } catch (error) {
   const redact = (message: string) =>
-    redactCliSecrets(message, process.argv.slice(2), process.env);
-  process.stderr.write(`${redact(errorMessage(error))}\n`);
+    redactCliSecrets(message, argv, environment.env);
+  const supervisedChild = argv[0] === "__serve-child" && process.send;
+  if (supervisedChild)
+    process.send?.({
+      type: "diagnostic",
+      message: redact(errorMessage(error)),
+    });
+  else reporter.renderError(error, redact);
   if (
-    process.env.MOKLY_DIAGNOSTIC === "1" &&
+    environment.env.MOKLY_DIAGNOSTIC === "1" &&
     error instanceof Error &&
     error.stack
   ) {
-    process.stderr.write(`${redact(error.stack)}\n`);
+    const stack = redact(error.stack);
+    if (supervisedChild)
+      process.send?.({ type: "diagnostic", message: stack.slice(0, 65_536) });
+    else reporter.diagnostic(stack);
   }
   process.exitCode = 1;
+} finally {
+  reporter.close();
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { sameOriginAdapter } from "../client/same_origin_adapter.js";
 
@@ -11,6 +11,7 @@ export function MoklyViewer(props: MoklyViewerProps) {
   const source = useCatalogue(props.catalogue, props.baseUrl);
   const [adapter] = useState(sameOriginAdapter);
   const selectedAdapter = props.frameAdapter ?? adapter;
+  const bridgeOwner = useRef({});
   const generation = useRef({
     source: source.key,
     adapter: selectedAdapter,
@@ -25,6 +26,11 @@ export function MoklyViewer(props: MoklyViewerProps) {
       adapter: selectedAdapter,
       id: generation.current.id + 1,
     };
+  const mountedGeneration = generation.current;
+  const replaced = useCallback(
+    () => generation.current !== mountedGeneration,
+    [mountedGeneration],
+  );
   const controlled = useRef(props.selection !== undefined);
   const invalidMode =
     controlled.current !== (props.selection !== undefined) ||
@@ -75,10 +81,8 @@ export function MoklyViewer(props: MoklyViewerProps) {
       {...props}
       loaded={source.loaded}
       adapter={selectedAdapter}
-      replaced={() =>
-        generation.current.source !== source.key ||
-        generation.current.adapter !== selectedAdapter
-      }
+      bridgeOwner={bridgeOwner.current}
+      replaced={replaced}
     />
   );
 }

@@ -87,7 +87,11 @@ export function workspaceData(
   entry: WorkspaceData["entry"],
 ): WorkspaceData {
   if (catalogue.publicModel)
-    return publicWorkspace(catalogue.publicModel, entry);
+    return publicWorkspace(
+      catalogue.publicModel,
+      entry,
+      context.comparisons ?? catalogue.publicModel.comparisonUrl !== null,
+    );
   const snapshot = context.componentChanges;
   const result = snapshot?.result;
   const resourceEvidence = snapshot?.screenEvidence?.find(
@@ -234,9 +238,6 @@ export function workspaceData(
     ...(catalogue.manifest.schemaVersion === "live-index-1"
       ? {
           usageComplete: false,
-          ...(context.renderCapability
-            ? { previewGeneration: context.renderCapability.generation }
-            : {}),
         }
       : {}),
     ...(entry.kind === "component" && context.renderCapability

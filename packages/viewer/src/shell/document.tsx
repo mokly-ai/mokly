@@ -2,7 +2,9 @@
 
 import { renderToStaticMarkup, renderToString } from "react-dom/server";
 
+import { viewerCapabilityDescriptor } from "../client/host_capability_descriptor.js";
 import {
+  externalShellBootstrap,
   shellBootstrap,
   shellBootstrapProps,
 } from "../standalone/bootstrap.js";
@@ -11,6 +13,7 @@ import { StandaloneShellDocument } from "../standalone/document.js";
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import type { ShellView } from "./views.js";
+import { workspaceData } from "./workspace_data.js";
 
 /** Render one full Mokly shell page to an HTML document string. */
 export function renderShellPage(
@@ -28,17 +31,39 @@ export function renderShellPage(
   return `<!doctype html>\n${markup}\n`;
 }
 
-/** Render the switched document from the same public state the browser hydrates. */
+/** Render the hydrated document from the same public state the browser adopts. */
 export function renderHydratedShellPage(
   view: ShellView,
   context: ShellContext,
+  privateCatalogue?: Catalogue,
 ): string {
   if (!context.readModel)
     throw new Error("Hydrated shell rendering requires a public catalogue.");
-  const bootstrap = shellBootstrap(context.readModel, view, context);
-  const props = shellBootstrapProps(bootstrap);
+  const resolvedBootstrap = shellBootstrap(context.readModel, view, context);
+  const bootstrap = context.delivery
+    ? externalShellBootstrap(resolvedBootstrap)
+    : resolvedBootstrap;
+  const initialWorkspace =
+    privateCatalogue &&
+    view.kind === "target" &&
+    view.target.kind === "entry" &&
+    (view.target.entry.kind === "screen" ||
+      view.target.entry.kind === "component")
+      ? workspaceData(privateCatalogue, context, view.target.entry)
+      : undefined;
+  const capabilityDescriptor = viewerCapabilityDescriptor(
+    context.readModel,
+    context,
+    initialWorkspace,
+  );
+  const props = shellBootstrapProps(resolvedBootstrap);
   const markup = renderToString(
-    <StandaloneShellDocument {...props} bootstrap={bootstrap} />,
+    <StandaloneShellDocument
+      {...props}
+      bootstrap={bootstrap}
+      {...(capabilityDescriptor ? { capabilityDescriptor } : {})}
+      {...(initialWorkspace ? { initialWorkspace } : {})}
+    />,
   );
   return `<!doctype html>\n${markup}\n`;
 }

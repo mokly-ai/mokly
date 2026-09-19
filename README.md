@@ -9,20 +9,30 @@ The public [npm package](https://www.npmjs.com/package/@mokly/mokly) is
 `@mokly/mokly`; its executable remains `mokly`. Releases remain pre-1.0 while
 the consumer contract settles.
 
+Versioned CLI documentation lives in [`docs/guides`](./docs/guides) and ships
+inside that package beside the protocol documents and changelog. The public
+documentation site is built by the private `mokly-cloud` repository from an
+installed package release; this repository does not build or deploy the site.
+
 The [`@mokly/viewer`](./packages/viewer/README.md) workspace embeds the existing
 Browse shell in React hosts using the public
 [catalogue read model](./docs/protocol/mokly-catalogue.md). It provides controlled
-selection, slots, inspection events, an imperative handle and
+screen and saved-variant selection, slots, inspection events, exact multi-instance
+highlighting, host-owned instance markers, an imperative handle and
 [frame adapters](./docs/protocol/mokly-frame-adapter.md). Serve and export render
 its shell tree on the server and hydrate it in the browser with its bundled
-React, so every delivery mode runs one shell; the
-[React Browse shell plan](./plans/react-browse-shell.md) tracks that transition.
+React, so every delivery mode runs one shell. Implementation and delivery work
+is tracked in the [plans index](./plans/README.md).
+Static pages retain their complete first paint and share one catalogue file,
+validated before hydration, instead of copying the catalogue into every page.
 Both packages build, release and are tested together. The viewer publishes before
-the CLI, which depends on its exact version. Local Serve/export presentation is
-unchanged; first viewer registration remains post-merge.
+the CLI, which depends on its exact version. Viewer 0.1.0 and CLI 0.10.0 were
+published together; local Serve/export presentation remains unchanged.
 Viewer inspection references identify an exact viewport, scheme, variant and
-flow step. Frame replacement cancels picking and resets inspection; host callback
-exceptions do not prevent resource cleanup. See the viewer README for semantics.
+flow step. The viewer positions marker content without owning comments or exposing
+raw geometry. Frame replacement cancels picking and resets inspection; host
+callback exceptions do not prevent resource cleanup. See the viewer README for
+semantics.
 
 Shared components can have their own pages, saved variants and editable props in
 local Serve. Screens record their actual component usage for inspection and
@@ -183,6 +193,7 @@ After installing, run the local CLI with npx:
 
 ```bash
 npx mokly                         # browse immediately, render on demand, and watch
+npx mokly serve --open            # open the development URL after startup
 npx mokly serve --no-watch --port 0
 npx mokly serve --debug-timings
 npx mokly build
@@ -200,6 +211,13 @@ name is not a package alias; imports also use `@mokly/mokly`.
 Value options also accept `--name=value`, which supports values beginning with
 `-`, such as `--config=-catalogue.config.ts`. Empty values and assignments to
 boolean flags are rejected.
+
+An interactive terminal highlights the local URL in a bordered panel and shows
+progress, accepted catalogue and comparison status, watched file actions, and
+friendly error hints. Press `h` during watched Serve to see shortcuts: `o`
+opens the browser, `r` rebuilds, `c` clears, and `q` quits. Piped and CI output
+keeps the stable plain strings used by automation; `MOKLY_OUTPUT=plain|rich`
+selects a mode explicitly. `--debug-timings` always uses plain mode.
 
 | Command                     | Outcome                                                    |
 | --------------------------- | ---------------------------------------------------------- |
@@ -579,8 +597,8 @@ unmatched historical documents never become removed catalogue entries.
 ## Rendering Boundary
 
 The default renderer produces neutral static HTML. A consumer renderer can wrap
-the React node in its theme/context and return a complete document. Accounting,
-for example, will keep React Native Web style collection in that adapter rather
+the React node in its theme/context and return a complete document. Custom
+renderers keep React Native Web style collection in the consumer adapter rather
 than making React Native Web a Mokly dependency.
 
 Entries, the renderer, and imported document helpers are bundled into one
@@ -620,6 +638,9 @@ forcing React peers to the consumer's one runtime.
   portable.
 - **A watched edit fails:** fix the reported candidate build/config error. The
   last-good server remains active and adopts the next valid change.
+- **Terminal progress is missing or noisy:** rich progress requires TTY stdout
+  unless `MOKLY_OUTPUT=rich` is set. Use `MOKLY_OUTPUT=plain` for stable logs;
+  `NO_COLOR=1` disables colour without disabling progress.
 - **Export cannot find its baseline:** fetch the configured base with enough
   Git history. Committed mode needs its manifest/fragments in Git; derived mode
   needs a working historical install/build recipe. Export never fetches history
@@ -664,10 +685,12 @@ including before `dist/` has been built. `npm run lint -- --fix` applies the
 For local development after installing dependencies, run:
 
 ```bash
-npm run dev
+npm run -s dev
 ```
 
 This builds the local CLI and starts the example catalogue with watching enabled.
+The quiet npm form leaves the terminal to Mokly's reporter; `npm run dev` works
+too but retains npm's outer banner.
 Open the printed URL, starting at `http://127.0.0.1:4173`. Edits to example
 entries, the renderer, and configured stylesheets update the catalogue
 automatically; generated HTML is written to `examples/basic/generated/`.
@@ -720,7 +743,7 @@ recovery and reports the last published state if it times out.
 dependency audit (`npm run dependencies:check`), then checks commit titles in
 `origin/main..HEAD` against the 50-character limit and includes formatting,
 lint, typechecking, unit/integration tests, the derived example, package
-allowlist and license checks, clean packed ESM/NodeNext/npx/Accounting/Juno
+allowlist and license checks, clean packed ESM/NodeNext/npx/themed/Juno
 consumers, Chromium tests, and all Rust checks. It also audits the freshly
 resolved packed consumer's production dependencies. Registry access is required;
 known advisories or registry errors fail verification. See the
@@ -936,10 +959,12 @@ boundary and does not add a second reviewer stage.
 The [Release workflow](./.github/workflows/release.yml) verifies both tags,
 reruns the full gate and smoke-tests both exact tarballs in clean consumers.
 It publishes and verifies the viewer before the CLI, retaining both inventories,
-hashes and registry signature/provenance results. A manual dispatch from `main`
-retries the existing `publish_ref` and `viewer_ref` pair, skipping only a matching
-already-published archive. See the [release protocol](./docs/protocol/npm-release.md)
-for version pairing, evidence and the complete retry procedure.
+hashes and registry signature/provenance results. Post-publish verification
+allows five minutes for npm registry propagation. A manual dispatch from `main`
+retries the existing `publish_ref` and `viewer_ref` pair, skipping only a
+matching already-published archive. See the
+[release protocol](./docs/protocol/npm-release.md) for version pairing, evidence
+and the complete retry procedure.
 
 The one-time [Mokly registry bootstrap](./docs/protocol/npm-bootstrap.md) is
 complete: `@mokly/mokly@0.8.0` is the accepted initial `latest` release and also
@@ -970,7 +995,9 @@ The [controls designs](./docs/protocol/mokly-component-controls-design.md) show
 saved variants and temporary edits, implemented by the local rendering service. The catalogue hierarchy reaches each design without
 adding navigation footers to the artboards. The [workspace designs](./docs/protocol/mokly-component-workspace-design.md) add working viewport/theme/highlight controls, a fixed shell with a resizable inspector, entry change-status badges, and comparison evidence inside Details. Unmodified examples and ordinary Browse/tag-picker designs omit comparison tabs;
 eligible comparisons retain an opaque toolbar. The desktop grip sits on its
-divider line.
+divider line and shares the navigation separator's affordance, rotated: the same
+rounded short line that turns accent-colored with a soft halo on hover, focus,
+and drag.
 
 All 68 design screens reuse the 15 registered components in
 **Components → Design → Shared components**, including the footer tabs panel. The library
@@ -986,12 +1013,14 @@ canonical destinations and the controls that remain visual depictions.
 
 - [`src/index.ts`](./src/index.ts) — supported public authoring API.
 - [`src/config`](./src/config) — config discovery, loading, and confinement.
+- [`src/cli`](./src/cli/README.md) — argument validation, terminal reporting,
+  interactive Serve controls, and command composition.
 - [`src/publish`](./src/publish/README.md) — upload manifests, archive limits,
   Git identity and the injectable HTTP boundary.
 - [`src/build`](./src/build) — single-graph bundling, compilation, links, check,
   and transactional writes.
 - [`packages/viewer`](./packages/viewer/README.md) — React/SSR shell, catalogue
-  readers, navigation, adapters, inspection and reusable browser enhancements.
+  readers, navigation, frame adapters, inspection and live host capabilities.
 - [`src/server`](./src/server) — manifest-backed HTTP and the watched child lifecycle.
 - [`src/client`](./src/client) — private Serve updates, controls and on-demand loading.
 - [`packages/viewer/src/navigation`](./packages/viewer/src/navigation) and
@@ -1013,6 +1042,10 @@ canonical destinations and the controls that remain visual depictions.
 
 ### Related Docs
 
+The [packaged guides contract](./docs/protocol/mokly-guides.md) defines the
+Markdown source, versioning, linking, and publication boundary used by the
+cloud documentation site.
+
 The [registered components contract](./docs/protocol/mokly-components.md)
 links to the [change attribution](./docs/protocol/mokly-component-changes.md),
 [pages and inspection](./docs/protocol/mokly-component-explorer.md), and
@@ -1026,16 +1059,12 @@ in the [plans index](./plans/README.md).
 - [Instance identity](./docs/protocol/mokly-instances.md),
   [public catalogue](./docs/protocol/mokly-catalogue.md),
   [viewer API](./docs/protocol/mokly-viewer.md), and
-  [frame adapters](./docs/protocol/mokly-frame-adapter.md) — identity, catalogue and
-  adapters are implemented; the viewer package is verified and awaiting its
-  first release.
+  [frame adapters](./docs/protocol/mokly-frame-adapter.md) — shared data,
+  selection, inspection and transport contracts for the published viewer package.
 - [Package ownership boundary](./docs/architecture/package-boundary.md)
-- [Accounting migration inventory](./docs/migration/accounting-framework-inventory.md)
-- [Styled control migration guide](./docs/migration/accounting-link-controls.md)
 - [Implementation review prompt](./docs/implementation-review-prompt.md)
 - [Implementation plans](./plans/README.md)
 - [Unified catalogue pages](./docs/protocol/mokly-pages.md) and
   [required breaking upgrade](./docs/protocol/mokly-page-migration.md)
 - [Authoring source protection](./docs/protocol/mokly-source-protection.md) and
   [catalogue change metadata](./docs/protocol/mokly-catalogue-changes.md)
-- [Versioned Accounting page migration](./docs/migration/accounting-page-entries.md)

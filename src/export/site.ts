@@ -35,7 +35,15 @@ import { ExportInventory } from "./inventory.js";
 import { exportResourceDenial } from "./resource_policy.js";
 import { STAGED_DEPLOYMENT_ID } from "./shell_metadata.js";
 
-const REACT_SHELL_BUNDLE = "react-shell.js";
+const LIVE_HOST_BUNDLES = new Set([
+  "host_capabilities.js",
+  "host_capability_descriptor.js",
+  "react_capabilities.js",
+  "react_capability_updates.js",
+  "react_transports.js",
+  "react_update_controller.js",
+  "react-host.js",
+]);
 
 /** Assemble one complete shell/resource/comparison tree without a live server. */
 export function assembleExport(
@@ -45,7 +53,6 @@ export function assembleExport(
   comparison: ReviewArtifact | undefined,
   publicFiles: ReadonlyMap<string, Buffer>,
   contentChanges: readonly string[],
-  reactShell = false,
 ): {
   inventory: ExportInventory;
   delivery: StaticDelivery;
@@ -171,7 +178,6 @@ export function assembleExport(
       : { comparisons: false }),
     updateVersion: 0,
     delivery,
-    ...(reactShell ? { reactShell: true } : {}),
   };
   const readModel = projectCatalogue({
     configPath: toPosixPath(path.relative(config.repoRoot, config.configPath)),
@@ -220,11 +226,7 @@ export function assembleExport(
   }
   inventory.add("__mokly/shell.css", SHELL_CSS);
   for (const [name, bytes] of loadBrowserClientModules()) {
-    if (
-      name !== "browser.js" &&
-      name !== "live_updates.js" &&
-      (name !== REACT_SHELL_BUNDLE || reactShell)
-    )
+    if (!LIVE_HOST_BUNDLES.has(name))
       inventory.add(`__mokly/client/${name}`, bytes);
   }
   for (const [name, bytes] of loadBrowserNavigationModules())

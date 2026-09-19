@@ -1,16 +1,19 @@
 /** Background output/evidence can be adopted only by its still-current source generation. */
-import type { BaselineBuilder } from "../../baseline/types.js";
+import type {
+  BaselineBuilder,
+  BaselineProgress,
+} from "../../baseline/types.js";
 import type { Compilation } from "../../build/compile.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
 import type { GeneratedOutputStore } from "../../build/output_store.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { timeAsync, timingCounts } from "../../diagnostics/timings.js";
-import { errorMessage } from "../../errors.js";
-import { RepositoryCatalogueChangeClassifier } from "../component_changes.js";
-import type {
-  CatalogueChangeClassifier,
-  ComponentChangeSnapshot,
+import {
+  RepositoryCatalogueChangeClassifier,
+  type CatalogueChangeClassifier,
+  type ComponentChangeSnapshot,
 } from "../component_changes.js";
+import { PlainServeReporter } from "../reporter.js";
 import type {
   PreparedResourceWatch,
   ResourceWatcher,
@@ -31,6 +34,10 @@ export interface BackgroundGenerationOptions {
    * `pending` once it settles. Committed mode and a cache hit never call this.
    */
   readonly baselineStatus?: (status: "preparing" | "pending") => void;
+  /** Observe cache-hit/rebuild identity without changing browser status. */
+  readonly baselineProgress?: (event: BaselineProgress) => void;
+  /** Route background failures through the process's sole terminal owner. */
+  readonly diagnostic?: (error: unknown) => void;
   /** Injected by tests; the composition root builds the real one on demand. */
   readonly builder?: BaselineBuilder;
 }
@@ -61,6 +68,10 @@ export class BackgroundGeneration {
       options.baselineStatus,
       options.baselinePrepared,
       options.builder,
+      options.baselineProgress,
+      options.diagnostic
+        ? (message) => options.diagnostic?.(message)
+        : undefined,
     );
   }
 
@@ -127,7 +138,8 @@ export class BackgroundGeneration {
         }
       } catch (error) {
         if (current()) {
-          process.stderr.write(`${errorMessage(error)}\n`);
+          if (this.options.diagnostic) this.options.diagnostic(error);
+          else new PlainServeReporter().runtimeDiagnostic(error);
           this.classified(undefined);
         }
       } finally {

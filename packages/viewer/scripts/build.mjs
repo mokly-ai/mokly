@@ -15,7 +15,11 @@ await fs.cp(path.join(root, "src/shell/assets"), path.join(target, "assets"), {
 await buildBrowserModules(
   path.join(root, "src/client"),
   path.join(target, "browser"),
-  { viewer: true },
+  {
+    additionalEntries: {
+      recovery: path.join(root, "src/standalone/recovery.ts"),
+    },
+  },
 );
 await build({
   bundle: true,

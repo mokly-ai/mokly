@@ -1,215 +1,190 @@
-/** Shell-scoped React state for standalone Browse hydration. */
+/** Shell-scoped React state for standalone and application-owned roots. */
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
+import type { FrameAdapter } from "../client/frame_adapter.js";
 import { DisplaySelection } from "../viewer/display_context.js";
-import { selectionQuery } from "../viewer/selection.js";
 
+import { ViewerLiveBoundary } from "./capability_context.js";
+import { useViewerCapabilityStore } from "./capability_store.js";
 import type { Catalogue } from "./catalogue.js";
+import {
+  ComparisonEnvironmentProvider,
+  type ComparisonEnvironment,
+} from "./comparison_context.js";
 import type { ShellContext } from "./context.js";
-import { catalogueNavSections, navigationFiltering } from "./nav_model.js";
-import { parseSearchQuery } from "./search_query.js";
-import { clearTagTerm, setTagTerm } from "./search_query.js";
+import { ShellFrameEventRouter } from "./frame_event_router.js";
+import { ShellFrameRegistryProvider } from "./frame_registry.js";
+import { catalogueNavSections } from "./nav_model.js";
+import { shellRecoverySnapshot, shellStore } from "./store_actions.js";
 import { useShellBrowser } from "./store_browser.js";
 import { ShellStoreBoundary, type ShellStore } from "./store_context.js";
 import { withFilterSelection } from "./store_filters.js";
+import { type EmbeddedShellEnvironment, useShellHost } from "./store_host.js";
+import { hostRoute } from "./store_host_routes.js";
 import { createInitialShellState } from "./store_initial.js";
-import { closedDisclosures } from "./store_state.js";
 import type {
   ShellInitialState,
   ShellRecoverySnapshot,
+  ShellState,
 } from "./store_state.js";
 import type { ShellView } from "./views.js";
 
-const navStorageKey = "mokly:nav-disclosure:v2";
-const detailsStorageKey = "mokly:details-disclosure";
-const widthStorageKey = "mokly:navigation-width:v1";
+interface ShellStoreProviderProps {
+  catalogue: Catalogue;
+  children: ReactNode;
+  comparisonEnvironment?: ComparisonEnvironment;
+  context: ShellContext;
+  embeddedHost?: EmbeddedShellEnvironment;
+  frameAdapter?: FrameAdapter;
+  frameBaseUrl?: string | URL;
+  initialState?: ShellInitialState;
+  interactive: boolean;
+  recovery?: ShellRecoverySnapshot;
+  view: ShellView;
+}
 
-/** Provide one state owner to the complete standalone shell tree. */
+/** Provide one state owner to a complete shell tree. */
 export function ShellStoreProvider({
   catalogue,
   children,
+  comparisonEnvironment,
   context,
+  embeddedHost,
+  frameAdapter,
+  frameBaseUrl,
   initialState,
   interactive,
+  recovery,
   view,
-}: {
-  catalogue: Catalogue;
-  children: ReactNode;
-  context: ShellContext;
-  initialState?: ShellInitialState;
-  interactive: boolean;
-  view: ShellView;
-}) {
-  const sections = useMemo(() => catalogueNavSections(catalogue), [catalogue]);
+}: ShellStoreProviderProps) {
   const [state, setState] = useState(() =>
-    createInitialShellState(catalogue, context, view, initialState),
+    initialShellState(catalogue, context, view, initialState, embeddedHost),
   );
   const stateRef = useRef(state);
+  const recoveryApplied = useRef(false);
   stateRef.current = state;
-  const browser = useShellBrowser({
+  const capabilityStore = useViewerCapabilityStore({
+    captureRecovery: () =>
+      shellRecoverySnapshot(
+        stateRef.current,
+        interactive && embeddedHost === undefined,
+      ),
     catalogue,
     context,
+    interactive,
+    setState,
+    state,
+    stateRef,
+  });
+  const activeCatalogue = capabilityStore.catalogue;
+  const activeContext = capabilityStore.context;
+  const sections = useMemo(
+    () => catalogueNavSections(activeCatalogue),
+    [activeCatalogue],
+  );
+  const browser = useShellBrowser({
+    catalogue: activeCatalogue,
+    context: activeContext,
+    interactive: interactive && !embeddedHost,
+    sections,
+    setState,
+    state,
+  });
+  const host = useShellHost({
+    catalogue: activeCatalogue,
+    ...(embeddedHost ? { environment: embeddedHost } : {}),
     interactive,
     sections,
     setState,
     state,
   });
   const runtimeContext = useMemo(
-    () => currentContext(context, state),
-    [context, state.changesStatus, state.route],
+    () => currentContext(activeContext, state),
+    [activeContext, state.changesStatus, state.route],
   );
 
   useEffect(() => {
-    if (!interactive) return;
-    const resize = () =>
-      setState((current) => {
-        const maximum = Math.max(
-          192,
-          Math.min(480, Math.floor(window.innerWidth / 2)),
-        );
-        return {
-          ...current,
-          navigationMaximum: maximum,
-          navigationWidth: Math.min(current.navigationWidth, maximum),
-        };
+    if (embeddedHost || !interactive || !recovery || recoveryApplied.current)
+      return;
+    recoveryApplied.current = true;
+    setState((current) => {
+      const restored = createInitialShellState(catalogue, context, view, {
+        ...initialState,
+        recovery,
       });
-    window.addEventListener("resize", resize);
-    return () => window.removeEventListener("resize", resize);
-  }, [interactive]);
-
-  const store: ShellStore = {
+      const selection = {
+        ...restored.selection,
+        screenId:
+          current.route.view.kind === "target"
+            ? current.route.view.target.entry.id
+            : null,
+      };
+      if (current.route.variant) selection.variantId = current.route.variant;
+      else delete selection.variantId;
+      return { ...restored, route: current.route, selection };
+    });
+  }, [
     catalogue,
-    context: runtimeContext,
+    context,
+    embeddedHost,
+    initialState,
     interactive,
+    recovery,
+    view,
+  ]);
+
+  const store = shellStore({
+    catalogue: activeCatalogue,
+    context: runtimeContext,
+    embedded: embeddedHost !== undefined,
+    interactive,
+    navigation: embeddedHost ? host : browser,
+    propose: host.select,
     sections,
+    setState,
     state,
-    ...browser,
-    collapseAll() {
-      setState((current) => {
-        const disclosures = Object.fromEntries(
-          Object.keys(current.disclosures).map((key) => [key, false]),
-        );
-        if (!navigationFiltering(current.selection))
-          persist(
-            navStorageKey,
-            JSON.stringify(closedDisclosures(disclosures)),
-          );
-        return { ...current, disclosures };
-      });
-    },
-    copy(text, announcement) {
-      copyText(text);
-      if (announcement) setState((current) => ({ ...current, announcement }));
-    },
-    persistNavigationWidth(value = stateRef.current.navigationWidth) {
-      const width = Math.round(
-        Math.max(192, Math.min(stateRef.current.navigationMaximum, value)),
-      );
-      persist(widthStorageKey, String(width));
-    },
-    recoverySnapshot() {
-      return recoverySnapshot(stateRef.current);
-    },
-    selectColorScheme(value) {
-      setState((current) => ({
-        ...current,
-        selection: {
-          ...current.selection,
-          colorScheme: catalogue.hasDarkFragments ? value : "light",
-        },
-      }));
-    },
-    selectViewport(value) {
-      setState((current) => ({
-        ...current,
-        selection: { ...current.selection, viewport: value },
-      }));
-    },
-    setDetails(open, tab = "details") {
-      persist(detailsStorageKey, open ? "open" : "closed");
-      setState((current) => ({
-        ...current,
-        detailsOpen: open,
-        inspectorTab: open ? tab : undefined,
-      }));
-    },
-    setDisclosure(key, open) {
-      setState((current) => {
-        const disclosures = { ...current.disclosures, [key]: open };
-        if (!navigationFiltering(current.selection))
-          persist(
-            navStorageKey,
-            JSON.stringify(closedDisclosures(disclosures)),
-          );
-        return { ...current, disclosures };
-      });
-    },
-    setDrawer(open) {
-      setState((current) => ({ ...current, drawerOpen: open }));
-    },
-    setExpandedFrame(key) {
-      setState((current) => ({ ...current, expandedFrame: key }));
-    },
-    setNavigationWidth(value) {
-      setState((current) => ({
-        ...current,
-        navigationWidth: Math.round(
-          Math.max(192, Math.min(current.navigationMaximum, value)),
-        ),
-      }));
-    },
-    setNavScroll(value) {
-      setState((current) => ({ ...current, navScroll: value }));
-    },
-    setSearch(value) {
-      const query = parseSearchQuery(value);
-      setState((current) =>
-        withFilterSelection(current, {
-          ...current.selection,
-          search: query.freeText,
-          tags: query.tags,
-        }),
-      );
-    },
-    setTagPicker(open, index = stateRef.current.tagPickerIndex) {
-      setState((current) => ({
-        ...current,
-        tagPickerIndex: index,
-        tagPickerOpen: open,
-      }));
-    },
-    setView(value) {
-      setState((current) =>
-        withFilterSelection(current, { ...current.selection, view: value }),
-      );
-    },
-    toggleTag(tag) {
-      setState((current) => {
-        const raw = selectionQuery(current.selection);
-        const selected = current.selection.tags.includes(tag.toLowerCase());
-        const query = parseSearchQuery(
-          selected ? clearTagTerm(raw, tag) : setTagTerm(raw, tag),
-        );
-        return {
-          ...withFilterSelection(current, {
-            ...current.selection,
-            search: query.freeText,
-            tags: query.tags,
-          }),
-          tagPickerOpen: false,
-        };
-      });
-    },
-  };
+    stateRef,
+  });
   return (
     <ShellStoreBoundary value={store}>
-      <DisplaySelection.Provider value={state.selection}>
-        {children}
-      </DisplaySelection.Provider>
+      <ViewerLiveBoundary value={capabilityStore.liveState}>
+        <ComparisonEnvironmentProvider
+          context={runtimeContext}
+          interactive={interactive}
+          {...(comparisonEnvironment
+            ? { environment: comparisonEnvironment }
+            : {})}
+        >
+          <ShellFrameRegistryProvider
+            {...(frameAdapter ? { adapter: frameAdapter } : {})}
+            {...(frameBaseUrl ? { baseUrl: frameBaseUrl } : {})}
+          >
+            <DisplaySelection.Provider value={state.selection}>
+              <ShellFrameEventRouter />
+              {children}
+            </DisplaySelection.Provider>
+          </ShellFrameRegistryProvider>
+        </ComparisonEnvironmentProvider>
+      </ViewerLiveBoundary>
     </ShellStoreBoundary>
   );
+}
+
+function initialShellState(
+  catalogue: Catalogue,
+  context: ShellContext,
+  view: ShellView,
+  initialState: ShellInitialState | undefined,
+  embeddedHost: EmbeddedShellEnvironment | undefined,
+): ShellState {
+  const state = createInitialShellState(catalogue, context, view, initialState);
+  if (!embeddedHost) return state;
+  return {
+    ...withFilterSelection(state, embeddedHost.selection),
+    route: hostRoute(catalogue, embeddedHost.selection),
+  };
 }
 
 function currentContext(context: ShellContext, state: ShellStore["state"]) {
@@ -229,44 +204,4 @@ function currentContext(context: ShellContext, state: ShellStore["state"]) {
     ...(state.changesStatus ? { changesStatus: state.changesStatus } : {}),
     ...(state.route.fragment ? { fragment: state.route.fragment } : {}),
   };
-}
-
-function recoverySnapshot(state: ShellStore["state"]): ShellRecoverySnapshot {
-  return {
-    ...(state.changesStatus ? { changesStatus: state.changesStatus } : {}),
-    closedCollectionIds: closedDisclosures(state.disclosures),
-    colorScheme: state.selection.colorScheme,
-    detailsOpen: state.detailsOpen,
-    drawerOpen: state.drawerOpen,
-    filterBaselineClosedCollectionIds: state.filterBaseline
-      ? closedDisclosures(state.filterBaseline)
-      : null,
-    navScroll: state.navScroll,
-    query: selectionQuery(state.selection),
-    regionScrolls: state.regionScrolls,
-    view: state.selection.view,
-    viewport: state.selection.viewport,
-  };
-}
-
-function copyText(text: string): void {
-  const clipboard = navigator.clipboard;
-  if (clipboard) {
-    void clipboard.writeText(text).catch(() => undefined);
-    return;
-  }
-  const area = document.createElement("textarea");
-  area.value = text;
-  document.body.append(area);
-  area.select();
-  document.execCommand("copy");
-  area.remove();
-}
-
-function persist(key: string, value: string): void {
-  try {
-    localStorage.setItem(key, value);
-  } catch {
-    return;
-  }
 }

@@ -24,6 +24,8 @@ export interface ShellRecoverySnapshot {
 export interface ShellInitialState {
   detailsOpen?: boolean;
   disclosures?: Readonly<Record<string, boolean>>;
+  earlyDetailsOpen?: boolean;
+  earlyDisclosures?: Readonly<Record<string, boolean>>;
   navigationMaximum?: number;
   navigationWidth?: number;
   recovery?: ShellRecoverySnapshot;
@@ -42,6 +44,7 @@ export interface ShellState {
   navigationMaximum: number;
   navScroll: number;
   navigationWidth: number;
+  query: string;
   regionScrolls: Readonly<Record<string, number>>;
   route: ShellRoute;
   selection: ViewerSelection;

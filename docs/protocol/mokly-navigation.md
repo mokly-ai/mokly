@@ -11,11 +11,11 @@ source ownership, and collection ancestry as screens and use cases.
 
 The [frame adapters](./mokly-frame-adapter.md) and `@mokly/viewer` package
 are implemented. This document's same-origin interactions remain
-authoritative. The [React Browse shell plan](../../plans/react-browse-shell.md)
-moves the outer shell from fetch-and-swap enhancement to a hydrated React tree
-that renders routes from the catalogue read model; the parent-side wording
-below describes that target, and every marker, sandbox, target-parsing and
-outer-navigation rule is unchanged by it.
+authoritative. The outer shell is a hydrated React tree that renders routes
+from the catalogue read model, as tracked in the
+[React Browse shell plan](../../plans/react-browse-shell.md). Every marker,
+sandbox, target-parsing and outer-navigation rule below applies to that shared
+shell in Serve, export and embedded hosts.
 
 ## Scope
 

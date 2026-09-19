@@ -11,8 +11,11 @@ import type {
   CatalogueReadModel,
   MoklyViewerHandle,
   MoklyViewerProps,
+  ViewerMarker,
   ViewerSelection,
 } from "@mokly/viewer";
+
+import { installFrameHookHarness } from "./frame_hook_harness.js";
 
 interface HostOptions {
   controlled?: boolean;
@@ -29,6 +32,7 @@ interface Host {
   ref: { current: MoklyViewerHandle | null };
   events: { name: string; value: unknown }[];
   render(): void;
+  setMarkers(markers: readonly Omit<ViewerMarker, "content">[]): void;
   setSelection(value: ViewerSelection): void;
   options: HostOptions;
 }
@@ -67,6 +71,24 @@ const start = (id: string, options: HostOptions = {}) => {
       const node = <MoklyViewer {...host.props} ref={ref} />;
       host.root.render(options.strict ? <StrictMode>{node}</StrictMode> : node);
     },
+    setMarkers(markers) {
+      host.props = {
+        ...host.props,
+        markers: markers.map((marker) => ({
+          ...marker,
+          content: (
+            <button
+              data-marker-content={marker.id}
+              onClick={() => log("marker-click", marker.id)}
+              style={{ pointerEvents: "auto" }}
+            >
+              {marker.id}
+            </button>
+          ),
+        })),
+      } as MoklyViewerProps;
+      host.render();
+    },
     setSelection(value) {
       host.props = {
         ...host.props,
@@ -96,6 +118,7 @@ const start = (id: string, options: HostOptions = {}) => {
     onInstanceClick: (event) => log("click", event),
     onPickStart: () => log("pick-start"),
     onPickEnd: (event) => log("pick-end", event),
+    onMarkerChange: (states) => log("markers", states),
     onError: (error) => log("error", error),
   } as MoklyViewerProps;
   if (options.slots)
@@ -121,3 +144,4 @@ const start = (id: string, options: HostOptions = {}) => {
     document.getElementById(id)?.remove();
   },
 };
+installFrameHookHarness();

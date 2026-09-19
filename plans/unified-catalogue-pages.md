@@ -5,7 +5,7 @@
 Implementation, consumer rehearsal, validation, commit, push, and review are
 complete. Authorized follow-up fixes are recorded in the
 [review record](../docs/reviews/catalogue-pages-and-publication.md). The user approved a mandatory
-breaking upgrade after the Accounting inspection found a second App root, and
+breaking upgrade after a downstream inspection found a second App root, and
 subsequently requested fixes for the contract reviews.
 
 Deliver first-class whole-document pages with explicit IDs and ordinary
@@ -22,13 +22,11 @@ publication consume one hierarchy. Do not merge collections by display name.
 - [Source protection](../docs/protocol/mokly-source-protection.md) and
   [catalogue changes](../docs/protocol/mokly-catalogue-changes.md) own shared
   source classification, change metadata, and removed-page presentation.
-- [Accounting migration](../docs/migration/accounting-page-entries.md) owns the
-  verified consumer revision, five mappings, and its separate delivery checks.
 - [Shell design](../docs/protocol/mokly-shell-design.md) owns reusable design
   components and responsive presentation. Its example catalogue is the
   established Mokabook mockup source of truth.
 
-Scope: Mokabook, generic packed consumers, and an isolated Accounting rehearsal.
+Scope: Mokabook, generic packed consumers, and an isolated external-consumer rehearsal.
 Publication, deployment, and durable consumer adoption are separate follow-ups;
 the synced inspection checkout remains read-only.
 
@@ -55,7 +53,7 @@ Update affected fixtures with the API changes instead of preserving a parallel
 legacy authoring path. No environment or migration flags appear in product views.
 
 Add regression tests before changing each failing behavior. Preserve unrelated
-mainline features and all five Accounting documents. Recheck source inventory
+mainline features and all five consumer documents. Recheck source inventory
 and IDs when implementation starts; the inspected remote sync may advance.
 New tasks go into the relevant unfinished milestone. Backend gaps discovered
 during a tagged milestone require a new backend milestone immediately after
@@ -91,7 +89,7 @@ implementation by removing the proposed source-registration compatibility layer.
 
 Commit `75180d8` passed Markdown/link and milestone checks and was pushed.
 Its review found three contract gaps: shared change metadata, source inventory,
-and the Accounting snapshot. Milestone 3 resolved them; the full gate remains below.
+and the consumer snapshot. Milestone 3 resolved them; the full gate remains below.
 
 ## Milestone 3: Resolve contract reviews — completed
 
@@ -100,7 +98,7 @@ The user requested fixes for the reviews of `75180d8` and `dc44b02`.
 - [x] Specify complete source inventory, stale-source protection, and one typed
       change snapshot with flat removed pages and baseline-only breadcrumbs.
 - [x] Move concrete mappings into consumer documentation and record a freshly
-      verified Accounting commit, manifest hash, and source/artifact checks.
+      verified consumer revision, manifest hash, and source/artifact checks.
 - [x] Add regression work to unfinished milestones; preserve completed work.
 
 Commit `f7a1a36` passed Prettier, 130 local links, milestone and inventory checks
@@ -239,10 +237,10 @@ Browse renders one hierarchy with complete page metadata and working screen view
 ## Milestone 8: Prove the required consumer upgrade — completed
 
 Activate the final v4 contract across examples, packed consumers, and migration
-guidance, and rehearse the actual Accounting inventory before release.
+guidance, and rehearse a large external-consumer inventory before release.
 
 - [x] Register the already-designed synthetic document as a page in the basic
-      example and use `definePage` in the Accounting packed fixture. Convert raw
+      example and use `definePage` in the themed packed fixture. Convert raw
       HTML comment components into consumer composition, make aliases explicit
       routes, and preserve applicable lint rules in consumer source-policy tests.
       Update ESM/NodeNext/npx/Juno checks for the new API/schema.
@@ -252,15 +250,15 @@ guidance, and rehearse the actual Accounting inventory before release.
 - [x] Update the package/runtime/navigation/Changes/watch/architecture docs,
       README, and example guidance to describe implemented behavior. Change the
       target protocols' delivery status only when their required behavior passes.
-- [x] Build and pack the candidate. In a disposable Accounting checkout,
-      follow the versioned consumer note for the five definitions and memberships,
+- [x] Build and pack the candidate. In a disposable external-consumer checkout,
+      apply the five definitions and memberships,
       remove `legacy` config, update consumer policy tests/docs, and perform the
       verified old-artifact regeneration. Do not alter the synced inspection workspace.
 - [x] Validate complete pre/post source, route, anchor, and artifact inventories;
       preserve all product screens, links, resources, and four real root collections.
       Keep the consumer patch and exact tarball identity under `.context`.
-- [x] Run Accounting mockup build/check/test/typecheck, relevant browser tests,
-      its required repository gate, and real-server mobile/desktop smoke tests of
+- [x] Run the consumer's mockup build/check/test/typecheck, relevant browser
+      tests, required repository gate, and real-server mobile/desktop smoke tests of
       all five pages, incoming links, search, ancestry, and exactly one App group.
 
 The package has a verified migration and rehearsal; durable adoption follows separately.
@@ -308,17 +306,16 @@ complete new source, tests, docs, and generated artifacts in the reviewed diff.
 ## Implementation Verification
 
 The pre-integration `cargo xtask check` passed on 2026-09-09: 425 Node tests, 82 Chromium tests,
-packed ESM/NodeNext/npx/Juno/Accounting consumers, example freshness, formatting,
+packed ESM/NodeNext/npx/Juno/themed consumers, example freshness, formatting,
 lint, typechecking, Rust fmt/clippy, three Rust tests, and file-length checks.
 No Mokabook Rust implementation changed. Regression tests also preserve the
 post-screen render context of complete documents and their ReviewIgnore
 serialization. All eight new page design artifacts were opened directly from
 disk and visually inspected; the four publication designs passed the same check.
 
-The Accounting rehearsal at `ba5f3fb` uses candidate SHA-256
-`262a44b34b86c58778ec81286ed93cf27e8e6a9439b9fa617bc914fec6e4c8fa`.
-Inventory comparison preserves all 2400 existing entries and four roots. Of
-3775 HTML artifacts, 3770 are byte-identical; the five documents change only
+The external-consumer rehearsal used the exact candidate tarball recorded with
+the review evidence. Inventory comparison preserved all existing entries and
+roots. Of 3775 HTML artifacts, 3770 are byte-identical; the five documents change only
 their verified ownership header, with bodies, anchors, resources, and links
 unchanged. All 929 existing source files remain; only the two collection
 registrations and two consumer policy/test files change, plus one new page
@@ -330,14 +327,13 @@ header/selection previously had none and is now reached through its collection.
 The initial main audit retained source tip `f7a1a36`; refreshed `origin/main` remained
 `e47524b`. The three removed files are the authorized legacy renderer and raw
 HTML fixture plus the removed-screen helper superseded by shared entry metadata.
-No unrelated mainline feature was removed. The full Accounting gate passed with
-5574 Rust, 198 mockup, 4596 app, and 52 additional TypeScript tests, plus lint,
-typechecking and infrastructure checks. All 36 supplemental mockup browser cases
-passed; an installed-Chrome stall required rerunning the eight layout cases with
+No unrelated mainline feature was removed. The full consumer gate passed,
+including Rust and TypeScript tests, lint, typechecking, infrastructure checks,
+and supplemental mockup browser cases. An installed-Chrome stall required
+rerunning the eight layout cases with
 Playwright Chromium 1228. The real CLI smoke passed. The rehearsal patch includes
 a behavior-preserving fix for a pre-existing Clippy warning in the disposable
-consumer. No consumer branch was committed or pushed. Evidence is recorded in
-[the consumer note](../docs/migration/accounting-page-entries.md).
+consumer. No consumer branch was committed or pushed.
 
 Sixteen live/published screen, page, flow, and missing-route views were also
 visually inspected at mobile/desktop sizes.
@@ -351,7 +347,7 @@ Chromium tests, packed consumers, all three Rust tests, fmt/clippy, and the
 file-length audit. All 151 local Markdown targets resolve. Test failures under
 concurrent load led to explicit waits for completed comparison responses and
 ephemeral Wrangler inspector ports; loading/error assertions remain immediate.
-All 583 compiled package files are byte-identical to the Accounting candidate,
+All 583 compiled package files are byte-identical to the rehearsed candidate,
 so the verified consumer rehearsal covers the final runtime. No further files
 were removed. The final push and post-push review are recorded below.
 
@@ -375,9 +371,9 @@ Final documentation bookkeeping is validated and committed/pushed separately.
 
 ## Consumer Follow-Up (Outside Package Completion)
 
-After a suitable package version is available, deliver the rehearsed Accounting
+After a suitable package version is available, deliver the rehearsed consumer
 page definitions, collection memberships, source-policy updates, docs, and
-generated output on an Accounting branch. Run that repository's full required
+generated output on a consumer branch. Run that repository's full required
 checks and commit/push/review workflow and repeat the five-page smoke test.
 Coordinate npm publication and consumer adoption separately; do not add tasks
 that require an already-merged package PR to a required milestone here.

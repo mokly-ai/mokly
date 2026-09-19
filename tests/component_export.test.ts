@@ -6,6 +6,7 @@ import { test } from "node:test";
 import { exportCatalogue } from "../dist/export/run.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
+import { buildPreview } from "../scripts/preview/catalogue.mjs";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import {
@@ -15,9 +16,7 @@ import {
 
 function workspace(html: string): WorkspaceData {
   const match =
-    /<script type="application\/json" data-workspace-data="">([\s\S]*?)<\/script>/.exec(
-      html,
-    );
+    /<script[^>]*data-workspace-data=""[^>]*>([\s\S]*?)<\/script>/.exec(html);
   assert.ok(match);
   return JSON.parse(match[1]!) as WorkspaceData;
 }
@@ -108,4 +107,40 @@ test("static export retains removed saved variants and baseline component consum
         `${path.posix.dirname(exported.comparisonUrl.slice(1))}/${view.beforePath!}`,
       ),
     );
+});
+
+test("preview capture retains route-scoped workspace evidence after removing live capabilities", async (t) => {
+  const source = componentEntrySource();
+  const fixture = await createExportFixture(source);
+  t.after(fixture.close);
+  await fs.writeFile(
+    fixture.entryPath,
+    source.replace(
+      "<button data-viewport=",
+      '<button className="changed" data-viewport=',
+    ),
+  );
+  const output = path.join(fixture.root, ".context/published");
+  await buildPreview(fixture.config, output, { includeChanges: true });
+  const actionPage = await fs.readFile(
+    path.join(output, "view/components/action.html"),
+    "utf8",
+  );
+  const homePage = await fs.readFile(
+    path.join(output, "view/screens/home.html"),
+    "utf8",
+  );
+  assert.doesNotMatch(actionPage, /data-mokly-host-capabilities/);
+  assert.doesNotMatch(actionPage, /react-host\.js/);
+  assert.match(actionPage, /data-mokly-static=""/);
+  assert.match(actionPage, /react-shell\.js/);
+  assert.ok(
+    workspace(actionPage).affected.some(
+      (item) => item.route === "screens/home.html",
+    ),
+  );
+  assert.deepEqual(
+    workspace(homePage).relatedComponents.map((item) => item.title),
+    ["Action"],
+  );
 });

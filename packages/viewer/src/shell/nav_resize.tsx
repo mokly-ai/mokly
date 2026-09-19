@@ -1,6 +1,7 @@
 /** Accessible React-owned desktop navigation split separator. */
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
+import type { RefObject } from "react";
 
 import { useOptionalShellStore } from "./store_context.js";
 
@@ -17,7 +18,9 @@ export function NavigationResizeHandle() {
   const finish = (handle: HTMLDivElement, pointer: number) => {
     if (drag.current?.pointer !== pointer) return;
     drag.current = undefined;
-    document.body.classList.remove("mbk-nav-resizing");
+    handle
+      .closest<HTMLElement>("[data-mokly-shell]")
+      ?.classList.remove("mbk-nav-resizing");
     if (handle.hasPointerCapture(pointer))
       handle.releasePointerCapture(pointer);
     store?.persistNavigationWidth(currentWidth.current);
@@ -61,7 +64,9 @@ export function NavigationResizeHandle() {
           width,
         };
         event.currentTarget.setPointerCapture(event.pointerId);
-        document.body.classList.add("mbk-nav-resizing");
+        event.currentTarget
+          .closest<HTMLElement>("[data-mokly-shell]")
+          ?.classList.add("mbk-nav-resizing");
       }}
       onPointerMove={(event) => {
         const active = drag.current;
@@ -78,4 +83,29 @@ export function NavigationResizeHandle() {
       title="Drag to resize. Use arrow keys for precise control."
     />
   );
+}
+
+/** Keep navigation constraints relative to this shell rather than the window. */
+export function useNavigationBounds(root: RefObject<HTMLElement | null>): void {
+  const store = useOptionalShellStore();
+  const latest = useRef(store);
+  latest.current = store;
+  useEffect(() => {
+    const element = root.current;
+    if (!element || !store?.interactive) return;
+    const resize = () => {
+      const maximum = Math.max(
+        192,
+        Math.min(480, Math.floor(element.clientWidth / 2)),
+      );
+      latest.current?.setNavigationMaximum(maximum);
+    };
+    const observer = new ResizeObserver(resize);
+    observer.observe(element);
+    resize();
+    return () => {
+      observer.disconnect();
+      element.classList.remove("mbk-nav-resizing");
+    };
+  }, [root, store?.interactive]);
 }

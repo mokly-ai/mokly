@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.11.0](https://github.com/mokly-ai/mokly/compare/v0.10.0...v0.11.0) (2026-09-17)
+
+
+### Features
+
+* default generated output to derived ([#81](https://github.com/mokly-ai/mokly/issues/81)) ([37a5ea8](https://github.com/mokly-ai/mokly/commit/37a5ea8919c880327e6baf88a3d9e7fa76975852))
+* **docs:** ship the CLI guides in the package ([#82](https://github.com/mokly-ai/mokly/issues/82)) ([9296ee3](https://github.com/mokly-ai/mokly/commit/9296ee322b65f4fce992b464ca7da46ebcd963eb))
+* **viewer:** add comment anchoring primitives ([#84](https://github.com/mokly-ai/mokly/issues/84)) ([adac9e1](https://github.com/mokly-ai/mokly/commit/adac9e1d56549a5ba164bf90508a93fd59d34e44))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @mokly/viewer bumped from 0.1.0 to 0.2.0
+
 ## [0.10.0](https://github.com/mokly-ai/mokly/compare/v0.9.0...v0.10.0) (2026-09-17)
 
 
@@ -195,7 +211,7 @@
 ### Features
 
 * **example:** prove the consumer contract against the real Firna stack - ([2b3827e](https://github.com/futex-ai/mokabook/commit/2b3827e7572c85a82696a1cc47d8bdee2e3dc14c))
-* extract app-independent Mokabook framework from Accounting ([#1](https://github.com/futex-ai/mokabook/issues/1)) ([2b3827e](https://github.com/futex-ai/mokabook/commit/2b3827e7572c85a82696a1cc47d8bdee2e3dc14c))
+* establish an app-independent Mokabook framework ([#1](https://github.com/futex-ai/mokabook/issues/1)) ([2b3827e](https://github.com/futex-ai/mokabook/commit/2b3827e7572c85a82696a1cc47d8bdee2e3dc14c))
 * rebuild the served Browse shell to the refined Mockbook design from ([2b3827e](https://github.com/futex-ai/mokabook/commit/2b3827e7572c85a82696a1cc47d8bdee2e3dc14c))
 
 ## Changelog
@@ -219,7 +235,7 @@ and releases use [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Deterministic React-to-static-HTML build and non-mutating output checks.
 - Manifest-backed responsive Browse server with transactional watched lifecycle.
 - Git-based per-viewport Review artifacts, comparison UI, and ignore normalization.
-- Packed ESM, NodeNext, clean-cache npx, Accounting-shaped, and Juno-shaped
+- Packed ESM, NodeNext, clean-cache npx, themed, and Juno-shaped
   consumer verification.
 - Consumer-owned module resolution, legacy exclusions, and a temporary typed
   document compatibility bridge for staged migrations.

@@ -1,6 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { reactShellForProject } from "./export_shell.js";
 import { chooseScheme, chooseViewport } from "./workspace_actions.js";
 import { expectFrameSource } from "./workspace_actions.js";
 
@@ -340,12 +339,12 @@ test("overlapping navigations are latest-wins", async ({ page }) => {
   expect(await hasMarker(page)).toBe(true);
 });
 
-test("failed enhancement falls back to native navigation", async ({
+test("failed route evidence keeps public navigation and rejects the previous owner", async ({
   page,
-}, info) => {
-  await page.goto("/");
+}) => {
+  await page.goto("/view/screens/details.html");
   await markPage(page);
-  await openScreensGroup(page);
+  await expect.poll(() => workspaceRoute(page)).toBe("screens/details.html");
   let fetches = 0;
   await page.route("**/view/screens/welcome.html", (route) =>
     route.request().resourceType() === "fetch"
@@ -353,15 +352,18 @@ test("failed enhancement falls back to native navigation", async ({
       : route.continue(),
   );
   await page.click(welcomeRow);
+  await expect(page).toHaveURL(/welcome\.html$/);
   await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
-  if (reactShellForProject(info.project.name)) {
-    expect(fetches).toBe(0);
-    expect(await hasMarker(page)).toBe(true);
-  } else {
-    expect(fetches).toBe(1);
-    expect(await hasMarker(page)).toBe(false);
-  }
+  await expect.poll(() => fetches).toBe(1);
+  await expect.poll(() => workspaceRoute(page)).toBe("screens/welcome.html");
+  expect(await hasMarker(page)).toBe(true);
 });
+
+async function workspaceRoute(page: Page): Promise<string | undefined> {
+  const state = await page.locator("script[data-workspace-data]").textContent();
+  if (!state) return;
+  return (JSON.parse(state) as { entry?: { route?: string } }).entry?.route;
+}
 
 test("viewport controls switch device frames", async ({ page }) => {
   await page.goto("/view/screens/welcome.html");
@@ -437,6 +439,49 @@ test("dark device screens keep their surface and edge", async ({ page }) => {
   expect(
     await computedStyle(page, ".browser-viewport", "backgroundColor"),
   ).toBe(darkSurface);
+});
+
+test("view controls retain mounted screen frames and their selected sources", async ({
+  page,
+}) => {
+  await page.goto("/view/screens/welcome.html");
+  await chooseScheme(page, "dark");
+  const mobile = await page.locator(mobileFrame).elementHandle();
+  const desktop = await page.locator(desktopFrame).elementHandle();
+  expect(mobile).not.toBeNull();
+  expect(desktop).not.toBeNull();
+
+  await chooseViewport(page, "mobile");
+  expect(await mobile?.evaluate((node) => node.isConnected)).toBe(true);
+  expect(await desktop?.evaluate((node) => node.isConnected)).toBe(true);
+  await expectFrameSource(
+    page.locator(mobileFrame),
+    /screens\/welcome\.mobile\.dark\.html$/,
+  );
+  await expectFrameSource(
+    page.locator(desktopFrame),
+    /screens\/welcome\.desktop\.dark\.html$/,
+  );
+
+  await mobile?.dispose();
+  await desktop?.dispose();
+});
+
+test("view controls retain mounted component frames", async ({ page }) => {
+  await page.goto("/view/components/action.html");
+  const mobileFrame = page.locator('[data-workspace-frame="mobile"]');
+  const desktopFrame = page.locator('[data-workspace-frame="desktop"]');
+  const mobile = await mobileFrame.elementHandle();
+  const desktop = await desktopFrame.elementHandle();
+  expect(mobile).not.toBeNull();
+  expect(desktop).not.toBeNull();
+
+  await chooseViewport(page, "mobile");
+  expect(await mobile?.evaluate((node) => node.isConnected)).toBe(true);
+  expect(await desktop?.evaluate((node) => node.isConnected)).toBe(true);
+
+  await mobile?.dispose();
+  await desktop?.dispose();
 });
 
 test("a light-only screen keeps light frames and says so", async ({ page }) => {

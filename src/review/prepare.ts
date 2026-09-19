@@ -34,6 +34,7 @@ export interface BaselinePreparationOptions {
   readonly runner?: GitCommandRunner;
   readonly builder?: BaselineBuilder;
   readonly filesystem?: BaselineFileSystem;
+  readonly diagnostic?: (message: string) => void;
   /** Already resolved by a caller that owns this baseline's lifetime. */
   readonly commit?: string;
 }
@@ -80,7 +81,11 @@ export async function prepareReviewRepository(
       error,
     );
   }
-  const maintenance = new StderrBaselineMaintenanceReporter();
+  const maintenance = new StderrBaselineMaintenanceReporter(
+    options.diagnostic
+      ? (line) => options.diagnostic!(line.replace(/\n$/, ""))
+      : undefined,
+  );
   const filesystem =
     options.filesystem ?? new NodeBaselineFileSystem(maintenance);
   const request = {

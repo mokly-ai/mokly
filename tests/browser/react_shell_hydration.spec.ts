@@ -5,7 +5,6 @@ import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import { build } from "esbuild";
 
-import { reactShellForProject } from "./export_shell.js";
 import {
   startHistoricalStaticFixture,
   startStaticFixture,
@@ -16,7 +15,7 @@ let exported: Awaited<ReturnType<typeof startStaticFixture>>;
 let historical: Awaited<ReturnType<typeof startHistoricalStaticFixture>>;
 let fixtureRoutes: readonly string[];
 
-test.beforeAll(async ({ browser: _browser }, info) => {
+test.beforeAll(async () => {
   test.setTimeout(120_000);
   const result = await build({
     bundle: true,
@@ -38,10 +37,8 @@ test.beforeAll(async ({ browser: _browser }, info) => {
   );
   fixtureRoutes = manifestRoutes(manifest);
   expect(fixtureRoutes.length).toBeGreaterThan(80);
-  const reactShell = reactShellForProject(info.project.name);
-  expect(reactShell).toBe(true);
-  exported = await startStaticFixture({ reactShell });
-  historical = await startHistoricalStaticFixture(reactShell);
+  exported = await startStaticFixture();
+  historical = await startHistoricalStaticFixture();
 });
 
 test.afterAll(async () => {
@@ -142,6 +139,44 @@ test("development React hydrates controls and persisted details as live state", 
     "dark",
   );
   await expectNoBrowserErrors(page, errors);
+});
+
+test("development React hydrates live component controls before enabling them", async ({
+  page,
+}) => {
+  const errors = captureBrowserErrors(page);
+  let markRequested = (): void => undefined;
+  const requested = new Promise<void>((resolve) => {
+    markRequested = resolve;
+  });
+  let release = (): void => undefined;
+  const released = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route("**/__mokly/client/react-shell.js", async (route) => {
+    markRequested();
+    await released;
+    await route.fulfill({
+      body: developmentBundle,
+      contentType: "text/javascript",
+    });
+  });
+  const navigation = page.goto("/view/components/action.html");
+  await requested;
+  const props = page.locator('[data-inspector-panel="props"]');
+  await expect(props.locator("[data-controls-status]")).toHaveText(
+    "Open this catalogue locally to edit props.",
+  );
+  await expect(props.locator("[data-prop-control]").first()).toBeDisabled();
+
+  release();
+  await navigation;
+  await expectCleanHydration(page, errors);
+  await page.getByRole("tab", { name: "Props", exact: true }).click();
+  await expect(page.locator("[data-controls-status]")).toHaveText(
+    "Saved props",
+  );
+  await expect(page.locator("[data-prop-control]").first()).toBeEnabled();
 });
 
 test("development React hydrates the mobile drawer as live state", async ({
@@ -246,6 +281,59 @@ test("development React hydrates a finalized export cleanly", async ({
   await page.goto(`${exported.url}/view/screens/home.html`);
   await expect(page.locator("html")).toHaveAttribute("data-mokly-static", "");
   await expectCleanHydration(page, errors);
+});
+
+test("static hydration adopts choices made after load while its catalogue is pending", async ({
+  page,
+}) => {
+  const errors = captureBrowserErrors(page);
+  await page.addInitScript(() => {
+    if (window === window.top)
+      localStorage.setItem("mokly:navigation-width:v1", "360");
+  });
+  await installDevelopmentBundle(page);
+  let markRequested = (): void => undefined;
+  const requested = new Promise<void>((resolve) => {
+    markRequested = resolve;
+  });
+  let release = (): void => undefined;
+  const released = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route("**/__mokly/catalogue.json", async (route) => {
+    markRequested();
+    await released;
+    await route.continue();
+  });
+
+  const navigation = page.goto(`${exported.url}/view/screens/home.html`);
+  await requested;
+  await expect
+    .poll(() => page.evaluate(() => document.readyState))
+    .toBe("complete");
+  const disclosure = page.locator(
+    'details[data-nav-disclosure="section:pages"]',
+  );
+  await expect(disclosure).toHaveAttribute("open", "");
+  await expect(page.locator("[data-mokly-nav-resize]")).toHaveAttribute(
+    "aria-valuenow",
+    "360",
+  );
+  await disclosure.locator(":scope > summary").click();
+  await expect(disclosure).not.toHaveAttribute("open", "");
+  await expect(page.locator("html")).not.toHaveAttribute(
+    "data-mokly-hydrated",
+    "",
+  );
+
+  release();
+  await navigation;
+  await expectCleanHydration(page, errors);
+  await expect(disclosure).not.toHaveAttribute("open", "");
+  await expect(page.locator("[data-mokly-nav-resize]")).toHaveAttribute(
+    "aria-valuenow",
+    "360",
+  );
 });
 
 test("development React hydrates removed and renamed finalized routes", async ({

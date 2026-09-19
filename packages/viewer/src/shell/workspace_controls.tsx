@@ -2,7 +2,18 @@
 import { useOptionalShellStore } from "./store_context.js";
 import { WorkspaceIcon } from "./workspace_icons.js";
 
-export function WorkspaceControls({ dark }: { dark: boolean }) {
+export function WorkspaceControls({
+  dark,
+  highlight,
+}: {
+  dark: boolean;
+  highlight?: {
+    available: boolean;
+    active: boolean;
+    reason?: string;
+    toggle(): void;
+  };
+}) {
   const store = useOptionalShellStore();
   return (
     <div className="mbk-view-tools" role="group" aria-label="View options">
@@ -45,10 +56,15 @@ export function WorkspaceControls({ dark }: { dark: boolean }) {
         type="button"
         className="mbk-icon-button"
         aria-label="Highlight components"
-        aria-pressed="false"
-        title="Highlight components"
+        aria-description={
+          highlight?.reason ??
+          "Inspect component regions and their supplied props."
+        }
+        aria-pressed={highlight?.active ?? false}
+        title={highlight?.reason ?? "Highlight components"}
         data-workspace-highlight=""
-        disabled
+        disabled={!highlight?.available}
+        onClick={highlight?.toggle}
       >
         <WorkspaceIcon name="highlight" />
       </button>

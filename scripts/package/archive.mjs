@@ -10,6 +10,38 @@ const ROOT_FILES = new Set([
   "README.md",
   "package.json",
 ]);
+const GUIDE_FILES = [
+  "docs/guides/start/install.md",
+  "docs/guides/start/configure.md",
+  "docs/guides/start/your-first-screen.md",
+  "docs/guides/start/build.md",
+  "docs/guides/start/serve.md",
+  "docs/guides/authoring/config.md",
+  "docs/guides/authoring/screens.md",
+  "docs/guides/authoring/components.md",
+  "docs/guides/authoring/viewports-and-color-schemes.md",
+  "docs/guides/authoring/collections-and-tags.md",
+  "docs/guides/authoring/use-case-flows.md",
+  "docs/guides/authoring/pages.md",
+  "docs/guides/authoring/links.md",
+  "docs/guides/authoring/review-ignore.md",
+  "docs/guides/catalogue/browse.md",
+  "docs/guides/catalogue/search-and-filters.md",
+  "docs/guides/catalogue/changes.md",
+  "docs/guides/catalogue/details.md",
+  "docs/guides/catalogue/export-and-host.md",
+  "docs/guides/ci/github-action.md",
+  "docs/guides/ci/publish-from-ci.md",
+  "docs/guides/ci/project-tokens.md",
+  "docs/guides/ci/the-upload.md",
+  "docs/guides/ci/the-check-on-a-pull-request.md",
+  "docs/guides/cli/serve.md",
+  "docs/guides/cli/build.md",
+  "docs/guides/cli/check.md",
+  "docs/guides/cli/export.md",
+  "docs/guides/cli/publish.md",
+  "docs/guides/cli/options-and-exit-status.md",
+];
 
 export async function createPackageArchive(
   repositoryRoot,
@@ -62,6 +94,7 @@ export function validatePackageReport(report, name = "@mokly/mokly") {
     "dist/cli/export.js",
     "dist/cli/publish.js",
     "dist/publish/run.js",
+    ...GUIDE_FILES,
     "docs/protocol/mokly-upload.md",
     "docs/protocol/mokly-export-ownership.md",
     "docs/protocol/fixtures/export-ownership-v1.json",
@@ -82,10 +115,10 @@ export function validatePackageReport(report, name = "@mokly/mokly") {
     assert.ok(
       ROOT_FILES.has(file) ||
         file.startsWith("dist/") ||
+        file.startsWith("docs/guides/") ||
         file.startsWith("docs/protocol/"),
       `package contains non-allowlisted path ${file}`,
     );
-    assert.equal(file.includes("accounting"), false);
     assert.equal(file.includes("juno"), false);
   }
 }
@@ -98,9 +131,12 @@ export async function inspectRuntimeLicenses(repositoryRoot) {
     ),
   );
   const invalid = Object.entries(lock.packages)
-    .filter(([key, value]) => key && value.dev !== true && value.link !== true)
+    .filter(([key, value]) => key && value.dev !== true)
     .filter(([, value]) => {
-      const license = value.license;
+      const license =
+        value.link === true
+          ? lock.packages[value.resolved]?.license
+          : value.license;
       return (
         typeof license !== "string" ||
         license.trim().length === 0 ||

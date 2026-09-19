@@ -22,9 +22,9 @@ fonts, events and static documents bypass that decoding entirely.
 requires exact equality with their build directories, rejects missing,
 non-JavaScript, unexpected or colliding outputs, and loads the complete delivery
 inventory before binding. The manifests are emitted from actual completed
-esbuild outputs rather than maintained by hand. During the React shell
-transition, a request-scoped internal selector chooses the hydration document
-while the default continues to load the existing client and live-update entries.
+esbuild outputs rather than maintained by hand. Every shell request renders the
+hydrated React document and loads the canonical `react-shell.js` browser entry.
+The CLI host modules retain private live-update and capability transports.
 
 `screen_view_changes.ts` retains per-view screen-only material decisions from
 the existing classification pass. The public projection does not infer Changes
@@ -74,6 +74,12 @@ Evidence updates invalidate comparison generations as well as classification.
 `update_messages.ts` validates IPC envelopes. `supervisor.ts` orders delivery and
 owns child shutdown. HTTP readiness precedes exhaustive compilation and baseline
 preparation, so All remains usable while Changes is pending or preparing.
+The CLI injects the terminal reporter's server-facing subset into both Serve
+compositions. Plain mode emits only the historical readiness and diagnostic
+bytes. Rich mode presents accepted catalogue, baseline, Changes, reference, and
+watch-action boundaries. Diagnostics originating in a supervised child cross a
+validated IPC message so the parent remains the sole terminal owner; a child
+without IPC retains direct diagnostic output.
 
 The [public-exclusion policy](../../docs/protocol/mokly-source-protection.md#public-exclusions)
 adds config-owned `publicExclude` globs to the shared source classifier.

@@ -12,7 +12,7 @@ documents.
 
 A single edit to a shared stylesheet currently marks every screen that links
 that stylesheet as a dependency change, and a broad `review.sharedImpact` glob
-marks every entry in the catalogue. The accounting consumer showed 1,382
+marks every entry in the catalogue. A large consumer showed 1,382
 Changes for a branch whose real diff was 98 files and three moved guide routes.
 The Mokly side of that count came from two sources: a blanket
 `docs/mockups/*.css` shared-impact glob in the consumer configuration, and
@@ -57,7 +57,7 @@ Out of scope, tracked as follow-up plans:
 - Import-graph ownership inference for CSS Modules or CSS-in-JS.
 - Mapping bundled stylesheet output back to source modules.
 - Pixel or screenshot comparison.
-- Any change to the accounting consumer; it only needs the glob removed.
+- Any change to that consumer; it only needs the glob removed.
 
 ## Design Summary
 

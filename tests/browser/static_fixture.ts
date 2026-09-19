@@ -15,7 +15,6 @@ import { assertServedShellMarker } from "./export_shell.js";
 interface StaticFixtureOptions {
   comparisons?: boolean;
   noChanges?: boolean;
-  reactShell: boolean;
 }
 
 function historicalEntrySource(
@@ -36,8 +35,7 @@ export const mockups = [
 export async function startStaticFixture({
   comparisons = false,
   noChanges = false,
-  reactShell,
-}: StaticFixtureOptions) {
+}: StaticFixtureOptions = {}) {
   const source = (changed: boolean) =>
     comparisons
       ? comparisonEntrySource(changed).replaceAll(
@@ -60,18 +58,13 @@ export async function startStaticFixture({
     await exportCatalogue(fixture.config, {
       outDir: "site",
       noChanges,
-      reactShell,
     });
     await fs.promises.cp(fixture.output, isolated, { recursive: true });
     await fixture.close();
     const files = await directoryFiles(isolated);
     const server = await serveStaticFiles(isolated);
     try {
-      await assertServedShellMarker(
-        server.url,
-        "/view/screens/home.html",
-        reactShell,
-      );
+      await assertServedShellMarker(server.url, "/view/screens/home.html");
     } catch (error) {
       await server.close();
       throw error;
@@ -93,7 +86,7 @@ export async function startStaticFixture({
 }
 
 /** Finalized export containing both removed and renamed historical routes. */
-export async function startHistoricalStaticFixture(reactShell: boolean) {
+export async function startHistoricalStaticFixture() {
   const fixture = await createExportFixture(
     historicalEntrySource(true, "guides/original.html"),
   );
@@ -107,17 +100,12 @@ export async function startHistoricalStaticFixture(reactShell: boolean) {
     );
     await exportCatalogue(fixture.config, {
       outDir: "site",
-      reactShell,
     });
     await fs.promises.cp(fixture.output, isolated, { recursive: true });
     await fixture.close();
     const server = await serveStaticFiles(isolated);
     try {
-      await assertServedShellMarker(
-        server.url,
-        "/view/removed.html",
-        reactShell,
-      );
+      await assertServedShellMarker(server.url, "/view/removed.html");
     } catch (error) {
       await server.close();
       throw error;

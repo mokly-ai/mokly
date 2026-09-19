@@ -252,7 +252,7 @@ view set is `["light", ...(screen.darkFragments ? ["dark"] : [])]`: a dark
 view present only in head is `added`, and one present only in base is
 `removed`. Mobile and desktop still classify separately from their fragments.
 Added, removed, changed, and unchanged states handle historical versions 2/3/4 and current version 5
-manifests during Accounting migration; pre-dark bases simply have no
+manifests during staged migrations; pre-dark bases simply have no
 `darkFragments`. Configured shared-impact globs and manifest dependencies
 identify changes that can affect many screens. A dependency is a repository file
 or directory root: its own change or any descendant change affects the entry,

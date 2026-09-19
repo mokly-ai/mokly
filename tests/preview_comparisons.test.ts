@@ -10,6 +10,12 @@ import { writeCompilation } from "../dist/build/transaction.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
+import {
+  attribute,
+  documentElements,
+  documentText,
+  textContent,
+} from "./helpers/html.js";
 import { createPreviewComparisonFixture } from "./helpers/preview_comparison_fixture.js";
 
 const execute = promisify(execFile);
@@ -69,19 +75,40 @@ test("published comparisons retain real baseline bytes, removed routes, and isol
       await fs.promises.readFile(path.join(fixture.mockupsDir, "pixel.png")),
     );
   }
-  assert.match(await read("index.html"), /href="\/view\/screens\/removed"/);
+  const index = await read("index.html");
+  const publicCatalogue = JSON.parse(await read("__mokly/catalogue.json")) as {
+    identity: { id: string };
+    revision: { content: number; evidence: number };
+  };
+  const bootstrapScripts = documentElements(
+    index,
+    (element) =>
+      element.tagName === "script" &&
+      attribute(element, "data-mokly-shell-bootstrap") !== undefined,
+  );
+  assert.equal(bootstrapScripts.length, 1);
+  const bootstrap = JSON.parse(textContent(bootstrapScripts[0]!)) as {
+    catalogue: unknown;
+  };
+  assert.deepEqual(bootstrap.catalogue, {
+    kind: "external",
+    path: "/__mokly/catalogue.json",
+    identity: publicCatalogue.identity.id,
+    revision: publicCatalogue.revision,
+  });
+  assert.match(index, /href="\/view\/screens\/removed"/);
   assert.match(
-    await read("index.html"),
+    index,
     /data-entry-id="removed"[^>]*data-route="screens\/removed.html"/,
   );
   assert.match(
-    await read("view/screens/removed.html"),
+    documentText(await read("view/screens/removed.html")),
     /This screen was removed/,
   );
   assert.match(redirects, /\/id\/removed \/view\/screens\/removed 302/);
   assert.match(await read("_headers"), /Cache-Control: no-store/);
   assert.match(
-    await read("view/removed-document.html"),
+    documentText(await read("view/removed-document.html")),
     /This page was removed/,
   );
   assert.doesNotMatch(
@@ -100,6 +127,24 @@ test("published comparisons retain real baseline bytes, removed routes, and isol
     fs.existsSync(path.join(fixture.output, "__mokly/client/live_updates.js")),
     false,
   );
+  assert.equal(
+    fs.existsSync(path.join(fixture.output, "__mokly/client/react-shell.js")),
+    true,
+  );
+  for (const name of [
+    "host_capabilities.js",
+    "host_capability_descriptor.js",
+    "react-host.js",
+    "react_capabilities.js",
+    "react_capability_updates.js",
+    "react_transports.js",
+    "react_update_controller.js",
+  ])
+    assert.equal(
+      fs.existsSync(path.join(fixture.output, "__mokly/client", name)),
+      false,
+      name,
+    );
   assert.equal(
     fs.existsSync(path.join(fixture.output, generation, "summary.md")),
     false,
@@ -221,6 +266,6 @@ test("a published renamed screen keeps its current id redirect and old compariso
     path.join(fixture.output, "view/screens/home.html"),
     "utf8",
   );
-  assert.match(old, /This screen was removed/);
+  assert.match(documentText(old), /This screen was removed/);
   assert.match(old, /data-diff-mode="side"/);
 });

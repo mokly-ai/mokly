@@ -137,6 +137,41 @@ retain the same route identity and existing scroll/disclosure behavior. Unknown
 ids are unavailable; the shell renders only routes present in its catalogue
 read model and never invents a catch-all route.
 
+An exported page embeds a compact shell bootstrap containing its route, shell
+context, catalogue identity, and content/evidence revisions. It references the
+single owned `/__mokly/catalogue.json`; it does not repeat the catalogue read
+model in every HTML document. Before hydration, the standalone entry first
+validates the root delivery descriptor, then fetches that exact same-origin path
+with `cache: no-store` and omitted credentials. The response must remain on that
+path, pass the public catalogue reader, carry the finalized deployment identity,
+and match both bootstrap revisions and the catalogue identity. Only then may
+React hydrate the existing server tree. A missing, redirected, malformed, or
+mismatched catalogue leaves the complete server-rendered page and its ordinary
+links in place without installing partial interaction. Serve retains its
+self-contained inline read model and performs no initial catalogue fetch.
+
+The pre-hydration disclosure and navigation-width handoff remains active until
+the asynchronous static catalogue resolution reaches the actual hydration
+boundary. A native choice made after `load` but before that resolution wins over
+stored state and hydrates without a mismatch. Static destination-page evidence
+resolves the compact destination bootstrap against the already installed
+catalogue after deployment fencing; it does not issue another catalogue fetch.
+
+Each exported screen and component page also embeds its route-scoped workspace
+evidence as inert JSON. After an in-shell route transition, React may read the
+destination's canonical shell page to recover evidence that is intentionally
+absent from the public catalogue, including affected consumers, related
+components, supplied-input changes, and resource evidence. This read never
+swaps or executes fetched markup. Accept only one shell bootstrap and one
+workspace payload from a successful same-origin response whose final `.html`
+or provider-normalized extensionless path identifies the requested route. The
+root delivery descriptor must retain the mounted deployment, comparison URL,
+and id map; the bootstrap must retain the catalogue identity, revisions, base,
+and exact destination route; and the workspace entry must match that route's
+id and kind. Abort the read when navigation replaces the route. A rejected,
+failed, or obsolete read leaves the already-committed public workspace in
+place and never falls back to a live endpoint.
+
 Preserve the existing [navigation contract](./mokly-navigation.md): trusted
 ownership-checked link markers only, immediate-frame parent enhancement,
 portable fallback hrefs, sandbox restrictions, latest-wins cancellation, focus,
@@ -148,9 +183,13 @@ syntactically valid missing anchor retains the current static fallback.
 
 ## Static Comparisons
 
-Each export packages one complete comparison at
-`__mokly/diffs/__generations/<generation>/review.json` with all referenced
-before/after documents and transitive resources under the same generation root.
+Each export packages one complete comparison, with all referenced before/after
+documents and transitive resources under the same generation root:
+
+```text
+__mokly/diffs/__generations/<generation>/review.json
+```
+
 Retain the engine's JSON and document bytes and relative snapshot paths.
 Do not change the review schema or rebase only some of its resource references.
 
@@ -187,11 +226,12 @@ The standalone browser inventory under `__mokly/client/` is the hydrated shell:
 the documented standalone hydration entry, which bundles React and React DOM
 with the shell tree, plus the transport, geometry and protocol modules it
 imports (frame adapters, message transport, geometry, catalogue revision
-adoption). Serve and export deliver the same inventory from generated manifests
-of the completed package build outputs rather than a hand-maintained list;
-manifest entries and directory files must match exactly. Static mode never
-activates private capabilities or starts update requests, because export leaves
-the capability context unset. `navigation-resize.js` retains its delivery name
+adoption). Export delivers the viewer-owned inventory from the generated manifest
+of the completed package build outputs; Serve also delivers the CLI-owned live
+host modules. Each manifest must match its directory files exactly. Static mode
+never activates live host capabilities or starts update requests. Its separate
+static evidence reader can issue only the same-origin destination-shell read
+defined above and receives no host token or behavior. `navigation-resize.js` retains its delivery name
 as the pre-hydration script that synchronously captures early native disclosure
 choices without mutating React-owned DOM. The hydrated shell reads those choices
 for its initial render so they win over stored preferences and the reload
@@ -206,10 +246,9 @@ bytes are unchanged by hydration. Module changes alter deployment identity as
 required below, so the transition to the hydrated shell changes the identity
 of every export exactly once. An export from a changed workspace also records
 its new `changedPaths` in `review.json`, which changes that generation's hash;
-snapshot and comparison resource bytes remain unchanged. Until the
-[React Browse shell plan](../../plans/react-browse-shell.md) flips the default,
-the delivered inventory is still the vanilla enhancement modules recorded by
-the viewer library plan.
+snapshot and comparison resource bytes remain unchanged. The
+[React Browse shell plan](../../plans/react-browse-shell.md) records the runtime
+replacement and its compatibility checks.
 
 ## Deployment Identity
 
