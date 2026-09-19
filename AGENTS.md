@@ -160,9 +160,12 @@
   them in the example source tree. Definitions and helpers should compose TSX
   components, not large raw HTML strings or generated static-tree data. When
   changing example entries, the renderer, configuration, or configured styles,
-  run `npm run build`, run `npm run example:build`, commit the matching generated
-  output, run `npm run example:check`, and visually smoke-test the changed pages
-  through `npm run dev`.
+  run `npm run build`, run `npm run example:build`, run
+  `npm run example:check`, and visually smoke-test the changed pages through
+  `npm run dev`. The example uses the default derived output mode: generated
+  HTML and `mokly-manifest.json` under `examples/basic/generated/` are ignored
+  local artifacts validated by `npm run example:check`. Commit only the tracked
+  authored CSS there; never force-add ignored generated output.
 - Do not hand-edit Mokly-owned generated HTML or `mokly-manifest.json` as source
   of truth. Update the entry, imported helper, renderer, or shared component
   first, then regenerate the example catalogue.
