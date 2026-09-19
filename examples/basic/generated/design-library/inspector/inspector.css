@@ -94,8 +94,11 @@ max-height: none;
 }
 
 .ce-design .mbk-shell--mobile .ce-inspector:has(> details[open]) {
-border-top: 0;
+  border: 1px solid var(--chrome-border);
+  border-radius: 20px;
+  box-shadow: 0 6px 28px #24372b26;
   grid-template-rows: 28px 48px minmax(0, 1fr);
+  overflow: hidden;
 }
 
 .mbk-shell--mobile .ce-inspector:has(> details[open]) > details > summary {
