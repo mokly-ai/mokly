@@ -6,11 +6,11 @@ The original implementation and measurement milestones are complete. The fast pa
 preserves complete-path output across the differential fixture matrix, keeps
 resource and derived-byte gates intact, and emits explicit path counts.
 
-The first seven approved findings are addressed and pushed. Milestone 8's
-post-push review found a broader projection gap for caller-slot resources in
-HTML contexts such as `select`. The user approved a projection-aware resource
-proof for Finding 8, implemented in Milestone 9. This plan remains Active until
-the PR merges.
+All eight approved findings are addressed and pushed. Milestone 9 implements
+the approved projection-aware resource proof for Finding 8, including the
+related instance-removal case found during supervision. The complete branch
+passed its checks and post-push review with no new findings. This plan remains
+Active until the PR merges.
 
 The final example measurement took medians of three warmed shortcut runs:
 1,064 ms committed and 1,451 ms derived. Complete comparison in the same
@@ -460,7 +460,7 @@ independently reproduced by the owner:
    treats another example without establishing the general resource guarantee
    and is not recommended. The user approved Option B; Milestone 9 implements it.
 
-## Milestone 9: Projection-aware resource proof
+## Milestone 9: Projection-aware resource proof (Complete)
 
 Replace element-specific slot guards with direct resource evidence from the
 same ownership projection used by complete comparison.
@@ -476,9 +476,9 @@ same ownership projection used by complete comparison.
       cache reuse on fall-through; remove the superseded template tag guard.
 - [x] Run formatting, build, type checking, lint, focused tests, and the final
       full `cargo xtask check` with a 100% pass rate.
-- [ ] `git add -A`, commit the completed work with a Conventional Commits
+- [x] `git add -A`, commit the completed work with a Conventional Commits
       message, and push the branch.
-- [ ] Review: after the push, use `docs/implementation-review-prompt.md` against
+- [x] Review: after the push, use `docs/implementation-review-prompt.md` against
       `origin/main` and report findings without changing the implementation.
 
 Validation passed: the final `cargo xtask check` completed 1,890 Node tests,
@@ -491,6 +491,13 @@ fix. Supervision of the initial entry-slot-only implementation found six
 additional mismatches in the instance-removal cases; the final broader proof
 resolved all of them. The unchanged example catalogue matches complete output
 for all 276 views in both modes; current timings are recorded above.
+
+The implementation was pushed as `db0044f`. The owner and an independent
+reviewer used `docs/implementation-review-prompt.md` against the complete
+pushed diff from `origin/main` and found no new findings. The working tree was
+clean and no files from main were removed. Residual test risk: the fixtures
+cannot exhaust every consumer HTML/resource combination; no remaining
+divergence was identified.
 
 ## Post-merge follow-up (non-blocking)
 
