@@ -10,8 +10,13 @@ by generated output:
 
 - the config file and its transitive authoring imports reload configuration, generated
   output, watch targets, and the child;
-- entry/page/renderer/transformer imports rebuild generated output, including
-  imported bytes handled by asset loaders;
+- resolved entry modules, page/renderer/transformer imports, and every other
+  inventoried source rebuild generated output, including imported bytes handled
+  by asset loaders;
+- a created, renamed, or deleted file whose repository-relative path matches an
+  `entries` glob and ends in `.mockup.ts` or `.mockup.tsx` re-runs discovery
+  before that rebuild, so the resolved entry set follows the filesystem; the
+  stable prefix of every entry glob is a watched root for this purpose;
 - an input shared with shell metadata rebuilds before restarting the child;
 - configured stylesheets and referenced local CSS, fonts, images, and other
   resources used only through public URLs reload the browser without rebuilding;
@@ -20,12 +25,16 @@ by generated output:
   transaction trees are pruned from broad watches and classify as ignored;
 - additional inputs use the explicit action declared in config.
 
-Configured source roots and modules remain rebuild inputs even when intentionally
-nested beneath an ordinarily ignored directory. Configured stylesheet files
-remain reload inputs. Those package-owned classifications take precedence over
-additional watch rules. Package source under `node_modules` or an npx cache is
-never treated as consumer source. Development of Mokly itself uses repository
-tooling rather than a hidden consumer-specific self-reload path.
+Resolved entry modules, entry glob roots, and inventoried modules remain
+rebuild inputs even when intentionally nested beneath an ordinarily ignored
+directory. Configured stylesheet files remain reload inputs. Those package-owned
+classifications take precedence over additional watch rules. Package source
+under `node_modules` or an npx cache is never treated as consumer source. A
+file created under an entry glob root that is not an entry module and is not
+imported classifies like any other unrelated file. Development of Mokly itself
+uses repository tooling rather than a hidden consumer-specific self-reload path.
+Glob-root watching and discovery re-runs are the approved target tracked by the [co-located entry discovery plan](../../plans/co-located-entry-discovery.md); today the
+single `entriesDir` is the watched root.
 
 Resource discovery follows the same portable HTML/CSS URL rules as Changes,
 including transitive imports and nested documents, with shared edges read once

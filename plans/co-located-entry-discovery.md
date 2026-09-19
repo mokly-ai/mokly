@@ -2,7 +2,7 @@
 
 ## Status And Outcome
 
-Planned. No milestone has started.
+Milestone 1 is complete, committed, and pushed. Milestone 2 is in progress.
 
 Mokly currently discovers every `*.mockup.ts` and `*.mockup.tsx` module below
 one configured directory, `entriesDir`, and binds the source-attributed
@@ -105,41 +105,41 @@ Out of scope, tracked as follow-up plans:
 
 ---
 
-### Milestone 1: Define the contract in the protocol docs
+### Milestone 1: Define the contract in the protocol docs — completed
 
 Update the protocol and architecture documents so they fully specify glob-based
 discovery, repository-wide facade binding, and the replacement of every
 `entriesDir` containment rule before any code changes.
 
-- [ ] In `docs/protocol/mokly-configuration.md`, replace the `entriesDir`
+- [x] In `docs/protocol/mokly-configuration.md`, replace the `entriesDir`
       field description with `entries` globs plus the `entriesDir` sugar,
       the both-supplied error, the zero-match error, the resolved-match
       classification rules, sort order, and the `.mockup.{ts,tsx}` filter.
       Update the source/output overlap paragraph to describe per-match checks.
-- [ ] In `docs/protocol/mokly-authoring.md`, replace the facade paragraph so
+- [x] In `docs/protocol/mokly-authoring.md`, replace the facade paragraph so
       binding covers every repository-owned module and attribution names the
       defining module, including helpers outside any glob.
-- [ ] In `docs/protocol/mokly-source-protection.md`, replace "beneath
+- [x] In `docs/protocol/mokly-source-protection.md`, replace "beneath
       `entriesDir`" with membership in the resolved entry set, keep the
       `sourceFiles` rule, and update the retained-unimported-helper guidance to
       use a reserved basename or a public exclusion, or to be matched by an
       `entries` glob.
-- [ ] In `docs/protocol/mokly-watch.md`, replace the entry-directory rebuild
+- [x] In `docs/protocol/mokly-watch.md`, replace the entry-directory rebuild
       rule with resolved entry modules plus `sourceFiles`, and specify that a
       newly created file matching an `entries` glob triggers a rebuild that
       re-runs discovery.
-- [ ] In `docs/protocol/mokly-export.md` and
+- [x] In `docs/protocol/mokly-export.md` and
       `docs/protocol/mokly-baseline-storage.md`, replace `entriesDir`
       confinement with the resolved entry set and inventoried sources.
-- [ ] In `docs/protocol/mokly-page-migration.md` and
+- [x] In `docs/protocol/mokly-page-migration.md` and
       `docs/protocol/mokly-package.md`, update the ownership-header owner and
       the recommended layout so co-location beside product components is the
       documented alternative to the sibling `docs/mockups` layout.
-- [ ] In `docs/architecture/build-pipeline.md`, describe glob discovery,
+- [x] In `docs/architecture/build-pipeline.md`, describe glob discovery,
       repository-wide facade binding, and the per-match classifier.
-- [ ] Add a Delivery Status note to each changed protocol document pointing at
+- [x] Add a Delivery Status note to each changed protocol document pointing at
       this plan until the implementation lands.
-- [ ] Run `npm run format:check` on the changed Markdown, review the diff,
+- [x] Run `npm run format:check` on the changed Markdown, review the diff,
       commit, and push.
 
 ---

@@ -110,10 +110,17 @@ carrying the key at all, so `tags: undefined` is as much a violation as
 `tags: ["forms"]`. Tags are optional catalogue vocabulary, not a second
 hierarchy: an untagged catalogue stays valid.
 
-Imports of `@mokly/mokly` from modules beneath `entriesDir` bind the authoring
-helpers to that importing module. Definitions created at module evaluation or
-later through a shared helper factory therefore retain the helper module's
-repo-relative source path without process-global attribution state.
+Imports of `@mokly/mokly` from any repository-owned module bind the authoring
+helpers to that importing module. A module is repository-owned when its real
+path lies inside `repoRoot` and outside `node_modules`, `.mokly-cache/`, and
+Mokly's own package runtime; installed packages receive the plain, unattributed
+API and cannot self-attribute. Definitions created at module evaluation or
+later through a shared helper factory therefore retain the defining module's
+repo-relative source path without process-global attribution state. A
+definition created in a helper beside a product component is attributed to
+that helper, not to the entry module that imports it, and the helper need not
+match an `entries` glob. Repository-wide binding is the approved
+target tracked by the [co-located entry discovery plan](../../plans/co-located-entry-discovery.md); today the facade binds only beneath `entriesDir`.
 
 Every catalogue-route segment starts with an ASCII letter or digit and then
 uses only URL-unreserved ASCII letters, digits, `.`, `_`, `~`, or `-`. A

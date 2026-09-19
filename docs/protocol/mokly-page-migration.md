@@ -6,7 +6,10 @@ The breaking page API is implemented. This supplements
 [Pages in the catalogue](./mokly-pages.md). Consumers must register complete
 documents and rebuild before adopting the new package; historical comparisons
 remain supported. The [implementation plan](../../plans/unified-catalogue-pages.md)
-records verification and the isolated consumer rehearsal.
+records verification and the isolated consumer rehearsal. Attributing pages
+to any repository-owned defining module, rather than one beneath `entriesDir`,
+is the approved target tracked by the
+[co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
 
 ## Required Upgrade
 
@@ -18,8 +21,9 @@ validation rejects the obsolete `legacy` key, even when set to `undefined`,
 before bundling or writing and directs the author to `definePage` and this
 migration procedure.
 
-Every whole-document page must be a `definePage` or nested `page` entry under
-`entriesDir`, with an explicit ID, route or slug, render callback, and metadata.
+Every whole-document page must be a `definePage` or nested `page` entry in a
+resolved entry module or a repository-owned helper it imports, with an explicit
+ID, route or slug, render callback, and metadata.
 Collections own its membership. Existing `.source.ts`/`.source.tsx` modules may
 remain as ordinary imported render helpers; their filename has no discovery
 meaning. The compiler never scans them into a second inventory. Consumers with
@@ -45,7 +49,8 @@ its ID from the intended collection. Import its existing `source()` callback
 where possible, with the source in its declared dependencies. Remove `legacy`
 configuration and replace consumer rules that depend on its discovery model.
 
-New page ownership headers name the registry module beneath `entriesDir`.
+New page ownership headers name the repository-owned defining module, which
+is an inventoried source: a resolved entry module or a helper it imports.
 An old page header can name a helper beneath the removed `legacy.pagesDir`,
 which is no longer an authorized output owner. The upgraded writer must
 continue refusing that overwrite; do not add a permissive owner fallback or a
@@ -70,8 +75,8 @@ when the remaining catalogue builds successfully.
 
 Follow the [source-protection contract](./mokly-source-protection.md): record
 the complete config and consumer authoring graphs, validate inventory freshness,
-and protect reserved source basenames even when unimported. Keep retained
-unimported helpers under `entriesDir` or a reserved source name. Removing
+and protect reserved source basenames even when unimported. Give retained
+unimported helpers a reserved source name or a public exclusion. Removing
 `legacy.pagesDir` must not make authoring inputs public or stop watching imports.
 
 ## Manifest Readers And Git Baselines

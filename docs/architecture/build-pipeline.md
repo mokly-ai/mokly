@@ -6,7 +6,7 @@
 mokly.config.ts
         |
         v
-discover *.mockup.tsx + renderer + optional compatibility modules
+resolve `entries` globs -> *.mockup.ts(x) modules + renderer + optional compatibility modules
         |
         v
 one esbuild graph, with React resolved from the consumer
@@ -38,11 +38,16 @@ mobile/desktop light and optional dark HTML, saved component variants, whole doc
 Mokly searches upward from the process working directory, or loads the path
 given by `--config`. Config code is bundled to a temporary ESM module so `.ts`,
 `.mts`, `.js`, and `.mjs` work from a local install or npx cache. Every path is
-then resolved from the config file and confined to `repoRoot`.
+then resolved from the config file and confined to `repoRoot`. The `entries`
+globs, or the `entriesDir` shorthand, are resolved once into a sorted set of
+`.mockup.ts(x)` modules; each module is classified by the shared source policy
+so none lies inside the output root, Review output, the baseline cache, or a
+package-owned private directory, and a glob with no entry modules is a config
+error. The resolved set travels with the config beside `sourceFiles`.
 
 ## 2. One Consumer Graph
 
-Registry `*.mockup.ts(x)` files, the configured renderer, imported page
+The resolved entry modules, the configured renderer, imported page
 helpers, and an optional temporary compatibility transformer are imported by a single virtual entry and
 bundled together. The internal bundle is CommonJS so Node-oriented consumer
 dependencies can retain dynamic built-in imports. Esbuild returns this bundle
@@ -72,10 +77,18 @@ extensions, and in-repository package roots pass directly to this graph after
 strict config validation. This supports React Native Web or other workspace
 layouts without putting an app alias or TypeScript-root assumption in Mokly.
 
-Every module beneath `entriesDir` imports a module-bound Mokly authoring
-facade. Each definition or nested marker is therefore attributed at the helper
-call itself, including calls made later through a shared helper factory, without
-sticky process-global state or an absolute checkout path.
+Every repository-owned module, meaning one whose real path is inside
+`repoRoot` and outside `node_modules`, `.mokly-cache/`, and Mokly's own runtime,
+imports a module-bound Mokly authoring facade. Each definition or nested marker
+is therefore attributed at the helper call itself, including calls made later
+through a shared helper factory or from a helper beside a product component,
+without sticky process-global state or an absolute checkout path. Installed
+packages import the plain API and cannot self-attribute. Registry validation
+accepts an attributed source only when it is a resolved entry module or an
+inventoried source file; generated ownership headers, tracked ownership, and
+export confinement use that same membership. Repository-wide binding and
+membership-based attribution are the approved target tracked by the [co-located entry discovery plan](../../plans/co-located-entry-discovery.md); today both use
+`entriesDir` containment.
 
 Both config and consumer bundle metafiles supply the complete source inventory,
 including tree-shaken repository inputs. Serving and publication resolve these

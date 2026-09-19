@@ -157,11 +157,14 @@ in the repo. A symlinked root is supported only when its resolved location still
 satisfies all core repository/source protections; the transaction pins the real
 output location so retargeting cannot redirect installation.
 
-Output must neither contain nor be contained by `entriesDir`, `mockupsDir`,
-or `review.outDir`. It must not contain inventoried authoring inputs, the config,
-renderer module, or a consumer package's `package.json`. Reject repository root, Git
-metadata, dependency directories, and package runtime directories as targets.
-These checks also apply when the requested directory does not yet exist.
+Output must neither contain nor be contained by `mockupsDir` or
+`review.outDir`, and must not contain any resolved entry module or the
+directory holding one. It must not contain inventoried authoring inputs, the
+config, renderer module, or a consumer package's `package.json`. Reject
+repository root, Git metadata, dependency directories, and package runtime
+directories as targets. These checks also apply when the requested directory
+does not yet exist. Confinement by resolved entry module rather than by
+`entriesDir` is the approved target tracked by the [co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
 
 Accept a missing destination or an empty real directory. A nonempty directory
 must have a regular `.mokly-export-artifact` ownership file using the

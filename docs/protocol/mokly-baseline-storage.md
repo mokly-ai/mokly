@@ -60,8 +60,8 @@ Git processes.
 The cache lives at `<repoRoot>/.mokly-cache/baselines/`. It is package
 owned: never served, never watched, never a comparison resource, excluded from
 changed-path evidence and shared-impact globs before those globs are evaluated,
-and never a valid `mockupsDir`, `entriesDir`, `review.outDir`, or export
-destination. Consumers add `.mokly-cache/` to their ignore file; derived
+and never a valid `mockupsDir`, entry glob root, resolved entry module,
+`review.outDir`, or export destination. Consumers add `.mokly-cache/` to their ignore file; derived
 `check` also fails when Git tracks anything under it.
 
 ```text

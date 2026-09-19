@@ -23,6 +23,9 @@ the completed
 screens and flows. Current manifests require v5. The
 [breaking migration](./mokly-page-migration.md) removes legacy configuration,
 discovery, and rendering adapters; consumers use ordinary page definitions.
+The co-located layout below, discovered through `entries` globs, is the
+approved target tracked by the
+[co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
 
 ## Package Identity
 
@@ -106,12 +109,16 @@ shape, path validation, source/output boundaries, and individual field behavior.
 with matching and public access defined by the
 [source-protection contract](./mokly-source-protection.md#public-exclusions).
 
-Recommend sibling source and output directories: `entriesDir` is
-`docs/mockups/entries`, `mockupsDir` is `docs/mockups/generated`, and `renderer`
-is `docs/mockups/renderer.tsx` for a repository-root config. Put public assets in
-`generated` and development documentation/configuration beside it. Nested
-`docs/mockups/src` layouts remain supported; source protection applies there too.
-These are examples, not mandatory runtime locations.
+Two layouts are recommended. Sibling source and output directories use
+`entriesDir: "docs/mockups/entries"`, `mockupsDir: "docs/mockups/generated"`,
+and `renderer: "docs/mockups/renderer.tsx"` for a repository-root config, with
+public assets in `generated` and development documentation/configuration
+beside it. Co-located entries use `entries: ["src/**/*.mockup.{ts,tsx}"]` so
+each entry module sits beside the product component or screen it describes,
+with the same output and renderer locations. Nested `docs/mockups/src` layouts
+remain supported; source protection applies to every layout. These are
+examples, not mandatory runtime locations. See
+[entry discovery](./mokly-configuration.md#entry-discovery).
 
 ## Public Authoring API
 
