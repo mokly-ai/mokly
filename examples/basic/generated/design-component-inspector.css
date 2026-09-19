@@ -36,16 +36,12 @@
   z-index: 3;
 }
 .mbk-shell--mobile .ce-inspector-dock:has(.ce-inspector > details[open]) {
-  border: 1px solid var(--chrome-border);
-  border-radius: 20px;
   bottom: max(12px, env(safe-area-inset-bottom));
-  box-shadow: 0 6px 28px #24372b26;
   height: 55cqh;
-  left: 12px;
   max-height: calc(100cqh - 24px);
   min-height: 180px;
+  overflow: visible;
   padding-bottom: 0;
-  right: 12px;
 }
 .mbk-shell--mobile
   .ce-inspector-dock:has(.ce-inspector > details[open]):has(

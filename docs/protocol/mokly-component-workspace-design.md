@@ -64,10 +64,12 @@ the resized split, clamped to the available workspace. Runtime resizing supports
 the whole divider and keyboard input; native mockup dragging uses its center grip.
 
 On mobile, keep the preview at full size and open the inspector above it as a
-non-modal bottom sheet with rounded corners, a light shadow, safe-area spacing,
-and a centered iOS-style grabber. The icon strip and close action stay fixed at
-the top of the sheet. Only its content scrolls. Closing leaves the icon strip at
-the bottom with no selected icon and no sheet content or grabber.
+non-modal, full-workspace-width bottom sheet with safe-area spacing and a
+centered iOS-style grabber. The workspace dock owns placement and height; the
+inspector component owns the border, rounded surface and light shadow. The icon
+strip and close action stay fixed at the top of the sheet. Only its content
+scrolls. Closing leaves the icon strip at the bottom with no selected icon and
+no sheet content or grabber.
 
 The mockup grabber is a native switch: touch/click or Space toggles between
 compact and expanded sheet heights without discarding edits or switching tabs.

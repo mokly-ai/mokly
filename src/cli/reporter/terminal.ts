@@ -3,6 +3,7 @@ import { styleText } from "node:util";
 import type { CliOutput, TerminalEnvironment } from "./types.js";
 
 const ANSI_PATTERN = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, "g");
+const ANSI_RESET = `${String.fromCharCode(27)}[0m`;
 
 /** Reporter symbols selected for the capabilities of this terminal. */
 export interface TerminalGlyphs {
@@ -86,7 +87,25 @@ export function truncateTerminalLine(value: string, columns: number): string {
   const visible = value.replace(ANSI_PATTERN, "");
   if (visible.length <= width) return value;
   if (width === 1) return "…";
-  return `${visible.slice(0, width - 1)}…`;
+  const limit = width - 1;
+  let cursor = 0;
+  let hasAnsi = false;
+  let retained = "";
+  let retainedWidth = 0;
+  const finish = (prefix: string) => `${prefix}…${hasAnsi ? ANSI_RESET : ""}`;
+  for (const match of value.matchAll(new RegExp(ANSI_PATTERN))) {
+    const text = value.slice(cursor, match.index);
+    const remaining = limit - retainedWidth;
+    if (text.length >= remaining)
+      return finish(`${retained}${text.slice(0, remaining)}`);
+    retained += `${text}${match[0]}`;
+    retainedWidth += text.length;
+    hasAnsi = true;
+    cursor = match.index + match[0].length;
+  }
+  return finish(
+    `${retained}${value.slice(cursor, cursor + limit - retainedWidth)}`,
+  );
 }
 
 /** Resolve the bounded width for either terminal stream. */
