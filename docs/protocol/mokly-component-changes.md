@@ -106,6 +106,97 @@ not enclose component boundaries or caller-owned slots and erase their signals.
 Reject that ambiguous composition with a migration diagnostic. Existing
 catalogues without component boundaries remain byte-compatible.
 
+### Unchanged view decision
+
+Classification cost must follow the size of the change, not the size of the
+catalogue. For a view present on both sides, the classifier first decides
+whether the view can differ at all. The decision validates ranges and projects
+ownership only for views whose usage can edit text through instances, styles,
+or entry-owned slots, then performs CSS rule analysis and implementation
+diffing only on complete-path fall-through. That decision is part of the
+materiality policy and must produce output equal to the complete
+comparison for every view produced by the validated builder; a differential
+test over the shared fixtures is required evidence. Identical handcrafted
+documents with the same malformed ownership markers are outside this equality
+guarantee for views without ownership text edits because those views do not
+repeat range validation.
+
+The decision, in order:
+
+1. Normalize historical marker prefixes in the base document, retain component
+   markers on both sides, and apply paired manual-ignore normalization. If the
+   resulting documents differ outside paired ignored regions, take the
+   complete path. Marker-stripped equality is not sufficient because marker
+   positions participate in ownership projection.
+2. Compare the two usage records canonically. Neither side having usage is
+   eligible; exactly one side having usage takes the complete path. When both
+   records exist, every field must match except `props` and `propsKey` on
+   entry-owned instances. In particular, viewport, color scheme, instance
+   `componentId`, `key`, `id`, `owner`, `slotKey`, and `order`, instance-owned
+   `props` and `propsKey`, and every slot, range, style, and resource record
+   must match. Optional invocation `source` metadata is excluded from this
+   comparison, as it is from every Changes projection. Any other difference
+   takes the complete path.
+3. If the paired view routes differ, take the complete path. Otherwise form
+   the actual normalized pair by stripping historical component markers
+   from the base, stripping current component markers from the head, and
+   applying paired manual-ignore normalization. If the normalized documents
+   differ, take the complete path. Discover the head closure in committed
+   mode and both closures independently in derived mode.
+4. When either usage record has instances, styles, or entry-owned slots,
+   compute the same ownership projection as the complete comparison, including
+   historical/current range validation in each side's marker dialect and
+   root-specific ownership.
+   Require the projected HTML pair to be equal and discover its resources with
+   the same exclusion policy. In committed mode discover the head closure; in
+   derived mode discover both closures.
+5. If any actual or projected resource is a changed Git path, take the complete
+   path; ownership, exclusion, and rule analysis are decided there.
+6. In derived mode, compare historical and current closure membership and
+   bytes independently for actual material and projected material. Any
+   difference in either comparison takes the complete path; equal unions do
+   not substitute for equal per-comparison sets.
+7. Otherwise the view is unchanged by content and resources. Its state is
+   `unchanged` when the single-document normalizations of both stripped sides
+   are equal and `ignored-only` otherwise; `ignoredIds` come from the paired
+   normalization. The view carries no `material`, `reasons`, or
+   `excludedResources` fields and contributes no owned-resource or
+   implementation-impact evidence, exactly as the complete path would.
+
+`inputs` and `structure` reasons are derived from validated usage records,
+never from document text, so an entry-owned input edit that renders identical
+HTML keeps its `inputs` reason on either path. Those entry-owned `props` and
+`propsKey` values are the only usage fields allowed to differ because the fast
+decision computes their signals with the same projection as the complete path.
+Nested instance input changes and all topology or ownership changes require
+projection and implementation-impact analysis. Entry-level `metadata`,
+`added`, `removed`, and dependency reasons are unaffected because they are
+computed outside the per-view comparison.
+
+Projected resources are not always a subset of actual-document resources.
+HTML parsing can discard caller slot content in contexts such as `template` or
+`select`, while ownership projection can expose that content. Removing
+component implementation text can also expose a later sibling that the
+implementation's unclosed HTML had hidden. Views whose usage cannot edit
+document text retain the actual-only proof. Views with instances, styles, or
+entry-owned slots remain eligible after both actual and projected resource
+comparisons are proved safe. Identical `(route, document, exclusion)` discovery
+work is reused on fall-through.
+
+Each resource discovery performed by the decision is reused when the view falls
+through to the complete path. Each side passes byte-identical route and
+normalized text to a cache keyed by route, content digest, and exclusion
+callback identity, so discovery is never repeated for that document and
+policy within one classification without retaining the full document as a map
+key.
+
+Added and removed views do not use the paired fast decision. Before their
+one-sided document is normalized, the classifier validates all recorded
+component ranges against that document. Removed base documents use the
+historical marker dialect; added head documents use the current dialect. A
+malformed one-sided ownership tree fails closed with a `$document` validation
+error rather than being reported as an ordinary addition or removal.
+
 ## Dependencies And Styles
 
 Component registration declares implementation dependency paths. Ownership must

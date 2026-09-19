@@ -13,6 +13,8 @@
 - [Publish Catalogue](./publish-catalogue.md)
 - [App-Independent Mokabook Npm Library](./app-independent-mokabook-library.md)
 - [Browse Shell Design Parity](./browse-shell-design-parity.md)
+- [Unchanged View Fast Path](./unchanged-view-fast-path.md) — post-review
+  correctness fixes are active until the PR merges.
 
 ## Completed
 

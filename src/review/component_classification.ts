@@ -18,7 +18,7 @@ import type {
 } from "@mokly/viewer/data";
 
 import { toPosixPath } from "../config/paths.js";
-import { timeAsync } from "../diagnostics/timings.js";
+import { timeAsync, timingCounts } from "../diagnostics/timings.js";
 
 import { affectedConsumers } from "./component_affected.js";
 import {
@@ -26,6 +26,7 @@ import {
   propagateUseCases,
 } from "./component_change_propagation.js";
 import type { ComponentClassificationInput } from "./component_classification_input.js";
+import { ComponentComparisonCounts } from "./component_comparison_counts.js";
 import {
   address,
   ComponentDependencyPolicy,
@@ -83,6 +84,9 @@ export async function classifyComponents(
       new CssResourceAnalysis(input.cssParser),
     ),
     compareResourceBytes: config.generatedOutput === "derived",
+    ...(input.useFastPath === undefined
+      ? {}
+      : { useFastPath: input.useFastPath }),
   };
   const prefetchBefore = () =>
     context.beforeReader.prefetch(
@@ -118,6 +122,7 @@ export async function classifyComponents(
   const afterHierarchy = analyzeHierarchy<ManifestEntry>(
     after.entries as readonly ManifestEntry[],
   ).hierarchy;
+  const comparisonCounts = new ComponentComparisonCounts();
   await timeAsync("review.compare-screens", async () => {
     for (const pair of pairs) {
       const entry = (pair.after ?? pair.before)!;
@@ -168,6 +173,7 @@ export async function classifyComponents(
           ),
         ),
       );
+      comparisonCounts.add(compared);
       assertViewAnalysisScope(
         compared.map((result) => result.view),
         config,
@@ -255,6 +261,7 @@ export async function classifyComponents(
           reasons: uniqueReasons(reasons),
         });
     }
+    timingCounts("review.compare-screens", () => comparisonCounts.record());
   });
   propagateOwnedCss(ownedResources, impacting, components, changes);
   propagateImplementations(

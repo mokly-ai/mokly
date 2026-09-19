@@ -8,25 +8,28 @@ import {
   stripHistoricalMarkers,
   stripMarkers,
 } from "../components/comparison_material.js";
-import {
-  changedComponentImplementations,
-  projectComponentPair,
-} from "../components/comparison_projection.js";
+import { changedComponentImplementations } from "../components/comparison_projection.js";
 import { validateComponentRanges } from "../components/ranges.js";
 import { MoklyError } from "../errors.js";
 
 import type { ComponentDependencyPolicy } from "./component_metadata.js";
+import {
+  prepareComponentProjection,
+  type PreparedComponentComparison,
+} from "./component_projection_resources.js";
 import {
   ownedCssReasons,
   type OwnedCssReason,
 } from "./component_resource_attribution.js";
 import { changedResourceBytes } from "./component_resource_changes.js";
 import type { ComponentMaterialReader } from "./component_resources.js";
+import { compareUnchangedComponentView } from "./component_view_fast_path.js";
 import { normalizeReviewPair, normalizeSingleDocument } from "./ignore.js";
 import { snapshotPath } from "./paths.js";
 import type { ResourceComparison } from "./resource_comparison.js";
 
 export interface ComparedComponentView {
+  comparisonPath: "fast" | "complete";
   view: ViewReview;
   reasons: readonly EntryChangeReason[];
   changedImplementations: ReadonlySet<string>;
@@ -40,6 +43,7 @@ export interface ComponentViewContext {
   prefix: string;
   resources: ResourceComparison;
   compareResourceBytes?: boolean;
+  useFastPath?: boolean;
 }
 /** Compare material and declared inputs without altering the retained view documents. */
 export async function compareComponentView(
@@ -58,14 +62,6 @@ export async function compareComponentView(
     ? await context.beforeReader.text(before.path)
     : undefined;
   const head = after ? await context.afterReader.text(after.path) : undefined;
-  const baseRanges =
-    base !== undefined && before?.usage
-      ? validateComponentRanges(base, before.usage.ranges, "historical")
-      : undefined;
-  const headRanges =
-    head !== undefined && after?.usage
-      ? validateComponentRanges(head, after.usage.ranges)
-      : undefined;
   const view: ViewReview = {
     viewport: selected.viewport,
     colorScheme: selected.colorScheme,
@@ -75,17 +71,16 @@ export async function compareComponentView(
     state: before ? "removed" : "added",
   };
   if (base === undefined || head === undefined) {
-    const normalized = normalizeSingleDocument(
+    const normalized =
       base !== undefined
-        ? stripHistoricalMarkers(base)
-        : stripMarkers(head!, after!.usage, headRanges),
-      selected.path,
-    );
+        ? normalizeOneSidedView(base, before!, "historical")
+        : normalizeOneSidedView(head!, after!, "current");
     const evidence = await context.resources.compare(
       before ? { path: before.path, html: normalized } : undefined,
       after ? { path: after.path, html: normalized } : undefined,
     );
     return {
+      comparisonPath: "complete",
       view: { ...view, ...evidence, material: true },
       reasons: [{ kind: "material" }, ...(evidence.reasons ?? [])],
       changedImplementations: new Set(),
@@ -99,16 +94,29 @@ export async function compareComponentView(
       ),
     };
   }
-  const projected = projectComponentPair(
+  let prepared: PreparedComponentComparison | undefined;
+  if (context.useFastPath !== false) {
+    const attempt = await compareUnchangedComponentView(
+      context,
+      before!,
+      after!,
+      view,
+      base,
+      head,
+      root,
+    );
+    if (attempt.comparison) return attempt.comparison;
+    prepared = attempt.prepared;
+  }
+  prepared ??= prepareComponentProjection(
+    context,
+    before!,
+    after!,
     base,
     head,
-    before?.usage,
-    after?.usage,
-    selected.path,
     root,
-    baseRanges,
-    headRanges,
   );
+  const { baseRanges, headRanges, projected, excluded } = prepared;
   const reasons: EntryChangeReason[] = [];
   if (projected.before !== projected.after) reasons.push({ kind: "material" });
   if (projected.inputs) reasons.push({ kind: "inputs" });
@@ -120,15 +128,6 @@ export async function compareComponentView(
   );
   const repoPath = (path: string) =>
     context.prefix ? `${context.prefix}/${path}` : path;
-  const excluded = (path: string) =>
-    context.dependencies.suppressResource(
-      repoPath(path),
-      path,
-      projected.pairedComponentIds,
-      before?.usage,
-      after?.usage,
-      root,
-    );
   const evidence = await context.resources.compare(
     { path: before!.path, html: projected.before },
     { path: after!.path, html: projected.after },
@@ -160,16 +159,8 @@ export async function compareComponentView(
     reasons.push({ kind: "material" });
   const actualByteChanges = context.compareResourceBytes
     ? await changedResourceBytes(
-        await context.beforeReader.resources(
-          before!.path,
-          actual.base,
-          () => false,
-        ),
-        await context.afterReader.resources(
-          after!.path,
-          actual.head,
-          () => false,
-        ),
+        await context.beforeReader.resources(before!.path, actual.base),
+        await context.afterReader.resources(after!.path, actual.head),
         context.beforeReader,
         context.afterReader,
       )
@@ -180,6 +171,7 @@ export async function compareComponentView(
       (route) => !context.changed.has(repoPath(route)),
     );
   return {
+    comparisonPath: "complete",
     ownedResources: ownedCssReasons(
       actualEvidence.reasons ?? [],
       context.dependencies,
@@ -210,4 +202,19 @@ export async function compareComponentView(
     },
     reasons,
   };
+}
+
+function normalizeOneSidedView(
+  html: string,
+  view: GeneratedComponentView,
+  dialect: "current" | "historical",
+): string {
+  const ranges = view.usage
+    ? validateComponentRanges(html, view.usage.ranges, dialect)
+    : undefined;
+  const material =
+    dialect === "historical"
+      ? stripHistoricalMarkers(html)
+      : stripMarkers(html, view.usage, ranges);
+  return normalizeSingleDocument(material, view.path);
 }
