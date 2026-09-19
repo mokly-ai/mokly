@@ -2,6 +2,9 @@
 
 ## Active
 
+- [Screen Variants](./screen-variants.md) — saved variants on screens,
+  expandable variant rows in the navigation, per-variant Changes, and
+  changed-view marks on the view controls.
 - [Co-Located Entry Discovery](./co-located-entry-discovery.md) — replace
   `entriesDir` with `entries` globs so entry modules can live beside product
   components, and bind the attributed authoring facade repository-wide.
