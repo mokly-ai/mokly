@@ -2,10 +2,14 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { inspectBrowserGraph } from "./package/browser_graph.mjs";
-import { checkPackagePair } from "./package/pair.mjs";
+import { checkPackagePair, readPackagePair } from "./package/pair.mjs";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "..");
-await checkPackagePair(repositoryRoot);
+const args = process.argv.slice(2);
+if (args.length !== 0 && (args.length !== 2 || args[0] !== "--artifacts"))
+  throw new Error("usage: package-check.mjs [--artifacts <directory>]");
+const pair = args.length === 0 ? undefined : await readPackagePair(args[1]);
+await checkPackagePair(repositoryRoot, pair);
 const packageJson = JSON.parse(
   await fs.promises.readFile(path.join(repositoryRoot, "package.json"), "utf8"),
 );

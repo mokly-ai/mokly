@@ -2,6 +2,8 @@
 
 ## Active
 
+- [CI Performance](./ci-performance.md) — parallel verification, complete test
+  sharding, reusable preparation and measured CI timing improvements.
 - [CLI Terminal Experience](./cli-terminal-experience.md)
 - [Package Documentation](./package-documentation.md) — supersedes the
   unmerged public-site plan and pull request #79 by shipping versioned Markdown

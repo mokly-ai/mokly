@@ -103,6 +103,10 @@ Tests that mutate files use isolated temporary directories and clean up child
 processes. Package smokes execute the packed artifact, not the source tree or a
 workspace symlink. Historical cross-repository parity audits are release
 evidence rather than recurring CI dependencies on other repositories.
+The independent suite and shard commands, including their complete command
+mapping and fail-closed inventory evidence, are defined by the
+[CI verification contract](./ci-verification.md). Selected suites and shards
+are partial checks; the unqualified command remains the complete release gate.
 
 Browser assertions that depend on a navigated preview's layout wait for the
 expected frame URL and complete document state together, not only the outer
@@ -117,23 +121,23 @@ must continue to exercise pending states and command-to-preview timings.
 
 `.github/workflows/ci.yml` runs on pull requests and pushes to `main`, with
 read-only repository contents permission and concurrency cancellation for
-superseded validation. Its two independent verification jobs run the complete
-gate on Ubuntu:
+superseded validation. An audit-first repository job gates independent package
+jobs on Node 22.14.0 and Node 24, four unit shards per runtime, four browser
+shards per runtime, and focused macOS/Windows native jobs. Chromium is installed
+only by browser jobs. Every job that runs npm installs with npm 11.7.0 and
+`npm ci`; CI caches only npm downloads and includes the merge-base lockfile in
+cache keys for jobs that build historical baselines.
 
-- the minimum supported Node 22.14.0 with npm 11.7.0; and
-- release Node 24 with npm 11.7.0.
-
-Both install Rust 1.95.0, install Chromium, and run `cargo xtask check`.
-Focused macOS and Windows jobs additionally run native export move,
-destination-race, and CSS rule parser/diff tests at the minimum Node version.
-The Ubuntu complete gates also exercise CSS parsing on Node 22.14 and 24.
-The `Required CI` aggregator
-fails unless both complete gates and both platform jobs succeed and is the
-branch-rule status to require. CI checks out complete Git history so the preview regression
-can resolve `origin/main`, and uses `npm ci` with the committed lockfile. Action
-revisions are immutable commit hashes with reviewed version comments; runtime
-versions are explicit. Fork pull requests receive no release secrets or write
-permissions.
+The stable `Required CI` branch-rule status fails unless every prerequisite
+result is exactly successful and all 16 unit/browser reports prove the expected
+commit, runtimes, shards, and complete test inventories. Stable report artifact
+names support failed-job and whole-workflow reruns by replacing each shard's
+evidence; browser traces remain attempt-specific. Full Git history is available
+where baseline resolution requires `origin/main`. Action revisions are immutable
+commit hashes with reviewed version comments, runtime versions are explicit,
+and fork pull requests receive no release secrets or write permissions. The
+[CI verification contract](./ci-verification.md) defines the complete graph,
+evidence, caching, and failure semantics.
 
 ## Preview Deployments
 
