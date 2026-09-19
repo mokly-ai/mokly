@@ -7,9 +7,10 @@ import path from "node:path";
 import test from "node:test";
 import { setTimeout as pause } from "node:timers/promises";
 
-import type {
-  BaselineProcessScope,
-  BaselineProcessScopeFactory,
+import {
+  NodeBaselineProcessScopeFactory,
+  type BaselineProcessScope,
+  type BaselineProcessScopeFactory,
 } from "../dist/baseline/process_scope.js";
 
 import {
@@ -97,6 +98,37 @@ for (const failureAt of ["spawn", "start"] as const) {
   });
 }
 
+test("preview commands wait for inherited process registration", async (context) => {
+  const root = await fs.mkdtemp(
+    path.join(os.tmpdir(), "mokly-preview-registration-"),
+  );
+  const sentinel = path.join(root, "started");
+  const failure = new Error("injected process registration failure");
+  context.after(() => fs.rm(root, { force: true, recursive: true }));
+  const scopes = new NodeBaselineProcessScopeFactory({
+    register() {
+      throw failure;
+    },
+  });
+
+  await assert.rejects(
+    startPreviewServerProcess(
+      {
+        argv: [
+          process.execPath,
+          "-e",
+          `require("node:fs").writeFileSync(${JSON.stringify(sentinel)}, "started")`,
+        ],
+        cwd: root,
+        env: processEnvironment(),
+      },
+      scopes,
+    ),
+    (error) => error === failure,
+  );
+  await assert.rejects(fs.access(sentinel), { code: "ENOENT" });
+});
+
 test(
   "preview process cleanup kills a stubborn descendant after its launcher exits",
   { timeout: 15_000 },
@@ -154,13 +186,11 @@ test(
       ]),
       "hung",
     );
-    for (
-      let attempt = 0;
-      attempt < 300 && processRunning(descendantPid);
-      attempt += 1
-    )
-      await pause(10);
-    assert.equal(processRunning(descendantPid), false);
+    assert.equal(
+      processRunning(descendantPid),
+      false,
+      "close must drain descendants before it resolves",
+    );
     descendantPid = 0;
   },
 );

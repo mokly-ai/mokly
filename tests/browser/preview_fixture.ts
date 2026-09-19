@@ -13,6 +13,7 @@ import { timeFixturePhase } from "../helpers/fixture_timing.js";
 
 import {
   PreviewOutputRetentionError,
+  previewFixtureContextRoot,
   startOwnedPreviewFixture,
   type OwnedPreviewFixture,
   type PreviewEndpoint,
@@ -76,7 +77,9 @@ export async function startPreviewFixture(
           );
         },
       ),
-    contextRoot: path.join(repositoryRoot, ".context"),
+    contextRoot: previewFixtureContextRoot(
+      path.join(repositoryRoot, ".context"),
+    ),
     prefix: includeChanges
       ? "mokly-preview-changes-cold-"
       : "mokly-preview-cold-",

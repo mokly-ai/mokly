@@ -7,6 +7,8 @@ this document are implemented. The
 [hosted acceptance measurement](../reviews/ci-performance.md) records the
 delivered timing, capacity, cache, cost, and coverage evidence. The
 authoritative complete local and release gate remains `cargo xtask check`.
+The public package forwarding and hierarchical cancellation additions below are
+implemented by the corresponding review-follow-up milestones.
 
 ## Verification Boundary
 
@@ -55,12 +57,15 @@ The public npm entrypoints `npm test`, `npm run typecheck`, and
 required package output, and both test commands also prepare the example. The
 browser command supports Playwright listing, filtering, and selected spec paths;
 any filtered selection is partial verification. The public unit command retains
-its complete explicit file inventory and concurrency limit. Internal prepared
-test entrypoints skip preparation, reject arguments other than the optional
-shard, and fail when required output is missing. Prepared package commands may
-instead receive the archive pair created by the package gate. Xtask suite
-invocations prepare their own output and call only the prepared consumers.
-Output is reused only for the lifetime of that suite invocation.
+its complete explicit file inventory and concurrency limit. Public
+`package:check` and `package:smoke` wrappers preserve every caller argument
+across their nested npm boundary; in particular, `--artifacts DIR` reaches the
+prepared consumer as the same two arguments. Internal prepared test entrypoints
+skip preparation, reject arguments other than the optional shard, and fail when
+required output is missing. Prepared package commands may instead receive the
+archive pair created by the package gate. Xtask suite invocations prepare their
+own output and call only the prepared consumers. Output is reused only for the
+lifetime of that suite invocation.
 
 Builds that are themselves under test are not removed. Package dry-run
 allowlist inspection retains its existing `--ignore-scripts` boundary, while
@@ -166,6 +171,20 @@ removing owned output. If termination cannot be confirmed, teardown fails and
 retains the owned output for diagnosis; concurrent and repeated close calls
 share that same completion or failure.
 
+Every report-producing wrapper creates a unique verification owner identity and
+passes its registry and resource root to the child. A wrapper nested beneath
+another owner creates a child identity in the same registry; cancellation acts
+only on that owner subtree, so concurrent sibling commands cannot terminate or
+remove each other's work. Independently grouped process scopes atomically
+register before releasing their command worker and unregister only after normal
+drainage. Abrupt cancellation signals the direct process tree and every
+registered descendant group, rescans for registrations racing with shutdown,
+escalates from TERM to KILL within the existing bound, and waits for all groups
+to stop before removing the subtree's resources. Invalid ownership records or a
+group that cannot be drained fail verification and retain resources for
+diagnosis. Windows retains kill-on-close job ownership; the hierarchy adds an
+outer cancellation fallback rather than replacing the job boundary.
+
 A dedicated preview-preparation spec still runs the real cold
 `npm run preview:build`, verifies generated-output digest stability, and serves
 the fresh artifact. Historical rebuilds, source mutation, missing-source
@@ -187,8 +206,9 @@ loader and concurrency flags from changing child startup behavior.
 Commands stop their local sequence at the first failure and propagate the
 subprocess error. CI cancellation may interrupt a job, but the aggregate treats
 that result as unsuccessful. Report-producing wrappers install exit and signal
-handling, preserve partial timing evidence when possible, and never write a
-successful outcome until independent completeness checks pass.
+handling, drain their complete hierarchical ownership subtree, preserve partial
+timing evidence when possible, and never write a successful outcome until
+independent completeness checks pass.
 
 Temporary fixtures use repository-local `.context` or operating-system temp
 directories and remove owned output on success and failure. Failed browser jobs

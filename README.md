@@ -724,6 +724,11 @@ spec still runs the cold `npm run preview:build` path and checks that generated
 output stays byte-stable. Fixture setup emits structured
 `[mokly:fixture-timing]` phase records and identifies operations that are
 themselves under test.
+Verification wrappers also assign nested subprocess scopes and fixture output
+to a shared hierarchical owner. Abrupt local or CI cancellation drains every
+registered descendant group before removing that owner's resource root; sibling
+test processes retain separate ownership. A failed drain keeps the resources
+for diagnosis and fails the wrapper.
 Wrangler Pages fixtures pass port zero and use the exact readiness URL Wrangler
 reports, so the serving process owns port selection through binding. Nested
 Playwright verification harnesses set an explicit output directory inside their
@@ -774,6 +779,9 @@ concurrency. Xtask uses the strict `test:prepared` and
 `test:browser:prepared` scripts after preparing output; those internal scripts
 accept only the optional CI shard argument and write inventory reports for
 completeness validation.
+`npm run package:check -- --artifacts DIR` and
+`npm run package:smoke -- --artifacts DIR` build once and forward the exact
+archive-pair option to their prepared package consumers.
 
 `npm test` limits test-file parallelism to two workers to keep subprocess-heavy
 fixtures within their existing startup deadlines on shared developer machines.

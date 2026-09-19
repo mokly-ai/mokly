@@ -1,6 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { VERIFICATION_RESOURCE_ROOT_ENV } from "../../dist/baseline/process_owner.js";
+
 export const PREVIEW_ARTIFACT_MARKER = ".mokly-preview-artifact";
 
 const PREVIEW_ARTIFACT_MARKER_CONTENTS = "schemaVersion=1\n";
@@ -39,6 +41,11 @@ interface OwnedPreviewOptions {
   readonly contextRoot: string;
   readonly prefix: string;
   readonly serve: (artifact: string) => Promise<PreviewEndpoint>;
+}
+
+/** Use the current verification owner's resource root when one is inherited. */
+export function previewFixtureContextRoot(fallback: string): string {
+  return process.env[VERIFICATION_RESOURCE_ROOT_ENV] ?? fallback;
 }
 
 /** Prepare, validate and serve a unique artifact with failure-safe ownership. */

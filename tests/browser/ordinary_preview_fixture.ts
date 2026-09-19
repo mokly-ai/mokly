@@ -9,6 +9,7 @@ import { timeFixturePhase } from "../helpers/fixture_timing.js";
 
 import { servePreviewFixture } from "./preview_fixture.js";
 import {
+  previewFixtureContextRoot,
   startOwnedPreviewFixture,
   type OwnedPreviewFixture,
 } from "./preview_fixture_owner.js";
@@ -39,7 +40,9 @@ export const test = base.extend<
               { cwd: repositoryRoot, maxBuffer: 16 * 1_024 * 1_024 },
             );
           }),
-        contextRoot: path.join(repositoryRoot, ".context"),
+        contextRoot: previewFixtureContextRoot(
+          path.join(repositoryRoot, ".context"),
+        ),
         prefix: `mokly-preview-worker-${workerInfo.workerIndex}-`,
         serve: (artifact) =>
           timeFixturePhase("ordinary-preview", "serve", false, () =>

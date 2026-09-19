@@ -2,7 +2,7 @@
 
 ## Status And Outcome
 
-Status: implementation and required post-push review complete. The
+Status: review follow-up validation complete; commit and push are pending. The
 implementation PR's merge is the completion boundary; keep this plan in the
 active index until then.
 
@@ -269,3 +269,78 @@ available-capacity attempt meets the target while retaining every verification
 boundary. Native whole-file sharding remains appropriate; browser shards 2 and
 3 are the measured follow-up point if future suite growth moves the critical
 path beyond the target. This plan remains active until the PR merges.
+
+## Milestone 6: Specify review follow-up contracts — completed
+
+Define the public argument-forwarding and hierarchical cancellation behavior
+before changing executable verification.
+
+- [x] Specify that public package check and smoke wrappers preserve every
+      caller argument across their nested npm boundary, including the complete
+      `--artifacts DIR` pair.
+- [x] Define verification owner identities, nested process registration,
+      sibling isolation, cancellation escalation, process drainage and owned
+      resource removal across POSIX process groups and Windows jobs.
+- [x] Update developer guidance for public package artifact reuse and abrupt
+      verification cancellation, then validate Markdown and local links.
+
+## Milestone 7: Preserve public package arguments — completed
+
+Restore the artifact-reuse interface at both public npm entrypoints.
+
+- [x] Add a failure-first regression that invokes the real public wrapper
+      strings through npm and observes the exact forwarded argument vector.
+- [x] Add the explicit npm argument separator to both delegating wrappers and
+      prove normal no-argument and `--artifacts` calls retain their behavior.
+- [x] Run the focused entrypoint, package inspection and package smoke tests.
+
+The forwarding regression failed first because npm passed only the directory to
+the prepared command. It now covers both public wrappers with and without
+arguments. A real archive pair also passed the public package check and all five
+public package-smoke consumer scenarios through `--artifacts`.
+
+## Milestone 8: Drain nested verification process scopes — completed
+
+Make abrupt cancellation own every nested process and fixture artifact.
+
+- [x] Add a failure-first real Playwright cancellation regression that starts
+      a registered detached process and owned resource, cancels the outer
+      verification wrapper, and proves both are gone before it exits.
+- [x] Strengthen ordinary preview close coverage to require the stubborn
+      descendant to be stopped when `close()` resolves, before artifact removal.
+- [x] Implement a hierarchical verification owner registry with atomic scope
+      registration before command release, owner-subtree signalling, bounded
+      TERM-to-KILL escalation, drainage and sibling-safe resource cleanup.
+- [x] Cover malformed/stale registrations, nested owners, normal deregistration
+      and idempotent cleanup without weakening Windows job ownership.
+- [x] Run the focused process, preview, baseline process-tree and affected
+      browser regressions, including a real cancellation smoke.
+
+The real cancellation regression failed first with its detached preview process
+still alive. Hierarchical owner cleanup now passes that regression, rejects late
+registrations once any ancestor begins shutdown, and drains process groups before
+resource removal. The focused process, preview, wrapper, POSIX and Windows
+boundary suite passes 29 tests; the affected real browser fixture smoke passes
+14 tests.
+
+## Milestone 9: Validate, commit, push and review the follow-up
+
+Finish the approved review fixes without weakening the measured CI contract.
+
+- [x] Run all relevant tests with a 100% pass rate, TypeScript checks, formatting,
+      lint, Rust formatting/Clippy/tests/file-length checks and the complete
+      `cargo xtask check`; validate updated Markdown and the complete diff.
+- [ ] After checks pass, run `git add -A`, commit every follow-up file with a
+      Conventional Commit and push the current branch.
+- [ ] Only after the push, use
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      against `origin/main` and report any findings in the session without
+      changing the implementation or checking review output into the repository.
+
+Final local evidence: `cargo xtask check` passes the dependency audit,
+formatting, lint, Rust formatting, Clippy, 10 Rust tests, the Rust file-length
+audit, package inspection, all five packed-consumer smokes, 1,865 unit tests in
+353 files and 454 browser tests in 86 specs. Both report-producing suites have
+zero failures, skips or cancellations. Focused package forwarding, ownership,
+cancellation and affected-browser checks also pass, and no verification owner
+directory or process remains after completion.
