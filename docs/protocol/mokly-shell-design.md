@@ -26,6 +26,13 @@ are flat Changes rows; baseline breadcrumbs are text even after their parents
 are deleted. Ordinary publications omit the Changes filter and comparison band
 while preserving the same navigation, search, tags, and screen variants.
 
+The removed-document and removed-screen designs depict the approved
+[removed previews](./mokly-removed-previews.md) behavior: the previous version
+under a quiet "Showing previous version" label, with loading, unavailable, and
+long-content states in their own child pages. The shipped shell still renders
+the empty removed states those contracts mark as replaced, so these designs are
+targets until the runtime milestone lands.
+
 ## Design Mockups
 
 The approved screens are authored in `examples/basic/entries/design/` and
@@ -37,54 +44,71 @@ inventory when design entries change and verify exact id/route agreement with
 that local derived manifest. Planned destinations stay in their feature
 contract until their standalone screens are implemented.
 
-| Entry id                              | Route                                              | State                                                      |
-| ------------------------------------- | -------------------------------------------------- | ---------------------------------------------------------- |
-| `design-browse-home`                  | `design/browse/views/home.html`                    | Catalogue home with navigation tree                        |
-| `design-browse-screen`                | `design/browse/views/screen.html`                  | Selected screen with framed fragments                      |
-| `design-browse-details-screen`        | `design/browse/views/details-screen.html`          | Normal Details screen, light selected                      |
-| `design-browse-use-case`              | `design/browse/views/use-case.html`                | Selected use case with ordered steps                       |
-| `design-browse-details`               | `design/browse/states/details.html`                | Expanded details inspector                                 |
-| `design-browse-missing-route`         | `design/browse/states/missing-route.html`          | Not-found view with navigation                             |
-| `design-browse-navigation`            | `design/browse/states/navigation.html`             | Collapsed navigation drawer                                |
-| `design-browse-tag-filter`            | `design/browse/states/tag-filter.html`             | Tag picker over a filtered tree                            |
-| `design-browse-tag-picker`            | `design/browse/states/tags/picker.html`            | Empty query, tag picker open                               |
-| `design-browse-tag-forms`             | `design/browse/states/tags/forms.html`             | Forms filter, picker closed                                |
-| `design-browse-tag-onboarding`        | `design/browse/states/tags/onboarding.html`        | Onboarding filter, picker closed                           |
-| `design-browse-tag-onboarding-picker` | `design/browse/states/tags/onboarding-picker.html` | Onboarding filter, picker open                             |
-| `design-browse-dark-scheme`           | `design/browse/states/dark-scheme.html`            | Dark selected, dark device screens                         |
-| `design-browse-light-only`            | `design/browse/states/light-only.html`             | Light-only screen under dark                               |
-| `design-changes-current`              | `design/review/controls/current.html`              | Current screen in Changes                                  |
-| `design-changes-overlay`              | `design/review/controls/overlay.html`              | On-demand overlay comparison                               |
-| `design-review-changed`               | `design/review/outcomes/changed.html`              | Changed screen, side-by-side compare                       |
-| `design-review-added`                 | `design/review/outcomes/added.html`                | Added screen current preview without comparison controls   |
-| `design-review-removed`               | `design/review/outcomes/removed.html`              | Removed badge and previous version without comparisons     |
-| `design-review-difference`            | `design/review/outcomes/difference.html`           | Blend-mode difference comparison                           |
-| `design-review-dark-scheme`           | `design/review/outcomes/dark-scheme.html`          | Dark view compared side by side                            |
-| `design-review-shared-impact`         | `design/review/impact/shared-impact.html`          | Unchanged screen from All with evidence                    |
-| `design-review-ignored-only`          | `design/review/impact/ignored-only.html`           | Ignored-only Current view with evidence                    |
-| `design-review-empty`                 | `design/review/impact/empty.html`                  | Empty Changes filter retaining Current                     |
-| `design-review-style-matched`         | `design/review/impact/stylesheets/matched.html`    | Changed styles that apply to the screen                    |
-| `design-review-style-unresolved`      | `design/review/impact/stylesheets/unresolved.html` | A style change that can reach anything on the screen       |
-| `design-review-style-unnamed`         | `design/review/impact/stylesheets/unnamed.html`    | The same reach with no style name to list                  |
-| `design-review-style-excluded`        | `design/review/impact/stylesheets/excluded.html`   | Changed stylesheet examined and excluded                   |
-| `design-review-preparing`             | `design/review/availability/preparing.html`        | Changes selected while the comparison is prepared          |
-| `design-review-unavailable`           | `design/review/availability/unavailable.html`      | Changes selected after the comparison could not be made    |
-| `design-page-view`                    | `design/browse/pages/view.html`                    | Complete document in its declared collection               |
-| `design-page-details`                 | `design/browse/pages/details.html`                 | Document metadata and close action                         |
-| `design-page-navigation`              | `design/browse/pages/navigation.html`              | Document with its narrow drawer open                       |
-| `design-page-removed`                 | `design/browse/pages/removed.html`                 | Removed document's previous version with baseline ancestry |
-| `design-publication-catalogue`        | `design/browse/publication/catalogue.html`         | Current catalogue with review omitted                      |
-| `design-publication-changes`          | `design/browse/publication/changes.html`           | Catalogue with optional comparisons                        |
+| Entry id                              | Route                                                       | State                                                      |
+| ------------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------- |
+| `design-browse-home`                  | `design/browse/views/home.html`                             | Catalogue home with navigation tree                        |
+| `design-browse-screen`                | `design/browse/views/screen.html`                           | Selected screen with framed fragments                      |
+| `design-browse-details-screen`        | `design/browse/views/details-screen.html`                   | Normal Details screen, light selected                      |
+| `design-browse-use-case`              | `design/browse/views/use-case.html`                         | Selected use case with ordered steps                       |
+| `design-browse-details`               | `design/browse/states/details.html`                         | Expanded details inspector                                 |
+| `design-browse-missing-route`         | `design/browse/states/missing-route.html`                   | Not-found view with navigation                             |
+| `design-browse-navigation`            | `design/browse/states/navigation.html`                      | Collapsed navigation drawer                                |
+| `design-browse-tag-filter`            | `design/browse/states/tag-filter.html`                      | Tag picker over a filtered tree                            |
+| `design-browse-tag-picker`            | `design/browse/states/tags/picker.html`                     | Empty query, tag picker open                               |
+| `design-browse-tag-forms`             | `design/browse/states/tags/forms.html`                      | Forms filter, picker closed                                |
+| `design-browse-tag-onboarding`        | `design/browse/states/tags/onboarding.html`                 | Onboarding filter, picker closed                           |
+| `design-browse-tag-onboarding-picker` | `design/browse/states/tags/onboarding-picker.html`          | Onboarding filter, picker open                             |
+| `design-browse-dark-scheme`           | `design/browse/states/dark-scheme.html`                     | Dark selected, dark device screens                         |
+| `design-browse-light-only`            | `design/browse/states/light-only.html`                      | Light-only screen under dark                               |
+| `design-changes-current`              | `design/review/controls/current.html`                       | Current screen in Changes                                  |
+| `design-changes-overlay`              | `design/review/controls/overlay.html`                       | On-demand overlay comparison                               |
+| `design-review-changed`               | `design/review/outcomes/changed.html`                       | Changed screen, side-by-side compare                       |
+| `design-review-added`                 | `design/review/outcomes/added.html`                         | Added screen current preview without comparison controls   |
+| `design-review-removed`               | `design/review/outcomes/removed.html`                       | Removed badge and previous version without comparisons     |
+| `design-review-removed-long`          | `design/review/outcomes/previous-version/long-preview.html` | A tall previous screen scrolling inside its device frame   |
+| `design-review-removed-loading`       | `design/review/outcomes/previous-version/loading.html`      | Waiting for a removed screen's previous views              |
+| `design-review-removed-unavailable`   | `design/review/outcomes/previous-version/unavailable.html`  | Previous views unavailable, with Retry                     |
+| `design-review-difference`            | `design/review/outcomes/difference.html`                    | Blend-mode difference comparison                           |
+| `design-review-dark-scheme`           | `design/review/outcomes/dark-scheme.html`                   | Dark view compared side by side                            |
+| `design-review-shared-impact`         | `design/review/impact/shared-impact.html`                   | Unchanged screen from All with evidence                    |
+| `design-review-ignored-only`          | `design/review/impact/ignored-only.html`                    | Ignored-only Current view with evidence                    |
+| `design-review-empty`                 | `design/review/impact/empty.html`                           | Empty Changes filter retaining Current                     |
+| `design-review-style-matched`         | `design/review/impact/stylesheets/matched.html`             | Changed styles that apply to the screen                    |
+| `design-review-style-unresolved`      | `design/review/impact/stylesheets/unresolved.html`          | A style change that can reach anything on the screen       |
+| `design-review-style-unnamed`         | `design/review/impact/stylesheets/unnamed.html`             | The same reach with no style name to list                  |
+| `design-review-style-excluded`        | `design/review/impact/stylesheets/excluded.html`            | Changed stylesheet examined and excluded                   |
+| `design-review-preparing`             | `design/review/availability/preparing.html`                 | Changes selected while the comparison is prepared          |
+| `design-review-unavailable`           | `design/review/availability/unavailable.html`               | Changes selected after the comparison could not be made    |
+| `design-page-view`                    | `design/browse/pages/view.html`                             | Complete document in its declared collection               |
+| `design-page-details`                 | `design/browse/pages/details.html`                          | Document metadata and close action                         |
+| `design-page-navigation`              | `design/browse/pages/navigation.html`                       | Document with its narrow drawer open                       |
+| `design-page-removed`                 | `design/browse/pages/removed.html`                          | Removed document's previous version with baseline ancestry |
+| `design-page-removed-long`            | `design/browse/pages/previous-version/long-document.html`   | A long previous document scrolling inside its pane         |
+| `design-page-removed-loading`         | `design/browse/pages/previous-version/loading.html`         | Waiting for a removed document's previous version          |
+| `design-page-removed-unavailable`     | `design/browse/pages/previous-version/unavailable.html`     | Previous document unavailable, with Retry                  |
+| `design-publication-catalogue`        | `design/browse/publication/catalogue.html`                  | Current catalogue with review omitted                      |
+| `design-publication-changes`          | `design/browse/publication/changes.html`                    | Catalogue with optional comparisons                        |
 
 Additional owning groups keep each new page at no more than five screens:
 
 - `design/browse/pages/view.html`, `details.html`, `navigation.html`, and
   `removed.html` specify full documents, metadata, the drawer, and deleted-parent
   behavior.
-- `design/browse/pages/removed/` and `design/review/outcomes/removed/` hold the
-  removed-preview child pages (loading, unavailable with retry, and long-document
-  scrolling) planned by [removed previews](./mokly-removed-previews.md). Each
+- `design/browse/pages/previous-version/` and
+  `design/review/outcomes/previous-version/` hold the removed-preview child
+  pages (loading, unavailable with retry, and long-document scrolling) planned
+  by [removed previews](./mokly-removed-previews.md). Their segment cannot be
+  `removed`, because a `view/` alias drops the `.html` suffix and an exported
+  `removed.html` would then collide with a `removed/` directory. Each
   parent removed page renders its canonical preview and links to those children.
+  The depicted branch removes four documents and four screens, so each child is
+  a sibling removed entry in the same flat Changes list and is selected the way
+  a reader selects it. A parent's document pane or device frames hold its
+  previous version under the "Showing previous version" label; a child's loading
+  or unavailable stage replaces that label and those frames while the catalogue
+  navigation, Removed badge, breadcrumbs, and Details stay in place. Retry
+  repeats the request, so it returns to the loaded preview. Served and exported
+  previews are identical, so no static-delivery variant is designed.
 - `design/browse/publication/catalogue.html` and `changes.html` specify review
   omitted and included, using the existing Welcome stage.
 - `design/review/impact/stylesheets/matched.html`, `unresolved.html`,
@@ -410,9 +434,12 @@ component shell makes the band conditional on changed screens, Changed or
 Removed component variants, or verified affected-consumer evidence. The updated mockups omit it on
 every Browse, Added screen/variant, Removed screen, shared-impact-only,
 ignored-only, excluded-stylesheet-only, and empty state. Removed screens show a
-status badge instead: a current empty state today, and their previous version
-labelled “Showing previous version” under the approved
-[removed previews](./mokly-removed-previews.md). Comparison bands always retain
+status badge instead: a current empty state in the shipped shell, and their
+previous version labelled “Showing previous version” in the mockups and under
+the approved [removed previews](./mokly-removed-previews.md). A removed screen
+keeps the grouped viewport and theme controls, with the theme control disabled
+because Light is the only scheme its previous views were rendered in.
+Comparison bands always retain
 an opaque surface and their border. Static catalogues without comparison data
 omit the band.
 The Added outcome still exposes factual branch evidence in Details. Comparison

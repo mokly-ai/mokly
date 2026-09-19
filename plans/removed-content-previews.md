@@ -195,31 +195,40 @@ Tags: mockup
 The design catalogue demonstrates every planned state at mobile and desktop
 widths while the existing application remains functional.
 
-- [ ] Reuse the existing shell, document, frame, status, and inspector
+- [x] Reuse the existing shell, document, frame, status, and inspector
       components. Replace the removed-document design's empty stage with its
       historical handbook, retaining the flat Changes row and deleted-parent
       ancestry.
-- [ ] Update the removed-screen design with historical device frames, available
+- [x] Update the removed-screen design with historical device frames, available
       viewport/scheme controls, Removed badge, and “Showing previous version.”
       Omit comparison modes and editable component/Props actions.
-- [ ] Add loading, unavailable-with-retry, and long-document scrolling/anchor
-      states as child pages under `design/browse/pages/removed/` and
-      `design/review/outcomes/removed/`, so the existing collections stay within
+- [x] Add loading, unavailable-with-retry, and long-document scrolling/anchor
+      states as child pages under `design/browse/pages/previous-version/` and
+      `design/review/outcomes/previous-version/` — a `removed/` segment would
+      collide with the exported `removed.html` alias — so the collections stay within
       five screens. Each parent removed page renders its canonical preview and
       links to its children; every state is its own mobile and desktop
       component reachable from Browse/Changes navigation. Served and exported
       previews look identical, so no static-delivery variant is designed.
-- [ ] Use established typography and surfaces, with no left-edge accent rail,
+- [x] Use established typography and surfaces, with no left-edge accent rail,
       environment labels, or engineering annotations inside rendered screens.
-- [ ] Update the example README and the shell-design protocol's route table and
+- [x] Update the example README and the shell-design protocol's route table and
       grouping notes; run `npm run build`, `npm run example:build`,
       `npm run example:check`, and relevant design tests. Commit only tracked
       authored CSS; generated HTML and the manifest stay ignored.
-- [ ] Start `npm run dev`, visually inspect every changed mobile and desktop
+- [x] Start `npm run dev`, visually inspect every changed mobile and desktop
       design, and save screenshots under `.context/` before UI work begins.
-- [ ] Run `cargo xtask check`; then `git add -A`, commit with Conventional
+- [ ] Discovered during the mockups: the
+      [design links contract](../docs/protocol/mokly-design-links.md) still says
+      “Removed Farewell shows a current empty state without comparison modes and
+      has no live product destination,” and its delivery status still counts 33
+      design screens. Replace that sentence with the previous-version behavior,
+      record the removed family's Changes rows as canonical destinations, and
+      refresh the count. Left unchanged here because this milestone's scope named
+      only `mokly-shell-design.md`.
+- [x] Run `cargo xtask check`; then `git add -A`, commit with Conventional
       Commits, and push the branch.
-- [ ] After the push, review the complete local diff against `origin/main` with
+- [x] After the push, review the complete local diff against `origin/main` with
       the implementation review prompt; report findings without changing the
       mockups.
 

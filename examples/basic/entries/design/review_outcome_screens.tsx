@@ -1,6 +1,5 @@
 import { screen } from "@mokly/mokly";
 
-import { PreviewWorkspace } from "./components/parts/workspace.js";
 import { CompareGrid, Pane } from "./parts/compare.js";
 import {
   ComparePage,
@@ -8,12 +7,13 @@ import {
   type CompareViewport,
 } from "./parts/compare_page.js";
 import { DESTINATIONS } from "./parts/destinations.js";
-import { DetailsPanel } from "./parts/details.js";
 import { ExampleWorkspace } from "./parts/example_workspace.js";
 import { MiniWelcome } from "./parts/mini_screens.js";
+import { REMOVED_SCREENS } from "./parts/nav_data.js";
+import { RemovedScreen, RemovedView } from "./parts/removed_screen.js";
+import { MiniFarewell } from "./parts/removed_shots.js";
 import { ReviewNav } from "./parts/review.js";
 import { ScreenHead, Shell, ViewSwitch } from "./parts/shell.js";
-import { EmptyState } from "./parts/stage_content.js";
 
 function ChangedCompare({ viewport }: { viewport: CompareViewport }) {
   return (
@@ -72,31 +72,22 @@ function AddedCurrent({ viewport }: { viewport: CompareViewport }) {
   );
 }
 
-function RemovedCurrent({ viewport }: { viewport: CompareViewport }) {
+function RemovedPrevious({ viewport }: { viewport: CompareViewport }) {
   return (
-    <Shell
-      design={DESTINATIONS.removed}
+    <RemovedScreen
+      entry={REMOVED_SCREENS.farewell}
+      preview={(previewViewport) => (
+        <RemovedView
+          address="example.test/farewell"
+          compact={viewport === "mobile"}
+          viewport={previewViewport}
+        >
+          <MiniFarewell compact={previewViewport === "mobile"} />
+        </RemovedView>
+      )}
+      subject="farewell"
       viewport={viewport}
-      nav={viewport === "desktop" ? <ReviewNav activeTitle="Farewell" /> : null}
-    >
-      <ScreenHead
-        action={<ViewSwitch active={viewport} />}
-        crumbs={["Example", "Screens"]}
-        idChip="example-farewell"
-        status="removed"
-        title="Farewell"
-      />
-      <PreviewWorkspace
-        inspector={<DetailsPanel subject="farewell" comparisonEvidence open />}
-        render={() => (
-          <EmptyState
-            body="There is no current preview to show."
-            title="This screen was removed"
-            to={DESTINATIONS.home}
-          />
-        )}
-      />
-    </Shell>
+    />
   );
 }
 
@@ -193,10 +184,13 @@ export const reviewOutcomeScreens = [
   }),
   screen({
     colorSchemes: ["light"],
-    description: "A removed screen shown as an empty current state.",
-    desktop: <RemovedCurrent viewport="desktop" />,
+    description:
+      "A removed screen shown as the previous version of its mobile and desktop views.",
+    desktop: <RemovedPrevious viewport="desktop" />,
     id: "design-review-removed",
-    mobile: <RemovedCurrent viewport="mobile" />,
+    mobile: <RemovedPrevious viewport="mobile" />,
+    rationale:
+      "A removed screen has nothing current to compare, so the stage carries its previous views under a quiet label instead of a comparison band. Light is the only scheme those views were rendered in, so the theme control stays disabled and names that.",
     slug: "removed",
     title: "Removed screen",
   }),

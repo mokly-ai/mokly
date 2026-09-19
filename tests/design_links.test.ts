@@ -129,7 +129,7 @@ test("every design link resolves to a real same-viewport design artifact without
     entry.id.startsWith("design-component-"),
   );
   assert.equal(componentDesigns.length, 32);
-  assert.equal(designs.length - componentDesigns.length, 36);
+  assert.equal(designs.length - componentDesigns.length, 42);
   for (const entry of designs) {
     for (const viewport of ["mobile", "desktop"] as const) {
       const { document, route } = await designDocument(entry.id, viewport);
@@ -182,6 +182,26 @@ test("every design link resolves to a real same-viewport design artifact without
         );
     }
   }
+});
+
+test("no design route doubles as a directory holding another design route", async () => {
+  const { manifest } = await designCatalogue;
+  const routes = manifest.entries.flatMap((entry) =>
+    entry.kind === "screen" && entry.id.startsWith("design-")
+      ? [entry.route]
+      : [],
+  );
+  const directories = new Set(
+    routes.flatMap((route) => {
+      const segments = route.split("/").slice(0, -1);
+      return segments.map((_, index) => segments.slice(0, index + 1).join("/"));
+    }),
+  );
+  for (const route of routes)
+    assert.ok(
+      !directories.has(route.replace(/\.html$/, "")),
+      `${route} collides with a collection segment of the same name`,
+    );
 });
 
 test("the canonical documented inventory exactly matches the complete design registry", async () => {

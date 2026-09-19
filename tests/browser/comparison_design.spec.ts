@@ -78,16 +78,17 @@ test("comparison designs use screen context instead of report chrome", async ({
         await expect(
           page.getByRole("group", { name: "Comparison mode" }),
         ).toHaveCount(0);
-        await expect(page.locator(".mbk-empty").first()).toContainText(
-          "There is no current preview to show.",
+        await expect(page.locator(".mbk-previous")).toHaveText(
+          "Showing previous version",
         );
-      } else {
-        await expect(
-          page
-            .locator(viewport === "desktop" ? ".browser-frame" : ".phone-frame")
-            .first(),
-        ).toBeVisible();
+        await expect(page.locator(".mbk-empty")).toHaveCount(0);
       }
+      const frame = page
+        .locator(viewport === "desktop" ? ".browser-frame" : ".phone-frame")
+        .first();
+      await expect(frame).toBeVisible();
+      if (route === "outcomes/removed")
+        await expect(frame).toContainText("Thanks for looking around");
     }
   }
 });
