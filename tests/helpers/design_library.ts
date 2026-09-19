@@ -27,7 +27,7 @@ export const designLibrary = [
   [
     "controls",
     "view-controls",
-    ["default", "both", "highlighted", "unavailable", "viewport-only"],
+    ["default", "both", "highlighted", "unavailable"],
   ],
   ["controls", "tag-picker", ["all", "selected", "empty"]],
   ["controls", "tag-chip", ["default", "selected", "inactive"]],

@@ -33,8 +33,10 @@ promise to retain their named subject, comparison mode, or color selection.
 
 Every design screen has mobile and desktop variants. They are light-only
 generated documents, including artboards depicting a dark product screen, except
-the appearance screens under `design/browse/appearance/`, which render in both
-schemes so the existing preview control switches the depicted catalogue. Link
+the appearance screens under `design/browse/appearance/` and the canonical
+`design-browse-screen`, `design-browse-details-screen` and
+`design-review-changed`, which render in both schemes so the existing preview
+control switches the depicted catalogue. Link
 targets use design entry ids independently of the example ids printed in the
 depicted shell's metadata. Existing ids, routes, screens, and text links remain
 available. `example-farewell` remains an intentionally absent product entry.
@@ -86,9 +88,8 @@ completed before link adoption.
 
 `design-browse-details` continues to mean Welcome's expanded inspector and remains
 reachable from its catalogue entry. Opening/closing the Details icon stays on
-the current screen and retains its query;
-`design-browse-light-only` continues to depict Details with dark selected and
-light-only device content. Neither substitutes for the new normal Details view.
+the current screen and retains its query. It does not substitute for the
+normal Details view.
 `design-browse-tag-filter` retains its existing route and depicts the forms
 filter with the picker open. New tag pages live in a matching nested source
 directory and catalogue group without moving the existing page.
@@ -101,8 +102,8 @@ directory and catalogue group without moving the existing page.
 | Home: Open the first screen                     | `design-browse-screen`                                                                         |
 | All catalogue: Welcome / Details / Example tour | `design-browse-screen` / `design-browse-details-screen` / `design-browse-use-case`             |
 | Changed catalogue: Welcome / Details / Farewell | `design-changes-current` / `design-review-added` / `design-review-removed`                     |
-| MiniWelcome: Open the details screen            | `design-browse-details-screen`; under dark selection, `design-browse-light-only`               |
-| MiniDetails: Return to welcome                  | `design-browse-screen`; under dark selection, `design-browse-dark-scheme`                      |
+| MiniWelcome: Open the details screen            | `design-browse-details-screen`                                                                 |
+| MiniDetails: Return to welcome                  | `design-browse-screen`                                                                         |
 | Depicted use-case step reference                | Welcome: `design-browse-screen`; Details: `design-browse-details-screen`                       |
 | Welcome/Details inspector: Example tour         | `design-browse-use-case`                                                                       |
 | Home menu open / drawer close                   | `design-browse-navigation` / `design-browse-home`                                              |
@@ -146,24 +147,16 @@ none borrows another subject's inspector or drawer identity.
 
 ## Scheme, Comparison, And Tag States
 
-Expose the theme icon on both endpoints of each pair in the shared screen-header
-view controls. Its accessible label is “Switch to dark mode” or “Switch to light
-mode”. The top bar contains no theme control. Unsupported pairs use a disabled
-icon with an explanatory tooltip:
-
-| Light state                    | Dark-selected state         |
-| ------------------------------ | --------------------------- |
-| `design-browse-screen`         | `design-browse-dark-scheme` |
-| `design-browse-details-screen` | `design-browse-light-only`  |
-| `design-review-changed`        | `design-review-dark-scheme` |
-
-Those three pairs belong to the legacy head-band depictions; the plan's
-legacy-mockup milestone decides their future. The appearance artboards have no
-scheme pair, because they draw one control: the depicted Appearance selector in
-the top bar, which sets the catalogue and its previews together. That selector
-has no authored transitions. Each appearance entry renders in Light and in Dark
+No design artboard depicts a scheme control, and the catalogue has no authored
+scheme pairs. Standalone Browse holds one Appearance setting, so every artboard
+that shows it draws the depicted Appearance selector in its top bar, which has
+no authored transitions, and the depicted screen header carries the viewport
+control alone. `design-browse-screen`, `design-browse-details-screen`,
+`design-review-changed` and the appearance entries render in Light and in Dark
 instead, and Browse's own preview control moves between those two generated
-files at the same route. Appearance comparison controls map Side by side
+files at the same route. The removed `design-browse-dark-scheme`,
+`design-browse-light-only` and `design-review-dark-scheme` screens were the
+head-band depictions those dual-scheme renders replace. Appearance comparison controls map Side by side
 to `design-appearance-side-by-side` and Difference to
 `design-appearance-difference`, with Current returning to
 `design-appearance-overview`; Overlay stays a depiction. Their All filter opens

@@ -90,15 +90,6 @@ clip-path: inset(50%);
 pointer-events: none;
 }
 
-.ce-design:has(.ce-theme-toggle:checked) {
---ce-surface: #1e2521;
-  --ce-text: #edf3ef;
-  --ce-secondary: #b0beb5;
-  --ce-soft: #2d3831;
-  --ce-edge: #48584d;
-  --ce-mask: #1e2521;
-}
-
 .ce-design .mbk-shell--mobile .ce-view-controls {
 width: auto;
 }
@@ -108,16 +99,11 @@ height: 40px;
   min-width: 40px;
 }
 
-.ce-viewport-control [data-view-icon]:not([data-view-icon="chevron"]),
-.ce-theme-control [data-view-icon="dark"],
-.ce-theme-control:has(:checked) [data-view-icon="light"],
-.ce-theme-control[data-scheme="dark"] [data-view-icon="light"] {
+.ce-viewport-control [data-view-icon]:not([data-view-icon="chevron"]) {
   display: none;
 }
 .ce-viewport-control:has(option[value="mobile"]:checked) [data-view-icon="mobile"],
 .ce-viewport-control:has(option[value="desktop"]:checked) [data-view-icon="desktop"],
-.ce-viewport-control:has(option[value="both"]:checked) [data-view-icon="both"],
-.ce-theme-control:has(:checked) [data-view-icon="dark"],
-.ce-theme-control[data-scheme="dark"] [data-view-icon="dark"] {
+.ce-viewport-control:has(option[value="both"]:checked) [data-view-icon="both"] {
   display: block;
 }

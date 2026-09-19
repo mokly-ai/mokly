@@ -1,5 +1,6 @@
 import { optional, useDesignInstance } from "../../library/composition.js";
 import { viewControls } from "../../library/controls/view-controls.js";
+import { useRenderedAppearance } from "../../parts/appearance.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
 
 export interface HighlightOption {
@@ -19,19 +20,17 @@ export function ViewControls({
     <viewControls.Component
       moklyInstance={useDesignInstance("view-controls")}
       selection={viewport}
-      scheme="light"
-      destinations={{}}
       {...optional("highlight", highlight?.active)}
       {...optional("unavailable", highlight?.unavailable)}
     />
   );
 }
 
+/** The depicted preview scheme, which follows the artboard it renders in. */
 export function PreviewScheme() {
   return (
-    <>
-      <span className="ce-scheme-light">Light</span>
-      <span className="ce-scheme-dark">Dark</span>
-    </>
+    <span className="ce-scheme">
+      {useRenderedAppearance() === "dark" ? "Dark" : "Light"}
+    </span>
   );
 }

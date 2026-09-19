@@ -33,6 +33,14 @@ export function useRenderedAppearance(): DesignAppearance {
 }
 
 /**
+ * The depicted catalogue holds one scheme setting, so a screen with a dark
+ * render shows it whenever the artboard is dark.
+ */
+export function useDarkPreview(): boolean {
+  return useRenderedAppearance() === "dark";
+}
+
+/**
  * Every artboard states the appearance it draws on its own root, taken from the
  * scheme Mokly requested, so Browse's existing Light/Dark preview control swaps
  * to the matching generated file.

@@ -4,8 +4,8 @@ Status: in progress; the documentation and mockup milestones are complete,
 including the Milestone 2A correction that lets Mokly's built-in preview
 color-scheme toggle switch the mockups. On 2026-09-19 the user chose one
 standalone control for the interface and the previews together, so Milestone
-2B corrects the appearance mockups and Milestone 2C aligns the legacy scheme
-depictions before runtime work begins. Runtime implementation has not started.
+2B corrected the appearance mockups and Milestone 2C aligned the legacy scheme
+depictions. Runtime implementation has not started.
 The implementation PR's merge is this plan's completion boundary.
 
 Give `@mokly/viewer`, local Serve and static exports a complete Auto/Light/Dark
@@ -269,7 +269,7 @@ artboard reads Auto in both renders. `design-appearance-light-preview` and
 `design-appearance-dark-preview` are removed and the appearance navigation
 states no longer carry `schemeLinks`, leaving 81 design screens.
 
-## Milestone 2C: Align the legacy scheme depictions
+## Milestone 2C: Align the legacy scheme depictions (complete)
 
 Tags: mockup
 
@@ -282,23 +282,44 @@ The recommended shape is consolidation: the canonical Welcome, Details and
 changed Welcome screens render in both schemes like the appearance entries,
 which subsumes the three legacy scheme screens.
 
-- [ ] Confirm with the user whether the three legacy scheme screens are
+- [x] Confirm with the user whether the three legacy scheme screens are
       consolidated into dual-scheme renders of `design-browse-screen`,
       `design-browse-details-screen` and `design-review-changed`, or kept as
       explicit embedded-viewer depictions. Record the decision here and in the
       shell-design and design-links contracts before changing entries.
-- [ ] Apply the decision: update or remove the entries, their `DESTINATIONS`,
+
+Decision, 2026-09-19: consolidate. The user approved removing
+`design-browse-dark-scheme`, `design-browse-light-only` and
+`design-review-dark-scheme` — the only routes this plan removes from
+`origin/main` — because the canonical Welcome, Details and changed Welcome
+screens now render in both schemes and subsume them. The user also approved
+removing the component explorer's depicted Dark mode switch in the same
+milestone. No design artboard depicts a scheme control after this milestone, so
+`controls/view-controls` loses its scheme control and the design catalogue has
+no authored scheme pairs.
+
+- [x] Apply the decision: update or remove the entries, their `DESTINATIONS`,
       navigation states, the MiniWelcome/MiniDetails scheme-dependent links,
       inventories and the design-links pair table. Preserve every route on
       `origin/main` unless the user approves its removal.
-- [ ] Remove the depicted Dark mode switch from the component explorer toolbar
+- [x] Remove the depicted Dark mode switch from the component explorer toolbar
       depictions and from the `controls/view-controls` samples that show it,
       and update the component design contracts accordingly.
-- [ ] Add or update inventory, link and both-scheme tests; run the example
+- [x] Add or update inventory, link and both-scheme tests; run the example
       build and check, relevant tests and `cargo xtask check`; smoke through
       `npm run dev`; commit and push; then review with
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       against `origin/main` and report findings without fixing them.
+
+Delivered: `design-browse-screen`, `design-browse-details-screen` and
+`design-review-changed` now render in both schemes, so the existing preview
+toggle shows the selected Welcome, the light-only Details subject and the
+side-by-side compare under either appearance at their own routes.
+`design-browse-dark-scheme`, `design-browse-light-only` and
+`design-review-dark-scheme` are removed with them. `controls/view-controls` has
+no scheme control at all, the component explorer's depicted Dark mode switch is
+gone and its preview caption now names the artboard's own scheme, leaving 78
+design screens, 63 saved variants and no authored scheme link pairs.
 
 ## Milestone 3: Implement shared viewer appearance
 

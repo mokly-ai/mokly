@@ -3,7 +3,6 @@ import { COMPONENT_NAVIGATION_STATES } from "../components/parts/navigation_stat
 import {
   DESTINATIONS as D,
   type ComparisonMode,
-  type DepictedScheme,
   type DesignDestination,
 } from "./destinations.js";
 import type { CatalogueTag } from "./tags.js";
@@ -20,8 +19,6 @@ export interface NavigationState {
   all?: DesignDestination;
   changes?: DesignDestination;
   comparison?: Partial<Record<ComparisonMode, DesignDestination>>;
-  scheme?: DepictedScheme;
-  schemeLinks?: Partial<Record<DepictedScheme, DesignDestination>>;
   tags?: TagState;
 }
 
@@ -73,19 +70,9 @@ export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
   [D.missing]: {},
   [D.navigation]: {},
   [D.tour]: {},
-  [D.welcome]: { ...welcomeBrowse, schemeLinks: { dark: D.darkWelcome } },
-  [D.details]: { ...detailsFilters, schemeLinks: { dark: D.darkDetails } },
+  [D.welcome]: { ...welcomeBrowse },
+  [D.details]: { ...detailsFilters },
   [D.inspector]: { ...welcomeBrowse },
-  [D.darkWelcome]: {
-    ...welcomeFilters,
-    scheme: "dark",
-    schemeLinks: { light: D.welcome },
-  },
-  [D.darkDetails]: {
-    ...detailsFilters,
-    scheme: "dark",
-    schemeLinks: { light: D.details },
-  },
   [D.appearance]: {
     ...appearanceFilters,
     comparison: appearanceModes,
@@ -133,19 +120,10 @@ export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
   },
   [D.current]: { ...welcomeFilters, comparison: welcomeModes },
   [D.overlay]: { ...welcomeFilters, comparison: welcomeModes },
-  [D.changed]: {
-    ...welcomeFilters,
-    comparison: welcomeModes,
-    schemeLinks: { dark: D.darkChanged },
-  },
+  [D.changed]: { ...welcomeFilters, comparison: welcomeModes },
   [D.difference]: { ...welcomeFilters, comparison: welcomeModes },
   [D.added]: { ...detailsFilters },
   [D.removed]: { all: D.home },
-  [D.darkChanged]: {
-    ...welcomeFilters,
-    scheme: "dark",
-    schemeLinks: { light: D.changed },
-  },
   [D.shared]: { all: D.welcome, changes: D.styleMatched },
   [D.ignored]: { all: D.welcome, changes: D.styleUnresolved },
   [D.empty]: { all: D.welcome },

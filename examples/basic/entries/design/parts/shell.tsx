@@ -125,23 +125,14 @@ export function ScreenHead({
 
 interface ViewSwitchProps {
   active: "both" | "desktop" | "mobile";
-  /** `false` leaves the viewport control alone, for one-control artboards. */
-  schemeControl?: boolean;
 }
 
 /** Viewport selection control shown in a selected screen header. */
-export function ViewSwitch({ active, schemeControl }: ViewSwitchProps) {
-  const navigation = useDesignNavigation();
-  const scheme = navigation.scheme ?? "light";
-  const nextScheme = scheme === "light" ? "dark" : "light";
+export function ViewSwitch({ active }: ViewSwitchProps) {
   return (
     <viewControls.Component
       moklyInstance={useDesignInstance("viewport")}
       selection={active}
-      scheme={scheme}
-      schemeDisabled={!navigation.schemeLinks?.[nextScheme]}
-      destinations={navigation.schemeLinks ?? {}}
-      {...optional("schemeControl", schemeControl)}
     />
   );
 }

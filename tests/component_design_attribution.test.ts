@@ -11,11 +11,11 @@ test("mixed component design styles retain their actual rendered resource scope"
     ["design-components.css", 32, 16],
     ["design-component-inspection.css", 32, 16],
     ["design-component-details.css", 32, 16],
-    ["design-component-inspector.css", 81, 16],
-    ["design-component-workspace.css", 81, 16],
+    ["design-component-inspector.css", 78, 16],
+    ["design-component-workspace.css", 78, 16],
     ["design-component-view.css", 32, 16],
     ["design-component-controls.css", 11, 16],
-    ["design.css", 81, 16],
+    ["design.css", 78, 16],
     ["design-library.css", 0, 16],
   ] as const)
     await t.test(stylesheet, async () => {

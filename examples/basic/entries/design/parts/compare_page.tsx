@@ -26,8 +26,6 @@ interface ComparePageProps {
   render: (viewport: CompareViewport) => ReactNode;
   idChip: string;
   mode?: "difference" | "overlay" | "side-by-side";
-  /** `false` draws the header's viewport control without a scheme control. */
-  schemeControl?: boolean;
   state: ReviewState;
   title: string;
   viewport: CompareViewport;
@@ -43,7 +41,6 @@ export function ComparePage({
   render,
   idChip,
   mode,
-  schemeControl,
   state,
   title,
   viewport,
@@ -61,12 +58,7 @@ export function ComparePage({
     >
       <ScreenHead
         comparisons
-        action={
-          <ViewSwitch
-            active={viewport}
-            {...(schemeControl === undefined ? {} : { schemeControl })}
-          />
-        }
+        action={<ViewSwitch active={viewport} />}
         comparisonMode={mode ?? "side-by-side"}
         crumbs={["Example", "Screens"]}
         idChip={idChip}

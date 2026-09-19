@@ -20,8 +20,6 @@ export const DESTINATIONS = {
   forms: "design-browse-tag-forms",
   onboarding: "design-browse-tag-onboarding",
   onboardingPicker: "design-browse-tag-onboarding-picker",
-  darkWelcome: "design-browse-dark-scheme",
-  darkDetails: "design-browse-light-only",
   appearance: "design-appearance-overview",
   appearanceLightOnly: "design-appearance-light-only",
   appearanceAuto: "design-appearance-auto",
@@ -41,7 +39,6 @@ export const DESTINATIONS = {
   added: "design-review-added",
   removed: "design-review-removed",
   difference: "design-review-difference",
-  darkChanged: "design-review-dark-scheme",
   shared: "design-review-shared-impact",
   ignored: "design-review-ignored-only",
   empty: "design-review-empty",
@@ -57,4 +54,3 @@ export type DesignDestination =
   (typeof DESTINATIONS)[keyof typeof DESTINATIONS] | ComponentDesignDestination;
 export type ComparisonMode =
   "current" | "side-by-side" | "overlay" | "difference";
-export type DepictedScheme = "light" | "dark";

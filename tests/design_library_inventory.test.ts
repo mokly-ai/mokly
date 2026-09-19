@@ -19,6 +19,13 @@ test("catalogue navigation's All example matches its in-screen navigation", () =
   assert.deepEqual(all.props.rows, NAV_TREE);
 });
 
+/** The canonical screens that absorbed the removed head-band scheme pairs. */
+const CONSOLIDATED_SCHEME_SCREENS = new Set([
+  "design-browse-screen",
+  "design-browse-details-screen",
+  "design-review-changed",
+]);
+
 test("the shared library preserves every existing design screen and viewport route", async () => {
   const baseline: {
     id: string;
@@ -31,13 +38,14 @@ test("the shared library preserves every existing design screen and viewport rou
     ),
   );
   const { manifest } = await designCatalogue;
-  assert.equal(baseline.length, 56);
+  assert.equal(baseline.length, 53);
   for (const original of baseline) {
     const entry = manifest.entries.find((entry) => entry.id === original.id);
     assert.ok(entry?.kind === "screen", original.id);
     assert.equal(entry.route, original.route);
     assert.deepEqual(entry.fragments, original.fragments);
-    assert.equal(entry.darkFragments, undefined);
+    if (!CONSOLIDATED_SCHEME_SCREENS.has(original.id))
+      assert.equal(entry.darkFragments, undefined);
   }
 });
 

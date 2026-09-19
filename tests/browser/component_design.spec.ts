@@ -94,9 +94,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
       await selectedView.focus();
       await expect(selectedView).toBeFocused();
       await expect(selectedView).toHaveValue(viewport);
-      await expect(
-        page.getByRole("switch", { name: "Dark mode" }),
-      ).not.toBeChecked();
+      await expect(page.getByRole("switch", { name: "Dark mode" })).toHaveCount(
+        0,
+      );
       await page.goto(componentDesignUrl("pages/affected", viewport));
       await expect(
         page

@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
 
 import {
+  useDarkPreview,
   useRenderedAppearance,
   type AppearanceChoice,
 } from "../../../parts/appearance.js";
 import type { DesignDestination } from "../../../parts/destinations.js";
-import { ExampleWorkspace } from "../../../parts/example_workspace.js";
+import { SchemeWorkspace } from "../../../parts/example_workspace.js";
 import { MiniWelcome } from "../../../parts/mini_screens.js";
 import { NavTree } from "../../../parts/nav.js";
 import {
@@ -59,14 +60,6 @@ export function AppearanceShell({
   );
 }
 
-/**
- * The depicted catalogue holds one scheme setting, so a screen with a dark
- * render shows it whenever the artboard is dark.
- */
-export function useDarkPreview(): boolean {
-  return useRenderedAppearance() === "dark";
-}
-
 /** The Welcome preview the appearance screens place on their stage. */
 export function WelcomeShot({ viewport }: { viewport: ArtboardViewport }) {
   const dark = useDarkPreview();
@@ -81,32 +74,8 @@ export function WelcomeShot({ viewport }: { viewport: ArtboardViewport }) {
   );
 }
 
-/**
- * The selected screen's workspace. Welcome renders in both schemes and follows
- * the artboard; Details renders in light only, so it keeps its light frames and
- * names that fallback once the catalogue is dark.
- */
-export function AppearanceWorkspace({
-  subject,
-  viewport,
-  ...rest
-}: {
-  subject: "welcome" | "details";
-  viewport: ArtboardViewport;
-  open?: boolean;
-  comparisonEvidence?: ReactNode;
-}) {
-  const dark = useDarkPreview();
-  return (
-    <ExampleWorkspace
-      subject={subject}
-      viewport={viewport}
-      dark={subject === "welcome" && dark}
-      lightOnly={subject === "details" && dark}
-      {...rest}
-    />
-  );
-}
+/** The appearance artboards use the shared dual-scheme workspace. */
+export const AppearanceWorkspace = SchemeWorkspace;
 
 interface AppearanceHeadProps {
   crumbs?: readonly string[];
@@ -135,7 +104,7 @@ export function AppearanceHead({
     <ScreenHead
       {...(selection === "none"
         ? {}
-        : { action: <ViewSwitch active={selection} schemeControl={false} /> })}
+        : { action: <ViewSwitch active={selection} /> })}
       crumbs={crumbs ?? ["Example", "Screens"]}
       idChip={idChip}
       title={title}

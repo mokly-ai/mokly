@@ -41,9 +41,9 @@ screens.
 Fixtures for each variant come from the corresponding existing screen state,
 assembled into complete explicit props at declaration time. They may reuse the
 same typed fixture values used by screen adapters. They never import/render the
-complete owning artboard. All selected-screen footers use the icon panel and all
-viewport/theme controls use the grouped icons. The legacy disclosure variant and
-segmented viewport/theme presentations are removed. Comparison-mode segments remain.
+complete owning artboard. All selected-screen footers use the icon panel and the
+viewport control uses the grouped icons. The legacy disclosure variant and
+segmented viewport presentations are removed. Comparison-mode segments remain.
 
 ## Data, Slots And Controls
 
@@ -58,8 +58,8 @@ Controls below use text, boolean, number and primitive enum selections only.
    existing text/icon menu presentation; available tag records, optional active
    tag and picker-open flag; explicit navigation destinations; and an optional
    `auto/light/dark` interface appearance. Controls: query, picker-open, menu
-   state and appearance. Preview theme controls belong in the screen header;
-   the appearance setting is the catalogue's own and renders only when a screen
+   state and appearance. The appearance setting is the catalogue's own, is the
+   only scheme control in the design catalogue, and renders only when a screen
    supplies it. Brand/search structure belongs to this component;
    it composes the registered picker, chip and appearance selector. Preserve compact mobile branding.
 2. **Catalogue navigation:** row records with stable key, label, kind
@@ -83,17 +83,13 @@ Controls below use text, boolean, number and primitive enum selections only.
    Controls: mode and eligibility. Ineligible renders no band; stories depicting
    a band supply eligible fixture data. Preserve the opaque background, refresh
    depiction and current linked/native/inactive behavior for each screen family.
-5. **View controls:** selected preview `mobile/desktop/both`, depicted scheme,
-   optional highlight state and unavailable reason `empty/unavailable/comparison/removed`;
-   optional scheme-disabled state, an optional scheme-control flag and supported
-   theme destinations. Controls: selection, scheme, scheme control, highlight and
-   reason. The single icon group lives in the
-   screen header: viewport dropdown, theme icon, and optional highlight toggle.
-   Omitting the scheme control leaves the viewport dropdown alone, for the
-   appearance artboards whose one scheme setting lives in the top bar.
-   Authored theme pairs use canonical links; unsupported pairs stay disabled.
-   Component previews retain native local theme toggling. The dropdown controls
-   actual mobile/desktop previews inside the bounded scrolling workspace.
+5. **View controls:** selected preview `mobile/desktop/both`, optional
+   highlight state and unavailable reason `empty/unavailable/comparison/removed`.
+   Controls: selection, highlight and reason. The single icon group lives in the
+   screen header: viewport dropdown and optional highlight toggle. The component
+   carries no scheme control, because one Appearance control in the top bar sets
+   the whole catalogue. The dropdown controls actual mobile/desktop previews
+   inside the bounded scrolling workspace.
 6. **Tag picker:** tag records containing stable id, label and optional
    destination, plus optional active id. Controls: optional active tag using
    the existing forms/onboarding examples. Empty input follows the current hidden

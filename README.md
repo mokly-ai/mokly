@@ -995,9 +995,9 @@ divider line and shares the navigation separator's affordance, rotated: the same
 rounded short line that turns accent-colored with a soft halo on hover, focus,
 and drag.
 
-All 81 design screens reuse the 16 registered components in
+All 78 design screens reuse the 16 registered components in
 **Components → Design → Shared components**, including the footer tabs panel. The library
-provides 64 saved variants, local prop controls, real usage and component-owned
+provides 63 saved variants, local prop controls, real usage and component-owned
 change attribution. See the [shared design library guide](./examples/basic/entries/design/library/README.md).
 
 **Browse shell → Appearance** designs the planned Auto/Light/Dark appearance for

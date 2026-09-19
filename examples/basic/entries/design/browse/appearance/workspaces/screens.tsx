@@ -2,6 +2,7 @@ import { screen } from "@mokly/mokly";
 
 import {
   DesignAppearanceScope,
+  useDarkPreview,
   useRenderedAppearance,
 } from "../../../parts/appearance.js";
 import { CompareGrid, Pane } from "../../../parts/compare.js";
@@ -17,7 +18,7 @@ import { NavDrawer } from "../../../parts/nav.js";
 import { ReviewNav } from "../../../parts/review.js";
 import { EmptyState } from "../../../parts/stage_content.js";
 import { TopBar } from "../../../parts/top_bar.js";
-import { AppearanceShell, useDarkPreview } from "../parts/scaffold.js";
+import { AppearanceShell } from "../parts/scaffold.js";
 
 import { appearanceInspectorScreens } from "./inspectors.js";
 
@@ -106,7 +107,6 @@ function SideBySideCompare({ viewport }: { viewport: CompareViewport }) {
       design={DESTINATIONS.appearanceSideBySide}
       idChip="example-welcome"
       nav={<ReviewNav activeTitle="Welcome" />}
-      schemeControl={false}
       render={(previewViewport) => (
         <CompareGrid>
           <WelcomePanes viewport={previewViewport} />
@@ -129,7 +129,6 @@ function DifferenceCompare({ viewport }: { viewport: CompareViewport }) {
       idChip="example-welcome"
       mode="difference"
       nav={<ReviewNav activeTitle="Welcome" />}
-      schemeControl={false}
       render={(previewViewport) => (
         <CompareGrid difference>
           <WelcomePanes viewport={previewViewport} />

@@ -4,11 +4,10 @@
 
 Runtime not implemented. The [dark-mode plan](../../plans/viewer-dark-mode.md)
 tracks this target for `@mokly/viewer`, local Serve and static exports. The
-[semantic palette](./mokly-viewer-palette.md) and the first appearance mockups
-are delivered, and every appearance entry renders in both schemes so the
-existing preview control switches it. Those mockups still draw a second preview
-scheme control beside the Appearance selector; the single-control correction
-below is pending as the plan's Milestone 2B. The current
+[semantic palette](./mokly-viewer-palette.md) and the appearance mockups are
+delivered: every appearance entry renders in both schemes so the existing
+preview control switches it, each artboard draws exactly one Appearance control
+in the top bar, and the legacy head-band scheme depictions are gone. The current
 [viewer](./mokly-viewer.md) and [shell design](./mokly-shell-design.md) remain
 light-only around previews until the runtime implementation lands.
 
@@ -269,10 +268,12 @@ exact ids and routes are listed in the
 [shell design inventory](./mokly-shell-design.md#design-mockups). The
 branch-only `light-preview` and `dark-preview` scenarios are removed by the
 single-control correction. `design-browse-dark-scheme`,
-`design-browse-light-only` and `design-review-dark-scheme` stay as records of
-the implemented head-band control until the plan's legacy-mockup milestone
-aligns them. Update inventories, style ownership and example documentation, and
-keep notes outside the screens.
+`design-browse-light-only` and `design-review-dark-scheme` are removed:
+`design-browse-screen`, `design-browse-details-screen` and
+`design-review-changed` render in both schemes and subsume them. No design
+artboard depicts a scheme control, so `controls/view-controls` carries none and
+the design catalogue authors no scheme link pairs. Update inventories, style
+ownership and example documentation, and keep notes outside the screens.
 
 ## Required Verification
 

@@ -1,7 +1,6 @@
 import { useId } from "react";
 
 import { ViewIcon } from "../../components/parts/view_icons.js";
-import { DesignLink } from "../../parts/design_navigation.js";
 import { useDesignStyle } from "../style_context.js";
 
 import type { ViewControlsProps } from "./view-controls.js";
@@ -19,19 +18,11 @@ const viewportOptions = [
 ] as const;
 export function ViewControlsView({
   selection,
-  scheme,
   highlight,
   unavailable,
-  schemeDisabled,
-  schemeControl,
-  destinations,
 }: ViewControlsProps) {
   useDesignStyle("view-controls");
   const reasonId = useId();
-  const nextScheme = scheme === "light" ? "dark" : "light";
-  const schemeDestination = schemeDisabled
-    ? undefined
-    : destinations[nextScheme];
   const reason = unavailable ? reasons[unavailable] : undefined;
   return (
     <div
@@ -59,39 +50,6 @@ export function ViewControlsView({
           ))}
         </select>
       </label>
-      {schemeControl === false ? null : schemeDestination ? (
-        <DesignLink to={schemeDestination}>
-          <span
-            className="ce-icon-control ce-theme-control"
-            data-scheme={scheme}
-            aria-label={`Switch to ${nextScheme} mode`}
-            title={`Switch to ${nextScheme} mode`}
-          >
-            <ViewIcon kind="light" />
-            <ViewIcon kind="dark" />
-          </span>
-        </DesignLink>
-      ) : (
-        <label
-          className="ce-icon-control ce-theme-control"
-          title={
-            schemeDisabled
-              ? "No alternate theme for this view"
-              : "Toggle light/dark mode"
-          }
-        >
-          <input
-            type="checkbox"
-            role="switch"
-            className="ce-theme-toggle"
-            aria-label="Dark mode"
-            defaultChecked={scheme === "dark"}
-            disabled={schemeDisabled}
-          />
-          <ViewIcon kind="light" />
-          <ViewIcon kind="dark" />
-        </label>
-      )}
       {highlight === undefined ? null : (
         <label
           className="ce-icon-control ce-highlight-control"

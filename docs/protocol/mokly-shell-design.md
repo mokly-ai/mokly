@@ -47,7 +47,7 @@ contract until their standalone screens are implemented.
 | ------------------------------------- | ------------------------------------------------------- | --------------------------------------------------------- |
 | `design-browse-home`                  | `design/browse/views/home.html`                         | Catalogue home with navigation tree                       |
 | `design-browse-screen`                | `design/browse/views/screen.html`                       | Selected screen with framed fragments                     |
-| `design-browse-details-screen`        | `design/browse/views/details-screen.html`               | Normal Details screen, light selected                     |
+| `design-browse-details-screen`        | `design/browse/views/details-screen.html`               | Normal Details screen, a light-only subject               |
 | `design-browse-use-case`              | `design/browse/views/use-case.html`                     | Selected use case with ordered steps                      |
 | `design-browse-details`               | `design/browse/states/details.html`                     | Expanded details inspector                                |
 | `design-browse-missing-route`         | `design/browse/states/missing-route.html`               | Not-found view with navigation                            |
@@ -57,15 +57,12 @@ contract until their standalone screens are implemented.
 | `design-browse-tag-forms`             | `design/browse/states/tags/forms.html`                  | Forms filter, picker closed                               |
 | `design-browse-tag-onboarding`        | `design/browse/states/tags/onboarding.html`             | Onboarding filter, picker closed                          |
 | `design-browse-tag-onboarding-picker` | `design/browse/states/tags/onboarding-picker.html`      | Onboarding filter, picker open                            |
-| `design-browse-dark-scheme`           | `design/browse/states/dark-scheme.html`                 | Dark selected, dark device screens                        |
-| `design-browse-light-only`            | `design/browse/states/light-only.html`                  | Light-only screen under dark                              |
 | `design-changes-current`              | `design/review/controls/current.html`                   | Current screen in Changes                                 |
 | `design-changes-overlay`              | `design/review/controls/overlay.html`                   | On-demand overlay comparison                              |
 | `design-review-changed`               | `design/review/outcomes/changed.html`                   | Changed screen, side-by-side compare                      |
 | `design-review-added`                 | `design/review/outcomes/added.html`                     | Added screen current preview without comparison controls  |
 | `design-review-removed`               | `design/review/outcomes/removed.html`                   | Removed badge and current empty state without comparisons |
 | `design-review-difference`            | `design/review/outcomes/difference.html`                | Blend-mode difference comparison                          |
-| `design-review-dark-scheme`           | `design/review/outcomes/dark-scheme.html`               | Dark view compared side by side                           |
 | `design-review-shared-impact`         | `design/review/impact/shared-impact.html`               | Unchanged screen from All with evidence                   |
 | `design-review-ignored-only`          | `design/review/impact/ignored-only.html`                | Ignored-only Current view with evidence                   |
 | `design-review-empty`                 | `design/review/impact/empty.html`                       | Empty Changes filter retaining Current                    |
@@ -124,6 +121,11 @@ Additional owning groups keep each new page at no more than five screens:
   the implemented behavior recorded below. Every one of them renders in both
   schemes, so the existing preview control moves between its two generated
   files at the same route. Existing light-interface routes keep their ids.
+
+`design-browse-screen`, `design-browse-details-screen` and
+`design-review-changed` also render in both schemes, so the existing preview
+control shows the selected Welcome, the light-only Details subject and the
+side-by-side compare under either appearance at their own routes.
 
 Every screen ships one mobile and one desktop variant. Mockup implementation
 notes live in entry descriptions, rationale, and related docs — never inside
@@ -307,8 +309,9 @@ scrollable region scrolls internally:
   button uses the standard pointer cursor, moves down 1px with an inset shadow
   while pressed, and copies the unprefixed ID without navigating.
   Selected screen routes place one right-aligned group of icon controls here:
-  Mobile/Desktop/Both dropdown, theme toggle, and component highlighting when
-  applicable. Tooltips name each action; the top bar has no theme selector.
+  Mobile/Desktop/Both dropdown and component highlighting when applicable.
+  Tooltips name each action. The head band carries no scheme control; the
+  catalogue's one Appearance control lives in the top bar.
 - **Stage** — dotted-grid background (22px radial dots), centred frames with
   40px gap, internal `overflow: auto`, `MOBILE` / `DESKTOP` uppercase frame
   labels, and no separate toolbar above the grid.
@@ -406,9 +409,9 @@ of those two.
   lighter-weight tail of the same uppercase label, not a separate badge.
   A use-case step frame carries the same fallback state but has no label, so it
   shows no scheme caption.
-- **Diff views** — keep the normal viewport and color-scheme controls in the
-  screen heading. The compact diff band changes only how the
-  selected screen is displayed. Light-only comparisons name their fallback;
+- **Diff views** — keep the normal viewport control in the screen heading and
+  the Appearance control in the top bar. The compact diff band changes only how
+  the selected screen is displayed. Light-only comparisons name their fallback;
   dark styling remains contained within device screens.
 
 ## Responsive Behavior

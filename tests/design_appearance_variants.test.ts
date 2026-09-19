@@ -202,3 +202,69 @@ test("the removed fixed-theme scenarios are gone", async () => {
       id,
     );
 });
+
+/** Canonical screens that replaced the removed head-band scheme depictions. */
+const consolidatedScreens = [
+  ["design-browse-screen", true],
+  ["design-browse-details-screen", false],
+  ["design-review-changed", true],
+] as const;
+
+test("the canonical scheme screens render in both schemes", async () => {
+  const { manifest, outputs } = await designCatalogue;
+  for (const [id, hasDarkRender] of consolidatedScreens) {
+    const entry = manifest.entries.find((entry) => entry.id === id);
+    assert.ok(entry?.kind === "screen", id);
+    assert.ok(entry.darkFragments, `${id} has no dark fragment`);
+    for (const viewport of ["mobile", "desktop"] as const) {
+      const light: string = outputs.get(entry.fragments[viewport])!;
+      const dark: string = outputs.get(entry.darkFragments[viewport]!)!;
+      assert.equal(appearanceOf(light), "light", `${id} ${viewport}`);
+      assert.equal(appearanceOf(dark), "dark", `${id} ${viewport}`);
+      assert.equal(
+        countClass(light, "mbk-screen-dark"),
+        0,
+        `${id} ${viewport}`,
+      );
+      assert.equal(
+        countClass(dark, "mbk-screen-dark") > 0,
+        hasDarkRender,
+        `${id} ${viewport}: dark device treatment`,
+      );
+      assert.equal(
+        countClass(dark, "mbk-frame-scheme-note") > 0,
+        !hasDarkRender,
+        `${id} ${viewport}: light-only caption`,
+      );
+    }
+  }
+});
+
+test("no design artboard depicts a scheme control", async () => {
+  const { manifest, outputs } = await designCatalogue;
+  for (const entry of manifest.entries) {
+    if (entry.kind !== "screen" || !entry.route.startsWith("design/")) continue;
+    for (const route of [
+      ...Object.values(entry.fragments),
+      ...Object.values(entry.darkFragments ?? {}),
+    ]) {
+      const html = outputs.get(route)!;
+      assert.equal(countClass(html, "ce-theme-control"), 0, route);
+      assert.equal(countClass(html, "ce-theme-toggle"), 0, route);
+    }
+  }
+});
+
+test("the consolidated head-band scheme screens are gone", async () => {
+  const { manifest } = await designCatalogue;
+  for (const id of [
+    "design-browse-dark-scheme",
+    "design-browse-light-only",
+    "design-review-dark-scheme",
+  ])
+    assert.equal(
+      manifest.entries.find((entry) => entry.id === id),
+      undefined,
+      id,
+    );
+});

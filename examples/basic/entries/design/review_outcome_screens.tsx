@@ -1,6 +1,7 @@
 import { screen } from "@mokly/mokly";
 
 import { PreviewWorkspace } from "./components/parts/workspace.js";
+import { useDarkPreview } from "./parts/appearance.js";
 import { CompareGrid, Pane } from "./parts/compare.js";
 import {
   ComparePage,
@@ -16,6 +17,7 @@ import { ScreenHead, Shell, ViewSwitch } from "./parts/shell.js";
 import { EmptyState } from "./parts/stage_content.js";
 
 function ChangedCompare({ viewport }: { viewport: CompareViewport }) {
+  const dark = useDarkPreview();
   return (
     <ComparePage
       design={DESTINATIONS.changed}
@@ -30,6 +32,7 @@ function ChangedCompare({ viewport }: { viewport: CompareViewport }) {
           <Pane label="Before" side="before">
             <FramedShot
               address="example.test/welcome"
+              dark={dark}
               viewport={previewViewport}
             >
               <MiniWelcome compact={previewViewport === "mobile"} />
@@ -38,6 +41,7 @@ function ChangedCompare({ viewport }: { viewport: CompareViewport }) {
           <Pane label="Current" side="after">
             <FramedShot
               address="example.test/welcome"
+              dark={dark}
               viewport={previewViewport}
             >
               <MiniWelcome compact={previewViewport === "mobile"} revised />
@@ -135,47 +139,11 @@ function DifferenceCompare({ viewport }: { viewport: CompareViewport }) {
   );
 }
 
-function DarkViewCompare({ viewport }: { viewport: CompareViewport }) {
-  return (
-    <ComparePage
-      design={DESTINATIONS.darkChanged}
-      activeTitle="Welcome"
-      subject="welcome"
-      idChip="example-welcome"
-      state="changed"
-      title="Welcome"
-      viewport={viewport}
-      render={(previewViewport) => (
-        <CompareGrid>
-          <Pane label="Before" side="before">
-            <FramedShot
-              address="example.test/welcome"
-              dark
-              viewport={previewViewport}
-            >
-              <MiniWelcome compact={previewViewport === "mobile"} />
-            </FramedShot>
-          </Pane>
-          <Pane label="Current" side="after">
-            <FramedShot
-              address="example.test/welcome"
-              dark
-              viewport={previewViewport}
-            >
-              <MiniWelcome compact={previewViewport === "mobile"} revised />
-            </FramedShot>
-          </Pane>
-        </CompareGrid>
-      )}
-    />
-  );
-}
-
 /** Review design screens for per-screen comparison outcomes. */
 export const reviewOutcomeScreens = [
   screen({
-    colorSchemes: ["light"],
-    description: "A changed screen compared side by side with its base render.",
+    description:
+      "A changed screen compared side by side with its base render, in either catalogue scheme.",
     desktop: <ChangedCompare viewport="desktop" />,
     id: "design-review-changed",
     mobile: <ChangedCompare viewport="mobile" />,
@@ -208,17 +176,5 @@ export const reviewOutcomeScreens = [
     mobile: <DifferenceCompare viewport="mobile" />,
     slug: "difference",
     title: "Difference mode",
-  }),
-  screen({
-    colorSchemes: ["light"],
-    description:
-      "The dark view of a changed screen compared side by side with its base render.",
-    desktop: <DarkViewCompare viewport="desktop" />,
-    id: "design-review-dark-scheme",
-    mobile: <DarkViewCompare viewport="mobile" />,
-    rationale:
-      "A screen with a dark render uses the grouped theme icon and viewport dropdown while the compact diff band selects its display mode. Dark reaches only inside the compared device screens (--mbk-dark-screen-bg #121514, --mbk-dark-screen-ink #eef1ef); the changed-screens navigation, head band, and comparison controls stay light. A screen that renders in light only keeps the theme icon disabled when no alternate state is available, and the head band never repeats the selected scheme in its title.",
-    slug: "dark-scheme",
-    title: "Dark view compare",
   }),
 ];

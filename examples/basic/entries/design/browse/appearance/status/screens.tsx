@@ -1,6 +1,7 @@
 import { screen } from "@mokly/mokly";
 
 import { PreviewWorkspace } from "../../../components/parts/workspace.js";
+import { useDarkPreview } from "../../../parts/appearance.js";
 import {
   DESTINATIONS,
   type DesignDestination,
@@ -15,7 +16,6 @@ import { EmptyState, FlowStep } from "../../../parts/stage_content.js";
 import {
   AppearanceHead,
   AppearanceShell,
-  useDarkPreview,
   WelcomeShot,
 } from "../parts/scaffold.js";
 

@@ -16,7 +16,6 @@ const changedDesigns = new Set([
   "design-changes-overlay",
   "design-review-changed",
   "design-review-difference",
-  "design-review-dark-scheme",
   "design-review-style-matched",
   "design-review-style-unresolved",
   "design-review-style-unnamed",

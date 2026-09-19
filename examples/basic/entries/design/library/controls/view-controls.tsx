@@ -1,12 +1,7 @@
 import { defineComponent, type ComponentProps } from "@mokly/mokly";
 
 import { libraryMetadata } from "../metadata.js";
-import {
-  optionalFlag,
-  previewViewport,
-  scheme,
-  schemeDestinations,
-} from "../schemas.js";
+import { optionalFlag, previewViewport } from "../schemas.js";
 
 import { ViewControlsView } from "./view-controls.view.js";
 
@@ -14,7 +9,6 @@ const propSchema = {
   kind: "object",
   properties: {
     selection: previewViewport,
-    scheme,
     highlight: optionalFlag,
     unavailable: {
       schema: {
@@ -23,24 +17,16 @@ const propSchema = {
       },
       optional: true,
     },
-    schemeDisabled: optionalFlag,
-    /** Omitted keeps the scheme control; `false` leaves the viewport alone. */
-    schemeControl: optionalFlag,
-    destinations: schemeDestinations,
   },
 } as const;
 export type ViewControlsProps = ComponentProps<typeof propSchema, []>;
-const sample = {
-  selection: "desktop",
-  scheme: "light",
-  destinations: {},
-} as const;
+const sample = { selection: "desktop" } as const;
 export const viewControls = defineComponent({
   ...libraryMetadata(
     "controls",
     "view-controls",
     "View controls",
-    "Viewport, theme and component highlighting controls.",
+    "Viewport and component highlighting controls.",
   ),
   propSchema,
   controls: {
@@ -52,12 +38,6 @@ export const viewControls = defineComponent({
         value,
       })),
     },
-    scheme: {
-      kind: "select",
-      label: "Theme",
-      options: scheme.schema.values.map((value) => ({ label: value, value })),
-    },
-    schemeControl: { kind: "boolean", label: "Scheme control" },
     highlight: { kind: "boolean", label: "Highlight components" },
     unavailable: {
       kind: "select",
@@ -85,11 +65,6 @@ export const viewControls = defineComponent({
       id: "unavailable",
       title: "Unavailable",
       props: { ...sample, highlight: false, unavailable: "empty" },
-    },
-    {
-      id: "viewport-only",
-      title: "Viewport only",
-      props: { ...sample, selection: "both", schemeControl: false },
     },
   ],
 });
