@@ -2,8 +2,9 @@
 
 ## Status And Outcome
 
-Status: implementation in progress. The implementation PR's merge is the completion boundary;
-keep this plan in the active index until then.
+Status: implementation and required post-push review complete. The
+implementation PR's merge is the completion boundary; keep this plan in the
+active index until then.
 
 Reduce the time to `Required CI` success while exercising the complete existing
 verification contract. Start with independent jobs and four shards per large
@@ -226,7 +227,7 @@ runtimes with complete passing evidence. The
 [measurement record](../docs/reviews/ci-performance.md) retains their fixture
 phase ranges.
 
-## Milestone 5: Validate, measure, commit, push and review
+## Milestone 5: Validate, measure, commit, push and review — completed
 
 Collect all acceptance evidence on the implementation branch before merge.
 Mark completed milestones as work lands and keep this plan active until the
@@ -252,10 +253,10 @@ implementation PR merges; arrange the index transition as part of that merge.
       behavior and inspect the complete diff and deletions against `origin/main`.
       Run `cargo xtask check` again if implementation changed after its last pass;
       validate Markdown and the diff for documentation-only evidence updates.
-- [ ] After checks pass, run `git add -A`, commit all completed work with
+- [x] After checks pass, run `git add -A`, commit all completed work with
       Conventional Commits and push the current branch, including every new
       source, test, documentation and report-support file in the review diff.
-- [ ] Only after that push, use
+- [x] Only after that push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`. Report numbered
       findings with severity, feature context, impact of doing nothing, lettered
