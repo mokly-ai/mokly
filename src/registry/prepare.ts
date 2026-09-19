@@ -31,9 +31,7 @@ export function prepareRegistry(
       violations.push({
         code: "invalid-definition",
         message: `exported definition #${index + 1} is not a registry definition`,
-        sourceRelativePath: toPosixPath(
-          path.relative(config.repoRoot, config.entriesDir),
-        ),
+        sourceRelativePath: entryGlobLabel(config),
       });
       return;
     }
@@ -70,13 +68,18 @@ export function prepareRegistry(
     violations.push({
       code: "empty-registry",
       message: "no registry definitions were exported",
-      sourceRelativePath: toPosixPath(
-        path.relative(config.repoRoot, config.entriesDir),
-      ),
+      sourceRelativePath: entryGlobLabel(config),
     });
   }
   if (violations.length > 0) throw invalidRegistry(violations);
   return { byId: new Map(entries.map((entry) => [entry.id, entry])), entries };
+}
+
+/** Label registry-wide violations with the configured entry globs. */
+function entryGlobLabel(config: ResolvedConfig): string {
+  return config.entriesDir
+    ? toPosixPath(path.relative(config.repoRoot, config.entriesDir))
+    : config.entryGlobs.join(", ");
 }
 
 function isDefinition(value: unknown): value is RegistryDefinition {

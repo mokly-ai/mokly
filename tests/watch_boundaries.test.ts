@@ -57,14 +57,24 @@ test("package-owned watch rules precede broad consumer rules", async (context) =
     "reload",
   );
   const nestedRenderer = path.join(fixture.root, "target/renderer.ts");
+  const nestedEntries = path.join(fixture.root, "dist/entries");
   const nestedSources: ResolvedConfig = {
     ...broad,
-    entriesDir: path.join(fixture.root, "dist/entries"),
+    entriesDir: nestedEntries,
+    entryGlobs: ["dist/entries/**/*.mockup.{ts,tsx}"],
+    entryModules: [path.join(nestedEntries, "screen.mockup.tsx")],
     renderer: nestedRenderer,
   };
   assert.equal(
     classifyWatchPath(
-      path.join(nestedSources.entriesDir, "screen.mockup.tsx"),
+      path.join(nestedEntries, "screen.mockup.tsx"),
+      nestedSources,
+    ),
+    "rebuild",
+  );
+  assert.equal(
+    classifyWatchPath(
+      path.join(nestedEntries, "created.mockup.tsx"),
       nestedSources,
     ),
     "rebuild",

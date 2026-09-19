@@ -8,9 +8,25 @@ import { isInside, projectRealPath, resolveInside } from "./paths.js";
 import { requireString } from "./rules.js";
 
 interface ReviewOutBoundary {
-  entriesDir: string;
+  /** Directories holding resolved entry modules, or the entriesDir shorthand. */
+  entryRoots?: readonly string[];
+  /** Resolved entry modules when discovery has already run. */
+  entryModules?: readonly string[];
+  /** Shorthand directory before discovery has resolved any module. */
+  entriesDir?: string;
   mockupsDir: string;
   repoRoot: string;
+}
+
+/** Directories that hold authored entry modules for a boundary check. */
+export function entryRootsOf(boundary: ReviewOutBoundary): string[] {
+  if (boundary.entriesDir) return [boundary.entriesDir];
+  return [
+    ...new Set([
+      ...(boundary.entryRoots ?? []),
+      ...(boundary.entryModules ?? []).map((module) => path.dirname(module)),
+    ]),
+  ];
 }
 
 /** Resolve an optional consumer module and require a regular file. */
@@ -43,14 +59,15 @@ export function requireDirectory(value: string, label: string): void {
   }
 }
 
-/** Reject source roots whose ownership cannot be distinguished. */
+/** Reject a shorthand source root whose ownership cannot be distinguished from output. */
 export function validateSourceRoots(
   repoRoot: string,
-  entriesDir: string,
+  entriesDir: string | undefined,
   mockupsDir: string,
 ): void {
-  const realEntries = requireRealInside(repoRoot, entriesDir, "entriesDir");
   const realMockups = requireRealInside(repoRoot, mockupsDir, "mockupsDir");
+  if (entriesDir === undefined) return;
+  const realEntries = requireRealInside(repoRoot, entriesDir, "entriesDir");
   if (entriesDir === mockupsDir || realEntries === realMockups)
     throw new MoklyError(
       "config-invalid",
@@ -65,10 +82,10 @@ export function validateReviewOut(
   label = "review.outDir",
   code: MoklyErrorCode = "config-invalid",
 ): void {
-  const { entriesDir, mockupsDir, repoRoot } = boundary;
+  const { mockupsDir, repoRoot } = boundary;
   const protectedRoots = [
     mockupsDir,
-    entriesDir,
+    ...entryRootsOf(boundary),
     path.join(repoRoot, MOKLY_CACHE),
   ];
   const realRepoRoot = fs.realpathSync(repoRoot);

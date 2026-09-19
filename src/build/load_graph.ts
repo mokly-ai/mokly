@@ -20,7 +20,7 @@ import {
   consumerReactPlugin,
   packageNodePaths,
 } from "./consumer_resolution.js";
-import { discoverEntryModules } from "./discovery.js";
+import { discoverEntryModules } from "./entry_discovery.js";
 import { graphSourceFiles, normalizeSourceFiles } from "./source_inventory.js";
 
 /** Consumer modules loaded in one React-safe esbuild graph. */
@@ -48,8 +48,9 @@ async function loadGraph(
   evaluate: boolean,
 ): Promise<LoadedGraph> {
   const entrySources = timeSync("graph.discover", () =>
-    discoverEntryModules(config.entriesDir),
+    discoverEntryModules(config),
   );
+  config = { ...config, entryModules: entrySources };
   timingCounts("graph", () => ({ entryModules: entrySources.length }));
   const outputPath = path.join(
     path.dirname(config.configPath),

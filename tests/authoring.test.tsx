@@ -40,6 +40,7 @@ const validationConfig: ResolvedConfig = {
   compatibility: { readManifestV2: false },
   configPath: path.join(repositoryRoot, "mokly.config.ts"),
   entriesDir: path.join(repositoryRoot, "tests"),
+  entryGlobs: ["tests/**/*.mockup.{ts,tsx}"],
   mockupsDir: path.join(repositoryRoot, "mockups"),
   moduleResolution: { aliases: {}, loaders: {}, packageRoots: [] },
   repoRoot: repositoryRoot,

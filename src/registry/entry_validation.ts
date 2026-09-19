@@ -1,7 +1,7 @@
 import { isCatalogueId } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
-import { isInside } from "../config/paths.js";
+import { isAuthoredOwner } from "../build/ownership.js";
 import type { ResolvedConfig } from "../config/types.js";
 
 import {
@@ -45,13 +45,13 @@ export function validateEntry(
   }
   if (
     entry.sourceRelativePath === "<unattributed>" ||
-    !isInside(config.entriesDir, entry.sourcePath)
+    !isAuthoredOwner(entry.sourceRelativePath, config)
   ) {
     violations.push(
       problem(
         entry,
         "invalid-source",
-        "definition is not attributed to entriesDir",
+        "definition is not attributed to a resolved entry module or inventoried source",
       ),
     );
   }

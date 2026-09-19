@@ -4,10 +4,13 @@ import { minimatch } from "minimatch";
 
 import { isOwned } from "../build/ownership.js";
 import { isBaselineCachePath } from "../config/cache_paths.js";
+import { isAuthoredEntryPath } from "../config/entry_membership.js";
 import { isInside, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig, WatchAction } from "../config/types.js";
 import { isExportIgnoredPath } from "../export/ignored.js";
 import { MANIFEST_NAME } from "../registry/manifest.js";
+
+import { entryGlobRoots, isEntryGlobCandidate } from "./watch_entry_globs.js";
 
 const IGNORED_DIRECTORY_NAMES = new Set([
   ".context",
@@ -191,7 +194,8 @@ export function classifyWatchPath(
     )
   )
     return "rebuild";
-  if (isInside(config.entriesDir, absolute)) return "rebuild";
+  if (isAuthoredEntryPath(absolute, config)) return "rebuild";
+  if (isEntryGlobCandidate(absolute, config)) return "rebuild";
   if (config.renderer === absolute) return "rebuild";
   const relative = toPosixPath(path.relative(config.repoRoot, absolute));
   if (isPackageOwnedIgnoredWatchPath(absolute, config, "event"))
@@ -238,7 +242,7 @@ export function isPackageOwnedIgnoredWatchPath(
 
 /** Resolve the finite roots/globs watched for this consumer. */
 export function watchTargets(config: ResolvedConfig): string[] {
-  const targets = [config.configPath, config.entriesDir];
+  const targets = [config.configPath, ...entryGlobRoots(config)];
   targets.push(
     ...(config.sourceFiles ?? []).map((source) =>
       path.resolve(config.repoRoot, source),
@@ -281,7 +285,7 @@ function isRequiredWatchPath(
 ): boolean {
   const required = [
     config.configPath,
-    config.entriesDir,
+    ...entryGlobRoots(config),
     ...(config.renderer ? [config.renderer] : []),
     ...(config.sourceFiles ?? []).map((source) =>
       path.resolve(config.repoRoot, source),

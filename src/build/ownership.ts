@@ -3,6 +3,7 @@ import path from "node:path";
 
 import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
+import { isAuthoredEntryPath } from "../config/entry_membership.js";
 import { isInside, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError, errorMessage } from "../errors.js";
@@ -126,15 +127,27 @@ export function generatedOwnershipDenial(
       );
       if (!source || !isSafeRepositoryPath(source))
         return "has no valid generated ownership header";
-      const absoluteSource = path.resolve(config.repoRoot, source);
-      if (!isInside(config.entriesDir, absoluteSource))
-        return "has an owner outside the configured entriesDir";
+      if (!isAuthoredOwner(source, config))
+        return "has an owner that is not a resolved entry module or inventoried source";
     } finally {
       fs.closeSync(handle);
     }
   } catch (error) {
     return `could not establish generated ownership: ${errorMessage(error)}`;
   }
+}
+
+/** An owner is trusted only when it is a discovered entry or an inventoried input. */
+export function isAuthoredOwner(
+  sourceRelativePath: string,
+  config: ResolvedConfig,
+): boolean {
+  const absolute = path.resolve(config.repoRoot, sourceRelativePath);
+  if (!isInside(config.repoRoot, absolute)) return false;
+  return (
+    isAuthoredEntryPath(absolute, config) ||
+    (config.sourceFiles ?? []).includes(sourceRelativePath)
+  );
 }
 
 function decodeSource(encoded: string): string | undefined {

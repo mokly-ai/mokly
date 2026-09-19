@@ -57,7 +57,9 @@ export async function serveWatched(
   const gate = new NotificationGate<string>();
   const failures = new NotificationGate<Error>();
   const report = (error: unknown) => reporter.runtimeDiagnostic(error);
-  config.sourceFiles = (await loadConsumerGraph(config, false)).sourceFiles;
+  const inventory = await loadConsumerGraph(config, false);
+  config.entryModules = inventory.entrySources;
+  config.sourceFiles = inventory.sourceFiles;
   let activeConfig = config;
   let watcher = createSourceWatcher(watcherFactory, config, gate, report);
   const resources = new ResourceWatcher(
@@ -199,9 +201,9 @@ export async function serveWatched(
   const reconfigure = async (candidate?: ResolvedConfig): Promise<void> => {
     const nextConfig =
       candidate ?? (await configLoader.load(activeConfig.configPath));
-    nextConfig.sourceFiles = (
-      await loadConsumerGraph(nextConfig, false)
-    ).sourceFiles;
+    const nextInventory = await loadConsumerGraph(nextConfig, false);
+    nextConfig.entryModules = nextInventory.entrySources;
+    nextConfig.sourceFiles = nextInventory.sourceFiles;
     const nextGate = new NotificationGate<string>();
     const replacement = createSourceWatcher(
       watcherFactory,

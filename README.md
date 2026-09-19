@@ -461,11 +461,14 @@ data imported through asset loaders. Editing them rebuilds the catalogue.
 Assets referenced only by public HTML/CSS URLs remain public resources unless
 another protection rule or public exclusion applies.
 
-- `entriesDir` and `mockupsDir` select structured source and generated output.
-  Prefer sibling `docs/mockups/entries` and `docs/mockups/generated` directories,
-  with `docs/mockups/renderer.tsx` beside them. Keep public assets such as `app.css`
-  in `generated` and developer README/tsconfig files beside it. Nested
-  `docs/mockups/src` layouts remain supported.
+- `entries` globs, or the `entriesDir` shorthand, discover entry modules
+  anywhere in the repository; `mockupsDir` selects generated output. Either
+  keep sibling `docs/mockups/entries` and `docs/mockups/generated` directories,
+  with `docs/mockups/renderer.tsx` beside them, or co-locate entry modules
+  beside product components with `entries: ["src/**/*.mockup.{ts,tsx}"]`.
+  Keep public assets such as `app.css` in `generated` and developer
+  README/tsconfig files beside it. Nested `docs/mockups/src` layouts remain
+  supported.
 - `publicExclude?: readonly string[]` adds safe POSIX globs matched relative to
   `mockupsDir`. Defaults are `**/README`, `**/README.*`, `**/tsconfig.json`, and
   `**/tsconfig.*.json`, all matched case-insensitively.

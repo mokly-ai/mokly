@@ -51,7 +51,11 @@ async function compileMeasured(
   accepted?: { graph: LoadedGraph; checkpoint: () => Promise<void> },
 ): Promise<Compilation> {
   const graph = accepted?.graph ?? (await loadConsumerGraph(config));
-  config = { ...config, sourceFiles: graph.sourceFiles };
+  config = {
+    ...config,
+    entryModules: graph.entrySources,
+    sourceFiles: graph.sourceFiles,
+  };
   const registry = timeSync("registry.prepare", () =>
     prepareRegistry(graph.definitions, config),
   );

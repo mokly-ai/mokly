@@ -7,10 +7,16 @@ export and local prop controls reuse the same consumer graph and validators.
 
 ## Consumer Graph
 
-`load_graph.ts` bundles entry modules, imported helpers, the renderer and any
-compatibility transformer together. React and React DOM resolve from consumer
-package roots, including when Mokly runs from an npx installation. The bundle
-stays in memory and retains the consumer's existing rendering/provider graph.
+`entry_discovery.ts` resolves the configured `entries` globs, or the
+`entriesDir` shorthand, into one sorted set of `.mockup.ts(x)` modules. Each
+glob must match at least one entry module, and every resolved module is
+rejected when it sits inside `review.outDir`, `.mokly-cache/`, `node_modules`,
+or escapes `repoRoot` through a symlink. `load_graph.ts` then bundles those
+modules, imported helpers, the renderer and any compatibility transformer
+together and retains the resolved set on the config as `entryModules`. React
+and React DOM resolve from consumer package roots, including when Mokly runs
+from an npx installation. The bundle stays in memory and retains the
+consumer's existing rendering/provider graph.
 
 Automatic JSX uses esbuild's `jsxDev` location arguments. `consumer_resolution.ts`
 resolves `react/jsx-dev-runtime` to a private shim exporting the consumer's
@@ -30,7 +36,11 @@ added prop. The wrapper strips the reserved `__moklySource` field before calling
 consumer code; the collector retains it only as optional manifest metadata.
 
 `consumer_entry.ts` attributes definitions to their owning modules and exposes
-the public authoring API, including `resolveInstance`. Source locations do not
+the public authoring API, including `resolveInstance`. Every repository-owned
+importer of `@mokly/mokly` receives the attributed facade; installed packages
+under `node_modules` and Mokly's own runtime receive the plain API. Registry
+validation and `ownership.ts` accept an attributed owner only when it is a
+resolved entry module or an inventoried source file. Source locations do not
 enter instance keys, props keys, slot identities, or Changes projections.
 
 ## Development
@@ -49,8 +59,9 @@ manifest compatibility are tested with isolated consumers.
 
 - `compile.ts`, `render.ts`, `document_compiler.ts`: exhaustive and requested-view
   compilation using the same validation boundary.
-- `load_graph.ts`, `consumer_entry.ts`, `consumer_resolution.ts`: one consumer
-  graph and its module resolution.
+- `entry_discovery.ts`, `load_graph.ts`, `consumer_entry.ts`,
+  `consumer_resolution.ts`: entry discovery, one consumer graph, and its module
+  resolution.
 - `jsx_dev_runtime.ts`, `component_source.ts`: invocation capture without output
   or input-identity changes.
 - `source_inventory.ts`: complete private authoring inventory, separate from

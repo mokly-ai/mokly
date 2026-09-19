@@ -2,7 +2,7 @@
 
 ## Status And Outcome
 
-Milestone 1 is complete, committed, and pushed. Milestone 2 is in progress.
+Milestones 1 through 4 are complete, committed, and pushed. Milestone 5 is next.
 
 Mokly currently discovers every `*.mockup.ts` and `*.mockup.tsx` module below
 one configured directory, `entriesDir`, and binds the source-attributed
@@ -144,95 +144,112 @@ discovery, repository-wide facade binding, and the replacement of every
 
 ---
 
-### Milestone 2: Config field and glob discovery
+### Milestone 2: Config field and glob discovery — completed
 
 Add the `entries` config field, resolve globs into a validated entry-module
 set, and make discovery consume that set. At the end of this milestone the
 existing `entriesDir` configurations behave exactly as before.
 
-- [ ] Add `entries?: readonly string[]` to `MoklyConfig` and make
+- [x] Add `entries?: readonly string[]` to `MoklyConfig` and make
       `entriesDir` optional; require exactly one of them.
-- [ ] Add `entryGlobs: readonly string[]` and
+- [x] Add `entryGlobs: readonly string[]` and
       `entryModules: readonly string[]` to `ResolvedConfig`. `entryGlobs` is
       the validated ordered list; `entryModules` is the sorted resolved set
       filled by discovery so later stages never re-glob.
-- [ ] Validate each glob with the existing relative-route rules, reject
+- [x] Validate each glob with the existing relative-route rules, reject
       duplicates, absolute paths, and escaping segments, and reject globs whose
       stable prefix resolves to `.mokly-cache/`.
-- [ ] Implement discovery that walks each glob's stable prefix, matches with
+- [x] Implement discovery that walks each glob's stable prefix, matches with
       `minimatch` using the same options as `review.sharedImpact`, keeps only
       `.mockup.ts` and `.mockup.tsx` files, and sorts the union.
-- [ ] Fail with a config error naming the glob when it matches zero entry
+- [x] Fail with a config error naming the glob when it matches zero entry
       modules.
-- [ ] Run the existing source classifier over every resolved module and fail
+- [x] Run the existing source classifier over every resolved module and fail
       with the module path and the matched denial when a module is inside
       `mockupsDir`, `review.outDir`, `.mokly-cache/`, a package-owned ignored
       directory, or resolves outside `repoRoot` through a symlink.
-- [ ] Replace `validateSourceRoots` with a per-match overlap check while
+- [x] Replace `validateSourceRoots` with a per-match overlap check while
       keeping the `entriesDir` sugar path producing the same errors for the
       same directories.
-- [ ] Add failing-first tests for: sugar equivalence, both-supplied error,
+- [x] Add failing-first tests for: sugar equivalence, both-supplied error,
       zero-match error, non-`.mockup` matches counting as zero, sort order
       independence from glob order, and each denial category.
-- [ ] Update the config-related crate and package READMEs that document
+- [x] Update the config-related crate and package READMEs that document
       configuration fields.
-- [ ] Run `cargo xtask check`, commit, and push.
+- [x] Run `cargo xtask check`, commit, and push.
 
 ---
 
-### Milestone 3: Repository-wide facade binding and attribution
+### Milestone 3: Repository-wide facade binding and attribution — completed
 
 Bind the attributed authoring facade to every repository-owned module and
 relax entry attribution so a definition is attributed to its defining module
 wherever that module lives.
 
-- [ ] Change the package API plugin so imports of `@mokly/mokly` from any
+- [x] Change the package API plugin so imports of `@mokly/mokly` from any
       real path inside `repoRoot`, excluding `node_modules`, `.mokly-cache/`,
       and Mokly's own runtime directories, receive the attributed facade keyed
       by the importer's repository-relative path.
-- [ ] Keep the plain package index for importers outside those boundaries so
+- [x] Keep the plain package index for importers outside those boundaries so
       installed packages cannot self-attribute.
-- [ ] Replace the `invalid-source` rule in registry entry validation with:
+- [x] Replace the `invalid-source` rule in registry entry validation with:
       the source path must be a safe repository-relative path, must be a
       regular file inside `repoRoot`, and must appear in the resolved entry
       set or the `sourceFiles` inventory.
-- [ ] Update the registry violation message and the shared source-denial
+- [x] Update the registry violation message and the shared source-denial
       message so neither names `entriesDir`.
-- [ ] Add failing-first tests for: a `defineComponent` call in a helper beside
+- [x] Add failing-first tests for: a `defineComponent` call in a helper beside
       a product component attributed to that helper, a `defineScreen` call in
       a helper outside every glob attributed to the helper and accepted
       because the helper is inventoried, a definition created by an installed
       package rejected as unattributed, and byte-identical manifests for the
       existing `entriesDir` fixtures.
-- [ ] Run `cargo xtask check`, commit, and push.
+- [x] Run `cargo xtask check`, commit, and push.
 
 ---
 
-### Milestone 4: Ownership, watch, export, and runtime boundaries
+### Milestone 4: Ownership, watch, export, and runtime boundaries — completed
 
 Replace the remaining `entriesDir` containment checks with the resolved entry
 set and inventoried sources so generated ownership, tracked ownership, watch
 classification, export confinement, and the component runtime all agree.
 
-- [ ] In generated ownership validation and tracked Git ownership, accept an
+- [x] In generated ownership validation and tracked Git ownership, accept an
       owner that is a resolved entry module or an inventoried source file
       inside `repoRoot`, and reject anything else with the existing messages.
-- [ ] In watch classification, treat the resolved entry modules as required
+- [x] In watch classification, treat the resolved entry modules as required
       rebuild inputs, add each glob's stable prefix to the watched roots, and
       re-run discovery on a created or deleted file that matches a glob.
-- [ ] In export resource policy and the export destination rules, replace the
+- [x] In export resource policy and the export destination rules, replace the
       `entriesDir` root with the set of directories containing resolved entry
       modules and inventoried sources, keeping the existing denial reasons.
-- [ ] In the component runtime IPC startup message, replace the `entriesDir`
+- [x] In the component runtime IPC startup message, replace the `entriesDir`
       string check with `entryModules` array validation.
-- [ ] Remove `entriesDir` from `ResolvedConfig` once no runtime reads it;
+- [x] Remove `entriesDir` from `ResolvedConfig` once no runtime reads it;
       keep it only as a config input field.
-- [ ] Add failing-first tests for: a generated document owned by a co-located
+- [x] Add failing-first tests for: a generated document owned by a co-located
       entry accepted and one owned by a non-inventoried file rejected, watch
       rebuild on a new co-located entry file, export refusing a destination
       containing a co-located entry directory, and runtime IPC rejecting a
       startup message without `entryModules`.
-- [ ] Run `cargo xtask check`, commit, and push.
+- [x] Run `cargo xtask check`, commit, and push.
+
+---
+
+Milestones 2, 3, and 4 were delivered in one commit. The shared entry-membership
+helper that replaces `entriesDir` containment is used by attribution, generated
+ownership, watch classification, and export confinement at once, so splitting
+them would have left the build failing between commits. Two planned details
+changed during implementation:
+
+- `entriesDir` stays on `ResolvedConfig` as an optional field alongside
+  `entryGlobs` and `entryModules`, because the shorthand still protects the
+  whole directory as authored source, exactly as before. Only the required
+  string field was removed.
+- The `.mockup.{ts,tsx}` filter uses the `entries` glob matching rules, and
+  private directories are `node_modules`, `.git`, and `.mokly-cache/`;
+  `dist`, `target`, and `.context` remain valid entry roots because existing
+  watch fixtures nest sources under them intentionally.
 
 ---
 
