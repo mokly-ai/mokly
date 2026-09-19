@@ -1,64 +1,64 @@
 # Screen Variants
 
-Status: active; created 2026-09-19 with the user's consent after the design
-discussion in this workspace. No implementation has started.
+Status: active. Created 2026-09-19 with the user's consent after the design
+discussion in this workspace, then rewritten the same day when the user chose
+own routes over a query parameter. Milestone 1 is complete; Milestone 2 is
+next.
 
-**Goal:** Let a screen declare saved variants beside its default render, show
-them as an expandable list under the screen's navigation row, select them on
-the screen's own route, and give changed variants their own Changes evidence.
+**Goal:** Let a screen declare variants beside its default render, show them as
+an expandable list under the screen's navigation row, give each variant its
+own catalogue id and URL, and show changed variants in the Changes filter.
 Today the only way to record "the same screen with one small shift" is a
 second sibling screen in the same collection, which is how the design
 catalogue's Shell states and Tag states collections are built.
 
-**Architecture:** Generalize the existing component saved-variant model to
-screens instead of inventing a screen-only mechanism. A screen variant has an
-id scoped to its screen, a title, an optional description, and its own mobile
-and desktop React nodes; the screen's own `mobile`/`desktop` nodes are the
-default variant. Every variant renders through the existing per-viewport,
-per-scheme pipeline into `<route>.variants/<variant>.<viewport>[.dark].html`,
-exactly like component variants. Selection is the existing `?variant=<id>`
-route query, so the client variant machinery, comparison fencing, selected
-live comparisons, and viewer selection extend rather than duplicate. Changes
-keeps one row per screen and marks changed variants under it, matching the
-component rule that variants are never independent rows.
+**Architecture:** A variant is an ordinary screen entry with one extra edge:
+`variantOf` names its parent screen. Authors write `variants: [...]` inside
+`defineScreen` or nested `screen`, and the helper flattens each variant into a
+full screen definition the way `defineRoot` flattens trees, deriving the route
+`<parent-route-stem>.variants/<slug>.html` and inheriting the parent's
+address, tags, color schemes, dependencies, and related docs unless the
+variant overrides them. Everything keyed by route or id then works unchanged:
+rendering, fragment paths, `MockLink`, use-case steps, `/id` aliases, static
+export files, changed-route detection, per-screen comparison results, selected
+live comparisons, and viewer selection. The navigation tree groups variants
+under their parent row from the `variantOf` edge, and Changes shows changed
+variant rows inside that group.
 
 **Decisions locked by the design discussion (raise before implementing if the
 user should reconsider):**
 
-- Light/dark is not a variant or sub-variant. Scheme stays a view axis on the
-  existing toggle. Dark-only changes are surfaced through per-view evidence on
-  the view controls and by landing on the first changed view; see Milestone 8.
-- The parent navigation row is the link to the default variant and carries a
-  separate disclosure button. It is not a `<details>` summary, because a
-  summary cannot also be a link.
-- Variants share the screen's `colorSchemes`, `tags`, `address`, `route`, and
-  `useCaseIds`. A variant declares none of those fields.
-- Variant ids use the catalogue-id grammar and are unique within one screen.
-  Ids are never global, never routable, and never valid `MockLink` targets.
-- A use-case step may name a `variantId`; the step then frames that variant.
-- `MockLink` and `mockLink` gain a `variant` input beside `fragment`; the
-  logical grammar becomes `mock:<id>[?variant=<variant>][#fragment]` and the
-  marker retains the same order. The plain `mock:<id>[#fragment]` form is
-  unchanged for every existing document.
-- Manifest schema advances to v6 because `ManifestScreen` gains a required
-  `variants` array and the fragment-route validator gains variant paths.
-  Comparison result schemas stay at v2 and v3 with an additive optional
-  `variants` array on screen results. Public catalogue read model v1 gains an
-  optional `variants` array on screens, which its additive-field rule allows.
-- Proposed, pending the user's explicit approval before Milestone 9 starts:
+- Own routes and ids, not a query parameter. Every variant is deep-linkable
+  as a real file without JavaScript, and no new link grammar is needed.
+- Light/dark is not a variant. Scheme stays a view axis on the existing
+  toggle. Dark-only changes are surfaced through per-view evidence on the view
+  controls and by landing on the first changed view; see Milestone 7.
+- Variant ids are ordinary global catalogue ids, never derived from position.
+  Authors write the full id, for example `welcome-empty`.
+- The parent navigation row is the link to the parent screen and carries a
+  separate disclosure button with `aria-expanded`. It is not a `<details>`
+  summary, because a summary cannot also be a link.
+- Exactly one level: a variant cannot declare variants, and a variant cannot
+  be claimed by a collection. It belongs to the parent's collection through
+  the parent.
+- A variant is a full screen for Changes: it is its own row inside its parent's
+  group, and the Changes count counts changed variants. The parent row carries
+  an aggregate mark when any variant changed so the group stays visible.
+- Manifest schema stays at v5. `variantOf` is an additive optional field, and
+  the derived route already satisfies the existing fragment-path rule.
+  Comparison schemas stay at v2 and v3 unchanged. The public read model v1
+  gains optional `variantOf` on screens, which its additive-field rule allows.
+- Proposed, pending the user's explicit approval before Milestone 8 starts:
   the shipped `examples/basic` design catalogue converts the light-only
   `design-browse-dark-scheme`/`design-browse-light-only` pair and the four tag
-  states into variants of `design-browse-screen` (Welcome) so the example
-  exercises the feature with real screens. That retires six existing ids and
-  routes on `origin/main`, which needs approval under the mainline
-  preservation rule. Without approval, Milestone 9 is skipped and the
-  standalone screens stay. Every other design screen stays as it is either
-  way.
+  states into variants of `design-browse-screen` (Welcome). Ids stay the
+  same because variants keep global ids; only their routes and collection
+  membership change, which retires six routes on `origin/main` and needs
+  approval under the mainline preservation rule. Without approval, Milestone 8
+  is skipped and the standalone screens stay.
 
 **Spec:** [`docs/protocol/mokly-screen-variants.md`](../docs/protocol/mokly-screen-variants.md)
-(new, Milestone 1) plus targeted updates to the authoring, rendering,
-manifest, changes, navigation, shell-design, catalogue read-model, viewer,
-selected-comparison, and design-links contracts.
+plus the targeted updates listed in Milestone 1.
 
 **Tech stack:** TypeScript ESM (Node 22 test runner via `tsx --test`, tests
 import from `../dist`), React 19 static rendering, Playwright Chromium against
@@ -86,17 +86,17 @@ import from `../dist`), React 19 static rendering, Playwright Chromium against
   describe. Documentation-only milestones validate Markdown with
   `npx prettier --check` on the changed files and a manual link check.
 - Keep new modules near 200 lines and below 300. `nav.tsx` (245),
-  `workspace_data.ts` (292), `stages.tsx` (287), `screen_compare.ts` (235),
-  and the design library's `catalogue-navigation.view.tsx` (261) are already
-  near the cap; extract before extending them.
+  `workspace_data.ts` (292), `stages.tsx` (287), and the design library's
+  `catalogue-navigation.view.tsx` (261) are already near the cap; extract
+  before extending them.
 - Mockup milestones and UI milestones are separate. If a `mockup` or `ui`
   milestone finds missing backend work, add a new backend milestone
   immediately after it, then a new tagged milestone holding the blocked
   tasks, without editing completed milestones.
 - Add the failing test before fixing any regression discovered on the way.
 - Do not delete or override anything on `origin/main` without explicit
-  approval. The only removal this plan proposes is the design-catalogue id
-  retirement in Milestone 9; it needs the user's approval first and must be
+  approval. The only removal this plan proposes is the design-catalogue route
+  retirement in Milestone 8; it needs the user's approval first and must be
   named in that commit message.
 
 ## Milestones
@@ -107,133 +107,50 @@ import from `../dist`), React 19 static rendering, Playwright Chromium against
 
 Documentation only. At completion every contract below defines the complete
 behavior the later milestones implement, with no guesswork left for the
-authoring API, generated output, manifest v6, links, navigation, Changes,
-comparisons, viewer selection, and the public read model.
+authoring API, derived routes, manifest field, navigation, Changes, the public
+read model, and the viewer.
 
 #### Task 1.1: New screen-variants contract
 
 **Files:**
 
-- Create: `docs/protocol/mokly-screen-variants.md` (about 250 lines)
-- Modify: `docs/protocol/README.md` (index entry beside the components
-  contracts; Supported Formats table moves both catalogue rows to manifest 6)
+- Create: `docs/protocol/mokly-screen-variants.md`
+- Modify: `docs/protocol/README.md` (index entry)
 
 **Steps:**
 
-- [ ] Write Delivery Status (approved target tracked by this plan), Purpose,
-      and Authoring: the `ScreenVariantInput` shape
-      `{ id, title, description?, mobile, desktop }`, the optional
-      `variants?: readonly ScreenVariantInput[]` field on `ScreenInput` and
-      nested `screen`, id grammar and uniqueness, the reserved id `default`
-      rejected for authored variants because the screen's own nodes own it,
-      shared-field rule, no inheritance from collections or roots, and
-      validation failures with source attribution.
-- [ ] Write Generated Output: default fragments keep their current paths;
-      each authored variant writes `<route>.variants/<id>.<viewport>.html`
-      and `.dark.html` for every effective scheme, rendered through the same
-      `renderer({ node, entry, viewport, colorScheme, variantId })` call with
-      the variant's node and `variantId` set; ownership headers, collision,
-      orphan, resource, link, and fragment validation apply to every variant
-      document; cross-view fragment validation for a destination screen now
-      covers every variant document as well.
-- [ ] Write Manifest v6: `ManifestScreen.variants` is a required array
-      (empty when the screen declares none) of
-      `{ id, title, description?, fragments, darkFragments?, componentViews? }`
-      in authored order; the same `componentViews` rule as component variants
-      when components are registered; entry sorting, key ordering, and
-      omission rules; historical readers accept v3, both v4 shapes, and v5;
-      current loading rejects v5 with the rebuild diagnostic; the live index
-      carries the same variant metadata.
-- [ ] Write Selection And Routes: `?variant=<id>` on the screen route with
-      the existing one-value rule, unknown or duplicate values showing the
-      selection error while the default stays reachable, `/id/<id>` opening
-      the default, `variant` preserved across viewport and scheme changes and
-      through Back and Forward, and static export id aliases unchanged.
-- [ ] Write Logical Links: `mockLink(id, options?)` where the second argument
-      is either the existing `fragment` string or `{ fragment?, variant? }`;
-      `MockLink` gains a `variant` prop; raw form
-      `mock:<id>[?variant=<variant>][#fragment]`; the `variant` grammar is the
-      catalogue-id grammar; validation that the destination screen declares
-      the variant; portable rewrite to that variant's fragment for the source
-      viewport and scheme with light fallback; marker bytes carry the same
-      logical form; `data-nav-href` accepts the same form; component
-      destinations continue to reject `variant` because their selectors are
-      shell-owned; use-case and page destinations reject it.
-- [ ] Write Use-Case Steps: optional `variantId` on `UseCaseStep`, validated
-      against the step screen, framed in the flow, and carried by the public
-      read model; a step without `variantId` frames the default.
-- [ ] Write Navigation: the screen row for a screen with variants renders a
-      link to the default plus a disclosure button with `aria-expanded` and
-      `aria-controls`; one child row per variant in authored order with the
-      screen icon at one extra depth and the same guide painting; row key
-      `variant:<screen-id>:<variant-id>`; disclosure key
-      `variants:<section>:<screen-id>` persisted beside collection keys;
-      active-row rule extended so the row whose route and variant match the
-      current URL is `aria-current`; ancestor disclosure opens the variant
-      list; Collapse all closes variant lists; search matches variant titles
-      and reveals the parent; a screen row stays visible when any variant
-      matches; the responsive drawer shows the same structure.
-- [ ] Write Changes: per-variant review views keyed by variant id; one
-      Changes row per screen; the Changes filter shows only variant rows with
-      Added, Changed, or Removed state under a changed screen, with the list
-      expanded; a screen whose default is unmodified but whose variant changed
-      is Changed with an aggregate marker; opening from Changes lands on the
-      first changed variant; removed variants of a surviving screen keep a
-      row with the Removed state and a retained baseline comparison; the
-      status beside the title, the comparison band, and selected live
-      comparisons describe the selected variant; use-case propagation counts
-      a changed variant as a changed screen.
-- [ ] Write Public Read Model And Viewer: optional `variants` on
-      `CatalogueScreen` with `{ id, title, description?, views, comparison }`;
-      `ViewerSelection.variantId` valid for a screen that declares the
-      variant; `InstanceRef` and `ScreenNavigateEvent` unchanged in shape;
-      controlled-mode proposals for screen variants follow the component
-      rules.
-- [ ] Write Verification Contract listing the coverage Milestones 3 through
-      7 must prove, and Related Docs.
+- [x] Write Delivery Status, Purpose And Boundary, Authoring (the
+      `ScreenVariantInput` shape, flattening, derived route, inheritance and
+      overrides, the one-level and no-collection-claim rules, validation
+      failures), Generated Output And Manifest (`variantOf`, sorting, v5
+      validation), Links And Flows (ordinary ids, portable rewrite, use-case
+      steps), Navigation (parent row, disclosure button, child rows, keys,
+      active-row invariant, search, Collapse all, drawer), Changes (own rows,
+      aggregate mark, counts, landing, removed variants), Public Read Model
+      And Viewer, Verification, and Related Docs.
 
-#### Task 1.2: Align the existing contracts
+#### Task 1.2: Align the existing contracts and guides
 
 **Files:**
 
-- Modify: `docs/protocol/mokly-authoring.md` (variants field, `MockLink`
-  `variant`, step `variantId`), `docs/protocol/mokly-rendering.md`
-  (`variantId` for screen renders), `docs/protocol/mokly-component-manifest.md`
-  (v6 envelope, screen `variants`), `docs/protocol/mokly-components.md`
-  (delivery status note that screens share the variant model),
-  `docs/protocol/mokly-changes.md` (per-variant screen views and the v2/v3
-  additive `variants` field), `docs/protocol/mokly-component-review.md`
-  (`ScreenReviewV3.variants`), `docs/protocol/mokly-selected-comparisons.md`
-  (`variant` accepted for screens), `docs/protocol/mokly-navigation.md`
-  (logical grammar, variant rows in the visibility invariant),
-  `docs/protocol/mokly-runtime.md` (Browse shell section),
-  `docs/protocol/mokly-shell-design.md` (navigation bullet, new design
-  inventory rows, retired rows), `docs/protocol/mokly-catalogue.md`
-  (screen `variants`), `docs/protocol/mokly-viewer.md` (selection rule),
-  `docs/protocol/mokly-design-links.md` (inventory and Welcome variant
-  destinations), `docs/protocol/mokly-export-delivery.md` (variant query
-  on exported screen pages)
-- Modify: `docs/architecture/build-pipeline.md` (variant documents in the
-  output line), `docs/guides/authoring/screens.md`,
-  `docs/guides/authoring/links.md`, `docs/guides/authoring/use-case-flows.md`,
-  `docs/guides/catalogue/browse.md`, `docs/guides/catalogue/changes.md`,
-  `docs/guides/catalogue/search-and-filters.md`, `README.md` (one feature
-  paragraph and the authoring example), `plans/README.md`
+- Modify: `docs/protocol/mokly-authoring.md`, `docs/protocol/mokly-rendering.md`,
+  `docs/protocol/mokly-component-manifest.md`, `docs/protocol/mokly-changes.md`,
+  `docs/protocol/mokly-catalogue-changes.md`, `docs/protocol/mokly-navigation.md`,
+  `docs/protocol/mokly-runtime.md`, `docs/protocol/mokly-shell-design.md`,
+  `docs/protocol/mokly-catalogue.md`, `docs/protocol/mokly-viewer.md`,
+  `docs/protocol/mokly-pages.md`, `docs/architecture/build-pipeline.md`
+- Modify: `docs/guides/authoring/screens.md`, `docs/guides/catalogue/browse.md`,
+  `docs/guides/catalogue/changes.md`, `README.md`, `plans/README.md`
 
 **Steps:**
 
-- [ ] Apply each change above, keeping every touched contract internally
-      consistent and each under roughly 250 lines by moving detail into the
-      new contract rather than growing the old ones. Where a contract states
-      "variants are component-only" or "screens have no variants", replace the
+- [x] Apply each change, keeping every touched contract internally consistent
+      and moving detail into the new contract rather than growing the old
+      ones. Where a contract says variants are component-only, replace the
       statement rather than leaving a contradiction.
-- [ ] Update the Supported Formats table and every "schema v5" statement that
-      describes the current manifest to v6, leaving historical-reader text
-      intact.
-- [ ] Re-read the new contract and every modified contract end to end for
-      conflicting statements. Run `npx prettier --check` on the changed
-      Markdown and confirm every relative link resolves.
-- [ ] Milestone close-out: commit `docs(protocol): define screen variants`
+- [x] Run `npx prettier --check` on the changed Markdown and confirm every
+      relative link resolves.
+- [x] Milestone close-out: commit `docs(protocol): define screen variants`
       and push.
 
 ---
@@ -243,28 +160,26 @@ comparisons, viewer selection, and the public read model.
 Tags: mockup
 
 At completion the design catalogue depicts the expandable variant row in the
-navigation, a selected variant, the Changes filter with changed variant
-sub-rows, a removed variant, and the changed-view marks on the view controls,
+navigation, a selected variant, the Changes filter with a changed variant
+sub-row, a removed variant, and the changed-view marks on the view controls,
 at mobile and desktop widths, using only screen components. The Welcome
 scheme and tag artboards stay standalone screens in this milestone; their
-conversion into real variants is Milestone 9, after the authoring field
-exists and the user has approved the id retirement.
+conversion into real variants is Milestone 8.
 
 #### Task 2.1: Catalogue navigation library component
 
 **Files:**
 
 - Modify: `examples/basic/entries/design/library/chrome/catalogue-navigation.tsx`
-  (row schema gains `kind: "variant"`, optional `parentKey`, optional
-  `variants` disclosure state on screen rows, optional `changed` mark), a new
-  saved variant `variants` depicting Welcome expanded with two variants, and
-  a saved variant `changed-variants` depicting the Changes filter with one
-  changed sub-row
+  (row schema gains `kind: "variant"`, an optional `variants` disclosure state
+  on screen rows, and an optional `changed` mark), a saved variant `variants`
+  depicting Welcome expanded with two variants, and a saved variant
+  `changed-variants` depicting the Changes filter with one changed sub-row
 - Modify: `examples/basic/entries/design/library/chrome/catalogue-navigation.view.tsx`
-  (extract row rendering into `catalogue-navigation-row.view.tsx` first,
-  then add the parent link plus disclosure button and the variant rows)
+  (extract row rendering into `catalogue-navigation-row.view.tsx` first, then
+  add the parent link plus disclosure button and the variant rows)
 - Modify: `examples/basic/entries/design/parts/nav_data.ts` (Welcome gains
-  variant rows `dark-scheme` and `tag-forms` as the depicted fixture),
+  variant rows as the depicted fixture),
   `examples/basic/generated/design-library/chrome/catalogue-navigation.css`
   (disclosure button, variant depth, changed dot; no left-edge accent rail)
 - Modify: `docs/protocol/mokly-design-component-library.md` (variant ids)
@@ -272,15 +187,14 @@ exists and the user has approved the id retirement.
 **Steps:**
 
 - [ ] Add the schema fields, saved variants, and view markup; keep the
-      library README's authoring rules (registration, fixtures, and
-      navigation tables stay out of the `.view` module's dependencies).
-- [ ] Style the disclosure button as a 16px chevron control inside the row
-      at the trailing edge, the variant rows one indent step deeper with the
-      screen icon, and the changed mark as the existing changed dot. Verify
-      no pseudo-element, border, or gradient adds a left-edge rail.
+      library README's authoring rules.
+- [ ] Style the disclosure button as a 16px chevron control at the row's
+      trailing edge, the variant rows one indent step deeper with the screen
+      icon, and the changed mark as the existing changed dot. Verify no
+      pseudo-element, border, or gradient adds a left-edge rail.
 - [ ] `npm run build && npm run example:build && npm run example:check`.
 
-#### Task 2.2: Welcome variants and the new Browse states
+#### Task 2.2: New Browse states
 
 **Files:**
 
@@ -289,23 +203,22 @@ exists and the user has approved the id retirement.
   `navigation_states.ts` (destinations and typed navigation records for the
   four new screens)
 - Create: `examples/basic/entries/design/browse/variants/screens.tsx` with
-  `design-browse-variant-selected` (Welcome with the `dark-scheme` variant
-  selected and the nav list expanded), `design-browse-variant-changes`
-  (Changes filter, Welcome changed, only its changed variant sub-row shown),
+  `design-browse-variant-selected` (a Welcome variant selected with the nav
+  list expanded and the breadcrumb ending in Welcome),
+  `design-browse-variant-changes` (Changes filter, Welcome group open, only
+  its changed variant sub-row shown with the parent's aggregate mark),
   `design-browse-variant-removed` (a removed variant sub-row with Removed
-  status and the baseline comparison band), `design-browse-changed-views`
-  (light selected, theme toggle and viewport dropdown carrying changed marks,
-  status reading Unmodified for the shown view); one canonical
+  status and the current empty state), `design-browse-changed-views` (light
+  selected, theme toggle and viewport dropdown carrying changed marks, status
+  reading Unmodified for the shown view); one canonical
   `design-browse-variants` collection page under `design/browse/variants/`
   rendering the selected-variant screen and linking the children
-- Modify: `examples/basic/entries/design/parts/screen_heads.tsx` (a variant
-  strip beneath the title for screens with variants, reusing the component
-  page's selection style), `examples/basic/entries/design/parts/nav.tsx`,
+- Modify: `examples/basic/entries/design/parts/screen_heads.tsx`,
+  `examples/basic/entries/design/parts/nav.tsx`,
   `examples/basic/entries/design/parts/shell.tsx` (view-control changed marks),
   `examples/basic/generated/design.css` and `design-stage.css`
 - Modify: `examples/basic/notes.md`, `docs/protocol/mokly-shell-design.md`
-  inventory, `docs/protocol/mokly-design-links.md` inventory and control
-  table
+  inventory, `docs/protocol/mokly-design-links.md` inventory and control table
 - Test: `tests/design_links.test.ts`, `tests/design_screens.test.tsx`,
   `tests/browser/design_links.spec.ts`, `tests/browser/comparison_design.spec.ts`
 
@@ -330,418 +243,246 @@ exists and the user has approved the id retirement.
 
 ---
 
-### Milestone 3: Authoring, rendering, and manifest v6
+### Milestone 3: Authoring, flattening, and manifest field
 
 Backend only, no shell changes. At completion `defineScreen` and nested
-`screen` accept validated variants, every variant renders to its own
-documents, the manifest is v6 with screen variants, historical readers accept
-v5, the live index and on-demand renderer know variant views, and Browse
-still renders exactly as before because it ignores the new data.
+`screen` accept validated variants and flatten them into screen definitions
+with derived routes and inherited metadata, the manifest carries `variantOf`,
+the hierarchy and public projection know the edge, and Browse still renders
+each variant as an ordinary screen because nothing reads the edge yet.
 
-#### Task 3.1: Authoring types and validation
+#### Task 3.1: Authoring types, flattening, and validation
 
 **Files:**
 
 - Modify: `src/authoring/types.ts` (`ScreenVariantInput`,
   `ScreenInput.variants?`, `NestedScreenInput.variants?`,
-  `UseCaseStep.variantId?`), `src/authoring/definitions.ts` (pass `variants`
-  through `defineScreen` and the nested flattener without inheritance)
-- Create: `src/registry/variant_validation.ts` (shared variant list checks
-  for screens: array shape, id grammar, uniqueness, reserved `default`,
-  nonempty title, optional nonempty description, `mobile`/`desktop`
-  presence, and rejection of every other key)
-- Modify: `src/registry/entry_validation.ts` (call it for screens; pages and
-  collections reject `variants`), `src/registry/relationships.ts` (step
-  `variantId` must exist on the step screen)
-- Test: `tests/authoring.test.tsx`, `tests/registry_relationships.test.ts`
-  (or the existing suite that owns `crossReferenceViolations`)
+  `ScreenDefinition.variantOf?`), `src/authoring/definitions.ts`
+  (`defineScreen` returns the parent when no variants are declared and
+  otherwise a `ScreenDefinition[]`-compatible result; nested `screen`
+  flattens variants beside the parent)
+- Create: `src/authoring/variants.ts` (derive the variant route from the
+  parent route and slug, merge inherited fields, brand and attribute each
+  flattened definition to the defining module)
+- Create: `src/registry/variant_validation.ts` (`variantOf` names an
+  existing screen that is not itself a variant; a variant is not claimed by
+  any collection; a variant route matches the derived form; slugs are unique
+  within a parent; a variant cannot declare `variants`)
+- Modify: `src/registry/entry_validation.ts`, `src/registry/relationships.ts`
+  (call the new checks), `src/registry/prepare.ts` (accept the flattened
+  result shape from `mockups` exports)
+- Test: `tests/authoring.test.tsx`, the suite owning `crossReferenceViolations`
 
 **Steps:**
 
-- [ ] Write failing tests: a screen with two variants keeps them on the
-      definition in authored order; duplicate ids, `default`, an invalid id,
-      a missing title, a variant carrying `route` or `tags`, a page with
-      `variants`, and a collection with `variants` each produce an
-      `invalid-variants` violation naming the screen; a step `variantId`
-      that the screen does not declare produces `missing-step-variant`;
-      nested `screen` accepts `variants` and nothing inherits them.
-- [ ] Implement; keep `entry_validation.ts` under 300 lines by delegating to
-      the new module.
+- [ ] Decide and record the `defineScreen` return shape before coding: keep
+      `defineScreen` returning one `ScreenDefinition` and expose the variants
+      through a new `defineScreenWithVariants` helper only if the array
+      return breaks existing typed consumers. Prefer the single helper with a
+      union return if the packed-consumer tests accept it.
+- [ ] Write failing tests: two variants flatten into two extra screens with
+      routes `screens/welcome.variants/<slug>.html`, `variantOf: "welcome"`,
+      inherited address, tags, schemes, dependencies, and related docs, and
+      per-variant overrides applied; duplicate slugs, a slug that is not a
+      route segment, a variant declaring `variants`, a variant claimed by a
+      collection, and a `variantOf` pointing at a variant each produce a
+      source-attributed violation; nested `screen` behaves the same.
+- [ ] Implement; keep `definitions.ts` under 300 lines by moving variant
+      flattening into the new module.
 - [ ] `npm test` green.
 
-#### Task 3.2: Rendering variant documents
+#### Task 3.2: Manifest, hierarchy, and public projection
 
 **Files:**
 
-- Modify: `src/build/render.ts` (iterate `[undefined, ...variant ids]` for
-  screens as it does for components; pick the variant's node; compute the
-  route with `componentFragmentRoute`, renamed to `variantFragmentRoute` in
-  `packages/viewer/src/components/paths.ts` with the old name removed and
-  every import updated), `src/build/logical_routes.ts` (variant-aware
-  artifact resolution for logical links), `src/build/logical_records.ts`,
-  `src/build/mock_links.ts` (parse and validate the `variant` part; rewrite
-  to the variant fragment; marker retains the logical form),
-  `src/build/render_cooperative.ts` and `src/build/document_compiler.ts`
-  (selection gains `variantId` for screens so on-demand rendering serves one
-  variant view), `src/components/render.tsx` (collector label already
-  includes `variantId`; screens now pass it)
-- Modify: `packages/viewer/src/navigation/logical.ts` (`LogicalTarget`
-  gains `variant?`; `parseLogicalTarget` and `logicalMarker` accept and emit
-  `?variant=`), `src/authoring/links.tsx` (`mockLink(id, options?)`,
-  `MockLink variant`), `src/server/fragments.ts` (cross-view fragment
-  validation covers variant documents)
-- Test: `tests/build.test.ts`, `tests/build_links.test.ts`,
-  `tests/build_navigation_links.test.ts`, `tests/compatibility_navigation.test.ts`,
-  `packages/viewer/tests/*` for the logical parser
+- Modify: `packages/viewer/src/registry/types.ts` (`ManifestScreen.variantOf?`),
+  `src/registry/manifest.ts` (emit it), `src/registry/manifest_entries.ts`
+  and `src/registry/manifest_relationships.ts` (validate it),
+  `packages/viewer/src/registry/hierarchy.ts` (`variantsById` and
+  `variantParentById` beside the collection maps; a variant's ancestors are
+  its parent's ancestors), `src/registry/changed_routes.ts` (the projection
+  includes `variantOf`), `src/catalogue/projection.ts`,
+  `packages/viewer/src/catalogue/types.ts` and `entry_reader.ts` (public
+  `variantOf`), `docs/protocol/fixtures/catalogue-v1.json`
+- Test: `tests/manifest_files.test.ts`, `tests/catalogue_projection.test.ts`,
+  `tests/catalogue_reader.test.ts`, `packages/viewer/tests/*` for the
+  hierarchy
 
 **Steps:**
 
-- [ ] Write failing tests: a screen with one variant writes the two default
-      fragments plus `<route>.variants/<id>.mobile.html` and
-      `.desktop.html`, and the dark pair when dark is enabled; the renderer
-      receives `variantId` for variant renders and not for the default;
-      `mockLink("welcome", { variant: "error" })` yields
-      `mock:welcome?variant=error`; `mockLink("welcome", { variant: "error", fragment: "top" })`
-      yields `mock:welcome?variant=error#top`; the string form still works;
-      a link to an undeclared variant fails the build naming the screen and
-      variant; a `variant` on a component, page, or use-case destination
-      fails; the portable rewrite targets the variant document for the
-      source viewport and scheme with light fallback; the compatibility
-      invariant records include the variant; a fragment must exist in every
-      variant document of the destination.
-- [ ] Implement; keep `render.ts` under 300 lines by extracting the
-      per-entry view enumeration into `src/build/render_views.ts`.
-- [ ] `npm test` green.
-
-#### Task 3.3: Manifest v6, historical readers, live index, public projection
-
-**Files:**
-
-- Modify: `packages/viewer/src/registry/types.ts` (`ManifestScreenVariant`,
-  `ManifestScreen.variants`, `ManifestV6`, `Manifest` union includes v5 as
-  historical), `packages/viewer/src/components/views.ts` (`generatedViews`
-  enumerates screen variants with `variantId`), `src/registry/manifest.ts`
-  (`schemaVersion: 6`, variant records), `src/registry/manifest_validation.ts`,
-  `src/registry/manifest_entries.ts`, `src/components/manifest_validation.ts`
-  (variant fragment paths and usage records for screens), `src/registry/catalogue_index.ts`
-  (live index carries screen variants), `src/components/render_request.ts`
-  (accept a screen as the render target when variants exist),
-  `src/registry/changed_routes.ts` (route projection includes screen variant
-  metadata and fragment candidates), `src/catalogue/projection.ts` and
-  `src/catalogue/views.ts` (public `variants` on screens),
-  `packages/viewer/src/catalogue/entry_reader.ts` (read them),
-  `packages/viewer/src/catalogue/references.ts`, `docs/protocol/fixtures/catalogue-v1.json`
-- Test: `tests/manifest_files.test.ts`, `tests/component_manifest.test.ts`,
-  `tests/catalogue_history.test.ts`, `tests/catalogue_projection.test.ts`,
-  `tests/catalogue_reader.test.ts`, `tests/manifest_combined.test.ts`
-
-**Steps:**
-
-- [ ] Write failing tests: a v6 manifest serializes `variants: []` for a
-      screen without variants and the full records otherwise, in authored
-      order with sorted keys; readers reject a variant whose fragment path
-      disagrees with the suffix rule, duplicate ids, and a missing
-      `componentViews` record when components are registered; current
-      loading rejects v5 with the rebuild diagnostic; the historical reader
-      accepts v5 and normalizes screens to an empty `variants` list; the
-      public projection emits `variants` and the conformance fixture round
-      trips.
-- [ ] Update every current-manifest literal from 5 to 6 in source, tests, and
-      the packed-consumer smoke; keep the v5 historical fixtures.
+- [ ] Write failing tests: the manifest omits `variantOf` on ordinary screens
+      and emits it on variants; validation rejects an unknown parent, a
+      parent that is a variant, and a variant listed in `childIds`; the
+      hierarchy exposes variants under their parent with the parent's
+      ancestors; reparenting a variant marks it changed; the public model
+      and reader round-trip the field and the fixture stays valid.
+- [ ] Implement.
 - [ ] `npm test` green; `npm run package:smoke` green.
 
-#### Task 3.4: Example catalogue variants and docs
+#### Task 3.3: Example catalogue variant and docs
 
 **Files:**
 
 - Modify: `examples/basic/entries/catalogue.mockup.tsx` (Welcome gains an
   `empty-workspace` variant whose input is blank and whose action is
-  disabled, so the example exercises variants without design-catalogue
-  coupling), `examples/basic/notes.md`, `README.md` authoring example,
+  disabled), `examples/basic/notes.md`, `README.md` authoring example,
   `docs/guides/authoring/screens.md`
 
 **Steps:**
 
 - [ ] Add the variant, rebuild, and check; confirm the manifest diff adds
-      exactly the new records and paths.
-- [ ] Smoke: `npm run dev`, open Welcome, confirm the default still renders
-      and `/static/screens/welcome.variants/empty-workspace.mobile.html`
-      serves the variant document.
-- [ ] Milestone close-out: commit
-      `feat(registry): add screen variants to manifest v6` and push.
+      exactly one screen entry with `variantOf` and its fragment paths.
+- [ ] Smoke: `npm run dev`, open the variant through `/id/example-welcome-empty`,
+      confirm it renders as an ordinary screen with the Welcome breadcrumb.
+- [ ] Milestone close-out: commit `feat(registry): add screen variants` and
+      push.
 
 ---
 
-### Milestone 4: Changes, comparisons, and use-case steps
+### Milestone 4: Changes aggregation and removed variants
 
-Backend only. At completion review results carry per-variant screen views,
-changed-route detection treats a changed variant as a changed screen, the
-selected live endpoint serves a screen variant, and a use-case step can frame
-a variant.
+Backend only. At completion the catalogue change snapshot lets the shell mark
+a parent whose variant changed, removed variants are retained as removed
+screens under their parent, and use-case propagation and affected-consumer
+evidence treat variants as the screens they are.
 
-#### Task 4.1: Screen comparison by variant
-
-**Files:**
-
-- Modify: `src/review/screen_views.ts` (enumerate variant views),
-  `src/review/screen_compare.ts` (extract per-view work into
-  `src/review/screen_view_compare.ts`; compare default and each paired
-  variant; emit `variants: [{ id, title, state, views }]` on the screen
-  result with removed variants after current ones), `src/review/component_classification.ts`
-  and `src/review/component_view.ts` (screen variant views pair by
-  `variantId` through `viewPairs`), `src/server/screen_view_changes.ts`
-  (per-variant view states), `src/review/selected.ts` and
-  `src/server/selected_review_routes.ts` (`variant` accepted for screens),
-  `packages/viewer/src/review/types.ts` and `component_types.ts`
-  (`ScreenVariantReview`), `src/review/component_result_sources.ts`
-  (validate variant references against both manifests)
-- Test: `tests/changes.test.ts`, `tests/catalogue_screen_changes.test.ts`,
-  `tests/component_review_schema.test.ts`, `tests/selected_comparisons` suites,
-  `tests/review_*` suites that assert result shapes
-
-**Steps:**
-
-- [ ] Write failing tests: editing only a variant's node marks the screen
-      route changed, its default views unchanged, and that variant's views
-      changed; adding a variant yields an added variant record without an
-      added screen; removing a variant yields a removed variant record with
-      retained baseline snapshots while the screen stays Changed; a use case
-      whose step frames the changed variant is propagated; the selected live
-      endpoint with `variant=<id>` on a screen route returns only that
-      variant's views and fences a stale response; an unknown variant fails
-      without inventing data; v2 output stays byte-identical for a
-      variant-free screen-only catalogue.
-- [ ] Implement, keeping `screen_compare.ts` under 300 lines.
-- [ ] `npm test` green.
-
-#### Task 4.2: Use-case step variants and links
+#### Task 4.1: Parent aggregation in the snapshot
 
 **Files:**
 
-- Modify: `src/registry/manifest_relationships.ts` (validate step
-  `variantId` against the manifest screen), `src/registry/manifest.ts` (emit
-  it), `src/catalogue/projection.ts` and `packages/viewer/src/catalogue/entry_reader.ts`
-  (public step `variantId`), `src/build/logical_routes.ts` (a use-case
-  destination resolves through its first step's variant), `src/server/fragments.ts`
-  (use-case fragment validation uses the first step's variant document)
-- Test: `tests/manifest_files.test.ts`, `tests/build_links.test.ts`,
-  `tests/catalogue_projection.test.ts`
+- Modify: `src/registry/changes.ts` (`RemovedEntrySnapshot` gains
+  `variantOf?` from the baseline entry so a removed variant can be placed
+  under a surviving parent; ancestors are the parent's ancestors),
+  `src/server/changed.ts` and `src/registry/changed_routes.ts` (no new
+  membership rule; document that a variant is its own route), `packages/viewer/src/shell/context.ts`
+  (no new field; the aggregate mark is derived in the shell from
+  `changedRoutes` and the hierarchy), `src/publication/*` and `src/export/site.ts`
+  (removed variants publish like removed screens)
+- Test: `tests/catalogue_screen_changes.test.ts`, `tests/changes.test.ts`,
+  `tests/export_changes.test.ts`
 
 **Steps:**
 
-- [ ] Write failing tests for each behavior above, then implement.
-- [ ] `npm test` green.
-
-#### Task 4.3: Served routes accept a screen variant query
-
-**Files:**
-
-- Modify: `src/server/view_routes.ts` (parse at most one `variant` value on
-  a screen route; a known id becomes `context.activeVariant`, an unknown or
-  duplicate value renders the page with the selection error state rather than
-  HTTP 400, and the id redirect never carries one), `src/server/fragments.ts`
-  (request-visible fragment validation checks the selected variant's
-  documents), `packages/viewer/src/shell/context.ts` (`activeVariant?`
-  field only; no rendering change yet), `src/export/site.ts` (no new files;
-  confirm the exported screen page keeps reading the query progressively)
-- Test: `tests/server.test.ts`, `tests/catalogue_server.test.ts`
-
-**Steps:**
-
-- [ ] Write failing tests: `/view/<route>?variant=<id>` returns 200 with the
-      active variant in the shell context; two values or an unknown id still
-      return 200 with the error state; `/id/<id>` redirects without a
-      `variant` query; the `fragment` query is validated against the
-      selected variant's documents.
+- [ ] Write failing tests: a variant-only edit yields the variant route in
+      `changedRoutes` and not the parent route; deleting a variant yields a
+      removed entry carrying `variantOf` and the parent's ancestors; deleting
+      the parent and its variant yields removed entries for both; a use case
+      that steps through the variant is propagated; the component
+      affected-consumer list names the variant as a screen.
 - [ ] Implement.
 - [ ] `npm test` green.
-- [ ] Milestone close-out: commit `feat(review): compare screen variants`
+- [ ] Milestone close-out: commit `feat(changes): track variant removals`
       and push.
 
 ---
 
-### Milestone 5: Shell navigation rows and variant selection
+### Milestone 5: Shell navigation rows
 
 Tags: ui
 
 At completion the served and exported shells show the expandable variant row,
-select a variant on the screen route, keep the active-row invariant across
-navigation, Back, Forward, search, and the Changes filter, and persist the
-variant disclosure state. The variant strip beneath the title matches the
-Milestone 2 mockups.
+the active-row invariant holds for variants across navigation, Back, Forward,
+search, and the Changes filter, the variant disclosure state persists, the
+breadcrumb of a variant ends in its parent's title, and the parent screen's
+details list its variants.
 
 #### Task 5.1: Navigation tree and rows
 
 **Files:**
 
 - Modify: `packages/viewer/src/shell/nav_tree.ts` (`NavLeafNode.variants?`
-  with `{ id, title, key }`), `packages/viewer/src/shell/nav.tsx` (extract
+  built from the hierarchy's variant maps; variants never appear as top-level
+  or collection leaves), `packages/viewer/src/shell/nav.tsx` (extract
   `LeafRow` and `GroupRow` into `nav_rows.tsx` first; the screen row becomes a
   `div.mbk-nav-leaf` holding the link and, when variants exist, a
   `button[data-nav-variants-toggle][aria-expanded][aria-controls]`, followed
   by `div[data-nav-disclosure="variants:<section>:<id>"][data-nav-variants]`
-  with one `a[data-nav-row][data-variant-id]` per variant whose `href` is the
-  route plus `?variant=`), `packages/viewer/src/shell/css_nav_rows.ts` (new
-  file `css_nav_variants.ts` for the toggle, list, depth, and changed dot),
+  with one ordinary `a[data-nav-row]` per variant), new
+  `packages/viewer/src/shell/css_nav_variants.ts`,
   `packages/viewer/src/client/browse_navigation.ts` (`variants:` keys are
   valid disclosure keys), `packages/viewer/src/client/browse_state.ts`
   (capture and restore the new disclosure elements; `Collapse all` closes
   them), `packages/viewer/src/client/browse_controls.ts` (toggle handling),
-  `packages/viewer/src/client/browse_navigation_state.ts` (active row matches
-  pathname plus `variant` query; variant rows count as rows for search and
-  the Changes filter; a parent stays visible when a variant matches; ancestor
-  reveal opens `data-nav-variants`), `packages/viewer/src/client/search_query.ts`
-  (unchanged API; row facts include the variant title)
+  `packages/viewer/src/client/browse_navigation_state.ts` (ancestor reveal
+  opens `data-nav-variants`; a parent stays visible when a variant matches
+  search or the Changes filter; the parent carries `data-changed-variants`
+  when any child row is changed), `packages/viewer/src/client/browse_evidence.ts`
+  (evidence refresh updates the aggregate mark), `packages/viewer/src/shell/head.tsx`
+  (crumbs for a variant end with the parent title as a link),
+  `packages/viewer/src/shell/details.tsx` (a Variants row on the parent and a
+  Variant of row on the variant)
 - Test: `tests/nav_tree.test.ts`, `tests/shell.test.ts`,
   `tests/client_navigation_state.test.ts`, `tests/client_browse_navigation.test.ts`,
   `tests/client_browse.test.ts`, `tests/browser/browse_navigation.spec.ts`,
-  `tests/browser/browse_history.spec.ts`
+  `tests/browser/browse_history.spec.ts`, `tests/browser/static_example.spec.ts`
 
 **Steps:**
 
-- [ ] Write failing tests: tree nodes carry variants in authored order;
-      shell HTML renders the link, toggle, and variant rows with the expected
-      attributes and no toggle for a screen without variants; the default row
-      is `aria-current` at the bare route and the variant row at
-      `?variant=<id>`; navigating to a variant opens its list and the
-      ancestors; Back returns to the default row; Collapse all closes the
-      list; `tag:` and free-text search reveal a parent through a matching
-      variant title; the disclosure survives reload through storage; a
-      browser test drives all of it against a fixture screen with two
-      variants and against the `examples/basic` Welcome variant.
+- [ ] Write failing tests: tree nodes carry variants in authored order under
+      their parent only; shell HTML renders the link, toggle, and variant
+      rows with the expected attributes and no toggle for a screen without
+      variants; navigating to a variant marks its row current, opens its
+      list and ancestors, and renders the parent crumb as a link; Back
+      returns to the parent row; Collapse all closes the list; search reveals
+      a parent through a matching variant title; the Changes filter shows
+      only changed variant rows, keeps the parent visible through the
+      aggregate mark, and expands the list; the disclosure survives reload
+      through storage; the exported example works without a server; a
+      browser test drives all of it against a fixture with two variants and
+      against the `examples/basic` Welcome variant.
 - [ ] Implement; keep `nav.tsx` and each CSS module under 300 lines.
-- [ ] `npm test && npm run test:browser` green.
-
-#### Task 5.2: Variant selection on the screen workspace
-
-**Files:**
-
-- Modify: `packages/viewer/src/shell/workspace_data.ts` (extract variant
-  status derivation into `workspace_variants_data.ts`; screens build their
-  `variants` list from manifest variants plus removed baseline variants with
-  status and comparison eligibility), `packages/viewer/src/shell/workspace.tsx`
-  (render the variant strip for screens with at least one variant, as
-  links carrying `?variant=` with `aria-current`; keep the component select),
-  `packages/viewer/src/shell/stages.tsx` (frame sources for the selected
-  variant), `packages/viewer/src/client/workspace_variants.ts`
-  (`selectedVariant` handles screens; default when absent), `packages/viewer/src/client/workspace.ts`,
-  `packages/viewer/src/client/diff_views.ts` (screen variant comparison
-  views), `packages/viewer/src/shell/nav_rows.tsx` (server-rendered
-  `aria-current` from `context.activeVariant`), `packages/viewer/src/viewer/selection.ts`,
-  `routing.ts`, `frame_views.ts`, `public_stage.tsx`, `public_workspace.ts`
-  (viewer selection and stage accept screen variants)
-- Test: `tests/component_workspace.test.ts`, `tests/client_workspace_comparison.test.ts`,
-  `packages/viewer/tests/selection.test.ts`, `tests/browser/component_workspace.spec.ts`
-  (screen cases), `tests/browser/viewer_variants.spec.ts` (screen cases),
-  `tests/browser/static_example.spec.ts`
-
-**Steps:**
-
-- [ ] Write failing tests: the workspace JSON lists screen variants with
-      status; selecting a variant swaps both frames to its documents and
-      updates the URL, title status, and `aria-current` in the strip and the
-      nav; viewport and scheme changes retain the variant; an unknown
-      variant shows the selection error with the default reachable; the
-      viewer commits `{ screenId, variantId }` for a screen and rejects an
-      undeclared id; the exported example selects a variant without a
-      server.
-- [ ] Implement; keep `workspace_data.ts` and `stages.tsx` under 300 lines
-      by extracting as noted.
-- [ ] Docs: update the runtime contract's Delivery Status and the shell
-      design contract to implemented for these states.
-- [ ] Smoke: `npm run dev`, expand Welcome, select the variant, use Back and
+- [ ] Update the runtime and shell design contracts' Delivery Status and the
+      browse guide.
+- [ ] Smoke: `npm run dev`, expand Welcome, open the variant, use Back and
       Forward, search for the variant title, Collapse all.
-- [ ] Milestone close-out: commit `feat(browse): select screen variants`
-      and push.
+- [ ] `npm test && npm run test:browser` green.
+- [ ] Milestone close-out: commit `feat(browse): group screen variants` and
+      push.
 
 ---
 
-### Milestone 6: Changed-variant evidence in the catalogue snapshot
-
-Backend only. At completion the catalogue change snapshot names, per changed
-route, which variants changed and which were removed, live Serve and watched
-updates refresh that data with evidence, and exported or published catalogues
-with Changes carry the same fields. The shell ignores the new fields until
-Milestone 7.
-
-#### Task 6.1: Snapshot fields and producers
-
-**Files:**
-
-- Modify: `src/registry/changes.ts` (`CatalogueChangeSnapshot` gains
-  `changedVariants` and `removedVariants`, both
-  `Readonly<Record<route, readonly variantId[]>>`, sorted and omitted when
-  empty), `src/server/changed.ts`, `src/server/component_changes.ts`,
-  `src/server/screen_view_changes.ts` (derive them from the review result
-  or the lightweight material pass without generating snapshots),
-  `src/server/catalogue_update.ts` and `src/server/catalogue_snapshot.ts`
-  (carry them into the shell context), `packages/viewer/src/shell/context.ts`
-  (`changedVariants?` and `removedVariants?` beside `changedRoutes`),
-  `src/server/update_messages.ts` (evidence updates include them),
-  `src/export/site.ts`, `src/export/shell_metadata.ts`, and
-  `src/publication/*` (publication with Changes carries the fields; ordinary
-  publication omits them)
-- Test: `tests/catalogue_screen_changes.test.ts`, `tests/changes.test.ts`,
-  `tests/export_changes.test.ts`, `tests/server_changed` suites, the
-  publication tests that assert shell metadata
-
-**Steps:**
-
-- [ ] Write failing tests: a variant-only edit yields the route in
-      `changedRoutes` and its id in `changedVariants`; a deleted variant
-      yields the route and its id in `removedVariants` while the screen
-      survives; a variant-free catalogue serializes no new fields; watched
-      evidence updates replace the fields; a review publication includes them
-      and an ordinary publication omits them.
-- [ ] Implement.
-- [ ] `npm test` green.
-- [ ] Milestone close-out: commit `feat(changes): record changed variants`
-      and push.
-
----
-
-### Milestone 7: Changes presentation for variants
+### Milestone 6: Changes presentation for variants
 
 Tags: ui
 
-At completion the Changes filter shows changed variant sub-rows under a
-changed screen, opening a changed screen from Changes lands on its first
-changed variant, removed variants stay comparable, and the mockups from
-Milestone 2 are matched.
+At completion the Changes filter matches the Milestone 2 mockups: a changed
+screen's group shows its changed variant rows, a parent whose default is
+unmodified still appears through its aggregate mark and opens its first
+changed variant when activated from Changes, and a removed variant appears as
+a Removed row under its surviving parent with the current empty state.
 
-#### Task 7.1: Changed variant rows and landing
+#### Task 6.1: Changed and removed variant rows
 
 **Files:**
 
-- Modify: `packages/viewer/src/shell/nav_rows.tsx` (`data-changed` on
-  variant rows from `context.changedVariants`; removed variant rows from
-  `context.removedVariants` rendered with the Removed label and hidden from
-  All), `packages/viewer/src/client/browse_navigation_state.ts` (Changes
-  shows a variant row only when changed; opens the list when the parent is
-  changed), `packages/viewer/src/client/browse_links.ts` (a Changes-filter
-  activation of a changed parent whose default is unmodified navigates to its
-  first changed variant), `packages/viewer/src/client/browse_evidence.ts`
-  (evidence refresh updates variant marks and removed rows),
-  `packages/viewer/src/shell/css_nav_variants.ts`
+- Modify: `packages/viewer/src/shell/nav_rows.tsx` (removed variants render
+  under their parent from `RemovedEntrySnapshot.variantOf` rather than as
+  flat rows), `packages/viewer/src/client/browse_links.ts` (a Changes-filter
+  activation of a parent that is not itself changed navigates to its first
+  changed variant), `packages/viewer/src/shell/workspace_data.ts` (status of
+  a variant is its own; the parent's status ignores its variants),
+  `packages/viewer/src/shell/nav_filter.tsx` (count stays the length of
+  `changedRoutes`)
 - Test: `tests/shell.test.ts`, `tests/client_navigation_state.test.ts`,
-  `tests/client_browse_evidence` suite, `tests/browser/changes_continuity.spec.ts`,
+  `tests/browser/changes_continuity.spec.ts`,
   `tests/browser/removed_comparison_eligibility.spec.ts`,
   `tests/browser/publish_current.spec.ts`
 
 **Steps:**
 
 - [ ] Write failing tests for each behavior in the milestone summary,
-      including the Changes count staying per screen and a removed variant
-      of a surviving screen opening its retained baseline comparison.
+      including a removed variant's row placement, its Removed status, and
+      the parent's Unmodified status when only the variant changed.
 - [ ] Implement and update the changes guide and runtime contract.
 - [ ] Smoke against a fixture repository with a committed baseline: edit a
-      variant only, confirm the row, count, landing, and comparison.
+      variant only, then delete it, confirming the rows, count, landing, and
+      comparison at each step.
 - [ ] Milestone close-out: commit `feat(browse): show changed variants` and
       push.
 
 ---
 
-### Milestone 8: Changed-view evidence on the view controls
+### Milestone 7: Changed-view evidence on the view controls
 
 Tags: ui
 
@@ -753,14 +494,14 @@ the details inspector lists the changed views. Scheme remains a view axis.
 The per-view states already exist in the review result and the lightweight
 screen-view evidence, so this milestone reads them without new server work.
 
-#### Task 8.1: View marks and landing
+#### Task 7.1: View marks and landing
 
 **Files:**
 
 - Modify: `packages/viewer/src/shell/workspace_controls.tsx` (options carry
-  `data-view-changed` from workspace data), `packages/viewer/src/shell/workspace_variants_data.ts`
-  (`changedViews: readonly { viewport, colorScheme, variantId? }[]` derived
-  from the comparison or screen-view evidence), `packages/viewer/src/shell/css_workspace.ts`
+  `data-view-changed` from workspace data), `packages/viewer/src/shell/workspace_data.ts`
+  (extract `changedViews: readonly { viewport, colorScheme }[]` derivation
+  into `workspace_views_data.ts`), `packages/viewer/src/shell/css_workspace.ts`
   (changed mark on the icon button and select label), `packages/viewer/src/client/workspace.ts`
   (when arriving from a Changes-filter row, set viewport and scheme to the
   first changed view unless the URL already names them),
@@ -784,33 +525,30 @@ screen-view evidence, so this milestone reads them without new server work.
 
 ---
 
-### Milestone 9: Design catalogue conversion and verification
+### Milestone 8: Design catalogue conversion and verification
 
 Tags: mockup
 
-Requires the user's explicit approval of the id retirement recorded in the
-locked decisions; without it, skip Task 9.1 and go straight to Task 9.2.
-At completion the Welcome design screen owns the dark-scheme, light-only, and
-four tag states as variants, the retired ids are gone from the inventories,
-every design link that pointed at them carries `variant`, and the plan is
-closed.
+Requires the user's explicit approval of the route retirement recorded in the
+locked decisions; without it, skip Task 8.1 and go straight to Task 8.2. At
+completion the Welcome design screen owns the dark-scheme, light-only, and four
+tag states as variants under `design/browse/views/screen.variants/`, the
+inventories list the new routes, and the plan is closed.
 
-#### Task 9.1: Convert the design states to Welcome variants
+#### Task 8.1: Convert the design states to Welcome variants
 
 **Files:**
 
 - Modify: `examples/basic/entries/design/browse_screens.tsx` (Welcome's
   `design-browse-screen` gains `variants: [...]` composed from the dark-scheme
-  and tag-state screen components; the standalone entries for those states
-  are removed), `examples/basic/entries/design/browse_scheme_screens.tsx`,
+  and tag-state screen components), `examples/basic/entries/design/browse_scheme_screens.tsx`,
   `examples/basic/entries/design/browse_tag_screens.tsx`,
   `examples/basic/entries/design/browse/states/tags/*.tsx` (export screen
-  components for reuse rather than entries), `examples/basic/entries/design/design.mockup.tsx`
-  (drop the retired children), `examples/basic/entries/design/parts/destinations.ts`
-  and `navigation_states.ts` (Welcome variant destinations replace the
-  retired ids; links that pointed at retired ids now carry `variant`),
-  `docs/protocol/mokly-shell-design.md` and `docs/protocol/mokly-design-links.md`
-  inventories, `examples/basic/notes.md`, `tests/design_links.test.ts`,
+  components and variant inputs rather than entries),
+  `examples/basic/entries/design/design.mockup.tsx` (drop the moved children
+  from their collections), `docs/protocol/mokly-shell-design.md` and
+  `docs/protocol/mokly-design-links.md` inventories, `examples/basic/notes.md`,
+  `tests/design_links.test.ts`, `tests/design_screens.test.tsx`,
   `tests/browser/design_links.spec.ts`, `tests/browser/preview_design_links.spec.ts`
 
 **Steps:**
@@ -818,18 +556,18 @@ closed.
 - [ ] Confirm the user's approval is recorded in this plan before touching
       any file.
 - [ ] Convert, rebuild, check, and run the design link suites; confirm the
-      manifest lost exactly the six retired entries and gained the variant
-      records. Name the retired ids in the commit message as the authorized
-      removal.
+      manifest keeps every design id, moves exactly six routes, and adds
+      `variantOf` to those six entries. Name the retired routes in the
+      commit message as the authorized removal.
 - [ ] Smoke through `npm run dev` and `npm run preview:build`: expand the
-      Welcome design row, open each variant, follow a `variant` link from a
-      mini screen.
+      Welcome design row, open each variant, follow a design link into a
+      variant from a mini screen.
 - [ ] Update `plans/README.md` to move this plan to Completed, and the
       README feature paragraph.
 - [ ] Milestone close-out: run `cargo xtask check`; commit
       `refactor(design): model Welcome states as variants` and push.
 
-#### Task 9.2: Review
+#### Task 8.2: Review
 
 - [ ] After the push, review the complete local diff against `origin/main`
       using [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
@@ -838,8 +576,7 @@ closed.
 
 ## Post-merge follow-up (non-blocking)
 
-- Smoke the published viewer package against a host that selects a screen
-  variant through the controlled selection props once the next viewer release
-  ships.
-- Consider a `variants` summary count on the home stage beside screens and
-  components once the user has seen the feature in use.
+- Group a component's Affected screens list by parent screen once variants
+  are common enough for the flat list to get long.
+- Consider a variants count on the home stage beside screens and components
+  once the user has seen the feature in use.

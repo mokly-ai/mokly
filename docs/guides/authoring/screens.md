@@ -26,21 +26,54 @@ export const accountHome = defineScreen({
 });
 ```
 
-| Field                  | Meaning                                                 |
-| ---------------------- | ------------------------------------------------------- |
-| `id`                   | Lowercase kebab-case identity, stable across renames    |
-| `title`, `description` | What the catalogue shows                                |
-| `route`                | Where the documents are written under `mockupsDir`      |
-| `mobile`, `desktop`    | The React node each viewport renders                    |
-| `dependencies`         | Repository paths this screen is made from               |
-| `relatedDocs`          | Documents a reader should open beside it                |
-| `useCaseIds`           | Flows this screen appears in                            |
-| `tags`                 | Lowercase kebab-case classification, searched as `tag:` |
-| `colorSchemes`         | Opt one screen out of a scheme the catalogue renders    |
-| `rationale`            | Why the screen is the way it is                         |
+| Field                  | Meaning                                                    |
+| ---------------------- | ---------------------------------------------------------- |
+| `id`                   | Lowercase kebab-case identity, stable across renames       |
+| `title`, `description` | What the catalogue shows                                   |
+| `route`                | Where the documents are written under `mockupsDir`         |
+| `mobile`, `desktop`    | The React node each viewport renders                       |
+| `dependencies`         | Repository paths this screen is made from                  |
+| `relatedDocs`          | Documents a reader should open beside it                   |
+| `useCaseIds`           | Flows this screen appears in                               |
+| `tags`                 | Lowercase kebab-case classification, searched as `tag:`    |
+| `colorSchemes`         | Opt one screen out of a scheme the catalogue renders       |
+| `rationale`            | Why the screen is the way it is                            |
+| `variants`             | States of this screen, each a full screen grouped under it |
 
 Each view is generated as its own standalone page, so wrap the content in a
 landmark such as `main`.
+
+## Variants of a screen
+
+A variant is the same screen with one deliberate shift, such as an empty
+state or an error. Declare it inside the screen it varies, and it becomes a
+full screen of its own, grouped under the parent in the catalogue.
+
+```tsx
+defineScreen({
+  id: "account-home",
+  // The rest of the screen is unchanged.
+  variants: [
+    {
+      id: "account-home-empty",
+      slug: "empty",
+      title: "Account home, empty",
+      description: "The landing screen before any account exists.",
+      mobile: <main>No accounts yet</main>,
+      desktop: <main>No accounts yet</main>,
+    },
+  ],
+});
+```
+
+The variant's route is derived from the parent's, so this one is written to
+`account/home.variants/empty.html`. It inherits the parent's address, tags,
+color schemes, dependencies and related docs unless it sets its own, and it
+keeps its own global id, so a link to `account-home-empty` opens it like any
+screen. A variant cannot declare variants of its own, and a collection never
+lists a variant directly; it belongs to the parent's collection through the
+parent. Variants are an approved target and not yet available in a
+released version.
 
 ## Nest a tree of screens
 

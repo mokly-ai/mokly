@@ -38,6 +38,16 @@ rather than rebuilding the catalogue. Changing the viewport, the scheme or the
 comparison mode renews the snapshots before using them, and an expired
 comparison is reacquired for you.
 
+## Variants and views
+
+A variant of a screen is its own row in Changes and counts on its own. When
+only a variant changed, the parent screen still shows a changed mark on its
+row so the group stays visible, and opening the parent from Changes takes you
+to the first changed variant. A change confined to one viewport or scheme,
+such as a dark-only edit, marks that view on the viewport and theme controls,
+lists it in Details, and lands on it when you open the screen from Changes.
+Both are approved targets and not yet available in a released version.
+
 ## Added and removed
 
 An added entry shows its current preview and an Added status, with no

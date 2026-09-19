@@ -24,7 +24,7 @@ adapt explicit child controls -> resolve mock:id links -> compatibility bridge
 validate markers/links/resources
         |
         v
-mobile/desktop light and optional dark HTML, saved component variants, whole documents + schema-v5 manifest in memory
+mobile/desktop light and optional dark HTML for every screen and variant screen, saved component variants, whole documents + schema-v5 manifest in memory
         |
         +---- check (committed): compare with disk, write nothing
         |

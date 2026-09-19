@@ -296,8 +296,10 @@ catalogue row, that row is visible and marked `aria-current="page"`.
 To establish the invariant, Browse must:
 
 1. remove `aria-current` from every other row;
-2. open each ancestor `details[data-nav-disclosure]` of the active row,
-   including its Pages or Components section;
+2. open each ancestor `[data-nav-disclosure]` of the active row, including
+   its Pages or Components section and, for a variant screen, the parent
+   row's variant list defined by the
+   [screen variants contract](./mokly-screen-variants.md);
 3. preserve unrelated collection disclosures;
 4. clear a search query only when it would hide the destination;
 5. switch Changes to All only when the destination is not changed;

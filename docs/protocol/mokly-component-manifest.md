@@ -63,6 +63,10 @@ interface ManifestComponentVariant {
 }
 ```
 
+`ManifestScreen` additionally gains an optional `variantOf` parent-screen id
+under the approved [screen variants contract](./mokly-screen-variants.md);
+the field is additive and the schema version stays 5.
+
 Common entry metadata keeps its meaning, including source attribution and
 hierarchy-derived `navPath`. Every v5 entry requires `declaredDependencies`,
 the sorted unique paths explicitly authored in its definition. `dependencies`

@@ -101,6 +101,7 @@ interface CatalogueScreen extends CatalogueEntry {
   kind: "screen";
   route: string;
   address?: string;
+  variantOf?: string; // Approved target: present exactly on variant screens.
   viewports: readonly Viewport[];
   colorSchemes: readonly ColorScheme[];
   views: readonly CatalogueView[];
@@ -166,6 +167,10 @@ Do not spread a manifest, entry, or internal evidence object into public JSON.
   mixed collections independently into both sections; unclaimed entries stay
   at the root. Collections have no route or tags; emit `tags: []`.
   Drop empty projections, except authored empty folders remain in Pages.
+  Under the approved [screen variants contract](./mokly-screen-variants.md),
+  a variant screen's entry node is a child of its parent screen's entry node
+  in the Pages tree rather than a sibling, and `variantOf` is an additive
+  field that v1 readers tolerate.
 - Details retain authored display metadata already exposed by the inspector.
   `details.dependencies` contains repository-relative display labels only.
   `sourcePath`, optional invocation `source.path`, and local related-doc paths

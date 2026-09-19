@@ -33,6 +33,11 @@ complete HTML document from a synchronous render callback, with no device or
 color variants. The [page contract](./mokly-pages.md) defines both explicit
 and nested authoring forms. Ids are explicit,
 globally unique kebab-case values and remain stable across navigation changes.
+A screen may also declare `variants`: each variant flattens into a complete
+screen entry with its own global id, a route derived beneath the parent's,
+and a `variantOf` relationship to the parent. The
+[screen variants contract](./mokly-screen-variants.md) is the approved target
+for that field, its inheritance, validation, and grouping.
 
 Each entry provides a title, description, related docs, and dependency paths.
 A dependency may identify an existing repository file or directory; Review
@@ -51,7 +56,10 @@ may have at most one collection parent. A collection cannot repeat one child,
 reference itself, participate in a longer collection cycle, or reference an
 unknown id. Entries that no collection claims are catalogue roots. Breadcrumbs
 are the root-to-parent sequence of ancestor collection titles; authors never
-provide a separate breadcrumb or navigation-label path.
+provide a separate breadcrumb or navigation-label path. A variant screen is
+the one exception to direct claiming: it belongs to its parent's collection
+through `variantOf`, is never listed in `childIds`, and its breadcrumbs end
+with the parent title.
 
 The common and nested-root input boundary is:
 

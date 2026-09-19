@@ -256,6 +256,13 @@ scrollable region scrolls internally:
     1px vertical guide per ancestor depth. The hover/active highlight is an
     inset pill starting at the row's indent (`--mbk-indent`), so guides stay
     visible; the active row uses the accent with contrast text.
+  - Approved target: a screen with variants keeps its link row and adds a
+    16px chevron disclosure button at the row's trailing edge that toggles a
+    list of its variant rows one indent step deeper, each with the screen
+    icon. The Changes filter shows only changed variant rows and marks the
+    parent with the changed dot when any variant changed. The
+    [screen variants contract](./mokly-screen-variants.md) owns the
+    behavior; its owning mockups are listed below once authored.
   - Catalogue-link navigation opens the active section and every collection on the active
     row's path and scrolls that row into view. Search and Changes filtering may
     stay selected only while the active row remains visible. Reapplying an

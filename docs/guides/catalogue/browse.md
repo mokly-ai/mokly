@@ -24,6 +24,14 @@ copyable id chip, so the name to use in a link is always in front of you. A
 link inside a screen opens its destination's canonical page, carries its
 fragment and reveals it in the tree.
 
+## Variants
+
+A screen that declares variants shows a chevron on its row. Opening it lists
+each variant beneath the screen, and choosing one opens that variant as its
+own page with the parent's name in the breadcrumbs. Search finds a variant by
+its own title. Variants are an approved target and not yet available in a
+released version.
+
 ## Look at a screen
 
 The header carries the viewport controls, and a Light and Dark switch once the

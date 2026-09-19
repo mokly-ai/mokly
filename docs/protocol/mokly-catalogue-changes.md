@@ -45,7 +45,11 @@ and tags. Historical screen readers normalize older supported shapes first;
 pages enter `removedEntries` only from v5 or the historical page-v4 format with a real catalogue ID.
 `ancestors` is the baseline's root-to-parent collection path, captured before
 current hierarchy lookup. It never depends on a surviving current parent or on
-serialized `navPath` labels.
+serialized `navPath` labels. A removed variant screen retains its baseline
+`variantOf` in the entry DTO and its parent's collection ancestry, so the
+shell can place its Removed row under a surviving parent as the
+[screen variants contract](./mokly-screen-variants.md) specifies; when the
+parent is also removed, each is its own removed entry.
 
 `changedRoutes` is the sorted, unique union of affected current routed entries
 and the selected removed-entry routes. Current route attribution keeps the

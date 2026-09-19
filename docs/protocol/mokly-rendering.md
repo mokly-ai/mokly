@@ -131,7 +131,10 @@ never copied into the npm package.
 
 `mokly build` writes deterministic output under `mockupsDir`:
 
-- `<screen>.mobile.html` and `<screen>.desktop.html` fragments for each screen;
+- `<screen>.mobile.html` and `<screen>.desktop.html` fragments for each screen,
+  including each variant screen at its derived
+  `<parent>.variants/<slug>.html` route (approved target in the
+  [screen variants contract](./mokly-screen-variants.md));
 - `<screen>.mobile.dark.html` and `<screen>.desktop.dark.html` when that screen's
   effective schemes include dark;
 - one complete HTML document at each page route;
@@ -196,6 +199,7 @@ type ManifestEntry =
       componentViews?: readonly ComponentViewRecord[];
       darkFragments?: { mobile: string; desktop: string };
       fragments: { mobile: string; desktop: string };
+      variantOf?: string; // Approved target: present exactly on variant screens.
       viewports: readonly ["mobile", "desktop"];
       useCaseIds: readonly string[];
     })

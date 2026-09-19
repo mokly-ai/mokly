@@ -135,10 +135,12 @@ independent frames; it owns no global document state.
 
 ## Selection, Events And Imperative Use
 
-`screenId` addresses any routed catalogue entry, including pages, components
-and use cases; null selects home. Unknown ids show the existing not-found view
+`screenId` addresses any routed catalogue entry, including pages, components,
+use cases and [variant screens](./mokly-screen-variants.md); null selects
+home. Unknown ids show the existing not-found view
 with usable navigation. `variantId` is valid only for a component or removed
 component that declares that saved variant; omission selects its default.
+It never addresses a variant screen, which is selected by its own `screenId`.
 Variants are invalid for home, pages and use cases. `view` selects the
 All/Changes **catalogue filter**, not a comparison mode. Logical fragments and
 comparison mode retain their existing route/runtime state.

@@ -1063,5 +1063,8 @@ in the [plans index](./plans/README.md).
 - [Implementation plans](./plans/README.md)
 - [Unified catalogue pages](./docs/protocol/mokly-pages.md) and
   [required breaking upgrade](./docs/protocol/mokly-page-migration.md)
+- [Screen variants](./docs/protocol/mokly-screen-variants.md) — approved
+  target: states of a screen authored as `variants`, each a full screen with
+  its own id and route, grouped under the parent in the catalogue.
 - [Authoring source protection](./docs/protocol/mokly-source-protection.md) and
   [catalogue change metadata](./docs/protocol/mokly-catalogue-changes.md)

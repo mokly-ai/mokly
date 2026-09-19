@@ -11,7 +11,10 @@ section, or `mokly review` command; `--out` belongs only to static `export`.
 
 [Pages](./mokly-pages.md) participate in Changes and removed-entry states,
 while comparison controls remain exclusive to changed screens and eligible
-component variants. The
+component variants. A [variant screen](./mokly-screen-variants.md) is a
+screen for every rule in this document: it has its own route, row, count
+contribution, views, and comparison result, and only its navigation placement
+under the parent screen is variant-specific. The
 [shared catalogue snapshot](./mokly-catalogue-changes.md) supplies metadata
 independently of screen results; removed pages are flat Changes-only rows with
 baseline ancestry. Review reads follow the [source policy](./mokly-source-protection.md).

@@ -251,7 +251,18 @@ rendered and persisted identities. A collection projected into a section uses
 independent state. Labels remain presentation only. Stored pre-section
 `collection:<id>` keys apply to either projection during migration; obsolete
 `legacy:` and label-path keys are ignored while valid disclosure keys remain
-effective.
+effective. The approved [screen variants contract](./mokly-screen-variants.md)
+adds `variants:<section>:<parent id>` for the variant list a screen row
+discloses, persisted, restored, and collapsed beside the collection keys.
+
+Per-view change evidence is an approved target of the same plan: when the
+comparison or lightweight screen-view evidence marks only some views of a
+screen changed, the theme toggle and viewport control mark those views,
+Details lists them, and opening the screen from the Changes filter lands on
+the first changed viewport and scheme instead of the sticky selection. Opening
+it from All keeps the selection. A light-only catalogue never renders a
+scheme mark. The mark is distinct from the pressed state and never relies on
+color alone.
 
 A catalogue with dark fragments offers a `Light | Dark` scheme switch; a
 light-only catalogue offers none. One switch renders in the top bar and one in
