@@ -4,11 +4,11 @@ import { setTimeout } from "node:timers/promises";
 import type koffi from "koffi";
 
 const EXTENDED_LIMIT_INFORMATION = 9;
-const BASIC_ACCOUNTING_INFORMATION = 1;
+const BASIC_JOB_INFORMATION = 1;
 const KILL_ON_JOB_CLOSE = 0x2000;
 const PROCESS_SET_QUOTA_AND_TERMINATE = 0x0101;
-/** Fixed-width fields in the Win32 accounting and limit structures. */
-const ACCOUNTING_BYTES = 48;
+/** Fixed-width fields in the Win32 job-status and limit structures. */
+const JOB_INFORMATION_BYTES = 48;
 const ACTIVE_PROCESSES_OFFSET = 40;
 const LIMIT_FLAGS_OFFSET = 16;
 
@@ -125,19 +125,19 @@ class NativeWindowsProcessJob implements WindowsProcessJob {
     if (!this.handle) return;
     try {
       this.terminate();
-      const accounting = Buffer.alloc(ACCOUNTING_BYTES);
+      const jobInformation = Buffer.alloc(JOB_INFORMATION_BYTES);
       while (true) {
         if (
           !this.api.query(
             this.handle,
-            BASIC_ACCOUNTING_INFORMATION,
-            accounting,
-            accounting.length,
+            BASIC_JOB_INFORMATION,
+            jobInformation,
+            jobInformation.length,
             null,
           )
         )
           throw jobError(this.api, "QueryInformationJobObject");
-        if (accounting.readUInt32LE(ACTIVE_PROCESSES_OFFSET) === 0) break;
+        if (jobInformation.readUInt32LE(ACTIVE_PROCESSES_OFFSET) === 0) break;
         await setTimeout(10);
       }
     } finally {

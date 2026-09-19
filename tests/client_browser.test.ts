@@ -1,53 +1,62 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { setImmediate } from "node:timers/promises";
 
-import { startBrowserLiveUpdates } from "../dist/client/browser.js";
-import type { BrowseRecoveryState } from "../packages/viewer/dist/client/browse_state.js";
+import type {
+  BrowseRecoveryState,
+  ShellRecoverySnapshot,
+  ViewerCapabilityDescriptor,
+  ViewerCapabilityRequest,
+} from "@mokly/viewer/runtime";
 
-test("browser adapter connects updates to reload and shutdown", () => {
-  const source = new FakeEventSource();
-  const storage = new FakeStorage();
-  const location = new FakeLocation();
-  const browse = browseState();
-  storage.setItem(
+import type { ReactCapabilityEnvironment } from "../dist/client/react_capabilities.js";
+import { createReactUpdateCapability } from "../dist/client/react_capability_updates.js";
+
+test("React host updates connect recovery, reload, and shutdown", async () => {
+  const environment = new FakeEnvironment();
+  environment.storage.setItem(
     "mokly:live-update-recovery",
-    JSON.stringify({ browse, url: location.href, version: 1 }),
+    JSON.stringify({
+      browse: browseState(),
+      url: environment.location.href,
+      version: 1,
+    }),
   );
-  let pageHide: (() => void) | undefined;
-  let restored: BrowseRecoveryState | undefined;
-  const controller = startBrowserLiveUpdates({
-    captureBrowseState: () => browse,
-    createEventSource(url) {
-      assert.equal(url, "/__mokly/events");
-      return source;
-    },
-    location,
-    onPageHide(callback) {
-      pageHide = callback;
-    },
-    pageVersion: 1,
-    restoreBrowseState(state) {
-      restored = state;
-    },
-    storage,
-  });
-  assert.deepEqual(restored, browse);
+  const initial = descriptor(1);
+  const updates = createReactUpdateCapability(initial, environment);
+  assert.deepEqual(updates.consumeRecovery(request(initial)), shellState());
+  assert.equal(updates.consumeRecovery(request(initial)), undefined);
 
-  source.emit("ready", "1");
-  source.emit("update", "2");
-  assert.equal(location.reloads, 1);
-  assert.deepEqual(controller.consumeRecovery(), {
-    browse,
-    url: "http://127.0.0.1:4173/view/screens/home.html",
-    version: 2,
-  });
-  pageHide?.();
-  assert.equal(source.closed, true);
+  const subscription = new AbortController();
+  updates.subscribe(
+    request(initial),
+    {
+      adoptEvidence: async () => false,
+      captureRecovery: shellState,
+    },
+    subscription.signal,
+  );
+  assert.equal(environment.requestedEventUrl, "/__mokly/events");
+  environment.source.emit("ready", "1");
+  environment.source.emit("update", "2");
+  await setImmediate();
+  await setImmediate();
+  assert.equal(environment.location.reloads, 1);
+
+  const reloaded = descriptor(2);
+  assert.deepEqual(
+    createReactUpdateCapability(reloaded, environment).consumeRecovery(
+      request(reloaded),
+    ),
+    shellState(),
+  );
+  environment.pageHide?.();
+  assert.equal(environment.source.closed, true);
 });
 
-test("browser adapter consumes stale-URL recovery without applying it", () => {
-  const storage = new FakeStorage();
-  storage.setItem(
+test("React host updates consume stale-URL recovery without applying it", () => {
+  const environment = new FakeEnvironment();
+  environment.storage.setItem(
     "mokly:live-update-recovery",
     JSON.stringify({
       browse: browseState(),
@@ -55,22 +64,37 @@ test("browser adapter consumes stale-URL recovery without applying it", () => {
       version: 2,
     }),
   );
-  let restored = false;
-  startBrowserLiveUpdates({
-    captureBrowseState: () => undefined,
-    createEventSource: () => new FakeEventSource(),
-    location: new FakeLocation(),
-    onPageHide: () => undefined,
-    pageVersion: 1,
-    restoreBrowseState: () => {
-      restored = true;
-    },
-    storage,
-  });
-
-  assert.equal(restored, false);
-  assert.equal(storage.getItem("mokly:live-update-recovery"), null);
+  const current = descriptor(2);
+  assert.equal(
+    createReactUpdateCapability(current, environment).consumeRecovery(
+      request(current),
+    ),
+    undefined,
+  );
+  assert.equal(environment.storage.getItem("mokly:live-update-recovery"), null);
 });
+
+function descriptor(updateVersion: number): ViewerCapabilityDescriptor {
+  return {
+    schemaVersion: 1,
+    source: {
+      base: "origin/main",
+      catalogueId: "a".repeat(64),
+      contentRevision: 1,
+      evidenceRevision: 1,
+      updateVersion,
+    },
+  };
+}
+
+function request(value: ViewerCapabilityDescriptor): ViewerCapabilityRequest {
+  return { route: null, source: value.source };
+}
+
+function shellState(): ShellRecoverySnapshot {
+  const { changedOnly: _changedOnly, ...state } = browseState();
+  return { ...state, view: "all" };
+}
 
 function browseState(): BrowseRecoveryState {
   return {
@@ -92,7 +116,7 @@ class FakeEventSource {
   readonly listeners = new Map<string, (event: { data: string }) => void>();
 
   addEventListener(
-    type: string,
+    type: "ready" | "update",
     callback: (event: { data: string }) => void,
   ): void {
     this.listeners.set(type, callback);
@@ -102,7 +126,7 @@ class FakeEventSource {
     this.closed = true;
   }
 
-  emit(type: string, data: string): void {
+  emit(type: "ready" | "update", data: string): void {
     this.listeners.get(type)?.({ data });
   }
 }
@@ -123,11 +147,36 @@ class FakeStorage {
   }
 }
 
-class FakeLocation {
-  href = "http://127.0.0.1:4173/view/screens/home.html";
-  reloads = 0;
+class FakeEnvironment implements ReactCapabilityEnvironment {
+  pageHide: (() => void) | undefined;
+  requestedEventUrl: string | undefined;
+  readonly source = new FakeEventSource();
+  readonly storage = new FakeStorage();
+  readonly location = {
+    href: "http://127.0.0.1:4173/view/screens/home.html",
+    reloads: 0,
+    reload() {
+      this.reloads += 1;
+    },
+  };
 
-  reload(): void {
-    this.reloads += 1;
+  createEventSource(url: string): FakeEventSource {
+    this.requestedEventUrl = url;
+    return this.source;
+  }
+
+  fetch = async (): Promise<Response> => {
+    throw new Error("refresh unavailable");
+  };
+
+  onPageHide(callback: () => void): () => void {
+    this.pageHide = callback;
+    return () => {
+      if (this.pageHide === callback) this.pageHide = undefined;
+    };
+  }
+
+  parseDocument(): Document {
+    throw new Error("unused");
   }
 }

@@ -3,33 +3,21 @@ import path from "node:path";
 
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { build } from "esbuild";
 
-import { reactShellForProject } from "./export_shell.js";
 import {
-  startHistoricalStaticFixture,
-  startStaticFixture,
-} from "./static_fixture.js";
+  buildDevelopmentBundle,
+  captureBrowserErrors,
+  expectCleanHydration,
+  expectNoBrowserErrors,
+  installDevelopmentBundle as installBundle,
+} from "./react_shell_hydration_helpers.js";
 
 let developmentBundle: string;
-let exported: Awaited<ReturnType<typeof startStaticFixture>>;
-let historical: Awaited<ReturnType<typeof startHistoricalStaticFixture>>;
 let fixtureRoutes: readonly string[];
 
-test.beforeAll(async ({ browser: _browser }, info) => {
+test.beforeAll(async () => {
   test.setTimeout(120_000);
-  const result = await build({
-    bundle: true,
-    define: { "process.env.NODE_ENV": '"development"' },
-    entryPoints: [path.resolve("packages/viewer/src/browser.tsx")],
-    format: "esm",
-    logLevel: "silent",
-    platform: "browser",
-    target: "es2023",
-    write: false,
-  });
-  developmentBundle = result.outputFiles[0]?.text ?? "";
-  expect(developmentBundle).toContain("react-dom-client.development.js");
+  developmentBundle = await buildDevelopmentBundle();
   const manifest: unknown = JSON.parse(
     fs.readFileSync(
       path.resolve("examples/basic/generated/mokly-manifest.json"),
@@ -38,14 +26,6 @@ test.beforeAll(async ({ browser: _browser }, info) => {
   );
   fixtureRoutes = manifestRoutes(manifest);
   expect(fixtureRoutes.length).toBeGreaterThan(80);
-  const reactShell = reactShellForProject(info.project.name);
-  expect(reactShell).toBe(true);
-  exported = await startStaticFixture({ reactShell });
-  historical = await startHistoricalStaticFixture(reactShell);
-});
-
-test.afterAll(async () => {
-  await Promise.all([exported?.close(), historical?.close()]);
 });
 
 test("development React hydrates a fresh desktop document cleanly", async ({
@@ -144,6 +124,44 @@ test("development React hydrates controls and persisted details as live state", 
   await expectNoBrowserErrors(page, errors);
 });
 
+test("development React hydrates live component controls before enabling them", async ({
+  page,
+}) => {
+  const errors = captureBrowserErrors(page);
+  let markRequested = (): void => undefined;
+  const requested = new Promise<void>((resolve) => {
+    markRequested = resolve;
+  });
+  let release = (): void => undefined;
+  const released = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route("**/__mokly/client/react-shell.js", async (route) => {
+    markRequested();
+    await released;
+    await route.fulfill({
+      body: developmentBundle,
+      contentType: "text/javascript",
+    });
+  });
+  const navigation = page.goto("/view/components/action.html");
+  await requested;
+  const props = page.locator('[data-inspector-panel="props"]');
+  await expect(props.locator("[data-controls-status]")).toHaveText(
+    "Open this catalogue locally to edit props.",
+  );
+  await expect(props.locator("[data-prop-control]").first()).toBeDisabled();
+
+  release();
+  await navigation;
+  await expectCleanHydration(page, errors);
+  await page.getByRole("tab", { name: "Props", exact: true }).click();
+  await expect(page.locator("[data-controls-status]")).toHaveText(
+    "Saved props",
+  );
+  await expect(page.locator("[data-prop-control]").first()).toBeEnabled();
+});
+
 test("development React hydrates the mobile drawer as live state", async ({
   page,
 }) => {
@@ -194,7 +212,7 @@ test("development React hydrates a mobile document cleanly", async ({
   await expectCleanHydration(page, errors);
 });
 
-test("an early native disclosure choice wins during development hydration", async ({
+test("an early native disclosure wins hydration before reload promotes active ancestry", async ({
   page,
 }) => {
   const errors = captureBrowserErrors(page);
@@ -235,87 +253,11 @@ test("an early native disclosure choice wins during development hydration", asyn
     .toContain("section:pages");
   await page.reload();
   await expectCleanHydration(page, errors);
-  await expect(disclosure).not.toHaveAttribute("open", "");
-});
-
-test("development React hydrates a finalized export cleanly", async ({
-  page,
-}) => {
-  const errors = captureBrowserErrors(page);
-  await installDevelopmentBundle(page);
-  await page.goto(`${exported.url}/view/screens/home.html`);
-  await expect(page.locator("html")).toHaveAttribute("data-mokly-static", "");
-  await expectCleanHydration(page, errors);
-});
-
-test("development React hydrates removed and renamed finalized routes", async ({
-  page,
-}) => {
-  const errors = captureBrowserErrors(page);
-  await installDevelopmentBundle(page);
-  for (const route of ["removed.html", "guides/original.html"]) {
-    const response = await page.goto(
-      `${historical.url}/view/${encodeRoute(route)}`,
-    );
-    expect(response?.status(), route).toBe(200);
-    await expect(page.locator("html")).toHaveAttribute("data-mokly-static", "");
-    await expect(
-      page.getByText("This document is no longer in the catalogue."),
-    ).toBeVisible();
-    await expectCleanHydration(page, errors, route);
-  }
+  await expect(disclosure).toHaveAttribute("open", "");
 });
 
 async function installDevelopmentBundle(page: Page): Promise<void> {
-  await page.route("**/__mokly/client/react-shell.js", (route) =>
-    route.fulfill({
-      body: developmentBundle,
-      contentType: "text/javascript",
-    }),
-  );
-}
-
-function captureBrowserErrors(page: Page): string[] {
-  const errors: string[] = [];
-  page.on("console", (message) => {
-    if (message.type() !== "error") return;
-    const sandboxDiagnostic =
-      message.location().url.includes("/static/") &&
-      message.text().startsWith("Blocked script execution in");
-    if (!sandboxDiagnostic) errors.push(message.text());
-  });
-  page.on("pageerror", (error) => errors.push(error.message));
-  return errors;
-}
-
-async function expectCleanHydration(
-  page: Page,
-  errors: string[],
-  context = "hydration",
-): Promise<void> {
-  await expect(page.locator("html")).toHaveAttribute("data-mokly-hydrated", "");
-  await page.evaluate(
-    () =>
-      new Promise<void>((resolve) =>
-        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-      ),
-  );
-  expect(errors, context).toEqual([]);
-  errors.length = 0;
-}
-
-async function expectNoBrowserErrors(
-  page: Page,
-  errors: string[],
-): Promise<void> {
-  await page.evaluate(
-    () =>
-      new Promise<void>((resolve) =>
-        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-      ),
-  );
-  expect(errors).toEqual([]);
-  errors.length = 0;
+  await installBundle(page, developmentBundle);
 }
 
 function manifestRoutes(value: unknown): readonly string[] {

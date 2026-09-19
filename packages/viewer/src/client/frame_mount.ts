@@ -22,6 +22,30 @@ export function frameUrl(
   view: FrameMount,
   expectedOrigin: string,
 ): URL {
+  return validatedFrameUrl(frame, view, expectedOrigin, (pathname) =>
+    pathname.startsWith("/static/"),
+  );
+}
+
+/** Confine a private live preview mount to one authenticated render bundle. */
+export function temporaryFrameUrl(
+  frame: HTMLIFrameElement,
+  view: FrameMount,
+  expectedOrigin: string,
+): URL {
+  return validatedFrameUrl(frame, view, expectedOrigin, (pathname) =>
+    /^\/__mokly\/components\/renders\/[a-f0-9]{48}\.[a-f0-9]{64}\/.+\.html?$/.test(
+      pathname,
+    ),
+  );
+}
+
+function validatedFrameUrl(
+  frame: HTMLIFrameElement,
+  view: FrameMount,
+  expectedOrigin: string,
+  allowedPath: (pathname: string) => boolean,
+): URL {
   const url = new URL(view.url.href);
   if (
     !origin(expectedOrigin) ||
@@ -39,7 +63,7 @@ export function frameUrl(
     throw new FrameError("origin");
   }
   if (
-    !pathname.startsWith("/static/") ||
+    !allowedPath(pathname) ||
     !/\.html?$/.test(pathname) ||
     pathname
       .split("/")

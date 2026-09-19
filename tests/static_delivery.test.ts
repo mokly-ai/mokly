@@ -1,15 +1,17 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import test from "node:test";
 
-import {
-  adoptStaticDelivery,
-  readStaticDelivery,
-} from "../packages/viewer/dist/client/static_delivery.js";
+import { readCatalogue } from "../packages/viewer/dist/catalogue/reader.js";
 import {
   parseStaticDelivery,
   resolveDeliveryHref,
   validFragmentQuery,
 } from "../packages/viewer/dist/navigation/delivery.js";
+import {
+  currentDeploymentMatches,
+  readShellDelivery,
+} from "../packages/viewer/dist/shell/delivery.js";
 
 const descriptor = {
   schemaVersion: 2,
@@ -54,14 +56,14 @@ test("a static document with missing or malformed metadata never falls back to t
     ({
       documentElement: { getAttribute: (key: string) => values[key] ?? null },
     }) as unknown as Document;
-  assert.equal(readStaticDelivery(document({})), undefined);
+  assert.equal(readShellDelivery(document({})), undefined);
   for (const contents of [undefined, "{}", "{"]) {
     const attrs: Record<string, string> = { "data-mokly-static": "" };
     if (contents !== undefined) attrs["data-mokly-delivery"] = contents;
-    assert.throws(() => readStaticDelivery(document(attrs)), /unavailable/);
+    assert.throws(() => readShellDelivery(document(attrs)), /unavailable/);
   }
   assert.deepEqual(
-    readStaticDelivery(
+    readShellDelivery(
       document({
         "data-mokly-static": "",
         "data-mokly-delivery": JSON.stringify(descriptor),
@@ -71,27 +73,46 @@ test("a static document with missing or malformed metadata never falls back to t
   );
 });
 
-test("different deployment identities never adopt a route with the same comparison URL", () => {
-  const document = (deploymentId: string) => {
-    const values = new Map([
-      ["data-mokly-static", ""],
-      ["data-mokly-delivery", JSON.stringify({ ...descriptor, deploymentId })],
-    ]);
-    return {
-      documentElement: {
-        getAttribute: (key: string) => values.get(key) ?? null,
-        setAttribute: (key: string, value: string) => values.set(key, value),
-      },
-    } as unknown as Document;
-  };
-  const current = document("a".repeat(64));
-  const before = current.documentElement.getAttribute("data-mokly-delivery");
-  assert.equal(adoptStaticDelivery(current, document("b".repeat(64))), false);
-  assert.equal(
-    current.documentElement.getAttribute("data-mokly-delivery"),
-    before,
+test("different deployment identities never validate the current route", async () => {
+  const catalogue = readCatalogue(
+    JSON.parse(
+      fs.readFileSync(
+        new URL("../docs/protocol/fixtures/catalogue-v1.json", import.meta.url),
+        "utf8",
+      ),
+    ),
   );
-  assert.equal(adoptStaticDelivery(current, document("a".repeat(64))), true);
+  const checked: string[] = [];
+  const windowFor = (deploymentId: string) =>
+    ({
+      fetch: async (input: URL | RequestInfo, init?: RequestInit) => {
+        checked.push(String(input));
+        assert.equal(init?.cache, "no-store");
+        assert.equal(init?.credentials, "omit");
+        return Response.json({ ...catalogue, deploymentId });
+      },
+      location: { href: "https://example.test/view/screens/home.html" },
+    }) as unknown as Window & typeof globalThis;
+  assert.equal(
+    await currentDeploymentMatches(
+      windowFor("b".repeat(64)),
+      catalogue,
+      new AbortController().signal,
+    ),
+    false,
+  );
+  assert.equal(
+    await currentDeploymentMatches(
+      windowFor(catalogue.deploymentId),
+      catalogue,
+      new AbortController().signal,
+    ),
+    true,
+  );
+  assert.deepEqual(checked, [
+    "https://example.test/__mokly/catalogue.json",
+    "https://example.test/__mokly/catalogue.json",
+  ]);
 });
 
 test("old and malformed deployment descriptors fail closed", () => {

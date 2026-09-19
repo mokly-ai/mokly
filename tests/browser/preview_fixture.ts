@@ -6,6 +6,7 @@ import { promisify } from "node:util";
 import { repositoryRoot } from "../helpers/fixture.js";
 
 const execute = promisify(execFile);
+const artifactBuilds = new Map<boolean, Promise<string>>();
 
 /** Running Cloudflare Pages preview used by browser integration tests. */
 export interface PreviewFixture {
@@ -17,13 +18,20 @@ export interface PreviewFixture {
 export async function startPreviewFixture(
   includeChanges = false,
 ): Promise<PreviewFixture> {
+  const output = await buildPreviewArtifact(includeChanges);
+  return await servePreviewFixture(output);
+}
+
+async function buildPreviewArtifact(includeChanges: boolean): Promise<string> {
+  const retained = artifactBuilds.get(includeChanges);
+  if (retained) return await retained;
   const output = path.join(
     repositoryRoot,
     includeChanges
       ? ".context/mokly-preview-changes"
       : ".context/mokly-preview",
   );
-  await execute(
+  const build = execute(
     "npm",
     [
       "run",
@@ -34,8 +42,15 @@ export async function startPreviewFixture(
       ...(includeChanges ? ["--include-changes"] : []),
     ],
     { cwd: repositoryRoot },
-  );
-  return await servePreviewFixture(output);
+  ).then(() => output);
+  artifactBuilds.set(includeChanges, build);
+  try {
+    return await build;
+  } catch (error) {
+    if (artifactBuilds.get(includeChanges) === build)
+      artifactBuilds.delete(includeChanges);
+    throw error;
+  }
 }
 
 /** Serve an already-published fixture through the real Pages routing runtime. */

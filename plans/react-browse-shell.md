@@ -52,6 +52,13 @@ Decisions taken with the user before planning:
    Serve, export, the React host, and the full check gate working. The switch
    and the vanilla runtime are removed together in one atomic milestone.
 
+Mainline integration on 2026-09-18 preserves the work added between this
+branch's source tip `1d0f0ab` and `origin/main` at `9bd6f20`: public saved-variant
+selection, multi-instance highlights and host-owned markers, the updated
+inspector divider, CLI reporting and packaged authoring guides. The
+[marker contract](../docs/protocol/mokly-viewer-markers.md) remains binding on
+the rewritten host. These features are not part of the retirement scope.
+
 ## Retirement rules
 
 These rules govern Milestones 2 to 7 and were added after review.
@@ -78,9 +85,11 @@ These rules govern Milestones 2 to 7 and were added after review.
 
 ## Module inventory
 
-The machine-readable keep, retire, and move sets live in
-`scripts/package/shell_partition.mjs`; the lists below explain that source of
-truth and must change with it.
+During the parallel implementation, the machine-readable keep, retire, and
+move sets lived in `scripts/package/shell_partition.mjs`. Milestone 7 removes
+that temporary inventory with the retired implementation. The final browser
+graph check validates the delivered inventory and every relative import;
+the lists below remain the record of the approved ownership changes.
 
 Retire (delete in Milestone 7, replaced by shell components, hooks, or the
 store):
@@ -101,13 +110,20 @@ store):
   `HighlightFrame` interface is deleted in Milestone 2), `style_evidence`,
   `prop_display`, `services`.
 
-Keep unchanged (transport, geometry, protocol; consumed through hooks):
+Keep (transport, geometry, protocol; consumed through hooks):
 `frame_adapter`, `frame_error`, `frame_mount`, `frame_usage`,
+`host_capability_descriptor`, `host_capabilities`,
 `message_transport`, `post_message_adapter`, `same_origin_adapter`,
 `same_origin_access`, `same_origin_mount`, `same_origin_pointer`,
 `same_origin_highlight`, `component_overlay`, `component_geometry`,
 `component_occlusion`, `component_range_nodes`, `document_ranges`,
 `catalogue_updates`.
+
+The public frame and inspector contracts remain unchanged. The retained
+`frame_mount` and `same_origin_adapter` modules also provide a private adapter
+for authenticated temporary control previews. Its URL validation confines the
+mount to one live render bundle, and its range authentication retains the full
+temporary path; the public same-origin adapter still accepts only static views.
 
 Retained standalone pre-hydration ownership:
 `standalone/early_disclosures`, `standalone/nav_resize`, and
@@ -145,17 +161,29 @@ Viewer host modules deleted in Milestone 7 with the islands: `layout.tsx`,
 and `frame_location.ts`. `packages/viewer/src/standalone/navigation_resize.ts`
 is not deleted in Milestone 7; it stays the pre-hydration disclosure-capture
 script emitted by `shell/document.tsx`, and Milestone 8 decides its future.
-Five viewer host modules that survive import deleted ones and must be
-reworked in the same change: `ready.tsx` (layout, runtime), `server.tsx` (layout),
-`public_stage.tsx` (frame_location), `highlight_request.ts` (frame_views),
-and `inspection_scope.ts` (frame_session, frame_views). CLI composition
+Viewer host entrypoints `ready.tsx`, `server.tsx`, and `public_stage.tsx` are
+reworked to use the shared shell. Four supporting modules also move into its
+ownership rather than retaining wrappers around removed sessions:
+
+| Removed viewer module  | Replacement owner                                                     |
+| ---------------------- | --------------------------------------------------------------------- |
+| `geometry_refresh.ts`  | `shell/frame_geometry.ts` and `shell/frame_geometry_controller.ts`    |
+| `highlight_request.ts` | `shell/frame_instances.ts` and `shell/frame_inspection_controller.ts` |
+| `inspection_scope.ts`  | Inspection claims and captured sessions in those same shell modules   |
+| `markers.ts`           | `shell/frame_markers.ts` and `shell/frame_marker_layer.tsx`           |
+
+Their public behaviors remain required, including geometry coalescing, trailing
+refresh, cancellation, exact instance scope, and marker status. The removed
+`packages/viewer/tests/frame_session.test.ts` is replaced by React lifecycle
+coverage in `tests/browser/frame_hook_lifecycle.spec.ts` and the frame registry
+and readiness tests. CLI composition
 deleted in Milestone 7: `src/client/browse.ts`, `browser.ts`,
 `live_updates.ts`, `browse_refresh.ts`, `control_transport.ts`,
 `workspace_loading.ts`.
 
 Unit tests that import any retired client, viewer host, or CLI composition
 module are rewritten against the replacement components, hooks, or pure
-helpers in Milestone 8. The set is produced by grepping `tests/` and
+helpers in Milestone 7, alongside retirement. The set is produced by grepping `tests/` and
 `packages/viewer/tests/` for imports of the retired module paths; the plan
 records no count because the set changes as modules move.
 
@@ -374,6 +402,37 @@ vanilla is deleted.
       spec files to the switched project's `testMatch`; fix regressions until
       they pass there. The default run stays green throughout.
 
+## Milestone 3A: Hydrated state and history corrections
+
+Tags: ui
+
+Summary: correct the verified state-adoption and async navigation defects found
+after Milestone 3 without reopening its completed implementation milestone.
+
+- [x] Keep sequential search input lossless while deriving typed tag filters.
+- [x] Adopt direct and alias URL variants/fragments on the first hydrated
+      render and scroll query-only route changes back to the active catalogue
+      row.
+- [x] Apply state precedence in chronological order: stored preferences,
+      reload recovery, then native interactions captured before hydration;
+      promote the active route ancestry in disclosures and the filter baseline.
+- [x] Put clicks, Back, Forward, and variant changes through one cancellable
+      static-deployment validation gate so an obsolete result cannot install
+      history or replace the current document.
+- [x] Keep early native Details and navigation disclosure choices
+      hydration-safe both with and without stored preferences.
+- [x] Replace the vanilla-only expectation that a persisted collapse may hide
+      the active route after reload: the native choice wins the pending
+      hydration, then reload re-establishes the active-ancestor invariant.
+- [x] Preserve a component frame's selected colour scheme when a viewport
+      change recreates the visible frame set.
+- [x] Keep the same-document Back branch proving that it cancels a pending
+      navigation rather than only asserting the resulting URL.
+- [x] Split `react_shell_hydration.spec.ts` below the 300-line hard limit
+      without weakening its development-React warning assertions.
+- [x] Run the focused pure-state, development-hydration, Serve-state, and
+      finalized-static regression suites with every assertion passing.
+
 ## Milestone 4: Frames, comparisons, and stage in React
 
 Tags: ui
@@ -382,22 +441,30 @@ Summary: bring the stage under React behind the switch while keeping frames
 static. Frame mounting, expansion, labels, highlights, and in-place
 comparisons become components and hooks over the unchanged frame adapters.
 
-- [ ] Wrap the same-origin and postMessage adapters in hooks that own mount,
+- [x] Wrap the same-origin and postMessage adapters in hooks that own mount,
       dispose, usage updates, and event subscriptions with React lifecycle
       semantics (effect replay safe, strict-mode safe).
-- [ ] Render screen, use-case step, and whole-document stages, device chrome,
+- [x] Preserve cancellation through pending usage updates and geometry reads:
+      unmount rejects readiness, newer evidence supersedes unresolved reads,
+      and late success or failure cannot change replacement inspection.
+- [x] Render screen, use-case step, and whole-document stages, device chrome,
       expand-to-overlay, frame readiness/error states, and frame labels as
       components; keep the script-disabled sandbox and byte-preserved frame
       documents.
-- [ ] Reimplement in-place comparisons (side by side, overlay, difference,
+- [x] Reimplement in-place comparisons (side by side, overlay, difference,
       renewal/expiry, selected comparisons) as components over the existing
       comparison routes and immutable generation URLs.
-- [ ] Keep in-frame logical link activation routing through the shell store;
+- [x] Keep in-frame logical link activation routing through the shell store;
       retain the sandbox and no top-navigation capability.
-- [ ] Add the frame adapter, frame readiness/clipping/overlay, comparison,
-      preview, review, and design-link spec files to the switched project's
-      `testMatch`; fix regressions until they pass there. The default run
-      stays green throughout.
+- [x] Authenticate same-origin frame resources across the exported host's
+      `.html`-to-extensionless normalization, apply validated fragments only
+      after resource authentication, and renew document-scoped ownership on
+      reload.
+- [x] During build-alongside, add the frame adapter, frame
+      readiness/clipping/overlay, comparison, preview, review, and design-link
+      spec files to the switched project's `testMatch`; after the flip, keep
+      them passing in the single project. The dual-project `testMatch` was
+      vanilla-only scaffolding and is removed with the switch in Milestone 7.
 
 ## Milestone 5: Host capability context for live Serve
 
@@ -405,36 +472,84 @@ Summary: define and implement the CLI-to-shell capability boundary that
 replaces DOM-injected services, before any workspace UI is ported. This is
 host and CLI contract work, so it is untagged and contains no shell UI.
 
-- [ ] Define a typed capability context in the viewer (update stream,
+- [x] Define a typed capability context in the viewer (update stream,
       reload-recovery snapshot, evidence revisions, temporary control
       previews, on-demand rendering), documented in the viewer contract;
       export supplies no capabilities.
-- [ ] Implement the CLI's hydrated composition that provides that context
+- [x] Implement the CLI's hydrated composition that provides that context
       alongside the existing `installViewerServices` path, reusing the
       unchanged private transports (`control_transport`, `live_updates`
       protocol, `browse_refresh` validation) without modifying them.
-- [ ] Add unit tests for context provision, cancellation on source change,
+- [x] Add unit tests for context provision, cancellation on source change,
       evidence-revision fencing, and export supplying nothing.
+- [x] Load route evidence after same-shell navigation as an atomic public
+      bootstrap/private workspace pair, fenced by route, monotonic source
+      revisions, render capability and cancellation; accept newer evidence
+      when the update version is unchanged.
 
 ## Milestone 6: Component workspaces and inspection in React
 
 Tags: ui
 
-Summary: port the component explorer, evidence, controls, and inspection UI to
-the React tree behind the switch, consuming the Milestone 5 context.
+Summary: keep the completed hydration correction isolated from the backend
+capability gap discovered while porting component workspaces.
 
-- [ ] Render component workspaces (variants, props, controls, evidence,
+- [x] Keep stored disclosure handoff hydration-safe when a preference closes
+      the active route ancestry: promote the active path in both the DOM and
+      first React state, preserve newer native choices, and pass the
+      development-hydration and watched reload/reparenting regressions.
+
+## Milestone 6A: Independent render and on-demand generations
+
+Summary: separate the temporary renderer identity from on-demand document
+availability so a compiled v5 catalogue can expose controls while retaining
+its complete eager Usage evidence.
+
+- [x] Give the private live capability source independent render and on-demand
+      generation identities, validate both at the host boundary, and preserve
+      eager workspace Usage whenever no on-demand document service exists.
+- [x] Add a server regression for a compiled v5 component runtime without a
+      document service: the React route returns successfully, binds the
+      renderer generation, retains eager Usage, and invents no preview
+      generation.
+
+## Milestone 6B: Component workspace continuation
+
+Tags: ui
+
+Summary: resume the component explorer, evidence, controls, and inspection UI
+on the React tree after Milestone 6A supplies the corrected host contract.
+
+- [x] Render component workspaces (variants, props, controls, evidence,
       usage links, inspector panels/tabs/resize) as components over the
       existing workspace data and control transport contracts.
-- [ ] Reimplement inspection ownership, picking, highlight, scroll-to-instance,
+- [x] Reimplement inspection ownership, picking, highlight, scroll-to-instance,
       and geometry presentation as hooks over the unchanged inspector protocol;
-      keep the `MoklyViewerHandle` and every documented event.
-- [ ] Reimplement watched reload recovery and evidence refresh on the shell
+      keep the `MoklyViewerHandle`, including atomic `highlightInstances`, and
+      every documented event. Preserve the mainline marker/label geometry
+      scheduler's coalescing, trailing refresh and cancellation guarantees.
+- [x] Reimplement watched reload recovery and evidence refresh on the shell
       store through the capability context.
-- [ ] Add the component, evidence, controls, inspector, workspace, viewer
-      inspection/readiness/replacement/teardown, watch, and changes spec files
-      to the switched project's `testMatch`; fix regressions until they pass
-      there. The default run stays green throughout.
+- [x] Reject an empty required or newly supplied optional select control
+      instead of silently rendering its first option; keep both cases under a
+      focused regression and the live controls check.
+- [x] Open Props when an instance selection first resolves, then preserve that
+      selection without overriding a later Details tab choice or explicit
+      inspector close.
+- [x] Bound component workspace state and pending temporary renders to the
+      routed entry so navigation between components with identical variants
+      cannot carry drafts or obsolete results into the destination.
+- [x] Give each visible viewport and colour-scheme context its own temporary
+      render queue identity so rendering both previews cannot cancel one of
+      the pair.
+- [x] Hydrate a live component route with development React without a markup
+      mismatch, keeping controls read-only through the hydration render before
+      enabling the host-backed editor.
+- [x] During build-alongside, add the component, evidence, controls, inspector,
+      workspace, viewer inspection/readiness/replacement/teardown, watch, and
+      changes spec files to the switched project's `testMatch`; after the flip,
+      keep them passing in the single project. The dual-project `testMatch` was
+      vanilla-only scaffolding and is removed with the switch in Milestone 7.
 
 ## Milestone 7: Flip and delete
 
@@ -443,28 +558,55 @@ vanilla runtime, the islands, the switch, and the old CLI composition in one
 change. This is delivery, packaging, and CLI work, so it is untagged; the
 public host component is rewritten in the next milestone.
 
-- [ ] Flip Serve and export to the hydrated document; collapse the Playwright
+- [x] Adopt a routed page's public catalogue, private workspace and source
+      revision atomically, including newer evidence with an unchanged watch
+      version; reject mismatched pairs and preserve live comparison availability.
+- [x] Flip Serve and export to the hydrated document; collapse the Playwright
       configuration back to one project running the whole suite; delete the
       switch and the selector header.
-- [ ] Delete every module in the retire list, the viewer host island modules,
+- [x] Preserve supplied Changes evidence in the public projection when live
+      Changes updates are disabled, while continuing to omit unknown live
+      states from static capture.
+- [x] Keep Serve self-contained, but replace the repeated catalogue embedded in
+      every exported page with one deployment-fenced `__mokly/catalogue.json`;
+      retain complete SSR when that shared read model cannot be validated.
+- [x] Load matching route evidence during static in-shell navigation so
+      Affected, related components, input changes and stylesheet evidence
+      remain consistent with direct loads; reject obsolete or mismatched
+      destination data without replacing the React tree.
+- [x] Profile and correct the full design-catalogue export timeout, retaining
+      its SSR/hydration contract and the existing export acceptance limit;
+      share the identical ordinary publication build between the design-link
+      and navigation browser specs instead of rebuilding it inside the second
+      setup deadline.
+- [x] Delete every module in the retire list, the viewer host island modules,
       the CLI composition modules, the `installViewerServices` seam, the
       `#markup-renderer` import map, and the client-side
       `react-dom/server.browser` dependency; the enumerated module delivery
       and export inventory update themselves, and the partition check is
       retired with the inventory it guarded.
-- [ ] Keep `navigation-resize.js` delivered unchanged as the pre-hydration
+- [x] Rewrite every unit test and test helper that imports a retired module
+      against its replacement component, hook, or pure helper as part of that
+      module's retirement; preserve every behavior assertion, add no skips,
+      and keep a 100% pass rate so `cargo xtask check` can pass in this
+      milestone.
+- [x] Retain the complete native shell-link eligibility matrix and denied
+      browser-storage behavior through tests of the production decision helper
+      and hydrated Details interactions.
+- [x] Keep `navigation-resize.js` delivered unchanged as the pre-hydration
       disclosure-capture script; Milestone 8 decides whether it folds into the
       shell.
-- [ ] Add a temporary host adapter: `MoklyViewer` renders the hydrated shell
-      tree through a minimal adapter that preserves its props, slots, handle,
-      and events, and rework the five surviving viewer host modules named in
+- [x] Add a temporary host adapter: `MoklyViewer` renders the hydrated shell
+      tree through a minimal adapter that preserves its props, slots, markers,
+      handle and events, and rework the surviving viewer host modules named in
       the inventory so the package compiles without the deleted modules. Those
       reworks repoint imports only and change no rendered markup; the adapter
       is compatibility plumbing, not UI. The full rewrite is Milestone 8.
-- [ ] Rerun the packed-consumer smoke and the published-package layout checks
+- [x] Rerun the packed-consumer smoke and the published-package layout checks
       for both tarballs.
-- [ ] Run `cargo xtask check` with the adapter in place, so the tree is green
-      before the host rewrite starts.
+- [x] Run `cargo xtask check` on the integrated delivery and completed host
+      rewrite. Mainline integration and the final host replace the temporary
+      adapter on this branch before that complete gate is recorded.
 
 ## Milestone 8: React host rewrite and documentation sync
 
@@ -473,20 +615,48 @@ Tags: ui
 Summary: finish the public React host on the new tree and bring
 code-adjacent docs and tests into line with the implementation.
 
-- [ ] Reimplement `MoklyViewer` on the shell tree: slots as ordinary children,
+- [x] Reimplement `MoklyViewer` on the shell tree: slots as ordinary children,
       controlled/uncontrolled selection, source/adapter replacement remount,
-      handle methods, events, theming variables, and the scoped embedded
-      stylesheet; remove the Milestone 7 adapter.
-- [ ] Fold `navigation-resize.js` behaviour into the hydrated shell or keep it
+      saved-variant selection, handle methods including multi-instance
+      highlighting, host-owned marker content and status events, theming
+      variables, and the scoped embedded stylesheet; remove the Milestone 7
+      adapter. Keep the mainline variant, multi-highlight and marker browser
+      regressions passing for independent mounts and lifecycle changes.
+- [x] Restore embedded root sizing and containment, preview-only host overlay
+      bounds and independent inspector resizing under the shared shell layout.
+- [x] Preserve public selection and comparison error reporting, Escape pick
+      cancellation, viewport/scheme replacement cancellation, and complete
+      frame cleanup even when a host callback throws.
+- [x] Keep standalone and embedded search lossless through the shared action
+      boundary, with sequential input tests for spaces and typed tag terms.
+- [x] Preserve exact saved-variant and repeated-flow inspection scope, atomic
+      multi-highlight labels, and marker errors across geometry refreshes; keep
+      the existing adapter and lifecycle assertions intact.
+- [x] Preserve replacement inspection requests and current picks when obsolete
+      geometry or label work settles, exclude unavailable sibling views from
+      scoped requests, and drain every mounted frame after callback failures.
+- [x] Exercise retained-evidence restoration through the production host bridge,
+      removing test-only restoration logic; preserve valid picks and scoped
+      highlights across ready revisions and invalidate only affected work.
+- [x] Keep a valid existing highlight when a replacement request fails input
+      validation, while clearing a current presentation that fails after its
+      activation has begun.
+- [x] Preserve active inspection through slot, marker and callback updates that
+      retain the same source and adapter; keep automatic ready-frame events
+      independent of explicit highlight scope and preserve idle highlights
+      when another ready instance is clicked.
+- [x] Mark only the first flow step as the logical fragment target, with
+      separate assertions for rendered iframe attributes and bootstrap data.
+- [x] Keep nested-instance disclosure on the Components panel while explicit
+      instance selection opens Props; preserve highlighting and library
+      navigation through both actions.
+- [x] Fold `navigation-resize.js` behaviour into the hydrated shell or keep it
       as a documented pre-hydration script; delete the standalone module if it
       is no longer needed.
-- [ ] Rewrite every unit test that imports a retired module against the
-      replacement components, hooks, or pure helpers; keep a 100% pass rate
-      with no skipped tests.
-- [ ] Re-run the design catalogue and shell design comparisons: the served
+- [x] Re-run the design catalogue and shell design comparisons: the served
       shell must match the design mockups; record any intentional pixel
       differences and their reasons.
-- [ ] Update the viewer package README, CLI READMEs, and protocol docs for any
+- [x] Update the viewer package README, CLI READMEs, and protocol docs for any
       contract clarifications discovered during implementation; remove every
       remaining reference to the switch and the vanilla runtime.
 
@@ -495,14 +665,14 @@ code-adjacent docs and tests into line with the implementation.
 Summary: complete branch work before review; the PR merge is the completion
 boundary.
 
-- [ ] Run the full unit, browser, example, package, and format/lint/type
+- [x] Run the full unit, browser, example, package, and format/lint/type
       gates; run `cargo xtask check` and resolve every failure.
 - [ ] Smoke-test manually: `npm run dev`, navigate, filter, pick tags, switch
       viewport and scheme, expand a frame, open a comparison, inspect a
       component instance, edit a control, trigger a watched reload; then
       export the example catalogue and repeat the same smoke on the exported
       site served statically.
-- [ ] Inspect deletions against `origin/main` and record every removed module
+- [x] Inspect deletions against `origin/main` and record every removed module
       and its replacement in the commit and PR description.
 - [ ] After checks pass, `git add -A`, commit with Conventional Commits and
       push the branch.

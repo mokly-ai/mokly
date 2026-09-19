@@ -5,30 +5,30 @@
 ## Status
 
 Active. All branch-local work in milestones 2–9 is implemented: the complete
-framework, neutral design and UI, packed-consumer and real-Accounting parity,
+framework, neutral design and UI, packed-consumer and external-consumer parity,
 and CI/release automation. Milestone 10 verification completed and its
 post-push review fixes are implemented in milestones 10A–10D; milestone 10E is
 running the required commit, push, and repeated-review workflow.
 The milestone-2 GitHub repository rename to `futex-ai/mokabook` is complete.
 Milestones 11–13 require a merged release, explicit approval for the first npm
-publish, and work in a separate Accounting workspace, so they cannot be closed
+publish, and work in a separate consumer workspace, so they cannot be closed
 from this feature branch.
 
 ## Summary
 
-Extract the reusable Mokabook framework from Accounting into this repository,
-remove its assumptions about Bookfolio and Accounting's filesystem, publish it
-as `mokabook`, and prove it through neutral fixture catalogues. The
+Build the reusable Mokabook framework in this repository, remove assumptions
+about any product or consumer filesystem, publish it as `mokabook`, and prove
+it through neutral fixture catalogues. The
 package will own structured registry definitions, static build/check, the
 watched Browse server, Git-based Review artifacts, and public authoring helpers.
 
-Accounting will retain its actual screens, use cases, page components, renderer
+A downstream consumer retains its screens, use cases, page components, renderer
 theme adapter, product styles/assets, generated HTML, and any temporary
-Accounting-only compatibility rules. After the first public package release, a
-separate Accounting workspace will replace the copied framework with the npm
+consumer-only compatibility rules. After the first public package release, a
+separate consumer workspace can replace copied framework code with the npm
 dependency and delete only the superseded generic code. Juno migration is a
 future change, but a Juno-shaped fixture must prove that the package boundary is
-not Accounting-specific.
+application-independent.
 
 The target contracts are:
 
@@ -43,11 +43,11 @@ The plan was prepared on 19 July 2026 from these clean `main` snapshots:
 | Repository          | Commit                                     | Purpose                               |
 | ------------------- | ------------------------------------------ | ------------------------------------- |
 | `futex-ai/mockbook` | `896a6ecfd26236b1695c7683e7acac73dc4efbc9` | Empty target before planned rename    |
-| Accounting          | `50e422e442a6819f1aae0fbd038d99b519b72a72` | Framework source and current behavior |
+| Reference consumer  | `50e422e442a6819f1aae0fbd038d99b519b72a72` | Framework source and current behavior |
 | Juno                | `e41d1832dd1109b4d454c77507e2de867b084849` | Future-consumer layout check          |
 | Firna UI            | `d36889be243a24f862d5d02539f15eca80e3fb7a` | Npm/CI/release convention reference   |
 
-The Accounting framework candidate is approximately 71 source/style files and
+The reference framework candidate is approximately 71 source/style files and
 9,571 lines, plus 18 focused framework/review test files and 4,314 test lines.
 The candidate is broader than `docs/mockups/src/mockbook/**`: registry,
 generation, bundling, loading, lints, id links, public Review-ignore helpers,
@@ -57,14 +57,14 @@ complete extraction.
 The source cannot be copied unchanged:
 
 - `core.ts`, registry discovery, manifests, and generated headers hard-code
-  `docs/mockups` and include Accounting-only legacy route repair.
-- `render.tsx` imports `@firna/ui`, React Native Web, and Accounting's theme
+  `docs/mockups` and include consumer-only legacy route repair.
+- `render.tsx` imports `@firna/ui`, React Native Web, and product theme
   tokens.
-- stylesheet selection recognizes Accounting's `marketing/` and `email/`
+- stylesheet selection recognizes product-specific `marketing/` and `email/`
   route families.
 - watched Serve knows about `emails/src/templates.json` and watches framework
   source because the framework currently lives inside the consumer.
-- Review shared-impact rules enumerate Accounting component, Firna-token, and
+- Review shared-impact rules enumerate product component, Firna-token, and
   generator paths.
 - the server derives the repository root by assuming `docs/mockups` is exactly
   two levels below it.
@@ -75,7 +75,7 @@ The source cannot be copied unchanged:
 
 Immediately before milestone implementation on 19 July 2026, `origin/main` in
 this repository remained at `896a6ecfd26236b1695c7683e7acac73dc4efbc9`.
-Accounting `origin/main` had advanced from the investigation baseline to
+The reference consumer's `origin/main` had advanced from the investigation baseline to
 `fdd0049a6fb195d4ac59250c0df797302565e58f`. The intervening mockup diff added
 one product entry module and generated assistant-reply fragments, and changed
 product pages, a product test, `app.css`, and the generated v2 manifest. No
@@ -96,7 +96,7 @@ by this plan.
 
 ## Ownership Boundary
 
-| Move into `mokabook`                             | Keep in Accounting                        | Make configurable                           |
+| Move into `mokabook`                             | Keep in the consumer                      | Make configurable                           |
 | ------------------------------------------------ | ----------------------------------------- | ------------------------------------------- |
 | Registry types/helpers and tree flattening       | `src/entries/**` definitions              | Mockups, entries, legacy, and repo roots    |
 | Manifest, fragments, discovery, validation       | `src/pages/**` and generated product HTML | Renderer module and stylesheet rules        |
@@ -106,10 +106,10 @@ by this plan.
 | Watch/rebuild/reload lifecycle                   | Email template source                     | Shell accent variables                      |
 | Review compare/artifact/JSON/summary             | Product protocol and mockup docs          | Consumer CI path filters/artifact name      |
 | Review-ignore helpers/material hashing           | Product-specific Review-ignore wrappers   | Optional version 2 manifest compatibility   |
-| Neutral shell/frame CSS and licensed font assets | Accounting-only route repair              | Legacy component-expansion adapter          |
+| Neutral shell/frame CSS and licensed font assets | Consumer-only route repair                | Legacy component-expansion adapter          |
 
 Every candidate file and behavior will receive one recorded disposition before
-Accounting deletes anything. “Rewritten as configuration” counts as extracted;
+the consumer deletes anything. “Rewritten as configuration” counts as extracted;
 silently dropping behavior does not.
 
 ## Decisions
@@ -123,44 +123,44 @@ silently dropping behavior does not.
 - Discover a typed `mokabook.config.*` from the working directory. All consumer
   paths resolve from that file.
 - Emit manifest schema version 3 with repo-relative paths. Read version 2 only
-  during the Accounting transition.
+  during the consumer transition.
 - Provide a plain React renderer and a consumer renderer hook; do not depend on
   `@firna/ui` or React Native Web.
 - Keep static fragments and manifests committed in consumer repositories.
 - Use synthetic mobile/desktop screens in examples and tests; publish no real
-  Accounting or Juno screen code or output.
+  consumer or Juno screen code or output.
 - Follow Firna UI's release-please plus npm trusted-publishing model, updated to
   current npm/action requirements and adapted for a CLI package.
 - Deliver in two product commits/PRs: the library/release work in this repo,
-  then the dependency cutover and generic-code deletion in Accounting.
+  then the dependency cutover and generic-code deletion in the consumer.
 
 ## Goals
 
 - Preserve all reusable Build, Check, Browse, watched-development, Review, and
-  Review-ignore behavior from the audited Accounting snapshot.
+  Review-ignore behavior from the audited consumer snapshot.
 - Make repository shape, renderer, styles, and app compatibility explicit.
 - Support a clean `npx mokabook` path and deterministic local dependency
   use in CI.
 - Provide fully typed public APIs, actionable errors, complete docs, and packed
   package tests.
 - Release through a reviewed release PR and tokenless OIDC publishing.
-- Leave Accounting with screens and adapters only, not a second framework fork.
+- Leave the consumer with screens and adapters only, not a second framework fork.
 
 ## Non-Goals
 
-- Moving Accounting or Juno screens, product use cases, generated HTML, product
+- Moving consumer or Juno screens, product use cases, generated HTML, product
   CSS, theme tokens, email data, or application components into this repo.
 - Migrating Juno to Mokabook in this change.
 - Hosting Mokabook as a deployed service or adding cloud visual-diff storage.
 - Making product fragments interactive or replacing consumer component tests.
-- Preserving undocumented Accounting path-repair behavior as a global default.
-- Publishing the package before a packed-tarball Accounting compatibility run.
+- Preserving undocumented consumer path-repair behavior as a global default.
+- Publishing the package before a packed-tarball consumer compatibility run.
 
 ## Milestone 1: Contract And Extraction Baseline
 
 Summary: establish a complete, reviewable target contract before implementation.
 
-- [x] Audit this repository, Accounting's current framework, Juno's future
+- [x] Audit this repository, a reference consumer's current framework, Juno's future
       consumer shape, and Firna UI's npm/release conventions.
 - [x] Record immutable source snapshots and quantify the candidate framework and
       test surface.
@@ -181,7 +181,7 @@ code in any repository.
 Summary: create a buildable, testable npm CLI/library skeleton whose help and
 public exports work before framework behavior is ported.
 
-- [x] Fetch `origin/main`, preserve its additions, and confirm the Accounting
+- [x] Fetch `origin/main`, preserve its additions, and confirm the consumer
       source tip has not moved; if it has, audit the new framework diff and
       update the baseline before copying code.
 - [x] Coordinate renaming the GitHub repository from `futex-ai/mockbook` to
@@ -198,7 +198,7 @@ public exports work before framework behavior is ported.
       `publishConfig` fields from the release protocol.
 - [x] Establish short, cohesive `src` module families for CLI, config,
       authoring, build, registry, legacy, server, client, review, and errors;
-      target about 200 lines and do not transplant the Accounting monoliths.
+      target about 200 lines and do not transplant consumer monoliths.
 - [x] Add a shebang-safe `mokabook` executable with `--help`, `--version`,
       default-serve dispatch, explicit subcommands, and typed option errors.
 - [x] Add TypeScript build/typecheck, formatter/linter, and test scripts with no
@@ -234,9 +234,8 @@ port the pure public registry/review helpers.
 - [x] Implement a neutral default renderer plus a documented consumer renderer
       module contract; add a test-only custom renderer that wraps context and
       injects collected styles.
-- [x] Create `docs/migration/accounting-framework-inventory.md`, listing every
-      candidate Accounting file/behavior as ported, rewritten into config,
-      retained in Accounting, product-specific test, or intentionally obsolete
+- [x] Audit every candidate file/behavior as ported, rewritten into config,
+      retained in the consumer, product-specific test, or intentionally obsolete
       with rationale.
 - [x] Add architecture documentation explaining package-owned versus
       consumer-owned dependencies and why app compatibility hooks cannot leak
@@ -244,7 +243,7 @@ port the pure public registry/review helpers.
 - [x] Run unit tests, typecheck, build, and file-size checks for this milestone.
 
 At this milestone a neutral config and registry can be imported and validated
-from a clean external fixture with no Accounting dependencies.
+from a clean external fixture with no consumer-app dependencies.
 
 ## Milestone 4: Static Build, Check, And Legacy Compatibility
 
@@ -260,7 +259,7 @@ with transactional output and explicit legacy extensions.
 - [x] Port generic `.source.ts`, `.source.tsx`, and `.source.html` discovery,
       bundling, component expansion, source linting, stage/screen limits, link
       checks, and generated-file ownership.
-- [x] Extract Accounting legacy route aliases, flat-family rules, allowlists,
+- [x] Extract consumer legacy route aliases, flat-family rules, allowlists,
       renderer, and stylesheet selection into fixture/consumer adapters; none
       may remain in framework defaults.
 - [x] Implement an in-memory/staged generation transaction so failed rendering,
@@ -269,7 +268,7 @@ with transactional output and explicit legacy extensions.
       grouped, actionable diagnostics and non-zero failure behavior.
 - [x] Prove deterministic paths/bytes on macOS and Linux path semantics and
       ensure absolute checkout paths never enter output.
-- [x] Port applicable Accounting tests first, remove product assertions, and add
+- [x] Port applicable consumer tests first, remove product assertions, and add
       config-boundary and security coverage for every rewritten assumption.
 - [x] Update package/API docs and protocol ambiguities discovered while porting.
 - [x] Run focused tests, the full unit/integration suite, typecheck, and build.
@@ -394,8 +393,8 @@ synthetic catalogue data before UI implementation.
       pages before any generated screen-spec page exceeds five screens.
       A difference-mode mockup was added beside the required states, and the
       design screens are split across four collections of at most four screens.
-- [x] Use the existing Accounting Mokabook prototypes only as behavioral/visual
-      reference; remove Bookfolio names, product screens, routes, data, colors,
+- [x] Use the existing Mokabook prototypes only as behavioral/visual reference;
+      remove product names, screens, routes, data, colors,
       and theme dependencies from the new designs.
 - [x] Ensure each design is reachable from the example navigation and that
       implementation notes live outside rendered screen areas.
@@ -405,7 +404,7 @@ synthetic catalogue data before UI implementation.
       protocol before the UI milestone begins.
 
 At this milestone reviewers can inspect the complete neutral Browse/Review
-design and example catalogue without any Accounting screen being present.
+design and example catalogue without any consumer screen being present.
 
 ## Milestone 7: Browse And Review UI
 
@@ -454,7 +453,7 @@ and that it works in realistic consumer layouts before release automation is
 enabled.
 
 - [x] Build the production distribution and inspect `npm pack --dry-run --json`
-      against an explicit allowlist; verify no Accounting/Juno source, examples,
+      against an explicit allowlist; verify no consumer/Juno source, examples,
       tests, plans, caches, or review artifacts enter the tarball.
 - [x] Install the real tarball in clean ESM and NodeNext consumers and test all
       public exports, declarations, `mokabook` bin, help/version, config
@@ -465,27 +464,27 @@ enabled.
 - [x] Add typed consumer module-resolution configuration for aliases,
       conditions, loaders, package roots, main fields, and extensions so
       React Native Web and other host dependencies resolve from packed installs.
-- [x] Build/check/serve/review an Accounting-shaped fixture using a custom Firna
+- [x] Build/check/serve/review a themed fixture using a custom Firna
       renderer, multiple stylesheet families, legacy aliases, external watch
       input, and shared-impact globs.
 - [x] Build/check/serve a Juno-shaped fixture with different roots, components,
-      styles, and no Accounting adapter.
+      styles, and no themed-consumer adapter.
 - [x] Add an explicitly configured temporary compatibility transformer and
       legacy exclude globs so the version 2 bridge is consumer-owned and cannot
-      leak Accounting rules into framework defaults.
-- [x] In a temporary Accounting worktree, install the tarball and draft only the
+      leak consumer rules into framework defaults.
+- [x] In a temporary consumer worktree, install the tarball and draft only the
       app-owned config/renderer/compatibility bridge; run existing Mokabook
       gates and compare ids, routes, fragment DOM/styles, Browse behavior, and
       Review classification with the source implementation.
 - [x] Treat schema/header/path changes documented by the version 3 migration as
       intentional; investigate every other parity difference before release.
-- [x] Complete the file/behavior migration ledger with no unexplained source
-      candidate and prove product-specific tests remain in Accounting.
+- [x] Complete the file/behavior migration audit with no unexplained source
+      candidate and prove product-specific tests remain in the consumer.
 - [x] Run the entire unit, integration, browser, type, build, and package smoke
       suite with a 100% pass rate.
 
 At this milestone the packed tarball—not a source checkout—passes neutral,
-Accounting-shaped, Juno-shaped, and temporary real-Accounting acceptance.
+themed, Juno-shaped, and temporary external-consumer acceptance.
 
 ## Milestone 9: CI, Release Automation, And Documentation
 
@@ -515,7 +514,7 @@ publishing without publishing yet.
       exact trusted-publisher workflow/environment/action, token restriction,
       and `0.1.0` verification.
 - [x] Finish README install/CLI/config/examples/troubleshooting/release sections,
-      API docs, architecture docs, migration ledger, and protocol alignment.
+      API docs, architecture docs, migration audit, and protocol alignment.
 - [x] Recheck current official npm trusted-publisher, npm-exec/bin, provenance,
       and release-please requirements immediately before finalizing workflows.
 
@@ -568,7 +567,7 @@ the library pull request.
       considers class-wide prevention.
 
 At this milestone the Mokabook library PR is fully verified, pushed, and
-reviewed. The plan remains active until release/bootstrap and Accounting cutover
+reviewed. The plan remains active until release/bootstrap and consumer cutover
 are complete.
 
 ## Milestone 10A: Review Runtime Correctness
@@ -848,48 +847,48 @@ approval for the irreversible first public publish.
 At this milestone `mokabook@0.1.0` is the first supported public version
 and future releases are tokenless and release-PR controlled.
 
-## Milestone 12: Accounting Consumer Cutover
+## Milestone 12: Downstream Consumer Cutover
 
-Summary: in a separate Accounting Conductor workspace, replace the in-repo
+Summary: in a separate consumer workspace, replace the in-repo
 framework with the released dependency while preserving every actual screen and
 generated product artifact.
 
 Blocked here by milestone 11 and by the requirement to perform this change in a
-separate Accounting Conductor workspace after a supported package is released.
+separate consumer workspace after a supported package is released.
 
-- [ ] Create and index an Accounting consumer-migration plan, update its
+- [ ] Create and index a consumer-migration plan, update its
       Mokabook protocol/README first, and capture the latest source tip and
       `origin/main` additions before editing.
 - [ ] Install an explicit compatible `mokabook` development dependency
-      and update the Accounting lockfile using npm.
-- [ ] Add Accounting-owned `mokabook.config.ts`, Firna UI/React Native Web
+      and update the consumer lockfile using npm.
+- [ ] Add a consumer-owned `mokabook.config.ts`, Firna UI/React Native Web
       renderer, stylesheet rules, external email watch input, Review impact
       globs, legacy aliases/allowlists, and any temporary version 2 bridge.
 - [ ] Update root and TypeScript npm scripts to call the installed `mokabook`
       bin for build/check/test/serve/review, retaining stable developer command
       names where useful.
-- [ ] Update Accounting CI's blocking mockup gates and non-blocking
+- [ ] Update consumer CI's blocking mockup gates and non-blocking
       `mokabook-review` artifact/summary job to use the package and PR merge base.
-- [ ] Preserve every Accounting entry, page, component, product style/asset,
+- [ ] Preserve every consumer entry, page, component, product style/asset,
       Mokabook-related protocol requirement, generated fragment, route, id,
       relationship, and actual screen; regenerate only documented schema/header
       differences.
-- [ ] Delete only framework files marked “ported” in the migration ledger after
+- [ ] Delete only framework files verified as ported in the consumer migration audit after
       package parity is green. Keep consumer adapters and product-specific tests;
       audit every deletion against `origin/main` as an authorized replacement,
       never a feature removal.
-- [ ] Run Accounting mockup build/check/test/browser/typecheck, Review against
+- [ ] Run consumer mockup build/check/test/browser/typecheck, Review against
       `origin/main`, direct-file and watched server smokes, plus the full
       `cargo xtask check` suite.
 - [ ] Inspect product-fragment and manifest differences, links, orphan cleanup,
       and Review classification; resolve every unexplained difference.
-- [ ] Commit and push the Accounting change with a Conventional Commit, then run
+- [ ] Commit and push the consumer change with a Conventional Commit, then run
       its required post-push `cargo xtask review` and report findings without
       automatically fixing them.
 - [ ] Do not modify Juno in this milestone; add only a concise future migration
       handoff if its fixture exposed consumer work.
 
-At this milestone Accounting contains no duplicate generic Mokabook framework,
+At this milestone the consumer contains no duplicate generic Mokabook framework,
 uses the public package, and retains all real screen/spec content.
 
 ## Milestone 13: Close The Extraction Plan
@@ -897,11 +896,11 @@ uses the public package, and retains all real screen/spec content.
 Summary: record the released/consumed result in this repository and close the
 plan only after both delivery repositories are verified.
 
-Blocked until milestones 11 and 12 supply the release and Accounting cutover
+Blocked until milestones 11 and 12 supply the release and consumer cutover
 evidence required for an honest closeout.
 
-- [ ] Update the migration ledger with the released version, Mokabook merge/tag,
-      Accounting cutover commit, intentional output changes, and any deferred
+- [ ] Update the extraction record with the released version, Mokabook merge/tag,
+      consumer cutover commit, intentional output changes, and any deferred
       compatibility removal.
 - [ ] Update README/protocol docs with the proven install and consumer behavior;
       remove planning-only language that is no longer true.
@@ -915,15 +914,15 @@ evidence required for an honest closeout.
 
 ## Definition Of Done
 
-- `mokabook` contains every reusable behavior in the migration ledger,
+- `mokabook` contains every reusable behavior identified by the extraction audit,
   has no product screen dependency, and passes all source and packed-artifact
   tests.
 - `npx mokabook` serves a configured consumer catalogue; a local install
   supports `npx mokabook` and all explicit subcommands.
-- Neutral and Juno-shaped fixtures prove app independence; a real Accounting
+- Neutral and Juno-shaped fixtures prove app independence; a real consumer
   cutover proves production-scale parity.
 - CI blocks broken code/generated output, Review provides non-blocking visual
   evidence, and release-please plus npm OIDC publishes reviewed tags.
-- Accounting no longer owns a generic framework fork and no actual Accounting
+- The consumer no longer owns a generic framework fork and no actual consumer
   screen, route, use case, generated artifact, or product documentation is
   lost.

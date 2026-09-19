@@ -125,7 +125,7 @@ body {
 }
 
 .mbk-nav-resize::after {
-  background: #c6cbc4;
+  background: var(--chrome-border-strong);
   border-radius: 999px;
   content: "";
   height: 32px;

@@ -1,0 +1,52 @@
+---
+title: "Export and host"
+description: "Deploy the catalogue as static files on your own hosting."
+section: "catalogue"
+order: 5
+---
+
+## Export a complete catalogue
+
+```shell
+npx mokly export --out .context/mokly-site
+```
+
+Export builds first, then packages the complete catalogue: every screen, the
+id aliases, the assets and the Git comparisons. `--out` is required and is
+resolved beside the config, not beside your working directory; an absolute
+path must stay inside the repository root.
+
+`--base` overrides the configured base ref for that run. The branch point must
+be present in the checkout, with the authored assets and either the committed
+generated output or the tooling your derived baseline recipe needs, so a CI
+job should check out the full history. Export never fetches history for you
+and never silently omits comparisons.
+
+## Deploy it
+
+Serve the directory's contents at the root of an HTTP(S) origin, with correct
+MIME types and directory indexes. No Mokly process, Git checkout, source tree
+or rewrite rule is needed there. Give the catalogue an origin of its own: it
+resolves every address from that root, so keep it off a path prefix and reach
+it over HTTP(S) rather than from a local folder.
+
+Configure revalidation for the shell and mutable assets, serve comparison
+files with `Cache-Control: no-store` and `X-Content-Type-Options: nosniff`,
+and deploy atomically so a reader never meets a mixture of two builds. The
+artifact includes a `404.html` your host can use as its error document.
+
+## What a reader gets
+
+The whole catalogue: navigation, search, tags, viewport and scheme controls,
+use-case flows, whole-document pages, the details inspector and the
+comparisons. Comparisons load only once a reader selects one. A refresh reads
+the same exported generation; deploy a new export to publish new results.
+
+## Re-exporting
+
+Each export has its own content-derived deployment identity, so a reader with
+an old tab reloads fully when the deployed catalogue changes. A re-export
+replaces only the output it owns and restores the previous site if installing
+the new one fails and recovery is safe. Choose a destination that is missing
+or empty and outside your source, generated, dependency and comparison
+directories.

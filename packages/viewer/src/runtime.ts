@@ -1,23 +1,36 @@
-export { applyNavigationEvidence } from "./client/browse_evidence.js";
+export { parseBrowseRecoveryState } from "./standalone/recovery.js";
+export type { BrowseRecoveryState } from "./standalone/recovery.js";
 export {
-  readPageStamp,
-  navigationPending,
-  waitForNavigation,
-} from "./client/browse_update_state.js";
-export { parseBrowseRecoveryState } from "./client/browse_recovery.js";
-export {
-  captureBrowseState,
-  restoreBrowseState,
-} from "./client/browse_state.js";
-export type { BrowseRecoveryState } from "./client/browse_state.js";
-export { workspaceEvidence } from "./client/workspace_updates.js";
+  externalShellBootstrap,
+  readShellBootstrap,
+  serializeShellBootstrap,
+} from "./standalone/bootstrap.js";
 export { localFramePath } from "./client/same_origin_adapter.js";
 export { BYTE_LIMIT } from "./inspector/values.js";
 export { compactRanges, readMetadata } from "./inspector/metadata.js";
 export type { LinkIdentity } from "./inspector/metadata.js";
-export { initializeBrowseShell } from "./client/browse.js";
-export {
-  installViewerServices,
-  loadCatalogueRevisionAdopter,
-} from "./client/services.js";
 export { adoptCatalogueRevision } from "./client/catalogue_updates.js";
+export {
+  readViewerCapabilityDescriptor,
+  viewerCapabilityRequest,
+  viewerCapabilityRequestMatches,
+  viewerCapabilitySourceEquals,
+} from "./client/host_capability_descriptor.js";
+export type {
+  ViewerCapabilityDescriptor,
+  ViewerCapabilityRequest,
+  ViewerCapabilitySource,
+} from "./client/host_capability_descriptor.js";
+export {
+  readViewerEvidenceRevision,
+  readViewerRouteEvidenceRevision,
+} from "./client/host_capabilities.js";
+export type {
+  ViewerEvidenceCapability,
+  ViewerEvidenceRevision,
+  ViewerHostCapabilities,
+  ViewerOnDemandCapability,
+  ViewerTemporaryPreviewCapability,
+  ViewerUpdateActions,
+} from "./client/host_capabilities.js";
+export type { ShellRecoverySnapshot } from "./shell/store_state.js";

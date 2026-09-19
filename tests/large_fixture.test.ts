@@ -15,7 +15,7 @@ import { prepareRegistry } from "../dist/registry/prepare.js";
 import { generateLargeFixture, largeSize } from "./fixtures/large/generate.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
-test("large fixture validates dimensions and defaults to Accounting-scale routes", () => {
+test("large fixture validates dimensions and defaults to high-scale routes", () => {
   assert.deepEqual(largeSize({}), {
     areas: 30,
     screens: 40,

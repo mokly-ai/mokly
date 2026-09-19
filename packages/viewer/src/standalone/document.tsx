@@ -1,64 +1,99 @@
 /** Complete standalone shell document shared by static SSR and hydration. */
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
+import type { ViewerHostCapabilities } from "../client/host_capabilities.js";
+import type { ViewerCapabilityDescriptor } from "../client/host_capability_descriptor.js";
+import { serializeViewerCapabilityDescriptor } from "../client/host_capability_descriptor.js";
+import { ViewerCapabilityBoundary } from "../shell/capability_context.js";
 import type { Catalogue } from "../shell/catalogue.js";
 import type { ShellContext } from "../shell/context.js";
-import { FrameNavigationBridge } from "../shell/frame_navigation.js";
 import { CatalogueNav } from "../shell/nav.js";
+import { useNavigationBounds } from "../shell/nav_resize.js";
 import { ShellStoreProvider } from "../shell/store.js";
 import { useShellStore } from "../shell/store_context.js";
 import type { ShellInitialState } from "../shell/store_state.js";
+import type { ShellRecoverySnapshot } from "../shell/store_state.js";
 import { TopBar } from "../shell/top_bar.js";
 import { ShellMain, viewTitle } from "../shell/views.js";
 import type { ShellView } from "../shell/views.js";
+import type { WorkspaceData } from "../shell/workspace_data.js";
 
-import { serializeShellBootstrap, type ShellBootstrap } from "./bootstrap.js";
+import {
+  serializeShellBootstrap,
+  type ShellBootstrapState,
+} from "./bootstrap.js";
 import { HYDRATED_EVENT } from "./nav_resize.js";
+import type { StaticWorkspaceEvidence } from "./static_workspace_evidence.js";
 
 export const REACT_SHELL_BUNDLE = "react-shell.js";
+export const REACT_HOST_BUNDLE = "react-host.js";
 
 /** Render the standalone document without changing the existing shell tree. */
 export function StandaloneShellDocument({
   bootstrap,
   catalogue,
+  capabilities,
+  capabilityDescriptor,
   context,
   initialState,
+  initialWorkspace,
+  recovery,
+  staticEvidence,
   view,
 }: {
-  bootstrap?: ShellBootstrap;
+  bootstrap?: ShellBootstrapState;
   catalogue: Catalogue;
+  capabilities?: ViewerHostCapabilities;
+  capabilityDescriptor?: ViewerCapabilityDescriptor;
   context: ShellContext;
   initialState?: ShellInitialState | undefined;
+  initialWorkspace?: WorkspaceData;
+  recovery?: ShellRecoverySnapshot;
+  staticEvidence?: StaticWorkspaceEvidence;
   view: ShellView;
 }) {
+  const workspace = capabilityDescriptor?.workspace ?? initialWorkspace;
   return (
-    <ShellStoreProvider
-      catalogue={catalogue}
-      context={context}
-      interactive={bootstrap !== undefined}
-      view={view}
-      {...(initialState ? { initialState } : {})}
+    <ViewerCapabilityBoundary
+      {...(capabilities ? { capabilities } : {})}
+      {...(capabilityDescriptor
+        ? { initialSource: capabilityDescriptor.source }
+        : {})}
+      {...(workspace ? { initialWorkspace: workspace } : {})}
+      {...(staticEvidence ? { staticEvidence } : {})}
     >
-      <StandaloneDocumentContents
+      <ShellStoreProvider
         catalogue={catalogue}
-        {...(bootstrap ? { bootstrap } : {})}
-      />
-    </ShellStoreProvider>
+        context={context}
+        interactive={bootstrap !== undefined}
+        {...(recovery ? { recovery } : {})}
+        view={view}
+        {...(initialState ? { initialState } : {})}
+      >
+        <StandaloneDocumentContents
+          {...(bootstrap ? { bootstrap } : {})}
+          {...(capabilityDescriptor ? { capabilityDescriptor } : {})}
+        />
+      </ShellStoreProvider>
+    </ViewerCapabilityBoundary>
   );
 }
 
 function StandaloneDocumentContents({
   bootstrap,
-  catalogue,
+  capabilityDescriptor,
 }: {
-  bootstrap?: ShellBootstrap;
-  catalogue: Catalogue;
+  bootstrap?: ShellBootstrapState;
+  capabilityDescriptor?: ViewerCapabilityDescriptor;
 }) {
   const store = useShellStore();
+  const catalogue = store.catalogue;
   const hydrated = store.interactive;
   const context = store.context;
   const view = store.state.route.view;
+  const shell = useRef<HTMLDivElement>(null);
+  useNavigationBounds(shell);
   return (
     <html
       data-mokly-base={context.base}
@@ -70,6 +105,7 @@ function StandaloneDocumentContents({
       data-mokly-content-version={
         context.delivery ? undefined : context.contentVersion
       }
+      data-mokly-host-capabilities={capabilityDescriptor ? "" : undefined}
       data-mokly-react-shell={hydrated ? "" : undefined}
       lang="en"
     >
@@ -92,6 +128,7 @@ function StandaloneDocumentContents({
           className="mbk"
           data-drawer={store.state.drawerOpen ? "open" : "closed"}
           data-mokly-shell=""
+          ref={shell}
         >
           <a className="mbk-skip-link" href="#mb-main">
             Skip to content
@@ -110,7 +147,6 @@ function StandaloneDocumentContents({
           >
             {store.state.announcement}
           </p>
-          {hydrated ? <FrameNavigationBridge /> : null}
         </div>
         {bootstrap ? (
           <script
@@ -121,13 +157,21 @@ function StandaloneDocumentContents({
             }}
           />
         ) : null}
+        {capabilityDescriptor ? (
+          <script
+            data-mokly-host-capability-state=""
+            type="application/json"
+            dangerouslySetInnerHTML={{
+              __html: serializeViewerCapabilityDescriptor(capabilityDescriptor),
+            }}
+          />
+        ) : null}
         <script src="/__mokly/client/navigation-resize.js" />
-        <script
-          src={`/__mokly/client/${hydrated ? REACT_SHELL_BUNDLE : "browse.js"}`}
-          type="module"
-        />
-        {!hydrated && !context.delivery ? (
-          <script src="/__mokly/client/browser.js" type="module" />
+        {hydrated ? (
+          <script
+            src={`/__mokly/client/${capabilityDescriptor ? REACT_HOST_BUNDLE : REACT_SHELL_BUNDLE}`}
+            type="module"
+          />
         ) : null}
         {hydrated ? <HydrationMarker /> : null}
       </body>

@@ -8,30 +8,24 @@ import { createExportFixture } from "../helpers/export_fixture.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 
-import {
-  assertServedShellMarker,
-  reactShellForProject,
-} from "./export_shell.js";
+import { assertServedShellMarker } from "./export_shell.js";
 
 let fixture: Awaited<ReturnType<typeof createExportFixture>>;
 let server: Awaited<ReturnType<typeof serveStaticFiles>>;
 let isolated: string;
 
-test.beforeAll(async ({ browser: _browser }, info) => {
+test.beforeAll(async () => {
   test.setTimeout(60_000);
-  const reactShell = reactShellForProject(info.project.name);
   fixture = await createExportFixture();
   isolated = await fs.mkdtemp(
     path.join(repositoryRoot, ".context/static-deployment-"),
   );
   const before = await exportCatalogue(fixture.config, {
     outDir: "site",
-    reactShell,
   });
   await fs.cp(fixture.output, isolated, { recursive: true });
   const after = await exportCatalogue(fixture.config, {
     outDir: "site",
-    reactShell,
     adapter: {
       transform: (files) => {
         files.set(
@@ -44,11 +38,7 @@ test.beforeAll(async ({ browser: _browser }, info) => {
   expect(after.comparisonUrl).toBe(before.comparisonUrl);
   expect(after.deploymentId).not.toBe(before.deploymentId);
   server = await serveStaticFiles(isolated);
-  await assertServedShellMarker(
-    server.url,
-    "/view/screens/home.html",
-    reactShell,
-  );
+  await assertServedShellMarker(server.url, "/view/screens/home.html");
 });
 
 test.afterAll(async () => {

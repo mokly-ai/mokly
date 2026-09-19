@@ -76,8 +76,10 @@ The request body is one gzip-compressed POSIX tar archive (USTAR with PAX
 extended headers when needed), not multipart and not an HTTP Content-Encoding.
 All 2xx responses mean the complete upload was accepted. No response body is
 required or interpreted; 204 is recommended. Receivers should finish validation
-before returning success. Publish prints `Published Mokly catalogue.` and exits
-0 only after acceptance. Upload timeout is 120 seconds; cancellation and all
+before returning success. After acceptance, plain mode prints
+`Published Mokly catalogue.` and rich mode prints the timed success summary in
+the [terminal output contract](./mokly-terminal-output.md); both exit 0. Upload
+timeout is 120 seconds; cancellation and all
 failures exit 1. Interrupted responses may have reached the service: retrying
 is a new upload, with no exactly-once or idempotency guarantee.
 

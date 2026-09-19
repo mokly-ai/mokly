@@ -3,20 +3,22 @@ import test from "node:test";
 import { setImmediate } from "node:timers/promises";
 
 import {
-  LiveUpdateController,
+  ReactUpdateController,
   type RecoveryStorage,
   type ReloadLocation,
   type UpdateEventStream,
-} from "../dist/client/live_updates.js";
-import { parseBrowseRecoveryState } from "../packages/viewer/dist/client/browse_recovery.js";
-import type { BrowseRecoveryState } from "../packages/viewer/dist/client/browse_state.js";
+} from "../dist/client/react_update_controller.js";
+import {
+  parseBrowseRecoveryState,
+  type BrowseRecoveryState,
+} from "../packages/viewer/dist/runtime.js";
 
 test("live updates are latest-wins and recovery is consumed once", () => {
   const stream = new FakeStream();
   const storage = new FakeStorage();
   const location = new FakeLocation();
   const browse = browseState();
-  const controller = new LiveUpdateController(
+  const controller = new ReactUpdateController(
     stream,
     storage,
     location,
@@ -42,7 +44,7 @@ test("a ready version newer than the served page reloads immediately", () => {
   const stream = new FakeStream();
   const storage = new FakeStorage();
   const location = new FakeLocation();
-  const controller = new LiveUpdateController(
+  const controller = new ReactUpdateController(
     stream,
     storage,
     location,
@@ -119,7 +121,7 @@ test("background refresh is latest-wins and catches up beyond its triggering ver
     signal: AbortSignal;
     resolve(value: number | undefined): void;
   }> = [];
-  const controller = new LiveUpdateController(
+  const controller = new ReactUpdateController(
     stream,
     new FakeStorage(),
     location,
@@ -152,7 +154,7 @@ test("a reconnected newer ready snapshot refreshes without losing Browse state",
   const stream = new FakeStream();
   const location = new FakeLocation();
   const versions: number[] = [];
-  const controller = new LiveUpdateController(
+  const controller = new ReactUpdateController(
     stream,
     new FakeStorage(),
     location,
@@ -177,7 +179,7 @@ test("shutdown cancels refreshes and ignores late failures and newer events", as
   const location = new FakeLocation();
   let reject: (reason: Error) => void = () => {};
   let pending: AbortSignal | undefined;
-  const controller = new LiveUpdateController(
+  const controller = new ReactUpdateController(
     stream,
     new FakeStorage(),
     location,

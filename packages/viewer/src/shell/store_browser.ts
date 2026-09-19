@@ -8,6 +8,7 @@ import type {
   SetStateAction,
 } from "react";
 
+import type { FrameNavigation } from "../client/frame_adapter.js";
 import {
   resolveDeliveryHref,
   validFragmentQuery,
@@ -18,6 +19,7 @@ import type { ShellContext } from "./context.js";
 import { currentDeploymentMatches } from "./delivery.js";
 import type { NavSectionNode } from "./nav_tree.js";
 import { routeDocumentKey, routeFromUrl, routeHref } from "./routes.js";
+import { eligibleShellAnchor, sameShellRoute } from "./store_browser_routes.js";
 import { withRoute } from "./store_filters.js";
 import {
   captureScrolls,
@@ -39,7 +41,7 @@ interface BrowserStoreInput {
 
 /** Browser-only actions returned to the React shell provider. */
 export interface ShellBrowserActions {
-  navigateFrame(href: string): void;
+  navigateFrame(href: string, navigation?: FrameNavigation): void;
   onShellClick(event: MouseEvent<HTMLElement>): void;
   onShellKeyDown(event: KeyboardEvent<HTMLElement>): void;
   openFrame(href: string, target: string): void;
@@ -50,8 +52,9 @@ export interface ShellBrowserActions {
 export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
   const stateRef = useRef(input.state);
   stateRef.current = input.state;
-  const displayed = useRef<string | undefined>(undefined);
   const sequence = useRef<AbortController | undefined>(undefined);
+  const providerNormalizedRoutes = useRef(false);
+  const installedDocumentKey = useRef<string | undefined>(undefined);
   const pendingScroll = useRef<Readonly<Record<string, number>> | undefined>(
     undefined,
   );
@@ -62,64 +65,101 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
       url: URL,
       push: boolean,
       scrolls: Readonly<Record<string, number>> = {},
+      restore = true,
     ) => {
       const win = window;
-      sequence.current?.abort();
-      const route = routeFromUrl(input.catalogue, url);
+      const route = routeFromUrl(input.catalogue, url, input.context.delivery);
       if (push) {
         persistScroll(win, captureScrolls(document));
         win.history.pushState({ scrolls: {} }, "", url);
       }
-      displayed.current = routeDocumentKey(url);
-      pendingScroll.current = scrolls;
-      pendingFocus.current = true;
+      installedDocumentKey.current = routeDocumentKey(url);
+      if (restore) {
+        pendingScroll.current = scrolls;
+        pendingFocus.current = true;
+      }
       input.setState((state) =>
         withRoute(state, route, input.catalogue, input.sections),
       );
     },
-    [input.catalogue, input.sections, input.setState],
+    [input.catalogue, input.context.delivery, input.sections, input.setState],
   );
 
-  const navigate = useCallback(
-    async (href: string) => {
+  const transition = useCallback(
+    async (
+      requested: URL,
+      push: boolean,
+      scrolls: Readonly<Record<string, number>> = {},
+    ) => {
       if (!input.interactive) return;
       const win = window;
-      const requested = new URL(href, win.location.href);
-      const route = routeFromUrl(input.catalogue, requested);
+      const sameDocument =
+        installedDocumentKey.current === routeDocumentKey(requested);
+      const route = routeFromUrl(
+        input.catalogue,
+        requested,
+        input.context.delivery,
+      );
       let canonical = requested;
       if (route.view.kind === "target")
         canonical = new URL(
-          routeHref(
-            route.view.target.entry.route,
-            route.fragment,
-            route.variant,
+          browserRouteHref(
+            routeHref(
+              route.view.target.entry.route,
+              route.fragment,
+              route.variant,
+              route,
+            ),
+            providerNormalizedRoutes.current,
           ),
           requested,
         );
       const controller = new AbortController();
       sequence.current?.abort();
       sequence.current = controller;
-      if (
-        input.context.delivery &&
-        input.catalogue.publicModel &&
-        !(await currentDeploymentMatches(
+      if (input.context.delivery && input.catalogue.publicModel) {
+        const matches = await currentDeploymentMatches(
           win,
           input.catalogue.publicModel,
           controller.signal,
-        ))
-      ) {
-        if (!controller.signal.aborted) win.location.assign(canonical.href);
+        );
+        if (controller.signal.aborted) return;
+        if (!matches) {
+          win.location.assign((sameDocument ? requested : canonical).href);
+          return;
+        }
+      }
+      if (controller.signal.aborted) return;
+      if (sameDocument) {
+        if (push && win.location.href !== requested.href)
+          win.location.assign(requested.href);
+        else if (!push) restoreScrolls(document, scrolls);
+        if (sequence.current === controller) sequence.current = undefined;
         return;
       }
-      if (!controller.signal.aborted) install(canonical, true);
+      install(canonical, push, scrolls);
+      if (sequence.current === controller) sequence.current = undefined;
     },
     [input.catalogue, input.context.delivery, input.interactive, install],
+  );
+  const navigate = useCallback(
+    (href: string) => transition(new URL(href, window.location.href), true),
+    [transition],
+  );
+  const navigateHistory = useCallback(
+    (url: URL, scrolls: Readonly<Record<string, number>>) =>
+      transition(url, false, scrolls),
+    [transition],
   );
 
   useEffect(() => {
     if (!input.interactive) return;
     const win = window;
     if (win.history.scrollRestoration) win.history.scrollRestoration = "manual";
+    providerNormalizedRoutes.current = isProviderNormalizedRoute(
+      win.location.pathname,
+      input.context.delivery?.canonicalPath,
+    );
     if (input.context.delivery && win.location.pathname.startsWith("/id/")) {
       win.history.replaceState(
         win.history.state,
@@ -128,9 +168,16 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
       );
     }
     const initialUrl = new URL(win.location.href);
-    displayed.current = routeDocumentKey(initialUrl);
+    installedDocumentKey.current = routeDocumentKey(initialUrl);
     persistScroll(win, captureScrolls(document));
     restoreScrolls(document, stateRef.current.regionScrolls);
+    const initialRoute = routeFromUrl(
+      input.catalogue,
+      initialUrl,
+      input.context.delivery,
+    );
+    if (!sameShellRoute(stateRef.current.route, initialRoute))
+      install(initialUrl, false, {}, false);
     const controller = new AbortController();
     let scrollFrame = 0;
     document.addEventListener(
@@ -149,14 +196,9 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
     win.addEventListener(
       "popstate",
       (event) => {
-        sequence.current?.abort();
         const url = new URL(win.location.href);
         const scrolls = historyScrolls(event.state);
-        if (displayed.current === routeDocumentKey(url)) {
-          restoreScrolls(document, scrolls);
-          return;
-        }
-        install(url, false, scrolls);
+        void navigateHistory(url, scrolls);
       },
       { signal: controller.signal },
     );
@@ -172,6 +214,7 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
     input.sections,
     input.setState,
     install,
+    navigateHistory,
   ]);
 
   useLayoutEffect(() => {
@@ -202,9 +245,10 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
     (value: string) => {
       const url = new URL(window.location.href);
       url.searchParams.set("variant", value);
-      install(url, true);
+      url.searchParams.delete("instance");
+      void navigate(url.href);
     },
-    [install],
+    [navigate],
   );
   return {
     navigateFrame: (href) => {
@@ -217,16 +261,28 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
       const target = event.target instanceof Element ? event.target : undefined;
       if (!target) return;
       const state = stateRef.current;
+      const outsidePickerTag =
+        target.closest("[data-mokly-tag]") &&
+        !target.closest("[data-mokly-tag-picker]");
       if (
         state.tagPickerOpen &&
-        !target.closest("[data-mokly-tag-toggle], #mb-tag-picker")
-      )
+        !target.closest("[data-mokly-tag-toggle], [data-mokly-tag-picker]")
+      ) {
         input.setState((current) => ({ ...current, tagPickerOpen: false }));
-      if (target.closest("[data-mokly-tag-toggle], #mb-tag-picker")) return;
+        if (outsidePickerTag) {
+          const root = event.currentTarget;
+          queueMicrotask(() =>
+            root.querySelector<HTMLElement>("[data-mokly-tag-toggle]")?.focus(),
+          );
+        }
+      }
+      if (target.closest("[data-mokly-tag-toggle], [data-mokly-tag-picker]"))
+        return;
       if (state.expandedFrame && !target.closest(".browser-frame.is-expanded"))
         input.setState((current) => ({ ...current, expandedFrame: undefined }));
       const anchor = target.closest<HTMLAnchorElement>("a[href]");
-      if (!anchor || !eligibleAnchor(event, anchor, window.location)) return;
+      if (!anchor || !eligibleShellAnchor(event, anchor, window.location))
+        return;
       event.preventDefault();
       void navigate(anchor.href);
     },
@@ -235,7 +291,9 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
       if (stateRef.current.tagPickerOpen) {
         event.preventDefault();
         input.setState((state) => ({ ...state, tagPickerOpen: false }));
-        document.querySelector<HTMLElement>("[data-mokly-tag-toggle]")?.focus();
+        event.currentTarget
+          .querySelector<HTMLElement>("[data-mokly-tag-toggle]")
+          ?.focus();
       } else if (stateRef.current.expandedFrame) {
         event.preventDefault();
         input.setState((state) => ({ ...state, expandedFrame: undefined }));
@@ -244,28 +302,16 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
   };
 }
 
-function eligibleAnchor(
-  event: MouseEvent<HTMLElement>,
-  anchor: HTMLAnchorElement,
-  location: Location,
+function isProviderNormalizedRoute(
+  pathname: string,
+  canonicalPath: string | undefined,
 ): boolean {
-  const url = new URL(anchor.href, location.href);
   return (
-    !event.defaultPrevented &&
-    event.button === 0 &&
-    !event.metaKey &&
-    !event.ctrlKey &&
-    !event.shiftKey &&
-    !event.altKey &&
-    !anchor.hasAttribute("download") &&
-    (!anchor.target || anchor.target === "_self") &&
-    url.origin === location.origin &&
-    !(
-      routeDocumentKey(url) === routeDocumentKey(new URL(location.href)) &&
-      url.hash !== ""
-    ) &&
-    (url.pathname === "/" ||
-      url.pathname.startsWith("/view/") ||
-      url.pathname.startsWith("/id/"))
+    canonicalPath?.endsWith(".html") === true &&
+    pathname === canonicalPath.slice(0, -5)
   );
+}
+
+function browserRouteHref(href: string, providerNormalized: boolean): string {
+  return providerNormalized ? href.replace(/\.html(?=\?|$)/, "") : href;
 }

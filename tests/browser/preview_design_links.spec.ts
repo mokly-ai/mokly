@@ -48,6 +48,14 @@ for (const viewport of ["mobile", "desktop"] as const) {
     await page.setViewportSize({ width: 1600, height: 1000 });
     await page.goto(`${preview.url}/view/design/browse/views/home`);
     await chooseViewport(page, viewport);
+    await expect(page.locator("html")).toHaveAttribute(
+      "data-mokly-hydrated",
+      "",
+    );
+    await expect(page.locator(`.mbk-frame-${viewport} iframe`)).toHaveAttribute(
+      "data-mokly-frame-state",
+      "ready",
+    );
     const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
     await frame.locator(".mbk-empty-link").click();
     await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen$/);
@@ -59,7 +67,11 @@ for (const viewport of ["mobile", "desktop"] as const) {
       page.locator('a[data-route="design/browse/views/details-screen.html"]'),
     ).toHaveAttribute("aria-current", "page");
     await frame.locator(".mbk-shot-link").first().click();
+    await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen$/);
     await frame.locator(".mbk-search-tag").click();
+    await expect(page).toHaveURL(
+      /\/view\/design\/browse\/states\/tags\/picker$/,
+    );
     await frame
       .getByRole("group", { name: "Tags", exact: true })
       .getByRole("link", { name: "onboarding", exact: true })

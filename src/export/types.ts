@@ -32,8 +32,8 @@ export interface ExportAdapter {
 export interface ExportOptions {
   outDir: string;
   base?: string;
-  /** @internal Temporary packaging selector removed with the shell flip. */
-  reactShell?: boolean;
+  /** Route non-fatal baseline cleanup diagnostics through the CLI reporter. */
+  diagnostic?: (message: string) => void;
   /** Omit baseline reads and comparison artifacts; publish uses this capability. */
   noChanges?: boolean;
   /** Consume finalized bytes before installation, while the output is reserved. */

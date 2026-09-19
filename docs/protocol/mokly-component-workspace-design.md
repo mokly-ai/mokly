@@ -50,7 +50,13 @@ scroll region. The inspector's icon strip stays visible while its content scroll
 
 On desktop, use the navigation divider's centered short-line handle, rotated to
 resize vertically. The grip center sits on the divider border, with no vertical gap.
-There is no diagonal corner grip or thick colored border.
+There is no diagonal corner grip or thick colored border. Both dividers share one
+affordance: a 32×2px rounded strong-border grip at rest that turns accent-colored
+with a soft accent halo while hovered, keyboard-focused, or being dragged, fading
+between those states. Keyboard focus also draws an accent bar along the divider's
+outer edge instead of a ring around the hit area. While a drag is in progress the
+pointer keeps the resize cursor everywhere and preview frames ignore pointer input,
+so the gesture cannot be interrupted by the content underneath.
 The native sizing element sits behind the preview with its hit area centered
 on the divider; it changes layout height without consumer scripts. Both panes
 have minimum heights. Closing restores the preview's space; reopening retains

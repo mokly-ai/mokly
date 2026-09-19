@@ -9,6 +9,7 @@ import {
   createExportFixture,
   directoryFiles,
 } from "./helpers/export_fixture.js";
+import { attribute, documentElements, textContent } from "./helpers/html.js";
 
 test("current-only exports skip Git and capture exactly the installed finalized bytes", async (context) => {
   const fixture = await createExportFixture();
@@ -42,32 +43,71 @@ test("current-only exports skip Git and capture exactly the installed finalized 
   );
 });
 
-test("the private shell selector changes only the hydration inventory", async (context) => {
+test("exports contain only the hydrated shell inventory", async (context) => {
   const fixture = await createExportFixture();
   context.after(() => fixture.close());
   await fs.promises.rm(path.join(fixture.root, ".git"), { recursive: true });
   await exportCatalogue(fixture.config, {
-    outDir: "vanilla-site",
+    outDir: "site",
     noChanges: true,
   });
-  await exportCatalogue(fixture.config, {
-    outDir: "react-site",
-    noChanges: true,
-    reactShell: true,
-  });
-  const vanilla = await directoryFiles(path.join(fixture.root, "vanilla-site"));
-  const react = await directoryFiles(path.join(fixture.root, "react-site"));
-  assert.equal(vanilla.has("__mokly/client/react-shell.js"), false);
-  assert.equal(react.has("__mokly/client/react-shell.js"), true);
-  assert.match(vanilla.get("index.html")!.toString(), /client\/browse\.js/);
+  const files = await directoryFiles(fixture.output);
+  assert.equal(files.has("__mokly/client/react-shell.js"), true);
+  assert.match(files.get("index.html")!.toString(), /client\/react-shell\.js/);
   assert.doesNotMatch(
-    vanilla.get("index.html")!.toString(),
-    /client\/react-shell\.js/,
-  );
-  assert.match(react.get("index.html")!.toString(), /client\/react-shell\.js/);
-  assert.doesNotMatch(
-    react.get("index.html")!.toString(),
+    files.get("index.html")!.toString(),
     /client\/(?:browse|browser)\.js/,
+  );
+  for (const name of [
+    "host_capabilities.js",
+    "host_capability_descriptor.js",
+    "react-host.js",
+    "react_capabilities.js",
+    "react_capability_updates.js",
+    "react_transports.js",
+    "react_update_controller.js",
+  ]) {
+    assert.equal(files.has(`__mokly/client/${name}`), false, name);
+  }
+  assert.doesNotMatch(
+    files.get("index.html")!.toString(),
+    /data-mokly-host-capabilit|data-mokly-host-capability-state|react-host\.js/,
+  );
+  const publicCatalogue = JSON.parse(
+    files.get("__mokly/catalogue.json")!.toString(),
+  ) as {
+    identity: { id: string };
+    revision: { content: number; evidence: number };
+  };
+  const reference = {
+    kind: "external",
+    path: "/__mokly/catalogue.json",
+    identity: publicCatalogue.identity.id,
+    revision: publicCatalogue.revision,
+  };
+  const bootstraps = [...files]
+    .filter(([name]) => name.endsWith(".html"))
+    .flatMap(([name, bytes]) =>
+      documentElements(
+        bytes.toString(),
+        (element) =>
+          element.tagName === "script" &&
+          attribute(element, "data-mokly-shell-bootstrap") !== undefined,
+      ).map((script) => ({
+        name,
+        value: JSON.parse(textContent(script)) as {
+          catalogue: Record<string, unknown>;
+        },
+      })),
+    );
+  assert.ok(bootstraps.length >= 4);
+  for (const { name, value } of bootstraps) {
+    assert.deepEqual(value.catalogue, reference, name);
+    assert.equal("screens" in value.catalogue, false, name);
+  }
+  assert.deepEqual(
+    [...files.keys()].filter((name) => name.endsWith("catalogue.json")),
+    ["__mokly/catalogue.json"],
   );
 });
 

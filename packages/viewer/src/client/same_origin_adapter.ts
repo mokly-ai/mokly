@@ -5,7 +5,7 @@ import { inspection } from "../inspector/inspection.js";
 import { authenticateRanges, rangeBounds } from "./component_geometry.js";
 import type { FrameAdapter } from "./frame_adapter.js";
 import { FrameError } from "./frame_error.js";
-import { frameUrl } from "./frame_mount.js";
+import { frameUrl, temporaryFrameUrl } from "./frame_mount.js";
 import { frameEvents, frameUsage } from "./frame_usage.js";
 import { localFrameAccess } from "./same_origin_access.js";
 import {
@@ -63,11 +63,24 @@ export function localFrameReady(
 
 /** Script-disabled local mounts retain the parent-owned highlight presentation. */
 export function sameOriginAdapter(): FrameAdapter {
+  return localAdapter(frameUrl);
+}
+
+/** Private local adapter for authenticated in-memory component previews. */
+export function temporaryPreviewAdapter(): FrameAdapter {
+  return localAdapter(temporaryFrameUrl);
+}
+
+function localAdapter(resolveUrl: typeof frameUrl): FrameAdapter {
   return {
     async mount(frame, view) {
       const win = frame.ownerDocument.defaultView;
       if (!win) throw new FrameError("unavailable");
-      const url = frameUrl(frame, view, win.location.origin);
+      const url = resolveUrl(frame, view, win.location.origin);
+      const pathname = decodeURIComponent(url.pathname);
+      const inspectionPath = pathname.startsWith("/static/")
+        ? pathname.slice("/static/".length)
+        : pathname;
       let usage = frameUsage(view.usage);
       view.signal?.throwIfAborted();
       const mounting = mountLocalDocument(
@@ -104,7 +117,7 @@ export function sameOriginAdapter(): FrameAdapter {
                 [
                   {
                     frame,
-                    path: decodeURIComponent(url.pathname).slice(8),
+                    path: inspectionPath,
                     usage: record,
                   },
                 ],

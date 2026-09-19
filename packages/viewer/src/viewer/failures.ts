@@ -16,7 +16,9 @@ export function viewerFailures(
         ? "The requested catalogue selection is unavailable."
         : code === "comparison"
           ? "The comparison could not be loaded. Try again."
-          : "This instance is unavailable in the current view.";
+          : code === "markers"
+            ? "The requested markers could not be displayed."
+            : "This instance is unavailable in the current view.";
     const failure = new Error(message);
     reported.set(error, failure);
     reported.set(failure, failure);

@@ -1,7 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { sameOriginAdapter } from "../client/same_origin_adapter.js";
 
+import {
+  awaitHostBridgeFailureBarrier,
+  consumeHostBridgeFailure,
+} from "./host_bridge_failure.js";
 import { ReadyViewer } from "./ready.js";
 import { useCatalogue } from "./source_hook.js";
 import type { MoklyViewerProps } from "./types.js";
@@ -11,6 +15,28 @@ export function MoklyViewer(props: MoklyViewerProps) {
   const source = useCatalogue(props.catalogue, props.baseUrl);
   const [adapter] = useState(sameOriginAdapter);
   const selectedAdapter = props.frameAdapter ?? adapter;
+  const bridgeOwner = useRef({});
+  const [bridgeFailure, setBridgeFailure] = useState<
+    { drained: boolean; error: unknown } | undefined
+  >();
+  useEffect(() => {
+    let active = true;
+    const owner = bridgeOwner.current;
+    const stop = consumeHostBridgeFailure(owner, (error) => {
+      void awaitHostBridgeFailureBarrier(owner).then(() => {
+        if (active)
+          setBridgeFailure((current) => current ?? { drained: false, error });
+      });
+    });
+    return () => {
+      active = false;
+      stop();
+    };
+  }, []);
+  useEffect(() => {
+    if (bridgeFailure && !bridgeFailure.drained)
+      setBridgeFailure({ ...bridgeFailure, drained: true });
+  }, [bridgeFailure]);
   const generation = useRef({
     source: source.key,
     adapter: selectedAdapter,
@@ -25,6 +51,11 @@ export function MoklyViewer(props: MoklyViewerProps) {
       adapter: selectedAdapter,
       id: generation.current.id + 1,
     };
+  const mountedGeneration = generation.current;
+  const replaced = useCallback(
+    () => generation.current !== mountedGeneration,
+    [mountedGeneration],
+  );
   const controlled = useRef(props.selection !== undefined);
   const invalidMode =
     controlled.current !== (props.selection !== undefined) ||
@@ -54,6 +85,8 @@ export function MoklyViewer(props: MoklyViewerProps) {
           : "The catalogue could not be loaded. Try again.",
       });
   }, [source.error, source.key, invalidMode]);
+  if (bridgeFailure?.drained) throw bridgeFailure.error;
+  if (bridgeFailure) return null;
   if (source.error || invalidMode)
     return (
       <div className="mokly-viewer mbk-empty" role="alert">
@@ -75,10 +108,8 @@ export function MoklyViewer(props: MoklyViewerProps) {
       {...props}
       loaded={source.loaded}
       adapter={selectedAdapter}
-      replaced={() =>
-        generation.current.source !== source.key ||
-        generation.current.adapter !== selectedAdapter
-      }
+      bridgeOwner={bridgeOwner.current}
+      replaced={replaced}
     />
   );
 }

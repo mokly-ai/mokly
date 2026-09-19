@@ -1,3 +1,5 @@
+import { GUIDE_PATHS } from "./guides.js";
+
 /** Minimal packed inventory shared by release guard and propagation tests. */
 export interface PackageReport {
   files: Array<{ path: string; size: number }>;
@@ -17,6 +19,7 @@ export function packageReport(): PackageReport {
       { path: "dist/cli/publish.js", size: 1 },
       { path: "dist/publish/run.js", size: 1 },
       { path: "dist/browser.manifest.json", size: 1 },
+      ...GUIDE_PATHS.map((path) => ({ path, size: 1 })),
       { path: "docs/protocol/mokly-upload.md", size: 1 },
       { path: "docs/protocol/mokly-export-ownership.md", size: 1 },
       { path: "docs/protocol/fixtures/export-ownership-v1.json", size: 1 },

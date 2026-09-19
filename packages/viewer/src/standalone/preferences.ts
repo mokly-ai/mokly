@@ -3,24 +3,46 @@
 import type { ShellInitialState } from "../shell/store_state.js";
 
 import {
+  readEarlyDetailsOpen,
+  readEarlyDisclosures,
   persistHydrationDisclosures,
-  readHydrationDisclosures,
+  readStoredDetailsPreference,
+  readStoredDisclosures,
 } from "./early_disclosures.js";
 import { readInitialNavigationWidth } from "./nav_resize.js";
 
 const detailsStorageKey = "mokly:details-disclosure";
 
 /** Read values already reflected into the server DOM for React's first render. */
-export function prepareHydrationState(doc: Document): ShellInitialState {
+export function prepareHydrationState(
+  doc: Document,
+  activeDisclosures: readonly string[] = [],
+): ShellInitialState {
   const win = doc.defaultView;
-  const detailsOpen = readDetailsPreference(win);
-  if (detailsOpen !== undefined) applyDetailsOpen(doc, detailsOpen);
+  const detailsOpen = readStoredDetailsPreference(win);
+  const earlyDetailsOpen = readEarlyDetailsOpen(doc);
+  const effectiveDetailsOpen = earlyDetailsOpen ?? detailsOpen;
+  if (effectiveDetailsOpen !== undefined) {
+    applyDetailsOpen(doc, effectiveDetailsOpen);
+    persistDetailsPreference(win, effectiveDetailsOpen);
+  }
   const navigation = readInitialNavigationWidth(doc);
-  const disclosures = readHydrationDisclosures(doc);
+  const disclosures = readStoredDisclosures(doc);
+  const earlyDisclosures = Object.fromEntries(readEarlyDisclosures(doc));
+  const activePath = Object.fromEntries(
+    activeDisclosures.map((key) => [key, true]),
+  );
+  applyDisclosures(doc, {
+    ...disclosures,
+    ...activePath,
+    ...earlyDisclosures,
+  });
   persistHydrationDisclosures(doc);
   return {
     disclosures,
     ...(detailsOpen === undefined ? {} : { detailsOpen }),
+    ...(earlyDetailsOpen === undefined ? {} : { earlyDetailsOpen }),
+    ...(Object.keys(earlyDisclosures).length ? { earlyDisclosures } : {}),
     ...(navigation
       ? {
           navigationMaximum: navigation.maximum,
@@ -30,15 +52,24 @@ export function prepareHydrationState(doc: Document): ShellInitialState {
   };
 }
 
-function readDetailsPreference(win: Window | null): boolean | undefined {
+function persistDetailsPreference(win: Window | null, open: boolean): void {
   try {
-    const value = win?.localStorage.getItem(detailsStorageKey);
-    if (value === "open") return true;
-    if (value === "closed") return false;
+    win?.localStorage.setItem(detailsStorageKey, open ? "open" : "closed");
   } catch {
-    return undefined;
+    return;
   }
-  return undefined;
+}
+
+function applyDisclosures(
+  doc: Document,
+  values: Readonly<Record<string, boolean>>,
+): void {
+  for (const group of doc.querySelectorAll<HTMLDetailsElement>(
+    "[data-nav-disclosure]",
+  )) {
+    const key = group.getAttribute("data-nav-disclosure");
+    if (key && values[key] !== undefined) group.open = values[key];
+  }
 }
 
 function applyDetailsOpen(doc: Document, open: boolean): void {

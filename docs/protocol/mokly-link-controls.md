@@ -119,10 +119,10 @@ consumer's disabled state to make navigation work.
 
 ## Integration And Verification
 
-The package has no Firna, React Native Web, or Accounting runtime dependency.
-The Accounting renderer can drop its custom navigation HTML transformer after
-adopting this API, while retaining theme wrapping and style collection. This
-package change does not migrate or publish downstream consumer repositories.
+The package has no consumer component-library or React Native Web runtime
+dependency. A consumer renderer can drop its custom navigation HTML transformer
+after adopting this API while retaining theme wrapping and style collection.
+This package change does not migrate or publish downstream repositories.
 
 Verification covers default-anchor byte compatibility, typed and untyped API
 misuse, source-byte preservation, native/custom controls, disabled and busy

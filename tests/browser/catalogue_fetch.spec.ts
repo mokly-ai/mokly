@@ -2,17 +2,15 @@ import { expect, test } from "@playwright/test";
 
 import { serveStaticFiles } from "../helpers/static_server.js";
 
-import { reactShellForProject } from "./export_shell.js";
 import { startStaticFixture } from "./static_fixture.js";
 
 test("a second origin can fetch catalogue and fragment with exact-origin headers and no credentials", async ({
   page,
   request,
   context,
-}, info) => {
+}) => {
   const site = await startStaticFixture({
     noChanges: true,
-    reactShell: reactShellForProject(info.project.name),
   });
   const host = await serveStaticFiles(site.root);
   const source = await serveStaticFiles(site.root, { allowedOrigin: host.url });
@@ -70,18 +68,19 @@ test("a second origin can fetch catalogue and fragment with exact-origin headers
   }
 });
 
-test("same-origin reads need no CORS or wildcard and the shell never requests the read model", async ({
+test("static hydration reads one same-origin catalogue without CORS or wildcard", async ({
   page,
-}, info) => {
+}) => {
   const site = await startStaticFixture({
     noChanges: true,
-    reactShell: reactShellForProject(info.project.name),
   });
   const other = await serveStaticFiles(site.root);
   try {
     await page.goto(`${site.url}/view/screens/home.html`);
     await expect(page.locator("#mb-main h2")).toHaveText("Home");
-    expect(site.requests).not.toContain("/__mokly/catalogue.json");
+    expect(
+      site.requests.filter((request) => request === "/__mokly/catalogue.json"),
+    ).toEqual(["/__mokly/catalogue.json"]);
     const result = await page.evaluate(async (otherOrigin) => {
       const same = await fetch("/__mokly/catalogue.json", {
         credentials: "omit",
@@ -112,4 +111,16 @@ test("same-origin reads need no CORS or wildcard and the shell never requests th
     await other.close();
     await site.close();
   }
+});
+
+test("Serve hydrates from its inline catalogue without an initial read", async ({
+  page,
+}) => {
+  const requests: string[] = [];
+  page.on("request", (request) =>
+    requests.push(new URL(request.url()).pathname),
+  );
+  await page.goto("/view/screens/welcome.html");
+  await expect(page.locator("html")).toHaveAttribute("data-mokly-hydrated", "");
+  expect(requests).not.toContain("/__mokly/catalogue.json");
 });

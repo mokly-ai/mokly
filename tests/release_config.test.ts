@@ -76,11 +76,22 @@ test("release-please owns the Node manifest and first release state", async () =
     [
       "bump-minor-pre-major",
       "changelog-path",
+      "extra-files",
       "include-component-in-tag",
       "include-v-in-tag",
       "release-type",
     ],
   );
+  assert.deepEqual(config.packages["."]["extra-files"], [
+    {
+      type: "generic",
+      path: "docs/guides/start/install.md",
+    },
+    {
+      type: "generic",
+      path: "docs/guides/ci/github-action.md",
+    },
+  ]);
   const packageVersion = JSON.parse(
     await fs.promises.readFile(
       path.join(repositoryRoot, "package.json"),

@@ -13,9 +13,9 @@ renderer module that receives the screen node, entry metadata, viewport,
 resolved stylesheet links, and render context, and returns one complete HTML
 document synchronously.
 
-The renderer module is consumer code. It is where Accounting may add a Firna UI
-theme provider or collect React Native Web atomic styles. Mokly must not
-depend on `@firna/ui`, React Native Web, Accounting tokens, or Juno components.
+The renderer module is consumer code. It may add a component-library theme
+provider or collect React Native Web atomic styles. Mokly must not depend on a
+consumer component library, React Native Web, product tokens, or app components.
 
 The renderer module has one default synchronous export with this exact
 contract:

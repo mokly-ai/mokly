@@ -5,13 +5,15 @@ import { test } from "node:test";
 import { readCatalogue } from "../src/catalogue/reader.js";
 import type { StaticDelivery } from "../src/navigation/delivery.js";
 import {
+  externalShellBootstrap,
   readShellBootstrap,
+  readShellBootstrapState,
+  resolveShellBootstrap,
   serializeShellBootstrap,
   shellBootstrap,
   shellBootstrapWithDelivery,
 } from "../src/standalone/bootstrap.js";
 import { viewerCatalogue, viewerView } from "../src/viewer/projection.js";
-import { viewerContext } from "../src/viewer/projection.js";
 import { defaultSelection } from "../src/viewer/selection.js";
 
 const catalogue = readCatalogue(
@@ -57,12 +59,6 @@ test("static hydration adopts the finalized authenticated deployment", () => {
   assert.equal(finalized.context.delivery, delivery);
 });
 
-test("the React host projection never selects the temporary standalone switch", () => {
-  const context = viewerContext(catalogue, defaultSelection);
-  assert.equal(context.reactShell, undefined);
-  assert.equal(Object.hasOwn(context, "reactShell"), false);
-});
-
 test("validated shell bootstrap JSON retains its canonical bytes", () => {
   const display = viewerCatalogue(catalogue);
   const bootstrap = shellBootstrap(
@@ -78,5 +74,40 @@ test("validated shell bootstrap JSON retains its canonical bytes", () => {
   assert.equal(
     serializeShellBootstrap(readShellBootstrap(JSON.parse(serialized))),
     serialized,
+  );
+});
+
+test("external shell bootstrap retains only the shared catalogue identity", () => {
+  const display = viewerCatalogue(catalogue);
+  const bootstrap = shellBootstrap(
+    catalogue,
+    viewerView(display, { ...defaultSelection, screenId: "home" }),
+    {
+      base: "origin/main",
+      comparisons: false,
+      updateVersion: 2,
+    },
+  );
+  const external = externalShellBootstrap(bootstrap);
+  assert.deepEqual(external.catalogue, {
+    kind: "external",
+    path: "/__mokly/catalogue.json",
+    identity: catalogue.identity.id,
+    revision: catalogue.revision,
+  });
+  const serialized = serializeShellBootstrap(external);
+  const parsed = readShellBootstrapState(JSON.parse(serialized));
+  assert.equal(serializeShellBootstrap(parsed), serialized);
+  assert.deepEqual(resolveShellBootstrap(parsed, catalogue), bootstrap);
+  assert.throws(
+    () =>
+      resolveShellBootstrap(parsed, {
+        ...catalogue,
+        revision: {
+          ...catalogue.revision,
+          evidence: catalogue.revision.evidence + 1,
+        },
+      }),
+    /does not match the page/,
   );
 });

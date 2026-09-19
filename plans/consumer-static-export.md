@@ -220,7 +220,7 @@ Exit: a consumer can invoke the public CLI to export a complete site, and the
 repository's established preview workflow uses the same tested core.
 
 Validation: CLI, migration, safety, and comparison cases passed; the packed
-Accounting/Juno fixtures cover custom renderers, module resolution, and legacy
+Themed/Juno fixtures cover custom renderers, module resolution, and legacy
 pages. All 8 existing Cloudflare browser checks and preview builds passed.
 
 ## Milestone 5: Prove Consumer Publishing And Document It — completed

@@ -5,67 +5,19 @@
 
 import type { ReactNode } from "react";
 
-import type { Viewport } from "../data/axes.js";
+import type { GeneratedComponentView } from "../components/views.js";
 import { encodeUrlPath } from "../data/paths.js";
-import { catalogueViewHref } from "../navigation/delivery.js";
-import type { ManifestScreen, ManifestUseCase } from "../registry/types.js";
-import { PublicStage } from "../viewer/public_stage.js";
 import { routedEntries } from "../viewer/selection.js";
 
 import type { Catalogue } from "./catalogue.js";
 import { ComponentStage } from "./component_stage.js";
-import { BrowserFrame, PhoneFrame } from "./frames.js";
+import { FramesStage, UseCaseFlowStage } from "./manifest_stages.js";
+import { PublicStage } from "./public_stage.js";
 import type { RouteTarget } from "./target.js";
 
-/** Served URLs a frame swaps between; both absent in a light-only catalogue. */
-interface FragmentSources {
-  dark: string | undefined;
-  light: string | undefined;
-}
-
-/**
- * The served URL of one generated route. Every embedded frame — its `src` and
- * the scheme attributes the Browse client assigns back into that `src` — is
- * built here so the two can never drift apart.
- */
 function fragmentSrc(route: string, fragment?: string): string {
   const source = `/static/${encodeUrlPath(route)}`;
   return fragment ? `${source}#${encodeURIComponent(fragment)}` : source;
-}
-
-function fragmentSources(
-  screen: ManifestScreen,
-  viewport: Viewport,
-  hasDarkFragments: boolean,
-  fragment?: string,
-): FragmentSources {
-  if (!hasDarkFragments) {
-    return { dark: undefined, light: undefined };
-  }
-  const dark = screen.darkFragments?.[viewport];
-  return {
-    dark: dark === undefined ? undefined : fragmentSrc(dark, fragment),
-    light: fragmentSrc(screen.fragments[viewport], fragment),
-  };
-}
-
-/** Whether the screen keeps its light render under a dark selection. */
-function isSchemeFallback(
-  screen: ManifestScreen,
-  hasDarkFragments: boolean,
-): boolean {
-  return hasDarkFragments && screen.darkFragments === undefined;
-}
-
-function FrameLabel(props: { fallback: boolean; text: string }) {
-  return (
-    <p className="mbk-frame-label">
-      {props.text}
-      {props.fallback ? (
-        <span className="mbk-frame-scheme-note">{" — Light only"}</span>
-      ) : null}
-    </p>
-  );
 }
 
 function EmbedStage(props: {
@@ -86,156 +38,6 @@ function EmbedStage(props: {
   );
 }
 
-function FramesStage(props: {
-  fragment?: string;
-  hasDarkFragments: boolean;
-  screen: ManifestScreen;
-}) {
-  const screen = props.screen;
-  const address = screen.address ?? screen.route;
-  const mobile = fragmentSources(
-    screen,
-    "mobile",
-    props.hasDarkFragments,
-    props.fragment,
-  );
-  const desktop = fragmentSources(
-    screen,
-    "desktop",
-    props.hasDarkFragments,
-    props.fragment,
-  );
-  const fallback = isSchemeFallback(screen, props.hasDarkFragments);
-  return (
-    <div
-      className="mbk-stage mbk-live"
-      data-mokly-scroll="stage"
-      data-mokly-stage=""
-      data-viewport="both"
-    >
-      <div
-        className="mbk-frame-wrap mbk-frame-mobile"
-        data-color-scheme-fallback={fallback ? "" : undefined}
-      >
-        <FrameLabel fallback={fallback} text="Mobile" />
-        <PhoneFrame>
-          <iframe
-            className="mbk-frag"
-            data-mokly-fragment-frame=""
-            data-workspace-frame="mobile"
-            data-fragment-dark={mobile.dark}
-            data-fragment-light={mobile.light}
-            sandbox="allow-same-origin"
-            src={fragmentSrc(screen.fragments.mobile, props.fragment)}
-            title={`${screen.title} — mobile`}
-          />
-        </PhoneFrame>
-      </div>
-      <div
-        className="mbk-frame-wrap mbk-frame-desktop"
-        data-color-scheme-fallback={fallback ? "" : undefined}
-      >
-        <FrameLabel fallback={fallback} text="Desktop" />
-        <BrowserFrame address={address} frameKey={`${screen.id}:desktop`}>
-          <iframe
-            className="mbk-frag"
-            data-mokly-fragment-frame=""
-            data-workspace-frame="desktop"
-            data-fragment-dark={desktop.dark}
-            data-fragment-light={desktop.light}
-            sandbox="allow-same-origin"
-            src={fragmentSrc(screen.fragments.desktop, props.fragment)}
-            title={`${screen.title} — desktop`}
-          />
-        </BrowserFrame>
-      </div>
-    </div>
-  );
-}
-
-function FlowScreen(props: {
-  fragment?: string;
-  stepIndex: number;
-  hasDarkFragments: boolean;
-  screen: ManifestScreen;
-}) {
-  const screen = props.screen;
-  const desktop = fragmentSources(
-    screen,
-    "desktop",
-    props.hasDarkFragments,
-    props.fragment,
-  );
-  const fallback = isSchemeFallback(screen, props.hasDarkFragments);
-  return (
-    <div
-      className="mbk-flow-screen"
-      data-color-scheme-fallback={fallback ? "" : undefined}
-    >
-      <BrowserFrame
-        address={screen.address ?? screen.route}
-        frameKey={`${screen.id}:flow:${props.stepIndex}`}
-      >
-        <iframe
-          className="mbk-frag"
-          data-mokly-fragment-frame={props.stepIndex === 0 ? "" : undefined}
-          data-fragment-dark={desktop.dark}
-          data-fragment-light={desktop.light}
-          sandbox="allow-same-origin"
-          src={fragmentSrc(screen.fragments.desktop, props.fragment)}
-          title={`${screen.title} — desktop`}
-        />
-      </BrowserFrame>
-    </div>
-  );
-}
-
-function UseCaseFlowStage(props: {
-  catalogue: Catalogue;
-  entry: ManifestUseCase;
-  fragment?: string;
-}) {
-  return (
-    <div className="mbk-flow" data-mokly-scroll="flow">
-      <div className="flow-track">
-        {props.entry.steps.map((step, index) => {
-          const candidate = props.catalogue.byId.get(step.screenId);
-          const screen = candidate?.kind === "screen" ? candidate : undefined;
-          return (
-            <section className="flow-step" key={`${step.screenId}-${index}`}>
-              <div className="flow-step-head">
-                <span className="flow-step-num">{index + 1}</span>
-                <div>
-                  <h3>{step.title ?? screen?.title ?? step.screenId}</h3>
-                  <p>{step.description ?? screen?.description}</p>
-                  {screen ? (
-                    <a
-                      className="flow-step-link"
-                      href={catalogueViewHref(screen.route)}
-                    >
-                      This screen in the catalogue: {screen.title} →
-                    </a>
-                  ) : null}
-                </div>
-              </div>
-              {screen ? (
-                <FlowScreen
-                  {...(index === 0 && props.fragment
-                    ? { fragment: props.fragment }
-                    : {})}
-                  hasDarkFragments={props.catalogue.hasDarkFragments}
-                  screen={screen}
-                  stepIndex={index}
-                />
-              ) : null}
-            </section>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 /** Quiet state used by home, missing routes, and the review launcher. */
 export function EmptyStage(props: { children: ReactNode; heading: string }) {
   return (
@@ -250,6 +52,7 @@ export function EmptyStage(props: { children: ReactNode; heading: string }) {
 export function TargetStage(props: {
   catalogue: Catalogue;
   fragment?: string;
+  previewViews?: readonly GeneratedComponentView[];
   target: RouteTarget;
   variantId?: string | undefined;
 }) {
@@ -261,8 +64,10 @@ export function TargetStage(props: {
       <PublicStage
         catalogue={model}
         entry={current}
-        fragment={props.fragment}
-        variantId={props.variantId}
+        hasDarkFragments={props.catalogue.hasDarkFragments}
+        {...(props.fragment ? { fragment: props.fragment } : {})}
+        {...(props.previewViews ? { previewViews: props.previewViews } : {})}
+        {...(props.variantId ? { variantId: props.variantId } : {})}
       />
     );
   }
@@ -274,8 +79,18 @@ export function TargetStage(props: {
         {...(props.fragment ? { fragment: props.fragment } : {})}
       />
     );
-  if (entry.kind === "component")
-    return <ComponentStage variant={entry.variants[0]!} title={entry.title} />;
+  if (entry.kind === "component") {
+    const variant =
+      entry.variants.find((item) => item.id === props.variantId) ??
+      entry.variants[0]!;
+    return (
+      <ComponentStage
+        title={entry.title}
+        variant={variant}
+        {...(props.previewViews ? { previewViews: props.previewViews } : {})}
+      />
+    );
+  }
   return entry.kind === "screen" ? (
     <FramesStage
       {...(props.fragment ? { fragment: props.fragment } : {})}

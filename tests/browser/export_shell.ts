@@ -1,15 +1,9 @@
 import assert from "node:assert/strict";
 
-/** Select the private shell export mode owned by one Playwright project. */
-export function reactShellForProject(projectName: string): boolean {
-  return projectName === "react-shell";
-}
-
-/** Prove the HTTP-served export matches the project that requested it. */
+/** Prove the HTTP-served export carries the hydrated shell marker. */
 export async function assertServedShellMarker(
   origin: string,
   pathname: string,
-  reactShell: boolean,
 ): Promise<void> {
   const response = await fetch(new URL(pathname, origin));
   assert.equal(
@@ -18,9 +12,8 @@ export async function assertServedShellMarker(
     `could not read exported shell ${pathname}`,
   );
   const html = await response.text();
-  assert.equal(
+  assert.ok(
     html.includes('data-mokly-react-shell=""'),
-    reactShell,
-    `${pathname} served the wrong shell for ${reactShell ? "react-shell" : "chromium"}`,
+    `${pathname} did not serve the hydrated shell`,
   );
 }

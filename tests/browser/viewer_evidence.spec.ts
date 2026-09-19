@@ -80,6 +80,63 @@ async function presentation(page: Page, cross: boolean, count: number) {
 
 for (const cross of [false, true]) {
   const name = cross ? "postMessage" : "same-origin";
+  test(`${name} markers follow retained evidence in both directions`, async ({
+    page,
+  }) => {
+    await start(page, cross);
+    await page.evaluate(() =>
+      window.evidence.setMarkers(window.evidence.instances),
+    );
+    await expect
+      .poll(() => page.evaluate(() => window.evidence.markerStates))
+      .toEqual([
+        { id: "marker-0", status: "visible" },
+        { id: "marker-1", status: "visible" },
+      ]);
+    await page.evaluate(() => window.evidence.update("mobile", "empty"));
+    await expect
+      .poll(() => page.evaluate(() => window.evidence.markerStates))
+      .toEqual([
+        { id: "marker-0", status: "unavailable" },
+        { id: "marker-1", status: "visible" },
+      ]);
+    await page.evaluate(() => window.evidence.update("mobile"));
+    await expect
+      .poll(() => page.evaluate(() => window.evidence.markerStates))
+      .toEqual([
+        { id: "marker-0", status: "visible" },
+        { id: "marker-1", status: "visible" },
+      ]);
+    expect(await page.evaluate(() => window.evidence.markerErrors)).toBe(0);
+  });
+
+  test(`${name} geometry during an asynchronous boundary list schedules a trailing marker read`, async ({
+    page,
+  }) => {
+    await start(page, cross);
+    const before = await page.evaluate(
+      () =>
+        window.evidence.calls.filter((call) => call === "mobile:list").length,
+    );
+    await page.evaluate(() => {
+      window.evidence.geometryDuringList = true;
+      window.evidence.setMarkers();
+    });
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            window.evidence.calls.filter((call) => call === "mobile:list")
+              .length,
+        ),
+      )
+      .toBeGreaterThanOrEqual(before + 2);
+    await expect
+      .poll(() => page.evaluate(() => window.evidence.markerStates))
+      .toEqual([{ id: "marker-0", status: "visible" }]);
+    expect(await page.evaluate(() => window.evidence.markerErrors)).toBe(0);
+  });
+
   test(`${name} ready evidence restores active pick on retained frames`, async ({
     page,
   }) => {
@@ -157,6 +214,52 @@ for (const cross of [false, true]) {
     });
   }
 
+  for (const hold of ["highlight", "list"] as const) {
+    test(`${name} unrelated evidence preserves pending scoped ${hold}`, async ({
+      page,
+    }) => {
+      await start(page, cross);
+      await page.evaluate((hold) => {
+        const probe = window.evidence;
+        probe.calls.length = 0;
+        probe.hold = hold;
+        void probe.frames.highlight(probe.instance).then(
+          () => {
+            probe.outcome = "resolved";
+          },
+          () => {
+            probe.outcome = "rejected";
+          },
+        );
+      }, hold);
+      await page.waitForFunction(() => window.evidence.waiting);
+      await page.evaluate(async () => {
+        window.evidence.update("desktop");
+        await new Promise(requestAnimationFrame);
+        await new Promise(requestAnimationFrame);
+      });
+      await expect
+        .poll(() => page.evaluate(() => window.evidence.updates))
+        .toBe(1);
+      expect(
+        await page.evaluate(() => window.evidence.outcome),
+      ).toBeUndefined();
+      await page.evaluate(() => window.evidence.release());
+      await expect
+        .poll(() => page.evaluate(() => window.evidence.outcome))
+        .toBe("resolved");
+      await presentation(page, cross, 1);
+      expect(
+        await page.evaluate(
+          () =>
+            window.evidence.calls.filter((call) => call === "mobile:highlight")
+              .length,
+        ),
+      ).toBe(1);
+      expect(await page.evaluate(() => window.evidence.events)).toEqual([]);
+    });
+  }
+
   for (const evidence of ["empty", "pending", "unavailable"] as const) {
     test(`${name} ${evidence} evidence ends invalid pick once and allows restart`, async ({
       page,
@@ -177,7 +280,7 @@ for (const cross of [false, true]) {
       ]);
       await page.evaluate(async () => {
         const probe = window.evidence;
-        probe.frames.end({ reason: "cancelled" });
+        probe.frames.cancelPick();
         probe.update("mobile");
         await probe.frames.startPick();
       });
@@ -212,6 +315,35 @@ for (const cross of [false, true]) {
     await presentation(page, cross, 2);
     expect(await page.evaluate(() => window.evidence.events)).toEqual([
       "start",
+    ]);
+  });
+
+  test(`${name} one lost multi-highlight ref clears every frame and still ends a later pick`, async ({
+    page,
+  }) => {
+    await start(page, cross);
+    await page.evaluate(() =>
+      window.evidence.frames.highlightInstances(window.evidence.instances),
+    );
+    await presentation(page, cross, 2);
+    await page.evaluate(() => window.evidence.update("mobile", "empty"));
+    await expect
+      .poll(() => page.evaluate(() => window.evidence.updates))
+      .toBe(1);
+    await presentation(page, cross, 0);
+    expect(await page.evaluate(() => window.evidence.events)).toEqual([]);
+    await page.evaluate(async () => {
+      window.evidence.update("mobile");
+      await window.evidence.frames.startPick();
+      window.evidence.update("desktop", "empty");
+    });
+    await expect
+      .poll(() => page.evaluate(() => window.evidence.updates))
+      .toBe(3);
+    await presentation(page, cross, 0);
+    expect(await page.evaluate(() => window.evidence.events)).toEqual([
+      "start",
+      "end:evidence",
     ]);
   });
 

@@ -137,14 +137,26 @@ export async function startCatalogueServer(
   let updateVersion = options.updateVersion ?? 1;
   let contentVersion = updateVersion;
   let publicComparison: PublicComparison | undefined;
+  const publicChangesStatus = (
+    routes: readonly string[] | undefined,
+    hasEvidence: boolean,
+    status: ChangesStatus,
+  ) =>
+    options.liveChanges === false &&
+    !options.review &&
+    routes === undefined &&
+    !hasEvidence
+      ? ("disabled" as const)
+      : status;
   const publicInput = (
     comparison: PublicComparison | undefined = publicComparison,
   ) => ({
     catalogue: activeCatalogue,
-    changesStatus:
-      options.liveChanges === false && !options.review
-        ? ("disabled" as const)
-        : changesStatus,
+    changesStatus: publicChangesStatus(
+      changedRoutes,
+      componentChanges !== undefined,
+      changesStatus,
+    ),
     changedRoutes,
     evidence: componentChanges,
     comparison: comparison?.result,
@@ -167,9 +179,12 @@ export async function startCatalogueServer(
     if (controls && request.url?.startsWith("/__mokly/components/")) {
       const busy = activity.channel();
       busy(true);
-      void handleControls(request, response, controls).finally(() =>
-        busy(false),
-      );
+      void handleControls(
+        request,
+        response,
+        controls,
+        options.onDiagnostic,
+      ).finally(() => busy(false));
       return;
     }
     const requestedVersion = updateVersion;
@@ -192,7 +207,6 @@ export async function startCatalogueServer(
       options.liveChanges === false ? undefined : changesStatus,
       contentVersion,
       publicCatalogue,
-      request.headers["x-mokly-shell"],
     ).catch(() => {
       if (!response.destroyed && !response.headersSent)
         send(
@@ -272,10 +286,11 @@ export async function startCatalogueServer(
           catalogue: next.activeCatalogue,
           changedRoutes: next.changedRoutes,
           evidence: next.componentChanges,
-          changesStatus:
-            options.liveChanges === false && !options.review
-              ? "disabled"
-              : next.changesStatus,
+          changesStatus: publicChangesStatus(
+            next.changedRoutes,
+            next.componentChanges !== undefined,
+            next.changesStatus,
+          ),
           comparison: undefined,
           comparisonUrl: null,
         },

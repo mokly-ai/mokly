@@ -9,17 +9,16 @@ import type {
 } from "../catalogue/types.js";
 import { encodeUrlPath } from "../data/paths.js";
 import { BrowserFrame, PhoneFrame } from "../shell/frames.js";
+import { framePath, frameSource } from "../shell/stage_sources.js";
 
 import { DisplaySelection } from "./display_context.js";
-import { frameLocation } from "./frame_location.js";
 
 function frameUrl(
   view: CatalogueView | undefined,
   fragment?: string,
   stepIndex?: number,
 ): string | undefined {
-  if (!view?.fragmentPath) return;
-  return frameLocation(view.fragmentPath, fragment, stepIndex);
+  return frameSource(view, fragment, stepIndex);
 }
 function PublicFrame({
   entry,
@@ -173,7 +172,7 @@ export function PublicStage({
             className="mbk-frag"
             sandbox="allow-same-origin"
             data-mokly-fragment-frame=""
-            src={frameLocation(entry.documentPath, fragment)}
+            src={framePath(entry.documentPath, fragment)}
             title={entry.title}
           />
         ) : (
@@ -192,8 +191,9 @@ export function PublicStage({
     );
   const views =
     entry.kind === "component"
-      ? (entry.variants.find((variant) => variant.id === variantId) ??
-          entry.variants[0])!.views
+      ? (entry.variants.find(
+          (variant) => variant.id === (variantId ?? selection.variantId),
+        ) ?? entry.variants[0])!.views
       : (entry as CatalogueScreen).views;
   return (
     <div

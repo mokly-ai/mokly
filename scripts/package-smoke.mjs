@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import {
-  smokeAccountingFixture,
+  smokeThemedConsumer,
   smokeCleanCacheExecution,
   smokeEsmConsumer,
   smokeJunoFixture,
@@ -52,7 +52,7 @@ try {
   await smokeEsmConsumer(context);
   await smokeNodeNextConsumer(context);
   await smokeCleanCacheExecution(context);
-  await smokeAccountingFixture(context);
+  await smokeThemedConsumer(context);
   await smokeJunoFixture(context);
   process.stdout.write(
     "Both packed packages passed all five consumer scenarios.\n",

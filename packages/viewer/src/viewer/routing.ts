@@ -7,7 +7,7 @@ import type { ViewerEvents, ViewerSelection } from "./types.js";
 
 interface RouteIntent {
   id: string | null;
-  variant?: string;
+  variantId?: string;
   fragment?: string;
   navigation?: FrameNavigation;
 }
@@ -20,9 +20,8 @@ interface RouteActions {
   events(): ViewerEvents;
 }
 
-/** Route details stay local; controlled selection proposals commit through the host. */
+/** Fragments stay local; saved variants commit through public selection. */
 export class ViewerRouting {
-  variant: string | undefined;
   fragment: string | undefined;
   private pending: RouteIntent | undefined;
   private announced: string;
@@ -41,7 +40,7 @@ export class ViewerRouting {
   private effectiveVariant() {
     const entry = this.entry();
     return (
-      this.variant ??
+      this.actions.selection().variantId ??
       (entry?.kind === "component" ? entry.variants[0]?.id : undefined)
     );
   }
@@ -52,10 +51,14 @@ export class ViewerRouting {
       this.fragment,
     ]);
   }
-  commit(screenId: string | null): void {
-    const intent = this.pending?.id === screenId ? this.pending : undefined;
-    this.variant = intent?.variant;
-    this.fragment = intent?.fragment;
+  commit(selection: ViewerSelection, screenChanged: boolean): void {
+    const intent =
+      this.pending?.id === selection.screenId &&
+      this.pending.variantId === selection.variantId
+        ? this.pending
+        : undefined;
+    if (intent) this.fragment = intent.fragment;
+    else if (screenChanged) this.fragment = undefined;
   }
   announce(navigation = this.pending?.navigation): void {
     this.pending = undefined;
@@ -73,17 +76,12 @@ export class ViewerRouting {
         ...(navigation ? { navigation } : {}),
       });
   }
-  selectVariant(value: string | undefined): boolean {
-    const previous = this.key();
-    this.variant = value;
-    return previous !== this.key();
-  }
   shell(id: string | null, url: URL): void {
     const fragment = url.searchParams.getAll("fragment");
     const variant = url.searchParams.getAll("variant");
     this.request({
       id,
-      ...(variant.length === 1 ? { variant: variant[0]! } : {}),
+      ...(variant.length === 1 ? { variantId: variant[0]! } : {}),
       ...(fragment.length === 1 && isLogicalFragment(fragment[0]!)
         ? { fragment: fragment[0]! }
         : {}),
@@ -117,12 +115,19 @@ export class ViewerRouting {
   }
   private request(intent: RouteIntent): void {
     this.pending = intent;
-    if (intent.id !== this.actions.selection().screenId) {
-      this.actions.select({ screenId: intent.id });
+    const selection = this.actions.selection();
+    if (
+      intent.id !== selection.screenId ||
+      intent.variantId !== selection.variantId
+    ) {
+      this.actions.select({
+        screenId: intent.id,
+        variantId: intent.variantId,
+      });
       return;
     }
     const before = this.key();
-    this.commit(intent.id);
+    this.commit(selection, false);
     if (before === this.key()) {
       this.pending = undefined;
       return;

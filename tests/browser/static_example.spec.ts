@@ -8,18 +8,14 @@ import { createExampleBaseline } from "../helpers/example_baseline.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 
-import {
-  assertServedShellMarker,
-  reactShellForProject,
-} from "./export_shell.js";
+import { assertServedShellMarker } from "./export_shell.js";
 import { chooseViewport } from "./workspace_actions.js";
 
 let output: string;
 let root: string;
 let server: Awaited<ReturnType<typeof serveStaticFiles>>;
-test.beforeAll(async ({ browser: _browser }, info) => {
+test.beforeAll(async () => {
   test.setTimeout(180_000);
-  const reactShell = reactShellForProject(info.project.name);
   root = await fs.promises.mkdtemp(
     path.join(repositoryRoot, ".context/mokly-example-export-"),
   );
@@ -28,14 +24,9 @@ test.beforeAll(async ({ browser: _browser }, info) => {
   await exportCatalogue(config, {
     base: "HEAD",
     outDir: output,
-    reactShell,
   });
   server = await serveStaticFiles(output);
-  await assertServedShellMarker(
-    server.url,
-    "/view/screens/welcome.html",
-    reactShell,
-  );
+  await assertServedShellMarker(server.url, "/view/screens/welcome.html");
 });
 test.afterAll(async () => {
   await server?.close();

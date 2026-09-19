@@ -43,7 +43,6 @@ export async function handleCatalogueRequest(
   changesStatus?: ChangesStatus,
   contentVersion?: number,
   publicCatalogue?: PublicCatalogueSource,
-  shellSelector?: string | readonly string[],
 ): Promise<void> {
   if (method !== "GET" && method !== "HEAD")
     return send(response, 405, "text/plain", "Method not allowed", method);
@@ -122,7 +121,6 @@ export async function handleCatalogueRequest(
         ]
       : undefined,
     requestVersion,
-    shellSelector === "react",
   );
   if (publicCatalogue) context.readModel = readPublicCatalogue(publicCatalogue);
   context.comparisons = reviewRoutes !== undefined;

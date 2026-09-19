@@ -82,6 +82,7 @@ export function mountLocalDocument(
     const listeners = new Set<(event: FrameEvent) => void>();
     const controller = new AbortController();
     const signal = controller.signal;
+    let documentController: AbortController | undefined;
     let operations: LocalOperations | undefined;
     let disposed = false;
     let release = () => {};
@@ -90,13 +91,19 @@ export function mountLocalDocument(
     const emit = (event: FrameEvent) => {
       for (const listener of [...listeners]) listener(event);
     };
+    const disposeDocument = () => {
+      documentController?.abort();
+      documentController = undefined;
+      operations?.dispose();
+      operations = undefined;
+      for (const cleanup of cleanups.splice(0)) cleanup();
+    };
     const dispose = () => {
       if (disposed) return;
       disposed = true;
       controller.abort();
       cancellation?.removeEventListener("abort", dispose);
-      operations?.dispose();
-      for (const cleanup of cleanups) cleanup();
+      disposeDocument();
       win.clearTimeout(timer);
       if (pending) win.cancelAnimationFrame(pending);
       listeners.clear();
@@ -129,21 +136,29 @@ export function mountLocalDocument(
     frame.addEventListener(
       "load",
       () => {
-        if (operations) {
-          dispose();
-          return;
-        }
         const doc = localFrameAccess(frame).document();
         if (
           !doc ||
           doc.defaultView?.frameElement !== frame ||
-          doc.URL !== url.href
+          !sameFrameResource(doc.URL, url)
         ) {
           reject(new FrameError("origin"));
           dispose();
           return;
         }
+        if (new URL(doc.URL).hash !== url.hash) {
+          try {
+            doc.defaultView.location.replace(url.href);
+          } catch {
+            reject(new FrameError("origin"));
+            dispose();
+            return;
+          }
+        }
+        if (operations) disposeDocument();
         win.clearTimeout(timer);
+        documentController = new AbortController();
+        const documentSignal = documentController.signal;
         operations = create(doc, emit);
         const inspecting = () =>
           listeners.size > 0 && operations!.inspectable();
@@ -153,7 +168,7 @@ export function mountLocalDocument(
           emit,
           inspecting,
           () => operations!.selecting(),
-          signal,
+          documentSignal,
         );
         const changed = () => {
           if (inspecting() && !pending)
@@ -165,11 +180,16 @@ export function mountLocalDocument(
         doc.addEventListener("scroll", changed, {
           capture: true,
           passive: true,
-          signal,
+          signal: documentSignal,
         });
-        doc.addEventListener("load", changed, { capture: true, signal });
-        doc.fonts.addEventListener("loadingdone", changed, { signal });
-        win.addEventListener("resize", changed, { signal });
+        doc.addEventListener("load", changed, {
+          capture: true,
+          signal: documentSignal,
+        });
+        doc.fonts.addEventListener("loadingdone", changed, {
+          signal: documentSignal,
+        });
+        win.addEventListener("resize", changed, { signal: documentSignal });
         const resize = new ResizeObserver(changed),
           mutations = new MutationObserver(changed);
         resize.observe(frame);
@@ -231,8 +251,10 @@ export function mountLocalDocument(
             },
           });
         };
-        doc.addEventListener("click", activate, { signal });
-        doc.addEventListener("auxclick", activate, { signal });
+        doc.addEventListener("click", activate, { signal: documentSignal });
+        doc.addEventListener("auxclick", activate, {
+          signal: documentSignal,
+        });
         resolve({
           updateUsage: (usage) => run(() => operations!.updateUsage(usage)),
           listInstanceBoundaries: () => run(() => operations!.list()),
@@ -267,4 +289,20 @@ export function mountLocalDocument(
       dispose();
     }
   });
+}
+
+function sameFrameResource(documentUrl: string, expected: URL): boolean {
+  const actual = new URL(documentUrl);
+  return (
+    actual.origin === expected.origin &&
+    !actual.username &&
+    !actual.password &&
+    normalizedHtmlPath(actual.pathname) ===
+      normalizedHtmlPath(expected.pathname) &&
+    actual.search === expected.search
+  );
+}
+
+function normalizedHtmlPath(pathname: string): string {
+  return pathname.endsWith(".html") ? pathname.slice(0, -5) : pathname;
 }

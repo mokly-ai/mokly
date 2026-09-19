@@ -21,8 +21,9 @@ including public CSS, are tracked. Build generates its local HTML and manifest.
 This document defines the release-ready runtime contract. The Build, Check,
 watch, server, and comparison engines, the responsive package-owned catalogue,
 on-demand screen diffs, packed-package consumers, CI/release
-automation, and Playwright browser coverage are implemented. The irreversible
-first publication and downstream consumer cutover remain external steps.
+automation, and Playwright browser coverage are implemented. Both npm packages
+have completed their [initial registration](./npm-bootstrap.md); subsequent
+versions follow the [coordinated release contract](./npm-release.md).
 Canonical outer navigation from links inside fragment frames, request-visible
 fragment transport, ownership-aware preview adaptation, and active-tree
 disclosure are implemented. Their delivery history is recorded in the completed
@@ -32,11 +33,11 @@ Browse is a first-party host of [`@mokly/viewer`](./mokly-viewer.md). The
 public catalogue (Milestone 3), optional frame transport (Milestone 4) and
 package extraction (Milestone 5) are implemented as recorded in the
 [viewer library plan](../../plans/mokly-viewer-library.md). The
-[React Browse shell plan](../../plans/react-browse-shell.md) replaces the
-string-rendered shell and its vanilla enhancement runtime with one hydrated
-React tree; the shell sections below describe that target, and the plan
-records which parts have landed. The shell CSS, interactions, design and
-script-disabled sandbox are unchanged by that transition.
+[React Browse shell plan](../../plans/react-browse-shell.md) delivers one React
+tree shared by standalone Serve, static export and embedded hosts. Standalone
+documents render the complete shell on the server and hydrate it in the browser;
+embedded hosts mount the same components with host-owned selection and slots.
+Consumer frames and comparisons remain static HTML in script-disabled sandboxes.
 
 ## Component Workspaces
 

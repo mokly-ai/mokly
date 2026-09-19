@@ -7,7 +7,7 @@ import type { ShellStore } from "./store_context.js";
 /** Bind the rail scroller to recovery state and route visibility. */
 export function useNavigationScroll(
   store: ShellStore | undefined,
-  activeRoute: string | undefined,
+  route: ShellStore["state"]["route"] | undefined,
 ) {
   const scroll = useRef<HTMLDivElement>(null);
   const initialScroll = useRef(store?.state.navScroll ?? 0);
@@ -24,6 +24,6 @@ export function useNavigationScroll(
     pane
       .querySelector<HTMLElement>('[data-nav-row][aria-current="page"]')
       ?.scrollIntoView({ block: "nearest" });
-  }, [activeRoute, interactive]);
+  }, [interactive, route]);
   return scroll;
 }

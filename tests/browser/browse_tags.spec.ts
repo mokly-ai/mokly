@@ -96,15 +96,40 @@ test("a click outside closes the picker without taking focus", async ({
   await expect(page.locator(search)).toBeFocused();
 });
 
+test("an inspector tag closes the open picker and restores toggle focus", async ({
+  page,
+}) => {
+  await page.goto("/view/screens/welcome.html");
+  await page.getByRole("tab", { name: "Details", exact: true }).click();
+  await openPicker(page);
+
+  await page.locator(inspectorChip).click();
+
+  await expect(page.locator(search)).toHaveValue("tag:forms");
+  await expectClosed(page);
+  await expect(page.locator(toggle)).toBeFocused();
+});
+
 test("the picker chips answer the arrow, Home, and End keys", async ({
   page,
 }) => {
   await page.goto("/");
   await openPicker(page);
   await expect(page.locator(chip("documents"))).toBeFocused();
+  await expect(page.locator(chip("documents"))).toHaveAttribute(
+    "tabindex",
+    "0",
+  );
+  for (const tag of ["forms", "onboarding"])
+    await expect(page.locator(chip(tag))).toHaveAttribute("tabindex", "-1");
 
   await page.keyboard.press("ArrowRight");
   await expect(page.locator(chip("forms"))).toBeFocused();
+  await expect(page.locator(chip("documents"))).toHaveAttribute(
+    "tabindex",
+    "-1",
+  );
+  await expect(page.locator(chip("forms"))).toHaveAttribute("tabindex", "0");
   await page.keyboard.press("ArrowRight");
   await expect(page.locator(chip("onboarding"))).toBeFocused();
   await page.keyboard.press("ArrowRight");

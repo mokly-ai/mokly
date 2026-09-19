@@ -14,12 +14,13 @@ const runtime = await fs.readFile(
 );
 const runtimeExports = new Map();
 for (const match of runtime.matchAll(
-  /export\s+\{([^}]+)\}\s+from\s+"\.\/client\/([^"/]+)\.js"/g,
+  /export\s+\{([^}]+)\}\s+from\s+"\.\/(?:client|standalone)\/([^"/]+)\.js"/g,
 ))
   for (const name of match[1].split(","))
     runtimeExports.set(name.trim(), match[2]);
 const target = path.join(root, "dist/browser");
 await buildBrowserModules(path.join(root, "src/client"), target, {
   runtimeExports,
+  viewerBrowserBundle: "react-shell.js",
 });
 await writeBrowserManifest(target);

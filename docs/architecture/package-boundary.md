@@ -20,8 +20,8 @@ paths, and synthetic tests.
 ## Dependency Direction
 
 `@mokly/mokly` has React and React DOM peer dependencies. It does not depend on
-React Native, React Native Web, `@firna/ui`, Accounting, Juno, or a consumer's
-workspace layout. At build time, React imports are resolved from the consumer's
+React Native, React Native Web, `@firna/ui`, consumer applications, or their
+workspace layouts. At build time, React imports are resolved from the consumer's
 config file and every React-bearing source is bundled in one graph.
 
 The renderer is synchronous and returns a complete HTML document, either as a
@@ -34,7 +34,7 @@ library would make Mokly app-specific and risk two React runtimes.
 Module-resolution configuration is likewise consumer-owned: aliases,
 conditions, package fields, extensions, loaders, and package roots describe the
 consumer component tree. Mokly validates and applies them without supplying
-React Native Web, Accounting, or Juno defaults.
+React Native Web or application-specific defaults.
 
 ## Registered Components
 
@@ -50,8 +50,8 @@ See the [component contract](../protocol/mokly-components.md).
 
 ## Viewer Package Boundary
 
-The repository uses npm workspaces with `packages/viewer` as `@mokly/viewer`
-(version 0.1.0); root `@mokly/mokly` depends on exactly that version, without
+The repository uses npm workspaces with `packages/viewer` as `@mokly/viewer`;
+root `@mokly/mokly` depends on its exact coordinated release version, without
 `workspace:` or filesystem dependency specifiers. The shell component tree
 and CSS, its hydration entries, navigation, frame adapters, inspector and
 public catalogue/instance readers belong to the viewer. Shared pure validation and DTOs live there too. The CLI retains config, authoring/build, comparisons,
@@ -73,14 +73,19 @@ the same-origin adapter and no slots, preserving every existing local pixel
 and interaction. Private live integrations stay in the CLI host and reach the
 tree through a typed capability context; explicit cross-origin hosts use the
 bounded inspector protocol, whose in-frame script stays React-free.
+React slots and marker content remain host-owned. The viewer may position that
+content from authenticated instance geometry, but it owns no comment model,
+tenant, auth or persistence and exposes no raw geometry API. Multi-instance
+highlighting and marker placement compose the same public frame adapter boundary.
 
 Public catalogue and inspector files join existing export/upload inventories
 without schema changes. The manifest/source inventory stays private. Build,
 package and packed-consumer checks must cover both tarballs and their dependency
 direction. Pack the viewer first and install both archives in clean consumers.
-The documented root, `./server`, `./runtime`, `./data` and stylesheet exports
-replace source deep imports. Release-please configuration for coordinated releases
-remains Milestone 6; this extraction does not modify release automation.
+The documented root, `./server`, `./runtime`, `./data`, `./browser` and stylesheet
+exports replace source deep imports. The browser entry starts standalone
+hydration as a package side effect. Coordinated release automation publishes
+the viewer before the CLI that depends on it.
 
 ## Complete-Document Boundary
 

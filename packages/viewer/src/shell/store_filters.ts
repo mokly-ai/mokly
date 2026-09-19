@@ -1,6 +1,6 @@
 /** Atomic filtering and active-route disclosure transitions. */
 
-import { revealSelection } from "../viewer/selection.js";
+import { revealSelection, selectionQuery } from "../viewer/selection.js";
 import type { ViewerSelection } from "../viewer/types.js";
 
 import type { Catalogue } from "./catalogue.js";
@@ -26,6 +26,20 @@ export function withRoute(
   sections: readonly NavSectionNode[],
 ): ShellState {
   let selection = { ...state.selection, screenId: routeScreenId(route) };
+  const entry =
+    route.view.kind === "target" ? route.view.target.entry : undefined;
+  if (
+    route.variant &&
+    entry?.kind === "component" &&
+    entry.variants.some((variant) => variant.id === route.variant)
+  )
+    selection.variantId = route.variant;
+  else delete selection.variantId;
+  if (route.viewport) selection.viewport = route.viewport;
+  if (route.colorScheme)
+    selection.colorScheme = catalogue.hasDarkFragments
+      ? route.colorScheme
+      : "light";
   if (catalogue.publicModel)
     selection = revealSelection(catalogue.publicModel, selection);
   let next = withSelection(state, selection, false);
@@ -68,7 +82,24 @@ function withSelection(
     disclosures = { ...(baseline ?? disclosures) };
     baseline = undefined;
   }
-  return { ...state, disclosures, filterBaseline: baseline, selection };
+  const query = sameQuery(state.selection, selection)
+    ? state.query
+    : selectionQuery(selection);
+  return {
+    ...state,
+    disclosures,
+    filterBaseline: baseline,
+    query,
+    selection,
+  };
+}
+
+function sameQuery(left: ViewerSelection, right: ViewerSelection): boolean {
+  return (
+    left.search === right.search &&
+    left.tags.length === right.tags.length &&
+    left.tags.every((tag, index) => tag === right.tags[index])
+  );
 }
 
 function routeTitle(catalogue: Catalogue, route: ShellRoute): string {

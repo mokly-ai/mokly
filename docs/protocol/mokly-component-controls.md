@@ -114,8 +114,12 @@ interface ComponentRenderSuccess {
 }
 ```
 
-The parent creates one random 32-hex `pageId` per mounted component page and
-retains it until navigation/reload. It is a queue-coalescing key, not authority.
+The parent creates one random 32-hex `pageId` per mounted component edit owner
+and rendered viewport/color-scheme context, retaining it until that owner is
+replaced by navigation or reload. Repeated edits for the same visible context
+reuse its id so they coalesce, while simultaneous contexts use distinct ids so
+one preview cannot supersede another. It is a queue-coalescing key, not
+authority.
 The opaque generation must match the active catalogue. Decode overrides through
 the shared primitive codec; validate the complete merged props against the
 registration schema and control constraints, including uneditable props.
@@ -177,10 +181,10 @@ returns 403. Loading a foreign web page must not cause consumer render code to
 execute through this endpoint.
 
 Text/number edits are debounced by 150 ms; boolean/select edits submit
-immediately. Each page has one active request and at most one latest queued
-replacement. Sequence/generation checks discard stale responses. Cancel
-obsolete requests on navigation, reset, variant/context change, or disconnect;
-cancellation must not leave an unresolved UI loading state.
+immediately. Each edit-owner context has one active request and at most one
+latest queued replacement. Sequence/generation checks discard stale responses.
+Cancel obsolete requests on navigation, reset, variant/context change, or
+disconnect; cancellation must not leave an unresolved UI loading state.
 
 Run bounded rendering outside the main HTTP event loop using the same compiled
 consumer graph in a supervised worker. Allow one active job and at most eight
@@ -238,7 +242,7 @@ resolution as saved variants and never mutate generated output. Assert that
 control requests create no filesystem output, Git status change, watch event,
 rebuild/reload notification, Check orphan, or publication entry, including when
 a consumer explicitly watches its repository root. Test aggregate bundle byte
-accounting, expiration/eviction, MIME/headers, and memory release on shutdown.
+tracking, expiration/eviction, MIME/headers, and memory release on shutdown.
 
 Browser tests cover actual prop changes, reset, variant switching, viewport/theme
 retention, rapid edits, stale responses, navigation, comparison selection,

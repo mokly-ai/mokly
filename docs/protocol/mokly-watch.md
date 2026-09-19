@@ -42,6 +42,8 @@ watched Serve with `examples/basic/mokly.config.ts`. Arguments after `--`
 are forwarded to Serve, for example `npm run dev -- --port 0`. Restarting the
 command rebuilds changes to Mokly's own source; this shortcut does not add
 watch targets beyond the example's inputs and referenced resources.
+Use `npm run -s dev` for Mokly's rich terminal output without npm's outer script
+banner; nested build scripts are already quiet.
 
 An unowned public HTML file beneath `mockupsDir` is an authored static input,
 not generated merely because of its extension. Reachable HTML resources reload
@@ -173,6 +175,14 @@ shell snapshot. Equal content versions adopt evidence without navigation recover
 a newer content version triggers reload and one-shot state recovery. A document without a valid stamp retains
 compatibility behavior in which its first `ready` version establishes the
 baseline.
+
+In rich mode, the [terminal reporter](./mokly-terminal-output.md) presents the
+existing accepted-catalogue, baseline, Changes, reference-refresh, rebuild,
+reload, restart, configuration, and failure boundaries as lifecycle or change
+lines. The presentation does not introduce another watch action. Candidate
+paths accumulate across each coalesced burst and the completed line names up to
+three. The `r` shortcut enqueues the same `rebuild` action through this serialized
+queue, so it cannot race a filesystem-triggered action.
 
 A filesystem edit composed of multiple operations can publish intermediate
 states: removing a tracked alias may identify a deletion before its replacement

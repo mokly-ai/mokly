@@ -14,6 +14,7 @@ import {
   PageIcon,
   ScreenIcon,
 } from "./icons.js";
+import { useShellIdentifier } from "./identifier_context.js";
 import { NavFilter, NavStatus } from "./nav_filter.js";
 import { navRowStyle } from "./nav_guides.js";
 import {
@@ -237,8 +238,9 @@ export function CatalogueNav({
   context: ShellContext;
 }) {
   const store = useOptionalShellStore();
+  const navigationId = useShellIdentifier("mb-nav");
   const sections = store?.sections ?? catalogueNavSections(catalogue);
-  const scroll = useNavigationScroll(store, context.activeRoute);
+  const scroll = useNavigationScroll(store, store?.state.route);
   const changesStatus = context.changedRoutes ? "ready" : context.changesStatus;
   const waiting =
     store?.state.selection.view === "changes" &&
@@ -254,7 +256,7 @@ export function CatalogueNav({
       className="mbk-nav"
       data-mokly-nav=""
       data-resize-ready={store?.interactive ? "" : undefined}
-      id="mb-nav"
+      id={navigationId}
       style={style}
     >
       <div className="mbk-nav-head">

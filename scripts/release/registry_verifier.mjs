@@ -8,7 +8,13 @@ import {
   isMissingPackage,
 } from "./registry_contract.mjs";
 
-const DEFAULT_RETRY_DELAYS = [2_000, 4_000, 8_000, 16_000, 30_000, 30_000];
+const DEFAULT_RETRY_DELAYS = [
+  2_000,
+  4_000,
+  8_000,
+  16_000,
+  ...Array.from({ length: 9 }, () => 30_000),
+];
 
 class RegistryNotReadyError extends Error {
   constructor(message) {

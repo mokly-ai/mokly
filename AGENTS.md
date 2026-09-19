@@ -54,6 +54,15 @@
   components in `ts/app/src/components` first and use them where possible. If a
   component or pattern is used many times across the app, extract it or add it
   to `ts/app/src/components` instead of duplicating the implementation.
+- Product UI and mockups must never use a left-edge accent border or vertical
+  accent rail to emphasize, select, categorize, decorate, or communicate the
+  status of content. This prohibited pattern includes a contrasting stroke
+  attached to the left side of a card, panel, callout, banner, list row,
+  navigation item, or other content surface, including strokes with rounded
+  ends or corners. Do not recreate the pattern with a pseudo-element, inset
+  shadow, gradient, outline, or separate adjacent bar; use the established
+  component system's typography, spacing, icons, full-surface treatments, or
+  standard selection controls instead.
 - Normal product views must not expose sandbox, test, or preview environment
   labels, badges, or explanatory copy in the implementation. The same view
   should render across environments, with environment-specific data selected

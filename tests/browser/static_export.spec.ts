@@ -1,14 +1,11 @@
 import { expect, test } from "@playwright/test";
 
-import { reactShellForProject } from "./export_shell.js";
 import { startStaticFixture } from "./static_fixture.js";
 import { chooseScheme, expectFrameSource } from "./workspace_actions.js";
 
 let site: Awaited<ReturnType<typeof startStaticFixture>>;
-test.beforeAll(async ({ browser: _browser }, info) => {
-  site = await startStaticFixture({
-    reactShell: reactShellForProject(info.project.name),
-  });
+test.beforeAll(async () => {
+  site = await startStaticFixture();
 });
 test.afterAll(async () => {
   await site.close();
@@ -42,6 +39,11 @@ test("aliases and frame activations retain canonical files, fragments, and histo
   await page.goto(`${site.url}/id/home/?fragment=home-mobile&ignored=1`);
   await expect(page).toHaveURL(
     `${site.url}/view/screens/home.html?fragment=home-mobile`,
+  );
+  await expect(page.locator("html")).toHaveAttribute("data-mokly-hydrated", "");
+  await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
+    "data-mokly-frame-state",
+    "ready",
   );
   await page
     .locator("html")

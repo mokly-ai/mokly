@@ -15,6 +15,14 @@ import type { ShellView } from "../shell/views.js";
 import { viewerCatalogue, viewerContext } from "../viewer/projection.js";
 import { defaultSelection } from "../viewer/selection.js";
 
+import {
+  catalogueReferenceMatches,
+  externalCatalogueReference,
+  isExternalCatalogueReference,
+  readExternalCatalogueReference,
+  type ExternalCatalogueReference,
+} from "./catalogue_reference.js";
+
 type BootstrapView =
   | { kind: "home" }
   | { kind: "missing"; requested: string }
@@ -36,6 +44,16 @@ export interface ShellBootstrap {
   context: BootstrapContext;
   view: BootstrapView;
 }
+
+/** Compact static-page state resolved from the deployment catalogue before hydration. */
+export interface ExternalShellBootstrap {
+  catalogue: ExternalCatalogueReference;
+  context: BootstrapContext;
+  view: BootstrapView;
+}
+
+/** Either a self-contained live bootstrap or a static shared-catalogue reference. */
+export type ShellBootstrapState = ShellBootstrap | ExternalShellBootstrap;
 
 /** Build the browser-safe hydration state from an accepted server snapshot. */
 export function shellBootstrap(
@@ -67,23 +85,57 @@ export function shellBootstrap(
   };
 }
 
+/** Replace a static page's repeated catalogue with its deployment-owned reference. */
+export function externalShellBootstrap(
+  bootstrap: ShellBootstrap,
+): ExternalShellBootstrap {
+  return {
+    ...bootstrap,
+    catalogue: externalCatalogueReference(bootstrap.catalogue),
+  };
+}
+
 /** Validate embedded JSON before it can select routes or delivery metadata. */
 export function readShellBootstrap(value: unknown): ShellBootstrap {
+  const state = readShellBootstrapState(value);
+  if (isExternalShellBootstrap(state))
+    throw new Error("External shell hydration requires a catalogue.");
+  return state;
+}
+
+/** Validate either supported embedded bootstrap representation. */
+export function readShellBootstrapState(value: unknown): ShellBootstrapState {
   if (!isRecord(value) || !isRecord(value.context) || !isRecord(value.view))
     throw new Error("Invalid shell hydration state.");
-  const catalogue = readCatalogue(value.catalogue);
   const context = readContext(value.context);
   const view = readView(value.view);
-  if (
-    view.kind === "target" &&
-    !catalogueRouteEntry(viewerCatalogue(catalogue), view.route)
-  )
-    throw new Error("Invalid shell hydration target.");
+  if (isExternalCatalogueReference(value.catalogue))
+    return {
+      catalogue: readExternalCatalogueReference(value.catalogue),
+      context,
+      view,
+    };
+  const catalogue = readCatalogue(value.catalogue);
+  validateTarget(catalogue, view);
   return { catalogue, context, view };
 }
 
+/** Resolve a compact static bootstrap against its validated deployment catalogue. */
+export function resolveShellBootstrap(
+  state: ShellBootstrapState,
+  catalogue: CatalogueReadModel,
+): ShellBootstrap {
+  if (!isExternalShellBootstrap(state)) return state;
+  if (!catalogueReferenceMatches(state.catalogue, catalogue))
+    throw new Error("The deployed catalogue does not match the page.");
+  validateTarget(catalogue, state.view);
+  return { catalogue, context: state.context, view: state.view };
+}
+
 /** Encode hydration state with stable lexical object-key ordering. */
-export function serializeShellBootstrap(bootstrap: ShellBootstrap): string {
+export function serializeShellBootstrap(
+  bootstrap: ShellBootstrapState,
+): string {
   return canonicalJson(bootstrap).replaceAll("<", "\\u003c");
 }
 
@@ -102,7 +154,6 @@ export function shellBootstrapProps(bootstrap: ShellBootstrap) {
     base: bootstrap.context.base,
     updateVersion: bootstrap.context.updateVersion,
     comparisons: bootstrap.context.comparisons,
-    reactShell: true,
     ...(bootstrap.context.contentVersion === undefined
       ? {}
       : { contentVersion: bootstrap.context.contentVersion }),
@@ -180,6 +231,23 @@ function readView(value: Record<string, unknown>): BootstrapView {
   if (value["kind"] === "target" && typeof value["route"] === "string")
     return { kind: "target", route: value["route"] };
   throw new Error("Invalid shell hydration view.");
+}
+
+function isExternalShellBootstrap(
+  state: ShellBootstrapState,
+): state is ExternalShellBootstrap {
+  return isExternalCatalogueReference(state.catalogue);
+}
+
+function validateTarget(
+  catalogue: CatalogueReadModel,
+  view: BootstrapView,
+): void {
+  if (
+    view.kind === "target" &&
+    !catalogueRouteEntry(viewerCatalogue(catalogue), view.route)
+  )
+    throw new Error("Invalid shell hydration target.");
 }
 
 function targetView(

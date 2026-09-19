@@ -3,13 +3,13 @@
 Implement the approved [styled link controls contract](../docs/protocol/mokly-link-controls.md)
 so consumers can use their existing styled controls with Mokabook navigation.
 Scope is the Mokabook package, documentation, and consumer/browser fixtures.
-Accounting adoption and publishing a package release are subsequent work.
+Downstream adoption and publishing a package release are subsequent work.
 
 ## Milestone 1: Define the contract — completed
 
 Specify a complete opt-in API and its ownership, accessibility, and build rules.
 
-- [x] Audit the Accounting failure and current Mokabook navigation boundary.
+- [x] Audit the consumer failure and current Mokabook navigation boundary.
 - [x] Fetch and preserve current main before integration. Source tip was
       `b5ed6dfa8d82ea8ef532f7873443ddaa9fca1440`; audit showed the navigation
       resize feature, which was retained by fast-forwarding to `b45327a`.
@@ -43,7 +43,7 @@ Prove the API works with custom renderers and real consumer UI controls.
       Browse and use-case navigation, focus, disabled/busy behavior, standalone
       files, and Review snapshots.
 - [x] Update the README and package/rendering documentation with usage,
-      limitations, and Accounting migration guidance; mark the contract delivered.
+      limitations and consumer migration guidance; mark the contract delivered.
 - [x] Complete relevant tests and `cargo xtask check` (including clippy).
 
 Validation: 78 focused tests, six real-Firna browser smoke tests, and the full
@@ -106,9 +106,9 @@ already-planned post-review bookkeeping.
 
    Recommended: A.
 
-4. **Severity: Low — public README includes downstream Accounting/Firna migration guidance.**
+4. **Severity: Low — public README includes downstream app migration guidance.**
 
-   Context: [README.md](../README.md#L118) puts Accounting-specific Firna `Button` instructions in the package README.
+   Context: [README.md](../README.md#L118) puts consumer-specific styled `Button` instructions in the package README.
 
    Impact of doing nothing: app-independent Mokabook docs remain coupled to one consumer app/framework, which can confuse package users and make future README maintenance noisier.
 
@@ -152,7 +152,7 @@ align focus validation with the contract, and separate consumer migration docs.
       generated metadata while rejecting authored or altered reserved metadata.
 - [x] Reject ancestor `tabindex`, including programmatic focus, and document the
       same rule for ancestors and descendants.
-- [x] Move Accounting/Firna instructions into a linked migration guide and keep
+- [x] Move consumer-specific instructions out of the README and keep
       the package README generic.
 - [x] Run relevant tests, browser smoke tests, and `cargo xtask check`.
 
@@ -170,9 +170,8 @@ Complete the required delivery sequence after the approved fixes pass validation
 Approved fixes: items 1 and 2 now share parsed metadata validation, including
 mixed-case names, global reservation, duplicate attributes, logical-owner
 records, and stylesheet preservation. Item 3 rejects ancestor focus attributes,
-including negative `tabindex`. Item 4 is documented in the linked
-[Accounting migration guide](../docs/migration/accounting-link-controls.md).
-Item 5 was completed in the initial post-review record.
+including negative `tabindex`. Item 4 is covered by the generic integration
+contract. Item 5 was completed in the initial post-review record.
 
 Validation after the fixes: all 97 focused tests and `cargo xtask check` passed.
 The full gate passed 401 unit/integration tests, 70 Chromium tests (including
