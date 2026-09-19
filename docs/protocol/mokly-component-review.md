@@ -169,9 +169,9 @@ Eligibility requires equality with component markers retained outside paired
 ignored regions and canonical equality of usage topology. Only `props` and
 `propsKey` on entry-owned instances may differ, and invocation `source`
 metadata is ignored; nested inputs, ownership, identity, slots, ranges, styles,
-and resources require the complete comparison. A view with caller-owned slot
-content and an authored HTML `template` also requires the complete comparison,
-because projection may expose resources hidden by the inert container.
+and resources require the complete comparison. Views with instances, styles, or entry-owned slots also prove the reachable resources of the ownership-projected documents before
+the shortcut can settle them, because HTML parsing can discard content that
+projection exposes.
 One-sided views always validate their available range records in the side's
 current or historical marker dialect before producing an added or removed
 record.

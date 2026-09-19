@@ -8,14 +8,15 @@ import {
   stripHistoricalMarkers,
   stripMarkers,
 } from "../components/comparison_material.js";
-import {
-  changedComponentImplementations,
-  projectComponentPair,
-} from "../components/comparison_projection.js";
+import { changedComponentImplementations } from "../components/comparison_projection.js";
 import { validateComponentRanges } from "../components/ranges.js";
 import { MoklyError } from "../errors.js";
 
 import type { ComponentDependencyPolicy } from "./component_metadata.js";
+import {
+  prepareComponentProjection,
+  type PreparedComponentComparison,
+} from "./component_projection_resources.js";
 import {
   ownedCssReasons,
   type OwnedCssReason,
@@ -93,33 +94,29 @@ export async function compareComponentView(
       ),
     };
   }
+  let prepared: PreparedComponentComparison | undefined;
   if (context.useFastPath !== false) {
-    const fast = await compareUnchangedComponentView(
+    const attempt = await compareUnchangedComponentView(
       context,
       before!,
       after!,
       view,
       base,
       head,
+      root,
     );
-    if (fast) return fast;
+    if (attempt.comparison) return attempt.comparison;
+    prepared = attempt.prepared;
   }
-  const baseRanges = before?.usage
-    ? validateComponentRanges(base, before.usage.ranges, "historical")
-    : undefined;
-  const headRanges = after?.usage
-    ? validateComponentRanges(head, after.usage.ranges)
-    : undefined;
-  const projected = projectComponentPair(
+  prepared ??= prepareComponentProjection(
+    context,
+    before!,
+    after!,
     base,
     head,
-    before?.usage,
-    after?.usage,
-    selected.path,
     root,
-    baseRanges,
-    headRanges,
   );
+  const { baseRanges, headRanges, projected, excluded } = prepared;
   const reasons: EntryChangeReason[] = [];
   if (projected.before !== projected.after) reasons.push({ kind: "material" });
   if (projected.inputs) reasons.push({ kind: "inputs" });
@@ -131,15 +128,6 @@ export async function compareComponentView(
   );
   const repoPath = (path: string) =>
     context.prefix ? `${context.prefix}/${path}` : path;
-  const excluded = (path: string) =>
-    context.dependencies.suppressResource(
-      repoPath(path),
-      path,
-      projected.pairedComponentIds,
-      before?.usage,
-      after?.usage,
-      root,
-    );
   const evidence = await context.resources.compare(
     { path: before!.path, html: projected.before },
     { path: after!.path, html: projected.after },

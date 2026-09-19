@@ -240,17 +240,17 @@ Key code:
   validate current or historical ranges before normalization. Both paths
   produce identical records for valid builder output. Identical handcrafted
   malformed ownership markers are outside that equivalence guarantee because
-  the shortcut does not repeat range validation. The internal `useFastPath`
-  classification input and trailing `compareReview` options object exist only
-  for differential tests and default to enabled. The decision rule lives in the
+  views without ownership text edits do not repeat range validation. Views with
+  instances, styles, or entry-owned slots validate ranges while preparing their resource projection. The
+  internal `useFastPath` classification input and trailing `compareReview`
+  options object exist only for differential tests and default to enabled. The decision rule lives in the
   [component change attribution contract](../../docs/protocol/mokly-component-changes.md#unchanged-view-decision).
-  Caller-owned slots combined with authored HTML `template` elements always
-  take the complete path: projection can move slot content out of the inert
-  container and expose resources absent from actual-document discovery. The
-  guard scans paired-normalized text case-insensitively and checks for any
-  entry-owned slot record. It conservatively accepts false positives such as
-  unrelated templates or template-looking raw text instead of parsing DOM
-  containment in the shortcut.
+  Views with instances, styles, or entry-owned slots additionally run the same ownership projection
+  and excluded-resource discovery as the complete comparison. This proves
+  resources that HTML parsing may discard in contexts such as `template` or
+  `select`, including siblings exposed when component implementation text is
+  removed. Views without ownership text edits use actual-document evidence
+  alone.
 - `component_resource_attribution.ts`: actual-invocation CSS ownership and entry
   evidence aggregation without inventing saved variants.
 - `assets.ts`, `component_resources.ts`, `resource_graph.ts`: confined reads and

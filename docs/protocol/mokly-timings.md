@@ -72,10 +72,11 @@ Review phases use the same session, role and parent context as their caller:
   Snapshot-copy traversals are measured even when their reads are cached;
   classification discovery-cache hits emit no additional span. Watcher
   inventory keeps its own stages.
-  For fast-path-eligible views in a component-aware classification where no view differs, the loop emits at
-  most one occurrence per paired view in committed mode and two in derived
-  mode, one for each independently discovered side, plus one per one-sided
-  view. A repeated discovery for the same side,
+  For fast-path-eligible views in a component-aware classification where no
+  view differs, the loop emits at most one actual occurrence per paired view
+  in committed mode and two in derived mode. Views with instances, styles, or
+  entry-owned slots may add one committed or two derived projected occurrences. One-sided views add
+  one occurrence. A repeated discovery for the same side,
   route, content digest, and exclusion callback identity is a defect.
 - `review.css-analysis` measures the synchronous parse/diff/match/reduce pass
   for one changed, reachable stylesheet and one before/after document pair.

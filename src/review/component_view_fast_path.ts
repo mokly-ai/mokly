@@ -7,7 +7,10 @@ import {
   stripHistoricalMarkers,
 } from "../components/comparison_material.js";
 
-import { mayProjectCallerSlotFromTemplate } from "./component_fast_path_eligibility.js";
+import {
+  prepareComponentProjection,
+  type PreparedComponentComparison,
+} from "./component_projection_resources.js";
 import { changedResourceBytes } from "./component_resource_changes.js";
 import type {
   ComparedComponentView,
@@ -19,6 +22,11 @@ import {
   normalizeSingleDocument,
 } from "./ignore.js";
 
+export interface UnchangedComponentAttempt {
+  comparison?: ComparedComponentView;
+  prepared?: PreparedComponentComparison;
+}
+
 /** Settle a paired view when neither its documents nor reachable resources can differ. */
 export async function compareUnchangedComponentView(
   context: ComponentViewContext,
@@ -27,25 +35,37 @@ export async function compareUnchangedComponentView(
   view: ViewReview,
   base: string,
   head: string,
-): Promise<ComparedComponentView | undefined> {
-  if (before.path !== after.path) return undefined;
+  root?: string,
+): Promise<UnchangedComponentAttempt> {
+  if (before.path !== after.path) return {};
   const retained = normalizeReviewPair(
     normalizeHistoricalDocument(base),
     head,
     after.path,
   );
-  if (retained.base !== retained.head) return undefined;
-  if (!componentUsageTopologyEqual(before.usage, after.usage)) return undefined;
-  if (
-    mayProjectCallerSlotFromTemplate(retained.base, before.usage) ||
-    mayProjectCallerSlotFromTemplate(retained.head, after.usage)
-  )
-    return undefined;
+  if (retained.base !== retained.head) return {};
+  if (!componentUsageTopologyEqual(before.usage, after.usage)) return {};
 
   const strippedBase = stripHistoricalMarkers(base);
   const strippedHead = stripComponentMarkers(head);
   const actual = normalizeReviewPair(strippedBase, strippedHead, after.path);
-  if (actual.base !== actual.head) return undefined;
+  if (actual.base !== actual.head) return {};
+
+  const hasOwnershipEdits = [before.usage, after.usage].some(
+    (usage) =>
+      usage &&
+      (usage.instances.length > 0 ||
+        usage.styles.length > 0 ||
+        usage.slots.some((slot) => slot.owner.kind === "entry")),
+  );
+  const prepared = hasOwnershipEdits
+    ? prepareComponentProjection(context, before, after, base, head, root)
+    : undefined;
+  const projected = prepared?.projected;
+  const excluded = prepared?.excluded;
+  const fallback = (): UnchangedComponentAttempt =>
+    prepared ? { prepared } : {};
+  if (projected && projected.before !== projected.after) return fallback();
 
   const afterResources = await context.afterReader.resources(
     after.path,
@@ -54,11 +74,32 @@ export async function compareUnchangedComponentView(
   const beforeResources = context.compareResourceBytes
     ? await context.beforeReader.resources(before.path, actual.base)
     : afterResources;
-  const resources = new Set([...beforeResources, ...afterResources]);
+  const projectedAfterResources =
+    projected && excluded
+      ? await context.afterReader.resources(
+          after.path,
+          projected.after,
+          excluded,
+        )
+      : new Set<string>();
+  const projectedBeforeResources =
+    projected && excluded && context.compareResourceBytes
+      ? await context.beforeReader.resources(
+          before.path,
+          projected.before,
+          excluded,
+        )
+      : projectedAfterResources;
+  const resources = new Set([
+    ...beforeResources,
+    ...afterResources,
+    ...projectedBeforeResources,
+    ...projectedAfterResources,
+  ]);
   const repoPath = (route: string) =>
     context.prefix ? `${context.prefix}/${route}` : route;
   if ([...resources].some((route) => context.changed.has(repoPath(route))))
-    return undefined;
+    return fallback();
   if (
     context.compareResourceBytes &&
     (
@@ -70,7 +111,19 @@ export async function compareUnchangedComponentView(
       )
     ).size > 0
   )
-    return undefined;
+    return fallback();
+  if (
+    context.compareResourceBytes &&
+    (
+      await changedResourceBytes(
+        projectedBeforeResources,
+        projectedAfterResources,
+        context.beforeReader,
+        context.afterReader,
+      )
+    ).size > 0
+  )
+    return fallback();
 
   const signals = componentUsageSignals(before.usage, after.usage);
   const reasons = [
@@ -81,14 +134,17 @@ export async function compareUnchangedComponentView(
     normalizeSingleDocument(strippedBase, after.path) ===
     normalizeSingleDocument(strippedHead, after.path);
   return {
-    comparisonPath: "fast",
-    view: {
-      ...view,
-      ignoredIds: actual.ignoredIds,
-      state: rawEqual ? "unchanged" : "ignored-only",
+    ...(prepared ? { prepared } : {}),
+    comparison: {
+      comparisonPath: "fast",
+      view: {
+        ...view,
+        ignoredIds: actual.ignoredIds,
+        state: rawEqual ? "unchanged" : "ignored-only",
+      },
+      reasons,
+      changedImplementations: new Set(),
+      ownedResources: [],
     },
-    reasons,
-    changedImplementations: new Set(),
-    ownedResources: [],
   };
 }

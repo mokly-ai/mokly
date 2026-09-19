@@ -110,13 +110,16 @@ catalogues without component boundaries remain byte-compatible.
 
 Classification cost must follow the size of the change, not the size of the
 catalogue. For a view present on both sides, the classifier first decides
-whether the view can differ at all and only then performs projection, range
-validation, CSS rule analysis, and implementation diffing. That decision is
-part of the materiality policy and must produce output equal to the complete
+whether the view can differ at all. The decision validates ranges and projects
+ownership only for views whose usage can edit text through instances, styles,
+or entry-owned slots, then performs CSS rule analysis and implementation
+diffing only on complete-path fall-through. That decision is part of the
+materiality policy and must produce output equal to the complete
 comparison for every view produced by the validated builder; a differential
 test over the shared fixtures is required evidence. Identical handcrafted
 documents with the same malformed ownership markers are outside this equality
-guarantee because the shortcut does not repeat range validation.
+guarantee for views without ownership text edits because those views do not
+repeat range validation.
 
 The decision, in order:
 
@@ -134,23 +137,25 @@ The decision, in order:
    must match. Optional invocation `source` metadata is excluded from this
    comparison, as it is from every Changes projection. Any other difference
    takes the complete path.
-3. If either paired-normalized document contains a case-insensitive HTML
-   `template` opening candidate and its usage record contains an entry-owned
-   slot, take the complete path.
-   Projection can move that content out of an inert template and expose local
-   resource references that actual-document discovery cannot see. Compiler
-   boundary elements have already been serialized as comments at this stage
-   and do not disqualify a view.
-4. If the paired view routes differ, take the complete path. Otherwise form
+3. If the paired view routes differ, take the complete path. Otherwise form
    the actual normalized pair by stripping historical component markers
    from the base, stripping current component markers from the head, and
-   applying paired manual-ignore normalization. Discover the head closure in
-   committed mode and both closures independently in derived mode.
-5. If any discovered resource is a changed Git path, take the complete path;
-   ownership, exclusion, and rule analysis are decided there.
-6. In derived mode, compare the independently discovered closures and the
-   bytes of every reachable resource present on both sides. Any closure or
-   byte difference takes the complete path.
+   applying paired manual-ignore normalization. If the normalized documents
+   differ, take the complete path. Discover the head closure in committed
+   mode and both closures independently in derived mode.
+4. When either usage record has instances, styles, or entry-owned slots,
+   compute the same ownership projection as the complete comparison, including
+   historical/current range validation in each side's marker dialect and
+   root-specific ownership.
+   Require the projected HTML pair to be equal and discover its resources with
+   the same exclusion policy. In committed mode discover the head closure; in
+   derived mode discover both closures.
+5. If any actual or projected resource is a changed Git path, take the complete
+   path; ownership, exclusion, and rule analysis are decided there.
+6. In derived mode, compare historical and current closure membership and
+   bytes independently for actual material and projected material. Any
+   difference in either comparison takes the complete path; equal unions do
+   not substitute for equal per-comparison sets.
 7. Otherwise the view is unchanged by content and resources. Its state is
    `unchanged` when the single-document normalizations of both stripped sides
    are equal and `ignored-only` otherwise; `ignoredIds` come from the paired
@@ -168,15 +173,15 @@ projection and implementation-impact analysis. Entry-level `metadata`,
 `added`, `removed`, and dependency reasons are unaffected because they are
 computed outside the per-view comparison.
 
-Projected resources are not always a subset of actual-document resources:
-caller-owned content projected out of an inert `template` is the counterexample.
-The inexpensive eligibility guard checks paired-normalized text for a
-case-insensitive template-opening candidate and checks the usage record for any
-entry-owned slot. It deliberately over-approximates: unrelated templates and
-template-looking raw text may also use the complete path, and it does not parse
-the DOM to prove containment. Eligible
-views retain the one-discovery committed and two-discovery derived bounds;
-guarded views use the complete path and its ordinary discovery count.
+Projected resources are not always a subset of actual-document resources.
+HTML parsing can discard caller slot content in contexts such as `template` or
+`select`, while ownership projection can expose that content. Removing
+component implementation text can also expose a later sibling that the
+implementation's unclosed HTML had hidden. Views whose usage cannot edit
+document text retain the actual-only proof. Views with instances, styles, or
+entry-owned slots remain eligible after both actual and projected resource
+comparisons are proved safe. Identical `(route, document, exclusion)` discovery
+work is reused on fall-through.
 
 Each resource discovery performed by the decision is reused when the view falls
 through to the complete path. Each side passes byte-identical route and

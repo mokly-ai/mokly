@@ -6,12 +6,20 @@ The original implementation and measurement milestones are complete. The fast pa
 preserves complete-path output across the differential fixture matrix, keeps
 resource and derived-byte gates intact, and emits explicit path counts.
 
-The first six approved findings are addressed and pushed. Milestone 7's
-post-push review found an additional equivalence gap for caller-slot resources
-inside inert templates. The approved conservative eligibility guard is
-implemented, verified, pushed, and reviewed in Milestone 8. Its post-push review
-found another projection gap for select content, recorded as finding 8 below
-for the user's decision. This plan remains Active until the PR merges.
+The first seven approved findings are addressed and pushed. Milestone 8's
+post-push review found a broader projection gap for caller-slot resources in
+HTML contexts such as `select`. The user approved a projection-aware resource
+proof for Finding 8, implemented in Milestone 9. This plan remains Active until
+the PR merges.
+
+The final example measurement took medians of three warmed shortcut runs:
+1,064 ms committed and 1,451 ms derived. Complete comparison in the same
+process took 1,891 ms and 1,959 ms respectively. The stronger resource proof is
+about 44% and 26% faster than complete comparison, while roughly doubling the
+earlier shortcut medians of 485 ms and 725 ms. These are local observations,
+not fixed performance guarantees. All 276 views retain the shortcut and match
+complete output in both modes. Resource discoveries increase from 276 to 446
+in committed mode and from 552 to 892 in derived mode.
 
 These historical measurements predate the independent two-sided resource
 traversal added by Milestone 7. Measurements on the same VM compare the background worker's
@@ -69,19 +77,23 @@ size of the change.
 Make the cost of classification scale with what changed. A paired view whose
 normalized documents are identical and whose reachable resources are
 unchanged must be reported `unchanged` (or `ignored-only`) without projection,
-range validation, CSS analysis, or implementation diffing. The result must be
-byte-identical to the result the complete path produces today for every view
-from valid builder output. Identical handcrafted malformed ownership records
-are outside that guarantee.
+range validation, CSS analysis, or implementation diffing when it has no
+ownership text edits. Views with instances, styles, or entry-owned slots perform the projection and range validation
+needed for their additional resource proof, while still skipping CSS analysis
+and implementation diffing when safe. The result must be byte-identical to the
+result the complete path produces today for every view from valid builder
+output. Identical handcrafted malformed ownership records are outside that
+guarantee.
 
 Success criteria:
 
-- Zero-change classification of `examples/basic` completes `changes.classify`
-  in well under one second on the same machine that measured 3.1 seconds.
-- `review.resource-graph` span count for a zero-change run is at most one per
-  fast-path-eligible paired view in committed mode and two in derived mode,
-  plus the complete-path work for guarded views and one per added or removed
-  view.
+- Zero-change classification of `examples/basic` remains materially faster
+  than complete comparison after every required actual and projected resource
+  proof.
+- `review.resource-graph` span count for a zero-change run is at most one actual
+  discovery per fast-path-eligible paired view in committed mode and two in
+  derived mode. Views with instances, styles, or entry-owned slots may add one committed or two
+  derived projected discoveries; one-sided views add one.
 - A differential test proves fast-path and complete-path results are deeply
   equal across the shared fixtures, including the large fixture generator's
   small instance.
@@ -124,25 +136,28 @@ as text by the material readers:
    keys, component ids, owners, slot keys and order; instance-owned props and
    prop keys; and all slots, ranges, styles, and resources must match.
    Invocation `source` metadata is excluded, as it is from every projection.
-3. If either document has an authored HTML `template` and its usage record has
-   caller-owned slots, take the complete path. Projection can expose resources
-   hidden by the inert container.
-4. If the view route changed, take the complete path. Otherwise compute the actual normalized pair by stripping historical component
+3. If the view route changed, take the complete path. Otherwise compute the actual normalized pair by stripping historical component
    markers from `B`, stripping current component markers from `H`, and applying
    paired manual-ignore normalization. Discover the head closure in committed
    mode and both closures independently in derived mode.
-5. If any discovered route, prefixed to a repository path, is in
+4. When either usage record has instances, styles, or entry-owned slots, validate historical and
+   current ranges in their respective dialects, compute the same root-specific
+   ownership projection and exclusion callback as complete comparison, require
+   projected document equality, and discover projected closures independently.
+5. If any actual or projected route, prefixed to a repository path, is in
    `changedPaths`, take the complete path. Owned or excluded stylesheets may
    still produce evidence or exclusions there.
-6. In derived mode, compare the independently discovered closures and bytes
-   with `changedResourceBytes`. Any difference takes the complete path.
+6. In derived mode, compare historical and current closure membership and bytes
+   separately for actual and projected material. Any difference takes the
+   complete path; equal unions do not establish equivalence.
 7. Otherwise the view is unchanged by resources. Its state is `unchanged` when
    `projected.rawEqual` would be true and `ignored-only` otherwise. `rawEqual`
    compares `normalizeSingleDocument` of each stripped side; the fast path
    computes exactly that string equality, which needs no parse. `ignoredIds`
-   come from `actual`. `reasons`, `ownedResources`, and
+   come from `actual`. Entry-owned input or structure signals remain in the
+   comparison reasons; otherwise reasons are empty. `ownedResources` and
    `changedImplementations` are empty, and the view carries no `material`,
-   `reasons`, or `excludedResources` fields.
+   resource `reasons`, or `excludedResources` fields.
 
 Why the shortcut is sound under the existing contract:
 
@@ -153,9 +168,11 @@ Why the shortcut is sound under the existing contract:
   `changedComponentImplementations`.
 - Dependency reasons and `excludedResources` require a path in `changedPaths`
   that is reachable from the view. Step 5 rules that out for eligible views.
-  Projection usually removes component-owned material, but can expose
-  caller-owned resources hidden inside inert templates; Step 3 sends those
-  views to the complete path before relying on actual-document discovery.
+  Projection usually removes component-owned material, but HTML parsing can
+  discard caller-owned resources that projection exposes. Removing component
+  implementation text can also expose a sibling hidden by unclosed HTML. Step
+  4 proves the projected closure directly whenever ownership records can edit
+  text.
 - `resourceChanged` in derived mode requires a reachable byte difference.
   Step 6 rules that out.
 - Entry-owned prop values are the sole allowed usage difference. `inputs` and
@@ -422,8 +439,8 @@ The implementation was pushed as `c76288c`. The complete branch review against
 independently reproduced by the owner:
 
 8. **Medium — Select content exposes the same resource-projection gap.**
-   The [template guard](../src/review/component_fast_path_eligibility.ts#L5)
-   does not cover a component rendering `<select>{props.children}</select>`
+   The former template-only guard did not cover a component rendering
+   `<select>{props.children}</select>`
    with a caller-supplied lazy image. Compilation succeeds, but HTML parsing
    discards the image from actual select contents while caller-slot projection
    exposes it. The fast path then omits the dependency or material change
@@ -441,7 +458,39 @@ independently reproduced by the owner:
    views that can be proven safe, including a defined fallback when evidence
    is unavailable on either side. **C:** add `select` to the tag guard; this
    treats another example without establishing the general resource guarantee
-   and is not recommended. The finding remains open for the user's decision.
+   and is not recommended. The user approved Option B; Milestone 9 implements it.
+
+## Milestone 9: Projection-aware resource proof
+
+Replace element-specific slot guards with direct resource evidence from the
+same ownership projection used by complete comparison.
+
+- [x] Update protocols, timing bounds, module READMEs, and this decision rule
+      to require separate actual and projected resource proofs.
+- [x] Add compiler-backed differential regressions for select placement and
+      forwarding, retained template cases, non-image and transitive resources,
+      hidden resource-set changes, sibling exposure after instance removal, and
+      ordinary-slot fast-path controls; capture pre-fix failures under `.context`.
+- [x] Reuse ownership projection and root-specific exclusion policy in the
+      shortcut, preserving side-specific derived comparisons and discovery
+      cache reuse on fall-through; remove the superseded template tag guard.
+- [x] Run formatting, build, type checking, lint, focused tests, and the final
+      full `cargo xtask check` with a 100% pass rate.
+- [ ] `git add -A`, commit the completed work with a Conventional Commits
+      message, and push the branch.
+- [ ] Review: after the push, use `docs/implementation-review-prompt.md` against
+      `origin/main` and report findings without changing the implementation.
+
+Validation passed: the final `cargo xtask check` completed 1,890 Node tests,
+452 Chromium tests, all five packed-consumer scenarios for both packages,
+formatting, lint, type checking, example validation, and three Rust tests.
+The focused suite passed 59 tests. Independent owner checks passed all 168
+resource/context cases, 16 ownership/historical-marker cases, and eight
+instance-removal context cases. The first matrix had 36 mismatches before the
+fix. Supervision of the initial entry-slot-only implementation found six
+additional mismatches in the instance-removal cases; the final broader proof
+resolved all of them. The unchanged example catalogue matches complete output
+for all 276 views in both modes; current timings are recorded above.
 
 ## Post-merge follow-up (non-blocking)
 

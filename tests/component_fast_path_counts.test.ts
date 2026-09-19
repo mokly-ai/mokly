@@ -41,6 +41,15 @@ for (const generatedOutput of ["committed", "derived"] as const)
       (count, entry) => count + generatedViews(entry).length,
       0,
     );
+    const projectedViews = fixture.after.manifest.entries
+      .flatMap((entry) => generatedViews(entry))
+      .filter((view) =>
+        view.usage
+          ? view.usage.instances.length > 0 ||
+            view.usage.styles.length > 0 ||
+            view.usage.slots.some((slot) => slot.owner.kind === "entry")
+          : false,
+      ).length;
     const counts = events.find(
       (event) =>
         event.stage === "review.compare-screens" && event.event === "counts",
@@ -55,6 +64,6 @@ for (const generatedOutput of ["committed", "derived"] as const)
         (event) =>
           event.stage === "review.resource-graph" && event.event === "start",
       ).length,
-      views * (generatedOutput === "derived" ? 2 : 1),
+      (views + projectedViews) * (generatedOutput === "derived" ? 2 : 1),
     );
   });

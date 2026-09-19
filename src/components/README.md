@@ -77,16 +77,12 @@ Historical Mokabook comparisons preserve the original document coordinates when
 applying recorded style ownership; internal marker renames alone do not create
 consumer changes or alter the retained snapshots.
 
-Comparison projection can move caller-owned slot material out of its rendered
-location. Content rendered inside an inert HTML `template` may therefore
-become active comparison material after projection. The review fast path treats
-authored templates combined with caller-owned slots as ineligible and uses full
-projection and resource discovery. Compiler boundary elements have already
-been serialized as ownership comments by this stage and do not trigger this
-rule by themselves. The guard scans paired-normalized text for a
-case-insensitive template-opening candidate and checks for any entry-owned slot
-record. It intentionally does not parse or prove DOM containment, so unrelated
-templates and template-looking raw text may conservatively use projection.
+Comparison projection can expose caller-owned slot material that HTML parsing
+discarded from contexts such as `template` or `select`. Removing component
+implementation text can likewise expose a sibling hidden by its unclosed HTML. The review shortcut
+therefore proves both actual and ownership-projected resource closures for
+views with instances, styles, or entry-owned slots, using the same root-specific ownership and
+resource exclusion policy as the complete comparison.
 
 ## Development
 
