@@ -2,6 +2,9 @@
 
 ## Active
 
+- [Co-Located Entry Discovery](./co-located-entry-discovery.md) — replace
+  `entriesDir` with `entries` globs so entry modules can live beside product
+  components, and bind the attributed authoring facade repository-wide.
 - [CLI Terminal Experience](./cli-terminal-experience.md)
 - [Package Documentation](./package-documentation.md) — supersedes the
   unmerged public-site plan and pull request #79 by shipping versioned Markdown
