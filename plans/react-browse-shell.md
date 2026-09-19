@@ -667,6 +667,9 @@ boundary.
 
 - [x] Run the full unit, browser, example, package, and format/lint/type
       gates; run `cargo xtask check` and resolve every failure.
+- [x] Assert marker measurement failures through their complete ordered state
+      event so a permitted later geometry refresh cannot hide the failed
+      generation; repeat the same-origin and postMessage cases 20 times each.
 - [ ] Smoke-test manually: `npm run dev`, navigate, filter, pick tags, switch
       viewport and scheme, expand a frame, open a comparison, inspect a
       component instance, edit a control, trigger a watched reload; then
@@ -674,7 +677,7 @@ boundary.
       site served statically.
 - [x] Inspect deletions against `origin/main` and record every removed module
       and its replacement in the commit and PR description.
-- [ ] After checks pass, `git add -A`, commit with Conventional Commits and
+- [x] After checks pass, `git add -A`, commit with Conventional Commits and
       push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
