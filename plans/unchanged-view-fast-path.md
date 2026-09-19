@@ -501,9 +501,43 @@ divergence was identified.
 
 ## Post-merge follow-up (non-blocking)
 
+The performance ideas below are deferred references for separately scoped
+future work. They will not be implemented in this plan and do not affect
+milestone completion, PR merge, or closing this plan.
+
 - Memoize `ComponentMaterialReader.resources()` by `(route, html)` for the
   complete path if Milestone 3 chose the override instead of the cache.
 - Cache `canonicalJson` encodings of usage records across views of the same
   entry.
 - Replace the DOM parse in `extractHtmlReferences` with a tokenizer, guarded
   by a differential test over every fixture document.
+
+### Deferred performance investigations
+
+- **FP-D1: Reuse parsing and projection for identical before/after documents.**
+  Investigate sharing the work in
+  [`prepareComponentProjection`](../src/review/component_projection_resources.ts)
+  when document bytes and the relevant ownership records permit it. This is
+  the preferred next candidate because it can benefit pages with stylesheets
+  too. Preserve historical/current marker handling, recorded ranges, ignore
+  normalization, and root-specific ownership; HTML equality alone is not a
+  sufficient cache key. Continue independent resource membership and byte
+  checks for both sides even when document parsing can be shared.
+- **FP-D2: Cheap proof that a page cannot reference resources.** Investigate
+  a conservative scan of original HTML, or trusted compiler-provided evidence,
+  before the additional work in
+  [`compareUnchangedComponentView`](../src/review/component_view_fast_path.ts).
+  Only skip work that the proof makes unnecessary; missing or uncertain
+  evidence must retain the current checks. Cover stylesheets, CSS URLs,
+  responsive images, fonts, and embedded documents as well as ordinary images.
+  An image-only check is insufficient, and inspecting only the parsed DOM
+  would repeat the resource-hiding bug fixed by Finding 8. This has no expected
+  benefit for the current example catalogue: all 276 views reference
+  stylesheets, even though none contains an `img` element. Revisit for consumer
+  catalogues with resource-free pages, rather than assuming a speedup here.
+
+Before adopting either idea in a future plan, benchmark committed and derived
+comparison against the final Milestone 9 measurements above and retain
+complete-comparison equivalence. Reuse the compiler-backed regressions for
+hidden resources, instance removal, ownership exclusions, historical markers,
+and added/removed resource references; preserve discovery reuse on fall-through.
