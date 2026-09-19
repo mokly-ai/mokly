@@ -149,7 +149,7 @@ function SelectedInstance({ viewport }: { viewport: ArtboardViewport }) {
 export const appearanceInspectorScreens = [
   screen({
     description:
-      "Editable props in either appearance, including a value that fails its rule.",
+      "Editable props with the catalogue all light or all dark, including a value that fails its rule.",
     desktop: <PropsValidation viewport="desktop" />,
     id: "design-appearance-props",
     mobile: <PropsValidation viewport="mobile" />,
@@ -160,7 +160,7 @@ export const appearanceInspectorScreens = [
   }),
   screen({
     description:
-      "The selected component instance and its recorded facts, in either appearance.",
+      "The selected component instance and its recorded facts, all light or all dark.",
     desktop: <SelectedInstance viewport="desktop" />,
     id: "design-appearance-instance",
     mobile: <SelectedInstance viewport="mobile" />,

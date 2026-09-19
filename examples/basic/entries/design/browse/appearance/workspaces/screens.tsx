@@ -17,7 +17,7 @@ import { NavDrawer } from "../../../parts/nav.js";
 import { ReviewNav } from "../../../parts/review.js";
 import { EmptyState } from "../../../parts/stage_content.js";
 import { TopBar } from "../../../parts/top_bar.js";
-import { AppearanceShell } from "../parts/scaffold.js";
+import { AppearanceShell, useDarkPreview } from "../parts/scaffold.js";
 
 import { appearanceInspectorScreens } from "./inspectors.js";
 
@@ -71,16 +71,26 @@ function NavigationDrawerMobile() {
   );
 }
 
+/** Both compared panes show Welcome, so they follow the artboard's scheme. */
 function WelcomePanes({ viewport }: { viewport: CompareViewport }) {
+  const dark = useDarkPreview();
   return (
     <>
       <Pane label="Before" side="before">
-        <FramedShot address="example.test/welcome" viewport={viewport}>
+        <FramedShot
+          address="example.test/welcome"
+          dark={dark}
+          viewport={viewport}
+        >
           <MiniWelcome compact={viewport === "mobile"} />
         </FramedShot>
       </Pane>
       <Pane label="Current" side="after">
-        <FramedShot address="example.test/welcome" viewport={viewport}>
+        <FramedShot
+          address="example.test/welcome"
+          dark={dark}
+          viewport={viewport}
+        >
           <MiniWelcome compact={viewport === "mobile"} revised />
         </FramedShot>
       </Pane>
@@ -96,6 +106,7 @@ function SideBySideCompare({ viewport }: { viewport: CompareViewport }) {
       design={DESTINATIONS.appearanceSideBySide}
       idChip="example-welcome"
       nav={<ReviewNav activeTitle="Welcome" />}
+      schemeControl={false}
       render={(previewViewport) => (
         <CompareGrid>
           <WelcomePanes viewport={previewViewport} />
@@ -118,6 +129,7 @@ function DifferenceCompare({ viewport }: { viewport: CompareViewport }) {
       idChip="example-welcome"
       mode="difference"
       nav={<ReviewNav activeTitle="Welcome" />}
+      schemeControl={false}
       render={(previewViewport) => (
         <CompareGrid difference>
           <WelcomePanes viewport={previewViewport} />

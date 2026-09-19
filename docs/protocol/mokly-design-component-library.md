@@ -26,7 +26,7 @@ screens.
 | chrome / screen-header        | `parts/shell.tsx: ScreenHead`                                       | `screen`, `component`, `changed`, `removed`                                |
 | chrome / appearance-selector  | new for the appearance mockups                                      | `auto`, `light`, `dark`, `compact`                                         |
 | controls / comparison-toolbar | `parts/compare.tsx: CompareToolbar`                                 | `current`, `side-by-side`, `overlay`, `difference`                         |
-| controls / view-controls      | `components/parts/view_controls.tsx`, `parts/shell.tsx: ViewSwitch` | `default`, `both`, `highlighted`, `unavailable`                            |
+| controls / view-controls      | `components/parts/view_controls.tsx`, `parts/shell.tsx: ViewSwitch` | `default`, `both`, `highlighted`, `unavailable`, `viewport-only`           |
 | controls / tag-picker         | `parts/tag_filter.tsx: TagPicker`                                   | `all`, `selected`, `empty`                                                 |
 | controls / tag-chip           | `parts/tag_filter.tsx: TagChips`                                    | `default`, `selected`, `inactive`                                          |
 | controls / change-status      | `components/parts/comparison_details.tsx: ChangeStatusBadge`        | `unmodified`, `added`, `changed`, `removed`                                |
@@ -85,9 +85,12 @@ Controls below use text, boolean, number and primitive enum selections only.
    depiction and current linked/native/inactive behavior for each screen family.
 5. **View controls:** selected preview `mobile/desktop/both`, depicted scheme,
    optional highlight state and unavailable reason `empty/unavailable/comparison/removed`;
-   optional scheme-disabled state and supported theme destinations. Controls:
-   selection, scheme, highlight and reason. The single icon group lives in the
+   optional scheme-disabled state, an optional scheme-control flag and supported
+   theme destinations. Controls: selection, scheme, scheme control, highlight and
+   reason. The single icon group lives in the
    screen header: viewport dropdown, theme icon, and optional highlight toggle.
+   Omitting the scheme control leaves the viewport dropdown alone, for the
+   appearance artboards whose one scheme setting lives in the top bar.
    Authored theme pairs use canonical links; unsupported pairs stay disabled.
    Component previews retain native local theme toggling. The dropdown controls
    actual mobile/desktop previews inside the bounded scrolling workspace.

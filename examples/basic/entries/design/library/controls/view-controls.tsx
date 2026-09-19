@@ -24,6 +24,8 @@ const propSchema = {
       optional: true,
     },
     schemeDisabled: optionalFlag,
+    /** Omitted keeps the scheme control; `false` leaves the viewport alone. */
+    schemeControl: optionalFlag,
     destinations: schemeDestinations,
   },
 } as const;
@@ -55,6 +57,7 @@ export const viewControls = defineComponent({
       label: "Theme",
       options: scheme.schema.values.map((value) => ({ label: value, value })),
     },
+    schemeControl: { kind: "boolean", label: "Scheme control" },
     highlight: { kind: "boolean", label: "Highlight components" },
     unavailable: {
       kind: "select",
@@ -82,6 +85,11 @@ export const viewControls = defineComponent({
       id: "unavailable",
       title: "Unavailable",
       props: { ...sample, highlight: false, unavailable: "empty" },
+    },
+    {
+      id: "viewport-only",
+      title: "Viewport only",
+      props: { ...sample, selection: "both", schemeControl: false },
     },
   ],
 });

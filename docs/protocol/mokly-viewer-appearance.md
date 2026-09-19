@@ -3,31 +3,50 @@
 ## Delivery Status
 
 Runtime not implemented. The [dark-mode plan](../../plans/viewer-dark-mode.md)
-tracks this target for `@mokly/viewer`, local Serve and static exports. Initial
-mockups and the [semantic palette](./mokly-viewer-palette.md) are delivered.
-The generated Light/Dark mockup variants described below are delivered: the
-appearance entries render in both schemes and the existing preview control
-switches them. The current [viewer](./mokly-viewer.md) and
-[shell design](./mokly-shell-design.md) remain light-only around previews until
-the later runtime implementation lands.
+tracks this target for `@mokly/viewer`, local Serve and static exports. The
+[semantic palette](./mokly-viewer-palette.md) and the first appearance mockups
+are delivered, and every appearance entry renders in both schemes so the
+existing preview control switches it. Those mockups still draw a second preview
+scheme control beside the Appearance selector; the single-control correction
+below is pending as the plan's Milestone 2B. The current
+[viewer](./mokly-viewer.md) and [shell design](./mokly-shell-design.md) remain
+light-only around previews until the runtime implementation lands.
 
-## Two Independent Settings
+## One Control In Standalone, Two Inputs When Embedded
 
-| Setting              | Values                  | Default                | Affects                                                                 |
-| -------------------- | ----------------------- | ---------------------- | ----------------------------------------------------------------------- |
-| Viewer appearance    | `auto`, `light`, `dark` | `auto`                 | Package-owned interface around previews                                 |
-| Preview color scheme | `light`, `dark`         | Existing Light default | Authored screen/component fragments and preview-specific device details |
+The model has two inputs: the interface appearance around previews and the
+preview color scheme inside them. Standalone Browse exposes one control that
+sets both, so the catalogue reads all light or all dark. An embedded host
+supplies the appearance, and the viewer keeps its own preview control.
 
-Auto follows the browser's `prefers-color-scheme`, including changes while
-open; no preference resolves to Light. Explicit Light or Dark wins over the
-system. Appearance works even when a catalogue has no dark fragments.
+| Input                | Values                  | Standalone Browse                                  | Embedded viewer                                  |
+| -------------------- | ----------------------- | -------------------------------------------------- | ------------------------------------------------ |
+| Interface appearance | `auto`, `light`, `dark` | **Appearance** control and saved preference        | `theme` prop; `auto` when omitted                |
+| Preview color scheme | `light`, `dark`         | Follows the effective appearance; no other control | `selection.colorScheme` and the preview controls |
 
-`ViewerSelection.colorScheme`, `InstanceRef.colorScheme`, the `scheme` URL
-parameter and catalogue/rendering color-scheme fields keep their preview
-meaning. Appearance creates no catalogue, manifest, comparison or adapter-wire
-schema change. A dark interface with a light preview and the reverse are both
-supported. Light-only previews retain their real light document and fallback
-label under a Dark preview selection.
+The effective appearance resolves Auto through the browser's
+`prefers-color-scheme`, including changes while open; a browser that reports no
+preference resolves to Light. Explicit Light or Dark wins over the system.
+Auto is the default in both contexts.
+
+In standalone Browse the effective preview scheme equals the effective
+appearance. Dark shows each screen's dark fragments where they exist, so the
+catalogue, its device screens, component samples and comparisons change
+together. A screen with no dark render keeps its light frames and the existing
+fallback caption when the catalogue has dark fragments elsewhere; a catalogue
+with no dark fragments shows light previews with no captions under a dark
+interface. The standalone top bar, head band and component workspace carry no
+separate preview scheme control.
+
+In an embedded root, `selection.colorScheme` keeps its preview meaning and
+stays independent of `theme`: a dark interface around a light preview and the
+reverse are both supported, and the viewer's preview controls remain. A host
+that wants previews to follow its application theme passes a matching
+`defaultSelection.colorScheme` or controls the selection.
+
+`ViewerSelection.colorScheme`, `InstanceRef.colorScheme` and catalogue or
+rendering color-scheme fields keep their preview meaning everywhere. Appearance
+creates no catalogue, manifest, comparison or adapter-wire schema change.
 
 ## React And Server API
 
@@ -46,7 +65,7 @@ untyped JavaScript resolve to Auto; they do not invalidate the catalogue.
 <MoklyViewer
   catalogue={catalogueUrl}
   theme="dark"
-  defaultSelection={{ screenId: null, colorScheme: "light" }}
+  defaultSelection={{ screenId: null, colorScheme: "dark" }}
 />
 ```
 
@@ -54,14 +73,17 @@ Embedded hosts own their appearance controls and persistence, normally passing
 the same theme as their surrounding application. The embedded viewer adds no
 second application appearance selector, `defaultTheme`, change callback, router
 state or storage access. Hosts may place their own control in an existing slot.
-Changing or removing `theme` takes effect on the mounted root immediately.
+The viewer's own preview controls stay, and their accessible names and tooltips
+identify **Preview color scheme** or **Dark preview** rather than saying Dark
+mode. Changing or removing `theme` takes effect on the mounted root immediately.
 
 Apply the theme to loading, unavailable-selection, error/retry and ready roots.
-Changing appearance preserves the runtime, frame elements and sessions, selected
-variant, comparison mode, temporary props, inspector disclosure/width, navigation
-and scroll. It emits no selection/navigation/pick events and does not cancel
-active picking or lose highlights and markers. Existing geometry updates may
-run when needed, without triggering fragment requests or comparison generation.
+Changing `theme` preserves the runtime, frame elements and sessions, selected
+variant, comparison mode, temporary props, inspector disclosure/width,
+navigation and scroll. It emits no selection/navigation/pick events and does
+not cancel active picking or lose highlights and markers. Existing geometry
+updates may run when needed, without triggering fragment requests or comparison
+generation.
 
 `renderViewer` applies the same prop to embedded static markup and to its
 first-party full-document rendering path. Explicit modes must be present in
@@ -73,35 +95,50 @@ must not produce theme-related hydration differences.
 
 Serve and exported Browse expose one compact native selector labelled
 **Appearance**, with **Auto**, **Light** and **Dark** options, in the global
-top bar. It remains reachable on home, pages, flows, empty and unavailable
-routes, and at narrow widths. Preserve catalogue search and menu access.
+top bar. It is the only scheme control in a standalone document: it replaces
+the top-bar and head-band `Light | Dark` preview switch and the component
+workspace's Dark mode button, and it is present even when the catalogue has no
+dark fragments. It remains reachable on home, pages, flows, empty and
+unavailable routes, and at narrow widths, and preserves catalogue search and
+menu access.
 
-Preview controls retain their current behavior and eligibility. Their
-accessible names/tooltips must identify **Preview color scheme** or
-**Dark preview**, rather than ambiguously saying Dark mode. Do not combine the
-two settings or duplicate the preview selector across visible controls.
+Choosing a value applies the interface appearance and the effective preview
+scheme together: the document's scheme mark, every screen and flow frame's
+light/dark fragment swap, component samples and comparison frames. The existing
+swap rules apply unchanged, including the light-only fallback caption. In-shell
+navigation, Back and Forward keep the current choice.
+
+On a full page load the effective appearance is resolved in this order: a
+`scheme` URL parameter of `light` or `dark` pins the appearance for that
+document without saving it; otherwise a valid stored override applies;
+otherwise the server-supplied initial theme; otherwise Auto. A user selection
+wins for the lifetime of the current document, replacing a URL pin, even if
+storage is unavailable. A link without `scheme` follows each reader's own
+appearance, so two readers can see different fragments; a link with `scheme`
+shows the same fragments to everyone.
 
 Standalone preferences use the origin-local key `mokly:theme`. Store only
-explicit `light` or `dark`; selecting Auto removes the override. On a full
-page load, a valid stored override wins over the server-supplied initial theme;
-otherwise use that initial theme, defaulting to Auto. A user selection wins
-for the lifetime of the current document even if storage is unavailable.
-Invalid stored values are ignored. Read/write/remove failures do not break
-navigation or show a catalogue error. No credentials or cookies are involved.
+explicit `light` or `dark`; selecting Auto removes the override. Invalid stored
+values are ignored. Read/write/remove failures do not break navigation or show
+a catalogue error. No credentials or cookies are involved.
 
-A small package-owned classic startup asset restores the preference on the
-document root before the shell stylesheet can paint. It then installs the
-selector behavior once the controls exist. Keep that asset out of the React
-entry's execution path. Installation is idempotent and provides cleanup for
-installed listeners. Progressive navigation, evidence refreshes and watched
-reload recovery must not overwrite the current appearance with preview state.
+A small package-owned classic startup asset restores the effective appearance
+on the document root before the shell stylesheet can paint, then installs the
+selector behavior once the controls exist and, under Auto, follows system
+changes while the document is open. When the effective scheme is dark at
+startup, it replaces each frame's server-rendered light source before or as
+early as possible in that frame's first load, and at most once. Keep the asset
+out of the React entry's execution path; installation is idempotent and
+provides cleanup for installed listeners. Progressive navigation, evidence
+refreshes and watched reload recovery carry the current effective appearance
+forward rather than a separate preview state.
 
 The asset is served through the existing explicit allowlist and included in
 export inventories, with portable URLs at root and subpath deployments. Do not
 add inline-script/CSP exceptions, React, hydration or remote assets to exports.
-Without JavaScript, CSS still provides the initial/Auto appearance; hide the
-manual selector until its behavior is installed. Persisted overrides require
-the startup asset.
+Without JavaScript, CSS still provides the initial/Auto interface appearance,
+frames keep their server-rendered light sources, and the manual selector stays
+hidden until its behavior is installed. Persisted overrides require the asset.
 
 ## Palette And Ownership
 
@@ -144,7 +181,8 @@ Support readable default palettes in both modes: normal text at least 4.5:1,
 large text at least 3:1, and required control/state/focus graphics at least 3:1
 against adjacent colors. Decorative hairlines are not control boundaries.
 Existing Light colors may change where a touched semantic role fails these
-criteria; the three such changes are recorded in the palette contract. These targets follow
+criteria; the three such changes are recorded in the palette contract. These
+targets follow
 [WCAG text contrast](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html)
 and [non-text contrast](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html).
 Consumer overrides retain the existing consumer contrast responsibility.
@@ -155,11 +193,14 @@ forced colors and reduced motion, without introducing animated theme changes.
 
 ## Preview Isolation
 
-Viewer surfaces, the browser toolbar and the workspace inspector follow
-appearance. Phone status/home indicators, phone-screen surfaces and preview
-loading surfaces follow that frame's effective preview scheme. Use independent
-preview tokens rather than deriving a light phone's text from dark shell ink.
-Fixed phone hardware and traffic-light artwork retain their intended colors.
+The interface and a preview can still differ: an embedded host may pair any
+`theme` with any `selection.colorScheme`, and a standalone light-only screen
+keeps its light frames under a dark interface. Viewer surfaces, the browser
+toolbar and the workspace inspector follow appearance. Phone status/home
+indicators, phone-screen surfaces and preview loading surfaces follow that
+frame's effective preview scheme. Use independent preview tokens rather than
+deriving a light phone's text from dark shell ink. Fixed phone hardware and
+traffic-light artwork retain their intended colors.
 
 Set each managed iframe's CSS `color-scheme` to its effective preview scheme
 before loading it, including page/component/flow and comparison frames. For
@@ -167,16 +208,16 @@ documents without a scheme axis, retain the existing Light context. CSS color
 scheme can otherwise affect an embedded document's media queries, even across
 origins; see [MDN embedded color schemes](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme#embedded_elements).
 
-Changing appearance must not change a preview's media-query result, document
-URL, native control appearance, content, or resource requests. Keep existing
-same-origin and postMessage adapters and sandbox permissions. Appearance never
-injects a theme stylesheet into authored documents or fabricates dark output.
-Inspection overlays must stay readable over both preview schemes without
-restyling the underlying screen.
+Changing the interface appearance alone must not change a preview's media-query
+result, document URL, native control appearance, content, or resource requests.
+Keep existing same-origin and postMessage adapters and sandbox permissions.
+Appearance never injects a theme stylesheet into authored documents or
+fabricates dark output. Inspection overlays must stay readable over both
+preview schemes without restyling the underlying screen.
 
 Preserve Before/Current comparison scheme selection and Difference/Overlay
 compositing. Give comparison canvases an opaque base appropriate to their
-preview scheme so changing the outer appearance cannot change the visual
+preview scheme so changing the outer appearance alone cannot change the visual
 difference result.
 
 ## Mockup Contract
@@ -184,25 +225,30 @@ difference result.
 The owning catalogue is `examples/basic/entries/design`, generated under
 `examples/basic/generated/design`; use its registered shared components and
 existing screen compositions. Appearance screens and their affected shared
-component samples must publish Light and Dark fragments for both viewports.
-Use the renderer's `input.colorScheme` through a shared render context to set
-each artboard's appearance. Render the same screen tree in both schemes;
-do not make these entries light-only or hardcode their shell to one theme.
+component samples publish Light and Dark fragments for both viewports through
+Mokly's existing authoring: the entries inherit the configured `colorSchemes`,
+`mokly build` writes one file per scheme, and Browse's existing outer preview
+control swaps between them at the same entry and route. A shared render context
+carries the renderer's `input.colorScheme` to the artboard roots as a
+pass-through, not a second theme setting, and each artboard's
+`data-mbk-appearance` reflects that requested scheme. Generated pages must not
+read the building or viewing machine's system theme; the Auto example uses the
+requested scheme as its deterministic system-theme fixture.
 
-This is Mokly's existing authoring and rendering behavior, not a new mechanism:
-the entries inherit the configured `colorSchemes`, `mokly build` writes one file
-per scheme, and Browse's existing outer Light/Dark preview control swaps between
-them at the same entry and route. A shared render context may carry
-`input.colorScheme` to the artboard roots, but it stays a pass-through of that
-input rather than a second theme setting. No extra control, fixed-theme
-destination, frame-local script or interaction inside the depicted screen is
-needed to choose the mockup appearance.
+Each artboard draws exactly one scheme control: the registered
+`chrome/appearance-selector` composed into the top bar. It depicts the planned
+standalone control and has no authored transitions. The depicted screen header
+carries the viewport control only, with no preview theme icon, and depicted
+component toolbars carry no scheme switch. The Auto artboard's selector reads
+Auto in both renders; every other artboard's selector reads the name of the
+scheme it was rendered for.
 
-This outer selection describes the authored mockup being previewed. It does not
-couple the real viewer's own `theme` prop to `ViewerSelection.colorScheme`.
-Within the mockup, keep the nested preview's Light, Dark or light-only fallback
-scenario independent of its depicted shell. A light-only inner screen still
-has a Light and a Dark rendering of the surrounding mockup interface.
+Previews follow the artboard. Subjects with a dark render, such as Welcome, the
+comparison panes and the flow's first step, use the dark device-screen
+treatment in the Dark render and the light one in the Light render. The
+light-only Details subject keeps its light frames in both renders and shows the
+fallback caption in the Dark render, because that is a fact about the screen.
+Device-screen tokens stay independent of the interface palette.
 
 A linked Appearance section sits under Browse, with matching source directories
 under `examples/basic/entries/design/browse/appearance/`. Each page's canonical
@@ -210,46 +256,44 @@ route is the group's own collection; its children are the owning screens.
 
 | Page                         | Owning screens                                                                             |
 | ---------------------------- | ------------------------------------------------------------------------------------------ |
-| `design/browse/appearance/`  | `overview.html`: the canonical interface holding a light preview in either appearance      |
-| `.../appearance/states/`     | Light preview, Dark preview, light-only fallback, Auto selector                            |
+| `design/browse/appearance/`  | `overview.html`: the canonical interface around a selected screen, all light or all dark   |
+| `.../appearance/states/`     | Auto selector, light-only screen fallback                                                  |
 | `.../appearance/workspaces/` | Props validation, selected-instance inspector, navigation drawer, Side by side, Difference |
 | `.../appearance/status/`     | Home/empty, catalogue loading, error/retry, Changes unavailable, use-case flow             |
 
 The catalogue hierarchy links the overview to its three child pages; artboards
 carry no navigation footer. Each screen has its own mobile and desktop
-component and reuses the registered shared components, including a registered
-`chrome/appearance-selector` composed into the top bar. Do not inline duplicate
-screen markup. Keep no more than five owning screen definitions per page.
-Existing light-shell/dark-preview destinations stay valid. The exact ids and
-routes of the initial delivery are listed in the
-[shell design inventory](./mokly-shell-design.md#design-mockups). Consolidate
-redundant branch-added fixed-theme scenes into theme-neutral scenario entries
-as Milestone 2A lands; preserve destinations already present on `origin/main`.
-Update inventories, style ownership and example documentation, and keep notes
-outside the screens.
-
-The artboard's `data-mbk-appearance` must reflect its requested render scheme.
-The Auto example uses that scheme as its deterministic system-theme fixture;
-generated pages must not read the building or viewing machine's system theme.
-The Appearance selector drawn inside the artboard depicts the planned standalone
-UI; it is not the control used to choose these authored Light/Dark variants.
+component and reuses the registered shared components. Do not inline duplicate
+screen markup. Keep no more than five owning screen definitions per page. The
+exact ids and routes are listed in the
+[shell design inventory](./mokly-shell-design.md#design-mockups). The
+branch-only `light-preview` and `dark-preview` scenarios are removed by the
+single-control correction. `design-browse-dark-scheme`,
+`design-browse-light-only` and `design-review-dark-scheme` stay as records of
+the implemented head-band control until the plan's legacy-mockup milestone
+aligns them. Update inventories, style ownership and example documentation, and
+keep notes outside the screens.
 
 ## Required Verification
 
 - For the mockups, use the existing preview toggle to switch Dark → Light → Dark
   on the same entry in both viewports. Assert actual fragment URLs, computed
-  artboard colors and absence of false outer Light only labels. Include panel
-  or comparison scenes and nested light-only examples, whose inner preview
-  behavior must remain correct. Validate all four generated view variants.
-- Test preference normalization, storage failures, startup ordering and cleanup;
-  SSR markup and exports; semantic contrast and inherited accent overrides.
-- In browsers, cross Light/Dark appearance with Light/Dark previews, both
-  viewports and light-only catalogues. Include native/media-query-driven preview
-  fixtures for both adapters and comparison frames.
+  artboard colors, the depicted previews' treatment, the light-only caption and
+  the absence of a second scheme control. Validate all four generated variants.
+- Test effective-appearance resolution, preference normalization, the `scheme`
+  URL pin, storage failures, startup ordering and cleanup; SSR markup and
+  exports; semantic contrast and inherited accent overrides.
+- In standalone browsers, cross Auto/Light/Dark with mixed and light-only
+  catalogues at both widths, including live system changes under Auto, a
+  `scheme` pin, component samples and comparison frames. In embedded browsers,
+  cross Light/Dark `theme` with Light/Dark previews and light-only catalogues,
+  including native/media-query-driven preview fixtures for both adapters.
 - Test Auto changes, explicit overrides, theme-prop updates, two independent
   embedded roots, host/slot isolation and loading/error/retry transitions.
-- Verify no frame reload, selection event, lost props, ended pick or marker
-  loss during appearance changes; retain preview-switch replacement behavior.
+- Verify an embedded `theme` change causes no frame reload, selection event,
+  lost props, ended pick or marker loss. Verify a standalone appearance change
+  swaps only fragment sources and preserves navigation, viewport, inspector,
+  scroll and search state.
 - Exercise keyboard selection, focus, forced colors, mobile drawer/inspector,
   hover/disabled/error states, expanded frames and comparison compositing.
 - Smoke Serve, saved appearance after full/watched reload, root/subpath exports,

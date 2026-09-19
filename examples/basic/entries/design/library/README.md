@@ -6,14 +6,17 @@ footer tabs panel is `inspector/inspector`. This is the consumer's mockup
 library; the actual Mokly browser shell remains in the package source.
 
 `chrome/appearance-selector` is the standalone catalogue's Auto/Light/Dark
-interface setting. The top bar composes it when a screen supplies an
-`appearance` value and omits it otherwise, so existing artboards are unchanged.
-It is the interface setting, not the preview colour scheme the screen header's
-theme control selects.
+setting, which changes the chrome and the screens it shows together. The top bar
+composes it when a screen supplies an `appearance` value and omits it otherwise,
+so the legacy artboards are unchanged. It is the only scheme control an
+appearance artboard draws.
 
 Those two samples — the appearance selector and the top bar that composes it —
 are the only ones that render in both schemes, because their own subject is the
-catalogue's appearance. Every other sample stays light. `metadata.ts` owns that
+catalogue's appearance. Every other sample stays light.
+`view-controls` takes an optional scheme control: the appearance artboards omit
+it so their header carries the viewport dropdown alone, while the legacy Browse,
+Changes and component artboards keep the theme icon they already depict. `metadata.ts` owns that
 list, `LibraryHost` stamps the requested scheme on the sample root, and Browse's
 existing preview control switches between the two generated files.
 
@@ -90,7 +93,7 @@ sheet. Only icon tabs are supported; the legacy disclosure and saved variant
 have been removed. Inline samples retain
 intrinsic width. Compact phone samples fit both viewports; full-size controls
 use the scrollable frame host. Every variant has actual mobile and desktop
-render contexts and uses the design catalogue's light-only scheme policy.
+render contexts; every sample is light-only except the two named above.
 Mobile comparison controls share compact sizing across buttons, links and
 static labels, so standalone samples also fit with wider system fonts.
 

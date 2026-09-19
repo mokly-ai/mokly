@@ -23,6 +23,7 @@ export function ViewControlsView({
   highlight,
   unavailable,
   schemeDisabled,
+  schemeControl,
   destinations,
 }: ViewControlsProps) {
   useDesignStyle("view-controls");
@@ -58,7 +59,7 @@ export function ViewControlsView({
           ))}
         </select>
       </label>
-      {schemeDestination ? (
+      {schemeControl === false ? null : schemeDestination ? (
         <DesignLink to={schemeDestination}>
           <span
             className="ce-icon-control ce-theme-control"

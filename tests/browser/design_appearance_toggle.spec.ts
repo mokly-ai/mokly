@@ -78,7 +78,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
     });
   }
 
-  test(`${viewport}: a light-only inner screen keeps its own fallback in both mockup schemes`, async ({
+  test(`${viewport}: a light-only inner screen keeps light frames and names its fallback under Dark`, async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1000 });
@@ -90,10 +90,35 @@ for (const viewport of ["mobile", "desktop"] as const) {
       await expect
         .poll(async () => (await artboard(page, viewport)).background)
         .toBe(BACKGROUNDS[scheme]);
-      await expect(
-        frame.locator(".mbk-frame-scheme-note").first(),
-      ).toContainText(/light only/iu);
       await expect(frame.locator(".mbk-screen-dark")).toHaveCount(0);
+      if (scheme === "dark")
+        await expect(
+          frame.locator(".mbk-frame-scheme-note").first(),
+        ).toContainText(/light only/iu);
+      else await expect(frame.locator(".mbk-frame-scheme-note")).toHaveCount(0);
+    }
+  });
+
+  test(`${viewport}: an appearance artboard draws one scheme control and previews that follow it`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1600, height: 1000 });
+    await page.goto("/view/design/browse/appearance/overview.html");
+    await chooseViewport(page, viewport);
+    const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
+    for (const scheme of ["dark", "light", "dark"] as const) {
+      await chooseScheme(page, scheme);
+      await expect
+        .poll(async () => (await artboard(page, viewport)).appearance)
+        .toBe(scheme);
+      const selector = frame.locator(".mbk-appearance");
+      await expect(selector).toHaveCount(1);
+      await expect(selector).toHaveAttribute("data-appearance-value", scheme);
+      await expect(frame.locator(".ce-theme-control")).toHaveCount(0);
+      await expect(frame.locator(".ce-theme-toggle")).toHaveCount(0);
+      await expect
+        .poll(() => frame.locator(".mbk-screen-dark").count())
+        .toBe(scheme === "dark" ? 2 : 0);
     }
   });
 }

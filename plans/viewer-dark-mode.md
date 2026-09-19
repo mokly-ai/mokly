@@ -2,7 +2,10 @@
 
 Status: in progress; the documentation and mockup milestones are complete,
 including the Milestone 2A correction that lets Mokly's built-in preview
-color-scheme toggle switch the mockups. Runtime implementation has not started.
+color-scheme toggle switch the mockups. On 2026-09-19 the user chose one
+standalone control for the interface and the previews together, so Milestone
+2B corrects the appearance mockups and Milestone 2C aligns the legacy scheme
+depictions before runtime work begins. Runtime implementation has not started.
 The implementation PR's merge is this plan's completion boundary.
 
 Give `@mokly/viewer`, local Serve and static exports a complete Auto/Light/Dark
@@ -12,8 +15,16 @@ defines the target; [viewer ownership](../docs/protocol/mokly-viewer.md) and
 
 ## Decisions And Scope
 
-- Default viewer appearance to Auto. Keep it independent of preview
-  `colorScheme`, which retains its existing default, URLs and fallback behavior.
+- Standalone Browse has one **Appearance** control, Auto/Light/Dark, in the
+  top bar. It sets the interface appearance and the effective preview scheme
+  together, so the catalogue is all light or all dark. Auto is the default and
+  follows the system. The standalone head-band `Light | Dark` switch and the
+  component workspace's Dark mode button go away, and a `scheme` URL parameter
+  pins a shared link. This replaced the earlier two-control design.
+- The embedded viewer takes `theme?: ViewerTheme` from its host and keeps its
+  own preview controls, because the host application owns its theme and a
+  designer still needs to flip one screen's variant without changing it.
+  Preview `colorScheme` keeps its existing default, URLs and fallback there.
 - Author the appearance mockups as ordinary dual-scheme entries, using the
   `colorSchemes` configuration, per-entry inheritance, renderer
   `input.colorScheme` and generated light/dark fragments Mokly already has. Its
@@ -23,12 +34,13 @@ defines the target; [viewer ownership](../docs/protocol/mokly-viewer.md) and
   changes mockup authoring, not the public viewer theme API.
 - Add `theme?: ViewerTheme` to React and server rendering. Embedded hosts own
   the surrounding appearance control and persistence; standalone Browse gets
-  an Appearance selector and a saved preference.
+  the Appearance selector, a saved preference and the URL pin.
 - Use one semantic palette for the shared shell and scoped embedded CSS.
   Preserve app independence and the three supported accent overrides.
 - Cover navigation, headers, stage, inspector, Props, comparisons, overlays,
   native controls and loading/error states. Pin each frame to its own preview
-  scheme, including a light phone's status indicators inside a dark interface.
+  scheme, so an embedded light preview inside a dark interface and a
+  standalone light-only screen under Dark keep their light indicators.
 - Preserve mounted frames, selection, temporary props, active inspection and
   host slots when only appearance changes. Keep exported browsers React-free.
 - Work in this repository. Adoption by `mokly-cloud` and replacement of its
@@ -191,6 +203,103 @@ theme. The States page consolidated five fixed-theme scenes into four scenarios:
 `tests/browser/design_appearance_toggle.spec.ts` guard the fragments, the
 artboard colors and the Dark → Light → Dark interaction.
 
+## Milestone 2B: One Appearance control in the mockups (complete)
+
+Tags: mockup
+
+The delivered appearance artboards draw two scheme controls: the Appearance
+selector in the top bar and the preview theme icon in the screen header. The
+user chose one control that sets the interface and the previews together.
+Correct the appearance section so each artboard draws only the top-bar
+Appearance selector and its previews follow the artboard's scheme. Milestone
+2A's generated Light/Dark variants and Browse's built-in toggle are unchanged;
+this is mockup authoring, not runtime work, and the viewer API is unchanged.
+
+- [x] Update the design-links and shell-design contracts, the workspace,
+      example and library READMEs and the protocol index for the single
+      control: remove the appearance scheme pairs and the removed scenarios,
+      describe previews following the artboard, and keep every statement
+      consistent with the appearance contract.
+- [x] Add failing tests first: appearance artboards contain no head-band or
+      toolbar scheme control and exactly one Appearance selector; the selector
+      reads Auto on the Auto screen and the rendered scheme elsewhere; Welcome,
+      comparison and flow previews use the dark device treatment only in the
+      Dark render; the light-only Details subject keeps light frames and shows
+      its fallback caption only in the Dark render.
+- [x] Make the registered `controls/view-controls` scheme control optional so
+      a caller can omit it, leaving the legacy Browse, Changes and component
+      artboards unchanged. Compose the appearance header without it and drop
+      `schemeLinks` from the appearance navigation states.
+- [x] Remove `design-appearance-light-preview` and
+      `design-appearance-dark-preview`; keep `light-only` and `auto` in
+      `states/`. Repoint their references, `DESTINATIONS`, navigation states,
+      inventories and the design-links table at the remaining screens.
+- [x] Derive each preview's treatment from the rendered scheme through the
+      shared scaffold rather than per-screen `dark` flags: `ExampleWorkspace`,
+      `WelcomeShot`, the comparison panes and the flow's first step follow the
+      artboard, while the Details subject stays light-only. Keep the Auto
+      artboard's selector on Auto in both renders.
+- [x] Keep every screen's mobile and desktop components, the canonical
+      overview, at most five owning screens per page, registered-component
+      reuse and no left-edge accent rails. Keep the two dual-scheme registered
+      samples and update their descriptions and the library guidance.
+- [x] Extend the built-in-toggle browser regression to assert the depicted
+      previews change with the artboard, the light-only caption appears only
+      under Dark, and no second scheme control exists, in both viewports.
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
+      relevant tests and `cargo xtask check`. Visually smoke through
+      `npm run dev` with the existing toggle, save paired Light/Dark screenshots
+      under `.context/` for the overview, Auto, light-only, side-by-side and
+      flow screens in both viewports, and include regenerated output.
+- [x] After checks pass, `git add -A`, commit and push this branch. Then review
+      the complete diff against `origin/main` with
+      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md),
+      report findings without automatic fixes, and stop for the user's mockup
+      review before Milestone 2C.
+
+Delivered: every appearance artboard now draws one scheme control, the
+registered `chrome/appearance-selector` in its top bar, and its depicted screen
+header carries the viewport control alone. `controls/view-controls` gained an
+optional scheme control so the legacy Browse, Changes and component artboards
+keep the theme icon they already depict. The shared scaffold derives each
+preview from the rendered scheme: Welcome, the comparison panes and the flow's
+first step are dark in the Dark render, while the light-only Details subject
+keeps its light frames and names that fallback only under Dark. The Auto
+artboard reads Auto in both renders. `design-appearance-light-preview` and
+`design-appearance-dark-preview` are removed and the appearance navigation
+states no longer carry `schemeLinks`, leaving 81 design screens.
+
+## Milestone 2C: Align the legacy scheme depictions
+
+Tags: mockup
+
+`design-browse-dark-scheme`, `design-browse-light-only`,
+`design-review-dark-scheme` and the component explorer's toolbar Dark mode
+switch depict the head-band and workspace preview controls that the standalone
+runtime drops. Align them with the single-control model after the user has
+reviewed Milestone 2B, so every mockup matches the target before UI work.
+The recommended shape is consolidation: the canonical Welcome, Details and
+changed Welcome screens render in both schemes like the appearance entries,
+which subsumes the three legacy scheme screens.
+
+- [ ] Confirm with the user whether the three legacy scheme screens are
+      consolidated into dual-scheme renders of `design-browse-screen`,
+      `design-browse-details-screen` and `design-review-changed`, or kept as
+      explicit embedded-viewer depictions. Record the decision here and in the
+      shell-design and design-links contracts before changing entries.
+- [ ] Apply the decision: update or remove the entries, their `DESTINATIONS`,
+      navigation states, the MiniWelcome/MiniDetails scheme-dependent links,
+      inventories and the design-links pair table. Preserve every route on
+      `origin/main` unless the user approves its removal.
+- [ ] Remove the depicted Dark mode switch from the component explorer toolbar
+      depictions and from the `controls/view-controls` samples that show it,
+      and update the component design contracts accordingly.
+- [ ] Add or update inventory, link and both-scheme tests; run the example
+      build and check, relevant tests and `cargo xtask check`; smoke through
+      `npm run dev`; commit and push; then review with
+      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      against `origin/main` and report findings without fixing them.
+
 ## Milestone 3: Implement shared viewer appearance
 
 Tags: ui
@@ -205,9 +314,12 @@ manual preference controls are connected after the asset-delivery milestone.
       storage and repeated initialization/cleanup. Keep storage access separate
       from pure normalization and out of embedded React initialization.
 - [ ] Implement and fixture-test the standalone startup entry and preference
-      helper. Guard it to opted-in standalone documents; restore on the root
-      before paint, then bind opted-in Appearance controls when the DOM is ready.
-      Do not reference an undelivered asset from production markup.
+      helper. Resolve the effective appearance in the documented order,
+      including the `scheme` URL pin and live system changes under Auto, and
+      apply it to the root and the existing frame scheme swap before paint or
+      as early as each frame's first load allows, at most once. Guard it to
+      opted-in standalone documents and bind opted-in Appearance controls when
+      the DOM is ready. Do not reference an undelivered asset from markup.
 - [ ] Implement one package-owned semantic palette from
       [the recorded swatches](../docs/protocol/mokly-viewer-palette.md),
       including its three Light corrections, and replace theme-dependent
@@ -217,9 +329,11 @@ manual preference controls are connected after the asset-delivery milestone.
 - [ ] Update stylesheet scoping and scheme-aware accent fallbacks. Verify host
       and slot boundaries, inherited overrides, multiple roots, focus, status,
       tooltips, native controls and forced-color behavior in both appearances.
-- [ ] Clarify preview-control names in `shell/head.tsx`,
-      `shell/workspace_controls.tsx` and matching tests/mockups. Retain existing
-      preview eligibility, URL semantics and light-only fallback behavior.
+- [ ] Rename the embedded preview controls' accessible names and tooltips to
+      Preview color scheme or Dark preview in `shell/head.tsx`,
+      `shell/workspace_controls.tsx` and their tests. Keep them rendering in
+      embedded roots with existing eligibility, URL semantics and light-only
+      fallback; their standalone removal is Milestone 5.
 - [ ] Set effective preview `color-scheme` on every frame before loading it.
       Separate device-screen indicators from shell ink and preserve comparison
       canvases/compositing across appearance changes, including dynamic frames.
@@ -249,36 +363,55 @@ usable while the next UI milestone connects the manual preference control.
 
 Tags: ui
 
-Complete the standalone experience with the same palette and tested preference
-behavior as the shared viewer, including early restoration and recovery.
+Complete the standalone experience: one Appearance control that sets the
+interface and the previews together, with the same palette and tested
+preference behavior as the shared viewer, early restoration and recovery.
 
 - [ ] Implement the standalone Appearance selector from the shared control
       composition. Add the opt-in startup hook and script before the stylesheet
-      in `shell/document.tsx`; keep embedded hosts' own controls separate.
+      in `shell/document.tsx`; render the selector in every standalone
+      document, including light-only catalogues; keep embedded hosts' own
+      controls separate.
+- [ ] Make the selector drive both the root theme and the existing preview
+      scheme application: the document mark, screen and flow frame swaps,
+      component samples, comparison frames, fallback captions and recovery
+      state. Remove the standalone top-bar and head-band scheme switch and the
+      workspace Dark mode button with their placement CSS, drop the clamp that
+      depends on a scheme control existing, and update the Browse client tests
+      and the shared browser helpers.
+- [ ] Apply the startup precedence: `scheme` URL pin, then stored override,
+      then initial theme, then Auto; a user selection wins for the document's
+      lifetime; Auto follows live system changes and re-applies the preview
+      scheme. Keep light-only catalogues caption-free under Dark.
 - [ ] Keep Appearance reachable on home, unavailable and light-only catalogues
-      at mobile and desktop widths, without obscuring search or preview controls.
+      at mobile and desktop widths, without obscuring search or menu access.
 - [ ] Preserve appearance through navigation, evidence refresh and watched
       recovery. Exercise storage failures without losing the current choice;
-      hide the manual selector until initialized and retain CSS with JavaScript off.
-- [ ] Verify saved/initial/Auto precedence, full reload, live system changes,
-      explicit overrides, keyboard control and early paint against Serve and a
-      static export. Run the relevant shell, navigation and export browser suites.
+      hide the manual selector until initialized and retain CSS with JavaScript
+      off, where frames keep their server-rendered light sources.
+- [ ] Verify pin/saved/initial/Auto precedence, full reload, live system
+      changes, explicit overrides, keyboard control, early paint and at most
+      one first-load frame swap against Serve and a static export. Update the
+      runtime and shell-design Color Scheme sections to the shipped behavior
+      and run the relevant shell, navigation and export browser suites.
 
 ## Milestone 6: Verify, commit, push and review
 
 Deliver a tested change with accurate documentation and a complete review diff.
 
-- [ ] Run the appearance matrix in `tests/browser`: Light/Dark viewer ×
-      Light/Dark preview at mobile/desktop widths; Auto and explicit overrides;
-      light-only catalogues; same-origin/postMessage frames; two embedded roots;
-      SSR, loading/error/retry, native controls and active inspection.
+- [ ] Run the appearance matrix in `tests/browser`. Standalone: Auto, Light,
+      Dark and a `scheme` pin against mixed and light-only catalogues at
+      mobile/desktop widths, including component samples and comparisons.
+      Embedded: Light/Dark theme × Light/Dark preview, Auto and explicit
+      overrides, same-origin/postMessage frames, two roots, SSR,
+      loading/error/retry, native controls and active inspection.
 - [ ] Smoke the running server via `npm run dev`, including watched/full reloads,
       navigation, Props and each comparison mode. Smoke exports hosted at root
       and subpaths, slow startup/first paint, storage denial and JavaScript off.
       Save screenshots under `.context/` and inspect the rendered result.
 - [ ] Exercise clean packed React and SSR consumers using the existing package
       smoke workflow; confirm explicit Light retains the established layout and
-      approved colors, and preview output stays independent of appearance.
+      approved colors, and embedded preview output stays independent of theme.
 - [ ] Update delivered API examples and current-status wording in the package
       and workspace READMEs, viewer/runtime/shell protocols and example docs.
       Keep the three public accent overrides documented. Prepare the plan-index

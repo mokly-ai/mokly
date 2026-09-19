@@ -89,26 +89,9 @@ export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
   [D.appearance]: {
     ...appearanceFilters,
     comparison: appearanceModes,
-    schemeLinks: { dark: D.appearanceDarkPreview },
   },
-  [D.appearanceLightPreview]: {
-    ...appearanceFilters,
-    schemeLinks: { dark: D.appearanceDarkPreview },
-  },
-  [D.appearanceDarkPreview]: {
-    ...appearanceFilters,
-    scheme: "dark",
-    schemeLinks: { light: D.appearanceLightPreview },
-  },
-  [D.appearanceLightOnly]: {
-    ...appearanceFilters,
-    scheme: "dark",
-    schemeLinks: { light: D.appearanceLightPreview },
-  },
-  [D.appearanceAuto]: {
-    ...appearanceFilters,
-    schemeLinks: { dark: D.appearanceDarkPreview },
-  },
+  [D.appearanceLightOnly]: { ...appearanceFilters },
+  [D.appearanceAuto]: { ...appearanceFilters },
   [D.appearanceProps]: { ...appearanceFilters },
   [D.appearanceInstance]: { ...appearanceFilters },
   [D.appearanceDrawer]: {

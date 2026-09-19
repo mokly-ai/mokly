@@ -144,7 +144,9 @@ Design components use `colorSchemes: ["light"]`, like the artboards that own
 them, except the appearance selector and the top bar that composes it: their own
 subject is the catalogue's appearance, so they render in both schemes alongside
 the appearance screens. A depicted dark-preview state is an explicit prop,
-distinct from the outer catalogue's color scheme. Select real mobile/desktop render contexts;
+distinct from the outer catalogue's color scheme; the appearance artboards set
+that prop from the scheme they were rendered for, so their chrome and previews
+change together. Select real mobile/desktop render contexts;
 device-frame `device` chooses a pictured phone/browser independently of the
 artboard viewport, so a mobile artboard may still depict a desktop comparison.
 

@@ -151,23 +151,19 @@ view controls. Its accessible label is “Switch to dark mode” or “Switch to
 mode”. The top bar contains no theme control. Unsupported pairs use a disabled
 icon with an explanatory tooltip:
 
-| Light state                       | Dark-selected state              |
-| --------------------------------- | -------------------------------- |
-| `design-browse-screen`            | `design-browse-dark-scheme`      |
-| `design-browse-details-screen`    | `design-browse-light-only`       |
-| `design-review-changed`           | `design-review-dark-scheme`      |
-| `design-appearance-light-preview` | `design-appearance-dark-preview` |
-| `design-appearance-overview`      | `design-appearance-dark-preview` |
-| `design-appearance-auto`          | `design-appearance-dark-preview` |
+| Light state                    | Dark-selected state         |
+| ------------------------------ | --------------------------- |
+| `design-browse-screen`         | `design-browse-dark-scheme` |
+| `design-browse-details-screen` | `design-browse-light-only`  |
+| `design-review-changed`        | `design-review-dark-scheme` |
 
-The theme icon drawn inside an appearance artboard changes the depicted
-preview's colour scheme, not the catalogue appearance around it;
-`design-appearance-dark-preview` and `design-appearance-light-only` return to
-`design-appearance-light-preview`. The catalogue appearance itself is not a
-link: each appearance entry renders in Light and in Dark, and Browse's own
-preview control moves between those two generated files at the same route. The
-Appearance selector drawn in the top bar depicts the planned standalone control
-and has no authored transitions. Appearance comparison controls map Side by side
+Those three pairs belong to the legacy head-band depictions; the plan's
+legacy-mockup milestone decides their future. The appearance artboards have no
+scheme pair, because they draw one control: the depicted Appearance selector in
+the top bar, which sets the catalogue and its previews together. That selector
+has no authored transitions. Each appearance entry renders in Light and in Dark
+instead, and Browse's own preview control moves between those two generated
+files at the same route. Appearance comparison controls map Side by side
 to `design-appearance-side-by-side` and Difference to
 `design-appearance-difference`, with Current returning to
 `design-appearance-overview`; Overlay stays a depiction. Their All filter opens

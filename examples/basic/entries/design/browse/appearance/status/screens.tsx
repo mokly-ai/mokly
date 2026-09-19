@@ -15,8 +15,23 @@ import { EmptyState, FlowStep } from "../../../parts/stage_content.js";
 import {
   AppearanceHead,
   AppearanceShell,
+  useDarkPreview,
   WelcomeShot,
 } from "../parts/scaffold.js";
+
+/** The flow's first step shows Welcome, which follows the artboard's scheme. */
+function FlowWelcomeShot({ viewport }: { viewport: ArtboardViewport }) {
+  const dark = useDarkPreview();
+  return viewport === "desktop" ? (
+    <BrowserFrame address="example.test/welcome" dark={dark}>
+      <MiniWelcome />
+    </BrowserFrame>
+  ) : (
+    <PhoneFrame small dark={dark}>
+      <MiniWelcome compact />
+    </PhoneFrame>
+  );
+}
 
 function HomeAndEmpty({ viewport }: { viewport: ArtboardViewport }) {
   return (
@@ -115,15 +130,7 @@ function UseCaseFlow({ viewport }: { viewport: ArtboardViewport }) {
             description="The tour starts on the landing screen."
             screenId={DESTINATIONS.appearance}
           >
-            {viewport === "desktop" ? (
-              <BrowserFrame address="example.test/welcome">
-                <MiniWelcome />
-              </BrowserFrame>
-            ) : (
-              <PhoneFrame small>
-                <MiniWelcome compact />
-              </PhoneFrame>
-            )}
+            <FlowWelcomeShot viewport={viewport} />
           </FlowStep>
           <FlowStep
             name="detail"

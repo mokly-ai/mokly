@@ -82,10 +82,8 @@ contract until their standalone screens are implemented.
 | `design-publication-catalogue`        | `design/browse/publication/catalogue.html`              | Current catalogue with review omitted                     |
 | `design-publication-changes`          | `design/browse/publication/changes.html`                | Catalogue with optional comparisons                       |
 | `design-appearance-overview`          | `design/browse/appearance/overview.html`                | Canonical catalogue appearance around a selected screen   |
-| `design-appearance-light-preview`     | `design/browse/appearance/states/light-preview.html`    | A screen showing its light view                           |
-| `design-appearance-dark-preview`      | `design/browse/appearance/states/dark-preview.html`     | A screen showing its dark view                            |
-| `design-appearance-light-only`        | `design/browse/appearance/states/light-only.html`       | A screen with no dark view keeping its light frames       |
 | `design-appearance-auto`              | `design/browse/appearance/states/auto.html`             | Appearance left on Auto                                   |
+| `design-appearance-light-only`        | `design/browse/appearance/states/light-only.html`       | A screen with no dark render keeping its light frames     |
 | `design-appearance-props`             | `design/browse/appearance/workspaces/props.html`        | Props panel with a rejected value                         |
 | `design-appearance-instance`          | `design/browse/appearance/workspaces/instance.html`     | Selected component instance panel                         |
 | `design-appearance-drawer`            | `design/browse/appearance/workspaces/drawer.html`       | Catalogue drawer on a narrow layout                       |
@@ -118,8 +116,9 @@ Additional owning groups keep each new page at no more than five screens:
   two Changes states that carry no comparison data yet, keeping the impact group
   to its own three aggregate outcomes.
 - `design/browse/appearance/overview.html` is the canonical appearance screen;
-  the `states/` group beneath it owns four screens and `workspaces/` and
-  `status/` own five each. They specify the planned Auto/Light/Dark interface
+  the `states/` group beneath it owns two screens and `workspaces/` and
+  `status/` own five each. Each of them draws one scheme control, the depicted
+  Appearance selector in the top bar, and its previews follow the artboard. They specify the planned Auto/Light/Dark interface
   appearance from [viewer appearance](./mokly-viewer-appearance.md), which the
   implemented shell does not offer yet; their preview colour-scheme behavior is
   the implemented behavior recorded below. Every one of them renders in both

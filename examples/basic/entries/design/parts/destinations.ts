@@ -23,8 +23,6 @@ export const DESTINATIONS = {
   darkWelcome: "design-browse-dark-scheme",
   darkDetails: "design-browse-light-only",
   appearance: "design-appearance-overview",
-  appearanceLightPreview: "design-appearance-light-preview",
-  appearanceDarkPreview: "design-appearance-dark-preview",
   appearanceLightOnly: "design-appearance-light-only",
   appearanceAuto: "design-appearance-auto",
   appearanceProps: "design-appearance-props",

@@ -2,8 +2,9 @@
 
 ## Active
 
-- [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance,
-  independent preview schemes, and standalone Auto/Light/Dark preferences.
+- [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
+  standalone Auto/Light/Dark control for interface and previews, and
+  host-owned theme with independent previews when embedded.
 - [CLI Terminal Experience](./cli-terminal-experience.md)
 - [Package Documentation](./package-documentation.md) — supersedes the
   unmerged public-site plan and pull request #79 by shipping versioned Markdown

@@ -24,9 +24,9 @@ The [large fixture](../../tests/fixtures/large/README.md)
 uses the same Firna/React Native Web rendering stack with configurable volume,
 without expanding this example or slowing ordinary development startup.
 
-Mokly's 83 design screens now use 16 registered shared components, including
+Mokly's 81 design screens now use 16 registered shared components, including
 the footer tabs panel and the appearance selector. Open **Components → Design → Shared components** for Chrome, Controls,
-Inspector and Preview galleries with 63 saved variants, real mobile/desktop
+Inspector and Preview galleries with 64 saved variants, real mobile/desktop
 previews and editable local props. The outer Components and Usage tabs show actual
 recorded relationships; pictured example data inside an artboard stays separate.
 See the [library authoring guide](./entries/design/library/README.md),
@@ -88,7 +88,7 @@ render plain React DOM need none of this and can keep a plain
 `renderToStaticMarkup` adapter.
 
 The `Design` navigation group is the owning design catalogue for Mokly's
-Browse and Changes views. Its fifty-one Browse, page, publication, appearance and Changes
+Browse and Changes views. Its forty-nine Browse, page, publication, appearance and Changes
 screens cover navigation, Details, tags, color schemes, comparison outcomes,
 stylesheet evidence, and the preparing and unavailable comparison states. Thirty-two component
 explorer screens add component pages, saved variants, affected screens,
@@ -154,7 +154,7 @@ A shared implementation edit appears on its component page and lists consuming
 screens as affected; independent screen inputs, slots or instance changes still
 appear in Changes. This is tested against fully registered baseline snapshots.
 
-The shared inspector/workspace sheets cover all 83 design screens and standalone
+The shared inspector/workspace sheets cover all 81 design screens and standalone
 library hosts. Other mixed component-design sheets remain scoped to the 32
 component-design routes and hosts; the controls sheet additionally remains
 scoped to its eleven owning screen routes. `review.sharedImpact` is fallback
@@ -242,24 +242,28 @@ do not request actual comparison snapshots. There is no separate Review section
 or comparison CLI command.
 
 `design/browse/appearance/` designs the planned Auto/Light/Dark interface
-appearance. `overview.html` is its canonical screen; `states/` owns four more
-and `workspaces/` and `status/` own five each. Every one of them is an ordinary
-dual-scheme entry, so `mokly build` writes a Light and a Dark file per viewport
-and Browse's own Light/Dark preview control switches the mockup you are looking
-at, at the same route. The renderer passes `input.colorScheme` to the shared
-artboard scope, which stamps `data-mbk-appearance`; there is no second theme
-mechanism, no extra control and no script inside a mockup.
+appearance for standalone Browse. `overview.html` is its canonical screen;
+`states/` owns two more and `workspaces/` and `status/` own five each. Every one
+of them is an ordinary dual-scheme entry, so `mokly build` writes a Light and a
+Dark file per viewport and Browse's own Light/Dark preview control switches the
+mockup you are looking at, at the same route. The renderer passes
+`input.colorScheme` to the shared artboard scope, which stamps
+`data-mbk-appearance`; there is no second theme mechanism, no extra control and
+no script inside a mockup.
 
-Appearance is the catalogue's own setting and is deliberately separate from the
-preview colour scheme chosen in the depicted screen header: a dark catalogue
-keeps light previews light, including their status indicators, a screen with no
-dark render keeps its light frames and says so in its own caption without making
-the catalogue light-only, and a comparison in Difference mode blends on a base
-taken from the compared screens rather than the catalogue. The approved swatches
-and their contrast are the
+Standalone Browse holds one Appearance setting, so each artboard draws one
+scheme control — the depicted Appearance selector in its top bar — and the
+depicted screen header carries the viewport control alone. The chrome and the
+screens it shows change together: Welcome, the comparison panes and the flow's
+first step are dark in the Dark render and light in the Light one, while the
+light-only Details screen keeps its light frames in both and names that fallback
+in its own caption. Device-screen tokens stay independent of the interface
+palette, and a comparison in Difference mode still blends on a base taken from
+the compared screens. The approved swatches and their contrast are the
 [semantic palette](../../docs/protocol/mokly-viewer-palette.md); the behavior
 is the [appearance contract](../../docs/protocol/mokly-viewer-appearance.md).
-The shipped viewer is still light-only around previews.
+The shipped viewer is still light-only around previews, and the embedded viewer
+keeps its host-supplied theme alongside its own preview controls.
 
 The shell designs now include `design/browse/pages/` (document, details,
 and removal) and `design/browse/publication/` (current catalogue and Changes).

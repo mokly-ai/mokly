@@ -5,6 +5,7 @@ import {
   type AppearanceChoice,
 } from "../../../parts/appearance.js";
 import type { DesignDestination } from "../../../parts/destinations.js";
+import { ExampleWorkspace } from "../../../parts/example_workspace.js";
 import { MiniWelcome } from "../../../parts/mini_screens.js";
 import { NavTree } from "../../../parts/nav.js";
 import {
@@ -58,16 +59,52 @@ export function AppearanceShell({
   );
 }
 
-/** The light Welcome preview the appearance screens place on their stage. */
+/**
+ * The depicted catalogue holds one scheme setting, so a screen with a dark
+ * render shows it whenever the artboard is dark.
+ */
+export function useDarkPreview(): boolean {
+  return useRenderedAppearance() === "dark";
+}
+
+/** The Welcome preview the appearance screens place on their stage. */
 export function WelcomeShot({ viewport }: { viewport: ArtboardViewport }) {
+  const dark = useDarkPreview();
   return viewport === "desktop" ? (
-    <BrowserFrame address="example.test/welcome">
+    <BrowserFrame address="example.test/welcome" dark={dark}>
       <MiniWelcome />
     </BrowserFrame>
   ) : (
-    <PhoneFrame small>
+    <PhoneFrame small dark={dark}>
       <MiniWelcome compact />
     </PhoneFrame>
+  );
+}
+
+/**
+ * The selected screen's workspace. Welcome renders in both schemes and follows
+ * the artboard; Details renders in light only, so it keeps its light frames and
+ * names that fallback once the catalogue is dark.
+ */
+export function AppearanceWorkspace({
+  subject,
+  viewport,
+  ...rest
+}: {
+  subject: "welcome" | "details";
+  viewport: ArtboardViewport;
+  open?: boolean;
+  comparisonEvidence?: ReactNode;
+}) {
+  const dark = useDarkPreview();
+  return (
+    <ExampleWorkspace
+      subject={subject}
+      viewport={viewport}
+      dark={subject === "welcome" && dark}
+      lightOnly={subject === "details" && dark}
+      {...rest}
+    />
   );
 }
 
@@ -80,7 +117,10 @@ interface AppearanceHeadProps {
   viewport: ArtboardViewport;
 }
 
-/** Selected appearance screens keep the ordinary header and preview controls. */
+/**
+ * The appearance header carries the viewport control only: the catalogue's one
+ * scheme setting lives in the top bar's Appearance selector.
+ */
 export function AppearanceHead({
   crumbs,
   idChip,
@@ -95,7 +135,7 @@ export function AppearanceHead({
     <ScreenHead
       {...(selection === "none"
         ? {}
-        : { action: <ViewSwitch active={selection} /> })}
+        : { action: <ViewSwitch active={selection} schemeControl={false} /> })}
       crumbs={crumbs ?? ["Example", "Screens"]}
       idChip={idChip}
       title={title}
