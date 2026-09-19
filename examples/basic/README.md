@@ -11,8 +11,13 @@ variants plus text, boolean, number, optional hint and emphasis controls; Toolba
 has an editable title and nested Action instances. Open Props in local Serve to
 edit them. Published exports provide the same saved examples read-only.
 `example-components.css` declares exact shared ownership, separate from global
-styles and the design mockups. Registration and source ownership live in
-`entries/components/action.tsx` and `toolbar.tsx`.
+styles and the design mockups. Action and Toolbar are co-located with their
+product-style implementations under `src/components/`: each directory holds
+the plain React component (`action.tsx`), its catalogue registration
+(`action.mokly.tsx`), and the entry module that exports it
+(`action.mockup.tsx`). The configuration discovers those entry modules with a
+second `entries` glob beside the `entries/` catalogue, so the shared
+components need no mirror files under `entries/`.
 It contains no consumer product screens.
 
 Authoring imports use the public package `@mokly/mokly`. The local executable

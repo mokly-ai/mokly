@@ -33,7 +33,7 @@ export const mockups = [
   }),
   defineCollection({
     ...metadata,
-    childIds: ["packed-home", "packed-detail"],
+    childIds: ["packed-home", "packed-detail", "packed-card"],
     description: "Screens loaded from an installed tarball.",
     id: "packed-pages",
     title: "Packed pages",

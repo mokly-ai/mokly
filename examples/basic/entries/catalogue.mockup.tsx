@@ -11,8 +11,9 @@ import {
   reviewMaterialKey,
 } from "@mokly/mokly";
 
-import { action } from "./components/action.js";
-import { toolbar } from "./components/toolbar.js";
+import { action } from "../src/components/action/action.mokly.js";
+import { toolbar } from "../src/components/toolbar/toolbar.mokly.js";
+
 import { renderExampleDocument } from "./document.js";
 
 const metadata = {
@@ -92,8 +93,6 @@ function Details({ compact }: { compact: boolean }) {
 }
 
 export const mockups = [
-  action.entry,
-  toolbar.entry,
   defineCollection({
     ...metadata,
     id: "example-components",

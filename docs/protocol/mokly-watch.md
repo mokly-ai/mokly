@@ -33,8 +33,6 @@ under `node_modules` or an npx cache is never treated as consumer source. A
 file created under an entry glob root that is not an entry module and is not
 imported classifies like any other unrelated file. Development of Mokly itself
 uses repository tooling rather than a hidden consumer-specific self-reload path.
-Glob-root watching and discovery re-runs are the approved target tracked by the [co-located entry discovery plan](../../plans/co-located-entry-discovery.md); today the
-single `entriesDir` is the watched root.
 
 Resource discovery follows the same portable HTML/CSS URL rules as Changes,
 including transitive imports and nested documents, with shared edges read once

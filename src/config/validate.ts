@@ -4,6 +4,7 @@ import path from "node:path";
 import { MoklyError } from "../errors.js";
 
 import { isBaselineCachePath } from "./cache_paths.js";
+import { discoverEntryModules } from "./entry_discovery.js";
 import { resolveEntryGlobs } from "./entry_globs.js";
 import {
   baselineBuildCommands,
@@ -122,7 +123,7 @@ export function resolveConfig(
     mockupsDir,
     repoRoot,
   });
-  return {
+  const resolved: ResolvedConfig = {
     publicExclude,
     generatedOutput,
     colorSchemes,
@@ -154,6 +155,7 @@ export function resolveConfig(
       rules: watchRules,
     },
   };
+  return { ...resolved, entryModules: discoverEntryModules(resolved) };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

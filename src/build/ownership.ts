@@ -3,7 +3,10 @@ import path from "node:path";
 
 import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
-import { isAuthoredEntryPath } from "../config/entry_membership.js";
+import {
+  isAuthoredEntryPath,
+  isInsideEntryRoot,
+} from "../config/entry_membership.js";
 import { isInside, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError, errorMessage } from "../errors.js";
@@ -137,7 +140,13 @@ export function generatedOwnershipDenial(
   }
 }
 
-/** An owner is trusted only when it is a discovered entry or an inventoried input. */
+/**
+ * An owner is trusted when it is a resolved entry module, an inventoried input,
+ * or a path beneath a directory that holds a resolved entry module. The last
+ * rule lets a rebuild replace output whose owner was renamed or deleted since
+ * the previous build, exactly as the former directory rule did, without
+ * letting an unrelated catalogue claim files.
+ */
 export function isAuthoredOwner(
   sourceRelativePath: string,
   config: ResolvedConfig,
@@ -146,7 +155,8 @@ export function isAuthoredOwner(
   if (!isInside(config.repoRoot, absolute)) return false;
   return (
     isAuthoredEntryPath(absolute, config) ||
-    (config.sourceFiles ?? []).includes(sourceRelativePath)
+    (config.sourceFiles ?? []).includes(sourceRelativePath) ||
+    isInsideEntryRoot(absolute, config)
   );
 }
 

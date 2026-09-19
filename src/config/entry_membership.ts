@@ -3,37 +3,46 @@ import path from "node:path";
 import { isInside, projectRealPath } from "./paths.js";
 import type { ResolvedConfig } from "./types.js";
 
-const moduleIndexes = new WeakMap<readonly string[], ReadonlySet<string>>();
+const lexicalIndexes = new WeakMap<readonly string[], ReadonlySet<string>>();
+const physicalIndexes = new WeakMap<readonly string[], ReadonlySet<string>>();
 const rootIndexes = new WeakMap<readonly string[], readonly string[]>();
 
 /**
  * Return whether a path is authored entry source: a resolved entry module, or
- * any file beneath a configured `entriesDir` shorthand directory. The check is
- * lexical on the given path; callers pass a projected real path for aliases.
+ * any file beneath a configured `entriesDir` shorthand directory. The lexical
+ * form touches no filesystem state; the physical form also matches through
+ * the projected real paths of the shorthand directory or each entry module,
+ * for callers that pass an already-projected candidate.
  */
 export function isAuthoredEntryPath(
   candidate: string,
   config: ResolvedConfig,
+  physical = false,
 ): boolean {
   const absolute = path.resolve(candidate);
   if (config.entriesDir !== undefined) {
     if (isInside(config.entriesDir, absolute)) return true;
+    if (!physical) return false;
     try {
-      if (isInside(projectRealPath(config.entriesDir), absolute)) return true;
+      return isInside(projectRealPath(config.entriesDir), absolute);
     } catch {
       return false;
     }
   }
   const modules = config.entryModules;
   if (!modules) return false;
-  let index = moduleIndexes.get(modules);
-  if (!index) {
-    index = new Set(
-      modules.flatMap((module) => [module, projectRealPath(module)]),
-    );
-    moduleIndexes.set(modules, index);
-  }
-  return index.has(absolute);
+  return (physical ? physicalIndex(modules) : lexicalIndex(modules)).has(
+    absolute,
+  );
+}
+
+/** Return whether a path lies beneath a directory holding an entry module. */
+export function isInsideEntryRoot(
+  candidate: string,
+  config: ResolvedConfig,
+): boolean {
+  const absolute = path.resolve(candidate);
+  return entryModuleRoots(config).some((root) => isInside(root, absolute));
 }
 
 /** Directories protected as authored entry roots for output and export boundaries. */
@@ -47,4 +56,24 @@ export function entryModuleRoots(config: ResolvedConfig): readonly string[] {
     rootIndexes.set(modules, roots);
   }
   return roots;
+}
+
+function lexicalIndex(modules: readonly string[]): ReadonlySet<string> {
+  let index = lexicalIndexes.get(modules);
+  if (!index) {
+    index = new Set(modules);
+    lexicalIndexes.set(modules, index);
+  }
+  return index;
+}
+
+function physicalIndex(modules: readonly string[]): ReadonlySet<string> {
+  let index = physicalIndexes.get(modules);
+  if (!index) {
+    index = new Set(
+      modules.flatMap((module) => [module, projectRealPath(module)]),
+    );
+    physicalIndexes.set(modules, index);
+  }
+  return index;
 }

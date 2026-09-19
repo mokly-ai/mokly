@@ -4,8 +4,8 @@ import path from "node:path";
 import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
-import { discoverEntryModules } from "../dist/build/entry_discovery.js";
 import { loadConsumerGraph } from "../dist/build/load_graph.js";
+import { discoverEntryModules } from "../dist/config/entry_discovery.js";
 import { loadConfig } from "../dist/config/load.js";
 import { resolveConfig } from "../dist/config/validate.js";
 
@@ -88,11 +88,26 @@ test("a glob without entry modules is a config error even when it matches helper
     fixture,
     'entries: ["entries/**/*.mockup.{ts,tsx}", "src/**/*.ts"]',
   );
-  await assert.rejects(loadConsumerGraph(await loadConfig(fixture.root)), {
+  await assert.rejects(loadConfig(fixture.root), {
     code: "config-invalid",
     message:
       /matches no \.mockup\.ts or \.mockup\.tsx module: src\/\*\*\/\*\.ts/,
   });
+});
+
+test("a resolved config carries its entry set and compilation refreshes it", async (t) => {
+  const fixture = await createFixture();
+  t.after(() => removeFixture(fixture));
+  const config = await loadConfig(fixture.root);
+  assert.deepEqual(config.entryModules, [fixture.entryPath]);
+  const created = await addModule(
+    fixture,
+    "entries/second.mockup.tsx",
+    screen("second", "screens/second.html"),
+  );
+  const graph = await loadConsumerGraph(config);
+  assert.deepEqual(graph.entrySources, [fixture.entryPath, created]);
+  assert.deepEqual(config.entryModules, [fixture.entryPath]);
 });
 
 test("discovery unions globs, ignores order, and sorts by repository path", async (t) => {

@@ -23,9 +23,8 @@ the completed
 screens and flows. Current manifests require v5. The
 [breaking migration](./mokly-page-migration.md) removes legacy configuration,
 discovery, and rendering adapters; consumers use ordinary page definitions.
-The co-located layout below, discovered through `entries` globs, is the
-approved target tracked by the
-[co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
+The co-located layout below, discovered through `entries` globs, was delivered
+by the [co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
 
 ## Package Identity
 

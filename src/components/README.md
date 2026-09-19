@@ -26,6 +26,11 @@ export const action = defineComponent({
 export const mockups = [action.entry];
 ```
 
+A registration may live in any repository module, typically beside the
+component it adapts, and the entry module that exports its `entry` may be
+discovered through any configured `entries` glob. The registration file is
+recorded as the component's source.
+
 Render `<action.Component label="Save" />` in a screen. Give repeated siblings
 distinct `moklyInstance` values; stable ids preserve their identity across
 edits. Registered children inside another registered component appear in its

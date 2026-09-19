@@ -60,7 +60,7 @@ import { defineConfig } from "@mokly/mokly";
 export default defineConfig({
   colorSchemes: ["light", "dark"],
   repoRoot: ".",
-  entriesDir: "docs/mockups/entries",
+  entries: ["src/**/*.mockup.{ts,tsx}", "docs/mockups/entries/**/*.mockup.tsx"],
   mockupsDir: "docs/mockups/generated",
   renderer: "docs/mockups/renderer.tsx",
   stylesheets: [{ match: "app/**/*.html", stylesheets: ["app.css"] }],
@@ -71,6 +71,11 @@ export default defineConfig({
   },
 });
 ```
+
+`entries` globs are repository-relative and find every `.mockup.ts` or
+`.mockup.tsx` module they match, so an entry can live beside the component or
+screen it describes. `entriesDir: "docs/mockups/entries"` is shorthand for one
+glob over that folder; configure one of the two.
 
 Use `review.sharedImpact` as fallback impact evidence for files the rendered
 resource graph cannot see, such as source components or token modules. Linked

@@ -121,6 +121,9 @@ function parseRuntimeStartupMessage(
     typeof config.configPath !== "string" ||
     !Array.isArray(config.entryGlobs) ||
     !config.entryGlobs.every((glob) => typeof glob === "string") ||
+    (config.entryModules !== undefined &&
+      (!Array.isArray(config.entryModules) ||
+        !config.entryModules.every((module) => typeof module === "string"))) ||
     typeof config.mockupsDir !== "string" ||
     typeof config.repoRoot !== "string" ||
     !Array.isArray(config.publicExclude) ||

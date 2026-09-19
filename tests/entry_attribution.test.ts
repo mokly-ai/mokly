@@ -148,7 +148,7 @@ export const packaged = defineScreen({ dependencies: [], relatedDocs: [], useCas
   });
 });
 
-test("generated ownership accepts co-located owners and rejects foreign owners", async (t) => {
+test("generated ownership accepts co-located and renamed owners beneath entry roots", async (t) => {
   const fixture = await coLocatedFixture();
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
@@ -175,8 +175,30 @@ test("generated ownership accepts co-located owners and rejects foreign owners",
   };
   assert.equal(isOwned(owned, inventoried), true);
   assert.equal(isOwned(helperOwned, inventoried), true);
-  assert.equal(isOwned(foreign, inventoried), false);
-  assert.equal(isOwned(helperOwned, { ...config, sourceFiles: [] }), false);
+  assert.equal(isOwned(foreign, inventoried), true);
+  assert.equal(isOwned(helperOwned, { ...config, sourceFiles: [] }), true);
+  const renamed = path.join(fixture.mockupsDir, "screens/renamed.html");
+  const unrelated = path.join(fixture.mockupsDir, "screens/unrelated.html");
+  await fs.promises.writeFile(
+    renamed,
+    `${generatedHeader("src/components/button/old-name.mockup.tsx")}<html></html>\n`,
+  );
+  await fs.promises.writeFile(
+    unrelated,
+    `${generatedHeader("src/components/card/card.mockup.tsx")}<html></html>\n`,
+  );
+  assert.equal(isOwned(renamed, inventoried), true);
+  assert.equal(isOwned(unrelated, inventoried), false);
+  assert.equal(
+    isOwned(unrelated, {
+      ...inventoried,
+      entryModules: [
+        ...(inventoried.entryModules ?? []),
+        path.join(fixture.root, "src/components/card/card.mockup.tsx"),
+      ],
+    }),
+    true,
+  );
 });
 
 test("watch rebuilds for a new co-located entry module and export refuses its directory", async (t) => {

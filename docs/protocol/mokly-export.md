@@ -163,8 +163,7 @@ directory holding one. It must not contain inventoried authoring inputs, the
 config, renderer module, or a consumer package's `package.json`. Reject
 repository root, Git metadata, dependency directories, and package runtime
 directories as targets. These checks also apply when the requested directory
-does not yet exist. Confinement by resolved entry module rather than by
-`entriesDir` is the approved target tracked by the [co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
+does not yet exist.
 
 Accept a missing destination or an empty real directory. A nonempty directory
 must have a regular `.mokly-export-artifact` ownership file using the

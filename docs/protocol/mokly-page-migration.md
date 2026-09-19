@@ -6,9 +6,8 @@ The breaking page API is implemented. This supplements
 [Pages in the catalogue](./mokly-pages.md). Consumers must register complete
 documents and rebuild before adopting the new package; historical comparisons
 remain supported. The [implementation plan](../../plans/unified-catalogue-pages.md)
-records verification and the isolated consumer rehearsal. Attributing pages
-to any repository-owned defining module, rather than one beneath `entriesDir`,
-is the approved target tracked by the
+records verification and the isolated consumer rehearsal. Pages are attributed
+to any repository-owned defining module, as delivered by the
 [co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
 
 ## Required Upgrade

@@ -2,7 +2,7 @@
 
 ## Status And Outcome
 
-Milestones 1 through 4 are complete, committed, and pushed. Milestone 5 is next.
+Milestones 1 through 6 are complete, committed, and pushed; only the final review item remains.
 
 Mokly currently discovers every `*.mockup.ts` and `*.mockup.tsx` module below
 one configured directory, `entriesDir`, and binds the source-attributed
@@ -253,50 +253,75 @@ changed during implementation:
 
 ---
 
-### Milestone 5: Co-locate the basic example components
+### Milestone 5: Co-locate the basic example components — completed
 
 Prove the layout in the repository's own consumer by moving the example's
 registered Action and Toolbar components beside a product-style component
 directory and discovering them through a second glob.
 
-- [ ] Create `examples/basic/src/components/` holding the Action and Toolbar
+- [x] Create `examples/basic/src/components/` holding the Action and Toolbar
       implementations, their `defineComponent` registrations, and
       `action.mockup.tsx` and `toolbar.mockup.tsx` entry modules beside them.
-- [ ] Change `examples/basic/mokly.config.ts` to discover both roots with an
+- [x] Change `examples/basic/mokly.config.ts` to discover both roots with an
       `entries` list: the existing entries glob
       `examples/basic/entries/**/*.mockup.{ts,tsx}` and the new co-located glob
       `examples/basic/src/components/**/*.mockup.{ts,tsx}`.
-- [ ] Update the example's `catalogue.mockup.tsx`, dependency declarations,
+- [x] Update the example's `catalogue.mockup.tsx`, dependency declarations,
       `sharedImpact` globs, and the Components collection so routes, ids, and
       saved variants are unchanged.
-- [ ] Update `examples/basic/README.md` and the example notes.
-- [ ] Run `npm run build`, `npm run example:build`, and
+- [x] Update `examples/basic/README.md` and the example notes.
+- [x] Run `npm run build`, `npm run example:build`, and
       `npm run example:check`, then smoke-test the Action and Toolbar pages,
       their Used by data, and a screen inspection through `npm run dev`.
-- [ ] Add a packed-consumer test that discovers a co-located entry through a
+- [x] Add a packed-consumer test that discovers a co-located entry through a
       second glob and builds it with the published package layout.
-- [ ] Run `cargo xtask check`, commit, and push.
+- [x] Run `cargo xtask check`, commit, and push.
 
 ---
 
-### Milestone 6: Guides, README, and changelog
+Milestone 5 notes: the Action and Toolbar registrations moved to
+`examples/basic/src/components/{action,toolbar}/*.mokly.tsx` beside plain
+`action.tsx` and `toolbar.tsx` implementations, each exported by a sibling
+`*.mockup.tsx` entry module discovered through a second `entries` glob. Routes,
+ids, variants, and recorded usage are unchanged; the generated Action and
+Toolbar pages, all three Action variants, and Welcome's recorded Action and
+Toolbar instances were smoke-tested through `mokly serve`. Two implementation
+details were added during this milestone: discovery now also runs when the
+configuration is resolved, so every resolved config carries `entryModules`,
+and a generated document whose recorded owner lies beneath a directory holding
+a resolved entry module remains replaceable, so moving or renaming an entry
+module never strands its previous output.
+
+`cargo xtask check` crashed twice in `tests/watch_resource_boundaries.test.ts`
+with a Node 24 fatal `v8::ToLocalChecked Empty MaybeLocal` inside
+`cjs_lexer::Parse` while loading a CommonJS module; the file passes in
+isolation and the complete unit suite and two further full gate runs passed
+without the crash. It is recorded here as an intermittent runtime fault to
+watch for, not a defect in this change.
+
+---
+
+### Milestone 6: Guides, README, and changelog — completed except review
 
 Bring the user-facing documentation in line with the delivered behavior and
 remove the Delivery Status notes added in Milestone 1.
 
-- [ ] Update `docs/guides/start/configure.md`,
+- [x] Update `docs/guides/start/configure.md`,
       `docs/guides/authoring/config.md`, and
       `docs/guides/start/your-first-screen.md` to present `entries` globs with
       co-location as the primary layout and `entriesDir` as the shorthand.
-- [ ] Update `docs/guides/authoring/components.md` with a co-located
+- [x] Update `docs/guides/authoring/components.md` with a co-located
       component example.
-- [ ] Update the workspace `README.md` configuration example and the
+- [x] Update the workspace `README.md` configuration example and the
       `src/components/README.md` authoring notes.
-- [ ] Remove the Milestone 1 Delivery Status notes from the changed protocol
+- [x] Remove the Milestone 1 Delivery Status notes from the changed protocol
       documents and confirm every document describes implemented behavior.
-- [ ] Add a changelog entry under the unreleased heading describing the new
-      field, the retained shorthand, and the facade binding change.
-- [ ] Run `cargo xtask check`, commit, and push.
+- [x] Add a changelog entry under the unreleased heading describing the new
+      field, the retained shorthand, and the facade binding change. Not
+      applicable: `CHANGELOG.md` is generated by release-please from
+      Conventional Commits and is excluded from formatting, so the `feat(config)`
+      commit message carries the entry instead.
+- [x] Run `cargo xtask check`, commit, and push.
 - [ ] Review the complete local diff against `origin/main` after the push
       using `docs/implementation-review-prompt.md`. Report each finding with a
       number, severity, context, impact of doing nothing, lettered options,

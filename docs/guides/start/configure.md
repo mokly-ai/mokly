@@ -8,21 +8,37 @@ order: 2
 ## Add the config file
 
 Create `mokly.config.ts` at the root of the repository and export the result
-of `defineConfig`. Two fields are required: `entriesDir`, the folder holding
-your entry modules, and `mockupsDir`, the folder that receives the generated
-catalogue.
+of `defineConfig`. Two things are required: where your entry modules live, and
+`mockupsDir`, the folder that receives the generated catalogue.
+
+Entry modules can sit beside the components and screens they describe. List
+one or more `entries` globs, relative to the repository root, and Mokly finds
+every `.mockup.ts` and `.mockup.tsx` file they match.
 
 ```ts
 import { defineConfig } from "@mokly/mokly";
 
+export default defineConfig({
+  entries: ["src/**/*.mockup.{ts,tsx}"],
+  mockupsDir: "docs/mockups/generated",
+});
+```
+
+If you would rather keep all entry modules in one folder, name it with
+`entriesDir` instead. It is shorthand for a single glob covering that folder,
+and you use one field or the other, never both.
+
+```ts
 export default defineConfig({
   entriesDir: "docs/mockups/entries",
   mockupsDir: "docs/mockups/generated",
 });
 ```
 
-Every path in the config is relative to the config file itself, and every one
-of them stays inside the repository root.
+Every folder path in the config is relative to the config file itself, the
+`entries` globs are relative to the repository root, and every one of them
+stays inside the repository. A glob that matches no entry module is an error,
+so a typo cannot quietly produce an empty catalogue.
 
 ## Add your theme
 
@@ -35,7 +51,7 @@ import { defineConfig } from "@mokly/mokly";
 
 export default defineConfig({
   colorSchemes: ["light", "dark"],
-  entriesDir: "docs/mockups/entries",
+  entries: ["src/**/*.mockup.{ts,tsx}"],
   mockupsDir: "docs/mockups/generated",
   renderer: "docs/mockups/renderer.tsx",
   stylesheets: [{ match: "app/**/*.html", stylesheets: ["app.css"] }],
@@ -43,7 +59,8 @@ export default defineConfig({
 ```
 
 Keep public assets such as `app.css` inside `mockupsDir` so the catalogue can
-serve them.
+serve them. Entry modules and the helpers they import are never served, even
+when a glob reaches into a folder below `mockupsDir`.
 
 ## Where the config is found
 

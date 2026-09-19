@@ -5,10 +5,9 @@ This is the detailed configuration boundary of the
 
 ## Delivery Status
 
-Glob-based entry discovery through `entries`, the `entriesDir` shorthand, and
-the per-match source classification below are the approved target tracked by
-the [co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
-Every other setting in this document is implemented.
+Every setting in this document is implemented, including glob-based entry
+discovery through `entries` and the `entriesDir` shorthand delivered by the
+[co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
 
 ## Configuration Discovery
 
@@ -210,9 +209,11 @@ neither, an empty list, a duplicate glob, or a glob whose stable prefix lies
 inside `.mokly-cache/` fails with `config-invalid` naming the field.
 
 Discovery walks each glob's stable prefix, the leading segments before the
-first wildcard, and keeps every regular file that matches the glob and ends in
-`.mockup.ts` or `.mockup.tsx`. Other matched names are never entry modules,
-even when a glob names them explicitly; they remain ordinary imported helpers.
+first wildcard, without following symlinks and without entering `node_modules`,
+`.git`, or `.mokly-cache/`, and keeps every regular file that matches the glob
+and ends in `.mockup.ts` or `.mockup.tsx`. Other matched names are never entry
+modules, even when a glob names them explicitly; they remain ordinary imported
+helpers.
 The union of all globs, deduplicated by repository-relative path and sorted by
 that path, is the resolved entry set. Discovery order therefore depends on
 neither glob order nor filesystem order. A glob that keeps zero entry modules
@@ -221,18 +222,24 @@ an empty or partial catalogue.
 
 Every resolved entry module is classified before bundling. Discovery fails
 with `config-invalid` naming the module and the matched rule when the module
-is the output root or inside `mockupsDir`, inside `review.outDir`, inside
-`.mokly-cache/`, inside a package-owned ignored directory such as
-`node_modules`, `dist`, `target`, or `.context`, or resolves outside `repoRoot`
-through a symlink. This is the same per-file source classification used by the
-[source-protection contract](./mokly-source-protection.md); the check runs once
-per resolved module instead of once per configured directory.
+lies inside `review.outDir`, inside `.mokly-cache/`, inside `node_modules` or
+`.git`, or resolves outside `repoRoot` through a symlink. An entry module may
+sit below `mockupsDir` in a nested `docs/mockups/src` layout; it is then
+protected authored source under the
+[source-protection contract](./mokly-source-protection.md), never public
+output, and generated routes are collision-checked against it. The check runs
+once per resolved module instead of once per configured directory.
 
-The resolved entry set is retained beside `sourceFiles` across build, check,
-watched Serve, publication, and the component runtime. Later stages consume
-that set and never repeat the glob walk within one compilation. The watched
-server re-runs discovery when a file matching an entry glob is created,
-renamed, or deleted, as defined by the [watch contract](./mokly-watch.md).
+Discovery runs when the configuration is resolved, so every resolved config
+carries its sorted entry set beside `entryGlobs`, and again at the start of
+each compilation so watched Serve observes created, renamed, or deleted entry
+modules as defined by the [watch contract](./mokly-watch.md). The set is
+retained beside `sourceFiles` across build, check, watched Serve, publication,
+and the component runtime; later stages consume it and never repeat the glob
+walk within one compilation. Generated output is trusted for replacement when
+its recorded owner is a resolved entry module, an inventoried source, or any
+path beneath a directory that holds a resolved entry module, so renaming or
+deleting an entry module never strands the documents it generated.
 
 ## Public Exclusion Configuration
 

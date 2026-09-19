@@ -86,9 +86,7 @@ without sticky process-global state or an absolute checkout path. Installed
 packages import the plain API and cannot self-attribute. Registry validation
 accepts an attributed source only when it is a resolved entry module or an
 inventoried source file; generated ownership headers, tracked ownership, and
-export confinement use that same membership. Repository-wide binding and
-membership-based attribution are the approved target tracked by the [co-located entry discovery plan](../../plans/co-located-entry-discovery.md); today both use
-`entriesDir` containment.
+export confinement use that same membership.
 
 Both config and consumer bundle metafiles supply the complete source inventory,
 including tree-shaken repository inputs. Serving and publication resolve these

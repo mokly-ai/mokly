@@ -5,9 +5,9 @@
 Implemented for schema-v5 [pages](./mokly-pages.md), screens, and flows.
 The same resolved inventory protects build, runtime, comparisons, and both
 publication options. Verification is tracked in
-[Unified Catalogue Pages](../../plans/unified-catalogue-pages.md). Replacing
-the `entriesDir` membership rule with the resolved entry set is the approved
-target tracked by the [co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
+[Unified Catalogue Pages](../../plans/unified-catalogue-pages.md); the
+resolved-entry-set rule was delivered by the
+[co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
 
 ## Protected Inputs
 

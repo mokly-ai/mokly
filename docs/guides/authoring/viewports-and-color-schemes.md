@@ -19,7 +19,7 @@ your own theme from the color scheme in your renderer.
 ```ts
 export default defineConfig({
   colorSchemes: ["light", "dark"],
-  entriesDir: "docs/mockups/entries",
+  entries: ["src/**/*.mockup.{ts,tsx}"],
   mockupsDir: "docs/mockups/generated",
   renderer: "docs/mockups/renderer.tsx",
 });

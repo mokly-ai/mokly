@@ -3,11 +3,12 @@ import path from "node:path";
 
 import { Minimatch } from "minimatch";
 
-import { isBaselineCachePath, MOKLY_CACHE } from "../config/cache_paths.js";
-import { globStablePrefix, isEntryModuleName } from "../config/entry_globs.js";
-import { isInside, projectRealPath, toPosixPath } from "../config/paths.js";
-import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
+
+import { isBaselineCachePath, MOKLY_CACHE } from "./cache_paths.js";
+import { globStablePrefix, isEntryModuleName } from "./entry_globs.js";
+import { isInside, projectRealPath, toPosixPath } from "./paths.js";
+import type { ResolvedConfig } from "./types.js";
 
 /** Directories that never hold consumer authoring sources and are not walked. */
 const NEVER_SOURCE_DIRECTORY_NAMES: ReadonlySet<string> = new Set([
@@ -17,7 +18,9 @@ const NEVER_SOURCE_DIRECTORY_NAMES: ReadonlySet<string> = new Set([
 ]);
 
 /** Resolve every configured entry glob into sorted absolute entry-module paths. */
-export function discoverEntryModules(config: ResolvedConfig): string[] {
+export function discoverEntryModules(
+  config: Pick<ResolvedConfig, "entryGlobs" | "repoRoot" | "review">,
+): string[] {
   const discovered = new Set<string>();
   for (const glob of config.entryGlobs) {
     const matcher = new Minimatch(glob, { dot: true });
@@ -69,7 +72,7 @@ function walkEntryCandidates(root: string): string[] {
 
 function entryModuleDenial(
   module: string,
-  config: ResolvedConfig,
+  config: Pick<ResolvedConfig, "repoRoot" | "review">,
 ): string | undefined {
   if (isBaselineCachePath(module, config.repoRoot))
     return `is inside the private ${MOKLY_CACHE} directory`;

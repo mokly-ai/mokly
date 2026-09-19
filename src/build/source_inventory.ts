@@ -82,7 +82,7 @@ export function isAuthoringSource(
   if (physicalExclusion !== undefined)
     return { kind: "exclusion", glob: physicalExclusion };
   if (aliases === "exclusions") return;
-  if (isAuthoredEntryPath(real, config)) return { kind: "entries" };
+  if (isAuthoredEntryPath(real, config, true)) return { kind: "entries" };
   if (isReservedSource(real)) return { kind: "reserved" };
   const index = sourceIndex(config);
   if (
