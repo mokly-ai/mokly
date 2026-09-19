@@ -192,9 +192,9 @@ treatment and are entered through the existing filter controls:
 
 Matched and unresolved depict Changes holding only the screen their evidence
 keeps; excluded depicts All with no Changes. None of them offers comparison
-modes, a scheme pair, or tag transitions.
+modes or tag transitions.
 
-Tag interactions are restricted to the canonical Welcome light states:
+Tag interactions are restricted to the canonical Welcome states:
 
 | Action                               | Destination                                                                                                 |
 | ------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
@@ -252,7 +252,8 @@ normal enhanced navigation. Do not equate these two contexts.
   design-screen set, including exact id/route pairs. Keep unimplemented planned
   destinations separate from that inventory so omissions and drift are visible.
 - Prove each new state is reachable from its owning screen/flow and has the
-  specified return route. Test tag query/picker agreement and scheme pairing.
+  specified return route. Test tag query/picker agreement and both-scheme
+  renders of the dual-scheme screens.
 - In Browse, exercise pointer and Tab/Enter activation from mobile and desktop
   design frames, history Back/Forward, canonical outer URLs, active catalogue
   rows, and preserved outer viewport selection. Keep consumer scripts denied.
