@@ -223,7 +223,9 @@ The viewer renders the existing [Browse shell](./mokly-runtime.md#browse-shell),
 [navigation](./mokly-navigation.md): catalogue trees and filters, route chrome,
 responsive frames and controls, comparisons, inspection and ordered flows. It
 retains existing accessibility, responsive and unavailable/loading/empty states;
-this API introduces no redesigned screen.
+this API introduces no redesigned screen. Removed entries load their
+[previous version](./mokly-removed-previews.md) only from advertised catalogue
+paths.
 
 Slots are optional React-owned content containers. `topBarStart`/`topBarEnd`
 adjoin the existing top bar; `railStart`/`railEnd` adjoin the navigation rail.

@@ -94,7 +94,8 @@ All is a catalogue filter, not evidence that the selected example changed.
 Known examples show Added, Changed, Removed, or Unmodified beside the title,
 using the selected entry's comparison state. Added and Unmodified examples retain
 their current preview with no comparison mode row. Removed screens show their
-badge and current empty state without a comparison mode row. Changed screens,
+badge without a comparison mode row, over a current empty state today and their
+previous version under [removed previews](./mokly-removed-previews.md). Changed screens,
 Changed or Removed component variants, and affected examples retain the relevant
 comparison controls. Temporary prop
 edits never create committed changes or make comparison controls appear.
@@ -103,7 +104,7 @@ Normal component/control fixtures depict an unchanged saved example and zero
 catalogue changes. Changed component and independent screen-change fixtures
 retain their explicit Changes counts and before/current presentation. A Removed
 component variant retains before/current presentation; a Removed screen uses a
-current empty state.
+current empty state until removed previews ship.
 Missing inspection metadata is distinct from comparison availability.
 
 The runtime uses actual comparison eligibility for the selected saved example.
@@ -123,8 +124,8 @@ example remains Unmodified. Status must never be inferred from usage counts.
 Name the information icon Details. Keep comparison evidence, when present,
 inside this panel alongside description and secondary source metadata. Do not
 add a comparison disclosure below the canvas or a separate explanatory banner
-above it. The panel remains available on a Removed screen's current empty state
-even though that screen has no comparison modes. Unmodified
+above it. The panel remains available on a Removed screen's stage even though
+that screen has no comparison modes. Unmodified
 examples omit the comparison section.
 
 Use structured evidence: entry/variant state, a generic output-change reason,

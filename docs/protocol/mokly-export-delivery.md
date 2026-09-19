@@ -80,8 +80,10 @@ and registered whole-document pages. Empty registries remain invalid under the e
 build contract; exporting one preserves the previous artifact. Missing views
 remain explicit in added/removed comparison data; never synthesize content.
 The shell keeps Added entries in Current without exposing comparison modes.
-Removed screens likewise show a Removed badge and current empty state without
-comparison modes; Removed component variants remain eligible for comparison.
+Removed screens likewise show a Removed badge without comparison modes, with a
+current empty state today and their packaged baseline views once
+[removed previews](./mokly-removed-previews.md) ship; Removed component variants
+remain eligible for comparison.
 
 Every manifest, generated, copied, and adapter-added path enters a single
 collision-checked inventory, including file/directory prefix collisions.
@@ -167,7 +169,9 @@ redirect for compatibility.
 Current remains the default after navigation/reload. Browsing, Changes filtering,
 and scheme/viewport switches do not request comparison JSON or snapshot files.
 Added entries retain their current preview without comparison modes. Removed
-screens retain their current empty state without comparison modes. Side by side,
+screens retain no comparison modes; their stage is the current empty state
+today and the packaged previous version under
+[removed previews](./mokly-removed-previews.md). Side by side,
 Overlay, and Difference retain the existing UI and missing-current state for
 Removed component variants. Refresh/retry reload the same exported generation; only
 another export and deployment produces new comparison content. An open tab

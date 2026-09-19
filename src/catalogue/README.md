@@ -11,7 +11,9 @@ evidence; projection performs no filesystem reads, Git commands, or rendering.
 `projection.ts`, `views.ts`, and `changes.ts` select public fields explicitly.
 Changes membership comes from route/component attribution, independently of
 per-view comparison eligibility. Removed entries retain baseline labels and
-null current paths; uncomputed usage stays pending or unavailable.
+null current paths, plus the optional additive `preview` descriptor from the
+[removed previews contract](../../docs/protocol/mokly-removed-previews.md);
+uncomputed usage stays pending or unavailable.
 Historical usage also becomes unavailable when current id/route precedence
 omits any referenced component's metadata. Projection checks the retained
 component set once for screens and removed variants; readers remain strict.

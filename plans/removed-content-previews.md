@@ -2,11 +2,14 @@
 
 ## Status And Outcome
 
-Planning only; implementation has not started. The user requested this plan
-after discussing the removed-document empty state and agreed preview behavior,
-then approved the amendments recorded below: reuse the comparison engine's
-historical capture for screens, settle the example output policy, deliver each
-milestone with its own commit and review, and name the contract lines to change.
+Milestone 1 is complete: the contract lives in
+[removed previews](../docs/protocol/mokly-removed-previews.md) and the owning
+protocols mark the sentences it replaces. Milestone 2 is next. The user
+requested this plan after discussing the removed-document empty state and
+agreed preview behavior, then approved the amendments recorded below: reuse
+the comparison engine's historical capture for screens, settle the example
+output policy, deliver each milestone with its own commit and review, and name
+the contract lines to change.
 
 Opening a removed document or screen shows the version from the same Git
 branch-point baseline as Changes, with its original local styles and assets.
@@ -118,8 +121,10 @@ artifacts or switch the example to committed mode.
 Specify the complete behavior and delivery boundaries before implementation.
 Documentation-only: validate Markdown and links instead of `cargo xtask check`.
 
-- [ ] Replace the shipped empty-state and no-capture sentences with the planned
-      behavior, marked by delivery status until implementation lands:
+- [x] Replace the shipped empty-state and no-capture sentences with the planned
+      behavior, marked by delivery status until implementation lands (also
+      applied to the runtime, component explorer, workspace design, inspector
+      design, component design, viewer, frame adapter, and catalogue contracts):
   - `mokly-changes.md`: “known removed screens show Removed with a current
     empty state and no comparison band”; “opening a screen … do not generate
     comparison snapshots in development”; “Removed screens remain discoverable
@@ -138,43 +143,46 @@ Documentation-only: validate Markdown and links instead of `cargo xtask check`.
   - `mokly-shell-design.md`: the `design-review-removed` and
     `design-page-removed` table rows and “Removed screens show a status badge
     and current empty state instead”.
-- [ ] Specify selection, baseline provenance, views, copy (“Showing previous
+- [x] Specify selection, baseline provenance, views, copy (“Showing previous
       version”, “Previous version unavailable”), failure/retry, navigation
       restrictions, and unchanged component-variant comparison behavior. Note
       that the shell copy “Select a comparison to see the previous screen” is
       replaced because removed screens offer no comparison.
-- [ ] Specify screen previews as the `before` views of the existing selected or
+- [x] Specify screen previews as the `before` views of the existing selected or
       packaged comparison result: which `beforePath` views render, how
       viewport/scheme choices map onto the available historical views, and that
       the comparison band, Props edits, and current inspector bindings stay
       absent.
-- [ ] Define the typed page-preview selection and response: the request shape
+- [x] Define the typed page-preview selection and response: the request shape
       on the stable selected endpoint, the generation-bound descriptor and
       snapshot path, reader validation, and how the packaged export exposes the
       same path relative to `comparisonUrl`. Keep `review.json` and its schema
       unchanged; pages add no comparison records.
-- [ ] Define the optional additive `removedEntries` descriptor in catalogue v1:
+- [x] Define the optional additive `removedEntries` descriptor in catalogue v1:
       fields, availability semantics, privacy (no source paths or baseline
-      metadata), and old/new reader compatibility. Update the shipped fixture
-      and compatibility requirements.
-- [ ] Specify loading for local and embedded viewers from advertised paths only,
+      metadata), and old/new reader compatibility. The shipped fixture changes
+      in Milestone 3: today's reader drops the unknown field and the serializer
+      cannot emit it, so the fixture's byte round-trip test would fail first.
+- [x] Specify loading for local and embedded viewers from advertised paths only,
       including object/URL sources and both frame adapters. The viewer must not
       discover private CLI endpoints, run Git, or infer a historical URL from a
       removed entry's current path.
-- [ ] Reuse the selected-capture lifecycle for page previews: retention, idle
+- [x] Reuse the selected-capture lifecycle for page previews: retention, idle
       renewal by HEAD, cancellation, coalescing, queue/byte bounds, shutdown,
       and evidence invalidation. Pin metadata and bytes to the same accepted
       removal snapshot; never rebuild a baseline during an HTTP request.
-- [ ] Specify script-disabled, read-only delivery for same-origin and
+- [x] Specify script-disabled, read-only delivery for same-origin and
       cross-origin frames. Keep original captures and existing comparison bytes
       unchanged. Preserve the external-resource policy without promising offline
       copies of external assets; expose no source files or private baseline data.
-- [ ] Define strict static capture: an included page preview must have a
+- [x] Define strict static capture: an included page preview must have a
       complete permitted local resource closure or export fails transactionally,
       matching the existing screen snapshot rule. Preserve current-only
       delivery's zero-history behavior and command defaults.
-- [ ] Update relevant READMEs, catalogue/Changes guides, and protocol links with
-      clear delivery status. Validate Markdown, links, and the documentation diff.
+- [x] Update relevant READMEs and protocol links with clear delivery status, and
+      validate Markdown, links, and the documentation diff. The packaged guides
+      describe shipped behavior in present tense, so
+      `docs/guides/catalogue/changes.md` changes in Milestone 5 instead.
 - [ ] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, review the complete local diff against `origin/main` with
       the implementation review prompt; report findings without changing the
@@ -238,8 +246,10 @@ before-only comparison path and adds page capture beside it.
       size bounds, and reserved-file protections to every transitive read. Test
       traversal, symlinks, private manifests, and authored-source references.
 - [ ] Add the historical descriptor to pure public projection, strict readers,
-      serialization, and fixtures. Keep current paths null, metadata private,
-      route/ID conflict precedence intact, and page comparison records absent.
+      serialization, and fixtures, including the shipped
+      `docs/protocol/fixtures/catalogue-v1.json` with one removed page and one
+      removed screen. Keep current paths null, metadata private, route/ID
+      conflict precedence intact, and page comparison records absent.
 - [ ] Test screen-only and component-aware catalogues, historical usage whose
       component metadata is unavailable, and old/new reader compatibility.
       Preserve removed component and saved-variant comparison coverage.
@@ -315,6 +325,8 @@ Activate the completed designs through the shared shell and both viewer hosts.
 - [ ] Fence late responses on navigation, evidence/source replacement, unmount,
       and viewport/scheme changes. Test Back/Forward, direct old routes, ID/route
       reuse, idle recovery, embedded controlled selection, and multiple viewers.
+- [ ] Update `docs/guides/catalogue/changes.md` so its Added and removed
+      section describes the shipped previous-version behavior in present tense.
 - [ ] Run focused shell/client/viewer and browser tests. Smoke-test real served
       and exported removed pages/screens at mobile and desktop sizes; compare
       them with Milestone 2 and save screenshots under `.context/`.

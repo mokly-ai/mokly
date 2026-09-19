@@ -46,7 +46,7 @@ mobile component and desktop component; there are no new user-flow pages.
 | `design-component-unavailable`              | `design/components/states/unavailable.html`           | Missing inspection metadata                             |
 | `design-component-unused`                   | `design/components/states/unused.html`                | Saved component with no consumers                       |
 | `design-component-removed`                  | `design/components/states/removed.html`               | Removed saved variant and former consumer               |
-| `design-component-removed-consumer`         | `design/components/states/removed-consumer.html`      | Removed badge and current empty screen state            |
+| `design-component-removed-consumer`         | `design/components/states/removed-consumer.html`      | Removed badge on a former consumer screen               |
 | `design-component-added`                    | `design/components/states/additions/added.html`       | Added Badge current preview without comparison controls |
 
 Standalone files insert `.mobile` or `.desktop` before `.html`. All thirty-two component
@@ -98,7 +98,9 @@ mobile/desktop × light/dark. A component-only appearance edit produces exactly
 one Changes row, Action; Welcome and Details appear under Affected screens.
 An independent Welcome label edit adds Welcome, making two Changes rows.
 The removed-state scenario also retains the former Farewell consumer and links
-it to its current empty state. Farewell is independently removed, so that
+it to its Removed state, which the approved
+[removed previews](./mokly-removed-previews.md) fill with its previous version.
+Farewell is independently removed, so that
 scenario has two Changes rows: Action and Farewell. The Removed Action variant
 keeps its before/current comparison and explicit missing current side; Farewell
 has no comparison band.

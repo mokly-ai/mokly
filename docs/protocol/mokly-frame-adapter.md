@@ -165,6 +165,8 @@ scroll restoration and logical-link classification unchanged. Ready usage is
 required for instance inspection; absent usage does not disable valid navigation.
 
 The sandbox remains exactly `allow-same-origin`; consumer scripts stay disabled.
+Historical [removed previews](./mokly-removed-previews.md) use the same frames
+with parent-enforced read-only links and forms.
 Existing local memory previews retain their authenticated private transport.
 No inspector handshake, extra badge, pick control, or visible affordance appears
 locally. Unsupported/unowned documents and comparison snapshots gain no privilege.

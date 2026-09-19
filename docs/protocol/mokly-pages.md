@@ -215,7 +215,8 @@ Do not use the serialized `navPath` as independent impact evidence.
 Screen comparison generation and use-case impact propagation retain their
 screen-only boundary. Adding page support must not make those paths assume
 every non-collection/non-use-case entry has screen fragments. Pages expose
-Current only; they do not trigger snapshot generation or fabricate comparisons.
+Current only and never fabricate comparisons; the only historical capture for a
+page is the approved [removed page preview](./mokly-removed-previews.md).
 The [catalogue-change contract](./mokly-catalogue-changes.md) owns the shared
 typed impact/removal snapshot, route/ID precedence, and flat removed-page rows
 in Changes. Baseline ancestry stays in details even when every ancestor is

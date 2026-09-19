@@ -362,6 +362,8 @@ Added entries show their current preview and Added status without comparison
 controls because there is no earlier version to compare. Removed screens show
 their Removed status and an explicit current empty state without comparison
 controls; removed component variants retain an explicit missing current side.
+The approved [removed previews](./docs/protocol/mokly-removed-previews.md)
+replace that empty state with the baseline version for removed screens and pages.
 Affected consumers can show their real before/after differences without entering Changes. Comparison,
 shared-impact, and declared-dependency evidence stays in the Details inspector.
 A changed stylesheet adds a secondary list there naming the changed styles that
