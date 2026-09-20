@@ -193,6 +193,9 @@ conversion into real variants is Milestone 8.
       icon, and the changed mark as the existing changed dot. Verify no
       pseudo-element, border, or gradient adds a left-edge rail.
 - [x] `npm run build && npm run example:build && npm run example:check`.
+- [x] Follow-up after review: give variant rows their own glyph, a screen
+      outline over a second partially drawn screen, on a `mbk-nav-ico variant`
+      wrapper, and name it in the contracts.
 
 #### Task 2.2: New Browse states
 
@@ -399,7 +402,9 @@ details list its variants.
   `div.mbk-nav-leaf` holding the link and, when variants exist, a
   `button[data-nav-variants-toggle][aria-expanded][aria-controls]`, followed
   by `div[data-nav-disclosure="variants:<section>:<id>"][data-nav-variants]`
-  with one ordinary `a[data-nav-row]` per variant), new
+  with one ordinary `a[data-nav-row]` per variant carrying a `VariantIcon`
+  added to `packages/viewer/src/shell/icons.tsx` that matches the mockup
+  glyph), new
   `packages/viewer/src/shell/css_nav_variants.ts`,
   `packages/viewer/src/client/browse_navigation.ts` (`variants:` keys are
   valid disclosure keys), `packages/viewer/src/client/browse_state.ts`

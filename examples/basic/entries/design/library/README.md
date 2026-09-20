@@ -20,10 +20,12 @@ selected, and **Changed variant** shows the Changes filter holding one changed
 variant under a parent whose own render is unmodified. A screen row that owns
 variants renders a `mbk-nav-leaf` container holding the unchanged row link plus
 a trailing chevron disclosure button; the row cannot be both a link and a
-disclosure summary. Variant rows render one indent step deeper with the screen
-icon, only while the list is open. The changed mark is a trailing dot and never
-an edge or rail. Row rendering lives in `catalogue-navigation-row.view.tsx`,
-which the component owns beside its main view.
+disclosure summary. Variant rows render one indent step deeper with the variant
+icon — a screen outline over a second, partially drawn screen — on a
+`mbk-nav-ico variant` wrapper, only while the list is open. The changed mark is
+a trailing dot and never an edge or rail. Row rendering lives in
+`catalogue-navigation-row.view.tsx`, which the component owns beside its main
+view.
 
 View controls saves **Changed views**, where a change confined to other views
 marks the theme control and the viewport dropdown. The mark is evidence about

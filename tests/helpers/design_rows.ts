@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 
+import { serializeOuter } from "parse5";
+
 import {
   attribute,
   byClass,
@@ -46,6 +48,19 @@ export function headCrumbs(node: Node): (string | undefined)[][] {
     textContent(crumb).trim(),
     attribute(crumb, "data-mokly-link"),
   ]);
+}
+
+/** A leaf row's icon: its wrapper class and the SVG markup the wrapper holds. */
+export function rowIcon(node: Node, label: string): [string, string] {
+  const row = byClass(node, "mbk-nav-row").find(
+    (candidate) => rowLabel(candidate) === label,
+  );
+  assert.ok(row, `Missing row ${label}`);
+  const wrapper = byClass(row, "mbk-nav-ico")[0];
+  assert.ok(wrapper, `Missing icon on ${label}`);
+  const svg = elements(wrapper, (element) => element.tagName === "svg")[0];
+  assert.ok(svg, `Missing icon SVG on ${label}`);
+  return [attribute(wrapper, "class") ?? "", serializeOuter(svg)];
 }
 
 /** The variant disclosures beside the screen rows that own variants. */

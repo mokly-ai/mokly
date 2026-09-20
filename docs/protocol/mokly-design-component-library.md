@@ -63,10 +63,12 @@ Controls below use text, boolean, number and primitive enum selections only.
    `ready/pending/preparing/unavailable`.
    Controls: All/Changes, availability and presentation. A `variant` row is a
    leaf one depth step below the screen row it follows; it renders only while
-   that screen's variant list is open, and it never counts as a collection
-   child. A screen row carrying a variant list adds a trailing 16px chevron
-   disclosure button with its own expanded state and accessible name; the row
-   link is unchanged. The changed mark is a trailing dot, never an edge or
+   that screen's variant list is open, it never counts as a collection child,
+   and it carries the variant icon — a screen outline over a second, partially
+   drawn screen outline — instead of the screen icon, muted like the screen
+   rows around it. A screen row carrying a variant list adds a trailing 16px
+   chevron disclosure button with its own expanded state and accessible name;
+   the row link is unchanged. The changed mark is a trailing dot, never an edge or
    rail. Pending and preparing
    both reserve the count slot with a spinner and replace selected Changes rows
    with their own message; only preparing adds a secondary detail line beneath

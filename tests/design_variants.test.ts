@@ -12,6 +12,7 @@ import {
   filterTargets,
   headCrumbs,
   headTitle,
+  rowIcon,
   rowLabel,
   rowLabels,
   variantToggles,
@@ -172,6 +173,24 @@ test("a selected variant discloses its parent's variant rows", async () => {
     "2",
     "variants are not collection children",
   );
+});
+
+test("variant rows carry their own icon, not the screen icon", async () => {
+  const { document } = await designDocument(
+    "design-browse-variant-selected",
+    "desktop",
+  );
+  const [emptyClass, emptyIcon] = rowIcon(document, "Empty workspace");
+  const [failedClass, failedIcon] = rowIcon(document, "Save failed");
+  const [welcomeClass, welcomeIcon] = rowIcon(document, "Welcome");
+  const [detailsClass, detailsIcon] = rowIcon(document, "Details");
+  assert.equal(emptyClass, "mbk-nav-ico variant");
+  assert.equal(failedClass, "mbk-nav-ico variant");
+  assert.equal(welcomeClass, "mbk-nav-ico");
+  assert.equal(detailsClass, "mbk-nav-ico");
+  assert.equal(emptyIcon, failedIcon, "every variant row draws one glyph");
+  assert.equal(welcomeIcon, detailsIcon, "screen rows keep the screen icon");
+  assert.notEqual(emptyIcon, welcomeIcon, "the variant glyph is its own");
 });
 
 test("Changes shows the changed variant row and marks its parent", async () => {

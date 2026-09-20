@@ -154,9 +154,12 @@ Pages projection and the responsive drawer:
   summary because a summary cannot also be a link.
 - The list renders one ordinary leaf row per variant in authored order, one
   indent step deeper than the parent with the same guide painting and the
-  screen icon. Its disclosure identity is `variants:<section>:<parent id>`,
-  persisted and restored beside collection keys, closed by `Collapse all`,
-  and captured by watched-reload recovery.
+  variant icon: a screen outline overlapping a second, partially drawn screen
+  outline behind it, so a variant row is distinguishable from its parent
+  screen row by more than its indent. It is muted like the screen icon; only
+  flow icons take the accent. Its disclosure identity is
+  `variants:<section>:<parent id>`, persisted and restored beside collection
+  keys, closed by `Collapse all`, and captured by watched-reload recovery.
 - The active-row invariant applies to variant rows: opening a variant marks
   its row `aria-current="page"` and opens its variant list, its parent's
   collections, and its section.

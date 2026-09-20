@@ -10,6 +10,7 @@ import {
   FolderOpenIcon,
   ScreenIcon,
   PageIcon,
+  VariantIcon,
 } from "../../parts/icons.js";
 
 import type { NavigationRow } from "./catalogue-navigation-sections.js";
@@ -61,7 +62,15 @@ function RowIcon({ kind }: { kind: NavigationRow["kind"] }) {
   }
   if (kind === "page") return <PageIcon />;
   if (kind === "flow") return <FlowIcon />;
+  if (kind === "variant") return <VariantIcon />;
   return <ScreenIcon />;
+}
+
+/** The icon wrapper's modifier, which styles and tests target by row kind. */
+function iconClassName(kind: NavigationRow["kind"]): string {
+  if (kind === "flow") return "mbk-nav-ico flow";
+  if (kind === "variant") return "mbk-nav-ico variant";
+  return "mbk-nav-ico";
 }
 
 /**
@@ -118,10 +127,7 @@ export function NavRow({
   }
   const content = (
     <>
-      <span
-        className={node.kind === "flow" ? "mbk-nav-ico flow" : "mbk-nav-ico"}
-        aria-hidden="true"
-      >
+      <span className={iconClassName(node.kind)} aria-hidden="true">
         <RowIcon kind={node.kind} />
       </span>
       {node.label}

@@ -262,15 +262,18 @@ scrollable region scrolls internally:
     authored collections remain in Pages. Collection groups are native
     `<details>` whose summary row shows a closed/open folder SVG pair (swapped
     via the `[open]` state), a bold label, and a monospace child count. Leaves
-    show a screen, page, flow, or component SVG; flow icons read in the accent.
+    show a screen, variant, page, flow, or component SVG; flow icons read in
+    the accent.
   - Rows indent 16px per depth from an 8px root inset and paint one faint
     1px vertical guide per ancestor depth. The hover/active highlight is an
     inset pill starting at the row's indent (`--mbk-indent`), so guides stay
     visible; the active row uses the accent with contrast text.
   - Approved target: a screen with variants keeps its link row and adds a
     16px chevron disclosure button at the row's trailing edge that toggles a
-    list of its variant rows one indent step deeper, each with the screen
-    icon. The Changes filter shows only changed variant rows and marks the
+    list of its variant rows one indent step deeper, each with the variant
+    icon — a screen outline over a second, partially drawn screen outline,
+    muted like the screen icon so only the flow icon takes the accent. The
+    Changes filter shows only changed variant rows and marks the
     parent with the changed dot when any variant changed. The changed mark is a
     6px accent dot at the row's trailing edge, drawn in the contrast color on
     the active row; no edge, rail, or border marks a row. The
