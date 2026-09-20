@@ -2,10 +2,9 @@
 
 ## Status And Outcome
 
-Milestones 1 through 6 are complete, committed, and pushed. Milestone 7 applies
-all seven approved review decisions and has passed the complete local
-verification gate. The fixes are locally committed; the supervising agent's
-push and the post-push review remain.
+Milestones 1 through 7 are complete, committed, and pushed. The post-push
+review of Milestone 7 reported seven further findings, recorded below, which
+await the user's decision; the first two are behavioural.
 
 Mokly currently discovers every `*.mockup.ts` and `*.mockup.tsx` module below
 one configured directory, `entriesDir`, and binds the source-attributed
@@ -359,9 +358,11 @@ agent to verify and push.
       `cargo xtask check` in that order.
 - [x] Stage all files and commit locally with a Conventional Commits message;
       the supervising agent will verify and push without changing branches.
-- [ ] After the supervising agent pushes, review the complete diff against
+- [x] After the supervising agent pushes, review the complete diff against
       `origin/main` with `docs/implementation-review-prompt.md` and report
-      findings without changing the implementation.
+      findings without changing the implementation. The post-push review of
+      the fix commit reported seven further findings, recorded under
+      "Second Review Findings (awaiting decision)".
 
 ## Review Findings (addressed)
 
@@ -415,6 +416,36 @@ The approved option applied to each finding is recorded below.
    **Applied option:** path and glob helpers moved to `watch_paths.ts`, the old
    `watch_entry_globs.ts` was folded into it, and both modules are below 300
    lines.
+
+## Second Review Findings (awaiting decision)
+
+Review of the Milestone 7 fix commit. Nothing has been changed in response.
+
+1. **P1, repository-root glob collapses ownership trust.** `isAuthoredOwner`
+   trusts any owner beneath a glob's stable prefix; for `**/*.mockup.{ts,tsx}`
+   that prefix is the repository root, so every in-repo owner path is
+   trusted, a foreign Mokly-headered file under `mockupsDir` becomes a
+   prunable orphan, and the unclaimed diagnostic never fires. Confirmed by
+   direct probe. Recommended: trust a prefix owner only when it is named like
+   an entry module and matches a configured glob, and treat an empty prefix
+   as no prefix trust.
+2. **P2, watcher prune and discovery disagree below a glob root.** The
+   watcher prunes `dist`, `coverage`, `target`, `.context`, and temporary
+   prefixes beneath a glob root, but discovery only skips `.git`,
+   `node_modules`, and `.mokly-cache`, so `src/dist/x.mockup.tsx` builds but
+   its creation is never seen while serving. Confirmed by direct probe.
+   Recommended: one shared denied-segment policy used by both, with the
+   watcher's list adopted by discovery.
+3. **P2, watch and configuration docs over-state the prune contract** until
+   findings 1 and 2 are fixed; then add the repository-root caveat.
+4. **P2, a mainline sentence was deleted** from `mokly-watch.md`: "Package
+   source under `node_modules` or an npx cache is never treated as consumer
+   source." Recommended: restore it.
+5. **P3, two em-dashes** were introduced in `mokly-watch.md`.
+6. **P3, `unclaimedGeneratedRoutes` is not exception-safe**; a file removed
+   between the walk and the read surfaces a raw ENOENT from `check`.
+7. **P3, four private helpers in `watch_paths.ts` lack doc comments** and one
+   blanket catch turns EACCES into "never rebuild" silently.
 
 ## Post-merge follow-up (non-blocking)
 
