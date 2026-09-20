@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 
 import {
   useDarkPreview,
-  useRenderedAppearance,
   type AppearanceChoice,
 } from "../../../parts/appearance.js";
 import type { DesignDestination } from "../../../parts/destinations.js";
@@ -42,11 +41,10 @@ export function AppearanceShell({
   nav,
   viewport,
 }: AppearanceShellProps) {
-  const rendered = useRenderedAppearance();
   return (
     <Shell
       design={design}
-      appearanceChoice={appearanceChoice ?? rendered}
+      appearanceChoice={appearanceChoice}
       viewport={viewport}
       nav={
         viewport === "desktop"

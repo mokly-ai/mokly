@@ -52,7 +52,8 @@ mobile component and desktop component; there are no new user-flow pages.
 Standalone files insert `.mobile` or `.desktop` before `.html`. All thirty-two component
 screens opt into light documents, matching the existing shell mockups. Their
 depicted preview caption names the artboard's own scheme, and the toolbar has
-no scheme switch: the catalogue's one Appearance control sets it. Links use
+no scheme switch: the catalogue's one Appearance control, drawn in their top
+bar like every other artboard's, sets it. Links use
 the existing logical-id navigation contract so they work both directly from
 disk and in Browse. State links demonstrate navigation between mockups; static
 depictions of shell controls do not implement the separate runtime inspector.

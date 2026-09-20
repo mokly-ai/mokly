@@ -2,7 +2,7 @@ export const designLibrary = [
   [
     "chrome",
     "top-bar",
-    ["default", "search", "tag-picker", "drawer-open", "appearance"],
+    ["default", "search", "tag-picker", "drawer-open", "auto-appearance"],
   ],
   [
     "chrome",

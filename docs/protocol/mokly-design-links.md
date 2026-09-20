@@ -147,11 +147,11 @@ none borrows another subject's inspector or drawer identity.
 
 ## Scheme, Comparison, And Tag States
 
-No design artboard depicts a scheme control, and the catalogue has no authored
-scheme pairs. Standalone Browse holds one Appearance setting, so every artboard
-that shows it draws the depicted Appearance selector in its top bar, which has
-no authored transitions, and the depicted screen header carries the viewport
-control alone. `design-browse-screen`, `design-browse-details-screen`,
+The catalogue authors no scheme pairs and no artboard depicts a scheme control
+in its screen header, which carries the viewport control alone. Standalone
+Browse holds one Appearance setting, so every artboard that draws a top bar
+draws the depicted Appearance selector in it, which has no authored
+transitions. `design-browse-screen`, `design-browse-details-screen`,
 `design-review-changed` and the appearance entries render in Light and in Dark
 instead, and Browse's own preview control moves between those two generated
 files at the same route. The removed `design-browse-dark-scheme`,

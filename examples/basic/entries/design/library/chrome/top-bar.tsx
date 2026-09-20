@@ -30,10 +30,7 @@ const propSchema = {
     menuPresentation: { schema: { kind: "enum", values: ["text", "icon"] } },
     tags: tagRecords,
     activeTag: optionalText,
-    appearance: {
-      schema: { kind: "enum", values: ["auto", "light", "dark"] },
-      optional: true,
-    },
+    appearance: { schema: { kind: "enum", values: ["auto", "light", "dark"] } },
     pickerOpen: flag,
     brandDestination: destination,
     menuDestination: destination,
@@ -42,6 +39,7 @@ const propSchema = {
 } as const;
 export type TopBarProps = ComponentProps<typeof propSchema, []>;
 const sample = {
+  appearance: "light",
   placeholder: "Search screens…",
   menu: "open",
   menuPresentation: "text",
@@ -56,7 +54,7 @@ export const topBar = defineComponent({
     "chrome",
     "top-bar",
     "Top bar",
-    "Branding, search, catalogue navigation and tag filtering.",
+    "Branding, search, catalogue navigation, tag filtering and appearance.",
   ),
   propSchema,
   controls: {
@@ -101,8 +99,8 @@ export const topBar = defineComponent({
       props: { ...sample, menu: "close", menuDestination: DESTINATIONS.home },
     },
     {
-      id: "appearance",
-      title: "Appearance",
+      id: "auto-appearance",
+      title: "Auto appearance",
       props: { ...sample, appearance: "auto" },
     },
   ],

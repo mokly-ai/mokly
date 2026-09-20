@@ -78,12 +78,10 @@ export function TopBarView({
           />
         ) : null}
       </div>
-      {appearance === undefined ? null : (
-        <appearanceSelector.Component
-          value={appearance}
-          compact={viewport === "mobile"}
-        />
-      )}
+      <appearanceSelector.Component
+        value={appearance}
+        compact={viewport === "mobile"}
+      />
     </header>
   );
 }

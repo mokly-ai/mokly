@@ -6,8 +6,9 @@ Runtime not implemented. The [dark-mode plan](../../plans/viewer-dark-mode.md)
 tracks this target for `@mokly/viewer`, local Serve and static exports. The
 [semantic palette](./mokly-viewer-palette.md) and the appearance mockups are
 delivered: every appearance entry renders in both schemes so the existing
-preview control switches it, each artboard draws exactly one Appearance control
-in the top bar, and the legacy head-band scheme depictions are gone. The current
+preview control switches it, the depicted top bar component owns the one
+Appearance control so every artboard drawing a top bar shows it, and the legacy
+head-band scheme depictions are gone. The current
 [viewer](./mokly-viewer.md) and [shell design](./mokly-shell-design.md) remain
 light-only around previews until the runtime implementation lands.
 
@@ -236,9 +237,10 @@ requested scheme as its deterministic system-theme fixture.
 
 Each artboard draws exactly one scheme control: the registered
 `chrome/appearance-selector` composed into the top bar. It depicts the planned
-standalone control and has no authored transitions. The depicted screen header
-carries the viewport control only, with no preview theme icon, and depicted
-component toolbars carry no scheme switch. The Auto artboard's selector reads
+standalone control and has no authored transitions. The depicted top bar
+component owns it, so every artboard drawing a top bar shows it rather than
+opting in. The depicted screen header carries the viewport control only, with no
+preview theme icon, and depicted component toolbars carry no scheme switch. The Auto artboard's selector reads
 Auto in both renders; every other artboard's selector reads the name of the
 scheme it was rendered for.
 

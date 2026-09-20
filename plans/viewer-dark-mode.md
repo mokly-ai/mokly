@@ -4,8 +4,9 @@ Status: in progress; the documentation and mockup milestones are complete,
 including the Milestone 2A correction that lets Mokly's built-in preview
 color-scheme toggle switch the mockups. On 2026-09-19 the user chose one
 standalone control for the interface and the previews together, so Milestone
-2B corrected the appearance mockups and Milestone 2C aligned the legacy scheme
-depictions. Runtime implementation has not started.
+2B corrected the appearance mockups, Milestone 2C aligned the legacy scheme
+depictions and Milestone 2D moved the control into the top bar component.
+Runtime implementation has not started.
 The implementation PR's merge is this plan's completion boundary.
 
 Give `@mokly/viewer`, local Serve and static exports a complete Auto/Light/Dark
@@ -320,6 +321,39 @@ side-by-side compare under either appearance at their own routes.
 no scheme control at all, the component explorer's depicted Dark mode switch is
 gone and its preview caption now names the artboard's own scheme, leaving 78
 design screens, 63 saved variants and no authored scheme link pairs.
+
+## Milestone 2D: Draw the Appearance control on every top bar (complete)
+
+Tags: mockup
+
+Milestone 2B introduced the Appearance selector as an opt-in prop that only the
+appearance group passes, so 83 artboards draw a top bar but 13 draw the control.
+Standalone Browse always holds one Appearance control, so the depicted top bar
+component should own it instead of each screen opting in.
+
+- [x] Add a test that every design artboard drawing a top bar draws exactly one
+      Appearance control, and confirm it fails on the 70 artboards that do not.
+- [x] Make `chrome/top-bar` own the control: require its `appearance` prop,
+      always render the selector, and default the value in the shared `TopBar`
+      to the scheme the artboard was rendered for. Keep `Shell`'s
+      `appearanceChoice` as the override the Auto artboard uses, and drop the
+      now-redundant explicit values and `top-bar` `appearance` variant.
+- [x] Update the shell design, design links, design component library and
+      component design contracts, plus `examples/basic/README.md`, the library
+      README and any counts the change moves.
+- [x] Run the example build and check, unit and browser tests, and
+      `cargo xtask check`; smoke both viewports through `npm run dev`,
+      including a narrow top bar and a component-explorer artboard.
+- [x] Commit and push, then review with
+      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      against `origin/main` and report findings without fixing them.
+
+Delivered: `chrome/top-bar` requires its `appearance` prop and always composes
+the selector, and the shared `TopBar` defaults the value to the scheme the file
+was rendered for. All 83 artboards with a top bar now draw exactly one
+Appearance control, up from 13; `Shell`'s `appearanceChoice` remains only as the
+override the Auto artboard uses. The `top-bar` `appearance` sample became
+`auto-appearance`, since every other sample now depicts the control too.
 
 ## Milestone 3: Implement shared viewer appearance
 

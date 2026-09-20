@@ -251,9 +251,11 @@ mockup you are looking at, at the same route. The renderer passes
 `data-mbk-appearance`; there is no second theme mechanism, no extra control and
 no script inside a mockup.
 
-Standalone Browse holds one Appearance setting, so each artboard draws one
-scheme control — the depicted Appearance selector in its top bar — and the
-depicted screen header carries the viewport control alone. The chrome and the
+Standalone Browse holds one Appearance setting, so the depicted top bar
+component owns it: every artboard with a top bar draws exactly one scheme
+control, the Appearance selector, and the depicted screen header carries the
+viewport control alone. The selector names the scheme its file was rendered for,
+except on the Auto artboard. The chrome and the
 screens it shows change together: Welcome, the comparison panes and the flow's
 first step are dark in the Dark render and light in the Light one, while the
 light-only Details screen keeps its light frames in both and names that fallback

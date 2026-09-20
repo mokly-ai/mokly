@@ -6,17 +6,17 @@ footer tabs panel is `inspector/inspector`. This is the consumer's mockup
 library; the actual Mokly browser shell remains in the package source.
 
 `chrome/appearance-selector` is the standalone catalogue's Auto/Light/Dark
-setting, which changes the chrome and the screens it shows together. The top bar
-composes it when a screen supplies an `appearance` value and omits it otherwise,
-so the legacy artboards are unchanged. It is the only scheme control an
-appearance artboard draws.
+setting, which changes the chrome and the screens it shows together. `chrome/top-bar`
+always composes it, so every artboard with a top bar draws it; a screen does not
+opt in. The value defaults to the scheme the file was rendered for and is
+overridden only to depict a different setting, as the Auto artboard does. It is
+the only scheme control the design catalogue draws.
 
 Those two samples — the appearance selector and the top bar that composes it —
 are the only ones that render in both schemes, because their own subject is the
 catalogue's appearance. Every other sample stays light.
-`view-controls` takes an optional scheme control: the appearance artboards omit
-it so their header carries the viewport dropdown alone, while the legacy Browse,
-Changes and component artboards keep the theme icon they already depict. `metadata.ts` owns that
+`view-controls` has no scheme control at all, so every depicted screen header
+carries the viewport dropdown alone. `metadata.ts` owns that
 list, `LibraryHost` stamps the requested scheme on the sample root, and Browse's
 existing preview control switches between the two generated files.
 

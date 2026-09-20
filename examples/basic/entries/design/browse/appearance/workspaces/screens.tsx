@@ -3,7 +3,6 @@ import { screen } from "@mokly/mokly";
 import {
   DesignAppearanceScope,
   useDarkPreview,
-  useRenderedAppearance,
 } from "../../../parts/appearance.js";
 import { CompareGrid, Pane } from "../../../parts/compare.js";
 import {
@@ -24,13 +23,7 @@ import { appearanceInspectorScreens } from "./inspectors.js";
 
 /** The drawer artboard draws the selector holding the scheme it renders for. */
 function DrawerTopBar() {
-  return (
-    <TopBar
-      viewport="mobile"
-      drawerOpen
-      appearanceChoice={useRenderedAppearance()}
-    />
-  );
+  return <TopBar viewport="mobile" drawerOpen />;
 }
 
 function DrawerBody() {
@@ -102,7 +95,6 @@ function WelcomePanes({ viewport }: { viewport: CompareViewport }) {
 function SideBySideCompare({ viewport }: { viewport: CompareViewport }) {
   return (
     <ComparePage
-      appearanceChoice={useRenderedAppearance()}
       activeTitle="Welcome"
       design={DESTINATIONS.appearanceSideBySide}
       idChip="example-welcome"
@@ -123,7 +115,6 @@ function SideBySideCompare({ viewport }: { viewport: CompareViewport }) {
 function DifferenceCompare({ viewport }: { viewport: CompareViewport }) {
   return (
     <ComparePage
-      appearanceChoice={useRenderedAppearance()}
       activeTitle="Welcome"
       design={DESTINATIONS.appearanceDifference}
       idChip="example-welcome"

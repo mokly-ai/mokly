@@ -268,3 +268,49 @@ test("the consolidated head-band scheme screens are gone", async () => {
       id,
     );
 });
+
+test("every artboard with a top bar draws one Appearance control", async () => {
+  const { manifest, outputs } = await designCatalogue;
+  let checked = 0;
+  for (const entry of manifest.entries) {
+    if (entry.kind !== "screen" || !entry.route.startsWith("design/")) continue;
+    for (const route of [
+      ...Object.values(entry.fragments),
+      ...Object.values(entry.darkFragments ?? {}),
+    ]) {
+      const html = outputs.get(route)!;
+      if (countClass(html, "mbk-topbar") === 0) continue;
+      checked += 1;
+      assert.equal(countClass(html, "mbk-appearance"), 1, route);
+    }
+  }
+  assert.ok(checked > 100, `only ${checked} artboards drew a top bar`);
+});
+
+test("the depicted Appearance control names the scheme it rendered for", async () => {
+  const { manifest, outputs } = await designCatalogue;
+  for (const entry of manifest.entries) {
+    if (entry.kind !== "screen" || !entry.route.startsWith("design/")) continue;
+    if (entry.id === "design-appearance-auto") continue;
+    for (const [scheme, routes] of [
+      ["light", entry.fragments],
+      ["dark", entry.darkFragments ?? {}],
+    ] as const) {
+      for (const route of Object.values(routes)) {
+        const html = outputs.get(route)!;
+        if (countClass(html, "mbk-topbar") === 0) continue;
+        const selector = elements(parse(html), (node) =>
+          (attribute(node, "class") ?? "")
+            .split(/\s+/u)
+            .includes("mbk-appearance"),
+        )[0];
+        assert.ok(selector, route);
+        assert.equal(
+          attribute(selector, "data-appearance-value"),
+          scheme,
+          route,
+        );
+      }
+    }
+  }
+});

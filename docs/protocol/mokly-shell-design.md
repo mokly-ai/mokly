@@ -114,8 +114,7 @@ Additional owning groups keep each new page at no more than five screens:
   to its own three aggregate outcomes.
 - `design/browse/appearance/overview.html` is the canonical appearance screen;
   the `states/` group beneath it owns two screens and `workspaces/` and
-  `status/` own five each. Each of them draws one scheme control, the depicted
-  Appearance selector in the top bar, and its previews follow the artboard. They specify the planned Auto/Light/Dark interface
+  `status/` own five each. Their previews follow the artboard. They specify the planned Auto/Light/Dark interface
   appearance from [viewer appearance](./mokly-viewer-appearance.md), which the
   implemented shell does not offer yet; their preview colour-scheme behavior is
   the implemented behavior recorded below. Every one of them renders in both
@@ -126,6 +125,11 @@ Additional owning groups keep each new page at no more than five screens:
 `design-review-changed` also render in both schemes, so the existing preview
 control shows the selected Welcome, the light-only Details subject and the
 side-by-side compare under either appearance at their own routes.
+
+Every artboard that draws a top bar draws exactly one scheme control in it, the
+depicted Appearance selector, because the standalone shell always offers that
+setting. The selector names the scheme its file was rendered for, except on the
+Auto artboard, which names Auto in both renders.
 
 Every screen ships one mobile and one desktop variant. Mockup implementation
 notes live in entry descriptions, rationale, and related docs — never inside
@@ -210,8 +214,9 @@ scrollable region scrolls internally:
   The decorative mark
   inherits the accent-contrast color and uses two-unit strokes on a 24-unit
   viewBox, with the mobile outline in front and a gap in the desktop outline
-  at the overlap. There is no mode
-  switch. A query splits into terms: every `tag:<tag>`
+  at the overlap. The bar carries no preview mode switch; the planned
+  Auto/Light/Dark Appearance control is the one setting that belongs here.
+  A query splits into terms: every `tag:<tag>`
   term matches only rows whose entry declares that tag, and the remaining words
   rejoin into one phrase that must appear in a row's authored ID, title, or
   route. A row stays visible only when it matches every tag term and that phrase;

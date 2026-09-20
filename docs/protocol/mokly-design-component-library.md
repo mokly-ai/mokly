@@ -17,16 +17,17 @@ Group indexes are pure galleries, containing at most five component entries.
 Samples are light-only except the appearance selector and the top bar that
 composes it, whose own subject is the catalogue's appearance: those render in
 both schemes so the existing preview control switches them like the appearance
-screens.
+screens. The top bar's own samples therefore name the scheme they rendered for,
+and one sample depicts the Auto setting.
 
 | Group / slug                  | Existing implementation                                             | Saved variant ids                                                          |
 | ----------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| chrome / top-bar              | `parts/top_bar.tsx`, `parts/tag_filter.tsx`                         | `default`, `search`, `tag-picker`, `drawer-open`, `appearance`             |
+| chrome / top-bar              | `parts/top_bar.tsx`, `parts/tag_filter.tsx`                         | `default`, `search`, `tag-picker`, `drawer-open`, `auto-appearance`        |
 | chrome / catalogue-navigation | `parts/nav.tsx`, scenario data in `components/parts/navigation.tsx` | `all`, `changes`, `empty`, `drawer`, `loading`, `preparing`, `unavailable` |
 | chrome / screen-header        | `parts/shell.tsx: ScreenHead`                                       | `screen`, `component`, `changed`, `removed`                                |
 | chrome / appearance-selector  | new for the appearance mockups                                      | `auto`, `light`, `dark`, `compact`                                         |
 | controls / comparison-toolbar | `parts/compare.tsx: CompareToolbar`                                 | `current`, `side-by-side`, `overlay`, `difference`                         |
-| controls / view-controls      | `components/parts/view_controls.tsx`, `parts/shell.tsx: ViewSwitch` | `default`, `both`, `highlighted`, `unavailable`, `viewport-only`           |
+| controls / view-controls      | `components/parts/view_controls.tsx`, `parts/shell.tsx: ViewSwitch` | `default`, `both`, `highlighted`, `unavailable`                            |
 | controls / tag-picker         | `parts/tag_filter.tsx: TagPicker`                                   | `all`, `selected`, `empty`                                                 |
 | controls / tag-chip           | `parts/tag_filter.tsx: TagChips`                                    | `default`, `selected`, `inactive`                                          |
 | controls / change-status      | `components/parts/comparison_details.tsx: ChangeStatusBadge`        | `unmodified`, `added`, `changed`, `removed`                                |
@@ -56,11 +57,14 @@ Controls below use text, boolean, number and primitive enum selections only.
 
 1. **Top bar:** query and placeholder strings; menu state `none/open/close`;
    existing text/icon menu presentation; available tag records, optional active
-   tag and picker-open flag; explicit navigation destinations; and an optional
-   `auto/light/dark` interface appearance. Controls: query, picker-open, menu
-   state and appearance. The appearance setting is the catalogue's own, is the
-   only scheme control in the design catalogue, and renders only when a screen
-   supplies it. Brand/search structure belongs to this component;
+   tag and picker-open flag; explicit navigation destinations; and a required
+   `auto/light/dark` interface appearance. Controls: query,
+   picker-open, menu state and appearance. The appearance setting is the
+   catalogue's own and is the only scheme control in the design catalogue. This
+   component owns it, so every artboard with a top bar draws it; screens do not
+   opt in. A screen's value defaults to the scheme its file was rendered for and
+   is overridden only to depict a different setting, as the Auto artboard does.
+   Brand/search structure belongs to this component;
    it composes the registered picker, chip and appearance selector. Preserve compact mobile branding.
 2. **Catalogue navigation:** row records with stable key, label, kind
    `collection/screen/component/flow`, depth, optional count/open/destination;
