@@ -2,13 +2,15 @@
 
 ## Delivery Status
 
-Implemented in the 33 design screens and two real example screens using
-`MockLink` and `MockLink asChild`. Verification and delivery are tracked by the
+Implemented in the 42 Browse/Changes design screens and two real example
+screens using `MockLink` and `MockLink asChild`. Verification and delivery are tracked by the
 [implementation plan](../../plans/mokabook-design-mocklinks.md).
 
 The [component design inventory](./mokly-component-design.md) extend the
 catalogue with their own state contract and native component/control depictions.
-The existing 24 Browse/Changes designs retain the canonical links below.
+The Browse/Changes designs retain the canonical links below, including the
+removed previous-version family added by
+[removed previews](./mokly-removed-previews.md).
 They now share native icon inspector tabs and working viewport dropdowns with
 the component designs; the legacy disclosure links and segmented view controls
 are removed. Catalogue-wide link and inventory checks cover
@@ -93,22 +95,24 @@ directory and catalogue group without moving the existing page.
 
 ## Navigation Controls
 
-| Control/context                                 | Destination or behavior                                                                        |
-| ----------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Brand, home breadcrumb, missing-route recovery  | `design-browse-home`                                                                           |
-| Home: Open the first screen                     | `design-browse-screen`                                                                         |
-| All catalogue: Welcome / Details / Example tour | `design-browse-screen` / `design-browse-details-screen` / `design-browse-use-case`             |
-| Changed catalogue: Welcome / Details / Farewell | `design-changes-current` / `design-review-added` / `design-review-removed`                     |
-| MiniWelcome: Open the details screen            | `design-browse-details-screen`; under dark selection, `design-browse-light-only`               |
-| MiniDetails: Return to welcome                  | `design-browse-screen`; under dark selection, `design-browse-dark-scheme`                      |
-| Depicted use-case step reference                | Welcome: `design-browse-screen`; Details: `design-browse-details-screen`                       |
-| Welcome/Details inspector: Example tour         | `design-browse-use-case`                                                                       |
-| Home menu open / drawer close                   | `design-browse-navigation` / `design-browse-home`                                              |
-| Menu from another narrow design                 | Canonical `design-browse-navigation`; selecting a leaf opens that leaf's canonical destination |
-| Welcome All / Changes filter                    | `design-browse-screen` / `design-changes-current`                                              |
-| Details All / Changes filter                    | `design-browse-details-screen` / `design-review-added`                                         |
-| Removed screen All filter                       | `design-browse-home`, because the depicted product screen has no current entry                 |
-| Empty Changes All filter                        | `design-browse-screen`                                                                         |
+| Control/context                                 | Destination or behavior                                                                                        |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Brand, home breadcrumb, missing-route recovery  | `design-browse-home`                                                                                           |
+| Home: Open the first screen                     | `design-browse-screen`                                                                                         |
+| All catalogue: Welcome / Details / Example tour | `design-browse-screen` / `design-browse-details-screen` / `design-browse-use-case`                             |
+| Changed catalogue: Welcome / Details / Farewell | `design-changes-current` / `design-review-added` / `design-review-removed`                                     |
+| Changed catalogue: Survey / Invite / Archive    | `design-review-removed-long` / `design-review-removed-loading` / `design-review-removed-unavailable`           |
+| Removed documents: four Changes rows            | `design-page-removed` / `-long` / `-loading` / `-unavailable`, each returning to `design-browse-home` from All |
+| MiniWelcome: Open the details screen            | `design-browse-details-screen`; under dark selection, `design-browse-light-only`                               |
+| MiniDetails: Return to welcome                  | `design-browse-screen`; under dark selection, `design-browse-dark-scheme`                                      |
+| Depicted use-case step reference                | Welcome: `design-browse-screen`; Details: `design-browse-details-screen`                                       |
+| Welcome/Details inspector: Example tour         | `design-browse-use-case`                                                                                       |
+| Home menu open / drawer close                   | `design-browse-navigation` / `design-browse-home`                                                              |
+| Menu from another narrow design                 | Canonical `design-browse-navigation`; selecting a leaf opens that leaf's canonical destination                 |
+| Welcome All / Changes filter                    | `design-browse-screen` / `design-changes-current`                                                              |
+| Details All / Changes filter                    | `design-browse-details-screen` / `design-review-added`                                                         |
+| Removed screen All filter                       | `design-browse-home`, because the depicted product screen has no current entry                                 |
+| Empty Changes All filter                        | `design-browse-screen`                                                                                         |
 
 Collection headings and collection-only breadcrumbs are not catalogue-link
 targets: the public API rejects collection ids. Leave grouping labels as text,
@@ -123,8 +127,9 @@ origin screen or simulate closing a drawer by linking back to the open state.
 
 Inspector data and links must describe the depicted subject. Share typed
 Welcome/Details metadata rather than rendering Welcome's generated path, tags,
-and description under every screen. The removed screen has no live product
-target or live-use-case link. Related-doc labels without a portable public
+and description under every screen. Removed screens have no live product
+target or live-use-case link; their inspector records the previous version's
+provenance. Related-doc labels without a portable public
 document remain plain text; this change adds no document publishing pipeline.
 
 The page designs extend this contract with explicit document destinations.
@@ -164,8 +169,10 @@ selected in `design-changes-current`, so it has no
 transition there. Returning to All uses the navigation table above.
 
 Added Details shows its Current preview without comparison modes. Removed
-Farewell shows a current empty state without comparison modes and has no live
-product destination. Unsupported dark-comparison modes remain non-link depictions.
+Farewell, Survey, Invite, and Archive show their previous version, its loading
+wait, or its unavailable state with Retry, without comparison modes and with
+no live product destination; links inside a previous version do nothing.
+Unsupported dark-comparison modes remain non-link depictions.
 Shared-impact/ignored-only and empty Changes keep a Current preview
 without comparison modes; factual evidence lives in Details. Their existing
 routes and All escape remain available. A future interactive mode needs its

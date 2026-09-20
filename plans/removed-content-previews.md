@@ -2,9 +2,10 @@
 
 ## Status And Outcome
 
-Milestone 1 is complete: the contract lives in
-[removed previews](../docs/protocol/mokly-removed-previews.md) and the owning
-protocols mark the sentences it replaces. Milestone 2 is next. The user
+Milestones 1 and 2 are complete: the contract lives in
+[removed previews](../docs/protocol/mokly-removed-previews.md), the owning
+protocols mark the sentences it replaces, and the design catalogue renders
+every previous-version state. Milestone 3 is next. The user
 requested this plan after discussing the removed-document empty state and
 agreed preview behavior, then approved the amendments recorded below: reuse
 the comparison engine's historical capture for screens, settle the example
@@ -218,14 +219,14 @@ widths while the existing application remains functional.
       authored CSS; generated HTML and the manifest stay ignored.
 - [x] Start `npm run dev`, visually inspect every changed mobile and desktop
       design, and save screenshots under `.context/` before UI work begins.
-- [ ] Discovered during the mockups: the
+- [x] Discovered during the mockups: the
       [design links contract](../docs/protocol/mokly-design-links.md) still says
       “Removed Farewell shows a current empty state without comparison modes and
       has no live product destination,” and its delivery status still counts 33
       design screens. Replace that sentence with the previous-version behavior,
       record the removed family's Changes rows as canonical destinations, and
-      refresh the count. Left unchanged here because this milestone's scope named
-      only `mokly-shell-design.md`.
+      refresh the count. Left unchanged by the delegated mockup work because its
+      scope named only `mokly-shell-design.md`; closed in the follow-up commit.
 - [x] Run `cargo xtask check`; then `git add -A`, commit with Conventional
       Commits, and push the branch.
 - [x] After the push, review the complete local diff against `origin/main` with
