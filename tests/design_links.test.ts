@@ -129,7 +129,7 @@ test("every design link resolves to a real same-viewport design artifact without
     entry.id.startsWith("design-component-"),
   );
   assert.equal(componentDesigns.length, 32);
-  assert.equal(designs.length - componentDesigns.length, 36);
+  assert.equal(designs.length - componentDesigns.length, 40);
   for (const entry of designs) {
     for (const viewport of ["mobile", "desktop"] as const) {
       const { document, route } = await designDocument(entry.id, viewport);
@@ -173,7 +173,8 @@ test("every design link resolves to a real same-viewport design artifact without
           elements(
             document,
             (node) =>
-              node.tagName === "button" ||
+              (node.tagName === "button" &&
+                attribute(node, "class") !== "mbk-nav-variants-toggle") ||
               (node.tagName !== "a" &&
                 attribute(node, "tabindex") !== undefined),
           ).length,

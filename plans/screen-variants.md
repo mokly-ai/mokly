@@ -2,8 +2,8 @@
 
 Status: active. Created 2026-09-19 with the user's consent after the design
 discussion in this workspace, then rewritten the same day when the user chose
-own routes over a query parameter. Milestone 1 is complete; Milestone 2 is
-next.
+own routes over a query parameter. Milestones 1 and 2 are complete;
+Milestone 3 is next.
 
 **Goal:** Let a screen declare variants beside its default render, show them as
 an expandable list under the screen's navigation row, give each variant its
@@ -186,13 +186,13 @@ conversion into real variants is Milestone 8.
 
 **Steps:**
 
-- [ ] Add the schema fields, saved variants, and view markup; keep the
+- [x] Add the schema fields, saved variants, and view markup; keep the
       library README's authoring rules.
-- [ ] Style the disclosure button as a 16px chevron control at the row's
+- [x] Style the disclosure button as a 16px chevron control at the row's
       trailing edge, the variant rows one indent step deeper with the screen
       icon, and the changed mark as the existing changed dot. Verify no
       pseudo-element, border, or gradient adds a left-edge rail.
-- [ ] `npm run build && npm run example:build && npm run example:check`.
+- [x] `npm run build && npm run example:build && npm run example:check`.
 
 #### Task 2.2: New Browse states
 
@@ -224,21 +224,23 @@ conversion into real variants is Milestone 8.
 
 **Steps:**
 
-- [ ] Author the four screens, each with one mobile and one desktop
+- [x] Author the four screens, each with one mobile and one desktop
       component, and the canonical collection page; keep the page at no more
       than five screens. Put implementation notes in descriptions and
       rationale, never inside the artboard. Depict the variant rows with the
       static nav fixture only; no screen in this milestone uses the
       `variants` authoring field, which does not exist yet.
-- [ ] Extend the design links contract's control table: parent row opens the
-      Welcome default, variant rows open the selected-variant screen, the
-      Changes filter on the changed-variants screen opens the removed-variant
-      screen's All destination, and the theme toggle on the changed-views
-      screen opens the dark comparison screen.
-- [ ] `npm run build && npm run example:build && npm run example:check`, then
+- [x] Extend the design links contract's control table: the parent row opens
+      the Welcome default, the Empty workspace variant row opens the
+      selected-variant screen, the selected-variant screen's Changes filter
+      opens the changed-variant screen and that screen's All filter returns,
+      the removed-variant and changed-views screens' All filters open the
+      Welcome default, and the theme toggle on the changed-views screen opens
+      the dark comparison screen.
+- [x] `npm run build && npm run example:build && npm run example:check`, then
       open every changed generated page from disk with Playwright screenshots
       saved under `.context/` and read them to confirm layout at both widths.
-- [ ] Milestone close-out: commit `docs(design): add screen variant mockups`
+- [x] Milestone close-out: commit `docs(design): add screen variant mockups`
       and push.
 
 ---

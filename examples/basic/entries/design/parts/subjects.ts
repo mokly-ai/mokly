@@ -1,10 +1,12 @@
 import type { CatalogueTag } from "./tags.js";
 
 /** Product subjects depicted by the design catalogue, independent of link ids. */
-export type ScreenSubject = "welcome" | "details" | "farewell";
+export type ScreenSubject = "welcome" | "details" | "farewell" | "welcomeError";
 
 interface SubjectMetadata {
   description: string;
+  /** Whether this subject has a published document to reference. */
+  docs: boolean;
   generated: string;
   rationale: string;
   schemes: string;
@@ -17,6 +19,7 @@ interface SubjectMetadata {
 export const SUBJECTS: Record<ScreenSubject, SubjectMetadata> = {
   welcome: {
     description: "A linked landing screen for the neutral fixture.",
+    docs: true,
     generated: "screens/welcome.html",
     rationale:
       "The landing screen anchors the example catalogue, so every cross-screen link starts from a known state.",
@@ -27,6 +30,7 @@ export const SUBJECTS: Record<ScreenSubject, SubjectMetadata> = {
   },
   details: {
     description: "Additional context for the example catalogue.",
+    docs: true,
     generated: "screens/details.html",
     rationale:
       "The Details screen completes the example tour and provides a return to Welcome.",
@@ -37,12 +41,24 @@ export const SUBJECTS: Record<ScreenSubject, SubjectMetadata> = {
   },
   farewell: {
     description: "Farewell was removed from the catalogue.",
+    docs: false,
     generated: "No current screen",
     rationale:
       "The empty state makes the removal clear while its recorded details remain available.",
     schemes: "light",
     source: "Previous version",
     tags: [],
+    tour: false,
+  },
+  welcomeError: {
+    description: "Welcome after saving failed was removed from the catalogue.",
+    docs: false,
+    generated: "No current screen",
+    rationale:
+      "A deleted state keeps its recorded details under the screen it belonged to, so the group stays readable after the removal.",
+    schemes: "light, dark",
+    source: "Previous version",
+    tags: ["forms"],
     tour: false,
   },
 };

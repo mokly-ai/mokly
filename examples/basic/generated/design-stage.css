@@ -74,6 +74,41 @@
   font-weight: 600;
 }
 
+.mbk-shot-error {
+  background: #fdf1ef;
+  border: 1px solid #e7c3bb;
+  border-radius: 8px;
+  color: #8a3423;
+  font-size: 12px;
+  margin: 0 0 12px;
+  padding: 8px 10px;
+}
+
+.mbk-shot-field {
+  align-items: center;
+  border: 1px solid var(--chrome-border-strong);
+  border-radius: 8px;
+  color: var(--chrome-muted);
+  display: flex;
+  font-size: 12.5px;
+  margin: 0 0 10px;
+  min-height: 32px;
+  padding: 0 10px;
+}
+
+.mbk-shot-action {
+  background: var(--chrome-bg);
+  border: 1px solid var(--chrome-border-strong);
+  border-radius: 8px;
+  color: var(--chrome-muted);
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  padding: 7px 12px;
+  width: fit-content;
+}
+
 .mbk-shot--restyled .mbk-shot-nav {
   border-bottom-color: var(--mbk-sage);
   color: var(--chrome-ink);

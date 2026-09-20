@@ -53,6 +53,10 @@ contract until their standalone screens are implemented.
 | `design-browse-tag-onboarding-picker` | `design/browse/states/tags/onboarding-picker.html` | Onboarding filter, picker open                            |
 | `design-browse-dark-scheme`           | `design/browse/states/dark-scheme.html`            | Dark selected, dark device screens                        |
 | `design-browse-light-only`            | `design/browse/states/light-only.html`             | Light-only screen under dark                              |
+| `design-browse-variant-selected`      | `design/browse/variants/selected.html`             | Selected variant under its parent screen                  |
+| `design-browse-variant-changes`       | `design/browse/variants/changes.html`              | Changed variant row inside its parent group               |
+| `design-browse-variant-removed`       | `design/browse/variants/removed.html`              | Removed variant under a surviving parent                  |
+| `design-browse-changed-views`         | `design/browse/variants/changed-views.html`        | Change confined to the views that are not shown           |
 | `design-changes-current`              | `design/review/controls/current.html`              | Current screen in Changes                                 |
 | `design-changes-overlay`              | `design/review/controls/overlay.html`              | On-demand overlay comparison                              |
 | `design-review-changed`               | `design/review/outcomes/changed.html`              | Changed screen, side-by-side compare                      |
@@ -83,6 +87,13 @@ Additional owning groups keep each new page at no more than five screens:
   behavior.
 - `design/browse/publication/catalogue.html` and `changes.html` specify review
   omitted and included, using the existing Welcome stage.
+- `design/browse/variants/selected.html`, `changes.html`, `removed.html`, and
+  `changed-views.html` specify a screen's variants: the disclosed variant list
+  with one variant selected, a changed variant row under a parent whose own
+  render is unmodified, a deleted variant retained under its surviving parent,
+  and a change confined to views other than the one shown. `selected.html`
+  is the group's canonical screen. Their behavior contract is
+  [screen variants](./mokly-screen-variants.md).
 - `design/review/impact/stylesheets/matched.html`, `unresolved.html`,
   `unnamed.html`, and `excluded.html` specify rule-aware stylesheet evidence
   beneath the impact states, so the impact page itself keeps its three screens.
@@ -260,9 +271,12 @@ scrollable region scrolls internally:
     16px chevron disclosure button at the row's trailing edge that toggles a
     list of its variant rows one indent step deeper, each with the screen
     icon. The Changes filter shows only changed variant rows and marks the
-    parent with the changed dot when any variant changed. The
-    [screen variants contract](./mokly-screen-variants.md) owns the
-    behavior; its owning mockups are listed below once authored.
+    parent with the changed dot when any variant changed. The changed mark is a
+    6px accent dot at the row's trailing edge, drawn in the contrast color on
+    the active row; no edge, rail, or border marks a row. The
+    [screen variants contract](./mokly-screen-variants.md) owns the behavior,
+    and `design/browse/variants/selected.html`, `changes.html`, and
+    `removed.html` own its mockups.
   - Catalogue-link navigation opens the active section and every collection on the active
     row's path and scrolls that row into view. Search and Changes filtering may
     stay selected only while the active row remains visible. Reapplying an
