@@ -6,7 +6,10 @@ export type LibraryGroup = "chrome" | "controls" | "inspector" | "preview";
  * schemes so Browse's preview control switches them like the appearance
  * screens; the remaining samples stay light, as they were before.
  */
-const dualScheme = new Set<LibraryStyle>(["appearance-selector", "top-bar"]);
+export const DUAL_SCHEME_SAMPLES = new Set<LibraryStyle>([
+  "appearance-selector",
+  "top-bar",
+]);
 
 /** Registration metadata is separate from implementation impact dependencies. */
 export function libraryMetadata(
@@ -25,7 +28,7 @@ export function libraryMetadata(
     dependencies: [view, stylesheet],
     ownedDependencies: [view, stylesheet],
     relatedDocs: ["docs/protocol/mokly-design-component-library.md"],
-    colorSchemes: dualScheme.has(slug)
+    colorSchemes: DUAL_SCHEME_SAMPLES.has(slug)
       ? (["light", "dark"] as const)
       : (["light"] as const),
   };

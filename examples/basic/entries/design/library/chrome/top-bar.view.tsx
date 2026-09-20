@@ -22,7 +22,10 @@ export function TopBarView({
   menuDestination,
   pickerDestination,
   viewport,
-}: TopBarProps & { viewport: Viewport }) {
+}: TopBarProps & {
+  appearance: NonNullable<TopBarProps["appearance"]>;
+  viewport: Viewport;
+}) {
   useDesignStyle("top-bar");
   return (
     <header className="mbk-topbar">

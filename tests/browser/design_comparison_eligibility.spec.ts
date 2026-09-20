@@ -5,6 +5,7 @@ import { pathToFileURL } from "node:url";
 import { expect, test } from "@playwright/test";
 
 import type { ManifestV5 } from "../../packages/viewer/dist/registry/types.js";
+import { paletteColor } from "../helpers/design_palette.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 
 const directory = path.join(repositoryRoot, "examples/basic/generated");
@@ -35,54 +36,51 @@ for (const viewport of ["desktop", "mobile"] as const) {
     );
     for (const entry of manifest.entries) {
       if (entry.kind !== "screen" || !entry.id.startsWith("design-")) continue;
-      await page.goto(
-        pathToFileURL(path.join(directory, entry.fragments[viewport])).href,
-      );
-      const componentDesign = entry.route.startsWith("design/components/");
-      const changedComponentOrScreen =
-        componentDesign &&
-        (await page.locator('[data-change-status="changed"]').count()) > 0;
-      const removedComponent =
-        componentDesign &&
-        (await page.locator('[data-change-status="removed"]').count()) > 0 &&
-        (await page.locator(".ce-variants").count()) > 0;
-      const componentComparison = changedComponentOrScreen || removedComponent;
-      const expected = changedDesigns.has(entry.id) || componentComparison;
-      const toolbar = page.locator(".mbk-cmp-toolbar");
-      await expect(toolbar, entry.id).toHaveCount(expected ? 1 : 0);
-      if (!expected) {
-        await expect(
-          page.locator(".mbk-comparison-stage h3"),
-          entry.id,
-        ).toHaveCount(0);
-      } else {
-        // The band stays opaque in whichever appearance the artboard draws.
-        const surface = await page.evaluate(() => {
-          const root =
-            document.querySelector("[data-mbk-appearance]") ??
-            document.documentElement;
-          const probe = document.createElement("span");
-          probe.style.backgroundColor = "var(--chrome-surface)";
-          root.append(probe);
-          const value = getComputedStyle(probe).backgroundColor;
-          probe.remove();
-          return value;
-        });
-        await expect(toolbar, entry.id).toHaveCSS("background-color", surface);
-        await expect(toolbar, entry.id).toHaveCSS("display", "flex");
-        const bounds = (await toolbar.boundingBox())!;
-        for (const control of await toolbar.locator(".mbk-seg").all()) {
-          const child = (await control.boundingBox())!;
-          expect(child.y, entry.id).toBeGreaterThanOrEqual(bounds.y);
-          expect(child.y + child.height, entry.id).toBeLessThanOrEqual(
-            bounds.y + bounds.height,
+      for (const [appearance, fragment] of [
+        ["light", entry.fragments[viewport]],
+        ["dark", entry.darkFragments?.[viewport]],
+      ] as const) {
+        if (!fragment) continue;
+        await page.goto(pathToFileURL(path.join(directory, fragment)).href);
+        const componentDesign = entry.route.startsWith("design/components/");
+        const changedComponentOrScreen =
+          componentDesign &&
+          (await page.locator('[data-change-status="changed"]').count()) > 0;
+        const removedComponent =
+          componentDesign &&
+          (await page.locator('[data-change-status="removed"]').count()) > 0 &&
+          (await page.locator(".ce-variants").count()) > 0;
+        const componentComparison =
+          changedComponentOrScreen || removedComponent;
+        const expected = changedDesigns.has(entry.id) || componentComparison;
+        const toolbar = page.locator(".mbk-cmp-toolbar");
+        await expect(toolbar, entry.id).toHaveCount(expected ? 1 : 0);
+        if (!expected) {
+          await expect(
+            page.locator(".mbk-comparison-stage h3"),
+            entry.id,
+          ).toHaveCount(0);
+        } else {
+          // The band stays opaque in the palette the artboard's appearance selects.
+          await expect(toolbar, fragment).toHaveCSS(
+            "background-color",
+            await paletteColor(appearance, "--chrome-surface"),
           );
+          await expect(toolbar, entry.id).toHaveCSS("display", "flex");
+          const bounds = (await toolbar.boundingBox())!;
+          for (const control of await toolbar.locator(".mbk-seg").all()) {
+            const child = (await control.boundingBox())!;
+            expect(child.y, entry.id).toBeGreaterThanOrEqual(bounds.y);
+            expect(child.y + child.height, entry.id).toBeLessThanOrEqual(
+              bounds.y + bounds.height,
+            );
+          }
         }
+        await page.screenshot({
+          path: testInfo.outputPath(`${entry.id}.${appearance}.png`),
+          fullPage: true,
+        });
       }
-      await page.screenshot({
-        path: testInfo.outputPath(`${entry.id}.png`),
-        fullPage: true,
-      });
     }
   });
 }

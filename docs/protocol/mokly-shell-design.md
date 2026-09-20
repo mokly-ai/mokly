@@ -121,10 +121,14 @@ Additional owning groups keep each new page at no more than five screens:
   schemes, so the existing preview control moves between its two generated
   files at the same route. Existing light-interface routes keep their ids.
 
-`design-browse-screen`, `design-browse-details-screen` and
-`design-review-changed` also render in both schemes, so the existing preview
-control shows the selected Welcome, the light-only Details subject and the
-side-by-side compare under either appearance at their own routes.
+`design-browse-screen`, `design-browse-details-screen` and the whole Welcome
+comparison family — `design-changes-current`, `design-changes-overlay`,
+`design-review-changed` and `design-review-difference` — also render in both
+schemes, so the existing preview control shows the selected Welcome, the
+light-only Details subject and every comparison mode under either appearance at
+their own routes. A comparison family publishes the same schemes for every
+member, so switching mode inside a dark catalogue never lands on a light
+document.
 
 Every artboard that draws a top bar draws exactly one scheme control in it, the
 depicted Appearance selector, because the standalone shell always offers that

@@ -3,13 +3,11 @@ import fs from "node:fs/promises";
 import test from "node:test";
 
 import { catalogueNavigation } from "../examples/basic/entries/design/library/chrome/catalogue-navigation.js";
+import { DUAL_SCHEME_SAMPLES } from "../examples/basic/entries/design/library/metadata.js";
 import { NAV_TREE } from "../examples/basic/entries/design/parts/nav_data.js";
 
 import { designCatalogue } from "./helpers/design_catalogue.js";
 import { designLibrary } from "./helpers/design_library.js";
-
-/** Samples Mokly's preview control switches, like the appearance screens. */
-const dualSchemeSamples = new Set(["appearance-selector", "top-bar"]);
 
 test("catalogue navigation's All example matches its in-screen navigation", () => {
   const all = catalogueNavigation.entry.variants.find(
@@ -19,11 +17,27 @@ test("catalogue navigation's All example matches its in-screen navigation", () =
   assert.deepEqual(all.props.rows, NAV_TREE);
 });
 
-/** The canonical screens that absorbed the removed head-band scheme pairs. */
-const CONSOLIDATED_SCHEME_SCREENS = new Set([
+/**
+ * `screens.json` is a frozen record proving the shared-library refactor never
+ * dropped a screen or changed a route, so an entry may only be removed from it
+ * with the user's recorded approval. The precedent is the three head-band
+ * scheme routes removed in `plans/viewer-dark-mode.md`; a screen that vanishes
+ * for any other reason is a regression, not a fixture to update.
+ */
+/**
+ * Baseline screens that have since gained a dark render: the canonical screens
+ * that absorbed the removed head-band scheme pairs, and the Welcome comparison
+ * family, whose members must publish the same schemes so a dark comparison
+ * never links into a light document. Their routes and light fragments are
+ * unchanged, which is what the baseline records.
+ */
+const DUAL_SCHEME_SINCE_BASELINE = new Set([
   "design-browse-screen",
   "design-browse-details-screen",
+  "design-changes-current",
+  "design-changes-overlay",
   "design-review-changed",
+  "design-review-difference",
 ]);
 
 test("the shared library preserves every existing design screen and viewport route", async () => {
@@ -44,7 +58,7 @@ test("the shared library preserves every existing design screen and viewport rou
     assert.ok(entry?.kind === "screen", original.id);
     assert.equal(entry.route, original.route);
     assert.deepEqual(entry.fragments, original.fragments);
-    if (!CONSOLIDATED_SCHEME_SCREENS.has(original.id))
+    if (!DUAL_SCHEME_SINCE_BASELINE.has(original.id))
       assert.equal(entry.darkFragments, undefined);
   }
 });
@@ -78,10 +92,10 @@ test("all sixteen shared components have connected pages, controls and saved exa
       // Only the samples whose own subject is appearance render in both schemes.
       assert.equal(
         variant.darkFragments === undefined,
-        !dualSchemeSamples.has(slug),
+        !DUAL_SCHEME_SAMPLES.has(slug),
         `${id}/${variant.id}`,
       );
-      const schemes = dualSchemeSamples.has(slug) ? 2 : 1;
+      const schemes = DUAL_SCHEME_SAMPLES.has(slug) ? 2 : 1;
       assert.deepEqual(
         [
           ...new Set(variant.componentViews.map((view) => view.viewport)),

@@ -14,7 +14,11 @@ the only scheme control the design catalogue draws.
 
 Those two samples — the appearance selector and the top bar that composes it —
 are the only ones that render in both schemes, because their own subject is the
-catalogue's appearance. Every other sample stays light.
+catalogue's appearance; `metadata.ts` exports that set as
+`DUAL_SCHEME_SAMPLES`. A dual-scheme sample reads the props whose own subject is
+the scheme from its render context instead of pinning them in a fixture, so the
+top bar's samples name the scheme they rendered for and only `auto-appearance`
+sets the value explicitly. Every other sample stays light.
 `view-controls` has no scheme control at all, so every depicted screen header
 carries the viewport dropdown alone. `metadata.ts` owns that
 list, `LibraryHost` stamps the requested scheme on the sample root, and Browse's

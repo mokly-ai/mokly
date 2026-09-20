@@ -3,6 +3,8 @@ import test from "node:test";
 
 import { parse } from "parse5";
 
+import { DUAL_SCHEME_SAMPLES } from "../examples/basic/entries/design/library/metadata.js";
+
 import {
   attribute,
   designCatalogue,
@@ -10,10 +12,9 @@ import {
 } from "./helpers/design_catalogue.js";
 
 /** Registered samples whose appearance is the subject of the sample itself. */
-const dualSchemeComponents = [
-  "design-ui-appearance-selector",
-  "design-ui-top-bar",
-];
+const dualSchemeComponents = [...DUAL_SCHEME_SAMPLES].map(
+  (slug) => `design-ui-${slug}`,
+);
 
 function appearanceOf(html: string): string | undefined {
   const roots = elements(

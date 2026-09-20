@@ -256,10 +256,11 @@ component owns it: every artboard with a top bar draws exactly one scheme
 control, the Appearance selector, and the depicted screen header carries the
 viewport control alone. The selector names the scheme its file was rendered for,
 except on the Auto artboard. The chrome and the
-screens it shows change together: Welcome, the comparison panes and the flow's
+screens it shows change together: Welcome, every comparison mode and the flow's
 first step are dark in the Dark render and light in the Light one, while the
 light-only Details screen keeps its light frames in both and names that fallback
-in its own caption. Device-screen tokens stay independent of the interface
+in its own caption. A comparison family publishes the same schemes for every
+member, so changing mode inside a dark catalogue never opens a light document. Device-screen tokens stay independent of the interface
 palette, and a comparison in Difference mode still blends on a base taken from
 the compared screens. The approved swatches and their contrast are the
 [semantic palette](../../docs/protocol/mokly-viewer-palette.md); the behavior

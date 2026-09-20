@@ -1,13 +1,15 @@
 # Viewer Dark Mode
 
-Status: in progress; the documentation and mockup milestones are complete,
-including the Milestone 2A correction that lets Mokly's built-in preview
-color-scheme toggle switch the mockups. On 2026-09-19 the user chose one
-standalone control for the interface and the previews together, so Milestone
-2B corrected the appearance mockups, Milestone 2C aligned the legacy scheme
-depictions and Milestone 2D moved the control into the top bar component.
-Runtime implementation has not started.
-The implementation PR's merge is this plan's completion boundary.
+Status: in progress; the documentation and mockup milestones through 2D are
+complete: the built-in preview toggle switches every dual-scheme mockup, the
+standalone design shows one Appearance control on every top bar, and the legacy
+head-band scheme depictions are consolidated. On 2026-09-20 the user asked for
+the open review findings to be fixed (Milestone 2E is complete; 2F remains)
+and then for the
+remaining milestones to be implemented, with UI milestones delegated to Opus 5
+and non-UI milestones to Codex, each checked by the parent session. Runtime
+implementation has not started. The implementation PR's merge is this plan's
+completion boundary.
 
 Give `@mokly/viewer`, local Serve and static exports a complete Auto/Light/Dark
 appearance. The [appearance contract](../docs/protocol/mokly-viewer-appearance.md)
@@ -355,12 +357,105 @@ Appearance control, up from 13; `Shell`'s `appearanceChoice` remains only as the
 override the Auto artboard uses. The `top-bar` `appearance` sample became
 `auto-appearance`, since every other sample now depicts the control too.
 
+## Milestone 2E: Fix the mockup review findings (complete)
+
+Tags: mockup
+
+The post-push reviews of Milestones 2B, 2C and 2D left findings the user
+chose to fix before runtime work. All of them are mockup authoring, tests or
+design documentation; none changes the viewer package.
+
+- [x] Make `design-changes-current`, `design-changes-overlay` and
+      `design-review-difference` dual-scheme like `design-review-changed`, so
+      every comparison-mode link out of the dark changed artboard resolves to
+      a dark fragment. Add the invariant to `tests/design_links.test.ts`: a
+      link out of a dark fragment resolves to the target's dark fragment when
+      one exists, and no dual-scheme screen links into a light-only sibling in
+      its own comparison family. Update the inventories and design-links copy.
+- [x] Let the registered `chrome/top-bar` sample default its `appearance` to
+      the render context's scheme when a fixture omits it, so the dark gallery
+      samples read Dark. Keep the explicit `auto-appearance` sample. Record the
+      rule once in the design component library contract: a dual-scheme sample
+      derives the props whose subject is the scheme from its render context.
+- [x] Export the dual-scheme sample set from
+      `examples/basic/entries/design/library/metadata.ts` and use it in
+      `tests/design_library_inventory.test.ts` and
+      `tests/design_appearance_variants.test.ts` instead of restating it.
+- [x] Replace the comparison-band probe in
+      `tests/browser/design_comparison_eligibility.spec.ts` with the expected
+      surface colour per scheme from `tests/helpers/design_palette.ts`.
+- [x] Add a comment to `tests/fixtures/design-library/screens.json`'s test
+      stating that baseline entries may only be removed with recorded user
+      approval, naming this plan as the precedent for the three removed routes.
+- [x] Replace the stale counts in `docs/protocol/mokly-design-components.md`'s
+      Delivery Status with a pointer to the generated manifest as the source
+      of screen, fragment, component and variant counts.
+- [x] Extract the scheme branch of `view-controls.view.tsx` into a small
+      sub-component if any nested ternary remains after Milestone 2C; skip if
+      the file already reads as one decision per expression.
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
+      the design unit and browser suites and `cargo xtask check`; smoke the
+      dark changed artboard's comparison links and the top-bar gallery through
+      `npm run dev`, save screenshots under `.context/` prefixed `m2e-`, and
+      include regenerated output.
+- [x] After checks pass, `git add -A`, commit and push; then review the
+      complete diff against `origin/main` with
+      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      and report findings without fixing them.
+
+Delivered: the Welcome comparison family — `design-changes-current`,
+`design-changes-overlay`, `design-review-changed` and
+`design-review-difference` — is dual-scheme, so every comparison-mode link out
+of the dark changed artboard lands on a dark document. `tests/design_links.test.ts`
+now asserts both invariants. The `top-bar` sample falls back to the render
+context's scheme, so its dark gallery samples read Dark, and
+`DUAL_SCHEME_SAMPLES` is exported from `library/metadata.ts` for both tests.
+The comparison-band spec asserts the concrete surface colour per scheme from
+`design_palette.ts` and now visits dark fragments too. The baseline fixture
+carries its removal rule, and `mokly-design-components.md` points at the
+generated manifest instead of restating counts. `view-controls.view.tsx` needed
+no change: Milestone 2C left one decision per expression and no nested ternary.
+
+## Milestone 2F: Merge main and stabilise the gate
+
+Bring the branch up to date with `origin/main` before runtime work, and stop
+the pre-existing Node crash from turning green gates red. Nothing here changes
+product behaviour.
+
+- [ ] Fetch `origin/main`, capture the branch tip, and audit main's additions
+      since the merge base as `AGENTS.md` requires. Merge `origin/main` into
+      this branch (no rebase; the branch is shared) and resolve every conflict
+      path by path, keeping main's inspector CSS fix, `xtask/src/check.rs`
+      changes and the verification scripts. Regenerate the example catalogue
+      if generated output conflicts; never hand-merge generated HTML.
+- [ ] Reproduce the intermittent Node fatal error (a V8 `ToLocalChecked`
+      crash during CommonJS export pre-parsing) in
+      `tests/watch_resource_boundaries.test.ts` under the CI Node version
+      (22.14.0) and the local Node 24. Identify the CommonJS import the CJS
+      lexer trips on, and fix it at the source: convert or preload the
+      offending module so the test runner never exercises the crashing path.
+      Do not add a retry loop. If the crash proves to be a Node bug with no
+      source-level fix, pin the CI and local Node version to one that does not
+      crash and document the reason in `docs/protocol/ci-verification.md`.
+- [ ] Run `npm run build`, `npm run example:build`, `npm run example:check`,
+      `npm test`, the browser suite and `cargo xtask check` on the merged
+      branch; run the watch resource test ten times in a row to confirm it no
+      longer crashes.
+- [ ] Confirm `git diff --diff-filter=D --name-status <merge-base>..HEAD`
+      lists only the approved removals, then `git add -A`, commit and push;
+      then review the complete diff against `origin/main` with
+      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      and report findings without fixing them.
+
 ## Milestone 3: Implement shared viewer appearance
 
 Tags: ui
 
 Deliver complete embedded appearance and shared system-aware styling. Standalone
 manual preference controls are connected after the asset-delivery milestone.
+Commit and push after the checks pass, then review the complete diff against
+`origin/main` with `docs/implementation-review-prompt.md` and report findings
+without fixing them, as every milestone in this plan does.
 
 - [ ] Add the public `ViewerTheme` type and `theme` prop to React/server entry
       types and examples. Apply theme data on every ready/loading/error root and
@@ -404,6 +499,9 @@ manual preference controls are connected after the asset-delivery milestone.
 
 Expose the tested startup asset through Serve and export. Existing pages remain
 usable while the next UI milestone connects the manual preference control.
+Commit and push after the checks pass, then review the complete diff against
+`origin/main` with `docs/implementation-review-prompt.md` and report findings
+without fixing them.
 
 - [ ] Bundle the classic startup entry in `packages/viewer/scripts/build.mjs`.
       Update the explicit server module allowlist and export/preview asset
@@ -421,6 +519,9 @@ Tags: ui
 Complete the standalone experience: one Appearance control that sets the
 interface and the previews together, with the same palette and tested
 preference behavior as the shared viewer, early restoration and recovery.
+Commit and push after the checks pass, then review the complete diff against
+`origin/main` with `docs/implementation-review-prompt.md` and report findings
+without fixing them.
 
 - [ ] Implement the standalone Appearance selector from the shared control
       composition. Add the opt-in startup hook and script before the stylesheet

@@ -2,10 +2,13 @@
 
 ## Delivery Status
 
-Implemented in the basic consumer. All 56 existing design screens retain their
-112 mobile/desktop fragments and now record shared component instances. Fifteen
-registered components and 56 saved variants live under Components → Design → Shared components,
-alongside the separate Example Action and Toolbar.
+Implemented in the basic consumer. Every existing design screen retains its
+mobile/desktop fragments and now records shared component instances, and the
+registered components and their saved variants live under
+Components → Design → Shared components, alongside the separate Example Action
+and Toolbar. The manifest `npm run example:build` generates at
+`examples/basic/generated/mokly-manifest.json` is the source of the screen,
+fragment, component and variant counts; this contract does not restate them.
 
 This contract and the [library inventory](./mokly-design-component-library.md)
 define the delivered behavior tracked by the [adoption plan](../../plans/mokabook-design-components.md).

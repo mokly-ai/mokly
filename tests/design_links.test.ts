@@ -3,6 +3,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { test } from "node:test";
 
+import { parse } from "parse5";
+
 import {
   attribute,
   byClass,
@@ -199,4 +201,71 @@ test("the canonical documented inventory exactly matches the complete design reg
     )
     .sort();
   assert.deepEqual(documented, actual);
+});
+
+/** Comparison families whose members must agree on the schemes they publish. */
+const COMPARISON_FAMILIES = [
+  [
+    "design-changes-current",
+    "design-changes-overlay",
+    "design-review-changed",
+    "design-review-difference",
+  ],
+  [
+    "design-appearance-overview",
+    "design-appearance-side-by-side",
+    "design-appearance-difference",
+  ],
+];
+
+test("a dark fragment's links stay dark wherever the target has a dark render", async () => {
+  const { manifest, outputs } = await designCatalogue;
+  const designs = manifest.entries.filter(
+    (entry) => entry.kind === "screen" && entry.id.startsWith("design-"),
+  );
+  let checked = 0;
+  for (const entry of designs) {
+    if (entry.kind !== "screen" || !entry.darkFragments) continue;
+    for (const viewport of ["mobile", "desktop"] as const) {
+      const route: string | undefined = entry.darkFragments[viewport];
+      assert.ok(route, `${entry.id} ${viewport}`);
+      const html = outputs.get(route);
+      assert.ok(html, route);
+      for (const link of elements(
+        parse(html),
+        (node) => node.tagName === "a",
+      )) {
+        const id = attribute(link, "data-mokly-link");
+        const target = designs.find((entry) => entry.id === id);
+        if (target?.kind !== "screen") continue;
+        const href = attribute(link, "href");
+        assert.ok(href, `${route}: ${id} has no href`);
+        checked += 1;
+        assert.equal(
+          path.posix.normalize(
+            path.posix.join(path.posix.dirname(route), href),
+          ),
+          target.darkFragments?.[viewport] ?? target.fragments[viewport],
+          `${route}: link to ${id} leaves the dark render`,
+        );
+      }
+    }
+  }
+  assert.ok(checked > 0, "no dark fragment linked anywhere");
+});
+
+test("comparison families publish the same schemes for every member", async () => {
+  const { manifest } = await designCatalogue;
+  for (const family of COMPARISON_FAMILIES) {
+    const members = family.map((id) => {
+      const entry = manifest.entries.find((entry) => entry.id === id);
+      assert.ok(entry?.kind === "screen", id);
+      return [id, entry.darkFragments !== undefined] as const;
+    });
+    assert.deepEqual(
+      members.filter(([, dual]) => !dual).map(([id]) => id),
+      [],
+      `light-only members would strand a dark comparison: ${family[0]}`,
+    );
+  }
 });

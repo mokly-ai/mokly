@@ -65,3 +65,31 @@ export function contrast(foreground: string, background: string): number {
     (Math.max(first, second) + 0.05) / (Math.min(first, second) + 0.05);
   return Math.floor(ratio * 100) / 100;
 }
+
+/** The CSS `rgb()` form of an opaque `#rgb` or `#rrggbb` colour. */
+export function cssColor(color: string): string {
+  const hex = color.trim().replace("#", "");
+  const full =
+    hex.length === 3
+      ? hex
+          .split("")
+          .map((part) => part + part)
+          .join("")
+      : hex;
+  if (!/^[0-9a-fA-F]{6}$/.test(full))
+    throw new Error(`not an opaque colour: ${color}`);
+  const channels = [0, 2, 4].map((start) =>
+    Number.parseInt(full.slice(start, start + 2), 16),
+  );
+  return `rgb(${channels.join(", ")})`;
+}
+
+/** One palette token as the CSS `rgb()` value a computed style reports. */
+export async function paletteColor(
+  appearance: Appearance,
+  token: string,
+): Promise<string> {
+  const value = (await designPalette())[appearance].get(token);
+  if (!value) throw new Error(`design.css has no ${token} for ${appearance}`);
+  return cssColor(value);
+}

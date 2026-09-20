@@ -105,6 +105,7 @@ function RemovedCurrent({ viewport }: { viewport: CompareViewport }) {
 }
 
 function DifferenceCompare({ viewport }: { viewport: CompareViewport }) {
+  const dark = useDarkPreview();
   return (
     <ComparePage
       design={DESTINATIONS.difference}
@@ -120,6 +121,7 @@ function DifferenceCompare({ viewport }: { viewport: CompareViewport }) {
           <Pane label="Before" side="before">
             <FramedShot
               address="example.test/welcome"
+              dark={dark}
               viewport={previewViewport}
             >
               <MiniWelcome compact={previewViewport === "mobile"} />
@@ -128,6 +130,7 @@ function DifferenceCompare({ viewport }: { viewport: CompareViewport }) {
           <Pane label="Current" side="after">
             <FramedShot
               address="example.test/welcome"
+              dark={dark}
               viewport={previewViewport}
             >
               <MiniWelcome compact={previewViewport === "mobile"} revised />
@@ -169,8 +172,8 @@ export const reviewOutcomeScreens = [
     title: "Removed screen",
   }),
   screen({
-    colorSchemes: ["light"],
-    description: "Difference mode blends the two screen versions in place.",
+    description:
+      "Difference mode blends the two screen versions in place, in either catalogue scheme.",
     desktop: <DifferenceCompare viewport="desktop" />,
     id: "design-review-difference",
     mobile: <DifferenceCompare viewport="mobile" />,

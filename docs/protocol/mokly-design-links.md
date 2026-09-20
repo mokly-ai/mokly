@@ -33,10 +33,10 @@ promise to retain their named subject, comparison mode, or color selection.
 
 Every design screen has mobile and desktop variants. They are light-only
 generated documents, including artboards depicting a dark product screen, except
-the appearance screens under `design/browse/appearance/` and the canonical
-`design-browse-screen`, `design-browse-details-screen` and
-`design-review-changed`, which render in both schemes so the existing preview
-control switches the depicted catalogue. Link
+the appearance screens under `design/browse/appearance/`, the canonical
+`design-browse-screen` and `design-browse-details-screen`, and the Welcome
+comparison family, which render in both schemes so the existing preview control
+switches the depicted catalogue. Link
 targets use design entry ids independently of the example ids printed in the
 depicted shell's metadata. Existing ids, routes, screens, and text links remain
 available. `example-farewell` remains an intentionally absent product entry.
@@ -151,10 +151,14 @@ The catalogue authors no scheme pairs and no artboard depicts a scheme control
 in its screen header, which carries the viewport control alone. Standalone
 Browse holds one Appearance setting, so every artboard that draws a top bar
 draws the depicted Appearance selector in it, which has no authored
-transitions. `design-browse-screen`, `design-browse-details-screen`,
-`design-review-changed` and the appearance entries render in Light and in Dark
-instead, and Browse's own preview control moves between those two generated
-files at the same route. The removed `design-browse-dark-scheme`,
+transitions. `design-browse-screen`, `design-browse-details-screen`, the Welcome comparison
+family (`design-changes-current`, `design-changes-overlay`,
+`design-review-changed`, `design-review-difference`) and the appearance entries
+render in Light and in Dark instead, and Browse's own preview control moves
+between those two generated files at the same route. A link out of a dark
+fragment resolves to the target's dark fragment wherever one exists, and every
+member of a comparison family publishes the same schemes, so no comparison
+control strands a reader in a light document. The removed `design-browse-dark-scheme`,
 `design-browse-light-only` and `design-review-dark-scheme` screens were the
 head-band depictions those dual-scheme renders replace. Appearance comparison controls map Side by side
 to `design-appearance-side-by-side` and Difference to

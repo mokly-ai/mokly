@@ -30,7 +30,10 @@ const propSchema = {
     menuPresentation: { schema: { kind: "enum", values: ["text", "icon"] } },
     tags: tagRecords,
     activeTag: optionalText,
-    appearance: { schema: { kind: "enum", values: ["auto", "light", "dark"] } },
+    appearance: {
+      schema: { kind: "enum", values: ["auto", "light", "dark"] },
+      optional: true,
+    },
     pickerOpen: flag,
     brandDestination: destination,
     menuDestination: destination,
@@ -39,7 +42,6 @@ const propSchema = {
 } as const;
 export type TopBarProps = ComponentProps<typeof propSchema, []>;
 const sample = {
-  appearance: "light",
   placeholder: "Search screens…",
   menu: "open",
   menuPresentation: "text",
@@ -79,7 +81,11 @@ export const topBar = defineComponent({
     },
   },
   render: (props: TopBarProps, context: ComponentRenderContext) => (
-    <TopBarView {...props} viewport={props.viewport ?? context.viewport} />
+    <TopBarView
+      {...props}
+      appearance={props.appearance ?? context.colorScheme}
+      viewport={props.viewport ?? context.viewport}
+    />
   ),
   variants: [
     { id: "default", title: "Default", props: sample },

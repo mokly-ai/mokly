@@ -17,8 +17,10 @@ Group indexes are pure galleries, containing at most five component entries.
 Samples are light-only except the appearance selector and the top bar that
 composes it, whose own subject is the catalogue's appearance: those render in
 both schemes so the existing preview control switches them like the appearance
-screens. The top bar's own samples therefore name the scheme they rendered for,
-and one sample depicts the Auto setting.
+screens. A dual-scheme sample derives the props whose own subject is the scheme
+from its render context rather than pinning them in its fixture, so the top
+bar's samples name the scheme they rendered for; a fixture sets such a prop only
+to depict a different setting, as the `auto-appearance` sample does.
 
 | Group / slug                  | Existing implementation                                             | Saved variant ids                                                          |
 | ----------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------- |
@@ -40,7 +42,8 @@ and one sample depicts the Auto setting.
 | preview / flow-step           | `parts/stage_content.tsx: FlowStep`                                 | `first`, `second`                                                          |
 
 Fixtures for each variant come from the corresponding existing screen state,
-assembled into complete explicit props at declaration time. They may reuse the
+assembled into complete explicit props at declaration time, apart from the
+render-context fallback a dual-scheme sample uses above. They may reuse the
 same typed fixture values used by screen adapters. They never import/render the
 complete owning artboard. All selected-screen footers use the icon panel and the
 viewport control uses the grouped icons. The legacy disclosure variant and
@@ -57,13 +60,14 @@ Controls below use text, boolean, number and primitive enum selections only.
 
 1. **Top bar:** query and placeholder strings; menu state `none/open/close`;
    existing text/icon menu presentation; available tag records, optional active
-   tag and picker-open flag; explicit navigation destinations; and a required
-   `auto/light/dark` interface appearance. Controls: query,
+   tag and picker-open flag; explicit navigation destinations; and an
+   `auto/light/dark` interface appearance that falls back to the render
+   context's scheme. Controls: query,
    picker-open, menu state and appearance. The appearance setting is the
    catalogue's own and is the only scheme control in the design catalogue. This
    component owns it, so every artboard with a top bar draws it; screens do not
-   opt in. A screen's value defaults to the scheme its file was rendered for and
-   is overridden only to depict a different setting, as the Auto artboard does.
+   opt in. The value defaults to the scheme the file was rendered for and is
+   overridden only to depict a different setting, as the Auto artboard does.
    Brand/search structure belongs to this component;
    it composes the registered picker, chip and appearance selector. Preserve compact mobile branding.
 2. **Catalogue navigation:** row records with stable key, label, kind
