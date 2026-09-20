@@ -685,6 +685,10 @@ The package's own `@mokly/mokly` public entrypoint is always a repository module
 including before `dist/` has been built. `npm run lint -- --fix` applies the
 `import/first` and `import/order` rules, provided by the ESLint 10-compatible
 `eslint-plugin-import-x` package.
+The root ESLint configuration also imports `.gitignore`, so ignored build,
+cache, report, and tool scratch paths stay outside the lint gate even when an
+earlier test command created them. ESLint-only broader ignores remain explicit
+in that configuration.
 
 For local development after installing dependencies, run:
 

@@ -580,21 +580,28 @@ canvas mask now read their tokens. The contract's decorative hairlines are
 exempt from the 3:1 requirement, so the mobile sheet around an open panel keeps
 `--chrome-border`.
 
-## Milestone 2J: Keep ignored scratch out of the lint gate
+## Milestone 2J: Keep ignored scratch out of the lint gate (complete)
 
 `cargo xtask check` is order-dependent: the browser suite's publish fixtures
 write Wrangler scratch under `.wrangler/tmp/`, which git ignores but eslint
 scans, so the gate fails on generated third-party files after a browser run.
 
-- [ ] Make eslint exclude every git-ignored path by construction, using the
+- [x] Make eslint exclude every git-ignored path by construction, using the
       config's gitignore support, so `.wrangler/`, `dist/`, `coverage/`,
       `.mokly-cache/` and `target/` can never be linted. Add a test or a
       check step that fails if a git-ignored path is reachable by the linter.
-- [ ] Run the browser suite, then `cargo xtask check` without cleaning, and
+- [x] Run the browser suite, then `cargo xtask check` without cleaning, and
       confirm the gate passes with the scratch present; commit and push; then
       review the complete diff against `origin/main` with
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       and report findings without fixing them.
+
+Delivered: the flat ESLint configuration imports the repository `.gitignore`
+before applying its broader lint-only exclusions, and a regression test proves
+that a Git-ignored invalid TypeScript file under Wrangler scratch is also
+ignored by ESLint. A Wrangler-backed browser test left its generated bundle in
+`.wrangler/tmp/`, after which the complete repository gate passed without
+cleaning.
 
 ## Milestone 2K: Close the remaining boundary audit gaps (complete)
 

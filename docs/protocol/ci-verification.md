@@ -52,6 +52,12 @@ gate. The Rust file-length auditor is a repository-gate operation implemented
 inside xtask rather than a subprocess in the command list; it has the same
 failure semantics as the listed commands.
 
+The ESLint configuration derives global ignores from the repository
+`.gitignore`, then layers its broader ESLint-only ignores. Git-ignored build,
+cache, report and tool scratch paths are therefore outside the repository gate
+even when an earlier suite leaves them in the checkout; in particular, Wrangler
+scratch from the browser suite cannot make a later complete gate fail.
+
 The public npm entrypoints `npm test`, `npm run typecheck`, and
 `npm run test:browser` remain clean-checkout entrypoints: each prepares its
 required package output, and both test commands also prepare the example. The
