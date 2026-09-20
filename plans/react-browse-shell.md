@@ -790,6 +790,34 @@ same-origin frame is mounting or replacing its document.
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
 
+## Milestone 14: Deterministic frame navigation CI
+
+Tags: ui
+
+Summary: separate the ready-frame link-shape matrix from the initial hydration
+handoff contract so CI exercises each lifecycle state deterministically.
+
+- [x] Add a deterministic browser regression that delays a replacement
+      document's subresource after commit and proves a logical activation in
+      that pre-`load` document reaches the parent shell exactly once.
+- [x] Make the broad desktop, area, SVG, flow and legacy link-shape matrix wait
+      for each target frame's owned ready state; keep loading-state ownership
+      asserted independently by the held-response regressions.
+- [x] Move the mount-time receiver onto an exact authenticated replacement
+      document before delayed subresources allow interaction ahead of the
+      iframe `load` event.
+- [x] Clarify the pre-load document adoption contract in the frame-adapter and
+      navigation protocols and the viewer package README.
+- [x] Run the focused viewer build, typecheck and repeated browser regressions,
+      then run the complete `cargo xtask check` gate with no failures or skips.
+- [x] After checks pass, `git add -A`, commit with Conventional Commits, and
+      push the branch.
+- [ ] After the push, use
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main`; report
+      numbered, severity-rated findings with options and recommendations
+      without changing the implementation.
+
 ## Post-merge follow-up (non-blocking)
 
 - Publish the viewer and CLI versions containing the hydrated shell; consumers

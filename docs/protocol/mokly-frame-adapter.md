@@ -186,9 +186,12 @@ valid navigation.
 When a same-origin replacement starts, the adapter installs its mount-time
 navigation receiver on the currently visible immediate document before changing
 `location`. Valid marked activations therefore remain host-owned while the exact
-assigned resource loads. The receiver moves to the authenticated replacement
-document on `load`. Unsubscribing or disposing removes it, so an unenhanced
-document continues to use its portable native links.
+assigned resource loads. As soon as the new immediate `Document` becomes
+same-origin-accessible, the adapter authenticates its exact origin, decoded
+resource path and query, then moves the receiver before slower subresources can
+delay the iframe `load` event. Readiness installs inspection and geometry over
+that document. Unsubscribing or disposing removes the receiver, so an
+unenhanced document continues to use its portable native links.
 
 The sandbox remains exactly `allow-same-origin`; consumer scripts stay disabled.
 Existing local memory previews retain their authenticated private transport.

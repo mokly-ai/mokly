@@ -1,6 +1,4 @@
 import type { CatalogueUsage } from "../catalogue/types.js";
-import { logicalMarker, parseLogicalMarker } from "../navigation/logical.js";
-import { parseBrowsingTarget } from "../navigation/target.js";
 
 import type {
   FrameEvent,
@@ -10,55 +8,8 @@ import type {
 import { FrameError } from "./frame_error.js";
 import { ownFrame } from "./frame_mount.js";
 import { localFrameAccess } from "./same_origin_access.js";
+import { listenForFrameActivations } from "./same_origin_navigation.js";
 import { localPointer } from "./same_origin_pointer.js";
-
-/** Input facts for one marked frame-link activation. */
-export interface FrameActivationCandidate {
-  altKey: boolean;
-  button: number;
-  ctrlKey: boolean;
-  download: boolean;
-  eventType: "auxclick" | "click";
-  marker: string;
-  metaKey: boolean;
-  shiftKey: boolean;
-  target: string | null;
-}
-
-/** Parent-owned action derived from a trusted marked link. */
-export type FrameActivation =
-  | { href: string; kind: "navigate" }
-  | { href: string; kind: "open"; target: string };
-
-/** Classify an activation without trusting a portable href. */
-export function classifyFrameActivation(
-  candidate: FrameActivationCandidate,
-): FrameActivation | undefined {
-  const destination = parseLogicalMarker(candidate.marker);
-  if (!destination || logicalMarker(destination) !== candidate.marker)
-    return undefined;
-  if (candidate.download || candidate.altKey) return undefined;
-  if (candidate.eventType === "click" && candidate.button !== 0)
-    return undefined;
-  if (candidate.eventType === "auxclick" && candidate.button !== 1)
-    return undefined;
-  const target = parseBrowsingTarget(candidate.target);
-  if (target.kind === "invalid") return undefined;
-  const href = `/id/${encodeURIComponent(destination.id)}${
-    destination.fragment
-      ? `?fragment=${encodeURIComponent(destination.fragment)}`
-      : ""
-  }`;
-  if (target.kind === "top" || target.kind === "parent")
-    return { href, kind: "navigate" };
-  if (target.kind === "blank") return { href, kind: "open", target: "_blank" };
-  if (target.kind === "named")
-    return { href, kind: "open", target: target.name };
-  const modified = candidate.metaKey || candidate.ctrlKey || candidate.shiftKey;
-  return modified || candidate.eventType === "auxclick"
-    ? { href, kind: "open", target: "_blank" }
-    : { href, kind: "navigate" };
-}
 
 interface LocalOperations {
   updateUsage(usage: CatalogueUsage): void;
@@ -86,7 +37,10 @@ export function mountLocalDocument(
     const controller = new AbortController();
     const signal = controller.signal;
     let initialSubscription = initialListener;
-    let documentController: AbortController | undefined;
+    let activationController: AbortController | undefined;
+    let activationDocument: Document | undefined;
+    let operationsController: AbortController | undefined;
+    let documentWatch: number | undefined;
     let operations: LocalOperations | undefined;
     let disposed = false;
     let release = () => {};
@@ -95,61 +49,60 @@ export function mountLocalDocument(
     const emit = (event: FrameEvent) => {
       for (const listener of [...listeners]) listener(event);
     };
-    const activate = (event: MouseEvent) => {
-      const link = (event.target as Element | null)?.closest?.(
-        "[data-mokly-link]",
-      );
-      if (!link || !listeners.size || !["a", "area"].includes(link.localName))
-        return;
-      const marker = link.getAttribute("data-mokly-link") ?? "";
-      const target = parseBrowsingTarget(
-        link.getAttribute("data-mokly-target"),
-      );
-      const destination = parseLogicalMarker(marker);
-      if (
-        !destination ||
-        target.kind === "invalid" ||
-        !classifyFrameActivation({
-          altKey: event.altKey,
-          button: event.button,
-          ctrlKey: event.ctrlKey,
-          metaKey: event.metaKey,
-          shiftKey: event.shiftKey,
-          download: link.hasAttribute("download"),
-          eventType: event.type === "click" ? "click" : "auxclick",
-          marker,
-          target: link.getAttribute("data-mokly-target"),
-        })
-      )
-        return;
-      event.preventDefault();
-      emit({
-        type: "navigation",
-        navigation: {
-          ...destination,
-          target,
-          activation:
-            event.type === "auxclick"
-              ? "middle"
-              : event.metaKey || event.ctrlKey || event.shiftKey
-                ? "modified"
-                : "primary",
-        },
-      });
+    const disposeActivation = () => {
+      activationController?.abort();
+      activationController = undefined;
+      activationDocument = undefined;
     };
-    const listenForActivations = (
-      doc: Document,
-      documentSignal: AbortSignal,
-    ) => {
-      doc.addEventListener("click", activate, { signal: documentSignal });
-      doc.addEventListener("auxclick", activate, { signal: documentSignal });
+    const adoptActivationDocument = (doc: Document) => {
+      if (activationDocument === doc) return;
+      disposeActivation();
+      activationDocument = doc;
+      activationController = new AbortController();
+      listenForFrameActivations(
+        doc,
+        activationController.signal,
+        () => listeners.size > 0,
+        emit,
+      );
     };
-    const disposeDocument = () => {
-      documentController?.abort();
-      documentController = undefined;
+    const disposeOperations = () => {
+      operationsController?.abort();
+      operationsController = undefined;
       operations?.dispose();
       operations = undefined;
       for (const cleanup of cleanups.splice(0)) cleanup();
+    };
+    const stopDocumentWatch = () => {
+      if (documentWatch === undefined) return;
+      win.clearInterval(documentWatch);
+      documentWatch = undefined;
+    };
+    const inspectReplacementDocument = () => {
+      try {
+        const doc = localFrameAccess(frame).document();
+        if (
+          doc &&
+          doc !== activationDocument &&
+          doc.defaultView?.frameElement === frame &&
+          sameFrameResource(doc.URL, url)
+        ) {
+          disposeOperations();
+          adoptActivationDocument(doc);
+        }
+      } catch {
+        /* The load handler owns final origin failure reporting. */
+      }
+    };
+    const watchReplacementDocument = () => {
+      if (documentWatch !== undefined) return;
+      inspectReplacementDocument();
+      documentWatch = win.setInterval(inspectReplacementDocument, 0);
+    };
+    const disposeDocument = () => {
+      stopDocumentWatch();
+      disposeActivation();
+      disposeOperations();
     };
     const dispose = () => {
       if (disposed) return;
@@ -211,12 +164,13 @@ export function mountLocalDocument(
             return;
           }
         }
-        disposeDocument();
+        stopDocumentWatch();
+        disposeOperations();
+        adoptActivationDocument(doc);
         win.clearTimeout(timer);
-        documentController = new AbortController();
-        const documentSignal = documentController.signal;
+        operationsController = new AbortController();
+        const documentSignal = operationsController.signal;
         operations = create(doc, emit);
-        listenForActivations(doc, documentSignal);
         const inspecting = () =>
           listeners.size > 0 && operations!.inspectable();
         localPointer(
@@ -297,9 +251,9 @@ export function mountLocalDocument(
     try {
       const current = localFrameAccess(frame).document();
       if (current?.defaultView?.frameElement === frame) {
-        documentController = new AbortController();
-        listenForActivations(current, documentController.signal);
+        adoptActivationDocument(current);
       }
+      watchReplacementDocument();
       localFrameAccess(frame).replace(url);
     } catch {
       reject(new FrameError("origin"));

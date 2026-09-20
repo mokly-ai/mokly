@@ -142,11 +142,13 @@ without this method retain replacement mounts for changed usage. Changing the
 React catalogue source still replaces the runtime as documented above.
 The shell also supplies `FrameMount.onEvent` before an adapter starts loading.
 The same-origin adapter attaches it to the currently visible document before a
-replacement, so valid logical links remain parent-owned throughout source
-handoffs; its first matching `MountedFrame.subscribe` adopts that receiver
-without duplicating events. Custom adapters should honor the same mount-time
-receiver contract. Unsubscribing or disposing restores the portable native-link
-behavior.
+replacement, then authenticates and adopts the exact replacement document as
+soon as it is accessible rather than waiting for slower subresources and the
+iframe `load` event. Valid logical links therefore remain parent-owned
+throughout source handoffs; the first matching `MountedFrame.subscribe` adopts
+that receiver without duplicating events. Custom adapters should honor the same
+mount-time receiver contract. Unsubscribing or disposing restores the portable
+native-link behavior.
 
 Evidence refreshes restore valid inspection masks, outlines and labels without
 ending an active pick. Explicit highlights retain their exact frame scope;

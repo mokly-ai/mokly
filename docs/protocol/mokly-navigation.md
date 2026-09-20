@@ -239,10 +239,13 @@ Once React owns a same-origin frame session, that ownership is continuous while
 the adapter replaces its document. The shell installs its navigation receiver
 on the still-visible document before starting the replacement, so a valid
 marked activation during a viewport, scheme, variant, fragment, or route
-handoff still navigates the parent exactly once. Readiness gates inspection,
-not logical navigation. Disposing or unsubscribing the session removes the
-receiver; before hydration, after failed hydration, or without a receiver, the
-portable link remains frame-owned as described below.
+handoff still navigates the parent exactly once. The receiver follows a new
+same-origin document as soon as its exact assigned resource identity can be
+authenticated; pending images, fonts, or other subresources cannot reopen a
+native-navigation gap before `load`. Readiness gates inspection, not logical
+navigation. Disposing or unsubscribing the session removes the receiver; before
+hydration, after failed hydration, or without a receiver, the portable link
+remains frame-owned as described below.
 
 Outer same-document links, including the shell's skip link, keep native fragment
 focus and scrolling. Document identity includes origin, pathname and query but
