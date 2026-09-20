@@ -2,10 +2,11 @@
 
 ## Status And Outcome
 
-Milestones 1 and 2 are complete: the contract lives in
+Milestones 1 to 3 are complete: the contract lives in
 [removed previews](../docs/protocol/mokly-removed-previews.md), the owning
-protocols mark the sentences it replaces, and the design catalogue renders
-every previous-version state. Milestone 3 is next. The user
+protocols mark the sentences it replaces, the design catalogue renders every
+previous-version state, and the backend captures removed page previews and
+publishes the catalogue descriptor. Milestone 4 is next. The user
 requested this plan after discussing the removed-document empty state and
 agreed preview behavior, then approved the amendments recorded below: reuse
 the comparison engine's historical capture for screens, settle the example
@@ -184,8 +185,8 @@ Documentation-only: validate Markdown and links instead of `cargo xtask check`.
       validate Markdown, links, and the documentation diff. The packaged guides
       describe shipped behavior in present tense, so
       `docs/guides/catalogue/changes.md` changes in Milestone 5 instead.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] After the push, review the complete local diff against `origin/main` with
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] After the push, review the complete local diff against `origin/main` with
       the implementation review prompt; report findings without changing the
       plan or docs.
 
