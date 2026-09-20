@@ -8,8 +8,9 @@ protocols describe the shipped behavior, the design catalogue renders every
 previous-version state, the backend captures removed page previews and delivers
 previews through Serve and static catalogues, and the shared shell, browser
 client, and `@mokly/viewer` render the previous version. Milestone 5 found one
-delivery gap — a repository preview advertises no page descriptor — so
-Milestones 6 and 7 close and verify it before the final verification milestone.
+delivery gap — a repository preview advertises no page descriptor — and its
+review found shell and mockup follow-ups, so Milestones 6 to 8 close and verify
+them before the final verification milestone.
 The user requested this plan after discussing the removed-document empty state and
 agreed preview behavior, then approved the amendments recorded below: reuse
 the comparison engine's historical capture for screens, settle the example
@@ -355,7 +356,7 @@ Activate the completed designs through the shared shell and both viewer hosts.
       them with Milestone 2 and save screenshots under `.context/`.
 - [x] Run `cargo xtask check`; then `git add -A`, commit with Conventional
       Commits, and push the branch.
-- [ ] After the push, review the complete local diff against `origin/main` with
+- [x] After the push, review the complete local diff against `origin/main` with
       the implementation review prompt; report findings without changing the
       implementation.
 
@@ -379,6 +380,19 @@ comparison exists, so they resolve through `comparisonUrl`.
 - [ ] Confirm no other packaged delivery captures development shells with the
       same gap, and keep the generation, ownership inventory, deployment hash,
       and upload archive unchanged.
+- [ ] Serve the shared preview browser modules as their own allowlisted module
+      instead of bundling them into `browse_runtime.js`: add the module to the
+      server's browser-module allowlist in `src/server/client_modules.ts` and
+      the export's browser inventory so `parseReviewResult` is no longer
+      shipped twice, then let the client import it as an external module.
+      Keep the standalone `@mokly/viewer` bundle unchanged in behavior.
+- [ ] Move the repository-preview capture, packaging, and descriptor logic that
+      Milestone 4 added to `scripts/preview/*.mjs` behind a typed module under
+      `src/publication/` with `MoklyError` failures, leaving the `.mjs`
+      entrypoints as thin orchestration, so export and publication cannot drift.
+- [ ] Reword the embedded viewer's scoped-fetch rejection in
+      `packages/viewer/src/viewer/scope.ts` so it no longer describes a
+      rejected preview address as a comparison problem.
 - [ ] Update the delivery status in
       [removed previews](../docs/protocol/mokly-removed-previews.md) and any
       affected publication or export contract text.
@@ -388,14 +402,59 @@ comparison exists, so they resolve through `comparisonUrl`.
       the implementation review prompt; report findings without changing the
       implementation.
 
-## Milestone 7: Verify repository-preview previous versions
+## Milestone 7: Align the component-explorer removed-consumer mockup
+
+Tags: mockup
+
+The component explorer's removed-consumer design still renders the replaced
+"This screen was removed" empty stage, so it contradicts the shipped runtime and
+the workspace design contract. Do this before Milestone 8's UI work that depends
+on the new stage note.
+
+- [ ] Update `examples/basic/entries/design/components/parts/screen_page.tsx`
+      (and its browser spec) so the removed consumer shows its previous version
+      with the "Showing previous version" label, reusing
+      `examples/basic/entries/design/parts/removed_preview.tsx`.
+- [ ] Add the no-captured-view stage note to the removed-screen design family so
+      Milestone 8 implements copy the mockups own.
+- [ ] Update `docs/protocol/mokly-component-design.md`, the example README,
+      and the shell-design route table if any id or description changes; run
+      `npm run build`, `npm run example:build`, `npm run example:check`, and
+      the design tests; smoke the changed pages with `npm run dev`.
+- [ ] Add a check that fails when a design entry contains copy a protocol marks
+      as replaced (start with the removed empty-state strings), so mockup
+      families outside a feature's named scope cannot silently drift.
+- [ ] Run `cargo xtask check`; then `git add -A`, commit with Conventional
+      Commits, and push the branch.
+- [ ] After the push, review the complete local diff against `origin/main` with
+      the implementation review prompt; report findings without changing the
+      mockups.
+
+## Milestone 8: Verify repository-preview previous versions
 
 Tags: ui
 
 Verify the shared preview presentation over the repository-preview delivery once
-its descriptors exist. Moved here from Milestone 5 because the shell cannot show
-a previous version the artifact does not advertise.
+its descriptors exist, and close the Milestone 5 review findings that belong to
+the shell. Moved here from Milestone 5 because the shell cannot show a previous
+version the artifact does not advertise.
 
+- [ ] Stop the read-only guard in `packages/viewer/src/previews/read_only.ts`
+      from intercepting the Space key: browsers scroll on Space and activate
+      links only on Enter, so keep the Enter branch and the capture-phase click
+      guard, and add a browser assertion that Space scrolls a preview while a
+      link inside it has focus.
+- [ ] Render the unavailable state server-side for removed entries and let the
+      browser client switch to loading on its first update, so a shell without
+      its client never claims a request is in flight.
+- [ ] Show an explicit stage note when the selected viewport has no captured
+      historical view instead of an empty stage; add the copy to the mockups
+      first (Milestone 7) and revalidate against them.
+- [ ] Cover the light-only fallback note with a dark-capable removed screen in
+      the browser fixture, and cover HEAD renewal after idle generation expiry
+      on a viewport or scheme change in a served browser test.
+- [ ] Replace the timed waits in `tests/browser/removed_previews.spec.ts`
+      with polled positive assertions, especially for the late-response fence.
 - [ ] Replace the repository-preview expectations in
       `tests/browser/preview_pages.spec.ts` so a removed page opens its previous
       version there, and drop the note explaining why it could not.
@@ -408,7 +467,7 @@ a previous version the artifact does not advertise.
       the implementation review prompt; report findings without changing the
       implementation.
 
-## Milestone 8: Verify and deliver the complete change
+## Milestone 9: Verify and deliver the complete change
 
 Complete the implementation and its review before the PR merge boundary.
 
