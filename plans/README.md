@@ -7,8 +7,9 @@
   the navigation, per-variant Changes, and changed-view marks on the view
   controls.
 - [Co-Located Entry Discovery](./co-located-entry-discovery.md) — delivered
-  on the branch with two review rounds applied; Milestone 8 carries the
-  second-round fixes and removes the fixed entry filename suffix.
+  on the branch with two review rounds applied and the fixed entry filename
+  suffix removed; a third review round reported six findings that await the
+  user's decision before the PR merges.
 - [CLI Terminal Experience](./cli-terminal-experience.md)
 - [Package Documentation](./package-documentation.md) — supersedes the
   unmerged public-site plan and pull request #79 by shipping versioned Markdown

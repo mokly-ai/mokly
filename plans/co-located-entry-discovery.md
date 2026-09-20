@@ -2,11 +2,12 @@
 
 ## Status And Outcome
 
-Milestones 1 through 7 are complete, committed, and pushed. Milestone 8 is
-complete and locally committed, pending the supervising agent's push and
-review. It resolves all seven findings from the post-push review of Milestone
-7 and removes the fixed `.mockup.ts`/`.mockup.tsx` suffix on top of `entries`
-globs, so a glob alone defines what an entry module is.
+Milestones 1 through 8 are complete, committed, and pushed. Milestone 8
+resolved all seven second-round findings and removed the fixed
+`.mockup.ts`/`.mockup.tsx` suffix on top of `entries` globs, so a glob alone
+defines what an entry module is. The post-push review of Milestone 8 reported
+six further findings, recorded below, which await the user's decision; the
+first is a dev-server crash path introduced by the second-round fix.
 
 Mokly currently discovers every `*.mockup.ts` and `*.mockup.tsx` module below
 one configured directory, `entriesDir`, and binds the source-attributed
@@ -486,9 +487,54 @@ glob", a single rule that reads the same way the glob does.
       it names") and any test that relied on the suffix filter.
 - [x] Run `cargo xtask check` and commit locally; the supervising agent will
       push the branch.
-- [ ] Review the complete local diff against `origin/main` after the push
+- [x] Review the complete local diff against `origin/main` after the push
       using `docs/implementation-review-prompt.md`; report findings without
-      changing the implementation.
+      changing the implementation. The post-push review of the Milestone 8
+      commit reported six findings, recorded under "Third Review Findings
+      (awaiting decision)".
+
+## Third Review Findings (awaiting decision)
+
+Review of the Milestone 8 commit. Nothing has been changed in response. The
+supervising agent confirmed findings 1, 2, and 4 by direct probe.
+
+1. **P1, a watcher path error now crashes the dev server.** Finding 7 of the
+   second round asked for the blanket catch in `isDiscoveryDeniedEntryPath`
+   to be narrowed so only path-resolution failures fail closed. The narrowed
+   catch rethrows other errors, but the classifier runs synchronously inside
+   the chokidar event listener through `NotificationGate.notify`, which has
+   no try/catch, and the repository installs no `uncaughtException` handler.
+   An `EMFILE`, `EPERM`, or `EIO` from `projectRealPath` during watching now
+   terminates `mokly serve`; `tests/watch_glob_boundaries.test.ts` locks the
+   propagation in. Recommended: keep the narrowed catch but isolate every
+   watcher event callback, routing the error to the existing reporter, and
+   update the test to assert the reporter is called.
+2. **P2, misleading zero-match error.** When a glob matches nothing, any
+   denied directory skipped under its root wins over the zero-match message,
+   so a typo such as `src/**/*.mokup.tsx` in a tree with an unrelated
+   `src/node_modules` reports a private-directory problem. Recommended:
+   report both causes in one message.
+3. **P2, two protocol docs disagree** about glob-matched helpers:
+   `mokly-source-protection.md` says a glob-selected helper requires a valid
+   registry export and still lists only reserved basenames and public
+   exclusions as ways to retain an unimported helper; `mokly-configuration.md`
+   correctly says a matched helper without exports contributes nothing.
+   Recommended: reword source protection to match and add glob match to its
+   protection list.
+4. **P3, a regular file named like a denied directory**, such as
+   `src/target` under `src/**`, is accepted by the walk and then rejected by
+   the per-module denial with a wrong message. Recommended: exclude the final
+   path segment from the denial scan.
+5. **P3, discovery and the watcher disagree about `review.outDir`.** The walk
+   prunes denied names but not `review.outDir`, so a repository-root glob plus
+   a custom outDir fails config loading after a Review run while the watcher
+   ignores the same path. Recommended: prune `review.outDir` in the walk.
+6. **P3, glob-only entries can double-register.** A matched barrel that
+   re-exports a sibling's `mockups` registers the same definitions twice and
+   fails with `duplicate-id`, undocumented and untested. Two test
+   observations: one asserts a mock call count rather than behaviour, and one
+   test name overstates what it proves. Recommended: document the rule, add a
+   regression test, and tighten the two tests.
 
 ## Second Review Findings (approved, addressed in Milestone 8)
 
