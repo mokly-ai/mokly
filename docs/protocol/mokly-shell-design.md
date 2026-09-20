@@ -277,7 +277,10 @@ scrollable region scrolls internally:
     open. The Changes filter shows only changed variant rows and marks the
     parent when any variant changed. The changed mark is a
     6px accent dot at the row's trailing edge, drawn in the contrast color on
-    the active row; no edge, rail, or border marks a row. The
+    the active row; no edge, rail, or border marks a row. Beside the dot the
+    row carries the visually hidden word `Changed`, which assistive technology
+    reads and the search box ignores. A Removed row takes neither, because its
+    label already ends in `· Removed`. The
     [screen variants contract](./mokly-screen-variants.md) owns the behavior,
     and `design/browse/variants/selected.html`, `changes.html`, and
     `removed.html` own its mockups.

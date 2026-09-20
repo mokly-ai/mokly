@@ -2,8 +2,8 @@
 
 Status: active. Created 2026-09-19 with the user's consent after the design
 discussion in this workspace, then rewritten the same day when the user chose
-own routes over a query parameter. Milestones 1 to 5 are complete;
-Milestone 6 is next.
+own routes over a query parameter. Milestones 1 to 6 are complete;
+Milestone 7 is next.
 
 **Goal:** Let a screen declare variants beside its default render, show them as
 an expandable list under the screen's navigation row, give each variant its
@@ -472,29 +472,51 @@ a Removed row under its surviving parent with the current empty state.
 
 **Files:**
 
-- Modify: `packages/viewer/src/shell/nav_rows.tsx` (removed variants render
-  under their parent from `RemovedEntrySnapshot.variantOf` rather than as
-  flat rows), `packages/viewer/src/client/browse_links.ts` (a Changes-filter
-  activation of a parent that is not itself changed navigates to its first
-  changed variant), `packages/viewer/src/shell/workspace_data.ts` (status of
-  a variant is its own; the parent's status ignores its variants),
+- Add: `packages/viewer/src/shell/nav_changed.ts` (the mark's class,
+  attribute and wording, shared by the markup and the client),
+  `packages/viewer/src/shell/css_nav_changed.ts` (the trailing dot and the
+  visually hidden wording, drawn from `data-changed` and
+  `data-changed-variants`), `packages/viewer/src/shell/nav_leaf_rows.tsx`
+  (leaf rows split out of `nav_rows.tsx`),
+  `packages/viewer/src/client/browse_landing.ts` (`changesLandingHref`),
+  `packages/viewer/src/client/browse_evidence_variants.ts` (removed variant
+  rows reconciled inside their parent's list)
+- Modify: `packages/viewer/src/shell/nav_tree.ts` and
+  `packages/viewer/src/shell/nav.tsx` (removed variants attach to their
+  current parent from `RemovedEntrySnapshot.variantOf` rather than rendering
+  as flat rows), `packages/viewer/src/shell/nav_rows.tsx` (collection groups
+  only), `packages/viewer/src/shell/css.ts`,
+  `packages/viewer/src/client/browse.ts` (a Changes-filter activation of a
+  parent that is not itself changed navigates to its first changed variant),
+  `packages/viewer/src/client/browse_navigation_state.ts` (All hides a
+  removed variant; search ignores the mark's wording),
+  `packages/viewer/src/client/browse_evidence.ts`,
+  `src/server/client_modules.ts`
+- Verify unchanged: `packages/viewer/src/shell/workspace_data.ts` (status of
+  a variant is its own; the parent's status ignores its variants) and
   `packages/viewer/src/shell/nav_filter.tsx` (count stays the length of
-  `changedRoutes`)
-- Test: `tests/shell.test.ts`, `tests/client_navigation_state.test.ts`,
+  `changedRoutes`); both already key on the entry's own route, so this task
+  adds their tests rather than changing them
+- Test: `tests/shell.test.ts`, `tests/client_browse_landing.test.ts`,
+  `tests/client_browse_navigation.test.ts`,
+  `tests/catalogue_screen_changes.test.ts`, `tests/helpers/fake_dom.ts`,
+  `tests/browser/navigation_fixture.ts`,
+  `tests/browser/browse_variants.spec.ts`,
+  `tests/browser/evidence_removed_variant.spec.ts`,
   `tests/browser/changes_continuity.spec.ts`,
   `tests/browser/removed_comparison_eligibility.spec.ts`,
   `tests/browser/publish_current.spec.ts`
 
 **Steps:**
 
-- [ ] Write failing tests for each behavior in the milestone summary,
+- [x] Write failing tests for each behavior in the milestone summary,
       including a removed variant's row placement, its Removed status, and
       the parent's Unmodified status when only the variant changed.
-- [ ] Implement and update the changes guide and runtime contract.
-- [ ] Smoke against a fixture repository with a committed baseline: edit a
+- [x] Implement and update the changes guide and runtime contract.
+- [x] Smoke against a fixture repository with a committed baseline: edit a
       variant only, then delete it, confirming the rows, count, landing, and
       comparison at each step.
-- [ ] Milestone close-out: commit `feat(browse): show changed variants` and
+- [x] Milestone close-out: commit `feat(browse): show changed variants` and
       push.
 
 ---

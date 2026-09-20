@@ -20,6 +20,36 @@ export interface NavigationFixture {
   close(): Promise<void>;
 }
 
+/**
+ * A variant of Home deleted on this branch. Its retained `variantOf` keeps the
+ * Removed row inside the surviving parent's list instead of at the root.
+ */
+const REMOVED_HOME_VARIANT = {
+  ancestors: [
+    { id: "fixture", title: "Fixture" },
+    { id: "nested", title: "Nested" },
+  ],
+  entry: {
+    declaredDependencies: [],
+    dependencies: [],
+    description: "Home after the workspace was deleted",
+    fragments: {
+      desktop: "screens/home.variants/gone.desktop.html",
+      mobile: "screens/home.variants/gone.mobile.html",
+    },
+    id: "home-gone",
+    kind: "screen" as const,
+    navPath: ["Fixture", "Nested"],
+    relatedDocs: [],
+    route: "screens/home.variants/gone.html",
+    sourcePath: "entries/fixture.mockup.tsx",
+    title: "Workspace deleted",
+    useCaseIds: [],
+    variantOf: "home",
+    viewports: ["mobile" as const, "desktop" as const],
+  },
+};
+
 /** Build and serve the navigation/security browser fixture. */
 export async function startNavigationFixture(): Promise<NavigationFixture> {
   const fixture = await createFixture(navigationSource(), {
@@ -56,11 +86,11 @@ export async function startNavigationFixture(): Promise<NavigationFixture> {
       baseCommit: "a".repeat(40),
       changedRoutes: [
         "screens/extra.html",
-        "screens/home.html",
         "screens/home.variants/error.html",
+        "screens/home.variants/gone.html",
         "user-flows/tour.html",
       ],
-      removedEntries: [],
+      removedEntries: [REMOVED_HOME_VARIANT],
     })),
     port: 0,
   });

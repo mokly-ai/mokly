@@ -10,8 +10,10 @@ are implemented through Milestone 4 of the
 navigation grouping described below — the parent row's disclosure button, the
 variant list and its persisted identity, the active-row invariant across
 variants, search and Changes composition, the parent's aggregate mark, and
-variant breadcrumbs and details rows. Placing a removed variant's row under its
-surviving parent remains a delivery target for Milestone 6.
+variant breadcrumbs and details rows. Milestone 6 completes the Changes
+presentation: the mark is drawn as the trailing dot, a deleted variant's
+Removed row sits inside its surviving parent's list, and activating an
+unmodified parent from Changes opens its first changed variant.
 
 ## Purpose And Boundary
 
@@ -193,15 +195,27 @@ The Changes filter shows a changed variant row inside its parent's group with
 the group expanded. A parent that is not itself changed still appears while
 any variant is changed: its row carries an aggregate mark derived from the
 shell's changed-route set and the hierarchy, its row is not a Changes row,
-and activating it from the Changes filter opens its first changed variant.
-The parent's status beside the title describes the parent only.
+and activating it from the Changes filter opens its first changed variant
+rather than the parent. Activation follows the rows the reader can see, so a
+variant the current constraints hide is never the destination, and a parent
+that changed on its own stays its own destination. The parent's status beside
+the title describes the parent only.
+
+The mark is the same trailing dot a changed row carries, drawn from the row's
+own attributes so it moves with background evidence, and it never marks a
+Removed row, whose label already names its state. Beside the dot the row
+carries the wording a screen reader announces; it is visually hidden, and
+free text in the search box never matches it.
 
 A deleted variant is a removed screen. The removed-entry snapshot retains its
 `variantOf` and its parent's ancestry so the shell places its Removed row
-under a surviving parent, hidden from All and shown in Changes. Deleting the
-parent and its variants yields one removed entry each. Comparison
-eligibility, the status badge, the current empty state, and retained
-baseline comparisons follow the existing removed-screen rules.
+inside a surviving parent's variant list, after the current variants, hidden
+from All and shown in Changes. A parent with no current variants discloses
+the list for it. When the parent is gone, or is not a current screen, the
+removed variant keeps the flat root-level row the removal rules give it.
+Deleting the parent and its variants yields one removed entry each.
+Comparison eligibility, the status badge, the current empty state, and
+retained baseline comparisons follow the existing removed-screen rules.
 
 Use-case propagation, affected-consumer evidence, selected live comparisons,
 and publication treat a variant as the screen it is; none of them needs a

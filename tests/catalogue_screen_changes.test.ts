@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { computeCatalogueChanges } from "../dist/server/changed.js";
 import { readCatalogueChanges } from "../dist/server/component_changes.js";
+import { homePage } from "../dist/server/pages.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { projectCatalogue } from "../src/catalogue/projection.js";
 
@@ -106,5 +107,44 @@ test("removing a parent and variant retains one removed screen for each", async 
   assert.deepEqual(
     changes.changedRoutes.filter((route) => route.startsWith("screens/home")),
     ["screens/home.html", "screens/home.variants/empty.html"],
+  );
+});
+
+test("a committed baseline places a removed variant under its parent row", async (t) => {
+  const fixture = await componentReviewFixture(
+    t,
+    () => screenVariantEntrySource({ includeVariant: false }),
+    screenVariantEntrySource(),
+  );
+  const changes = await computeCatalogueChanges(
+    fixture.config,
+    "main",
+    fixture.git,
+    fixture.after.manifest,
+  );
+  const catalogue = createCatalogue(
+    fixture.after.manifest,
+    changes.removedEntries,
+  );
+
+  const html = homePage(catalogue, {
+    base: "main",
+    changedRoutes: changes.changedRoutes,
+    updateVersion: 1,
+  });
+
+  assert.match(
+    html,
+    /<div class="mbk-nav-variants" data-nav-disclosure="variants:pages:home"[^>]*id="mb-nav-variants-pages-home"><a [^>]*data-nav-removed=""[^>]*data-removed-variant=""[^>]*hidden=""[^>]*data-route="screens\/home\.variants\/empty\.html"/,
+  );
+  assert.match(html, /Home empty · Removed<span class="mbk-nav-changed-text"/);
+  assert.match(html, /<span class="mbk-nav-filter-count">1<\/span>/);
+  assert.doesNotMatch(
+    html,
+    /data-changed="true"[^>]*data-route="screens\/home\.html"/,
+  );
+  assert.match(
+    html,
+    /data-changed="true"[^>]*data-route="screens\/home\.variants\/empty\.html"/,
   );
 });

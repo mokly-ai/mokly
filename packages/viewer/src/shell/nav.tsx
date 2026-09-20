@@ -46,16 +46,20 @@ export function CatalogueNav(props: {
   context: ShellContext;
 }) {
   const removedLeaves = props.catalogue.removedEntries.map(
-    ({ entry }): NavLeafNode => ({
-      kind: "leaf",
-      key: `removed:${entry.route}`,
-      entryId: entry.id,
-      entryKind: entry.kind,
-      label: `${entry.title} · Removed`,
-      route: entry.route,
-      tags: entry.tags ?? [],
-      removedPage: entry.kind === "page",
-    }),
+    ({ entry }): NavLeafNode => {
+      const variantOf = entry.kind === "screen" ? entry.variantOf : undefined;
+      return {
+        kind: "leaf",
+        key: `removed:${entry.route}`,
+        entryId: entry.id,
+        entryKind: entry.kind,
+        label: `${entry.title} · Removed`,
+        route: entry.route,
+        tags: entry.tags ?? [],
+        removedPage: entry.kind === "page",
+        ...(variantOf === undefined ? {} : { variantOf }),
+      };
+    },
   );
   const sections = buildNavSections(props.catalogue.hierarchy, removedLeaves);
   return (

@@ -114,7 +114,12 @@ historical folder, extra App root, or expandable Removed group.
 
 Removed-page rows are hidden from All. Preserve existing removed-screen
 navigation visibility and comparison behavior; this page rule does not narrow
-those screen features. Search by ID/title/route/tags and tag filtering use the
+those screen features. A removed screen variant is the one screen exception to
+the flat root-level placement: while its `variantOf` still names a current
+screen, its Removed row belongs inside that parent's variant list, after the
+parent's current variants, and is hidden from All like a removed page. A
+parent with no current variants discloses the list for it. Once the parent is
+gone, the variant takes the ordinary flat row. Search by ID/title/route/tags and tag filtering use the
 baseline metadata, with the same matching rules as current leaves. The Changes
 count includes each selected removed route once. Current home totals and the
 current tag picker remain based on current entries.

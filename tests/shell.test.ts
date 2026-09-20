@@ -6,7 +6,9 @@ import type { ManifestV5 } from "../packages/viewer/dist/registry/types.js";
 import type { Catalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { SHELL_CSS } from "../packages/viewer/dist/shell/css.js";
+import type { RemovedEntrySnapshot } from "../packages/viewer/dist/shell/metadata.js";
 import { buildNavTree } from "../packages/viewer/dist/shell/nav_tree.js";
+import { workspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 
 const manifest: ManifestV5 = {
   entries: [
@@ -190,6 +192,33 @@ const variantManifest: ManifestV5 = {
   ],
 };
 
+/** A deleted variant of the surviving Welcome screen, retained from baseline. */
+const removedVariant: RemovedEntrySnapshot = {
+  ancestors: [
+    { id: "example", title: "Example" },
+    { id: "screens", title: "Screens" },
+  ],
+  entry: {
+    declaredDependencies: [],
+    dependencies: [],
+    description: "Welcome after the workspace was deleted",
+    fragments: {
+      desktop: "screens/welcome.variants/gone.desktop.html",
+      mobile: "screens/welcome.variants/gone.mobile.html",
+    },
+    id: "welcome-gone",
+    kind: "screen",
+    navPath: ["Example", "Screens"],
+    relatedDocs: [],
+    route: "screens/welcome.variants/gone.html",
+    sourcePath: "entries/fixture.mockup.tsx",
+    title: "Workspace deleted",
+    useCaseIds: [],
+    variantOf: "welcome",
+    viewports: ["mobile", "desktop"],
+  },
+};
+
 const untaggedManifest: ManifestV5 = {
   ...manifest,
   entries: manifest.entries.map((entry) => {
@@ -286,6 +315,14 @@ function detailsSection(html: string): string {
     legacy >= 0 ? legacy : html.indexOf('<section class="mbk-inspector"');
   assert.ok(start > -1);
   return html.slice(start);
+}
+
+/** The single disclosed variant list a fixture renders, markup and all. */
+function variantListHtml(html: string): string {
+  const start = html.indexOf('<div class="mbk-nav-variants"');
+  if (start < 0) return "";
+  const end = html.indexOf("</div>", start);
+  return html.slice(start, end);
 }
 
 function routePage(catalogue: Catalogue, route: string): string {
@@ -562,6 +599,136 @@ test("the variant disclosure styles carry no rail and rotate the chevron", () =>
   assert.doesNotMatch(
     css,
     /\.mbk-nav-(?:leaf|variants)[^{}]*\{[^}]*linear-gradient/,
+  );
+});
+
+test("changed rows draw a trailing dot and name the change for readers", () => {
+  const catalogue = createCatalogue(variantManifest);
+  const html = homePage(catalogue, {
+    ...context,
+    changedRoutes: ["screens/welcome.variants/error.html"],
+  });
+  const css = flatCss(SHELL_CSS);
+
+  assert.match(
+    html,
+    /Save failed<span class="mbk-nav-changed-text" data-nav-changed-text="">Changed<\/span><\/a>/,
+  );
+  assert.match(
+    html,
+    /Details<span class="mbk-nav-changed-text" data-nav-changed-text="">Changed<\/span><\/a>/,
+  );
+  assert.match(
+    css,
+    /a\[data-nav-row\]\[data-changed="true"\]:not\(\[data-nav-removed\]\)::after, a\[data-nav-row\]\[data-changed-variants="true"\]::after \{ content: ""; width: 6px; height: 6px; flex-shrink: 0; margin-left: auto; border-radius: 50%; background: var\(--mokly-accent\); \}/,
+  );
+  assert.match(
+    css,
+    /a\[data-nav-row\]\[aria-current="page"\]\[data-changed="true"\]::after, a\[data-nav-row\]\[aria-current="page"\]\[data-changed-variants="true"\]::after \{ background: var\(--mokly-accent-contrast\); \}/,
+  );
+  assert.match(css, /\.mbk-nav-changed-text \{ display: none; \}/);
+  assert.match(
+    css,
+    /\.mbk-nav-changed-text \{ display: block; position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset\(50%\); white-space: nowrap; \}/,
+  );
+  assert.doesNotMatch(css, /\[data-changed[^{}]*\{[^}]*border-left/);
+  assert.doesNotMatch(css, /\[data-changed[^{},]*\]::before/);
+});
+
+test("a removed variant keeps its row inside the surviving parent's list", () => {
+  const catalogue = createCatalogue(variantManifest, [removedVariant]);
+  const html = homePage(catalogue, {
+    ...context,
+    changedRoutes: ["screens/welcome.variants/gone.html"],
+  });
+  const list = variantListHtml(html);
+
+  assert.match(
+    list,
+    /<a [^>]*data-nav-removed=""[^>]*data-removed-variant=""[^>]*hidden=""[^>]*data-route="screens\/welcome\.variants\/gone\.html"/,
+  );
+  assert.match(
+    list,
+    /data-route="screens\/welcome\.variants\/gone\.html"[^>]*><span class="mbk-nav-ico variant">/,
+  );
+  assert.match(list, /Workspace deleted · Removed</);
+  assert.ok(
+    list.indexOf('data-route="screens/welcome.variants/error.html"') <
+      list.indexOf('data-route="screens/welcome.variants/gone.html"'),
+  );
+  assert.equal(
+    occurrences(html, 'data-route="screens/welcome.variants/gone.html"'),
+    1,
+  );
+});
+
+test("a screen without variants discloses a removed variant it kept", () => {
+  const catalogue = createCatalogue(manifest, [removedVariant]);
+  const html = homePage(catalogue, context);
+
+  assert.match(
+    html,
+    /<div class="mbk-nav-leaf"><a [^>]*data-route="screens\/welcome\.html"/,
+  );
+  assert.match(
+    variantListHtml(html),
+    /^<div class="mbk-nav-variants" data-nav-disclosure="variants:pages:welcome" data-nav-variants="" hidden="" id="mb-nav-variants-pages-welcome"><a [^>]*data-route="screens\/welcome\.variants\/gone\.html"/,
+  );
+});
+
+test("a removed variant whose parent is gone stays a flat removed row", () => {
+  const orphan = {
+    ancestors: [{ id: "example", title: "Example" }],
+    entry: { ...removedVariant.entry, variantOf: "farewell" },
+  };
+  const catalogue = createCatalogue(variantManifest, [orphan]);
+  const html = homePage(catalogue, context);
+
+  assert.doesNotMatch(variantListHtml(html), /gone\.html/);
+  assert.match(
+    html,
+    /<\/details><a [^>]*data-nav-removed=""[^>]*data-route="screens\/welcome\.variants\/gone\.html"/,
+  );
+});
+
+test("a removed variant view keeps the surviving parent in its crumbs", () => {
+  const catalogue = createCatalogue(variantManifest, [removedVariant]);
+  const entry = removedVariant.entry;
+  const html = viewPage(entry, catalogue, {
+    ...context,
+    activeRoute: entry.route,
+    changedRoutes: [entry.route],
+  });
+
+  assert.match(
+    html,
+    /<p aria-label="Catalogue location" class="mbk-crumbs"><span>Example<\/span><span><span class="sep">›<\/span>Screens<\/span><span><span class="sep">›<\/span><a class="mbk-crumb-link" href="\/view\/screens\/welcome\.html">Welcome<\/a><\/span><\/p>/,
+  );
+  assert.match(html, />Removed</);
+  assert.match(html, /This screen was removed/);
+});
+
+test("a changed variant counts once and leaves its parent unmodified", () => {
+  const catalogue = createCatalogue(variantManifest);
+  const changedRoutes = ["screens/welcome.variants/error.html"];
+  const html = homePage(catalogue, { ...context, changedRoutes });
+  const parent = catalogue.byRoute.get("screens/welcome.html");
+  const variant = catalogue.byRoute.get("screens/welcome.variants/error.html");
+  if (parent?.kind !== "screen" || variant?.kind !== "screen")
+    assert.fail("Expected both routes to resolve to screens");
+
+  assert.match(html, /<span class="mbk-nav-filter-count">1<\/span>/);
+  assert.equal(
+    workspaceData(catalogue, { ...context, changedRoutes }, parent).status,
+    "Unmodified",
+  );
+  assert.equal(
+    workspaceData(catalogue, { ...context, changedRoutes }, variant).status,
+    "Changed",
+  );
+  assert.doesNotMatch(
+    html,
+    /data-changed="true"[^>]*data-route="screens\/welcome\.html"/,
   );
 });
 

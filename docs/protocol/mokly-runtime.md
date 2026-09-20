@@ -265,6 +265,12 @@ carry the same disclosure the collection keys carry, and the button's
 accessible name follows the state. A parent row whose list holds a changed
 route carries `data-changed-variants`, the aggregate mark that keeps the group
 visible under the Changes filter without claiming the parent itself changed.
+The stylesheet draws that attribute and `data-changed` as the same trailing
+dot, and reveals the row's visually hidden change wording to assistive
+technology, so a background evidence refresh moves the mark by toggling the
+attributes alone. A Removed row is never marked. Activating a parent row that
+carries only the aggregate mark while the Changes filter is selected navigates
+to the first changed variant row its list still shows.
 
 Per-view change evidence is an approved target of the same plan: when the
 comparison or lightweight screen-view evidence marks only some views of a

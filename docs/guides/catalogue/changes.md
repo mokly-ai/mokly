@@ -43,10 +43,13 @@ comparison is reacquired for you.
 A variant of a screen is its own row in Changes and counts on its own. When
 only a variant changed, the parent screen still shows a changed mark on its
 row so the group stays visible, and opening the parent from Changes takes you
-to the first changed variant. A change confined to one viewport or scheme,
-such as a dark-only edit, marks that view on the viewport and theme controls,
-lists it in Details, and lands on it when you open the screen from Changes.
-Both are approved targets and not yet available in a released version.
+to the first changed variant. A deleted variant keeps a Removed row under the
+screen it belonged to, shown in Changes and hidden in All; if the screen went
+too, the row joins the others at the top level. A change confined to one
+viewport or scheme, such as a dark-only edit, marks that view on the viewport
+and theme controls, lists it in Details, and lands on it when you open the
+screen from Changes. That last one is an approved target and not yet
+available in a released version.
 
 ## Added and removed
 

@@ -8,6 +8,13 @@ import type { ManifestEntry } from "../registry/types.js";
 export interface NavLeafNode {
   entryId?: string;
   removedPage?: boolean;
+  /**
+   * A retained baseline variant placed under its surviving parent. Like a
+   * removed page it is a Changes row: All hides it, Changes shows it.
+   */
+  removedVariant?: boolean;
+  /** Parent screen id a retained baseline variant still names. */
+  variantOf?: string;
   entryKind: "component" | "screen" | "use-case" | "page";
   key: string;
   kind: "leaf";
@@ -63,10 +70,14 @@ export function buildNavSections(
   hierarchy: CatalogueHierarchy<ManifestEntry>,
   additionalLeaves: readonly NavLeafNode[] = [],
 ): NavSectionNode[] {
-  const tree = buildNavTree(hierarchy);
+  const adopted = adoptedVariants(hierarchy, additionalLeaves);
+  const tree = attachRemovedVariants(buildNavTree(hierarchy), adopted);
+  const flat = additionalLeaves.filter(
+    (leaf) => !(adopted.get(leaf.variantOf ?? "") ?? []).includes(leaf),
+  );
   return (["pages", "components"] as const).flatMap((id) => {
     const current = projectNodes(tree, id);
-    const additional = additionalLeaves.filter((leaf) =>
+    const additional = flat.filter((leaf) =>
       id === "components"
         ? leaf.entryKind === "component"
         : leaf.entryKind !== "component",
@@ -94,6 +105,55 @@ export function structuredCrumbTrail(
   return (hierarchy.ancestorsById.get(entryId) ?? []).map((ancestor) => ({
     label: ancestor.title,
   }));
+}
+
+/**
+ * Retained baseline variants grouped by the surviving parent screen that
+ * still claims them. A variant whose parent is gone, or whose parent is not a
+ * current screen, keeps the flat removed row the removal rules give it.
+ */
+function adoptedVariants(
+  hierarchy: CatalogueHierarchy<ManifestEntry>,
+  leaves: readonly NavLeafNode[],
+): Map<string, NavLeafNode[]> {
+  const byParent = new Map<string, NavLeafNode[]>();
+  for (const leaf of leaves) {
+    const parentId = leaf.variantOf;
+    if (parentId === undefined) continue;
+    const parent = hierarchy.byId.get(parentId);
+    if (parent?.kind !== "screen") continue;
+    byParent.set(parentId, [...(byParent.get(parentId) ?? []), leaf]);
+  }
+  return byParent;
+}
+
+/**
+ * Append each adopted variant to its parent's list, after the current ones.
+ * Adoption is what makes the row a Changes row, so the flag is written here
+ * rather than guessed again by whoever supplied the leaf.
+ */
+function attachRemovedVariants(
+  nodes: readonly NavNode[],
+  byParent: ReadonlyMap<string, readonly NavLeafNode[]>,
+): NavNode[] {
+  if (byParent.size === 0) return [...nodes];
+  return nodes.map((node) => {
+    if (node.kind === "group")
+      return {
+        ...node,
+        children: attachRemovedVariants(node.children, byParent),
+      };
+    const removed = node.entryId ? byParent.get(node.entryId) : undefined;
+    return removed
+      ? {
+          ...node,
+          variants: [
+            ...(node.variants ?? []),
+            ...removed.map((leaf) => ({ ...leaf, removedVariant: true })),
+          ],
+        }
+      : node;
+  });
 }
 
 /** One routed entry, the only entry kind a navigation leaf can represent. */

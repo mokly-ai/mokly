@@ -1,4 +1,5 @@
 /** Reconcile background catalogue evidence while retaining navigation nodes and choices. */
+import { reconcileRemovedVariants } from "./browse_evidence_variants.js";
 import { applyNavVisibility } from "./browse_navigation_state.js";
 
 export function applyNavigationEvidence(doc: Document, next: Document): void {
@@ -43,6 +44,7 @@ export function applyNavigationEvidence(doc: Document, next: Document): void {
         "data-entry-id",
         "data-entry-kind",
         "data-removed-page",
+        "data-removed-variant",
       ]) {
         const value = replacement.getAttribute(name);
         if (value === null) row.removeAttribute(name);
@@ -52,6 +54,7 @@ export function applyNavigationEvidence(doc: Document, next: Document): void {
     nextRows.delete(row.getAttribute("href"));
   }
   reconcileRemovedRows(doc, next, tree, removed);
+  reconcileRemovedVariants(doc, next, removed);
   applyNavVisibility(doc, "preserve");
   if (tree) tree.scrollTop = scroll;
 }

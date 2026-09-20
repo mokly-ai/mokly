@@ -51,6 +51,11 @@ export class FakeNode {
     this.#attributes = new Map(Object.entries(attributes));
   }
 
+  /** The tree root, which the client modules address as the document. */
+  get ownerDocument(): FakeNode {
+    return this.treeRoot();
+  }
+
   get textContent(): string {
     return this.#children.reduce(
       (text, child) => text + child.textContent,

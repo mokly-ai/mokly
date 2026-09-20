@@ -10,6 +10,7 @@ import {
   handleAddressClick,
   handleFrameClick,
 } from "./browse_frames.js";
+import { changesLandingHref } from "./browse_landing.js";
 import { browseLinkTarget } from "./browse_links.js";
 import { createBrowserNavPreference } from "./browse_navigation.js";
 import {
@@ -224,7 +225,12 @@ export function initializeBrowseShell(
     const url = browseLinkTarget(event, target, win.location);
     if (!url) return;
     event.preventDefault();
-    void navigate(url, true);
+    const anchor = target.closest("a");
+    const landing = anchor ? changesLandingHref(anchor) : undefined;
+    void navigate(
+      landing === undefined ? url : new URL(landing, win.location.href).href,
+      true,
+    );
   });
 
   doc.addEventListener("keydown", (event) => {

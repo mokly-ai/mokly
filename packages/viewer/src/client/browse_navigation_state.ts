@@ -1,5 +1,7 @@
 /** Catalogue-tree filtering and active-route visibility invariants. */
 
+import { NAV_CHANGED_TEXT_ATTRIBUTE } from "../shell/nav_changed.js";
+
 import {
   isDisclosureOpen,
   isVariantList,
@@ -65,7 +67,8 @@ export function applyNavVisibility(
   for (const row of doc.querySelectorAll<HTMLElement>("[data-nav-row]")) {
     const matchesFilter = changedOnly
       ? row.getAttribute("data-changed") === "true"
-      : !row.hasAttribute("data-removed-page");
+      : !row.hasAttribute("data-removed-page") &&
+        !row.hasAttribute("data-removed-variant");
     row.hidden =
       waiting || !(matchesFilter && rowMatchesQuery(query, navRowFacts(row)));
     visible ||= !row.hidden;
@@ -162,8 +165,19 @@ function navRowFacts(row: Element): {
     tags: (row.getAttribute("data-tags") ?? "")
       .split(/\s+/)
       .filter((tag) => tag !== ""),
-    text: row.textContent ?? "",
+    text: navRowText(row),
   };
+}
+
+/**
+ * A row's searchable label. The changed mark's wording ends every row, so
+ * free text matches what the reader sees rather than the mark's `Changed`.
+ */
+function navRowText(row: Element): string {
+  const text = row.textContent ?? "";
+  const mark =
+    row.querySelector(`[${NAV_CHANGED_TEXT_ATTRIBUTE}]`)?.textContent ?? "";
+  return mark === "" ? text : text.slice(0, text.length - mark.length);
 }
 
 /**

@@ -128,6 +128,11 @@ test("review export retains a removed variant route, id redirect, and parent con
     "utf8",
   );
   assert.match(removed, /This screen was removed/);
+  assert.match(
+    removed,
+    /<div class="mbk-nav-variants" data-nav-disclosure="variants:pages:home"[^>]*id="mb-nav-variants-pages-home"><a [^>]*data-nav-removed=""[^>]*data-removed-variant=""/,
+  );
+  assert.match(removed, /Home empty · Removed/);
   const redirect = await fs.readFile(
     path.join(fixture.output, "id/home-empty/index.html"),
     "utf8",

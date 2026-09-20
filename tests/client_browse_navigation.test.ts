@@ -291,6 +291,61 @@ test("a changed variant marks its parent row and survives the Changes filter", (
   assert.equal(nav.welcome.hidden, true);
 });
 
+test("a removed variant shows under its parent only while Changes is on", () => {
+  const nav = navFixture();
+  const gone = removedVariantRow();
+  nav.welcomeList.append(gone);
+
+  applyNavVisibility(asDocument(nav.root), "reveal-matches");
+
+  assert.equal(gone.hidden, true);
+  assert.equal(nav.welcome.hidden, false);
+  assert.equal(nav.welcome.getAttribute("data-changed-variants"), "true");
+
+  nav.changed.setAttribute("aria-pressed", "true");
+  applyNavVisibility(asDocument(nav.root), "reveal-matches");
+
+  assert.equal(gone.hidden, false);
+  assert.equal(nav.welcomeEmpty.hidden, true);
+  assert.equal(nav.welcome.hidden, false);
+  assert.equal(nav.welcomeList.hidden, false);
+  assert.equal(nav.details.hidden, true);
+});
+
+test("the mark's reader text never becomes a search term", () => {
+  const nav = navFixture();
+  nav.welcome.append(
+    new FakeNode("span", { "data-nav-changed-text": "" }, "Changed"),
+  );
+  nav.search.value = "changed";
+
+  applyNavVisibility(asDocument(nav.root), "reveal-matches");
+
+  assert.equal(nav.welcome.hidden, true);
+
+  nav.search.value = "welcome";
+  applyNavVisibility(asDocument(nav.root), "reveal-matches");
+
+  assert.equal(nav.welcome.hidden, false);
+});
+
+/** A deleted variant retained under a surviving parent's disclosed list. */
+function removedVariantRow(): FakeNode {
+  return new FakeNode(
+    "a",
+    {
+      "data-changed": "true",
+      "data-entry-id": "welcome-gone",
+      "data-nav-removed": "",
+      "data-nav-row": "",
+      "data-removed-variant": "",
+      "data-route": "screens/welcome.variants/gone.html",
+      href: "/view/screens/welcome.variants/gone.html",
+    },
+    "Workspace deleted \u00b7 Removed",
+  );
+}
+
 /** One catalogue column with its All/Changed filter: two tagged screens and
  * one untagged legacy page. */
 interface NavFixture {
