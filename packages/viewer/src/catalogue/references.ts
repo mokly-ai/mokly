@@ -81,6 +81,23 @@ export function validateCatalogueReferences(model: CatalogueReadModel): void {
     }
     if (entry.kind === "screen") {
       unique(entry.useCaseIds);
+      if (entry.variantOf !== undefined && !removed) {
+        const parent = model.screens.find(
+          (screen) => screen.id === entry.variantOf,
+        );
+        const parentExists = parent !== undefined;
+        require(parentExists, "variant parent screen must exist");
+        const parentIsNotVariant =
+          parent !== undefined && parent.variantOf === undefined;
+        require(parentIsNotVariant, "variant parent cannot be a variant");
+        const routeMatchesParent =
+          parent !== undefined && variantRoute(parent.route, entry.route);
+        require(routeMatchesParent, "variant route must match its parent");
+        const isUnclaimedByCollections = !model.collections.some((collection) =>
+          collection.childIds.includes(entry.id),
+        );
+        require(isUnclaimedByCollections, "collections cannot claim variants");
+      }
       if (!removed)
         for (const id of entry.useCaseIds)
           require(Boolean(
@@ -181,4 +198,11 @@ function validateViews(
 
 function require(condition: boolean, message: string): void {
   if (!condition) invalidData("$catalogue", message);
+}
+
+function variantRoute(parentRoute: string, route: string): boolean {
+  if (!parentRoute.endsWith(".html") || !route.endsWith(".html")) return false;
+  const prefix = `${parentRoute.slice(0, -5)}.variants/`;
+  const slug = route.slice(prefix.length, -5);
+  return route.startsWith(prefix) && slug.length > 0 && !slug.includes("/");
 }

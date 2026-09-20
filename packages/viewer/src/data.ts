@@ -148,6 +148,7 @@ export type {
 export type { ColorScheme, Viewport } from "./data/axes.js";
 export {
   isSafeCatalogueRoute,
+  isPortableUrlPath,
   encodeUrlPath,
   isSafeRepositoryPath,
 } from "./data/paths.js";

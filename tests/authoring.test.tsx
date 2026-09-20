@@ -152,6 +152,25 @@ test("nested screens retain colorSchemes through root flattening", () => {
   assert.deepEqual(definition.colorSchemes, ["light"]);
 });
 
+test("defineScreen flattens declared variants after their parent", () => {
+  const definitions = defineScreen({
+    ...screenBase,
+    variants: [
+      {
+        description: "Empty tagged screen",
+        desktop: "Empty desktop",
+        id: "tagged-screen-empty",
+        mobile: "Empty mobile",
+        slug: "empty",
+        title: "Tagged screen, empty",
+      },
+    ],
+  });
+
+  assert.equal(definitions[0]?.id, "tagged-screen");
+  assert.equal(definitions[1]?.id, "tagged-screen-empty");
+});
+
 test("define helpers keep authored tags on screens and use cases", () => {
   const definition = defineScreen({
     ...screenBase,

@@ -49,12 +49,14 @@ workspace` and `Save failed`. Only `Empty workspace` has a design destination;
   `Save failed` is selected by the Changes artboards that own it. The variant
   rows come from the static navigation fixture in `parts/nav_data.ts`, which the
   shared catalogue-navigation samples reuse, so the saved samples and the
-  in-screen trees stay aligned. No screen declares an authored variant list yet;
-  the authoring field arrives with the registry work.
+  in-screen trees stay aligned. The example Welcome screen now authors the
+  `Empty workspace` state as `example-welcome-empty`; `Save failed` remains a
+  design-only comparison scenario until its Changes milestone lands.
 - A variant's inspector shows the metadata it inherits from its parent, because
-  a variant inherits the parent's address, schemes, tags, and related docs and
-  supplies only its own title, description, and render. The removed variant has
-  its own recorded details, like every removed screen.
+  a variant inherits the parent's address, schemes, dependencies, tags, and
+  related docs. It supplies its own title, description, render, and any
+  reciprocal flow membership; omitted `useCaseIds` defaults to an empty list.
+  The removed variant has its own recorded details, like every removed screen.
 - The changed-views artboard keeps `Welcome` in Changes while its shown light
   view is unmodified: the change is confined to the dark views, so the theme
   control and the viewport dropdown carry a mark and the details list them.

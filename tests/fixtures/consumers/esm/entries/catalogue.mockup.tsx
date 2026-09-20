@@ -62,6 +62,16 @@ export const mockups = [
     route: "screens/home.html",
     title: "Packed home",
     useCaseIds: ["packed-tour"],
+    variants: [
+      {
+        description: "Packed home without content.",
+        desktop: <main data-fixture="esm-empty-desktop">Empty</main>,
+        id: "packed-home-empty",
+        mobile: <main data-fixture="esm-empty-mobile">Empty</main>,
+        slug: "empty",
+        title: "Packed home, empty",
+      },
+    ],
   }),
   defineScreen({
     ...metadata,

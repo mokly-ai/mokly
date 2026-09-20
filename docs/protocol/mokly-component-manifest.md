@@ -63,8 +63,8 @@ interface ManifestComponentVariant {
 }
 ```
 
-`ManifestScreen` additionally gains an optional `variantOf` parent-screen id
-under the approved [screen variants contract](./mokly-screen-variants.md);
+`ManifestScreen` additionally has an optional `variantOf` parent-screen id
+under the implemented [screen variants contract](./mokly-screen-variants.md);
 the field is additive and the schema version stays 5.
 
 Common entry metadata keeps its meaning, including source attribution and

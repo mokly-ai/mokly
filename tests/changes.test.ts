@@ -41,6 +41,40 @@ test("shared inputs require rendered impact to include screens in Changes", asyn
   );
 });
 
+test("changing only a screen variant parent marks its route changed", async (t) => {
+  const fixture = await createFixture();
+  t.after(() => removeFixture(fixture));
+  const config = await loadConfig(fixture.root);
+  const { manifest } = await compileCatalogue(config);
+  const parent = manifest.entries.find(
+    (entry) => entry.kind === "screen" && entry.id === "home",
+  );
+  assert.ok(parent?.kind === "screen");
+  const stem = parent.route.slice(0, -5);
+  const variant = {
+    ...structuredClone(parent),
+    fragments: {
+      desktop: `${stem}.variants/empty.desktop.html`,
+      mobile: `${stem}.variants/empty.mobile.html`,
+    },
+    id: "home-empty",
+    route: `${stem}.variants/empty.html`,
+    useCaseIds: [],
+    variantOf: "home",
+  };
+  const base = { ...manifest, entries: [...manifest.entries, variant] };
+  const current = {
+    ...base,
+    entries: base.entries.map((entry) =>
+      entry.id === variant.id ? { ...entry, variantOf: "details" } : entry,
+    ),
+  };
+
+  assert.deepEqual(changedManifestRoutes(current, base, config, []), [
+    variant.route,
+  ]);
+});
+
 test("Changes keeps screen comparisons lazy and has no separate Review route", async (t) => {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));

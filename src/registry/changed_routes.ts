@@ -99,6 +99,7 @@ function routeChangeProjection(
     fragments: entry.fragments,
     route: entry.route,
     useCaseIds: entry.useCaseIds,
+    variantOf: entry.variantOf,
     viewports: entry.viewports,
   };
 }

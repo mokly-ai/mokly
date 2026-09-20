@@ -3,6 +3,8 @@ import fs from "node:fs/promises";
 import test from "node:test";
 
 import { readCatalogueChanges } from "../dist/server/component_changes.js";
+import type { CatalogueNode } from "../packages/viewer/dist/catalogue/types.js";
+import type { ManifestV5 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { readCatalogue } from "../packages/viewer/src/catalogue/reader.js";
 import { projectCatalogue } from "../src/catalogue/projection.js";
@@ -87,6 +89,57 @@ test("projection exposes real usage and attribution without private evidence", a
   );
 });
 
+test("projection exposes screen variants beneath their parent entry", async (t) => {
+  const fixture = await componentReviewFixture(t, (source) => source);
+  const parent = fixture.after.manifest.entries.find(
+    (entry): entry is CurrentManifestScreen => entry.kind === "screen",
+  );
+  assert.ok(parent);
+  const stem = parent.route.slice(0, -5);
+  const variant: CurrentManifestScreen = {
+    ...structuredClone(parent),
+    description: "Empty workspace",
+    fragments: {
+      desktop: `${stem}.variants/empty.desktop.html`,
+      mobile: `${stem}.variants/empty.mobile.html`,
+    },
+    id: `${parent.id}-empty`,
+    route: `${stem}.variants/empty.html`,
+    title: `${parent.title}, empty`,
+    useCaseIds: [],
+    variantOf: parent.id,
+    ...(parent.darkFragments
+      ? {
+          darkFragments: {
+            desktop: `${stem}.variants/empty.desktop.dark.html`,
+            mobile: `${stem}.variants/empty.mobile.dark.html`,
+          },
+        }
+      : {}),
+  };
+  const model = projectCatalogue({
+    configPath: "mokly.config.ts",
+    catalogue: createCatalogue({
+      ...fixture.after.manifest,
+      entries: [...fixture.after.manifest.entries, variant],
+    }),
+    changesStatus: "disabled",
+    comparisonUrl: null,
+    revision: { content: 0, evidence: 0 },
+  });
+
+  assert.equal(
+    model.screens.find(({ id }) => id === variant.id)?.variantOf,
+    parent.id,
+  );
+  assert.deepEqual(findNode(model.tree.pages, parent.id), {
+    children: [{ id: variant.id, kind: "entry" }],
+    id: parent.id,
+    kind: "entry",
+  });
+  assert.deepEqual(readCatalogue(JSON.parse(serializeCatalogue(model))), model);
+});
+
 test("public v1 fixture conforms and compatible readers ignore additive fields", async () => {
   const json = await fs.readFile(
     "docs/protocol/fixtures/catalogue-v1.json",
@@ -151,3 +204,22 @@ test("reader rejects unsafe paths, private extensions and broken known reference
     assert.throws(() => readCatalogue(value), String(mutate));
   }
 });
+
+function findNode(
+  nodes: readonly CatalogueNode[],
+  id: string,
+): CatalogueNode | undefined {
+  for (const node of nodes) {
+    if (node.id === id) return node;
+    if (node.kind === "collection") {
+      const nested = findNode(node.children, id);
+      if (nested) return nested;
+    }
+  }
+  return undefined;
+}
+
+type CurrentManifestScreen = Extract<
+  ManifestV5["entries"][number],
+  { kind: "screen" }
+>;

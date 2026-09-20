@@ -2,8 +2,8 @@
 
 Status: active. Created 2026-09-19 with the user's consent after the design
 discussion in this workspace, then rewritten the same day when the user chose
-own routes over a query parameter. Milestones 1 and 2 are complete;
-Milestone 3 is next.
+own routes over a query parameter. Milestones 1 to 3 are complete;
+Milestone 4 is next.
 
 **Goal:** Let a screen declare variants beside its default render, show them as
 an expandable list under the screen's navigation row, give each variant its
@@ -280,21 +280,20 @@ each variant as an ordinary screen because nothing reads the edge yet.
 
 **Steps:**
 
-- [ ] Decide and record the `defineScreen` return shape before coding: keep
-      `defineScreen` returning one `ScreenDefinition` and expose the variants
-      through a new `defineScreenWithVariants` helper only if the array
-      return breaks existing typed consumers. Prefer the single helper with a
-      union return if the packed-consumer tests accept it.
-- [ ] Write failing tests: two variants flatten into two extra screens with
+- [x] Keep one helper with a conditional overload: `defineScreen` returns one
+      `ScreenDefinition` when `variants` is absent and a readonly parent-first
+      `ScreenDefinition[]` when it is present. The packed NodeNext consumer
+      covers both return shapes, and the authoring contract records the choice.
+- [x] Write failing tests: two variants flatten into two extra screens with
       routes `screens/welcome.variants/<slug>.html`, `variantOf: "welcome"`,
       inherited address, tags, schemes, dependencies, and related docs, and
       per-variant overrides applied; duplicate slugs, a slug that is not a
       route segment, a variant declaring `variants`, a variant claimed by a
       collection, and a `variantOf` pointing at a variant each produce a
       source-attributed violation; nested `screen` behaves the same.
-- [ ] Implement; keep `definitions.ts` under 300 lines by moving variant
+- [x] Implement; keep `definitions.ts` under 300 lines by moving variant
       flattening into the new module.
-- [ ] `npm test` green.
+- [x] `npm test` green.
 
 #### Task 3.2: Manifest, hierarchy, and public projection
 
@@ -315,14 +314,14 @@ each variant as an ordinary screen because nothing reads the edge yet.
 
 **Steps:**
 
-- [ ] Write failing tests: the manifest omits `variantOf` on ordinary screens
+- [x] Write failing tests: the manifest omits `variantOf` on ordinary screens
       and emits it on variants; validation rejects an unknown parent, a
       parent that is a variant, and a variant listed in `childIds`; the
       hierarchy exposes variants under their parent with the parent's
       ancestors; reparenting a variant marks it changed; the public model
       and reader round-trip the field and the fixture stays valid.
-- [ ] Implement.
-- [ ] `npm test` green; `npm run package:smoke` green.
+- [x] Implement.
+- [x] `npm test` green; `npm run package:smoke` green.
 
 #### Task 3.3: Example catalogue variant and docs
 
@@ -335,11 +334,11 @@ each variant as an ordinary screen because nothing reads the edge yet.
 
 **Steps:**
 
-- [ ] Add the variant, rebuild, and check; confirm the manifest diff adds
+- [x] Add the variant, rebuild, and check; confirm the manifest diff adds
       exactly one screen entry with `variantOf` and its fragment paths.
-- [ ] Smoke: `npm run dev`, open the variant through `/id/example-welcome-empty`,
+- [x] Smoke: `npm run dev`, open the variant through `/id/example-welcome-empty`,
       confirm it renders as an ordinary screen with the Welcome breadcrumb.
-- [ ] Milestone close-out: commit `feat(registry): add screen variants` and
+- [x] Milestone close-out: commit `feat(registry): add screen variants` and
       push.
 
 ---

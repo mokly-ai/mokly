@@ -171,6 +171,9 @@ export function readEntry(value: unknown): CatalogueRoutedEntry {
       ...(input.address !== undefined
         ? { address: string(input.address) }
         : {}),
+      ...(input.variantOf !== undefined
+        ? { variantOf: id(input.variantOf) }
+        : {}),
     };
   const schema = readSchema(input.propSchema);
   if (schema.kind !== "object")

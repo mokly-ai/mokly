@@ -35,6 +35,7 @@ import {
   type RoutedEntryInput,
   type ScreenDefinition,
   type ScreenInput,
+  type ScreenVariantInput,
   type StylesheetRule,
   type UseCaseDefinition,
   type UseCaseInput,
@@ -88,6 +89,25 @@ const nestedPage: NestedPageInput = {
   slug: "page",
   render: documentPage.render,
 };
+const typedVariant: ScreenVariantInput = {
+  description: "Typed empty state",
+  desktop: <main>Empty</main>,
+  id: "typed-screen-empty",
+  mobile: <main>Empty</main>,
+  slug: "empty",
+  title: "Typed screen, empty",
+};
+const variantDefinitions: readonly ScreenDefinition[] = defineScreen({
+  dependencies: [],
+  description: "Typed variant parent",
+  desktop: node,
+  id: "typed-variant-parent",
+  mobile: node,
+  relatedDocs: [],
+  route: "typed/variant-parent.html",
+  title: "Typed variant parent",
+  variants: [typedVariant],
+});
 const definitions: RegistryDefinition[] = [
   definePage(documentPage),
   defineScreen({
@@ -101,6 +121,7 @@ const definitions: RegistryDefinition[] = [
     title: "Typed screen",
     useCaseIds: [],
   }),
+  ...variantDefinitions,
 ];
 
 void [
@@ -139,6 +160,7 @@ type PublicTypes =
   | RoutedEntryInput
   | ScreenDefinition
   | ScreenInput
+  | ScreenVariantInput
   | StylesheetRule
   | UseCaseDefinition
   | UseCaseInput

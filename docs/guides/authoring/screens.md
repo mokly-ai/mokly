@@ -50,9 +50,16 @@ state or an error. Declare it inside the screen it varies, and it becomes a
 full screen of its own, grouped under the parent in the catalogue.
 
 ```tsx
-defineScreen({
+export const accountHomeStates = defineScreen({
   id: "account-home",
-  // The rest of the screen is unchanged.
+  title: "Account home",
+  description: "The account landing screen.",
+  route: "account/home.html",
+  mobile: <main>Account</main>,
+  desktop: <main>Account</main>,
+  dependencies: ["src/account/home.tsx"],
+  relatedDocs: ["docs/account.md"],
+  useCaseIds: [],
   variants: [
     {
       id: "account-home-empty",
@@ -70,10 +77,14 @@ The variant's route is derived from the parent's, so this one is written to
 `account/home.variants/empty.html`. It inherits the parent's address, tags,
 color schemes, dependencies and related docs unless it sets its own, and it
 keeps its own global id, so a link to `account-home-empty` opens it like any
-screen. A variant cannot declare variants of its own, and a collection never
-lists a variant directly; it belongs to the parent's collection through the
-parent. Variants are an approved target and not yet available in a
-released version.
+screen. Its `useCaseIds` defaults to an empty list and never inherits; list a
+flow only when one of that flow's steps names the variant. A variant cannot
+declare variants of its own, and a collection never lists a variant directly;
+it belongs to the parent's collection through the parent. The call returns a
+readonly array containing the parent first and then the variants in authored
+order; `mockups` exports may include that result directly. A call without
+`variants` continues to return one screen definition. Nested `screen` markers
+accept the same `variants` field and flatten in the same order.
 
 ## Nest a tree of screens
 
@@ -123,6 +134,7 @@ never inherited.
 | Type                              | Use                                       |
 | --------------------------------- | ----------------------------------------- |
 | `ScreenInput`, `ScreenDefinition` | What `defineScreen` takes and returns     |
+| `ScreenVariantInput`              | One screen state nested under its parent  |
 | `NestedScreenInput`               | What `screen` takes inside a tree         |
 | `RootInput`                       | What `defineRoot` takes                   |
 | `EntryInput`, `RoutedEntryInput`  | The metadata every entry and route shares |

@@ -95,6 +95,9 @@ export function projectCatalogue(
         views: projectViews(input, retainedComponents, entry, entry, removed),
         useCaseIds: [...entry.useCaseIds],
         ...(entry.address !== undefined ? { address: entry.address } : {}),
+        ...(entry.variantOf !== undefined
+          ? { variantOf: entry.variantOf }
+          : {}),
       };
     const schema = readSchema(entry.propSchema);
     if (schema.kind !== "object")

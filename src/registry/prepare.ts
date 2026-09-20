@@ -26,7 +26,10 @@ export function prepareRegistry(
 ): PreparedRegistry {
   const violations: RegistryViolation[] = [];
   const entries: ResolvedRegistryEntry[] = [];
-  values.forEach((value, index) => {
+  const flattened = values.flatMap((value) =>
+    Array.isArray(value) ? value : [value],
+  );
+  flattened.forEach((value, index) => {
     if (!isDefinition(value)) {
       violations.push({
         code: "invalid-definition",

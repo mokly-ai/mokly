@@ -2,10 +2,11 @@
 
 ## Delivery Status
 
-Approved target tracked by the [screen variants plan](../../plans/screen-variants.md).
-Nothing in this document is implemented yet. Contracts that this document
-extends describe the variant behavior as a target until that plan's milestones
-deliver it.
+Authoring, flattening, generated output, manifest validation, hierarchy maps,
+and the public read model are implemented through Milestone 3 of the
+[screen variants plan](../../plans/screen-variants.md). Navigation grouping,
+Changes aggregation, removed-variant placement, and variant breadcrumbs remain
+delivery targets for later milestones.
 
 ## Purpose And Boundary
 
@@ -62,10 +63,12 @@ The helper flattens each variant into a full `ScreenDefinition` carrying
 `variantOf: <parent id>`, the way `defineRoot` flattens nested trees. The
 parent definition itself is unchanged and never lists its variants; the
 relationship is stored on the variant. A module's `mockups` export therefore
-contains the parent and every variant as separate entries. When `variants` is
-present, `defineScreen` returns the parent together with its flattened
-variants; the exact return shape is decided in the plan's authoring milestone
-and documented here when it lands.
+contains the parent and every variant as separate entries. A `defineScreen`
+call without `variants` returns one `ScreenDefinition`, preserving the existing
+typed API. A call with `variants` returns a readonly `ScreenDefinition[]`,
+ordered parent first and then variants in authored order. Entry-module exports
+may place that result directly in `mockups`; registry preparation flattens that
+one array level.
 
 The derived route is `<parent route without .html>.variants/<slug>.html`. For a
 parent at `screens/welcome.html`, the variant with slug `empty` lives at
@@ -77,10 +80,12 @@ viewport fragments. The slug obeys the route-segment grammar, and an author
 never supplies `route` on a variant.
 
 A variant inherits the parent's `address`, `colorSchemes`, `dependencies`,
-`relatedDocs`, `tags`, and `useCaseIds` unless it declares its own value,
-which replaces rather than merges the inherited list. `title`, `description`,
-`mobile`, and `desktop` are always the variant's own. `id` is a global
-catalogue id written in full by the author; ids never derive from tree
+`relatedDocs`, and `tags` unless it declares its own value, which replaces
+rather than merges the inherited list. `useCaseIds` defaults to an empty list
+and is never inherited because membership is reciprocal with the flow's steps;
+a flow that steps through the variant must be listed by that variant. `title`,
+`description`, `mobile`, and `desktop` are always the variant's own. `id` is a
+global catalogue id written in full by the author; ids never derive from tree
 position, so `welcome-empty` is authored as `welcome-empty`.
 
 Validation rejects, with source attribution:
@@ -91,8 +96,10 @@ Validation rejects, with source attribution:
   is itself a variant, so nesting is exactly one level deep;
 - a variant id listed in any collection's `childIds`; a variant belongs to
   its parent's collection through the parent and is never claimed directly;
-- a page, collection, use case, or component carrying `variants` or
-  `variantOf`, including keys whose value is `undefined`.
+- a page, collection, or use case carrying `variants` or `variantOf`, including
+  keys whose value is `undefined`;
+- a component carrying `variantOf`. A component's required `variants` field
+  remains the unrelated saved-component-view contract.
 
 Every other screen rule applies unchanged: id and tag grammar, color-scheme
 subsets, reciprocal use-case membership, dependency paths, and source
@@ -124,7 +131,8 @@ variant listed in any `childIds`. Entry sorting, key ordering, `navPath`, and
 field; a baseline screen without `variantOf` is an ordinary screen.
 
 The hierarchy analysis exposes variants beside collection membership: each
-screen's variants in authored order, and each variant's parent. A variant's
+screen's variants in manifest entry order (the route order), and each variant's
+parent. A variant's
 ancestors are its parent's collection ancestors, so its breadcrumbs and its
 removed-entry ancestry read the same as the parent's, followed by the parent
 title. The parent title is a link when the parent is viewable.

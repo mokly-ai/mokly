@@ -127,6 +127,16 @@ export const mockups = [
     relatedDocs: ["docs/account.md"],
     dependencies: ["src/account/home.tsx"],
     useCaseIds: [],
+    variants: [
+      {
+        id: "account-home-empty",
+        slug: "empty",
+        title: "Account home, empty",
+        description: "The account landing screen before setup.",
+        mobile: <main>No account yet</main>,
+        desktop: <main>No account yet</main>,
+      },
+    ],
   }),
 ];
 ```
@@ -136,6 +146,15 @@ content in a `<main>` landmark because each fragment is generated as its own
 standalone page. Collection membership is also the navigation hierarchy:
 Mokly infers the screen's `Account` breadcrumb from `childIds`, so authors
 do not maintain a separate breadcrumb path.
+
+Optional screen `variants` flatten into complete screens with their own ids and
+derived routes such as `account/home.variants/empty.html`. Variant metadata
+for address, color schemes, dependencies, related docs, and tags inherits from
+the parent unless overridden. Use-case membership never inherits:
+`useCaseIds` defaults to an empty list because a variant lists only flows whose
+steps name that variant. `defineScreen` still returns one definition when
+`variants` is absent; with variants it returns a readonly parent-first array
+that an entry module can place directly in `mockups`.
 
 `MockLink` accepts a lowercase kebab-case entry id and an optional bare HTML id
 through its separate `fragment` prop. The equivalent string helper is
@@ -1079,8 +1098,9 @@ in the [plans index](./plans/README.md).
 - [Implementation plans](./plans/README.md)
 - [Unified catalogue pages](./docs/protocol/mokly-pages.md) and
   [required breaking upgrade](./docs/protocol/mokly-page-migration.md)
-- [Screen variants](./docs/protocol/mokly-screen-variants.md) — approved
-  target: states of a screen authored as `variants`, each a full screen with
-  its own id and route, grouped under the parent in the catalogue.
+- [Screen variants](./docs/protocol/mokly-screen-variants.md) — implemented
+  authoring and registry model for states declared as `variants`, each a full
+  screen with its own id and route; navigation grouping follows in its UI
+  milestone.
 - [Authoring source protection](./docs/protocol/mokly-source-protection.md) and
   [catalogue change metadata](./docs/protocol/mokly-catalogue-changes.md)

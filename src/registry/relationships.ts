@@ -4,6 +4,7 @@ import type { ResolvedRegistryEntry } from "../authoring/types.js";
 
 import { problem } from "./entry_metadata.js";
 import type { RegistryViolation } from "./prepared_types.js";
+import { crossReferenceVariantViolations } from "./variant_validation.js";
 
 /** Validate collection and reciprocal use-case references. */
 export function crossReferenceViolations(
@@ -22,6 +23,7 @@ export function crossReferenceViolations(
       validateScreen(entry, byId, violations);
     }
   }
+  violations.push(...crossReferenceVariantViolations(entries, byId));
   return violations;
 }
 

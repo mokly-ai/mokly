@@ -36,8 +36,14 @@ globally unique kebab-case values and remain stable across navigation changes.
 A screen may also declare `variants`: each variant flattens into a complete
 screen entry with its own global id, a route derived beneath the parent's,
 and a `variantOf` relationship to the parent. The
-[screen variants contract](./mokly-screen-variants.md) is the approved target
-for that field, its inheritance, validation, and grouping.
+[screen variants contract](./mokly-screen-variants.md) defines that implemented
+field, validation, and public grouping. A variant inherits the parent's
+address, color schemes, dependencies, related docs, and tags when it omits
+them. Its use-case membership never inherits: `useCaseIds` defaults to an empty
+list because a variant must reciprocate only the flows whose steps name that
+variant. `defineScreen` returns one `ScreenDefinition` when `variants` is absent
+and a readonly parent-first array of screen definitions when it is present.
+Entry-module loading flattens that array one level.
 
 Each entry provides a title, description, related docs, and dependency paths.
 A dependency may identify an existing repository file or directory; Review

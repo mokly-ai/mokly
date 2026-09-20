@@ -15,6 +15,7 @@ import {
   record,
 } from "./entry_metadata.js";
 import type { RegistryViolation } from "./prepared_types.js";
+import { variantEntryViolations } from "./variant_validation.js";
 
 /** Validate metadata, routes, source attribution, and declared paths. */
 export function validateEntry(
@@ -165,5 +166,6 @@ export function validateEntry(
       }
     }
   }
+  violations.push(...variantEntryViolations(entry));
   return violations;
 }

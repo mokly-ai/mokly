@@ -19,6 +19,23 @@ export interface RoutedEntryInput extends EntryInput {
   route: string;
 }
 
+/** One authored state flattened beneath its parent screen. */
+export interface ScreenVariantInput {
+  address?: string;
+  colorSchemes?: readonly ColorScheme[];
+  dependencies?: readonly string[];
+  description: string;
+  desktop: ReactNode;
+  id: string;
+  mobile: ReactNode;
+  rationale?: string;
+  relatedDocs?: readonly string[];
+  slug: string;
+  tags?: readonly string[];
+  title: string;
+  useCaseIds?: readonly string[];
+}
+
 /** One screen with distinct mobile and desktop renders. */
 export interface ScreenInput extends RoutedEntryInput {
   address?: string;
@@ -28,6 +45,7 @@ export interface ScreenInput extends RoutedEntryInput {
   /** Lowercase kebab-case classification tags, e.g. ["forms"]. */
   tags?: readonly string[];
   useCaseIds?: readonly string[];
+  variants?: readonly ScreenVariantInput[];
 }
 
 /** One complete HTML document rendered without device variants. */
@@ -64,6 +82,8 @@ interface DefinitionBrand {
 export interface ScreenDefinition extends ScreenInput, DefinitionBrand {
   kind: "screen";
   useCaseIds: readonly string[];
+  /** Parent screen id when this definition is a flattened screen variant. */
+  variantOf?: string;
 }
 
 /** Source-attributed whole-document definition. */
@@ -109,6 +129,7 @@ export interface NestedScreenInput extends NestedInherited {
   tags?: readonly string[];
   title: string;
   useCaseIds?: readonly string[];
+  variants?: readonly ScreenVariantInput[];
 }
 
 /** Whole document with a route derived from ancestor paths and this slug. */
