@@ -370,33 +370,38 @@ repository preview advertises no address and shows the unavailable state.
 Removed screens are unaffected: Serve pins `{ kind: "screen" }` once a complete
 comparison exists, so they resolve through `comparisonUrl`.
 
-- [ ] Add a failing regression that a repository preview built with
+- [x] Add a failing regression that a repository preview built with
       `--include-changes` serves a removed page's previous version, covering both
       `npm run preview:build` output and `buildPreview` directly.
-- [ ] Give the preview build the packaged page descriptors before it captures
+- [x] Give the preview build the packaged page descriptors before it captures
       shells, or inject them into captured shells beside the existing static
       delivery metadata. Keep the descriptor identical to the consumer export's
       and keep Serve's own shells free of it.
-- [ ] Confirm no other packaged delivery captures development shells with the
+- [x] Confirm no other packaged delivery captures development shells with the
       same gap, and keep the generation, ownership inventory, deployment hash,
       and upload archive unchanged.
-- [ ] Serve the shared preview browser modules as their own allowlisted module
+- [x] Serve the shared preview browser modules as their own allowlisted module
       instead of bundling them into `browse_runtime.js`: add the module to the
       server's browser-module allowlist in `src/server/client_modules.ts` and
       the export's browser inventory so `parseReviewResult` is no longer
       shipped twice, then let the client import it as an external module.
       Keep the standalone `@mokly/viewer` bundle unchanged in behavior.
-- [ ] Move the repository-preview capture, packaging, and descriptor logic that
+- [x] Move the repository-preview capture, packaging, and descriptor logic that
       Milestone 4 added to `scripts/preview/*.mjs` behind a typed module under
       `src/publication/` with `MoklyError` failures, leaving the `.mjs`
       entrypoints as thin orchestration, so export and publication cannot drift.
-- [ ] Reword the embedded viewer's scoped-fetch rejection in
+- [x] Reword the embedded viewer's scoped-fetch rejection in
       `packages/viewer/src/viewer/scope.ts` so it no longer describes a
       rejected preview address as a comparison problem.
-- [ ] Update the delivery status in
+- [x] Update the delivery status in
       [removed previews](../docs/protocol/mokly-removed-previews.md) and any
       affected publication or export contract text.
-- [ ] Run `cargo xtask check`; then `git add -A`, commit with Conventional
+- [x] Discovered during verification: the repository-preview browser test
+      encoded the exact unavailable-page delivery gap this milestone closes.
+      Update that expectation to the packaged historical bytes and retain the
+      assertion that no request reaches the stable development endpoint; the
+      remaining Milestone 8 presentation and interaction checks stay deferred.
+- [x] Run `cargo xtask check`; then `git add -A`, commit with Conventional
       Commits, and push the branch.
 - [ ] After the push, review the complete local diff against `origin/main` with
       the implementation review prompt; report findings without changing the

@@ -36,6 +36,29 @@ test("served browser modules import only modules served beside them", () => {
     inspected.includes("../navigation/logical.js"),
     "no served module still imports across the client and navigation directories",
   );
+  const clients = served.get("client");
+  assert.ok(clients);
+  assert.ok(clients.has("previews.js"));
+  assert.match(
+    clients.get("previews.js")?.toString("utf8") ?? "",
+    /\.\/diffs\.js/,
+  );
+  assert.doesNotMatch(
+    clients.get("browse_runtime.js")?.toString("utf8") ?? "",
+    /function parseReviewResult/,
+  );
+  assert.equal(
+    [...clients.values()].filter((source) =>
+      source.toString("utf8").includes("function parseReviewResult"),
+    ).length,
+    1,
+  );
+  assert.equal(
+    [...clients.values()].filter((source) =>
+      source.toString("utf8").includes("function reviewInvalid"),
+    ).length,
+    1,
+  );
 });
 
 function importSpecifiers(source: string): string[] {

@@ -30,6 +30,9 @@ navigate the shell. `browse.ts` installs the
 [preview controller](../previews/README.md) beside `installDiffs` and updates
 both from the same navigation, viewport and theme events; neither adapter mounts
 a preview frame, so no inspector handshake happens for historical documents.
+The browser build emits that controller as `previews.js`; it reuses the review
+validator exported by `diffs.js` instead of copying the validator into
+`browse_runtime.js`.
 
 `post_message_adapter.ts` explicitly opts into a separate HTTP(S) origin. It sets
 the cross-origin sandbox, replaces iframe history, and negotiates a fresh random

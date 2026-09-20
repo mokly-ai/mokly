@@ -29,6 +29,13 @@ its sandbox instead. `install.ts` is the delegated controller: it requests on
 selection, renews before re-rendering a viewport or theme change, and discards
 any response whose stage or entry has since changed.
 
+The browser build exposes this controller as `client/previews.js`. Browse
+imports that module instead of bundling it into `browse_runtime.js`, and the
+controller imports `parseReviewResult` from the existing `diffs.js` module.
+Serve and static export explicitly ship the resulting graph. The packaged
+`@mokly/viewer` browser build uses the same graph without changing preview
+behavior.
+
 ```bash
 npm run build
 npx tsx --test tests/client_removed_previews.test.ts tests/removed_preview_shell.test.ts

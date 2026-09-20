@@ -21,6 +21,7 @@ export async function inspectConsumerExport(
     "__mokly/catalogue.json",
     "__mokly/client/inspector.js",
     "__mokly/client/browse.js",
+    "__mokly/client/previews.js",
     "__mokly/client/static_delivery.js",
     "__mokly/navigation/delivery.js",
     "__mokly/fonts/InterVariable.woff2",

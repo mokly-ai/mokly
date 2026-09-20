@@ -31,7 +31,6 @@ import {
   previewComparisonProvider,
   publishComparison,
 } from "./comparisons.mjs";
-import { publicationPreviewDescriptors } from "./descriptors.mjs";
 import { capturePublicationInputs } from "./inputs.mjs";
 
 const liveUpdateScript =
@@ -124,6 +123,7 @@ export async function buildPreview(config, output, options = {}) {
             review,
             comparison,
             stage,
+            changes.removedEntries,
             pagePreviews,
           );
         await copyPublicFiles(config, catalogue, stage, excludedRoots);
@@ -144,19 +144,18 @@ export async function buildPreview(config, output, options = {}) {
               comparisonUrl: comparison
                 ? `${comparison.directory}/review.json`
                 : null,
-              removedPreviews: comparison
-                ? publicationPreviewDescriptors(
-                    changes.removedEntries,
-                    pagePreviews,
-                    comparison.directory,
-                    comparison.result,
-                  )
-                : undefined,
+              removedPreviews: comparison?.removedPreviews,
               revision: { content: 0, evidence: 0 },
             }),
           ),
         );
-        await stagePreviewArtifact(stage, manifest, removed, comparison);
+        await stagePreviewArtifact(
+          stage,
+          manifest,
+          removed,
+          comparison,
+          comparison?.removedPreviews,
+        );
         if (
           inputs.fingerprint !==
           (await capturePublicationInputs(config, excludedRoots)).fingerprint

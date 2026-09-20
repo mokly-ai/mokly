@@ -1,9 +1,12 @@
 /** Lazy comparison requests, with cancellation when a user leaves the screen. */
 
+import { parseRemovedPagePreview } from "../review/page_preview.js";
 import { parseReviewResult } from "../review/result_validation.js";
 
 import { renderDiff, type DiffMode, type LoadedDiff } from "./diff_views.js";
 import { readStaticDelivery } from "./static_delivery.js";
+
+export { parseRemovedPagePreview, parseReviewResult };
 
 /** Install one delegated controller on the persistent catalogue document. */
 export function installDiffs(

@@ -1,11 +1,9 @@
 import path from "node:path";
 
-import type { RemovedEntryPreview } from "@mokly/viewer";
 import type { Manifest, ReviewArtifact } from "@mokly/viewer/data";
 import {
   canonicalJson,
   catalogueViewHref,
-  parseRemovedPagePreview,
   parseStaticDelivery,
   type StaticDelivery,
   parseReviewResult,
@@ -22,6 +20,7 @@ import {
 } from "../catalogue/serialization.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
+import { staticRemovedPreviews } from "../publication/removed_previews.js";
 import { changedManifestRoutes } from "../registry/changed_routes.js";
 import { removedManifestEntries } from "../registry/changes.js";
 import {
@@ -233,50 +232,4 @@ export function assembleExport(
   for (const [name, bytes] of loadShellFontAssets())
     inventory.add(`__mokly/fonts/${name}`, bytes);
   return { inventory, delivery, shells };
-}
-
-function staticRemovedPreviews(
-  removed: ReturnType<typeof removedManifestEntries>,
-  comparison: ReviewArtifact | undefined,
-  files: ReadonlyMap<string, string | Uint8Array>,
-  prefix: string,
-): ReadonlyMap<string, RemovedEntryPreview> | undefined {
-  if (!comparison) return;
-  const previews = new Map<string, RemovedEntryPreview>();
-  for (const { entry } of removed) {
-    if (entry.kind === "screen") {
-      const screen = comparison.result.screens.find(
-        (candidate) => candidate.route === entry.route,
-      );
-      if (
-        !screen ||
-        screen.state !== "removed" ||
-        screen.views.length === 0 ||
-        screen.views.some((view) => !view.beforePath || view.afterPath)
-      )
-        throw exportError(
-          `Removed screen preview is incomplete: ${entry.route}`,
-        );
-      previews.set(entry.route, { kind: "screen" });
-    }
-    if (entry.kind === "page") {
-      const name = `pages/${entry.route}.json`;
-      const bytes = files.get(name);
-      if (bytes === undefined)
-        throw exportError(`Removed page preview is missing: ${entry.route}`);
-      const preview = parseRemovedPagePreview(
-        JSON.parse(Buffer.from(bytes).toString("utf8")),
-      );
-      if (
-        preview.route !== entry.route ||
-        preview.baseCommit !== comparison.result.baseCommit ||
-        preview.baseRef !== comparison.result.baseRef
-      )
-        throw exportError(
-          `Removed page preview does not match the comparison: ${entry.route}`,
-        );
-      previews.set(entry.route, { kind: "page", path: `${prefix}/${name}` });
-    }
-  }
-  return previews;
 }

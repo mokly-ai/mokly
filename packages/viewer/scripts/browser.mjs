@@ -52,6 +52,22 @@ export async function buildBrowserModules(sourceRoot, target, options = {}) {
               );
               return { contents, loader: "ts" };
             });
+          builder.onResolve(
+            {
+              filter:
+                /^\.\.\/(?:client\/[\w.-]+|review\/(?:page_preview|result_validation))\.js$/,
+            },
+            (args) => {
+              if (!args.importer.includes(`${path.sep}previews${path.sep}`))
+                return;
+              return {
+                external: true,
+                path: args.path.startsWith("../review/")
+                  ? "./diffs.js"
+                  : `./${path.posix.basename(args.path)}`,
+              };
+            },
+          );
           builder.onResolve({ filter: /^\.\.?\// }, (args) => {
             if (path.dirname(args.importer) !== sourceRoot) return;
             if (

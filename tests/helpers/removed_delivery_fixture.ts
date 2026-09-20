@@ -7,7 +7,7 @@ import { compileCatalogue } from "../../dist/build/compile.js";
 import { writeCompilation } from "../../dist/build/transaction.js";
 import { loadConfig } from "../../dist/config/load.js";
 
-import { createFixture, removeFixture } from "./fixture.js";
+import { createFixture, removeFixture, repositoryRoot } from "./fixture.js";
 
 const execute = promisify(execFile);
 
@@ -59,6 +59,88 @@ export async function createRemovedDeliveryFixture() {
     await removeFixture(fixture);
     throw error;
   }
+}
+
+/** Install the repository preview npm entrypoint over a committed removal fixture. */
+export async function prepareRemovedPreviewEntrypoint(
+  fixture: Awaited<ReturnType<typeof createRemovedDeliveryFixture>>,
+): Promise<void> {
+  const exampleRoot = path.join(fixture.root, "examples/basic");
+  const configPath = path.join(exampleRoot, "mokly.config.ts");
+  await fs.mkdir(exampleRoot, { recursive: true });
+  await fs.cp(
+    path.join(repositoryRoot, "scripts/preview"),
+    path.join(fixture.root, "scripts/preview"),
+    { recursive: true },
+  );
+  await fs.symlink(
+    path.join(repositoryRoot, "dist"),
+    path.join(fixture.root, "dist"),
+  );
+  await fs.symlink(
+    path.join(repositoryRoot, "node_modules"),
+    path.join(fixture.root, "node_modules"),
+  );
+  await fs.writeFile(
+    path.join(fixture.root, "package.json"),
+    `${JSON.stringify(
+      {
+        name: "removed-preview-entrypoint-fixture",
+        private: true,
+        scripts: { "preview:build": "node scripts/preview/build.mjs" },
+        type: "module",
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  await fs.writeFile(
+    configPath,
+    `import { defineConfig } from "@mokly/mokly";
+export default defineConfig({
+  generatedOutput: "committed",
+  entriesDir: "../../entries",
+  mockupsDir: "../../mockups",
+  repoRoot: "../..",
+  review: { outDir: ".review", sharedImpact: [] }
+});
+`,
+  );
+  await fs.writeFile(fixture.entryPath, removedDeliverySource(false));
+  await writeRemovedAssets(fixture.mockupsDir);
+  const config = await loadConfig(fixture.root, configPath);
+  await writeCompilation(await compileCatalogue(config), config);
+  await fixture.git(
+    "add",
+    "examples/basic/mokly.config.ts",
+    "entries",
+    "mockups",
+  );
+  await fixture.git("commit", "-qm", "test: preview entrypoint baseline");
+  await fixture.git("update-ref", "refs/remotes/origin/main", "HEAD");
+  await fs.writeFile(fixture.entryPath, removedDeliverySource(true));
+  await writeCompilation(await compileCatalogue(config), config);
+  await Promise.all(
+    ["page.css", "nested.css", "past.png"].map((name) =>
+      fs.rm(path.join(fixture.mockupsDir, "assets", name)),
+    ),
+  );
+}
+
+async function writeRemovedAssets(mockupsDir: string): Promise<void> {
+  await fs.mkdir(path.join(mockupsDir, "assets"), { recursive: true });
+  await fs.writeFile(
+    path.join(mockupsDir, "assets/page.css"),
+    '@import "./nested.css"; body { background: url("./past.png"); }',
+  );
+  await fs.writeFile(
+    path.join(mockupsDir, "assets/nested.css"),
+    "main { color: rebeccapurple; }",
+  );
+  await fs.writeFile(
+    path.join(mockupsDir, "assets/past.png"),
+    Uint8Array.from([0, 17, 34, 51, 68]),
+  );
 }
 
 export function removedDeliverySource(current: boolean): string {

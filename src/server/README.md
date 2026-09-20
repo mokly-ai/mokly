@@ -79,6 +79,12 @@ descriptors: local pages remain selected through the stable private endpoint,
 so ordinary navigation, filtering, search and catalogue reads perform no
 historical capture.
 
+The browser-module allowlist serves `previews.js` beside `diffs.js` and
+`static_delivery.js`. The preview controller imports the review validator from
+`diffs.js`, so Serve ships that parser once. Repository publication may add page
+descriptors to shells after capture; that artifact-only rewrite does not change
+this live boundary.
+
 `update_messages.ts` validates IPC envelopes. `supervisor.ts` orders delivery and
 owns child shutdown. HTTP readiness precedes exhaustive compilation and baseline
 preparation, so All remains usable while Changes is pending or preparing.

@@ -78,6 +78,7 @@ export function loadBrowserClientModules(): ReadonlyMap<string, Buffer> {
     "navigation.js",
     "navigation-resize.js",
     "preview_fragment.js",
+    "previews.js",
     "search_query.js",
     "static_delivery.js",
     "tag_filter.js",

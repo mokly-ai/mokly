@@ -170,6 +170,10 @@ Package validated comparison data and isolated resources under the existing
 immutable generation path. Browser diff selection loads the packaged result;
 refresh/retry uses that same result. Later Git commits or changes to the base
 ref do not update a published artifact. Only a new publication replaces it.
+After that generation path is known, repository publication uses the consumer
+exporter's typed removed-preview descriptor builder and adds each descriptor to
+the matching captured static shell. This artifact-only step does not advertise
+page paths from the development server used during capture.
 
 An unavailable base, invalid historical manifest, capture inconsistency, or
 comparison failure aborts publication and preserves the previous owned output.

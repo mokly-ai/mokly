@@ -2,18 +2,12 @@
 
 ## Delivery Status
 
-This contract is implemented. The typed capture, Serve generation lifecycle,
-public descriptor, consumer export, and upload packaging land through Milestone
-4 of the [removed content previews plan](../../plans/removed-content-previews.md),
-and the shared shell, browser client, and `@mokly/viewer` render the previous
-version through Milestone 5. Nothing here changes ordinary browsing, Added
-entries, changed-screen comparisons, or removed component variants.
-
-One delivery gap remains: the repository preview built by `scripts/preview/`
-captures its shells before it packages page previews, so those shells advertise
-no page descriptor and a removed page there shows the unavailable state. Its
-removed screens are unaffected because they resolve through `comparisonUrl`.
-Milestone 6 of the plan closes that gap.
+This contract is implemented through Milestone 6 of the
+[removed content previews plan](../../plans/removed-content-previews.md). Typed
+capture, the Serve generation lifecycle, consumer export, repository preview,
+upload packaging, and the shared shell and viewer all deliver the previous
+version. Nothing here changes ordinary browsing, Added entries, changed-screen
+comparisons, or removed component variants.
 
 ## Behavior
 
@@ -118,6 +112,9 @@ inventory, reference validation, deployment hash, and upload archive. A preview
 whose closure is incomplete fails the export transactionally, as an incomplete
 screen snapshot does. Current-only delivery writes no historical files and
 removes a previous artifact's historical files when replacing it.
+Repository preview validates these files with the same typed descriptor builder
+as consumer export, then adds the resulting descriptor only to its captured
+static shell metadata. The development server it captured remains unchanged.
 
 ## Public Descriptor
 
@@ -157,6 +154,12 @@ state without a request. Both frame adapters render previews in script-disabled
 frames; the cross-origin adapter mounts historical documents without the
 inspector handshake, so no inspection, marker, or navigation message is
 exchanged for them.
+
+Serve and static artifacts publish the preview controller as
+`__mokly/client/previews.js`. It imports the already-served comparison validator
+from `diffs.js`, so the review parser has one delivered implementation. The
+standalone `@mokly/viewer` browser inventory retains the same module graph and
+behavior.
 
 ## Frames And Lifecycle
 

@@ -29,6 +29,10 @@ normal reference checks, ownership inventory, deployment identity and upload
 capture. A missing local closure fails the transaction and preserves the prior
 artifact. Current-only assembly branches before preparation or capture and
 replaces any previously owned historical files.
+The descriptor builder lives in `publication/removed_previews.ts` and is shared
+with repository preview packaging. Repository capture therefore cannot publish
+a page path that consumer export would reject, while Serve itself continues to
+omit live page descriptors.
 The shared `server/changed_content.ts` calculation receives the same captured
 asset reader as comparisons, preserving Serve's material-output/resource Changes
 membership without reading a different current-file snapshot.
@@ -74,10 +78,13 @@ Export revisions are zero; current-only exports have disabled Changes and a
 null comparison pointer. Repository preview capture uses the same projection
 and finalization. Its opt-in Changes build captures removed pages through the
 already prepared repository reader; the default build performs no Git or
-historical capture. Shell HTML retains its existing bytes apart from the
-identity.
+historical capture. Captured shell HTML gains only the static delivery metadata,
+deployment identity, and, for a removed entry in a Changes-enabled repository
+preview, its validated packaged preview descriptor.
 
-The browser inventory also publishes `__mokly/client/inspector.js`. The Browse
+The browser inventory publishes `__mokly/client/previews.js` as a separate
+module; it imports review validation from `diffs.js` instead of duplicating it
+inside `browse_runtime.js`. It also publishes `__mokly/client/inspector.js`. The Browse
 adapter adds its deferred script and bounded inert identity map only to owned
 current HTML copies. Generated files and immutable comparison snapshots remain
 byte-unmodified. Local frames retain `allow-same-origin`, with scripts disabled

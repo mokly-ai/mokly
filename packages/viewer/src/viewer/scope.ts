@@ -129,7 +129,7 @@ export function runtimeScope(
       request.username ||
       request.password
     )
-      throw new Error("The comparison is unavailable.");
+      throw new Error("This catalogue address is unavailable.");
     return request;
   };
   const win = new Proxy(window, {

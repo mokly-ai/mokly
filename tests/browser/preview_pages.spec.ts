@@ -32,15 +32,12 @@ for (const width of [390, 1280]) {
     await expect(page.locator("#mb-main")).toContainText(
       "Showing previous version",
     );
-    /* This artifact's shells are captured before its page previews are
-       packaged, so the catalogue advertises none of them to the shell and the
-       stage says so instead of guessing an address. */
-    await expect(page.locator("[data-mokly-preview] h2")).toHaveText(
-      "Previous version unavailable",
-    );
+    await expect(
+      page.frameLocator("[data-mokly-preview] iframe").locator("body"),
+    ).toContainText("Previous document");
     await expect(
       page.locator("[data-mokly-preview] [data-mokly-preview-retry]"),
-    ).toBeVisible();
+    ).toHaveCount(0);
     await expect(
       page.locator("[data-diff-screen], [data-viewport-option]"),
     ).toHaveCount(0);
@@ -88,6 +85,6 @@ for (const width of [390, 1280]) {
       requests.filter((url) =>
         /\/pages\/removed-document\.html\.json$/.test(url),
       ),
-    ).toEqual([]);
+    ).toHaveLength(1);
   });
 }

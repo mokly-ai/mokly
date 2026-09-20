@@ -202,6 +202,11 @@ same complete module inventory; static mode never activates private services or
 starts update requests. Serve loads `catalogue_updates.js` dynamically only when
 adopting evidence, so validation cannot delay initial live-state restoration.
 The delivered graph check covers static and dynamic imports.
+`client/previews.js` owns the removed-content preview controller and imports the
+shared review parser from the already-delivered `client/diffs.js`; it is not
+bundled into `client/browse_runtime.js`. Both Serve and export explicitly
+allowlist that module, while the standalone viewer package keeps the same
+behavioral graph.
 `navigation-resize.js` retains its existing delivery
 name and synchronously captures early native disclosure choices. Deferred
 preference and reload recovery retain those newer choices; capture listeners

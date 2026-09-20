@@ -20,6 +20,7 @@ import { exportCatalogue } from "../dist/export/run.js";
 import { bundleUpload } from "../dist/publish/bundle.js";
 import { buildPreview } from "../scripts/preview/catalogue.mjs";
 
+import { assertPublishedPagePreview } from "./helpers/published_preview.js";
 import { createRemovedDeliveryFixture } from "./helpers/removed_delivery_fixture.js";
 
 test("Changes export packages removed previews into every delivery boundary", async (t) => {
@@ -184,6 +185,8 @@ test("repository publication packages previews and default replacement removes t
     ({ entry }) => entry.route === "archive/removed.html",
   );
   assert.ok(page?.preview?.kind === "page");
+  await assertPublishedPagePreview(output, page.preview);
+  await fs.access(path.join(output, "__mokly/client/previews.js"));
   await fs.access(path.join(output, page.preview.path));
   await fs.access(
     path.join(
