@@ -755,9 +755,9 @@ cannot concatenate with dynamic package-owned IDs into the same DOM identifier.
       server and client rendering deterministic from the same `viewerId`.
 - [x] Run the viewer build, typecheck and focused server/hydration tests, then
       run the complete `cargo xtask check` gate with no failures or skips.
-- [ ] After checks pass, `git add -A`, commit with Conventional Commits, and
+- [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
@@ -845,3 +845,9 @@ viewer IDs can therefore still produce one duplicate DOM ID for a deliberately
 aligned component prop key. The recommended follow-up is a length-prefixed or
 otherwise unambiguous namespace encoding plus an adversarial two-root
 regression; no review finding was applied automatically.
+
+Milestone 12 (`7730ea8`) was reviewed with the implementation review prompt
+after the full gate and push. No findings remain. The residual compatibility
+risk is limited to host code that depended on the exact bytes of undocumented
+package-owned DOM IDs; the supported SSR, hydration, accessibility-reference,
+and multi-root contracts are covered by the adversarial regressions.
