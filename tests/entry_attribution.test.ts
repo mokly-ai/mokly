@@ -178,19 +178,31 @@ test("generated ownership accepts co-located and renamed owners beneath entry ro
   assert.equal(isOwned(foreign, inventoried), true);
   assert.equal(isOwned(helperOwned, { ...config, sourceFiles: [] }), true);
   const renamed = path.join(fixture.mockupsDir, "screens/renamed.html");
-  const unrelated = path.join(fixture.mockupsDir, "screens/unrelated.html");
+  const underGlobPrefix = path.join(
+    fixture.mockupsDir,
+    "screens/under-prefix.html",
+  );
+  const outsideGlobPrefixes = path.join(
+    fixture.mockupsDir,
+    "screens/outside-prefixes.html",
+  );
   await fs.promises.writeFile(
     renamed,
     `${generatedHeader("src/components/button/old-name.mockup.tsx")}<html></html>\n`,
   );
   await fs.promises.writeFile(
-    unrelated,
+    underGlobPrefix,
     `${generatedHeader("src/components/card/card.mockup.tsx")}<html></html>\n`,
   );
+  await fs.promises.writeFile(
+    outsideGlobPrefixes,
+    `${generatedHeader("docs/old/page.mockup.tsx")}<html></html>\n`,
+  );
   assert.equal(isOwned(renamed, inventoried), true);
-  assert.equal(isOwned(unrelated, inventoried), false);
+  assert.equal(isOwned(underGlobPrefix, inventoried), true);
+  assert.equal(isOwned(outsideGlobPrefixes, inventoried), false);
   assert.equal(
-    isOwned(unrelated, {
+    isOwned(underGlobPrefix, {
       ...inventoried,
       entryModules: [
         ...(inventoried.entryModules ?? []),

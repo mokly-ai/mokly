@@ -1,7 +1,7 @@
 import { isCatalogueId } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
-import { isAuthoredOwner } from "../build/ownership.js";
+import { isResolvedEntryOrInventoriedSource } from "../config/entry_membership.js";
 import type { ResolvedConfig } from "../config/types.js";
 
 import {
@@ -45,7 +45,7 @@ export function validateEntry(
   }
   if (
     entry.sourceRelativePath === "<unattributed>" ||
-    !isAuthoredOwner(entry.sourceRelativePath, config)
+    !isResolvedEntryOrInventoriedSource(entry.sourceRelativePath, config)
   ) {
     violations.push(
       problem(

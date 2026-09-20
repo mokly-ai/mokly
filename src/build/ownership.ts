@@ -3,10 +3,8 @@ import path from "node:path";
 
 import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
-import {
-  isAuthoredEntryPath,
-  isInsideEntryRoot,
-} from "../config/entry_membership.js";
+import { globStablePrefix } from "../config/entry_globs.js";
+import { isResolvedEntryOrInventoriedSource } from "../config/entry_membership.js";
 import { isInside, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError, errorMessage } from "../errors.js";
@@ -100,6 +98,22 @@ export function pendingGeneratedOrphanRoutes(
   return ownedGeneratedRoutes(config).filter((route) => !expected.has(route));
 }
 
+/** List generated HTML whose ownership header this configuration cannot claim. */
+export function unclaimedGeneratedRoutes(config: ResolvedConfig): string[] {
+  return walkFiles(config.mockupsDir)
+    .flatMap((candidate) => {
+      const relative = toPosixPath(path.relative(config.mockupsDir, candidate));
+      if (!candidate.endsWith(".html") || relative === MANIFEST_NAME) return [];
+      const source = readGeneratedSource(candidate);
+      return source &&
+        isSafeRepositoryPath(source) &&
+        !isAuthoredOwner(source, config)
+        ? [relative]
+        : [];
+    })
+    .sort();
+}
+
 /** Determine whether an existing target may be replaced safely. */
 export function isOwned(candidate: string, config: ResolvedConfig): boolean {
   return generatedOwnershipDenial(candidate, config) === undefined;
@@ -121,20 +135,11 @@ export function generatedOwnershipDenial(
     if (relative === MANIFEST_NAME) return;
     if (!candidate.endsWith(".html")) return "is not generated HTML";
     if (!fs.lstatSync(candidate).isFile()) return "is not a regular file";
-    const handle = fs.openSync(candidate, "r");
-    try {
-      const buffer = Buffer.alloc(8_192);
-      const length = fs.readSync(handle, buffer, 0, buffer.length, 0);
-      const source = generatedSource(
-        buffer.subarray(0, length).toString("utf8"),
-      );
-      if (!source || !isSafeRepositoryPath(source))
-        return "has no valid generated ownership header";
-      if (!isAuthoredOwner(source, config))
-        return "has an owner that is not a resolved entry module or inventoried source";
-    } finally {
-      fs.closeSync(handle);
-    }
+    const source = readGeneratedSource(candidate);
+    if (!source || !isSafeRepositoryPath(source))
+      return "has no valid generated ownership header";
+    if (!isAuthoredOwner(source, config))
+      return "has an owner outside every configured entry glob and the source inventory";
   } catch (error) {
     return `could not establish generated ownership: ${errorMessage(error)}`;
   }
@@ -142,22 +147,33 @@ export function generatedOwnershipDenial(
 
 /**
  * An owner is trusted when it is a resolved entry module, an inventoried input,
- * or a path beneath a directory that holds a resolved entry module. The last
- * rule lets a rebuild replace output whose owner was renamed or deleted since
- * the previous build, exactly as the former directory rule did, without
- * letting an unrelated catalogue claim files.
+ * or a path beneath the stable prefix of a configured entry glob. Stable-prefix
+ * trust lets a rebuild replace output after its source is renamed or deleted.
  */
 export function isAuthoredOwner(
   sourceRelativePath: string,
   config: ResolvedConfig,
 ): boolean {
+  if (!isSafeRepositoryPath(sourceRelativePath)) return false;
   const absolute = path.resolve(config.repoRoot, sourceRelativePath);
   if (!isInside(config.repoRoot, absolute)) return false;
   return (
-    isAuthoredEntryPath(absolute, config) ||
-    (config.sourceFiles ?? []).includes(sourceRelativePath) ||
-    isInsideEntryRoot(absolute, config)
+    isResolvedEntryOrInventoriedSource(sourceRelativePath, config) ||
+    config.entryGlobs.some((glob) =>
+      isInside(path.resolve(config.repoRoot, globStablePrefix(glob)), absolute),
+    )
   );
+}
+
+function readGeneratedSource(candidate: string): string | undefined {
+  const handle = fs.openSync(candidate, "r");
+  try {
+    const buffer = Buffer.alloc(8_192);
+    const length = fs.readSync(handle, buffer, 0, buffer.length, 0);
+    return generatedSource(buffer.subarray(0, length).toString("utf8"));
+  } finally {
+    fs.closeSync(handle);
+  }
 }
 
 function decodeSource(encoded: string): string | undefined {

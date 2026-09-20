@@ -7,8 +7,8 @@
   the navigation, per-variant Changes, and changed-view marks on the view
   controls.
 - [Co-Located Entry Discovery](./co-located-entry-discovery.md) — delivered
-  on the branch and reviewed; seven review findings await the user's decision
-  before the PR merges.
+  on the branch; all seven approved review findings are addressed, verified,
+  and locally committed, with the supervising agent's push/review still pending.
 - [CLI Terminal Experience](./cli-terminal-experience.md)
 - [Package Documentation](./package-documentation.md) — supersedes the
   unmerged public-site plan and pull request #79 by shipping versioned Markdown

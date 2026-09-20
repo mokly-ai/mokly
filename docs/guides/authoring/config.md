@@ -16,7 +16,7 @@ import { defineConfig } from "@mokly/mokly";
 
 export default defineConfig({
   colorSchemes: ["light", "dark"],
-  entries: ["src/**/*.mockup.{ts,tsx}", "docs/mockups/entries/**/*.mockup.tsx"],
+  entries: ["src/**/*.mockup.{ts,tsx}"],
   mockupsDir: "docs/mockups/generated",
   renderer: "docs/mockups/renderer.tsx",
   repoRoot: ".",
@@ -60,6 +60,11 @@ matched set is sorted by path, so neither glob order nor filesystem order
 changes the catalogue. A glob that matches no entry module is a
 configuration error, and so is an entry module inside `review.outDir`,
 `node_modules`, or the baseline cache.
+
+List multiple globs when entry modules genuinely live in multiple locations,
+for example `entries: ["src/**/*.mockup.{ts,tsx}",
+"docs/mockups/entries/**/*.mockup.tsx"]`. Every item is validated separately,
+so each glob must match at least one entry module.
 
 `entriesDir` names one folder relative to the config file and is exactly
 `entries: ["<folder>/**/*.mockup.{ts,tsx}"]`. Set one of the two fields, not

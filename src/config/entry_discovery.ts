@@ -17,7 +17,10 @@ const NEVER_SOURCE_DIRECTORY_NAMES: ReadonlySet<string> = new Set([
   "node_modules",
 ]);
 
-/** Resolve every configured entry glob into sorted absolute entry-module paths. */
+/**
+ * Resolve every configured entry glob into sorted absolute entry-module paths.
+ * The cache denial remains here for direct callers that bypass config validation.
+ */
 export function discoverEntryModules(
   config: Pick<ResolvedConfig, "entryGlobs" | "repoRoot" | "review">,
 ): string[] {

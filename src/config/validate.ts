@@ -155,7 +155,12 @@ export function resolveConfig(
       rules: watchRules,
     },
   };
-  return { ...resolved, entryModules: discoverEntryModules(resolved) };
+  const discovered = {
+    ...resolved,
+    entryModules: discoverEntryModules(resolved),
+  };
+  validateReviewOut(reviewOut, discovered);
+  return discovered;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

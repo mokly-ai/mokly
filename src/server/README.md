@@ -4,6 +4,10 @@ Serve publishes a validated catalogue, renders requested documents and exposes
 comparison snapshots. `serve.ts` owns single-process Serve; `serve_watched.ts`
 owns watchers, background work and the supervised HTTP child. `http.ts` and
 `child.ts` serve accepted inputs and never prepare historical baselines.
+`watch_events.ts` owns classification and serialized event handling;
+`watch_paths.ts` owns watch roots and pruning, including entry-glob traversal
+boundaries that retain each stable prefix without exempting its ignored
+descendants.
 
 GET/HEAD `/__mokly/catalogue.json` returns the public v1
 [read model](../catalogue/README.md) as JSON with `Cache-Control: no-store`.

@@ -110,6 +110,31 @@ test("a resolved config carries its entry set and compilation refreshes it", asy
   assert.deepEqual(config.entryModules, [fixture.entryPath]);
 });
 
+test("config loading rejects review output below a resolved entry directory", async (t) => {
+  const fixture = await createFixture();
+  t.after(() => removeFixture(fixture));
+  await addModule(
+    fixture,
+    "src/components/button/button.mockup.tsx",
+    screen("button", "components/button.html"),
+  );
+  await fs.promises.writeFile(
+    fixture.configPath,
+    `export default {
+  entries: ["src/**/*.mockup.{ts,tsx}"],
+  mockupsDir: "mockups",
+  repoRoot: ".",
+  review: { outDir: "src/components/button/.review" }
+};\n`,
+  );
+
+  await assert.rejects(loadConfig(fixture.root), {
+    code: "config-invalid",
+    message:
+      /review\.outDir must not overlap repository, mockup, source, or cache roots/,
+  });
+});
+
 test("discovery unions globs, ignores order, and sorts by repository path", async (t) => {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
@@ -153,10 +178,23 @@ test("discovery unions globs, ignores order, and sorts by repository path", asyn
 test("discovery rejects entry modules inside private, output, and review trees", async (t) => {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
+  await addModule(fixture, ".mokly-cache/x.mockup.tsx", screen("x", "x.html"));
+  await writeConfig(
+    fixture,
+    'entries: ["entries/**/*.mockup.{ts,tsx}", ".mokly-cache/x.mockup.tsx"]',
+  );
+  await assert.rejects(loadConfig(fixture.root), {
+    code: "config-invalid",
+    message:
+      /entries glob must stay inside repoRoot and outside \.mokly-cache: \.mokly-cache\/x\.mockup\.tsx/,
+  });
+  await fs.promises.rm(path.join(fixture.root, ".mokly-cache"), {
+    force: true,
+    recursive: true,
+  });
   for (const [relative, reason] of [
     ["node_modules/pkg/x.mockup.tsx", /package-owned private directory/],
     [".review/x.mockup.tsx", /inside review\.outDir/],
-    [".mokly-cache/x.mockup.tsx", /\.mokly-cache/],
   ] as const) {
     await addModule(fixture, relative, screen("x", "x.html"));
     await writeConfig(

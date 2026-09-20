@@ -45,6 +45,7 @@ const validationConfig: ResolvedConfig = {
   moduleResolution: { aliases: {}, loaders: {}, packageRoots: [] },
   repoRoot: repositoryRoot,
   review: { base: "main", outDir: ".review", sharedImpact: [] },
+  sourceFiles: [sourceRelativePath],
   stylesheets: [],
   watch: { debounceMs: 100, rules: [] },
 };

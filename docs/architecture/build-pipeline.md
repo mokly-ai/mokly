@@ -85,8 +85,11 @@ through a shared helper factory or from a helper beside a product component,
 without sticky process-global state or an absolute checkout path. Installed
 packages import the plain API and cannot self-attribute. Registry validation
 accepts an attributed source only when it is a resolved entry module or an
-inventoried source file; generated ownership headers, tracked ownership, and
-export confinement use that same membership.
+inventoried source file. Generated and Git-tracked ownership additionally trust
+owners beneath a configured entry glob's stable prefix, preserving cleanup after
+a matched source is renamed or deleted. Export and Review confinement remain
+limited to directories that hold resolved entry modules; a repository-root glob
+does not protect the whole repository as an export source root.
 
 Both config and consumer bundle metafiles supply the complete source inventory,
 including tree-shaken repository inputs. Serving and publication resolve these
@@ -188,9 +191,13 @@ ordinary and `data-nav-href` links, anchors, local HTML resource attributes,
 Review-ignore/material markers, protected source inventory, and manifest data are
 validated before output changes. All expected bytes are held in memory.
 In committed mode, `check` compares those bytes with disk and reports grouped
-missing, stale, and proven-orphan paths. In derived mode, it rejects Git-tracked
-generated routes, the manifest and cache contents; local generated files may be
-absent or stale. Authored public assets remain tracked in either mode.
+missing, stale, proven-orphan, and unclaimed paths. Unclaimed paths are HTML
+files with a valid Mokly ownership header whose owner is outside all stable entry
+glob prefixes and the source inventory; ordinary authored HTML is not reported.
+In derived mode, Check does not add this filesystem diagnostic and instead
+rejects Git-tracked generated routes, the manifest and cache contents; local
+generated files may be absent or stale. Authored public assets remain tracked
+in either mode.
 
 This repository's example uses derived mode. Both test entrypoints build the
 package and example before tests read generated files, so the verification order

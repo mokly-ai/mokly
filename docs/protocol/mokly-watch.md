@@ -25,14 +25,25 @@ by generated output:
   transaction trees are pruned from broad watches and classify as ignored;
 - additional inputs use the explicit action declared in config.
 
-Resolved entry modules, entry glob roots, and inventoried modules remain
-rebuild inputs even when intentionally nested beneath an ordinarily ignored
-directory. Configured stylesheet files remain reload inputs. Those package-owned
-classifications take precedence over additional watch rules. Package source
-under `node_modules` or an npx cache is never treated as consumer source. A
-file created under an entry glob root that is not an entry module and is not
-imported classifies like any other unrelated file. Development of Mokly itself
-uses repository tooling rather than a hidden consumer-specific self-reload path.
+An entry glob's stable prefix is a traversal waypoint, not an exemption for its
+whole subtree. A candidate that is an ancestor of, or equal to, the prefix is
+never pruned. Below the prefix, ignored directory names and transaction prefixes
+are evaluated against the path segments relative to the deepest containing glob
+prefix; baseline-cache, `review.outDir`, header-proven generated-output, and
+export-output rules still apply. Thus an explicit `dist/entries/**` root remains
+reachable, while `src/dist` and `src/node_modules` are pruned beneath a `src/**`
+root, and repository-root globs still prune top-level `.git` and `node_modules`.
+
+Exact required files—the config and its imports, inventoried sources, the
+renderer, and configured stylesheets—retain both their ancestor path and the
+file itself even when intentionally nested beneath an ordinarily ignored
+directory. Configured stylesheet files remain reload inputs.
+Those package-owned classifications take precedence over additional watch rules.
+A created entry-shaped path beneath `node_modules`, `.git`, `.mokly-cache`, or
+`review.outDir` is ignored because discovery cannot accept it. A file created
+under an entry glob root that is not an entry module and is not imported
+classifies like any other unrelated file. Development of Mokly itself uses
+repository tooling rather than a hidden consumer-specific self-reload path.
 
 Resource discovery follows the same portable HTML/CSS URL rules as Changes,
 including transitive imports and nested documents, with shared edges read once

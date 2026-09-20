@@ -1,5 +1,7 @@
 import path from "node:path";
 
+import { isSafeRepositoryPath } from "@mokly/viewer/data";
+
 import { isInside, projectRealPath } from "./paths.js";
 import type { ResolvedConfig } from "./types.js";
 
@@ -36,13 +38,18 @@ export function isAuthoredEntryPath(
   );
 }
 
-/** Return whether a path lies beneath a directory holding an entry module. */
-export function isInsideEntryRoot(
-  candidate: string,
+/** Require registry attribution to name a resolved entry or inventoried input. */
+export function isResolvedEntryOrInventoriedSource(
+  sourceRelativePath: string,
   config: ResolvedConfig,
 ): boolean {
-  const absolute = path.resolve(candidate);
-  return entryModuleRoots(config).some((root) => isInside(root, absolute));
+  if (!isSafeRepositoryPath(sourceRelativePath)) return false;
+  const absolute = path.resolve(config.repoRoot, sourceRelativePath);
+  if (!isInside(config.repoRoot, absolute)) return false;
+  return (
+    (config.entryModules ?? []).includes(absolute) ||
+    (config.sourceFiles ?? []).includes(sourceRelativePath)
+  );
 }
 
 /** Directories protected as authored entry roots for output and export boundaries. */

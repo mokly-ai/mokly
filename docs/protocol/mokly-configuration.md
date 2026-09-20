@@ -237,9 +237,14 @@ modules as defined by the [watch contract](./mokly-watch.md). The set is
 retained beside `sourceFiles` across build, check, watched Serve, publication,
 and the component runtime; later stages consume it and never repeat the glob
 walk within one compilation. Generated output is trusted for replacement when
-its recorded owner is a resolved entry module, an inventoried source, or any
-path beneath a directory that holds a resolved entry module, so renaming or
-deleting an entry module never strands the documents it generated.
+its recorded owner is a resolved entry module, an inventoried source, or lies
+beneath the stable prefix of any configured entry glob. For the `entriesDir`
+shorthand, that prefix is the configured directory. This keeps output owned
+after an entry is renamed or deleted anywhere the same glob could discover it.
+An ownership header outside every stable prefix and the current source inventory
+is unclaimed: committed `check` reports it, while Build, Serve, and Export leave
+the file untouched. Registry attribution remains narrower and accepts only a
+resolved entry module or inventoried source.
 
 ## Public Exclusion Configuration
 

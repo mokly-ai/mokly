@@ -6,10 +6,8 @@ import { setTimeout as delay } from "node:timers/promises";
 
 import { EXPORT_MARKER } from "../dist/export/ownership.js";
 import { exportCatalogue } from "../dist/export/run.js";
-import {
-  classifyWatchPath,
-  isPackageOwnedIgnoredWatchPath,
-} from "../dist/server/watch_events.js";
+import { classifyWatchPath } from "../dist/server/watch_events.js";
+import { isPackageOwnedIgnoredWatchPath } from "../dist/server/watch_paths.js";
 import { ChokidarWatcherFactory } from "../dist/server/watcher.js";
 
 import { createExportFixture } from "./helpers/export_fixture.js";

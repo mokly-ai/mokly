@@ -31,8 +31,8 @@ import {
   type RuntimeWatchAction,
   WatchActionQueue,
   WatchDebouncer,
-  watchTargets,
 } from "./watch_events.js";
+import { watchTargets } from "./watch_paths.js";
 import { createSourceWatcher } from "./watcher.js";
 
 export async function serveWatched(

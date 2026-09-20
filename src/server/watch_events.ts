@@ -2,27 +2,16 @@ import path from "node:path";
 
 import { minimatch } from "minimatch";
 
-import { isOwned } from "../build/ownership.js";
 import { isBaselineCachePath } from "../config/cache_paths.js";
 import { isAuthoredEntryPath } from "../config/entry_membership.js";
 import { isInside, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig, WatchAction } from "../config/types.js";
-import { isExportIgnoredPath } from "../export/ignored.js";
-import { MANIFEST_NAME } from "../registry/manifest.js";
 
-import { entryGlobRoots, isEntryGlobCandidate } from "./watch_entry_globs.js";
-
-const IGNORED_DIRECTORY_NAMES = new Set([
-  ".context",
-  ".git",
-  "coverage",
-  "dist",
-  "node_modules",
-  "playwright-report",
-  "target",
-  "test-results",
-]);
-const IGNORED_TEMPORARY_PREFIXES = [".mokly-review-", ".mokly-write-"] as const;
+import {
+  configuredStylesheetPaths,
+  isEntryGlobCandidate,
+  isPackageOwnedIgnoredWatchPath,
+} from "./watch_paths.js";
 
 /** Internal watch work, including package-owned configuration reloads. */
 export type RuntimeWatchAction = "reconfigure" | "evidence" | WatchAction;
@@ -217,95 +206,4 @@ export function classifyWatchPath(
       return rule.action;
   }
   return "ignore";
-}
-
-/** Return whether package-owned output should be pruned from a broad watch. */
-export function isPackageOwnedIgnoredWatchPath(
-  candidate: string,
-  config: ResolvedConfig,
-  mode: "traverse" | "event" = "traverse",
-): boolean {
-  const absolute = path.resolve(candidate);
-  if (isBaselineCachePath(absolute, config.repoRoot)) return true;
-  if (!isInside(config.repoRoot, absolute)) return false;
-  if (isRequiredWatchPath(absolute, config)) return false;
-  if (isGeneratedOutputPath(absolute, config)) return true;
-  if (isExportIgnoredPath(absolute, config.repoRoot, mode)) return true;
-  if (isInside(config.review.outDir, absolute)) return true;
-  const parts = path.relative(config.repoRoot, absolute).split(path.sep);
-  return parts.some(
-    (part) =>
-      IGNORED_DIRECTORY_NAMES.has(part) ||
-      IGNORED_TEMPORARY_PREFIXES.some((prefix) => part.startsWith(prefix)),
-  );
-}
-
-/** Resolve the finite roots/globs watched for this consumer. */
-export function watchTargets(config: ResolvedConfig): string[] {
-  const targets = [config.configPath, ...entryGlobRoots(config)];
-  targets.push(
-    ...(config.sourceFiles ?? []).map((source) =>
-      path.resolve(config.repoRoot, source),
-    ),
-  );
-  if (config.renderer) targets.push(config.renderer);
-  for (const stylesheet of configuredStylesheetPaths(config)) {
-    if (!/^https?:\/\//.test(stylesheet))
-      targets.push(path.resolve(config.mockupsDir, stylesheet));
-  }
-  for (const rule of config.watch.rules) {
-    targets.push(
-      ...rule.paths.map((glob) => globWatchRoot(config.repoRoot, glob)),
-    );
-  }
-  return [...new Set(targets)]
-    .filter((target) => !isBaselineCachePath(target, config.repoRoot))
-    .sort();
-}
-
-function globWatchRoot(repoRoot: string, glob: string): string {
-  const parts = glob.split("/");
-  const firstGlob = parts.findIndex((part) => /[*?{[(]/.test(part));
-  const stable = firstGlob === -1 ? parts : parts.slice(0, firstGlob);
-  return path.resolve(repoRoot, stable.length === 0 ? "." : stable.join("/"));
-}
-
-function isGeneratedOutputPath(
-  candidate: string,
-  config: ResolvedConfig,
-): boolean {
-  if (!isInside(config.mockupsDir, candidate)) return false;
-  const relative = toPosixPath(path.relative(config.mockupsDir, candidate));
-  return relative === MANIFEST_NAME || isOwned(candidate, config);
-}
-
-function isRequiredWatchPath(
-  candidate: string,
-  config: ResolvedConfig,
-): boolean {
-  const required = [
-    config.configPath,
-    ...entryGlobRoots(config),
-    ...(config.renderer ? [config.renderer] : []),
-    ...(config.sourceFiles ?? []).map((source) =>
-      path.resolve(config.repoRoot, source),
-    ),
-    ...configuredStylesheetPaths(config).flatMap((stylesheet) =>
-      /^https?:\/\//.test(stylesheet)
-        ? []
-        : [path.resolve(config.mockupsDir, stylesheet)],
-    ),
-  ];
-  return required.some(
-    (target) => isInside(candidate, target) || isInside(target, candidate),
-  );
-}
-
-/** Configured stylesheet roots whose imports are also consumer resources. */
-export function configuredStylesheetPaths(config: ResolvedConfig): string[] {
-  return config.stylesheets.flatMap((rule) => [
-    ...rule.stylesheets,
-    ...(rule.lightStylesheets ?? []),
-    ...(rule.darkStylesheets ?? []),
-  ]);
 }

@@ -25,8 +25,13 @@ write, without writing them. It validates your entries, the links between
 them and the resources they reference.
 
 With committed output it then compares those bytes with the files in the
-repository and reports generated files that are missing, stale or no longer
-part of the catalogue.
+repository. It groups generated files that are missing, stale, or no longer
+part of the catalogue, plus unclaimed HTML that has a valid Mokly ownership
+header whose source is outside every configured entry-glob prefix and the
+current source inventory. Run `build` for missing, stale, and orphan files.
+Delete an unclaimed file or restore its source under a configured entry glob;
+Build deliberately leaves it untouched. Consumer-authored HTML without a Mokly
+header is not reported.
 
 With derived output it instead requires that no generated file or cache path
 is tracked in Git. Your authored public CSS and HTML stay tracked as usual,

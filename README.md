@@ -60,7 +60,7 @@ import { defineConfig } from "@mokly/mokly";
 export default defineConfig({
   colorSchemes: ["light", "dark"],
   repoRoot: ".",
-  entries: ["src/**/*.mockup.{ts,tsx}", "docs/mockups/entries/**/*.mockup.tsx"],
+  entries: ["src/**/*.mockup.{ts,tsx}"],
   mockupsDir: "docs/mockups/generated",
   renderer: "docs/mockups/renderer.tsx",
   stylesheets: [{ match: "app/**/*.html", stylesheets: ["app.css"] }],
@@ -75,7 +75,9 @@ export default defineConfig({
 `entries` globs are repository-relative and find every `.mockup.ts` or
 `.mockup.tsx` module they match, so an entry can live beside the component or
 screen it describes. `entriesDir: "docs/mockups/entries"` is shorthand for one
-glob over that folder; configure one of the two.
+glob over that folder; configure one of the two. Use multiple `entries` globs
+when the repository has entry modules in multiple locations. Every configured
+glob must match at least one entry module.
 
 Use `review.sharedImpact` as fallback impact evidence for files the rendered
 resource graph cannot see, such as source components or token modules. Linked
@@ -299,7 +301,9 @@ change evidence while current previews remain accessible. See [on-demand Serve](
 `build` writes one fragment per effective viewport and color-scheme view plus
 `mokly-manifest.json` under `mockupsDir`. `check` calculates those bytes
 without writing. Committed mode reports missing, stale, or orphan generated
-files; derived mode reports tracked generated or cache paths. The
+files, plus Mokly-headered HTML whose owner is outside every configured entry
+glob and the source inventory; derived mode reports tracked generated or cache
+paths. The
 manifest stays internal: its source inventory is unavailable through HTTP,
 published assets, and comparison resources. Ordinary public JSON remains
 supported. Browse

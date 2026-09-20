@@ -113,7 +113,7 @@ function safeGlob(glob: string): boolean {
     glob.trim().length > 0 &&
     !/^[!#]/.test(glob) &&
     !glob.startsWith("/") &&
-    !/[\\:\0]/.test(glob) &&
+    !/[:\0]/.test(glob) &&
     glob
       .split("/")
       .every((part) => part !== "" && part !== "." && part !== "..")

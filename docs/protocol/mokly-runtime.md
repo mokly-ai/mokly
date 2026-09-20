@@ -85,12 +85,17 @@ fails for:
 - missing `lightStylesheets` / `darkStylesheets` files, or a stylesheet path one
   rule would link twice into the same fragment;
 - invalid or colliding `darkFragments` manifest routes;
-- stale, missing, or proven-orphan generated output in committed mode;
+- stale, missing, proven-orphan, or unclaimed generated output in committed
+  mode; unclaimed means Mokly-headered HTML whose owner is outside every
+  configured entry-glob prefix and the current source inventory;
 - malformed Review-ignore markers or material keys;
 - protected-source or source-inventory violations.
 
-The failure report groups problems by class and tells the author whether to run
-`mokly build` or edit source/config. `check` never rewrites output.
+The committed failure report groups missing, stale, orphan, and unclaimed paths.
+Run `mokly build` for the first three. Build does not alter unclaimed files;
+delete them or restore their source under a configured entry glob. Consumer HTML
+without a valid Mokly ownership header is authored public content and is not an
+unclaimed-file error. `check` never rewrites output.
 
 ## Catalogue And Routes
 

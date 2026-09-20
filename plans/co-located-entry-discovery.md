@@ -2,9 +2,10 @@
 
 ## Status And Outcome
 
-Milestones 1 through 6 are complete, committed, and pushed. The final review
-reported seven findings, recorded below, which await the user's decision; none
-has been applied.
+Milestones 1 through 6 are complete, committed, and pushed. Milestone 7 applies
+all seven approved review decisions and has passed the complete local
+verification gate. The fixes are locally committed; the supervising agent's
+push and the post-push review remain.
 
 Mokly currently discovers every `*.mockup.ts` and `*.mockup.tsx` module below
 one configured directory, `entriesDir`, and binds the source-attributed
@@ -331,10 +332,41 @@ remove the Delivery Status notes added in Milestone 1.
       number, severity, context, impact of doing nothing, lettered options,
       and a recommendation. Do not change the implementation.
 
-## Review Findings (awaiting decision)
+---
+
+### Milestone 7: Review fixes
+
+Apply the approved review decisions, add failing-first coverage for every
+behavioral defect, and leave the branch locally committed for the supervising
+agent to verify and push.
+
+- [x] Fix Finding 1 by pruning ignored descendants beneath entry-glob roots
+      while retaining the ancestor path needed to reach each root, and align
+      entry-glob event classification with discovery.
+- [x] Fix Finding 2 by trusting ownership headers beneath stable entry-glob
+      prefixes, keeping registry attribution strict, and reporting unclaimed
+      generated HTML during committed checks.
+- [x] Fix Finding 3 by making the primary README and authoring-guide examples
+      use one entry glob while documenting the multi-glob form in prose.
+- [x] Fix Finding 4 by validating `review.outDir` again after entry discovery.
+- [x] Record Finding 5 as already fixed without changing its implementation.
+- [x] Fix Finding 6 with serve rediscovery, symlinked `entriesDir`, missing
+      stable-prefix, POSIX normalization, direct cache-denial, and reachable
+      glob-expansion coverage, removing dead branches where appropriate.
+- [x] Fix Finding 7 by extracting watch-path classification from
+      `watch_events.ts` and updating its consumers and documentation.
+- [x] Run `npm run build`, the required affected test files, and
+      `cargo xtask check` in that order.
+- [x] Stage all files and commit locally with a Conventional Commits message;
+      the supervising agent will verify and push without changing branches.
+- [ ] After the supervising agent pushes, review the complete diff against
+      `origin/main` with `docs/implementation-review-prompt.md` and report
+      findings without changing the implementation.
+
+## Review Findings (addressed)
 
 The review of the complete diff against `origin/main` reported these findings.
-Nothing has been changed in response; each needs a decision.
+The approved option applied to each finding is recorded below.
 
 1. **P1, watcher prune.** `isRequiredWatchPath` in `src/server/watch_events.ts`
    treats every entry glob's stable prefix as a required root, and required
@@ -342,6 +374,9 @@ Nothing has been changed in response; each needs a decision.
    traverses `src/node_modules` and `src/dist`; with a repository-root glob it
    traverses `node_modules` and `.git`. Recommended: apply the ignore list
    before the required-root override for glob roots, with a regression test.
+   **Applied option:** glob roots now protect only their ancestor traversal;
+   descendants apply ignored-path rules relative to the deepest containing
+   glob root, and entry-shaped events in discovery-denied trees stay ignored.
 2. **P2, stranded output.** `isAuthoredOwner` trusts owners beneath a directory
    that currently holds an entry module. Deleting the only entry module in a
    co-located directory leaves its generated HTML unowned, so it is neither
@@ -349,20 +384,37 @@ Nothing has been changed in response; each needs a decision.
    contract's "never strands" sentence over-promises. Recommended: also trust
    an entry-module-named owner under any glob's stable prefix, and report
    unowned Mokly-headered files as a distinct `check` diagnostic.
+   **Applied option:** ownership headers and tracked output trust stable glob
+   prefixes, registry attribution remains restricted to resolved or inventoried
+   sources, and committed Check reports unclaimed generated HTML separately.
 3. **P2, doc examples.** The README and config guide show two globs; a fresh
    repository with only one location fails with the zero-match error.
    Recommended: single-glob examples with the multi-glob form in prose.
+   **Applied option:** both primary examples use one glob and explain that each
+   item in a multi-glob configuration must match an entry module.
 4. **P2, review.outDir.** In `entries` mode, config resolution validates
    `review.outDir` before discovery, so an output directory inside an entry
    root is only rejected later by Review or Export. Recommended: re-run the
    boundary check after discovery in `validate.ts`.
+   **Applied option:** config resolution repeats `validateReviewOut` with the
+   discovered `entryModules` before returning the resolved config.
 5. **P3, plan scope.** This plan's scope says a match inside `mockupsDir` is
    rejected; the delivered contract allows nested `docs/mockups/src` layouts.
    Corrected below.
+   **Applied option:** no new change; the scope correction was already present
+   before this milestone and remains intact.
 6. **P3, coverage.** No serve-level re-discovery test; no tests for a
    symlinked `entriesDir`, a missing stable prefix, or brace-expansion errors;
    two unreachable branches in `entry_globs.ts` and `entry_discovery.ts`.
+   **Applied option:** coverage now exercises every named boundary. Minimatch's
+   `braceExpand` throws for string patterns longer than 65,536 characters, so
+   the translation catch remains and is covered. The post-normalization
+   backslash check was removed, while the direct-discovery cache denial remains
+   as documented defense in depth and is reached directly.
 7. **P3, file size.** `src/server/watch_events.ts` is 311 lines.
+   **Applied option:** path and glob helpers moved to `watch_paths.ts`, the old
+   `watch_entry_globs.ts` was folded into it, and both modules are below 300
+   lines.
 
 ## Post-merge follow-up (non-blocking)
 

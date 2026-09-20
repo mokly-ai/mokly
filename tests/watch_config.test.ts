@@ -17,10 +17,8 @@ import type {
   ProcessSupervisor,
   ProcessSupervisorFactory,
 } from "../dist/server/supervisor.js";
-import {
-  classifyWatchPath,
-  watchTargets,
-} from "../dist/server/watch_events.js";
+import { classifyWatchPath } from "../dist/server/watch_events.js";
+import { watchTargets } from "../dist/server/watch_paths.js";
 import type {
   ConsumerWatcher,
   ConsumerWatcherFactory,

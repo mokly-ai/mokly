@@ -41,8 +41,13 @@ the public authoring API, including `resolveInstance`. Every repository-owned
 importer of `@mokly/mokly` receives the attributed facade; installed packages
 under `node_modules` and Mokly's own runtime receive the plain API. Registry
 validation and `ownership.ts` accept an attributed owner only when it is a
-resolved entry module or an inventoried source file. Source locations do not
-enter instance keys, props keys, slot identities, or Changes projections.
+resolved entry module or an inventoried source file. Ownership headers and
+tracked output additionally trust owners beneath any entry glob's stable prefix,
+so deleted matched sources still leave removable orphans. Committed Check lists
+Mokly-headered HTML outside those prefixes as unclaimed without changing it.
+Export and Review boundaries continue to use directories that hold resolved
+entry modules. Source locations do not enter instance keys, props keys, slot
+identities, or Changes projections.
 
 ## Development
 

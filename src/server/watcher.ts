@@ -3,15 +3,12 @@ import chokidar, { type FSWatcher } from "chokidar";
 import type { ResolvedConfig } from "../config/types.js";
 
 import { PlainServeReporter } from "./reporter.js";
-import {
-  isPackageOwnedIgnoredWatchPath,
-  watchTargets,
-  type NotificationGate,
-} from "./watch_events.js";
+import type { NotificationGate } from "./watch_events.js";
 import {
   rawRenamePaths,
   ResourceWatchNotifications,
 } from "./watch_notifications.js";
+import { isPackageOwnedIgnoredWatchPath, watchTargets } from "./watch_paths.js";
 
 /** Build the source/config observer before compiling an accepted input graph. */
 export function createSourceWatcher(
