@@ -12,15 +12,14 @@ export const appearanceDesign = collection({
     collection({
       children: appearanceStateScreens,
       description:
-        "Each interface and preview pairing, the light-only fallback, and the Auto setting.",
+        "The Auto setting and the light-only screen that cannot follow it.",
       id: "design-appearance-states",
       segment: "states",
       title: "Appearance states",
     }),
     collection({
       children: appearanceWorkspaceScreens,
-      description:
-        "Panels, the drawer and comparisons drawn in the dark interface.",
+      description: "Panels, the drawer and comparisons in either appearance.",
       id: "design-appearance-workspaces",
       segment: "workspaces",
       title: "Panels and comparisons",
@@ -28,14 +27,14 @@ export const appearanceDesign = collection({
     collection({
       children: appearanceStatusScreens,
       description:
-        "Home, loading, recovery and use-case routes drawn in the dark interface.",
+        "Home, loading, recovery and use-case routes in either appearance.",
       id: "design-appearance-status",
       segment: "status",
       title: "Status and recovery",
     }),
   ],
   description:
-    "Auto, Light and Dark for the catalogue around previews, independent of each preview's own colour scheme.",
+    "Auto, Light and Dark for the whole catalogue: one setting takes the chrome and the screens it shows together.",
   id: "design-appearance",
   relatedDocs: ["docs/protocol/mokly-viewer-appearance.md"],
   segment: "appearance",

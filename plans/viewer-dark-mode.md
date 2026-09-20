@@ -1,15 +1,14 @@
 # Viewer Dark Mode
 
-Status: in progress; the documentation and mockup milestones through 2D are
+Status: in progress; the documentation and mockup milestones through 2F are
 complete: the built-in preview toggle switches every dual-scheme mockup, the
-standalone design shows one Appearance control on every top bar, and the legacy
-head-band scheme depictions are consolidated. On 2026-09-20 the user asked for
-the open review findings to be fixed (Milestone 2E is complete; 2F remains)
-and then for the
-remaining milestones to be implemented, with UI milestones delegated to Opus 5
-and non-UI milestones to Codex, each checked by the parent session. Runtime
-implementation has not started. The implementation PR's merge is this plan's
-completion boundary.
+standalone design shows one Appearance control on every top bar, the legacy
+head-band scheme depictions are consolidated, the branch carries the merge of
+`origin/main`, and the Node CommonJS lexer crash is contained. Milestones 2G
+and 2H close the findings from the 2F review; Milestone 3 is next. The user
+asked on 2026-09-20 for UI milestones to go to Opus 5 and non-UI milestones
+to Codex, each checked by the parent session. Runtime implementation has not
+started. The implementation PR's merge is this plan's completion boundary.
 
 Give `@mokly/viewer`, local Serve and static exports a complete Auto/Light/Dark
 appearance. The [appearance contract](../docs/protocol/mokly-viewer-appearance.md)
@@ -460,6 +459,80 @@ product behaviour.
 - [x] Confirm `git diff --diff-filter=D --name-status <merge-base>..HEAD`
       lists only the approved removals, then `git add -A`, commit and push;
       then review the complete diff against `origin/main` with
+      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      and report findings without fixing them.
+
+## Milestone 2G: Align control boundaries and mockup copy (complete)
+
+Tags: mockup
+
+The Milestone 2F review found two mockup defects: hover, selected and checked
+control boundaries use `--mbk-accent-edge`, which the palette contract does
+not allow for control boundaries and which reaches only 1.46:1 in Light, and
+several descriptions still describe the superseded independent-preview model.
+
+- [x] Make the Appearance selector hover, the checked or hovered view
+      controls and the selected inspector tab draw their boundary with an
+      approved control token, `--chrome-control-edge` or `--mbk-sage-deep`,
+      in the authored design styles, and regenerate the outputs. Do not weaken
+      the 3:1 rule; if a boundary is genuinely decorative because the state
+      has another 3:1 indicator, record that exception in the palette
+      contract instead.
+- [x] Extend `tests/design_appearance.test.ts` to audit the token pairs the
+      hover, selected, checked and focus states actually use in the generated
+      library styles, so a control that adopts a sub-3:1 boundary fails.
+- [x] Align the copy with the single-control model: the Appearance collection
+      descriptions in `browse/appearance/index.tsx`, the side-by-side and
+      difference rationales in `workspaces/screens.tsx`, item 16 of
+      `docs/protocol/mokly-design-component-library.md`, and any other
+      description that says appearance leaves previews unchanged. Keep
+      independence wording only for embedded viewer inputs and genuine
+      light-only fallbacks.
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
+      the design unit and browser suites and `cargo xtask check`. Smoke the
+      changed controls in both schemes through `npm run dev`, save screenshots
+      under `.context/` prefixed `m2g-`, and include regenerated output.
+- [x] Commit and push, then review the complete diff against `origin/main`
+      with
+      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      and report findings without fixing them.
+
+Delivered: the Appearance selector hover, the hovered or checked view controls
+and the selected inspector tab draw their boundary with `--mbk-sage-deep`,
+which reaches 7.08:1 in Light and 8.79:1 in Dark on the accent surface they
+fill. `--chrome-control-edge` was not usable there: it reaches only 2.99:1 on
+`--mbk-accent-surface`, so the palette contract now names `--mbk-sage-deep` as
+the token a state boundary uses and records the new pair. The Added, Changed
+and Removed status badges keep their tinted outlines as a recorded exception,
+because each names its own state in 5.62:1 or better text inside a distinct
+fill; `tests/design_appearance.test.ts` audits every state rule in the
+generated library styles against that exception list, so a new control with a
+sub-3:1 boundary fails. The Appearance collection descriptions, the
+side-by-side and difference rationales and item 16 of the component library
+contract now describe one setting taking the chrome and the screens together;
+independence wording survives only for embedded viewer inputs and the
+light-only fallback.
+
+## Milestone 2H: Correct the Node compatibility policy
+
+The upstream fix for the CommonJS lexer crash (`cjs_lexer::Parse` handling an
+empty `MaybeLocal`, nodejs/node#63885) shipped in Node 24.19.0, so the
+affected releases are 24.14.0 through 24.18.x. Milestone 2F excluded 24.19
+and 24.20 as well, and the CLI preflight still accepts the affected releases.
+
+- [ ] Set the supported range to exclude exactly 24.14.0 through 24.18.x in
+      `package.json` `engines`, `docs/protocol/ci-verification.md`, the
+      install guide and the release and package docs, citing the upstream fix.
+      Keep the CI lanes on 22.14.0 and 24.21.0.
+- [ ] Enforce the same range in a minimal CLI bootstrap that runs before other
+      modules load, and add a test that the CLI check, `engines` and the CI
+      runtime list agree.
+- [ ] If the sandbox still runs an affected Node release, install the pinned
+      24.21.0 release for local gates so they match CI, and record the
+      requirement in the developer setup docs.
+- [ ] Run `npm run build`, `npm test`, the browser suite and
+      `cargo xtask check`; commit and push; then review the complete diff
+      against `origin/main` with
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       and report findings without fixing them.
 

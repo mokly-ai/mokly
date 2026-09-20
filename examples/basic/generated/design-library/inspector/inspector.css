@@ -47,7 +47,7 @@ background: var(--chrome-hover);
 
 .ce-inspector > details[open] > summary {
 background: var(--mbk-accent-surface);
-  border-color: var(--mbk-accent-edge);
+  border-color: var(--mbk-sage-deep);
   color: var(--mbk-sage-deep);
 }
 

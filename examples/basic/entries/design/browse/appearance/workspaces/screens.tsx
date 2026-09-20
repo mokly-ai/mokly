@@ -154,7 +154,7 @@ export const appearanceWorkspaceScreens = [
     id: "design-appearance-side-by-side",
     mobile: <SideBySideCompare viewport="mobile" />,
     rationale:
-      "The comparison band, the Before and Current captions and the stage behind the frames follow the catalogue appearance, while both compared screens keep the light surfaces they actually render.",
+      "The comparison band, the Before and Current captions, the stage behind the frames and both compared screens follow the one catalogue appearance, so a side-by-side read stays in a single scheme rather than mixing chrome and content.",
     slug: "side-by-side",
     title: "Side by side",
   }),
@@ -165,7 +165,7 @@ export const appearanceWorkspaceScreens = [
     id: "design-appearance-difference",
     mobile: <DifferenceCompare viewport="mobile" />,
     rationale:
-      "Difference blends the two versions, so the blend sits on an opaque base taken from the compared screens' own colour scheme; the visible difference must be the same whichever appearance the catalogue is using.",
+      "Difference blends the two versions, so the blend needs an opaque base taken from the compared screens rather than the stage behind them. Both versions follow the catalogue appearance together, so the difference stays legible in either one.",
     slug: "difference",
     title: "Difference",
   }),

@@ -61,7 +61,7 @@ cursor: inherit;
 .ce-icon-control:hover,
 .ce-icon-control:has(input:checked) {
 background: var(--mbk-accent-surface);
-  border-color: var(--mbk-accent-edge);
+  border-color: var(--mbk-sage-deep);
   color: var(--mbk-sage-deep);
 }
 

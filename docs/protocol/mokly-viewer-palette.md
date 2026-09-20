@@ -65,33 +65,45 @@ Ignored use `--chrome-muted` on `--chrome-surface` inside `--chrome-border`.
 
 ## Recorded Contrast
 
-| Pair                                    | Light | Dark  | Requirement |
-| --------------------------------------- | ----- | ----- | ----------- |
-| ink on surface                          | 16.98 | 13.88 | 4.5 text    |
-| ink on background                       | 15.41 | 15.75 | 4.5 text    |
-| secondary ink on surface                | 8.34  | 9.61  | 4.5 text    |
-| muted on surface                        | 5.23  | 6.00  | 4.5 text    |
-| muted on background                     | 4.74  | 6.81  | 4.5 text    |
-| muted on raised (navigation)            | 5.05  | 6.42  | 4.5 text    |
-| muted on hover surface                  | 4.81  | 5.15  | 4.5 text    |
-| accent link on surface                  | 10.25 | 9.03  | 4.5 text    |
-| sage on surface                         | 4.99  | 6.96  | 4.5 text    |
-| deep sage on surface                    | 7.96  | 10.23 | 4.5 text    |
-| deep sage on accent surface             | 7.08  | 8.79  | 4.5 text    |
-| accent contrast on sage (active row)    | 4.99  | 7.87  | 4.5 text    |
-| control edge on surface                 | 3.36  | 3.54  | 3 non-text  |
-| control edge on background              | 3.05  | 4.02  | 3 non-text  |
-| control edge on raised (navigation)     | 3.25  | 3.79  | 3 non-text  |
-| focus outline (deep sage) on background | 7.23  | 11.61 | 3 non-text  |
-| changed status ink on its surface       | 5.62  | 8.27  | 4.5 text    |
-| removed status ink on its surface       | 5.73  | 8.04  | 4.5 text    |
-| added status ink on its surface         | 7.08  | 8.79  | 4.5 text    |
-| validation message on surface           | 6.66  | 8.19  | 4.5 text    |
+| Pair                                         | Light | Dark  | Requirement |
+| -------------------------------------------- | ----- | ----- | ----------- |
+| ink on surface                               | 16.98 | 13.88 | 4.5 text    |
+| ink on background                            | 15.41 | 15.75 | 4.5 text    |
+| secondary ink on surface                     | 8.34  | 9.61  | 4.5 text    |
+| muted on surface                             | 5.23  | 6.00  | 4.5 text    |
+| muted on background                          | 4.74  | 6.81  | 4.5 text    |
+| muted on raised (navigation)                 | 5.05  | 6.42  | 4.5 text    |
+| muted on hover surface                       | 4.81  | 5.15  | 4.5 text    |
+| accent link on surface                       | 10.25 | 9.03  | 4.5 text    |
+| sage on surface                              | 4.99  | 6.96  | 4.5 text    |
+| deep sage on surface                         | 7.96  | 10.23 | 4.5 text    |
+| deep sage on accent surface                  | 7.08  | 8.79  | 4.5 text    |
+| accent contrast on sage (active row)         | 4.99  | 7.87  | 4.5 text    |
+| control edge on surface                      | 3.36  | 3.54  | 3 non-text  |
+| control edge on background                   | 3.05  | 4.02  | 3 non-text  |
+| control edge on raised (navigation)          | 3.25  | 3.79  | 3 non-text  |
+| focus outline (deep sage) on background      | 7.23  | 11.61 | 3 non-text  |
+| state boundary (deep sage) on accent surface | 7.08  | 8.79  | 3 non-text  |
+| changed status ink on its surface            | 5.62  | 8.27  | 4.5 text    |
+| removed status ink on its surface            | 5.73  | 8.04  | 4.5 text    |
+| added status ink on its surface              | 7.08  | 8.79  | 4.5 text    |
+| validation message on surface                | 6.66  | 8.19  | 4.5 text    |
 
 `--chrome-border`, `--chrome-border-strong` and `--mbk-guide` are decorative
 hairlines separating adjacent surfaces, not control boundaries, so they are not
 held to 3:1. Every control outline, grip, field border and focus ring uses
-`--chrome-control-edge` or `--mbk-sage-deep` instead.
+`--chrome-control-edge` or `--mbk-sage-deep` instead. A control that marks its
+hovered, selected or checked state with a boundary uses `--mbk-sage-deep`,
+because `--chrome-control-edge` reaches only 2.99:1 on `--mbk-accent-surface`,
+the fill those states carry.
+
+One family is exempt. The `--mbk-status-*-edge` tokens and `--mbk-accent-edge`
+outline the Added, Changed and Removed status badges, which are labels rather
+than controls: each names its own state in 5.62:1 or better text inside a
+distinct tinted fill, so the outline adds no information and is held to the
+decorative hairline standard. No other boundary may claim this exception; a
+control state that draws a boundary must reach 3:1 against its own fill or the
+surface around it.
 
 ## Light Corrections
 

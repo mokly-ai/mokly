@@ -150,8 +150,9 @@ Controls below use text, boolean, number and primitive enum selections only.
     screen, and flows never become the original home of screen markup.
 16. **Appearance selector:** the catalogue's `auto/light/dark` setting and a
     compact flag for narrow bars. Controls: setting and compact. It is a native
-    selection control named Appearance, holding one value; it does not change
-    any preview's colour scheme and does not fabricate a native open list.
+    selection control named Appearance, holding one value; it is the catalogue's
+    single setting, so the value it holds is also the scheme the previews
+    around it follow, and it does not fabricate a native open list.
 
 Scenario adapters explicitly map current names to these semantic fields. Do not
 add uncontrolled catch-all objects, per-screen CSS strings or function props to
