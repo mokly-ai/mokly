@@ -3,7 +3,12 @@ import path from "node:path";
 
 import { comparisonContentId } from "../../dist/export/content_id.js";
 import { ownedEntries } from "../../dist/export/ownership.js";
-import { configuredServedReview } from "../../dist/server/review_routes.js";
+import {
+  captureRemovedPagePreviews,
+  packageRemovedPagePreviews,
+  RepositoryRemovedPagePreview,
+} from "../../dist/review/page_preview.js";
+import { configuredServedReview } from "../../dist/server/configured_review.js";
 
 const comparisonRoute = "/__mokly/diffs/review.json";
 
@@ -43,8 +48,35 @@ export async function captureComparison(serverUrl) {
   };
 }
 
+/** Capture every removed page through the already-pinned publication reader. */
+export async function capturePublicationPagePreviews(
+  config,
+  prepared,
+  changes,
+) {
+  if (!changes?.componentChanges)
+    throw new Error("preview page evidence is unavailable");
+  return captureRemovedPagePreviews(
+    new RepositoryRemovedPagePreview(config, prepared.reader),
+    {
+      baseline: changes.componentChanges.baseline,
+      baseCommit: changes.baseCommit,
+      baseRef: changes.baseRef,
+      changedRoutes: changes.changedRoutes,
+      removedEntries: changes.removedEntries,
+      schemaVersion: 1,
+    },
+    new AbortController().signal,
+  );
+}
+
 /** Move the completed generation into the deployment after the server closes. */
-export async function publishComparison(provider, comparison, stage) {
+export async function publishComparison(
+  provider,
+  comparison,
+  stage,
+  pagePreviews = new Map(),
+) {
   const files = new Map();
   for (const name of (await ownedEntries(provider.outDir)).files)
     if (![".mokly-review-artifact", "summary.md"].includes(name))
@@ -52,7 +84,13 @@ export async function publishComparison(provider, comparison, stage) {
         name,
         await fs.promises.readFile(path.join(provider.outDir, name)),
       );
-  const directory = `__mokly/diffs/__generations/${comparisonContentId(files)}`;
+  const packaged = packageRemovedPagePreviews(files, pagePreviews);
+  for (const [name, bytes] of packaged) {
+    const target = path.join(provider.outDir, name);
+    await fs.promises.mkdir(path.dirname(target), { recursive: true });
+    await fs.promises.writeFile(target, bytes);
+  }
+  const directory = `__mokly/diffs/__generations/${comparisonContentId(packaged)}`;
   const target = path.join(stage, directory);
   await fs.promises.mkdir(path.dirname(target), { recursive: true });
   await fs.promises.rename(provider.outDir, target);

@@ -1,6 +1,6 @@
 import { readCatalogueChanges } from "../../dist/server/component_changes.js";
+import { configuredServedReview } from "../../dist/server/configured_review.js";
 import { startCatalogueServer } from "../../dist/server/http.js";
-import { configuredServedReview } from "../../dist/server/review_routes.js";
 import { componentReviewFixture } from "../helpers/component_review_fixture.js";
 
 /** Serve selected comparisons with real screen and saved-variant snapshots. */

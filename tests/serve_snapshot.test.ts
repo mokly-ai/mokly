@@ -6,9 +6,9 @@ import test from "node:test";
 import { MoklyError } from "../dist/errors.js";
 import { GitRepositoryEvidence } from "../dist/review/git_evidence.js";
 import { committedReviewRepository } from "../dist/review/repository.js";
+import { configuredServedReview } from "../dist/server/configured_review.js";
 import { NodeCatalogueServerFactory } from "../dist/server/factory.js";
 import { startCatalogueServer } from "../dist/server/http.js";
-import { configuredServedReview } from "../dist/server/review_routes.js";
 import { serve } from "../dist/server/serve.js";
 
 import { observeBackgroundClassification } from "./helpers/background_classification.js";

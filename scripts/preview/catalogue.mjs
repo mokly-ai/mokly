@@ -27,9 +27,11 @@ import { startCatalogueServer } from "../../dist/server/http.js";
 import { previewOwnership, stagePreviewArtifact } from "./artifact.mjs";
 import {
   captureComparison,
+  capturePublicationPagePreviews,
   previewComparisonProvider,
   publishComparison,
 } from "./comparisons.mjs";
+import { publicationPreviewDescriptors } from "./descriptors.mjs";
 import { capturePublicationInputs } from "./inputs.mjs";
 
 const liveUpdateScript =
@@ -84,11 +86,17 @@ export async function buildPreview(config, output, options = {}) {
           ...(review ? { review } : {}),
         });
         let comparison;
+        let pagePreviews = new Map();
         let removed = [];
         try {
           if (review) {
             comparison = await captureComparison(server.url);
             removed = changes.removedEntries.map(({ entry }) => entry);
+            pagePreviews = await capturePublicationPagePreviews(
+              config,
+              prepared,
+              changes,
+            );
           }
           await capturePage(server.url, "/", stage, "index.html");
           for (const entry of [...manifest.entries, ...removed]) {
@@ -112,7 +120,12 @@ export async function buildPreview(config, output, options = {}) {
           await server.close();
         }
         if (review && comparison)
-          comparison = await publishComparison(review, comparison, stage);
+          comparison = await publishComparison(
+            review,
+            comparison,
+            stage,
+            pagePreviews,
+          );
         await copyPublicFiles(config, catalogue, stage, excludedRoots);
         await writeText(
           stage,
@@ -131,6 +144,14 @@ export async function buildPreview(config, output, options = {}) {
               comparisonUrl: comparison
                 ? `${comparison.directory}/review.json`
                 : null,
+              removedPreviews: comparison
+                ? publicationPreviewDescriptors(
+                    changes.removedEntries,
+                    pagePreviews,
+                    comparison.directory,
+                    comparison.result,
+                  )
+                : undefined,
               revision: { content: 0, evidence: 0 },
             }),
           ),

@@ -2,12 +2,14 @@
 
 ## Delivery Status
 
-Approved target tracked by the
+The typed capture, Serve generation lifecycle, public descriptor, consumer
+export, upload packaging, and repository-preview delivery are implemented
+through Milestone 4 of the
 [removed content previews plan](../../plans/removed-content-previews.md).
 The shipped shell still shows the empty removed states described in the
 [Changes](./mokly-changes.md) and [catalogue changes](./mokly-catalogue-changes.md)
-contracts; those documents mark the sentences this contract replaces. Nothing
-here changes ordinary browsing, Added entries, changed-screen comparisons, or
+contracts until Milestone 5 consumes those delivered previews. Nothing here
+changes ordinary browsing, Added entries, changed-screen comparisons, or
 removed component variants.
 
 ## Behavior

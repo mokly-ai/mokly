@@ -130,8 +130,9 @@ screen comparison capture, with safely escaped metadata in the captured shell.
 The [publication option](./mokly-publication.md) defaults to current entries
 only: no catalogue-change snapshot is computed or exported. With Changes
 included, retain removed page routes, permitted ID redirects, and missing-current
-views from this model, packaging removed page previews once approved. Pages still
-generate no visual comparison snapshots.
+views from this model. Static delivery packages each removed page preview and
+its historical resource closure in the comparison generation; pages still
+generate no visual comparison records.
 Unsupported unmatched v2/v3 legacy documents stay historical artifact records,
 as specified by [migration](./mokly-page-migration.md).
 

@@ -7,8 +7,8 @@ import type {
   ComponentChangeSource,
   ComponentChangeSnapshot,
 } from "./component_changes.js";
+import type { ServedReview } from "./configured_review.js";
 import type { PreviewObservation } from "./demand/observation.js";
-import type { ServedReview } from "./review_routes.js";
 import type { CatalogueUpdate, ChangesStatus } from "./update_messages.js";
 
 /** Options for one deterministic server child. */

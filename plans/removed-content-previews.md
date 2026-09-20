@@ -2,11 +2,11 @@
 
 ## Status And Outcome
 
-Milestones 1 to 3 are complete: the contract lives in
+Milestones 1 to 4 are complete: the contract lives in
 [removed previews](../docs/protocol/mokly-removed-previews.md), the owning
 protocols mark the sentences it replaces, the design catalogue renders every
 previous-version state, and the backend captures removed page previews and
-publishes the catalogue descriptor. Milestone 4 is next. The user
+delivers previews through Serve and static catalogues. Milestone 5 is next. The user
 requested this plan after discussing the removed-document empty state and
 agreed preview behavior, then approved the amendments recorded below: reuse
 the comparison engine's historical capture for screens, settle the example
@@ -277,34 +277,34 @@ before-only comparison path and adds page capture beside it.
 Connect page capture to the bounded generation service and complete exports;
 screens already flow through both.
 
-- [ ] Add server regressions before wiring requests: a removed screen route
+- [x] Add server regressions before wiring requests: a removed screen route
       resolves to a before-only generation, a removed page route resolves to a
       page-preview generation, ordinary navigation/filtering does no capture,
       and requests never compile or reclassify the catalogue.
-- [ ] Extend the selected generation service with the page selection kind.
+- [x] Extend the selected generation service with the page selection kind.
       Serve its descriptor and snapshot files with GET/HEAD parity and the
       established `no-store`/`nosniff` protections. Fence refreshes, evidence
       changes, restore/redelete cycles, and route reuse so stale work cannot
       publish.
-- [ ] Reuse bounded admission, pending-request coalescing, cancellation, retained
+- [x] Reuse bounded admission, pending-request coalescing, cancellation, retained
       generations, idle renewal, and shutdown cleanup. Test generation expiry,
       failed retries, invalid selections, and source/base changes during capture.
-- [ ] Preserve fast startup and background preparation in watched and no-watch
+- [x] Preserve fast startup and background preparation in watched and no-watch
       Serve. Test preparing/unavailable evidence and confirm current entries
       remain usable when historical previews cannot be prepared.
-- [ ] Package page previews for Changes-enabled export, publish packaging, and
+- [x] Package page previews for Changes-enabled export, publish packaging, and
       repository preview under the same generation root as the comparison, from
       the single pinned baseline. Include them in ownership inventories,
       reference validation, deployment hashes, and upload archives; preserve
       atomic rollback on failure.
-- [ ] Prove current-only delivery performs no historical work or requests and
+- [x] Prove current-only delivery performs no historical work or requests and
       removes old historical files when replacing a Changes-enabled artifact.
       Static previews must not require live capture, renewal, or watch endpoints.
-- [ ] Run build and focused server, lifecycle, export, publication, upload, and
+- [x] Run build and focused server, lifecycle, export, publication, upload, and
       catalogue tests; update affected READMEs and protocols.
-- [ ] Run `cargo xtask check`; then `git add -A`, commit with Conventional
+- [x] Run `cargo xtask check`; then `git add -A`, commit with Conventional
       Commits, and push the branch.
-- [ ] After the push, review the complete local diff against `origin/main` with
+- [x] After the push, review the complete local diff against `origin/main` with
       the implementation review prompt; report findings without changing the
       implementation.
 

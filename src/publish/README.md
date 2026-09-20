@@ -10,6 +10,12 @@ actual checkout HEAD, adds an owned manifest through the exporter, compresses
 its finalized bytes before installation, rechecks HEAD and uploads once. HTTP
 failure leaves the complete local export intact. Archive failure happens before
 installation and retains the previous export through the normal transaction.
+Changes-enabled exports already contain removed-page metadata and its complete
+historical resource closure under the comparison generation. Because publishing
+bundles the finalized export map rather than walking the output directory,
+those files participate unchanged in ownership, deployment identity and the
+upload archive. `--no-changes` reaches the exporter's current-only branch and
+therefore packages no removed entries or historical paths.
 
 `metadata.ts` handles repository remotes and Actions context. `manifest.ts` and
 `validation.ts` define the upload envelope invariants. `bundle.ts` uses

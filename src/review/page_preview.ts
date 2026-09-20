@@ -93,3 +93,66 @@ export function renderRemovedPagePreviewArtifact(
   addArtifactFile(files, "preview.json", `${canonicalJson(preview, 2)}\n`);
   return files;
 }
+
+/** Capture every removed page in one accepted catalogue-change snapshot. */
+export async function captureRemovedPagePreviews(
+  provider: RemovedPagePreviewProvider,
+  source: RemovedPagePreviewSource,
+  signal: AbortSignal,
+): Promise<ReadonlyMap<string, RemovedPagePreviewArtifact>> {
+  const artifacts = new Map<string, RemovedPagePreviewArtifact>();
+  const routes = source.removedEntries
+    .flatMap(({ entry }) => (entry.kind === "page" ? [entry.route] : []))
+    .sort();
+  for (const route of routes) {
+    signal.throwIfAborted();
+    if (artifacts.has(route))
+      throw new MoklyError(
+        "review-invalid",
+        `Duplicate removed page preview route: ${route}`,
+      );
+    const artifact = await provider.generate(
+      source,
+      { kind: "page", route },
+      signal,
+    );
+    if (
+      artifact.preview.route !== route ||
+      artifact.preview.baseCommit !== source.baseCommit ||
+      artifact.preview.baseRef !== source.baseRef
+    )
+      throw new MoklyError(
+        "review-invalid",
+        `Removed page preview does not match its accepted source: ${route}`,
+      );
+    artifacts.set(route, artifact);
+  }
+  signal.throwIfAborted();
+  return artifacts;
+}
+
+/** Add packaged page metadata and shared snapshots to one comparison generation. */
+export function packageRemovedPagePreviews(
+  files: ReadonlyMap<string, ReviewArtifactContent>,
+  artifacts: ReadonlyMap<string, RemovedPagePreviewArtifact>,
+): ReadonlyMap<string, ReviewArtifactContent> {
+  const packaged = new Map(files);
+  for (const [route, artifact] of artifacts) {
+    if (artifact.preview.route !== route)
+      throw new MoklyError(
+        "review-invalid",
+        `Removed page preview route does not match its selection: ${route}`,
+      );
+    for (const [name, content] of renderRemovedPagePreviewArtifact(artifact)) {
+      const target = name === "preview.json" ? `pages/${route}.json` : name;
+      const previous = packaged.get(target);
+      if (previous === undefined) packaged.set(target, content);
+      else if (!Buffer.from(previous).equals(Buffer.from(content)))
+        throw new MoklyError(
+          "review-invalid",
+          `Removed page preview conflicts with generation file: ${target}`,
+        );
+    }
+  }
+  return packaged;
+}

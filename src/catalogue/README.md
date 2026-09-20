@@ -21,6 +21,13 @@ while screen descriptors reuse that generation's comparison. Readers reject
 descriptors on current entries, mismatched entry kinds, missing comparison URLs,
 and cross-generation or mismatched page paths while accepting older catalogues
 that omit the field.
+Serve supplies only removed-screen descriptors after a complete comparison is
+pinned; selected-only generations never change the public model, and live page
+descriptors remain absent. Changes-enabled consumer export and repository
+publication supply both screen descriptors and removed-page paths after their
+historical closures are packaged. Evidence replacement publishes the pointer,
+descriptors and removed-entry snapshot atomically. Current-only delivery supplies
+none of them.
 Historical usage also becomes unavailable when current id/route precedence
 omits any referenced component's metadata. Projection checks the retained
 component set once for screens and removed variants; readers remain strict.
