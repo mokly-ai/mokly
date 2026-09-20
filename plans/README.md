@@ -8,7 +8,8 @@
   controls.
 - [Co-Located Entry Discovery](./co-located-entry-discovery.md) — delivered
   on the branch with two review rounds applied and the fixed entry filename
-  suffix removed; Milestone 9 carries the approved third-round fixes.
+  suffix removed and three review rounds applied; a fourth review round
+  reported seven P2/P3 findings that await the user's decision.
 - [CLI Terminal Experience](./cli-terminal-experience.md)
 - [Package Documentation](./package-documentation.md) — supersedes the
   unmerged public-site plan and pull request #79 by shipping versioned Markdown

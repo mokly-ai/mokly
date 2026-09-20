@@ -2,11 +2,12 @@
 
 ## Status And Outcome
 
-Milestones 1 through 8 are complete, committed, and pushed. Milestone 9 is
-locally committed pending the supervising agent's push and review. It resolves
-all six approved third-review findings, including watcher isolation, combined
+Milestones 1 through 9 are complete, committed, and pushed. Milestone 9
+resolved all six third-review findings, including watcher isolation, combined
 zero-match diagnostics, basename handling, Review-output pruning, and the
-documented duplicate-registration contract.
+documented duplicate-registration contract. The post-push review of Milestone
+9 reported seven further findings, all P2 or P3, recorded below and awaiting
+the user's decision.
 
 Mokly currently discovers every `*.mockup.ts` and `*.mockup.tsx` module below
 one configured directory, `entriesDir`, and binds the source-attributed
@@ -545,9 +546,50 @@ the double-registration risk of broad globs.
       it proves.
 - [x] Run `cargo xtask check` and commit locally; the supervising agent will
       push the branch.
-- [ ] Review the complete local diff against `origin/main` after the push
+- [x] Review the complete local diff against `origin/main` after the push
       using `docs/implementation-review-prompt.md`; report findings without
-      changing the implementation.
+      changing the implementation. The post-push review of the Milestone 9
+      commit confirmed the extracted `WatchedBackground` and
+      `reportedWatchProcessor` modules are behaviourally identical to the
+      inline code they replaced, and reported seven findings, recorded under
+      "Fourth Review Findings (awaiting decision)".
+
+## Fourth Review Findings (awaiting decision)
+
+Review of the Milestone 9 commit. Nothing has been changed in response. All
+seven are P2 or P3; the first three share one cause: the basename and
+`review.outDir` fixes added filesystem calls to paths that previously did no
+I/O.
+
+1. **P2, a filesystem error in the watcher's prune predicate can abort
+   startup.** The chokidar `ignored` predicate now calls `fs.statSync` and
+   rethrows anything other than a path-resolution error. Chokidar turns that
+   into an `error` event; during the initial walk that rejects watcher
+   readiness and `mokly serve` refuses to start, and after readiness the
+   subtree is silently left unwatched. Recommended: make the directory check
+   fail open, and use the `stats` argument chokidar already passes to the
+   predicate so the extra syscall disappears.
+2. **P3, one extra stat per traversal candidate**, tens to low hundreds of
+   milliseconds per full walk, and a just-deleted directory under a denied
+   name now classifies as a rebuild. Recommended: scan the non-leaf segments
+   first and stat only when the leaf itself carries a denied name.
+3. **P3, `review.outDir` pruning resolves real paths for every visited
+   directory** and a permission error now escapes `loadConfig` as a raw Node
+   error where the old walk skipped it. Recommended: resolve the outDir once
+   per discovery and treat a resolution failure on a candidate as a skip.
+4. **P3, `docs/architecture/build-pipeline.md` still says "denied segment"**
+   where the contracts now say directories only. Recommended: align the
+   sentence and add the `review.outDir` pruning note.
+5. **P3, the barrel guidance is unactionable**: `entries` rejects negated
+   globs, so "exclude barrels from broad globs" cannot be expressed.
+   Recommended: reword to narrow the glob, rename the barrel, or stop
+   re-exporting registry arrays.
+6. **P3, one `NotificationGate` in `resource_watcher.ts` still has no
+   reporter.** Safe today because its consumer delegates to a guarded gate.
+   Recommended: make the reporter a required constructor argument.
+7. **P3, one weak assertion** in the new serve-level test checks a constant
+   URL. Recommended: drop the line; the restart wait already proves the
+   behaviour.
 
 ## Third Review Findings (approved, addressed in Milestone 9)
 
