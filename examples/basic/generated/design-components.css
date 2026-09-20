@@ -64,8 +64,8 @@
   padding: 5px 10px;
 }
 .ce-variants a[aria-current] {
-  background: #edf3ef;
-  border-color: #b9cfc2;
+  background: var(--mbk-accent-surface);
+  border-color: var(--mbk-sage-deep);
   color: var(--mbk-sage-deep);
   font-weight: 600;
 }
@@ -188,8 +188,8 @@
   padding: 1px 5px;
 }
 .ce-badge {
-  background: #edf3ef;
-  border: 1px solid #b9cfc2;
+  background: var(--mbk-accent-surface);
+  border: 1px solid var(--mbk-sage-deep);
   border-radius: 999px;
   color: var(--mbk-sage-deep);
   font-size: 12px;

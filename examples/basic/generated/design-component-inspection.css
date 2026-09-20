@@ -13,7 +13,7 @@
   padding: 5px 10px;
 }
 .ce-button[aria-pressed="true"] {
-  background: #edf3ef;
+  background: var(--mbk-accent-surface);
   border-color: var(--mbk-sage);
   color: var(--mbk-sage-deep);
 }

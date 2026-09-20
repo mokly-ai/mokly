@@ -40,7 +40,7 @@
   text-decoration: none;
 }
 .ce-controls-notice {
-  background: #f4f6f3;
+  background: var(--chrome-hover);
   border-radius: 6px;
   color: var(--chrome-ink-2);
   font-size: 12px;
@@ -87,7 +87,7 @@
   width: 6px;
 }
 .ce-action--quiet {
-  background: #edf3ef;
-  border-color: #c4d6ca;
+  background: var(--mbk-accent-surface);
+  border-color: var(--mbk-sage-deep);
   color: var(--mbk-sage-deep);
 }

@@ -4,6 +4,12 @@ import path from "node:path";
 import test from "node:test";
 
 import { contrast, designPalette } from "./helpers/design_palette.js";
+import {
+  boundaryOf,
+  designStyleRules,
+  fillOf,
+  type ColorReference,
+} from "./helpers/design_styles.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const CONTRAST_PAIRS: readonly (readonly [string, string, string, number])[] = [
@@ -171,12 +177,20 @@ test("preview tokens stay independent of the interface appearance", async () => 
  * states is the state's own indicator, so it carries the 3:1 requirement.
  */
 const STATE_SELECTOR =
-  /:hover|:focus|:checked|:has\(input:checked\)|\[open\]|\.active|aria-pressed|aria-current/;
+  /:hover|:focus|:checked|:has\(input:checked\)|\[open\]|\.active|aria-pressed|aria-current/u;
+
+/** Fills that mark a selected, active or status surface. */
+const MARKED_FILLS = [
+  "--mbk-accent-surface",
+  "--mbk-accent-soft",
+  "--mbk-status-changed-bg",
+  "--mbk-status-removed-bg",
+];
 
 /**
  * Boundaries that are decoration rather than a state or control indicator, so
- * the palette contract exempts them. Each entry names the rule and the 3:1
- * indicator the state carries instead; see the palette contract's exceptions.
+ * the palette contract exempts them. Each names its own state in 5.62:1 or
+ * better text inside a distinct tinted fill, so the outline adds nothing.
  */
 const DECORATIVE_BOUNDARIES = new Set([
   ".ce-added",
@@ -184,75 +198,114 @@ const DECORATIVE_BOUNDARIES = new Set([
   ".ce-removed",
 ]);
 
-interface StateBoundary {
-  file: string;
-  selector: string;
-  edge: string;
-  background: string | undefined;
+/**
+ * Hairline tokens the palette contract classifies as decoration separating
+ * adjacent surfaces rather than control boundaries. A surface that happens to
+ * sit inside a state selector, such as the mobile sheet around an open panel,
+ * still draws one of these rather than a control edge.
+ */
+const DECORATIVE_TOKENS = new Set([
+  "--chrome-border",
+  "--chrome-border-strong",
+  "--mbk-guide",
+]);
+
+/** Resolves a reference to the colour it paints in one appearance. */
+function resolve(
+  reference: ColorReference,
+  tokens: Map<string, string>,
+): string | undefined {
+  return reference.token ? tokens.get(reference.token) : reference.literal;
 }
 
-function boundaryToken(body: string, property: RegExp): string | undefined {
-  const declaration = property.exec(body)?.[1];
-  return /var\((--[a-z0-9-]+)\)/.exec(declaration ?? "")?.[1];
+function describe(reference: ColorReference): string {
+  return reference.token ?? reference.literal ?? "?";
 }
 
-/** Every state rule in the shared library that draws its own boundary. */
-async function stateBoundaries(): Promise<StateBoundary[]> {
-  const directory = path.join(
-    repositoryRoot,
-    "examples/basic/generated/design-library",
-  );
-  const files = (
-    await fs.readdir(directory, { recursive: true, withFileTypes: true })
-  ).filter((entry) => entry.isFile() && entry.name.endsWith(".css"));
-  const boundaries: StateBoundary[] = [];
-  for (const file of files) {
-    const source = await fs.readFile(
-      path.join(file.parentPath, file.name),
-      "utf8",
-    );
-    for (const [, selector, body] of source.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
-      if (!selector || !body || !STATE_SELECTOR.test(selector)) continue;
-      const edge =
-        boundaryToken(body, /border-color:\s*([^;]+);/) ??
-        boundaryToken(body, /outline:\s*([^;]+);/);
-      if (!edge) continue;
-      boundaries.push({
-        file: file.name,
-        selector: selector.replace(/\s+/g, " ").trim(),
-        edge,
-        background:
-          boundaryToken(body, /background:\s*([^;]+);/) ??
-          boundaryToken(body, /background-color:\s*([^;]+);/),
-      });
-    }
-  }
-  return boundaries;
-}
-
-test("every control state boundary is visible against an adjacent colour", async () => {
+/**
+ * Rules whose boundary is a control or state indicator: either the selector
+ * names a state, or the rule fills itself with a marked surface.
+ */
+async function markedBoundaryRules() {
   const palette = await designPalette();
-  const boundaries = await stateBoundaries();
-  assert.ok(boundaries.length >= 4, "no state boundaries were audited");
+  const marked = new Set(
+    MARKED_FILLS.flatMap((token) => [
+      token,
+      palette.light.get(token)?.toLowerCase() ?? token,
+      palette.dark.get(token)?.toLowerCase() ?? token,
+    ]),
+  );
+  return (await designStyleRules()).flatMap((rule) => {
+    const boundary = boundaryOf(rule.body);
+    if (!boundary) return [];
+    const fill = fillOf(rule.body);
+    const fillMark = fill?.token ?? fill?.literal?.toLowerCase();
+    if (
+      !STATE_SELECTOR.test(rule.selector) &&
+      !(fillMark && marked.has(fillMark))
+    )
+      return [];
+    return [{ ...rule, boundary, fill }];
+  });
+}
+
+test("every marked boundary is visible against an adjacent colour", async () => {
+  const palette = await designPalette();
+  const rules = await markedBoundaryRules();
+  assert.ok(rules.length >= 8, `only ${rules.length} boundaries were audited`);
+  assert.ok(
+    rules.some((rule) => DECORATIVE_BOUNDARIES.has(rule.selector)),
+    "the recorded decorative exception is not reached by the audit",
+  );
   const failures: string[] = [];
-  for (const boundary of boundaries) {
-    if (DECORATIVE_BOUNDARIES.has(boundary.selector)) continue;
+  for (const rule of rules) {
+    if (DECORATIVE_BOUNDARIES.has(rule.selector)) continue;
+    if (rule.boundary.token && DECORATIVE_TOKENS.has(rule.boundary.token))
+      continue;
     for (const appearance of ["light", "dark"] as const) {
       const tokens = palette[appearance];
-      const edge = tokens.get(boundary.edge);
-      assert.ok(edge, `${boundary.edge} is not in the ${appearance} palette`);
+      const edge = resolve(rule.boundary, tokens);
+      assert.ok(
+        edge,
+        `${rule.file} ${rule.selector}: ${describe(rule.boundary)} is not in the ${appearance} palette`,
+      );
       // A boundary sits between its own fill and the surface around it, so it
       // only has to reach 3:1 against one of them to read as an edge.
-      const own = boundary.background
-        ? contrast(edge, tokens.get(boundary.background) ?? edge)
-        : 0;
+      const fill = rule.fill ? resolve(rule.fill, tokens) : undefined;
+      const own = fill ? contrast(edge, fill) : 0;
       const reached = Math.max(
         own,
         contrast(edge, tokens.get("--chrome-surface")!),
       );
       if (reached < 3)
         failures.push(
-          `${boundary.file} ${boundary.selector}: ${boundary.edge} reaches only ${reached}:1 in ${appearance}`,
+          `${rule.file} ${rule.selector}: ${describe(rule.boundary)} reaches only ${reached}:1 in ${appearance}`,
+        );
+    }
+  }
+  assert.deepEqual(failures, []);
+});
+
+/** The two sheets that define a palette, where a literal is the definition. */
+const PALETTE_SOURCES = new Set(["design.css", "design-stage.css"]);
+
+test("no design stylesheet hardcodes an interface palette colour", async () => {
+  const palette = await designPalette();
+  const named = new Map<string, string>();
+  for (const appearance of ["light", "dark"] as const)
+    for (const [token, value] of palette[appearance])
+      if (!named.has(value.toLowerCase()))
+        named.set(value.toLowerCase(), `${token} (${appearance})`);
+  const failures: string[] = [];
+  for (const rule of await designStyleRules()) {
+    if (PALETTE_SOURCES.has(rule.file)) continue;
+    for (const [, literal] of rule.body.matchAll(
+      /(#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b)/gu,
+    )) {
+      const token = named.get(literal!.toLowerCase());
+      if (token)
+        failures.push(
+          `${rule.file} ${rule.selector}: ${literal} is ${token}; use the token so it follows the appearance`,
         );
     }
   }

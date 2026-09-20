@@ -4,7 +4,7 @@
   --ce-secondary: #647068;
   --ce-soft: #f3f6f3;
   --ce-edge: #dce5de;
-  --ce-mask: #f4f4f1;
+  --ce-mask: var(--chrome-bg);
 }
 .ce-preview-view .ce-canvas,
 .ce-preview-view .ce-welcome-example,

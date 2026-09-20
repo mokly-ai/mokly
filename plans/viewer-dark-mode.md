@@ -536,6 +536,66 @@ and 24.20 as well, and the CLI preflight still accepts the affected releases.
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       and report findings without fixing them.
 
+## Milestone 2I: Widen the boundary audit to every design stylesheet (complete)
+
+Tags: mockup
+
+The Milestone 2G review found the same 1.46:1 boundary defect in the
+component explorer's selected-variant pill, written as raw hex literals in
+`examples/basic/generated/design-components.css`, outside the new audit's
+scope, and found that the decorative-boundary allowlist in the audit can never
+be consulted because status badges are not state selectors.
+
+- [x] Widen the audit in `tests/design_appearance.test.ts` to every
+      `examples/basic/generated/*.css` and `design-library/**/*.css`, and
+      widen its collector to any rule that draws a boundary on an accent or
+      status fill, so the recorded status-badge exception is genuinely
+      enforced. Confirm the widened audit fails on the selected-variant pill
+      before fixing it.
+- [x] Replace the raw hex literals in `.ce-variants a[aria-current]` with
+      `--mbk-accent-surface` and `--mbk-sage-deep` in the authored source,
+      regenerate, and remove any other hardcoded palette colour the widened
+      audit or a search of the design styles reveals.
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
+      the design unit and browser suites and `cargo xtask check`; smoke the
+      selected-variant pill through `npm run dev`; commit and push; then
+      review the complete diff against `origin/main` with
+      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      and report findings without fixing them.
+
+Delivered: `tests/helpers/design_styles.ts` scans every design stylesheet,
+including the shared library, and the audit collects any rule that draws a
+boundary while a state selector applies or the rule fills itself with an accent
+or status surface. That makes the recorded status-badge exception live, which
+the audit now asserts. A second test rejects any design stylesheet that
+hardcodes a colour the interface palette already names; `design.css` and
+`design-stage.css` are exempt because a literal there is the palette
+definition, and the preview tokens stay deliberately independent.
+
+The widened audit failed on three boundaries and nine hardcoded colours. The
+selected-variant pill, the quiet action and the badge moved to
+`--mbk-accent-surface` with a `--mbk-sage-deep` boundary; the controls notice,
+the instance-tree current row, the pressed inspection button and the component
+canvas mask now read their tokens. The contract's decorative hairlines are
+exempt from the 3:1 requirement, so the mobile sheet around an open panel keeps
+`--chrome-border`.
+
+## Milestone 2J: Keep ignored scratch out of the lint gate
+
+`cargo xtask check` is order-dependent: the browser suite's publish fixtures
+write Wrangler scratch under `.wrangler/tmp/`, which git ignores but eslint
+scans, so the gate fails on generated third-party files after a browser run.
+
+- [ ] Make eslint exclude every git-ignored path by construction, using the
+      config's gitignore support, so `.wrangler/`, `dist/`, `coverage/`,
+      `.mokly-cache/` and `target/` can never be linted. Add a test or a
+      check step that fails if a git-ignored path is reachable by the linter.
+- [ ] Run the browser suite, then `cargo xtask check` without cleaning, and
+      confirm the gate passes with the scratch present; commit and push; then
+      review the complete diff against `origin/main` with
+      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      and report findings without fixing them.
+
 ## Milestone 3: Implement shared viewer appearance
 
 Tags: ui
