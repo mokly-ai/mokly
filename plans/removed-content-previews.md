@@ -504,9 +504,9 @@ version the artifact does not advertise.
       over the removed-preview fixture and served through the Pages runtime;
       the no-captured-view and light-only notes were captured beside the
       Milestone 7 mockups in `.context/milestone8/`.
-- [ ] Run `cargo xtask check`; then `git add -A`, commit with Conventional
+- [x] Run `cargo xtask check`; then `git add -A`, commit with Conventional
       Commits, and push the branch.
-- [ ] After the push, review the complete local diff against `origin/main` with
+- [x] After the push, review the complete local diff against `origin/main` with
       the implementation review prompt; report findings without changing the
       implementation.
 
@@ -514,6 +514,15 @@ version the artifact does not advertise.
 
 Complete the implementation and its review before the PR merge boundary.
 
+- [ ] Close the Milestone 7 and Milestone 8 review follow-ups that are still
+      worth taking before the merge, in their owning layers: the mockup-side
+      items listed under Milestone 7; and, in the shell, share the unavailable
+      stage's copy and the Retry attribute between `shell/previews.tsx` and
+      `previews/render.ts` through one module, omit the Retry control from
+      the served markup so a shell without its client shows only what it can
+      honour, and key the Both-selected hint off the normalized live-stage
+      `data-viewport` value. Record the served-then-loading first paint as an
+      accepted tradeoff in the contract rather than adding an inline script.
 - [ ] Exercise a real Git fixture with removed documents/screens, deleted
       ancestors and assets, changed historical CSS, and branch edits before
       deletion. Verify baseline identity and rendered resource bytes in local
