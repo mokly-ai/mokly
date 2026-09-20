@@ -7,5 +7,5 @@ export function viewerIdentifierPrefix(viewerId: string): string {
     throw new Error(
       "Invalid viewerId: expected 1-64 ASCII letters, digits, hyphens or underscores, starting with a letter or digit.",
     );
-  return `mokly-${viewerId}-`;
+  return `mokly-${viewerId.length}-${viewerId}-`;
 }

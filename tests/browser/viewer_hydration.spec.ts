@@ -22,36 +22,38 @@ test("independent application-owned server roots hydrate in place", async ({
 
   await page.goto(`${fixture.host.url}/hydration.html`);
   await page.waitForFunction(() => window.viewerHydrationHarness?.ready());
-  for (const rootId of ["hydration-primary", "hydration-secondary"])
+  for (const rootId of ["hydration-x", "hydration-x-mb-prop-action"])
     await expect(page.locator(`#${rootId} [data-mokly-nav]`)).toHaveAttribute(
       "data-resize-ready",
       "",
     );
 
   const result = await page.evaluate(() => {
-    const roots = ["hydration-primary", "hydration-secondary"].map((rootId) => {
-      const root = document.getElementById(rootId)!;
-      const ids = [...root.querySelectorAll<HTMLElement>("[id]")].map(
-        ({ id }) => id,
-      );
-      const references = [
-        ...root.querySelectorAll<HTMLElement>(
-          '[aria-controls], [aria-describedby], [aria-labelledby], [for], [href^="#"]',
-        ),
-      ].flatMap((element) =>
-        [
-          "aria-controls",
-          "aria-describedby",
-          "aria-labelledby",
-          "for",
-          "href",
-        ].flatMap((attribute) => {
-          const value = element.getAttribute(attribute);
-          return value ? value.replace(/^#/, "").split(" ") : [];
-        }),
-      );
-      return { ids, references, rootId };
-    });
+    const roots = ["hydration-x", "hydration-x-mb-prop-action"].map(
+      (rootId) => {
+        const root = document.getElementById(rootId)!;
+        const ids = [...root.querySelectorAll<HTMLElement>("[id]")].map(
+          ({ id }) => id,
+        );
+        const references = [
+          ...root.querySelectorAll<HTMLElement>(
+            '[aria-controls], [aria-describedby], [aria-labelledby], [for], [href^="#"]',
+          ),
+        ].flatMap((element) =>
+          [
+            "aria-controls",
+            "aria-describedby",
+            "aria-labelledby",
+            "for",
+            "href",
+          ].flatMap((attribute) => {
+            const value = element.getAttribute(attribute);
+            return value ? value.replace(/^#/, "").split(" ") : [];
+          }),
+        );
+        return { ids, references, rootId };
+      },
+    );
     const allIds = roots.flatMap(({ ids }) => ids);
     return {
       errors: window.viewerHydrationHarness.recoverableErrors,
@@ -59,8 +61,9 @@ test("independent application-owned server roots hydrate in place", async ({
         const viewerId = rootId.replace("hydration-", "");
         const localIds = new Set(ids);
         return (
-          ids.every((id) => id.startsWith(`mokly-${viewerId}-`)) &&
-          references.every((id) => localIds.has(id))
+          ids.every((id) =>
+            id.startsWith(`mokly-${viewerId.length}-${viewerId}-`),
+          ) && references.every((id) => localIds.has(id))
         );
       }),
       retained: window.viewerHydrationHarness.retained(),
@@ -71,8 +74,8 @@ test("independent application-owned server roots hydrate in place", async ({
     errors: [],
     isolated: true,
     retained: {
-      "hydration-primary": { frame: true, shell: true },
-      "hydration-secondary": { frame: true, shell: true },
+      "hydration-x": { frame: true, shell: true },
+      "hydration-x-mb-prop-action": { frame: true, shell: true },
     },
     unique: true,
   });

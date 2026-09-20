@@ -123,14 +123,54 @@ test("independent SSR viewers keep IDs and references root-local", () => {
   const secondIds = htmlIds(second);
 
   assert.ok(firstIds.size > 0);
-  assert.ok([...firstIds].every((id) => id.startsWith("mokly-primary-")));
-  assert.ok([...secondIds].every((id) => id.startsWith("mokly-secondary-")));
+  assert.ok([...firstIds].every((id) => id.startsWith("mokly-7-primary-")));
+  assert.ok([...secondIds].every((id) => id.startsWith("mokly-9-secondary-")));
   assert.deepEqual(
     [...firstIds].filter((id) => secondIds.has(id)),
     [],
   );
   assert.ok(htmlReferences(first).every((id) => firstIds.has(id)));
   assert.ok(htmlReferences(second).every((id) => secondIds.has(id)));
+});
+
+test("distinct valid viewer IDs cannot absorb dynamic control IDs", () => {
+  const model = structuredClone(fixture);
+  const component = model.components[0]!;
+  const variant = component.variants[0]!;
+  component.controls = {
+    ...component.controls,
+    "mb-main": component.controls.label!,
+  };
+  component.propSchema = {
+    ...component.propSchema,
+    properties: {
+      ...component.propSchema.properties,
+      "mb-main": {
+        ...component.propSchema.properties.label!,
+        optional: true,
+      },
+    },
+  };
+  variant.props = {
+    ...variant.props,
+    "mb-main": variant.props.label!,
+  };
+  const render = (viewerId: string) =>
+    htmlIds(
+      renderViewer({
+        viewerId,
+        catalogue: model,
+        baseUrl: "https://catalogue.example",
+        defaultSelection: { screenId: component.id },
+      }),
+    );
+  const firstIds = render("x");
+  const secondIds = render("x-mb-prop-action");
+
+  assert.deepEqual(
+    [...firstIds].filter((id) => secondIds.has(id)),
+    [],
+  );
 });
 
 test("server and React viewer IDs share one validation contract", async () => {

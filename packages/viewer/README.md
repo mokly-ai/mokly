@@ -95,7 +95,10 @@ Every viewer requires a stable `viewerId`: 1–64 ASCII letters, digits, hyphens
 or underscores, starting with a letter or digit. Keep it unique within the host
 document. When hydrating `renderViewer()` output, pass the identical `viewerId`
 to both server and client renders so package-owned IDs and accessibility
-references remain root-local. Host slot descendants are never namespaced.
+references remain root-local. The package preserves the viewer/local-ID
+boundary even when a valid viewer ID resembles an internal control ID; generated
+DOM ID bytes are not an extension API. Host slot descendants are never
+namespaced.
 
 `defaultSelection` initializes uncontrolled state. Controlled `selection` requires
 `onSelectionChange` and forbids `defaultSelection`. Selection comprises `screenId`

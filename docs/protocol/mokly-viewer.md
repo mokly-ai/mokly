@@ -344,9 +344,12 @@ URL/fetcher sources and browser handles/effects are not accepted during SSR.
 with a letter or digit, and is unique among viewer roots in the host document.
 The host passes the identical value to `renderViewer` and `MoklyViewer` when it
 hydrates that output. Package-owned DOM IDs and fragment/ARIA references are
-prefixed from this value; host slot descendants remain untouched. Thus two
-independently rendered viewers can be safely composed and hydrated in one
-document without relying on React's per-render identifier sequence.
+prefixed through a boundary-preserving encoding of this value: distinct valid
+viewer IDs cannot collide even when one contains text used by a dynamic local
+control ID. The exact generated DOM ID bytes are internal. Host slot descendants
+remain untouched. Thus two independently rendered viewers can be safely
+composed and hydrated in one document without relying on React's per-render
+identifier sequence.
 CLI-owned context supplies the existing route, live capabilities or static
 delivery descriptor through its server integration. That context already
 contains accepted data; it bypasses public-source decoding. Serve validates

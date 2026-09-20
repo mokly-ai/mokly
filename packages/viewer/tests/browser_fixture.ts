@@ -58,23 +58,49 @@ export async function viewerHydrationFixture() {
     search: "",
     tags: [],
   };
+  const catalogue = structuredClone(fixture.catalogue);
+  const component = catalogue.components.find(({ id }) => id === "action");
+  const variant = component?.variants[0];
+  const control = component?.controls.label;
+  const schema = component?.propSchema.properties.label;
+  const value = variant?.props.label;
+  if (!component || !variant || !control || !schema || !value)
+    throw new Error("Missing hydration fixture component control");
+  component.controls = {
+    ...component.controls,
+    "mb-main": control,
+  };
+  component.propSchema = {
+    ...component.propSchema,
+    properties: {
+      ...component.propSchema.properties,
+      "mb-main": { ...schema, optional: true },
+    },
+  };
+  variant.props = {
+    ...variant.props,
+    "mb-main": value,
+  };
   const viewers = [
-    { rootId: "hydration-primary", viewerId: "primary" },
-    { rootId: "hydration-secondary", viewerId: "secondary" },
+    { rootId: "hydration-x", viewerId: "x" },
+    {
+      rootId: "hydration-x-mb-prop-action",
+      viewerId: "x-mb-prop-action",
+    },
   ];
   const html = viewers
     .map(
       ({ rootId, viewerId }) =>
         `<section id="${rootId}">${renderViewer({
           viewerId,
-          catalogue: fixture.catalogue,
+          catalogue,
           baseUrl: fixture.host.url,
           defaultSelection,
         })}</section>`,
     )
     .join("");
   const data = JSON.stringify({
-    catalogue: fixture.catalogue,
+    catalogue,
     baseUrl: fixture.host.url,
     defaultSelection,
     viewers,
