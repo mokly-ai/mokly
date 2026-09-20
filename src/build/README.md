@@ -8,11 +8,13 @@ export and local prop controls reuse the same consumer graph and validators.
 ## Consumer Graph
 
 `config/entry_discovery.ts` resolves the configured `entries` globs, or the
-`entriesDir` shorthand, into one sorted set of `.mockup.ts(x)` modules when
-the configuration loads and again here at the start of each compilation. Each
-glob must match at least one entry module, and every resolved module is
-rejected when it sits inside `review.outDir`, `.mokly-cache/`, `node_modules`,
-or escapes `repoRoot` through a symlink. `load_graph.ts` then bundles those
+`entriesDir` shorthand, into one sorted set of matched modules when the
+configuration loads and again here at the start of each compilation. The glob
+defines the entry shape with no suffix filter; `entriesDir` expands to the
+recommended `<dir>/**/*.mockup.{ts,tsx}` convention. Each glob must match at
+least one entry module, and every resolved module is rejected when it sits
+inside `review.outDir`, `.mokly-cache/`, beneath a denied segment relative to
+its glob root, or escapes `repoRoot` through a symlink. `load_graph.ts` then bundles those
 modules, imported helpers, the renderer and any compatibility transformer
 together and refreshes the resolved set on the config as `entryModules`. React
 and React DOM resolve from consumer package roots, including when Mokly runs
@@ -42,9 +44,11 @@ importer of `@mokly/mokly` receives the attributed facade; installed packages
 under `node_modules` and Mokly's own runtime receive the plain API. Registry
 validation and `ownership.ts` accept an attributed owner only when it is a
 resolved entry module or an inventoried source file. Ownership headers and
-tracked output additionally trust owners beneath any entry glob's stable prefix,
-so deleted matched sources still leave removable orphans. Committed Check lists
-Mokly-headered HTML outside those prefixes as unclaimed without changing it.
+tracked output additionally trust repository-relative owners that match an
+entry glob, so deleted matched sources still leave removable orphans. A
+repository-root glob trusts every matching path and no other path through this
+branch. Committed Check lists Mokly-headered HTML outside the resolved,
+inventoried, and glob-matched sets as unclaimed without changing it.
 Export and Review boundaries continue to use directories that hold resolved
 entry modules. Source locations do not enter instance keys, props keys, slot
 identities, or Changes projections.

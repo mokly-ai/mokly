@@ -42,7 +42,7 @@ test("a missing entry glob stable prefix reports the zero-match error", async (c
   await assert.rejects(loadConfig(fixture.root), {
     code: "config-invalid",
     message:
-      /entries glob matches no \.mockup\.ts or \.mockup\.tsx module: missing\/\*\*\/\*\.mockup\.\{ts,tsx\}/,
+      /entries glob matches no module: missing\/\*\*\/\*\.mockup\.\{ts,tsx\}/,
   });
 });
 

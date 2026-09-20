@@ -4,7 +4,11 @@ import path from "node:path";
 import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
-import { generatedHeader, isOwned } from "../dist/build/ownership.js";
+import {
+  generatedHeader,
+  isAuthoredOwner,
+  pendingGeneratedOrphanRoutes,
+} from "../dist/build/ownership.js";
 import { loadConfig } from "../dist/config/load.js";
 import { resolvePublicExclude } from "../dist/config/public_exclusions.js";
 import { resolveExportOutput } from "../dist/export/paths.js";
@@ -148,69 +152,53 @@ export const packaged = defineScreen({ dependencies: [], relatedDocs: [], useCas
   });
 });
 
-test("generated ownership accepts co-located and renamed owners beneath entry roots", async (t) => {
+test("ownership trusts resolved, inventoried, and glob-matched sources", async (t) => {
   const fixture = await coLocatedFixture();
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
-  await compileCatalogue(config);
-  const owned = path.join(fixture.mockupsDir, "screens/owned.html");
-  const helperOwned = path.join(fixture.mockupsDir, "screens/helper.html");
-  const foreign = path.join(fixture.mockupsDir, "screens/foreign.html");
-  await fs.promises.mkdir(path.dirname(owned), { recursive: true });
-  await fs.promises.writeFile(
-    owned,
-    `${generatedHeader("src/components/button/button.mockup.tsx")}<html></html>\n`,
-  );
-  await fs.promises.writeFile(
-    helperOwned,
-    `${generatedHeader("src/components/button/button.mokly.tsx")}<html></html>\n`,
-  );
-  await fs.promises.writeFile(
-    foreign,
-    `${generatedHeader("src/components/button/README.md")}<html></html>\n`,
-  );
   const inventoried = {
     ...config,
     sourceFiles: (await compileCatalogue(config)).manifest.sourceFiles,
   };
-  assert.equal(isOwned(owned, inventoried), true);
-  assert.equal(isOwned(helperOwned, inventoried), true);
-  assert.equal(isOwned(foreign, inventoried), true);
-  assert.equal(isOwned(helperOwned, { ...config, sourceFiles: [] }), true);
-  const renamed = path.join(fixture.mockupsDir, "screens/renamed.html");
-  const underGlobPrefix = path.join(
-    fixture.mockupsDir,
-    "screens/under-prefix.html",
-  );
-  const outsideGlobPrefixes = path.join(
-    fixture.mockupsDir,
-    "screens/outside-prefixes.html",
-  );
-  await fs.promises.writeFile(
-    renamed,
-    `${generatedHeader("src/components/button/old-name.mockup.tsx")}<html></html>\n`,
-  );
-  await fs.promises.writeFile(
-    underGlobPrefix,
-    `${generatedHeader("src/components/card/card.mockup.tsx")}<html></html>\n`,
-  );
-  await fs.promises.writeFile(
-    outsideGlobPrefixes,
-    `${generatedHeader("docs/old/page.mockup.tsx")}<html></html>\n`,
-  );
-  assert.equal(isOwned(renamed, inventoried), true);
-  assert.equal(isOwned(underGlobPrefix, inventoried), true);
-  assert.equal(isOwned(outsideGlobPrefixes, inventoried), false);
+  const rootGlob = {
+    ...inventoried,
+    entryGlobs: ["**/*.mockup.{ts,tsx}"],
+  };
+  const scopedGlob = { ...rootGlob, entryGlobs: ["src/**/*.mockup.{ts,tsx}"] };
   assert.equal(
-    isOwned(underGlobPrefix, {
-      ...inventoried,
-      entryModules: [
-        ...(inventoried.entryModules ?? []),
-        path.join(fixture.root, "src/components/card/card.mockup.tsx"),
-      ],
-    }),
+    isAuthoredOwner("other/catalogue/thing.mockup.tsx", rootGlob),
     true,
   );
+  assert.equal(isAuthoredOwner("docs/notes.md", rootGlob), false);
+  assert.equal(
+    isAuthoredOwner("other/catalogue/thing.mockup.tsx", scopedGlob),
+    false,
+  );
+  assert.equal(isAuthoredOwner("docs/notes.md", scopedGlob), false);
+  assert.equal(
+    isAuthoredOwner("src/components/button/button.mockup.tsx", inventoried),
+    true,
+  );
+  assert.equal(
+    isAuthoredOwner("src/components/button/button.mokly.tsx", inventoried),
+    true,
+  );
+  assert.equal(
+    isAuthoredOwner("src/components/button/button.mokly.tsx", {
+      ...inventoried,
+      sourceFiles: [],
+    }),
+    false,
+  );
+  const stale = path.join(fixture.mockupsDir, "screens/stale.html");
+  await fs.promises.mkdir(path.dirname(stale), { recursive: true });
+  await fs.promises.writeFile(
+    stale,
+    `${generatedHeader("src/components/button/old-name.mockup.tsx")}<html></html>\n`,
+  );
+  assert.deepEqual(pendingGeneratedOrphanRoutes(inventoried, []), [
+    "screens/stale.html",
+  ]);
 });
 
 test("watch rebuilds for a new co-located entry module and export refuses its directory", async (t) => {

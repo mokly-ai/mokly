@@ -41,7 +41,9 @@ A registration can live next to the component it describes. With an
 `entries` glob such as `src/**/*.mockup.{ts,tsx}`, a `src/components/button`
 folder holds the product component, its registration, and the entry module
 that exports it, and Mokly records the registration file as the component's
-source.
+source. That example glob selects the recommended `.mockup.tsx` convention;
+the configured glob itself, not a built-in suffix rule, decides which files
+are entry modules.
 
 ```tsx
 // src/components/button/button.mokly.tsx

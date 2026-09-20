@@ -80,18 +80,30 @@ test("config requires exactly one of entries and entriesDir", async (t) => {
   }
 });
 
-test("a glob without entry modules is a config error even when it matches helpers", async (t) => {
+test("a glob makes every matched file an entry module", async (t) => {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
-  await addModule(fixture, "src/helper.ts", "export const value = 1;\n");
-  await writeConfig(
+  const helper = await addModule(
     fixture,
-    'entries: ["entries/**/*.mockup.{ts,tsx}", "src/**/*.ts"]',
+    "src/helper.ts",
+    "export const value = 1;\n",
   );
+  await writeConfig(fixture, 'entries: ["src/**/*.ts"]');
+  const config = await loadConfig(fixture.root);
+  assert.deepEqual(config.entryModules, [helper]);
+  await assert.rejects(compileCatalogue(config), {
+    code: "build-invalid",
+    message: /\[empty-registry\].*no registry definitions were exported/s,
+  });
+});
+
+test("a glob matching no module is a config error", async (t) => {
+  const fixture = await createFixture();
+  t.after(() => removeFixture(fixture));
+  await writeConfig(fixture, 'entries: ["src/**/*.ts"]');
   await assert.rejects(loadConfig(fixture.root), {
     code: "config-invalid",
-    message:
-      /matches no \.mockup\.ts or \.mockup\.tsx module: src\/\*\*\/\*\.ts/,
+    message: /entries glob matches no module: src\/\*\*\/\*\.ts/,
   });
 });
 
@@ -157,7 +169,7 @@ test("discovery unions globs, ignores order, and sorts by repository path", asyn
   for (const globs of [
     '["entries/**/*.mockup.{ts,tsx}", "src/**/*.mockup.{ts,tsx}"]',
     '["src/**/*.mockup.{ts,tsx}", "entries/**/*.mockup.{ts,tsx}"]',
-    '["src/widgets/zeta/*.mockup.tsx", "src/widgets/alpha/**", "entries/**"]',
+    '["src/widgets/zeta/*.mockup.tsx", "src/widgets/alpha/*.mockup.{ts,tsx}", "entries/**"]',
   ]) {
     await writeConfig(fixture, `entries: ${globs}`);
     const config = await loadConfig(fixture.root);
@@ -192,14 +204,18 @@ test("discovery rejects entry modules inside private, output, and review trees",
     force: true,
     recursive: true,
   });
-  for (const [relative, reason] of [
-    ["node_modules/pkg/x.mockup.tsx", /package-owned private directory/],
-    [".review/x.mockup.tsx", /inside review\.outDir/],
+  for (const [relative, glob, reason] of [
+    [
+      "src/node_modules/pkg/x.mockup.tsx",
+      "src/**/*.mockup.{ts,tsx}",
+      /denied source directory \(node_modules\)/,
+    ],
+    [".review/x.mockup.tsx", ".review/x.mockup.tsx", /inside review\.outDir/],
   ] as const) {
     await addModule(fixture, relative, screen("x", "x.html"));
     await writeConfig(
       fixture,
-      `entries: ["entries/**/*.mockup.{ts,tsx}", ${JSON.stringify(relative)}]`,
+      `entries: ["entries/**/*.mockup.{ts,tsx}", ${JSON.stringify(glob)}]`,
     );
     await assert.rejects(
       async () => discoverEntryModules(await loadConfig(fixture.root)),

@@ -7,11 +7,13 @@ order: 3
 
 ## Add an entry module
 
-An entry module ends in `.mockup.ts` or `.mockup.tsx`, matches one of your
-`entries` globs or lives under `entriesDir`, and exports `mockups`. Everything
-in that array becomes part of the catalogue. With a glob such as
-`src/**/*.mockup.{ts,tsx}`, the natural place for this file is beside the
-account screen it describes, for example `src/account/home.mockup.tsx`.
+An entry module is any regular file matched by one of your `entries` globs and
+exports `mockups` or a default registry value. Everything in that registry
+becomes part of the catalogue. Mokly applies no separate suffix rule. With the
+recommended `src/**/*.mockup.{ts,tsx}` convention, the natural place for this
+file is beside the account screen it describes, for example
+`src/account/home.mockup.tsx`. `entriesDir` selects the same convention by
+expanding to `<folder>/**/*.mockup.{ts,tsx}`.
 
 ```tsx
 import { defineCollection, defineScreen } from "@mokly/mokly";

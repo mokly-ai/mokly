@@ -7,7 +7,10 @@ owns watchers, background work and the supervised HTTP child. `http.ts` and
 `watch_events.ts` owns classification and serialized event handling;
 `watch_paths.ts` owns watch roots and pruning, including entry-glob traversal
 boundaries that retain each stable prefix without exempting its ignored
-descendants.
+descendants. Discovery and watching share one denied-segment policy below the
+relevant glob root: traversal uses the deepest containing root, and entry-file
+classification uses the deepest matching root. The glob itself defines every
+entry-file shape that can trigger rediscovery.
 
 GET/HEAD `/__mokly/catalogue.json` returns the public v1
 [read model](../catalogue/README.md) as JSON with `Cache-Control: no-store`.

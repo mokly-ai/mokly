@@ -12,8 +12,10 @@ of `defineConfig`. Two things are required: where your entry modules live, and
 `mockupsDir`, the folder that receives the generated catalogue.
 
 Entry modules can sit beside the components and screens they describe. List
-one or more `entries` globs, relative to the repository root, and Mokly finds
-every `.mockup.ts` and `.mockup.tsx` file they match.
+one or more `entries` globs, relative to the repository root. Every matched
+regular file is an entry module; the glob defines the complete shape. The
+recommended pattern below selects the conventional `.mockup.ts` and
+`.mockup.tsx` names.
 
 ```ts
 import { defineConfig } from "@mokly/mokly";
@@ -25,8 +27,8 @@ export default defineConfig({
 ```
 
 If you would rather keep all entry modules in one folder, name it with
-`entriesDir` instead. It is shorthand for a single glob covering that folder,
-and you use one field or the other, never both.
+`entriesDir` instead. It is shorthand for
+`<folder>/**/*.mockup.{ts,tsx}`, and you use one field or the other, never both.
 
 ```ts
 export default defineConfig({

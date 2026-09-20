@@ -116,7 +116,10 @@ beside it. Co-located entries use `entries: ["src/**/*.mockup.{ts,tsx}"]` so
 each entry module sits beside the product component or screen it describes,
 with the same output and renderer locations. Nested `docs/mockups/src` layouts
 remain supported; source protection applies to every layout. These are
-examples, not mandatory runtime locations. See
+examples, not mandatory runtime locations. An explicit `entries` glob defines
+the complete entry shape with no additional suffix filter. The `.mockup.ts` and
+`.mockup.tsx` convention remains recommended, and `entriesDir` selects it by
+expanding to `<dir>/**/*.mockup.{ts,tsx}`. See
 [entry discovery](./mokly-configuration.md#entry-discovery).
 
 ## Public Authoring API

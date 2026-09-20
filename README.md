@@ -72,12 +72,14 @@ export default defineConfig({
 });
 ```
 
-`entries` globs are repository-relative and find every `.mockup.ts` or
-`.mockup.tsx` module they match, so an entry can live beside the component or
-screen it describes. `entriesDir: "docs/mockups/entries"` is shorthand for one
-glob over that folder; configure one of the two. Use multiple `entries` globs
-when the repository has entry modules in multiple locations. Every configured
-glob must match at least one entry module.
+`entries` globs are repository-relative, and every matched regular file is an
+entry module. The glob defines the complete entry shape; Mokly adds no suffix
+filter. The example selects the recommended `.mockup.ts` and `.mockup.tsx`
+convention so an entry can live beside the component or screen it describes.
+`entriesDir: "docs/mockups/entries"` is shorthand for
+`docs/mockups/entries/**/*.mockup.{ts,tsx}`; configure one of the two. Use
+multiple `entries` globs when the repository has entry modules in multiple
+locations. Every configured glob must match at least one entry module.
 
 Use `review.sharedImpact` as fallback impact evidence for files the rendered
 resource graph cannot see, such as source components or token modules. Linked
@@ -92,7 +94,8 @@ rebuild their baseline from the merge-base commit. See
 [generated output modes](#generated-output-modes) for the required ignore rules,
 historical-build trust boundary, and committed-mode alternative.
 
-An entry module ends in `.mockup.ts` or `.mockup.tsx` and exports `mockups`:
+An entry module exports `mockups` or a default registry value. This example
+uses the recommended `.mockup.tsx` filename selected by the config glob:
 
 ```tsx
 import { defineCollection, defineScreen, MockLink } from "@mokly/mokly";
@@ -470,8 +473,9 @@ data imported through asset loaders. Editing them rebuilds the catalogue.
 Assets referenced only by public HTML/CSS URLs remain public resources unless
 another protection rule or public exclusion applies.
 
-- `entries` globs, or the `entriesDir` shorthand, discover entry modules
-  anywhere in the repository; `mockupsDir` selects generated output. Either
+- `entries` globs define which regular files are entry modules anywhere in the
+  repository; `entriesDir` is shorthand for the recommended suffixed glob, and
+  `mockupsDir` selects generated output. Either
   keep sibling `docs/mockups/entries` and `docs/mockups/generated` directories,
   with `docs/mockups/renderer.tsx` beside them, or co-locate entry modules
   beside product components with `entries: ["src/**/*.mockup.{ts,tsx}"]`.

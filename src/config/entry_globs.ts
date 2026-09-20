@@ -8,9 +8,6 @@ import { isBaselineCachePath, MOKLY_CACHE } from "./cache_paths.js";
 import { isInside, resolveInside, toPosixPath } from "./paths.js";
 import { requireString, validateStringArray } from "./rules.js";
 
-/** Entry-module suffixes; every other matched file remains an ordinary helper. */
-export const ENTRY_MODULE_SUFFIXES = [".mockup.ts", ".mockup.tsx"] as const;
-
 /** Glob appended to an `entriesDir` shorthand directory. */
 const ENTRIES_DIR_GLOB = "**/*.mockup.{ts,tsx}";
 
@@ -79,11 +76,6 @@ export function globStablePrefix(glob: string): string {
   return (
     firstGlob === -1 ? parts.slice(0, -1) : parts.slice(0, firstGlob)
   ).join("/");
-}
-
-/** Return whether a repository-relative file name may be an entry module. */
-export function isEntryModuleName(name: string): boolean {
-  return ENTRY_MODULE_SUFFIXES.some((suffix) => name.endsWith(suffix));
 }
 
 function validateEntryGlob(glob: string, repoRoot: string): string {

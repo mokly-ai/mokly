@@ -25,6 +25,10 @@ export default defineConfig({
 });
 ```
 
+This `entries` glob selects the recommended `.mockup.ts` and `.mockup.tsx`
+names. The glob itself defines the entry shape, while `entriesDir` is shorthand
+for the same suffixed pattern beneath one folder.
+
 ```tsx
 export default function render(input: RenderInput): string {
   const theme = themes[input.colorScheme];

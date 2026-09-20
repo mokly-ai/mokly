@@ -13,10 +13,11 @@ by generated output:
 - resolved entry modules, page/renderer/transformer imports, and every other
   inventoried source rebuild generated output, including imported bytes handled
   by asset loaders;
-- a created, renamed, or deleted file whose repository-relative path matches an
-  `entries` glob and ends in `.mockup.ts` or `.mockup.tsx` re-runs discovery
-  before that rebuild, so the resolved entry set follows the filesystem; the
-  stable prefix of every entry glob is a watched root for this purpose;
+- a created, renamed, or deleted regular file whose repository-relative path
+  matches an `entries` glob re-runs discovery before that rebuild, so the
+  resolved entry set follows the filesystem; the glob defines the complete
+  entry shape, and the stable prefix of every entry glob is a watched root for
+  this purpose;
 - an input shared with shell metadata rebuilds before restarting the child;
 - configured stylesheets and referenced local CSS, fonts, images, and other
   resources used only through public URLs reload the browser without rebuilding;
@@ -27,23 +28,37 @@ by generated output:
 
 An entry glob's stable prefix is a traversal waypoint, not an exemption for its
 whole subtree. A candidate that is an ancestor of, or equal to, the prefix is
-never pruned. Below the prefix, ignored directory names and transaction prefixes
-are evaluated against the path segments relative to the deepest containing glob
-prefix; baseline-cache, `review.outDir`, header-proven generated-output, and
-export-output rules still apply. Thus an explicit `dist/entries/**` root remains
-reachable, while `src/dist` and `src/node_modules` are pruned beneath a `src/**`
-root, and repository-root globs still prune top-level `.git` and `node_modules`.
+never pruned. Broad traversal evaluates descendants relative to the deepest
+containing prefix, while discovery and entry-candidate classification evaluate
+a matched file relative to the deepest root whose glob matches that file. Below
+that base they all deny `.git`, `node_modules`, `.mokly-cache`, `dist`,
+`coverage`, `target`,
+`test-results`, `playwright-report`, `.context`, and segments beginning with
+`.mokly-review-` or `.mokly-write-`. Baseline-cache, `review.outDir`,
+header-proven generated-output, and export-output rules still apply. Thus an
+explicit `dist/entries/**` root remains reachable, while `src/dist` and
+`src/node_modules` are pruned beneath a `src/**` root, and repository-root globs
+still prune top-level `.git` and `node_modules`.
 
-Exact required files—the config and its imports, inventoried sources, the
-renderer, and configured stylesheets—retain both their ancestor path and the
+Exact required files, including the config and its imports, inventoried sources,
+the renderer, and configured stylesheets, retain both their ancestor path and the
 file itself even when intentionally nested beneath an ordinarily ignored
 directory. Configured stylesheet files remain reload inputs.
 Those package-owned classifications take precedence over additional watch rules.
-A created entry-shaped path beneath `node_modules`, `.git`, `.mokly-cache`, or
-`review.outDir` is ignored because discovery cannot accept it. A file created
-under an entry glob root that is not an entry module and is not imported
-classifies like any other unrelated file. Development of Mokly itself uses
-repository tooling rather than a hidden consumer-specific self-reload path.
+A created path beneath a denied segment relative to its glob root, or beneath
+`review.outDir`, is ignored because discovery cannot accept it. A file created
+under an entry glob root that no `entries` glob matches and that is not imported
+classifies like any other unrelated file. Package source under `node_modules` or
+an npx cache is never treated as consumer source. Development of Mokly itself
+uses repository tooling rather than a hidden consumer-specific self-reload path.
+
+Header-proven generated output is trusted only when its recorded owner is a
+resolved entry module, an inventoried source, or a repository-relative path
+matching a configured entry glob with dotfile matching enabled. As the
+glob-based trust branch, a repository-root glob trusts every path matching that
+glob and nothing else. A deleted or renamed entry remains trusted while its old
+path still matches, so its stale output is pruned as an orphan. Other
+Mokly-headered HTML is unclaimed and remains untouched.
 
 Resource discovery follows the same portable HTML/CSS URL rules as Changes,
 including transitive imports and nested documents, with shared edges read once

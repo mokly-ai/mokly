@@ -36,8 +36,8 @@ Globs are relative to `repoRoot`.
 
 | Field              | Meaning                                                                           |
 | ------------------ | --------------------------------------------------------------------------------- |
-| `entries`          | Globs that find your `.mockup.ts` and `.mockup.tsx` entry modules                 |
-| `entriesDir`       | Shorthand for one `entries` glob covering a single folder                         |
+| `entries`          | Globs whose matched regular files are entry modules                               |
+| `entriesDir`       | Shorthand for `<folder>/**/*.mockup.{ts,tsx}`                                     |
 | `mockupsDir`       | Where the generated catalogue is written                                          |
 | `generatedOutput`  | `"derived"` (default) requires untracked output; `"committed"` verifies Git bytes |
 | `colorSchemes`     | Schemes rendered for every screen; defaults to `["light"]`                        |
@@ -52,14 +52,16 @@ Globs are relative to `repoRoot`.
 
 ## Entries
 
-`entries` lists repository-relative globs. Every matched file that ends in
-`.mockup.ts` or `.mockup.tsx` is an entry module, so a glob such as
-`src/**/*.mockup.{ts,tsx}` lets each entry live beside the component or
-screen it describes, while other matched files stay ordinary helpers. The
-matched set is sorted by path, so neither glob order nor filesystem order
-changes the catalogue. A glob that matches no entry module is a
-configuration error, and so is an entry module inside `review.outDir`,
-`node_modules`, or the baseline cache.
+`entries` lists repository-relative globs. Every matched regular file is an
+entry module, with no separate suffix or extension filter. A glob such as
+`src/**/*.mockup.{ts,tsx}` selects the recommended naming convention and lets
+each entry live beside the component or screen it describes. A broader glob
+such as `src/**/*.ts` deliberately makes every matched TypeScript file an entry,
+so each one must export `mockups` or a default registry value. The matched set
+is sorted by path, so neither glob order nor filesystem order changes the
+catalogue. A glob that matches no module is a configuration error, as is a
+module under a denied segment below its glob root, inside `review.outDir`, or
+inside the baseline cache.
 
 List multiple globs when entry modules genuinely live in multiple locations,
 for example `entries: ["src/**/*.mockup.{ts,tsx}",

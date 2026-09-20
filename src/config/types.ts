@@ -87,7 +87,7 @@ export interface MoklyConfig {
   generatedOutput?: "committed" | "derived";
   /** Color schemes rendered for screens; defaults to light only. */
   colorSchemes?: readonly ColorScheme[];
-  /** Repository-relative POSIX globs discovering `*.mockup.ts(x)` entry modules. */
+  /** Repository-relative POSIX globs whose matched files are entry modules. */
   entries?: readonly string[];
   /** Config-relative shorthand for one `entries` glob covering a directory. */
   entriesDir?: string;

@@ -2,12 +2,11 @@
 
 ## Status And Outcome
 
-Milestones 1 through 7 are complete, committed, and pushed. The post-push
-review of Milestone 7 reported seven further findings, recorded below. The
-user approved fixing all seven and additionally approved a design change:
-the fixed `.mockup.ts`/`.mockup.tsx` suffix on top of the `entries` globs is
-removed, so a glob alone defines what an entry module is. Milestone 8 carries
-both.
+Milestones 1 through 7 are complete, committed, and pushed. Milestone 8 is
+complete and locally committed, pending the supervising agent's push and
+review. It resolves all seven findings from the post-push review of Milestone
+7 and removes the fixed `.mockup.ts`/`.mockup.tsx` suffix on top of `entries`
+globs, so a glob alone defines what an entry module is.
 
 Mokly currently discovers every `*.mockup.ts` and `*.mockup.tsx` module below
 one configured directory, `entriesDir`, and binds the source-attributed
@@ -433,13 +432,13 @@ so that a configured `entries` glob alone decides what an entry module is.
 Ownership trust is then "the recorded source matches a configured entry
 glob", a single rule that reads the same way the glob does.
 
-- [ ] Remove the `.mockup.ts`/`.mockup.tsx` suffix filter from discovery
+- [x] Remove the `.mockup.ts`/`.mockup.tsx` suffix filter from discovery
       (`src/config/entry_discovery.ts`), the watcher's entry-candidate check
       (`src/server/watch_paths.ts`), and any other site; delete
       `ENTRY_MODULE_SUFFIXES` and `isEntryModuleName` when unused. The
       `entriesDir` shorthand keeps expanding to `<dir>/**/*.mockup.{ts,tsx}`.
       Reword the zero-match error to "entries glob matches no module".
-- [ ] Finding 1: replace stable-prefix ownership trust with "the recorded
+- [x] Finding 1: replace stable-prefix ownership trust with "the recorded
       source path matches a configured entry glob" (minimatch, `dot: true`,
       against the repository-relative path), keeping resolved-entry and
       inventoried-source trust. An empty stable prefix confers no trust by
@@ -449,7 +448,7 @@ glob", a single rule that reads the same way the glob does.
       is; a deleted or renamed entry module that still matches its glob
       remains trusted so its old output is cleaned up; the unclaimed
       diagnostic fires for `docs/notes.md`-style owners under a root glob.
-- [ ] Finding 2: introduce one shared denied-segment policy in
+- [x] Finding 2: introduce one shared denied-segment policy in
       `src/config/` used by discovery's directory walk, discovery's
       per-module denial, and the watcher's prune and entry-candidate checks,
       seeded with the watcher's current list (`.git`, `node_modules`,
@@ -460,32 +459,33 @@ glob", a single rule that reads the same way the glob does.
       `src/dist/x.mockup.tsx` under `src/**` is neither built nor watched,
       while an explicit `dist/entries/**` root still works. Add a test that
       discovery and the watcher agree for `src/dist/x.mockup.tsx`.
-- [ ] Finding 3: correct `docs/protocol/mokly-watch.md` and
+- [x] Finding 3: correct `docs/protocol/mokly-watch.md` and
       `docs/protocol/mokly-configuration.md` so the prune and trust rules
       state exactly the behavior after findings 1 and 2.
-- [ ] Finding 4: restore the deleted sentence "Package source under
+- [x] Finding 4: restore the deleted sentence "Package source under
       `node_modules` or an npx cache is never treated as consumer source." to
       `docs/protocol/mokly-watch.md`.
-- [ ] Finding 5: replace the two em-dashes in `docs/protocol/mokly-watch.md`
+- [x] Finding 5: replace the two em-dashes in `docs/protocol/mokly-watch.md`
       with commas or separate sentences.
-- [ ] Finding 6: make `readGeneratedSource` in `src/build/ownership.ts`
+- [x] Finding 6: make `readGeneratedSource` in `src/build/ownership.ts`
       return `undefined` when the file cannot be read, so
       `unclaimedGeneratedRoutes` and `generatedOwnershipDenial` never
       surface a raw filesystem error.
-- [ ] Finding 7: add doc comments to `isGeneratedOutputPath`,
+- [x] Finding 7: add doc comments to `isGeneratedOutputPath`,
       `isRequiredWatchPath`, `deepestContainingRoot`, and the
       discovery-denied helper in `src/server/watch_paths.ts`; narrow the
       blanket catch so only path-resolution failures fail closed, with the
       fail-closed choice documented.
-- [ ] Update every doc and README that states the suffix rule: the
+- [x] Update every doc and README that states the suffix rule: the
       configuration contract, authoring, source protection, watch, package,
       build pipeline, the start and authoring guides, README, and the build
       and components READMEs. State that the glob defines the entry shape and
       that `entriesDir` is shorthand for the suffixed glob.
-- [ ] Update `tests/entry_discovery.test.ts` (the "glob matching only
+- [x] Update `tests/entry_discovery.test.ts` (the "glob matching only
       helpers counts as zero matches" case becomes "a glob matches whatever
       it names") and any test that relied on the suffix filter.
-- [ ] Run `cargo xtask check`, commit, and push.
+- [x] Run `cargo xtask check` and commit locally; the supervising agent will
+      push the branch.
 - [ ] Review the complete local diff against `origin/main` after the push
       using `docs/implementation-review-prompt.md`; report findings without
       changing the implementation.

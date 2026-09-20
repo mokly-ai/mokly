@@ -63,9 +63,11 @@ For example, removing the final import of `old-page.source.tsx` must leave the
 file inaccessible through `/static` and absent from both publication options.
 Deleting source files is not a condition of migration. Arbitrarily named helpers
 are covered by the inventory while imported; helpers retained without imports
-must use a reserved basename or match a public exclusion. Matching an `entries`
-glob does not protect a helper, because only `.mockup.ts` and `.mockup.tsx`
-files are entry modules.
+must use a reserved basename or match a public exclusion. A file matched by an
+`entries` glob is an entry module regardless of its suffix, so selecting a
+retained helper that way also requires it to export a valid registry. The
+`entriesDir` shorthand alone keeps the `.mockup.ts` and `.mockup.tsx` naming
+convention by expanding to its suffixed glob.
 Ordinary public browser scripts are not made private merely because they end in `.js`.
 
 Reject generated output routes that use a reserved source basename, match a

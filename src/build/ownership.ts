@@ -1,9 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { minimatch } from "minimatch";
+
 import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
-import { globStablePrefix } from "../config/entry_globs.js";
 import { isResolvedEntryOrInventoriedSource } from "../config/entry_membership.js";
 import { isInside, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -147,8 +148,7 @@ export function generatedOwnershipDenial(
 
 /**
  * An owner is trusted when it is a resolved entry module, an inventoried input,
- * or a path beneath the stable prefix of a configured entry glob. Stable-prefix
- * trust lets a rebuild replace output after its source is renamed or deleted.
+ * or a repository-relative path matched by a configured entry glob.
  */
 export function isAuthoredOwner(
   sourceRelativePath: string,
@@ -160,19 +160,23 @@ export function isAuthoredOwner(
   return (
     isResolvedEntryOrInventoriedSource(sourceRelativePath, config) ||
     config.entryGlobs.some((glob) =>
-      isInside(path.resolve(config.repoRoot, globStablePrefix(glob)), absolute),
+      minimatch(sourceRelativePath, glob, { dot: true }),
     )
   );
 }
 
 function readGeneratedSource(candidate: string): string | undefined {
-  const handle = fs.openSync(candidate, "r");
   try {
-    const buffer = Buffer.alloc(8_192);
-    const length = fs.readSync(handle, buffer, 0, buffer.length, 0);
-    return generatedSource(buffer.subarray(0, length).toString("utf8"));
-  } finally {
-    fs.closeSync(handle);
+    const handle = fs.openSync(candidate, "r");
+    try {
+      const buffer = Buffer.alloc(8_192);
+      const length = fs.readSync(handle, buffer, 0, buffer.length, 0);
+      return generatedSource(buffer.subarray(0, length).toString("utf8"));
+    } finally {
+      fs.closeSync(handle);
+    }
+  } catch {
+    return undefined;
   }
 }
 

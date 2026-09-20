@@ -4,24 +4,12 @@ import { minimatch } from "minimatch";
 
 import { isOwned } from "../build/ownership.js";
 import { isBaselineCachePath } from "../config/cache_paths.js";
-import { globStablePrefix, isEntryModuleName } from "../config/entry_globs.js";
+import { globStablePrefix } from "../config/entry_globs.js";
 import { isInside, projectRealPath, toPosixPath } from "../config/paths.js";
+import { isDeniedSourceSegment } from "../config/private_directories.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { isExportIgnoredPath } from "../export/ignored.js";
 import { MANIFEST_NAME } from "../registry/manifest.js";
-
-const IGNORED_DIRECTORY_NAMES = new Set([
-  ".context",
-  ".git",
-  "coverage",
-  "dist",
-  "node_modules",
-  "playwright-report",
-  "target",
-  "test-results",
-]);
-const IGNORED_TEMPORARY_PREFIXES = [".mokly-review-", ".mokly-write-"] as const;
-const DISCOVERY_PRIVATE_DIRECTORY_NAMES = new Set([".git", "node_modules"]);
 
 /** Stable prefixes of every entry glob, watched so new entry modules are found. */
 export function entryGlobRoots(config: ResolvedConfig): string[] {
@@ -40,11 +28,13 @@ export function isEntryGlobCandidate(
   config: ResolvedConfig,
 ): boolean {
   if (!isInside(config.repoRoot, absolute)) return false;
-  if (isDiscoveryDeniedEntryPath(absolute, config)) return false;
   const relative = toPosixPath(path.relative(config.repoRoot, absolute));
+  const matchingGlobs = config.entryGlobs.filter((glob) =>
+    minimatch(relative, glob, { dot: true }),
+  );
   return (
-    isEntryModuleName(relative) &&
-    config.entryGlobs.some((glob) => minimatch(relative, glob, { dot: true }))
+    matchingGlobs.length > 0 &&
+    !isDiscoveryDeniedEntryPath(absolute, matchingGlobs, config)
   );
 }
 
@@ -67,11 +57,7 @@ export function isPackageOwnedIgnoredWatchPath(
   const parts = path
     .relative(relativeRoot ?? config.repoRoot, absolute)
     .split(path.sep);
-  return parts.some(
-    (part) =>
-      IGNORED_DIRECTORY_NAMES.has(part) ||
-      IGNORED_TEMPORARY_PREFIXES.some((prefix) => part.startsWith(prefix)),
-  );
+  return parts.some(isDeniedSourceSegment);
 }
 
 /** Resolve the finite roots/globs watched for this consumer. */
@@ -117,6 +103,7 @@ function globWatchRoot(repoRoot: string, glob: string): string {
   return path.resolve(repoRoot, stable.length === 0 ? "." : stable.join("/"));
 }
 
+/** Return whether a path is the manifest or header-proven generated output. */
 function isGeneratedOutputPath(
   candidate: string,
   config: ResolvedConfig,
@@ -126,6 +113,7 @@ function isGeneratedOutputPath(
   return relative === MANIFEST_NAME || isOwned(candidate, config);
 }
 
+/** Preserve exact configured inputs and the ancestors needed to reach them. */
 function isRequiredWatchPath(
   candidate: string,
   config: ResolvedConfig,
@@ -150,6 +138,7 @@ function isRequiredWatchPath(
   );
 }
 
+/** Select the most specific root containing a candidate path. */
 function deepestContainingRoot(
   candidate: string,
   roots: readonly string[],
@@ -159,23 +148,50 @@ function deepestContainingRoot(
     .sort((left, right) => right.length - left.length)[0];
 }
 
+/**
+ * Apply discovery confinement below the deepest root whose glob matches a path.
+ * An unresolvable path fails closed because discovery could not accept it either.
+ */
 function isDiscoveryDeniedEntryPath(
   candidate: string,
+  matchingGlobs: readonly string[],
   config: ResolvedConfig,
 ): boolean {
   if (isBaselineCachePath(candidate, config.repoRoot)) return true;
   if (isInside(config.review.outDir, candidate)) return true;
+  const globRoot = deepestContainingRoot(
+    candidate,
+    matchingGlobs.map((glob) =>
+      path.resolve(config.repoRoot, globStablePrefix(glob)),
+    ),
+  );
+  const relativeRoot = globRoot ?? config.repoRoot;
+  if (
+    path
+      .relative(relativeRoot, candidate)
+      .split(path.sep)
+      .some(isDeniedSourceSegment)
+  )
+    return true;
   try {
     const realRepoRoot = projectRealPath(config.repoRoot);
     const realCandidate = projectRealPath(candidate);
     if (!isInside(realRepoRoot, realCandidate)) return true;
     if (isInside(projectRealPath(config.review.outDir), realCandidate))
       return true;
+    const realRelativeRoot = projectRealPath(relativeRoot);
     return path
-      .relative(realRepoRoot, realCandidate)
+      .relative(realRelativeRoot, realCandidate)
       .split(path.sep)
-      .some((part) => DISCOVERY_PRIVATE_DIRECTORY_NAMES.has(part));
-  } catch {
-    return true;
+      .some(isDeniedSourceSegment);
+  } catch (error) {
+    if (isPathResolutionFailure(error)) return true;
+    throw error;
   }
+}
+
+/** Return whether a filesystem error means a path could not be resolved. */
+function isPathResolutionFailure(error: unknown): boolean {
+  const code = (error as NodeJS.ErrnoException).code;
+  return ["EACCES", "ELOOP", "ENOENT", "ENOTDIR"].includes(code ?? "");
 }

@@ -6,7 +6,7 @@
 mokly.config.ts
         |
         v
-resolve `entries` globs -> *.mockup.ts(x) modules + renderer + optional compatibility modules
+resolve `entries` globs -> matched entry modules + renderer + optional compatibility modules
         |
         v
 one esbuild graph, with React resolved from the consumer
@@ -40,10 +40,13 @@ given by `--config`. Config code is bundled to a temporary ESM module so `.ts`,
 `.mts`, `.js`, and `.mjs` work from a local install or npx cache. Every path is
 then resolved from the config file and confined to `repoRoot`. The `entries`
 globs, or the `entriesDir` shorthand, are resolved once into a sorted set of
-`.mockup.ts(x)` modules; each module is classified by the shared source policy
-so none lies inside the output root, Review output, the baseline cache, or a
-package-owned private directory, and a glob with no entry modules is a config
-error. The resolved set travels with the config beside `sourceFiles`.
+matched modules. The glob defines the entry shape without another suffix
+filter; `entriesDir` preserves the recommended `.mockup.ts` and `.mockup.tsx`
+convention by expanding to a suffixed glob. Each module is classified by the
+shared source policy so none lies inside the output root, Review output, the
+baseline cache, or a denied segment below its deepest glob root, and a glob
+with no entry modules is a config error. The resolved set travels with the
+config beside `sourceFiles`.
 
 ## 2. One Consumer Graph
 
@@ -86,10 +89,12 @@ without sticky process-global state or an absolute checkout path. Installed
 packages import the plain API and cannot self-attribute. Registry validation
 accepts an attributed source only when it is a resolved entry module or an
 inventoried source file. Generated and Git-tracked ownership additionally trust
-owners beneath a configured entry glob's stable prefix, preserving cleanup after
-a matched source is renamed or deleted. Export and Review confinement remain
-limited to directories that hold resolved entry modules; a repository-root glob
-does not protect the whole repository as an export source root.
+a repository-relative owner that matches a configured entry glob with dotfile
+matching enabled, preserving cleanup after a matched source is renamed or
+deleted. A repository-root glob trusts every matching owner path and no other
+path through this branch. Export and Review confinement remain limited to
+directories that hold resolved entry modules; a repository-root glob does not
+protect the whole repository as an export source root.
 
 Both config and consumer bundle metafiles supply the complete source inventory,
 including tree-shaken repository inputs. Serving and publication resolve these
@@ -192,8 +197,9 @@ Review-ignore/material markers, protected source inventory, and manifest data ar
 validated before output changes. All expected bytes are held in memory.
 In committed mode, `check` compares those bytes with disk and reports grouped
 missing, stale, proven-orphan, and unclaimed paths. Unclaimed paths are HTML
-files with a valid Mokly ownership header whose owner is outside all stable entry
-glob prefixes and the source inventory; ordinary authored HTML is not reported.
+files with a valid Mokly ownership header whose owner is neither a resolved
+entry, an inventoried source, nor matched by a configured entry glob; ordinary
+authored HTML is not reported.
 In derived mode, Check does not add this filesystem diagnostic and instead
 rejects Git-tracked generated routes, the manifest and cache contents; local
 generated files may be absent or stale. Authored public assets remain tracked

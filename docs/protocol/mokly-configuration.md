@@ -23,9 +23,9 @@ globs operate on repo-relative POSIX paths; `publicExclude` uses the
 the following contract:
 
 - `mockupsDir`: output/catalogue root, such as `docs/mockups/generated`;
-- `entries`: repository-relative POSIX globs that discover `*.mockup.ts` and
-  `*.mockup.tsx` entry modules anywhere in the repository, or the `entriesDir`
-  shorthand for one directory;
+- `entries`: repository-relative POSIX globs that define which regular files
+  are entry modules anywhere in the repository, or the `entriesDir` shorthand
+  for conventional `.mockup.ts` and `.mockup.tsx` files in one directory;
 - `repoRoot`: repository root, defaulting to the config file's directory;
 - a light-only or light-and-dark catalogue rendering set;
 - optional renderer-module path and declarative route-to-stylesheet rules;
@@ -160,8 +160,9 @@ and `renderer: "docs/mockups/renderer.tsx"`; public assets live under
 and entry sources, so publication output never mixes with developer files. A
 co-located layout keeps each entry module beside the product component or
 screen it describes, for example `entries: ["src/**/*.mockup.{ts,tsx}"]` with
-the same `mockupsDir` and renderer. Both layouts are examples, not runtime
-defaults.
+the same `mockupsDir` and renderer. The `.mockup.ts` and `.mockup.tsx` names are
+the recommended convention selected by that example glob, not an additional
+runtime suffix rule. Both layouts are examples, not runtime defaults.
 Authored source directories may sit below `mockupsDir` for a `docs/mockups/src`
 layout, but no entry module may be the output root or lie inside it; generated
 routes are collision-checked against every inventoried source before writing.
@@ -209,22 +210,37 @@ neither, an empty list, a duplicate glob, or a glob whose stable prefix lies
 inside `.mokly-cache/` fails with `config-invalid` naming the field.
 
 Discovery walks each glob's stable prefix, the leading segments before the
-first wildcard, without following symlinks and without entering `node_modules`,
-`.git`, or `.mokly-cache/`, and keeps every regular file that matches the glob
-and ends in `.mockup.ts` or `.mockup.tsx`. Other matched names are never entry
-modules, even when a glob names them explicitly; they remain ordinary imported
-helpers.
+first wildcard, without following symlinks, and keeps every regular file that
+matches the glob. The glob alone defines the entry shape. Mokly applies no
+filename suffix or extension filter, so `entries: ["src/**/*.ts"]` evaluates
+every matched TypeScript file as an entry module. Each module must therefore
+export `mockups` or a default registry value; a matched helper with neither
+contributes no definitions and can produce the normal empty-registry error.
+`.mockup.ts` and `.mockup.tsx` remain the recommended naming convention, and
+the `entriesDir` shorthand preserves it through its generated glob.
+
+The candidate walk does not enter a denied segment below the deepest root whose
+glob matches that candidate. Denied names are `.git`, `node_modules`,
+`.mokly-cache`, `dist`, `coverage`, `target`, `test-results`,
+`playwright-report`, and `.context`;
+segments beginning with `.mokly-review-` or `.mokly-write-` are denied too.
+This base is relative to the glob root: `src/dist/x.mockup.tsx` is denied under
+`src/**/*.mockup.{ts,tsx}`, while an explicit `dist/entries/**` root can discover
+`dist/entries/a.mockup.tsx` because `dist` is above that root. Discovery never
+inspects a denied tree. When a glob has no accepted match after pruning one, the
+configuration error names the denied segment. A glob that encounters no denied
+tree and matches no file fails with `entries glob matches no module: <glob>`.
 The union of all globs, deduplicated by repository-relative path and sorted by
 that path, is the resolved entry set. Discovery order therefore depends on
-neither glob order nor filesystem order. A glob that keeps zero entry modules
-fails with `config-invalid` naming that glob, so a typo cannot silently produce
-an empty or partial catalogue.
+neither glob order nor filesystem order. Per-glob validation ensures a typo
+cannot silently produce an empty or partial catalogue.
 
 Every resolved entry module is classified before bundling. Discovery fails
 with `config-invalid` naming the module and the matched rule when the module
-lies inside `review.outDir`, inside `.mokly-cache/`, inside `node_modules` or
-`.git`, or resolves outside `repoRoot` through a symlink. An entry module may
-sit below `mockupsDir` in a nested `docs/mockups/src` layout; it is then
+lies inside `review.outDir`, inside `.mokly-cache/`, below a denied segment
+relative to its deepest matching glob root, or resolves outside `repoRoot`
+through a symlink. An entry module may sit below `mockupsDir` in a nested
+`docs/mockups/src` layout; it is then
 protected authored source under the
 [source-protection contract](./mokly-source-protection.md), never public
 output, and generated routes are collision-checked against it. The check runs
@@ -237,14 +253,18 @@ modules as defined by the [watch contract](./mokly-watch.md). The set is
 retained beside `sourceFiles` across build, check, watched Serve, publication,
 and the component runtime; later stages consume it and never repeat the glob
 walk within one compilation. Generated output is trusted for replacement when
-its recorded owner is a resolved entry module, an inventoried source, or lies
-beneath the stable prefix of any configured entry glob. For the `entriesDir`
-shorthand, that prefix is the configured directory. This keeps output owned
-after an entry is renamed or deleted anywhere the same glob could discover it.
-An ownership header outside every stable prefix and the current source inventory
-is unclaimed: committed `check` reports it, while Build, Serve, and Export leave
-the file untouched. Registry attribution remains narrower and accepts only a
-resolved entry module or inventoried source.
+its recorded repository-relative owner is a resolved entry module, an
+inventoried source, or matches at least one configured entry glob with dotfile
+matching enabled. The match rule keeps output owned after a matched entry is
+renamed or deleted. A repository-root glob such as
+`**/*.mockup.{ts,tsx}` trusts every owner path matching that glob and no other
+path through the glob rule; resolved entries and inventoried sources remain
+independent trust branches. In particular, that root glob trusts
+`other/catalogue/thing.mockup.tsx` but not `docs/notes.md`. An ownership header
+that satisfies none of the three branches is unclaimed: committed `check`
+reports it, while Build, Serve, and Export leave the file untouched. Registry
+attribution remains narrower and accepts only a resolved entry module or
+inventoried source.
 
 ## Public Exclusion Configuration
 

@@ -129,6 +129,12 @@ definition created in a helper beside a product component is attributed to
 that helper, not to the entry module that imports it, and the helper need not
 match an `entries` glob.
 
+The configured `entries` glob itself defines which regular files Mokly
+evaluates as registry modules; there is no additional filename suffix rule.
+`.mockup.ts` and `.mockup.tsx` are the recommended convention because the
+`entriesDir` shorthand expands to `<dir>/**/*.mockup.{ts,tsx}`, while an
+explicit glob may deliberately select another shape.
+
 Every catalogue-route segment starts with an ASCII letter or digit and then
 uses only URL-unreserved ASCII letters, digits, `.`, `_`, `~`, or `-`. A
 segment's filename stem must not be a Windows device name, and the complete

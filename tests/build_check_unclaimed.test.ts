@@ -14,6 +14,10 @@ import { createFixture, removeFixture } from "./helpers/fixture.js";
 test("committed check separates orphan and unclaimed generated files", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
+  await fs.promises.writeFile(
+    fixture.configPath,
+    'export default { entries: ["**/*.mockup.{ts,tsx}"], generatedOutput: "committed", mockupsDir: "mockups", repoRoot: "." };\n',
+  );
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
   await writeCompilation(compilation, config);
@@ -26,7 +30,7 @@ test("committed check separates orphan and unclaimed generated files", async (co
     );
   };
   await generated("deleted-entry.html", "entries/deleted.mockup.tsx");
-  await generated("unclaimed.html", "docs/old/page.mockup.tsx");
+  await generated("unclaimed.html", "docs/notes.md");
   await fs.promises.writeFile(
     path.join(fixture.mockupsDir, "public.html"),
     "<!doctype html><p>Consumer-authored</p>\n",
@@ -53,4 +57,32 @@ test("committed check separates orphan and unclaimed generated files", async (co
       return true;
     },
   );
+});
+
+test("committed check tolerates a generated file removed before its header is read", async (context) => {
+  const fixture = await createFixture();
+  context.after(() => removeFixture(fixture));
+  const config = await loadConfig(fixture.root);
+  const compilation = await compileCatalogue(config);
+  await writeCompilation(compilation, config);
+  const disappearing = path.join(fixture.mockupsDir, "disappearing.html");
+  await fs.promises.writeFile(
+    disappearing,
+    `${generatedHeader("docs/notes.md")}<html></html>\n`,
+  );
+  const openSync = fs.openSync;
+  let opens = 0;
+  context.mock.method(
+    fs,
+    "openSync",
+    (candidate: fs.PathLike, flags: fs.OpenMode) => {
+      if (candidate === disappearing && ++opens === 2) {
+        fs.unlinkSync(disappearing);
+      }
+      return openSync(candidate, flags);
+    },
+  );
+
+  assert.doesNotThrow(() => checkCompilation(compilation, config));
+  assert.equal(opens, 2);
 });
