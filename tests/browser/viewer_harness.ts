@@ -18,6 +18,11 @@ interface Harness {
   get(id: string): ViewerHost;
   remove(id: string): void;
 }
+interface ViewerHydrationHarness {
+  recoverableErrors: string[];
+  ref: { current: MoklyViewerHandle | null };
+  retained(): { frame: boolean; shell: boolean };
+}
 interface FrameHookHarness {
   highlight(id: string): Promise<void>;
   ready(id: string): Promise<string>;
@@ -61,5 +66,6 @@ declare global {
   interface Window {
     frameHookHarness: FrameHookHarness;
     viewerHarness: Harness;
+    viewerHydrationHarness: ViewerHydrationHarness;
   }
 }

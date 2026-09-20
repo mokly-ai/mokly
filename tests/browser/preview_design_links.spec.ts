@@ -41,6 +41,26 @@ test.afterAll(async () => {
   await preview?.close();
 });
 
+test("published scheme swaps survive a redirected source replacement", async ({
+  page,
+}) => {
+  await page.route(
+    /\/static\/screens\/welcome\.desktop\.dark\.html$/,
+    async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      await route.continue();
+    },
+  );
+  await page.goto(`${preview.url}/view/screens/welcome`);
+  await chooseViewport(page, "both");
+  await chooseScheme(page, "dark");
+  for (const viewport of ["mobile", "desktop"] as const) {
+    const frame = page.locator(`.mbk-frame-${viewport} iframe`);
+    await expectFrameSource(frame, new RegExp(`welcome\\.${viewport}\\.dark$`));
+    await expect(frame).toHaveAttribute("data-mokly-frame-state", "ready");
+  }
+});
+
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: published design states and styled buttons use the same navigation`, async ({
     page,
@@ -98,6 +118,10 @@ for (const viewport of ["mobile", "desktop"] as const) {
     await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen$/);
     await page.goto(`${preview.url}/view/screens/welcome`);
     await chooseScheme(page, "dark");
+    await expect(page.locator(`.mbk-frame-${viewport} iframe`)).toHaveAttribute(
+      "data-mokly-frame-state",
+      "ready",
+    );
     await frame
       .getByRole("link", { name: "View details", exact: true })
       .click();

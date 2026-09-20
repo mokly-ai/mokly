@@ -137,11 +137,13 @@ export function mountLocalDocument(
       "load",
       () => {
         const doc = localFrameAccess(frame).document();
-        if (
-          !doc ||
-          doc.defaultView?.frameElement !== frame ||
-          !sameFrameResource(doc.URL, url)
-        ) {
+        if (!doc || doc.defaultView?.frameElement !== frame) {
+          reject(new FrameError("origin"));
+          dispose();
+          return;
+        }
+        if (!sameFrameResource(doc.URL, url)) {
+          if (assignedFrameResource(frame, url)) return;
           reject(new FrameError("origin"));
           dispose();
           return;
@@ -301,6 +303,22 @@ function sameFrameResource(documentUrl: string, expected: URL): boolean {
       normalizedHtmlPath(expected.pathname) &&
     actual.search === expected.search
   );
+}
+
+function assignedFrameResource(
+  frame: HTMLIFrameElement,
+  expected: URL,
+): boolean {
+  const source = frame.getAttribute("src");
+  if (!source) return false;
+  try {
+    return sameFrameResource(
+      new URL(source, frame.ownerDocument.baseURI).href,
+      expected,
+    );
+  } catch {
+    return false;
+  }
 }
 
 function normalizedHtmlPath(pathname: string): string {

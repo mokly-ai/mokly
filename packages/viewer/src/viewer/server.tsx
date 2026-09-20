@@ -1,6 +1,6 @@
 /** Server rendering for public viewer and first-party shell hosts. */
 
-import { renderToStaticMarkup } from "react-dom/server";
+import { renderToString } from "react-dom/server";
 
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import type { Catalogue } from "../shell/catalogue.js";
@@ -56,7 +56,7 @@ export function renderViewer(
     () => ({}),
     () => {},
   );
-  return renderToStaticMarkup(
+  return renderToString(
     <ShellIdentifierProvider scoped>
       <ShellStoreProvider
         catalogue={catalogue}

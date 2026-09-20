@@ -679,6 +679,31 @@ boundary.
       and its replacement in the commit and PR description.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits and
       push the branch.
+- [x] After the push, use
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main`; report
+      numbered, severity-rated findings with options and recommendations
+      without changing the implementation.
+
+## Milestone 10: Embedded hydration correction
+
+Tags: ui
+
+Summary: resolve the post-push review finding so application-owned React hosts
+hydrate public viewer SSR in place before enabling browser-only behavior.
+
+- [x] Add a browser regression that renders `renderViewer()`, hydrates the
+      result with `MoklyViewer`, captures recoverable/page/console errors, and
+      proves the existing shell and preview frame nodes remain mounted.
+- [x] Give embedded SSR and the first browser hydration render the same
+      noninteractive snapshot, then enable the existing host bridge and frame
+      lifecycle without delaying ordinary client-only mounts.
+- [x] Fence superseded same-origin loads during redirected published scheme
+      swaps without losing canonical `src` attributes or the mounted session.
+- [x] Run the focused viewer unit and browser coverage, then the complete
+      `cargo xtask check` gate with no failures or skips.
+- [ ] After checks pass, `git add -A`, commit with Conventional Commits, and
+      push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report

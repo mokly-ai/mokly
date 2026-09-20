@@ -79,8 +79,12 @@ The host supplies the selected catalogue view URL; the adapter confines it to
 current `/static/` HTML paths, the configured origin and a valid logical hash.
 Caller-approved query parameters are retained; no selectors or comparison paths
 are accepted. Mount replaces the document with iframe history
-replacement semantics. A load, view/scheme swap or disposal invalidates the old
-session and its pending work; responses from it never update a new mount.
+replacement semantics while the React shell keeps the portable `src` attribute
+aligned with the selected view. A superseded same-origin load may arrive during
+that handoff; it cannot fail or be adopted by the current mount, which remains
+pending for the exact assigned resource. A load, view/scheme swap or disposal
+invalidates the old session and its pending work; responses from it never update
+a new mount.
 An optional mount signal cancels both pending initialization and an active
 session. Built-in adapters remove cancellation listeners on disposal. Viewer
 cleanup also fences late custom-adapter results and disposes them immediately.

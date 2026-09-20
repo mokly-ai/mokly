@@ -1,6 +1,12 @@
 /** Validated public viewer composition over the shared React shell. */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 import { EmbeddedViewerShell } from "../shell/embedded_viewer.js";
 import { ShellIdentifierProvider } from "../shell/identifier_context.js";
@@ -23,6 +29,10 @@ type ReadyProps = MoklyViewerProps & {
   bridgeOwner: object;
   replaced: () => boolean;
 };
+
+const subscribeBrowser = () => () => undefined;
+const browserSnapshot = () => true;
+const serverSnapshot = () => false;
 
 /** Validate host props before React constructs an interactive runtime. */
 export function ReadyViewer(props: ReadyProps) {
@@ -76,7 +86,11 @@ function MountedViewer(
   );
   const [initial] = useState(props.normalized);
   const [catalogue] = useState(() => viewerCatalogue(props.loaded.catalogue));
-  const interactive = typeof window !== "undefined";
+  const interactive = useSyncExternalStore(
+    subscribeBrowser,
+    browserSnapshot,
+    serverSnapshot,
+  );
   const environment = useMemo(
     () =>
       viewerShellEnvironment(

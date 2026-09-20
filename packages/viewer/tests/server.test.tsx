@@ -85,8 +85,8 @@ test("object source requires a valid base and URL sources reject an override", (
   );
 });
 
-test("SSR and initial React render agree for selection and all slots", async () => {
-  const { renderToStaticMarkup } = await import("react-dom/server");
+test("SSR and hydratable React render agree for selection and all slots", async () => {
+  const { renderToString } = await import("react-dom/server");
   const { MoklyViewer } = await import("../src/viewer/component.js");
   const props = {
     catalogue: fixture,
@@ -100,7 +100,7 @@ test("SSR and initial React render agree for selection and all slots", async () 
     slots: { topBarEnd: <b>Account</b> },
   };
   const html = renderViewer(props);
-  assert.equal(renderToStaticMarkup(<MoklyViewer {...props} />), html);
+  assert.equal(renderToString(<MoklyViewer {...props} />), html);
   assert.match(html, /data-mokly-color-scheme="dark"/);
   assert.match(html, /data-viewport="mobile"/);
   assert.match(html, /value="phrase tag:forms"/);
