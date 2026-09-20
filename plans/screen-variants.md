@@ -48,13 +48,13 @@ user should reconsider):**
   the derived route already satisfies the existing fragment-path rule.
   Comparison schemas stay at v2 and v3 unchanged. The public read model v1
   gains optional `variantOf` on screens, which its additive-field rule allows.
-- Proposed, pending the user's explicit approval before Milestone 8 starts:
+- Proposed, pending the user's explicit approval before Milestone 9 starts:
   the shipped `examples/basic` design catalogue converts the light-only
   `design-browse-dark-scheme`/`design-browse-light-only` pair and the four tag
   states into variants of `design-browse-screen` (Welcome). Ids stay the
   same because variants keep global ids; only their routes and collection
   membership change, which retires six routes on `origin/main` and needs
-  approval under the mainline preservation rule. Without approval, Milestone 8
+  approval under the mainline preservation rule. Without approval, Milestone 9
   is skipped and the standalone screens stay.
 
 **Spec:** [`docs/protocol/mokly-screen-variants.md`](../docs/protocol/mokly-screen-variants.md)
@@ -96,7 +96,7 @@ import from `../dist`), React 19 static rendering, Playwright Chromium against
 - Add the failing test before fixing any regression discovered on the way.
 - Do not delete or override anything on `origin/main` without explicit
   approval. The only removal this plan proposes is the design-catalogue route
-  retirement in Milestone 8; it needs the user's approval first and must be
+  retirement in Milestone 9; it needs the user's approval first and must be
   named in that commit message.
 
 ## Milestones
@@ -164,7 +164,7 @@ navigation, a selected variant, the Changes filter with a changed variant
 sub-row, a removed variant, and the changed-view marks on the view controls,
 at mobile and desktop widths, using only screen components. The Welcome
 scheme and tag artboards stay standalone screens in this milestone; their
-conversion into real variants is Milestone 8.
+conversion into real variants is Milestone 9.
 
 #### Task 2.1: Catalogue navigation library component
 
@@ -582,17 +582,75 @@ screen-view evidence, so this milestone reads them without new server work.
 
 ---
 
-### Milestone 8: Design catalogue conversion and verification
+### Milestone 8: Per-view evidence for every variant and every export
+
+Backend only. Added after the Milestone 7 review: two findings there are
+real product gaps rather than polish. A component workspace derives its
+changed views from the first saved variant only, so the marks can describe a
+variant other than the one on screen; and a static export of a screen-only
+catalogue publishes no per-view states, so the exported shell shows neither
+the marks nor the Changed views row that the served shell shows for the same
+catalogue. At completion the evidence always describes what is on screen, in
+Serve and in every export.
+
+#### Task 8.1: Changed views per saved variant
+
+**Files:**
+
+- Modify: `packages/viewer/src/shell/workspace_data.ts` and
+  `workspace_views_data.ts` (`WorkspaceData.changedViews` becomes a record
+  keyed by saved-variant id for components, with one entry for screens;
+  derive each variant's views from its own `ComponentVariantReview`),
+  `packages/viewer/src/client/workspace_views.ts` and `workspace.ts`
+  (`syncViewControls` and `applyInitialView` read the selected variant's
+  entry, the way `workspaceViews` already filters by `variantId`),
+  `packages/viewer/src/viewer/public_workspace.ts` (the published model keys
+  the same way from each variant's views), `docs/protocol/mokly-runtime.md`
+  (one sentence: the evidence describes the selected saved variant)
+- Test: `tests/workspace_views_data.test.ts`, `tests/client_workspace_evidence.test.ts`,
+  `tests/browser/changed_views.spec.ts` (a component whose second variant
+  changed only in dark shows the theme mark only while that variant is
+  selected)
+
+**Steps:**
+
+- [ ] Write the failing tests, then implement.
+- [ ] `npm test && npm run test:browser` green.
+
+#### Task 8.2: Per-view states in screen-only exports
+
+**Files:**
+
+- Modify: `src/export/site.ts` (map the v2 result's `screens[].views[]`
+  `viewport`, `colorScheme`, and `state` into `screenViews` beside the
+  existing `screenEvidence`, so `ShellEvidence` stays the one source for
+  served and exported shells), `docs/protocol/mokly-export-delivery.md` and
+  `docs/protocol/mokly-changes.md` (the exported shell carries the same
+  per-view evidence as Serve)
+- Test: `tests/export_changes.test.ts` (an exported screen-only catalogue with
+  a dark-only change renders the theme mark and the Changed views row),
+  `tests/browser/static_comparisons.spec.ts` or `publish_current.spec.ts`
+
+**Steps:**
+
+- [ ] Write the failing tests, then implement.
+- [ ] `npm test && npm run test:browser` green.
+- [ ] Milestone close-out: run `cargo xtask check`; commit
+      `fix(browse): keep view evidence on screen` and push.
+
+---
+
+### Milestone 9: Design catalogue conversion and verification
 
 Tags: mockup
 
 Requires the user's explicit approval of the route retirement recorded in the
-locked decisions; without it, skip Task 8.1 and go straight to Task 8.2. At
+locked decisions; without it, skip Task 9.1 and go straight to Task 9.2. At
 completion the Welcome design screen owns the dark-scheme, light-only, and four
 tag states as variants under `design/browse/views/screen.variants/`, the
 inventories list the new routes, and the plan is closed.
 
-#### Task 8.1: Convert the design states to Welcome variants
+#### Task 9.1: Convert the design states to Welcome variants
 
 **Files:**
 
@@ -624,7 +682,7 @@ inventories list the new routes, and the plan is closed.
 - [ ] Milestone close-out: run `cargo xtask check`; commit
       `refactor(design): model Welcome states as variants` and push.
 
-#### Task 8.2: Review
+#### Task 9.2: Review
 
 - [ ] After the push, review the complete local diff against `origin/main`
       using [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
