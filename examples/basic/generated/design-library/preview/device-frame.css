@@ -31,7 +31,7 @@ font-weight: 500;
 }
 
 .phone-frame {
-background: #171a18;
+background: var(--mbk-device-body);
   border-radius: 46px;
   height: 844px;
   padding: 12px;
@@ -45,7 +45,7 @@ pointer-events: none;
 }
 
 .phone-notch {
-background: #0b0d0c;
+background: var(--mbk-device-notch);
   border-radius: 999px;
   height: 30px;
   left: 50%;
@@ -88,7 +88,7 @@ align-items: center;
 }
 
 .phone-home {
-background: rgba(20, 24, 20, 0.4);
+background: var(--mbk-device-home);
   border-radius: 999px;
   bottom: 20px;
   height: 4px;
@@ -172,15 +172,15 @@ border-radius: 999px;
 }
 
 .lights i:first-child {
-background: #d9655b;
+background: var(--mbk-device-light-close);
 }
 
 .lights i:nth-child(2) {
-background: #dba43d;
+background: var(--mbk-device-light-minimise);
 }
 
 .lights i:nth-child(3) {
-background: #50a86d;
+background: var(--mbk-device-light-expand);
 }
 
 .address {

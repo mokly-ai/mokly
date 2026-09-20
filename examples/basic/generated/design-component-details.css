@@ -94,7 +94,7 @@
   font-weight: 400;
 }
 .ce-nested-instance {
-  border-left: 1px solid #c5d6ca;
+  border-left: 1px solid var(--mbk-guide);
   margin-left: 16px;
 }
 .ce-detail-links {

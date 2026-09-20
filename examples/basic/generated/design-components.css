@@ -39,7 +39,7 @@
 }
 .ce-design .mbk-seg button.active {
   background: white;
-  box-shadow: 0 1px 2px rgba(20, 28, 22, 0.1);
+  box-shadow: var(--chrome-shadow-soft);
   color: var(--chrome-ink);
 }
 .ce-variants {
@@ -109,9 +109,9 @@
   white-space: nowrap;
 }
 .ce-action:disabled {
-  background: #e6ebe7;
-  border-color: #d7dfd9;
-  color: #5d6f63;
+  background: var(--chrome-disabled-bg);
+  border-color: var(--chrome-disabled-edge);
+  color: var(--chrome-disabled-ink);
   cursor: default;
 }
 .ce-action--before {
@@ -120,8 +120,8 @@
 }
 .ce-toolbar-example {
   align-items: center;
-  background: #f3f6f3;
-  border: 1px solid #dce5de;
+  background: var(--ce-soft);
+  border: 1px solid var(--ce-edge);
   border-radius: 10px;
   display: flex;
   font-size: 12px;

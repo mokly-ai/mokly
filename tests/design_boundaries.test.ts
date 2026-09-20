@@ -1,0 +1,205 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+
+import { contrast, designPalette } from "./helpers/design_palette.js";
+import {
+  boundaryOf,
+  designStyleRules,
+  fillOf,
+  type ColorReference,
+} from "./helpers/design_styles.js";
+
+/**
+ * Selectors that mark a control state. A boundary drawn only in one of these
+ * states is the state's own indicator, so it carries the 3:1 requirement.
+ */
+const STATE_SELECTOR =
+  /:hover|:focus|:checked|:has\(input:checked\)|\[open\]|\.active|aria-pressed|aria-current/u;
+
+/**
+ * Fills that mark a selected, active or status surface, derived from the
+ * palette so a new accent or status role joins the audit without an edit here.
+ */
+function markedFillTokens(tokens: Map<string, string>): string[] {
+  return [...tokens.keys()].filter(
+    (token) =>
+      token.startsWith("--mbk-accent-") ||
+      token === "--mbk-danger-bg" ||
+      (token.startsWith("--mbk-status-") && token.endsWith("-bg")),
+  );
+}
+
+/** Selectors naming a control primitive, whose boundary is a control edge. */
+const CONTROL_SELECTOR =
+  /\bbutton\b|\binput\b|\bselect\b|\bsummary\b|\btextarea\b|\.ce-action|\.ce-button|\.ce-icon-control|\.mbk-seg|\.mbk-appearance|\.ce-sheet-expand/u;
+
+/** Tokens the palette contract reserves for decoration between surfaces. */
+const HAIRLINE_TOKENS = new Set([
+  "--chrome-border",
+  "--chrome-border-strong",
+  "--mbk-guide",
+]);
+
+/**
+ * Boundaries that are decoration rather than a state or control indicator, so
+ * the palette contract exempts them. Each names its own state in 5.62:1 or
+ * better text inside a distinct tinted fill, so the outline adds nothing.
+ */
+const DECORATIVE_BOUNDARIES = new Set([
+  ".ce-added",
+  ".ce-changed",
+  ".ce-removed",
+  ".ce-control-alert",
+]);
+
+/**
+ * Surfaces that draw a hairline inside a state selector because the state
+ * belongs to a descendant, not to a control. Each entry must be reached by the
+ * audit, so a future control cannot quietly inherit the exemption.
+ */
+const EXEMPT_SURFACES = new Map([
+  [
+    "design-library/inspector/inspector.css",
+    ".ce-design .mbk-shell--mobile .ce-inspector:has(> details[open])",
+  ],
+]);
+
+/** Collected rules, pinned so a narrowed collector fails instead of passing. */
+const AUDITED_BOUNDARY_COUNT = 18;
+
+function isExemptSurface(file: string, selector: string): boolean {
+  return EXEMPT_SURFACES.get(file) === selector;
+}
+
+/** Resolves a reference to the colour it paints in one appearance. */
+function resolve(
+  reference: ColorReference,
+  tokens: Map<string, string>,
+): string | undefined {
+  return reference.token ? tokens.get(reference.token) : reference.literal;
+}
+
+function describe(reference: ColorReference): string {
+  return reference.token ?? reference.literal ?? "?";
+}
+
+/**
+ * Rules whose boundary is a control or state indicator: either the selector
+ * names a state, or the rule fills itself with a marked surface.
+ */
+async function markedBoundaryRules() {
+  const palette = await designPalette();
+  const marked = new Set(
+    markedFillTokens(palette.light).flatMap((token) => [
+      token,
+      palette.light.get(token)?.toLowerCase() ?? token,
+      palette.dark.get(token)?.toLowerCase() ?? token,
+    ]),
+  );
+  return (await designStyleRules()).flatMap((rule) => {
+    const boundary = boundaryOf(rule.body);
+    if (!boundary) return [];
+    const fill = fillOf(rule.body);
+    const fillMark = fill?.token ?? fill?.literal?.toLowerCase();
+    if (
+      !STATE_SELECTOR.test(rule.selector) &&
+      !(fillMark && marked.has(fillMark))
+    )
+      return [];
+    return [{ ...rule, boundary, fill }];
+  });
+}
+
+test("every marked boundary is visible against an adjacent colour", async () => {
+  const palette = await designPalette();
+  const rules = await markedBoundaryRules();
+  assert.equal(
+    rules.length,
+    AUDITED_BOUNDARY_COUNT,
+    "the audit's coverage changed; confirm the new total is intended",
+  );
+  for (const selector of DECORATIVE_BOUNDARIES)
+    assert.ok(
+      rules.some((rule) => rule.selector === selector),
+      `the recorded exception ${selector} is not reached by the audit`,
+    );
+  for (const [file, selector] of EXEMPT_SURFACES)
+    assert.ok(
+      rules.some((rule) => rule.file === file && rule.selector === selector),
+      `the exempt surface ${file} ${selector} is not reached by the audit`,
+    );
+  const failures: string[] = [];
+  for (const rule of rules) {
+    if (DECORATIVE_BOUNDARIES.has(rule.selector)) continue;
+    if (isExemptSurface(rule.file, rule.selector)) continue;
+    for (const appearance of ["light", "dark"] as const) {
+      const tokens = palette[appearance];
+      const edge = resolve(rule.boundary, tokens);
+      assert.ok(
+        edge,
+        `${rule.file} ${rule.selector}: ${describe(rule.boundary)} is not in the ${appearance} palette`,
+      );
+      // A boundary sits between its own fill and the surface around it, so it
+      // only has to reach 3:1 against one of them to read as an edge.
+      const fill = rule.fill ? resolve(rule.fill, tokens) : undefined;
+      const own = fill ? contrast(edge, fill) : 0;
+      const reached = Math.max(
+        own,
+        contrast(edge, tokens.get("--chrome-surface")!),
+      );
+      if (reached < 3)
+        failures.push(
+          `${rule.file} ${rule.selector}: ${describe(rule.boundary)} reaches only ${reached}:1 in ${appearance}`,
+        );
+    }
+  }
+  assert.deepEqual(failures, []);
+});
+
+test("no control primitive draws its boundary with a hairline token", async () => {
+  const failures: string[] = [];
+  for (const rule of await designStyleRules()) {
+    if (!CONTROL_SELECTOR.test(rule.selector)) continue;
+    const boundary = boundaryOf(rule.body);
+    if (!boundary?.token || !HAIRLINE_TOKENS.has(boundary.token)) continue;
+    failures.push(
+      `${rule.file} ${rule.selector}: ${boundary.token} is a decorative hairline; a control uses --chrome-control-edge or --mbk-sage-deep`,
+    );
+  }
+  assert.deepEqual(failures, []);
+});
+
+/**
+ * Sheets that define a palette, where a literal is the definition itself:
+ * the interface palette, the preview palette with its fixed device hardware,
+ * and the component explorer's scoped palette for depicted content.
+ */
+const PALETTE_SOURCES = new Set([
+  "design.css",
+  "design-stage.css",
+  "design-component-view.css",
+]);
+
+test("no design stylesheet outside a palette source names a colour", async () => {
+  const palette = await designPalette();
+  const named = new Map<string, string>();
+  for (const appearance of ["light", "dark"] as const)
+    for (const [token, value] of palette[appearance])
+      if (!named.has(value.toLowerCase()))
+        named.set(value.toLowerCase(), `${token} (${appearance})`);
+  const failures: string[] = [];
+  for (const rule of await designStyleRules()) {
+    if (PALETTE_SOURCES.has(rule.file)) continue;
+    for (const [, literal] of rule.body.matchAll(
+      /(#[0-9a-fA-F]{3,8}\b|rgba?\([^)]*\))/gu,
+    )) {
+      const token = named.get(literal!.toLowerCase());
+      failures.push(
+        token
+          ? `${rule.file} ${rule.selector}: ${literal} is ${token}; use the token so it follows the appearance`
+          : `${rule.file} ${rule.selector}: ${literal} has no palette role; add one or move it to a palette source`,
+      );
+    }
+  }
+  assert.deepEqual(failures, []);
+});

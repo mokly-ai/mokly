@@ -17,9 +17,9 @@
   font-size: 11px;
 }
 .ce-edited {
-  background: #fbf1da;
+  background: var(--mbk-status-changed-bg);
   border-radius: 4px;
-  color: #866c33;
+  color: var(--mbk-status-changed-ink);
   margin-left: 8px;
   padding: 2px 5px;
 }
@@ -47,10 +47,10 @@
   padding: 10px 12px;
 }
 .ce-control-alert {
-  background: #fcf0ed;
-  border: 1px solid #edcdc5;
+  background: var(--mbk-danger-bg);
+  border: 1px solid var(--mbk-danger-edge);
   border-radius: 6px;
-  color: #873b2e;
+  color: var(--mbk-danger-ink);
   font-size: 12px;
   margin-bottom: 12px;
   padding: 10px 12px;

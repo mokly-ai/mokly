@@ -48,6 +48,9 @@ the mockup token names.
 | `--chrome-shadow-press`  | `inset 0 1px 2px rgba(20, 28, 22, 0.14)` | `inset 0 1px 2px rgba(0, 0, 0, 0.55)` |
 | `--chrome-shadow-drawer` | `0 18px 50px rgba(20, 28, 22, 0.3)`      | `0 18px 50px rgba(0, 0, 0, 0.6)`      |
 | `--chrome-shadow-sheet`  | `0 6px 28px rgba(36, 55, 43, 0.15)`      | `0 6px 28px rgba(0, 0, 0, 0.55)`      |
+| `--chrome-disabled-bg`   | `#e6ebe7`                                | `#262d29`                             |
+| `--chrome-disabled-edge` | `#d7dfd9`                                | `#3b443f`                             |
+| `--chrome-disabled-ink`  | `#5d6f63`                                | `#8b968f`                             |
 
 Status and validation pairs. Added reuses the accent surface, edge and deep
 accent ink so one selected-state family covers both jobs. Unmodified and
@@ -61,6 +64,8 @@ Ignored use `--chrome-muted` on `--chrome-surface` inside `--chrome-border`.
 | `--mbk-status-removed-bg`   | `#fcefee` | `#331f1d` |
 | `--mbk-status-removed-edge` | `#ecc5c1` | `#5e3b37` |
 | `--mbk-status-removed-ink`  | `#9b433c` | `#f1a99c` |
+| `--mbk-danger-bg`           | `#fcf0ed` | `#331f1d` |
+| `--mbk-danger-edge`         | `#edcdc5` | `#5e3b37` |
 | `--mbk-danger-ink`          | `#964334` | `#f1a99c` |
 
 ## Recorded Contrast
@@ -84,6 +89,8 @@ Ignored use `--chrome-muted` on `--chrome-surface` inside `--chrome-border`.
 | control edge on raised (navigation)          | 3.25  | 3.79  | 3 non-text  |
 | focus outline (deep sage) on background      | 7.23  | 11.61 | 3 non-text  |
 | state boundary (deep sage) on accent surface | 7.08  | 8.79  | 3 non-text  |
+| validation ink on validation surface         | 5.97  | 8.04  | 4.5 text    |
+| disabled ink on disabled surface             | 4.43  | 4.60  | disabled    |
 | changed status ink on its surface            | 5.62  | 8.27  | 4.5 text    |
 | removed status ink on its surface            | 5.73  | 8.04  | 4.5 text    |
 | added status ink on its surface              | 7.08  | 8.79  | 4.5 text    |
@@ -97,13 +104,18 @@ hovered, selected or checked state with a boundary uses `--mbk-sage-deep`,
 because `--chrome-control-edge` reaches only 2.99:1 on `--mbk-accent-surface`,
 the fill those states carry.
 
-One family is exempt. The `--mbk-status-*-edge` tokens and `--mbk-accent-edge`
-outline the Added, Changed and Removed status badges, which are labels rather
-than controls: each names its own state in 5.62:1 or better text inside a
-distinct tinted fill, so the outline adds no information and is held to the
-decorative hairline standard. No other boundary may claim this exception; a
-control state that draws a boundary must reach 3:1 against its own fill or the
-surface around it.
+One family is exempt. The `--mbk-status-*-edge` tokens, `--mbk-accent-edge` and
+`--mbk-danger-edge` outline the Added, Changed and Removed status badges and the
+validation alert, which are labels rather than controls: each names its own
+state in 5.62:1 or better text inside a distinct tinted fill, so the outline
+adds no information and is held to the decorative hairline standard. No other
+boundary may claim this exception; a control state that draws a boundary must
+reach 3:1 against its own fill or the surface around it.
+
+Disabled controls are outside the contrast minimums, as WCAG allows. They use
+`--chrome-disabled-bg`, `--chrome-disabled-edge` and `--chrome-disabled-ink`
+rather than a dimmed copy of the enabled colours, so a disabled control reads
+the same way in both appearances.
 
 ## Light Corrections
 
@@ -141,8 +153,17 @@ These values are the authored fragment's own colors, not the viewer interface,
 so they keep their existing Light values and are outside the corrections above.
 Each device screen also sets its own CSS `color-scheme`, so native controls and
 scrollbars inside a preview follow the preview rather than the interface. Fixed
-phone hardware (`#171a18` body, `#0b0d0c` notch, the home pill) and the browser
-traffic lights keep their intended colors in both appearances.
+phone hardware and the browser traffic lights keep their intended colors in both
+appearances, and are named so no stylesheet repeats them:
+
+| Role                          | Both appearances        |
+| ----------------------------- | ----------------------- |
+| `--mbk-device-body`           | `#171a18`               |
+| `--mbk-device-notch`          | `#0b0d0c`               |
+| `--mbk-device-home`           | `rgba(20, 24, 20, 0.4)` |
+| `--mbk-device-light-close`    | `#d9655b`               |
+| `--mbk-device-light-minimise` | `#dba43d`               |
+| `--mbk-device-light-expand`   | `#50a86d`               |
 
 A comparison in Difference mode paints an opaque base behind the compared
 frames, taken from the compared preview scheme, so the blended result is

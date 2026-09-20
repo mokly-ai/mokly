@@ -596,6 +596,61 @@ scans, so the gate fails on generated third-party files after a browser run.
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       and report findings without fixing them.
 
+## Milestone 2K: Close the remaining boundary audit gaps (complete)
+
+Tags: mockup
+
+The Milestone 2H and 2I reviews left four audit findings: a resting control
+boundary can still use a decorative hairline (`.mbk-seg` at 1.15:1 Light),
+the hairline exemption is token-wide rather than per selector, the marked-fill
+list restates palette knowledge as literals, and the component explorer's
+disabled and validation colours are hardcoded below the hardcode test's
+threshold. Close them so the audit enforces the contract without gaps.
+
+- [x] Change `.mbk-seg` to `--chrome-control-edge` and add a test asserting
+      that no rule whose selector names a control primitive (`button`,
+      `input`, `select`, `summary`, `.ce-action`, `.mbk-seg` and any other
+      control class the design styles use) draws its boundary with a hairline
+      token.
+- [x] Replace the token-wide hairline exemption with a file-and-selector
+      exception map whose every entry must be reached by the audit, so the
+      mobile inspector sheet is the only exempt surface and a future control
+      cannot inherit the exemption.
+- [x] Derive the marked-fill set from the palette by naming convention
+      (`--mbk-accent-*` and `--mbk-status-*-bg`) instead of a literal list,
+      and assert the exact count of collected rules so coverage cannot narrow
+      silently.
+- [x] Add the missing disabled and validation roles to the palette contract
+      and `design.css` with Light and Dark values and recorded contrast, point
+      the component explorer's disabled action, muted inspection text and
+      notice colours at them, and extend the hardcode test to reject any
+      literal colour outside the palette-defining sheets.
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
+      the design unit and browser suites and `cargo xtask check`; smoke the
+      comparison-mode control and a disabled action in both schemes through
+      `npm run dev`; commit and push; then review the complete diff against
+      `origin/main` with
+      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      and report findings without fixing them.
+
+Delivered: `.mbk-seg` and the inspection `.ce-button` moved to
+`--chrome-control-edge` (3.05:1 Light, 4.02:1 Dark on the catalogue
+background), and a new test rejects any control primitive whose boundary is a
+decorative hairline. The token-wide hairline exemption became a
+file-and-selector map holding one entry, the mobile inspector sheet, which the
+audit asserts it reaches. The marked-fill set is derived from the palette by
+naming convention, and the collected-rule total is pinned at 18 so a narrowed
+collector fails instead of passing quietly.
+
+`--chrome-disabled-bg/-edge/-ink` and `--mbk-danger-bg/-edge` are new palette
+roles with Light and Dark values and recorded contrast; the disabled pair is
+recorded rather than required, as WCAG exempts disabled controls. The fixed
+device hardware and browser traffic lights the contract already described in
+prose are now named `--mbk-device-*` in the preview palette. Every remaining
+literal colour outside a palette source is gone, and the hardcode test rejects
+any literal rather than only those duplicating a token. The boundary audit
+moved to `tests/design_boundaries.test.ts` to keep both files under 300 lines.
+
 ## Milestone 3: Implement shared viewer appearance
 
 Tags: ui

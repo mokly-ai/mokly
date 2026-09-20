@@ -14,6 +14,12 @@
   --mbk-screen-border: #e3e5e0;
   --mbk-screen-link: #4f7864;
   --mbk-screen-link-strong: #2f5945;
+  --mbk-device-body: #171a18;
+  --mbk-device-notch: #0b0d0c;
+  --mbk-device-home: rgba(20, 24, 20, 0.4);
+  --mbk-device-light-close: #d9655b;
+  --mbk-device-light-minimise: #dba43d;
+  --mbk-device-light-expand: #50a86d;
 }
 
 .mbk-screen-dark {
