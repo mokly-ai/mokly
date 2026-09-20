@@ -178,9 +178,12 @@ export function catalogueHtml(json: unknown, artifactOrigin: string) {
 `./server` additionally provides typed first-party document context and package
 asset resolution. `./runtime` exposes the standalone runtime, private-service
 injection and validated revision adoption used by the CLI host. `./data` exposes
-shared pure build/comparison value contracts; it contains no CLI execution or
-filesystem access. Hosts embedding React normally use only the root entry and
-stylesheet.
+shared pure build/comparison value contracts, including the strict
+`parseRemovedPagePreview` reader for advertised `preview.json` payloads; it
+contains no CLI execution or filesystem access. Public catalogue removed-entry
+types retain optional screen/page preview descriptors, validated against the
+catalogue's comparison generation. Hosts embedding React normally use only the
+root entry and stylesheet.
 
 ## Releases
 

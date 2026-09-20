@@ -10,6 +10,8 @@ import { serializeCatalogue } from "../src/catalogue/serialization.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 
+const previewGeneration = "d".repeat(64);
+
 test("removed screens and saved variants retain baseline context with null current paths", async (t) => {
   const source = componentEntrySource({
     body: '<action.Component label="Child" />',
@@ -48,13 +50,17 @@ test("removed screens and saved variants retain baseline context with null curre
     ),
     changesStatus: "ready",
     evidence,
-    comparisonUrl: null,
+    comparisonUrl: `__mokly/diffs/__generations/${previewGeneration}/review.json`,
+    removedPreviews: new Map([
+      ["screens/home.html", { kind: "screen" as const }],
+    ]),
     revision: { content: 0, evidence: 0 },
   });
   assert.deepEqual(model.removedEntries[0]?.ancestors, [
     { id: "components", title: "Components" },
   ]);
   const removed = model.removedEntries[0]!.entry;
+  assert.deepEqual(model.removedEntries[0]!.preview, { kind: "screen" });
   assert.equal(removed.kind, "screen");
   if (removed.kind !== "screen") throw new Error("Expected removed screen");
   for (const view of removed.views) {
@@ -95,7 +101,10 @@ test("removed screens and saved variants retain baseline context with null curre
     catalogue: catalogueAtBaseline(fixture.after.manifest, legacy),
     changesStatus: "ready",
     evidence: { baseline: legacy },
-    comparisonUrl: null,
+    comparisonUrl: `__mokly/diffs/__generations/${previewGeneration}/review.json`,
+    removedPreviews: new Map([
+      ["screens/home.html", { kind: "screen" as const }],
+    ]),
     revision: { content: 0, evidence: 0 },
   });
   const old = unavailable.removedEntries[0]!.entry;
@@ -103,6 +112,7 @@ test("removed screens and saved variants retain baseline context with null curre
     old.kind === "screen" &&
       old.views.every((view) => view.usage.status === "unavailable"),
   );
+  assert.deepEqual(unavailable.removedEntries[0]!.preview, { kind: "screen" });
 });
 
 test("historical usage survives changed component schemas and slot declarations", async (t) => {

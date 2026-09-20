@@ -239,35 +239,35 @@ Implement the reusable backend capability without changing visible shell
 behavior. Screens need no new capture; this milestone proves the existing
 before-only comparison path and adds page capture beside it.
 
-- [ ] Add failure-first tests for removed screens through
+- [x] Add failure-first tests for removed screens through
       `RepositorySelectedReview` and the complete comparison in committed and
       derived modes: before-only v2 and v3 results, older supported manifests,
       multiple screen views, deleted local assets, and missing baseline output.
-- [ ] Add failure-first tests for removed pages: missing document, deleted
+- [x] Add failure-first tests for removed pages: missing document, deleted
       local assets, invalid baseline data, historical page-v4 manifests, and
       current files sharing a deleted resource's path.
-- [ ] Implement the typed page-preview selection over the accepted removed-entry
+- [x] Implement the typed page-preview selection over the accepted removed-entry
       snapshot and pinned `BaselineReader`, using `GitReviewAssetReader` and
       `copySnapshotDependencies` for the document and its transitive closure.
-- [ ] Retain styles, nested CSS imports, images, fonts, and embedded resources
+- [x] Retain styles, nested CSS imports, images, fonts, and embedded resources
       from that baseline. Prove that current files with the same paths cannot
       replace deleted or changed historical bytes.
-- [ ] Apply existing source/public exclusions, path and regular-file validation,
+- [x] Apply existing source/public exclusions, path and regular-file validation,
       size bounds, and reserved-file protections to every transitive read. Test
       traversal, symlinks, private manifests, and authored-source references.
-- [ ] Add the historical descriptor to pure public projection, strict readers,
+- [x] Add the historical descriptor to pure public projection, strict readers,
       serialization, and fixtures, including the shipped
       `docs/protocol/fixtures/catalogue-v1.json` with one removed page and one
       removed screen. Keep current paths null, metadata private, route/ID
       conflict precedence intact, and page comparison records absent.
-- [ ] Test screen-only and component-aware catalogues, historical usage whose
+- [x] Test screen-only and component-aware catalogues, historical usage whose
       component metadata is unavailable, and old/new reader compatibility.
       Preserve removed component and saved-variant comparison coverage.
-- [ ] Run build, typecheck, and focused baseline, resource, catalogue, and review
+- [x] Run build, typecheck, and focused baseline, resource, catalogue, and review
       tests; keep relevant module READMEs and contracts aligned.
-- [ ] Run `cargo xtask check`; then `git add -A`, commit with Conventional
+- [x] Run `cargo xtask check`; then `git add -A`, commit with Conventional
       Commits, and push the branch.
-- [ ] After the push, review the complete local diff against `origin/main` with
+- [x] After the push, review the complete local diff against `origin/main` with
       the implementation review prompt; report findings without changing the
       implementation.
 

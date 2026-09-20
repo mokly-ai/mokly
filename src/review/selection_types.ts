@@ -1,13 +1,23 @@
 /** Inputs for a comparison of one screen or one saved component variant. */
 import type {
+  HistoricalManifest,
+  RemovedPagePreviewArtifact,
   Manifest,
   ReviewResultV3,
   ReviewArtifact,
 } from "@mokly/viewer/data";
 
+import type { CatalogueChangeSnapshot } from "../registry/changes.js";
+
 export interface ReviewSelection {
   readonly route: string;
   readonly variantId?: string;
+}
+
+/** Explicit selection for a page proven removed by the accepted snapshot. */
+export interface RemovedPageSelection {
+  readonly kind: "page";
+  readonly route: string;
 }
 
 /** Private evidence retained by background classification, never published as JSON. */
@@ -26,6 +36,11 @@ export interface SelectedReviewSource extends ReviewEvidence {
   readonly result?: ReviewResultV3;
 }
 
+/** Pinned removal metadata and its already-validated historical manifest. */
+export interface RemovedPagePreviewSource extends CatalogueChangeSnapshot {
+  readonly baseline: HistoricalManifest;
+}
+
 /** Capture validated, immutable pane bytes without compiling the consumer again. */
 export interface SelectedReviewProvider {
   generate(
@@ -33,4 +48,13 @@ export interface SelectedReviewProvider {
     selection: ReviewSelection,
     signal: AbortSignal,
   ): Promise<ReviewArtifact>;
+}
+
+/** Capture one removed page without resolving refs or rebuilding its baseline. */
+export interface RemovedPagePreviewProvider {
+  generate(
+    source: RemovedPagePreviewSource,
+    selection: RemovedPageSelection,
+    signal: AbortSignal,
+  ): Promise<RemovedPagePreviewArtifact>;
 }

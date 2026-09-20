@@ -14,6 +14,13 @@ per-view comparison eligibility. Removed entries retain baseline labels and
 null current paths, plus the optional additive `preview` descriptor from the
 [removed previews contract](../../docs/protocol/mokly-removed-previews.md);
 uncomputed usage stays pending or unavailable.
+`CatalogueProjectionInput.removedPreviews` is caller-supplied generation data;
+projection never derives it from Git or the filesystem. Page paths must name the
+same 64-hex generation as `comparisonUrl` and end in the exact removed route,
+while screen descriptors reuse that generation's comparison. Readers reject
+descriptors on current entries, mismatched entry kinds, missing comparison URLs,
+and cross-generation or mismatched page paths while accepting older catalogues
+that omit the field.
 Historical usage also becomes unavailable when current id/route precedence
 omits any referenced component's metadata. Projection checks the retained
 component set once for screens and removed variants; readers remain strict.

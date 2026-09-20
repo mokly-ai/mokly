@@ -137,7 +137,9 @@ entries keep null `fragmentPath` and `documentPath`; historical HTML is never
 disguised as current output. The descriptor contains no baseline metadata,
 source paths, or commit identifiers beyond those already public in review JSON.
 Readers validate `kind`, require a confined `__mokly/diffs/__generations/**`
-path for pages, tolerate the field's absence, and reject it on current entries.
+path for pages whose generation matches `comparisonUrl` and whose suffix is the
+exact removed page route plus `.json`, tolerate the field's absence, and reject
+it on current entries or when `comparisonUrl` is null.
 When the readers learn the field, the shipped
 [v1 fixture](./fixtures/catalogue-v1.json) must exercise both variants.
 
