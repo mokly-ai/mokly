@@ -702,9 +702,9 @@ hydrate public viewer SSR in place before enabling browser-only behavior.
       swaps without losing canonical `src` attributes or the mounted session.
 - [x] Run the focused viewer unit and browser coverage, then the complete
       `cargo xtask check` gate with no failures or skips.
-- [ ] After checks pass, `git add -A`, commit with Conventional Commits, and
+- [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
