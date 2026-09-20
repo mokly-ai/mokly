@@ -24,7 +24,8 @@ export interface NavigationState {
 
 const welcomeFilters = { all: D.welcome, changes: D.current };
 const detailsFilters = { all: D.details, changes: D.added };
-const welcomeModes = {
+/** Welcome routes that form one complete comparison family. */
+export const welcomeModes = {
   current: D.current,
   "side-by-side": D.changed,
   overlay: D.overlay,
@@ -38,7 +39,8 @@ const appearanceFilters = {
   all: D.appearance,
   changes: D.appearanceSideBySide,
 };
-const appearanceModes = {
+/** Appearance routes that form one complete comparison family. */
+export const appearanceModes = {
   current: D.appearance,
   "side-by-side": D.appearanceSideBySide,
   difference: D.appearanceDifference,

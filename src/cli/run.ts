@@ -13,7 +13,6 @@ import { parseArguments, type CliArguments } from "./arguments.js";
 import { openServedBrowser } from "./browser.js";
 import { runExport } from "./export.js";
 import { HELP } from "./help.js";
-import { runPublish } from "./publish.js";
 import {
   processTerminalEnvironment,
   reportPhase,
@@ -56,6 +55,7 @@ async function execute(
 ): Promise<number> {
   const startedAt = environment.now();
   if (arguments_.command === "publish") {
+    const { runPublish } = await import("./publish.js");
     await timeAsync("publish", () =>
       runPublish(arguments_, cwd, reporter, environment.env),
     );

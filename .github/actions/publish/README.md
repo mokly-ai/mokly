@@ -42,7 +42,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
-          node-version: 24
+          node-version: 24.21.0
       - run: npm ci
       - uses: mokly-ai/mokly/.github/actions/publish@ACTION_COMMIT_SHA
         with:
@@ -69,7 +69,7 @@ Actions environment. Other CI systems can invoke the npm CLI directly.
 | `base`       | no       | Comparison ref; omission uses the config or `origin/main`                     |
 | `no-changes` | no       | `true` omits comparisons; defaults to `false`, conflicts with `base`          |
 
-The action sets up Node 24, but does not check out the consumer, install its
+The action sets up Node 24.21.0, but does not check out the consumer, install its
 dependencies, fetch history, publish an npm package or comment on pull requests.
 Consumer authoring code runs during export, so only grant upload credentials to
 trusted workflows. Use a receiver-scoped token through GitHub secrets; do not

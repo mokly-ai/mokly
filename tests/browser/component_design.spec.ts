@@ -67,7 +67,14 @@ for (const viewport of ["desktop", "mobile"] as const) {
       await expect(page).toHaveURL(
         componentDesignUrl("pages/variants", viewport),
       );
-      await expect(page.locator(".ce-canvas:visible button")).toBeDisabled();
+      const preview = page.getByRole("region", {
+        name: `${viewport === "desktop" ? "Desktop" : "Mobile"} component preview`,
+        exact: true,
+      });
+      await expect(page.locator(".ce-canvas:visible")).toHaveCount(1);
+      await expect(
+        preview.getByRole("button", { name: "Continue" }),
+      ).toBeDisabled();
       await expect(page.getByLabel("Supplied props")).toContainText("true");
       await page.getByRole("button", { name: "Usage", exact: true }).click();
       const welcome = page

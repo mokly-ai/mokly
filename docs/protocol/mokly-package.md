@@ -40,9 +40,11 @@ discovery, and rendering adapters; consumers use ordinary page definitions.
   to use `mokly.config.*`; generator identities, ownership markers, and
   `MOKLY_*` environment variables do not include the npm scope.
 
-The initial supported runtime is Node.js 22.14 or newer. CI must exercise the
-minimum supported release and the current Firna release runtime. Unsupported
-Node versions fail immediately with an actionable version error.
+The supported runtime is Node.js `>=22.14.0 <24.14.0` or `>=24.21.0`. CI must
+exercise the minimum supported release and the pinned 24.21.0 release runtime.
+Node 24.14–24.20 are excluded because their native CommonJS export pre-parser
+can abort under concurrent ESM-to-CommonJS loading. Unsupported Node versions
+fail immediately with an actionable version error.
 
 ## CLI
 

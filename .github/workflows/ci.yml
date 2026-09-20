@@ -27,7 +27,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
-          node-version: 24
+          node-version: 24.21.0
           package-manager-cache: false
           cache: npm
           cache-dependency-path: package-lock.json
@@ -49,7 +49,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ["22.14.0", "24"]
+        node: ["22.14.0", "24.21.0"]
     steps:
       - name: Check out repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -87,7 +87,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ["22.14.0", "24"]
+        node: ["22.14.0", "24.21.0"]
         shard: [1, 2, 3, 4]
     env:
       MOKLY_VERIFICATION_RUNTIME: node-${{ matrix.node }}
@@ -139,7 +139,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ["22.14.0", "24"]
+        node: ["22.14.0", "24.21.0"]
         shard: [1, 2, 3, 4]
     env:
       MOKLY_VERIFICATION_RUNTIME: node-${{ matrix.node }}
@@ -237,7 +237,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
-          node-version: 24
+          node-version: 24.21.0
           package-manager-cache: false
       - name: Download shard evidence
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0

@@ -416,19 +416,19 @@ carries its removal rule, and `mokly-design-components.md` points at the
 generated manifest instead of restating counts. `view-controls.view.tsx` needed
 no change: Milestone 2C left one decision per expression and no nested ternary.
 
-## Milestone 2F: Merge main and stabilise the gate
+## Milestone 2F: Merge main and stabilise the gate (complete)
 
 Bring the branch up to date with `origin/main` before runtime work, and stop
 the pre-existing Node crash from turning green gates red. Nothing here changes
 product behaviour.
 
-- [ ] Fetch `origin/main`, capture the branch tip, and audit main's additions
+- [x] Fetch `origin/main`, capture the branch tip, and audit main's additions
       since the merge base as `AGENTS.md` requires. Merge `origin/main` into
       this branch (no rebase; the branch is shared) and resolve every conflict
       path by path, keeping main's inspector CSS fix, `xtask/src/check.rs`
       changes and the verification scripts. Regenerate the example catalogue
       if generated output conflicts; never hand-merge generated HTML.
-- [ ] Reproduce the intermittent Node fatal error (a V8 `ToLocalChecked`
+- [x] Reproduce the intermittent Node fatal error (a V8 `ToLocalChecked`
       crash during CommonJS export pre-parsing) in
       `tests/watch_resource_boundaries.test.ts` under the CI Node version
       (22.14.0) and the local Node 24. Identify the CommonJS import the CJS
@@ -437,11 +437,27 @@ product behaviour.
       Do not add a retry loop. If the crash proves to be a Node bug with no
       source-level fix, pin the CI and local Node version to one that does not
       crash and document the reason in `docs/protocol/ci-verification.md`.
-- [ ] Run `npm run build`, `npm run example:build`, `npm run example:check`,
+- [x] Close the three findings from the Milestone 2E review: add one
+      sentence to `docs/protocol/mokly-design-links.md` stating that the
+      depicted dark set is representative and the runtime's single preference,
+      not per-screen dark renders, keeps a whole session dark; export the
+      comparison families from `parts/navigation_states.ts` (the existing
+      `welcomeModes` and `appearanceModes` records) and derive the
+      `COMPARISON_FAMILIES` list in `tests/design_links.test.ts` from them;
+      extract the per-fragment body of
+      `tests/browser/design_comparison_eligibility.spec.ts` into one local
+      function that labels every assertion with the fragment.
+- [x] Stabilise the component-design browser check surfaced by the merged full
+      gate: wait for one selected canvas, then assert the disabled action
+      through its viewport-labelled preview instead of a transient global
+      `:visible` selector.
+- [x] Keep the public install and CI guides aligned with the safe Node 24 lane
+      while preserving their reader-facing copy and version-literal contracts.
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
       `npm test`, the browser suite and `cargo xtask check` on the merged
       branch; run the watch resource test ten times in a row to confirm it no
       longer crashes.
-- [ ] Confirm `git diff --diff-filter=D --name-status <merge-base>..HEAD`
+- [x] Confirm `git diff --diff-filter=D --name-status <merge-base>..HEAD`
       lists only the approved removals, then `git add -A`, commit and push;
       then review the complete diff against `origin/main` with
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)

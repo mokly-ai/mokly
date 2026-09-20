@@ -83,7 +83,7 @@ create historical baselines receive complete Git history.
 
 After the repository job succeeds, the workflow fans out to:
 
-- package jobs on Node 22.14.0 and Node 24;
+- package jobs on Node 22.14.0 and Node 24.21.0;
 - four unit shards on each Node runtime;
 - four browser shards on each Node runtime; and
 - native jobs on macOS and Windows at Node 22.14.0.
@@ -94,6 +94,15 @@ Clippy and tests run only in the repository job; selected suite jobs still
 compile xtask to dispatch their gate. Jobs that execute npm use npm 11.7.0. All
 jobs have read-only repository permissions. Superseded workflow runs remain
 cancellable.
+
+The Node 24 lane and the repository's `.node-version` are pinned to 24.21.0.
+Node 24.14.0 through 24.20.x contain an
+[upstream native CommonJS export-preparser crash](https://github.com/nodejs/node/issues/63323)
+that can abort concurrent ESM-to-CommonJS loading before JavaScript can handle
+an error. Lazy-loading individual dependencies reduces exposure but cannot
+remove this process-wide parser path; Node 24.21.0 contains the upstream native
+fix. The package engine range therefore excludes those affected releases while
+retaining the supported Node 22.14 floor.
 
 The stable `Required CI` job uses `if: always()` and fails closed unless every
 required job result is exactly `success`. It also validates the evidence

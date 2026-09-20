@@ -4,7 +4,7 @@ import path from "node:path";
 import { readReport } from "./evidence.mjs";
 import { validateShardReports } from "./report-validation.mjs";
 
-const RUNTIMES = ["node-22.14.0", "node-24"];
+const RUNTIMES = ["node-22.14.0", "node-24.21.0"];
 const SUITES = ["unit", "browser"];
 const SHARDS = 4;
 

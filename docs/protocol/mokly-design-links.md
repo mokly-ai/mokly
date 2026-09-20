@@ -40,6 +40,8 @@ switches the depicted catalogue. Link
 targets use design entry ids independently of the example ids printed in the
 depicted shell's metadata. Existing ids, routes, screens, and text links remain
 available. `example-farewell` remains an intentionally absent product entry.
+This depicted dark set is representative; the runtime's single Appearance
+preference, rather than per-screen dark renders, keeps a whole session dark.
 
 ## Authoring And Shared Components
 

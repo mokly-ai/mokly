@@ -653,8 +653,10 @@ forcing React peers to the consumer's one runtime.
 
 ## Developer Setup
 
-The repository requires Node.js 22.14 or newer, npm 11, and Rust 1.95 for its
-repository tasks.
+The repository accepts Node.js `>=22.14.0 <24.14.0` or `>=24.21.0`, npm 11,
+and Rust 1.95 for its repository tasks. The checked-in `.node-version` pins
+Node 24.21.0 so local verification cannot select the affected Node 24.14–24.20
+native loader releases described above.
 
 ```bash
 npm ci

@@ -111,7 +111,9 @@ declarations from ordinary declarations. `source.ts` recovers the original runs;
 Native header serialization omits nullable optional AST fields when returning them
 to Lightning CSS, whose visitor decoder expects those fields to be absent.
 The parser requires Lightning CSS's optional native package for the host platform;
-the installed Node package has no automatic WASM fallback.
+the installed Node package has no automatic WASM fallback. `lightning.ts` loads
+that CommonJS native boundary directly so an ESM process does not pre-parse its
+exports before using the parser.
 Comments between identifiers and opening parentheses retain token separation,
 so an invalid function spelling cannot cancel a valid function in a rule diff.
 

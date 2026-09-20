@@ -40,7 +40,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: "24.21"
       - run: npm ci
       - uses: mokly-ai/mokly/.github/actions/publish@COMMIT_SHA
         with:

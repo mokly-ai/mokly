@@ -24,6 +24,9 @@ supports colour and remain unstyled when colour is disabled. `bin.ts` is the
 process boundary: it selects the reporter before parsing arguments, applies
 secret redaction, and controls the exit code.
 
+Publish-only modules are loaded after command selection. Build, Check, Export,
+and supervised Serve children therefore do not initialize the upload archiver.
+
 Rich presentation never changes `MoklyError`, generated output, HTTP responses,
 or timing JSON. The supervised Serve child stays plain and forwards diagnostics
 to the parent so only one reporter owns the terminal.

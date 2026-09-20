@@ -122,7 +122,7 @@ must continue to exercise pending states and command-to-preview timings.
 `.github/workflows/ci.yml` runs on pull requests and pushes to `main`, with
 read-only repository contents permission and concurrency cancellation for
 superseded validation. An audit-first repository job gates independent package
-jobs on Node 22.14.0 and Node 24, four unit shards per runtime, four browser
+jobs on Node 22.14.0 and Node 24.21.0, four unit shards per runtime, four browser
 shards per runtime, and focused macOS/Windows native jobs. Chromium is installed
 only by browser jobs. Every job that runs npm installs with npm 11.7.0 and
 `npm ci`; CI caches only npm downloads and includes the merge-base lockfile in
@@ -247,7 +247,7 @@ The release workflow then:
    output), or explicit manual `publish_ref` and `viewer_ref` inputs. An
    incomplete pair fails closed; ordinary pushes do nothing.
 2. Checks out the CLI tag with history on a GitHub-hosted runner.
-3. Installs Node 24, npm 11.7.0, Rust 1.95.0, and Chromium without a package
+3. Installs Node 24.21.0, npm 11.7.0, Rust 1.95.0, and Chromium without a package
    cache.
 4. Verifies both local and remote tags identify `HEAD`, the source tree is clean
    including untracked files, and each tag matches its package version.

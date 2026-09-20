@@ -6,6 +6,11 @@ import { test } from "node:test";
 import { parse } from "parse5";
 
 import {
+  appearanceModes,
+  welcomeModes,
+} from "../examples/basic/entries/design/parts/navigation_states.js";
+
+import {
   attribute,
   byClass,
   designCatalogue,
@@ -205,17 +210,8 @@ test("the canonical documented inventory exactly matches the complete design reg
 
 /** Comparison families whose members must agree on the schemes they publish. */
 const COMPARISON_FAMILIES = [
-  [
-    "design-changes-current",
-    "design-changes-overlay",
-    "design-review-changed",
-    "design-review-difference",
-  ],
-  [
-    "design-appearance-overview",
-    "design-appearance-side-by-side",
-    "design-appearance-difference",
-  ],
+  Object.values(welcomeModes),
+  Object.values(appearanceModes),
 ];
 
 test("a dark fragment's links stay dark wherever the target has a dark render", async () => {
