@@ -205,6 +205,7 @@ function EvidenceRuntime({
   const [usages, setUsages] = useState(initial);
   const [markers, setMarkers] = useState<readonly ViewerMarker[]>([]);
   const callbacks = useRef<MoklyViewerProps>({
+    viewerId: "evidence",
     baseUrl: loaded.url,
     catalogue: model,
     defaultSelection: {

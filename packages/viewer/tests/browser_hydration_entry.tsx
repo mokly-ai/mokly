@@ -12,6 +12,7 @@ interface HydrationFixtureData {
   baseUrl: string;
   catalogue: CatalogueReadModel;
   defaultSelection: ViewerSelection;
+  viewers: readonly { rootId: string; viewerId: string }[];
 }
 
 interface HydrationProbe {
@@ -22,41 +23,54 @@ interface HydrationProbe {
 const state = window as unknown as {
   fixture: HydrationFixtureData;
   viewerHydrationHarness: unknown;
-  viewerHydrationProbe: HydrationProbe;
+  viewerHydrationProbe: Record<string, HydrationProbe>;
 };
-const root = document.querySelector<HTMLElement>("#hydration-root");
-if (!root) throw new Error("Missing hydration root");
-const ref = createRef<MoklyViewerHandle>();
 const recoverableErrors: string[] = [];
 
-hydrateRoot(
-  root,
-  <MoklyViewer
-    baseUrl={state.fixture.baseUrl}
-    catalogue={state.fixture.catalogue}
-    defaultSelection={state.fixture.defaultSelection}
-    ref={ref}
-  />,
-  {
-    onRecoverableError(error) {
-      recoverableErrors.push(
-        error instanceof Error ? error.message : String(error),
-      );
+const viewers = state.fixture.viewers.map(({ rootId, viewerId }) => {
+  const root = document.getElementById(rootId);
+  if (!root) throw new Error(`Missing hydration root ${rootId}`);
+  const ref = createRef<MoklyViewerHandle>();
+  hydrateRoot(
+    root,
+    <MoklyViewer
+      viewerId={viewerId}
+      baseUrl={state.fixture.baseUrl}
+      catalogue={state.fixture.catalogue}
+      defaultSelection={state.fixture.defaultSelection}
+      ref={ref}
+    />,
+    {
+      onRecoverableError(error) {
+        const message = error instanceof Error ? error.message : String(error);
+        recoverableErrors.push(`${viewerId}: ${message}`);
+      },
     },
-  },
-);
+  );
+  return { ref, root, rootId };
+});
 
 state.viewerHydrationHarness = {
   recoverableErrors,
-  ref,
+  ready() {
+    return viewers.every(({ ref }) => ref.current !== null);
+  },
   retained() {
-    return {
-      frame:
-        state.viewerHydrationProbe.frame ===
-        root.querySelector<HTMLIFrameElement>(".mbk-frag"),
-      shell:
-        state.viewerHydrationProbe.shell ===
-        root.querySelector<HTMLElement>("[data-mokly-shell]"),
-    };
+    return Object.fromEntries(
+      viewers.map(({ root, rootId }) => {
+        const probe = state.viewerHydrationProbe[rootId]!;
+        return [
+          rootId,
+          {
+            frame:
+              probe.frame ===
+              root.querySelector<HTMLIFrameElement>(".mbk-frag"),
+            shell:
+              probe.shell ===
+              root.querySelector<HTMLElement>("[data-mokly-shell]"),
+          },
+        ];
+      }),
+    );
   },
 };

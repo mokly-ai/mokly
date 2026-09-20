@@ -52,6 +52,7 @@ export function Catalogue({
     <div style={{ height: "100vh" }}>
       <MoklyViewer
         ref={viewer}
+        viewerId="catalogue"
         catalogue={`${artifactOrigin}/__mokly/catalogue.json`}
         frameAdapter={adapter}
         markers={commentMarker ? [commentMarker] : []}
@@ -90,6 +91,11 @@ runtime and cancels its pending work.
 
 All sources pass through `readCatalogue`. Paths resolve from the artifact origin,
 not the embedding page. Failed loads show a retry action and emit `onError`.
+Every viewer requires a stable `viewerId`: 1–64 ASCII letters, digits, hyphens
+or underscores, starting with a letter or digit. Keep it unique within the host
+document. When hydrating `renderViewer()` output, pass the identical `viewerId`
+to both server and client renders so package-owned IDs and accessibility
+references remain root-local. Host slot descendants are never namespaced.
 
 `defaultSelection` initializes uncontrolled state. Controlled `selection` requires
 `onSelectionChange` and forbids `defaultSelection`. Selection comprises `screenId`
@@ -173,6 +179,7 @@ import { renderViewer } from "@mokly/viewer/server";
 
 export function catalogueHtml(json: unknown, artifactOrigin: string) {
   return renderViewer({
+    viewerId: "catalogue",
     catalogue: readCatalogue(json),
     baseUrl: artifactOrigin,
     defaultSelection: { screenId: null },

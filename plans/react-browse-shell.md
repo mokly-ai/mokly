@@ -710,6 +710,34 @@ hydrate public viewer SSR in place before enabling browser-only behavior.
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
 
+## Milestone 11: Independent SSR viewer identifiers
+
+Tags: ui
+
+Summary: resolve the post-push accessibility finding where separate server
+renders restart React's local ID sequence and can collide when composed into
+one host document.
+
+- [x] Define the required stable `viewerId` contract in the viewer protocol,
+      package README and workspace README: IDs are validated, unique within a
+      document and identical across a server render and its hydration render.
+- [x] Add a failing server regression for two independent `renderViewer()`
+      calls and a browser regression that hydrates both roots in place, proving
+      package-owned IDs and their fragment/ARIA references remain root-local
+      without hydration errors.
+- [x] Replace the implicit root-local React ID prefix with the validated
+      host-supplied viewer ID in both `renderViewer()` and `MoklyViewer`; update
+      package consumers, fixtures and smoke checks to supply stable IDs.
+- [x] Run the viewer build, typecheck and focused server/hydration tests, then
+      run the complete `cargo xtask check` gate with no failures or skips.
+- [ ] After checks pass, `git add -A`, commit with Conventional Commits, and
+      push the branch.
+- [ ] After the push, use
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main`; report
+      numbered, severity-rated findings with options and recommendations
+      without changing the implementation.
+
 ## Post-merge follow-up (non-blocking)
 
 - Publish the viewer and CLI versions containing the hydrated shell; consumers

@@ -51,26 +51,37 @@ export async function viewerHydrationFixture() {
     logLevel: "silent",
   });
   const defaultSelection = {
-    screenId: "home",
+    screenId: "action",
     view: "all" as const,
     viewport: "mobile" as const,
     colorScheme: "light" as const,
     search: "",
     tags: [],
   };
-  const html = renderViewer({
-    catalogue: fixture.catalogue,
-    baseUrl: fixture.host.url,
-    defaultSelection,
-  });
+  const viewers = [
+    { rootId: "hydration-primary", viewerId: "primary" },
+    { rootId: "hydration-secondary", viewerId: "secondary" },
+  ];
+  const html = viewers
+    .map(
+      ({ rootId, viewerId }) =>
+        `<section id="${rootId}">${renderViewer({
+          viewerId,
+          catalogue: fixture.catalogue,
+          baseUrl: fixture.host.url,
+          defaultSelection,
+        })}</section>`,
+    )
+    .join("");
   const data = JSON.stringify({
     catalogue: fixture.catalogue,
     baseUrl: fixture.host.url,
     defaultSelection,
+    viewers,
   }).replaceAll("<", "\\u003c");
   await fs.writeFile(
     path.join(fixture.root, "hydration.html"),
-    `<!doctype html><meta charset="utf-8"><link href="data:," rel="icon"><link rel="stylesheet" href="/viewer.css"><body><section id="hydration-root">${html}</section><script>window.fixture=${data};window.viewerHydrationProbe={shell:document.querySelector("#hydration-root [data-mokly-shell]"),frame:document.querySelector("#hydration-root .mbk-frag")}</script><script type="module" src="/viewer-hydration.js"></script></body>`,
+    `<!doctype html><meta charset="utf-8"><link href="data:," rel="icon"><link rel="stylesheet" href="/viewer.css"><body>${html}<script>window.fixture=${data};window.viewerHydrationProbe=Object.fromEntries(window.fixture.viewers.map(({rootId})=>{const root=document.getElementById(rootId);return [rootId,{shell:root.querySelector("[data-mokly-shell]"),frame:root.querySelector(".mbk-frag")}]}))</script><script type="module" src="/viewer-hydration.js"></script></body>`,
   );
   await fs.copyFile(
     "packages/viewer/dist/styles.css",

@@ -27,6 +27,7 @@ type ReadyProps = MoklyViewerProps & {
   loaded: LoadedCatalogue;
   adapter: NonNullable<MoklyViewerProps["frameAdapter"]>;
   bridgeOwner: object;
+  identifierPrefix: string;
   replaced: () => boolean;
 };
 
@@ -110,7 +111,7 @@ function MountedViewer(
     [props.loaded, report],
   );
   return (
-    <ShellIdentifierProvider scoped>
+    <ShellIdentifierProvider prefix={props.identifierPrefix}>
       <ShellStoreProvider
         catalogue={catalogue}
         comparisonEnvironment={comparisonEnvironment}

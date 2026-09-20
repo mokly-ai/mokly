@@ -10,7 +10,9 @@ test.beforeAll(async () => {
 });
 test.afterAll(async () => fixture?.close());
 
-test("application-owned server HTML hydrates in place", async ({ page }) => {
+test("independent application-owned server roots hydrate in place", async ({
+  page,
+}) => {
   const consoleErrors: string[] = [];
   const pageErrors: string[] = [];
   page.on("console", (message) => {
@@ -19,21 +21,60 @@ test("application-owned server HTML hydrates in place", async ({ page }) => {
   page.on("pageerror", (error) => pageErrors.push(error.message));
 
   await page.goto(`${fixture.host.url}/hydration.html`);
-  await page.waitForFunction(() =>
-    Boolean(window.viewerHydrationHarness?.ref.current),
-  );
-  await expect(page.locator("[data-mokly-nav]")).toHaveAttribute(
-    "data-resize-ready",
-    "",
-  );
+  await page.waitForFunction(() => window.viewerHydrationHarness?.ready());
+  for (const rootId of ["hydration-primary", "hydration-secondary"])
+    await expect(page.locator(`#${rootId} [data-mokly-nav]`)).toHaveAttribute(
+      "data-resize-ready",
+      "",
+    );
 
-  const result = await page.evaluate(() => ({
-    errors: window.viewerHydrationHarness.recoverableErrors,
-    retained: window.viewerHydrationHarness.retained(),
-  }));
+  const result = await page.evaluate(() => {
+    const roots = ["hydration-primary", "hydration-secondary"].map((rootId) => {
+      const root = document.getElementById(rootId)!;
+      const ids = [...root.querySelectorAll<HTMLElement>("[id]")].map(
+        ({ id }) => id,
+      );
+      const references = [
+        ...root.querySelectorAll<HTMLElement>(
+          '[aria-controls], [aria-describedby], [aria-labelledby], [for], [href^="#"]',
+        ),
+      ].flatMap((element) =>
+        [
+          "aria-controls",
+          "aria-describedby",
+          "aria-labelledby",
+          "for",
+          "href",
+        ].flatMap((attribute) => {
+          const value = element.getAttribute(attribute);
+          return value ? value.replace(/^#/, "").split(" ") : [];
+        }),
+      );
+      return { ids, references, rootId };
+    });
+    const allIds = roots.flatMap(({ ids }) => ids);
+    return {
+      errors: window.viewerHydrationHarness.recoverableErrors,
+      isolated: roots.every(({ ids, references, rootId }) => {
+        const viewerId = rootId.replace("hydration-", "");
+        const localIds = new Set(ids);
+        return (
+          ids.every((id) => id.startsWith(`mokly-${viewerId}-`)) &&
+          references.every((id) => localIds.has(id))
+        );
+      }),
+      retained: window.viewerHydrationHarness.retained(),
+      unique: new Set(allIds).size === allIds.length,
+    };
+  });
   expect(result).toEqual({
     errors: [],
-    retained: { frame: true, shell: true },
+    isolated: true,
+    retained: {
+      "hydration-primary": { frame: true, shell: true },
+      "hydration-secondary": { frame: true, shell: true },
+    },
+    unique: true,
   });
   expect(pageErrors).toEqual([]);
   expect(

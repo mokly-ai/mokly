@@ -1,19 +1,17 @@
 /** React-owned identifier scoping for independent embedded shell roots. */
 
-import { createContext, useContext, useId, type ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
 
 const IdentifierPrefix = createContext("");
 
 /** Prefix package-owned identifiers while leaving host slot children untouched. */
 export function ShellIdentifierProvider({
   children,
-  scoped = false,
+  prefix = "",
 }: {
   children: ReactNode;
-  scoped?: boolean;
+  prefix?: string;
 }) {
-  const generated = useId().replace(/[^A-Za-z0-9_-]/g, "");
-  const prefix = scoped ? `mokly-${generated}-` : "";
   return (
     <IdentifierPrefix.Provider value={prefix}>
       {children}

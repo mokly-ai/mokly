@@ -20,8 +20,8 @@ interface Harness {
 }
 interface ViewerHydrationHarness {
   recoverableErrors: string[];
-  ref: { current: MoklyViewerHandle | null };
-  retained(): { frame: boolean; shell: boolean };
+  ready(): boolean;
+  retained(): Record<string, { frame: boolean; shell: boolean }>;
 }
 interface FrameHookHarness {
   highlight(id: string): Promise<void>;

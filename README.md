@@ -23,6 +23,9 @@ highlighting, host-owned instance markers, an imperative handle and
 its shell tree on the server and hydrate it in the browser with its bundled
 React, so every delivery mode runs one shell. Implementation and delivery work
 is tracked in the [plans index](./plans/README.md).
+Embedded hosts give each viewer a stable, document-unique `viewerId` and reuse
+it across server rendering and hydration, keeping links and accessibility
+relationships isolated when several viewers share a page.
 Static pages retain their complete first paint and share one catalogue file,
 validated before hydration, instead of copying the catalogue into every page.
 Both packages build, release and are tested together. The viewer publishes before

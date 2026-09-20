@@ -34,10 +34,16 @@ export function ViewerConsumer({
   onSelectionChange: (selection: ViewerSelection) => void;
 }) {
   const handle = createRef<MoklyViewerHandle>();
-  renderViewer({ catalogue, baseUrl: "https://artifact.example", selection });
+  renderViewer({
+    viewerId: "catalogue",
+    catalogue,
+    baseUrl: "https://artifact.example",
+    selection,
+  });
   return (
     <MoklyViewer
       ref={handle}
+      viewerId="catalogue"
       catalogue={catalogue}
       baseUrl="https://artifact.example"
       selection={selection}

@@ -6,12 +6,14 @@ import {
   awaitHostBridgeFailureBarrier,
   consumeHostBridgeFailure,
 } from "./host_bridge_failure.js";
+import { viewerIdentifierPrefix } from "./identifiers.js";
 import { ReadyViewer } from "./ready.js";
 import { useCatalogue } from "./source_hook.js";
 import type { MoklyViewerProps } from "./types.js";
 
 /** Mount a validated catalogue with host-owned slots and isolated runtime state. */
 export function MoklyViewer(props: MoklyViewerProps) {
+  const identifierPrefix = viewerIdentifierPrefix(props.viewerId);
   const source = useCatalogue(props.catalogue, props.baseUrl);
   const [adapter] = useState(sameOriginAdapter);
   const selectedAdapter = props.frameAdapter ?? adapter;
@@ -109,6 +111,7 @@ export function MoklyViewer(props: MoklyViewerProps) {
       loaded={source.loaded}
       adapter={selectedAdapter}
       bridgeOwner={bridgeOwner.current}
+      identifierPrefix={identifierPrefix}
       replaced={replaced}
     />
   );

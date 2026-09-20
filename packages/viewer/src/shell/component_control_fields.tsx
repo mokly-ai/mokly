@@ -10,6 +10,7 @@ import type {
 import { validateValue } from "../components/props.js";
 import type { ComponentOverride } from "../components/render_types.js";
 
+import { useShellIdentifierScope } from "./identifier_context.js";
 import type { WorkspaceVariant } from "./workspace_data.js";
 
 /** Input representation that preserves partial numeric and text edits. */
@@ -123,13 +124,14 @@ export function ComponentControlFields({
   errors: Readonly<Record<string, string>>;
   onChange(key: string, field: ControlDraftField, immediate: boolean): void;
 }) {
+  const identifier = useShellIdentifierScope();
   return (
     <div className="mbk-control-grid">
       {controlEntries(component).map(([key, control]) => {
         const field = draft[key]!;
         const label = control.label ?? key;
         const optional = component.propSchema.properties[key]?.optional;
-        const id = `mb-prop-${component.id}-${key}`;
+        const id = identifier(`mb-prop-${component.id}-${key}`);
         const help =
           control.description ??
           (control.kind === "number" &&

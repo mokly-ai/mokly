@@ -99,6 +99,7 @@ const start = (id: string, options: HostOptions = {}) => {
     },
   };
   host.props = {
+    viewerId: id,
     catalogue: options.source ?? data.catalogue,
     ...(options.source
       ? {}

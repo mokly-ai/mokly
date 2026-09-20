@@ -15,12 +15,15 @@ import {
   viewerComparisonEnvironment,
   viewerShellEnvironment,
 } from "./environment.js";
+import { viewerIdentifierPrefix } from "./identifiers.js";
 import { viewerCatalogue, viewerContext, viewerView } from "./projection.js";
 import { defaultSelection, normalizeSelection } from "./selection.js";
 import { readObjectSource } from "./source.js";
 import type { ViewerSelection, ViewerSlots } from "./types.js";
 
 export interface ServerViewerProps {
+  /** Stable identifier unique among viewer roots in the host document. */
+  viewerId: string;
   catalogue: CatalogueReadModel;
   baseUrl: string | URL;
   selection?: ViewerSelection;
@@ -40,6 +43,7 @@ export function renderViewer(
   host?: ViewerServerContext,
 ): string {
   if (host) return renderShellPage(host.catalogue, host.view, host.context);
+  const identifierPrefix = viewerIdentifierPrefix(props.viewerId);
   const loaded = readObjectSource(props.catalogue, props.baseUrl);
   if (!loaded) throw new Error("Server rendering requires a catalogue object.");
   if (props.selection && props.defaultSelection)
@@ -57,7 +61,7 @@ export function renderViewer(
     () => {},
   );
   return renderToString(
-    <ShellIdentifierProvider scoped>
+    <ShellIdentifierProvider prefix={identifierPrefix}>
       <ShellStoreProvider
         catalogue={catalogue}
         comparisonEnvironment={viewerComparisonEnvironment(loaded)}
