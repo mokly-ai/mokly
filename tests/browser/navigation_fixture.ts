@@ -57,6 +57,7 @@ export async function startNavigationFixture(): Promise<NavigationFixture> {
       changedRoutes: [
         "screens/extra.html",
         "screens/home.html",
+        "screens/home.variants/error.html",
         "user-flows/tour.html",
       ],
       removedEntries: [],
@@ -107,7 +108,10 @@ export const mockups = [
   defineCollection({ ...metadata, childIds: ["nested"], description: "Fixture", id: "fixture", title: "Fixture" }),
   defineCollection({ ...metadata, childIds: ["home", "details", "tour"], description: "Nested", id: "nested", title: "Nested" }),
   defineCollection({ ...metadata, childIds: ["extra"], description: "Other", id: "other", title: "Other" }),
-  defineScreen({ ...metadata, description: "Home", desktop: <Home compact={false} />, id: "home", mobile: <Home compact />, route: "screens/home.html", title: "Home", useCaseIds: ["tour"] }),
+  defineScreen({ ...metadata, description: "Home", desktop: <Home compact={false} />, id: "home", mobile: <Home compact />, route: "screens/home.html", title: "Home", useCaseIds: ["tour"], variants: [
+    { description: "Home before any workspace exists", desktop: <main id="home-empty">Empty workspace</main>, id: "home-empty", mobile: <main id="home-empty">Empty workspace</main>, slug: "empty", title: "Empty workspace" },
+    { description: "Home after saving failed", desktop: <main id="home-error">Save failed</main>, id: "home-error", mobile: <main id="home-error">Save failed</main>, slug: "error", title: "Save failed" },
+  ] }),
   defineScreen({ ...metadata, description: "Details", desktop: <Details />, id: "details", mobile: <Details />, route: "screens/details.html", title: "Details", useCaseIds: ["tour"] }),
   defineScreen({ ...metadata, description: "Extra", desktop: <main>Extra</main>, id: "extra", mobile: <main>Extra</main>, route: "screens/extra.html", title: "Extra", useCaseIds: [] }),
   defineUseCase({ ...metadata, description: "Tour", id: "tour", route: "user-flows/tour.html", steps: [{ screenId: "home" }, { screenId: "details" }], title: "Tour" })

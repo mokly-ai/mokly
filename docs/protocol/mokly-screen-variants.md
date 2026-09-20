@@ -6,9 +6,12 @@ Authoring, flattening, generated output, manifest validation, hierarchy maps,
 the public read model, route-level Changes classification, removed-variant
 metadata and publication, use-case propagation, and affected-consumer evidence
 are implemented through Milestone 4 of the
-[screen variants plan](../../plans/screen-variants.md). Navigation grouping,
-the shell's aggregate parent mark, removed-row placement, and variant
-breadcrumbs remain delivery targets for later UI milestones.
+[screen variants plan](../../plans/screen-variants.md). Milestone 5 adds the
+navigation grouping described below — the parent row's disclosure button, the
+variant list and its persisted identity, the active-row invariant across
+variants, search and Changes composition, the parent's aggregate mark, and
+variant breadcrumbs and details rows. Placing a removed variant's row under its
+surviving parent remains a delivery target for Milestone 6.
 
 ## Purpose And Boundary
 

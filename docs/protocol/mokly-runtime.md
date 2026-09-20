@@ -256,9 +256,15 @@ rendered and persisted identities. A collection projected into a section uses
 independent state. Labels remain presentation only. Stored pre-section
 `collection:<id>` keys apply to either projection during migration; obsolete
 `legacy:` and label-path keys are ignored while valid disclosure keys remain
-effective. The approved [screen variants contract](./mokly-screen-variants.md)
-adds `variants:<section>:<parent id>` for the variant list a screen row
-discloses, persisted, restored, and collapsed beside the collection keys.
+effective. The [screen variants contract](./mokly-screen-variants.md) adds
+`variants:<section>:<parent id>` for the variant list a screen row discloses,
+persisted, restored, and collapsed beside the collection keys. That list is a
+container rather than a `<details>`, because the row beside it is a link and
+cannot also be a summary; its `hidden` state and its button's `aria-expanded`
+carry the same disclosure the collection keys carry, and the button's
+accessible name follows the state. A parent row whose list holds a changed
+route carries `data-changed-variants`, the aggregate mark that keeps the group
+visible under the Changes filter without claiming the parent itself changed.
 
 Per-view change evidence is an approved target of the same plan: when the
 comparison or lightweight screen-view evidence marks only some views of a

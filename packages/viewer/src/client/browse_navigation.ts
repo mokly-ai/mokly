@@ -1,5 +1,11 @@
 /** Durable disclosure preferences for Browse navigation groups. */
 
+import {
+  isDisclosureOpen,
+  navDisclosures,
+  setDisclosureOpen,
+} from "./disclosures.js";
+
 /** Storage subset used by navigation disclosure preferences. */
 export interface NavPreferenceStorage {
   getItem(key: string): string | null;
@@ -8,10 +14,14 @@ export interface NavPreferenceStorage {
 
 const NAV_DISCLOSURE_KEY = "mokly:nav-disclosure:v2";
 
+/** The identity a screen row's variant list persists, per section. */
+const VARIANT_KEY = /^variants:(?:components|pages):[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
 /** Whether a value identifies a current or legacy navigation disclosure. */
 export function isNavDisclosureKey(value: string): boolean {
   return (
     value.startsWith("collection:") ||
+    VARIANT_KEY.test(value) ||
     value === "section:pages" ||
     value === "section:components"
   );
@@ -44,18 +54,20 @@ export class NavDisclosurePreference {
   /** Apply an explicit stored preference without replacing server defaults. */
   apply(doc: Document): void {
     if (!this.#closed) return;
-    for (const group of navigationGroups(doc)) {
+    for (const group of navDisclosures(doc)) {
       const key = group.getAttribute("data-nav-disclosure");
       if (key && isNavDisclosureKey(key))
-        group.open = !isNavDisclosureClosed(this.#closed, key);
+        setDisclosureOpen(group, !isNavDisclosureClosed(this.#closed, key));
     }
   }
 
   /** Capture and persist the current closed-group set. */
   remember(doc: Document): void {
-    const closed = navigationGroups(doc).flatMap((group) => {
+    const closed = navDisclosures(doc).flatMap((group) => {
       const key = group.getAttribute("data-nav-disclosure");
-      return !group.open && key && isNavDisclosureKey(key) ? [key] : [];
+      return !isDisclosureOpen(group) && key && isNavDisclosureKey(key)
+        ? [key]
+        : [];
     });
     this.#closed = new Set(closed);
     try {
@@ -92,10 +104,4 @@ export function createBrowserNavPreference(
   } catch {
     return new NavDisclosurePreference();
   }
-}
-
-function navigationGroups(doc: Document): HTMLDetailsElement[] {
-  return [
-    ...doc.querySelectorAll<HTMLDetailsElement>("details[data-nav-disclosure]"),
-  ];
 }

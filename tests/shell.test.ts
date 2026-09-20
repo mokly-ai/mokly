@@ -141,6 +141,55 @@ const taggedFlowManifest: ManifestV5 = {
   ),
 };
 
+const variantManifest: ManifestV5 = {
+  ...manifest,
+  entries: [
+    ...manifest.entries,
+    {
+      address: "example.test/welcome",
+      declaredDependencies: [],
+      dependencies: ["styles.css"],
+      description: "Welcome before the workspace has a name",
+      fragments: {
+        desktop: "screens/welcome.variants/empty.desktop.html",
+        mobile: "screens/welcome.variants/empty.mobile.html",
+      },
+      id: "welcome-empty",
+      kind: "screen",
+      navPath: ["Example", "Screens"],
+      relatedDocs: ["notes.md"],
+      route: "screens/welcome.variants/empty.html",
+      sourcePath: "entries/fixture.mockup.tsx",
+      tags: ["forms", "onboarding"],
+      title: "Welcome, empty workspace",
+      useCaseIds: [],
+      variantOf: "welcome",
+      viewports: ["mobile", "desktop"],
+    },
+    {
+      address: "example.test/welcome",
+      declaredDependencies: [],
+      dependencies: ["styles.css"],
+      description: "Welcome after the workspace failed to save",
+      fragments: {
+        desktop: "screens/welcome.variants/error.desktop.html",
+        mobile: "screens/welcome.variants/error.mobile.html",
+      },
+      id: "welcome-error",
+      kind: "screen",
+      navPath: ["Example", "Screens"],
+      relatedDocs: ["notes.md"],
+      route: "screens/welcome.variants/error.html",
+      sourcePath: "entries/fixture.mockup.tsx",
+      tags: ["forms", "onboarding"],
+      title: "Save failed",
+      useCaseIds: [],
+      variantOf: "welcome",
+      viewports: ["mobile", "desktop"],
+    },
+  ],
+};
+
 const untaggedManifest: ManifestV5 = {
   ...manifest,
   entries: manifest.entries.map((entry) => {
@@ -343,6 +392,177 @@ test("catalogue nav marks active, changed, and iconed rows", () => {
   );
   const inactive = homePage(catalogue, context);
   assert.equal(inactive.includes('aria-current="page"[^>]*data-route'), false);
+});
+
+test("a screen with variants discloses them under its own row", () => {
+  const catalogue = createCatalogue(variantManifest);
+  const html = homePage(catalogue, context);
+
+  assert.match(
+    html,
+    /<div class="mbk-nav-leaf"><a [^>]*data-route="screens\/welcome\.html"/,
+  );
+  assert.match(
+    html,
+    /<button aria-controls="mb-nav-variants-pages-welcome" aria-expanded="false" aria-label="Show variants of Welcome" class="mbk-nav-variants-toggle" data-nav-variants-label="Welcome" data-nav-variants-toggle="mb-nav-variants-pages-welcome" type="button">/,
+  );
+  assert.match(
+    html,
+    /<div class="mbk-nav-variants" data-nav-disclosure="variants:pages:welcome" data-nav-variants="" hidden="" id="mb-nav-variants-pages-welcome">/,
+  );
+  assert.match(
+    html,
+    /<a [^>]*data-route="screens\/welcome\.variants\/empty\.html"[^>]*>/,
+  );
+  assert.match(html, /class="mbk-nav-ico variant"/);
+  assert.match(
+    html,
+    /class="mbk-nav-ico variant"><svg[^>]*><path d="M6 6V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-2" stroke-linecap="butt"><\/path><rect height="14" rx="2" width="16" x="2" y="6"><\/rect><path d="M2 10h16"><\/path><\/svg>/,
+  );
+  assert.equal(
+    occurrences(html, 'data-route="screens/welcome.variants/empty.html"'),
+    1,
+  );
+  assert.equal(occurrences(html, 'class="mbk-nav-variants-toggle"'), 1);
+  assert.doesNotMatch(
+    html,
+    /<div class="mbk-nav-leaf"><a [^>]*data-route="screens\/details\.html"/,
+  );
+});
+
+test("variant rows indent one step past their parent row", () => {
+  const catalogue = createCatalogue(variantManifest);
+  const html = homePage(catalogue, context);
+  const parent = /<a ([^>]*data-route="screens\/welcome\.html"[^>]*)>/.exec(
+    html,
+  );
+  const child =
+    /<a ([^>]*data-route="screens\/welcome\.variants\/empty\.html"[^>]*)>/.exec(
+      html,
+    );
+  assert.ok(parent?.[1]);
+  assert.ok(child?.[1]);
+  assert.match(parent[1], /padding-left:40px/);
+  assert.match(parent[1], /--mbk-indent:32px/);
+  assert.match(child[1], /padding-left:56px/);
+  assert.match(child[1], /--mbk-indent:48px/);
+  assert.match(child[1], /background-position:15px 0, 31px 0, 47px 0/);
+  assert.match(child[1], /data-nav-row=""/);
+  assert.match(child[1], /data-entry-id="welcome-empty"/);
+});
+
+test("the served variant list opens for the parent and for each variant", () => {
+  const catalogue = createCatalogue(variantManifest);
+  const closed =
+    'class="mbk-nav-variants" data-nav-disclosure="variants:pages:welcome" data-nav-variants="" hidden=""';
+  const open =
+    'class="mbk-nav-variants" data-nav-disclosure="variants:pages:welcome" data-nav-variants=""';
+  assert.ok(homePage(catalogue, context).includes(closed));
+  assert.ok(
+    routePage(catalogue, "screens/details.html").includes(closed),
+    "an unrelated screen keeps the list closed",
+  );
+
+  const onVariant = routePage(catalogue, "screens/welcome.variants/empty.html");
+  assert.equal(onVariant.includes(closed), false);
+  assert.ok(onVariant.includes(`${open} id=`));
+  assert.match(
+    onVariant,
+    /aria-expanded="true" aria-label="Hide variants of Welcome"/,
+  );
+  assert.match(
+    onVariant,
+    /<a aria-current="page"[^>]*data-route="screens\/welcome\.variants\/empty\.html"/,
+  );
+
+  const onParent = routePage(catalogue, "screens/welcome.html");
+  assert.equal(onParent.includes(closed), false);
+  assert.match(
+    onParent,
+    /aria-expanded="true" aria-label="Hide variants of Welcome"/,
+  );
+});
+
+test("a variant's crumbs end in a link to its parent screen", () => {
+  const catalogue = createCatalogue(variantManifest);
+  const html = routePage(catalogue, "screens/welcome.variants/empty.html");
+
+  assert.match(
+    html,
+    /<p aria-label="Catalogue location" class="mbk-crumbs"><span>Example<\/span><span><span class="sep">›<\/span>Screens<\/span><span><span class="sep">›<\/span><a class="mbk-crumb-link" href="\/view\/screens\/welcome\.html">Welcome<\/a><\/span><\/p>/,
+  );
+  assert.match(html, /#welcome-empty<\/button>/);
+  assert.doesNotMatch(
+    routePage(catalogue, "screens/welcome.html"),
+    /class="mbk-crumb-link"/,
+  );
+});
+
+test("details list a screen's variants and a variant's parent", () => {
+  const catalogue = createCatalogue(variantManifest);
+  const parent = detailsSection(routePage(catalogue, "screens/welcome.html"));
+  const child = detailsSection(
+    routePage(catalogue, "screens/welcome.variants/empty.html"),
+  );
+
+  assert.match(
+    parent,
+    /<span class="mbk-meta-k">Variants<\/span><span class="mbk-meta-v"><span class="mbk-chips"><a class="mbk-chip screen" href="\/view\/screens\/welcome\.variants\/empty\.html">/,
+  );
+  assert.match(parent, /Welcome, empty workspace<\/a>/);
+  assert.doesNotMatch(parent, /mbk-meta-k">Variant of/);
+  assert.match(
+    child,
+    /<span class="mbk-meta-k">Variant of<\/span><span class="mbk-meta-v"><span class="mbk-chips"><a class="mbk-chip screen" href="\/view\/screens\/welcome\.html">/,
+  );
+  assert.doesNotMatch(child, /mbk-meta-k">Variants</);
+  assert.doesNotMatch(
+    detailsSection(routePage(catalogue, "screens/details.html")),
+    /mbk-meta-k">Variant/,
+  );
+});
+
+test("the variant disclosure styles carry no rail and rotate the chevron", () => {
+  const css = flatCss(SHELL_CSS);
+
+  assert.match(css, /\.mbk-nav-leaf \{ display: flex; align-items: center;/);
+  assert.match(css, /\.mbk-nav-leaf > \.mbk-nav-row \{ flex: 1;/);
+  assert.match(
+    css,
+    /\.mbk-nav-leaf > \.mbk-nav-row::before \{ right: -18px; \}/,
+  );
+  assert.match(css, /\.mbk-nav-variants\[hidden\] \{ display: none; \}/);
+  assert.match(css, /\.mbk-nav-variants-toggle \{[^}]*width: 16px;/);
+  assert.match(css, /\.mbk-nav-variants-toggle \{[^}]*height: 16px;/);
+  assert.match(css, /\.mbk-nav-variants-toggle \{[^}]*border: 0;/);
+  assert.match(
+    css,
+    /\.mbk-nav-variants-toggle:focus-visible \{ outline: 2px solid/,
+  );
+  assert.match(
+    css,
+    /\.mbk-nav-variants-toggle\[aria-expanded="true"\] svg \{ transform: rotate\(90deg\); \}/,
+  );
+  assert.match(
+    css,
+    /@media \(prefers-reduced-motion: reduce\) \{ \.mbk-nav-variants-toggle svg \{ transition: none; \} \}/,
+  );
+  assert.match(
+    css,
+    /\.mbk-nav-leaf:has\(> \.mbk-nav-row\[aria-current="page"\]\) \.mbk-nav-variants-toggle \{ color: var\(--mokly-accent-contrast\); \}/,
+  );
+  assert.doesNotMatch(
+    css,
+    /\.mbk-nav-(?:leaf|variants)[^{}]*\{[^}]*border-left/,
+  );
+  assert.doesNotMatch(
+    css,
+    /\.mbk-nav-(?:leaf|variants)[^{}]*\{[^}]*box-shadow: inset/,
+  );
+  assert.doesNotMatch(
+    css,
+    /\.mbk-nav-(?:leaf|variants)[^{}]*\{[^}]*linear-gradient/,
+  );
 });
 
 test("screen page renders device chrome, viewport switch, and details", () => {

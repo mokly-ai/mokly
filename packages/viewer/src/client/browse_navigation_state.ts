@@ -1,6 +1,12 @@
 /** Catalogue-tree filtering and active-route visibility invariants. */
 
 import {
+  isDisclosureOpen,
+  isVariantList,
+  navDisclosures,
+  setDisclosureOpen,
+} from "./disclosures.js";
+import {
   parseSearchQuery,
   queryConstrains,
   rowMatchesQuery,
@@ -64,6 +70,7 @@ export function applyNavVisibility(
       waiting || !(matchesFilter && rowMatchesQuery(query, navRowFacts(row)));
     visible ||= !row.hidden;
   }
+  applyVariantVisibility(doc);
   const notice = doc.querySelector<HTMLElement>("[data-nav-status]");
   if (notice) {
     notice.hidden = !changedOnly || (!waiting && visible);
@@ -124,12 +131,10 @@ export function selectAndRevealRoute(
     }
   }
   applyNavVisibility(doc, "preserve");
-  let ancestor = active.closest<HTMLDetailsElement>(
-    "details[data-nav-disclosure]",
-  );
+  let ancestor = active.closest<HTMLElement>("[data-nav-disclosure]");
   while (ancestor) {
-    const wasOpen = ancestor.open;
-    ancestor.open = true;
+    const wasOpen = isDisclosureOpen(ancestor);
+    setDisclosureOpen(ancestor, true);
     if (
       ancestor.dataset["filterOpen"] !== undefined &&
       (cause === "navigation" || !wasOpen)
@@ -137,9 +142,8 @@ export function selectAndRevealRoute(
       ancestor.dataset["filterOpen"] = "1";
     }
     ancestor =
-      ancestor.parentElement?.closest<HTMLDetailsElement>(
-        "details[data-nav-disclosure]",
-      ) ?? null;
+      ancestor.parentElement?.closest<HTMLElement>("[data-nav-disclosure]") ??
+      null;
   }
   active.scrollIntoView({ block: "nearest" });
   return active;
@@ -162,35 +166,63 @@ function navRowFacts(row: Element): {
   };
 }
 
+/**
+ * Reconcile every screen row that owns variants with the rows inside its list:
+ * the parent stays visible while any of its variants matches the current
+ * constraints, and it carries the aggregate mark while any of them is changed.
+ * The mark states that the group holds a change, never that the parent screen
+ * itself changed.
+ */
+function applyVariantVisibility(doc: Document): void {
+  for (const toggle of doc.querySelectorAll<HTMLElement>(
+    "[data-nav-variants-toggle]",
+  )) {
+    const listId = toggle.getAttribute("aria-controls");
+    const list = listId === null ? null : doc.getElementById(listId);
+    const parent =
+      toggle.parentElement?.querySelector<HTMLElement>("a[data-nav-row]");
+    if (!list || !parent) continue;
+    const rows = [...list.querySelectorAll<HTMLElement>("[data-nav-row]")];
+    if (rows.some((row) => !row.hidden)) parent.hidden = false;
+    if (rows.some((row) => row.getAttribute("data-changed") === "true"))
+      parent.setAttribute("data-changed-variants", "true");
+    else parent.removeAttribute("data-changed-variants");
+  }
+}
+
+/**
+ * A variant list carries its open state in the same `hidden` attribute that
+ * hides a filtered-out group, so filtering opens it exactly while it holds a
+ * matching row and restores the remembered state once filtering ends.
+ */
 function applyGroupVisibility(
   doc: Document,
   filtering: boolean,
   disclosure: NavigationDisclosurePolicy,
 ): void {
-  const groups = [
-    ...doc.querySelectorAll<HTMLDetailsElement>("details[data-nav-disclosure]"),
-  ];
+  const groups = navDisclosures(doc);
   if (filtering) {
     for (const group of groups) {
       if (group.dataset["filterOpen"] === undefined) {
-        group.dataset["filterOpen"] = group.open ? "1" : "0";
+        group.dataset["filterOpen"] = isDisclosureOpen(group) ? "1" : "0";
       }
-      if (disclosure === "reveal-matches") group.open = true;
+      if (disclosure === "reveal-matches") setDisclosureOpen(group, true);
     }
     for (const group of [...groups].reverse()) {
       const visible = [
         ...group.querySelectorAll<HTMLElement>("[data-nav-row]"),
       ].some((row) => !row.hidden);
-      group.hidden = !visible;
+      if (isVariantList(group)) setDisclosureOpen(group, visible);
+      else group.hidden = !visible;
     }
     return;
   }
   for (const group of groups) {
     const saved = group.dataset["filterOpen"];
     if (saved !== undefined) {
-      group.open = saved === "1";
+      setDisclosureOpen(group, saved === "1");
       delete group.dataset["filterOpen"];
     }
-    group.hidden = false;
+    if (!isVariantList(group)) group.hidden = false;
   }
 }

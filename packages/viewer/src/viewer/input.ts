@@ -82,7 +82,10 @@ export function viewerInput(event: Event, actions: InputActions): void {
     return;
   }
   if (
-    handleBrowseControl(doc, target, actions.updateDiffs) ||
+    handleBrowseControl(doc, target, {
+      rememberDisclosures: () => {},
+      updateDiffs: actions.updateDiffs,
+    }) ||
     handleFrameClick(doc, target) ||
     handleAddressClick(doc, target, (text) => copyText(doc, text))
   )

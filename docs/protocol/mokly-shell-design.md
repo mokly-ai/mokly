@@ -268,13 +268,14 @@ scrollable region scrolls internally:
     1px vertical guide per ancestor depth. The hover/active highlight is an
     inset pill starting at the row's indent (`--mbk-indent`), so guides stay
     visible; the active row uses the accent with contrast text.
-  - Approved target: a screen with variants keeps its link row and adds a
-    16px chevron disclosure button at the row's trailing edge that toggles a
-    list of its variant rows one indent step deeper, each with the variant
-    icon — a screen outline over a second, partially drawn screen outline,
-    muted like the screen icon so only the flow icon takes the accent. The
-    Changes filter shows only changed variant rows and marks the
-    parent with the changed dot when any variant changed. The changed mark is a
+  - A screen with variants keeps its link row and adds a 16px chevron
+    disclosure button at the row's trailing edge that toggles a list of its
+    variant rows one indent step deeper, each with the variant icon — a screen
+    outline over a second, partially drawn screen outline, muted like the
+    screen icon so only the flow icon takes the accent. The row and its button
+    share one hover/selected pill, and the button rotates its chevron while
+    open. The Changes filter shows only changed variant rows and marks the
+    parent when any variant changed. The changed mark is a
     6px accent dot at the row's trailing edge, drawn in the contrast color on
     the active row; no edge, rail, or border marks a row. The
     [screen variants contract](./mokly-screen-variants.md) owns the behavior,

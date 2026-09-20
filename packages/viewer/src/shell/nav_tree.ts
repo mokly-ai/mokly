@@ -15,6 +15,11 @@ export interface NavLeafNode {
   route: string;
   /** Declared classification tags, present only when the entry has them. */
   tags?: readonly string[];
+  /**
+   * Screens this row discloses as its variants, in manifest order. Present
+   * only on a parent screen; a variant never carries variants of its own.
+   */
+  variants?: readonly NavLeafNode[];
 }
 
 /** A collapsible navigation group with no destination of its own. */
@@ -38,6 +43,8 @@ export interface NavSectionNode {
 
 /** One breadcrumb segment, representing an authored collection ancestor. */
 export interface CatalogueCrumb {
+  /** A viewable route this crumb links to; plain text when absent. */
+  href?: string;
   label: string;
 }
 
@@ -89,21 +96,42 @@ export function structuredCrumbTrail(
   }));
 }
 
+/** One routed entry, the only entry kind a navigation leaf can represent. */
+type RoutedManifestEntry = Exclude<ManifestEntry, { kind: "collection" }>;
+
+/**
+ * One leaf row plus the variant rows it discloses. The hierarchy already keeps
+ * variants out of `roots` and `childrenById`, so a variant reaches the tree
+ * only through this list and never as a row of its own.
+ */
+function leafNode(
+  entry: RoutedManifestEntry,
+  variants: readonly NavLeafNode[],
+): NavLeafNode {
+  return {
+    entryId: entry.id,
+    entryKind: entry.kind,
+    key: `entry:${entry.id}`,
+    kind: "leaf",
+    label: entry.title,
+    route: entry.route,
+    ...(entry.tags && entry.tags.length > 0 ? { tags: [...entry.tags] } : {}),
+    ...(variants.length > 0 ? { variants } : {}),
+  };
+}
+
 function structuredNode(
   entry: ManifestEntry,
   hierarchy: CatalogueHierarchy<ManifestEntry>,
   ancestors: ReadonlySet<string>,
 ): NavNode {
   if (entry.kind !== "collection") {
-    return {
-      entryId: entry.id,
-      entryKind: entry.kind,
-      key: `entry:${entry.id}`,
-      kind: "leaf",
-      label: entry.title,
-      route: entry.route,
-      ...(entry.tags && entry.tags.length > 0 ? { tags: [...entry.tags] } : {}),
-    };
+    return leafNode(
+      entry,
+      (hierarchy.variantsById.get(entry.id) ?? []).flatMap((variant) =>
+        variant.kind === "collection" ? [] : [leafNode(variant, [])],
+      ),
+    );
   }
   const visited = new Set(ancestors);
   visited.add(entry.id);

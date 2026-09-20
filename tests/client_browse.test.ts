@@ -217,6 +217,36 @@ test("recovery matches stable keys and ignores old label paths", () => {
   ]);
 });
 
+test("watched-reload recovery restores variant lists beside native groups", () => {
+  const shell = new FakeElement("div", { "data-mokly-shell": "" });
+  const screens = new FakeElement("details", {
+    "data-nav-disclosure": "collection:pages:screens",
+  });
+  const variants = new FakeElement("div", {
+    "data-nav-disclosure": "variants:pages:welcome",
+    "data-nav-variants": "",
+    id: "mb-nav-variants-pages-welcome",
+  });
+  variants.hidden = true;
+  const doc = asDocument(new FakeDocument([shell, screens, variants]));
+
+  assert.deepEqual(captureBrowseState(doc, fakeWindow())?.closedCollectionIds, [
+    "variants:pages:welcome",
+  ]);
+
+  restoreBrowseState(doc, fakeWindow(), {
+    ...snapshot(),
+    closedCollectionIds: ["collection:pages:screens"],
+    filterBaselineClosedCollectionIds: null,
+  });
+
+  assert.equal(screens.open, false);
+  assert.equal(variants.hidden, false);
+  assert.deepEqual(captureBrowseState(doc, fakeWindow())?.closedCollectionIds, [
+    "collection:pages:screens",
+  ]);
+});
+
 /** One dark-capable screen view: two switch instances and three frames. */
 interface SchemeView {
   desktopFrame: FakeElement;

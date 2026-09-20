@@ -2,41 +2,23 @@
 // two-column body with prose on the left and metadata rows on the right —
 // populated from the manifest entry for the selected route: description,
 // rationale, source and generated paths, declared tags, related docs,
-// dependencies, and the use cases a screen belongs to. The tag chips are the
-// one interactive metadata row: the Browse client turns a chip into the
-// matching `tag:` search term.
-
-import type { ReactNode } from "react";
+// dependencies, the variants a screen declares or belongs to, and the use
+// cases a screen belongs to. The rows themselves live in `details_rows.tsx`.
 
 import type { ColorScheme } from "../data/axes.js";
-import { catalogueViewHref } from "../navigation/delivery.js";
-import type { ManifestScreen, ManifestUseCase } from "../registry/types.js";
+import type { ManifestScreen } from "../registry/types.js";
 
 import type { Catalogue } from "./catalogue.js";
-import { ChevronIcon, FlowIcon } from "./icons.js";
-import { TagChip } from "./tags.js";
+import {
+  MetaRow,
+  PathChips,
+  TagChips,
+  UsedByChips,
+  VariantChips,
+  VariantOfChip,
+} from "./details_rows.js";
+import { ChevronIcon } from "./icons.js";
 import type { RoutedEntry, RouteTarget } from "./target.js";
-
-function MetaRow(props: { children: ReactNode; label: string }) {
-  return (
-    <div className="mbk-meta-row">
-      <span className="mbk-meta-k">{props.label}</span>
-      <span className="mbk-meta-v">{props.children}</span>
-    </div>
-  );
-}
-
-function PathChips(props: { values: readonly string[] }) {
-  return (
-    <span className="mbk-chips">
-      {props.values.map((value) => (
-        <code className="mbk-code" key={value}>
-          {value}
-        </code>
-      ))}
-    </span>
-  );
-}
 
 /** Generated fragment routes for a screen, dark renders after the light ones. */
 function generatedPaths(screen: ManifestScreen): string[] {
@@ -53,57 +35,6 @@ function schemeNames(screen: ManifestScreen): string {
     ? ["light", "dark"]
     : ["light"];
   return schemes.join(", ");
-}
-
-/**
- * The tags an entry declares. Each chip is a control: the Browse client enters
- * `tag:<tag>` in the search field for it, so an unenhanced page still reads the
- * tags as text.
- */
-function TagChips(props: { values: readonly string[] }) {
-  if (props.values.length === 0) {
-    return null;
-  }
-  return (
-    <MetaRow label="Tags">
-      <span className="mbk-chips">
-        {props.values.map((tag) => (
-          <TagChip key={tag} tag={tag} />
-        ))}
-      </span>
-    </MetaRow>
-  );
-}
-
-function UsedByChips(props: {
-  catalogue: Catalogue;
-  useCaseIds: readonly string[];
-}) {
-  const useCases = props.useCaseIds
-    .map((id) => props.catalogue.byId.get(id))
-    .filter(
-      (entry): entry is ManifestUseCase =>
-        entry !== undefined && entry.kind === "use-case",
-    );
-  if (useCases.length === 0) {
-    return null;
-  }
-  return (
-    <MetaRow label="Used by">
-      <span className="mbk-chips">
-        {useCases.map((useCase) => (
-          <a
-            className="mbk-chip flow"
-            href={catalogueViewHref(useCase.route)}
-            key={useCase.id}
-          >
-            <FlowIcon size={11} />
-            {useCase.title}
-          </a>
-        ))}
-      </span>
-    </MetaRow>
-  );
 }
 
 export function EntryDetailsBody(props: {
@@ -151,6 +82,8 @@ export function EntryDetailsBody(props: {
               .join(" › ")}
           </MetaRow>
         ) : null}
+        <VariantOfChip catalogue={props.catalogue} entry={entry} />
+        <VariantChips catalogue={props.catalogue} entry={entry} />
         <TagChips values={entry.tags ?? []} />
         {entry.relatedDocs.length > 0 ? (
           <MetaRow label="Related docs">

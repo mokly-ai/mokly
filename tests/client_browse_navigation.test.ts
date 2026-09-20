@@ -186,6 +186,111 @@ test("navigation clears only a query that hides its destination", () => {
   assert.equal(nav.glossary.hidden, false);
 });
 
+test("variant list keys join the persisted disclosure identities", () => {
+  assert.equal(isNavDisclosureKey("variants:pages:welcome"), true);
+  assert.equal(isNavDisclosureKey("variants:components:welcome"), true);
+  assert.equal(isNavDisclosureKey("variants:welcome"), false);
+  assert.equal(isNavDisclosureKey("variants:"), false);
+});
+
+test("a closed variant list round-trips through the stored preference", () => {
+  const storage = new FakeStorage();
+  const nav = navFixture();
+  nav.welcomeList.hidden = false;
+  nav.welcomeToggle.setAttribute("aria-expanded", "true");
+  new NavDisclosurePreference(storage).remember(asDocument(nav.root));
+  assert.equal(
+    (JSON.parse(storage.value ?? "[]") as string[]).includes(
+      "variants:pages:welcome",
+    ),
+    false,
+  );
+
+  nav.welcomeList.hidden = true;
+  nav.welcomeToggle.setAttribute("aria-expanded", "false");
+  new NavDisclosurePreference(storage).remember(asDocument(nav.root));
+  assert.deepEqual(JSON.parse(storage.value ?? "[]"), [
+    "variants:pages:welcome",
+  ]);
+
+  const restored = navFixture();
+  restored.welcomeList.hidden = false;
+  restored.welcomeToggle.setAttribute("aria-expanded", "true");
+  new NavDisclosurePreference(storage).apply(asDocument(restored.root));
+  assert.equal(restored.welcomeList.hidden, true);
+  assert.equal(restored.welcomeToggle.getAttribute("aria-expanded"), "false");
+  assert.equal(
+    restored.welcomeToggle.getAttribute("aria-label"),
+    "Show variants of Welcome",
+  );
+  assert.equal(restored.screens.open, true);
+});
+
+test("navigating to a variant opens the list holding its row", () => {
+  const nav = navFixture();
+  nav.pages.open = false;
+  nav.screens.open = false;
+
+  const active = selectAndRevealRoute(
+    asDocument(nav.root),
+    "/view/screens/welcome.variants/empty.html",
+    BASE,
+    "navigation",
+  );
+
+  assert.equal(active, asAnchor(nav.welcomeEmpty));
+  assert.equal(nav.welcomeEmpty.getAttribute("aria-current"), "page");
+  assert.equal(nav.welcomeList.hidden, false);
+  assert.equal(nav.welcomeToggle.getAttribute("aria-expanded"), "true");
+  assert.equal(
+    nav.welcomeToggle.getAttribute("aria-label"),
+    "Hide variants of Welcome",
+  );
+  assert.equal(nav.screens.open, true);
+  assert.equal(nav.pages.open, true);
+});
+
+test("a search that matches only a variant keeps its parent row visible", () => {
+  const nav = navFixture();
+  nav.search.value = "Empty workspace";
+
+  applyNavVisibility(asDocument(nav.root), "reveal-matches");
+
+  assert.equal(nav.welcomeEmpty.hidden, false);
+  assert.equal(nav.welcome.hidden, false);
+  assert.equal(nav.welcomeList.hidden, false);
+  assert.equal(nav.details.hidden, true);
+  assert.equal(nav.glossary.hidden, true);
+  assert.equal(nav.screens.hidden, false);
+
+  nav.search.value = "glossary";
+  applyNavVisibility(asDocument(nav.root), "reveal-matches");
+
+  assert.equal(nav.welcome.hidden, true);
+  assert.equal(nav.welcomeEmpty.hidden, true);
+  assert.equal(nav.welcomeList.hidden, true);
+});
+
+test("a changed variant marks its parent row and survives the Changes filter", () => {
+  const nav = navFixture();
+  nav.welcomeEmpty.setAttribute("data-changed", "true");
+  nav.changed.setAttribute("aria-pressed", "true");
+
+  applyNavVisibility(asDocument(nav.root), "reveal-matches");
+
+  assert.equal(nav.welcomeEmpty.hidden, false);
+  assert.equal(nav.welcome.hidden, false);
+  assert.equal(nav.welcome.getAttribute("data-changed-variants"), "true");
+  assert.equal(nav.welcomeList.hidden, false);
+  assert.equal(nav.details.hidden, true);
+
+  nav.welcomeEmpty.removeAttribute("data-changed");
+  applyNavVisibility(asDocument(nav.root), "reveal-matches");
+
+  assert.equal(nav.welcome.getAttribute("data-changed-variants"), null);
+  assert.equal(nav.welcome.hidden, true);
+});
+
 /** One catalogue column with its All/Changed filter: two tagged screens and
  * one untagged legacy page. */
 interface NavFixture {
@@ -198,6 +303,9 @@ interface NavFixture {
   screens: FakeNode;
   search: FakeNode;
   welcome: FakeNode;
+  welcomeEmpty: FakeNode;
+  welcomeList: FakeNode;
+  welcomeToggle: FakeNode;
 }
 
 function navFixture(): NavFixture {
@@ -215,7 +323,25 @@ function navFixture(): NavFixture {
     "transactions-list-transfer-ready",
   );
   const glossary = navRow("docs/glossary.html", "Glossary");
-  const screens = navGroup("collection:screens", welcome, details);
+  const welcomeEmpty = navRow(
+    "screens/welcome.variants/empty.html",
+    "Empty workspace",
+    "forms onboarding",
+    "welcome-empty",
+  );
+  const welcomeToggle = variantToggle("mb-nav-variants-pages-welcome");
+  const welcomeList = variantList(
+    "variants:pages:welcome",
+    "mb-nav-variants-pages-welcome",
+    welcomeEmpty,
+  );
+  const welcomeLeaf = new FakeNode("div").append(welcome, welcomeToggle);
+  const screens = navGroup(
+    "collection:screens",
+    welcomeLeaf,
+    welcomeList,
+    details,
+  );
   const docs = navGroup("collection:docs", glossary);
   const changed = filterOption("changed", "false");
   const pages = navGroup("section:pages", screens, docs);
@@ -228,6 +354,9 @@ function navFixture(): NavFixture {
   return {
     changed,
     details,
+    welcomeEmpty,
+    welcomeList,
+    welcomeToggle,
     docs,
     glossary,
     pages,
@@ -264,6 +393,30 @@ function navGroup(key: string, ...rows: readonly FakeNode[]): FakeNode {
   }).append(...rows);
 }
 
+function variantToggle(listId: string): FakeNode {
+  return new FakeNode("button", {
+    "aria-controls": listId,
+    "aria-expanded": "false",
+    "aria-label": "Show variants of Welcome",
+    "data-nav-variants-label": "Welcome",
+    "data-nav-variants-toggle": listId,
+  });
+}
+
+function variantList(
+  key: string,
+  listId: string,
+  ...rows: readonly FakeNode[]
+): FakeNode {
+  const list = new FakeNode("div", {
+    "data-nav-disclosure": key,
+    "data-nav-variants": "",
+    id: listId,
+  }).append(...rows);
+  list.hidden = true;
+  return list;
+}
+
 function filterOption(name: string, pressed: string): FakeNode {
   return new FakeNode("button", {
     "aria-pressed": pressed,
@@ -283,7 +436,7 @@ function group(key: string, open: boolean): HTMLDetailsElement {
 function fakeDocument(...groups: HTMLDetailsElement[]): Document {
   return {
     querySelectorAll(selector: string) {
-      assert.equal(selector, "details[data-nav-disclosure]");
+      assert.equal(selector, "[data-nav-disclosure]");
       return groups;
     },
   } as unknown as Document;

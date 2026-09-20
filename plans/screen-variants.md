@@ -2,8 +2,8 @@
 
 Status: active. Created 2026-09-19 with the user's consent after the design
 discussion in this workspace, then rewritten the same day when the user chose
-own routes over a query parameter. Milestones 1 to 4 are complete;
-Milestone 5 is next.
+own routes over a query parameter. Milestones 1 to 5 are complete;
+Milestone 6 is next.
 
 **Goal:** Let a screen declare variants beside its default render, show them as
 an expandable list under the screen's navigation row, give each variant its
@@ -418,14 +418,24 @@ details list its variants.
   (crumbs for a variant end with the parent title as a link),
   `packages/viewer/src/shell/details.tsx` (a Variants row on the parent and a
   Variant of row on the variant)
+- Also modified while implementing: new `packages/viewer/src/shell/nav_rows.tsx`
+  (the extracted rows plus the variant list), new
+  `packages/viewer/src/shell/details_rows.tsx` (inspector metadata rows, so
+  `details.tsx` stays short), new `packages/viewer/src/client/disclosures.ts`
+  (one reader/writer over `<details>` groups and variant lists),
+  `packages/viewer/src/shell/css_details.ts` (the screen chip's muted icon),
+  `packages/viewer/src/viewer/input.ts` and
+  `packages/viewer/src/client/browse.ts` (the control actions object), and
+  `src/server/client_modules.ts` (serve `disclosures.js`)
 - Test: `tests/nav_tree.test.ts`, `tests/shell.test.ts`,
   `tests/client_navigation_state.test.ts`, `tests/client_browse_navigation.test.ts`,
-  `tests/client_browse.test.ts`, `tests/browser/browse_navigation.spec.ts`,
-  `tests/browser/browse_history.spec.ts`, `tests/browser/static_example.spec.ts`
+  `tests/client_browse.test.ts`, new `tests/client_browse_controls.test.ts`,
+  new `tests/browser/browse_variants.spec.ts`,
+  `tests/browser/navigation_fixture.ts`, `tests/browser/static_example.spec.ts`
 
 **Steps:**
 
-- [ ] Write failing tests: tree nodes carry variants in authored order under
+- [x] Write failing tests: tree nodes carry variants in authored order under
       their parent only; shell HTML renders the link, toggle, and variant
       rows with the expected attributes and no toggle for a screen without
       variants; navigating to a variant marks its row current, opens its
@@ -437,13 +447,13 @@ details list its variants.
       through storage; the exported example works without a server; a
       browser test drives all of it against a fixture with two variants and
       against the `examples/basic` Welcome variant.
-- [ ] Implement; keep `nav.tsx` and each CSS module under 300 lines.
-- [ ] Update the runtime and shell design contracts' Delivery Status and the
+- [x] Implement; keep `nav.tsx` and each CSS module under 300 lines.
+- [x] Update the runtime and shell design contracts' Delivery Status and the
       browse guide.
-- [ ] Smoke: `npm run dev`, expand Welcome, open the variant, use Back and
+- [x] Smoke: `npm run dev`, expand Welcome, open the variant, use Back and
       Forward, search for the variant title, Collapse all.
-- [ ] `npm test && npm run test:browser` green.
-- [ ] Milestone close-out: commit `feat(browse): group screen variants` and
+- [x] `npm test && npm run test:browser` green.
+- [x] Milestone close-out: commit `feat(browse): group screen variants` and
       push.
 
 ---

@@ -10,6 +10,11 @@ import {
   applyNavVisibility,
   selectAndRevealRoute,
 } from "./browse_navigation_state.js";
+import {
+  isDisclosureOpen,
+  navDisclosures,
+  setDisclosureOpen,
+} from "./disclosures.js";
 import { restoreEarlyDisclosures } from "./early_disclosures.js";
 import { replaceLocalFrame } from "./same_origin_adapter.js";
 import { syncTagChips } from "./tag_filter.js";
@@ -70,12 +75,10 @@ export function captureBrowseState(
 ): BrowseRecoveryState | undefined {
   const shell = doc.querySelector<HTMLElement>("[data-mokly-shell]");
   if (!shell) return undefined;
-  const disclosures = [
-    ...doc.querySelectorAll<HTMLDetailsElement>("[data-nav-disclosure]"),
-  ];
+  const disclosures = navDisclosures(doc);
   const closedCollectionIds = disclosures.flatMap((disclosure) => {
     const id = disclosure.getAttribute("data-nav-disclosure");
-    return !disclosure.open && id ? [id] : [];
+    return !isDisclosureOpen(disclosure) && id ? [id] : [];
   });
   const filterBaselineClosedCollectionIds = disclosures.some(
     (disclosure) => disclosure.dataset["filterOpen"] !== undefined,
@@ -138,11 +141,9 @@ export function restoreBrowseState(
       : new Set(
           state.filterBaselineClosedCollectionIds.filter(isNavDisclosureKey),
         );
-  for (const disclosure of doc.querySelectorAll<HTMLDetailsElement>(
-    "[data-nav-disclosure]",
-  )) {
+  for (const disclosure of navDisclosures(doc)) {
     const id = disclosure.getAttribute("data-nav-disclosure");
-    disclosure.open = !id || !isNavDisclosureClosed(closed, id);
+    setDisclosureOpen(disclosure, !id || !isNavDisclosureClosed(closed, id));
     if (filterBaselineClosed) {
       disclosure.dataset["filterOpen"] =
         id && isNavDisclosureClosed(filterBaselineClosed, id) ? "0" : "1";

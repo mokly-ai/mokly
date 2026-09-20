@@ -206,7 +206,13 @@ export function initializeBrowseShell(
       }
       return;
     }
-    if (handleBrowseControl(doc, target, diffs.update)) return;
+    if (
+      handleBrowseControl(doc, target, {
+        rememberDisclosures: () => navPreference.remember(doc),
+        updateDiffs: diffs.update,
+      })
+    )
+      return;
     if (handleFrameClick(doc, target)) {
       event.preventDefault();
       return;

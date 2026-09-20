@@ -5,6 +5,12 @@ own navigation, viewport and theme state, comparisons, and component inspection.
 The package build bundles their pure dependencies into `dist/browser`; the
 server's explicit client-module allowlist also supplies the export inventory.
 
+`disclosures.ts` reads and writes every catalogue disclosure through one pair of
+helpers, so navigation, filtering, reload recovery and `Collapse all` treat a
+collection's native `<details>` and a screen's variant list alike. The list
+carries its state in `hidden` and in its button's `aria-expanded`, which the
+helpers keep in step along with the button's accessible name.
+
 `early_disclosures.ts` bridges native disclosure clicks through deferred startup.
 The synchronous navigation bootstrap starts capture; Browse initialization and
 reload recovery reapply the latest native choices. Load or page exit cleans up
