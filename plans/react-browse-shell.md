@@ -730,9 +730,9 @@ one host document.
       package consumers, fixtures and smoke checks to supply stable IDs.
 - [x] Run the viewer build, typecheck and focused server/hydration tests, then
       run the complete `cargo xtask check` gate with no failures or skips.
-- [ ] After checks pass, `git add -A`, commit with Conventional Commits, and
+- [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
@@ -811,3 +811,12 @@ route"), the `./runtime` entry described as already shipping hydration (now
 "after the flip"), and the reload snapshot omitting the optional Changes
 status. The fifth, the viewer contract growing to 381 lines, is noted for a
 later split once the store exists in code.
+
+Milestone 11 (`960ee22`) was reviewed with the implementation review prompt
+after the full gate and push. One medium finding remains for user decision:
+plain delimiter concatenation does not make valid `viewerId` prefixes
+structurally disjoint from dynamic package-owned control IDs. Distinct allowed
+viewer IDs can therefore still produce one duplicate DOM ID for a deliberately
+aligned component prop key. The recommended follow-up is a length-prefixed or
+otherwise unambiguous namespace encoding plus an adversarial two-root
+regression; no review finding was applied automatically.
