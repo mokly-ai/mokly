@@ -113,6 +113,7 @@ export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
   [D.removedLong]: { all: D.home },
   [D.removedLoading]: { all: D.home },
   [D.removedUnavailable]: { all: D.home },
+  [D.removedNoView]: { all: D.home },
   [D.darkChanged]: {
     ...welcomeFilters,
     scheme: "dark",

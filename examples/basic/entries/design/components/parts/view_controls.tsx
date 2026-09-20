@@ -11,9 +11,12 @@ export interface HighlightOption {
 export function ViewControls({
   viewport,
   highlight,
+  schemeDisabled,
 }: {
   viewport: ArtboardViewport;
   highlight?: HighlightOption;
+  /** Set when only one scheme exists, as on a removed screen's previous views. */
+  schemeDisabled?: boolean | undefined;
 }) {
   return (
     <viewControls.Component
@@ -22,6 +25,7 @@ export function ViewControls({
       scheme="light"
       destinations={{}}
       {...optional("highlight", highlight?.active)}
+      {...optional("schemeDisabled", schemeDisabled)}
       {...optional("unavailable", highlight?.unavailable)}
     />
   );

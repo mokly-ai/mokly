@@ -29,6 +29,36 @@ export function MiniFarewell({ compact }: { compact?: boolean }) {
   );
 }
 
+const TIMELINE_ENTRIES = [
+  ["Spring", "The first screens were written and the tour was drafted."],
+  ["Summer", "Notes moved next to the screens they describe."],
+  ["Autumn", "The handbook grew a field guide and printing notes."],
+  ["Winter", "The survey closed and the catalogue settled."],
+] as const;
+
+/**
+ * The Timeline fragment as it stood before the screen was removed. It was only
+ * ever drawn at desktop width, so it is the screen's one previous view.
+ */
+export function MiniTimeline() {
+  return (
+    <div className="mbk-shot">
+      <div className="mbk-shot-pad">
+        <div className="mbk-shot-nav">Example navigation</div>
+        <h2>A year of the example catalogue</h2>
+        <div className="mbk-shot-timeline">
+          {TIMELINE_ENTRIES.map(([season, summary]) => (
+            <section key={season}>
+              <h3>{season}</h3>
+              <p>{summary}</p>
+            </section>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /**
  * A tall historical fragment. The preview keeps its own scrolling, so the
  * frame shows the top of the screen with the rest below it.

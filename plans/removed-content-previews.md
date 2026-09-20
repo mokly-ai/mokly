@@ -416,20 +416,34 @@ The component explorer's removed-consumer design still renders the replaced
 the workspace design contract. Do this before Milestone 8's UI work that depends
 on the new stage note.
 
-- [ ] Update `examples/basic/entries/design/components/parts/screen_page.tsx`
+- [x] Update `examples/basic/entries/design/components/parts/screen_page.tsx`
       (and its browser spec) so the removed consumer shows its previous version
       with the "Showing previous version" label, reusing
-      `examples/basic/entries/design/parts/removed_preview.tsx`.
-- [ ] Add the no-captured-view stage note to the removed-screen design family so
-      Milestone 8 implements copy the mockups own.
-- [ ] Update `docs/protocol/mokly-component-design.md`, the example README,
+      `examples/basic/entries/design/parts/removed_preview.tsx`. The stage
+      carries no escape link; the desktop Action row and the narrow Changes
+      shortcut already return to Action's affected screens. Its theme control
+      is disabled, as on the other removed screens.
+- [x] Add the no-captured-view stage note to the removed-screen design family so
+      Milestone 8 implements copy the mockups own. `design-review-removed-no-view`
+      joins `design/review/outcomes/previous-version/`, and the shared Changes
+      tree gains the removed Timeline row it is selected from.
+- [x] Fix the note's wording in the Behavior section of
+      [removed previews](../docs/protocol/mokly-removed-previews.md) as the copy
+      the runtime must use: "No previous mobile version was captured. Switch to
+      Desktop to see it.", reduced to its first sentence when both viewports are
+      shown together. Discovered while designing the state, because the mockup
+      cannot own copy the contract leaves unspecified.
+- [x] Update `docs/protocol/mokly-component-design.md`, the example README,
       and the shell-design route table if any id or description changes; run
       `npm run build`, `npm run example:build`, `npm run example:check`, and
       the design tests; smoke the changed pages with `npm run dev`.
-- [ ] Add a check that fails when a design entry contains copy a protocol marks
+- [x] Update the design-screen counts the added screen changes:
+      `mokly-design-links.md`, both READMEs, and the link, library-usage, and
+      attribution tests. Discovered during the mockup work.
+- [x] Add a check that fails when a design entry contains copy a protocol marks
       as replaced (start with the removed empty-state strings), so mockup
       families outside a feature's named scope cannot silently drift.
-- [ ] Run `cargo xtask check`; then `git add -A`, commit with Conventional
+- [x] Run `cargo xtask check`; then `git add -A`, commit with Conventional
       Commits, and push the branch.
 - [ ] After the push, review the complete local diff against `origin/main` with
       the implementation review prompt; report findings without changing the

@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-Implemented in the 42 Browse/Changes design screens and two real example
+Implemented in the 43 Browse/Changes design screens and two real example
 screens using `MockLink` and `MockLink asChild`. Verification and delivery are tracked by the
 [implementation plan](../../plans/mokabook-design-mocklinks.md).
 
@@ -102,6 +102,7 @@ directory and catalogue group without moving the existing page.
 | All catalogue: Welcome / Details / Example tour | `design-browse-screen` / `design-browse-details-screen` / `design-browse-use-case`                             |
 | Changed catalogue: Welcome / Details / Farewell | `design-changes-current` / `design-review-added` / `design-review-removed`                                     |
 | Changed catalogue: Survey / Invite / Archive    | `design-review-removed-long` / `design-review-removed-loading` / `design-review-removed-unavailable`           |
+| Changed catalogue: Timeline                     | `design-review-removed-no-view`                                                                                |
 | Removed documents: four Changes rows            | `design-page-removed` / `-long` / `-loading` / `-unavailable`, each returning to `design-browse-home` from All |
 | MiniWelcome: Open the details screen            | `design-browse-details-screen`; under dark selection, `design-browse-light-only`                               |
 | MiniDetails: Return to welcome                  | `design-browse-screen`; under dark selection, `design-browse-dark-scheme`                                      |
@@ -113,6 +114,7 @@ directory and catalogue group without moving the existing page.
 | Details All / Changes filter                    | `design-browse-details-screen` / `design-review-added`                                                         |
 | Removed screen All filter                       | `design-browse-home`, because the depicted product screen has no current entry                                 |
 | Empty Changes All filter                        | `design-browse-screen`                                                                                         |
+| Removed consumer return, component explorer     | `design-component-removed`, from the desktop Action row and the narrow Changes shortcut, never from the stage  |
 
 Collection headings and collection-only breadcrumbs are not catalogue-link
 targets: the public API rejects collection ids. Leave grouping labels as text,
@@ -169,8 +171,9 @@ selected in `design-changes-current`, so it has no
 transition there. Returning to All uses the navigation table above.
 
 Added Details shows its Current preview without comparison modes. Removed
-Farewell, Survey, Invite, and Archive show their previous version, its loading
-wait, or its unavailable state with Retry, without comparison modes and with
+Farewell, Survey, Invite, Archive, and Timeline show their previous version,
+its loading wait, its unavailable state with Retry, or the note naming the
+viewport that still opens, without comparison modes and with
 no live product destination; links inside a previous version do nothing.
 Unsupported dark-comparison modes remain non-link depictions.
 Shared-impact/ignored-only and empty Changes keep a Current preview

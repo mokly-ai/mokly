@@ -5,9 +5,10 @@ import { REMOVED_SCREENS } from "../../../parts/nav_data.js";
 import {
   PreviewLoading,
   PreviewUnavailable,
+  PreviewViewMissing,
 } from "../../../parts/removed_preview.js";
 import { RemovedScreen, RemovedView } from "../../../parts/removed_screen.js";
-import { MiniSurvey } from "../../../parts/removed_shots.js";
+import { MiniSurvey, MiniTimeline } from "../../../parts/removed_shots.js";
 
 type Viewport = "desktop" | "mobile";
 
@@ -52,6 +53,30 @@ function Unavailable({ viewport }: { viewport: Viewport }) {
   );
 }
 
+function NoCapturedView({ viewport }: { viewport: Viewport }) {
+  return (
+    <RemovedScreen
+      entry={REMOVED_SCREENS.timeline}
+      preview={(previewViewport) =>
+        previewViewport === "mobile" ? (
+          <PreviewViewMissing viewport="mobile" />
+        ) : (
+          <RemovedView
+            address="example.test/timeline"
+            compact={false}
+            viewport={previewViewport}
+          >
+            <MiniTimeline />
+          </RemovedView>
+        )
+      }
+      selection="mobile"
+      subject="timeline"
+      viewport={viewport}
+    />
+  );
+}
+
 /** Previous-version states a removed screen reaches before it can be read. */
 export const removedOutcomeScreens = [
   screen({
@@ -89,5 +114,17 @@ export const removedOutcomeScreens = [
       "Current output may never stand in for missing history, so the stage says plainly that the previous version is unavailable and offers one repeatable action rather than naming a reason.",
     slug: "unavailable",
     title: "Previous screen unavailable",
+  }),
+  screen({
+    colorSchemes: ["light"],
+    description:
+      "A viewport the previous version was never captured in names the viewport that still opens.",
+    desktop: <NoCapturedView viewport="desktop" />,
+    id: "design-review-removed-no-view",
+    mobile: <NoCapturedView viewport="mobile" />,
+    rationale:
+      "A removed screen is only ever shown in the viewports it was captured in, so a viewport with no previous view says so on the stage instead of leaving it blank. Selecting both viewports already shows the captured one, so the stage drops the sentence naming it.",
+    slug: "no-captured-view",
+    title: "Previous view not captured",
   }),
 ];

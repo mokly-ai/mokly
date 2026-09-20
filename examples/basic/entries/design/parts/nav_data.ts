@@ -40,11 +40,17 @@ export const REMOVED_SCREENS = {
     key: "archive-removed",
     title: "Archive",
   },
+  timeline: {
+    design: DESTINATIONS.removedNoView,
+    id: "example-timeline",
+    key: "timeline-removed",
+    title: "Timeline",
+  },
 } as const satisfies Record<string, RemovedScreen>;
 
 export const REMOVED_SCREEN_ROWS = Object.values(REMOVED_SCREENS);
 
-/** Welcome changed, Details was added, and four screens were removed. */
+/** Welcome changed, Details was added, and five screens were removed. */
 export const CHANGED_COUNT = 2 + REMOVED_SCREEN_ROWS.length;
 
 export const NAV_TREE = [

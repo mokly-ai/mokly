@@ -2,7 +2,13 @@ import type { CatalogueTag } from "./tags.js";
 
 /** Product subjects depicted by the design catalogue, independent of link ids. */
 export type ScreenSubject =
-  "welcome" | "details" | "farewell" | "survey" | "invite" | "archive";
+  | "welcome"
+  | "details"
+  | "farewell"
+  | "survey"
+  | "invite"
+  | "archive"
+  | "timeline";
 
 interface SubjectMetadata {
   description: string;
@@ -72,5 +78,11 @@ export const SUBJECTS: Record<ScreenSubject, SubjectMetadata> = {
     description: "The archive screen was removed from the catalogue.",
     rationale:
       "A previous version that cannot be loaded must say so and offer another attempt, never substitute current content.",
+  },
+  timeline: {
+    ...removed,
+    description: "The timeline was removed from the catalogue.",
+    rationale:
+      "The timeline was only ever drawn at desktop width, so the stage says which viewport has no previous version instead of leaving that viewport blank.",
   },
 };

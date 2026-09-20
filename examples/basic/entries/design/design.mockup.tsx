@@ -109,7 +109,7 @@ const designMockups = defineRoot({
             collection({
               children: removedOutcomeScreens,
               description:
-                "Previous-version states a removed screen reaches before it can be read: a long screen, the wait while it is retrieved, and a failure with Retry.",
+                "Previous-version states a removed screen reaches before it can be read: a long screen, the wait while it is retrieved, a failure with Retry, and a viewport with no previous view.",
               id: "design-review-outcomes-previous",
               segment: "previous-version",
               title: "Previous screen versions",

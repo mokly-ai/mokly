@@ -9,6 +9,12 @@ upload packaging, and the shared shell and viewer all deliver the previous
 version. Nothing here changes ordinary browsing, Added entries, changed-screen
 comparisons, or removed component variants.
 
+The note for a selected viewport with no captured historical view is fixed
+here and depicted by the design catalogue's
+[no-captured-view screen](./mokly-shell-design.md#design-mockups); the shell
+renders a viewport without a view as an empty stage until Milestone 8
+implements it.
+
 ## Behavior
 
 Opening a removed screen or registered page shows the version from the pinned
@@ -25,6 +31,14 @@ choices follow the historical views that exist. A saved scheme without a
 historical view falls back to Light with the existing light-only note. Removed
 screens stay outside comparison modes; incoming comparison URLs are declined as
 today. Removed component variants keep their existing comparison behavior.
+
+A selected viewport with no captured historical view shows a note where its
+frame would be, never a blank stage. The note reads “No previous mobile version
+was captured. Switch to Desktop to see it.”, exchanging the two viewport names
+for the desktop case. A preview carrying no views at all is unavailable
+instead, so the viewport the note names always holds a view. Selecting both
+viewports already puts that view on the stage beside the note, so only the
+first sentence is shown there.
 
 Historical content is read-only. Scrolling, text selection, and same-document
 anchors work. Forms cannot submit, and every link is inert: marked catalogue

@@ -26,6 +26,8 @@ interface RemovedScreenProps {
   entry: RemovedScreenEntry;
   /** The previous mobile and desktop views, one per preview viewport. */
   preview?: (viewport: RemovedViewport) => ReactNode;
+  /** Viewport the preview control holds; the artboard's own size by default. */
+  selection?: RemovedViewport | "both";
   /** A stage that replaces the previous views until they can be shown. */
   state?: ReactNode;
   subject: ScreenSubject;
@@ -41,6 +43,7 @@ interface RemovedScreenProps {
 export function RemovedScreen({
   entry,
   preview,
+  selection,
   state,
   subject,
   viewport,
@@ -63,7 +66,7 @@ export function RemovedScreen({
       }
     >
       <ScreenHead
-        action={<ViewSwitch active={viewport} />}
+        action={<ViewSwitch active={selection ?? viewport} />}
         crumbs={["Example", "Screens"]}
         idChip={entry.id}
         status="removed"

@@ -33,6 +33,7 @@ export const DESTINATIONS = {
   removedLong: "design-review-removed-long",
   removedLoading: "design-review-removed-loading",
   removedUnavailable: "design-review-removed-unavailable",
+  removedNoView: "design-review-removed-no-view",
   difference: "design-review-difference",
   darkChanged: "design-review-dark-scheme",
   shared: "design-review-shared-impact",

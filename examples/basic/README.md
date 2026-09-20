@@ -24,7 +24,7 @@ The [large fixture](../../tests/fixtures/large/README.md)
 uses the same Firna/React Native Web rendering stack with configurable volume,
 without expanding this example or slowing ordinary development startup.
 
-Mokly's 74 design screens now use 15 registered shared components, including
+Mokly's 75 design screens now use 15 registered shared components, including
 the footer tabs panel. Open **Components → Design → Shared components** for Chrome, Controls,
 Inspector and Preview galleries with 58 saved variants, real mobile/desktop
 previews and editable local props. The outer Components and Usage tabs show actual
@@ -70,6 +70,12 @@ Shared destinations live in [destinations.ts](./entries/design/parts/destination
 selects which transitions each artboard supports. Add an owning screen and its
 contract before enabling a new transition.
 
+`tests/helpers/replaced_copy.ts` lists the shell sentences the protocols
+replaced, and `tests/design_replaced_copy.test.ts` fails when any generated
+design document renders one of them again. Add the retired sentence to that
+list whenever a protocol replaces visible copy, so a mockup family outside the
+change's named scope cannot quietly keep the old wording.
+
 ## Firna renderer adapter
 
 `renderer.tsx` is the reference consumer adapter for react-native-web
@@ -88,7 +94,7 @@ render plain React DOM need none of this and can keep a plain
 `renderToStaticMarkup` adapter.
 
 The `Design` navigation group is the owning design catalogue for Mokly's
-Browse and Changes views. Its forty-two Browse, page, publication and Changes
+Browse and Changes views. Its forty-three Browse, page, publication and Changes
 screens cover navigation, Details, tags, color schemes, comparison outcomes,
 stylesheet evidence, the preparing and unavailable comparison states, and the
 previous-version states of removed documents and screens. Thirty-two component
@@ -135,7 +141,7 @@ galleries; `inspector` shows both closed-panel layouts.
 Each child gallery lists at most five owning screens; inspection also links
 two selected-instance screens in a nested gallery.
 
-All seventy-four design screens use `colorSchemes: ["light"]`: they draw the
+All seventy-five design screens use `colorSchemes: ["light"]`: they draw the
 Mokly shell, including the existing dark-selection examples. The two product
 screens inherit the catalogue's light/dark settings and prove dark generation.
 Design headers retain the approved screen-stack logo: 17px overlapping mobile
@@ -152,7 +158,7 @@ A shared implementation edit appears on its component page and lists consuming
 screens as affected; independent screen inputs, slots or instance changes still
 appear in Changes. This is tested against fully registered baseline snapshots.
 
-The shared inspector/workspace sheets cover all 74 design screens and standalone
+The shared inspector/workspace sheets cover all 75 design screens and standalone
 library hosts. Other mixed component-design sheets remain scoped to the 32
 component-design routes and hosts; the controls sheet additionally remains
 scoped to its eleven owning screen routes. `review.sharedImpact` is fallback
@@ -180,7 +186,9 @@ previous version, labelled “Showing previous version”, without them. Their
 nested `design/browse/pages/previous-version/` and
 `design/review/outcomes/previous-version/` groups add the long, loading, and
 unavailable-with-retry states, each reached from its own row in the same flat
-Changes list.
+Changes list. A removed screen also has a viewport with no captured previous
+view, whose stage names the viewport that still opens instead of standing
+empty.
 The Added outcome still shows its factual branch evidence in
 Details; evidence availability, comparison eligibility, and initial inspector
 disclosure are independent. The

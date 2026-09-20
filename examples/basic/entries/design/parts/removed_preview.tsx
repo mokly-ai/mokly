@@ -35,3 +35,29 @@ export function PreviewUnavailable({ to }: { to: DesignDestination }) {
     />
   );
 }
+
+/** The other viewport, which always holds a view when one of them is missing. */
+const OTHER_VIEWPORT = { desktop: "Mobile", mobile: "Desktop" } as const;
+
+/**
+ * The stage for a viewport the previous version was never captured in. At
+ * least one viewport was captured, so the note names the one that still opens.
+ * Showing both viewports together already puts that view on screen, and the
+ * stylesheet drops the second sentence there.
+ */
+export function PreviewViewMissing({
+  viewport,
+}: {
+  viewport: "desktop" | "mobile";
+}) {
+  return (
+    <div className="mbk-preview-state">
+      <p className="mbk-preview-note" role="status">
+        No previous {viewport} version was captured.{" "}
+        <span className="mbk-preview-switch">
+          Switch to {OTHER_VIEWPORT[viewport]} to see it.
+        </span>
+      </p>
+    </div>
+  );
+}
