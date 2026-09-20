@@ -14,7 +14,7 @@ import {
  * states is the state's own indicator, so it carries the 3:1 requirement.
  */
 const STATE_SELECTOR =
-  /:hover|:focus|:checked|:has\(input:checked\)|\[open\]|\.active|aria-pressed|aria-current/u;
+  /:hover|:focus|:checked|:has\(input:checked\)|:disabled|\[open\]|\.active|aria-pressed|aria-current/u;
 
 /**
  * Fills that mark a selected, active or status surface, derived from the
@@ -25,13 +25,14 @@ function markedFillTokens(tokens: Map<string, string>): string[] {
     (token) =>
       token.startsWith("--mbk-accent-") ||
       token === "--mbk-danger-bg" ||
+      token === "--chrome-disabled-bg" ||
       (token.startsWith("--mbk-status-") && token.endsWith("-bg")),
   );
 }
 
 /** Selectors naming a control primitive, whose boundary is a control edge. */
 const CONTROL_SELECTOR =
-  /\bbutton\b|\binput\b|\bselect\b|\bsummary\b|\btextarea\b|\.ce-action|\.ce-button|\.ce-icon-control|\.mbk-seg|\.mbk-appearance|\.ce-sheet-expand/u;
+  /\bbutton\b|\binput\b|\bselect\b|\bsummary\b|\btextarea\b|\.ce-action|\.ce-button|\.ce-icon-control|\.mbk-seg|\.mbk-appearance|\.ce-sheet-expand|\.mbk-chip:is\(a\)/u;
 
 /** Tokens the palette contract reserves for decoration between surfaces. */
 const HAIRLINE_TOKENS = new Set([
@@ -50,6 +51,9 @@ const DECORATIVE_BOUNDARIES = new Set([
   ".ce-changed",
   ".ce-removed",
   ".ce-control-alert",
+  // WCAG exempts a disabled control from the contrast minimums, so its
+  // boundary is recorded here rather than held to 3:1.
+  ".ce-action:disabled",
 ]);
 
 /**
@@ -64,8 +68,31 @@ const EXEMPT_SURFACES = new Map([
   ],
 ]);
 
-/** Collected rules, pinned so a narrowed collector fails instead of passing. */
-const AUDITED_BOUNDARY_COUNT = 18;
+/**
+ * Every rule the audit collects, so a failure names the rule that appeared or
+ * vanished instead of only reporting that the total moved.
+ */
+const AUDITED_BOUNDARIES = [
+  "design-component-controls.css .ce-action--quiet",
+  "design-component-controls.css .ce-control-alert",
+  'design-component-inspection.css .ce-button[aria-pressed="true"]',
+  "design-components.css .ce-action:disabled",
+  "design-components.css .ce-badge",
+  "design-components.css .ce-design a:focus-visible, .ce-design button:focus-visible, .ce-design summary:focus-visible, .ce-design input:focus-visible, .ce-design select:focus-visible",
+  "design-components.css .ce-variants a[aria-current]",
+  "design-library/chrome/appearance-selector.css .mbk-appearance:focus-within",
+  "design-library/chrome/appearance-selector.css .mbk-appearance:hover",
+  "design-library/controls/change-status.css .ce-added",
+  "design-library/controls/change-status.css .ce-changed",
+  "design-library/controls/change-status.css .ce-removed",
+  "design-library/controls/tag-chip.css .mbk-chip.tag.active",
+  "design-library/controls/view-controls.css .ce-icon-control:focus-within",
+  "design-library/controls/view-controls.css .ce-icon-control:hover, .ce-icon-control:has(input:checked)",
+  "design-library/inspector/inspector.css .ce-design .mbk-shell--mobile .ce-inspector:has(> details[open])",
+  "design-library/inspector/inspector.css .ce-inspector > details[open] > summary",
+  "design-library/inspector/inspector.css .ce-sheet-expand:focus-visible",
+  "design-stage.css .mbk-chip:is(a):focus-visible",
+];
 
 function isExemptSurface(file: string, selector: string): boolean {
   return EXEMPT_SURFACES.get(file) === selector;
@@ -113,10 +140,10 @@ async function markedBoundaryRules() {
 test("every marked boundary is visible against an adjacent colour", async () => {
   const palette = await designPalette();
   const rules = await markedBoundaryRules();
-  assert.equal(
-    rules.length,
-    AUDITED_BOUNDARY_COUNT,
-    "the audit's coverage changed; confirm the new total is intended",
+  assert.deepEqual(
+    rules.map((rule) => `${rule.file} ${rule.selector}`).sort(),
+    [...AUDITED_BOUNDARIES].sort(),
+    "the audit's coverage changed; confirm every added or removed rule is intended",
   );
   for (const selector of DECORATIVE_BOUNDARIES)
     assert.ok(

@@ -651,6 +651,53 @@ literal colour outside a palette source is gone, and the hardcode test rejects
 any literal rather than only those duplicating a token. The boundary audit
 moved to `tests/design_boundaries.test.ts` to keep both files under 300 lines.
 
+## Milestone 2L: Make the boundary audit's exclusions explicit (complete)
+
+Tags: mockup
+
+The Milestone 2K review left four audit findings: linked tag chips are
+controls the control-primitive test excludes, the component explorer's
+`--ce-*` palette is an exempt source with no contract entry, the pinned
+boundary count cannot say what changed, and disabled boundaries are outside
+the audit by omission rather than by a stated rule.
+
+- [x] Split the chip styles: keep the hairline on `.mbk-chip` and give
+      `.mbk-chip:is(a)` a `--chrome-control-edge` boundary, then restore
+      `.mbk-chip` to the control selector so linked chips are audited.
+- [x] Add a "Component explorer preview tokens" table to
+      `docs/protocol/mokly-viewer-palette.md` naming the six `--ce-*` roles
+      as light-only depicted-content colours, so the palette-source exemption
+      for `design-component-view.css` is justified by the contract.
+- [x] Replace the exact boundary count in `tests/design_boundaries.test.ts`
+      with a sorted inventory of the collected file and selector pairs, so a
+      failure shows which rule appeared or vanished.
+- [x] Add `:disabled` to the state selector and `--chrome-disabled-bg` to the
+      marked fills, and list the disabled rules as recorded exceptions with
+      the WCAG reason, so the disabled exemption is explicit and reachable
+      like every other one.
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
+      the design unit and browser suites and `cargo xtask check`; smoke a
+      linked tag chip in both schemes through `npm run dev`; commit and push;
+      then review the complete diff against `origin/main` with
+      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      and report findings without fixing them.
+
+Delivered: `.mbk-chip:is(a)` draws `--chrome-control-edge` while a label chip
+keeps its hairline, so a chip that navigates reads as a control and one that
+labels does not. The control-primitive test matches `.mbk-chip:is(a)` rather
+than the bare class, which audits linked chips without restyling labels. The
+palette contract gains a Component Explorer Preview Tokens table naming the six
+`--ce-*` roles as light-only depicted-content colours, with `--ce-mask` called
+out as the one that follows the interface background, so the palette-source
+exemption for `design-component-view.css` is justified rather than assumed.
+
+The pinned total became a sorted inventory of 19 file-and-selector pairs, so a
+coverage change names the rule that appeared or vanished; it caught two of my
+own guesses while writing it. `:disabled` joined the state selector and
+`--chrome-disabled-bg` the marked fills, and `.ce-action:disabled` is a recorded
+exception carrying the WCAG reason, so the disabled exemption is explicit and
+reachable like every other one.
+
 ## Milestone 3: Implement shared viewer appearance
 
 Tags: ui

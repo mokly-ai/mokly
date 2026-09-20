@@ -204,6 +204,10 @@
   padding: 3px 9px;
 }
 
+.mbk-chip:is(a) {
+  border-color: var(--chrome-control-edge);
+}
+
 .mbk-chip.flow svg {
   color: var(--mbk-sage);
   flex-shrink: 0;

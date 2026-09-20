@@ -169,6 +169,30 @@ A comparison in Difference mode paints an opaque base behind the compared
 frames, taken from the compared preview scheme, so the blended result is
 identical in both appearances.
 
+## Component Explorer Preview Tokens
+
+The component explorer draws a depicted component on its own canvas, inside the
+catalogue chrome. Those canvas colours describe the depicted content rather than
+the interface, so `design-component-view.css` scopes its own roles to
+`.ce-design` and they stay Light in both appearances, exactly as the preview
+tokens above do. A stylesheet that needs one of these reads the token rather
+than repeating its value.
+
+| Role             | Both appearances   |
+| ---------------- | ------------------ |
+| `--ce-surface`   | `white`            |
+| `--ce-text`      | `#252e28`          |
+| `--ce-secondary` | `#647068`          |
+| `--ce-soft`      | `#f3f6f3`          |
+| `--ce-edge`      | `#dce5de`          |
+| `--ce-mask`      | `var(--chrome-bg)` |
+
+`--ce-mask` is the exception: the highlight scrim covers the catalogue around a
+depicted component rather than the component itself, so it follows the interface
+background. The explorer's own artboards render in Light only, so these roles
+have no Dark counterpart; a dark component canvas would need this table extended
+before those artboards could publish a dark render.
+
 ## Related Docs
 
 - [Viewer appearance](./mokly-viewer-appearance.md)
