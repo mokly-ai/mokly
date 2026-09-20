@@ -4,7 +4,6 @@ import { compileCatalogue } from "../build/compile.js";
 import { FileSystemGeneratedOutputStore } from "../build/output_store.js";
 import { loadConfig } from "../config/load.js";
 import { runWithTimings, timeAsync } from "../diagnostics/timings.js";
-import { MoklyError } from "../errors.js";
 import { runServerChild } from "../server/child.js";
 import { receiveComponentRuntimeStartup } from "../server/controls/runtime_ipc.js";
 import { serve, type RunningServe } from "../server/serve.js";
@@ -30,7 +29,6 @@ export async function run(
   environment: TerminalEnvironment = processTerminalEnvironment(),
   reporter: CliReporter = selectReporter(argv, environment),
 ): Promise<number> {
-  assertSupportedNode();
   const arguments_ = parseArguments(argv);
   if (arguments_.help) {
     reporter.write(HELP);
@@ -246,14 +244,4 @@ function waitForShutdown(
     process.once("SIGTERM", onSignal);
     if (watched) shortcuts.start();
   });
-}
-
-function assertSupportedNode(): void {
-  const [major = 0, minor = 0] = process.versions.node.split(".").map(Number);
-  if (major < 22 || (major === 22 && minor < 14)) {
-    throw new MoklyError(
-      "cli-invalid",
-      `Node.js 22.14 or newer is required; found ${process.versions.node}`,
-    );
-  }
 }

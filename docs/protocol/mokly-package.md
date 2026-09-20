@@ -40,11 +40,12 @@ discovery, and rendering adapters; consumers use ordinary page definitions.
   to use `mokly.config.*`; generator identities, ownership markers, and
   `MOKLY_*` environment variables do not include the npm scope.
 
-The supported runtime is Node.js `>=22.14.0 <24.14.0` or `>=24.21.0`. CI must
-exercise the minimum supported release and the pinned 24.21.0 release runtime.
-Node 24.14–24.20 are excluded because their native CommonJS export pre-parser
-can abort under concurrent ESM-to-CommonJS loading. Unsupported Node versions
-fail immediately with an actionable version error.
+The supported runtime is Node.js `>=22.14.0 <24.14.0` or `>=24.19.0`. CI tests
+the minimum supported release, 22.14.0, and the pinned 24.21.0 release; these are
+tested representatives, not the support bounds. Node 24.14–24.18 are excluded
+because their native CommonJS export pre-parser can abort under concurrent
+ESM-to-CommonJS loading. A minimal CLI bootstrap rejects unsupported Node
+versions with an actionable error before loading other application modules.
 
 ## CLI
 

@@ -69,8 +69,11 @@ Actions environment. Other CI systems can invoke the npm CLI directly.
 | `base`       | no       | Comparison ref; omission uses the config or `origin/main`                     |
 | `no-changes` | no       | `true` omits comparisons; defaults to `false`, conflicts with `base`          |
 
-The action sets up Node 24.21.0, but does not check out the consumer, install its
-dependencies, fetch history, publish an npm package or comment on pull requests.
+The action sets up the tested Node 24.21.0 lane. Published Mokly releases support
+Node.js `>=22.14.0 <24.14.0` or `>=24.19.0`; the action's pin is a tested
+representative, not the lower bound. The action does not check out the consumer,
+install its dependencies, fetch history, publish an npm package or comment on
+pull requests.
 Consumer authoring code runs during export, so only grant upload credentials to
 trusted workflows. Use a receiver-scoped token through GitHub secrets; do not
 pass it in a workflow shell command. The receiver controls repository access.

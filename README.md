@@ -618,10 +618,11 @@ forcing React peers to the consumer's one runtime.
 
 ## Troubleshooting
 
-- **Node crashes in `cjs_lexer::Parse`:** upgrade to a patched Node LTS release.
-  Node 24.14.1 has an [upstream native-loader crash](https://github.com/nodejs/node/issues/63323)
-  that can surface during worker startup/shutdown. Node 24.21.0 includes the fix;
-  this is separate from a Mokly render or validation error.
+- **Node crashes in `cjs_lexer::Parse`:** upgrade to Node 24.19.0 or newer, or
+  use another supported release. Node 24.14.0 through 24.18.x can abort during
+  worker startup or shutdown; this is separate from a Mokly render or validation
+  error. The [CI verification contract](./docs/protocol/ci-verification.md)
+  records the runtime boundary.
 - **No config found:** run from the consumer repository or pass `--config`
   after the command.
 - **A committed generated file is stale:** run `mokly build`, inspect the diff,
@@ -653,10 +654,11 @@ forcing React peers to the consumer's one runtime.
 
 ## Developer Setup
 
-The repository accepts Node.js `>=22.14.0 <24.14.0` or `>=24.21.0`, npm 11,
-and Rust 1.95 for its repository tasks. The checked-in `.node-version` pins
-Node 24.21.0 so local verification cannot select the affected Node 24.14–24.20
-native loader releases described above.
+The repository accepts Node.js `>=22.14.0 <24.14.0` or `>=24.19.0`, npm 11,
+and Rust 1.95 for its repository tasks. Run local gates only on a supported
+Node release. CI tests 22.14.0 and 24.21.0; the checked-in `.node-version` and
+the development sandbox both use 24.21.0 so local verification matches the
+pinned Node 24 lane.
 
 ```bash
 npm ci

@@ -95,14 +95,21 @@ compile xtask to dispatch their gate. Jobs that execute npm use npm 11.7.0. All
 jobs have read-only repository permissions. Superseded workflow runs remain
 cancellable.
 
-The Node 24 lane and the repository's `.node-version` are pinned to 24.21.0.
-Node 24.14.0 through 24.20.x contain an
-[upstream native CommonJS export-preparser crash](https://github.com/nodejs/node/issues/63323)
-that can abort concurrent ESM-to-CommonJS loading before JavaScript can handle
-an error. Lazy-loading individual dependencies reduces exposure but cannot
-remove this process-wide parser path; Node 24.21.0 contains the upstream native
-fix. The package engine range therefore excludes those affected releases while
-retaining the supported Node 22.14 floor.
+The supported range is Node.js `>=22.14.0 <24.14.0` or `>=24.19.0`. Node
+24.14.0 through 24.18.x can abort concurrent ESM-to-CommonJS loading before
+JavaScript can handle an error. The upstream
+[`cjs_lexer::Parse` empty-`MaybeLocal` fix](https://github.com/nodejs/node/pull/63885)
+shipped in Node 24.19.0. Lazy-loading individual dependencies reduces exposure
+but cannot remove this process-wide parser path, so the CLI rejects affected
+versions before loading its application modules.
+
+CI tests the supported floor at 22.14.0 and the Node 24 lane at 24.21.0. Those
+are the tested representatives rather than the bounds of the supported range.
+The repository's `.node-version` and release, preview, and publish workflows
+remain pinned to 24.21.0. The dependency-free CLI bootstrap owns both the
+support bounds and tested-version list; repository tests require its derived
+range, `package.json` and lockfile engines, `.node-version`, and CI matrices to
+agree.
 
 The stable `Required CI` job uses `if: always()` and fails closed unless every
 required job result is exactly `success`. It also validates the evidence

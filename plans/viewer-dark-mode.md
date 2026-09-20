@@ -513,24 +513,24 @@ contract now describe one setting taking the chrome and the screens together;
 independence wording survives only for embedded viewer inputs and the
 light-only fallback.
 
-## Milestone 2H: Correct the Node compatibility policy
+## Milestone 2H: Correct the Node compatibility policy (complete)
 
 The upstream fix for the CommonJS lexer crash (`cjs_lexer::Parse` handling an
 empty `MaybeLocal`, nodejs/node#63885) shipped in Node 24.19.0, so the
 affected releases are 24.14.0 through 24.18.x. Milestone 2F excluded 24.19
 and 24.20 as well, and the CLI preflight still accepts the affected releases.
 
-- [ ] Set the supported range to exclude exactly 24.14.0 through 24.18.x in
+- [x] Set the supported range to exclude exactly 24.14.0 through 24.18.x in
       `package.json` `engines`, `docs/protocol/ci-verification.md`, the
       install guide and the release and package docs, citing the upstream fix.
       Keep the CI lanes on 22.14.0 and 24.21.0.
-- [ ] Enforce the same range in a minimal CLI bootstrap that runs before other
+- [x] Enforce the same range in a minimal CLI bootstrap that runs before other
       modules load, and add a test that the CLI check, `engines` and the CI
       runtime list agree.
-- [ ] If the sandbox still runs an affected Node release, install the pinned
+- [x] If the sandbox still runs an affected Node release, install the pinned
       24.21.0 release for local gates so they match CI, and record the
       requirement in the developer setup docs.
-- [ ] Run `npm run build`, `npm test`, the browser suite and
+- [x] Run `npm run build`, `npm test`, the browser suite and
       `cargo xtask check`; commit and push; then review the complete diff
       against `origin/main` with
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)

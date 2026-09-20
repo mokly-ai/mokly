@@ -67,7 +67,9 @@ choosing, and replace `COMMIT_SHA` with the action commit you reviewed.
 
 ## What it leaves to you
 
-The action sets up Node and runs the command. Checking out your repository,
+The action uses the tested Node 24.21 lane and runs the command. Published Mokly
+releases support Node.js 22.14 or newer except Node 24.14 through 24.18; 24.21
+is a tested representative, not the lower bound. Checking out your repository,
 installing its dependencies, fetching enough history for the comparison, and
 any comment you want on the pull request are yours. Success means the service
 accepted the upload; a failure exits with the command's own code and category.

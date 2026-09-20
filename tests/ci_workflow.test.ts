@@ -7,10 +7,17 @@ import { promisify } from "node:util";
 
 import { parse } from "yaml";
 
+import {
+  SUPPORTED_NODE_RANGE,
+  TESTED_NODE_VERSIONS,
+  isSupportedNodeVersion,
+} from "../dist/cli/bootstrap.js";
+
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
-const supportedCiNodes = ["22.14.0", "24.21.0"] as const;
+const testedNodeVersions: readonly string[] = TESTED_NODE_VERSIONS;
+const [minimumTestedNode, currentTestedNode] = TESTED_NODE_VERSIONS;
 const resultVariables = [
   "REPOSITORY_RESULT",
   "PACKAGE_RESULT",
@@ -81,10 +88,10 @@ test("CI shards complete verification behind one prerequisite", async () => {
   assert.equal(required.if, "always()");
   for (const job of [packageJob, unit, browser, native])
     assert.deepEqual(job.needs, ["repository"]);
-  assert.deepEqual(packageJob.strategy?.matrix.node, supportedCiNodes);
+  assert.deepEqual(packageJob.strategy?.matrix.node, TESTED_NODE_VERSIONS);
   for (const job of [unit, browser]) {
     assert.equal(job.strategy?.["fail-fast"], false);
-    assert.deepEqual(job.strategy?.matrix.node, supportedCiNodes);
+    assert.deepEqual(job.strategy?.matrix.node, TESTED_NODE_VERSIONS);
     assert.deepEqual(job.strategy?.matrix.shard, [1, 2, 3, 4]);
   }
   assert.equal(native.strategy?.["fail-fast"], false);
@@ -150,13 +157,13 @@ test("CI shards complete verification behind one prerequisite", async () => {
     assert.equal(setupNode?.with?.cache, "npm");
     assert.ok(job.steps.some((step) => step.run === "npm ci"));
   }
-  assert.equal(setupNodeVersion(repository), "24.21.0");
-  assert.equal(setupNodeVersion(native), "22.14.0");
-  assert.equal(setupNodeVersion(required), "24.21.0");
+  assert.equal(setupNodeVersion(repository), currentTestedNode);
+  assert.equal(setupNodeVersion(native), minimumTestedNode);
+  assert.equal(setupNodeVersion(required), currentTestedNode);
   assertPinnedActions(workflow);
 });
 
-test("local and package runtimes exclude the crashing Node 24 releases", async () => {
+test("local, package and CI runtimes share the Node compatibility policy", async () => {
   const [version, manifestSource, lockSource] = await Promise.all([
     fs.readFile(path.join(repositoryRoot, ".node-version"), "utf8"),
     fs.readFile(path.join(repositoryRoot, "package.json"), "utf8"),
@@ -168,9 +175,11 @@ test("local and package runtimes exclude the crashing Node 24 releases", async (
   const lock = JSON.parse(lockSource) as {
     packages: { "": { engines: { node: string } } };
   };
-  assert.equal(version.trim(), "24.21.0");
-  assert.equal(manifest.engines.node, ">=22.14.0 <24.14.0 || >=24.21.0");
+  assert.equal(version.trim(), currentTestedNode);
+  assert.equal(manifest.engines.node, SUPPORTED_NODE_RANGE);
   assert.equal(lock.packages[""].engines.node, manifest.engines.node);
+  assert.ok(TESTED_NODE_VERSIONS.every(isSupportedNodeVersion));
+  assert.ok(testedNodeVersions.includes(version.trim()));
 });
 
 test("Required CI fails closed for every prerequisite result", async (context) => {

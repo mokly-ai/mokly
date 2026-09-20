@@ -22,7 +22,7 @@ fail-closed aggregate.
 
 The packed ESM-consumer smoke also audits its freshly resolved production,
 optional, and peer dependencies before exercising the installed CLI on both
-supported Node runtimes in CI. This is a separate boundary: npm does not apply
+tested Node runtimes in CI. This is a separate boundary: npm does not apply
 Mokly's workspace overrides or lockfile to downstream installations. Other
 consumer fixtures continue to exercise their respective integration contracts
 without duplicating registry requests. Consumers must maintain and audit their
@@ -66,7 +66,7 @@ The current maintenance choices are:
 - Lightning CSS is a production dependency for stylesheet rule parsing. Its
   MPL-2.0 native packages and Apache-2.0 `detect-libc` dependency participate in
   the workspace and packed-consumer audits. Retain every platform's optional
-  lockfile entry when updating it; Ubuntu Node 22.14/24.21 and the minimum-Node
+  lockfile entry when updating it; tested Ubuntu Node 22.14/24.21 and minimum-Node
   macOS/Windows jobs exercise its parser. Native binaries must remain installed;
   the Node package does not automatically fall back to WASM. See the
   [release platform contract](./npm-release.md#continuous-integration).

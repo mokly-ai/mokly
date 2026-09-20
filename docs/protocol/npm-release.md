@@ -20,8 +20,9 @@ as breaking; version numbers and `CHANGELOG.md` remain release-PR owned.
 
 `package.json` describes the published, scoped public ESM package `@mokly/mokly`,
 with a release-managed version, MIT licensing, Mokly authorship, exact
-repository/bugs/homepage metadata for `mokly-ai/mokly`, a Node engine floor,
-one `mokly` bin, explicit exports/types, and a restrictive `files` allowlist.
+repository/bugs/homepage metadata for `mokly-ai/mokly`, the Node engine range
+`>=22.14.0 <24.14.0 || >=24.19.0`, one `mokly` bin, explicit exports/types, and
+a restrictive `files` allowlist.
 
 Read the checkout's version from `package.json`; `.release-please-manifest.json`
 tracks release-please's version state, and `package-lock.json` mirrors package
@@ -123,10 +124,11 @@ must continue to exercise pending states and command-to-preview timings.
 read-only repository contents permission and concurrency cancellation for
 superseded validation. An audit-first repository job gates independent package
 jobs on Node 22.14.0 and Node 24.21.0, four unit shards per runtime, four browser
-shards per runtime, and focused macOS/Windows native jobs. Chromium is installed
-only by browser jobs. Every job that runs npm installs with npm 11.7.0 and
-`npm ci`; CI caches only npm downloads and includes the merge-base lockfile in
-cache keys for jobs that build historical baselines.
+shards per runtime, and focused macOS/Windows native jobs. These are the tested
+representatives of the package's supported Node range, with 22.14.0 exercising
+the floor. Chromium is installed only by browser jobs. Every job that runs npm
+installs with npm 11.7.0 and `npm ci`; CI caches only npm downloads and includes
+the merge-base lockfile in cache keys for jobs that build historical baselines.
 
 The stable `Required CI` branch-rule status fails unless every prerequisite
 result is exactly successful and all 16 unit/browser reports prove the expected
