@@ -812,7 +812,7 @@ handoff contract so CI exercises each lifecycle state deterministically.
       then run the complete `cargo xtask check` gate with no failures or skips.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
@@ -917,4 +917,13 @@ that unsupported and unowned documents gain no privilege. The recommended
 follow-up is to transfer only an authenticated document identity from the prior
 mount (while accepting an initial document only when it matches the requested
 resource), plus an adversarial browser regression; no review finding was
+applied automatically.
+
+Milestone 14 (`1f64ff7`) was reviewed with the implementation review prompt
+after the full gate and push. The CI-specific changes introduced no new
+findings. The complete-diff review reconfirmed the unresolved medium finding
+from Milestone 13: authentication now protects the newly committed replacement
+document, but the provisional receiver still accepts an arbitrary accessible
+current same-origin document. The authenticated prior-document identity and
+adversarial regression remain the recommended follow-up; no review finding was
 applied automatically.
