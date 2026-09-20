@@ -445,9 +445,17 @@ on the new stage note.
       families outside a feature's named scope cannot silently drift.
 - [x] Run `cargo xtask check`; then `git add -A`, commit with Conventional
       Commits, and push the branch.
-- [ ] After the push, review the complete local diff against `origin/main` with
+- [x] After the push, review the complete local diff against `origin/main` with
       the implementation review prompt; report findings without changing the
       mockups.
+- [ ] Follow-ups from that review, all mockup-side: widen
+      `tests/design_replaced_copy.test.ts` to every generated `design/`
+      document rather than screen entries only; move the Both-selected hint
+      rule beside the other `.ce-viewport-select` rules and stamp the mockup's
+      preview set with the runtime's `data-viewport` hook so both share one
+      selector; normalize `schemeDisabled` inside `ViewControls` so callers
+      pass a plain boolean; assert the removed consumer renders the removed
+      Compact Action in `tests/browser/component_design.spec.ts`.
 
 ## Milestone 8: Verify repository-preview previous versions
 
@@ -467,8 +475,11 @@ version the artifact does not advertise.
       browser client switch to loading on its first update, so a shell without
       its client never claims a request is in flight.
 - [ ] Show an explicit stage note when the selected viewport has no captured
-      historical view instead of an empty stage; add the copy to the mockups
-      first (Milestone 7) and revalidate against them.
+      historical view instead of an empty stage, using the copy Milestone 7
+      recorded in the contract (including the shorter Both-selected form), and
+      style it in `packages/viewer/src/shell/css_previews.ts` with the
+      `.mbk-preview-note` and `.mbk-preview-switch` classes the mockup's
+      `design-stage.css` owns; record those class names in the contract.
 - [ ] Cover the light-only fallback note with a dark-capable removed screen in
       the browser fixture, and cover HEAD renewal after idle generation expiry
       on a viewport or scheme change in a served browser test.
