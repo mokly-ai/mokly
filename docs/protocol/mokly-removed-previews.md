@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-This contract is implemented through Milestone 6 of the
+This contract is implemented through Milestone 8 of the
 [removed content previews plan](../../plans/removed-content-previews.md). Typed
 capture, the Serve generation lifecycle, consumer export, repository preview,
 upload packaging, and the shared shell and viewer all deliver the previous
@@ -11,9 +11,7 @@ comparisons, or removed component variants.
 
 The note for a selected viewport with no captured historical view is fixed
 here and depicted by the design catalogue's
-[no-captured-view screen](./mokly-shell-design.md#design-mockups); the shell
-renders a viewport without a view as an empty stage until Milestone 8
-implements it.
+[no-captured-view screen](./mokly-shell-design.md#design-mockups).
 
 ## Behavior
 
@@ -38,7 +36,10 @@ was captured. Switch to Desktop to see it.”, exchanging the two viewport names
 for the desktop case. A preview carrying no views at all is unavailable
 instead, so the viewport the note names always holds a view. Selecting both
 viewports already puts that view on the stage beside the note, so only the
-first sentence is shown there.
+first sentence is shown there. The note carries the `mbk-preview-note` class and
+its closing sentence the `mbk-preview-switch` class, the classes the design
+catalogue's stage stylesheet owns, and the second sentence is hidden rather
+than rewritten while both viewports are selected.
 
 Historical content is read-only. Scrolling, text selection, and same-document
 anchors work. Forms cannot submit, and every link is inert: marked catalogue
@@ -49,12 +50,14 @@ external HTTP(S) resources load as they did, without offline copies.
 
 The preview is requested when the removed entry is selected, in development and
 in static delivery alike. Ordinary browsing, All/Changes filtering, search,
-navigation, and evidence updates never request historical bytes. While the
-preview loads, the stage shows “Loading previous version…”; a failure shows
-“Previous version unavailable” with a Retry control while the catalogue stays
-usable. Current bytes, current fragments, or invented content never stand in
-for missing history. Catalogues published without Changes have no removed
-entries and therefore no previews.
+navigation, and evidence updates never request historical bytes. A served or
+packaged shell arrives holding “Previous version unavailable” with its Retry
+control, because a shell whose browser client never runs has nothing on the
+way; the client's first update replaces that with “Loading previous version…”
+and then with the previous version. A failure returns to “Previous version
+unavailable” while the catalogue stays usable. Current bytes, current
+fragments, or invented content never stand in for missing history. Catalogues
+published without Changes have no removed entries and therefore no previews.
 
 ## Screens Reuse The Comparison
 
@@ -179,8 +182,10 @@ behavior.
 
 Preview frames are the existing shell frames with the existing sandbox. The
 parent enforces read-only behavior for same-origin documents by cancelling link
-and form activation, including keyboard activation, popup targets, and download
-attributes; cross-origin previews rely on the sandbox alone, which already
+and form activation, including activation with Enter, popup targets, and
+download attributes. Space keeps its default, because it scrolls the document
+rather than activating a link, so a long previous version stays readable from
+the keyboard. Cross-origin previews rely on the sandbox alone, which already
 withholds forms, popups, downloads, and top navigation. Original historical
 bytes are not transformed for presentation.
 

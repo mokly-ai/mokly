@@ -3,6 +3,10 @@
  * same-document anchors work; links and forms never leave the preview or reach
  * current content. Frames the parent cannot reach are already withheld forms,
  * popups, downloads and top navigation by their sandbox.
+ *
+ * Only Enter activates a link, so only Enter is cancelled. Space scrolls the
+ * document even while a link holds focus, and cancelling it would take reading
+ * a long previous version away from keyboard users.
  */
 
 const guarded = new WeakSet<Document>();
@@ -53,7 +57,7 @@ function guard(doc: Document): void {
     (event) => {
       const view = doc.defaultView;
       if (!view || !(event instanceof view.KeyboardEvent)) return;
-      if (event.key === "Enter" || event.key === " ") block(event);
+      if (event.key === "Enter") block(event);
     },
     true,
   );

@@ -56,9 +56,10 @@ function PreviousVersionLabel() {
 }
 
 /**
- * The stage a removed entry opens in. Its initial content is the loading state
- * the client replaces as soon as the previous version arrives, because opening
- * a removed entry is itself the request.
+ * The stage a removed entry opens in. The served markup says the previous
+ * version is unavailable, because a shell whose client never runs has nothing
+ * on the way; the client's first update replaces it with the loading state and
+ * then with the previous version, since opening a removed entry is the request.
  */
 export function RemovedPreviewStage(props: { data: RemovedPreviewData }) {
   return (
@@ -72,11 +73,16 @@ export function RemovedPreviewStage(props: { data: RemovedPreviewData }) {
         data-viewport="both"
       >
         <div className="mbk-stage">
-          <div className="mbk-preview-state">
-            <p className="mbk-preview-status" role="status">
-              <span aria-hidden="true" className="mbk-preview-spinner" />
-              Loading previous version…
-            </p>
+          <div className="mbk-empty">
+            <h2>Previous version unavailable</h2>
+            <p>The previous version could not be loaded.</p>
+            <button
+              className="mbk-empty-link"
+              data-mokly-preview-retry=""
+              type="button"
+            >
+              Retry
+            </button>
           </div>
         </div>
       </div>

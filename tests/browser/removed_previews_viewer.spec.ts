@@ -50,10 +50,19 @@ test("a viewer selection change fences the previous request", async ({
   const held = new Promise<void>((resolve) => {
     release = resolve;
   });
+  let handled = false;
   await page.route("**/pages/archive/removed.html.json", async (route) => {
     await held;
-    await route.continue();
+    await route.continue().catch(() => undefined);
+    handled = true;
   });
+  let settled = false;
+  const settle = (request: { url(): string }): void => {
+    if (request.url().includes("/pages/archive/removed.html.json"))
+      settled = true;
+  };
+  page.on("requestfinished", settle);
+  page.on("requestfailed", settle);
   await page.goto(`${host.url}/viewer.html?adapter=same-origin`);
   await expect(page.locator(".mbk-preview-status")).toHaveText(
     "Loading previous version…",
@@ -63,7 +72,7 @@ test("a viewer selection change fences the previous request", async ({
     page.frameLocator(`${stage} .mbk-frame-desktop iframe`).locator("h1"),
   ).toHaveText("Previous desktop screen");
   release();
-  await page.waitForTimeout(300);
+  await expect.poll(() => handled && settled).toBe(true);
   await expect(
     page.frameLocator(`${stage} .mbk-frame-desktop iframe`).locator("h1"),
   ).toHaveText("Previous desktop screen");

@@ -115,7 +115,6 @@ function descriptor(html: string) {
 test("a removed document opens its previous version instead of an empty state", () => {
   const html = removedShell(page);
   assert.match(html, /Showing previous version/);
-  assert.match(html, /Loading previous version…/);
   assert.doesNotMatch(html, /This page was removed/);
   assert.doesNotMatch(html, /no longer in the catalogue/);
   assert.doesNotMatch(
@@ -149,6 +148,16 @@ test("a removed screen opens historical frames without comparison controls", () 
     route: "screens/farewell.html",
     title: "Farewell",
   });
+});
+
+test("a served stage claims no request until its client can make one", () => {
+  for (const entry of [page, screen]) {
+    const html = removedShell(entry);
+    assert.doesNotMatch(html, /Loading previous version…/);
+    assert.match(html, /Previous version unavailable/);
+    assert.match(html, /The previous version could not be loaded\./);
+    assert.match(html, /data-mokly-preview-retry=""[^>]*>Retry</);
+  }
 });
 
 test("removed components and flows keep the behavior the contract leaves alone", () => {

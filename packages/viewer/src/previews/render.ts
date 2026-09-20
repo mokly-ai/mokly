@@ -67,6 +67,26 @@ export function renderPreviewUnavailable(doc: Document, host: Element): void {
   host.replaceChildren(stage(doc, empty));
 }
 
+/** The viewport that still holds a view when the selected one has none. */
+const OTHER_VIEWPORT = { desktop: "Mobile", mobile: "Desktop" } as const;
+
+/**
+ * Say that one viewport was never captured, where its frame would have been. A
+ * preview with no views at all is unavailable instead, so the other viewport
+ * named here always opens. Showing both viewports already puts that view on the
+ * stage, and the stylesheet drops the sentence naming it there.
+ */
+function missingView(doc: Document, viewport: Viewport): HTMLElement {
+  const state = element(doc, "div", "mbk-preview-state");
+  const note = element(doc, "p", "mbk-preview-note");
+  note.setAttribute("role", "status");
+  const rest = element(doc, "span", "mbk-preview-switch");
+  rest.textContent = `Switch to ${OTHER_VIEWPORT[viewport]} to see it.`;
+  note.append(`No previous ${viewport} version was captured. `, rest);
+  state.append(note);
+  return state;
+}
+
 function previewFrame(doc: Document, src: string, title: string) {
   const frame = element(doc, "iframe", "mbk-frag");
   frame.setAttribute(PREVIEW_FRAME_ATTRIBUTE, "");
@@ -126,7 +146,8 @@ function screenFrame(
 
 /**
  * Render the historical documents. A page keeps the plain document pane; a
- * screen keeps its device frames, showing only the views that were captured.
+ * screen keeps its device frames, and a viewport that was never captured says
+ * so where its frame would have been.
  */
 export function renderPreviewContent(
   doc: Document,
@@ -156,7 +177,11 @@ export function renderPreviewContent(
       content.views.find(
         (item) => item.viewport === size && item.colorScheme === "light",
       );
-    if (view) surface.append(screenFrame(doc, data, size, view, scheme));
+    surface.append(
+      view
+        ? screenFrame(doc, data, size, view, scheme)
+        : missingView(doc, size),
+    );
   }
   host.replaceChildren(surface);
   return [...host.querySelectorAll("iframe")];

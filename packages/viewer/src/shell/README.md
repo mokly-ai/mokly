@@ -20,9 +20,14 @@ a removed screen share: the "Showing previous version" label, the stage host
 carrying the descriptor the browser client requests from, and the device chrome
 a screen preview clones. It advertises a packaged address only when the accepted
 public catalogue publishes one, so a delivery without that descriptor stays
-quiet. `views.tsx` uses it for removed pages and `workspace.tsx` for removed
-screens; both drop the comparison band there, while removed component variants
-keep theirs. See [previews](../previews/README.md) for the client side.
+quiet. The served stage holds the unavailable state with its Retry control,
+because a shell whose browser client never runs has no request in flight; the
+client's first update replaces it with the loading state. `views.tsx` uses it
+for removed pages and `workspace.tsx` for removed screens; both drop the
+comparison band there, while removed component variants keep theirs.
+`css_previews.ts` styles the stage, including the `mbk-preview-note` and
+`mbk-preview-switch` classes the design catalogue's stage stylesheet owns.
+See [previews](../previews/README.md) for the client side.
 
 See [the package README](../../README.md), the
 [viewer contract](../../../../docs/protocol/mokly-viewer.md), and the

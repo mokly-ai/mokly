@@ -466,32 +466,44 @@ its descriptors exist, and close the Milestone 5 review findings that belong to
 the shell. Moved here from Milestone 5 because the shell cannot show a previous
 version the artifact does not advertise.
 
-- [ ] Stop the read-only guard in `packages/viewer/src/previews/read_only.ts`
+- [x] Stop the read-only guard in `packages/viewer/src/previews/read_only.ts`
       from intercepting the Space key: browsers scroll on Space and activate
       links only on Enter, so keep the Enter branch and the capture-phase click
       guard, and add a browser assertion that Space scrolls a preview while a
       link inside it has focus.
-- [ ] Render the unavailable state server-side for removed entries and let the
+- [x] Render the unavailable state server-side for removed entries and let the
       browser client switch to loading on its first update, so a shell without
-      its client never claims a request is in flight.
-- [ ] Show an explicit stage note when the selected viewport has no captured
+      its client never claims a request is in flight. The controller already
+      renders loading synchronously on its first update, so only the served
+      markup changed. A shell whose client module is still downloading when the
+      browser first paints shows the unavailable state briefly; the honest state
+      is preferred to claiming a request no one has made.
+- [x] Show an explicit stage note when the selected viewport has no captured
       historical view instead of an empty stage, using the copy Milestone 7
       recorded in the contract (including the shorter Both-selected form), and
       style it in `packages/viewer/src/shell/css_previews.ts` with the
       `.mbk-preview-note` and `.mbk-preview-switch` classes the mockup's
       `design-stage.css` owns; record those class names in the contract.
-- [ ] Cover the light-only fallback note with a dark-capable removed screen in
+- [x] Cover the light-only fallback note with a dark-capable removed screen in
       the browser fixture, and cover HEAD renewal after idle generation expiry
       on a viewport or scheme change in a served browser test.
-- [ ] Replace the timed waits in `tests/browser/removed_previews.spec.ts`
+- [x] Replace the timed waits in `tests/browser/removed_previews.spec.ts`
       with polled positive assertions, especially for the late-response fence.
+      Discovered while doing it: the exported and embedded-viewer specs carried
+      the same waits, so they were replaced in the same pass; a fenced request
+      is cancelled rather than delivered, so the fences now wait on the held
+      route being released and the browser finishing with that request.
 - [x] Replace the repository-preview expectations in
       `tests/browser/preview_pages.spec.ts` so a removed page opens its previous
       version there, and drop the note explaining why it could not. Done in
       Milestone 6 alongside the fix; nothing remains here.
-- [ ] Smoke-test a deployed-style repository preview at mobile and desktop
+- [x] Smoke-test a deployed-style repository preview at mobile and desktop
       widths, confirming read-only links, Retry, and catalogue navigation behave
       as they do in Serve and consumer export. Save screenshots under `.context/`.
+      Built with `buildPreview(..., { includeChanges: true, base: "origin/main" })`
+      over the removed-preview fixture and served through the Pages runtime;
+      the no-captured-view and light-only notes were captured beside the
+      Milestone 7 mockups in `.context/milestone8/`.
 - [ ] Run `cargo xtask check`; then `git add -A`, commit with Conventional
       Commits, and push the branch.
 - [ ] After the push, review the complete local diff against `origin/main` with

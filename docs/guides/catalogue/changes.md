@@ -46,11 +46,13 @@ comparison controls, because there is no earlier version.
 A removed page or screen keeps its Removed status and opens the version from
 the branch point instead, labelled "Showing previous version". A page opens in
 its document pane and a screen in its mobile and desktop frames, with the
-themes it was captured in. That version is read only: you can scroll it, select
-text and follow anchors inside it, but its links and forms do nothing, so an
-old link can never take you to current content. While it is being retrieved the
-stage says so, and if it cannot be shown you get "Previous version unavailable"
-with a Retry, while the rest of the catalogue stays usable.
+themes it was captured in. A viewport that was never captured says so on the
+stage and names the one that still opens. That version is read only: you can
+scroll it, select text and follow anchors inside it, but its links and forms
+do nothing, so an old link can never take you to current content. While it is
+being retrieved the stage says so, and if it cannot be shown you get "Previous
+version unavailable" with a Retry, while the rest of the catalogue stays
+usable.
 
 A removed saved component variant keeps its earlier version, so it can still be
 compared.

@@ -40,6 +40,25 @@ export const SHELL_PREVIEW_CSS = `
   font-size: 13px;
 }
 
+.mbk-preview > .mbk-stage.mbk-live > .mbk-preview-state {
+  flex: 0 1 auto;
+  align-self: center;
+}
+
+.mbk-preview-note {
+  margin: 0;
+  padding: 32px 0;
+  max-width: 24rem;
+  color: var(--chrome-ink-2);
+  font-size: 13px;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.mbk-preview[data-viewport="both"] .mbk-preview-switch {
+  display: none;
+}
+
 .mbk-preview-spinner {
   display: inline-block;
   flex-shrink: 0;

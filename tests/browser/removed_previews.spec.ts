@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 import {
   startServedPreviews,
@@ -17,6 +17,37 @@ test.afterAll(async () => {
 
 const stage = "[data-mokly-preview]";
 const previewFrame = `${stage} iframe`;
+
+/** The historical document itself, so its own address can be inspected. */
+function historical(page: Page) {
+  return page
+    .frames()
+    .find((frame) => frame.url().includes("snapshots/before"))!;
+}
+
+/**
+ * Report whether the browser has finished with a matching request, whether it
+ * was delivered or cancelled. A fenced preview request settles either way, so
+ * this replaces waiting on the clock for the response a navigation left behind.
+ */
+function settlement(page: Page, match: string): () => boolean {
+  let done = false;
+  const settle = (request: { url(): string }): void => {
+    if (request.url().includes(match)) done = true;
+  };
+  page.on("requestfinished", settle);
+  page.on("requestfailed", settle);
+  return () => done;
+}
+
+/** Every top-level document the browser asked for, in order. */
+function documentRequests(page: Page): readonly string[] {
+  const requested: string[] = [];
+  page.on("request", (request) => {
+    if (request.resourceType() === "document") requested.push(request.url());
+  });
+  return requested;
+}
 
 for (const width of [390, 1280]) {
   test(`a removed document shows its previous version at ${width}px`, async ({
@@ -75,34 +106,45 @@ test("a previous version reads but never acts", async ({ page }) => {
   const preview = page.frameLocator(previewFrame);
   await expect(preview.locator("h1")).toHaveText("Previous page");
   const address = page.url();
-  const inner = () =>
-    page.frames().find((frame) => frame.url().includes("snapshots/before"))!;
-  await expect(preview.getByText("Marked catalogue link")).toBeVisible();
+  const opened = historical(page).url();
+  const documents = documentRequests(page);
   for (const label of [
     "Marked catalogue link",
     "Relative link",
     "External link",
     "Download link",
-  ]) {
+  ])
     await preview.getByText(label, { exact: true }).click();
-    await page.waitForTimeout(150);
-    expect(page.url()).toBe(address);
-    expect(inner().url()).toContain("snapshots/before");
-  }
   await preview.getByRole("button", { name: "Send" }).click();
-  await page.waitForTimeout(150);
-  expect(inner().url()).not.toContain("submitted");
   await preview.getByText("Marked catalogue link").focus();
   await page.keyboard.press("Enter");
-  await page.waitForTimeout(150);
-  expect(page.url()).toBe(address);
-  const scrolled = await inner().evaluate(() => {
-    document.documentElement.scrollTop = 400;
-    return document.documentElement.scrollTop || document.body.scrollTop;
-  });
-  expect(scrolled).toBeGreaterThan(0);
   await preview.getByText("Jump to the end").click();
   await expect(preview.locator("#foot")).toBeInViewport();
+  expect(documents).toEqual([]);
+  expect(page.url()).toBe(address);
+  expect(historical(page).url().split("#")[0]).toBe(opened);
+});
+
+test("Space scrolls a previous version while a link holds focus", async ({
+  page,
+}) => {
+  await page.goto(`${host.url}/view/archive/removed.html`);
+  const preview = page.frameLocator(previewFrame);
+  await expect(preview.locator("h1")).toHaveText("Previous page");
+  const address = page.url();
+  const documents = documentRequests(page);
+  const offset = () =>
+    historical(page).evaluate(
+      () => document.documentElement.scrollTop || document.body.scrollTop,
+    );
+  await preview.getByText("Marked catalogue link").focus();
+  await page.keyboard.press("Space");
+  await expect.poll(offset).toBeGreaterThan(0);
+  await preview.getByText("Marked catalogue link").focus();
+  await page.keyboard.press("Enter");
+  await preview.getByText("Jump to the end").click();
+  await expect(preview.locator("#foot")).toBeInViewport();
+  expect(documents).toEqual([]);
   expect(page.url()).toBe(address);
 });
 
@@ -139,10 +181,13 @@ test("navigation fences a late response and keeps history usable", async ({
   const held = new Promise<void>((resolve) => {
     release = resolve;
   });
+  let handled = false;
   await page.route("**/__mokly/diffs/review.json?page=*", async (route) => {
     await held;
-    await route.continue();
+    await route.continue().catch(() => undefined);
+    handled = true;
   });
+  const settled = settlement(page, "review.json?page=");
   await page.goto(`${host.url}/view/screens/current.html`);
   await page.locator('[data-filter="changed"]').click();
   await page.locator('a[data-route="archive/removed.html"]').click();
@@ -150,22 +195,18 @@ test("navigation fences a late response and keeps history usable", async ({
     "Loading previous version…",
   );
   await page.locator('a[data-route="screens/removed.html"]').click();
-  await expect(
-    page.frameLocator(`${stage} .mbk-frame-desktop iframe`).locator("h1"),
-  ).toHaveText("Previous desktop screen");
+  const desktop = page.frameLocator(`${stage} .mbk-frame-desktop iframe`);
+  await expect(desktop.locator("h1")).toHaveText("Previous desktop screen");
   release();
-  await page.waitForTimeout(300);
-  await expect(
-    page.frameLocator(`${stage} .mbk-frame-desktop iframe`).locator("h1"),
-  ).toHaveText("Previous desktop screen");
+  await expect.poll(() => handled && settled()).toBe(true);
+  await expect(page.locator(".mbk-preview-status")).toHaveCount(0);
+  await expect(desktop.locator("h1")).toHaveText("Previous desktop screen");
   await page.goBack();
   await expect(page.frameLocator(previewFrame).locator("h1")).toHaveText(
     "Previous page",
   );
   await page.goForward();
-  await expect(
-    page.frameLocator(`${stage} .mbk-frame-desktop iframe`).locator("h1"),
-  ).toHaveText("Previous desktop screen");
+  await expect(desktop.locator("h1")).toHaveText("Previous desktop screen");
 });
 
 test("browsing current entries requests no historical bytes", async ({
@@ -178,6 +219,28 @@ test("browsing current entries requests no historical bytes", async ({
   await page.locator('[data-filter="changed"]').click();
   await page.locator('[data-filter="all"]').click();
   await page.locator("[data-workspace-viewport]").selectOption("mobile");
-  await page.waitForTimeout(200);
+  await expect(
+    page.frameLocator('iframe[data-workspace-frame="mobile"]').locator("main"),
+  ).toHaveText("Current mobile");
   expect(requests.filter((url) => url.includes("/__mokly/diffs/"))).toEqual([]);
+});
+
+test.describe("without its browser client", () => {
+  test.use({ javaScriptEnabled: false });
+
+  test("a served stage never claims a request is in flight", async ({
+    page,
+  }) => {
+    await page.goto(`${host.url}/view/archive/removed.html`);
+    await expect(page.locator(".mbk-previous")).toHaveText(
+      "Showing previous version",
+    );
+    await expect(page.locator(`${stage} h2`)).toHaveText(
+      "Previous version unavailable",
+    );
+    await expect(page.locator("#mb-main")).not.toContainText(
+      "Loading previous version",
+    );
+    await expect(page.locator(previewFrame)).toHaveCount(0);
+  });
 });

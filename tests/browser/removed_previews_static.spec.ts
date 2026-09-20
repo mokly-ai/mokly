@@ -1,9 +1,10 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 import {
   startExportedPreviews,
   type RemovedPreviewHost,
 } from "./removed_preview_fixture.js";
+import { chooseViewport } from "./workspace_actions.js";
 
 let host: RemovedPreviewHost & { requests: readonly string[] };
 
@@ -71,15 +72,64 @@ test("a catalogue that advertises nothing stays quiet", async ({ page }) => {
   expect(requests.filter((url) => url.includes("/pages/"))).toEqual([]);
 });
 
+/** Only the fields this file rewrites; the rest is passed through unchanged. */
+interface CapturedViews {
+  screens: { views: { viewport: string }[] }[];
+}
+
+/** Deliver one screen's comparison as if only its desktop views were captured. */
+async function dropMobileViews(page: Page): Promise<void> {
+  await page.route("**/__generations/**/review.json", async (route) => {
+    const response = await route.fetch();
+    const payload = (await response.json()) as CapturedViews;
+    for (const screen of payload.screens)
+      screen.views = screen.views.filter((view) => view.viewport !== "mobile");
+    await route.fulfill({ response, body: JSON.stringify(payload) });
+  });
+}
+
+test("a viewport with no captured previous view says so", async ({ page }) => {
+  const note = `${stage} .mbk-preview-note`;
+  const rest = `${note} .mbk-preview-switch`;
+  await dropMobileViews(page);
+  await page.goto(`${host.url}/view/screens/removed.html`);
+  await expect(
+    page.frameLocator(`${stage} .mbk-frame-desktop iframe`).locator("h1"),
+  ).toHaveText("Previous desktop screen");
+  await expect(page.locator(`${stage} .mbk-frame-mobile`)).toHaveCount(0);
+  await expect(page.locator(note)).toContainText(
+    "No previous mobile version was captured.",
+  );
+  await expect(page.locator(rest)).toBeHidden();
+
+  await chooseViewport(page, "mobile");
+  await expect(page.locator(`${stage} iframe`)).toHaveCount(0);
+  await expect(page.locator(note)).toHaveText(
+    "No previous mobile version was captured. Switch to Desktop to see it.",
+  );
+  await expect(page.locator(rest)).toBeVisible();
+
+  await chooseViewport(page, "desktop");
+  await expect(page.locator(note)).toHaveCount(0);
+  await expect(
+    page.frameLocator(`${stage} .mbk-frame-desktop iframe`).locator("h1"),
+  ).toHaveText("Previous desktop screen");
+});
+
 test("an exported previous version stays read-only", async ({ page }) => {
   await page.goto(`${host.url}/view/archive/removed.html`);
-  const document = page.frameLocator(`${stage} iframe`);
-  await expect(document.locator("h1")).toHaveText("Previous page");
+  const preview = page.frameLocator(`${stage} iframe`);
+  await expect(preview.locator("h1")).toHaveText("Previous page");
   const address = page.url();
-  for (const label of ["Marked catalogue link", "Relative link"]) {
-    await document.getByText(label, { exact: true }).click();
-    await page.waitForTimeout(120);
-    expect(page.url()).toBe(address);
-  }
-  await expect(document.locator("h1")).toHaveText("Previous page");
+  const documents: string[] = [];
+  page.on("request", (request) => {
+    if (request.resourceType() === "document") documents.push(request.url());
+  });
+  for (const label of ["Marked catalogue link", "Relative link"])
+    await preview.getByText(label, { exact: true }).click();
+  await preview.getByText("Jump to the end").click();
+  await expect(preview.locator("#foot")).toBeInViewport();
+  expect(documents).toEqual([]);
+  expect(page.url()).toBe(address);
+  await expect(preview.locator("h1")).toHaveText("Previous page");
 });

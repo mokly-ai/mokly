@@ -12,12 +12,16 @@ import { createFixture, removeFixture } from "./fixture.js";
 const execute = promisify(execFile);
 
 /**
- * A Git fixture whose baseline holds one page and one screen that the working
+ * A Git fixture whose baseline holds one page and two screens that the working
  * tree deletes. Their previous versions carry links, a form and enough content
- * to scroll, so read-only behavior can be exercised in a real browser.
+ * to scroll, so read-only behavior can be exercised in a real browser. One
+ * screen was captured in both schemes and the other in Light alone, so the
+ * catalogue offers a theme control and the light-only fallback is reachable.
  */
 export async function createRemovedPreviewFixture() {
-  const fixture = await createFixture(removedPreviewSource(false));
+  const fixture = await createFixture(removedPreviewSource(false), {
+    extraConfig: `colorSchemes: ["light", "dark"],`,
+  });
   try {
     await fs.mkdir(path.join(fixture.mockupsDir, "assets"), {
       recursive: true,
@@ -72,8 +76,14 @@ function removedPreviewSource(current: boolean): string {
   const removed = current
     ? ""
     : `defineScreen({ ...metadata, id: "removed-screen", title: "Removed screen", route: "screens/removed.html",
+    colorSchemes: ["light"],
     mobile: <main id="top"><h1>Previous mobile screen</h1><div dangerouslySetInnerHTML={{ __html: ${JSON.stringify(links)} }} /><p id="foot">End of the archived screen.</p></main>,
     desktop: <main id="top"><h1>Previous desktop screen</h1><div dangerouslySetInnerHTML={{ __html: ${JSON.stringify(links)} }} /><p id="foot">End of the archived screen.</p></main>,
+    useCaseIds: [] }),
+  defineScreen({ ...metadata, id: "removed-dark", title: "Removed dark screen", route: "screens/removed-dark.html",
+    colorSchemes: ["light", "dark"],
+    mobile: <main><h1>Previous themed mobile screen</h1></main>,
+    desktop: <main><h1>Previous themed desktop screen</h1></main>,
     useCaseIds: [] }),
   definePage({ ...metadata, id: "removed-page", title: "Removed page", route: "archive/removed.html",
     render: () => ${JSON.stringify(
@@ -83,8 +93,8 @@ function removedPreviewSource(current: boolean): string {
 import { defineCollection, definePage, defineScreen } from "@mokly/mokly";
 const metadata = { description: "Fixture", dependencies: [], relatedDocs: [] };
 export const mockups = [
-  defineCollection({ ...metadata, id: "fixture", title: "Fixture", childIds: ["current"${current ? "" : ', "removed-screen", "removed-page"'}] }),
-  defineScreen({ ...metadata, id: "current", title: "Current", route: "screens/current.html", mobile: <main>Current mobile</main>, desktop: <main>Current desktop</main>, useCaseIds: [] }),
+  defineCollection({ ...metadata, id: "fixture", title: "Fixture", childIds: ["current"${current ? "" : ', "removed-screen", "removed-dark", "removed-page"'}] }),
+  defineScreen({ ...metadata, id: "current", title: "Current", route: "screens/current.html", colorSchemes: ["light"], mobile: <main>Current mobile</main>, desktop: <main>Current desktop</main>, useCaseIds: [] }),
   ${removed}
 ];`;
 }

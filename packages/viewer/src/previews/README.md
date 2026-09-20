@@ -22,10 +22,16 @@ extends a live generation's retention before reusing it, exactly as comparisons
 do. `advertisedPreviewPaths` is the complete set an embedded viewer may fetch.
 
 `render.ts` owns the loading, unavailable-with-retry and loaded stages, cloning
-the device chrome the shell rendered into templates. `read_only.ts` cancels link
-and form activation inside frames the parent can reach while preserving
-scrolling, selection and same-document anchors; a cross-origin preview relies on
-its sandbox instead. `install.ts` is the delegated controller: it requests on
+the device chrome the shell rendered into templates. A selected viewport with no
+captured view keeps a note where its frame would be rather than an empty stage;
+its `mbk-preview-note` and `mbk-preview-switch` classes match the design
+catalogue, and the stylesheet hides the closing sentence while both viewports
+are shown. `read_only.ts` cancels link and form activation inside frames the
+parent can reach, Enter included, while preserving scrolling, selection and
+same-document anchors; Space keeps its default so a long previous version stays
+readable from the keyboard, and a cross-origin preview relies on its sandbox
+instead. `install.ts` is the delegated controller: its first update replaces the
+shell's served unavailable stage with the loading state, then it requests on
 selection, renews before re-rendering a viewport or theme change, and discards
 any response whose stage or entry has since changed.
 
@@ -39,7 +45,7 @@ behavior.
 ```bash
 npm run build
 npx tsx --test tests/client_removed_previews.test.ts tests/removed_preview_shell.test.ts
-npx playwright test tests/browser/removed_previews.spec.ts tests/browser/removed_previews_static.spec.ts tests/browser/removed_previews_viewer.spec.ts
+npx playwright test tests/browser/removed_previews.spec.ts tests/browser/removed_preview_views.spec.ts tests/browser/removed_previews_static.spec.ts tests/browser/removed_previews_viewer.spec.ts
 ```
 
 Related boundaries: [the Browse client](../client/README.md), the
