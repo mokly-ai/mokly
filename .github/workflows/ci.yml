@@ -16,40 +16,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  minimum-runtime:
-    name: Minimum Node 22.14
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-        with:
-          fetch-depth: 0
-      - name: Set up Node.js
-        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
-        with:
-          node-version: 22.14.0
-          package-manager-cache: false
-      - name: Set up npm
-        run: npm install --global npm@11.7.0
-      - name: Set up Rust
-        run: |
-          rustup toolchain install 1.95.0 --profile minimal --component rustfmt --component clippy
-          rustup default 1.95.0
-      - name: Install dependencies
-        run: npm ci
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
-      - name: Run complete verification
-        run: cargo xtask check
-      - name: Retain browser failure evidence
-        if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: browser-failures-node-22
-          path: test-results/
-
-  release-runtime:
-    name: Release Node 24
+  repository:
+    name: Repository
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -61,6 +29,8 @@ jobs:
         with:
           node-version: 24
           package-manager-cache: false
+          cache: npm
+          cache-dependency-path: package-lock.json
       - name: Set up npm
         run: npm install --global npm@11.7.0
       - name: Set up Rust
@@ -69,19 +39,163 @@ jobs:
           rustup default 1.95.0
       - name: Install dependencies
         run: npm ci
+      - name: Run repository verification
+        run: cargo xtask check --suite repository
+
+  package:
+    name: Package (Node ${{ matrix.node }})
+    needs: [repository]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["22.14.0", "24"]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          fetch-depth: 0
+      - name: Read baseline dependency lockfile
+        run: |
+          mkdir -p .context
+          baseline_commit="$(git merge-base HEAD origin/main)"
+          git show "${baseline_commit}:package-lock.json" > .context/baseline-package-lock.json
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: ${{ matrix.node }}
+          package-manager-cache: false
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            .context/baseline-package-lock.json
+      - name: Set up npm
+        run: npm install --global npm@11.7.0
+      - name: Set up Rust
+        run: |
+          rustup toolchain install 1.95.0 --profile minimal
+          rustup default 1.95.0
+      - name: Install dependencies
+        run: npm ci
+      - name: Run package verification
+        run: cargo xtask check --suite package
+
+  unit:
+    name: Unit (Node ${{ matrix.node }}, shard ${{ matrix.shard }}/4)
+    needs: [repository]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["22.14.0", "24"]
+        shard: [1, 2, 3, 4]
+    env:
+      MOKLY_VERIFICATION_RUNTIME: node-${{ matrix.node }}
+      MOKLY_VERIFICATION_REPORT: .context/verification-reports/unit-node-${{ matrix.node }}-shard-${{ matrix.shard }}-of-4.json
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          fetch-depth: 0
+      - name: Read baseline dependency lockfile
+        run: |
+          mkdir -p .context
+          baseline_commit="$(git merge-base HEAD origin/main)"
+          git show "${baseline_commit}:package-lock.json" > .context/baseline-package-lock.json
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: ${{ matrix.node }}
+          package-manager-cache: false
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            .context/baseline-package-lock.json
+      - name: Set up npm
+        run: npm install --global npm@11.7.0
+      - name: Set up Rust
+        run: |
+          rustup toolchain install 1.95.0 --profile minimal
+          rustup default 1.95.0
+      - name: Install dependencies
+        run: npm ci
+      - name: Run unit shard
+        run: cargo xtask check --suite unit --shard ${{ matrix.shard }}/4
+      - name: Retain unit inventory and timings
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: verification-unit-node-${{ matrix.node }}-shard-${{ matrix.shard }}
+          path: ${{ env.MOKLY_VERIFICATION_REPORT }}
+          if-no-files-found: error
+          include-hidden-files: true
+          overwrite: true
+          retention-days: 14
+
+  browser:
+    name: Browser (Node ${{ matrix.node }}, shard ${{ matrix.shard }}/4)
+    needs: [repository]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["22.14.0", "24"]
+        shard: [1, 2, 3, 4]
+    env:
+      MOKLY_VERIFICATION_RUNTIME: node-${{ matrix.node }}
+      MOKLY_VERIFICATION_REPORT: .context/verification-reports/browser-node-${{ matrix.node }}-shard-${{ matrix.shard }}-of-4.json
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          fetch-depth: 0
+      - name: Read baseline dependency lockfile
+        run: |
+          mkdir -p .context
+          baseline_commit="$(git merge-base HEAD origin/main)"
+          git show "${baseline_commit}:package-lock.json" > .context/baseline-package-lock.json
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: ${{ matrix.node }}
+          package-manager-cache: false
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            .context/baseline-package-lock.json
+      - name: Set up npm
+        run: npm install --global npm@11.7.0
+      - name: Set up Rust
+        run: |
+          rustup toolchain install 1.95.0 --profile minimal
+          rustup default 1.95.0
+      - name: Install dependencies
+        run: npm ci
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
-      - name: Run complete verification
-        run: cargo xtask check
+      - name: Run browser shard
+        run: cargo xtask check --suite browser --shard ${{ matrix.shard }}/4
+      - name: Retain browser inventory and timings
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: verification-browser-node-${{ matrix.node }}-shard-${{ matrix.shard }}
+          path: ${{ env.MOKLY_VERIFICATION_REPORT }}
+          if-no-files-found: error
+          include-hidden-files: true
+          overwrite: true
+          retention-days: 14
       - name: Retain browser failure evidence
         if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: browser-failures-node-24
+          name: browser-failures-node-${{ matrix.node }}-shard-${{ matrix.shard }}-attempt-${{ github.run_attempt }}
           path: test-results/
+          retention-days: 14
 
-  export-platforms:
-    name: Export filesystem (${{ matrix.os }})
+  native:
+    name: Native filesystem (${{ matrix.os }})
+    needs: [repository]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -90,11 +204,15 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          fetch-depth: 0
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 22.14.0
           package-manager-cache: false
+          cache: npm
+          cache-dependency-path: package-lock.json
       - name: Set up npm
         run: npm install --global npm@11.7.0
       - name: Install dependencies
@@ -111,15 +229,33 @@ jobs:
   required:
     name: Required CI
     if: always()
-    needs: [minimum-runtime, release-runtime, export-platforms]
+    needs: [repository, package, unit, browser, native]
     runs-on: ubuntu-latest
     steps:
+      - name: Check out report validator
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Download shard evidence
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: verification-*
+          path: .context/downloaded-verification
       - name: Require every verification job
         env:
-          MINIMUM_RESULT: ${{ needs.minimum-runtime.result }}
-          RELEASE_RESULT: ${{ needs.release-runtime.result }}
-          EXPORT_PLATFORMS_RESULT: ${{ needs.export-platforms.result }}
+          REPOSITORY_RESULT: ${{ needs.repository.result }}
+          PACKAGE_RESULT: ${{ needs.package.result }}
+          UNIT_RESULT: ${{ needs.unit.result }}
+          BROWSER_RESULT: ${{ needs.browser.result }}
+          NATIVE_RESULT: ${{ needs.native.result }}
         run: |
-          test "$MINIMUM_RESULT" = success
-          test "$RELEASE_RESULT" = success
-          test "$EXPORT_PLATFORMS_RESULT" = success
+          test "$REPOSITORY_RESULT" = success
+          test "$PACKAGE_RESULT" = success
+          test "$UNIT_RESULT" = success
+          test "$BROWSER_RESULT" = success
+          test "$NATIVE_RESULT" = success
+      - name: Require complete shard evidence
+        run: node scripts/verification/aggregate.mjs --reports .context/downloaded-verification --commit "${GITHUB_SHA}"

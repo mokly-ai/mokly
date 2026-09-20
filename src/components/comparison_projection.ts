@@ -7,6 +7,7 @@ import {
 } from "../review/ignore.js";
 
 import {
+  componentUsageSignals,
   projectOwnedMaterial,
   sameOwner,
   stripHistoricalMarkers,
@@ -99,25 +100,7 @@ export function projectComponentPair(
     right,
     context,
   );
-  const currentInputs = new Map(
-    afterView?.instances
-      .filter((item) => item.owner.kind === "entry")
-      .map((item) => [item.key, item]),
-  );
-  const inputs = Boolean(
-    beforeView?.instances.some(
-      (item) =>
-        item.owner.kind === "entry" &&
-        currentInputs.get(item.key)?.componentId === item.componentId &&
-        currentInputs.get(item.key)?.propsKey !== item.propsKey,
-    ),
-  );
-  const structure = Boolean(
-    beforeView &&
-    afterView &&
-    canonicalJson(structureSignals(beforeView)) !==
-      canonicalJson(structureSignals(afterView)),
-  );
+  const { inputs, structure } = componentUsageSignals(beforeView, afterView);
   return {
     before: normalized.base,
     after: normalized.head,

@@ -15,4 +15,6 @@ export interface ComponentClassificationInput {
   baseCommit: string;
   baseRef: string;
   cssParser?: CssRuleParser;
+  /** Test-only: disable the unchanged-view decision so both paths can be compared. */
+  useFastPath?: boolean;
 }

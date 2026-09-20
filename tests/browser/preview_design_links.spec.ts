@@ -1,18 +1,12 @@
-import crypto from "node:crypto";
-import fs from "node:fs/promises";
-import path from "node:path";
+import { expect } from "@playwright/test";
 
-import { expect, test } from "@playwright/test";
-
-import { repositoryRoot, validEntrySource } from "../helpers/fixture.js";
+import { validEntrySource } from "../helpers/fixture.js";
 import { createPreviewComparisonFixture } from "../helpers/preview_comparison_fixture.js";
 
 import { focusDesignLink } from "./design_test_helpers.js";
-import {
-  servePreviewFixture,
-  startPreviewFixture,
-  type PreviewFixture,
-} from "./preview_fixture.js";
+import { test } from "./ordinary_preview_fixture.js";
+import { servePreviewFixture, type PreviewFixture } from "./preview_fixture.js";
+import type { OwnedPreviewFixture } from "./preview_fixture_owner.js";
 import {
   chooseScheme,
   chooseViewport,
@@ -23,14 +17,12 @@ let comparisonFixture: Awaited<
   ReturnType<typeof createPreviewComparisonFixture>
 >;
 let comparisonPreview: PreviewFixture;
-let preview: PreviewFixture;
+let preview: OwnedPreviewFixture;
 test.describe.configure({ timeout: 90_000 });
 
-test.beforeAll(async () => {
+test.beforeAll(async ({ ordinaryPreview }) => {
   test.setTimeout(180_000);
-  const before = await generatedDigest();
-  preview = await startPreviewFixture();
-  expect(await generatedDigest()).toBe(before);
+  preview = ordinaryPreview;
   comparisonFixture = await createPreviewComparisonFixture(linkEntrySource);
   comparisonPreview = await servePreviewFixture(comparisonFixture.output);
 });
@@ -38,7 +30,6 @@ test.beforeAll(async () => {
 test.afterAll(async () => {
   await comparisonPreview?.close();
   await comparisonFixture?.close();
-  await preview?.close();
 });
 
 test("published scheme swaps survive a redirected source replacement", async ({
@@ -187,17 +178,4 @@ function linkEntrySource(changed: boolean): string {
   return source
     .replace('<main id="details">Detail</main>', details)
     .replace('<main id="details-mobile">Detail</main>', details);
-}
-
-async function generatedDigest(): Promise<string> {
-  const root = path.join(repositoryRoot, "examples/basic/generated");
-  const hash = crypto.createHash("sha256");
-  for (const relative of (await fs.readdir(root, { recursive: true })).sort()) {
-    const file = path.join(root, relative);
-    if ((await fs.stat(file)).isFile()) {
-      hash.update(relative);
-      hash.update(await fs.readFile(file));
-    }
-  }
-  return hash.digest("hex");
 }

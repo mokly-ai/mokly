@@ -8,6 +8,7 @@ use crate::error::{Error, FilesystemResult, Result};
 const MAX_LINES: usize = 300;
 
 /// Audits Rust source length for repository checks.
+#[cfg_attr(test, unimock::unimock(api = [RustFileLengthAuditorRunMock]))]
 pub(crate) trait RustFileLengthAuditor: Send + Sync {
     /// Audit all Rust files beneath `xtask` and an optional `crates` directory.
     fn run(&self, workspace: &Path) -> Result<()>;

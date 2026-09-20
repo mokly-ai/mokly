@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import { timeAsync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
 
@@ -5,6 +7,13 @@ import { referencedRoutes } from "./asset_references.js";
 import type { ReviewAssetReader } from "./assets.js";
 import { normalizeResourceDocuments } from "./resource_documents.js";
 import { ResourceGraph } from "./resource_graph.js";
+
+type ResourceExclusion = (route: string) => boolean;
+
+interface CachedViewResources {
+  all?: Promise<ReadonlySet<string>>;
+  filtered: WeakMap<ResourceExclusion, Promise<ReadonlySet<string>>>;
+}
 
 /** One immutable read cache per source side; it never copies or writes snapshots. */
 export class ComponentMaterialReader {
@@ -17,6 +26,10 @@ export class ComponentMaterialReader {
   private counterpart?: ComponentMaterialReader;
   private side: "before" | "after" = "after";
   private readonly normalized = new Map<string, Promise<string>>();
+  private readonly viewResources = new Map<
+    string,
+    Map<string, CachedViewResources>
+  >();
   constructor(private readonly reader: ReviewAssetReader) {
     this.graph = new ResourceGraph({
       prefetch: (routes) => this.prefetch(routes),
@@ -157,13 +170,29 @@ export class ComponentMaterialReader {
   async resources(
     route: string,
     html: string,
-    excluded: (route: string) => boolean,
+    excluded?: ResourceExclusion,
   ): Promise<ReadonlySet<string>> {
-    return timeAsync("review.resource-graph", () => {
+    let documents = this.viewResources.get(route);
+    if (!documents) {
+      documents = new Map();
+      this.viewResources.set(route, documents);
+    }
+    const digest = createHash("sha256").update(html).digest("base64url");
+    let cached = documents.get(digest);
+    if (!cached) {
+      cached = { filtered: new WeakMap() };
+      documents.set(digest, cached);
+    }
+    const existing = excluded ? cached.filtered.get(excluded) : cached.all;
+    if (existing) return existing;
+    const resources = timeAsync("review.resource-graph", () => {
       const seeds = referencedRoutes(route, html, {
         resourceHints: false,
-      }).filter((path) => !excluded(path));
+      }).filter((path) => !excluded?.(path));
       return this.graph.collect(seeds);
     });
+    if (excluded) cached.filtered.set(excluded, resources);
+    else cached.all = resources;
+    return resources;
   }
 }

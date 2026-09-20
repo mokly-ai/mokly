@@ -1,4 +1,4 @@
-/** Windows command gate: the parent assigns this worker to its job before releasing argv. */
+/** Command gate released only after the parent establishes platform ownership. */
 import { spawn } from "node:child_process";
 
 interface CommandMessage {

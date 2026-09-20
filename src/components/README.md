@@ -77,6 +77,13 @@ Historical Mokabook comparisons preserve the original document coordinates when
 applying recorded style ownership; internal marker renames alone do not create
 consumer changes or alter the retained snapshots.
 
+Comparison projection can expose caller-owned slot material that HTML parsing
+discarded from contexts such as `template` or `select`. Removing component
+implementation text can likewise expose a sibling hidden by its unclosed HTML. The review shortcut
+therefore proves both actual and ownership-projected resource closures for
+views with instances, styles, or entry-owned slots, using the same root-specific ownership and
+resource exclusion policy as the complete comparison.
+
 ## Development
 
 ```sh

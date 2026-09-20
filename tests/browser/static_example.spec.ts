@@ -6,6 +6,10 @@ import { expect, test } from "@playwright/test";
 import { exportCatalogue } from "../../dist/export/run.js";
 import { createExampleBaseline } from "../helpers/example_baseline.js";
 import { repositoryRoot } from "../helpers/fixture.js";
+import {
+  timeExportPreparation,
+  timeFixturePhase,
+} from "../helpers/fixture_timing.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 
 import { assertServedShellMarker } from "./export_shell.js";
@@ -19,12 +23,16 @@ test.beforeAll(async () => {
   root = await fs.promises.mkdtemp(
     path.join(repositoryRoot, ".context/mokly-example-export-"),
   );
-  const config = await createExampleBaseline(root);
+  const config = await timeFixturePhase(
+    "static-example",
+    "baseline-fixture",
+    false,
+    () => createExampleBaseline(root),
+  );
   output = path.join(root, "site");
-  await exportCatalogue(config, {
-    base: "HEAD",
-    outDir: output,
-  });
+  await timeExportPreparation("static-example", () =>
+    exportCatalogue(config, { base: "HEAD", outDir: output }),
+  );
   server = await serveStaticFiles(output);
   await assertServedShellMarker(server.url, "/view/screens/welcome.html");
 });

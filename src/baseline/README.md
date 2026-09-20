@@ -113,12 +113,14 @@ retain at most 64 KiB; command errors expose the last 40 lines and a zero-based
 command index, argv, exit code and signal. `process_scope.ts` owns command
 lifecycle: POSIX uses process groups with TERM then KILL; Windows uses a native
 kill-on-close Job Object through the existing Koffi bridge. `process_worker.ts`
-waits for the parent's release until job assignment succeeds, so commands cannot
-start descendants before ownership is established. Job termination does not
-depend on the launcher's PID remaining alive. Disposal waits for zero active job
-processes and closed output pipes, and also stops silent background descendants
-after normal command completion. Missing native support or failed job assignment
-fails before historical code starts; there is no child-only fallback.
+waits for the parent's release until the POSIX group is registered with an
+inherited verification owner, when present, and Windows job assignment succeeds.
+Commands therefore cannot start descendants before ownership is established.
+Job termination does not depend on the launcher's PID remaining alive. Disposal
+waits for zero active job processes and closed output pipes, and also stops
+silent background descendants after normal command completion. Missing native
+support, process-registration failure or job-assignment failure each stops
+historical code before it starts; there is no child-only fallback.
 
 `RebuiltBaselineReader(fs, repoRoot, outputDir, commit, mockupsPath, signal?)`
 reads only a completed output tree. Its `BaselineReader` API retains
