@@ -784,7 +784,7 @@ same-origin frame is mounting or replacing its document.
       the complete `cargo xtask check` gate with no failures or skips.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
@@ -878,3 +878,15 @@ after the full gate and push. No findings remain. The residual compatibility
 risk is limited to host code that depended on the exact bytes of undocumented
 package-owned DOM IDs; the supported SSR, hydration, accessibility-reference,
 and multi-root contracts are covered by the adversarial regressions.
+
+Milestone 13 (`ca66e2a`) was reviewed with the implementation review prompt
+after the full gate and push. One medium finding remains for user decision: the
+same-origin adapter installs its provisional navigation receiver on any
+accessible current iframe document before that document passes the expected
+resource check. An unowned same-origin document can therefore emit a valid
+logical marker during the replacement window, despite the protocol promising
+that unsupported and unowned documents gain no privilege. The recommended
+follow-up is to transfer only an authenticated document identity from the prior
+mount (while accepting an initial document only when it matches the requested
+resource), plus an adversarial browser regression; no review finding was
+applied automatically.
