@@ -2,7 +2,9 @@
 
 ## Status And Outcome
 
-Milestones 1 through 6 are complete, committed, and pushed; only the final review item remains.
+Milestones 1 through 6 are complete, committed, and pushed. The final review
+reported seven findings, recorded below, which await the user's decision; none
+has been applied.
 
 Mokly currently discovers every `*.mockup.ts` and `*.mockup.tsx` module below
 one configured directory, `entriesDir`, and binds the source-attributed
@@ -49,8 +51,10 @@ In scope:
   both are supplied.
 - Glob discovery that resolves every match, applies the existing source
   classifier to each match, and fails on a pattern with zero matches or a match
-  inside `mockupsDir`, `review.outDir`, `.mokly-cache/`, a package-owned
-  ignored directory, or outside `repoRoot` after realpath resolution.
+  inside `review.outDir`, `.mokly-cache/`, `node_modules`, `.git`, or outside
+  `repoRoot` after realpath resolution. A match below `mockupsDir` is allowed
+  and protected as authored source, preserving nested `docs/mockups/src`
+  layouts.
 - Facade binding for every module inside `repoRoot` that is not under
   `node_modules`, a package runtime directory, or `.mokly-cache/`.
 - Entry attribution, generated ownership, tracked ownership, and watch
@@ -301,7 +305,7 @@ watch for, not a defect in this change.
 
 ---
 
-### Milestone 6: Guides, README, and changelog — completed except review
+### Milestone 6: Guides, README, and changelog — completed
 
 Bring the user-facing documentation in line with the delivered behavior and
 remove the Delivery Status notes added in Milestone 1.
@@ -322,10 +326,43 @@ remove the Delivery Status notes added in Milestone 1.
       Conventional Commits and is excluded from formatting, so the `feat(config)`
       commit message carries the entry instead.
 - [x] Run `cargo xtask check`, commit, and push.
-- [ ] Review the complete local diff against `origin/main` after the push
+- [x] Review the complete local diff against `origin/main` after the push
       using `docs/implementation-review-prompt.md`. Report each finding with a
       number, severity, context, impact of doing nothing, lettered options,
       and a recommendation. Do not change the implementation.
+
+## Review Findings (awaiting decision)
+
+The review of the complete diff against `origin/main` reported these findings.
+Nothing has been changed in response; each needs a decision.
+
+1. **P1, watcher prune.** `isRequiredWatchPath` in `src/server/watch_events.ts`
+   treats every entry glob's stable prefix as a required root, and required
+   roots override the package-owned ignore list. With `src/**` the watcher
+   traverses `src/node_modules` and `src/dist`; with a repository-root glob it
+   traverses `node_modules` and `.git`. Recommended: apply the ignore list
+   before the required-root override for glob roots, with a regression test.
+2. **P2, stranded output.** `isAuthoredOwner` trusts owners beneath a directory
+   that currently holds an entry module. Deleting the only entry module in a
+   co-located directory leaves its generated HTML unowned, so it is neither
+   pruned nor replaceable, and `check` does not report it. The configuration
+   contract's "never strands" sentence over-promises. Recommended: also trust
+   an entry-module-named owner under any glob's stable prefix, and report
+   unowned Mokly-headered files as a distinct `check` diagnostic.
+3. **P2, doc examples.** The README and config guide show two globs; a fresh
+   repository with only one location fails with the zero-match error.
+   Recommended: single-glob examples with the multi-glob form in prose.
+4. **P2, review.outDir.** In `entries` mode, config resolution validates
+   `review.outDir` before discovery, so an output directory inside an entry
+   root is only rejected later by Review or Export. Recommended: re-run the
+   boundary check after discovery in `validate.ts`.
+5. **P3, plan scope.** This plan's scope says a match inside `mockupsDir` is
+   rejected; the delivered contract allows nested `docs/mockups/src` layouts.
+   Corrected below.
+6. **P3, coverage.** No serve-level re-discovery test; no tests for a
+   symlinked `entriesDir`, a missing stable prefix, or brace-expansion errors;
+   two unreachable branches in `entry_globs.ts` and `entry_discovery.ts`.
+7. **P3, file size.** `src/server/watch_events.ts` is 311 lines.
 
 ## Post-merge follow-up (non-blocking)
 

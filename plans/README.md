@@ -6,9 +6,9 @@
   ids and routes grouped under a parent screen, expandable variant rows in
   the navigation, per-variant Changes, and changed-view marks on the view
   controls.
-- [Co-Located Entry Discovery](./co-located-entry-discovery.md) — replace
-  `entriesDir` with `entries` globs so entry modules can live beside product
-  components, and bind the attributed authoring facade repository-wide.
+- [Co-Located Entry Discovery](./co-located-entry-discovery.md) — delivered
+  on the branch and reviewed; seven review findings await the user's decision
+  before the PR merges.
 - [CLI Terminal Experience](./cli-terminal-experience.md)
 - [Package Documentation](./package-documentation.md) — supersedes the
   unmerged public-site plan and pull request #79 by shipping versioned Markdown
