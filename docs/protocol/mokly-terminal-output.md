@@ -26,7 +26,9 @@ interactive developer experience. Stdin is never claimed in plain mode.
 
 Rich colour uses Node's `util.styleText` with stdout or stderr as the validation
 stream. Node therefore applies its normal TTY, `NO_COLOR`, and `FORCE_COLOR`
-rules. Mokly adds no colour dependency and never emits styling in plain mode.
+rules. Success glyphs are green when colour is supported and remain unstyled
+when colour is disabled or unavailable. Mokly adds no colour dependency and
+never emits styling in plain mode.
 
 Modern terminals use these glyphs:
 
@@ -46,9 +48,11 @@ frames in modern terminals and `|`, `/`, `-`, `\\` in the fallback.
 
 Every rich line is bounded by stdout's current positive `columns` value, or 80
 columns when unavailable. Mokly accounts for ANSI control sequences when
-measuring, truncates content with a single ellipsis where possible, and never
-writes a partial escape sequence. User-authored paths are made relative to the
-repository when possible before truncation.
+measuring, truncates content with a single ellipsis where possible, preserves
+complete styling sequences in the retained prefix, and never writes a partial
+escape sequence. A shortened styled line ends with a full style reset so its
+colour cannot bleed into later output. User-authored paths are made relative to
+the repository when possible before truncation.
 
 ## Spinner lifecycle
 

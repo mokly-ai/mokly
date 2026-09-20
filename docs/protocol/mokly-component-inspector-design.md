@@ -45,10 +45,12 @@ Escape and focus return as specified by the explorer contract.
 
 Both layouts use a bounded, scrollable panel inside a fixed shell. Desktop uses
 the navigation divider's centered short-line grip to resize the inspector.
-Mobile uses a rounded sheet over the preview with an iOS-style grabber; the
-mockup grabber toggles compact/expanded heights without scripts. Closing leaves
-the icon strip at the bottom. The enclosing page and main column do not scroll.
-The icon strip remains separate from scrolling panel content. The
+Mobile uses a full-workspace-width rounded sheet over the preview with an
+iOS-style grabber; the inspector owns its border, corners and shadow while its
+dock owns placement and height. The mockup grabber toggles compact/expanded
+heights without scripts. Closing leaves the icon strip at the bottom. The
+enclosing page and main column do not scroll. The icon strip remains separate
+from scrolling panel content. The
 [workspace design](./mokly-component-workspace-design.md) owns the exact pane,
 resize, and grouped view-control behavior.
 Each owning artboard declares its initial panel explicitly; instance links open

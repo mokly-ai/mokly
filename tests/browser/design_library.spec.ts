@@ -182,3 +182,36 @@ test("mobile comparison samples fit with wider fallback fonts", async ({
     ).toBeLessThanOrEqual(390);
   }
 });
+
+test("mobile footer component owns its full-width sheet surface", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const entry = manifest.entries.find(
+    (candidate) => candidate.id === "design-ui-inspector",
+  );
+  if (entry?.kind !== "component") throw new Error("Missing footer panel");
+  await page.goto(
+    fileUrl(
+      entry.variants.find((variant) => variant.id === "details")!.fragments
+        .mobile,
+    ),
+  );
+  const workspace = page.locator(".ce-workspace");
+  const dock = page.locator(".ce-inspector-dock");
+  const inspector = page.locator(".ce-inspector");
+  const [workspaceBounds, dockBounds] = await Promise.all([
+    workspace.boundingBox(),
+    dock.boundingBox(),
+  ]);
+  expect(workspaceBounds).not.toBeNull();
+  expect(dockBounds).not.toBeNull();
+  expect(dockBounds!.x).toBeCloseTo(workspaceBounds!.x, 0);
+  expect(dockBounds!.width).toBeCloseTo(workspaceBounds!.width, 0);
+  await expect(dock).toHaveCSS("border-top-width", "0px");
+  await expect(dock).toHaveCSS("border-top-left-radius", "0px");
+  await expect(dock).toHaveCSS("box-shadow", "none");
+  await expect(inspector).toHaveCSS("border-top-width", "1px");
+  await expect(inspector).toHaveCSS("border-top-left-radius", "20px");
+  await expect(inspector).not.toHaveCSS("box-shadow", "none");
+});

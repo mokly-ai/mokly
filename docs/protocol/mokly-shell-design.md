@@ -312,8 +312,10 @@ scrollable region scrolls internally:
   labels, and no separate toolbar above the grid.
 - **Details inspector** — the shared icon footer opens the chosen tab in place;
   closing it leaves no icon selected. Desktop uses a centered grip on the divider
-  and mobile uses a rounded bottom sheet with an iOS-style grabber. Only panel
-  content scrolls within the bounded workspace. Details contains a two-column
+  and mobile uses a full-workspace-width rounded bottom sheet with an iOS-style
+  grabber. The footer owns that sheet's surface and shadow while its dock owns
+  placement and height. Only panel content scrolls within the bounded workspace.
+  Details contains a two-column
   body (`1.35fr / 1fr`) with description and
   `Why this screen —` rationale on the left and uppercase-labelled metadata
   rows (Source, Generated, Schemes, Tags, Related docs, Dependencies, Used by)

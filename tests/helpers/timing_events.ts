@@ -43,7 +43,7 @@ export function assertReviewTimings(
     assert.ok(Number.isInteger(event.pid) && event.pid > 0);
     assert.ok(Number.isInteger(event.id) && event.id > 0);
     assert.ok(Number.isFinite(event.elapsedMs) && event.elapsedMs >= 0);
-    assert.ok(["start", "end"].includes(event.event));
+    assert.ok(["start", "end", "counts"].includes(event.event));
     assert.deepEqual(
       Object.keys(event).sort(),
       [
@@ -57,8 +57,10 @@ export function assertReviewTimings(
         "elapsedMs",
         "event",
         ...(event.event === "end" ? ["durationMs", "status"] : []),
+        ...(event.event === "counts" ? ["counts"] : []),
       ].sort(),
     );
+    if (event.event === "counts") continue;
     if (event.event !== "start") continue;
     const session = events.filter((item) => item.session === event.session);
     const ends = session.filter(
@@ -87,4 +89,30 @@ export function assertReviewTimings(
     }
     assert.ok(ancestors.includes(ancestor), `${event.stage} under ${ancestor}`);
   }
+}
+
+/** Assert the component-view path counts emitted once per classification loop. */
+export function assertComparisonCounts(
+  events: readonly TimingEvent[],
+  role: string,
+): void {
+  const records = events.filter(
+    (event) =>
+      event.role === role &&
+      event.stage === "review.compare-screens" &&
+      event.event === "counts",
+  );
+  assert.equal(records.length, 1);
+  const counts = records[0]?.counts;
+  assert.deepEqual(Object.keys(counts ?? {}).sort(), [
+    "completePath",
+    "fastPath",
+    "views",
+  ]);
+  assert.ok(
+    [counts?.views, counts?.fastPath, counts?.completePath].every(
+      (value) => Number.isInteger(value) && value! >= 0,
+    ),
+  );
+  assert.equal(counts!.fastPath! + counts!.completePath!, counts!.views);
 }

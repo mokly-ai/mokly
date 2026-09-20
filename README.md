@@ -243,6 +243,10 @@ output and generated files unchanged. It separates bundling, rendering,
 validation, file writes, watcher setup, child readiness, and background Changes.
 Review timings distinguish Git baseline and document reads, comparison loops,
 resource traversal, CSS rule analysis, and artifact writes. Build and Check do not run review.
+Once the baseline is cached, classification cost follows the size of the
+change: views whose normalized documents and reachable resources are unchanged
+are settled without the complete comparison, and the `review.compare-screens`
+counts record reports how many views took each path.
 Parent timings include child phases; overlapping timings must not be added
 together. See the [diagnostic contract](./docs/protocol/mokly-timings.md).
 
@@ -716,6 +720,27 @@ The shared browser example also waits for terminal Changes in global setup
 before tests begin, so comparison and navigation assertions start with complete
 evidence. Loading-state and continuity tests own explicit pending fixtures to
 exercise evidence completion during browsing and editing.
+Navigation and design-link specs share one unique read-only ordinary preview per
+worker. Its owned output must be absent before preparation, and a current-build
+marker proves freshness before the server starts. Setup failures and normal
+teardown drain the full process tree before removing the artifact. If process
+termination cannot be confirmed, teardown fails, retains the owned output, and
+returns the same failure to repeated close calls. A separate preview-preparation
+spec still runs the cold `npm run preview:build` path and checks that generated
+output stays byte-stable. Fixture setup emits structured
+`[mokly:fixture-timing]` phase records and identifies operations that are
+themselves under test.
+Verification wrappers also assign nested subprocess scopes and fixture output
+to a shared hierarchical owner. Abrupt local or CI cancellation drains every
+registered descendant group before removing that owner's resource root; sibling
+test processes retain separate ownership. A failed drain keeps the resources
+for diagnosis and fails the wrapper.
+Wrangler Pages fixtures pass port zero and use the exact readiness URL Wrangler
+reports, so the serving process owns port selection through binding. Nested
+Playwright verification harnesses set an explicit output directory inside their
+temporary root because an implicit directory can resolve at the nearest package
+root. Tests that fork a compiled CLI set `execArgv: []`; test-runner loaders and
+concurrency flags belong only to the parent test process.
 Run the full browser suite separately from other top-level
 checks: publication fixtures rebuild shared package and example output.
 Watched tests that assert a stable update version also wait for final Changes
@@ -746,6 +771,24 @@ consumers, Chromium tests, and all Rust checks. It also audits the freshly
 resolved packed consumer's production dependencies. Registry access is required;
 known advisories or registry errors fail verification. See the
 [dependency security contract](./docs/protocol/dependency-security.md).
+Individual gates can be exercised with `cargo xtask check --suite repository`,
+`package`, `unit`, or `browser`. The unit and browser suites accept a one-based
+`--shard INDEX/TOTAL`; selected suites and shards are partial checks and do not
+replace the complete command.
+
+The public `npm test` and `npm run test:browser` commands prepare their required
+output and retain their native Node and Playwright entrypoints. Browser runner
+arguments such as `npm run test:browser -- --list` or a selected spec path are
+available during development; filtered runs are partial checks. `npm test`
+retains the repository's complete explicit file inventory and two-file
+concurrency. Xtask uses the strict `test:prepared` and
+`test:browser:prepared` scripts after preparing output; those internal scripts
+accept only the optional CI shard argument and write inventory reports for
+completeness validation.
+`npm run package:check -- --artifacts DIR` and
+`npm run package:smoke -- --artifacts DIR` build once and forward the exact
+archive-pair option to their prepared package consumers.
+
 `npm test` limits test-file parallelism to two workers to keep subprocess-heavy
 fixtures within their existing startup deadlines on shared developer machines.
 All tests still run, including their explicit concurrent-writer and race cases.
