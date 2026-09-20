@@ -14,6 +14,8 @@ export interface InstanceBoundary {
 export interface FrameMount {
   /** Cancel a pending mount or its active session. */
   signal?: AbortSignal;
+  /** Receive events from the visible document while the adapter mounts. */
+  onEvent?: (event: FrameEvent) => void;
   url: URL;
   usage: CatalogueUsage;
 }

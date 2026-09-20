@@ -208,6 +208,50 @@ test("raw native links navigate from desktop, area, SVG, flow, and legacy frames
   await expectDestination(page);
 });
 
+test("logical activation stays host-owned during a frame source handoff", async ({
+  page,
+}) => {
+  let releaseRequest = () => {};
+  let reportRequest = () => {};
+  const requestStarted = new Promise<void>((resolve) => {
+    reportRequest = resolve;
+  });
+  const requestReleased = new Promise<void>((resolve) => {
+    releaseRequest = resolve;
+  });
+  await page.route("**/static/screens/home.mobile.dark.html", async (route) => {
+    reportRequest();
+    await requestReleased;
+    await route.continue();
+  });
+
+  try {
+    await page.goto(`${navigation.url}/view/screens/home.html`);
+    await chooseViewport(page, "mobile");
+    await page.locator("[data-workspace-scheme]").click();
+    await requestStarted;
+    await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
+      "data-mokly-frame-state",
+      "loading",
+    );
+    await page
+      .frameLocator(".mbk-frame-mobile iframe")
+      .locator("#area-link")
+      .evaluate((element) =>
+        element.dispatchEvent(
+          new MouseEvent("click", { bubbles: true, cancelable: true }),
+        ),
+      );
+
+    await expectDestination(page);
+    await page.goBack();
+    await expect(page).toHaveURL(/\/view\/screens\/home\.html$/);
+    await expect(page.locator("#mb-main h2")).toHaveText("Home");
+  } finally {
+    releaseRequest();
+  }
+});
+
 async function navigateFrom(
   page: Page,
   frameSelector: string,

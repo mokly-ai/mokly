@@ -96,6 +96,16 @@ export function useMountedShellFrame(input: MountedFrameInput): {
     active.current = session;
     registry.add(session);
     setStatus("loading");
+    const receive = (event: FrameEvent) => {
+      if (controller.signal.aborted) return;
+      if (event.type === "error") {
+        session.status = "error";
+        setStatus("error");
+        registry.changed();
+      }
+      registry.emit(session, event);
+      latestEvent.current?.(event);
+    };
     const url = new URL(
       input.source,
       registry.baseUrl ?? element.ownerDocument.baseURI,
@@ -105,6 +115,7 @@ export function useMountedShellFrame(input: MountedFrameInput): {
       .then(() => {
         mountedUsageRevision = session.usageRevision;
         return (input.adapter ?? registry.adapter).mount(element, {
+          onEvent: receive,
           signal: controller.signal,
           url,
           usage: session.usage,
@@ -120,16 +131,7 @@ export function useMountedShellFrame(input: MountedFrameInput): {
         }
         session.mounted = mounted;
         session.appliedUsageRevision = mountedUsageRevision;
-        session.unsubscribe = mounted.subscribe((event) => {
-          if (controller.signal.aborted) return;
-          if (event.type === "error") {
-            session.status = "error";
-            setStatus("error");
-            registry.changed();
-          }
-          registry.emit(session, event);
-          latestEvent.current?.(event);
-        });
+        session.unsubscribe = mounted.subscribe(receive);
         registry.changed();
         const synchronized = await synchronizeMountedUsage(
           registry,

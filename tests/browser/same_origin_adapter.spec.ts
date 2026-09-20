@@ -129,6 +129,20 @@ test("valid local logical navigation works without instance usage", async ({
     )
     .toBe(true);
   expect(page.url()).toBe(`${fixture.host.url}/`);
+
+  await page.evaluate(() =>
+    (window as unknown as FrameTestWindow).unsubscribe(),
+  );
+  await page
+    .frameLocator("#frame")
+    .getByRole("link", { name: "Open Action" })
+    .click();
+  await expect(
+    page.frameLocator("#frame").getByRole("button", {
+      name: "Continue",
+      exact: true,
+    }),
+  ).toBeVisible();
 });
 
 test("temporary previews authenticate masks and preserve logical navigation", async ({

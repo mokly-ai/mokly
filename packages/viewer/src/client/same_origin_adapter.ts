@@ -144,6 +144,7 @@ function localAdapter(resolveUrl: typeof frameUrl): FrameAdapter {
           };
         },
         view.signal,
+        view.onEvent,
       );
       return mounting;
     },

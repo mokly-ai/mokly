@@ -763,6 +763,33 @@ cannot concatenate with dynamic package-owned IDs into the same DOM identifier.
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
 
+## Milestone 13: Atomic frame navigation handoff
+
+Tags: ui
+
+Summary: keep hydrated Browse ownership of logical links continuous while a
+same-origin frame is mounting or replacing its document.
+
+- [x] Add a deterministic browser regression that holds a replacement frame
+      request open, activates a valid native logical link in the still-visible
+      document, and proves the parent shell navigates exactly once.
+- [x] Give the React frame session an event sink before adapter navigation
+      starts, and let the same-origin adapter intercept authenticated logical
+      activations in the visible document throughout the mount handoff without
+      changing native behavior after unsubscribe.
+- [x] Clarify the adapter lifecycle in the navigation protocol and viewer
+      package README, including the distinction between enhanced ownership and
+      the portable unhydrated fallback.
+- [x] Run the focused viewer build, typecheck and browser regressions, then run
+      the complete `cargo xtask check` gate with no failures or skips.
+- [x] After checks pass, `git add -A`, commit with Conventional Commits, and
+      push the branch.
+- [ ] After the push, use
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main`; report
+      numbered, severity-rated findings with options and recommendations
+      without changing the implementation.
+
 ## Post-merge follow-up (non-blocking)
 
 - Publish the viewer and CLI versions containing the hydrated shell; consumers

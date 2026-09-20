@@ -235,6 +235,14 @@ The resulting history entry has the canonical `/view/<route>[?fragment=...]`
 URL; the title, breadcrumbs, heading, details inspector, frames, focus, and
 status announcement all describe the destination. Back and Forward return
 through those outer route entries and restore their route-owned scroll.
+Once React owns a same-origin frame session, that ownership is continuous while
+the adapter replaces its document. The shell installs its navigation receiver
+on the still-visible document before starting the replacement, so a valid
+marked activation during a viewport, scheme, variant, fragment, or route
+handoff still navigates the parent exactly once. Readiness gates inspection,
+not logical navigation. Disposing or unsubscribing the session removes the
+receiver; before hydration, after failed hydration, or without a receiver, the
+portable link remains frame-owned as described below.
 
 Outer same-document links, including the shell's skip link, keep native fragment
 focus and scrolling. Document identity includes origin, pathname and query but

@@ -140,6 +140,13 @@ pointer-driven inspection errors. Built-in adapters implement optional
 and enable inspection on the same document without remounting it. Custom adapters
 without this method retain replacement mounts for changed usage. Changing the
 React catalogue source still replaces the runtime as documented above.
+The shell also supplies `FrameMount.onEvent` before an adapter starts loading.
+The same-origin adapter attaches it to the currently visible document before a
+replacement, so valid logical links remain parent-owned throughout source
+handoffs; its first matching `MountedFrame.subscribe` adopts that receiver
+without duplicating events. Custom adapters should honor the same mount-time
+receiver contract. Unsubscribing or disposing restores the portable native-link
+behavior.
 
 Evidence refreshes restore valid inspection masks, outlines and labels without
 ending an active pick. Explicit highlights retain their exact frame scope;

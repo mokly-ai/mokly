@@ -76,12 +76,16 @@ export function mountLocalDocument(
   url: URL,
   create: (doc: Document, emit: (event: FrameEvent) => void) => LocalOperations,
   cancellation?: AbortSignal,
+  initialListener?: (event: FrameEvent) => void,
 ): Promise<MountedFrame> {
   const win = frame.ownerDocument.defaultView!;
   return new Promise((resolve, reject) => {
-    const listeners = new Set<(event: FrameEvent) => void>();
+    const listeners = new Set<(event: FrameEvent) => void>(
+      initialListener ? [initialListener] : [],
+    );
     const controller = new AbortController();
     const signal = controller.signal;
+    let initialSubscription = initialListener;
     let documentController: AbortController | undefined;
     let operations: LocalOperations | undefined;
     let disposed = false;
@@ -90,6 +94,55 @@ export function mountLocalDocument(
     const cleanups: (() => void)[] = [];
     const emit = (event: FrameEvent) => {
       for (const listener of [...listeners]) listener(event);
+    };
+    const activate = (event: MouseEvent) => {
+      const link = (event.target as Element | null)?.closest?.(
+        "[data-mokly-link]",
+      );
+      if (!link || !listeners.size || !["a", "area"].includes(link.localName))
+        return;
+      const marker = link.getAttribute("data-mokly-link") ?? "";
+      const target = parseBrowsingTarget(
+        link.getAttribute("data-mokly-target"),
+      );
+      const destination = parseLogicalMarker(marker);
+      if (
+        !destination ||
+        target.kind === "invalid" ||
+        !classifyFrameActivation({
+          altKey: event.altKey,
+          button: event.button,
+          ctrlKey: event.ctrlKey,
+          metaKey: event.metaKey,
+          shiftKey: event.shiftKey,
+          download: link.hasAttribute("download"),
+          eventType: event.type === "click" ? "click" : "auxclick",
+          marker,
+          target: link.getAttribute("data-mokly-target"),
+        })
+      )
+        return;
+      event.preventDefault();
+      emit({
+        type: "navigation",
+        navigation: {
+          ...destination,
+          target,
+          activation:
+            event.type === "auxclick"
+              ? "middle"
+              : event.metaKey || event.ctrlKey || event.shiftKey
+                ? "modified"
+                : "primary",
+        },
+      });
+    };
+    const listenForActivations = (
+      doc: Document,
+      documentSignal: AbortSignal,
+    ) => {
+      doc.addEventListener("click", activate, { signal: documentSignal });
+      doc.addEventListener("auxclick", activate, { signal: documentSignal });
     };
     const disposeDocument = () => {
       documentController?.abort();
@@ -107,6 +160,7 @@ export function mountLocalDocument(
       win.clearTimeout(timer);
       if (pending) win.cancelAnimationFrame(pending);
       listeners.clear();
+      initialSubscription = undefined;
       release();
       reject(new FrameError("disposed"));
     };
@@ -157,11 +211,12 @@ export function mountLocalDocument(
             return;
           }
         }
-        if (operations) disposeDocument();
+        disposeDocument();
         win.clearTimeout(timer);
         documentController = new AbortController();
         const documentSignal = documentController.signal;
         operations = create(doc, emit);
+        listenForActivations(doc, documentSignal);
         const inspecting = () =>
           listeners.size > 0 && operations!.inspectable();
         localPointer(
@@ -206,57 +261,6 @@ export function mountLocalDocument(
           resize.disconnect();
           mutations.disconnect();
         });
-        const activate = (event: MouseEvent) => {
-          const link = (event.target as Element | null)?.closest?.(
-            "[data-mokly-link]",
-          );
-          if (
-            !link ||
-            !listeners.size ||
-            !["a", "area"].includes(link.localName)
-          )
-            return;
-          const marker = link.getAttribute("data-mokly-link") ?? "";
-          const target = parseBrowsingTarget(
-            link.getAttribute("data-mokly-target"),
-          );
-          const destination = parseLogicalMarker(marker);
-          if (
-            !destination ||
-            target.kind === "invalid" ||
-            !classifyFrameActivation({
-              ...event,
-              altKey: event.altKey,
-              button: event.button,
-              ctrlKey: event.ctrlKey,
-              metaKey: event.metaKey,
-              shiftKey: event.shiftKey,
-              download: link.hasAttribute("download"),
-              eventType: event.type === "click" ? "click" : "auxclick",
-              marker,
-              target: link.getAttribute("data-mokly-target"),
-            })
-          )
-            return;
-          event.preventDefault();
-          emit({
-            type: "navigation",
-            navigation: {
-              ...destination,
-              target,
-              activation:
-                event.type === "auxclick"
-                  ? "middle"
-                  : event.metaKey || event.ctrlKey || event.shiftKey
-                    ? "modified"
-                    : "primary",
-            },
-          });
-        };
-        doc.addEventListener("click", activate, { signal: documentSignal });
-        doc.addEventListener("auxclick", activate, {
-          signal: documentSignal,
-        });
         resolve({
           updateUsage: (usage) => run(() => operations!.updateUsage(usage)),
           listInstanceBoundaries: () => run(() => operations!.list()),
@@ -265,6 +269,12 @@ export function mountLocalDocument(
           scrollTo: (key) => run(() => operations!.scroll(key)),
           subscribe(listener) {
             if (disposed) throw new FrameError("disposed");
+            if (initialSubscription === listener) {
+              initialSubscription = undefined;
+              return () => {
+                listeners.delete(listener);
+              };
+            }
             const subscription = (event: FrameEvent) => listener(event);
             listeners.add(subscription);
             return () => {
@@ -285,6 +295,11 @@ export function mountLocalDocument(
     release = ownFrame(frame, dispose);
     win.addEventListener("pagehide", dispose, { signal });
     try {
+      const current = localFrameAccess(frame).document();
+      if (current?.defaultView?.frameElement === frame) {
+        documentController = new AbortController();
+        listenForActivations(current, documentController.signal);
+      }
       localFrameAccess(frame).replace(url);
     } catch {
       reject(new FrameError("origin"));
