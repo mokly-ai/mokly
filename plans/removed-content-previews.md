@@ -403,7 +403,7 @@ comparison exists, so they resolve through `comparisonUrl`.
       remaining Milestone 8 presentation and interaction checks stay deferred.
 - [x] Run `cargo xtask check`; then `git add -A`, commit with Conventional
       Commits, and push the branch.
-- [ ] After the push, review the complete local diff against `origin/main` with
+- [x] After the push, review the complete local diff against `origin/main` with
       the implementation review prompt; report findings without changing the
       implementation.
 
