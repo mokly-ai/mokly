@@ -705,6 +705,55 @@ own guesses while writing it. `:disabled` joined the state selector and
 exception carrying the WCAG reason, so the disabled exemption is explicit and
 reachable like every other one.
 
+## Milestone 2M: Finish the chip and audit consistency fixes (complete)
+
+Tags: mockup
+
+The Milestone 2L review left three small findings: a non-link tag chip still
+shows a pointer cursor, the audit's exception set mixes two unrelated reasons
+under one comment, and a linked chip's resting boundary is proven readable
+only by two tests in combination.
+
+- [x] Scope every interactive tag-chip treatment (cursor, hover and pressed
+      styles) to chips that navigate, `.mbk-chip.tag:is(a)`, in the design
+      tag-chip styles and in the shipped shell's `css_details.ts`, so cursor,
+      hover and boundary agree on whether the chip navigates. Add a test that
+      a destinationless chip renders as a label with no interactive styling.
+- [x] Turn the exception set in `tests/design_boundaries.test.ts` into a map
+      from selector to reason, and print the reason in the reachability
+      assertion message.
+- [x] Extend the control-primitive test to assert 3:1 against each control
+      rule's own fill or the surface, sharing the marked-boundary resolution
+      logic, so a control boundary is covered by construction.
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
+      the design unit and browser suites and `cargo xtask check`; commit and
+      push; then review the complete diff against `origin/main` with
+      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      and report findings without fixing them. Further Low findings on the
+      design audit are recorded for the user rather than opening another
+      mockup milestone, so runtime work can begin.
+
+Delivered: cursor, hover, pressed and selected styling is scoped to a tag chip
+that acts — `:is(a)` in the design styles, `:is(a, button)` in the shipped
+shell, where a tag chip is a button — so a destinationless chip renders as a
+plain label. A test asserts both halves: every interactive rule in the design
+tag-chip styles is scoped, and every non-link tag chip in the generated output
+is a `span` with no link.
+
+Scoping the hover rule raised its specificity above `.mbk-chip.tag.active`,
+which the browser suite caught: a chip stayed on the hover fill after being
+selected, because the pointer was still over it. The selected rule is scoped
+the same way so the two stay in step and source order decides again.
+
+The audit's exception set is a map from selector to reason, printed in the
+reachability assertion, and the control-primitive test now also asserts 3:1
+against each control rule's own fill or the surface, sharing the resolution
+logic with the marked-boundary audit, so a control boundary is covered by
+construction rather than by two tests in combination.
+
+Remaining Low findings on the design audit are recorded in the reviews for the
+user rather than opening another mockup milestone.
+
 ## Milestone 3: Implement shared viewer appearance
 
 Tags: ui

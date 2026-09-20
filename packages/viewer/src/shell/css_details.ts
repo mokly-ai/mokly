@@ -149,7 +149,7 @@ details.mbk-details[open] > summary.mbk-details-bar .chev svg {
   color: var(--mokly-accent);
 }
 
-.mbk-chip.tag {
+.mbk-chip.tag:is(a, button) {
   font: inherit;
   font-size: 11.5px;
   cursor: pointer;
@@ -160,21 +160,21 @@ details.mbk-details[open] > summary.mbk-details-bar .chev svg {
   color: var(--chrome-muted);
 }
 
-.mbk-chip.tag:hover {
+.mbk-chip.tag:is(a, button):hover {
   background: var(--mokly-accent-soft);
 }
 
-.mbk-chip.tag.active {
+.mbk-chip.tag:is(a, button).active {
   background: var(--mokly-accent);
   border-color: var(--mokly-accent);
   color: var(--mokly-accent-contrast);
 }
 
-.mbk-chip.tag.active svg {
+.mbk-chip.tag:is(a, button).active svg {
   color: var(--mokly-accent-contrast);
 }
 
-.mbk-chip.tag:active {
+.mbk-chip.tag:is(a, button):active {
   box-shadow: inset 0 1px 2px rgba(20, 28, 22, 0.14);
   transform: translateY(1px);
 }

@@ -42,18 +42,15 @@ const HAIRLINE_TOKENS = new Set([
 ]);
 
 /**
- * Boundaries that are decoration rather than a state or control indicator, so
- * the palette contract exempts them. Each names its own state in 5.62:1 or
- * better text inside a distinct tinted fill, so the outline adds nothing.
+ * Boundaries the palette contract exempts from 3:1, each with the reason that
+ * exempts it, so a new entry has to state why rather than join a list.
  */
-const DECORATIVE_BOUNDARIES = new Set([
-  ".ce-added",
-  ".ce-changed",
-  ".ce-removed",
-  ".ce-control-alert",
-  // WCAG exempts a disabled control from the contrast minimums, so its
-  // boundary is recorded here rather than held to 3:1.
-  ".ce-action:disabled",
+const DECORATIVE_BOUNDARIES = new Map([
+  [".ce-added", "a label naming its own state in 7.08:1 ink"],
+  [".ce-changed", "a label naming its own state in 5.62:1 ink"],
+  [".ce-removed", "a label naming its own state in 5.73:1 ink"],
+  [".ce-control-alert", "a label naming its own state in 5.97:1 ink"],
+  [".ce-action:disabled", "WCAG exempts a disabled control"],
 ]);
 
 /**
@@ -85,7 +82,7 @@ const AUDITED_BOUNDARIES = [
   "design-library/controls/change-status.css .ce-added",
   "design-library/controls/change-status.css .ce-changed",
   "design-library/controls/change-status.css .ce-removed",
-  "design-library/controls/tag-chip.css .mbk-chip.tag.active",
+  "design-library/controls/tag-chip.css .mbk-chip.tag:is(a).active",
   "design-library/controls/view-controls.css .ce-icon-control:focus-within",
   "design-library/controls/view-controls.css .ce-icon-control:hover, .ce-icon-control:has(input:checked)",
   "design-library/inspector/inspector.css .ce-design .mbk-shell--mobile .ce-inspector:has(> details[open])",
@@ -108,6 +105,24 @@ function resolve(
 
 function describe(reference: ColorReference): string {
   return reference.token ?? reference.literal ?? "?";
+}
+
+/**
+ * A boundary sits between its own fill and the surface around it, so it only
+ * has to reach 3:1 against one of them to read as an edge.
+ */
+function boundaryContrast(
+  boundary: ColorReference,
+  fill: ColorReference | undefined,
+  tokens: Map<string, string>,
+): number | undefined {
+  const edge = resolve(boundary, tokens);
+  if (!edge) return undefined;
+  const behind = fill ? resolve(fill, tokens) : undefined;
+  return Math.max(
+    behind ? contrast(edge, behind) : 0,
+    contrast(edge, tokens.get("--chrome-surface")!),
+  );
 }
 
 /**
@@ -145,10 +160,10 @@ test("every marked boundary is visible against an adjacent colour", async () => 
     [...AUDITED_BOUNDARIES].sort(),
     "the audit's coverage changed; confirm every added or removed rule is intended",
   );
-  for (const selector of DECORATIVE_BOUNDARIES)
+  for (const [selector, reason] of DECORATIVE_BOUNDARIES)
     assert.ok(
       rules.some((rule) => rule.selector === selector),
-      `the recorded exception ${selector} is not reached by the audit`,
+      `the recorded exception ${selector} (${reason}) is not reached by the audit`,
     );
   for (const [file, selector] of EXEMPT_SURFACES)
     assert.ok(
@@ -161,18 +176,10 @@ test("every marked boundary is visible against an adjacent colour", async () => 
     if (isExemptSurface(rule.file, rule.selector)) continue;
     for (const appearance of ["light", "dark"] as const) {
       const tokens = palette[appearance];
-      const edge = resolve(rule.boundary, tokens);
+      const reached = boundaryContrast(rule.boundary, rule.fill, tokens);
       assert.ok(
-        edge,
+        reached !== undefined,
         `${rule.file} ${rule.selector}: ${describe(rule.boundary)} is not in the ${appearance} palette`,
-      );
-      // A boundary sits between its own fill and the surface around it, so it
-      // only has to reach 3:1 against one of them to read as an edge.
-      const fill = rule.fill ? resolve(rule.fill, tokens) : undefined;
-      const own = fill ? contrast(edge, fill) : 0;
-      const reached = Math.max(
-        own,
-        contrast(edge, tokens.get("--chrome-surface")!),
       );
       if (reached < 3)
         failures.push(
@@ -183,15 +190,35 @@ test("every marked boundary is visible against an adjacent colour", async () => 
   assert.deepEqual(failures, []);
 });
 
-test("no control primitive draws its boundary with a hairline token", async () => {
+test("every control boundary is a readable control edge", async () => {
+  const palette = await designPalette();
   const failures: string[] = [];
   for (const rule of await designStyleRules()) {
     if (!CONTROL_SELECTOR.test(rule.selector)) continue;
+    if (DECORATIVE_BOUNDARIES.has(rule.selector)) continue;
     const boundary = boundaryOf(rule.body);
-    if (!boundary?.token || !HAIRLINE_TOKENS.has(boundary.token)) continue;
-    failures.push(
-      `${rule.file} ${rule.selector}: ${boundary.token} is a decorative hairline; a control uses --chrome-control-edge or --mbk-sage-deep`,
-    );
+    if (!boundary) continue;
+    if (boundary.token && HAIRLINE_TOKENS.has(boundary.token)) {
+      failures.push(
+        `${rule.file} ${rule.selector}: ${boundary.token} is a decorative hairline; a control uses --chrome-control-edge or --mbk-sage-deep`,
+      );
+      continue;
+    }
+    for (const appearance of ["light", "dark"] as const) {
+      const reached = boundaryContrast(
+        boundary,
+        fillOf(rule.body),
+        palette[appearance],
+      );
+      if (reached === undefined)
+        failures.push(
+          `${rule.file} ${rule.selector}: ${describe(boundary)} is not in the ${appearance} palette`,
+        );
+      else if (reached < 3)
+        failures.push(
+          `${rule.file} ${rule.selector}: ${describe(boundary)} reaches only ${reached}:1 in ${appearance}`,
+        );
+    }
   }
   assert.deepEqual(failures, []);
 });

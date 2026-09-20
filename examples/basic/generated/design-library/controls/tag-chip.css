@@ -1,7 +1,7 @@
 /* Exclusive shared-component styles. Global and layout rules stay shared. */
 
-.mbk-chip.tag {
-cursor: pointer;
+.mbk-chip.tag:is(a) {
+  cursor: pointer;
 }
 
 .mbk-chip.tag svg {
@@ -9,21 +9,21 @@ color: var(--chrome-muted);
   flex-shrink: 0;
 }
 
-.mbk-chip.tag:hover {
+.mbk-chip.tag:is(a):hover {
 background: var(--mbk-accent-soft);
 }
 
-.mbk-chip.tag.active {
+.mbk-chip.tag:is(a).active {
 background: var(--mbk-sage);
   border-color: var(--mbk-sage);
   color: var(--mbk-accent-contrast);
 }
 
-.mbk-chip.tag.active svg {
+.mbk-chip.tag:is(a).active svg {
 color: var(--mbk-accent-contrast);
 }
 
-.mbk-chip.tag:active {
+.mbk-chip.tag:is(a):active {
 box-shadow: var(--chrome-shadow-press);
   transform: translateY(1px);
 }

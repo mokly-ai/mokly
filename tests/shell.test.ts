@@ -841,9 +841,11 @@ test("both split dividers share one grip affordance", () => {
 
 test("tag chips select in the accent and the bar clears the scrim", () => {
   const css = flatCss(SHELL_CSS);
+  // Interactive styling is scoped to a chip that acts, so a plain label chip
+  // never advertises a click it cannot deliver.
   assert.match(
     SHELL_CSS,
-    /\.mbk-chip\.tag \{[^}]*font: inherit;[^}]*cursor: pointer;/,
+    /\.mbk-chip\.tag:is\(a, button\) \{[^}]*font: inherit;[^}]*cursor: pointer;/,
   );
   assert.ok(
     css.includes(
@@ -852,24 +854,24 @@ test("tag chips select in the accent and the bar clears the scrim", () => {
   );
   assert.ok(
     css.includes(
-      ".mbk-chip.tag:hover { background: var(--mokly-accent-soft); }",
+      ".mbk-chip.tag:is(a, button):hover { background: var(--mokly-accent-soft); }",
     ),
   );
   assert.ok(
     css.includes(
-      ".mbk-chip.tag.active { background: var(--mokly-accent); " +
+      ".mbk-chip.tag:is(a, button).active { background: var(--mokly-accent); " +
         "border-color: var(--mokly-accent); " +
         "color: var(--mokly-accent-contrast); }",
     ),
   );
   assert.ok(
     css.includes(
-      ".mbk-chip.tag.active svg { color: var(--mokly-accent-contrast); }",
+      ".mbk-chip.tag:is(a, button).active svg { color: var(--mokly-accent-contrast); }",
     ),
   );
   assert.ok(
     css.includes(
-      ".mbk-chip.tag:active { box-shadow: inset 0 1px 2px " +
+      ".mbk-chip.tag:is(a, button):active { box-shadow: inset 0 1px 2px " +
         "rgba(20, 28, 22, 0.14); transform: translateY(1px); }",
     ),
   );

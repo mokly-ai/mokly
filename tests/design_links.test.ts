@@ -265,3 +265,41 @@ test("comparison families publish the same schemes for every member", async () =
     );
   }
 });
+
+test("a tag chip without a destination is a label, not a control", async () => {
+  const { manifest, outputs } = await designCatalogue;
+  const chipStyles = await fs.readFile(
+    path.join(
+      repositoryRoot,
+      "examples/basic/generated/design-library/controls/tag-chip.css",
+    ),
+    "utf8",
+  );
+  // Cursor, hover and pressed styling belongs to a chip that navigates, so it
+  // never promises an interaction a plain label cannot deliver.
+  for (const [, selector, body] of chipStyles.matchAll(/([^{}]+)\{([^}]*)\}/gu))
+    if (
+      /cursor:|:hover|:active|box-shadow:|transform:/u.test(body ?? selector!)
+    )
+      assert.match(
+        selector!,
+        /\.mbk-chip\.tag:is\(a\)/u,
+        `${selector!.trim()} styles a chip that may be a label`,
+      );
+  let labels = 0;
+  for (const entry of manifest.entries) {
+    if (entry.kind !== "screen" || !entry.route.startsWith("design/")) continue;
+    for (const route of Object.values(entry.fragments)) {
+      const html = outputs.get(route);
+      assert.ok(html, route);
+      for (const chip of byClass(parse(html), "tag")) {
+        if (!(attribute(chip, "class") ?? "").includes("mbk-chip")) continue;
+        if (chip.tagName === "a") continue;
+        labels += 1;
+        assert.equal(chip.tagName, "span", `${route}: ${chip.tagName} chip`);
+        assert.equal(attribute(chip, "data-mokly-link"), undefined, route);
+      }
+    }
+  }
+  assert.ok(labels > 0, "no destinationless tag chip was checked");
+});
