@@ -2,10 +2,16 @@
 import type { WorkspaceData } from "../shell/workspace_data.js";
 
 import { copyChildren } from "./browse_evidence.js";
-import { captureRegionScrolls, restoreRegionScrolls } from "./browse_state.js";
+import {
+  captureRegionScrolls,
+  currentColorScheme,
+  currentViewport,
+  restoreRegionScrolls,
+} from "./browse_state.js";
 import { renderUsage } from "./inspector_panels.js";
 import { renderWorkspaceEvidence } from "./workspace_evidence.js";
 import { applyVariant, selectedVariant } from "./workspace_variants.js";
+import { applyViewEvidence } from "./workspace_views.js";
 
 /** Validate the owning workspace before any part of a snapshot is applied. */
 export function workspaceEvidence(
@@ -111,6 +117,7 @@ export function updateWorkspaceEvidence(
   const panel = root.querySelector<HTMLElement>("[data-workspace-evidence]");
   copyChildren(panel, evidence);
   if (panel) panel.hidden = evidence.hidden;
+  applyViewEvidence(root, data, currentViewport(doc), currentColorScheme(doc));
   const json = root.querySelector("[data-workspace-data]");
   if (json) json.textContent = JSON.stringify(data);
   restoreRegionScrolls(doc, scrolls);

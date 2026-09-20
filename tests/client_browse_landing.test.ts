@@ -1,11 +1,16 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { changesLandingHref } from "../packages/viewer/dist/client/browse_landing.js";
+import {
+  changesLandingHref,
+  consumeChangesLanding,
+  rememberChangesLanding,
+} from "../packages/viewer/dist/client/browse_landing.js";
 
 import { asElement, FakeNode } from "./helpers/fake_dom.js";
 
 const LIST_ID = "mb-nav-variants-pages-welcome";
+const VARIANT = "/view/screens/welcome.variants/error.html";
 
 /** One parent row, its disclosed variant list, and the catalogue filter. */
 interface LandingFixture {
@@ -67,6 +72,76 @@ test("rows without the aggregate mark are never redirected", () => {
   assert.equal(changesLandingHref(asElement(nav.parent)), undefined);
   assert.equal(changesLandingHref(asElement(nav.error)), undefined);
 });
+
+test("a Changes activation of a changed row is remembered once", () => {
+  const nav = landingFixture();
+  const { store, win } = fakeWindow(
+    "/view/screens/welcome.variants/error.html",
+  );
+
+  rememberChangesLanding(win, asElement(nav.error), VARIANT);
+  assert.equal(store.size, 1);
+  assert.equal(consumeChangesLanding(win), true);
+  assert.equal(store.size, 0);
+  assert.equal(consumeChangesLanding(win), false);
+});
+
+test("an aggregate parent remembers the variant it redirects to", () => {
+  const nav = landingFixture();
+  const { win } = fakeWindow("/view/screens/welcome.variants/error.html");
+
+  rememberChangesLanding(win, asElement(nav.parent), VARIANT);
+  assert.equal(consumeChangesLanding(win), true);
+});
+
+test("All navigation and unchanged rows remember nothing", () => {
+  const nav = landingFixture();
+  const { store, win } = fakeWindow(
+    "/view/screens/welcome.variants/empty.html",
+  );
+
+  rememberChangesLanding(
+    win,
+    asElement(nav.empty),
+    "/view/screens/welcome.variants/empty.html",
+  );
+  assert.equal(store.size, 0);
+
+  nav.all.setAttribute("aria-pressed", "true");
+  nav.changed.setAttribute("aria-pressed", "false");
+  rememberChangesLanding(win, asElement(nav.error), VARIANT);
+  assert.equal(store.size, 0);
+});
+
+test("an intent for another page is discarded on arrival", () => {
+  const nav = landingFixture();
+  const { store, win } = fakeWindow("/view/screens/welcome.html");
+
+  rememberChangesLanding(win, asElement(nav.error), VARIANT);
+  assert.equal(consumeChangesLanding(win), false);
+  assert.equal(store.size, 0);
+});
+
+/** The `sessionStorage` and `location` the landing intent reads and clears. */
+function fakeWindow(pathname: string): {
+  store: Map<string, string>;
+  win: Window & typeof globalThis;
+} {
+  const store = new Map<string, string>();
+  const win = {
+    location: { href: `https://catalogue.test${pathname}`, pathname },
+    sessionStorage: {
+      getItem: (key: string) => store.get(key) ?? null,
+      removeItem: (key: string) => {
+        store.delete(key);
+      },
+      setItem: (key: string, value: string) => {
+        store.set(key, value);
+      },
+    },
+  };
+  return { store, win: win as unknown as Window & typeof globalThis };
+}
 
 function landingFixture(): LandingFixture {
   const parent = navRow("screens/welcome.html", "Welcome");

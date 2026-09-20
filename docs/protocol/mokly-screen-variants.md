@@ -13,7 +13,12 @@ variants, search and Changes composition, the parent's aggregate mark, and
 variant breadcrumbs and details rows. Milestone 6 completes the Changes
 presentation: the mark is drawn as the trailing dot, a deleted variant's
 Removed row sits inside its surviving parent's list, and activating an
-unmodified parent from Changes opens its first changed variant.
+unmodified parent from Changes opens its first changed variant. Milestone 7
+delivers the per-view evidence that keeps scheme and viewport out of this
+model: the view controls mark the changed views a reader cannot see, the
+details inspector lists them, and a Changes activation lands on the first of
+them. The [runtime contract](./mokly-runtime.md#browse-shell) owns that
+behavior.
 
 ## Purpose And Boundary
 

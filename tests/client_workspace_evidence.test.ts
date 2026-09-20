@@ -2,8 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { renderWorkspaceEvidence } from "../packages/viewer/dist/client/workspace_evidence.js";
+import { mergeWorkspaceEvidence } from "../packages/viewer/dist/client/workspace_updates.js";
+import { applyViewEvidence } from "../packages/viewer/dist/client/workspace_views.js";
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 
+import { FakeNode } from "./helpers/fake_dom.js";
 import type { FakeMarkupElement } from "./helpers/fake_markup.js";
 import { FakeMarkupDocument, fakeMarkup } from "./helpers/fake_markup.js";
 
@@ -130,6 +133,100 @@ test("the terminal line names the screen or the saved view it compared", () => {
     /<p>No changes to this saved view\.<\/p>$/,
   );
 });
+
+test("a merged snapshot moves the view marks and the changed-views row", () => {
+  const workspace = fakeWorkspace();
+  const data = {
+    base: "main",
+    changedViews: [],
+    components: [],
+    comparisonEligible: false,
+    comparisons: true,
+    entry: { id: "home", kind: "screen", route: "screens/home.html" },
+    inputChanges: [],
+    relatedComponents: [],
+    usedBy: [],
+    affected: [],
+    removed: false,
+    variants: [],
+    views: [],
+  } as unknown as WorkspaceData;
+
+  applyViewEvidence(workspace.root, data, "both", "light");
+  assert.equal(workspace.dot("scheme").hidden, true);
+  assert.equal(workspace.row.hidden, true);
+  assert.equal(
+    workspace.control("scheme").getAttribute("aria-describedby"),
+    null,
+  );
+
+  mergeWorkspaceEvidence(data, {
+    ...data,
+    status: "Changed",
+    changedViews: [
+      { viewport: "mobile", colorScheme: "dark" },
+      { viewport: "desktop", colorScheme: "dark" },
+    ],
+  } as unknown as WorkspaceData);
+  applyViewEvidence(workspace.root, data, "both", "light");
+
+  assert.equal(workspace.dot("scheme").hidden, false);
+  assert.equal(workspace.text("scheme").hidden, false);
+  assert.equal(
+    workspace.control("scheme").getAttribute("aria-describedby"),
+    "mb-view-changed-scheme",
+  );
+  assert.equal(workspace.dot("viewport").hidden, true);
+  assert.equal(workspace.row.hidden, false);
+  assert.equal(workspace.value.textContent, "Mobile · Dark, Desktop · Dark");
+
+  applyViewEvidence(workspace.root, data, "mobile", "dark");
+  assert.equal(workspace.dot("scheme").hidden, true);
+  assert.equal(workspace.dot("viewport").hidden, false);
+  assert.equal(
+    workspace.control("viewport").getAttribute("aria-describedby"),
+    "mb-view-changed-viewport",
+  );
+  assert.equal(workspace.row.hidden, false);
+});
+
+function fakeWorkspace() {
+  const dots = {
+    scheme: new FakeNode("span", { "data-view-changed": "scheme" }),
+    viewport: new FakeNode("span", { "data-view-changed": "viewport" }),
+  };
+  const texts = {
+    scheme: new FakeNode("span", { "data-view-changed-text": "scheme" }),
+    viewport: new FakeNode("span", { "data-view-changed-text": "viewport" }),
+  };
+  const controls = {
+    scheme: new FakeNode("button", { "data-workspace-scheme": "" }),
+    viewport: new FakeNode("select", { "data-workspace-viewport": "" }),
+  };
+  const value = new FakeNode("span", {
+    "data-workspace-changed-views-value": "",
+  });
+  const row = new FakeNode("div", {
+    "data-workspace-changed-views": "",
+  }).append(value);
+  const root = new FakeNode("section", { "data-workspace": "" }).append(
+    new FakeNode("label").append(
+      controls.viewport,
+      dots.viewport,
+      texts.viewport,
+    ),
+    controls.scheme.append(dots.scheme, texts.scheme),
+    row,
+  );
+  return {
+    control: (kind: "scheme" | "viewport") => controls[kind],
+    dot: (kind: "scheme" | "viewport") => dots[kind],
+    root: root as unknown as HTMLElement,
+    row,
+    text: (kind: "scheme" | "viewport") => texts[kind],
+    value,
+  };
+}
 
 function fakePanel(): { node: FakeMarkupElement; panel: Element } {
   const node = new FakeMarkupDocument().createElement("section");

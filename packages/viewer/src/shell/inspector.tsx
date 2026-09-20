@@ -108,7 +108,11 @@ export function Inspector({
           >
             {tab.id === "details" ? (
               <>
-                <EntryDetailsBody catalogue={catalogue} entry={data.entry} />
+                <EntryDetailsBody
+                  catalogue={catalogue}
+                  changedViews={data.changedViews}
+                  entry={data.entry}
+                />
                 <section
                   className="mbk-comparison-evidence"
                   data-workspace-evidence=""

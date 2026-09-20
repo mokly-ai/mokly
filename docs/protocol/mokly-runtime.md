@@ -272,14 +272,32 @@ attributes alone. A Removed row is never marked. Activating a parent row that
 carries only the aggregate mark while the Changes filter is selected navigates
 to the first changed variant row its list still shows.
 
-Per-view change evidence is an approved target of the same plan: when the
-comparison or lightweight screen-view evidence marks only some views of a
-screen changed, the theme toggle and viewport control mark those views,
-Details lists them, and opening the screen from the Changes filter lands on
-the first changed viewport and scheme instead of the sticky selection. Opening
-it from All keeps the selection. A light-only catalogue never renders a
-scheme mark. The mark is distinct from the pressed state and never relies on
-color alone.
+Per-view change evidence sits on the view controls. When the comparison result
+or the lightweight screen-view evidence marks only some of a screen's views
+changed, the workspace publishes those views in its serialized data and each
+view control carries a mark for the ones the reader cannot currently see: the
+theme control when a changed view uses the other scheme, and the viewport
+control when a changed view uses the other viewport. Selecting both viewports
+shows every viewport at once, so that control is never marked. The mark is a
+6px accent dot in the control's top-right corner with a visually hidden
+description the control names through `aria-describedby`, so it is distinct
+from the pressed state and never relies on color alone. The shown viewport and
+scheme change without a page load, so the client recomputes both marks from the
+same rule whenever either changes or fresh evidence arrives. The details
+inspector lists the same views as `Changed views`, in mobile-before-desktop and
+light-before-dark order, and hides the row while nothing is named. A light-only
+catalogue renders no scheme control and therefore no scheme mark.
+
+Opening a changed row while the Changes filter is selected lands on the first
+changed view instead of the sticky selection. Arriving from the filter is an
+explicit signal rather than a guess: activating the row records one
+session-scoped intent naming the destination, and the destination workspace
+reads and clears that intent as it installs, landing only when the intent names
+the page being installed. A URL that names `viewport` or `scheme` is an
+explicit request and wins outright. Because the intent is consumed once, a
+direct URL, an All-filter activation, Back, Forward, and a reload all keep the
+sticky selection. A light-only catalogue clamps the requested scheme to light,
+so it never lands on dark.
 
 A catalogue with dark fragments offers a `Light | Dark` scheme switch; a
 light-only catalogue offers none. One switch renders in the top bar and one in

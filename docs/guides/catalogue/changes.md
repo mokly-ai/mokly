@@ -46,10 +46,12 @@ row so the group stays visible, and opening the parent from Changes takes you
 to the first changed variant. A deleted variant keeps a Removed row under the
 screen it belonged to, shown in Changes and hidden in All; if the screen went
 too, the row joins the others at the top level. A change confined to one
-viewport or scheme, such as a dark-only edit, marks that view on the viewport
-and theme controls, lists it in Details, and lands on it when you open the
-screen from Changes. That last one is an approved target and not yet
-available in a released version.
+viewport or scheme, such as a dark-only edit, puts a dot on the control that
+would take you to it: the theme control when the change is in the other theme,
+the viewport control when it is in the other viewport. Details names those
+views under Changed views, and opening the screen from Changes takes you
+straight to the first of them. Opening it from All, following a link with a
+viewport or scheme in it, or reloading keeps the view you were on.
 
 ## Added and removed
 

@@ -2,8 +2,8 @@
 
 Status: active. Created 2026-09-19 with the user's consent after the design
 discussion in this workspace, then rewritten the same day when the user chose
-own routes over a query parameter. Milestones 1 to 6 are complete;
-Milestone 7 is next.
+own routes over a query parameter. Milestones 1 to 7 are complete;
+Milestone 8 is next.
 
 **Goal:** Let a screen declare variants beside its default render, show them as
 an expandable list under the screen's navigation row, give each variant its
@@ -537,29 +537,47 @@ screen-view evidence, so this milestone reads them without new server work.
 
 **Files:**
 
-- Modify: `packages/viewer/src/shell/workspace_controls.tsx` (options carry
-  `data-view-changed` from workspace data), `packages/viewer/src/shell/workspace_data.ts`
-  (extract `changedViews: readonly { viewport, colorScheme }[]` derivation
-  into `workspace_views_data.ts`), `packages/viewer/src/shell/css_workspace.ts`
-  (changed mark on the icon button and select label), `packages/viewer/src/client/workspace.ts`
-  (when arriving from a Changes-filter row, set viewport and scheme to the
-  first changed view unless the URL already names them),
-  `packages/viewer/src/shell/details.tsx` (a Changed views row),
-  `packages/viewer/src/client/workspace_evidence.ts` (marks refresh with
-  evidence)
-- Test: `tests/component_workspace.test.ts`, `tests/client_workspace_evidence.test.ts`,
-  `tests/browser/evidence_workspace.spec.ts`, `tests/browser/browse.spec.ts`
+- Add: `packages/viewer/src/shell/view_marks.ts` (the changed-view axes, their
+  canonical order and reader label, the mark's class/ids/wording, and the pure
+  rule both the server render and the client apply),
+  `packages/viewer/src/shell/workspace_views_data.ts` (`changedViews`
+  derivation, comparison result first and lightweight screen-view evidence
+  second), `packages/viewer/src/shell/workspace_input_changes.ts` (split out of
+  `workspace_data.ts` so it stays under the cap),
+  `packages/viewer/src/shell/css_workspace_marks.ts` (the dot, its clipped
+  wording, and the hidden metadata row),
+  `packages/viewer/src/client/workspace_views.ts` (control sync, mark
+  application, and the initial view an arrival opens on),
+  `packages/viewer/src/client/browse_clicks.ts` (the delegated click path
+  extracted from `browse.ts`)
+- Modify: `packages/viewer/src/shell/workspace_controls.tsx` (each control
+  carries its dot and its `aria-describedby` wording),
+  `packages/viewer/src/shell/workspace_data.ts` (publish `changedViews`),
+  `packages/viewer/src/shell/metadata.ts` (`ShellEvidence.screenViews`),
+  `packages/viewer/src/shell/details.tsx` and `details_rows.tsx` (a
+  `Changed views` row), `packages/viewer/src/shell/inspector.tsx`,
+  `packages/viewer/src/shell/workspace.tsx`, `packages/viewer/src/shell/css.ts`,
+  `packages/viewer/src/viewer/public_workspace.ts` (the published read model
+  names the same views), `packages/viewer/src/client/workspace.ts`,
+  `packages/viewer/src/client/workspace_updates.ts` (marks and the row refresh
+  with evidence), `packages/viewer/src/client/workspace_preview.ts`,
+  `packages/viewer/src/client/browse_landing.ts` (the Changes-landing intent),
+  `packages/viewer/src/client/browse.ts`, `src/server/client_modules.ts`
+- Test: `tests/view_marks.test.ts`, `tests/workspace_views_data.test.ts`,
+  `tests/client_workspace_evidence.test.ts`, `tests/client_browse_landing.test.ts`,
+  `tests/client_workspace_comparison.test.ts`, `tests/shell.test.ts`,
+  `tests/helpers/fake_dom.ts`, `tests/browser/changed_views.spec.ts`
 
 **Steps:**
 
-- [ ] Write failing tests: a dark-only material change marks the theme
+- [x] Write failing tests: a dark-only material change marks the theme
       toggle and lists `Mobile · Dark, Desktop · Dark` in details; opening
       that screen from Changes lands on dark; opening it from All keeps the
       sticky selection; a light-only catalogue renders no scheme mark.
-- [ ] Implement, keeping the changed mark distinct from the pressed state
+- [x] Implement, keeping the changed mark distinct from the pressed state
       and never relying on color alone.
-- [ ] Update the runtime and shell design contracts and the changes guide.
-- [ ] Milestone close-out: commit `feat(browse): mark changed views` and
+- [x] Update the runtime and shell design contracts and the changes guide.
+- [x] Milestone close-out: commit `feat(browse): mark changed views` and
       push.
 
 ---

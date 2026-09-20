@@ -94,6 +94,30 @@ export function highlightUnavailable(
   }
 }
 
+/**
+ * Say so when the selected instance renders nothing measurable in the view on
+ * screen, so an empty highlight reads as a fact about this view rather than a
+ * failed selection.
+ */
+export function noteMissingRegion(
+  panel: HTMLElement,
+  frames: readonly HighlightFrame[],
+  viewport: "mobile" | "desktop",
+  selected: string,
+): void {
+  const active = frames.find((frame) => frame.usage.viewport === viewport);
+  if (!active) return;
+  const inspection = localInspection(active.frame, active.path, active.usage);
+  if (inspection && !inspection.measure(new Set([selected])).length)
+    panel.append(
+      element(
+        panel.ownerDocument,
+        "p",
+        "This instance has no visible region in this view.",
+      ),
+    );
+}
+
 /** Keep the inspector selection independent for each visible viewport. */
 export function renderViewContexts(
   panel: HTMLElement,

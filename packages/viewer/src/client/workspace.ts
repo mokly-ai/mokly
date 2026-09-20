@@ -5,16 +5,14 @@ import { collapseFrame, expandedFrame } from "./browse_frames.js";
 /** One disposable controller for the package's component and screen inspector. */
 import {
   currentColorScheme,
-  currentViewport,
   setColorScheme,
   setViewport,
 } from "./browse_state.js";
 import { ComponentControls } from "./component_controls.js";
 import { installComponentHighlight } from "./component_highlight.js";
 import type { LoadedDiff } from "./diff_views.js";
-import { element, renderInstances, renderUsage } from "./inspector_panels.js";
+import { renderInstances, renderUsage } from "./inspector_panels.js";
 import { installInspectorTabs } from "./inspector_tabs.js";
-import { localInspection } from "./same_origin_adapter.js";
 import { viewerServices } from "./services.js";
 import { installWorkspaceEvents } from "./workspace_events.js";
 import { renderWorkspaceEvidence } from "./workspace_evidence.js";
@@ -28,6 +26,7 @@ import {
   workspaceViews,
   workspaceFrames,
   highlightUnavailable,
+  noteMissingRegion,
   renderViewContexts,
   revealWorkspaceInstance,
 } from "./workspace_preview.js";
@@ -43,6 +42,7 @@ import {
   syncVariantControl,
 } from "./workspace_variants.js";
 import type { InstalledWorkspace } from "./workspace_variants.js";
+import { applyInitialView, syncViewControls } from "./workspace_views.js";
 
 export function installWorkspace(
   doc: Document,
@@ -85,9 +85,6 @@ export function installWorkspace(
   const viewportControl = root.querySelector<HTMLSelectElement>(
     "[data-workspace-viewport]",
   )!;
-  const schemeControl = root.querySelector<HTMLButtonElement>(
-    "[data-workspace-scheme]",
-  );
   const tabs = installInspectorTabs(root, signal, doc);
   const open = tabs.open;
   const panel = (name: string) =>
@@ -179,24 +176,8 @@ export function installWorkspace(
       loaded?.result,
     );
     const frames = inspection ? [] : workspaceFrames(root, views);
-    const activeFrame = frames.find(
-      (frame) => frame.usage.viewport === activeViewport,
-    );
-    if (selected && activeFrame) {
-      const inspection = localInspection(
-        activeFrame.frame,
-        activeFrame.path,
-        activeFrame.usage,
-      )!;
-      if (!inspection.measure(new Set([selected])).length)
-        panel("props")!.append(
-          element(
-            doc,
-            "p",
-            "This instance has no visible region in this view.",
-          ),
-        );
-    }
+    if (selected)
+      noteMissingRegion(panel("props")!, frames, activeViewport, selected);
     const reason = inspection
       ? adapterHighlightUnavailable(views, comparison())
       : highlightUnavailable(
@@ -221,11 +202,7 @@ export function installWorkspace(
               toggle.focus();
             },
           );
-    viewportControl.value = currentViewport(doc);
-    schemeControl?.setAttribute(
-      "aria-pressed",
-      String(currentColorScheme(doc) === "dark"),
-    );
+    syncViewControls(doc, root, data);
   };
   const activateVariant = () => {
     applyVariant(root, data, variant.variant, variant.error, {
@@ -240,10 +217,7 @@ export function installWorkspace(
     expanded.clear();
     activateVariant();
   };
-  if (["mobile", "desktop", "both"].includes(query.get("viewport") ?? ""))
-    setViewport(doc, query.get("viewport")!);
-  if (query.get("scheme") === "light" || query.get("scheme") === "dark")
-    setColorScheme(doc, query.get("scheme") as "light" | "dark");
+  applyInitialView(doc, win, data);
   applyVariant(root, data, variant.variant, variant.error, {
     preservePreview: Boolean(inspection),
   });

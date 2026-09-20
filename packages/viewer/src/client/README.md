@@ -11,9 +11,16 @@ collection's native `<details>` and a screen's variant list alike. The list
 carries its state in `hidden` and in its button's `aria-expanded`, which the
 helpers keep in step along with the button's accessible name.
 
-`browse_landing.ts` decides where activating a catalogue row from the Changes
-filter lands: a parent that carries only the aggregate mark opens the first
-changed variant its list still shows, and every other row opens itself.
+`browse_clicks.ts` owns the one delegated click path, in the order the chrome
+nests, and is the only place that navigates. `browse_landing.ts` decides where
+activating a catalogue row from the Changes filter lands: a parent that carries
+only the aggregate mark opens the first changed variant its list still shows,
+and every other row opens itself. It also records one session-scoped intent
+naming that destination, which `workspace_views.ts` reads and clears as the
+destination installs, so only an arrival from the filter lands on a changed
+view and Back, Forward, a direct URL and a reload stay sticky.
+`workspace_views.ts` also re-applies the changed-view marks and the
+`Changed views` row whenever the viewport, the scheme or the evidence changes.
 `browse_evidence_variants.ts` keeps those lists aligned with a background
 baseline — a parent adopts its first list without losing its live row, a
 parent whose last removed variant returned drops the list and the mark, and

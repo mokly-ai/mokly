@@ -1,6 +1,7 @@
 // The metadata rows of the details inspector: the label/value pair itself,
-// path and tag chips, the use cases a screen belongs to, and the links between
-// a screen and the variants it declares.
+// path and tag chips, the views a classification marked changed, the use cases
+// a screen belongs to, and the links between a screen and the variants it
+// declares.
 
 import type { ReactNode } from "react";
 
@@ -11,6 +12,7 @@ import type { Catalogue } from "./catalogue.js";
 import { FlowIcon, ScreenIcon, VariantIcon } from "./icons.js";
 import { TagChip } from "./tags.js";
 import type { RoutedEntry } from "./target.js";
+import { changedViewsLabel, type ChangedView } from "./view_marks.js";
 
 /** One label/value pair in the inspector's metadata column. */
 export function MetaRow(props: { children: ReactNode; label: string }) {
@@ -18,6 +20,27 @@ export function MetaRow(props: { children: ReactNode; label: string }) {
     <div className="mbk-meta-row">
       <span className="mbk-meta-k">{props.label}</span>
       <span className="mbk-meta-v">{props.children}</span>
+    </div>
+  );
+}
+
+/**
+ * The views a ready classification marked changed. The row is always present
+ * so a background evidence refresh can name new views without rebuilding the
+ * inspector, and stays hidden while there is nothing to name.
+ */
+export function ChangedViewsRow(props: { views: readonly ChangedView[] }) {
+  const label = changedViewsLabel(props.views);
+  return (
+    <div
+      className="mbk-meta-row"
+      data-workspace-changed-views=""
+      hidden={label === ""}
+    >
+      <span className="mbk-meta-k">Changed views</span>
+      <span className="mbk-meta-v" data-workspace-changed-views-value="">
+        {label}
+      </span>
     </div>
   );
 }

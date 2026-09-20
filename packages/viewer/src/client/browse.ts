@@ -1,17 +1,10 @@
 /** Progressive Browse shell enhancement served at /__mokly/client/browse.js. */
 
-import { handleBrowseControl } from "./browse_controls.js";
+import { handleBrowseClick } from "./browse_clicks.js";
 import { createBrowserDetailsPreference } from "./browse_details.js";
 import { applyNavigationEvidence } from "./browse_evidence.js";
 import { fetchBrowseDestination } from "./browse_fetch.js";
-import {
-  collapseFrame,
-  expandedFrame,
-  handleAddressClick,
-  handleFrameClick,
-} from "./browse_frames.js";
-import { changesLandingHref } from "./browse_landing.js";
-import { browseLinkTarget } from "./browse_links.js";
+import { collapseFrame, expandedFrame } from "./browse_frames.js";
 import { createBrowserNavPreference } from "./browse_navigation.js";
 import {
   applyNavVisibility,
@@ -31,18 +24,13 @@ import {
   finishNavigation,
   readPageStamp,
 } from "./browse_update_state.js";
-import { copyText } from "./clipboard.js";
 import { installDiffs } from "./diffs.js";
 import { restoreEarlyDisclosures } from "./early_disclosures.js";
 import { attachFrameNavigation } from "./frame_navigation.js";
 import { isSameBrowseDocument, NavigationSequencer } from "./navigation.js";
 import { applyPreviewFragmentQuery } from "./preview_fragment.js";
 import { documentFrameHref, normalizeStaticAlias } from "./static_delivery.js";
-import {
-  handleTagControlClick,
-  handleTagPickerKeydown,
-  syncTagChips,
-} from "./tag_filter.js";
+import { handleTagPickerKeydown, syncTagChips } from "./tag_filter.js";
 import { installWorkspace } from "./workspace.js";
 
 interface ScrollState {
@@ -187,50 +175,14 @@ export function initializeBrowseShell(
   };
 
   doc.addEventListener("click", (event) => {
-    const target = event.target instanceof Element ? event.target : undefined;
-    if (!target) return;
-    if (handleTagControlClick(doc, target)) return;
-    const summary = target.closest("summary");
-    const details = summary?.parentElement;
-    if (
-      details instanceof HTMLDetailsElement &&
-      details.matches("[data-mokly-details]")
-    ) {
-      detailsPreference.rememberActivation(details);
-    }
-    const idChip = target.closest<HTMLElement>("button[data-copy-id]");
-    if (idChip) {
-      const id = idChip.dataset["copyId"] ?? "";
-      if (id !== "") {
-        copyText(doc, id);
-        announce(`Copied ID ${id}`);
-      }
-      return;
-    }
-    if (
-      handleBrowseControl(doc, target, {
-        rememberDisclosures: () => navPreference.remember(doc),
-        updateDiffs: diffs.update,
-      })
-    )
-      return;
-    if (handleFrameClick(doc, target)) {
-      event.preventDefault();
-      return;
-    }
-    if (handleAddressClick(doc, target, (text) => copyText(doc, text))) {
-      event.preventDefault();
-      return;
-    }
-    const url = browseLinkTarget(event, target, win.location);
-    if (!url) return;
-    event.preventDefault();
-    const anchor = target.closest("a");
-    const landing = anchor ? changesLandingHref(anchor) : undefined;
-    void navigate(
-      landing === undefined ? url : new URL(landing, win.location.href).href,
-      true,
-    );
+    handleBrowseClick(doc, win, event, {
+      announce,
+      navigate: (url) => void navigate(url, true),
+      rememberDetails: (details) =>
+        detailsPreference.rememberActivation(details),
+      rememberDisclosures: () => navPreference.remember(doc),
+      updateDiffs: diffs.update,
+    });
   });
 
   doc.addEventListener("keydown", (event) => {

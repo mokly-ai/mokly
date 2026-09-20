@@ -308,6 +308,15 @@ function darkTokenSelectors(css: string): string[] {
     .map((block) => block.slice(0, block.lastIndexOf("{")).trim());
 }
 
+/** The always-present changed-views row, hidden until a view is named. */
+function changedViewsRow(label = ""): string {
+  return (
+    `<div class="mbk-meta-row" data-workspace-changed-views=""${label ? "" : ' hidden=""'}>` +
+    '<span class="mbk-meta-k">Changed views</span>' +
+    `<span class="mbk-meta-v" data-workspace-changed-views-value="">${label}</span></div>`
+  );
+}
+
 /** The details inspector alone, so top-bar chips cannot satisfy a check. */
 function detailsSection(html: string): string {
   const legacy = html.indexOf('<details class="mbk-details"');
@@ -913,6 +922,7 @@ test("details inspector lists dark fragments and the schemes row", () => {
         "</span></span></div>" +
         '<div class="mbk-meta-row"><span class="mbk-meta-k">Schemes</span>' +
         '<span class="mbk-meta-v">light, dark</span></div>' +
+        changedViewsRow() +
         '<div class="mbk-meta-row"><span class="mbk-meta-k">Tags</span>',
     ),
   );
@@ -926,7 +936,8 @@ test("details inspector lists dark fragments and the schemes row", () => {
         '<code class="mbk-code">screens/details.desktop.html</code>' +
         "</span></span></div>" +
         '<div class="mbk-meta-row"><span class="mbk-meta-k">Schemes</span>' +
-        '<span class="mbk-meta-v">light</span></div>',
+        '<span class="mbk-meta-v">light</span></div>' +
+        changedViewsRow(),
     ),
   );
 
@@ -943,6 +954,7 @@ test("details inspector lists dark fragments and the schemes row", () => {
         '<code class="mbk-code">screens/welcome.mobile.html</code>' +
         '<code class="mbk-code">screens/welcome.desktop.html</code>' +
         "</span></span></div>" +
+        changedViewsRow() +
         '<div class="mbk-meta-row"><span class="mbk-meta-k">Tags</span>',
     ),
   );
@@ -954,6 +966,7 @@ test("details inspector chips the tags an entry declares", () => {
   assert.ok(
     welcome.includes(
       '<span class="mbk-meta-v">light, dark</span></div>' +
+        changedViewsRow() +
         tagsRow("forms", "onboarding") +
         '<div class="mbk-meta-row"><span class="mbk-meta-k">Related docs</span>',
     ),

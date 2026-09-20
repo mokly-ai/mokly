@@ -15,7 +15,18 @@ which `nav_tree.ts` attaches to the parent instead of the section root.
 row markup here and the Browse client's search and evidence passes agree on
 it; `css_nav_changed.ts` draws the mark from `data-changed` and
 `data-changed-variants` alone. `details_rows.tsx` owns the inspector's
-metadata rows, including the links between a screen and its variants.
+metadata rows, including the links between a screen and its variants and the
+`Changed views` row.
+
+`view_marks.ts` is the shared vocabulary for per-view change evidence: the two
+axes that name a view, their canonical order and reader label, and the rule
+that decides whether the theme and viewport controls carry a mark.
+`workspace_controls.tsx` renders from that rule and the Browse client
+recomputes from it, so a mark can never disagree between the two.
+`workspace_views_data.ts` derives the changed views themselves, preferring a
+ready comparison result and falling back to the lightweight screen-view
+evidence a screen-only catalogue records; `css_workspace_marks.ts` draws the
+dot and clips its wording.
 
 `css.ts` concatenates the standalone stylesheet. Split string modules preserve
 its exact bytes. The package build scopes an embedded stylesheet separately and

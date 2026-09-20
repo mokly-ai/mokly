@@ -301,6 +301,14 @@ scrollable region scrolls internally:
   Selected screen routes place one right-aligned group of icon controls here:
   Mobile/Desktop/Both dropdown, theme toggle, and component highlighting when
   applicable. Tooltips name each action; the top bar has no theme selector.
+  A control whose axis hides a changed view carries a 6px accent dot in its
+  top-right corner, ringed 1.5px in the surface colour so it reads over the
+  glyph: the theme control when a changed view uses the other scheme, the
+  viewport control when a changed view uses the other viewport, and neither
+  while Both is selected. The dot is decorative; the control names a visually
+  hidden `Other theme changed` or `Other viewport changed` through
+  `aria-describedby`, so the mark never relies on color alone and stays
+  distinct from the pressed state. No control draws an edge rail.
 - **Stage** — dotted-grid background (22px radial dots), centred frames with
   40px gap, internal `overflow: auto`, `MOBILE` / `DESKTOP` uppercase frame
   labels, and no separate toolbar above the grid.
@@ -312,10 +320,13 @@ scrollable region scrolls internally:
   Details contains a two-column
   body (`1.35fr / 1fr`) with description and
   `Why this screen —` rationale on the left and uppercase-labelled metadata
-  rows (Source, Generated, Schemes, Tags, Related docs, Dependencies, Used by)
-  on the right. Paths render as monospace chips; use cases render as pill chips
-  with the flow icon; the Schemes row is plain text naming the schemes the
-  screen renders in (`light, dark`). The Tags row lists the tags the entry
+  rows (Source, Generated, Schemes, Changed views, Tags, Related docs,
+  Dependencies, Used by) on the right. Paths render as monospace chips; use
+  cases render as pill chips with the flow icon; the Schemes row is plain text
+  naming the schemes the screen renders in (`light, dark`). The Changed views
+  row is plain text naming the views a ready classification marked changed
+  (`Mobile · Dark, Desktop · Dark`), mobile before desktop and light before
+  dark; it is hidden while no view is named. The Tags row lists the tags the entry
   declares as pill chips with the tag icon: selecting one enters `tag:<tag>` in
   the search field, so the filter stays visible and clearable there, and the
   chip whose tag is in the entered query carries the accent active state with

@@ -159,6 +159,18 @@ is eligible. The destination revalidates that eligibility before honoring a
 comparison query, so stale, manually edited, or historical URLs cannot bypass a
 current-only state or trigger a hidden comparison request.
 
+When a ready classification marks only some of a screen's views changed, the
+view controls say so rather than leaving the reviewer to find the difference.
+The theme control is marked when a changed view uses the other scheme, and the
+viewport control when a changed view uses the other viewport; selecting both
+viewports shows every viewport at once, so that control is never marked. The
+details inspector lists the same views as `Changed views`. Activating a changed
+row while the Changes filter is selected opens the first changed view instead of
+the sticky selection, unless the URL names a viewport or scheme. A direct URL,
+an All-filter activation, Back, Forward, and a reload all keep the sticky
+selection, because the arrival is recorded once by the activation and cleared
+by the destination.
+
 Diffs render inside the existing main region with the catalogue, title, details,
 viewport, and scheme controls retained. Both viewports are supported. Snapshot
 frames remain sandboxed without scripts or catalogue navigation privileges.

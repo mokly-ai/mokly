@@ -1,15 +1,17 @@
 // The served collapsible details inspector: a native <details> bar above a
 // two-column body with prose on the left and metadata rows on the right —
 // populated from the manifest entry for the selected route: description,
-// rationale, source and generated paths, declared tags, related docs,
-// dependencies, the variants a screen declares or belongs to, and the use
-// cases a screen belongs to. The rows themselves live in `details_rows.tsx`.
+// rationale, source and generated paths, the views a classification marked
+// changed, declared tags, related docs, dependencies, the variants a screen
+// declares or belongs to, and the use cases a screen belongs to. The rows
+// themselves live in `details_rows.tsx`.
 
 import type { ColorScheme } from "../data/axes.js";
 import type { ManifestScreen } from "../registry/types.js";
 
 import type { Catalogue } from "./catalogue.js";
 import {
+  ChangedViewsRow,
   MetaRow,
   PathChips,
   TagChips,
@@ -19,6 +21,7 @@ import {
 } from "./details_rows.js";
 import { ChevronIcon } from "./icons.js";
 import type { RoutedEntry, RouteTarget } from "./target.js";
+import type { ChangedView } from "./view_marks.js";
 
 /** Generated fragment routes for a screen, dark renders after the light ones. */
 function generatedPaths(screen: ManifestScreen): string[] {
@@ -39,6 +42,7 @@ function schemeNames(screen: ManifestScreen): string {
 
 export function EntryDetailsBody(props: {
   catalogue: Catalogue;
+  changedViews?: readonly ChangedView[];
   entry: RoutedEntry;
 }) {
   const entry = props.entry;
@@ -71,6 +75,9 @@ export function EntryDetailsBody(props: {
         ) : null}
         {entry.kind === "screen" && props.catalogue.hasDarkFragments ? (
           <MetaRow label="Schemes">{schemeNames(entry)}</MetaRow>
+        ) : null}
+        {entry.kind === "screen" || entry.kind === "component" ? (
+          <ChangedViewsRow views={props.changedViews ?? []} />
         ) : null}
         {props.catalogue.removedEntries.find(
           (removed) => removed.entry.route === entry.route,

@@ -13,6 +13,7 @@ import { SHELL_REVIEW_CSS } from "./css_review.js";
 import { SHELL_TOKENS_CSS } from "./css_tokens.js";
 import { SHELL_VIEW_CSS } from "./css_views.js";
 import { SHELL_WORKSPACE_CSS } from "./css_workspace.js";
+import { CSS_WORKSPACE_MARKS } from "./css_workspace_marks.js";
 
 /** The complete shell stylesheet. */
 export const SHELL_CSS =
@@ -27,4 +28,5 @@ export const SHELL_CSS =
   SHELL_CHROME_CSS +
   SHELL_REVIEW_CSS +
   SHELL_WORKSPACE_CSS +
+  CSS_WORKSPACE_MARKS +
   SHELL_INSPECTOR_RESIZE_CSS;

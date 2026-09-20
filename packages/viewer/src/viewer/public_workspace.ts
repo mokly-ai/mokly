@@ -2,8 +2,10 @@
 import type {
   CatalogueReadModel,
   CatalogueRoutedEntry,
+  CatalogueView,
 } from "../catalogue/types.js";
 import { generatedViews } from "../components/views.js";
+import { orderChangedViews, type ChangedView } from "../shell/view_marks.js";
 import type {
   EntryStatus,
   UsageLink,
@@ -24,6 +26,20 @@ function status(entry: CatalogueRoutedEntry): EntryStatus | undefined {
     ? statuses[entry.changes.kind]
     : undefined;
 }
+/** Published per-view comparisons name the same changed views the shell derives. */
+function publishedChangedViews(
+  views: readonly CatalogueView[],
+): readonly ChangedView[] {
+  return orderChangedViews(
+    views.flatMap((view) =>
+      view.comparison.status === "ready" &&
+      view.comparison.kind !== "unmodified"
+        ? [{ colorScheme: view.colorScheme, viewport: view.viewport }]
+        : [],
+    ),
+  );
+}
+
 export function publicWorkspace(
   model: CatalogueReadModel,
   entry: WorkspaceData["entry"],
@@ -88,6 +104,11 @@ export function publicWorkspace(
       ),
     ].map(({ id, title, route }) => ({ id, title, route })),
     views: generatedViews(entry),
+    changedViews: publishedChangedViews(
+      original.kind === "screen"
+        ? original.views
+        : (original.variants[0]?.views ?? []),
+    ),
     variants,
     usedBy,
     affected: [],
