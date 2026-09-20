@@ -67,14 +67,21 @@ test.describe("mobile inspector sheet", () => {
   }) => {
     await page.goto(componentDesignUrl("controls/editing/edited", "mobile"));
     const dock = page.locator(".ce-inspector-dock");
+    const inspector = page.locator(".ce-inspector");
     const preview = page.locator(".ce-preview-pane");
+    const workspace = (await page.locator(".ce-workspace").boundingBox())!;
     const toggle = page.getByRole("switch", { name: "Expanded inspector" });
     await expect(toggle).toBeVisible();
     const previewBounds = (await preview.boundingBox())!;
     const compact = (await dock.boundingBox())!;
     expect(compact.y).toBeLessThan(previewBounds.y + previewBounds.height - 80);
     expect(compact.y).toBeGreaterThan(previewBounds.y);
-    await expect(dock).toHaveCSS("border-top-left-radius", "20px");
+    expect(compact.x).toBeCloseTo(workspace.x, 0);
+    expect(compact.width).toBeCloseTo(workspace.width, 0);
+    await expect(dock).toHaveCSS("border-top-left-radius", "0px");
+    await expect(dock).toHaveCSS("box-shadow", "none");
+    await expect(inspector).toHaveCSS("border-top-left-radius", "20px");
+    await expect(inspector).not.toHaveCSS("box-shadow", "none");
     const label = page.getByRole("textbox", { name: "label", exact: true });
     await label.fill("Keep my edits");
     await toggle.tap();

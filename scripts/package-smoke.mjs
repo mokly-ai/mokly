@@ -8,7 +8,11 @@ import {
   smokeJunoFixture,
   smokeNodeNextConsumer,
 } from "./package/consumer_cases.mjs";
-import { inspectPackagePair, packPackagePair } from "./package/pair.mjs";
+import {
+  inspectPackagePair,
+  packPackagePair,
+  readPackagePair,
+} from "./package/pair.mjs";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "..");
 const fixturesRoot = path.join(repositoryRoot, "tests/fixtures/consumers");
@@ -65,17 +69,5 @@ async function readArtifacts(args) {
     throw new Error(
       "usage: package-smoke.mjs [--artifacts <release-artifact-directory>]",
     );
-  const read = async (name) => {
-    const directory = path.resolve(args[1], name);
-    const report = JSON.parse(
-      await fs.promises.readFile(
-        path.join(directory, "pack-report.json"),
-        "utf8",
-      ),
-    );
-    if (path.basename(report.filename) !== report.filename)
-      throw new Error("invalid archive filename");
-    return { report, archivePath: path.join(directory, report.filename) };
-  };
-  return { cli: await read("cli"), viewer: await read("viewer") };
+  return await readPackagePair(args[1]);
 }

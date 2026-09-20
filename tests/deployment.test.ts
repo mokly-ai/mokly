@@ -131,7 +131,7 @@ test("PR install caching includes the branch-point lockfile and verification ret
       "utf8",
     ),
   ) as Workflow;
-  for (const job of ["minimum-runtime", "release-runtime"])
+  for (const job of ["repository", "package", "unit", "browser", "native"])
     assertFullHistoryCheckout(ci.jobs[job]!);
 });
 

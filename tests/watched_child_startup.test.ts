@@ -29,25 +29,29 @@ test(
       path.join(fixture.mockupsDir, MANIFEST_NAME),
       "invalid stale manifest\n",
     );
-    const child = fork(
-      path.join(repositoryRoot, "dist/cli/bin.js"),
-      [
-        "__serve-child",
-        "--config",
-        fixture.configPath,
-        "--retained-runtime",
-        "--port",
-        "0",
-      ],
-      {
-        cwd: fixture.root,
-        stdio: ["ignore", "ignore", "ignore", "ipc"],
-      },
-    );
+    const childBin = path.join(repositoryRoot, "dist/cli/bin.js");
+    const childArguments = [
+      "__serve-child",
+      "--config",
+      fixture.configPath,
+      "--retained-runtime",
+      "--port",
+      "0",
+    ];
+    const child = fork(childBin, childArguments, {
+      cwd: fixture.root,
+      execArgv: [],
+      stdio: ["ignore", "ignore", "ignore", "ipc"],
+    });
     context.after(async () => {
       await stopChild(child);
       await removeFixture(fixture);
     });
+    assert.deepEqual(child.spawnargs, [
+      process.execPath,
+      childBin,
+      ...childArguments,
+    ]);
     const messages: unknown[] = [];
     child.on("message", (message) => messages.push(message));
 

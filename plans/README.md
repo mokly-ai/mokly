@@ -5,6 +5,8 @@
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
   standalone Auto/Light/Dark control for interface and previews, and
   host-owned theme with independent previews when embedded.
+- [CI Performance](./ci-performance.md) — parallel verification, complete test
+  sharding, reusable preparation and measured CI timing improvements.
 - [CLI Terminal Experience](./cli-terminal-experience.md)
 - [Package Documentation](./package-documentation.md) — supersedes the
   unmerged public-site plan and pull request #79 by shipping versioned Markdown
@@ -14,6 +16,8 @@
 - [Publish Catalogue](./publish-catalogue.md)
 - [App-Independent Mokabook Npm Library](./app-independent-mokabook-library.md)
 - [Browse Shell Design Parity](./browse-shell-design-parity.md)
+- [Unchanged View Fast Path](./unchanged-view-fast-path.md) — post-review
+  correctness fixes are active until the PR merges.
 
 ## Completed
 

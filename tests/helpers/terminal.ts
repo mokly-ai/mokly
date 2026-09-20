@@ -1,4 +1,5 @@
 import { EventEmitter } from "node:events";
+import { Writable } from "node:stream";
 
 import type {
   CliInput,
@@ -8,20 +9,27 @@ import type {
 
 interface MemoryTerminalOptions {
   columns?: number;
+  env?: NodeJS.ProcessEnv;
   inputEnded?: boolean;
   inputTTY?: boolean;
   isTTY: boolean;
 }
 
-class MemoryOutput implements CliOutput {
+class MemoryOutput extends Writable implements CliOutput {
   readonly chunks: string[] = [];
   constructor(
     readonly isTTY: boolean,
     readonly columns: number | undefined,
-  ) {}
-  write(chunk: string): boolean {
-    this.chunks.push(chunk);
-    return true;
+  ) {
+    super();
+  }
+  override _write(
+    chunk: Buffer,
+    _encoding: BufferEncoding,
+    callback: (error?: Error | null) => void,
+  ): void {
+    this.chunks.push(chunk.toString());
+    callback();
   }
 }
 
@@ -61,7 +69,7 @@ export function memoryTerminal(options: MemoryTerminalOptions): {
   return {
     environment: {
       browserOpener: { async open() {} },
-      env: { NO_COLOR: "1" },
+      env: options.env ?? { NO_COLOR: "1" },
       now: () => (milliseconds += 100),
       platform: "linux",
       stderr,

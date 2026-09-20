@@ -1,19 +1,27 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
-import { startPreviewFixture, type PreviewFixture } from "./preview_fixture.js";
+import { test } from "./ordinary_preview_fixture.js";
+import type { OwnedPreviewFixture } from "./preview_fixture_owner.js";
 import { chooseScheme } from "./workspace_actions.js";
 
-let preview: PreviewFixture;
+let preview: OwnedPreviewFixture;
 
 test.describe.configure({ timeout: 90_000 });
 
-test.beforeAll(async () => {
+test.beforeAll(async ({ ordinaryPreview }) => {
   test.setTimeout(90_000);
-  preview = await startPreviewFixture();
+  preview = ordinaryPreview;
 });
 
-test.afterAll(async () => {
-  await preview?.close();
+test("ordinary preview output is fresh and shared across worker consumers", async ({
+  ordinaryPreview,
+}) => {
+  expect(ordinaryPreview).toBe(preview);
+  expect(ordinaryPreview.freshness.outputWasAbsent).toBe(true);
+  expect(ordinaryPreview.freshness.markerModifiedAtMs).toBeGreaterThanOrEqual(
+    ordinaryPreview.freshness.preparationStartedAtMs - 2_000,
+  );
+  expect((await fetch(ordinaryPreview.url)).ok).toBe(true);
 });
 
 for (const width of [390, 1280]) {

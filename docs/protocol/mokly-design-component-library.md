@@ -115,8 +115,10 @@ Controls below use text, boolean, number and primitive enum selections only.
    tabs and Closed. Available tabs follow the provided list. A screen with only
    metadata supplies Details alone. Opening and closing tabs is native and keeps
    the current screen and query. The shared workspace supplies desktop resizing
-   and the mobile bottom sheet; the icon strip stays fixed while content scrolls.
-   There are no legacy presentation, behavior or destination props.
+   and mobile-sheet placement and sizing; the inspector owns the sheet surface,
+   and the open mobile dock spans the workspace width. The icon strip stays
+   fixed while content scrolls. There are no legacy presentation, behavior or
+   destination props.
 10. **Metadata row:** label plus a `children` slot for text, code, links or tags.
     Control: label. Keep the correct existing `div`/`dl` semantics through an
     explicit `metadata/props` presentation. Registered chips may be supplied by
