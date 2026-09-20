@@ -208,7 +208,7 @@ test("discovery rejects entry modules inside private, output, and review trees",
     [
       "src/node_modules/pkg/x.mockup.tsx",
       "src/**/*.mockup.{ts,tsx}",
-      /denied source directory \(node_modules\)/,
+      /entries glob matches no module: src\/\*\*\/\*\.mockup\.\{ts,tsx\}; not searched: src\/node_modules/,
     ],
     [".review/x.mockup.tsx", ".review/x.mockup.tsx", /inside review\.outDir/],
   ] as const) {

@@ -213,23 +213,26 @@ Discovery walks each glob's stable prefix, the leading segments before the
 first wildcard, without following symlinks, and keeps every regular file that
 matches the glob. The glob alone defines the entry shape. Mokly applies no
 filename suffix or extension filter, so `entries: ["src/**/*.ts"]` evaluates
-every matched TypeScript file as an entry module. Each module must therefore
-export `mockups` or a default registry value; a matched helper with neither
-contributes no definitions and can produce the normal empty-registry error.
+every matched TypeScript file as an entry module. Mokly reads `mockups` or a
+default registry value from each; a matched helper with neither contributes no
+definitions and can produce the normal empty-registry error.
 `.mockup.ts` and `.mockup.tsx` remain the recommended naming convention, and
 the `entriesDir` shorthand preserves it through its generated glob.
 
-The candidate walk does not enter a denied segment below the deepest root whose
-glob matches that candidate. Denied names are `.git`, `node_modules`,
-`.mokly-cache`, `dist`, `coverage`, `target`, `test-results`,
-`playwright-report`, and `.context`;
-segments beginning with `.mokly-review-` or `.mokly-write-` are denied too.
+The candidate walk does not enter a denied directory below its deepest matching
+glob root. Regular file basenames are not denied. The names are `.git`,
+`node_modules`, `.mokly-cache`, `dist`, `coverage`, `target`, `test-results`,
+`playwright-report`, and `.context`; prefixes `.mokly-review-` and
+`.mokly-write-` are denied too.
 This base is relative to the glob root: `src/dist/x.mockup.tsx` is denied under
 `src/**/*.mockup.{ts,tsx}`, while an explicit `dist/entries/**` root can discover
 `dist/entries/a.mockup.tsx` because `dist` is above that root. Discovery never
-inspects a denied tree. When a glob has no accepted match after pruning one, the
-configuration error names the denied segment. A glob that encounters no denied
-tree and matches no file fails with `entries glob matches no module: <glob>`.
+inspects a denied tree. It also skips `review.outDir` when a broader walk reaches
+that directory by lexical or projected identity, without recording it as a
+denied root. A zero-match error starts with
+`entries glob matches no module: <glob>` and, when denied directories were
+skipped, continues with `; not searched: <repository-relative roots>` using a
+sorted, comma-separated list.
 The union of all globs, deduplicated by repository-relative path and sorted by
 that path, is the resolved entry set. Discovery order therefore depends on
 neither glob order nor filesystem order. Per-glob validation ensures a typo
@@ -237,11 +240,10 @@ cannot silently produce an empty or partial catalogue.
 
 Every resolved entry module is classified before bundling. Discovery fails
 with `config-invalid` naming the module and the matched rule when the module
-lies inside `review.outDir`, inside `.mokly-cache/`, below a denied segment
+lies inside `review.outDir`, inside `.mokly-cache/`, below a denied directory
 relative to its deepest matching glob root, or resolves outside `repoRoot`
 through a symlink. An entry module may sit below `mockupsDir` in a nested
-`docs/mockups/src` layout; it is then
-protected authored source under the
+`docs/mockups/src` layout; it is protected authored source under the
 [source-protection contract](./mokly-source-protection.md), never public
 output, and generated routes are collision-checked against it. The check runs
 once per resolved module instead of once per configured directory.
@@ -266,14 +268,17 @@ reports it, while Build, Serve, and Export leave the file untouched. Registry
 attribution remains narrower and accepts only a resolved entry module or
 inventoried source.
 
+A matched module that re-exports another matched module's `mockups` registers the
+same definitions twice and fails with `duplicate-id`. Broad globs such as
+`src/**/*.ts` should exclude barrels, or barrels must not re-export registry arrays.
+
 ## Public Exclusion Configuration
 
 `publicExclude?: readonly string[]` extends the defaults in the
 [source-protection contract](./mokly-source-protection.md#public-exclusions):
 `**/README`, `**/README.*`, `**/tsconfig.json`, and `**/tsconfig.*.json`.
-The defaults are case-folded, so consumers need not add case variants.
-Resolution prepends them to consumer entries without
-mutating the input; omission and an empty array produce the defaults alone.
+The case-folded defaults are prepended without mutating consumer input;
+omission and an empty array produce the defaults alone.
 The resolved list is frozen. Watched children require this already-resolved
 array and use the shared glob validator to adopt a frozen copy with exactly
 the transferred entries, without prepending defaults again. Missing, non-array

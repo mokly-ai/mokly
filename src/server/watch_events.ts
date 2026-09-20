@@ -21,16 +21,28 @@ export class NotificationGate<Value> {
   readonly #buffer: Value[] = [];
   #consumer: ((value: Value) => void) | undefined;
 
+  constructor(private readonly report?: (error: unknown) => void) {}
+
   /** Queue or immediately deliver one notification. */
   notify(value: Value): void {
-    if (this.#consumer) this.#consumer(value);
+    if (this.#consumer) this.deliver(value);
     else this.#buffer.push(value);
   }
 
   /** Open the gate and flush startup notifications in arrival order. */
   open(consumer: (value: Value) => void): void {
     this.#consumer = consumer;
-    for (const value of this.#buffer.splice(0)) consumer(value);
+    for (const value of this.#buffer.splice(0)) this.deliver(value);
+  }
+
+  /** Deliver one value while preserving the optional isolation boundary. */
+  private deliver(value: Value): void {
+    try {
+      this.#consumer?.(value);
+    } catch (error) {
+      if (!this.report) throw error;
+      this.report(error);
+    }
   }
 }
 

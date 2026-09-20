@@ -7,7 +7,11 @@ import { discoverEntryModules } from "../dist/config/entry_discovery.js";
 import { loadConfig } from "../dist/config/load.js";
 import { resolveConfig } from "../dist/config/validate.js";
 
-import { createFixture, removeFixture } from "./helpers/fixture.js";
+import {
+  createFixture,
+  removeFixture,
+  validEntrySource,
+} from "./helpers/fixture.js";
 
 test("entriesDir resolves lexical paths through an in-repository symlink and rejects an escape", async (context) => {
   const fixture = await createFixture();
@@ -44,6 +48,68 @@ test("a missing entry glob stable prefix reports the zero-match error", async (c
     message:
       /entries glob matches no module: missing\/\*\*\/\*\.mockup\.\{ts,tsx\}/,
   });
+});
+
+test("a zero-match error also lists unrelated denied roots", async (context) => {
+  const fixture = await createFixture();
+  context.after(() => removeFixture(fixture));
+  const dependency = path.join(
+    fixture.root,
+    "src/node_modules/example/x.mockup.tsx",
+  );
+  await fs.promises.mkdir(path.dirname(dependency), { recursive: true });
+  await fs.promises.writeFile(dependency, validEntrySource());
+  await fs.promises.writeFile(
+    fixture.configPath,
+    'export default { entries: ["src/**/*.mokup.tsx"], mockupsDir: "mockups", repoRoot: "." };\n',
+  );
+
+  await assert.rejects(loadConfig(fixture.root), {
+    code: "config-invalid",
+    message:
+      /entries glob matches no module: src\/\*\*\/\*\.mokup\.tsx; not searched: src\/node_modules/,
+  });
+});
+
+test("discovery accepts denied basenames but prunes matching directories", async (context) => {
+  const fixture = await createFixture();
+  context.after(() => removeFixture(fixture));
+  const target = path.join(fixture.root, "src/target");
+  await fs.promises.mkdir(path.dirname(target), { recursive: true });
+  await fs.promises.writeFile(target, "export const mockups = [];\n");
+  await fs.promises.writeFile(
+    fixture.configPath,
+    'export default { entries: ["src/**"], mockupsDir: "mockups", repoRoot: "." };\n',
+  );
+
+  assert.deepEqual((await loadConfig(fixture.root)).entryModules, [target]);
+
+  await fs.promises.rm(target);
+  await fs.promises.mkdir(target);
+  await fs.promises.writeFile(
+    path.join(target, "x.mockup.tsx"),
+    validEntrySource(),
+  );
+  await assert.rejects(loadConfig(fixture.root), {
+    code: "config-invalid",
+    message:
+      /entries glob matches no module: src\/\*\*; not searched: src\/target/,
+  });
+});
+
+test("a repository-root glob skips review output during discovery", async (context) => {
+  const fixture = await createFixture();
+  context.after(() => removeFixture(fixture));
+  const reviewEntry = path.join(fixture.root, ".review/x.mockup.tsx");
+  await fs.promises.mkdir(path.dirname(reviewEntry), { recursive: true });
+  await fs.promises.writeFile(reviewEntry, validEntrySource());
+  await fs.promises.writeFile(
+    fixture.configPath,
+    'export default { entries: ["**/*.mockup.{ts,tsx}"], mockupsDir: "mockups", repoRoot: ".", review: { outDir: ".review" } };\n',
+  );
+
+  const config = await loadConfig(fixture.root);
+  assert.deepEqual(config.entryModules, [fixture.entryPath]);
 });
 
 test("entry globs with backslashes normalize to POSIX", async (context) => {

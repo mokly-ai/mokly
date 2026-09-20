@@ -24,20 +24,21 @@ export function discoverEntryModules(
     const root = path.resolve(config.repoRoot, globStablePrefix(glob));
     const deniedRoots: string[] = [];
     let matched = 0;
-    for (const candidate of walkEntryCandidates(root, deniedRoots)) {
+    for (const candidate of walkEntryCandidates(root, deniedRoots, config)) {
       const relative = toPosixPath(path.relative(config.repoRoot, candidate));
       if (!matcher.match(relative)) continue;
       matched += 1;
       discovered.add(candidate);
     }
     if (matched === 0) {
-      const deniedRoot = deniedRoots.sort((left, right) =>
-        left.localeCompare(right),
-      )[0];
-      if (deniedRoot) throw deniedDirectoryError(deniedRoot, config.repoRoot);
+      const notSearched = [...new Set(deniedRoots)]
+        .map((deniedRoot) =>
+          toPosixPath(path.relative(config.repoRoot, deniedRoot)),
+        )
+        .sort((left, right) => left.localeCompare(right));
       throw new MoklyError(
         "config-invalid",
-        `entries glob matches no module: ${glob}`,
+        `entries glob matches no module: ${glob}${notSearched.length > 0 ? `; not searched: ${notSearched.join(", ")}` : ""}`,
       );
     }
   }
@@ -54,18 +55,23 @@ export function discoverEntryModules(
 }
 
 /** List regular files below a root without following links or private trees. */
-function walkEntryCandidates(root: string, deniedRoots: string[]): string[] {
+function walkEntryCandidates(
+  root: string,
+  deniedRoots: string[],
+  config: Pick<ResolvedConfig, "entryGlobs" | "repoRoot" | "review">,
+): string[] {
   if (!fs.existsSync(root) || !fs.statSync(root).isDirectory()) return [];
   return fs
     .readdirSync(root, { withFileTypes: true })
     .flatMap((entry) => {
       const candidate = path.join(root, entry.name);
       if (entry.isDirectory()) {
+        if (isReviewOutputDirectory(candidate, config.review.outDir)) return [];
         if (isDeniedSourceSegment(entry.name)) {
           deniedRoots.push(candidate);
           return [];
         }
-        return walkEntryCandidates(candidate, deniedRoots);
+        return walkEntryCandidates(candidate, deniedRoots, config);
       }
       return entry.isFile() ? [candidate] : [];
     })
@@ -90,10 +96,19 @@ function entryModuleDenial(
   const privateSegment = path
     .relative(realGlobRoot, real)
     .split(path.sep)
+    .slice(0, -1)
     .find(isDeniedSourceSegment);
   if (privateSegment)
     return `is inside a package-owned private directory (${privateSegment})`;
   return undefined;
+}
+
+/** Match the configured Review directory by lexical or projected identity. */
+function isReviewOutputDirectory(candidate: string, outDir: string): boolean {
+  return (
+    path.resolve(candidate) === path.resolve(outDir) ||
+    projectRealPath(candidate) === projectRealPath(outDir)
+  );
 }
 
 /** Select the most specific configured walk root containing a module. */
@@ -118,17 +133,5 @@ function entryModuleError(
   return new MoklyError(
     "config-invalid",
     `entry module ${toPosixPath(path.relative(config.repoRoot, module))} ${reason ?? "is denied"}`,
-  );
-}
-
-/** Report the first pruned segment without inspecting its private descendants. */
-function deniedDirectoryError(
-  deniedRoot: string,
-  repoRoot: string,
-): MoklyError {
-  const segment = path.basename(deniedRoot);
-  return new MoklyError(
-    "config-invalid",
-    `entries glob has no module outside denied source directory (${segment}): ${toPosixPath(path.relative(repoRoot, deniedRoot))}`,
   );
 }

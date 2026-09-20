@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 
 import { minimatch } from "minimatch";
@@ -54,9 +55,11 @@ export function isPackageOwnedIgnoredWatchPath(
   if (isExportIgnoredPath(absolute, config.repoRoot, mode)) return true;
   if (isInside(config.review.outDir, absolute)) return true;
   const relativeRoot = deepestContainingRoot(absolute, globRoots);
-  const parts = path
-    .relative(relativeRoot ?? config.repoRoot, absolute)
-    .split(path.sep);
+  const parts = denialSegments(
+    relativeRoot ?? config.repoRoot,
+    absolute,
+    isDirectory(absolute),
+  );
   return parts.some(isDeniedSourceSegment);
 }
 
@@ -166,11 +169,11 @@ function isDiscoveryDeniedEntryPath(
     ),
   );
   const relativeRoot = globRoot ?? config.repoRoot;
+  const includeLeaf = isDirectory(candidate);
   if (
-    path
-      .relative(relativeRoot, candidate)
-      .split(path.sep)
-      .some(isDeniedSourceSegment)
+    denialSegments(relativeRoot, candidate, includeLeaf).some(
+      isDeniedSourceSegment,
+    )
   )
     return true;
   try {
@@ -180,12 +183,34 @@ function isDiscoveryDeniedEntryPath(
     if (isInside(projectRealPath(config.review.outDir), realCandidate))
       return true;
     const realRelativeRoot = projectRealPath(relativeRoot);
-    return path
-      .relative(realRelativeRoot, realCandidate)
-      .split(path.sep)
-      .some(isDeniedSourceSegment);
+    return denialSegments(realRelativeRoot, realCandidate, includeLeaf).some(
+      isDeniedSourceSegment,
+    );
   } catch (error) {
     if (isPathResolutionFailure(error)) return true;
+    throw error;
+  }
+}
+
+/** Return denial-relevant segments, retaining the leaf only for directories. */
+function denialSegments(
+  root: string,
+  candidate: string,
+  includeLeaf: boolean,
+): string[] {
+  const segments = path
+    .relative(root, candidate)
+    .split(path.sep)
+    .filter((segment) => segment.length > 0);
+  return includeLeaf ? segments : segments.slice(0, -1);
+}
+
+/** Identify an existing directory without making missing events fail closed. */
+function isDirectory(candidate: string): boolean {
+  try {
+    return fs.statSync(candidate).isDirectory();
+  } catch (error) {
+    if (isPathResolutionFailure(error)) return false;
     throw error;
   }
 }

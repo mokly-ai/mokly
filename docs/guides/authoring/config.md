@@ -57,11 +57,13 @@ entry module, with no separate suffix or extension filter. A glob such as
 `src/**/*.mockup.{ts,tsx}` selects the recommended naming convention and lets
 each entry live beside the component or screen it describes. A broader glob
 such as `src/**/*.ts` deliberately makes every matched TypeScript file an entry,
-so each one must export `mockups` or a default registry value. The matched set
-is sorted by path, so neither glob order nor filesystem order changes the
-catalogue. A glob that matches no module is a configuration error, as is a
-module under a denied segment below its glob root, inside `review.outDir`, or
-inside the baseline cache.
+but a file with no registry export simply contributes no definitions. If no
+matched file contributes a definition, compilation reports the normal empty
+registry error. The matched set is sorted by path, so neither glob order nor
+filesystem order changes the catalogue. Discovery skips denied directories and
+`review.outDir`. A glob with no matched module reports the skipped denied roots,
+if any. A matched barrel that re-exports another matched module's registry
+causes a `duplicate-id` error, so exclude such barrels from broad globs.
 
 List multiple globs when entry modules genuinely live in multiple locations,
 for example `entries: ["src/**/*.mockup.{ts,tsx}",

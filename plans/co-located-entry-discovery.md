@@ -2,11 +2,11 @@
 
 ## Status And Outcome
 
-Milestones 1 through 8 are complete, committed, and pushed. Milestone 8
-resolved all seven second-round findings and removed the fixed
-`.mockup.ts`/`.mockup.tsx` suffix on top of `entries` globs, so a glob alone
-defines what an entry module is. The post-push review of Milestone 8 reported
-six further findings, all approved by the user; Milestone 9 carries them.
+Milestones 1 through 8 are complete, committed, and pushed. Milestone 9 is
+locally committed pending the supervising agent's push and review. It resolves
+all six approved third-review findings, including watcher isolation, combined
+zero-match diagnostics, basename handling, Review-output pruning, and the
+documented duplicate-registration contract.
 
 Mokly currently discovers every `*.mockup.ts` and `*.mockup.tsx` module below
 one configured directory, `entriesDir`, and binds the source-attributed
@@ -501,7 +501,7 @@ handling so a filesystem error can never terminate `mokly serve`; the rest
 correct diagnostics, docs, and two discovery edge cases, and document and test
 the double-registration risk of broad globs.
 
-- [ ] Finding 1: isolate every watcher event callback. In
+- [x] Finding 1: isolate every watcher event callback. In
       `src/server/watch_events.ts`, make `NotificationGate.notify` and
       `open` deliver through a guarded call that routes a thrown error to a
       reporter supplied at construction, so a classifier error is reported
@@ -514,28 +514,28 @@ the double-registration risk of broad globs.
       accepting later notifications. Add a serve-level test that injects a
       throwing classifier path during `serve` with `watch: true` and asserts
       the server stays up and the reporter received the error.
-- [ ] Finding 2: when a glob matches nothing, report both causes in one
+- [x] Finding 2: when a glob matches nothing, report both causes in one
       `config-invalid` message: the zero-match text followed by the denied
       trees that were not searched, if any. Update the tests that assert
       either message.
-- [ ] Finding 3: in `docs/protocol/mokly-source-protection.md`, state that a
+- [x] Finding 3: in `docs/protocol/mokly-source-protection.md`, state that a
       glob-matched file is an entry module and therefore protected source,
       that one exporting no registry value contributes nothing (matching the
       configuration contract), and add "matched by an `entries` glob" to the
       list of ways a retained unimported helper stays protected.
-- [ ] Finding 4: in `src/config/entry_discovery.ts`, exclude the final path
+- [x] Finding 4: in `src/config/entry_discovery.ts`, exclude the final path
       segment from the per-module denied-segment scan so a regular file named
       like a denied directory, such as `src/target`, is accepted exactly as
       the walk accepts it. Mirror the same rule in the watcher's
       `isDiscoveryDeniedEntryPath`. Add a test for `src/target` under
       `src/**` in both discovery and the watcher.
-- [ ] Finding 5: prune `review.outDir` in discovery's directory walk so a
+- [x] Finding 5: prune `review.outDir` in discovery's directory walk so a
       broad glob skips it silently, exactly as the watcher does; keep the
       hard per-module error only when a glob's stable prefix lies inside
       `review.outDir`. Add a test: `entries: ["**/*.mockup.{ts,tsx}"]` with
       `review: { outDir: ".review" }` and a matching file under `.review`
       loads successfully and does not discover that file.
-- [ ] Finding 6: document in `docs/protocol/mokly-configuration.md` that a
+- [x] Finding 6: document in `docs/protocol/mokly-configuration.md` that a
       glob-matched module re-exporting another matched module's `mockups`
       registers those definitions twice and fails with `duplicate-id`, and
       add a regression test that a barrel under `src/**/*.ts` produces that
@@ -543,15 +543,16 @@ the double-registration risk of broad globs.
       `tests/build_check_unclaimed.test.ts` with a behavioural one, and rename
       the misnamed test in `tests/watch_glob_boundaries.test.ts` to say what
       it proves.
-- [ ] Run `cargo xtask check`, commit, and push.
+- [x] Run `cargo xtask check` and commit locally; the supervising agent will
+      push the branch.
 - [ ] Review the complete local diff against `origin/main` after the push
       using `docs/implementation-review-prompt.md`; report findings without
       changing the implementation.
 
 ## Third Review Findings (approved, addressed in Milestone 9)
 
-Review of the Milestone 8 commit. Nothing has been changed in response. The
-supervising agent confirmed findings 1, 2, and 4 by direct probe.
+Review of the Milestone 8 commit. Milestone 9 addresses all six findings below.
+The supervising agent confirmed findings 1, 2, and 4 by direct probe.
 
 1. **P1, a watcher path error now crashes the dev server.** Finding 7 of the
    second round asked for the blanket catch in `isDiscoveryDeniedEntryPath`

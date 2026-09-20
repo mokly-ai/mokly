@@ -10,7 +10,10 @@ boundaries that retain each stable prefix without exempting its ignored
 descendants. Discovery and watching share one denied-segment policy below the
 relevant glob root: traversal uses the deepest containing root, and entry-file
 classification uses the deepest matching root. The glob itself defines every
-entry-file shape that can trigger rediscovery.
+entry-file shape that can trigger rediscovery. Traversal also skips
+`review.outDir`. Source notifications are isolated at the gate: classifier
+failures are reported, that notification is dropped, and later notifications
+continue through the same watcher.
 
 GET/HEAD `/__mokly/catalogue.json` returns the public v1
 [read model](../catalogue/README.md) as JSON with `Cache-Control: no-store`.

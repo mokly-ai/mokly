@@ -12,11 +12,13 @@ export and local prop controls reuse the same consumer graph and validators.
 configuration loads and again here at the start of each compilation. The glob
 defines the entry shape with no suffix filter; `entriesDir` expands to the
 recommended `<dir>/**/*.mockup.{ts,tsx}` convention. Each glob must match at
-least one entry module, and every resolved module is rejected when it sits
-inside `review.outDir`, `.mokly-cache/`, beneath a denied segment relative to
-its glob root, or escapes `repoRoot` through a symlink. `load_graph.ts` then bundles those
-modules, imported helpers, the renderer and any compatibility transformer
-together and refreshes the resolved set on the config as `entryModules`. React
+least one entry module. Walks skip `review.outDir` and denied directory trees;
+zero-match diagnostics list any denied roots that were not searched. Every
+resolved module is rejected when it sits inside `review.outDir`, `.mokly-cache/`,
+beneath a denied directory relative to its glob root, or escapes `repoRoot`
+through a symlink. `load_graph.ts` then bundles those modules, imported helpers,
+the renderer and any compatibility transformer together and refreshes the
+resolved set on the config as `entryModules`. React
 and React DOM resolve from consumer package roots, including when Mokly runs
 from an npx installation. The bundle stays in memory and retains the
 consumer's existing rendering/provider graph.

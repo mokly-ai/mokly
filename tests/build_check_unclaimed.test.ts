@@ -70,6 +70,14 @@ test("committed check tolerates a generated file removed before its header is re
     disappearing,
     `${generatedHeader("docs/notes.md")}<html></html>\n`,
   );
+  await fs.promises.writeFile(
+    path.join(fixture.mockupsDir, "retained-orphan.html"),
+    `${generatedHeader("entries/deleted.mockup.tsx")}<html></html>\n`,
+  );
+  await fs.promises.writeFile(
+    path.join(fixture.mockupsDir, "retained-unclaimed.html"),
+    `${generatedHeader("docs/notes.md")}<html></html>\n`,
+  );
   const openSync = fs.openSync;
   let opens = 0;
   context.mock.method(
@@ -83,6 +91,22 @@ test("committed check tolerates a generated file removed before its header is re
     },
   );
 
-  assert.doesNotThrow(() => checkCompilation(compilation, config));
-  assert.equal(opens, 2);
+  assert.throws(
+    () => checkCompilation(compilation, config),
+    (error: Error) => {
+      const groups = [
+        ...error.message.matchAll(
+          /\n((?:missing|stale|orphan|unclaimed) generated files):/g,
+        ),
+      ].map((match) => match[1]);
+      assert.deepEqual(groups, [
+        "orphan generated files",
+        "unclaimed generated files",
+      ]);
+      assert.match(error.message, / {2}- retained-orphan\.html/);
+      assert.match(error.message, / {2}- retained-unclaimed\.html/);
+      assert.doesNotMatch(error.message, /disappearing\.html/);
+      return true;
+    },
+  );
 });

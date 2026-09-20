@@ -5,7 +5,10 @@ import test from "node:test";
 
 import { loadConfig } from "../dist/config/load.js";
 import type { ResolvedConfig } from "../dist/config/types.js";
-import { classifyWatchPath } from "../dist/server/watch_events.js";
+import {
+  classifyWatchPath,
+  NotificationGate,
+} from "../dist/server/watch_events.js";
 import {
   isEntryGlobCandidate,
   isPackageOwnedIgnoredWatchPath,
@@ -105,6 +108,30 @@ test("a custom entry glob rebuilds for every file shape it matches", async (cont
   );
 });
 
+test("denied directory names remain valid regular-file basenames", async (context) => {
+  const fixture = await createFixture();
+  context.after(() => removeFixture(fixture));
+  const loaded = await loadConfig(fixture.root);
+  const config: ResolvedConfig = {
+    ...loaded,
+    entryGlobs: ["src/**"],
+    entryModules: [],
+  };
+  delete config.entriesDir;
+  const target = path.join(fixture.root, "src/target");
+  await fs.promises.mkdir(path.dirname(target), { recursive: true });
+  await fs.promises.writeFile(target, "export const mockups = [];\n");
+  assert.equal(isEntryGlobCandidate(target, config), true);
+  assert.equal(isPackageOwnedIgnoredWatchPath(target, config, "event"), false);
+
+  await fs.promises.rm(target);
+  const nested = path.join(target, "x.mockup.tsx");
+  await fs.promises.mkdir(target);
+  await fs.promises.writeFile(nested, validEntrySource());
+  assert.equal(isEntryGlobCandidate(nested, config), false);
+  assert.equal(isPackageOwnedIgnoredWatchPath(target, config), true);
+});
+
 test("discovery and watching share denied segments below glob roots", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
@@ -126,7 +153,8 @@ test("discovery and watching share denied segments below glob roots", async (con
   );
   await assert.rejects(loadConfig(fixture.root), {
     code: "config-invalid",
-    message: /denied source directory \(dist\)/,
+    message:
+      /entries glob matches no module: src\/\*\*\/\*\.mockup\.\{ts,tsx\}; not searched: src\/dist/,
   });
 
   const loaded = await loadConfigFor(fixture, "dist/entries/**");
@@ -140,10 +168,16 @@ test("discovery and watching share denied segments below glob roots", async (con
   );
 });
 
-test("unexpected discovery path errors propagate from entry candidate checks", async (context) => {
+test("a notification gate reports classifier errors and keeps delivering", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
-  const config = await loadConfig(fixture.root);
+  const loaded = await loadConfig(fixture.root);
+  const config: ResolvedConfig = {
+    ...loaded,
+    entryGlobs: ["entries/**/*.mockup.{ts,tsx}"],
+    entryModules: [fixture.entryPath],
+  };
+  delete config.entriesDir;
   const candidate = path.join(fixture.root, "entries/new.mockup.tsx");
   const lstatSync = fs.lstatSync;
   context.mock.method(fs, "lstatSync", (value: fs.PathLike) => {
@@ -157,12 +191,27 @@ test("unexpected discovery path errors propagate from entry candidate checks", a
     return lstatSync(value);
   });
   assert.throws(
-    () => isEntryGlobCandidate(candidate, config),
+    () => classifyWatchPath(candidate, config),
     /unexpected path failure/,
   );
+  const unreported = new NotificationGate<string>();
+  unreported.open((value) => classifyWatchPath(value, config));
+  assert.throws(() => unreported.notify(candidate), /unexpected path failure/);
+  const reported: unknown[] = [];
+  const delivered: string[] = [];
+  const gate = new NotificationGate<string>((error) => reported.push(error));
+  gate.notify(candidate);
+  gate.open((value) => delivered.push(classifyWatchPath(value, config)));
+  gate.notify(candidate);
+  gate.notify(fixture.entryPath);
+  assert.deepEqual(
+    reported.map((error) => String(error)),
+    ["Error: unexpected path failure", "Error: unexpected path failure"],
+  );
+  assert.deepEqual(delivered, ["rebuild"]);
 });
 
-test("entry denial uses the deepest glob that matches the candidate", async (context) => {
+test("a non-matching glob root is excluded from the entry denial base", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const loaded = await loadConfig(fixture.root);

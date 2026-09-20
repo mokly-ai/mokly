@@ -31,14 +31,17 @@ whole subtree. A candidate that is an ancestor of, or equal to, the prefix is
 never pruned. Broad traversal evaluates descendants relative to the deepest
 containing prefix, while discovery and entry-candidate classification evaluate
 a matched file relative to the deepest root whose glob matches that file. Below
-that base they all deny `.git`, `node_modules`, `.mokly-cache`, `dist`,
+that base, only directory segments are denied, so a regular file named `target`
+remains ordinary. The denied names are `.git`, `node_modules`, `.mokly-cache`, `dist`,
 `coverage`, `target`,
 `test-results`, `playwright-report`, `.context`, and segments beginning with
 `.mokly-review-` or `.mokly-write-`. Baseline-cache, `review.outDir`,
 header-proven generated-output, and export-output rules still apply. Thus an
 explicit `dist/entries/**` root remains reachable, while `src/dist` and
 `src/node_modules` are pruned beneath a `src/**` root, and repository-root globs
-still prune top-level `.git` and `node_modules`.
+still prune top-level `.git` and `node_modules`. The discovery walk and broad
+watch traversal skip `review.outDir`; matching file events beneath it are
+ignored too.
 
 Exact required files, including the config and its imports, inventoried sources,
 the renderer, and configured stylesheets, retain both their ancestor path and the
@@ -98,7 +101,9 @@ set using the same readiness and recovery rules as configuration adoption.
 Resource watches are discovered from candidate output and become ready before
 it is written. Discovery repeats after readiness to capture newly introduced
 references during watcher attachment. Notifications during generation and child
-startup are buffered. A child receives the parent-validated catalogue, validates
+startup are buffered. Each notification delivery is isolated: a classifier
+exception is reported once, that event is dropped, and later notifications keep
+flowing. A child receives the parent-validated catalogue, validates
 its source inventory, and binds before
 readiness. Initial startup tries a requested concrete port and then each higher
 port in order when the address is occupied; port `0` delegates selection to the
