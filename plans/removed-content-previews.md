@@ -460,9 +460,10 @@ version the artifact does not advertise.
       on a viewport or scheme change in a served browser test.
 - [ ] Replace the timed waits in `tests/browser/removed_previews.spec.ts`
       with polled positive assertions, especially for the late-response fence.
-- [ ] Replace the repository-preview expectations in
+- [x] Replace the repository-preview expectations in
       `tests/browser/preview_pages.spec.ts` so a removed page opens its previous
-      version there, and drop the note explaining why it could not.
+      version there, and drop the note explaining why it could not. Done in
+      Milestone 6 alongside the fix; nothing remains here.
 - [ ] Smoke-test a deployed-style repository preview at mobile and desktop
       widths, confirming read-only links, Retry, and catalogue navigation behave
       as they do in Serve and consumer export. Save screenshots under `.context/`.
