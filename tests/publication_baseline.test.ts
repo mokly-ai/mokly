@@ -65,7 +65,7 @@ test("publication pins one baseline for Changes and comparisons when its ref adv
   );
   assert.match(
     await read("view/removed-document.html"),
-    /This page was removed/,
+    /Showing previous version/,
   );
   assert.match(await read("index.html"), /data-removed-page/);
 });

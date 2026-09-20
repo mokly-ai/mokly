@@ -134,9 +134,9 @@ Review-enabled changed screens and saved component variants with actual Changed
 or Removed comparison views offer Current / Side by side / Overlay / Difference in an opaque band
 beneath the heading. Known unchanged views show Unmodified without that band;
 known added views show Added with their current preview and no comparison band;
-known removed screens show Removed with a current empty state and no comparison band
-(the approved [removed previews](./mokly-removed-previews.md) replace that empty
-state with the baseline views); unknown evidence has no invented status. Eligibility follows saved view evidence,
+known removed screens show Removed with their
+[previous version](./mokly-removed-previews.md) and no comparison band;
+unknown evidence has no invented status. Eligibility follows saved view evidence,
 so affected-only consumers can compare their actual rendered differences while
 staying outside Changes. Current is selected initially, including
 after navigation and reload. Selecting Changes, opening a current screen, changing
@@ -164,8 +164,8 @@ available only in Current so it cannot misalign an overlay.
 Loading, unavailable, and failed comparison states use plain product copy.
 Failure offers a retry. All and Changes share the same comparison eligibility.
 Removed screens remain discoverable in Changes without offering a comparison;
-they show an explicit current empty state today and their previous version once
-[removed previews](./mokly-removed-previews.md) ship. Dependency and ignored-region
+they show their [previous version](./mokly-removed-previews.md) instead of a
+current preview. Dependency and ignored-region
 evidence stays secondary to the screen preview. Evidence availability is
 independent of comparison-mode eligibility and the inspector's initial
 disclosure; Added and Removed screens can retain factual Details without gaining

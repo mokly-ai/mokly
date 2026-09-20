@@ -15,6 +15,15 @@ in the CLI's `src/server/baseline_catalogue.ts`. `workspace_data.ts` describes
 shell data; the public viewer projects it only from validated catalogue records.
 The CLI supplies its private live capabilities through typed server context.
 
+`previews.tsx` renders the one previous-version presentation a removed page and
+a removed screen share: the "Showing previous version" label, the stage host
+carrying the descriptor the browser client requests from, and the device chrome
+a screen preview clones. It advertises a packaged address only when the accepted
+public catalogue publishes one, so a delivery without that descriptor stays
+quiet. `views.tsx` uses it for removed pages and `workspace.tsx` for removed
+screens; both drop the comparison band there, while removed component variants
+keep theirs. See [previews](../previews/README.md) for the client side.
+
 See [the package README](../../README.md), the
 [viewer contract](../../../../docs/protocol/mokly-viewer.md), and the
 [shell design](../../../../docs/protocol/mokly-shell-design.md).

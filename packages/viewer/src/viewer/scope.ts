@@ -1,8 +1,12 @@
-/** Adapt document-oriented enhancements to one isolated viewer root. */
+/**
+ * Adapt document-oriented enhancements to one isolated viewer root. Requests
+ * are confined to the addresses the accepted catalogue advertises: its
+ * comparison and the previous versions of its removed pages.
+ */
 export function runtimeScope(
   root: HTMLElement,
   baseUrl: URL,
-  comparisonUrl: string | null,
+  advertisedPaths: readonly string[],
 ) {
   const document = root.ownerDocument;
   const window = document.defaultView! as Window & typeof globalThis;
@@ -116,12 +120,12 @@ export function runtimeScope(
   };
   const eventTarget = (name: string) =>
     ["resize", "blur"].includes(name) ? window : listeners;
+  const advertised = new Set(advertisedPaths.map((path) => `/${path}`));
   const resource = (input: string | URL) => {
     const request = new URL(input, url);
     if (
       request.origin !== baseUrl.origin ||
-      !comparisonUrl ||
-      request.pathname !== `/${comparisonUrl}` ||
+      !advertised.has(request.pathname) ||
       request.username ||
       request.password
     )

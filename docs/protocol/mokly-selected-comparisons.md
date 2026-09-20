@@ -11,7 +11,7 @@ exhaustive behavior.
 The live browser requests
 `/__mokly/diffs/review.json?route=<encoded-catalogue-route>`, adding
 `variant=<saved-variant-id>` for a component and `refresh=1` for an explicit retry
-or refresh, or `page=<encoded-catalogue-route>` for a removed page's approved
+or refresh, or `page=<encoded-catalogue-route>` for a removed page's
 [preview](./mokly-removed-previews.md). Current, navigation and filtering never
 request snapshots. Static delivery continues to request its complete, packaged
 comparison URL without selection parameters.

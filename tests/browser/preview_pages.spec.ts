@@ -30,8 +30,17 @@ for (const width of [390, 1280]) {
     await expect(page.locator(".mbk-crumbs")).toHaveText("Documents");
     await expect(page.locator(".mbk-crumbs a")).toHaveCount(0);
     await expect(page.locator("#mb-main")).toContainText(
-      "This page was removed",
+      "Showing previous version",
     );
+    /* This artifact's shells are captured before its page previews are
+       packaged, so the catalogue advertises none of them to the shell and the
+       stage says so instead of guessing an address. */
+    await expect(page.locator("[data-mokly-preview] h2")).toHaveText(
+      "Previous version unavailable",
+    );
+    await expect(
+      page.locator("[data-mokly-preview] [data-mokly-preview-retry]"),
+    ).toBeVisible();
     await expect(
       page.locator("[data-diff-screen], [data-viewport-option]"),
     ).toHaveCount(0);
@@ -69,8 +78,16 @@ for (const width of [390, 1280]) {
     await expect(
       page.frameLocator(".mbk-stage-embed iframe").locator("#overview"),
     ).toBeVisible();
+    expect(requests.filter((url) => /\/__mokly\/events\//.test(url))).toEqual(
+      [],
+    );
     expect(
-      requests.filter((url) => /\/__mokly\/(?:events|diffs)\//.test(url)),
+      requests.filter((url) => /\/__mokly\/diffs\/review\.json/.test(url)),
+    ).toEqual([]);
+    expect(
+      requests.filter((url) =>
+        /\/pages\/removed-document\.html\.json$/.test(url),
+      ),
     ).toEqual([]);
   });
 }

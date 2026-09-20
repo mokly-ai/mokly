@@ -182,8 +182,10 @@ shared pure build/comparison value contracts, including the strict
 `parseRemovedPagePreview` reader for advertised `preview.json` payloads; it
 contains no CLI execution or filesystem access. Public catalogue removed-entry
 types retain optional screen/page preview descriptors, validated against the
-catalogue's comparison generation. Hosts embedding React normally use only the
-root entry and stylesheet.
+catalogue's comparison generation. Selecting a removed entry renders its
+read-only previous version from those advertised addresses alone; a catalogue
+without them, or without a comparison, shows the unavailable state without any
+request. Hosts embedding React normally use only the root entry and stylesheet.
 
 ## Releases
 

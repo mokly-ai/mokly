@@ -207,9 +207,8 @@ comparison applies the same paired ignore rules and material keys as screen
 comparisons. Ignored-only edits stay out of Changes. Referenced CSS, images,
 fonts, and transitive local resources remain eligible even when HTML bytes are
 unchanged. Removed
-screens remain accessible using their baseline metadata, with an explicit
-missing-current state until the approved
-[removed previews](./mokly-removed-previews.md) show their previous version.
+screens remain accessible using their baseline metadata and open their
+[previous version](./mokly-removed-previews.md).
 Both watched and non-watched serving compute the filter.
 When a screen is directly affected, every use case that embeds that screen's
 fragments is affected too and remains visible in the changed-only filter.

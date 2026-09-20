@@ -82,7 +82,7 @@ test("removed page metadata keeps deleted ancestry and current route/id preceden
     updateVersion: 1,
     changedRoutes: [entry.route],
   });
-  assert.match(html, /This page was removed/);
+  assert.match(html, /Showing previous version/);
   assert.match(html, /App.*Book/s);
   assert.doesNotMatch(html, /data-diff-screen|data-nav-collection=/);
   assert.match(

@@ -71,8 +71,8 @@ variant's viewport/theme fragment. Variant selectors and Used by links are
 shell-owned URLs; do not overload the existing logical fragment grammar with
 component prop JSON or variant suffixes.
 Affected-consumer links carry explicit comparison eligibility. A removed screen
-link opens its Removed state (its current empty state today, its
-[previous version](./mokly-removed-previews.md) once approved) without a
+link opens its Removed state, showing its
+[previous version](./mokly-removed-previews.md) without a
 comparison query; an
 eligible removed component variant may request its retained baseline comparison.
 The destination validates the selected view again before activating any

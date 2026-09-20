@@ -49,7 +49,7 @@ test("no-watch startup retains removed metadata from its single Changes calculat
   const home = await (await fetch(running.url)).text();
   const removed = await fetch(`${running.url}/view/guide.html`);
   assert.equal(removed.status, 200);
-  assert.match(await removed.text(), /This page was removed/);
+  assert.match(await removed.text(), /Showing previous version/);
   assert.match(home, /data-removed-page=""/);
   assert.match(home, /class="mbk-nav-filter-count">1</);
   assert.equal(calls, 1);

@@ -24,6 +24,13 @@ entrypoints and shares containing-block-aware clipping with the inspector in
 `inspector/clipping.ts`; `same_origin_highlight.ts` owns the unchanged
 mask, labels, selection and observer lifecycle.
 
+Frames holding a previous version carry `data-mokly-preview-frame` and are
+skipped by `same_origin_navigation.ts`, so a historical catalogue link cannot
+navigate the shell. `browse.ts` installs the
+[preview controller](../previews/README.md) beside `installDiffs` and updates
+both from the same navigation, viewport and theme events; neither adapter mounts
+a preview frame, so no inspector handshake happens for historical documents.
+
 `post_message_adapter.ts` explicitly opts into a separate HTTP(S) origin. It sets
 the cross-origin sandbox, replaces iframe history, and negotiates a fresh random
 nonce after load. `message_transport.ts` owns the five-second request timeouts,

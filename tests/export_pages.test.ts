@@ -31,7 +31,7 @@ test("consumer export builds unified pages and preserves a removed page's baseli
   await fs.writeFile(fixture.entryPath, validEntrySource());
   const removed = await exportCatalogue(fixture.config, { outDir: "site" });
   assert.equal(removed.idRoutes["handbook"], "/view/handbook.html");
-  assert.match(await read("view/handbook.html"), /This page was removed/);
+  assert.match(await read("view/handbook.html"), /Showing previous version/);
   assert.match(
     await read("view/handbook.html"),
     /Catalogue location[^>]*>.*Library/,
@@ -57,9 +57,9 @@ test("renamed pages retain their old route while the static id resolves to curre
     path.join(fixture.output, "id/handbook/index.html"),
     "utf8",
   );
-  assert.doesNotMatch(alias, /This page was removed/);
+  assert.doesNotMatch(alias, /Showing previous version/);
   assert.match(
     await fs.readFile(path.join(fixture.output, "view/handbook.html"), "utf8"),
-    /This page was removed/,
+    /Showing previous version/,
   );
 });

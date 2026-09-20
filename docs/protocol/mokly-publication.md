@@ -149,9 +149,9 @@ With `--include-changes`, publish the existing All/Changes navigation and screen
 comparison controls, including a zero changed count. Retain removed-screen
 metadata, routes, and comparisons under the existing ID/route precedence rules.
 Render those removed screens with their Removed badge and no comparison
-controls. Publication now packages their baseline views and advertises the
-descriptor defined by [removed previews](./mokly-removed-previews.md); the
-shipped shell retains its current empty stage until the viewer milestone.
+controls. Publication packages their baseline views and advertises the
+descriptor defined by [removed previews](./mokly-removed-previews.md), which the
+shell resolves into the previous version.
 Include page impact and removed registered-page states from the
 [shared catalogue snapshot](./mokly-catalogue-changes.md), including flat
 Changes rows after deleting their parents and each removed page's packaged

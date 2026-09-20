@@ -359,11 +359,11 @@ stay in the same screen, with mobile/desktop and light/dark controls, secondary
 impact evidence, and a refresh option. Loading and failure states keep the
 catalogue available and offer a retry. Navigation and reload return to Current.
 Added entries show their current preview and Added status without comparison
-controls because there is no earlier version to compare. Removed screens show
-their Removed status and an explicit current empty state without comparison
-controls; removed component variants retain an explicit missing current side.
-The approved [removed previews](./docs/protocol/mokly-removed-previews.md)
-replace that empty state with the baseline version for removed screens and pages.
+controls because there is no earlier version to compare. Removed screens and
+pages keep their Removed status and open their read-only
+[previous version](./docs/protocol/mokly-removed-previews.md) from the branch
+point, with no comparison controls; removed component variants retain an
+explicit missing current side.
 Affected consumers can show their real before/after differences without entering Changes. Comparison,
 shared-impact, and declared-dependency evidence stays in the Details inspector.
 A changed stylesheet adds a secondary list there naming the changed styles that

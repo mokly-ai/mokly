@@ -2,12 +2,15 @@
 
 ## Status And Outcome
 
-Milestones 1 to 4 are complete: the contract lives in
+Milestones 1 to 5 are complete: the contract lives in
 [removed previews](../docs/protocol/mokly-removed-previews.md), the owning
-protocols mark the sentences it replaces, the design catalogue renders every
-previous-version state, and the backend captures removed page previews and
-delivers previews through Serve and static catalogues. Milestone 5 is next. The user
-requested this plan after discussing the removed-document empty state and
+protocols describe the shipped behavior, the design catalogue renders every
+previous-version state, the backend captures removed page previews and delivers
+previews through Serve and static catalogues, and the shared shell, browser
+client, and `@mokly/viewer` render the previous version. Milestone 5 found one
+delivery gap — a repository preview advertises no page descriptor — so
+Milestones 6 and 7 close and verify it before the final verification milestone.
+The user requested this plan after discussing the removed-document empty state and
 agreed preview behavior, then approved the amendments recorded below: reuse
 the comparison engine's historical capture for screens, settle the example
 output policy, deliver each milestone with its own commit and review, and name
@@ -314,40 +317,98 @@ Tags: ui
 
 Activate the completed designs through the shared shell and both viewer hosts.
 
-- [ ] Add shell/client, embedded-viewer, and browser regressions before replacing
+- [x] Add shell/client, embedded-viewer, and browser regressions before replacing
       empty stages. Reuse existing base/frame components and one shared preview
       presentation for pages and screens where their behavior matches.
-- [ ] Automatically request the selected removed entry's generation: the
+- [x] Automatically request the selected removed entry's generation: the
       existing selected comparison for a screen, the page preview for a page.
       Keep the Removed badge and historical Details, show the previous-version
       label, render pages in a document pane, and render screens from their
       `before` views with the baseline viewport/scheme choices.
-- [ ] Implement loading, real unavailable states, and retry. Revalidate saved
+- [x] Implement loading, real unavailable states, and retry. Revalidate saved
       viewport/theme choices against historical capabilities without inventing
       views; keep catalogue navigation usable throughout failures.
-- [ ] Keep removed screens/pages outside comparison modes, including incoming
+- [x] Keep removed screens/pages outside comparison modes, including incoming
       comparison URLs, while leaving the eligibility gate for changed screens and
       removed component variants unchanged. Do not expose Props edits,
       current-document inspector bindings, or current usage/comment markers
       against a historical frame.
-- [ ] Enforce read-only forms and navigation without breaking scrolling, text
+- [x] Enforce read-only forms and navigation without breaking scrolling, text
       selection, or same-document anchors. Test links, keyboard activation,
       forms, popup/download attempts, and both frame adapters.
-- [ ] Fence late responses on navigation, evidence/source replacement, unmount,
+- [x] Fence late responses on navigation, evidence/source replacement, unmount,
       and viewport/scheme changes. Test Back/Forward, direct old routes, ID/route
       reuse, idle recovery, embedded controlled selection, and multiple viewers.
-- [ ] Update `docs/guides/catalogue/changes.md` so its Added and removed
+- [x] Discovered during implementation: a removed page had no Removed badge in
+      the shipped shell, although the contract and the Milestone 2 mockups both
+      show one. The shell head now renders it for removed pages, matching removed
+      screens.
+- [x] Discovered during implementation: the browser client cannot gain new
+      served modules without changing the server's module allowlist, which this
+      tagged milestone may not touch. The shared preview modules live in
+      `packages/viewer/src/previews/` and are bundled into the existing
+      `browse_runtime.js` and the package build instead.
+- [x] Update `docs/guides/catalogue/changes.md` so its Added and removed
       section describes the shipped previous-version behavior in present tense.
-- [ ] Run focused shell/client/viewer and browser tests. Smoke-test real served
+- [x] Run focused shell/client/viewer and browser tests. Smoke-test real served
       and exported removed pages/screens at mobile and desktop sizes; compare
       them with Milestone 2 and save screenshots under `.context/`.
+- [x] Run `cargo xtask check`; then `git add -A`, commit with Conventional
+      Commits, and push the branch.
+- [ ] After the push, review the complete local diff against `origin/main` with
+      the implementation review prompt; report findings without changing the
+      implementation.
+
+## Milestone 6: Advertise repository-preview page previews
+
+Close the delivery gap Milestone 5 found. `scripts/preview/` captures its shells
+from a live development server, where a removed page's preview is selected
+through the stable endpoint and the public descriptor is therefore absent. The
+captured shells are then served as static files, so a removed page in a
+repository preview advertises no address and shows the unavailable state.
+Removed screens are unaffected: Serve pins `{ kind: "screen" }` once a complete
+comparison exists, so they resolve through `comparisonUrl`.
+
+- [ ] Add a failing regression that a repository preview built with
+      `--include-changes` serves a removed page's previous version, covering both
+      `npm run preview:build` output and `buildPreview` directly.
+- [ ] Give the preview build the packaged page descriptors before it captures
+      shells, or inject them into captured shells beside the existing static
+      delivery metadata. Keep the descriptor identical to the consumer export's
+      and keep Serve's own shells free of it.
+- [ ] Confirm no other packaged delivery captures development shells with the
+      same gap, and keep the generation, ownership inventory, deployment hash,
+      and upload archive unchanged.
+- [ ] Update the delivery status in
+      [removed previews](../docs/protocol/mokly-removed-previews.md) and any
+      affected publication or export contract text.
 - [ ] Run `cargo xtask check`; then `git add -A`, commit with Conventional
       Commits, and push the branch.
 - [ ] After the push, review the complete local diff against `origin/main` with
       the implementation review prompt; report findings without changing the
       implementation.
 
-## Milestone 6: Verify and deliver the complete change
+## Milestone 7: Verify repository-preview previous versions
+
+Tags: ui
+
+Verify the shared preview presentation over the repository-preview delivery once
+its descriptors exist. Moved here from Milestone 5 because the shell cannot show
+a previous version the artifact does not advertise.
+
+- [ ] Replace the repository-preview expectations in
+      `tests/browser/preview_pages.spec.ts` so a removed page opens its previous
+      version there, and drop the note explaining why it could not.
+- [ ] Smoke-test a deployed-style repository preview at mobile and desktop
+      widths, confirming read-only links, Retry, and catalogue navigation behave
+      as they do in Serve and consumer export. Save screenshots under `.context/`.
+- [ ] Run `cargo xtask check`; then `git add -A`, commit with Conventional
+      Commits, and push the branch.
+- [ ] After the push, review the complete local diff against `origin/main` with
+      the implementation review prompt; report findings without changing the
+      implementation.
+
+## Milestone 8: Verify and deliver the complete change
 
 Complete the implementation and its review before the PR merge boundary.
 

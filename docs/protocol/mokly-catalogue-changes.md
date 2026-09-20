@@ -105,9 +105,8 @@ baseline metadata, with the same matching rules as current leaves. The Changes
 count includes each selected removed route once. Current home totals and the
 current tag picker remain based on current entries.
 
-The removed page view shows an explicit missing-current state today; the approved
-[removed previews](./mokly-removed-previews.md) replace it with the baseline
-document from the same snapshot. Its details show
+The removed page view shows the baseline document from the same snapshot, under
+the [removed previews](./mokly-removed-previews.md) contract. Its details show
 the baseline title, ID, description, tags, dependencies, related docs, and
 root-to-parent breadcrumb labels. Historical ancestors are informational text,
 not collection nodes or links that pretend the old hierarchy still exists.

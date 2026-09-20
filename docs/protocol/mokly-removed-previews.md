@@ -2,15 +2,18 @@
 
 ## Delivery Status
 
-The typed capture, Serve generation lifecycle, public descriptor, consumer
-export, upload packaging, and repository-preview delivery are implemented
-through Milestone 4 of the
-[removed content previews plan](../../plans/removed-content-previews.md).
-The shipped shell still shows the empty removed states described in the
-[Changes](./mokly-changes.md) and [catalogue changes](./mokly-catalogue-changes.md)
-contracts until Milestone 5 consumes those delivered previews. Nothing here
-changes ordinary browsing, Added entries, changed-screen comparisons, or
-removed component variants.
+This contract is implemented. The typed capture, Serve generation lifecycle,
+public descriptor, consumer export, and upload packaging land through Milestone
+4 of the [removed content previews plan](../../plans/removed-content-previews.md),
+and the shared shell, browser client, and `@mokly/viewer` render the previous
+version through Milestone 5. Nothing here changes ordinary browsing, Added
+entries, changed-screen comparisons, or removed component variants.
+
+One delivery gap remains: the repository preview built by `scripts/preview/`
+captures its shells before it packages page previews, so those shells advertise
+no page descriptor and a removed page there shows the unavailable state. Its
+removed screens are unaffected because they resolve through `comparisonUrl`.
+Milestone 6 of the plan closes that gap.
 
 ## Behavior
 

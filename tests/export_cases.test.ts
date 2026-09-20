@@ -111,13 +111,13 @@ test("renamed screens keep both routes but only the current id alias", async (co
       path.join(fixture.output, "view/screens/home.html"),
       "utf8",
     ),
-    /This screen was removed/,
+    /Showing previous version/,
   );
   const alias = await fs.promises.readFile(
     path.join(fixture.output, "id/home/index.html"),
     "utf8",
   );
-  assert.doesNotMatch(alias, /This screen was removed/);
+  assert.doesNotMatch(alias, /Showing previous version/);
   assert.match(alias, /screens\/renamed.html/);
 });
 

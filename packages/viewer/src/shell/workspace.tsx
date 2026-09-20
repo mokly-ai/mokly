@@ -4,6 +4,7 @@ import type { ShellContext } from "./context.js";
 import { DiffScreen } from "./diffs.js";
 import { ScreenHead, targetHead } from "./head.js";
 import { Inspector } from "./inspector.js";
+import { removedPreviewData, RemovedPreviewStage } from "./previews.js";
 import { TargetStage } from "./stages.js";
 import { WorkspaceControls } from "./workspace_controls.js";
 import { workspaceData, type WorkspaceData } from "./workspace_data.js";
@@ -24,14 +25,13 @@ export function ComponentWorkspace({
     entry.kind === "component"
       ? (data.variants[0]?.comparisonEligible ?? false)
       : data.comparisonEligible;
+  const preview = data.removed
+    ? removedPreviewData(catalogue, context, entry)
+    : undefined;
   const stage = data.removed ? (
     <div className="mbk-empty" data-mokly-stage="" data-viewport="both">
-      <h2>This {entry.kind} was removed</h2>
-      <p>
-        {entry.kind === "component"
-          ? "Select a comparison to see the previous version."
-          : "There is no current preview to show."}
-      </p>
+      <h2>This component was removed</h2>
+      <p>Select a comparison to see the previous version.</p>
     </div>
   ) : (
     <TargetStage
@@ -90,7 +90,9 @@ export function ComponentWorkspace({
       />
       <div className="mbk-workspace-panes">
         <div className="mbk-preview-pane" data-workspace-preview="">
-          {data.comparisons ? (
+          {preview ? (
+            <RemovedPreviewStage data={preview} />
+          ) : data.comparisons ? (
             <DiffScreen
               route={entry.route}
               eligible={eligible}

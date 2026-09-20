@@ -80,16 +80,18 @@ test("published comparisons retain mobile, dark, and current-only added and remo
   });
   await page.setViewportSize({ height: 844, width: 390 });
   await page.goto(`${preview.url}/id/removed`);
-  await expect(page.locator("[data-current-screen]")).toContainText(
-    "This screen was removed",
+  await expect(page.locator(".mbk-previous")).toHaveText(
+    "Showing previous version",
   );
   await chooseViewport(page, "mobile");
   await expect(page.locator("[data-workspace-status]")).toHaveText("Removed");
-  await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
-  await expect(page.locator("[data-current-screen]")).toContainText(
-    "There is no current preview to show.",
-  );
-  await expect(page.locator("[data-diff-stage] iframe")).toHaveCount(0);
+  await expect(page.locator(".mbk-diff-toolbar")).toHaveCount(0);
+  await expect(
+    page
+      .frameLocator("[data-mokly-preview] .mbk-frame-mobile iframe")
+      .locator("main"),
+  ).toHaveText("removed");
+  await expect(page.locator("[data-diff-stage]")).toHaveCount(0);
   await page.getByRole("button", { name: "Open catalogue navigation" }).click();
   await page.locator('[data-filter="changed"]').click();
   await expect(

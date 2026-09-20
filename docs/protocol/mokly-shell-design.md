@@ -26,12 +26,11 @@ are flat Changes rows; baseline breadcrumbs are text even after their parents
 are deleted. Ordinary publications omit the Changes filter and comparison band
 while preserving the same navigation, search, tags, and screen variants.
 
-The removed-document and removed-screen designs depict the approved
+The removed-document and removed-screen designs depict the shipped
 [removed previews](./mokly-removed-previews.md) behavior: the previous version
 under a quiet "Showing previous version" label, with loading, unavailable, and
-long-content states in their own child pages. The shipped shell still renders
-the empty removed states those contracts mark as replaced, so these designs are
-targets until the runtime milestone lands.
+long-content states in their own child pages. The shell renders the same states
+at runtime.
 
 ## Design Mockups
 
@@ -434,9 +433,8 @@ component shell makes the band conditional on changed screens, Changed or
 Removed component variants, or verified affected-consumer evidence. The updated mockups omit it on
 every Browse, Added screen/variant, Removed screen, shared-impact-only,
 ignored-only, excluded-stylesheet-only, and empty state. Removed screens show a
-status badge instead: a current empty state in the shipped shell, and their
-previous version labelled “Showing previous version” in the mockups and under
-the approved [removed previews](./mokly-removed-previews.md). A removed screen
+status badge instead, over their previous version labelled “Showing previous
+version” under [removed previews](./mokly-removed-previews.md). A removed screen
 keeps the grouped viewport and theme controls, with the theme control disabled
 because Light is the only scheme its previous views were rendered in.
 Comparison bands always retain

@@ -98,7 +98,7 @@ mobile/desktop × light/dark. A component-only appearance edit produces exactly
 one Changes row, Action; Welcome and Details appear under Affected screens.
 An independent Welcome label edit adds Welcome, making two Changes rows.
 The removed-state scenario also retains the former Farewell consumer and links
-it to its Removed state, which the approved
+it to its Removed state, which
 [removed previews](./mokly-removed-previews.md) fill with its previous version.
 Farewell is independently removed, so that
 scenario has two Changes rows: Action and Farewell. The Removed Action variant

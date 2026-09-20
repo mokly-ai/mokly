@@ -1,5 +1,7 @@
 /** Progressive Browse shell enhancement served at /__mokly/client/browse.js. */
 
+import { installPreviews } from "../previews/install.js";
+
 import { handleBrowseControl } from "./browse_controls.js";
 import { createBrowserDetailsPreference } from "./browse_details.js";
 import { applyNavigationEvidence } from "./browse_evidence.js";
@@ -72,7 +74,12 @@ export function initializeBrowseShell(
     displayedUrl = new URL(win.location.href);
   };
   const diffs = installDiffs(doc, win);
-  let workspace = installWorkspace(doc, win, diffs.update, rememberDocument);
+  const previews = installPreviews(doc, win);
+  const updateStage = (): void => {
+    diffs.update();
+    previews.update();
+  };
+  let workspace = installWorkspace(doc, win, updateStage, rememberDocument);
   const persistScroll = (): void => {
     win.history.replaceState(
       { scrolls: captureRegionScrolls(doc) } satisfies ScrollState,
@@ -128,6 +135,7 @@ export function initializeBrowseShell(
     collapseFrame(doc, expandedFrame(doc));
     if (push) persistScroll();
     diffs.reset();
+    previews.reset();
     main.innerHTML = nextMain.innerHTML;
     const baseline = nextMain.getAttribute("data-mokly-baseline");
     if (baseline) main.setAttribute("data-mokly-baseline", baseline);
@@ -152,7 +160,8 @@ export function initializeBrowseShell(
         "",
         finalUrl,
       );
-    workspace = installWorkspace(doc, win, diffs.update, rememberDocument);
+    workspace = installWorkspace(doc, win, updateStage, rememberDocument);
+    previews.update();
     selectAndRevealRoute(
       doc,
       new URL(finalUrl, win.location.href).pathname,
@@ -206,7 +215,7 @@ export function initializeBrowseShell(
       }
       return;
     }
-    if (handleBrowseControl(doc, target, diffs.update)) return;
+    if (handleBrowseControl(doc, target, updateStage)) return;
     if (handleFrameClick(doc, target)) {
       event.preventDefault();
       return;
@@ -276,4 +285,5 @@ export function initializeBrowseShell(
   );
   syncTagChips(doc);
   restoreEarlyDisclosures(doc);
+  previews.update();
 }

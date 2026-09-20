@@ -7,13 +7,17 @@ import { localFrameAccess } from "./same_origin_access.js";
 const attachedFrames = new WeakSet<HTMLIFrameElement>();
 const attachedDocuments = new WeakSet<Document>();
 
-/** Attach enhancement to every immediate shell-owned fragment frame. */
+/**
+ * Attach enhancement to every immediate shell-owned fragment frame. A frame
+ * holding a previous version is skipped: its marked links are inert, so an old
+ * destination can never open current content.
+ */
 export function attachLocalNavigation(
   doc: Document,
   actions: FrameNavigationActions,
 ): void {
   for (const frame of doc.querySelectorAll<HTMLIFrameElement>(
-    "iframe.mbk-frag",
+    "iframe.mbk-frag:not([data-mokly-preview-frame])",
   )) {
     if (!attachedFrames.has(frame)) {
       attachedFrames.add(frame);

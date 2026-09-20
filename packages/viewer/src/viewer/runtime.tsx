@@ -4,6 +4,8 @@ import type { FrameAdapter } from "../client/frame_adapter.js";
 import { initializeNavigationResize } from "../client/nav_resize.js";
 import { handleTagPickerKeydown } from "../client/tag_filter.js";
 import { installWorkspace } from "../client/workspace.js";
+import { installPreviews } from "../previews/install.js";
+import { advertisedPreviewPaths } from "../previews/request.js";
 
 import { runCleanup } from "./cleanup.js";
 import { viewerFailures } from "./failures.js";
@@ -39,6 +41,7 @@ export class ViewerRuntime implements MoklyViewerHandle {
   private frames: ViewerFrames;
   private catalogue: ReturnType<typeof viewerCatalogue>;
   private diffs: ReturnType<typeof installDiffs>;
+  private previews: ReturnType<typeof installPreviews>;
   private stopResize: () => void;
   private workspace: ReturnType<typeof installWorkspace> = {
     dispose: () => {},
@@ -60,7 +63,7 @@ export class ViewerRuntime implements MoklyViewerHandle {
     this.error = viewerFailures(events, () => !this.disposed);
     this.selection = normalizeSelection(model, selection);
     this.catalogue = viewerCatalogue(model);
-    this.scope = runtimeScope(root, baseUrl, model.comparisonUrl);
+    this.scope = runtimeScope(root, baseUrl, advertisedPreviewPaths(model));
     this.route = new ViewerRouting(model, baseUrl, {
       selection: () => this.selection,
       select: (value) => this.select(value),
@@ -88,6 +91,7 @@ export class ViewerRuntime implements MoklyViewerHandle {
       this.frames.end({ reason: "error" });
       this.error(error, "comparison");
     });
+    this.previews = installPreviews(this.scope.doc, this.scope.win);
     const { doc, win } = this.scope;
     const act = (event: Event) =>
       viewerInput(event, {
@@ -98,7 +102,7 @@ export class ViewerRuntime implements MoklyViewerHandle {
         select: (value) => this.select(value),
         navigate: (id, url) => this.route.shell(id, url),
         refresh: () => this.apply(false),
-        updateDiffs: this.diffs.update,
+        updateDiffs: () => this.updateStage(),
       });
     for (const name of ["click", "input", "change"])
       doc.addEventListener(name, act, true);
@@ -165,6 +169,7 @@ export class ViewerRuntime implements MoklyViewerHandle {
     if (routeChanged) {
       this.workspace.dispose();
       this.diffs.reset();
+      this.previews.reset();
       const main = doc.querySelector<HTMLElement>("[data-mokly-view]")!;
       const next = routeMarkup(
         this.model,
@@ -213,13 +218,18 @@ export class ViewerRuntime implements MoklyViewerHandle {
       this.workspace = installWorkspace(
         doc,
         win,
-        this.diffs.update,
+        () => this.updateStage(),
         () => {},
         this.frames,
         (variantId) => this.select({ variantId }),
       );
     this.slots.update();
     if (!workspaceUpdated) this.diffs.update();
+    this.previews.update();
+  }
+  private updateStage(): void {
+    this.diffs.update();
+    this.previews.update();
   }
   refreshLayout(): void {
     this.slots.update();
@@ -263,6 +273,7 @@ export class ViewerRuntime implements MoklyViewerHandle {
       () => this.frames.dispose(reason),
       () => this.workspace.dispose(),
       () => this.diffs.reset(),
+      () => this.previews.reset(),
       () => this.stopResize(),
       () => this.slots.dispose(),
       () => this.scope.dispose(),
