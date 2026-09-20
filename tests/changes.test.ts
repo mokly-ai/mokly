@@ -14,6 +14,7 @@ import { serve } from "../dist/server/serve.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { screenVariantEntrySource } from "./helpers/screen_variant_fixture.js";
 import { waitForClassifiedCount } from "./helpers/watched_catalogue.js";
 
 test("review stays internal and output options belong only to export", () => {
@@ -74,6 +75,75 @@ test("changing only a screen variant parent marks its route changed", async (t) 
     variant.route,
   ]);
 });
+
+test("a material variant edit marks only the variant route", async (t) => {
+  const fixture = await createFixture(screenVariantEntrySource());
+  t.after(() => removeFixture(fixture));
+  const config = await loadConfig(fixture.root);
+  const { manifest } = await compileCatalogue(config);
+  const variant = manifest.entries.find(
+    (entry) => entry.kind === "screen" && entry.id === "home-empty",
+  );
+  assert.ok(variant?.kind === "screen");
+
+  assert.deepEqual(
+    changedManifestRoutes(manifest, manifest, config, [
+      `mockups/${variant.fragments.mobile}`,
+    ]),
+    [variant.route],
+  );
+});
+
+test("renaming a parent title marks its variant through the parent projection", async (t) => {
+  const fixture = await createFixture(screenVariantEntrySource());
+  t.after(() => removeFixture(fixture));
+  const config = await loadConfig(fixture.root);
+  const { manifest } = await compileCatalogue(config);
+  const parent = manifest.entries.find(
+    (entry) => entry.kind === "screen" && entry.id === "home",
+  );
+  const variant = manifest.entries.find(
+    (entry) => entry.kind === "screen" && entry.id === "home-empty",
+  );
+  assert.ok(parent?.kind === "screen");
+  assert.ok(variant?.kind === "screen");
+  const current = {
+    ...manifest,
+    entries: manifest.entries.map((entry) =>
+      entry.id === parent.id ? { ...entry, title: "Renamed home" } : entry,
+    ),
+  };
+
+  assert.deepEqual(changedManifestRoutes(current, manifest, config, []), [
+    parent.route,
+    variant.route,
+  ]);
+});
+
+for (const changed of ["parent", "variant"] as const)
+  test(`use-case route propagation follows the exact changed screen: ${changed}`, async (t) => {
+    const fixture = await createFixture(
+      screenVariantEntrySource({ flowScreenId: "home-empty" }),
+    );
+    t.after(() => removeFixture(fixture));
+    const config = await loadConfig(fixture.root);
+    const { manifest } = await compileCatalogue(config);
+    const screen = manifest.entries.find(
+      (entry) =>
+        entry.kind === "screen" &&
+        entry.id === (changed === "variant" ? "home-empty" : "home"),
+    );
+    assert.ok(screen?.kind === "screen");
+
+    assert.deepEqual(
+      changedManifestRoutes(manifest, manifest, config, [
+        `mockups/${screen.fragments.mobile}`,
+      ]),
+      changed === "variant"
+        ? [screen.route, "user-flows/variant.html"]
+        : [screen.route],
+    );
+  });
 
 test("Changes keeps screen comparisons lazy and has no separate Review route", async (t) => {
   const fixture = await createFixture();

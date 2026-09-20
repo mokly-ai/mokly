@@ -2,9 +2,11 @@
 
 ## Delivery Status
 
-Implemented alongside [Pages in the catalogue](./mokly-pages.md).
-Catalogue impact and removed-entry metadata are independent of the visual
-[comparison result](./mokly-changes.md). Verification is tracked in
+Implemented alongside [Pages in the catalogue](./mokly-pages.md), with removed
+screen-variant metadata and publication implemented through Milestone 4 of the
+[screen variants plan](../../plans/screen-variants.md). Catalogue impact and
+removed-entry metadata are independent of the visual
+[comparison result](./mokly-changes.md). Page verification is tracked in
 [Unified Catalogue Pages](../../plans/unified-catalogue-pages.md).
 
 ## Shared Metadata Contract
@@ -49,7 +51,9 @@ serialized `navPath` labels. A removed variant screen retains its baseline
 `variantOf` in the entry DTO and its parent's collection ancestry, so the
 shell can place its Removed row under a surviving parent as the
 [screen variants contract](./mokly-screen-variants.md) specifies; when the
-parent is also removed, each is its own removed entry.
+parent is also removed, each is its own removed entry. `variantOf` is not a
+parallel snapshot field: retaining the complete baseline screen DTO preserves
+it on schema-v5 baselines, while historical v3/v4 screens simply omit it.
 
 `changedRoutes` is the sorted, unique union of affected current routed entries
 and the selected removed-entry routes. Current route attribution keeps the
@@ -77,6 +81,12 @@ Select a baseline screen or registered page when its old route is absent from ev
 current routed entry. Sort removed entries by canonical route, then ID. Current
 route ownership always wins, including a different entry kind reusing a route.
 Never attach a removed-state view to a current route.
+
+A removed screen variant follows these same selection and precedence rules.
+Its relationship does not make it subordinate for selection: deleting only the
+variant yields one removed entry, while deleting both parent and variant yields
+one removed entry for each. A surviving parent does not claim or suppress the
+variant's retained route or ID redirect.
 
 A current ID also wins its `/id` destination. When the same ID moves to a new
 route, retain the old route's removed row/view if that route is free, but omit

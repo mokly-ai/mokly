@@ -2,8 +2,8 @@
 
 Status: active. Created 2026-09-19 with the user's consent after the design
 discussion in this workspace, then rewritten the same day when the user chose
-own routes over a query parameter. Milestones 1 to 3 are complete;
-Milestone 4 is next.
+own routes over a query parameter. Milestones 1 to 4 are complete;
+Milestone 5 is next.
 
 **Goal:** Let a screen declare variants beside its default render, show them as
 an expandable list under the screen's navigation row, give each variant its
@@ -350,13 +350,14 @@ a parent whose variant changed, removed variants are retained as removed
 screens under their parent, and use-case propagation and affected-consumer
 evidence treat variants as the screens they are.
 
-#### Task 4.1: Parent aggregation in the snapshot
+#### Task 4.1: Variant Changes and removal snapshots
 
 **Files:**
 
-- Modify: `src/registry/changes.ts` (`RemovedEntrySnapshot` gains
-  `variantOf?` from the baseline entry so a removed variant can be placed
-  under a surviving parent; ancestors are the parent's ancestors),
+- Modify: `src/registry/changes.ts` (`RemovedEntrySnapshot.entry` retains the
+  complete baseline screen DTO, including `variantOf` when present, so a
+  removed variant can be placed under a surviving parent; ancestors are the
+  parent's ancestors),
   `src/server/changed.ts` and `src/registry/changed_routes.ts` (no new
   membership rule; document that a variant is its own route), `packages/viewer/src/shell/context.ts`
   (no new field; the aggregate mark is derived in the shell from
@@ -367,15 +368,15 @@ evidence treat variants as the screens they are.
 
 **Steps:**
 
-- [ ] Write failing tests: a variant-only edit yields the variant route in
+- [x] Write failing tests: a variant-only edit yields the variant route in
       `changedRoutes` and not the parent route; deleting a variant yields a
       removed entry carrying `variantOf` and the parent's ancestors; deleting
       the parent and its variant yields removed entries for both; a use case
       that steps through the variant is propagated; the component
       affected-consumer list names the variant as a screen.
-- [ ] Implement.
-- [ ] `npm test` green.
-- [ ] Milestone close-out: commit `feat(changes): track variant removals`
+- [x] Implement.
+- [x] `npm test` green.
+- [x] Milestone close-out: commit `feat(changes): track variant removals`
       and push.
 
 ---

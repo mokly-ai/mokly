@@ -32,6 +32,13 @@ dependency declaration edits, and shared-impact matches alone do not add
 otherwise unchanged entries. Dependency and shared-impact evidence remains in
 comparison details, accessible for every screen from All.
 
+Each screen variant is projected independently. Its metadata projection
+contains `variantOf`, its parent's `{ id, title }`, and the parent's collection
+ancestors. Changing `variantOf` or the parent title therefore marks the variant
+route, while a material or metadata change confined to the variant never adds
+the parent route. A flow is propagated only when its `screenId` step names the
+exact changed screen, including a variant.
+
 Before marking an existing fragment, compare its branch-point and working-tree
 documents with the same paired ignore normalization and material-key rules as
 the comparison engine. Ignored-only changes are excluded from Changes; real

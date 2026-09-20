@@ -3,10 +3,12 @@
 ## Delivery Status
 
 Authoring, flattening, generated output, manifest validation, hierarchy maps,
-and the public read model are implemented through Milestone 3 of the
+the public read model, route-level Changes classification, removed-variant
+metadata and publication, use-case propagation, and affected-consumer evidence
+are implemented through Milestone 4 of the
 [screen variants plan](../../plans/screen-variants.md). Navigation grouping,
-Changes aggregation, removed-variant placement, and variant breadcrumbs remain
-delivery targets for later milestones.
+the shell's aggregate parent mark, removed-row placement, and variant
+breadcrumbs remain delivery targets for later UI milestones.
 
 ## Purpose And Boundary
 

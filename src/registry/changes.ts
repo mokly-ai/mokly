@@ -11,6 +11,7 @@ import type { CatalogueMetadata } from "./catalogue_index.js";
 
 /** Baseline context retained independently of current collection membership. */
 export interface RemovedEntrySnapshot {
+  /** Complete baseline DTO, including `variantOf` when the screen was a variant. */
   entry: ManifestPage | ManifestScreen | ManifestComponent;
   ancestors: readonly { id: string; title: string }[];
 }

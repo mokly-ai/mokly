@@ -155,6 +155,9 @@ the parent unless overridden. Use-case membership never inherits:
 steps name that variant. `defineScreen` still returns one definition when
 `variants` is absent; with variants it returns a readonly parent-first array
 that an entry module can place directly in `mockups`.
+Each variant participates in Changes on its own route. A flow follows a variant
+change only when its step names that variant, and deleting a variant retains its
+baseline parent relationship for Changes-enabled exports.
 
 `MockLink` accepts a lowercase kebab-case entry id and an optional bare HTML id
 through its separate `fragment` prop. The equivalent string helper is
@@ -1099,8 +1102,8 @@ in the [plans index](./plans/README.md).
 - [Unified catalogue pages](./docs/protocol/mokly-pages.md) and
   [required breaking upgrade](./docs/protocol/mokly-page-migration.md)
 - [Screen variants](./docs/protocol/mokly-screen-variants.md) — implemented
-  authoring and registry model for states declared as `variants`, each a full
-  screen with its own id and route; navigation grouping follows in its UI
-  milestone.
+  authoring, registry, Changes, removal, propagation, and publication model for
+  states declared as `variants`, each a full screen with its own id and route;
+  navigation grouping follows in its UI milestone.
 - [Authoring source protection](./docs/protocol/mokly-source-protection.md) and
   [catalogue change metadata](./docs/protocol/mokly-catalogue-changes.md)
