@@ -32,7 +32,7 @@ import type {
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 test("notification gate preserves startup events", () => {
-  const gate = new NotificationGate<string>();
+  const gate = new NotificationGate<string>(() => undefined);
   const received: string[] = [];
   gate.notify("first");
   gate.notify("second");

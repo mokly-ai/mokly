@@ -62,8 +62,9 @@ matched file contributes a definition, compilation reports the normal empty
 registry error. The matched set is sorted by path, so neither glob order nor
 filesystem order changes the catalogue. Discovery skips denied directories and
 `review.outDir`. A glob with no matched module reports the skipped denied roots,
-if any. A matched barrel that re-exports another matched module's registry
-causes a `duplicate-id` error, so exclude such barrels from broad globs.
+if any. A matched barrel that re-exports another matched module's registry array
+fails with `duplicate-id`. Narrow the glob, rename the barrel so the glob no
+longer matches it, or stop re-exporting registry arrays.
 
 List multiple globs when entry modules genuinely live in multiple locations,
 for example `entries: ["src/**/*.mockup.{ts,tsx}",

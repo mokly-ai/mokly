@@ -227,11 +227,11 @@ glob root. Regular file basenames are not denied. The names are `.git`,
 This base is relative to the glob root: `src/dist/x.mockup.tsx` is denied under
 `src/**/*.mockup.{ts,tsx}`, while an explicit `dist/entries/**` root can discover
 `dist/entries/a.mockup.tsx` because `dist` is above that root. Discovery never
-inspects a denied tree. It also skips `review.outDir` when a broader walk reaches
-that directory by lexical or projected identity, without recording it as a
-denied root. A zero-match error starts with
-`entries glob matches no module: <glob>` and, when denied directories were
-skipped, continues with `; not searched: <repository-relative roots>` using a
+inspects a denied tree. It resolves the lexical and projected identities of
+`review.outDir` once per pass, skips either identity, and skips directories that
+cannot be projected or searched without recording them as denied roots. A
+zero-match error starts with `entries glob matches no module: <glob>`; when denied
+directories were skipped, it continues with `; not searched: <repository-relative roots>` using a
 sorted, comma-separated list.
 The union of all globs, deduplicated by repository-relative path and sorted by
 that path, is the resolved entry set. Discovery order therefore depends on
@@ -268,9 +268,9 @@ reports it, while Build, Serve, and Export leave the file untouched. Registry
 attribution remains narrower and accepts only a resolved entry module or
 inventoried source.
 
-A matched module that re-exports another matched module's `mockups` registers the
-same definitions twice and fails with `duplicate-id`. Broad globs such as
-`src/**/*.ts` should exclude barrels, or barrels must not re-export registry arrays.
+A matched barrel that re-exports another matched module's registry array fails
+with `duplicate-id`. Narrow the glob, rename the barrel so the glob no longer
+matches it, or stop re-exporting registry arrays.
 
 ## Public Exclusion Configuration
 

@@ -21,7 +21,7 @@ export class NotificationGate<Value> {
   readonly #buffer: Value[] = [];
   #consumer: ((value: Value) => void) | undefined;
 
-  constructor(private readonly report?: (error: unknown) => void) {}
+  constructor(private readonly report: (error: unknown) => void) {}
 
   /** Queue or immediately deliver one notification. */
   notify(value: Value): void {
@@ -35,12 +35,11 @@ export class NotificationGate<Value> {
     for (const value of this.#buffer.splice(0)) this.deliver(value);
   }
 
-  /** Deliver one value while preserving the optional isolation boundary. */
+  /** Deliver one value while preserving the isolation boundary. */
   private deliver(value: Value): void {
     try {
       this.#consumer?.(value);
     } catch (error) {
-      if (!this.report) throw error;
       this.report(error);
     }
   }
@@ -199,7 +198,7 @@ export function classifyWatchPath(
   if (isEntryGlobCandidate(absolute, config)) return "rebuild";
   if (config.renderer === absolute) return "rebuild";
   const relative = toPosixPath(path.relative(config.repoRoot, absolute));
-  if (isPackageOwnedIgnoredWatchPath(absolute, config, "event"))
+  if (isPackageOwnedIgnoredWatchPath(absolute, config, undefined, "event"))
     return "ignore";
   if ([...resources].some((resource) => isInside(absolute, resource)))
     return "reload";

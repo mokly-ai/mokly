@@ -1,3 +1,5 @@
+import type fs from "node:fs";
+
 import chokidar, { type FSWatcher } from "chokidar";
 
 import type { ResolvedConfig } from "../config/types.js";
@@ -18,8 +20,8 @@ export function createSourceWatcher(
   report: (error: unknown) => void = (error) =>
     new PlainServeReporter().runtimeDiagnostic(error),
 ): ConsumerWatcher {
-  const watcher = factory.create(watchTargets(config), (candidate) =>
-    isPackageOwnedIgnoredWatchPath(candidate, config),
+  const watcher = factory.create(watchTargets(config), (candidate, stats) =>
+    isPackageOwnedIgnoredWatchPath(candidate, config, stats),
   );
   watcher.onChange((candidate) => gate.notify(candidate));
   watcher.onError(report);
@@ -35,7 +37,10 @@ export interface ConsumerWatcher {
 }
 
 /** Predicate used to prune package-owned paths from a recursive watch. */
-export type WatchIgnorePredicate = (candidate: string) => boolean;
+export type WatchIgnorePredicate = (
+  candidate: string,
+  stats?: fs.Stats,
+) => boolean;
 
 /** Filesystem traversal policy for a watcher with a confined set of inputs. */
 export interface ConsumerWatchOptions {
@@ -62,7 +67,9 @@ export class ChokidarWatcherFactory implements ConsumerWatcherFactory {
       chokidar.watch([...targets], {
         ...options,
         awaitWriteFinish: { pollInterval: 20, stabilityThreshold: 50 },
-        ...(ignore ? { ignored: ignore } : {}),
+        ...(ignore
+          ? { ignored: (candidate, stats) => ignore(candidate, stats) }
+          : {}),
         ignoreInitial: true,
       }),
       options?.followSymlinks === false,

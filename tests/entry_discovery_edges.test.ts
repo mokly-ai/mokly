@@ -112,6 +112,34 @@ test("a repository-root glob skips review output during discovery", async (conte
   assert.deepEqual(config.entryModules, [fixture.entryPath]);
 });
 
+test("discovery skips an inaccessible directory", async (context) => {
+  if (process.platform === "win32" || process.getuid?.() === 0) {
+    context.skip("directory permissions are not enforced on this platform");
+    return;
+  }
+  const fixture = await createFixture();
+  const visible = path.join(fixture.root, "src/visible.mockup.tsx");
+  const inaccessible = path.join(fixture.root, "src/inaccessible");
+  await fs.promises.mkdir(inaccessible, { recursive: true });
+  await fs.promises.writeFile(visible, validEntrySource());
+  await fs.promises.writeFile(
+    path.join(inaccessible, "hidden.mockup.tsx"),
+    validEntrySource(),
+  );
+  await fs.promises.chmod(inaccessible, 0o000);
+  context.after(async () => {
+    await fs.promises.chmod(inaccessible, 0o755);
+    await removeFixture(fixture);
+  });
+  await fs.promises.writeFile(
+    fixture.configPath,
+    'export default { entries: ["src/**/*.mockup.{ts,tsx}"], mockupsDir: "mockups", repoRoot: "." };\n',
+  );
+
+  const config = await loadConfig(fixture.root);
+  assert.deepEqual(config.entryModules, [visible]);
+});
+
 test("entry globs with backslashes normalize to POSIX", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));

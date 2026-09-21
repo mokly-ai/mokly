@@ -67,7 +67,9 @@ export class ResourceWatcher {
       };
     }
     while (!this.#closed) {
-      const gate = new NotificationGate<string>();
+      const gate = new NotificationGate<string>((error) =>
+        this.failed(error instanceof Error ? error : new Error(String(error))),
+      );
       const paths = snapshot.paths;
       const watcher =
         snapshot.paths.size > 0

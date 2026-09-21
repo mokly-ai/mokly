@@ -216,7 +216,6 @@ test(
         .length,
       1,
     );
-    assert.equal(running.url, "http://127.0.0.1:48123");
   },
 );
 

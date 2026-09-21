@@ -43,12 +43,21 @@ still prune top-level `.git` and `node_modules`. The discovery walk and broad
 watch traversal skip `review.outDir`; matching file events beneath it are
 ignored too.
 
+Broad traversal checks non-leaf segments first and uses only watcher-supplied
+stats to recognize a denied leaf as a directory; it performs no filesystem
+lookup. Without stats, a denied leaf is treated as a file, while denied
+non-leaf segments are still pruned. Entry-event classification likewise checks
+directory status only for a denied leaf. An existing regular file with that
+name remains ordinary. A missing denied leaf classifies as ignored so removing
+`src/dist` under `src/**` cannot trigger a rebuild, and other directory-status
+lookup failures fail open.
+
 Exact required files, including the config and its imports, inventoried sources,
 the renderer, and configured stylesheets, retain both their ancestor path and the
 file itself even when intentionally nested beneath an ordinarily ignored
 directory. Configured stylesheet files remain reload inputs.
 Those package-owned classifications take precedence over additional watch rules.
-A created path beneath a denied segment relative to its glob root, or beneath
+A created path beneath a denied directory relative to its glob root, or beneath
 `review.outDir`, is ignored because discovery cannot accept it. A file created
 under an entry glob root that no `entries` glob matches and that is not imported
 classifies like any other unrelated file. Package source under `node_modules` or

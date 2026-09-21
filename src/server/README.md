@@ -7,13 +7,15 @@ owns watchers, background work and the supervised HTTP child. `http.ts` and
 `watch_events.ts` owns classification and serialized event handling;
 `watch_paths.ts` owns watch roots and pruning, including entry-glob traversal
 boundaries that retain each stable prefix without exempting its ignored
-descendants. Discovery and watching share one denied-segment policy below the
+descendants. Discovery and watching share one denied-directory policy below the
 relevant glob root: traversal uses the deepest containing root, and entry-file
 classification uses the deepest matching root. The glob itself defines every
 entry-file shape that can trigger rediscovery. Traversal also skips
-`review.outDir`. Source notifications are isolated at the gate: classifier
-failures are reported, that notification is dropped, and later notifications
-continue through the same watcher.
+`review.outDir`. Traversal uses supplied watcher stats rather than filesystem
+lookups for denied leaf names. Event classification ignores a missing denied
+leaf but accepts an existing regular file with that name. Source notifications
+are isolated at the gate: classifier failures are reported, that notification
+is dropped, and later notifications continue through the same watcher.
 
 GET/HEAD `/__mokly/catalogue.json` returns the public v1
 [read model](../catalogue/README.md) as JSON with `Cache-Control: no-store`.

@@ -18,13 +18,21 @@ import type { ResolvedConfig } from "./types.js";
 export function discoverEntryModules(
   config: Pick<ResolvedConfig, "entryGlobs" | "repoRoot" | "review">,
 ): string[] {
+  const reviewOutput: ReviewOutputPaths = {
+    lexical: path.resolve(config.review.outDir),
+    projected: projectRealPath(config.review.outDir),
+  };
   const discovered = new Set<string>();
   for (const glob of config.entryGlobs) {
     const matcher = new Minimatch(glob, { dot: true });
     const root = path.resolve(config.repoRoot, globStablePrefix(glob));
     const deniedRoots: string[] = [];
     let matched = 0;
-    for (const candidate of walkEntryCandidates(root, deniedRoots, config)) {
+    for (const candidate of walkEntryCandidates(
+      root,
+      deniedRoots,
+      reviewOutput,
+    )) {
       const relative = toPosixPath(path.relative(config.repoRoot, candidate));
       if (!matcher.match(relative)) continue;
       matched += 1;
@@ -48,30 +56,34 @@ export function discoverEntryModules(
     ),
   );
   for (const module of modules) {
-    const reason = entryModuleDenial(module, config);
-    if (reason) throw entryModuleError(module, config);
+    const reason = entryModuleDenial(module, config, reviewOutput);
+    if (reason) throw entryModuleError(module, reason, config);
   }
   return modules;
+}
+
+/** Review output identities resolved once for one discovery pass. */
+interface ReviewOutputPaths {
+  readonly lexical: string;
+  readonly projected: string;
 }
 
 /** List regular files below a root without following links or private trees. */
 function walkEntryCandidates(
   root: string,
   deniedRoots: string[],
-  config: Pick<ResolvedConfig, "entryGlobs" | "repoRoot" | "review">,
+  reviewOutput: ReviewOutputPaths,
 ): string[] {
-  if (!fs.existsSync(root) || !fs.statSync(root).isDirectory()) return [];
-  return fs
-    .readdirSync(root, { withFileTypes: true })
+  return readEntryDirectory(root)
     .flatMap((entry) => {
       const candidate = path.join(root, entry.name);
       if (entry.isDirectory()) {
-        if (isReviewOutputDirectory(candidate, config.review.outDir)) return [];
+        if (isSkippedEntryDirectory(candidate, reviewOutput)) return [];
         if (isDeniedSourceSegment(entry.name)) {
           deniedRoots.push(candidate);
           return [];
         }
-        return walkEntryCandidates(candidate, deniedRoots, config);
+        return walkEntryCandidates(candidate, deniedRoots, reviewOutput);
       }
       return entry.isFile() ? [candidate] : [];
     })
@@ -80,7 +92,8 @@ function walkEntryCandidates(
 
 function entryModuleDenial(
   module: string,
-  config: Pick<ResolvedConfig, "entryGlobs" | "repoRoot" | "review">,
+  config: Pick<ResolvedConfig, "entryGlobs" | "repoRoot">,
+  reviewOutput: ReviewOutputPaths,
 ): string | undefined {
   if (isBaselineCachePath(module, config.repoRoot))
     return `is inside the private ${MOKLY_CACHE} directory`;
@@ -88,8 +101,10 @@ function entryModuleDenial(
   const realRepoRoot = fs.realpathSync(config.repoRoot);
   if (!isInside(config.repoRoot, module) || !isInside(realRepoRoot, real))
     return "resolves outside repoRoot through a symlink";
-  const outDir = config.review.outDir;
-  if (isInside(outDir, module) || isInside(projectRealPath(outDir), real))
+  if (
+    isInside(reviewOutput.lexical, module) ||
+    isInside(reviewOutput.projected, real)
+  )
     return "is inside review.outDir";
   const globRoot = deepestContainingGlobRoot(module, config);
   const realGlobRoot = projectRealPath(globRoot ?? config.repoRoot);
@@ -103,12 +118,28 @@ function entryModuleDenial(
   return undefined;
 }
 
-/** Match the configured Review directory by lexical or projected identity. */
-function isReviewOutputDirectory(candidate: string, outDir: string): boolean {
-  return (
-    path.resolve(candidate) === path.resolve(outDir) ||
-    projectRealPath(candidate) === projectRealPath(outDir)
-  );
+/** Skip Review output and directories whose identity cannot be projected. */
+function isSkippedEntryDirectory(
+  candidate: string,
+  reviewOutput: ReviewOutputPaths,
+): boolean {
+  if (path.resolve(candidate) === reviewOutput.lexical) return true;
+  try {
+    return projectRealPath(candidate) === reviewOutput.projected;
+  } catch {
+    return true;
+  }
+}
+
+/** Read a searchable directory, skipping inaccessible or unresolved paths. */
+function readEntryDirectory(candidate: string): fs.Dirent[] {
+  try {
+    const stats = fs.statSync(candidate);
+    if (!stats.isDirectory() || (stats.mode & 0o555) === 0) return [];
+    return fs.readdirSync(candidate, { withFileTypes: true });
+  } catch {
+    return [];
+  }
 }
 
 /** Select the most specific configured walk root containing a module. */
@@ -127,11 +158,11 @@ function deepestContainingGlobRoot(
 /** Build a typed config error from the shared per-module denial policy. */
 function entryModuleError(
   module: string,
-  config: Pick<ResolvedConfig, "entryGlobs" | "repoRoot" | "review">,
+  reason: string,
+  config: Pick<ResolvedConfig, "repoRoot">,
 ): MoklyError {
-  const reason = entryModuleDenial(module, config);
   return new MoklyError(
     "config-invalid",
-    `entry module ${toPosixPath(path.relative(config.repoRoot, module))} ${reason ?? "is denied"}`,
+    `entry module ${toPosixPath(path.relative(config.repoRoot, module))} ${reason}`,
   );
 }
