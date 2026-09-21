@@ -302,6 +302,54 @@ every host, keeping every existing preview regression green.
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
 
+## Milestone 3: Review Fixes
+
+Tags: ui
+
+Summary: apply the five findings from the Milestone 2 post-push review so the
+guard covers every anchor form, the presentation keeps document-level nodes,
+a missing presentation degrades to the failed state, the advertised fetch set
+is typed, and the completed removed-previews plan states the resolution.
+
+- [ ] Finding 1: add an SVG `<a xlink:href>` anchor to the removed page and
+      screens in `tests/helpers/removed_preview_fixture.ts`, extend the
+      inert-link regressions in `removed_previews_viewer.spec.ts` (both
+      adapters) and `removed_previews.spec.ts` to click it and assert no
+      document request, then make `read_only.ts` match `a` and `area` by
+      local name on the composed path regardless of which `href` attribute
+      they carry, reading the SVG `xlink:href` when `href` is absent for the
+      fragment rule.
+- [ ] Finding 2: serialize every top-level document child in order in
+      `presentation_document.ts` (doctype through the existing serializer,
+      comments as `<!--…-->`, the document element as `outerHTML`), extend
+      `removed_preview_presentation.spec.ts` to prove a comment before and
+      after `<html>` survives, and state in
+      `docs/protocol/mokly-removed-previews.md` that document-level comments
+      are preserved.
+- [ ] Finding 3: in `plans/removed-content-previews.md`, replace "The
+      implementation remains unchanged until that plan's viewer presentation
+      milestone" with the resolution and the `9ae758e` commit, keeping the
+      dated probe record.
+- [ ] Finding 4: make `presentationFor` in `shell/previews.tsx` return
+      `undefined` for a missing address and render the failed state with
+      Retry instead of throwing; cover it with a unit test that renders the
+      ready state with an incomplete map (precedent
+      `tests/removed_preview_shell.test.ts`).
+- [ ] Finding 5: change `advertisedPreviewPaths` in `previews/request.ts` to
+      return a typed `{ files: readonly string[]; prefixes: readonly string[] }`
+      value, update its unit test and the previews README sentence.
+- [ ] Run the viewer build and typecheck, `npm run lint`,
+      `npm run format:check`, the changed unit tests, and the five preview
+      browser specs three times; then the complete `cargo xtask check` gate
+      with no failures or skips.
+- [ ] After checks pass, `git add -A`, commit with Conventional Commits, and
+      push the branch.
+- [ ] After the push, use
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main`; report
+      numbered, severity-rated findings with options and recommendations
+      without changing the implementation.
+
 ## Post-merge follow-up (non-blocking)
 
 - Publish the `@mokly/viewer` version carrying the presentation; embedded
