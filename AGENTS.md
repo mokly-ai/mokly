@@ -20,10 +20,10 @@
   recommendation in the final message so the user can decide what to address
   next
 - When providing review comments or review output, number each review item, give
-  each item a severity, include enough codebase and feature context for readers
-  without prior knowledge, state the impact of not making the change / doing
-  nothing, provide solution options with lettered labels, and clearly state the
-  recommended option
+  each item a severity, and explain it in simple language that assumes the
+  reader has no prior codebase or feature context. State the impact of not
+  making the change / doing nothing, provide solution options with lettered
+  labels, and clearly state the recommended option
 - When suggesting fixes for review items, evaluate whether the direct fix is
   enough or whether a broader rule, test, lint, abstraction, or architectural
   change would prevent the same class of issue from recurring. Do not default to
