@@ -154,13 +154,23 @@ generation. Superseded handle promises reject with `disposed`, while obsolete
 work cannot clear replacement labels, cancel a fresh pick or emit errors against
 it. The rule covers highlights, label refreshes, scrolls and geometry events.
 
-The viewer interface is currently Light-only; `selection.colorScheme` changes
-the mockup previews. Independent Auto/Light/Dark appearance is
-[planned](../../docs/protocol/mokly-viewer-appearance.md) and is not yet an API.
+`theme` sets the appearance of the interface around previews: `"auto"`,
+`"light"` or `"dark"`, with `"auto"` the default when it is omitted. Auto
+follows the reader's `prefers-color-scheme` through CSS, so a dark reader never
+sees a light first paint. It is independent of `selection.colorScheme`, which
+stays the scheme of the previews, so a dark interface around a light preview and
+the reverse are both supported and the preview controls remain. Changing `theme`
+preserves frames, selection, temporary props, picking, highlights and markers,
+emits no events and requests nothing. The appearance lives on the viewer root
+alone, so a host page, its other roots and host slot content are untouched. The
+[appearance contract](../../docs/protocol/mokly-viewer-appearance.md) defines
+the standalone Appearance control, which is not delivered yet.
 
 Import the stylesheet once. Override `--mokly-accent`,
 `--mokly-accent-contrast`, and `--mokly-accent-soft` on a containing element,
-maintaining readable contrast. Scoped styles exclude host slots and the
+maintaining readable contrast in both appearances; an override that is not
+supplied falls back to the value the palette declares for the current
+appearance. Scoped styles exclude host slots and the
 surrounding page; fonts are packaged locally. Internal selectors and geometry are
 not extension APIs.
 

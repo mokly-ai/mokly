@@ -19,11 +19,13 @@ stacking above the navigation drawer scrim. Every state recorded here is
 implemented. The separate [component explorer designs](./mokly-component-design.md)
 are target mockups delivered before their runtime implementation.
 
-Independent Auto/Light/Dark interface appearance is a
-[planned extension](./mokly-viewer-appearance.md), designed in the
+Auto/Light/Dark interface appearance is designed in the
 `design/browse/appearance/` mockups and specified by the
-[semantic palette](./mokly-viewer-palette.md). The Light-only shell tokens and
-preview-scheme behavior below describe the current implementation.
+[semantic palette](./mokly-viewer-palette.md). The shell now carries that
+palette in both appearances, selected on a viewer root, and an embedded host
+chooses one with `theme`. A standalone document has no Appearance control yet,
+so the shell tokens and preview-scheme behavior below describe what a
+standalone reader sees today.
 
 The page and publication designs are now recorded in the example catalogue.
 Their runtime implementation is tracked in the linked plans. Whole documents

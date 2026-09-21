@@ -2,15 +2,24 @@
 
 ## Delivery Status
 
-Runtime not implemented. The [dark-mode plan](../../plans/viewer-dark-mode.md)
-tracks this target for `@mokly/viewer`, local Serve and static exports. The
+The embedded half is implemented: `theme` on `MoklyViewerProps` and
+`ServerViewerProps`, applied to every viewer root and resolved for Auto through
+CSS; one package-owned semantic palette carrying the recorded swatches and their
+three Light corrections; per-frame preview `color-scheme`; and preview controls
+renamed to name the preview they change. The standalone Appearance control, and
+the asset that restores a saved preference, are not delivered yet: the
+preference helper and startup entry exist and are fixture-tested, but no
+production markup references them.
+
+The [dark-mode plan](../../plans/viewer-dark-mode.md) tracks the remaining work
+for local Serve and static exports. The
 [semantic palette](./mokly-viewer-palette.md) and the appearance mockups are
 delivered: every appearance entry renders in both schemes so the existing
 preview control switches it, the depicted top bar component owns the one
 Appearance control so every artboard drawing a top bar shows it, and the legacy
-head-band scheme depictions are gone. The current
-[viewer](./mokly-viewer.md) and [shell design](./mokly-shell-design.md) remain
-light-only around previews until the runtime implementation lands.
+head-band scheme depictions are gone. A standalone reader still sees the Light
+interface, because the control and its asset arrive in the milestones after
+this one.
 
 ## One Control In Standalone, Two Inputs When Embedded
 
