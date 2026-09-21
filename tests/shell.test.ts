@@ -1098,6 +1098,28 @@ test("a standalone document offers Appearance, not a preview switch", () => {
     assert.equal(occurrences(html, "data-mokly-appearance-select"), 1);
 });
 
+test("the selector renders all three faces and names the current one", () => {
+  const html = homePage(createCatalogue(manifest), context);
+  // The startup asset changes the visible glyph and word by setting one value,
+  // so every face has to be in the markup for CSS to reveal.
+  for (const option of ["auto", "light", "dark"])
+    assert.equal(
+      occurrences(html, `data-appearance-option="${option}"`),
+      1,
+      option,
+    );
+  assert.match(html, /class="mbk-appearance"[^>]*data-appearance-value="auto"/);
+  assert.match(
+    SHELL_CSS,
+    /\.mbk-appearance-option \{\s*display: none;/,
+    "unselected faces stay hidden",
+  );
+  assert.match(
+    SHELL_CSS,
+    /\.mbk-appearance\[data-appearance-value="dark"\] > \[data-appearance-option="dark"\]/,
+  );
+});
+
 test("the selector waits for its behaviour before it appears", () => {
   const html = homePage(createCatalogue(manifest), context);
   // Without the asset the control cannot do anything, so it stays hidden while

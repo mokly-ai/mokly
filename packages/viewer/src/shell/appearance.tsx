@@ -51,18 +51,27 @@ const GLYPHS = { auto: AutoGlyph, light: LightGlyph, dark: DarkGlyph };
  */
 export function AppearanceSelect(props: { theme?: ViewerTheme }) {
   const value = normalizeTheme(props.theme);
-  const Glyph = GLYPHS[value];
   return (
     <label
       className="mbk-appearance"
+      data-appearance-value={value}
       data-mokly-appearance-control=""
       hidden
       title="Appearance"
     >
-      <Glyph />
-      <span className="mbk-appearance-value">
-        {OPTIONS.find(([option]) => option === value)?.[1]}
-      </span>
+      {OPTIONS.map(([option, label]) => {
+        const OptionGlyph = GLYPHS[option];
+        return (
+          <span
+            className="mbk-appearance-option"
+            data-appearance-option={option}
+            key={option}
+          >
+            <OptionGlyph />
+            <span className="mbk-appearance-value">{label}</span>
+          </span>
+        );
+      })}
       <ChevronIcon size={12} />
       <select
         aria-label="Appearance"

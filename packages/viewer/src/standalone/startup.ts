@@ -34,6 +34,7 @@ interface AppearanceFrame {
 interface AppearanceControl {
   value: string;
   hidden: boolean;
+  setAttribute(name: string, value: string): void;
   addEventListener(type: "change", handler: () => void): void;
 }
 
@@ -87,6 +88,7 @@ const SELECT_SELECTOR = "[data-mokly-appearance-select]";
 // The select carries the value; its label carries the reveal, because the
 // stylesheet hides the whole control until its behaviour exists.
 const CONTROL_SELECTOR = "[data-mokly-appearance-control]";
+const VALUE_ATTRIBUTE = "data-appearance-value";
 const INERT: AppearanceHandle = {
   choose: () => {},
   refresh: () => {},
@@ -160,8 +162,12 @@ function createController(
       applyFrames(document, scheme);
       for (const select of document.querySelectorAll(SELECT_SELECTOR))
         select.value = controller.theme;
-      for (const control of document.querySelectorAll(CONTROL_SELECTOR))
+      for (const control of document.querySelectorAll(CONTROL_SELECTOR)) {
+        // The visible glyph and word are chosen from this one value, so the
+        // control names the appearance it actually set.
+        control.setAttribute(VALUE_ATTRIBUTE, controller.theme);
         control.hidden = false;
+      }
       window.onAppearance?.(controller.theme, scheme);
     },
     bind() {

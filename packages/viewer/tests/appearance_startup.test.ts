@@ -56,7 +56,11 @@ function environment(
   const select = {
     value: "auto",
     hidden: true,
+    attributes: {} as Record<string, string>,
     handlers: [] as (() => void)[],
+    setAttribute(name: string, next: string) {
+      select.attributes[name] = next;
+    },
     addEventListener(_type: string, handler: () => void) {
       select.handlers.push(handler);
     },
@@ -313,4 +317,27 @@ test("a light-only catalogue never captions a fallback under Dark", () => {
   // fallback caption rule keys off the frame rather than the appearance.
   assert.deepEqual(lightOnly.loads, []);
   assert.equal(world.body.attributes["data-mokly-color-scheme"], "dark");
+});
+
+test("the control names the appearance it set", () => {
+  const environmentUnderTest = environment({ stored: "dark" });
+  environmentUnderTest.attach({ body: true, select: true });
+  const handle = installAppearance(
+    environmentUnderTest.document,
+    environmentUnderTest.window,
+  );
+  handle.refresh();
+  // The visible glyph and word are chosen from this value, so a stale one
+  // would leave the control naming an appearance the document is not in.
+  assert.equal(
+    environmentUnderTest.select.attributes["data-appearance-value"],
+    "dark",
+  );
+  assert.equal(environmentUnderTest.select.value, "dark");
+
+  handle.choose("light");
+  assert.equal(
+    environmentUnderTest.select.attributes["data-appearance-value"],
+    "light",
+  );
 });

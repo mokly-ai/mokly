@@ -5,6 +5,16 @@ own navigation, viewport and theme state, comparisons, and component inspection.
 The package build bundles their pure dependencies into `dist/browser`; the
 server's explicit client-module allowlist also supplies the export inventory.
 
+`browse_appearance.ts` takes the standalone Appearance control over from the
+classic `appearance-startup.js` asset. The asset paints the appearance before
+this module exists; once Browse is running, its `onAppearance` hook re-applies
+the same scheme through `setColorScheme`, so frames swap with history replaced
+and comparison panes and component samples redraw. Each swap compares the
+current source first, so the asset's earlier swap is never repeated. The
+workspace listens for the `mokly:appearance` document event rather than owning
+its own standalone control. See the
+[appearance contract](../../../../docs/protocol/mokly-viewer-appearance.md).
+
 `early_disclosures.ts` bridges native disclosure clicks through deferred startup.
 The synchronous navigation bootstrap starts capture; Browse initialization and
 reload recovery reapply the latest native choices. Load or page exit cleans up

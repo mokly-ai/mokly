@@ -197,6 +197,22 @@ details.mbk-nav-group > summary::-webkit-details-marker {
   flex-shrink: 0;
 }
 
+/* All three faces are rendered and the current one is revealed by attribute,
+   so the startup asset changes the visible glyph and word by setting one
+   value rather than rewriting markup. */
+.mbk-appearance-option {
+  display: none;
+  align-items: center;
+  gap: 6px;
+}
+
+.mbk-appearance[data-appearance-value="auto"] > [data-appearance-option="auto"],
+.mbk-appearance[data-appearance-value="light"]
+  > [data-appearance-option="light"],
+.mbk-appearance[data-appearance-value="dark"] > [data-appearance-option="dark"] {
+  display: inline-flex;
+}
+
 .mbk-appearance-value {
   font-size: 12px;
   font-weight: 600;
