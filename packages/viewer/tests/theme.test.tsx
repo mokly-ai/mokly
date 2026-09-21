@@ -173,3 +173,10 @@ test("a comparison canvas takes an opaque base from its preview scheme", () => {
     "a dark comparison canvas keeps the light base",
   );
 });
+
+test("forced colours are left to the system in both appearances", () => {
+  // A reader who forces their own colours must keep them, so no rule opts an
+  // element out of the substitution in either appearance.
+  assert.doesNotMatch(SHELL_CSS, /forced-color-adjust:\s*none/u);
+  assert.doesNotMatch(VIEWER_CSS, /forced-color-adjust:\s*none/u);
+});

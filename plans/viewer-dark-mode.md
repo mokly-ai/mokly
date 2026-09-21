@@ -755,7 +755,7 @@ construction rather than by two tests in combination.
 Remaining Low findings on the design audit are recorded in the reviews for the
 user rather than opening another mockup milestone.
 
-## Milestone 3: Implement shared viewer appearance
+## Milestone 3: Implement shared viewer appearance (complete)
 
 Tags: ui
 
@@ -765,43 +765,68 @@ Commit and push after the checks pass, then review the complete diff against
 `origin/main` with `docs/implementation-review-prompt.md` and report findings
 without fixing them, as every milestone in this plan does.
 
-- [ ] Add the public `ViewerTheme` type and `theme` prop to React/server entry
+- [x] Add the public `ViewerTheme` type and `theme` prop to React/server entry
       types and examples. Apply theme data on every ready/loading/error root and
       in the first-party server-rendered envelope, without remounting islands.
-- [ ] Add focused tests for accepted preferences, bad stored values, unavailable
+- [x] Add focused tests for accepted preferences, bad stored values, unavailable
       storage and repeated initialization/cleanup. Keep storage access separate
       from pure normalization and out of embedded React initialization.
-- [ ] Implement and fixture-test the standalone startup entry and preference
+- [x] Implement and fixture-test the standalone startup entry and preference
       helper. Resolve the effective appearance in the documented order,
       including the `scheme` URL pin and live system changes under Auto, and
       apply it to the root and the existing frame scheme swap before paint or
       as early as each frame's first load allows, at most once. Guard it to
       opted-in standalone documents and bind opted-in Appearance controls when
       the DOM is ready. Do not reference an undelivered asset from markup.
-- [ ] Implement one package-owned semantic palette from
+- [x] Implement one package-owned semantic palette from
       [the recorded swatches](../docs/protocol/mokly-viewer-palette.md),
       including its three Light corrections, and replace theme-dependent
       literals in shell CSS, embedded extensions and viewer-owned overlays.
       Add a focused color-literal rule and token-pair contrast tests to prevent
       the same class of missing-theme styles from recurring.
-- [ ] Update stylesheet scoping and scheme-aware accent fallbacks. Verify host
+- [x] Update stylesheet scoping and scheme-aware accent fallbacks. Verify host
       and slot boundaries, inherited overrides, multiple roots, focus, status,
       tooltips, native controls and forced-color behavior in both appearances.
-- [ ] Rename the embedded preview controls' accessible names and tooltips to
+- [x] Rename the embedded preview controls' accessible names and tooltips to
       Preview color scheme or Dark preview in `shell/head.tsx`,
       `shell/workspace_controls.tsx` and their tests. Keep them rendering in
       embedded roots with existing eligibility, URL semantics and light-only
       fallback; their standalone removal is Milestone 5.
-- [ ] Set effective preview `color-scheme` on every frame before loading it.
+- [x] Set effective preview `color-scheme` on every frame before loading it.
       Separate device-screen indicators from shell ink and preserve comparison
       canvases/compositing across appearance changes, including dynamic frames.
-- [ ] Use CSS for live Auto changes and test explicit theme-prop overrides.
-- [ ] Add regression coverage proving appearance changes preserve frame/session
+- [x] Use CSS for live Auto changes and test explicit theme-prop overrides.
+- [x] Add regression coverage proving appearance changes preserve frame/session
       identity, props, focus/scroll, picking/highlights/markers and comparison
       state with no new preview/comparison requests or selection/pick events.
-- [ ] Run focused React/SSR, shell, client, frame-adapter and browser suites.
+- [x] Run focused React/SSR, shell, client, frame-adapter and browser suites.
       If a new design gap appears, schedule a new tagged mockup milestone before
       implementing its affected UI; keep existing mockups aligned.
+
+Delivered: `ViewerTheme` and a `theme` prop on the React and server entries,
+applied to every viewer root including the loading, error and unavailable ones,
+with an unusable value resolving to Auto. Auto follows `prefers-color-scheme`
+through CSS alone, so a dark reader never sees a light first paint and no
+script decides the appearance. One package-owned semantic palette carries the
+recorded swatches and their three Light corrections; the 64 theme-dependent
+literals that were spread across eleven shell modules now live only in the two
+modules that define a palette, and a test rejects any new one. Token pairs are
+checked against their criterion in both appearances.
+
+Frames declare their own preview `color-scheme` from the stylesheet, so it is
+in force before a frame loads and survives a source swap, and a difference pane
+takes an opaque base from the preview scheme. Device hardware and preview
+surfaces use fixed tokens, so a light preview inside a dark interface keeps its
+own colours. A host override of `--mokly-accent` still wins in both
+appearances, falling back to the value the palette declares rather than a
+pinned Light one.
+
+The standalone preference helper and startup entry exist and are
+fixture-tested — the documented resolution order, the `scheme` pin, storage
+failures, live system changes under Auto, idempotent installation and cleanup —
+but no production markup references them, because the asset is Milestone 4 and
+the control that calls `choose` is Milestone 5. Binding that control is
+therefore deferred with it.
 
 ## Milestone 4: Deliver the standalone startup asset
 
