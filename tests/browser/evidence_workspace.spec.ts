@@ -4,7 +4,7 @@ import type { ReviewResultV3 } from "../../packages/viewer/dist/review/component
 import { controlsEntrySource } from "../helpers/component_controls_fixture.js";
 import { startEvidenceFixture } from "../helpers/evidence_fixture.js";
 
-import { expectFrameLoaded } from "./workspace_actions.js";
+import { chooseScheme, expectFrameLoaded } from "./workspace_actions.js";
 
 test("Usage and Changes completion preserve edited props and their live preview", async ({
   page,
@@ -82,9 +82,7 @@ test("Usage and Changes completion preserve edited props and their live preview"
     await expect(
       frame.getByRole("button", { name: "Continue" }),
     ).toBeDisabled();
-    await page
-      .getByRole("button", { name: "Dark preview", exact: true })
-      .click();
+    await chooseScheme(page, "dark");
     await expect(
       frame.getByRole("button", { name: "Continue" }),
     ).toHaveAttribute("data-scheme", "dark");

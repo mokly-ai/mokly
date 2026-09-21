@@ -1,7 +1,10 @@
 /** Disposable shell input and layout subscriptions, independent of workspace state. */
+import { APPEARANCE_EVENT } from "./browse_appearance.js";
 import type { LoadedDiff } from "./diff_views.js";
 
 export interface WorkspaceActions {
+  /** The document's scheme changed outside the workspace's own controls. */
+  appearance(): void;
   comparison(loaded: LoadedDiff | undefined): void;
   refresh(): void;
   highlight(): void;
@@ -17,6 +20,9 @@ export function installWorkspaceEvents(
   actions: WorkspaceActions,
   doc: Document = root.ownerDocument,
 ): void {
+  doc.addEventListener(APPEARANCE_EVENT, () => actions.appearance(), {
+    signal,
+  });
   doc.addEventListener(
     "mokly:comparison",
     (event) =>

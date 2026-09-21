@@ -1,5 +1,6 @@
 /** Progressive Browse shell enhancement served at /__mokly/client/browse.js. */
 
+import { installBrowseAppearance } from "./browse_appearance.js";
 import { handleBrowseControl } from "./browse_controls.js";
 import { createBrowserDetailsPreference } from "./browse_details.js";
 import { applyNavigationEvidence } from "./browse_evidence.js";
@@ -72,6 +73,7 @@ export function initializeBrowseShell(
     displayedUrl = new URL(win.location.href);
   };
   const diffs = installDiffs(doc, win);
+  installBrowseAppearance(doc, win, diffs.update);
   let workspace = installWorkspace(doc, win, diffs.update, rememberDocument);
   const persistScroll = (): void => {
     win.history.replaceState(

@@ -2,24 +2,27 @@
 
 ## Delivery Status
 
-The embedded half is implemented: `theme` on `MoklyViewerProps` and
-`ServerViewerProps`, applied to every viewer root and resolved for Auto through
-CSS; one package-owned semantic palette carrying the recorded swatches and their
-three Light corrections; per-frame preview `color-scheme`; and preview controls
-renamed to name the preview they change. The standalone Appearance control, and
-the asset that restores a saved preference, are not delivered yet: the
-preference helper and startup entry exist and are fixture-tested, but no
-production markup references them.
+This document is the canonical status for viewer appearance. Other protocols
+link here rather than restating it.
 
-The [dark-mode plan](../../plans/viewer-dark-mode.md) tracks the remaining work
-for local Serve and static exports. The
-[semantic palette](./mokly-viewer-palette.md) and the appearance mockups are
-delivered: every appearance entry renders in both schemes so the existing
-preview control switches it, the depicted top bar component owns the one
-Appearance control so every artboard drawing a top bar shows it, and the legacy
-head-band scheme depictions are gone. A standalone reader still sees the Light
-interface, because the control and its asset arrive in the milestones after
-this one.
+Both halves are implemented. Embedded: `theme` on `MoklyViewerProps` and
+`ServerViewerProps`, applied to every viewer root and resolved for Auto through
+CSS; per-frame preview `color-scheme`; and preview controls renamed to name the
+preview they change. Standalone: one Appearance selector in the top bar on
+every document, the classic `appearance-startup.js` asset that restores the
+appearance before the first paint, and the documented precedence over the
+`scheme` pin, the stored override and the server-supplied initial theme. The
+standalone scheme switches and the workspace Dark preview button are gone from
+standalone documents; an embedded root keeps its own preview control.
+
+One package-owned semantic palette carries the recorded swatches and their
+three Light corrections, in
+[mokly-viewer-palette.md](./mokly-viewer-palette.md). The appearance mockups
+are delivered: every appearance entry renders in both schemes, the depicted top
+bar component owns the one Appearance control, and the legacy head-band scheme
+depictions are gone.
+
+The [dark-mode plan](../../plans/viewer-dark-mode.md) tracks the work.
 
 ## One Control In Standalone, Two Inputs When Embedded
 

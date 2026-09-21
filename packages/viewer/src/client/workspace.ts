@@ -254,6 +254,12 @@ export function installWorkspace(
     signal,
     {
       refresh,
+      appearance() {
+        // The scheme is already applied; the workspace only has to redraw what
+        // it owns, so a comparison or sample follows the reader's appearance.
+        refresh();
+        updateDiffs();
+      },
       comparison(comparisonDiff) {
         loaded = comparisonDiff;
         if (comparison()) highlight = false;

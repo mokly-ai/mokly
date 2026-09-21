@@ -39,7 +39,7 @@ local shell, CSS, interactions and script-disabled sandbox remain unchanged.
 Registered components extend this runtime with saved variant pages, nested usage,
 actual screen instances, and local prop editing. The [explorer contract](./mokly-component-explorer.md)
 owns the icon inspector, bounded panes, desktop resizing, mobile bottom sheet,
-viewport/theme controls, and authenticated highlighting. The [controls contract](./mokly-component-controls.md)
+viewport/appearance controls, and authenticated highlighting. The [controls contract](./mokly-component-controls.md)
 owns the private same-origin endpoint, bounded worker, immutable memory previews,
 last-good watched generation, and no-output/no-reload editing boundary. Exported
 workspaces retain saved variants and inspection with read-only props.
@@ -258,18 +258,22 @@ independent state. Labels remain presentation only. Stored pre-section
 `legacy:` and label-path keys are ignored while valid disclosure keys remain
 effective.
 
-A catalogue with dark fragments offers a `Light | Dark` scheme switch; a
-light-only catalogue offers none. One switch renders in the top bar and one in
-the screen head band, and the shell reveals whichever suits the width: the top
-bar at and above the breakpoint, the head band below it. The catalogue home has
-no head band, so below the breakpoint it carries no scheme control. Choosing a
-scheme marks the document, keeps every switch in sync, and swaps each embedded
-frame — screen frames and use-case steps alike — between its light and dark
-fragment URLs; only the inside of a device screen follows the selection, which
-then survives in-shell navigation, Back, and Forward. A screen with no dark
-render keeps its light fragments and names the fallback in its frame label
-(`MOBILE — LIGHT ONLY`), while a use-case step, which has no label, simply
-stays light.
+Every standalone document carries one Appearance selector in the top bar —
+Auto, Light and Dark — at both widths and on every route, including the
+catalogue home, an unavailable route and a light-only catalogue. It sets the
+interface and the previews together: the document mark, screen and use-case
+step frames, component samples, comparison frames and fallback captions all
+follow it, and the choice survives in-shell navigation, Back, Forward,
+evidence refresh and watched reload recovery. Precedence, storage and the
+classic startup asset are specified in
+[mokly-viewer-appearance.md](./mokly-viewer-appearance.md). An embedded root
+has no Appearance selector; its host owns the interface appearance, and the
+root keeps a Dark preview toggle for the preview scheme when the catalogue has
+dark fragments. Only the inside of a device screen follows the preview scheme.
+A screen with no dark render keeps its light fragments and names the fallback
+in its frame label (`MOBILE — LIGHT ONLY`), while a use-case step, which has no
+label, simply stays light; a catalogue with no dark fragments at all captions
+nothing, because nothing fell back.
 
 Browse is server rendered first and progressively enhanced. Direct URLs,
 refresh, missing routes, and JavaScript-disabled use remain functional. For an

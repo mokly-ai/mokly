@@ -9,11 +9,8 @@ selection, multi-instance highlights and markers are implemented by the
 Serve/export presentation remains unchanged.
 
 The [viewer appearance contract](./mokly-viewer-appearance.md) defines
-Auto/Light/Dark interface support, separate from preview color schemes. The
-embedded half is implemented: `theme` on the React and server entries, one
-package-owned semantic palette, and per-frame preview `color-scheme`. The
-standalone Appearance control and the asset that restores a saved preference
-are not delivered yet.
+Auto/Light/Dark interface support, separate from preview color schemes, and
+carries its own delivery status.
 
 ## Package And Props
 

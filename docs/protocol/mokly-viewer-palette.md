@@ -2,11 +2,12 @@
 
 ## Delivery Status
 
-These are the approved swatches for the [appearance contract](./mokly-viewer-appearance.md).
-They are implemented in the design mockups under `examples/basic/generated/`
-(`design.css` for the interface palette, `design-stage.css` for preview tokens).
-The package's own `SHELL_CSS` and scoped embedded stylesheet adopt them in the
-runtime milestone; until then the shipped shell remains light-only.
+These are the approved swatches for the
+[appearance contract](./mokly-viewer-appearance.md), which carries the delivery
+status for every appearance surface. They are implemented in the design mockups
+under `examples/basic/generated/` (`design.css` for the interface palette,
+`design-stage.css` for preview tokens) and adopted by the package's own
+`SHELL_CSS` and scoped embedded stylesheet.
 
 Contrast ratios below are computed from the listed sRGB values using the
 [WCAG relative-luminance formula](https://www.w3.org/WAI/GL/wiki/Relative_luminance)

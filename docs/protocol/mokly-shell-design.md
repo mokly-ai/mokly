@@ -387,9 +387,12 @@ or flow; shared controls and missing-route messages cover the whole catalogue.
 
 ## Color Scheme
 
-A catalogue may render dark fragments beside its light ones. The selection
-changes only what a device screen shows; every shell surface around the frames
-keeps the light chrome palette in both schemes.
+A catalogue may render dark fragments beside its light ones. The preview scheme
+changes what a device screen shows; the interface around the frames follows its
+own appearance, described in
+[mokly-viewer-appearance.md](./mokly-viewer-appearance.md). In a standalone
+catalogue the two are one choice, made once in the top bar; an embedded root
+keeps them apart, so a host can hold a light interface over a dark preview.
 
 | Token                   | Value     | Role                             |
 | ----------------------- | --------- | -------------------------------- |
@@ -411,10 +414,13 @@ of those two.
   embedded document cannot occlude it:
   `color-mix(in srgb, var(--mbk-dark-screen-ink) 12%, var(--mbk-dark-screen-bg))`.
   The browser viewport needs none; its light bar already draws that edge.
-- **Control** — a theme icon beside the viewport dropdown in the screen header
-  at every width. Authored design pairs navigate through their canonical scheme
-  links. Component designs toggle their local preview; unavailable choices are
-  disabled with an explanation.
+- **Control** — a standalone catalogue carries one Appearance selector in the
+  top bar at every width, setting the interface and the previews together; see
+  [mokly-viewer-appearance.md](./mokly-viewer-appearance.md). An embedded root
+  instead carries a Dark preview toggle beside the viewport dropdown, and only
+  when the catalogue has dark fragments. Authored design pairs navigate through
+  their canonical scheme links. Component designs toggle their local preview;
+  unavailable choices are disabled with an explanation.
 - **Light-only screens** — a screen with no dark render keeps its light frames
   under a dark selection and states the fallback in its frame label, which
   gains an `mbk-frame-scheme-note` span so the caption reads
