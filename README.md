@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./docs/assets/mokly-logo.svg" alt="Mokly" width="360">
+  <img src="https://mokly.ai/brand/mokly-logo.svg" alt="Mokly" width="360">
 </p>
 
 <p align="center">
