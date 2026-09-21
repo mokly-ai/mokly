@@ -138,6 +138,11 @@ test("search through a variant title keeps its parent row visible", async ({
   await page.fill("[data-mokly-search]", "extra");
   await expect(page.locator(HOME_ROW)).toBeHidden();
   await expect(page.locator(LIST)).toBeHidden();
+  await expect(page.locator(TOGGLE)).toBeHidden();
+
+  await page.fill("[data-mokly-search]", "");
+  await expect(page.locator(HOME_ROW)).toBeVisible();
+  await expect(page.locator(TOGGLE)).toBeVisible();
 });
 
 test("the Changes filter shows a changed variant under its marked parent", async ({

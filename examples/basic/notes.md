@@ -57,10 +57,11 @@ workspace` and `Save failed`. Only `Empty workspace` has a design destination;
   related docs. It supplies its own title, description, render, and any
   reciprocal flow membership; omitted `useCaseIds` defaults to an empty list.
   The removed variant has its own recorded details, like every removed screen.
-- The changed-views artboard keeps `Welcome` in Changes while its shown light
-  view is unmodified: the change is confined to the dark views, so the theme
-  control and the viewport dropdown carry a mark and the details list them.
-  Color scheme and viewport stay view axes and never become variants.
+- The changed-views artboard records a direct or All-filter arrival at `Welcome`
+  while its shown light view is unmodified: the change is confined to the dark
+  views, so the theme control and the viewport dropdown carry a mark and the
+  details list them. Color scheme and viewport stay view axes and never become
+  variants.
 - The `forms` and `onboarding` tags are synthetic fixture labels that carry no
   product meaning: the Welcome entry declares both and the Details entry
   declares `forms` in their authored metadata, which is why the `tag:forms`

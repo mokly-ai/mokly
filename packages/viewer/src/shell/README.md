@@ -43,6 +43,8 @@ the dot and clips its wording.
 The parallel `viewStates` map stores `{ viewport, colorScheme, state }` for each
 ready view under the same key, while a missing key means per-view status is
 unknown and the workspace must retain its route-level status and eligibility.
+`workspace.tsx` resolves the shown status and comparison band from that map on
+every viewport, scheme, saved-variant, or evidence change.
 
 `css.ts` concatenates the standalone stylesheet. Split string modules preserve
 its exact bytes. The package build scopes an embedded stylesheet separately and

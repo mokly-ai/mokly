@@ -1,7 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import type { ScreenViewChanges } from "../../packages/viewer/dist/shell/metadata.js";
-import { secondVariantDarkOnlyResult } from "../helpers/changed_view_fixture.js";
+import {
+  darkOnlyScreenViews,
+  secondVariantDarkOnlyResult,
+} from "../helpers/changed_view_fixture.js";
 import { controlsEntrySource } from "../helpers/component_controls_fixture.js";
 import { startEvidenceFixture } from "../helpers/evidence_fixture.js";
 
@@ -11,30 +13,7 @@ const HOME = "screens/home.html";
 const HOME_ROW = `a[data-nav-row][data-route="${HOME}"]`;
 const SCHEME_DOT = '[data-view-changed="scheme"]';
 const VIEWPORT_DOT = '[data-view-changed="viewport"]';
-
-/** Only Home's dark renders differ; every light view stays unchanged. */
-function darkOnlyViews(): readonly ScreenViewChanges[] {
-  return [
-    {
-      route: HOME,
-      views: [
-        { viewport: "mobile", colorScheme: "light", state: "unchanged" },
-        { viewport: "mobile", colorScheme: "dark", state: "changed" },
-        { viewport: "desktop", colorScheme: "light", state: "unchanged" },
-        { viewport: "desktop", colorScheme: "dark", state: "changed" },
-      ],
-    },
-    {
-      route: "screens/details.html",
-      views: [
-        { viewport: "mobile", colorScheme: "light", state: "unchanged" },
-        { viewport: "mobile", colorScheme: "dark", state: "unchanged" },
-        { viewport: "desktop", colorScheme: "light", state: "unchanged" },
-        { viewport: "desktop", colorScheme: "dark", state: "unchanged" },
-      ],
-    },
-  ];
-}
+const TOOLBAR = ".mbk-diff-toolbar";
 
 /** The mark's painted geometry, so a hidden dot cannot pass as a drawn one. */
 async function dotStyle(page: Page, selector: string) {
@@ -49,6 +28,16 @@ async function dotStyle(page: Page, selector: string) {
   });
 }
 
+async function expectShownStatus(
+  page: Page,
+  status: "Changed" | "Unmodified",
+  comparison: boolean,
+): Promise<void> {
+  await expect(page.locator("[data-workspace-status]")).toHaveText(status);
+  if (comparison) await expect(page.locator(TOOLBAR)).toBeVisible();
+  else await expect(page.locator(TOOLBAR)).toBeHidden();
+}
+
 test("a dark-only change marks the views it hides and opens on one", async ({
   page,
 }) => {
@@ -61,10 +50,10 @@ test("a dark-only change marks the views it hides and opens on one", async ({
       changesStatus: "ready",
       componentChanges: {
         baseline: compilation.manifest,
-        screenViews: darkOnlyViews(),
+        screenViews: darkOnlyScreenViews(),
       },
     });
-    await page.goto(`${server.url}/view/${HOME}`);
+    await page.goto(`${server.url}/view/${HOME}?comparison=side`);
 
     const scheme = page.getByRole("button", { name: "Dark mode", exact: true });
     await expect(scheme).toHaveAttribute("aria-pressed", "false");
@@ -77,7 +66,22 @@ test("a dark-only change marks the views it hides and opens on one", async ({
       "Other theme changed",
     );
     await expect(page.locator(VIEWPORT_DOT)).toBeHidden();
-    await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");
+    await expectShownStatus(page, "Unmodified", false);
+    await expect(page.locator('[data-diff-mode="current"]')).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+
+    await scheme.click();
+    await expect(scheme).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByLabel("Viewport", { exact: true })).toHaveValue(
+      "both",
+    );
+    await expectShownStatus(page, "Changed", true);
+
+    await scheme.click();
+    await expect(scheme).toHaveAttribute("aria-pressed", "false");
+    await expectShownStatus(page, "Unmodified", false);
 
     expect(await dotStyle(page, SCHEME_DOT)).toEqual({
       display: "block",
@@ -104,6 +108,25 @@ test("a dark-only change marks the views it hides and opens on one", async ({
     await expect(scheme).not.toHaveAttribute("aria-describedby", /.*/);
     await expect(page.locator(VIEWPORT_DOT)).toBeVisible();
     await expect(row).toBeVisible();
+
+    await expectShownStatus(page, "Changed", true);
+    await scheme.click();
+    await expectShownStatus(page, "Unmodified", false);
+
+    await page.goto(
+      `${server.url}/view/${HOME}?viewport=mobile&scheme=dark&comparison=side`,
+    );
+    await expect(page.getByLabel("Viewport", { exact: true })).toHaveValue(
+      "mobile",
+    );
+    await expect(
+      page.getByRole("button", { name: "Dark mode", exact: true }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await expectShownStatus(page, "Changed", true);
+    await expect(page.locator('[data-diff-mode="side"]')).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
   } finally {
     await fixture.close();
   }
@@ -131,7 +154,7 @@ test("a background classification moves the marks without reloading the frames",
       changesStatus: "ready",
       componentChanges: {
         baseline: compilation.manifest,
-        screenViews: darkOnlyViews(),
+        screenViews: darkOnlyScreenViews(),
       },
     });
 
@@ -166,8 +189,13 @@ test("component view evidence follows the selected saved variant", async ({
     await page.goto(`${server.url}/view/components/action.html`);
 
     const row = page.locator("[data-workspace-changed-views]");
+    const scheme = page.getByRole("button", {
+      name: "Dark mode",
+      exact: true,
+    });
     await expect(page.locator(SCHEME_DOT)).toBeHidden();
     await expect(row).toBeHidden();
+    await expectShownStatus(page, "Unmodified", false);
 
     await page
       .getByLabel("Saved variant", { exact: true })
@@ -176,6 +204,10 @@ test("component view evidence follows the selected saved variant", async ({
     await expect(page.locator(SCHEME_DOT)).toBeVisible();
     await expect(row).toBeVisible();
     await expect(row).toHaveText("Changed viewsMobile · Dark, Desktop · Dark");
+    await expectShownStatus(page, "Unmodified", false);
+
+    await scheme.click();
+    await expectShownStatus(page, "Changed", true);
   } finally {
     await fixture.close();
   }
@@ -193,7 +225,7 @@ test("Changes lands on the first changed view and every other arrival stays stic
       changesStatus: "ready",
       componentChanges: {
         baseline: compilation.manifest,
-        screenViews: darkOnlyViews(),
+        screenViews: darkOnlyScreenViews(),
       },
     });
     await page.goto(`${server.url}/view/screens/details.html`);
@@ -210,9 +242,12 @@ test("Changes lands on the first changed view and every other arrival stays stic
       page.locator('[data-workspace-frame="mobile"]'),
       /screens\/home\.mobile\.html/,
     );
+    await expectShownStatus(page, "Unmodified", false);
 
     await page.goBack();
     await expect(page).toHaveURL(new RegExp("screens/details\\.html$"));
+    await expectShownStatus(page, "Unmodified", false);
+
     await page.locator('[data-filter="changed"]').click();
     await expect(page.locator(HOME_ROW)).toBeVisible();
     await page.locator(HOME_ROW).click();
@@ -230,7 +265,14 @@ test("Changes lands on the first changed view and every other arrival stays stic
     );
     await expect(page.locator(SCHEME_DOT)).toBeHidden();
     await expect(page.locator(VIEWPORT_DOT)).toBeVisible();
+    await expectShownStatus(page, "Changed", true);
 
+    await page.goBack();
+    await expect(page).toHaveURL(new RegExp("screens/details\\.html$"));
+    await expectShownStatus(page, "Unmodified", false);
+
+    await page.goForward();
+    await expect(page).toHaveURL(new RegExp("screens/home\\.html$"));
     await page.reload();
     await expect(
       page.getByRole("button", { name: "Dark mode", exact: true }),
@@ -239,6 +281,7 @@ test("Changes lands on the first changed view and every other arrival stays stic
       "both",
     );
     await expect(page.locator(SCHEME_DOT)).toBeVisible();
+    await expectShownStatus(page, "Unmodified", false);
   } finally {
     await fixture.close();
   }

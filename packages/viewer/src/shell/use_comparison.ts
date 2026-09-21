@@ -210,7 +210,7 @@ export function useComparison({
           ? "side"
           : "current",
     });
-  }, [environment, route]);
+  }, [eligible, environment, route]);
 
   useEffect(() => {
     if (!eligible) setModeState({ ownerKey, mode: "current" });

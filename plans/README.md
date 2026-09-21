@@ -5,8 +5,9 @@
 - [Screen Variants](./screen-variants.md) — variant screens with their own
   ids and routes grouped under a parent screen, expandable variant rows in
   the navigation, per-variant Changes, and changed-view marks on the view
-  controls; Milestones 1 to 8 are delivered, the design conversion awaits
-  approval, and six review findings await the user's decision.
+  controls; Milestones 1 to 8 and the three review-fix milestones are
+  delivered, the design conversion awaits approval, and three second-review
+  findings await the user's decision.
 - [Co-Located Entry Discovery](./co-located-entry-discovery.md) — delivered
   on the branch through Milestone 11 with five review rounds applied; earlier
   milestones and review rounds are kept in `co-located-entry-discovery/`.

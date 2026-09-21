@@ -17,6 +17,7 @@ import { useOptionalShellStore } from "./store_context.js";
 import type { ComparisonMode } from "./use_comparison.js";
 import { useWorkspaceData } from "./use_workspace_data.js";
 import { useWorkspaceUsage } from "./use_workspace_usage.js";
+import { shownComparisonEligible, shownStatus } from "./view_status.js";
 import { WorkspaceControls } from "./workspace_controls.js";
 import type { WorkspaceData } from "./workspace_data.js";
 import { WorkspaceEvidence } from "./workspace_evidence.js";
@@ -165,6 +166,15 @@ export function ComponentWorkspace({
     ...(selectedKey ? { selectedKey } : {}),
     views,
   });
+  const evidenceKey = entry.kind === "component" ? variantId : entry.id;
+  const currentStatus = shownStatus(
+    evidenceKey === undefined ? undefined : data.viewStates[evidenceKey],
+    viewport,
+    colorScheme,
+    variant?.status ?? data.status,
+  );
+  const comparisonEligible =
+    !selection.error && shownComparisonEligible(currentStatus, entry.kind);
   const target = { kind: "entry" as const, entry };
   const head = targetHead(catalogue, target);
   const preview = data.removed
@@ -222,11 +232,11 @@ export function ComponentWorkspace({
         status={
           <span
             className="mbk-entry-status"
-            data-status={data.status}
+            data-status={currentStatus}
             data-workspace-status=""
-            hidden={!data.status}
+            hidden={!currentStatus}
           >
-            {data.status}
+            {currentStatus}
           </span>
         }
       />
@@ -250,7 +260,7 @@ export function ComponentWorkspace({
           ) : data.comparisons ? (
             <DiffScreen
               component={entry.kind === "component"}
-              eligible={selection.comparisonEligible}
+              eligible={comparisonEligible}
               onComparisonChange={setLoadedComparison}
               onModeChange={setComparisonMode}
               route={entry.route}

@@ -1,5 +1,32 @@
 import type { ReviewResultV3 } from "../../packages/viewer/dist/review/component_types.js";
 import type { ViewReview } from "../../packages/viewer/dist/review/types.js";
+import type { ScreenViewChanges } from "../../packages/viewer/dist/shell/metadata.js";
+
+const HOME = "screens/home.html";
+
+/** Only Home's dark renders differ; every light view stays unchanged. */
+export function darkOnlyScreenViews(): readonly ScreenViewChanges[] {
+  return [
+    {
+      route: HOME,
+      views: [
+        { viewport: "mobile", colorScheme: "light", state: "unchanged" },
+        { viewport: "mobile", colorScheme: "dark", state: "changed" },
+        { viewport: "desktop", colorScheme: "light", state: "unchanged" },
+        { viewport: "desktop", colorScheme: "dark", state: "changed" },
+      ],
+    },
+    {
+      route: "screens/details.html",
+      views: [
+        { viewport: "mobile", colorScheme: "light", state: "unchanged" },
+        { viewport: "mobile", colorScheme: "dark", state: "unchanged" },
+        { viewport: "desktop", colorScheme: "light", state: "unchanged" },
+        { viewport: "desktop", colorScheme: "dark", state: "unchanged" },
+      ],
+    },
+  ];
+}
 
 function variantViews(changed: boolean): readonly ViewReview[] {
   return (["mobile", "desktop"] as const).flatMap((viewport) =>
