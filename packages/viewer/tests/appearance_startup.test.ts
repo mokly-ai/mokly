@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { APPEARANCE_STORAGE_KEY } from "../src/standalone/preference.js";
 import {
   installAppearance,
   type AppearanceDocument,
   type AppearanceWindow,
 } from "../src/standalone/startup.js";
-import { APPEARANCE_STORAGE_KEY } from "../src/standalone/preference.js";
 
 interface FakeFrame {
   src: string;
