@@ -196,7 +196,7 @@ complete contract, and register the plan.
 - [x] Validate the changed Markdown with `npm run format:check` and review the
       diff; documentation-only work does not require `cargo xtask check`.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
@@ -313,6 +313,16 @@ every host, keeping every existing preview regression green.
 
 ## Review record
 
+### Milestone 1
+
+The post-push review of `da7ade2` against browser behaviour on this base found
+two contract errors, corrected in `f10a066` before Milestone 2 started: a
+`srcdoc` document always renders in no-quirks mode, so the contract no longer
+promises to preserve quirks or limited-quirks compatibility modes; and static
+hosts may canonicalize a final `.html` suffix away, as the frame adapter and
+static workspace evidence read already accept, so the fetch acceptance rule
+allows that provider-normalized final URL. No other findings.
+
 ### Milestone 2
 
 - Base commit: `f10a066` on `calummoore/jakarta-v2`, based on `origin/main` at
@@ -350,3 +360,32 @@ tests/browser/removed_previews_viewer.spec.ts` security regression also
   `.context/viewer-owned-preview-exported.png`,
   `.context/viewer-owned-preview-cross-origin-page.png` and
   `.context/viewer-owned-preview-cross-origin-screen.png`.
+
+The post-push review of `9ae758e` against `origin/main` recorded these
+findings for the user's decision; none was applied automatically:
+
+1. Medium: the guard matches `a[href], area[href]`, so an SVG anchor that
+   uses `xlink:href` is not cancelled. A browser probe confirmed such a click
+   navigates a sandboxed `srcdoc` frame; the load-time restoration then
+   re-presents the document, but a document request is still issued.
+   Recommended: match `a` and `area` by local name on the composed path
+   regardless of which `href` attribute they carry, add an SVG `xlink:href`
+   anchor to the fixture, and extend the inert-link regressions.
+2. Low: the presentation is serialized from the doctype plus
+   `documentElement.outerHTML`, so comments before or after `<html>`, such as
+   the generated ownership header, are dropped although the contract says
+   other parsed nodes are serialized unchanged. Recommended: serialize every
+   top-level document child in order, or narrow the contract.
+3. Low: the completed removed content previews plan still says the
+   implementation remains unchanged until this plan's presentation milestone.
+   Recommended: state the resolution and commit there.
+4. Low: `presentationFor` in `shell/previews.tsx` throws during render when a
+   selected address has no presentation. The hook guarantees the map is
+   complete, but the shell has no error boundary, so a future mismatch would
+   unmount the viewer rather than show the unavailable state. Recommended:
+   render the failed state for a missing presentation.
+5. Low: `advertisedPreviewPaths` now mixes exact file paths with one
+   directory prefix in a single string array. Nothing in production reads it
+   after the React shell, but a future consumer could treat the prefix as a
+   file. Recommended: return a typed `{ files, prefixes }` shape or document
+   the mixed contents on the function.
