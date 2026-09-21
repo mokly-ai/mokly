@@ -2,11 +2,11 @@
 
 ## Delivery Status
 
-Implementation is tracked by the [derived baselines plan](../../plans/derived-baselines.md).
-Milestones 2–4 implement the separate readers, cached builder, configuration,
-build/check modes and awaiting preparation in Serve/export. Milestone 6 adds the
-`preparing` presentation and the commit-scoped watch lifecycle. Milestone 7 adds
-the detailed rebuild timings and derived scale fixture below.
+Implemented by the completed
+[derived baselines plan](../../plans/derived-baselines.md). Separate readers,
+the cached builder, configuration, build/check modes, Serve/export preparation,
+the `preparing` presentation, the commit-scoped watch lifecycle, detailed
+rebuild timings, and the derived scale fixture are shipped.
 
 ## Purpose
 

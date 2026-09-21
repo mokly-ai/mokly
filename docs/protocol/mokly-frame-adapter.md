@@ -2,12 +2,16 @@
 
 ## Delivery Status
 
-Implemented in `@mokly/viewer` through [viewer library Milestones 4–5](../../plans/mokly-viewer-library.md). Local
+Implemented in `@mokly/viewer` by the completed
+[viewer library plan](../../plans/mokly-viewer-library.md). Local
 Serve/export keep today's same-origin sandbox and visible behavior. Only an
 explicit cross-origin host uses the new inspector transport. Host marker
 consumption and the trailing geometry refresh are implemented by the
 [comment anchoring plan](../../plans/viewer-comment-anchoring.md); the adapter
 wire protocol remains unchanged.
+Historical page and screen frames are shell-owned, read-only preview frames and
+never enter an adapter inspection handshake, as implemented by the
+[removed content previews plan](../../plans/removed-content-previews.md).
 
 ## Public Interface
 
@@ -183,17 +187,42 @@ highlighting, scroll restoration and logical-link classification unchanged.
 Ready usage is required for instance inspection; absent usage does not disable
 valid navigation.
 
-When a same-origin replacement starts, the adapter installs its mount-time
-navigation receiver on the currently visible immediate document before changing
-`location`. Valid marked activations therefore remain host-owned while the exact
-assigned resource loads. As soon as the new immediate `Document` becomes
-same-origin-accessible, the adapter authenticates its exact origin, decoded
-resource path and query, then moves the receiver before slower subresources can
-delay the iframe `load` event. Readiness installs inspection and geometry over
-that document. Unsubscribing or disposing removes the receiver, so an
-unenhanced document continues to use its portable native links.
+When a same-origin replacement starts, the adapter transfers its mount-time
+navigation receiver before changing `location` only when the currently visible
+immediate document is the exact `Document` object that a previous same-origin
+mount authenticated for that frame. Object identity is the transfer key because
+scripts are disabled, so a document cannot change its resource identity, while
+every frame navigation commits a new document. Valid marked activations in that
+authenticated still-visible document therefore remain host-owned while the
+assigned resource loads. A document that no mount authenticated, including one
+the frame reached through its own native navigation, keeps portable native-link
+behavior until the replacement authenticates.
+
+The adapter records weak per-frame mount provenance. On the first same-origin
+mount only, its immediate watcher may authenticate an already rendered
+document whose resource exactly matches the assignment; this is the explicit
+server-rendered hydration path. Every later mount captures the immediate
+pre-replacement `Document`. When that exact object was not previously
+authenticated for the frame, both the watcher and `load` handler exclude it
+from assigned-resource authentication even if its URL exactly equals the new
+assignment. Only a different replacement `Document` may then pass the resource
+check. Frame and document provenance is weakly held and does not extend either
+object's lifetime.
+
+As soon as the new immediate `Document` becomes same-origin-accessible, the
+adapter independently authenticates its exact origin, decoded resource path and
+query, then moves the receiver before slower subresources can delay the iframe
+`load` event. The replacement watcher and `load` handler accept only this
+assigned-resource authentication; previously authenticated identity never lets
+a transferred document satisfy a new mount. Readiness installs inspection and
+geometry over the authenticated document. Unsubscribing or disposing removes
+the receiver, so an unenhanced document continues to use its portable native
+links.
 
 The sandbox remains exactly `allow-same-origin`; consumer scripts stay disabled.
+Historical [removed previews](./mokly-removed-previews.md) use separate
+shell-owned frames with the same sandbox and parent-enforced read-only links and
+forms when the document is same-origin-accessible.
 Existing local memory previews retain their authenticated private transport.
 No inspector handshake, extra badge, pick control, or visible affordance appears
 locally. Unsupported/unowned documents and comparison snapshots gain no privilege.
@@ -361,8 +390,16 @@ bounded per-document inert metadata is not executable code and is excluded.
 
 ## Acceptance
 
-Retain same-origin browser tests unchanged. Cross-origin fixtures must cover
-handshake and inertness, wrong origins/sources/nonces, opaque origins, limits,
-unknown fields, navigation, null/multi-root ranges, clipping, overlays, scroll,
-view swaps, timeout and disposal. Check the script budget and prove comparison
-bytes and local screenshots/interactions are unchanged.
+Retain same-origin browser tests unchanged. Add an adversarial same-origin case
+where a frame navigates itself to an unowned document carrying a syntactically
+valid marker, then starts a replacement mount: the unowned document keeps native
+activation and emits no host navigation, while the authenticated replacement
+regains host-owned navigation. Repeat that case with the unowned document's URL
+exactly equal to the next assigned resource, proving the starting object is
+excluded while a different object loaded from that URL authenticates. Retain a
+first-mount SSR hydration case proving its matching starting document remains
+eligible. Cross-origin fixtures must cover handshake and inertness, wrong
+origins/sources/nonces, opaque origins, limits, unknown fields, navigation,
+null/multi-root ranges, clipping, overlays, scroll, view swaps, timeout and
+disposal. Check the script budget and prove comparison bytes and local
+screenshots/interactions are unchanged.

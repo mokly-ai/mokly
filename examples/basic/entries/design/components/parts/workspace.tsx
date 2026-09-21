@@ -38,13 +38,15 @@ export function PreviewWorkspace({
   inspector,
   render,
   stage = true,
+  viewport,
 }: {
   inspector: ReactNode;
   render: (viewport: ArtboardViewport) => ReactNode;
   stage?: boolean;
+  viewport: ArtboardViewport | "both";
 }) {
   const previews = (
-    <div className="ce-preview-set">
+    <div className="ce-preview-set" data-viewport={viewport}>
       {(["mobile", "desktop"] as const).map((viewport) => (
         <div
           key={viewport}

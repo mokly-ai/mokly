@@ -19,7 +19,7 @@ import { viewerCatalogue, viewerContext } from "../src/viewer/projection.js";
 import { publicWorkspace } from "../src/viewer/public_workspace.js";
 import { defaultSelection } from "../src/viewer/selection.js";
 
-const model = readCatalogue(
+const fixtureModel = readCatalogue(
   JSON.parse(
     fs.readFileSync(
       new URL(
@@ -30,6 +30,11 @@ const model = readCatalogue(
     ),
   ),
 );
+const model: CatalogueReadModel = {
+  ...fixtureModel,
+  comparisonUrl: null,
+  removedEntries: [],
+};
 
 test("live evidence rebinds records while preserving interaction state", () => {
   const current = viewerCatalogue(model);

@@ -4,6 +4,7 @@ import type {
   CatalogueReadModel,
   CatalogueRoutedEntry,
   CatalogueVariant,
+  RemovedEntryPreview,
 } from "@mokly/viewer";
 import type { ManifestEntry } from "@mokly/viewer/data";
 import {
@@ -15,6 +16,7 @@ import {
   comparisonPath,
   lexical,
   publicPath,
+  pagePreviewPath,
   relatedDoc,
   repositoryPath,
 } from "@mokly/viewer/data";
@@ -29,6 +31,7 @@ export function projectCatalogue(
   input: CatalogueProjectionInput,
 ): CatalogueReadModel {
   const { catalogue } = input;
+  const comparisonUrl = comparisonPath(input.comparisonUrl);
   const retainedComponents = new Set(
     [
       ...catalogue.manifest.entries,
@@ -168,6 +171,18 @@ export function projectCatalogue(
       });
     else entries.push(routed(entry, false));
   }
+  const removedSnapshots =
+    input.changesStatus === "ready"
+      ? [...catalogue.removedEntries].sort((a, b) =>
+          entryOrder(a.entry, b.entry),
+        )
+      : [];
+  const removedRoutes = new Set(
+    removedSnapshots.map(({ entry }) => entry.route),
+  );
+  for (const route of input.removedPreviews?.keys() ?? [])
+    if (!removedRoutes.has(route))
+      invalidData("$catalogue", "preview route is not a removed entry");
   return {
     schemaVersion: 1,
     identity: catalogueIdentity(input.configPath),
@@ -177,26 +192,51 @@ export function projectCatalogue(
       evidence: input.revision.evidence,
     },
     changesStatus: input.changesStatus,
-    comparisonUrl: comparisonPath(input.comparisonUrl),
+    comparisonUrl,
     collections,
     tree: projectTree(catalogue.hierarchy),
     screens: entries.filter((entry) => entry.kind === "screen"),
     pages: entries.filter((entry) => entry.kind === "page"),
     useCases: entries.filter((entry) => entry.kind === "use-case"),
     components: entries.filter((entry) => entry.kind === "component"),
-    removedEntries:
-      input.changesStatus !== "ready"
-        ? []
-        : [...catalogue.removedEntries]
-            .sort((a, b) => entryOrder(a.entry, b.entry))
-            .map(({ entry, ancestors }) => ({
-              entry: routed(entry, true),
-              ancestors: ancestors.map((ancestor) => ({
-                id: ancestor.id,
-                title: ancestor.title,
-              })),
-            })),
+    removedEntries: removedSnapshots.map(({ entry, ancestors }) => ({
+      entry: routed(entry, true),
+      ancestors: ancestors.map((ancestor) => ({
+        id: ancestor.id,
+        title: ancestor.title,
+      })),
+      ...projectPreview(
+        entry,
+        input.removedPreviews?.get(entry.route),
+        comparisonUrl,
+      ),
+    })),
   };
+}
+
+function projectPreview(
+  entry: Exclude<ManifestEntry, { kind: "collection" }>,
+  preview: RemovedEntryPreview | undefined,
+  comparisonUrl: string | null,
+): { preview?: RemovedEntryPreview } {
+  if (!preview) return {};
+  if (!comparisonUrl)
+    invalidData("$catalogue", "preview requires a comparison URL");
+  if (preview.kind === "screen") {
+    if (entry.kind !== "screen")
+      invalidData("$catalogue", "screen preview requires a removed screen");
+    return { preview: { kind: "screen" } };
+  }
+  if (entry.kind !== "page")
+    invalidData("$catalogue", "page preview requires a removed page");
+  const previewPath = pagePreviewPath(preview.path);
+  const generation = comparisonUrl.slice(0, -"review.json".length);
+  if (previewPath !== `${generation}pages/${entry.route}.json`)
+    invalidData(
+      "$catalogue",
+      "page preview must match comparison generation and route",
+    );
+  return { preview: { kind: "page", path: previewPath } };
 }
 
 function entryOrder(left: ManifestEntry, right: ManifestEntry): number {

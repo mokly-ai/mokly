@@ -6,7 +6,9 @@ Implemented in this branch. All routed entries use one collection hierarchy,
 and current builds emit schema v5. [Page migration](./mokly-page-migration.md)
 defines the required breaking consumer upgrade and historical comparison
 support. Verification is tracked in
-[Unified Catalogue Pages](../../plans/unified-catalogue-pages.md).
+[Unified Catalogue Pages](../../plans/unified-catalogue-pages.md). The
+[removed content previews plan](../../plans/removed-content-previews.md)
+implements the page-only historical capture and delivery boundary.
 
 ## Purpose And Boundary
 
@@ -215,7 +217,8 @@ Do not use the serialized `navPath` as independent impact evidence.
 Screen comparison generation and use-case impact propagation retain their
 screen-only boundary. Adding page support must not make those paths assume
 every non-collection/non-use-case entry has screen fragments. Pages expose
-Current only; they do not trigger snapshot generation or fabricate comparisons.
+Current only and never fabricate comparisons; the only historical capture for a
+page is its [removed page preview](./mokly-removed-previews.md).
 The [catalogue-change contract](./mokly-catalogue-changes.md) owns the shared
 typed impact/removal snapshot, route/ID precedence, and flat removed-page rows
 in Changes. Baseline ancestry stays in details even when every ancestor is

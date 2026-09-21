@@ -8,8 +8,8 @@ import { writeCompilation } from "../dist/build/transaction.js";
 import { ConfiguredGitCommandRunner } from "../dist/config/git.js";
 import { exportCatalogue } from "../dist/export/run.js";
 import { CommittedRepository } from "../dist/review/git.js";
+import { configuredServedReview } from "../dist/server/configured_review.js";
 import { startCatalogueServer } from "../dist/server/http.js";
-import { configuredServedReview } from "../dist/server/review_routes.js";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
@@ -29,10 +29,7 @@ test("hydrated Serve and export render a removed route", async (context) => {
 
   const served = await fetch(`${server.url}/view/handbook.html`);
   assert.equal(served.status, 200);
-  assert.match(
-    await served.text(),
-    /This document is no longer in the catalogue/,
-  );
+  assert.match(await served.text(), /Showing previous version/);
 
   await exportCatalogue(fixture.config, { outDir: "site" });
   const exported = await fs.readFile(
@@ -40,7 +37,7 @@ test("hydrated Serve and export render a removed route", async (context) => {
     "utf8",
   );
   assert.match(exported, /data-mokly-react-shell=""/);
-  assert.match(exported, /This document is no longer in the catalogue/);
+  assert.match(exported, /Showing previous version/);
 });
 
 test("hydrated Serve and export distinguish renamed routes", async (context) => {
@@ -52,27 +49,18 @@ test("hydrated Serve and export distinguish renamed routes", async (context) => 
 
   const oldRoute = await fetch(`${server.url}/view/handbook.html`);
   assert.equal(oldRoute.status, 200);
-  assert.match(
-    await oldRoute.text(),
-    /This document is no longer in the catalogue/,
-  );
+  assert.match(await oldRoute.text(), /Showing previous version/);
   const currentRoute = await fetch(`${server.url}/view/guides/handbook.html`);
   assert.equal(currentRoute.status, 200);
-  assert.doesNotMatch(
-    await currentRoute.text(),
-    /This document is no longer in the catalogue/,
-  );
+  assert.doesNotMatch(await currentRoute.text(), /Showing previous version/);
 
   await exportCatalogue(fixture.config, { outDir: "site" });
   const read = (name: string) =>
     fs.readFile(path.join(fixture.output, name), "utf8");
-  assert.match(
-    await read("view/handbook.html"),
-    /This document is no longer in the catalogue/,
-  );
+  assert.match(await read("view/handbook.html"), /Showing previous version/);
   const current = await read("view/guides/handbook.html");
   assert.match(current, /data-mokly-react-shell=""/);
-  assert.doesNotMatch(current, /This document is no longer in the catalogue/);
+  assert.doesNotMatch(current, /Showing previous version/);
 });
 
 async function startReviewedServer(

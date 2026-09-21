@@ -61,15 +61,18 @@ test.afterAll(async () => {
   for (const dispose of cleanup.reverse()) await dispose();
 });
 
-async function expectRemovedCurrent(page: Page) {
+async function expectRemovedPrevious(page: Page) {
   await expect(page.locator("[data-workspace-status]")).toHaveText("Removed");
-  await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
-  await expect(page.locator("[data-current-screen]")).toBeVisible();
-  await expect(page.locator("[data-current-screen]")).toContainText(
-    "There is no current preview to show.",
+  await expect(page.locator(".mbk-diff-toolbar")).toHaveCount(0);
+  await expect(
+    page.locator("[data-current-screen], [data-diff-stage]"),
+  ).toHaveCount(0);
+  await expect(page.locator(".mbk-previous")).toHaveText(
+    "Showing previous version",
   );
-  await expect(page.locator("[data-diff-stage]")).toBeHidden();
-  await expect(page.locator("[data-diff-stage] iframe")).toHaveCount(0);
+  await expect(
+    page.locator("[data-mokly-preview] iframe").first(),
+  ).toBeVisible();
 }
 
 test("removed affected-screen links and legacy comparison URLs stay current", async ({
@@ -82,10 +85,10 @@ test("removed affected-screen links and legacy comparison URLs stay current", as
     .getByRole("link", { name: "Home · Removed", exact: true });
   await expect(removed).not.toHaveAttribute("href", /comparison=side/);
   await removed.click();
-  await expectRemovedCurrent(page);
+  await expectRemovedPrevious(page);
 
   await page.goto(`${server.url}/view/screens/home.html?comparison=side`);
-  await expectRemovedCurrent(page);
+  await expectRemovedPrevious(page);
 });
 
 test("removed component variants still honor eligible comparison URLs", async ({

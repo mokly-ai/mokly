@@ -11,10 +11,14 @@ export interface HighlightOption {
 export function ViewControls({
   viewport,
   highlight,
+  schemeDisabled,
 }: {
   viewport: ArtboardViewport;
   highlight?: HighlightOption;
+  /** Set when only one scheme exists, as on a removed screen's previous views. */
+  schemeDisabled?: boolean | undefined;
 }) {
+  const normalizedSchemeDisabled = schemeDisabled || undefined;
   return (
     <viewControls.Component
       moklyInstance={useDesignInstance("view-controls")}
@@ -22,6 +26,7 @@ export function ViewControls({
       scheme="light"
       destinations={{}}
       {...optional("highlight", highlight?.active)}
+      {...optional("schemeDisabled", normalizedSchemeDisabled)}
       {...optional("unavailable", highlight?.unavailable)}
     />
   );

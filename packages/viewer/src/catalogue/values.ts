@@ -74,6 +74,15 @@ export function comparisonPath(value: unknown): string | null {
     invalidData("$catalogue", "invalid comparison path");
   return result;
 }
+export function pagePreviewPath(value: unknown): string {
+  const result = repositoryPath(value);
+  const match = result.match(
+    /^__mokly\/diffs\/__generations\/([a-f0-9]{64})\/pages\/(.+)\.json$/,
+  );
+  if (!match || !isSafeCatalogueRoute(match[2] ?? ""))
+    invalidData("$catalogue", "invalid page preview path");
+  return result;
+}
 export function relatedDoc(value: unknown): string {
   const result = text(value);
   if (/^https?:\/\//.test(result)) {

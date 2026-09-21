@@ -26,9 +26,10 @@ themes from your repository, presents every screen at mobile and desktop
 sizes, and shows which screens changed from a Git baseline.
 
 Run Mokly locally while you build, export the same catalogue as static files,
-or embed its viewer in another React application. Mokly owns the catalogue;
-your repository keeps ownership of its UI, data, styling, and rendering
-context.
+or embed its viewer in another React application. Local Serve, static exports,
+and embedded hosts share the same viewer presentation. Mokly owns the
+catalogue; your repository keeps ownership of its UI, data, styling, and
+rendering context.
 
 > Mokly is pre-1.0. The package is [`@mokly/mokly`](https://www.npmjs.com/package/@mokly/mokly)
 > and the executable is `mokly`.
@@ -41,7 +42,8 @@ context.
   desktop views, color schemes, pages, components, and user flows share one
   catalogue.
 - **Review outcomes, not file lists.** The Changes view compares rendered
-  screens and their reachable resources with the branch point of your Git base.
+  screens and their reachable resources with the branch point of your Git base,
+  while removed screens and pages retain a read-only previous version.
 - **Inspect reusable components.** Register typed props, saved variants, slots,
   and local controls, then see where each component is used.
 - **Keep delivery simple.** A catalogue can be exported as static files and
@@ -121,6 +123,9 @@ docs/mockups/generated/**/*.html
 docs/mockups/generated/mokly-manifest.json
 ```
 
+Mokly's current output requires manifest v5; compatibility readers for older
+formats are limited to historical Git baselines.
+
 ### 4. Open the catalogue
 
 ```bash
@@ -188,7 +193,10 @@ so component trees use one React runtime.
 The local **Changes** view compares the working tree with the merge base of
 `HEAD` and `origin/main` by default. It accounts for generated documents,
 reachable resources, catalogue metadata, registered components, and applicable
-stylesheet changes. Comparisons are generated only when someone opens them.
+stylesheet changes. Changed screens and saved component variants generate
+comparisons only when opened; removed screens and pages load their read-only
+[previous version](./docs/protocol/mokly-removed-previews.md) from the branch
+point.
 
 Read [how Changes works](./docs/guides/catalogue/changes.md), then export a
 standalone site:
@@ -197,8 +205,9 @@ standalone site:
 npx --no-install mokly export --out .context/mokly-site
 ```
 
-The export contains the catalogue, its assets, navigation, and available Git
-comparisons. Serve the directory at the root of an HTTP(S) origin. The
+The export contains the catalogue, its assets, navigation, available Git
+comparisons, and previous versions for removed screens and pages. Serve the
+directory at the root of an HTTP(S) origin. The
 [export and hosting guide](./docs/guides/catalogue/export-and-host.md) covers
 the required headers and deployment model.
 
@@ -224,6 +233,7 @@ authentication, or discussion experience.
 - [Browsing the catalogue](./docs/guides/catalogue/browse.md)
 - [Configuration reference](./docs/guides/authoring/config.md)
 - [Protocol and specification index](./docs/protocol/README.md)
+- [Removed content previews](./docs/protocol/mokly-removed-previews.md)
 - [Package ownership boundary](./docs/architecture/package-boundary.md)
 - [React-to-static-HTML pipeline](./docs/architecture/build-pipeline.md)
 - [Implementation plans](./plans/README.md)
@@ -272,6 +282,8 @@ See the [xtask README](./xtask/README.md) for focused suites.
 - [`src/review`](./src/review/README.md) — Git baselines, comparison, and change
   attribution.
 - [`src/export`](./src/export/README.md) — static catalogue export.
+- [`src/publication`](./src/publication/README.md) — shared static shell and
+  previous-version publication.
 - [`src/publish`](./src/publish/README.md) — archive creation and upload.
 - [`packages/viewer`](./packages/viewer/README.md) — React shell, catalogue read
   model, navigation, frames, and inspection.

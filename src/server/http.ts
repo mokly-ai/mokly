@@ -33,6 +33,11 @@ import { LivePublicCatalogue } from "./public_catalogue.js";
 import type { PublicComparison } from "./public_review.js";
 import { send } from "./respond.js";
 import { ReviewRoutes } from "./review_routes.js";
+import {
+  livePublicInput,
+  removedPagePreviewSource,
+  selectedReviewSource,
+} from "./review_sources.js";
 import type { ChangesStatus } from "./update_messages.js";
 
 /** Start Browse only after manifest validation succeeds. */
@@ -98,22 +103,18 @@ export async function startCatalogueServer(
   const reviewRoutes = options.review
     ? new ReviewRoutes(
         options.review,
-        () =>
-          manifest.schemaVersion === 5 && componentChanges?.comparison
-            ? {
-                ...componentChanges.comparison,
-                before: componentChanges.baseline,
-                after: manifest,
-                ...(componentChanges.result
-                  ? { result: componentChanges.result }
-                  : {}),
-              }
-            : undefined,
+        () => selectedReviewSource(manifest, componentChanges),
         (comparison) => {
           if (changesStatus !== "ready") return;
           publicCatalogue.publish(publicInput(comparison), contentVersion);
           publicComparison = comparison;
         },
+        () =>
+          removedPagePreviewSource(
+            activeCatalogue,
+            componentChanges,
+            changesStatus,
+          ),
       )
     : undefined;
   let componentChanges =
@@ -150,18 +151,18 @@ export async function startCatalogueServer(
       : status;
   const publicInput = (
     comparison: PublicComparison | undefined = publicComparison,
-  ) => ({
-    catalogue: activeCatalogue,
-    changesStatus: publicChangesStatus(
+  ) =>
+    livePublicInput(
+      activeCatalogue,
+      publicChangesStatus(
+        changedRoutes,
+        componentChanges !== undefined,
+        changesStatus,
+      ),
       changedRoutes,
-      componentChanges !== undefined,
-      changesStatus,
-    ),
-    changedRoutes,
-    evidence: componentChanges,
-    comparison: comparison?.result,
-    comparisonUrl: comparison?.path ?? null,
-  });
+      componentChanges,
+      comparison,
+    );
   const publicCatalogue = new LivePublicCatalogue(
     config,
     publicInput(),
@@ -281,19 +282,17 @@ export async function startCatalogueServer(
       );
       if (!next) return;
       publicCatalogue.publish(
-        {
-          ...publicInput(),
-          catalogue: next.activeCatalogue,
-          changedRoutes: next.changedRoutes,
-          evidence: next.componentChanges,
-          changesStatus: publicChangesStatus(
+        livePublicInput(
+          next.activeCatalogue,
+          publicChangesStatus(
             next.changedRoutes,
             next.componentChanges !== undefined,
             next.changesStatus,
           ),
-          comparison: undefined,
-          comparisonUrl: null,
-        },
+          next.changedRoutes,
+          next.componentChanges,
+          undefined,
+        ),
         next.contentVersion,
         update.kind === "evidence",
       );

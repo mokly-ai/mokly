@@ -39,6 +39,7 @@ export function externalizeCapturedShell(
   }
   if (
     bootstrap.context.comparisons !== (catalogue.comparisonUrl !== null) ||
+    !capturedPreviewsRemainValid(bootstrap.catalogue, catalogue) ||
     !sameRenderedCatalogue(bootstrap.catalogue, catalogue)
   )
     throw exportError(
@@ -59,8 +60,25 @@ function sameRenderedCatalogue(
     deploymentId: "0".repeat(64),
     revision: { content: 0, evidence: 0 },
     comparisonUrl: null,
+    removedEntries: model.removedEntries.map(
+      ({ preview: _preview, ...removed }) => removed,
+    ),
   });
   return isDeepStrictEqual(normalize(captured), normalize(published));
+}
+
+/** Finalization may add descriptors, but cannot replace one already rendered. */
+function capturedPreviewsRemainValid(
+  captured: CatalogueReadModel,
+  published: CatalogueReadModel,
+): boolean {
+  return captured.removedEntries.every((removed, index) => {
+    if (removed.preview === undefined) return true;
+    return isDeepStrictEqual(
+      removed.preview,
+      published.removedEntries[index]?.preview,
+    );
+  });
 }
 
 function matchingScripts(node: HtmlNode): HtmlElement[] {

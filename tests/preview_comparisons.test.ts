@@ -43,7 +43,10 @@ test("published comparisons retain real baseline bytes, removed routes, and isol
   const generation = path.dirname(jsonPath);
   for (const screen of result.screens) {
     const page = await read(`view/${screen.route}`);
-    assert.ok(page.includes(`data-diff-screen="${screen.route}"`));
+    if (screen.state === "removed") {
+      assert.ok(page.includes("Showing previous version"));
+      assert.ok(!page.includes("data-diff-screen="));
+    } else assert.ok(page.includes(`data-diff-screen="${screen.route}"`));
     for (const view of screen.views) {
       for (const snapshot of [view.beforePath, view.afterPath]) {
         if (!snapshot) continue;
@@ -103,13 +106,13 @@ test("published comparisons retain real baseline bytes, removed routes, and isol
   );
   assert.match(
     documentText(await read("view/screens/removed.html")),
-    /This screen was removed/,
+    /Showing previous version/,
   );
   assert.match(redirects, /\/id\/removed \/view\/screens\/removed 302/);
   assert.match(await read("_headers"), /Cache-Control: no-store/);
   assert.match(
     documentText(await read("view/removed-document.html")),
-    /This page was removed/,
+    /Showing previous version/,
   );
   assert.doesNotMatch(
     await read("view/removed-document.html"),
@@ -266,6 +269,6 @@ test("a published renamed screen keeps its current id redirect and old compariso
     path.join(fixture.output, "view/screens/home.html"),
     "utf8",
   );
-  assert.match(documentText(old), /This screen was removed/);
-  assert.match(old, /data-diff-mode="side"/);
+  assert.match(documentText(old), /Showing previous version/);
+  assert.doesNotMatch(old, /data-diff-mode="side"/);
 });

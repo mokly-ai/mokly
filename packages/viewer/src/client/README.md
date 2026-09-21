@@ -37,6 +37,24 @@ entrypoints and shares containing-block-aware clipping with the inspector in
 `inspector/clipping.ts`; `same_origin_highlight.ts` owns the unchanged
 mask, labels, selection and observer lifecycle.
 
+`same_origin_identity.ts` is the single document-authentication boundary for
+same-origin mounts. It records authenticated `Document` objects without
+retaining them, transfers mount-time navigation ownership only when the exact
+current object was previously authenticated for that frame, and separately
+checks every watcher or `load` candidate against the assigned resource through
+a mount-scoped capability. Weak frame provenance permits matching SSR content
+on the first same-origin mount. A later mount excludes its exact unrecorded
+starting object even when its URL equals the assignment, so an unowned document
+reached through native frame navigation keeps portable link behavior until a
+different replacement object authenticates.
+
+Frames holding a previous version carry `data-mokly-preview-frame`. They are
+owned directly by the [React preview controller](../previews/README.md), not a
+frame adapter, so no inspector or logical-navigation handshake happens for
+historical documents. The controller cancels marked links and forms in
+same-origin historical documents and the frame sandbox supplies the remaining
+cross-origin boundary.
+
 `post_message_adapter.ts` explicitly opts into a separate HTTP(S) origin. It sets
 the cross-origin sandbox, replaces iframe history, and negotiates a fresh random
 nonce after load. `message_transport.ts` owns the five-second request timeouts,

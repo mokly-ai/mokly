@@ -24,7 +24,7 @@ The [large fixture](../../tests/fixtures/large/README.md)
 uses the same Firna/React Native Web rendering stack with configurable volume,
 without expanding this example or slowing ordinary development startup.
 
-Mokly's 68 design screens now use 15 registered shared components, including
+Mokly's 75 design screens now use 15 registered shared components, including
 the footer tabs panel. Open **Components → Design → Shared components** for Chrome, Controls,
 Inspector and Preview galleries with 58 saved variants, real mobile/desktop
 previews and editable local props. The outer Components and Usage tabs show actual
@@ -70,6 +70,12 @@ Shared destinations live in [destinations.ts](./entries/design/parts/destination
 selects which transitions each artboard supports. Add an owning screen and its
 contract before enabling a new transition.
 
+`tests/helpers/replaced_copy.ts` lists the shell sentences the protocols
+replaced, and `tests/design_replaced_copy.test.ts` fails when any generated
+design document renders one of them again. Add the retired sentence to that
+list whenever a protocol replaces visible copy, so a mockup family outside the
+change's named scope cannot quietly keep the old wording.
+
 ## Firna renderer adapter
 
 `renderer.tsx` is the reference consumer adapter for react-native-web
@@ -88,9 +94,10 @@ render plain React DOM need none of this and can keep a plain
 `renderToStaticMarkup` adapter.
 
 The `Design` navigation group is the owning design catalogue for Mokly's
-Browse and Changes views. Its thirty-six Browse, page, publication and Changes
+Browse and Changes views. Its forty-three Browse, page, publication and Changes
 screens cover navigation, Details, tags, color schemes, comparison outcomes,
-stylesheet evidence, and the preparing and unavailable comparison states. Thirty-two component
+stylesheet evidence, the preparing and unavailable comparison states, and the
+previous-version states of removed documents and screens. Thirty-two component
 explorer screens add component pages, saved variants, affected screens,
 repeated/nested inspection, highlighting, and empty or removed states. The shared icon inspector and complete controls
 mockups include edited/reset, optional, loading, validation, retry, comparison,
@@ -115,7 +122,7 @@ active content scrolls; closing and reopening retains edits. Viewport carets,
 the mobile menu, and the Usage icon use centered SVGs. Known entries show
 Added, Changed, Removed, or Unmodified; removing a variant marks its surviving
 component Changed. The States → Additions gallery demonstrates a newly added Badge.
-Removed screens show their status and current empty state without comparison
+Removed screens show their status and previous version without comparison
 controls; the removed component variant retains its baseline comparison.
 Comparison facts live in Details, using shared fixture values for prop differences
 and linked component changes. These rows do not generate descriptions of visual
@@ -134,7 +141,7 @@ galleries; `inspector` shows both closed-panel layouts.
 Each child gallery lists at most five owning screens; inspection also links
 two selected-instance screens in a nested gallery.
 
-All sixty-eight design screens use `colorSchemes: ["light"]`: they draw the
+All seventy-five design screens use `colorSchemes: ["light"]`: they draw the
 Mokly shell, including the existing dark-selection examples. The two product
 screens inherit the catalogue's light/dark settings and prove dark generation.
 Design headers retain the approved screen-stack logo: 17px overlapping mobile
@@ -151,7 +158,7 @@ A shared implementation edit appears on its component page and lists consuming
 screens as affected; independent screen inputs, slots or instance changes still
 appear in Changes. This is tested against fully registered baseline snapshots.
 
-The shared inspector/workspace sheets cover all 68 design screens and standalone
+The shared inspector/workspace sheets cover all 75 design screens and standalone
 library hosts. Other mixed component-design sheets remain scoped to the 32
 component-design routes and hosts; the controls sheet additionally remains
 scoped to its eleven owning screen routes. `review.sharedImpact` is fallback
@@ -174,8 +181,15 @@ routes, fixture relationships, mask geometry, and delivery status live in the
 All unchanged Browse designs, including the tag picker, omit comparison controls.
 Changed screens and changed or removed component variants retain an opaque
 comparison band. Added designs show their current preview and status without
-comparison controls; removed screens show their status and current empty state
-without them. The Added outcome still shows its factual branch evidence in
+comparison controls; removed screens and documents show their status and their
+previous version, labelled “Showing previous version”, without them. Their
+nested `design/browse/pages/previous-version/` and
+`design/review/outcomes/previous-version/` groups add the long, loading, and
+unavailable-with-retry states, each reached from its own row in the same flat
+Changes list. A removed screen also has a viewport with no captured previous
+view, whose stage names the viewport that still opens instead of standing
+empty.
+The Added outcome still shows its factual branch evidence in
 Details; evidence availability, comparison eligibility, and initial inspector
 disclosure are independent. The
 shared-impact and ignored-only examples open from All with zero Changes and one
@@ -232,22 +246,26 @@ Public HTML copies pass through the same ownership-aware link adapter as served
 Browse; direct preview URLs apply one validated `fragment` query progressively
 in the parent shell. PR previews explicitly include Changes and immutable screen and saved component
 comparisons with `--include-changes --base origin/main`. Publishing then prepares
-isolated before/after resources and removed-entry states; browsers fetch screen
-snapshots only after a comparison option is selected. Links inside the design
+isolated before/after resources and removed-entry states. Changed-screen
+snapshots load only after a comparison option is selected; selecting a removed
+page or screen loads its packaged previous version. Links inside the design
 frames navigate between authored artboards; their pictured comparison controls
 do not request actual comparison snapshots. There is no separate Review section
 or comparison CLI command.
 
 The shell designs now include `design/browse/pages/` (document, details,
-and removal) and `design/browse/publication/` (current catalogue and Changes).
+removal, and the nested `previous-version/` states) and
+`design/browse/publication/` (current catalogue and Changes).
 Each state has its own mobile and desktop component and reuses the shell,
 navigation, and stage primitives. The synthetic handbook in `entries/document.tsx`
-is shared by these designs and the first-class page example.
+is shared by these designs and the first-class page example; its read-only copy
+keeps the document's own appearance while its link, like every link in a
+previous version, does nothing.
 
 The `example-handbook` page imports the shared example document and belongs to
 the existing Example collection alongside Screens and Example tour. Its exact
 `handbook.html` route, `next-steps` anchor, and incoming Welcome link exercise
-the public page API. The design catalogue has four responsive page states and
+the public page API. The design catalogue has seven responsive page states and
 two publication states.
 
 Every design uses the shared `Search catalogue…` wording. Home guidance and the

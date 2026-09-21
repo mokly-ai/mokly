@@ -1,7 +1,57 @@
 import { COMPONENT_PAGES } from "../components/parts/destinations.js";
 import type { CatalogueNavigationProps } from "../library/chrome/catalogue-navigation.js";
 
-import { DESTINATIONS } from "./destinations.js";
+import { DESTINATIONS, type DesignDestination } from "./destinations.js";
+
+/** One screen this branch removed, with the preview state it opens in. */
+interface RemovedScreen {
+  design: DesignDestination;
+  id: string;
+  key: string;
+  title: string;
+}
+
+/**
+ * The screens this branch removed. Each keeps its own Changes row, so the
+ * previous-version states are reached the way a reader reaches them.
+ */
+export const REMOVED_SCREENS = {
+  farewell: {
+    design: DESTINATIONS.removed,
+    id: "example-farewell",
+    key: "farewell-removed",
+    title: "Farewell",
+  },
+  survey: {
+    design: DESTINATIONS.removedLong,
+    id: "example-survey",
+    key: "survey-removed",
+    title: "Survey",
+  },
+  invite: {
+    design: DESTINATIONS.removedLoading,
+    id: "example-invite",
+    key: "invite-removed",
+    title: "Invite",
+  },
+  archive: {
+    design: DESTINATIONS.removedUnavailable,
+    id: "example-archive",
+    key: "archive-removed",
+    title: "Archive",
+  },
+  timeline: {
+    design: DESTINATIONS.removedNoView,
+    id: "example-timeline",
+    key: "timeline-removed",
+    title: "Timeline",
+  },
+} as const satisfies Record<string, RemovedScreen>;
+
+export const REMOVED_SCREEN_ROWS = Object.values(REMOVED_SCREENS);
+
+/** Welcome changed, Details was added, and five screens were removed. */
+export const CHANGED_COUNT = 2 + REMOVED_SCREEN_ROWS.length;
 
 export const NAV_TREE = [
   {

@@ -121,10 +121,13 @@ test("background baselines reconcile removed rows and invalidate changed histori
     await expect(document).toBeHidden();
     await page.locator('[data-filter="changed"]').click();
     await expect(document).toBeVisible();
+    expect(fixture.comparisonRequests).toBe(0);
     await document.click();
     await expect(
       page.getByRole("heading", { name: "Old page", exact: true }),
     ).toBeVisible();
+    await expect.poll(() => fixture.comparisonRequests).toBeGreaterThan(0);
+    const initialPreviewRequests = fixture.comparisonRequests;
     publish(
       baseline.entries.map((entry) =>
         entry.id === "old-page" ? { ...entry, title: "Earlier page" } : entry,
@@ -137,6 +140,10 @@ test("background baselines reconcile removed rows and invalidate changed histori
       "data-test-retained",
       "true",
     );
+    await expect
+      .poll(() => fixture.comparisonRequests)
+      .toBeGreaterThan(initialPreviewRequests);
+    const previewRequests = fixture.comparisonRequests;
     await page.goto(`${server.url}/view/screens/home.html`);
     server.publishUpdate({
       kind: "evidence",
@@ -148,7 +155,7 @@ test("background baselines reconcile removed rows and invalidate changed histori
     await expect(page.locator('[data-nav-section="components"]')).toHaveCount(
       0,
     );
-    expect(fixture.comparisonRequests).toBe(0);
+    expect(fixture.comparisonRequests).toBe(previewRequests);
   } finally {
     await fixture.close();
     await removeFixture(before);

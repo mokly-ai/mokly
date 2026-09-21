@@ -50,7 +50,11 @@ export function ComponentLayout({
         comparisonMode={comparison ? "side-by-side" : "current"}
       />
       {variants}
-      <PreviewWorkspace inspector={inspector} render={children} />
+      <PreviewWorkspace
+        inspector={inspector}
+        render={children}
+        viewport={viewport}
+      />
     </ExplorerShell>
   );
 }

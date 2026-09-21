@@ -16,9 +16,17 @@
 - [Browse Shell Design Parity](./browse-shell-design-parity.md)
 - [Unchanged View Fast Path](./unchanged-view-fast-path.md) — post-review
   correctness fixes are active until the PR merges.
+- [Authenticated Frame Document Handoff](./authenticated-frame-document-handoff.md)
+  — closes the React Browse Shell Milestone 13/14 review finding by attaching
+  the same-origin mount-time navigation receiver only to a previously
+  authenticated document.
 
 ## Completed
 
+- [Removed Content Previews](./removed-content-previews.md) — delivered and
+  verified; Serve, exports, repository previews, and embedded viewers render
+  pinned previous versions for removed documents and screens. One High/P1
+  cross-origin read-only finding is recorded for the user's decision.
 - [Mokly Viewer Library](./mokly-viewer-library.md) — implementation and release
   PRs merged; viewer 0.1.0 and CLI 0.10.0 are published. One P2 review finding
   and the remaining published-package smoke are recorded for follow-up.

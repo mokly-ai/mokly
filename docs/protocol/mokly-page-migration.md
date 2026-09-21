@@ -109,9 +109,10 @@ without an explicit preserved match is treated as an added current page.
 
 Unmatched legacy records have no catalogue IDs and remain historical
 artifact records; they never become synthetic removed-page entries. Normal v5
-page removals have real IDs and use the missing-current behavior in the page
-contract and its [shared metadata](./mokly-catalogue-changes.md) wherever
-Changes is enabled. Ordinary publication omits removed pages;
+page removals have real IDs and open their
+[previous version](./mokly-removed-previews.md) through the page contract and
+its [shared metadata](./mokly-catalogue-changes.md) wherever Changes is
+enabled. Ordinary publication omits removed pages;
 the [publication option](./mokly-publication.md) explicitly enables review.
 Keep all existing screen/base asset-copying, ignored-region, resource
 confinement, cancellation, and publication safeguards through schema changes.

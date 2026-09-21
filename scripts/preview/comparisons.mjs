@@ -1,9 +1,11 @@
-import fs from "node:fs";
 import path from "node:path";
 
-import { comparisonContentId } from "../../dist/export/content_id.js";
-import { ownedEntries } from "../../dist/export/ownership.js";
-import { configuredServedReview } from "../../dist/server/review_routes.js";
+import {
+  capturePublicationPagePreviews,
+  publicationComparisonMetadata,
+  publishPublicationComparison,
+} from "../../dist/publication/removed_previews.js";
+import { configuredServedReview } from "../../dist/server/configured_review.js";
 
 const comparisonRoute = "/__mokly/diffs/review.json";
 
@@ -43,41 +45,30 @@ export async function captureComparison(serverUrl) {
   };
 }
 
+export { capturePublicationPagePreviews };
+
 /** Move the completed generation into the deployment after the server closes. */
-export async function publishComparison(provider, comparison, stage) {
-  const files = new Map();
-  for (const name of (await ownedEntries(provider.outDir)).files)
-    if (![".mokly-review-artifact", "summary.md"].includes(name))
-      files.set(
-        name,
-        await fs.promises.readFile(path.join(provider.outDir, name)),
-      );
-  const directory = `__mokly/diffs/__generations/${comparisonContentId(files)}`;
-  const target = path.join(stage, directory);
-  await fs.promises.mkdir(path.dirname(target), { recursive: true });
-  await fs.promises.rename(provider.outDir, target);
-  await fs.promises.rm(path.join(target, ".mokly-review-artifact"));
-  await fs.promises.rm(path.join(target, "summary.md"));
+export async function publishComparison(
+  provider,
+  comparison,
+  stage,
+  removed,
+  pagePreviews = new Map(),
+) {
+  const published = await publishPublicationComparison(
+    provider,
+    comparison,
+    stage,
+    removed,
+    pagePreviews,
+  );
   return {
-    ...comparison,
-    directory,
-    ...comparisonMetadata(`/${directory}/review.json`),
+    ...published,
+    ...comparisonMetadata(`/${published.directory}/review.json`),
   };
 }
 
 /** Preserve the repository's immutable-generation alias and hosting policy. */
 export function comparisonMetadata(comparisonUrl) {
-  if (
-    !/^\/__mokly\/diffs\/__generations\/[a-f0-9]{64}\/review\.json$/.test(
-      comparisonUrl,
-    )
-  )
-    throw new Error(
-      "preview comparison did not resolve an immutable generation",
-    );
-  return {
-    redirect: `/__mokly/diffs/review.json ${comparisonUrl} 302`,
-    headers:
-      "/__mokly/diffs/*\n  Cache-Control: no-store\n  X-Content-Type-Options: nosniff\n",
-  };
+  return publicationComparisonMetadata(comparisonUrl);
 }
