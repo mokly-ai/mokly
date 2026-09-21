@@ -10,6 +10,8 @@
   documentation finding, and the remaining follow-up tasks from PR #101;
   implemented, independently verified, pushed, and reviewed with no actionable
   findings; [PR #111](https://github.com/mokly-ai/mokly/pull/111) awaits merge.
+- [Mokly MCP Server](./mokly-mcp-server.md) — `mokly mcp`, a local stdio
+  Model Context Protocol host over watched Serve for coding agents.
 - [React Browse Shell](./react-browse-shell.md)
 - [CI Performance](./ci-performance.md) — parallel verification, complete test
   sharding, reusable preparation and measured CI timing improvements.
