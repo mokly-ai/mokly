@@ -54,8 +54,9 @@ exact `origin/main` base `a177abd` confirmed that “Relative link” through th
 `snapshots/before/screens/current.mobile.html` and replaced the historical
 preview, because the parent could not install its DOM guard and the sandbox
 permits frame self-navigation. The same activation through `sameOriginAdapter`
-was cancelled. The implementation remains unchanged until that plan's viewer
-presentation milestone. Intentional tradeoffs remain: served unavailable
+was cancelled. Milestone 2 of that plan (`9ae758e`) resolved the issue by
+presenting each historical document as a viewer-owned, same-origin document
+guarded in every host. Intentional tradeoffs remain: served unavailable
 markup changes to loading after the client starts its request; branch-point
 semantics exclude later pre-deletion branch edits; and published-package and
 deployed-preview smokes remain post-merge follow-up work.

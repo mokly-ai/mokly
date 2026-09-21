@@ -19,8 +19,9 @@ against the generation root, not the descriptor's own directory. Screen views
 render only where the comparison says `removed`; any `afterPath` for that route
 means a reused generation and is treated as unavailable. `renewPreview`
 extends a live generation's retention before reusing it, exactly as comparisons
-do. `advertisedPreviewPaths` includes the accepted metadata and historical
-document prefix an embedded viewer may fetch.
+do. `advertisedPreviewPaths` returns accepted metadata in `files` and the
+historical document directory in `prefixes` so an embedded viewer can enforce
+each kind of advertised path separately.
 
 `presentation.ts` fetches each metadata-named document beneath that
 generation's `snapshots/before/`, applies the comparison credential and

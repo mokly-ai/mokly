@@ -40,12 +40,14 @@ function documentFixture(): Document {
     },
   };
   const root = {
+    nodeType: 1,
     get outerHTML() {
       return `<html><head><base href="${baseHref}"></head><body>Archived</body></html>`;
     },
   };
   return {
     body: {},
+    childNodes: [root],
     createElement: () => base,
     doctype: null,
     documentElement: root,

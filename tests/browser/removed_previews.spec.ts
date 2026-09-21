@@ -118,6 +118,7 @@ test("a previous version reads but never acts", async ({ page }) => {
     "Relative link",
     "External link",
     "Download link",
+    "SVG link",
   ])
     await preview.getByText(label, { exact: true }).click();
   await preview.getByRole("button", { name: "Send" }).click();

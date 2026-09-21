@@ -53,6 +53,14 @@ export interface PreviewRequestEnvironment {
   fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>;
 }
 
+/** Exact files and confined directory prefixes advertised for a preview. */
+export interface AdvertisedPreviewPaths {
+  /** Metadata files an embedded viewer may request directly. */
+  files: readonly string[];
+  /** Directory prefixes beneath which historical documents may be requested. */
+  prefixes: readonly string[];
+}
+
 /**
  * The address to request, or `undefined` when the delivery advertises nothing
  * for this entry. Static delivery loads only advertised addresses, so an older
@@ -95,19 +103,20 @@ export function previewEndpoint(
  */
 export function advertisedPreviewPaths(
   model: CatalogueReadModel,
-): readonly string[] {
+): AdvertisedPreviewPaths {
   const comparison = model.comparisonUrl;
-  return [
-    ...(comparison === null
-      ? []
-      : [
-          comparison,
-          `${comparison.slice(0, -REVIEW_FILE.length)}snapshots/before/`,
-        ]),
-    ...model.removedEntries.flatMap((removed) =>
-      removed.preview?.kind === "page" ? [removed.preview.path] : [],
-    ),
-  ];
+  return {
+    files: [
+      ...(comparison === null ? [] : [comparison]),
+      ...model.removedEntries.flatMap((removed) =>
+        removed.preview?.kind === "page" ? [removed.preview.path] : [],
+      ),
+    ],
+    prefixes:
+      comparison === null
+        ? []
+        : [`${comparison.slice(0, -REVIEW_FILE.length)}snapshots/before/`],
+  };
 }
 
 function unavailable(): never {

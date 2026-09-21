@@ -78,6 +78,32 @@ async function inspect(page: Page, srcdoc: string) {
   );
 }
 
+async function inspectDocumentNodes(page: Page, srcdoc: string) {
+  return page.evaluate(
+    (source) =>
+      new Promise<string[]>((resolve) => {
+        const frame = document.createElement("iframe");
+        frame.setAttribute("sandbox", "allow-same-origin");
+        frame.addEventListener("load", () => {
+          const doc = frame.contentDocument!;
+          resolve(
+            Array.from(doc.childNodes, (node) => {
+              if (node.nodeType === Node.COMMENT_NODE)
+                return `comment:${(node as Comment).data}`;
+              if (node.nodeType === Node.DOCUMENT_TYPE_NODE)
+                return `doctype:${(node as DocumentType).name}`;
+              return `element:${(node as Element).localName}`;
+            }),
+          );
+          frame.remove();
+        });
+        frame.srcdoc = source;
+        document.body.append(frame);
+      }),
+    srcdoc,
+  );
+}
+
 test("historical markup becomes one faithful viewer-owned document", async ({
   page,
 }) => {
@@ -143,6 +169,18 @@ test("historical markup becomes one faithful viewer-owned document", async ({
     baseCount: 1,
     firstHeadNode: "base",
   });
+
+  const comments = await page.evaluate(() =>
+    window.loadPreviewPresentation({
+      html: "<!-- before --><!doctype html><html><body>Archived</body></html><!-- after -->",
+    }),
+  );
+  expect(await inspectDocumentNodes(page, comments.srcdoc)).toEqual([
+    "comment: before ",
+    "doctype:html",
+    "element:html",
+    "comment: after ",
+  ]);
 });
 
 test("historical fetches accept only the contracted response", async ({

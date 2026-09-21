@@ -2,6 +2,10 @@
 
 import type { PreviewPresentation } from "./presentation.js";
 
+const ELEMENT_NODE = 1;
+const COMMENT_NODE = 8;
+const DOCUMENT_TYPE_NODE = 10;
+
 /** Apply the contracted base and refresh edits, then serialize the document. */
 export function presentPreviewDocument(
   doc: Document,
@@ -30,8 +34,19 @@ export function presentPreviewDocument(
   if (!element) return unavailable();
   return {
     snapshotAddress,
-    srcdoc: `${serializeDoctype(doc.doctype)}${element.outerHTML}`,
+    srcdoc: serializeDocument(doc),
   };
+}
+
+function serializeDocument(doc: Document): string {
+  return Array.from(doc.childNodes, (node) => {
+    if (node.nodeType === DOCUMENT_TYPE_NODE)
+      return serializeDoctype(node as DocumentType);
+    if (node.nodeType === COMMENT_NODE)
+      return `<!--${(node as Comment).data}-->`;
+    if (node.nodeType === ELEMENT_NODE) return (node as Element).outerHTML;
+    return "";
+  }).join("");
 }
 
 function documentHead(doc: Document): HTMLHeadElement {

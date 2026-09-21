@@ -311,7 +311,7 @@ guard covers every anchor form, the presentation keeps document-level nodes,
 a missing presentation degrades to the failed state, the advertised fetch set
 is typed, and the completed removed-previews plan states the resolution.
 
-- [ ] Finding 1: add an SVG `<a xlink:href>` anchor to the removed page and
+- [x] Finding 1: add an SVG `<a xlink:href>` anchor to the removed page and
       screens in `tests/helpers/removed_preview_fixture.ts`, extend the
       inert-link regressions in `removed_previews_viewer.spec.ts` (both
       adapters) and `removed_previews.spec.ts` to click it and assert no
@@ -319,26 +319,26 @@ is typed, and the completed removed-previews plan states the resolution.
       local name on the composed path regardless of which `href` attribute
       they carry, reading the SVG `xlink:href` when `href` is absent for the
       fragment rule.
-- [ ] Finding 2: serialize every top-level document child in order in
+- [x] Finding 2: serialize every top-level document child in order in
       `presentation_document.ts` (doctype through the existing serializer,
       comments as `<!--…-->`, the document element as `outerHTML`), extend
       `removed_preview_presentation.spec.ts` to prove a comment before and
       after `<html>` survives, and state in
       `docs/protocol/mokly-removed-previews.md` that document-level comments
       are preserved.
-- [ ] Finding 3: in `plans/removed-content-previews.md`, replace "The
+- [x] Finding 3: in `plans/removed-content-previews.md`, replace "The
       implementation remains unchanged until that plan's viewer presentation
       milestone" with the resolution and the `9ae758e` commit, keeping the
       dated probe record.
-- [ ] Finding 4: make `presentationFor` in `shell/previews.tsx` return
+- [x] Finding 4: make `presentationFor` in `shell/previews.tsx` return
       `undefined` for a missing address and render the failed state with
       Retry instead of throwing; cover it with a unit test that renders the
       ready state with an incomplete map (precedent
       `tests/removed_preview_shell.test.ts`).
-- [ ] Finding 5: change `advertisedPreviewPaths` in `previews/request.ts` to
+- [x] Finding 5: change `advertisedPreviewPaths` in `previews/request.ts` to
       return a typed `{ files: readonly string[]; prefixes: readonly string[] }`
       value, update its unit test and the previews README sentence.
-- [ ] Run the viewer build and typecheck, `npm run lint`,
+- [x] Run the viewer build and typecheck, `npm run lint`,
       `npm run format:check`, the changed unit tests, and the five preview
       browser specs three times; then the complete `cargo xtask check` gate
       with no failures or skips.
@@ -437,3 +437,30 @@ findings for the user's decision; none was applied automatically:
    after the React shell, but a future consumer could treat the prefix as a
    file. Recommended: return a typed `{ files, prefixes }` shape or document
    the mixed contents on the function.
+
+### Milestone 3
+
+- Base commit: `0fe41f8` on `calummoore/jakarta-v2`, based on `origin/main` at
+  `a177abd`.
+- Finding 1 pre-fix regression: the focused three-case browser run on port 4539
+  failed each retained `expect(documents).toEqual([])` assertion because it
+  received one request for `snapshots/before/screens/current.mobile.html`
+  after clicking “SVG link.”
+- Finding 2 pre-fix regression: the focused presentation test on port 4539
+  expected the ordered `comment: before ` and `comment: after ` document nodes
+  but received only `doctype:html` and `element:html`.
+- Finding 4 pre-fix regression: the new Node test failed
+  `assert.doesNotThrow` because `presentationFor` raised “The previous version
+  is unavailable.” Findings 3 and 5 were documentation and typed-contract
+  corrections, so no failing browser assertion was expected for them.
+- Checks: `npm run build`, `npm run typecheck`, `npm run lint`,
+  `npm run format:check`,
+  `npx tsx --test tests/client_removed_previews.test.ts
+tests/client_removed_preview_requests.test.ts
+tests/client_removed_preview_presentation.test.ts
+tests/removed_preview_shell.test.ts
+tests/removed_preview_presentation_state.test.ts` (21/21), the five preview
+  browser specs through `MOKLY_PLAYWRIGHT_PORT=<port> npx playwright test` on
+  ports 4541, 4542 and 4543 (30/30 on every run), `npm run package:check`, and
+  the complete `cargo xtask check` all passed. The complete gate's unit phase
+  passed 2068/2068 with no failures, skips or cancellations.

@@ -205,9 +205,10 @@ validation, read, parse, or presentation failure renders the existing
 “Previous version unavailable” state with Retry. Cancellation after unmount or
 replacement is silent, and late work cannot change the replacement stage.
 
-Parse the body as an inert HTML document. Resolve the first `<base href>` in
-document order against the snapshot address, falling back to that address when
-there is no such element or its value is unresolvable. Remove every consumer
+Parse the body as an inert HTML document. Preserve document-level comments
+before and after the document element in their parsed order. Resolve the first
+`<base href>` in document order against the snapshot address, falling back to
+that address when there is no such element or its value is unresolvable. Remove every consumer
 `<base>` and every `<meta>` whose `http-equiv`, after trimming ASCII whitespace,
 equals `refresh` under ASCII case-insensitive comparison. Prepend exactly one
 `<base href>` for the effective base as `head`'s first child, including for an

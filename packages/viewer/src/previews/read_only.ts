@@ -3,6 +3,7 @@
 import type { PreviewPresentation } from "./presentation.js";
 
 const guarded = new WeakSet<Document>();
+const XLINK_NAMESPACE = "http://www.w3.org/1999/xlink";
 
 function accessible(frame: HTMLIFrameElement): Document | undefined {
   try {
@@ -20,14 +21,18 @@ function activated(event: Event, doc: Document): Element | undefined {
     .find(
       (candidate): candidate is Element =>
         candidate instanceof view.Element &&
-        candidate.matches("a[href], area[href]"),
+        (candidate.localName === "a" || candidate.localName === "area"),
     );
 }
 
 function fragmentName(link: Element, doc: Document, source: string) {
   let target: URL;
   try {
-    target = new URL(link.getAttribute("href") ?? "", doc.baseURI);
+    const href =
+      link.getAttribute("href") ??
+      link.getAttributeNS(XLINK_NAMESPACE, "href") ??
+      "";
+    target = new URL(href, doc.baseURI);
   } catch {
     return;
   }

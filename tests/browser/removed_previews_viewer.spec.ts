@@ -67,6 +67,7 @@ for (const adapter of ["same-origin", "cross"]) {
       "Plain external link",
       "Download link",
       "Shadow link",
+      "SVG link",
     ]) {
       await preview.getByText(label, { exact: true }).click();
       await expect(preview.locator("h1")).toHaveText("Previous page");
