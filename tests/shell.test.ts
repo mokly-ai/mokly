@@ -1024,3 +1024,32 @@ test("one scheme switch instance shows per side of the breakpoint", () => {
     ),
   );
 });
+
+test("a full document states its appearance and opts into the asset", () => {
+  const catalogue = createCatalogue(manifest);
+  for (const theme of ["light", "dark", "auto"] as const) {
+    const html = homePage(catalogue, { ...context, theme });
+    assert.match(
+      html,
+      new RegExp(`<html[^>]*data-mokly-theme="${theme}"`),
+      theme,
+    );
+    // The hook marks the document as one the asset may act on, and the asset
+    // is requested before the stylesheet so it restores before first paint.
+    assert.match(html, /<html[^>]*data-mokly-appearance=""/);
+    assert.ok(
+      html.indexOf("appearance-startup.js") < html.indexOf('rel="stylesheet"'),
+      "the startup asset is requested after the stylesheet",
+    );
+  }
+});
+
+test("an omitted or unusable theme renders Auto in a full document", () => {
+  const catalogue = createCatalogue(manifest);
+  for (const theme of [undefined, "sideways" as never])
+    assert.match(
+      homePage(catalogue, { ...context, ...(theme ? { theme } : {}) }),
+      /<html[^>]*data-mokly-theme="auto"/,
+      String(theme),
+    );
+});

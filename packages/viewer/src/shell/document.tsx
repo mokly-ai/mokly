@@ -9,6 +9,8 @@ import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import { CatalogueNav } from "./nav.js";
 import { TopBar } from "./top_bar.js";
+import { normalizeTheme } from "../viewer/theme.js";
+
 import { ShellMain, viewTitle } from "./views.js";
 import type { ShellView } from "./views.js";
 
@@ -25,6 +27,8 @@ export function renderShellPage(
       data-mokly-delivery={
         context.delivery ? JSON.stringify(context.delivery) : undefined
       }
+      data-mokly-appearance=""
+      data-mokly-theme={normalizeTheme(context.theme)}
       data-mokly-update-version={context.updateVersion}
       data-mokly-content-version={
         context.delivery ? undefined : context.contentVersion
@@ -35,6 +39,9 @@ export function renderShellPage(
         <meta charSet="utf-8" />
         <meta content="width=device-width, initial-scale=1" name="viewport" />
         <title>{viewTitle(catalogue, view)}</title>
+        {/* Classic and ahead of the stylesheet, so a stored or pinned dark
+            appearance is on the root before the first paint. */}
+        <script src="/__mokly/client/appearance-startup.js" />
         <link href="/__mokly/shell.css" rel="stylesheet" />
       </head>
       <body className="mbk-fs">

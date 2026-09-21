@@ -902,6 +902,19 @@ without fixing them.
       one first-load frame swap against Serve and a static export. Update the
       runtime and shell-design Color Scheme sections to the shipped behavior
       and run the relevant shell, navigation and export browser suites.
+- [ ] Close the Milestone 4 review findings that this milestone owns: give
+      the standalone startup one shared controller per root (a `WeakMap`) so
+      repeated installation returns handles over the same theme and listener
+      state, with tests for choices through repeated handles, media changes,
+      storage failure and disposal order; thread the normalized `theme` into
+      the first-party full-document rendering path (`server.tsx` through
+      `document.tsx`) with an SSR regression test; replace the uses of
+      `--mokly-accent-contrast` over non-accent backgrounds in the skip link
+      and inspection labels with private semantic foregrounds, and add a test
+      auditing every public override foreground and background pairing in
+      both appearances; make the appearance protocol the canonical delivery
+      status and replace the duplicated status prose in the viewer and
+      palette protocols with short references.
 
 ## Milestone 6: Verify, commit, push and review
 

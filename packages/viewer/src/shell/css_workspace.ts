@@ -78,7 +78,7 @@ export const SHELL_WORKSPACE_CSS = `
 .mbk-comparison-evidence ul + p { margin-top: 14px; }
 .mbk-highlight-layer { position: fixed; pointer-events: none; z-index: 4; overflow: hidden; }
 .mbk-highlight-layer svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.mbk-highlight-label { position: absolute; pointer-events: auto; max-width: 230px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border: 0; border-radius: 4px; background: var(--mbk-accent-deep); color: var(--mokly-accent-contrast); padding: 3px 7px; font: 11px var(--sans); cursor: pointer; }
+.mbk-highlight-label { position: absolute; pointer-events: auto; max-width: 230px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border: 0; border-radius: 4px; background: var(--mbk-accent-deep); color: var(--_mokly-private-on-accent-deep); padding: 3px 7px; font: 11px var(--sans); cursor: pointer; }
 .mbk-control-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px 24px; }
 .mbk-control-field { display: flex; flex-direction: column; gap: 6px; position: relative; min-width: 0; }
 .mbk-control-field > label:not(.mbk-control-supplied) { font-size: 12px; font-weight: 600; }

@@ -49,6 +49,9 @@ export interface AppearanceWindow {
     removeEventListener(type: "change", handler: () => void): void;
   };
   localStorage?: AppearanceStorage | undefined;
+  /** Notified after each application, so a host can mirror the scheme. */
+  onAppearance?:
+    ((theme: ViewerTheme, scheme: "dark" | "light") => void) | undefined;
 }
 
 /** A live installation: choose an appearance, or remove what it installed. */
@@ -58,8 +61,26 @@ export interface AppearanceHandle {
 }
 
 const FRAME_SELECTOR = "[data-fragment-light][data-fragment-dark]";
-const INSTALLED = new WeakSet<object>();
+const NO_STORAGE: AppearanceStorage = {
+  getItem: () => null,
+  setItem: () => {},
+  removeItem: () => {},
+};
 const INERT: AppearanceHandle = { choose: () => {}, dispose: () => {} };
+
+/**
+ * One controller per document root. A document has one appearance, so every
+ * handle over the same root shares the theme, the system listener and the
+ * store: a choice made through one handle is the choice the listener sees.
+ */
+interface Controller {
+  theme: ViewerTheme;
+  handles: number;
+  apply(): void;
+  choose(theme: ViewerTheme): void;
+  release(): void;
+}
+const CONTROLLERS = new WeakMap<object, Controller>();
 
 function storageOf(window: AppearanceWindow): AppearanceStorage {
   try {
@@ -69,12 +90,6 @@ function storageOf(window: AppearanceWindow): AppearanceStorage {
     return NO_STORAGE;
   }
 }
-
-const NO_STORAGE: AppearanceStorage = {
-  getItem: () => null,
-  setItem: () => {},
-  removeItem: () => {},
-};
 
 /**
  * Points every dual-scheme frame at the source matching the effective scheme.
@@ -94,6 +109,46 @@ function applyFrames(
   }
 }
 
+function createController(
+  document: AppearanceDocument,
+  window: AppearanceWindow,
+): Controller {
+  const root = document.documentElement;
+  const storage = storageOf(window);
+  const initial = root.getAttribute(THEME_ATTRIBUTE);
+  const media = window.matchMedia("(prefers-color-scheme: dark)");
+  const controller: Controller = {
+    theme: resolveAppearance({
+      pin: schemePin(window.location.search),
+      stored: readStoredAppearance(storage),
+      ...(initial ? { initial: initial as ViewerTheme } : {}),
+    }),
+    handles: 0,
+    apply() {
+      root.setAttribute(THEME_ATTRIBUTE, controller.theme);
+      const scheme = effectiveScheme(controller.theme, media.matches);
+      applyFrames(document, scheme);
+      window.onAppearance?.(controller.theme, scheme);
+    },
+    choose(theme) {
+      controller.theme = theme;
+      storeAppearance(storage, theme);
+      controller.apply();
+    },
+    release() {
+      controller.handles -= 1;
+      if (controller.handles > 0) return;
+      media.removeEventListener("change", followSystem);
+      CONTROLLERS.delete(root);
+    },
+  };
+  const followSystem = (): void => {
+    if (controller.theme === "auto") controller.apply();
+  };
+  media.addEventListener("change", followSystem);
+  return controller;
+}
+
 /**
  * Installs the appearance on an opted-in standalone document. A document that
  * has not opted in keeps whatever it rendered, so an embedded host page is
@@ -105,37 +160,21 @@ export function installAppearance(
 ): AppearanceHandle {
   const root = document.documentElement;
   if (root.dataset.moklyAppearance === undefined) return INERT;
-  const storage = storageOf(window);
-  const initial = root.getAttribute(THEME_ATTRIBUTE);
-  let theme = resolveAppearance({
-    pin: schemePin(window.location.search),
-    stored: readStoredAppearance(storage),
-    ...(initial ? { initial: initial as ViewerTheme } : {}),
-  });
-  const media = window.matchMedia("(prefers-color-scheme: dark)");
-  const apply = (): void => {
-    root.setAttribute(THEME_ATTRIBUTE, theme);
-    applyFrames(document, effectiveScheme(theme, media.matches));
-  };
-  apply();
-  // A second install must not add a second system listener, and the first
-  // handle keeps working, so both can be disposed in any order.
-  if (INSTALLED.has(root)) return { choose: choose, dispose: () => {} };
-  INSTALLED.add(root);
-  const followSystem = (): void => {
-    if (theme === "auto") apply();
-  };
-  media.addEventListener("change", followSystem);
-  function choose(next: ViewerTheme): void {
-    theme = next;
-    storeAppearance(storage, next);
-    apply();
-  }
+  const controller =
+    CONTROLLERS.get(root) ?? createController(document, window);
+  CONTROLLERS.set(root, controller);
+  controller.handles += 1;
+  controller.apply();
+  let live = true;
   return {
-    choose,
-    dispose: () => {
-      media.removeEventListener("change", followSystem);
-      INSTALLED.delete(root);
+    choose(theme) {
+      // A disposed handle no longer speaks for a document it does not own.
+      if (live) controller.choose(theme);
+    },
+    dispose() {
+      if (!live) return;
+      live = false;
+      controller.release();
     },
   };
 }

@@ -43,6 +43,8 @@ export const SHELL_TOKENS_CSS = `
   --sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
   --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  --_mokly-private-on-ink: #ffffff;
+  --_mokly-private-on-accent-deep: #ffffff;
   --_mokly-private-accent-default: #4f7864;
   --_mokly-private-accent-contrast-default: #ffffff;
   --_mokly-private-accent-soft-default: rgba(79, 120, 100, 0.1);

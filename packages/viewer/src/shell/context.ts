@@ -4,6 +4,7 @@ import type { StaticDelivery } from "../navigation/delivery.js";
 
 import type { ShellEvidence } from "./metadata.js";
 import type { LiveChangesStatus } from "./metadata.js";
+import type { ViewerTheme } from "../viewer/types.js";
 
 /** Server-side context shared by every served Mokly shell page. */
 
@@ -24,6 +25,8 @@ export interface ShellContext {
   activeRoute?: string;
   /** Review comparison base ref for the serve session. */
   base: string;
+  /** Interface appearance the document starts from; omission means `auto`. */
+  theme?: ViewerTheme;
   /** Routes changed since the base-ref branch point; absent when unknown. */
   changedRoutes?: readonly string[];
   /** Whether on-demand comparison serving is available. */

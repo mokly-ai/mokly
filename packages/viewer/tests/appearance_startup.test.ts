@@ -36,6 +36,7 @@ function environment(
     systemDark?: boolean;
     frames?: FakeFrame[];
     opted?: boolean;
+    failStorage?: boolean;
   } = {},
 ) {
   const root: { attributes: Record<string, string> } = { attributes: {} };
@@ -65,11 +66,16 @@ function environment(
     location: { search: options.search ?? "" },
     matchMedia: () => media,
     localStorage: {
-      getItem: () => value,
+      getItem: () => {
+        if (options.failStorage) throw new Error("blocked");
+        return value;
+      },
       setItem: (_key: string, next: string) => {
+        if (options.failStorage) throw new Error("blocked");
         value = next;
       },
       removeItem: () => {
+        if (options.failStorage) throw new Error("blocked");
         value = null;
       },
     },
@@ -179,4 +185,51 @@ test("a document that has not opted in is left untouched", () => {
 
 test("the stored key is the documented origin-local one", () => {
   assert.equal(APPEARANCE_STORAGE_KEY, "mokly:theme");
+});
+
+test("repeated handles share one theme, listener and storage", () => {
+  const dual = frame("welcome.html", "welcome.dark.html");
+  const world = environment({ frames: [dual] });
+  const first = installAppearance(world.document, world.window);
+  const second = installAppearance(world.document, world.window);
+  assert.equal(world.listeners.length, 1, "only one system listener is live");
+
+  // A choice through either handle is the document's choice, so the shared
+  // listener must see it rather than a copy the other handle still holds.
+  second.choose("light");
+  assert.equal(world.root.attributes["data-mokly-theme"], "light");
+  assert.equal(world.stored(), "light");
+  world.media.matches = true;
+  for (const listener of world.listeners) listener.handler();
+  assert.deepEqual(dual.loads, [], "an explicit choice followed the system");
+
+  first.choose("auto");
+  assert.equal(world.root.attributes["data-mokly-theme"], "auto");
+  assert.equal(world.stored(), null);
+  for (const listener of world.listeners) listener.handler();
+  assert.deepEqual(dual.loads, ["welcome.dark.html"]);
+});
+
+test("the shared listener survives until the last handle is disposed", () => {
+  const world = environment({});
+  const first = installAppearance(world.document, world.window);
+  const second = installAppearance(world.document, world.window);
+  second.dispose();
+  assert.equal(world.listeners.length, 1, "one handle still holds it");
+  first.choose("dark");
+  assert.equal(world.root.attributes["data-mokly-theme"], "dark");
+  first.dispose();
+  assert.equal(world.listeners.length, 0);
+  // A disposed handle must not keep writing to a document it no longer owns.
+  first.choose("light");
+  assert.equal(world.root.attributes["data-mokly-theme"], "dark");
+});
+
+test("a storage failure never loses the choice the reader made", () => {
+  const world = environment({ failStorage: true });
+  const handle = installAppearance(world.document, world.window);
+  handle.choose("dark");
+  assert.equal(world.root.attributes["data-mokly-theme"], "dark");
+  handle.choose("light");
+  assert.equal(world.root.attributes["data-mokly-theme"], "light");
 });

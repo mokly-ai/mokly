@@ -201,3 +201,39 @@ test("the palette carries the contract's three Light corrections", () => {
   assert.equal(LIGHT.get("--chrome-control-edge"), "#868e88");
   assert.equal(LIGHT.get("--mbk-danger-ink"), "#964334");
 });
+
+/**
+ * A consumer may override the three public accent properties to pair with
+ * their own brand. A foreground role that reads "contrast with the accent" is
+ * only correct over the accent, so every other background needs its own
+ * private role; otherwise an override silently breaks unrelated surfaces.
+ */
+const PUBLIC_OVERRIDES = new Set([
+  "--mokly-accent",
+  "--mokly-accent-contrast",
+  "--mokly-accent-soft",
+]);
+
+test("a public override foreground only sits on the accent it pairs with", () => {
+  // Only a rule painting both in one block can be judged without a cascade
+  // model, which is exactly the case an override breaks: the background stays
+  // pinned while the foreground follows the consumer's brand.
+  const accentBackgrounds = new Set([
+    "var(--mokly-accent)",
+    "var(--mokly-accent-soft)",
+  ]);
+  const failures: string[] = [];
+  for (const [, selector, body] of SHELL_CSS.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
+    const color = /(?:^|;|\{)\s*color:\s*([^;]+)/.exec(body ?? "")?.[1]?.trim();
+    const token = /var\((--[a-z0-9-]+)\)/.exec(color ?? "")?.[1];
+    const background = /(?:^|;|\{)\s*background(?:-color)?:\s*([^;]+)/
+      .exec(body ?? "")?.[1]
+      ?.trim();
+    if (!token || !PUBLIC_OVERRIDES.has(token) || !background) continue;
+    if (accentBackgrounds.has(background)) continue;
+    failures.push(
+      `${selector!.replace(/\s+/g, " ").trim()}: ${token} over ${background}`,
+    );
+  }
+  assert.deepEqual(failures, []);
+});

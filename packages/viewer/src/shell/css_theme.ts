@@ -28,6 +28,8 @@ const DARK_ROLES = `
   --chrome-shadow-press: inset 0 1px 2px rgba(0, 0, 0, 0.55);
   --chrome-shadow-drawer: 0 18px 50px rgba(0, 0, 0, 0.6);
   --chrome-shadow-sheet: 0 6px 28px rgba(0, 0, 0, 0.55);
+  --_mokly-private-on-ink: #1e2421;
+  --_mokly-private-on-accent-deep: #0e1a14;
   --_mokly-private-accent-default: #86b79b;
   --_mokly-private-accent-contrast-default: #0e1a14;
   --_mokly-private-accent-soft-default: rgba(134, 183, 155, 0.16);
