@@ -24,7 +24,11 @@ export type PreviewContent =
 
 /** A parsed preview and the immutable address its documents resolve against. */
 export interface LoadedPreview {
+  /** Validated page or screen documents named by the preview metadata. */
   content: PreviewContent;
+  /** Absolute generation root that owns every historical document. */
+  generation: string;
+  /** Final metadata response URL used to renew a live generation. */
   url: string;
 }
 
@@ -92,8 +96,14 @@ export function previewEndpoint(
 export function advertisedPreviewPaths(
   model: CatalogueReadModel,
 ): readonly string[] {
+  const comparison = model.comparisonUrl;
   return [
-    ...(model.comparisonUrl === null ? [] : [model.comparisonUrl]),
+    ...(comparison === null
+      ? []
+      : [
+          comparison,
+          `${comparison.slice(0, -REVIEW_FILE.length)}snapshots/before/`,
+        ]),
     ...model.removedEntries.flatMap((removed) =>
       removed.preview?.kind === "page" ? [removed.preview.path] : [],
     ),
@@ -161,6 +171,7 @@ export async function requestPreview(
       data.kind === "screen"
         ? screenContent(data, payload, base)
         : pageContent(data, payload, base),
+    generation: new URL(".", base).href,
     url: response.url,
   };
 }

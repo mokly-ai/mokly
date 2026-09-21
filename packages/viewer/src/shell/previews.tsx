@@ -2,17 +2,16 @@
 // removed screens. The React shell owns the request, lifecycle, and historical
 // frames while the server render remains an explicit unavailable state.
 
-import { useEffect, useRef } from "react";
-
 import type { RemovedEntryPreview } from "../catalogue/types.js";
 import { PREVIEW_UNAVAILABLE } from "../previews/copy.js";
-import { enforcePreviewReadOnly } from "../previews/read_only.js";
+import type { PreviewPresentation } from "../previews/presentation.js";
 import type { LoadedPreview, PreviewScreenView } from "../previews/request.js";
 import type { ManifestEntry } from "../registry/types.js";
 
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import { BrowserFrame, PhoneFrame } from "./frames.js";
+import { PreviewFrame } from "./preview_frame.js";
 import { useOptionalShellStore } from "./store_context.js";
 import { useRemovedPreview } from "./use_removed_preview.js";
 
@@ -61,23 +60,6 @@ function PreviousVersionLabel() {
   return <p className="mbk-previous">Showing previous version</p>;
 }
 
-function PreviewFrame(props: { src: string; title: string }) {
-  const frame = useRef<HTMLIFrameElement>(null);
-  useEffect(() => {
-    if (frame.current) enforcePreviewReadOnly(frame.current);
-  }, [props.src]);
-  return (
-    <iframe
-      className="mbk-frag"
-      data-mokly-preview-frame=""
-      ref={frame}
-      sandbox="allow-same-origin"
-      src={props.src}
-      title={props.title}
-    />
-  );
-}
-
 function MissingView(props: { viewport: "desktop" | "mobile" }) {
   const other = props.viewport === "desktop" ? "Mobile" : "Desktop";
   return (
@@ -92,6 +74,7 @@ function MissingView(props: { viewport: "desktop" | "mobile" }) {
 
 function ScreenFrame(props: {
   data: RemovedPreviewData;
+  presentation: PreviewPresentation;
   scheme: "dark" | "light";
   view: PreviewScreenView;
   viewport: "desktop" | "mobile";
@@ -99,7 +82,7 @@ function ScreenFrame(props: {
   const fallback = props.view.colorScheme !== props.scheme;
   const content = (
     <PreviewFrame
-      src={props.view.url}
+      presentation={props.presentation}
       title={`${props.data.title} — ${props.viewport}`}
     />
   );
@@ -132,13 +115,17 @@ function ReadyPreview(props: {
   colorScheme: "dark" | "light";
   data: RemovedPreviewData;
   loaded: LoadedPreview;
+  presentations: ReadonlyMap<string, PreviewPresentation>;
   viewport: "both" | "desktop" | "mobile";
 }) {
   const content = props.loaded.content;
   if (content.kind === "page")
     return (
       <div className="mbk-stage-embed" data-mokly-scroll="embed">
-        <PreviewFrame src={content.url} title={props.data.title} />
+        <PreviewFrame
+          presentation={presentationFor(props.presentations, content.url)}
+          title={props.data.title}
+        />
       </div>
     );
   const viewports =
@@ -166,6 +153,7 @@ function ReadyPreview(props: {
           <ScreenFrame
             data={props.data}
             key={viewport}
+            presentation={presentationFor(props.presentations, view.url)}
             scheme={props.colorScheme}
             view={view}
             viewport={viewport}
@@ -176,6 +164,15 @@ function ReadyPreview(props: {
       })}
     </div>
   );
+}
+
+function presentationFor(
+  presentations: ReadonlyMap<string, PreviewPresentation>,
+  address: string,
+): PreviewPresentation {
+  const presentation = presentations.get(address);
+  if (!presentation) throw new Error("The previous version is unavailable.");
+  return presentation;
 }
 
 function PreviewState(props: {
@@ -196,6 +193,7 @@ function PreviewState(props: {
         colorScheme={props.colorScheme}
         data={props.data}
         loaded={preview.state.loaded}
+        presentations={preview.state.presentations}
         viewport={props.viewport}
       />
     );

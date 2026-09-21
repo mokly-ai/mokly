@@ -210,12 +210,12 @@ Summary: prove the cross-origin gap with failing regressions, then replace
 URL-framed previews with fetched, validated, viewer-owned documents guarded in
 every host, keeping every existing preview regression green.
 
-- [ ] Extend `tests/helpers/removed_preview_fixture.ts`: add a plain external
+- [x] Extend `tests/helpers/removed_preview_fixture.ts`: add a plain external
       link without `target` and a `<meta http-equiv="refresh">` pointing at
       `../screens/current.mobile.html` to the removed page and screens. Add a
       `csp` option to `tests/helpers/static_server.ts` that sends a
       `Content-Security-Policy` header on HTML responses.
-- [ ] Add failing embedded-viewer regressions to
+- [x] Add failing embedded-viewer regressions to
       `tests/browser/removed_previews_viewer.spec.ts` for both adapters: with
       the previous version shown, click the marked, relative, plain external
       and download links, submit the form and press Enter on a focused link;
@@ -223,7 +223,7 @@ every host, keeping every existing preview regression green.
       frame still shows "Previous page" and the outer URL is unchanged. Confirm
       the cross-origin case fails on the current implementation and record the
       failing assertion in the review record.
-- [ ] Add `tests/browser/removed_preview_presentation.spec.ts` with an esbuild
+- [x] Add `tests/browser/removed_preview_presentation.spec.ts` with an esbuild
       harness entry (like `removed_preview_viewer_entry.tsx`) that exposes the
       presentation module, and assert in a real browser: the prepended
       `<base>` is the first head child; a consumer `<base href>` is removed
@@ -234,12 +234,12 @@ every host, keeping every existing preview regression green.
       a fetch whose final URL only drops the `.html` suffix is accepted, and
       one whose final URL otherwise differs, whose origin differs, whose type
       is not HTML or whose body exceeds the bound is rejected.
-- [ ] Create `packages/viewer/src/previews/presentation.ts` owning the fetch,
+- [x] Create `packages/viewer/src/previews/presentation.ts` owning the fetch,
       acceptance rules, per-address cache for one loaded preview, and the
       parse-edit-serialize step that returns the `srcdoc` text and its snapshot
       address; keep it pure over an injected `fetch` and parser so it is
       unit-testable, and under 300 lines with doc comments on public items.
-- [ ] Confine historical document fetches: `presentation.ts` accepts only
+- [x] Confine historical document fetches: `presentation.ts` accepts only
       addresses beneath `snapshots/before/` of the generation the loaded
       preview resolved against, on the same origin, with `credentials: "omit"`
       for pinned delivery and the comparison request's rule for live
@@ -247,7 +247,7 @@ every host, keeping every existing preview regression green.
       `packages/viewer/src/previews/request.ts` so the documented embedded
       fetch set includes that prefix, and cover both in
       `tests/client_removed_previews.test.ts`.
-- [ ] In `packages/viewer/src/shell/previews.tsx`, render `PreviewFrame`
+- [x] In `packages/viewer/src/shell/previews.tsx`, render `PreviewFrame`
       from a presentation rather than a URL: assign `srcdoc`, keep
       `sandbox="allow-same-origin"`, set `data-mokly-preview-source` to the
       snapshot address, and never set `src`. In
@@ -258,7 +258,7 @@ every host, keeping every existing preview regression green.
       existing controller, and route any failure to the failed state with
       Retry. Keep both files under 300 lines, splitting a
       `use_removed_preview_documents.ts` hook if needed.
-- [ ] In `packages/viewer/src/previews/read_only.ts`, cancel every link
+- [x] In `packages/viewer/src/previews/read_only.ts`, cancel every link
       activation including same-document anchors, resolving the activated
       link through `composedPath()` so a declarative shadow root cannot hide
       one; scroll the fragment's element into view for anchors that name the
@@ -267,7 +267,7 @@ every host, keeping every existing preview regression green.
       frame's document is not the presented one. Keep
       `same_origin_navigation.ts` skipping `[data-mokly-preview-frame]` and
       keep the module's existing `enforcePreviewReadOnly` entry point.
-- [ ] Update existing specs to the new presentation without weakening them:
+- [x] Update existing specs to the new presentation without weakening them:
       in `removed_previews.spec.ts` locate the historical frame through its
       element instead of `frame.url().includes("snapshots/before")` and
       assert its document identity through `data-mokly-preview-source`
@@ -275,28 +275,28 @@ every host, keeping every existing preview regression green.
       `src` was asserted in `removed_preview_views.spec.ts`; and keep the
       served, static, shell unit and expired-generation reacquire tests
       passing against `srcdoc` frames.
-- [ ] Add a strict-CSP embedded-host test in
+- [x] Add a strict-CSP embedded-host test in
       `removed_previews_viewer.spec.ts`: serve the viewer page with a policy
       that allows only its own origin and the artifact origin for images,
       styles, fonts and media, assert the historical stylesheet applied
       (`archive.css` background) and that the browser reported no policy
       violation; correct the README directive list if the fixture proves it
       wrong.
-- [ ] Run the viewer build and typecheck, `npm run lint`, the changed unit
+- [x] Run the viewer build and typecheck, `npm run lint`, the changed unit
       tests, and `tests/browser/removed_previews.spec.ts`,
       `removed_preview_views.spec.ts`, `removed_previews_static.spec.ts`,
       `removed_previews_viewer.spec.ts`, `removed_preview_presentation.spec.ts`
       three times to show they are deterministic; confirm the package check
       (`npm run package:check`) accepts the unchanged browser inventory and
       that the inspector budget is untouched.
-- [ ] Smoke by hand: `npm run dev`, open a removed page and screen, follow
+- [x] Smoke by hand: `npm run dev`, open a removed page and screen, follow
       every link and the form, toggle viewport and scheme, then repeat through
       the exported catalogue and the cross-origin viewer fixture; save
       screenshots under `.context/`.
-- [ ] Run the complete `cargo xtask check` gate with no failures or skips.
-- [ ] After checks pass, `git add -A`, commit with Conventional Commits, and
+- [x] Run the complete `cargo xtask check` gate with no failures or skips.
+- [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
@@ -313,5 +313,40 @@ every host, keeping every existing preview regression green.
 
 ## Review record
 
-To be completed after each milestone's post-push review, including the
-assertion the cross-origin regression fails on before the fix.
+### Milestone 2
+
+- Base commit: `f10a066` on `calummoore/jakarta-v2`, based on `origin/main` at
+  `a177abd`.
+- Pre-fix regression: `MOKLY_PLAYWRIGHT_PORT=4517 npx playwright test
+tests/browser/removed_previews_viewer.spec.ts --grep "a previous version
+stays inert through the cross adapter"` failed at
+  `await expect(preview.locator("h1")).toHaveText("Previous page")` with
+  `Expected: "Previous page"` and `Error: element(s) not found` after the
+  relative link replaced the historical frame.
+- Checks: `npm run build`, `npm run typecheck`, `npm run lint`,
+  `npm run format:check`,
+  `npx tsx --test tests/client_removed_previews.test.ts
+tests/client_removed_preview_requests.test.ts
+tests/client_removed_preview_presentation.test.ts
+tests/removed_preview_shell.test.ts` (20/20), the five changed browser specs
+  through `MOKLY_PLAYWRIGHT_PORT=<port> npx playwright test
+tests/browser/removed_previews.spec.ts
+tests/browser/removed_preview_views.spec.ts
+tests/browser/removed_previews_static.spec.ts
+tests/browser/removed_previews_viewer.spec.ts
+tests/browser/removed_preview_presentation.spec.ts` on ports 4532, 4533 and
+  4534 (30/30 on every run),
+  `npm run package:check`, and `cargo xtask check` all passed. The focused
+  `MOKLY_PLAYWRIGHT_PORT=4531 npx playwright test
+tests/browser/catalogue_fetch.spec.ts
+tests/browser/removed_previews_viewer.spec.ts` security regression also
+  passed (11/11).
+- Smoke: `npm run dev` served the example catalogue at
+  `http://127.0.0.1:4173`. Because it contained no removed entries, the served,
+  exported and cross-origin fixtures were exercised instead. Screenshots are
+  `.context/viewer-owned-preview-dev.png`,
+  `.context/viewer-owned-preview-served-page.png`,
+  `.context/viewer-owned-preview-served-screen.png`,
+  `.context/viewer-owned-preview-exported.png`,
+  `.context/viewer-owned-preview-cross-origin-page.png` and
+  `.context/viewer-owned-preview-cross-origin-screen.png`.

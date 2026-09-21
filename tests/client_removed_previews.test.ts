@@ -175,6 +175,7 @@ test("an embedded viewer may request only advertised addresses", () => {
   } as unknown as CatalogueReadModel;
   assert.deepEqual(advertisedPreviewPaths(model), [
     COMPARISON.slice(1),
+    `__mokly/diffs/__generations/${GENERATION}/snapshots/before/`,
     pagePath,
   ]);
   assert.deepEqual(

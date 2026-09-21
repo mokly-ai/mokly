@@ -28,7 +28,10 @@ test("Dark shows the previous dark views a screen was captured in", async ({
   await chooseScheme(page, "dark");
   await expect(
     page.locator(`${stage} .mbk-frame-desktop iframe`),
-  ).toHaveAttribute("src", /\/screens\/removed-dark\.desktop\.dark\.html$/);
+  ).toHaveAttribute(
+    "data-mokly-preview-source",
+    /\/screens\/removed-dark\.desktop\.dark\.html$/,
+  );
   await expect(
     page.frameLocator(`${stage} .mbk-frame-desktop iframe`).locator("h1"),
   ).toHaveText("Previous themed desktop screen");
@@ -52,7 +55,10 @@ test("Dark falls back to the light views a screen kept only", async ({
   );
   await expect(
     page.locator(`${stage} .mbk-frame-desktop iframe`),
-  ).toHaveAttribute("src", /\/screens\/removed\.desktop\.html$/);
+  ).toHaveAttribute(
+    "data-mokly-preview-source",
+    /\/screens\/removed\.desktop\.html$/,
+  );
   await expect(
     page.frameLocator(`${stage} .mbk-frame-desktop iframe`).locator("h1"),
   ).toHaveText("Previous desktop screen");
@@ -81,7 +87,7 @@ for (const change of ["scheme", "viewport"] as const)
       await expect(
         page.frameLocator(`${stage} .mbk-frame-desktop iframe`).locator("h1"),
       ).toHaveText("Previous desktop screen");
-      const expired = await desktop.getAttribute("src");
+      const expired = await desktop.getAttribute("data-mokly-preview-source");
       expect(expired).not.toBeNull();
 
       now += 120_001;
@@ -103,7 +109,10 @@ for (const change of ["scheme", "viewport"] as const)
           ? "Previous desktop screen"
           : "Previous mobile screen",
       );
-      await expect(page.locator(renewed)).not.toHaveAttribute("src", expired!);
+      await expect(page.locator(renewed)).not.toHaveAttribute(
+        "data-mokly-preview-source",
+        expired!,
+      );
       expect(
         selections.map((url) => url.searchParams.get("route")).filter(Boolean),
       ).toEqual(["screens/removed.html", "screens/removed.html"]);
