@@ -239,10 +239,18 @@ function detailsSection(html: string): string {
   return html.slice(start);
 }
 
-function routePage(catalogue: Catalogue, route: string): string {
+function routePage(
+  catalogue: Catalogue,
+  route: string,
+  extra: Partial<typeof context> = {},
+): string {
   const entry = catalogue.byRoute.get(route);
   assert.ok(entry);
-  return viewPage(entry, catalogue, { ...context, activeRoute: route });
+  return viewPage(entry, catalogue, {
+    ...context,
+    activeRoute: route,
+    ...extra,
+  });
 }
 
 /**
@@ -419,9 +427,12 @@ test("scheme switch renders only for catalogues with dark fragments", () => {
     false,
   );
 
+  // The preview switch belongs to an embedded root now; a standalone document
+  // has the one Appearance control instead.
+  const embedded = { ...context, embedded: true };
   const dark = createCatalogue(darkManifest);
   assert.equal(dark.hasDarkFragments, true);
-  const home = homePage(dark, context);
+  const home = homePage(dark, embedded);
   assert.ok(home.includes(SCHEME_SWITCH));
   assert.equal(occurrences(home, "data-mokly-schemeswitch"), 1);
   assert.match(
@@ -429,7 +440,7 @@ test("scheme switch renders only for catalogues with dark fragments", () => {
     /data-mokly-search[\s\S]*?<\/div><span aria-label="Preview color scheme"[\s\S]*?<\/span><\/header>/,
   );
 
-  const screen = routePage(dark, "screens/welcome.html");
+  const screen = routePage(dark, "screens/welcome.html", { embedded: true });
   assert.equal(occurrences(screen, "data-mokly-schemeswitch"), 1);
   assert.equal(occurrences(screen, "data-workspace-scheme"), 1);
   assert.match(
@@ -437,7 +448,7 @@ test("scheme switch renders only for catalogues with dark fragments", () => {
     /class="mbk-view-tools"[\s\S]*?data-workspace-viewport=""[\s\S]*?data-workspace-scheme=""/,
   );
 
-  const flow = routePage(dark, "user-flows/tour.html");
+  const flow = routePage(dark, "user-flows/tour.html", { embedded: true });
   assert.equal(occurrences(flow, "data-mokly-schemeswitch"), 2);
   assert.equal(flow.includes("data-mokly-viewswitch"), false);
   assert.match(
@@ -445,7 +456,7 @@ test("scheme switch renders only for catalogues with dark fragments", () => {
     /<\/div><span aria-label="Preview color scheme"[\s\S]*?<\/span><\/div><div class="mbk-flow"/,
   );
 
-  const legacy = routePage(dark, "legacy/old.html");
+  const legacy = routePage(dark, "legacy/old.html", { embedded: true });
   assert.equal(occurrences(legacy, "data-mokly-schemeswitch"), 1);
 });
 
@@ -1052,4 +1063,49 @@ test("an omitted or unusable theme renders Auto in a full document", () => {
       /<html[^>]*data-mokly-theme="auto"/,
       String(theme),
     );
+});
+
+test("a standalone document offers Appearance, not a preview switch", () => {
+  const catalogue = createCatalogue(manifest);
+  const dark = createCatalogue(darkManifest);
+  // The one control is present even where the catalogue has no dark fragments,
+  // because it sets the interface as well as the previews.
+  for (const [name, entry] of [
+    ["light-only", catalogue],
+    ["dual-scheme", dark],
+  ] as const) {
+    const html = homePage(entry, context);
+    assert.equal(occurrences(html, "data-mokly-appearance-select"), 1, name);
+    assert.match(html, /aria-label="Appearance"/, name);
+    for (const option of ["Auto", "Light", "Dark"])
+      assert.match(
+        html,
+        new RegExp(`<option value="${option.toLowerCase()}"`),
+        `${name} ${option}`,
+      );
+    assert.equal(html.includes("data-mokly-schemeswitch"), false, name);
+    assert.equal(html.includes("data-workspace-scheme"), false, name);
+  }
+  // It stays reachable on every route, including one that found nothing.
+  for (const html of [
+    notFoundPage("view/unknown.html", catalogue, context),
+    routePage(dark, "screens/welcome.html"),
+    routePage(dark, "user-flows/tour.html"),
+  ])
+    assert.equal(occurrences(html, "data-mokly-appearance-select"), 1);
+});
+
+test("the selector waits for its behaviour before it appears", () => {
+  const html = homePage(createCatalogue(manifest), context);
+  // Without the asset the control cannot do anything, so it stays hidden while
+  // CSS alone still gives the initial and Auto appearance.
+  assert.match(html, /class="mbk-appearance"[^>]*hidden=""/);
+  assert.match(SHELL_CSS, /\.mbk-appearance\[hidden\] \{[^}]*display: none;/);
+});
+
+test("an embedded root keeps its own preview controls", () => {
+  const dark = createCatalogue(darkManifest);
+  const html = homePage(dark, { ...context, embedded: true });
+  assert.equal(html.includes("data-mokly-appearance-select"), false);
+  assert.equal(occurrences(html, "data-mokly-schemeswitch"), 1);
 });

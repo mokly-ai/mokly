@@ -69,7 +69,7 @@ export function ViewerLayout({
         <div data-mokly-slot="topBarStart">{slots?.topBarStart}</div>
         <Island
           markup={islandMarkup(
-            <TopBar catalogue={catalogue} />,
+            <TopBar catalogue={catalogue} context={context} />,
             baseUrl,
             selection,
           )}

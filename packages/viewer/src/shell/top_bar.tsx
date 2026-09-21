@@ -1,10 +1,15 @@
+import { AppearanceSelect } from "./appearance.js";
 import type { Catalogue } from "./catalogue.js";
+import type { ShellContext } from "./context.js";
 import { SchemeSwitch } from "./head.js";
 import { BrandIcon, IconSvg, SearchIcon } from "./icons.js";
 import { SearchTagPicker } from "./tags.js";
 
 /** The shared 48px catalogue header keeps search available at every width. */
-export function TopBar(props: { catalogue: Catalogue }) {
+export function TopBar(props: {
+  catalogue: Catalogue;
+  context?: ShellContext;
+}) {
   return (
     <header className="mbk-topbar" data-search="">
       <button
@@ -35,7 +40,15 @@ export function TopBar(props: { catalogue: Catalogue }) {
         />
         <SearchTagPicker tags={props.catalogue.tags} />
       </div>
-      {props.catalogue.hasDarkFragments ? <SchemeSwitch /> : null}
+      {props.context?.embedded ? (
+        props.catalogue.hasDarkFragments ? (
+          <SchemeSwitch />
+        ) : null
+      ) : (
+        <AppearanceSelect
+          {...(props.context?.theme ? { theme: props.context.theme } : {})}
+        />
+      )}
     </header>
   );
 }

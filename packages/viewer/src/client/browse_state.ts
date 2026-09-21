@@ -216,14 +216,12 @@ export function currentViewport(doc: Document): BrowseViewport {
  * fragment. Each source is compared with the current `src` attribute first,
  * because assigning `src` reloads the frame even when the URL is unchanged.
  *
- * A catalogue built without dark fragments renders no scheme control, so a
- * requested dark scheme is clamped to light there: dark chrome around light
- * fragments would otherwise have no switch to recover from.
+ * Every standalone document carries the Appearance control, and an embedded
+ * root keeps its own preview switch, so a requested scheme is always one the
+ * reader can change back: no clamp is needed.
  */
 export function setColorScheme(doc: Document, value: BrowseColorScheme): void {
-  const scheme = doc.querySelector("[data-color-scheme-option]")
-    ? value
-    : "light";
+  const scheme = value;
   doc.body.setAttribute("data-mokly-color-scheme", scheme);
   for (const option of doc.querySelectorAll("[data-color-scheme-option]"))
     option.setAttribute(

@@ -159,4 +159,74 @@ details.mbk-nav-group > summary::-webkit-details-marker {
     display: flex;
   }
 }
+
+/* ---- Appearance ------------------------------------------------------- */
+
+.mbk-appearance {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 9px;
+  border: 1px solid var(--chrome-control-edge);
+  border-radius: 8px;
+  background: var(--chrome-surface);
+  color: var(--chrome-ink-2);
+  cursor: pointer;
+}
+
+.mbk-appearance[hidden] {
+  display: none;
+}
+
+.mbk-appearance:hover {
+  border-color: var(--mbk-accent-deep);
+  background: var(--mbk-accent-surface);
+  color: var(--mbk-accent-deep);
+}
+
+.mbk-appearance:focus-within {
+  outline: 2px solid var(--mbk-accent-deep);
+  outline-offset: 2px;
+}
+
+.mbk-appearance svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+.mbk-appearance-value {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.mbk-appearance > select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+/* Below the breakpoint the label collapses to its glyph, so search and the
+   menu keep their room while the control stays reachable. */
+@media (max-width: 56.25rem) {
+  .mbk-appearance {
+    padding: 0 7px;
+  }
+
+  .mbk-appearance-value {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
 `;

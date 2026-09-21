@@ -93,15 +93,17 @@ test("setColorScheme replaces frame history and marks the body", () => {
   assert.deepEqual(pressedOptions(view), ["true", "false", "true", "false"]);
 });
 
-test("setColorScheme clamps a light-only catalogue to light", () => {
+test("a light-only catalogue marks dark without moving a frame", () => {
   const embed = new FakeElement("iframe", { src: "/static/pages/notes.html" });
   const fake = new FakeDocument([embed]);
   const doc = asDocument(fake);
 
+  // Every document now carries a control that can change the appearance back,
+  // so dark is honoured; a frame with no dark render simply keeps its source.
   assert.equal(currentColorScheme(doc), "light");
   setColorScheme(doc, "dark");
-  assert.equal(fake.body.getAttribute("data-mokly-color-scheme"), "light");
-  assert.equal(currentColorScheme(doc), "light");
+  assert.equal(fake.body.getAttribute("data-mokly-color-scheme"), "dark");
+  assert.equal(currentColorScheme(doc), "dark");
   assert.equal(embed.getAttribute("src"), "/static/pages/notes.html");
   assert.equal(embed.srcWrites, 0);
 
@@ -151,7 +153,7 @@ test("recovery state restores color scheme strictly", () => {
   assert.equal(parseBrowseRecoveryState(withoutScheme), undefined);
 });
 
-test("restored dark stays light when a rebuild drops dark fragments", () => {
+test("restored dark survives a rebuild that drops dark fragments", () => {
   const embed = new FakeElement("iframe", { src: "/static/pages/notes.html" });
   const fake = new FakeDocument([
     new FakeElement("div", { "data-mokly-shell": "" }),
@@ -161,9 +163,11 @@ test("restored dark stays light when a rebuild drops dark fragments", () => {
 
   restoreBrowseState(doc, fakeWindow(), snapshot());
 
+  // The reader's appearance outlives a rebuild, and a frame with no dark
+  // render keeps the source it was served with.
   assert.equal(snapshot().colorScheme, "dark");
-  assert.equal(fake.body.getAttribute("data-mokly-color-scheme"), "light");
-  assert.equal(currentColorScheme(doc), "light");
+  assert.equal(fake.body.getAttribute("data-mokly-color-scheme"), "dark");
+  assert.equal(currentColorScheme(doc), "dark");
   assert.equal(embed.getAttribute("src"), "/static/pages/notes.html");
   assert.equal(embed.srcWrites, 0);
 });

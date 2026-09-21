@@ -52,7 +52,21 @@ function environment(
     },
   };
   let value = options.stored ?? null;
+  const body: { attributes: Record<string, string> } = { attributes: {} };
+  const select = {
+    value: "auto",
+    hidden: true,
+    handlers: [] as (() => void)[],
+    addEventListener(_type: string, handler: () => void) {
+      select.handlers.push(handler);
+    },
+    fire() {
+      for (const handler of select.handlers) handler();
+    },
+  };
+  let attached: { frames?: FakeFrame[]; body?: boolean; select?: boolean } = {};
   const document = {
+    body: undefined as unknown,
     documentElement: {
       getAttribute: (name: string) => root.attributes[name] ?? null,
       setAttribute: (name: string, next: string) => {
@@ -60,7 +74,12 @@ function environment(
       },
       dataset: options.opted === false ? {} : { moklyAppearance: "" },
     },
-    querySelectorAll: () => options.frames ?? [],
+    querySelectorAll: (selector: string) =>
+      selector.includes("appearance-select")
+        ? attached.select
+          ? [select]
+          : []
+        : (attached.frames ?? options.frames ?? []),
   } as unknown as AppearanceDocument;
   const window = {
     location: { search: options.search ?? "" },
@@ -81,7 +100,26 @@ function environment(
     },
   } as unknown as AppearanceWindow;
   if (options.initial) root.attributes["data-mokly-theme"] = options.initial;
-  return { document, window, root, listeners, media, stored: () => value };
+  const attach = (next: typeof attached): void => {
+    attached = next;
+    if (next.body)
+      (document as unknown as { body: unknown }).body = {
+        setAttribute: (name: string, value: string) => {
+          body.attributes[name] = value;
+        },
+      };
+  };
+  return {
+    document,
+    window,
+    root,
+    body,
+    select,
+    attach,
+    listeners,
+    media,
+    stored: () => value,
+  };
 }
 
 test("the effective appearance is applied to the document root", () => {
@@ -232,4 +270,47 @@ test("a storage failure never loses the choice the reader made", () => {
   assert.equal(world.root.attributes["data-mokly-theme"], "dark");
   handle.choose("light");
   assert.equal(world.root.attributes["data-mokly-theme"], "light");
+});
+
+test("the root is set before the body exists, and the rest follows later", () => {
+  const dual = frame("welcome.html", "welcome.dark.html");
+  const world = environment({ search: "?scheme=dark" });
+  // At head time there is no body and no frame yet, so only the root can be
+  // marked; the appearance must still be right before the first paint.
+  const handle = installAppearance(world.document, world.window);
+  assert.equal(world.root.attributes["data-mokly-theme"], "dark");
+  assert.equal(world.body.attributes["data-mokly-color-scheme"], undefined);
+
+  world.attach({ frames: [dual], body: true, select: true });
+  handle.refresh();
+  assert.equal(world.body.attributes["data-mokly-color-scheme"], "dark");
+  assert.deepEqual(dual.loads, ["welcome.dark.html"]);
+  assert.equal(world.select.value, "dark", "the control shows the appearance");
+  assert.equal(world.select.hidden, false, "the control is revealed");
+});
+
+test("choosing through the control applies and stores the appearance", () => {
+  const dual = frame("welcome.html", "welcome.dark.html");
+  const world = environment({});
+  const handle = installAppearance(world.document, world.window);
+  world.attach({ frames: [dual], body: true, select: true });
+  handle.refresh();
+  world.select.value = "dark";
+  world.select.fire();
+  assert.equal(world.root.attributes["data-mokly-theme"], "dark");
+  assert.equal(world.body.attributes["data-mokly-color-scheme"], "dark");
+  assert.equal(world.stored(), "dark");
+  assert.deepEqual(dual.loads, ["welcome.dark.html"]);
+});
+
+test("a light-only catalogue never captions a fallback under Dark", () => {
+  const lightOnly = frame("details.html");
+  const world = environment({ search: "?scheme=dark" });
+  const handle = installAppearance(world.document, world.window);
+  world.attach({ frames: [lightOnly], body: true, select: true });
+  handle.refresh();
+  // The frame keeps its source, and the body still reports dark, so the
+  // fallback caption rule keys off the frame rather than the appearance.
+  assert.deepEqual(lightOnly.loads, []);
+  assert.equal(world.body.attributes["data-mokly-color-scheme"], "dark");
 });

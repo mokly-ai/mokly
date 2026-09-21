@@ -27,6 +27,12 @@ export interface ShellContext {
   base: string;
   /** Interface appearance the document starts from; omission means `auto`. */
   theme?: ViewerTheme;
+  /**
+   * True inside an embedding host, which supplies the appearance itself and
+   * keeps the viewer's own preview controls. A standalone document instead
+   * shows the one Appearance control.
+   */
+  embedded?: boolean;
   /** Routes changed since the base-ref branch point; absent when unknown. */
   changedRoutes?: readonly string[];
   /** Whether on-demand comparison serving is available. */

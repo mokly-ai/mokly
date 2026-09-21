@@ -47,7 +47,11 @@ export function ComponentWorkspace({
         heading={head.title}
         id={head.id}
         crumbs={head.crumbs}
-        action={<WorkspaceControls dark={catalogue.hasDarkFragments} />}
+        action={
+          <WorkspaceControls
+            dark={Boolean(context.embedded) && catalogue.hasDarkFragments}
+          />
+        }
         status={
           <span
             className="mbk-entry-status"

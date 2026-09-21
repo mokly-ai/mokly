@@ -9,7 +9,7 @@
  * reference it until that control opts the document in.
  */
 
-import { THEME_ATTRIBUTE } from "../viewer/theme.js";
+import { normalizeTheme, THEME_ATTRIBUTE } from "../viewer/theme.js";
 import type { ViewerTheme } from "../viewer/types.js";
 
 import {
@@ -30,14 +30,25 @@ interface AppearanceFrame {
   };
 }
 
+/** The control that sets the appearance, once the document has rendered it. */
+interface AppearanceControl {
+  value: string;
+  hidden: boolean;
+  addEventListener(type: "change", handler: () => void): void;
+}
+
 /** The document surface this module touches, so a test can supply its own. */
 export interface AppearanceDocument {
+  /** Absent while the asset runs ahead of the stylesheet, in the head. */
+  body?: { setAttribute(name: string, value: string): void } | null | undefined;
   documentElement: {
     getAttribute(name: string): string | null;
     setAttribute(name: string, value: string): void;
     dataset: { moklyAppearance?: string | undefined };
   };
-  querySelectorAll(selector: string): Iterable<AppearanceFrame>;
+  querySelectorAll(
+    selector: string,
+  ): Iterable<AppearanceFrame & AppearanceControl>;
 }
 
 /** The window surface this module touches. */
@@ -57,6 +68,12 @@ export interface AppearanceWindow {
 /** A live installation: choose an appearance, or remove what it installed. */
 export interface AppearanceHandle {
   choose(theme: ViewerTheme): void;
+  /**
+   * Re-applies once the document has a body, frames and controls. The asset
+   * runs in the head so the root is right before the first paint, and calls
+   * this when the DOM is ready to finish the job.
+   */
+  refresh(): void;
   dispose(): void;
 }
 
@@ -66,7 +83,12 @@ const NO_STORAGE: AppearanceStorage = {
   setItem: () => {},
   removeItem: () => {},
 };
-const INERT: AppearanceHandle = { choose: () => {}, dispose: () => {} };
+const CONTROL_SELECTOR = "[data-mokly-appearance-select]";
+const INERT: AppearanceHandle = {
+  choose: () => {},
+  refresh: () => {},
+  dispose: () => {},
+};
 
 /**
  * One controller per document root. A document has one appearance, so every
@@ -77,6 +99,7 @@ interface Controller {
   theme: ViewerTheme;
   handles: number;
   apply(): void;
+  bind(): void;
   choose(theme: ViewerTheme): void;
   release(): void;
 }
@@ -117,6 +140,7 @@ function createController(
   const storage = storageOf(window);
   const initial = root.getAttribute(THEME_ATTRIBUTE);
   const media = window.matchMedia("(prefers-color-scheme: dark)");
+  const bound = new WeakSet<object>();
   const controller: Controller = {
     theme: resolveAppearance({
       pin: schemePin(window.location.search),
@@ -127,8 +151,24 @@ function createController(
     apply() {
       root.setAttribute(THEME_ATTRIBUTE, controller.theme);
       const scheme = effectiveScheme(controller.theme, media.matches);
+      // The preview scheme is the same choice, so the document mark the shell
+      // already keys its frames and captions off follows the appearance.
+      document.body?.setAttribute("data-mokly-color-scheme", scheme);
       applyFrames(document, scheme);
+      for (const control of document.querySelectorAll(CONTROL_SELECTOR)) {
+        control.value = controller.theme;
+        control.hidden = false;
+      }
       window.onAppearance?.(controller.theme, scheme);
+    },
+    bind() {
+      for (const control of document.querySelectorAll(CONTROL_SELECTOR)) {
+        if (bound.has(control)) continue;
+        bound.add(control);
+        control.addEventListener("change", () =>
+          controller.choose(normalizeTheme(control.value)),
+        );
+      }
     },
     choose(theme) {
       controller.theme = theme;
@@ -170,6 +210,11 @@ export function installAppearance(
     choose(theme) {
       // A disposed handle no longer speaks for a document it does not own.
       if (live) controller.choose(theme);
+    },
+    refresh() {
+      if (!live) return;
+      controller.bind();
+      controller.apply();
     },
     dispose() {
       if (!live) return;

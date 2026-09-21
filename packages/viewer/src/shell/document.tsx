@@ -49,7 +49,7 @@ export function renderShellPage(
           <a className="mbk-skip-link" href="#mb-main">
             Skip to content
           </a>
-          <TopBar catalogue={catalogue} />
+          <TopBar catalogue={catalogue} context={context} />
           <div className="mbk-body">
             <CatalogueNav catalogue={catalogue} context={context} />
             <ShellMain catalogue={catalogue} context={context} view={view} />
