@@ -149,6 +149,10 @@ waiting for slower subresources and the iframe `load` event. Valid logical links
 in an authenticated document therefore remain parent-owned throughout source
 handoffs; a document reached through unowned frame navigation keeps portable
 native-link behavior until the assigned replacement authenticates. The first
+same-origin mount may authenticate a matching server-rendered starting document
+for hydration. Later mounts exclude their exact unrecorded starting document
+from URL-based authentication, even when its URL already matches the new
+assignment; only a different loaded document can authenticate. The first
 matching `MountedFrame.subscribe` adopts the receiver without duplicating
 events. Custom adapters should honor the same authenticated mount-time receiver
 contract. Unsubscribing or disposing restores portable native-link behavior.

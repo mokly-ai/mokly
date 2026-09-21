@@ -94,6 +94,7 @@ function Home({ compact }) {
     <a href="mock:details#section" id="top-link" target="_top">Top details</a>
     <a href="mock:details#section" id="parent-link" target="_parent">Parent details</a>
     <a href="./details.mobile.html" id="unowned-details-link">Unowned details</a>
+    <a href="./home.mobile.dark.html" id="unowned-next-scheme-link">Unowned next scheme</a>
     <a href="#home" id="unmarked-top" target="_top">Ordinary top</a>
     <a href="#home" id="unmarked-parent" target="_parent">Ordinary parent</a>
     <svg viewBox="0 0 100 30"><a href="#home" id="unmarked-svg-top" target="_top"><text x="0" y="20">Ordinary SVG</text></a></svg>

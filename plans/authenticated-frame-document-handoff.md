@@ -64,10 +64,14 @@ docs currently describe the unsafe behaviour as intended.
    [`browse_navigation_hydration_handoff.spec.ts`](../tests/browser/browse_navigation_hydration_handoff.spec.ts))
    must keep passing unchanged. They are the proof that continuity survives.
 3. **An initial document is accepted only when it is the requested resource.**
-   The first hydration mount has no prior owner; its SSR-loaded document is
-   adopted by the watcher's immediate resource check, which already runs
-   synchronously before `location.replace`. No separate initial-document rule
-   is needed, and `about:blank` is never adopted.
+   The first same-origin mount of a frame has no prior adapter owner, so it may
+   adopt its SSR-loaded document through the watcher's immediate resource
+   check. Later mounts remember that the frame has already been mounted and
+   exclude their exact pre-replacement `Document` from resource
+   authentication unless identity transfer succeeds. This explicit
+   initial-mount rule keeps hydration while preventing an unowned document at
+   the next requested URL from impersonating the replacement. `about:blank`
+   is never adopted.
 4. **One authentication chokepoint with a branded type.** Every document the
    mount listens to must come from a new module that returns
    `AuthenticatedDocument` (a branded `Document`). Receiver installation and
@@ -213,6 +217,50 @@ regression green.
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
 
+## Milestone 3: Exact-Resource Starting Document Guard
+
+Tags: ui
+
+Summary: close the review-discovered same-object bypass without regressing
+first hydration or authenticated handoff continuity.
+
+- [x] Amend the frame-adapter and navigation protocols plus both viewer
+      READMEs to define weak frame/mount provenance: the first same-origin
+      mount may authenticate a matching SSR document, but a later mount must
+      exclude its exact unrecorded pre-replacement `Document` from both watcher
+      and `load` authentication even when its URL equals the new assignment.
+- [x] Add adapter- and shell-level browser regressions that first navigate the
+      frame natively to the exact resource the next mount will request, hold
+      that replacement, and prove the unowned starting document keeps native
+      activation until a different replacement `Document` authenticates.
+- [x] Run both exact-resource regressions against the current implementation,
+      confirm they fail at the `defaultPrevented` assertion, and record the
+      failures in this plan's review record before changing production code.
+- [x] Extend `same_origin_identity.ts` with weak frame provenance and a
+      mount-scoped authentication capability. Preserve matching-document
+      authentication for the first mount and authenticated identity transfer
+      for later mounts, while rejecting the exact unrecorded starting object
+      from every assigned-resource authentication path.
+- [x] Route the replacement watcher and iframe `load` handler in
+      `same_origin_mount.ts` through the mount-scoped capability, keeping the
+      authenticated-document brand as the only receiver/operations input.
+- [x] Extend the Node identity tests to cover first-mount hydration, an
+      authenticated later handoff, rejection of an exact-URL unrecorded
+      starting document, and authentication of the different replacement
+      object at that same URL.
+- [x] Run the viewer build and typecheck, the identity unit test, both new
+      exact-resource browser regressions, and the retained handoff/security
+      browser matrix repeatedly enough to show deterministic behavior; confirm
+      the package inventory remains valid.
+- [x] Run the complete `cargo xtask check` gate with no failures or skips.
+- [x] After checks pass, `git add -A`, commit with Conventional Commits, and
+      push the branch.
+- [ ] After the push, use
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main`; report
+      numbered, severity-rated findings with options and recommendations
+      without changing the implementation.
+
 ## Post-merge follow-up (non-blocking)
 
 - Publish the viewer version containing the handoff fix; hosts that embed
@@ -232,6 +280,14 @@ Before the Milestone 2 fix, both new browser regressions failed at their
 `defaultPrevented` assertion: the adapter-level and shell-level probes each
 received `true` instead of `false`, proving that the provisional receiver had
 intercepted the unowned document's marked activation.
+
+Before the Milestone 3 fix, both exact-resource regressions reproduced the
+review finding. The adapter probe's `prevented` field was `true` instead of
+`false` at `same_origin_identity.spec.ts:197`, and the shell probe's
+`defaultPrevented` value was `true` instead of `false` at
+`browse_navigation_hydration_handoff.spec.ts:134`. This proves the immediate
+watcher promoted the exact unrecorded starting `Document` before either held
+replacement response was released.
 
 Milestone 2 (`b27533f`) was reviewed with the implementation review prompt
 after the full gate and push. One finding remains for user decision; it was not

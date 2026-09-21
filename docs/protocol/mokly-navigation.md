@@ -242,8 +242,12 @@ The shell transfers its navigation receiver to that authenticated document
 before starting the replacement, so a valid marked activation during a
 viewport, scheme, variant, fragment, or route handoff still navigates the parent
 exactly once. A document the session did not authenticate remains frame-owned
-until the replacement document passes assigned-resource authentication. The
-receiver follows that new same-origin document as soon as its exact resource
+until a different replacement document passes assigned-resource authentication.
+On the frame's first same-origin mount, a matching server-rendered starting
+document may authenticate for hydration. On every later mount, the exact
+starting `Document` is ineligible for URL-based authentication when it was not
+already authenticated, even if it has the requested replacement URL. The
+receiver follows the new same-origin document as soon as its exact resource
 identity can be authenticated; pending images, fonts, or other subresources
 cannot reopen a native-navigation gap before `load`. Readiness gates inspection,
 not logical navigation. Disposing or unsubscribing the session removes the

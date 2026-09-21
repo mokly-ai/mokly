@@ -10,9 +10,9 @@ import { ownFrame } from "./frame_mount.js";
 import { localFrameAccess } from "./same_origin_access.js";
 import {
   assignedFrameResource,
-  authenticateAssignedDocument,
+  createMountAuthentication,
   type AuthenticatedDocument,
-  transferAuthenticatedDocument,
+  type MountAuthentication,
 } from "./same_origin_identity.js";
 import { listenForFrameActivations } from "./same_origin_navigation.js";
 import { localPointer } from "./same_origin_pointer.js";
@@ -50,6 +50,7 @@ export function mountLocalDocument(
     let activationDocument: AuthenticatedDocument | undefined;
     let operationsController: AbortController | undefined;
     let documentWatch: number | undefined;
+    let mountAuthentication: MountAuthentication | undefined;
     let operations: LocalOperations | undefined;
     let disposed = false;
     let release = () => {};
@@ -90,7 +91,10 @@ export function mountLocalDocument(
     const inspectReplacementDocument = () => {
       try {
         const doc = localFrameAccess(frame).document();
-        const authenticated = authenticateAssignedDocument(frame, doc, url);
+        const authenticated = mountAuthentication?.authenticateAssignedDocument(
+          doc,
+          url,
+        );
         if (authenticated && authenticated !== activationDocument) {
           disposeOperations();
           adoptActivationDocument(authenticated);
@@ -154,7 +158,10 @@ export function mountLocalDocument(
           dispose();
           return;
         }
-        const authenticated = authenticateAssignedDocument(frame, doc, url);
+        const authenticated = mountAuthentication?.authenticateAssignedDocument(
+          doc,
+          url,
+        );
         if (!authenticated) {
           if (assignedFrameResource(frame, url)) return;
           reject(new FrameError("origin"));
@@ -256,8 +263,9 @@ export function mountLocalDocument(
     win.addEventListener("pagehide", dispose, { signal });
     try {
       const current = localFrameAccess(frame).document();
-      const authenticated = transferAuthenticatedDocument(frame, current);
-      if (authenticated) adoptActivationDocument(authenticated);
+      mountAuthentication = createMountAuthentication(frame, current);
+      if (mountAuthentication.transferredDocument)
+        adoptActivationDocument(mountAuthentication.transferredDocument);
       watchReplacementDocument();
       localFrameAccess(frame).replace(url);
     } catch {

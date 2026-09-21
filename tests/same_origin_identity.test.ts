@@ -3,10 +3,9 @@ import test from "node:test";
 
 import {
   assignedFrameResource,
-  authenticateAssignedDocument,
+  createMountAuthentication,
   normalizedHtmlPath,
   sameFrameResource,
-  transferAuthenticatedDocument,
 } from "../packages/viewer/dist/client/same_origin_identity.js";
 
 test("resource identity retains origin, path and query while excluding hash", () => {
@@ -60,36 +59,76 @@ test("assigned frame resources resolve against the owner document", () => {
   assert.equal(assignedFrameResource(fixture.frame, expected), false);
 });
 
-test("only a recorded immediate document transfers to its owning frame", () => {
+test("the first mount authenticates a matching immediate document", () => {
   const owning = fakeFrame();
   const other = fakeFrame();
   const expected = new URL("https://app.test/static/screen.html?revision=2");
   const mismatched = fakeDocument(other.frame, expected.href);
-  const unrecorded = fakeDocument(owning.frame, expected.href);
   const recorded = fakeDocument(owning.frame, expected.href);
+  const authentication = createMountAuthentication(owning.frame, recorded);
 
   assert.equal(
-    authenticateAssignedDocument(owning.frame, mismatched, expected),
+    authentication.authenticateAssignedDocument(mismatched, expected),
     undefined,
   );
   assert.equal(
-    transferAuthenticatedDocument(owning.frame, unrecorded),
-    undefined,
-  );
-  assert.equal(
-    authenticateAssignedDocument(
-      owning.frame,
+    authentication.authenticateAssignedDocument(
       recorded,
       new URL("https://app.test/static/other.html?revision=2"),
     ),
     undefined,
   );
   assert.equal(
-    authenticateAssignedDocument(owning.frame, recorded, expected),
+    authentication.authenticateAssignedDocument(recorded, expected),
     recorded,
   );
-  assert.equal(transferAuthenticatedDocument(owning.frame, recorded), recorded);
-  assert.equal(transferAuthenticatedDocument(other.frame, recorded), undefined);
+});
+
+test("only a recorded immediate document transfers to a later mount", () => {
+  const owning = fakeFrame();
+  const other = fakeFrame();
+  const expected = new URL("https://app.test/static/screen.html?revision=2");
+  const recorded = fakeDocument(owning.frame, expected.href);
+  const first = createMountAuthentication(owning.frame, recorded);
+
+  assert.equal(
+    first.authenticateAssignedDocument(recorded, expected),
+    recorded,
+  );
+  assert.equal(
+    createMountAuthentication(owning.frame, recorded).transferredDocument,
+    recorded,
+  );
+  assert.equal(
+    createMountAuthentication(other.frame, recorded).transferredDocument,
+    undefined,
+  );
+});
+
+test("a later mount excludes its exact unrecorded starting document", () => {
+  const fixture = fakeFrame();
+  const firstUrl = new URL("https://app.test/static/first.html");
+  const nextUrl = new URL("https://app.test/static/next.html?revision=2");
+  const hydrated = fakeDocument(fixture.frame, firstUrl.href);
+  const first = createMountAuthentication(fixture.frame, hydrated);
+  assert.equal(
+    first.authenticateAssignedDocument(hydrated, firstUrl),
+    hydrated,
+  );
+
+  const unowned = fakeDocument(fixture.frame, nextUrl.href);
+  const replacement = createMountAuthentication(fixture.frame, unowned);
+  assert.equal(replacement.transferredDocument, undefined);
+  assert.equal(
+    replacement.authenticateAssignedDocument(unowned, nextUrl),
+    undefined,
+  );
+
+  const loaded = fakeDocument(fixture.frame, nextUrl.href);
+  assert.equal(
+    replacement.authenticateAssignedDocument(loaded, nextUrl),
+    loaded,
+  );
 });
 
 function fakeFrame(baseURI = "https://app.test/") {

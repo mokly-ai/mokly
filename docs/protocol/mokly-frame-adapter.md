@@ -194,6 +194,17 @@ assigned resource loads. A document that no mount authenticated, including one
 the frame reached through its own native navigation, keeps portable native-link
 behavior until the replacement authenticates.
 
+The adapter records weak per-frame mount provenance. On the first same-origin
+mount only, its immediate watcher may authenticate an already rendered
+document whose resource exactly matches the assignment; this is the explicit
+server-rendered hydration path. Every later mount captures the immediate
+pre-replacement `Document`. When that exact object was not previously
+authenticated for the frame, both the watcher and `load` handler exclude it
+from assigned-resource authentication even if its URL exactly equals the new
+assignment. Only a different replacement `Document` may then pass the resource
+check. Frame and document provenance is weakly held and does not extend either
+object's lifetime.
+
 As soon as the new immediate `Document` becomes same-origin-accessible, the
 adapter independently authenticates its exact origin, decoded resource path and
 query, then moves the receiver before slower subresources can delay the iframe
@@ -376,8 +387,12 @@ Retain same-origin browser tests unchanged. Add an adversarial same-origin case
 where a frame navigates itself to an unowned document carrying a syntactically
 valid marker, then starts a replacement mount: the unowned document keeps native
 activation and emits no host navigation, while the authenticated replacement
-regains host-owned navigation. Cross-origin fixtures must cover handshake and
-inertness, wrong origins/sources/nonces, opaque origins, limits, unknown fields,
-navigation, null/multi-root ranges, clipping, overlays, scroll, view swaps,
-timeout and disposal. Check the script budget and prove comparison bytes and
-local screenshots/interactions are unchanged.
+regains host-owned navigation. Repeat that case with the unowned document's URL
+exactly equal to the next assigned resource, proving the starting object is
+excluded while a different object loaded from that URL authenticates. Retain a
+first-mount SSR hydration case proving its matching starting document remains
+eligible. Cross-origin fixtures must cover handshake and inertness, wrong
+origins/sources/nonces, opaque origins, limits, unknown fields, navigation,
+null/multi-root ranges, clipping, overlays, scroll, view swaps, timeout and
+disposal. Check the script budget and prove comparison bytes and local
+screenshots/interactions are unchanged.

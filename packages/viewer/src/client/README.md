@@ -41,10 +41,12 @@ mask, labels, selection and observer lifecycle.
 same-origin mounts. It records authenticated `Document` objects without
 retaining them, transfers mount-time navigation ownership only when the exact
 current object was previously authenticated for that frame, and separately
-checks every watcher or `load` candidate against the assigned resource. An
-unowned document reached through native frame navigation is never promoted by
-URL resemblance and keeps portable link behavior until its replacement
-authenticates.
+checks every watcher or `load` candidate against the assigned resource through
+a mount-scoped capability. Weak frame provenance permits matching SSR content
+on the first same-origin mount. A later mount excludes its exact unrecorded
+starting object even when its URL equals the assignment, so an unowned document
+reached through native frame navigation keeps portable link behavior until a
+different replacement object authenticates.
 
 `post_message_adapter.ts` explicitly opts into a separate HTTP(S) origin. It sets
 the cross-origin sandbox, replaces iframe history, and negotiates a fresh random

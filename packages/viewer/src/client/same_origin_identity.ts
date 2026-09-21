@@ -2,6 +2,7 @@
 
 const authenticatedDocument: unique symbol = Symbol("authenticated-document");
 const authenticatedDocuments = new WeakSet<Document>();
+const mountedFrames = new WeakSet<HTMLIFrameElement>();
 
 /** A document whose frame and assigned resource identity were authenticated. */
 export type AuthenticatedDocument = Document & {
@@ -9,8 +10,41 @@ export type AuthenticatedDocument = Document & {
   readonly [authenticatedDocument]: true;
 };
 
-/** Authenticate and record one immediate document against its assigned resource. */
-export function authenticateAssignedDocument(
+/** Mount-scoped document transfer and assigned-resource authentication. */
+export interface MountAuthentication {
+  /** The authenticated starting document eligible for ownership transfer. */
+  readonly transferredDocument: AuthenticatedDocument | undefined;
+  /** Authenticate a candidate without promoting an excluded starting object. */
+  authenticateAssignedDocument(
+    doc: Document | null | undefined,
+    expected: URL,
+  ): AuthenticatedDocument | undefined;
+}
+
+/** Establish weak frame provenance and authentication rules for one mount. */
+export function createMountAuthentication(
+  frame: HTMLIFrameElement,
+  startingDocument: Document | null | undefined,
+): MountAuthentication {
+  const firstMount = !mountedFrames.has(frame);
+  mountedFrames.add(frame);
+  const transferredDocument = transferAuthenticatedDocument(
+    frame,
+    startingDocument,
+  );
+  const excludedDocument =
+    firstMount || transferredDocument ? undefined : startingDocument;
+  return {
+    transferredDocument,
+    authenticateAssignedDocument: (doc, expected) =>
+      doc === excludedDocument
+        ? undefined
+        : authenticateAssignedDocument(frame, doc, expected),
+  };
+}
+
+/** Record one immediate candidate after its assigned resource matches. */
+function authenticateAssignedDocument(
   frame: HTMLIFrameElement,
   doc: Document | null | undefined,
   expected: URL,
@@ -25,8 +59,8 @@ export function authenticateAssignedDocument(
   return doc as AuthenticatedDocument;
 }
 
-/** Transfer a recorded document only while it remains immediate to the same frame. */
-export function transferAuthenticatedDocument(
+/** Transfer a recorded document only while it remains in its owning frame. */
+function transferAuthenticatedDocument(
   frame: HTMLIFrameElement,
   doc: Document | null | undefined,
 ): AuthenticatedDocument | undefined {
