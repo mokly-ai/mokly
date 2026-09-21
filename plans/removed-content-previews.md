@@ -46,10 +46,14 @@ Changes-enabled repository preview retained deleted ancestry, historical
 the current-only preview emitted no removed entries or history URL, and a viewer
 installed from the packed package rendered the removed page.
 
-Remaining risks are bounded and intentional: served unavailable markup changes
-to loading after the client starts its request; branch-point semantics exclude
-later pre-deletion branch edits; and published-package and deployed-preview
-smokes remain post-merge follow-up work.
+Remaining risks include one High/P1 finding from the final post-push review:
+cross-origin preview frames cannot receive the parent document's read-only DOM
+guard, while their sandbox still permits self-navigation, so activating a link
+can replace the historical document inside its frame. The implementation is
+unchanged pending the user's decision. Intentional tradeoffs remain: served
+unavailable markup changes to loading after the client starts its request;
+branch-point semantics exclude later pre-deletion branch edits; and
+published-package and deployed-preview smokes remain post-merge follow-up work.
 
 The final mainline-preservation audit merged `origin/main` at
 `20e55ca02a7274b659031b2295bc4d3e92360767`, retaining its CI verification,
@@ -577,11 +581,11 @@ Complete the implementation and its review before the PR merge boundary.
       behavior boundary so every changed TypeScript file remains within the
       300-line ceiling, preserving all assertions and rerunning the affected
       tests and static checks.
-- [ ] After all checks pass, run `git add -A`, commit the completed work using
+- [x] After all checks pass, run `git add -A`, commit the completed work using
       Conventional Commits with a title of at most 50 characters and an
       explanatory body, then push the existing branch. Inspect the committed
       diff and deletions against `origin/main`.
-- [ ] Only after the push, use
+- [x] Only after the push, use
       [docs/implementation-review-prompt.md](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`. Do not change
       implementation or automatically fix findings. Report each numbered finding
