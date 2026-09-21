@@ -5,12 +5,12 @@
 
 import { renderToStaticMarkup } from "react-dom/server";
 
+import { normalizeTheme } from "../viewer/theme.js";
+
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import { CatalogueNav } from "./nav.js";
 import { TopBar } from "./top_bar.js";
-import { normalizeTheme } from "../viewer/theme.js";
-
 import { ShellMain, viewTitle } from "./views.js";
 import type { ShellView } from "./views.js";
 
