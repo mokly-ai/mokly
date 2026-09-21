@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 
@@ -19,7 +19,7 @@ test.beforeEach(async ({ page }) => {
 const ROOT = "#one .mokly-viewer";
 const FRAME = "#one .mbk-frag";
 
-async function startHost(page: import("@playwright/test").Page) {
+async function startHost(page: Page) {
   await page.evaluate(() => window.viewerHarness.start("one", { slots: true }));
   await page.waitForFunction(
     () => window.viewerHarness.get("one").ref.current !== null,
