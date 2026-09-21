@@ -207,7 +207,7 @@ regression green.
 - [x] Run the complete `cargo xtask check` gate with no failures or skips.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
@@ -232,3 +232,40 @@ Before the Milestone 2 fix, both new browser regressions failed at their
 `defaultPrevented` assertion: the adapter-level and shell-level probes each
 received `true` instead of `false`, proving that the provisional receiver had
 intercepted the unowned document's marked activation.
+
+Milestone 2 (`b27533f`) was reviewed with the implementation review prompt
+after the full gate and push. One finding remains for user decision; it was not
+applied automatically.
+
+1. **Medium — the immediate watcher can authenticate an unowned starting
+   document whose URL already equals the next assigned resource.**
+   `same_origin_mount.ts:90-105` runs `inspectReplacementDocument`
+   synchronously at mount start, before `location.replace` at lines 257-262.
+   Although identity transfer rejects an unrecorded current object, that watcher
+   immediately sends the same object through URL-based
+   `authenticateAssignedDocument` and installs the receiver when its URL matches
+   the new assignment. A read-only browser probe navigated the mobile frame to
+   `home.mobile.dark.html`, held a replacement request for that same resource,
+   toggled the scheme, and observed `defaultPrevented: true`. Doing nothing
+   leaves the original trust-boundary finding exploitable whenever consumer
+   navigation anticipates the next viewport, scheme, variant, fragment, or
+   route resource; such a document can emit parent-shell navigation during the
+   held handoff despite never being authenticated by its prior mount.
+   - **A.** Extend the identity boundary with weak frame/mount provenance and
+     exclude the exact pre-replacement `Document` from assigned-resource
+     authentication on a previously mounted frame unless identity transfer
+     succeeds. Preserve initial hydration through an explicit initial-mount
+     rule, and add adapter- and shell-level regressions where the unowned URL is
+     exactly the next assignment.
+   - **B.** Remove synchronous pre-replacement watcher authentication and wait
+     for `location.replace` to expose a different `Document` object on every
+     mount, accepting a native-navigation gap during initial hydration.
+   - **C.** Treat a matching URL as sufficient ownership and narrow the
+     protocol promise, accepting that document identity is not the effective
+     trust key.
+
+   **Recommendation: A.** The broader frame-provenance invariant preserves the
+   existing continuity goal while preventing the entire same-object bypass;
+   the exact-path adversarial matrix would keep future watcher or load-handler
+   changes from reintroducing it. Option B is secure but regresses the retained
+   hydration behavior, while C abandons the approved trust boundary.
