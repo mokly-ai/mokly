@@ -7,8 +7,10 @@ resolved all seven fourth-review findings, including I/O-free watch pruning,
 leaf-last denial checks, resilient Review-output discovery, mandatory watcher
 reporting, and the approved documentation and test corrections. The post-push
 review of Milestone 10 reported seven further findings, recorded below and
-awaiting the user's decision; the first is a precedence regression and the
-third turns a loud discovery failure into silent output pruning.
+all approved by the user. Milestone 11 carries them as one design change
+rather than seven patches: the watcher passes chokidar's event kind and stats
+into classification so no helper has to guess from the filesystem, and
+discovery swallows only not-found errors.
 
 Mokly currently discovers every `*.mockup.ts` and `*.mockup.tsx` module below
 one configured directory, `entriesDir`, and binds the source-attributed
@@ -615,7 +617,58 @@ conditions; the rest are doc, guard, and test hygiene.
       commit reported seven findings, recorded under "Fifth Review Findings
       (awaiting decision)".
 
-## Fifth Review Findings (awaiting decision)
+---
+
+### Milestone 11: Event-aware classification and loud discovery
+
+Apply the seven fifth-review findings. Findings 1 and 2 and the missing-path
+heuristic share one cause: the chokidar adapter discards the event kind and
+stats that chokidar already supplies, so classification guesses directory
+status from the filesystem. Threading that information through removes the
+guessing. Finding 3 restores loud discovery failures.
+
+- [ ] Change `ConsumerWatcher.onChange` in `src/server/watcher.ts` to deliver
+      `{ path, kind, stats? }` where `kind` is chokidar's event name (`add`,
+      `addDir`, `change`, `unlink`, `unlinkDir`) or `raw` for the rename
+      fallback; carry it through `ResourceWatchNotifications` and every
+      `NotificationGate` and test double that forwards paths.
+- [ ] Give `classifyWatchPath` and `isPackageOwnedIgnoredWatchPath` an
+      optional event descriptor. Directory status comes from `stats` when
+      present, else from the event kind (`addDir`/`unlinkDir` are
+      directories, `add`/`change`/`unlink` are files), and only when neither
+      is known from an event-time `fs.statSync` that fails open. Delete
+      `isMissing` and the lazily evaluated missing-path heuristic in
+      `isDiscoveryDeniedEntryPath`. Findings 1 and 2 follow: an existing or
+      removed denied-name directory outranks user watch rules again, and a
+      removed matched file named like a denied directory rebuilds.
+- [ ] Finding 3: in `src/config/entry_discovery.ts`, swallow only `ENOENT`
+      and `ENOTDIR` in `readEntryDirectory` and the Review-output skip;
+      surface any other read or projection error as `config-invalid` naming
+      the directory; record concurrently vanished directories as skipped and
+      list them with the denied roots in the zero-match message. Delete the
+      `0o555` mode mask (finding 5). Guard the top-level `review.outDir`
+      projection with a lexical fallback and hoist the per-module
+      `realpathSync(repoRoot)` and glob-root projections into the
+      once-per-pass paths object (finding 6).
+- [ ] Finding 4: scope the "no filesystem lookup" sentence in
+      `docs/protocol/mokly-watch.md` to the denied-leaf directory check and
+      rename the test accordingly; extend the descriptor-exhaustion test to
+      mock `lstatSync`, `readFileSync`, and `openSync` as well as `statSync`
+      and assert the traversal predicate still returns without throwing.
+- [ ] Finding 7: add a test that deleting a matched module with an ordinary
+      name still classifies as rebuild, and a test that the resource
+      watcher's gate reports a thrown non-`Error` value through `failed` as
+      an `Error`.
+- [ ] Update `docs/protocol/mokly-watch.md`, `docs/protocol/mokly-configuration.md`,
+      `docs/architecture/build-pipeline.md`, `src/build/README.md`, and
+      `src/server/README.md` so they state the event-aware rule and the
+      loud-failure rule exactly.
+- [ ] Run `cargo xtask check`, commit, and push.
+- [ ] Review the complete local diff against `origin/main` after the push
+      using `docs/implementation-review-prompt.md`; report findings without
+      changing the implementation.
+
+## Fifth Review Findings (approved, addressed in Milestone 11)
 
 Review of the Milestone 10 commit. Nothing has been changed in response. The
 supervising agent confirmed findings 1, 2, and 3 by direct probe.
