@@ -38,6 +38,7 @@ export {
   repositoryPath,
   publicPath,
   comparisonPath,
+  pagePreviewPath,
   relatedDoc,
   lexical,
 } from "./catalogue/values.js";
@@ -117,6 +118,11 @@ export type {
   ReviewResult,
 } from "./review/types.js";
 export { parseReviewResult } from "./review/result_validation.js";
+export { parseRemovedPagePreview } from "./review/page_preview.js";
+export type {
+  RemovedPagePreview,
+  RemovedPagePreviewArtifact,
+} from "./review/page_preview.js";
 export { reviewInvalid, requireEqual } from "./review/result_helpers.js";
 export { isStylesheetPath } from "./review/css/stylesheet_path.js";
 export { VIEWPORTS, effectiveColorSchemes } from "./registry/views.js";

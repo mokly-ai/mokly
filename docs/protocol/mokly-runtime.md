@@ -38,6 +38,9 @@ tree shared by standalone Serve, static export and embedded hosts. Standalone
 documents render the complete shell on the server and hydrate it in the browser;
 embedded hosts mount the same components with host-owned selection and slots.
 Consumer frames and comparisons remain static HTML in script-disabled sandboxes.
+Selecting a removed page or screen captures and renders its pinned previous
+version in that shared tree through the lifecycle implemented by the
+[removed content previews plan](../../plans/removed-content-previews.md).
 
 ## Component Workspaces
 
@@ -221,8 +224,9 @@ comparison applies the same paired ignore rules and material keys as screen
 comparisons. Ignored-only edits stay out of Changes. Referenced CSS, images,
 fonts, and transitive local resources remain eligible even when HTML bytes are
 unchanged. Removed
-screens remain accessible using their baseline metadata, with an explicit
-missing-current state. Both watched and non-watched serving compute the filter.
+screens remain accessible using their baseline metadata and open their
+[previous version](./mokly-removed-previews.md).
+Both watched and non-watched serving compute the filter.
 When a screen is directly affected, every use case that embeds that screen's
 fragments is affected too and remains visible in the changed-only filter.
 

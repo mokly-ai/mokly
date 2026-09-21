@@ -10,7 +10,7 @@ import type { RoutedEntry } from "./target.js";
 import { workspaceData } from "./workspace_data.js";
 import { selectedChangedViews } from "./workspace_views_data.js";
 
-/** Apply the destination and view-axis rules for a visible Changes row. */
+/** Apply the destination and first-arrival view rules for a visible Changes row. */
 export function changesActivation(
   catalogue: Catalogue,
   context: ShellContext,
@@ -39,6 +39,7 @@ export function changesActivation(
       }
     : route;
   if (
+    selectionHasChangedRoute(catalogue, context, selection) ||
     route.viewport !== undefined ||
     route.colorScheme !== undefined ||
     (destination.kind !== "screen" && destination.kind !== "component")
@@ -53,6 +54,19 @@ export function changesActivation(
   return first
     ? { ...next, viewport: first.viewport, colorScheme: first.colorScheme }
     : next;
+}
+
+function selectionHasChangedRoute(
+  catalogue: Catalogue,
+  context: ShellContext,
+  selection: ViewerSelection,
+): boolean {
+  const current = selection.screenId
+    ? catalogue.byId.get(selection.screenId)
+    : undefined;
+  return current !== undefined && current.kind !== "collection"
+    ? context.changedRoutes?.includes(current.route) === true
+    : false;
 }
 
 function firstVisibleChangedVariant(

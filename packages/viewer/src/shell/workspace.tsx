@@ -12,6 +12,7 @@ import { DiffScreen } from "./diffs.js";
 import { ScreenHead, targetHead } from "./head.js";
 import { Inspector } from "./inspector.js";
 import { useInspectorResize } from "./inspector_resize.js";
+import { removedPreviewData, RemovedPreviewStage } from "./previews.js";
 import { useOptionalShellStore } from "./store_context.js";
 import type { ComparisonMode } from "./use_comparison.js";
 import { useWorkspaceData } from "./use_workspace_data.js";
@@ -107,7 +108,7 @@ export function ComponentWorkspace({
 
   useInspectorResize(workspaceRef, store?.interactive ?? false);
   useWorkspaceUsage({
-    active: !comparing,
+    active: !comparing && !data.removed,
     data,
     refresh,
     ...(request ? { request } : {}),
@@ -157,13 +158,18 @@ export function ComponentWorkspace({
   const inspection = useWorkspaceInspection({
     comparisonActive: comparing,
     data,
-    invalidSelection: Boolean(selection.error || variant?.removed),
+    invalidSelection: Boolean(
+      data.removed || selection.error || variant?.removed,
+    ),
     onSelect: selectInstance,
     ...(selectedKey ? { selectedKey } : {}),
     views,
   });
   const target = { kind: "entry" as const, entry };
   const head = targetHead(catalogue, target);
+  const preview = data.removed
+    ? removedPreviewData(catalogue, context, entry)
+    : undefined;
   const stage = (
     <WorkspaceStage
       catalogue={catalogue}
@@ -239,7 +245,9 @@ export function ComponentWorkspace({
       </p>
       <div className="mbk-workspace-panes">
         <div className="mbk-preview-pane" data-workspace-preview="">
-          {data.comparisons ? (
+          {preview ? (
+            <RemovedPreviewStage data={preview} />
+          ) : data.comparisons ? (
             <DiffScreen
               component={entry.kind === "component"}
               eligible={selection.comparisonEligible}

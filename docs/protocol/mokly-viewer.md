@@ -13,6 +13,9 @@ This document now defines the hydrated shell contract delivered by the
 component tree rendered on the server and hydrated in every delivery mode.
 Serve, export and application-owned hosts now use that tree directly. Local
 Serve/export presentation remains unchanged.
+Removed pages and screens load their advertised previous versions in local,
+static, and embedded hosts through the same tree, as implemented by the
+[removed content previews plan](../../plans/removed-content-previews.md).
 
 ## Package And Props
 
@@ -178,13 +181,15 @@ The Viewer rebuilds `variantOf` for current and removed screens from the public
 model, so its hierarchy, breadcrumbs, details rows, aggregate mark, and
 removed-variant adoption match Serve. A shell-link activation while `view` is
 `changes` proposes one atomic selection. An aggregate-only parent proposes its
-first visible changed variant's `screenId`; a changed destination proposes the
-first changed view's `viewport` and `colorScheme` from the public model's
-per-view comparison states, ordered mobile/light, mobile/dark, desktop/light,
-desktop/dark, unless the link names either axis. This rule applies only to
-shell-link activation: an imperative `select` call and supplied
-`defaultSelection` or `selection` props keep their axes. Controlled mode emits
-the complete proposal and waits for the host to supply it back.
+first visible changed variant's `screenId`. If the current selection is not
+itself a changed route, a changed destination also proposes the first changed
+view's `viewport` and `colorScheme` from the public model's per-view comparison
+states, ordered mobile/light, mobile/dark, desktop/light, desktop/dark, unless
+the link names either axis. Once a changed route is selected, later shell-link
+activations preserve the sticky axes while aggregate-parent redirection remains
+active. An imperative `select` call and supplied `defaultSelection` or
+`selection` props also keep their axes. Controlled mode emits the complete
+proposal and waits for the host to supply it back.
 
 Free text and tags follow [Browse search](./mokly-runtime.md#browse-shell):
 parse case-insensitive `tag:` terms out of search into a deduplicated tag list,
@@ -252,7 +257,9 @@ The viewer renders the existing [Browse shell](./mokly-runtime.md#browse-shell),
 [navigation](./mokly-navigation.md): catalogue trees and filters, route chrome,
 responsive frames and controls, comparisons, inspection and ordered flows. It
 retains existing accessibility, responsive and unavailable/loading/empty states;
-this API introduces no redesigned screen.
+this API introduces no redesigned screen. Removed entries load their
+[previous version](./mokly-removed-previews.md) only from advertised catalogue
+paths.
 
 Slots are optional React-owned content containers. `topBarStart`/`topBarEnd`
 adjoin the existing top bar; `railStart`/`railEnd` adjoin the navigation rail.

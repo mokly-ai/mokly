@@ -181,6 +181,19 @@ test("public v1 fixture conforms and compatible readers ignore additive fields",
   const fixture = JSON.parse(json);
   const model = readCatalogue(fixture);
   assert.equal(model.schemaVersion, 1);
+  assert.deepEqual(
+    model.removedEntries.map(({ entry, preview }) => [entry.kind, preview]),
+    [
+      [
+        "page",
+        {
+          kind: "page",
+          path: `__mokly/diffs/__generations/${"c".repeat(64)}/pages/archive/removed-page.html.json`,
+        },
+      ],
+      ["screen", { kind: "screen" }],
+    ],
+  );
   assert.equal(serializeCatalogue(model), json);
   fixture.future = { description: "An additive field" };
   fixture.screens[0].future = true;

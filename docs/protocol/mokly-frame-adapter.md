@@ -2,12 +2,16 @@
 
 ## Delivery Status
 
-Implemented in `@mokly/viewer` through [viewer library Milestones 4–5](../../plans/mokly-viewer-library.md). Local
+Implemented in `@mokly/viewer` by the completed
+[viewer library plan](../../plans/mokly-viewer-library.md). Local
 Serve/export keep today's same-origin sandbox and visible behavior. Only an
 explicit cross-origin host uses the new inspector transport. Host marker
 consumption and the trailing geometry refresh are implemented by the
 [comment anchoring plan](../../plans/viewer-comment-anchoring.md); the adapter
 wire protocol remains unchanged.
+Historical page and screen frames are shell-owned, read-only preview frames and
+never enter an adapter inspection handshake, as implemented by the
+[removed content previews plan](../../plans/removed-content-previews.md).
 
 ## Public Interface
 
@@ -216,6 +220,9 @@ the receiver, so an unenhanced document continues to use its portable native
 links.
 
 The sandbox remains exactly `allow-same-origin`; consumer scripts stay disabled.
+Historical [removed previews](./mokly-removed-previews.md) use separate
+shell-owned frames with the same sandbox and parent-enforced read-only links and
+forms when the document is same-origin-accessible.
 Existing local memory previews retain their authenticated private transport.
 No inspector handshake, extra badge, pick control, or visible affordance appears
 locally. Unsupported/unowned documents and comparison snapshots gain no privilege.

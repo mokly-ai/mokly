@@ -14,10 +14,12 @@
         "tour"
       ],
       "details": {
-        "dependencies": [],
+        "dependencies": [
+          "entries/fixture.mockup.tsx"
+        ],
         "description": "Product",
         "relatedDocs": [],
-        "sourcePath": "entries/catalogue.mockup.tsx"
+        "sourcePath": "entries/fixture.mockup.tsx"
       },
       "id": "product",
       "kind": "collection",
@@ -25,7 +27,7 @@
       "title": "Product"
     }
   ],
-  "comparisonUrl": null,
+  "comparisonUrl": "__mokly/diffs/__generations/cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc/review.json",
   "components": [
     {
       "changes": {
@@ -42,10 +44,12 @@
         }
       },
       "details": {
-        "dependencies": [],
+        "dependencies": [
+          "entries/fixture.mockup.tsx"
+        ],
         "description": "Action",
         "relatedDocs": [],
-        "sourcePath": "entries/catalogue.mockup.tsx"
+        "sourcePath": "entries/fixture.mockup.tsx"
       },
       "id": "action",
       "kind": "component",
@@ -66,9 +70,7 @@
       "variants": [
         {
           "comparison": {
-            "eligible": false,
-            "kind": "unmodified",
-            "status": "ready"
+            "status": "unavailable"
           },
           "id": "default",
           "props": {
@@ -83,9 +85,7 @@
             {
               "colorScheme": "light",
               "comparison": {
-                "eligible": false,
-                "kind": "unmodified",
-                "status": "ready"
+                "status": "unavailable"
               },
               "fragmentPath": "static/components/action.variants/default.mobile.html",
               "usage": {
@@ -99,9 +99,7 @@
             {
               "colorScheme": "light",
               "comparison": {
-                "eligible": false,
-                "kind": "unmodified",
-                "status": "ready"
+                "status": "unavailable"
               },
               "fragmentPath": "static/components/action.variants/default.desktop.html",
               "usage": {
@@ -134,10 +132,12 @@
         "status": "ready"
       },
       "details": {
-        "dependencies": [],
+        "dependencies": [
+          "entries/fixture.mockup.tsx"
+        ],
         "description": "Guide",
         "relatedDocs": [],
-        "sourcePath": "entries/catalogue.mockup.tsx"
+        "sourcePath": "entries/fixture.mockup.tsx"
       },
       "documentPath": "static/guide.html",
       "id": "guide",
@@ -147,7 +147,114 @@
       "title": "Guide"
     }
   ],
-  "removedEntries": [],
+  "removedEntries": [
+    {
+      "ancestors": [
+        {
+          "id": "product",
+          "title": "Product"
+        }
+      ],
+      "entry": {
+        "changes": {
+          "included": true,
+          "kind": "removed",
+          "status": "ready"
+        },
+        "details": {
+          "dependencies": [
+            "entries/fixture.mockup.tsx"
+          ],
+          "description": "Guide",
+          "relatedDocs": [],
+          "sourcePath": "entries/fixture.mockup.tsx"
+        },
+        "documentPath": null,
+        "id": "removed-page",
+        "kind": "page",
+        "route": "archive/removed-page.html",
+        "tags": [],
+        "title": "Removed page"
+      },
+      "preview": {
+        "kind": "page",
+        "path": "__mokly/diffs/__generations/cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc/pages/archive/removed-page.html.json"
+      }
+    },
+    {
+      "ancestors": [
+        {
+          "id": "product",
+          "title": "Product"
+        }
+      ],
+      "entry": {
+        "changes": {
+          "included": true,
+          "kind": "removed",
+          "status": "ready"
+        },
+        "colorSchemes": [
+          "light"
+        ],
+        "details": {
+          "dependencies": [
+            "entries/fixture.mockup.tsx"
+          ],
+          "description": "Home",
+          "relatedDocs": [],
+          "sourcePath": "entries/fixture.mockup.tsx"
+        },
+        "id": "removed-screen",
+        "kind": "screen",
+        "route": "screens/removed.html",
+        "tags": [],
+        "title": "Removed screen",
+        "useCaseIds": [],
+        "viewports": [
+          "mobile",
+          "desktop"
+        ],
+        "views": [
+          {
+            "colorScheme": "light",
+            "comparison": {
+              "eligible": false,
+              "kind": "removed",
+              "status": "ready"
+            },
+            "fragmentPath": null,
+            "usage": {
+              "instances": [],
+              "ranges": [],
+              "slots": [],
+              "status": "ready"
+            },
+            "viewport": "mobile"
+          },
+          {
+            "colorScheme": "light",
+            "comparison": {
+              "eligible": false,
+              "kind": "removed",
+              "status": "ready"
+            },
+            "fragmentPath": null,
+            "usage": {
+              "instances": [],
+              "ranges": [],
+              "slots": [],
+              "status": "ready"
+            },
+            "viewport": "desktop"
+          }
+        ]
+      },
+      "preview": {
+        "kind": "screen"
+      }
+    }
+  ],
   "revision": {
     "content": 0,
     "evidence": 0
@@ -164,10 +271,12 @@
         "light"
       ],
       "details": {
-        "dependencies": [],
+        "dependencies": [
+          "entries/fixture.mockup.tsx"
+        ],
         "description": "Home",
         "relatedDocs": [],
-        "sourcePath": "entries/catalogue.mockup.tsx"
+        "sourcePath": "entries/fixture.mockup.tsx"
       },
       "id": "home",
       "kind": "screen",
@@ -185,9 +294,7 @@
         {
           "colorScheme": "light",
           "comparison": {
-            "eligible": false,
-            "kind": "unmodified",
-            "status": "ready"
+            "status": "unavailable"
           },
           "fragmentPath": "static/screens/home.mobile.html",
           "usage": {
@@ -201,9 +308,7 @@
         {
           "colorScheme": "light",
           "comparison": {
-            "eligible": false,
-            "kind": "unmodified",
-            "status": "ready"
+            "status": "unavailable"
           },
           "fragmentPath": "static/screens/home.desktop.html",
           "usage": {
@@ -259,10 +364,12 @@
         "status": "ready"
       },
       "details": {
-        "dependencies": [],
+        "dependencies": [
+          "entries/fixture.mockup.tsx"
+        ],
         "description": "Tour",
         "relatedDocs": [],
-        "sourcePath": "entries/catalogue.mockup.tsx"
+        "sourcePath": "entries/fixture.mockup.tsx"
       },
       "id": "tour",
       "kind": "use-case",

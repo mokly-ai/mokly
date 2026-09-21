@@ -123,6 +123,8 @@ export function readEntry(value: unknown): CatalogueRoutedEntry {
   const input = object(value),
     base = common(input),
     path = route(input.route);
+  if (Object.hasOwn(input, "preview"))
+    invalidData("$catalogue", "preview is only valid on a removed entry");
   const kind = choice(input.kind, [
     "screen",
     "page",

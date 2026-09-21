@@ -190,7 +190,9 @@ test("review export retains a removed variant route, id redirect, and parent con
     path.join(fixture.output, "view", route),
     "utf8",
   );
-  assert.match(documentText(removed), /This screen was removed/);
+  assert.match(documentText(removed), /Showing previous version/);
+  assert.match(documentText(removed), /Previous version unavailable/);
+  assert.doesNotMatch(documentText(removed), /This screen was removed/);
   assert.match(
     removed,
     /<div class="mbk-nav-variants" data-nav-disclosure="variants:pages:home"[^>]*id="mb-nav-variants-pages-home"><a [^>]*data-nav-removed=""[^>]*data-removed-variant=""/,
@@ -200,7 +202,8 @@ test("review export retains a removed variant route, id redirect, and parent con
     path.join(fixture.output, "id/home-empty/index.html"),
     "utf8",
   );
-  assert.match(documentText(redirect), /This screen was removed/);
+  assert.match(documentText(redirect), /Showing previous version/);
+  assert.match(documentText(redirect), /Previous version unavailable/);
 
   const catalogue = JSON.parse(
     await fs.readFile(

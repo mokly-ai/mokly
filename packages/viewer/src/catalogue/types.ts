@@ -14,6 +14,8 @@ export type ChangesStatus =
   "preparing" | "pending" | "ready" | "unavailable" | "disabled";
 export type ChangeKind = "added" | "changed" | "removed" | "unmodified";
 export type PublicPath = string;
+export type RemovedEntryPreview =
+  { kind: "screen" } | { kind: "page"; path: PublicPath };
 
 /** Public v1 contract, independent of private build and comparison inventories. */
 export interface CatalogueReadModel {
@@ -35,6 +37,7 @@ export interface CatalogueReadModel {
   removedEntries: readonly {
     entry: CatalogueRoutedEntry;
     ancestors: readonly { id: string; title: string }[];
+    preview?: RemovedEntryPreview;
   }[];
 }
 export type CatalogueRoutedEntry =

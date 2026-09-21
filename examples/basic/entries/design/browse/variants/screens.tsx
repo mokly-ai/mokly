@@ -11,6 +11,9 @@ import {
   NAV_TREE_VARIANTS_OPEN,
   REMOVED_VARIANT_ROWS,
 } from "../../parts/nav_data.js";
+import { PreviousVersionLabel } from "../../parts/removed_preview.js";
+import { RemovedView } from "../../parts/removed_screen.js";
+import { MiniSaveFailed } from "../../parts/removed_shots.js";
 import {
   ScreenHead,
   Shell,
@@ -19,7 +22,6 @@ import {
   type ChangedView,
   type Crumb,
 } from "../../parts/shell.js";
-import { EmptyState } from "../../parts/stage_content.js";
 
 /** Only Welcome's dark renders changed, in both viewports. */
 const DARK_VIEWS: readonly ChangedView[] = [
@@ -114,16 +116,20 @@ function RemovedVariant({ viewport }: { viewport: ArtboardViewport }) {
         status="removed"
         title="Save failed"
       />
+      <PreviousVersionLabel />
       <PreviewWorkspace
+        viewport={viewport}
         inspector={
           <DetailsPanel comparisonEvidence open subject="welcomeError" />
         }
-        render={() => (
-          <EmptyState
-            body="There is no current preview to show."
-            title="This screen was removed"
-            to={DESTINATIONS.home}
-          />
+        render={(previewViewport) => (
+          <RemovedView
+            address="example.test/welcome"
+            compact={viewport === "mobile"}
+            viewport={previewViewport}
+          >
+            <MiniSaveFailed compact={previewViewport === "mobile"} />
+          </RemovedView>
         )}
       />
     </Shell>

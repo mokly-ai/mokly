@@ -94,11 +94,16 @@ test("added and removed screens stay current while light-only comparisons retain
   await chooseViewport(page, "mobile");
   await expect(page).toHaveURL(`${site.url}/view/screens/removed.html`);
   await expect(page.locator("[data-workspace-status]")).toHaveText("Removed");
-  await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
-  await expect(page.locator("[data-current-screen]")).toContainText(
-    "There is no current preview to show.",
+  await expect(page.locator(".mbk-diff-toolbar")).toHaveCount(0);
+  await expect(page.locator(".mbk-previous")).toHaveText(
+    "Showing previous version",
   );
-  await expect(page.locator("[data-diff-stage] iframe")).toHaveCount(0);
+  await expect(
+    page
+      .frameLocator("[data-mokly-preview] .mbk-frame-mobile iframe")
+      .locator("main"),
+  ).toHaveText("removed");
+  await expect(page.locator("[data-diff-stage]")).toHaveCount(0);
   await page.goto(`${site.url}/view/screens/details.html`);
   await chooseScheme(page, "dark");
   await page.getByRole("button", { name: "Overlay", exact: true }).click();

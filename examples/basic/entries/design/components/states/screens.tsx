@@ -71,7 +71,7 @@ export const stateScreens = [
     title: "Removed variant and former consumer",
     colorSchemes: ["light"],
     description:
-      "The removed Compact variant retains its Before canvas and links a removed affected screen to its current empty state.",
+      "The removed Compact variant retains its Before canvas and links a removed affected screen to its previous version.",
     desktop: <RemovedVariantDesktop />,
     mobile: <RemovedVariantMobile />,
   }),
@@ -81,7 +81,7 @@ export const stateScreens = [
     title: "Retained removed screen",
     colorSchemes: ["light"],
     description:
-      "The former Farewell consumer remains reachable from Action's affected list, with an explicit missing Current side.",
+      "The former Farewell consumer remains reachable from Action's affected list and opens its previous version.",
     desktop: <RemovedConsumerDesktop />,
     mobile: <RemovedConsumerMobile />,
   }),

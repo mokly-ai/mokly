@@ -90,13 +90,52 @@ test("a changed row opens its own first changed view", () => {
   const activated = changesActivation(
     catalogue,
     context,
-    { ...defaultSelection, view: "changes" },
+    { ...defaultSelection, screenId: parent.id, view: "changes" },
     route(empty),
   );
 
   assert.equal(target(activated).id, empty.id);
   assert.equal(activated.viewport, "mobile");
   assert.equal(activated.colorScheme, "light");
+});
+
+test("navigation within Changes keeps the sticky view axes", () => {
+  const activated = changesActivation(
+    catalogue,
+    context,
+    {
+      ...defaultSelection,
+      colorScheme: "light",
+      screenId: empty.id,
+      view: "changes",
+      viewport: "both",
+    },
+    route(failure),
+  );
+
+  assert.equal(target(activated).id, failure.id);
+  assert.equal(activated.viewport, undefined);
+  assert.equal(activated.colorScheme, undefined);
+});
+
+test("navigation within Changes still redirects an aggregate parent", () => {
+  const activated = changesActivation(
+    catalogue,
+    context,
+    {
+      ...defaultSelection,
+      colorScheme: "light",
+      screenId: empty.id,
+      search: "failure",
+      view: "changes",
+      viewport: "both",
+    },
+    route(parent),
+  );
+
+  assert.equal(target(activated).id, failure.id);
+  assert.equal(activated.viewport, undefined);
+  assert.equal(activated.colorScheme, undefined);
 });
 
 test("an explicit axis prevents automatic view selection", () => {

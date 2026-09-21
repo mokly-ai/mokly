@@ -74,12 +74,14 @@ for (const viewport of ["mobile", "desktop"] as const) {
     assert.match(textContent(document), /Couldn’t save this workspace/);
   });
 
-  test(`${viewport}: a removed variant shows no current preview`, async () => {
+  test(`${viewport}: a removed variant shows its previous version`, async () => {
     const { document } = await designDocument(
       "design-browse-variant-removed",
       viewport,
     );
-    assert.match(textContent(document), /This screen was removed/);
+    assert.match(textContent(document), /Showing previous version/);
+    assert.match(textContent(document), /Couldn’t save this workspace/);
+    assert.doesNotMatch(textContent(document), /This screen was removed/);
     assert.equal(byClass(document, "mbk-cmp-toolbar").length, 0);
     const details = byClass(document, "mbk-details-body")[0];
     assert.ok(details);

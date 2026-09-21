@@ -5,9 +5,15 @@ import { writeCompilation } from "../build/transaction.js";
 import { projectRealPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError, errorMessage } from "../errors.js";
+import { removedManifestEntries } from "../registry/changes.js";
 import { readBaseManifest } from "../review/base_manifest.js";
 import { reviewChangedPaths } from "../review/changed_paths.js";
 import { compareReview } from "../review/compare.js";
+import {
+  captureRemovedPagePreviews,
+  packageRemovedPagePreviews,
+  RepositoryRemovedPagePreview,
+} from "../review/page_preview.js";
 import { prepareReviewRepository } from "../review/prepare.js";
 import { changedContentPaths } from "../server/changed_content.js";
 
@@ -105,6 +111,26 @@ async function generateExport(
         assetReader,
         comparison.result.schemaVersion === 3 ? "pages" : "all",
       );
+      const removedEntries = removedManifestEntries(
+        compilation.manifest,
+        baseline,
+      );
+      const pagePreviews = await captureRemovedPagePreviews(
+        new RepositoryRemovedPagePreview(config, prepared.reader),
+        {
+          schemaVersion: 1,
+          baseline,
+          baseCommit: comparison.result.baseCommit,
+          baseRef: comparison.result.baseRef,
+          changedRoutes: removedEntries.map(({ entry }) => entry.route),
+          removedEntries,
+        },
+        options.signal ?? new AbortController().signal,
+      );
+      comparison = {
+        ...comparison,
+        files: packageRemovedPagePreviews(comparison.files, pagePreviews),
+      };
     }
     const site = assembleExport(
       config,

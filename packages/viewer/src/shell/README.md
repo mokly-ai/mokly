@@ -22,8 +22,10 @@ server row and each React store update use the same presentation contract;
 visibility to parents and their variant children. `changes_activation.ts`
 owns Changes-filter activation for both standalone and embedded shells: an
 aggregate-only parent selects its first visible changed variant, and a changed
-destination selects its first changed view unless the requested URL already
-names a viewport or color scheme. `details_rows.tsx` owns the inspector's
+destination selects its first changed view only when the current selection is
+not already a changed route. Later navigation within Changes keeps the sticky
+view axes; aggregate-parent redirection still applies, and a requested URL that
+names a viewport or color scheme remains explicit. `details_rows.tsx` owns the inspector's
 metadata rows, including links between a screen and its variants and the
 `Changed views` row.
 
@@ -107,6 +109,24 @@ temporary capture. Static catalogue resolution may finish after document load,
 so native choices remain authoritative until hydration starts. React therefore
 adopts the same attributes on its first render instead of replaying preferences
 after hydration.
+
+`previews.tsx` renders the one previous-version presentation a removed page and
+a removed screen share: the "Showing previous version" label, the stage host
+carrying the descriptor the React request lifecycle validates, and the shared
+device chrome around captured screen views. It advertises a packaged address only when the accepted
+public catalogue publishes one, so a delivery without that descriptor stays
+quiet. The served stage holds the unavailable copy without a Retry control,
+because a shell that never hydrates cannot honour that action; the first client
+effect replaces it with the loading state and adds Retry only if its own request
+fails. The request fencing lives in `use_removed_preview.ts`, and the copy and
+Retry contract comes from `previews/copy.ts`.
+`views.tsx` uses it for removed pages and `workspace.tsx` for removed screens;
+both drop the comparison band there, while removed component variants keep
+theirs.
+`css_previews.ts` styles the stage, including the `mbk-preview-note` and
+`mbk-preview-switch` classes the design catalogue's stage stylesheet owns. Its
+Both-only rule reads the normalized `data-viewport` value on the live stage.
+See [previews](../previews/README.md) for the client side.
 
 See [the package README](../../README.md), the
 [viewer contract](../../../../docs/protocol/mokly-viewer.md), and the
