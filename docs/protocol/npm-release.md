@@ -177,9 +177,10 @@ Both options omit the live-update entrypoint, watch-only modules, event routes,
 and stale comparison directories. Full history remains available in both jobs.
 Static shell metadata addresses an included comparison generation directly;
 the stable comparison redirect remains available when Changes is enabled.
-Eligible changed views offer comparison controls; known unchanged views show
-Unmodified, while unknown evidence has no invented status. Pages retain Changes
-membership but never offer visual comparisons.
+Eligible shown views offer comparison controls; known unchanged views show
+Unmodified. Missing per-view evidence uses route-level status and eligibility;
+absent change evidence never invents a status. Pages retain Changes membership
+but never offer visual comparisons.
 The [Changes contract](./mokly-changes.md) owns the shared interaction and
 snapshot rules. Artifact
 replacement uses the shared exclusive reservation, ownership inventory, and

@@ -72,7 +72,7 @@ icon in the Components section and its authored Components collection. Desktop k
 mobile keeps the compact header and adds short Screen/Components/Changes links
 above the heading so the relevant destinations and change count remain visible.
 
-The saved-variant strip follows the title and, for changed examples, the comparison band. Known unchanged examples show Unmodified beside the title, with no comparison row. The selected variant uses
+The saved-variant strip follows the title and, for an eligible shown view, the comparison band. Known unchanged shown views show Unmodified beside the title, with no comparison row. The selected variant uses
 a pale sage surface, border, and explicit current-link state. Default and
 Disabled are one component's variants; neither creates a separate Changes row.
 The viewport dropdown shows the mobile canvas, desktop canvas, or both for the selected variant. Mobile context is capped at 390px; desktop context uses the available width with a 720px minimum inside the scrolling preview pane. Canvases have a 10px radius, a light
@@ -103,8 +103,9 @@ scenario has two Changes rows: Action and Farewell. The Removed Action variant
 keeps its before/current comparison and explicit missing current side; Farewell
 has no comparison band.
 
-Every known entry carries an Added, Changed, Removed, or Unmodified badge beside
-its title. Action stays Changed when only Compact is removed; Farewell is Removed.
+Every known shown view carries an Added, Changed, Removed, or Unmodified badge
+beside its title. Action's route-level state stays Changed when only Compact is
+removed, while Compact reads Removed when selected; Farewell is Removed.
 States links an Additions child gallery with one new Badge example and one Changes
 entry, preserving the five-screen limit in its parent and the existing unused state.
 Comparison evidence appears only in the Details panel. Its typed fixture records

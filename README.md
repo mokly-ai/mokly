@@ -372,10 +372,11 @@ classification publishes a later update with the complete replacement snapshot;
 failed or superseded calculations cannot restore stale rows.
 Served `/static/` files use `Cache-Control: no-store`, so a watched reload reads
 the rebuilt fragments and resources even when their URLs remain unchanged.
-Changed screens and changed or removed saved component variants offer
-Current / Side by side / Overlay / Difference beneath the heading. The controls
-are available from All and Changes, and start in Current. Known unchanged views
-show Unmodified without a comparison band; unknown evidence has no status badge.
+Comparison-eligible shown views offer Current / Side by side / Overlay /
+Difference beneath the heading. The controls are available from All and
+Changes, and start in Current. Ready per-view evidence drives the status and
+band: a known unchanged shown view reads Unmodified without the band. Until
+that evidence is ready, route-level status and eligibility remain in force.
 During development, Mokly generates comparison snapshots only after a diff
 option is selected; browsing, filtering, and watched reloads do not trigger
 generation. Opening a diff reuses completed background evidence and captures only
@@ -1101,9 +1102,9 @@ in the [plans index](./plans/README.md).
 - [Implementation plans](./plans/README.md)
 - [Unified catalogue pages](./docs/protocol/mokly-pages.md) and
   [required breaking upgrade](./docs/protocol/mokly-page-migration.md)
-- [Screen variants](./docs/protocol/mokly-screen-variants.md) — implemented
-  authoring, registry, Changes, removal, propagation, and publication model for
-  states declared as `variants`, each a full screen with its own id and route;
-  navigation grouping follows in its UI milestone.
+- [Screen variants](./docs/protocol/mokly-screen-variants.md) — full screens
+  with their own ids and routes, grouped under their parent in navigation with
+  expandable rows, per-variant Changes, and changed-view marks on the view
+  controls.
 - [Authoring source protection](./docs/protocol/mokly-source-protection.md) and
   [catalogue change metadata](./docs/protocol/mokly-catalogue-changes.md)

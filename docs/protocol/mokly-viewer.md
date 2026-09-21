@@ -162,6 +162,18 @@ host supplies that selection back. A committed variant replaces frames and
 announces `onScreenNavigate` once. Switching control mode requires remounting.
 Never mutate supplied objects/arrays.
 
+The Viewer rebuilds `variantOf` for current and removed screens from the public
+model, so its hierarchy, breadcrumbs, details rows, aggregate mark, and
+removed-variant adoption match Serve. A shell-link activation while `view` is
+`changes` proposes one atomic selection. An aggregate-only parent proposes its
+first visible changed variant's `screenId`; a changed destination proposes the
+first changed view's `viewport` and `colorScheme` from the public model's
+per-view comparison states, ordered mobile/light, mobile/dark, desktop/light,
+desktop/dark, unless the link names either axis. This rule applies only to
+shell-link activation: an imperative `select` call and supplied
+`defaultSelection` or `selection` props keep their axes. Controlled mode emits
+the complete proposal and waits for the host to supply it back.
+
 Free text and tags follow [Browse search](./mokly-runtime.md#browse-shell):
 parse case-insensitive `tag:` terms out of search into a deduplicated tag list,
 retain the remaining phrase as `search`, and require every tag plus that phrase.

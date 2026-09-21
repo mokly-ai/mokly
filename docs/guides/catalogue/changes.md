@@ -28,9 +28,9 @@ excluded.
 
 ## Compare a screen
 
-A changed screen offers Current, Side by side, Overlay and Difference beneath
-its heading, from All as well as from Changes, and starts in Current. A screen
-that is known to be unchanged shows Unmodified with no comparison.
+A shown view with Changed status offers Current, Side by side, Overlay and
+Difference beneath its heading, from All as well as from Changes, and starts in
+Current. A shown view known to be unchanged reads Unmodified with no comparison.
 
 Comparison snapshots are generated when you select one of those options, not
 while you browse, and they capture the selected screen and its resources
@@ -52,6 +52,9 @@ the viewport control when it is in the other viewport. Details names those
 views under Changed views, and opening the screen from Changes takes you
 straight to the first of them. Opening it from All, following a link with a
 viewport or scheme in it, or reloading keeps the view you were on.
+The status and comparison options describe the view in front of you; with Both
+selected, Changed wins over Added, then Removed, then Unmodified, while control
+dots and Changed views point to changes elsewhere.
 
 ## Added and removed
 

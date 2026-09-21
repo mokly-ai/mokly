@@ -262,9 +262,12 @@ persisted, restored, and collapsed beside the collection keys. That list is a
 container rather than a `<details>`, because the row beside it is a link and
 cannot also be a summary; its `hidden` state and its button's `aria-expanded`
 carry the same disclosure the collection keys carry, and the button's
-accessible name follows the state. A parent row whose list holds a changed
-route carries `data-changed-variants`, the aggregate mark that keeps the group
-visible under the Changes filter without claiming the parent itself changed.
+accessible name follows the state. When search or the Changes filter hides a
+parent row, it hides the entire leaf container, so no disclosure button remains
+visible or focusable without its row; the container reappears with the row. A
+parent row whose list holds a changed route carries `data-changed-variants`,
+the aggregate mark that keeps the group visible under the Changes filter
+without claiming the parent itself changed.
 The stylesheet draws that attribute and `data-changed` as the same trailing
 dot, and reveals the row's visually hidden change wording to assistive
 technology, so a background evidence refresh moves the mark by toggling the
@@ -272,23 +275,31 @@ attributes alone. A Removed row is never marked. Activating a parent row that
 carries only the aggregate mark while the Changes filter is selected navigates
 to the first changed variant row its list still shows.
 
-Per-view change evidence sits on the view controls. When the comparison result
-or the lightweight screen-view evidence marks only some of a screen's views
-changed, the workspace publishes those views in its serialized data and each
-view control carries a mark for the ones the reader cannot currently see: the
-theme control when a changed view uses the other scheme, and the viewport
-control when a changed view uses the other viewport. Selecting both viewports
-shows every viewport at once, so that control is never marked. The mark is a
-6px accent dot in the control's top-right corner with a visually hidden
-description the control names through `aria-describedby`, so it is distinct
-from the pressed state and never relies on color alone. The shown viewport and
-scheme change without a page load, so the client recomputes both marks from the
-same rule whenever either changes or fresh evidence arrives. The details
-inspector lists the same views as `Changed views`, in mobile-before-desktop and
-light-before-dark order, and hides the row while nothing is named. A light-only
-catalogue renders no scheme control and therefore no scheme mark.
-For a component, this evidence describes the selected saved variant and changes
-with that selection.
+Per-view change evidence drives the status beside the title and the comparison
+band, so both describe the shown view rather than the route-wide result. With
+one viewport and one scheme selected, `changed`, `added`, and `removed` map to
+Changed, Added, and Removed; `unchanged` and `ignored-only` map to Unmodified.
+While Both is selected, the shown status is Changed if any shown view is
+Changed, else Added if any is Added, else Removed if any is Removed, else
+Unmodified. Comparison eligibility follows the shown status under the existing
+kind rule: Changed, or Removed for a component saved variant. If neither a ready
+result nor screen-view evidence exists for the entry, route-level status and
+eligibility remain in force. Switching viewport, scheme, or saved variant
+recomputes both without a page load, and a background evidence refresh does the
+same.
+
+The workspace publishes the changed views in its serialized data. Each view
+control carries a mark for changed views the reader cannot currently see: the
+theme control for the other scheme and the viewport control for the other
+viewport. Both shows every viewport, so its control is never marked. The 6px
+accent dot has a visually hidden description named through `aria-describedby`,
+keeping it distinct from the pressed state and independent of color. The
+details inspector lists the same views as `Changed views`, in mobile-before-
+desktop and light-before-dark order, and hides the row while nothing is named.
+The marks and row point to the changed views when the shown view is Unmodified.
+A light-only catalogue has no scheme control or scheme mark. For a component,
+this evidence describes the selected saved variant and changes with that
+selection.
 
 Opening a changed row while the Changes filter is selected lands on the first
 changed view instead of the sticky selection. Arriving from the filter is an

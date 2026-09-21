@@ -438,16 +438,16 @@ The shell has one breakpoint at **56.25rem (900px)**:
 
 ## In-place Comparisons
 
-The catalogue remains the only shell. An eligible screen has a compact Current /
+The catalogue remains the only shell. An eligible shown view has a compact Current /
 Side by side / Overlay / Difference band below its heading. Current is the initial
 state in both All and Changes. Diff selections load snapshots on demand in the
 same main region; controls, navigation, and details stay in place. Refresh and
 retry controls are available after an explicit comparison request. The target
-component shell makes the band conditional on changed screens, Changed or
-Removed component variants, or verified affected-consumer evidence. The updated mockups omit it on
-every Browse, Added screen/variant, Removed screen, shared-impact-only,
-ignored-only, excluded-stylesheet-only, and empty state. Removed screens show a status badge and current
-empty state instead. Comparison bands always retain
+component shell makes the band conditional on a Changed shown view, a Removed
+component saved variant, or verified affected-consumer evidence. The updated
+mockups omit it on every Browse, Added or Unmodified shown view, Removed screen,
+shared-impact-only, ignored-only, excluded-stylesheet-only, and empty state.
+Removed screens show a status badge and current empty state instead. Comparison bands always retain
 an opaque surface and their border. Static catalogues without comparison data
 omit the band.
 The Added outcome still exposes factual branch evidence in Details. Comparison

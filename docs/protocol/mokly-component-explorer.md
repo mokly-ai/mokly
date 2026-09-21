@@ -55,12 +55,14 @@ there is no baseline view. Page navigation and reload start in Current, as
 screens do today. Saved variant selection and comparison are fully usable in
 served and published catalogues.
 
-Only expose comparison modes when actual evidence marks the saved selection
-Changed or Removed. A known selection shows Added, Changed, Removed, or Unmodified
-beside its title from the entry's comparison state; a removed variant does not
-mark its surviving component Removed. Added and Unmodified show only their
-current preview.
-Unknown evidence does not imply Unmodified. Affected
+Only expose comparison modes when the shown status is Changed or when a
+component saved variant's shown status is Removed. A known selection shows
+Added, Changed, Removed, or Unmodified beside its title from the selected
+viewport and scheme; Both follows the aggregation rule in the
+[Changes contract](./mokly-changes.md#screen-controls). A removed variant does
+not mark its surviving component Removed. Added and Unmodified show only their
+current preview. Missing per-view evidence retains route-level status and
+eligibility rather than implying Unmodified. Affected
 consumers can remain eligible without entering Changes; temporary control edits
 never establish comparison eligibility. Do not eagerly generate screenshots to
 decide whether the mode row is available.

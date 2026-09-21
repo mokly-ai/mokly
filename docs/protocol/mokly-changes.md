@@ -140,14 +140,26 @@ dropping views or disabling Git file validation.
 
 ## Screen controls
 
-Review-enabled changed screens and saved component variants with actual Changed
-or Removed comparison views offer Current / Side by side / Overlay / Difference in an opaque band
-beneath the heading. Known unchanged views show Unmodified without that band;
-known added views show Added with their current preview and no comparison band;
-known removed screens show Removed with a current empty state and no comparison band;
-unknown evidence has no invented status. Eligibility follows saved view evidence,
-so affected-only consumers can compare their actual rendered differences while
-staying outside Changes. Current is selected initially, including
+The status beside the title and the comparison band describe the shown view,
+not the entry's route-wide result. With one viewport and one scheme selected,
+the view's review state maps `changed` to Changed, `added` to Added, `removed`
+to Removed, and `unchanged` or `ignored-only` to Unmodified. While Both is
+selected, the shown status is Changed when any shown view is Changed, else
+Added when any is Added, else Removed when any is Removed, else Unmodified.
+Comparison eligibility follows that shown status under the existing kind rule:
+Changed is eligible, and Removed is eligible only for a component saved
+variant. Thus a route with changes can show Unmodified with no comparison band
+while the marks on the view controls and the `Changed views` row point to the
+views that changed. Unknown or pending per-view evidence — no ready result and
+no screen-view evidence for the entry — preserves the route-level status and
+eligibility. Switching viewport, scheme, or saved variant recomputes both
+without a page load, as does a background evidence refresh.
+
+Eligible views offer Current / Side by side / Overlay / Difference in an opaque
+band beneath the heading. Added and Unmodified views retain their current
+preview without that band; removed screens show their current empty state
+without it. Affected-only consumers can compare actual rendered differences
+while staying outside Changes. Current is selected initially, including
 after navigation and reload. Selecting Changes, opening a screen, changing its
 viewport or color scheme in Current, and receiving a watched update do not generate
 comparison snapshots in development. Publications with Changes prepare snapshots at build time, but never fetch or render them while browsing in Current. The first

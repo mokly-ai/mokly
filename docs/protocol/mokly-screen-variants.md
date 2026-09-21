@@ -2,23 +2,11 @@
 
 ## Delivery Status
 
-Authoring, flattening, generated output, manifest validation, hierarchy maps,
-the public read model, route-level Changes classification, removed-variant
-metadata and publication, use-case propagation, and affected-consumer evidence
-are implemented through Milestone 4 of the
-[screen variants plan](../../plans/screen-variants.md). Milestone 5 adds the
-navigation grouping described below — the parent row's disclosure button, the
-variant list and its persisted identity, the active-row invariant across
-variants, search and Changes composition, the parent's aggregate mark, and
-variant breadcrumbs and details rows. Milestone 6 completes the Changes
-presentation: the mark is drawn as the trailing dot, a deleted variant's
-Removed row sits inside its surviving parent's list, and activating an
-unmodified parent from Changes opens its first changed variant. Milestone 7
-delivers the per-view evidence that keeps scheme and viewport out of this
-model: the view controls mark the changed views a reader cannot see, the
-details inspector lists them, and a Changes activation lands on the first of
-them. The [runtime contract](./mokly-runtime.md#browse-shell) owns that
-behavior.
+Milestones 1 to 8 of the
+[screen variants plan](../../plans/screen-variants.md) are implemented and
+verified, covering authoring through per-view evidence for every saved variant
+and every export. Milestone 9's design-catalogue conversion remains pending
+explicit approval; Milestones 10 to 12 apply the approved review findings.
 
 ## Purpose And Boundary
 
@@ -138,13 +126,13 @@ interface ManifestScreen {
 `variantOf` is present exactly on variants. Manifest validation requires the
 named parent to be a current screen entry without `variantOf`, requires the
 variant's route to match the derived form for that parent, and rejects a
-variant listed in any `childIds`. Entry sorting, key ordering, `navPath`, and
-`sourceFiles` are unchanged. Historical readers accept manifests without the
-field; a baseline screen without `variantOf` is an ordinary screen.
+variant listed in any `childIds`. Canonical entry sorting follows the manifest
+contract; key ordering, `navPath`, and `sourceFiles` are unchanged. Historical
+readers accept manifests without the field; a baseline screen without
+`variantOf` is an ordinary screen.
 
 The hierarchy analysis exposes variants beside collection membership: each
-screen's variants in manifest entry order (the route order), and each variant's
-parent. A variant's
+screen's variants in authored order, and each variant's parent. A variant's
 ancestors are its parent's collection ancestors, so its breadcrumbs and its
 removed-entry ancestry read the same as the parent's, followed by the parent
 title. The parent title is a link when the parent is viewable.
@@ -185,7 +173,10 @@ Pages projection and the responsive drawer:
   collections, and its section.
 - Search matches a variant row by its own id, title, route, and tags. A
   parent row stays visible while any of its variants matches, and a
-  filtering constraint that keeps only a variant opens the list.
+  filtering constraint that keeps only a variant opens the list. When search
+  or the Changes filter hides the parent row, it hides the parent's entire
+  leaf container, so no disclosure button remains visible or focusable without
+  its row; the container reappears with the row.
 - Tag terms, the Changes filter, and free text compose on variant rows
   exactly as on other rows.
 
@@ -234,6 +225,18 @@ can render the same grouping. A `ViewerSelection.screenId` may name a variant
 like any screen; `variantId` remains reserved for component saved variants.
 Readers of catalogue v1 tolerate the added field under the existing
 additive-field rule.
+
+The Viewer rebuilds `variantOf` for current and removed screens so its rendered
+hierarchy, breadcrumbs, details rows, aggregate mark, and removed-variant
+adoption match Serve. Activating a shell link while `view` is `changes`
+proposes one atomic selection. An aggregate-only parent proposes the
+`screenId` of its first visible changed variant; a changed destination also
+proposes the first changed view's `viewport` and `colorScheme`, read from the
+public model's per-view comparison states in mobile/light, mobile/dark,
+desktop/light, desktop/dark order, unless the link names either axis. Direct
+`select` calls and supplied `defaultSelection` or `selection` props keep their
+axes. In controlled mode every such activation remains a proposal until the
+host supplies it back.
 
 ## Verification
 

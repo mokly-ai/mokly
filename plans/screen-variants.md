@@ -698,7 +698,7 @@ that follow have no guesswork: per-view status and comparison eligibility,
 authored sibling-variant order, the embedded Viewer's variant relationship and
 Changes activation, and the parent row's leaf container under filtering.
 
-- [ ] Finding 3 contract: in `docs/protocol/mokly-changes.md` (Screen
+- [x] Finding 3 contract: in `docs/protocol/mokly-changes.md` (Screen
       controls) and `docs/protocol/mokly-runtime.md` (Browse Shell per-view
       paragraph), state that the status beside the title and the comparison
       band describe the shown view: for one viewport and one scheme they
@@ -712,7 +712,7 @@ Changes activation, and the parent row's leaf container under filtering.
       route-level status. Add the same rule to
       `docs/protocol/mokly-component-workspace-design.md` (Comparison
       Availability) and one sentence to `docs/guides/catalogue/changes.md`.
-- [ ] Finding 4 contract: in `docs/protocol/mokly-screen-variants.md`, replace
+- [x] Finding 4 contract: in `docs/protocol/mokly-screen-variants.md`, replace
       "manifest entry order (the route order)" with authored order, and in
       `docs/protocol/mokly-component-manifest.md` and
       `docs/protocol/mokly-catalogue.md` state that variant screens of one
@@ -720,7 +720,7 @@ Changes activation, and the parent row's leaf container under filtering.
       before the next route in route order, so the manifest and public
       entry arrays keep authored sibling order while every other entry keeps
       route order.
-- [ ] Findings 1 and 2 contract: in `docs/protocol/mokly-viewer.md`
+- [x] Findings 1 and 2 contract: in `docs/protocol/mokly-viewer.md`
       (Selection, Events And Imperative Use) and
       `docs/protocol/mokly-screen-variants.md` (Public Read Model And
       Viewer), state that the Viewer rebuilds `variantOf` for current and
@@ -731,15 +731,15 @@ Changes activation, and the parent row's leaf container under filtering.
       variant, and a changed row proposes the first changed view's viewport
       and scheme unless the link names them; a direct `select` call keeps the
       supplied axes.
-- [ ] Finding 5 contract: in `docs/protocol/mokly-runtime.md` (Browse Shell
+- [x] Finding 5 contract: in `docs/protocol/mokly-runtime.md` (Browse Shell
       navigation paragraph) and `docs/protocol/mokly-screen-variants.md`
       (Navigation), state that a parent row hidden by search or the Changes
       filter hides its leaf container, so no disclosure button remains
       visible or focusable without its row.
-- [ ] Finding 6: correct the README feature paragraph and the variants
+- [x] Finding 6: correct the README feature paragraph and the variants
       contract's Delivery Status to one current statement that Milestones 1
       to 8 are implemented and verified.
-- [ ] Validate the changed Markdown with Prettier and review the diff; commit
+- [x] Validate the changed Markdown with Prettier and review the diff; commit
       `docs(protocol): define the review fix contracts` and push.
 
 ### Milestone 11: Backend fixes for order, Viewer data, and per-view status
@@ -768,10 +768,10 @@ reconstruction, and per-view status and eligibility in the workspace data.
       nav tree from `buildNavSections`.
 - [ ] Finding 3: per-view status. Extend `WorkspaceData` with typed per-view
       states keyed like `changedViews` (`viewStates: Record<key,
-    { viewport, colorScheme, state }[]>`, where `state` is the review
+  { viewport, colorScheme, state }[]>`, where `state` is the review
       state) derived in `workspace_views_data.ts` from the same sources as
       `changedViews`, and a pure `shownStatus(states, viewport, scheme,
-    fallback)` in a new `packages/viewer/src/shell/view_status.ts` that
+  fallback)` in a new `packages/viewer/src/shell/view_status.ts` that
       applies the Both aggregation rule from Milestone 10 and returns the
       fallback when no per-view evidence exists. Comparison eligibility for
       the shown view is `isComparisonEligible(shownStatus, kind)`. Derive the
