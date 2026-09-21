@@ -5,6 +5,7 @@ import { homePage, notFoundPage, viewPage } from "../dist/server/pages.js";
 import type { ManifestV5 } from "../packages/viewer/dist/registry/types.js";
 import type { Catalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
+import type { ShellContext } from "../packages/viewer/dist/shell/context.js";
 import { SHELL_CSS } from "../packages/viewer/dist/shell/css.js";
 import { buildNavTree } from "../packages/viewer/dist/shell/nav_tree.js";
 
@@ -242,7 +243,7 @@ function detailsSection(html: string): string {
 function routePage(
   catalogue: Catalogue,
   route: string,
-  extra: Partial<typeof context> = {},
+  extra: Partial<ShellContext> = {},
 ): string {
   const entry = catalogue.byRoute.get(route);
   assert.ok(entry);
