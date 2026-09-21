@@ -502,7 +502,7 @@ test("scheme switch renders only for catalogues with dark fragments", () => {
   assert.equal(occurrences(home, "data-mokly-schemeswitch"), 1);
   assert.match(
     home,
-    /data-mokly-search[\s\S]*?<\/div><span aria-label="Color scheme"[\s\S]*?<\/span><\/header>/,
+    /data-mokly-search[\s\S]*?class="mbk-search-close"[\s\S]*?<\/button><span aria-label="Color scheme"[\s\S]*?<\/span><\/header>/,
   );
 
   const screen = routePage(dark, "screens/welcome.html");
@@ -801,7 +801,16 @@ test("the search field carries a tag control over a closed picker", () => {
 
 test("the brand names itself and the search bar drops that name", () => {
   const browse = homePage(createCatalogue(manifest), context);
-  assert.ok(browse.includes('<header class="mbk-topbar" data-search="">'));
+  assert.ok(
+    browse.includes(
+      '<header class="mbk-topbar" data-compact-search="closed" data-search="">',
+    ),
+  );
+  assert.match(
+    browse,
+    /aria-expanded="false" aria-label="Search catalogue" class="mbk-search-toggle"/,
+  );
+  assert.match(browse, /aria-label="Close search" class="mbk-search-close"/);
   const brand = browse.match(
     /<a aria-label="Mokly" class="mbk-brand" href="\/">(.*?)<\/a>/,
   )?.[1];

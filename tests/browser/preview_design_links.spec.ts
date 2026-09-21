@@ -103,6 +103,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
     await frame.locator(".ce-inspector-link").click();
     await expect(page).toHaveURL(/\/view\/design\/browse\/pages\/details$/);
     await frame.locator(".ce-inspector-link").click();
+    await expect(page).toHaveURL(/\/view\/design\/browse\/pages\/view$/);
     await frame
       .getByRole("link", { name: "Open Welcome", exact: true })
       .click();
