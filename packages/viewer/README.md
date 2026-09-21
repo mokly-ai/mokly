@@ -141,14 +141,17 @@ and enable inspection on the same document without remounting it. Custom adapter
 without this method retain replacement mounts for changed usage. Changing the
 React catalogue source still replaces the runtime as documented above.
 The shell also supplies `FrameMount.onEvent` before an adapter starts loading.
-The same-origin adapter attaches it to the currently visible document before a
-replacement, then authenticates and adopts the exact replacement document as
-soon as it is accessible rather than waiting for slower subresources and the
-iframe `load` event. Valid logical links therefore remain parent-owned
-throughout source handoffs; the first matching `MountedFrame.subscribe` adopts
-that receiver without duplicating events. Custom adapters should honor the same
-mount-time receiver contract. Unsubscribing or disposing restores the portable
-native-link behavior.
+Before a replacement, the same-origin adapter transfers that receiver only to
+the exact currently visible `Document` that an earlier same-origin mount
+authenticated for the frame. It then independently authenticates and adopts the
+exact assigned replacement document as soon as it is accessible rather than
+waiting for slower subresources and the iframe `load` event. Valid logical links
+in an authenticated document therefore remain parent-owned throughout source
+handoffs; a document reached through unowned frame navigation keeps portable
+native-link behavior until the assigned replacement authenticates. The first
+matching `MountedFrame.subscribe` adopts the receiver without duplicating
+events. Custom adapters should honor the same authenticated mount-time receiver
+contract. Unsubscribing or disposing restores portable native-link behavior.
 
 Evidence refreshes restore valid inspection masks, outlines and labels without
 ending an active pick. Explicit highlights retain their exact frame scope;

@@ -101,7 +101,7 @@ docs currently describe the unsafe behaviour as intended.
 Summary: state the authenticated-handoff rule in the specs and package docs so
 the implementation has a complete contract, and record the plan.
 
-- [ ] Rewrite the same-origin replacement paragraph in
+- [x] Rewrite the same-origin replacement paragraph in
       [`mokly-frame-adapter.md`](../docs/protocol/mokly-frame-adapter.md#same-origin-implementation):
       before changing `location` the adapter attaches its mount-time receiver
       only to the exact `Document` a previous same-origin mount of that frame
@@ -110,24 +110,24 @@ the implementation has a complete contract, and record the plan.
       replacement document authenticates. Explain why object identity is the
       key and that resource authentication in the watcher and `load` handler
       never accepts a transferred document.
-- [ ] Add the adversarial unowned-document case to the protocol's
+- [x] Add the adversarial unowned-document case to the protocol's
       `## Acceptance` section beside the retained same-origin tests.
-- [ ] Qualify the "still-visible document" sentence in
+- [x] Qualify the "still-visible document" sentence in
       [`mokly-navigation.md`](../docs/protocol/mokly-navigation.md#enhanced-navigation-and-safe-degradation):
       ownership is continuous across a handoff only for the authenticated
       still-visible document; a document the session did not authenticate is
       frame-owned until the replacement authenticates.
-- [ ] Update the `FrameMount.onEvent` paragraph in
+- [x] Update the `FrameMount.onEvent` paragraph in
       [`packages/viewer/README.md`](../packages/viewer/README.md) and the
       adapter paragraph in
       [`packages/viewer/src/client/README.md`](../packages/viewer/src/client/README.md)
       to describe the identity transfer and name the new module.
-- [ ] Add this plan to the active list in [`plans/README.md`](./README.md)
+- [x] Add this plan to the active list in [`plans/README.md`](./README.md)
       and note in the React Browse Shell review record that the Milestone 13
       and 14 finding is tracked here.
-- [ ] Validate the changed Markdown with `npm run format:check` and review the
+- [x] Validate the changed Markdown with `npm run format:check` and review the
       diff; documentation-only work does not require `cargo xtask check`.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report

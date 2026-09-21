@@ -183,15 +183,26 @@ highlighting, scroll restoration and logical-link classification unchanged.
 Ready usage is required for instance inspection; absent usage does not disable
 valid navigation.
 
-When a same-origin replacement starts, the adapter installs its mount-time
-navigation receiver on the currently visible immediate document before changing
-`location`. Valid marked activations therefore remain host-owned while the exact
-assigned resource loads. As soon as the new immediate `Document` becomes
-same-origin-accessible, the adapter authenticates its exact origin, decoded
-resource path and query, then moves the receiver before slower subresources can
-delay the iframe `load` event. Readiness installs inspection and geometry over
-that document. Unsubscribing or disposing removes the receiver, so an
-unenhanced document continues to use its portable native links.
+When a same-origin replacement starts, the adapter transfers its mount-time
+navigation receiver before changing `location` only when the currently visible
+immediate document is the exact `Document` object that a previous same-origin
+mount authenticated for that frame. Object identity is the transfer key because
+scripts are disabled, so a document cannot change its resource identity, while
+every frame navigation commits a new document. Valid marked activations in that
+authenticated still-visible document therefore remain host-owned while the
+assigned resource loads. A document that no mount authenticated, including one
+the frame reached through its own native navigation, keeps portable native-link
+behavior until the replacement authenticates.
+
+As soon as the new immediate `Document` becomes same-origin-accessible, the
+adapter independently authenticates its exact origin, decoded resource path and
+query, then moves the receiver before slower subresources can delay the iframe
+`load` event. The replacement watcher and `load` handler accept only this
+assigned-resource authentication; previously authenticated identity never lets
+a transferred document satisfy a new mount. Readiness installs inspection and
+geometry over the authenticated document. Unsubscribing or disposing removes
+the receiver, so an unenhanced document continues to use its portable native
+links.
 
 The sandbox remains exactly `allow-same-origin`; consumer scripts stay disabled.
 Existing local memory previews retain their authenticated private transport.
@@ -361,8 +372,12 @@ bounded per-document inert metadata is not executable code and is excluded.
 
 ## Acceptance
 
-Retain same-origin browser tests unchanged. Cross-origin fixtures must cover
-handshake and inertness, wrong origins/sources/nonces, opaque origins, limits,
-unknown fields, navigation, null/multi-root ranges, clipping, overlays, scroll,
-view swaps, timeout and disposal. Check the script budget and prove comparison
-bytes and local screenshots/interactions are unchanged.
+Retain same-origin browser tests unchanged. Add an adversarial same-origin case
+where a frame navigates itself to an unowned document carrying a syntactically
+valid marker, then starts a replacement mount: the unowned document keeps native
+activation and emits no host navigation, while the authenticated replacement
+regains host-owned navigation. Cross-origin fixtures must cover handshake and
+inertness, wrong origins/sources/nonces, opaque origins, limits, unknown fields,
+navigation, null/multi-root ranges, clipping, overlays, scroll, view swaps,
+timeout and disposal. Check the script budget and prove comparison bytes and
+local screenshots/interactions are unchanged.
