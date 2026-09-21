@@ -2,7 +2,7 @@
 
 ## Status And Outcome
 
-Milestones 1 through 12 are complete, committed, and pushed. Milestone 11
+Milestones 1 through 13 are complete, committed, and pushed. Milestone 11
 preserves watcher event kinds and stats through classification and reports
 discovery failures except benign missing-directory races; its gate passed with
 1,976 unit tests, five packed-consumer scenarios, and 466 Chrome tests after the
@@ -10,9 +10,10 @@ supervising agent replaced the permission test's root-only skip with a runtime
 probe, since capability-holding processes read mode-000 directories. Milestone
 12 applied four approved sixth-round findings; findings 5 and 6 are accepted as
 documented behavior. The post-push review of Milestone 12 reported eight
-findings, recorded below. The user approved fixing findings 1 and 2, which
-Milestone 13 carries; findings 3 through 8 are deferred and remain open in the
-list below. Milestone 13 is locally committed pending the supervising agent's push and review.
+findings, recorded below. The user approved fixing findings 1 and 2; Milestone 13
+delivered them and its post-push review reported two P3 items. Seventh-round
+findings 3 through 8 and both eighth-round items are deferred and remain listed
+below. The plan is ready for a pull request. Milestone 13 is locally committed pending the supervising agent's push and review.
 
 Mokly currently discovers every `*.mockup.ts` and `*.mockup.tsx` module below
 one configured directory, `entriesDir`, and binds the source-attributed
@@ -261,10 +262,31 @@ read and projection error rule it lost.
       read errors also remain loud." Confirm `src/build/README.md` and
       `docs/architecture/build-pipeline.md` state the same rule in the same
       terms.
-- [ ] Run `cargo xtask check`, commit, and push.
-- [ ] Review the complete local diff against `origin/main` after the push
+- [x] Run `cargo xtask check`, commit, and push.
+- [x] Review the complete local diff against `origin/main` after the push
       using `docs/implementation-review-prompt.md`; report findings without
-      changing the implementation.
+      changing the implementation. The post-push review reported two P3
+      items, recorded under "Eighth Review Findings (deferred)"; it verified
+      the symlink, permission, cost, test, and documentation questions.
+
+## Eighth Review Findings (deferred)
+
+Review of the Milestone 13 commit. Both items are P3 hygiene and are deferred
+with seventh-round findings 3 through 8. The reviewer confirmed that no
+legitimately listed candidate can be dropped by the new type check, that
+`EACCES` on the existence check is reported, that a module replaced by a
+symlink is dropped rather than followed as documented, that the extra lstat is
+immaterial, and that the three docs agree with the code.
+
+1. **P3, two unwrapped lines** were added to the configuration contract
+   paragraph that the sibling docs wrap; this widens deferred finding 8.
+2. **P3, the test helper that mutates the filesystem after a directory
+   listing fires on every listing** rather than once; a future second pass
+   would fail loudly rather than falsely pass, so this is maintainability.
+3. Residual note: the existence check now precedes the baseline-cache
+   check, so a concurrently deleted module inside `.mokly-cache/` is dropped
+   instead of reported; the more correct outcome, adjacent to deferred
+   finding 5.
 
 ## Seventh Review Findings (1 and 2 approved in Milestone 13; 3 through 8 deferred)
 

@@ -10,8 +10,9 @@
 - [Co-Located Entry Discovery](./co-located-entry-discovery.md) — delivered
   on the branch through Milestone 11 with five review rounds applied; earlier
   milestones and review rounds are kept in `co-located-entry-discovery/`.
-  Milestone 13 carries the two approved seventh-round fixes; six smaller
-  seventh-round findings are deferred.
+  Milestone 13 delivered the two approved seventh-round fixes; eight small
+  deferred findings from the seventh and eighth review rounds remain listed
+  in the plan. Ready for a pull request.
 - [CLI Terminal Experience](./cli-terminal-experience.md)
 - [Package Documentation](./package-documentation.md) — supersedes the
   unmerged public-site plan and pull request #79 by shipping versioned Markdown
