@@ -1,7 +1,4 @@
-// Leaf rows of the served catalogue tree: the entry-kind glyph, the row link
-// every leaf and variant shares, and the variant list a screen discloses. A
-// screen that owns variants keeps its link and gains a separate chevron
-// button, because a row cannot be both a link and a `<summary>`.
+/** Leaf rows and screen-variant disclosures for the React shell. */
 
 import { catalogueViewHref } from "../navigation/delivery.js";
 
@@ -13,51 +10,22 @@ import {
   ScreenIcon,
   VariantIcon,
 } from "./icons.js";
-import { useShellIdentifierScope } from "./identifier_context.js";
-import { navActivation } from "./nav_activation.js";
+import { useShellIdentifier } from "./identifier_context.js";
 import {
   NAV_CHANGED_TEXT,
   NAV_CHANGED_TEXT_ATTRIBUTE,
   NAV_CHANGED_TEXT_CLASS,
 } from "./nav_changed.js";
 import { navRowStyle } from "./nav_guides.js";
-import { navLeafVisible } from "./nav_model.js";
-import type { NavLeafNode, NavNode, NavSectionNode } from "./nav_tree.js";
+import {
+  navLeafVisible,
+  navNodeVisible,
+  navigationFiltering,
+  variantDisclosureKey,
+} from "./nav_model.js";
+import type { NavLeafNode, NavSectionNode } from "./nav_tree.js";
 import { useOptionalShellStore } from "./store_context.js";
 import { WorkspaceIcon } from "./workspace_icons.js";
-
-/** The persisted disclosure identity of one screen's variant list. */
-function variantDisclosureKey(
-  sectionId: NavSectionNode["id"],
-  parentId: string,
-): string {
-  return `variants:${sectionId}:${parentId}`;
-}
-
-/** The element id the parent row's disclosure button controls. */
-function variantListId(
-  sectionId: NavSectionNode["id"],
-  parentId: string,
-): string {
-  return `mb-nav-variants-${sectionId}-${parentId}`;
-}
-
-/** Whether a node, one of its descendants, or one of its variants is active. */
-export function containsRoute(
-  node: NavNode,
-  route: string | undefined,
-): boolean {
-  if (route === undefined) {
-    return false;
-  }
-  if (node.kind === "leaf") {
-    return (
-      node.route === route ||
-      (node.variants ?? []).some((variant) => variant.route === route)
-    );
-  }
-  return node.children.some((child) => containsRoute(child, route));
-}
 
 function LeafGlyph(props: {
   entryKind: NavLeafNode["entryKind"];
@@ -92,7 +60,6 @@ function LeafGlyph(props: {
 
 /** One catalogue row link, used for leaves and for the variants they hold. */
 function NavRowLink(props: {
-  aggregateChanged?: boolean;
   context: ShellContext;
   depth: number;
   hidden?: boolean;
@@ -101,36 +68,28 @@ function NavRowLink(props: {
 }) {
   const store = useOptionalShellStore();
   const context = store?.context ?? props.context;
-  const active = props.node.route === context.activeRoute;
+  const active = props.node.route === props.context.activeRoute;
   const changed = context.changedRoutes?.includes(props.node.route) === true;
+  const changedVariants = (props.node.variants ?? []).some((variant) =>
+    context.changedRoutes?.includes(variant.route),
+  );
   const tags = props.node.tags ?? [];
-  const changesOnly = props.node.removedPage || props.node.removedVariant;
-  const hidden =
-    props.hidden ??
-    (store
-      ? !navLeafVisible(props.node, store.state.selection, context)
-      : changesOnly);
-  const activation = store
-    ? navActivation(props.node, store.catalogue, context, store.state.selection)
-    : { route: props.node.route };
   return (
     <a
       aria-current={active ? "page" : undefined}
       className="mbk-nav-row"
       data-changed={changed ? "true" : undefined}
-      data-changed-variants={props.aggregateChanged ? "true" : undefined}
+      data-changed-variants={changedVariants ? "true" : undefined}
       data-entry-id={props.node.entryId}
       data-entry-kind={props.node.entryKind}
-      data-nav-activate-scheme={activation.colorScheme}
-      data-nav-activate-viewport={activation.viewport}
       data-nav-row=""
       data-nav-removed={props.node.key.startsWith("removed:") ? "" : undefined}
       data-removed-page={props.node.removedPage ? "" : undefined}
       data-removed-variant={props.node.removedVariant ? "" : undefined}
-      hidden={hidden}
+      hidden={props.hidden}
       data-route={props.node.route}
       data-tags={tags.length > 0 ? tags.join(" ") : undefined}
-      href={catalogueViewHref(activation.route)}
+      href={catalogueViewHref(props.node.route)}
       style={navRowStyle(props.depth)}
     >
       <LeafGlyph
@@ -160,41 +119,42 @@ export function LeafRow(props: {
   sectionId: NavSectionNode["id"];
 }) {
   const store = useOptionalShellStore();
-  const identifier = useShellIdentifierScope();
   const variants = props.node.variants ?? [];
   const parentId = props.node.entryId;
+  const listId = useShellIdentifier(
+    `mb-nav-variants-${props.sectionId}-${parentId ?? "unknown"}`,
+  );
+  const leafVisible = store
+    ? navLeafVisible(props.node, store.state.selection, store.context)
+    : !props.node.removedPage && !props.node.removedVariant;
   if (variants.length === 0 || parentId === undefined) {
     return (
       <NavRowLink
         context={props.context}
         depth={props.depth}
+        hidden={!leafVisible}
         node={props.node}
       />
     );
   }
-  const context = store?.context ?? props.context;
-  const disclosureKey = variantDisclosureKey(props.sectionId, parentId);
-  const listId = identifier(variantListId(props.sectionId, parentId));
-  const open =
-    store?.state.disclosures[disclosureKey] ??
-    containsRoute(props.node, context.activeRoute);
+  const key = variantDisclosureKey(props.sectionId, parentId);
+  const filtering = store ? navigationFiltering(store.state.selection) : false;
   const parentVisible = store
-    ? navLeafVisible(props.node, store.state.selection, context) ||
-      variants.some((variant) =>
-        navLeafVisible(variant, store.state.selection, context),
-      )
+    ? navNodeVisible(props.node, store.state.selection, store.context)
     : true;
-  const aggregateChanged = variants.some((variant) =>
-    context.changedRoutes?.includes(variant.route),
-  );
+  const matchingVariants = store
+    ? variants.filter((variant) =>
+        navLeafVisible(variant, store.state.selection, store.context),
+      )
+    : variants.filter((variant) => !variant.removedVariant);
+  const active =
+    props.node.route === props.context.activeRoute ||
+    variants.some((variant) => variant.route === props.context.activeRoute);
+  const open = filtering
+    ? matchingVariants.length > 0
+    : (store?.state.disclosures[key] ?? active);
   const link = (
-    <NavRowLink
-      aggregateChanged={aggregateChanged}
-      context={context}
-      depth={props.depth}
-      hidden={false}
-      node={props.node}
-    />
+    <NavRowLink context={props.context} depth={props.depth} node={props.node} />
   );
   return (
     <>
@@ -207,7 +167,7 @@ export function LeafRow(props: {
           className="mbk-nav-variants-toggle"
           data-nav-variants-label={props.node.label}
           data-nav-variants-toggle={listId}
-          onClick={() => store?.setDisclosure(disclosureKey, !open)}
+          onClick={() => store?.setDisclosure(key, !open)}
           type="button"
         >
           <ChevronIcon size={16} />
@@ -215,15 +175,27 @@ export function LeafRow(props: {
       </div>
       <div
         className="mbk-nav-variants"
-        data-nav-disclosure={disclosureKey}
+        data-filter-open={
+          store?.state.filterBaseline
+            ? store.state.filterBaseline[key]
+              ? "1"
+              : "0"
+            : undefined
+        }
+        data-nav-disclosure={key}
         data-nav-variants=""
-        hidden={!open || !parentVisible}
+        hidden={open ? undefined : true}
         id={listId}
       >
         {variants.map((variant) => (
           <NavRowLink
             context={props.context}
             depth={props.depth + 1}
+            hidden={
+              store
+                ? !navLeafVisible(variant, store.state.selection, store.context)
+                : Boolean(variant.removedVariant)
+            }
             key={variant.key}
             node={variant}
             variant

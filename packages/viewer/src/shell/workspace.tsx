@@ -54,6 +54,11 @@ export function ComponentWorkspace({
   );
   const variant = selection.variant;
   const variantId = variant?.value.id;
+  const changedViews = selectedChangedViews(
+    entry,
+    data.changedViews,
+    variantId,
+  );
   const viewport = store?.state.selection.viewport ?? "both";
   const colorScheme = store?.state.selection.colorScheme ?? "light";
   const savedViews = useMemo(
@@ -161,13 +166,6 @@ export function ComponentWorkspace({
     ...(selectedKey ? { selectedKey } : {}),
     views,
   });
-  const target = { kind: "entry" as const, entry };
-  const head = targetHead(catalogue, target);
-  const changedViews = selectedChangedViews(
-    entry,
-    data.changedViews,
-    variantId,
-  );
   const evidenceKey = entry.kind === "component" ? variantId : entry.id;
   const currentStatus = shownStatus(
     evidenceKey === undefined ? undefined : data.viewStates[evidenceKey],
@@ -175,8 +173,10 @@ export function ComponentWorkspace({
     colorScheme,
     variant?.status ?? data.status,
   );
-  const eligible =
+  const comparisonEligible =
     !selection.error && shownComparisonEligible(currentStatus, entry.kind);
+  const target = { kind: "entry" as const, entry };
+  const head = targetHead(catalogue, target);
   const preview = data.removed
     ? removedPreviewData(catalogue, context, entry)
     : undefined;
@@ -260,7 +260,7 @@ export function ComponentWorkspace({
           ) : data.comparisons ? (
             <DiffScreen
               component={entry.kind === "component"}
-              eligible={eligible}
+              eligible={comparisonEligible}
               onComparisonChange={setLoadedComparison}
               onModeChange={setComparisonMode}
               route={entry.route}
@@ -274,7 +274,6 @@ export function ComponentWorkspace({
         </div>
         <Inspector
           catalogue={catalogue}
-          changedViews={changedViews}
           data={data}
           panels={{
             ...(showComponents

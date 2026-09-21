@@ -15,9 +15,10 @@ import {
   useShellIdentifierScope,
 } from "./identifier_context.js";
 import { useOptionalShellStore } from "./store_context.js";
-import type { ChangedView } from "./view_marks.js";
 import type { WorkspaceData } from "./workspace_data.js";
 import { WorkspaceIcon, type WorkspaceIconName } from "./workspace_icons.js";
+import { selectedVariantId } from "./workspace_selection.js";
+import { selectedChangedViews } from "./workspace_views_data.js";
 
 /** React content supplied by the owning workspace for each dynamic panel. */
 export interface InspectorPanels {
@@ -30,12 +31,10 @@ export interface InspectorPanels {
 /** Accessible inspector tabs with one mounted panel at a time. */
 export function Inspector({
   catalogue,
-  changedViews,
   data,
   panels,
 }: {
   catalogue: Catalogue;
-  changedViews?: readonly ChangedView[];
   data: WorkspaceData;
   panels: InspectorPanels;
 }) {
@@ -62,6 +61,15 @@ export function Inspector({
   ];
   const active = store?.state.inspectorTab;
   const open = store?.state.detailsOpen ?? false;
+  const variant = selectedVariantId(
+    data,
+    store?.state.route.variantValues ?? store?.state.route.variant,
+  ).variant;
+  const changedViews = selectedChangedViews(
+    data.entry,
+    data.changedViews,
+    variant?.value.id,
+  );
   const previousTab = useRef<HTMLElement | null>(null);
   const inspector = useRef<HTMLElement>(null);
   const select = (id: string, target: HTMLElement) => {
@@ -165,7 +173,7 @@ export function Inspector({
             key={tab.id}
             role="tabpanel"
           >
-            {panelContent(tab.id, catalogue, changedViews, data, panels)}
+            {panelContent(tab.id, catalogue, data, changedViews, panels)}
           </section>
         ))}
       </div>
@@ -176,8 +184,8 @@ export function Inspector({
 function panelContent(
   id: WorkspaceIconName,
   catalogue: Catalogue,
-  changedViews: readonly ChangedView[] | undefined,
   data: WorkspaceData,
+  changedViews: ReturnType<typeof selectedChangedViews>,
   panels: InspectorPanels,
 ): ReactNode {
   if (id === "details")

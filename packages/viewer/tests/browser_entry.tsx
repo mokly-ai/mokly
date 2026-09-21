@@ -98,19 +98,15 @@ const start = (id: string, options: HostOptions = {}) => {
       host.render();
     },
   };
-  const objectSource =
-    options.source !== undefined &&
-    typeof options.source === "object" &&
-    options.source !== null &&
-    "schemaVersion" in options.source;
+  const sourceNeedsBaseUrl =
+    options.source === undefined ||
+    (typeof options.source === "object" && !(options.source instanceof URL));
   host.props = {
     viewerId: id,
     catalogue: options.source ?? data.catalogue,
-    ...(options.source
-      ? objectSource
-        ? { baseUrl: location.origin }
-        : {}
-      : { baseUrl: options.cross ? data.baseUrl : location.origin }),
+    ...(sourceNeedsBaseUrl
+      ? { baseUrl: options.cross ? data.baseUrl : location.origin }
+      : {}),
     frameAdapter: options.cross
       ? postMessageAdapter({ frameOrigin: data.baseUrl })
       : sameOriginAdapter(),

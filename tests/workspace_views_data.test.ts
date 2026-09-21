@@ -11,6 +11,7 @@ import {
   viewStatesBySelection,
 } from "../packages/viewer/dist/shell/workspace_views_data.js";
 
+import { attribute, documentElements } from "./helpers/html.js";
 import { publicShellContext } from "./helpers/public_shell.js";
 import {
   component,
@@ -211,34 +212,29 @@ test("workspace data keeps changed views with current and removed variants", () 
 
 test("the view controls and details name a dark-only change", () => {
   const catalogue = createCatalogue(screenManifest);
+  const shellContext = context({
+    baseline: screenManifest,
+    result: darkOnlyResult("unchanged"),
+  });
   const html = viewPage(
     screen,
     catalogue,
-    publicShellContext(
-      catalogue,
-      context({
-        baseline: screenManifest,
-        result: darkOnlyResult("unchanged"),
-      }),
-    ),
+    publicShellContext(catalogue, shellContext),
   );
   assert.match(html, /data-workspace-status="">Unmodified</);
-  assert.match(
-    html,
-    /<span class="mbk-view-changed" aria-hidden="true" data-view-changed="scheme"><\/span>/,
-  );
+  assert.equal(attribute(viewMark(html, "scheme"), "hidden"), undefined);
   assert.match(
     html,
     /<span class="mbk-view-changed-text" data-view-changed-text="scheme" id="mb-view-changed-scheme">Other theme changed<\/span>/,
   );
-  assert.match(
-    html,
-    /data-workspace-scheme="" aria-describedby="mb-view-changed-scheme"/,
+  assert.equal(
+    attribute(
+      workspaceControl(html, "data-workspace-scheme"),
+      "aria-describedby",
+    ),
+    "mb-view-changed-scheme",
   );
-  assert.match(
-    html,
-    /<span class="mbk-view-changed" aria-hidden="true" data-view-changed="viewport" hidden=""><\/span>/,
-  );
+  assert.equal(attribute(viewMark(html, "viewport"), "hidden"), "");
   assert.doesNotMatch(html, /aria-describedby="mb-view-changed-viewport"/);
   assert.match(
     html,
@@ -248,16 +244,32 @@ test("the view controls and details name a dark-only change", () => {
 
 test("an unchanged screen hides every changed-view mark and row", () => {
   const catalogue = createCatalogue(screenManifest);
+  const shellContext = context({ baseline: screenManifest });
   const html = viewPage(
     screen,
     catalogue,
-    publicShellContext(catalogue, context({ baseline: screenManifest })),
+    publicShellContext(catalogue, shellContext),
   );
-  assert.match(
-    html,
-    /<span class="mbk-view-changed" aria-hidden="true" data-view-changed="scheme" hidden=""><\/span>/,
-  );
+  assert.equal(attribute(viewMark(html, "scheme"), "hidden"), "");
   assert.doesNotMatch(html, /aria-describedby="mb-view-changed-/);
   assert.match(html, /data-workspace-changed-views="" hidden=""/);
   assert.doesNotMatch(html, /Mobile · Dark/);
 });
+
+function viewMark(html: string, kind: "scheme" | "viewport") {
+  const marks = documentElements(
+    html,
+    (element) => attribute(element, "data-view-changed") === kind,
+  );
+  assert.equal(marks.length, 1);
+  return marks[0]!;
+}
+
+function workspaceControl(html: string, name: string) {
+  const controls = documentElements(
+    html,
+    (element) => attribute(element, name) !== undefined,
+  );
+  assert.equal(controls.length, 1);
+  return controls[0]!;
+}

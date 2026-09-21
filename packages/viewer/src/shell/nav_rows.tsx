@@ -1,11 +1,9 @@
-// The rows of the served catalogue tree. Collection groups are native
-// `<details>` elements rendered here; leaves, their glyphs and the variant
-// list a screen discloses live in `nav_leaf_rows.tsx`.
+/** React-owned rows for the catalogue hierarchy. */
 
 import type { ShellContext } from "./context.js";
 import { FolderIcon, FolderOpenIcon } from "./icons.js";
 import { navRowStyle } from "./nav_guides.js";
-import { containsRoute, LeafRow } from "./nav_leaf_rows.js";
+import { LeafRow } from "./nav_leaf_rows.js";
 import { navNodeVisible, navigationFiltering } from "./nav_model.js";
 import type { NavGroupNode, NavNode, NavSectionNode } from "./nav_tree.js";
 import { useOptionalShellStore } from "./store_context.js";
@@ -28,12 +26,10 @@ function GroupRow(props: {
   node: NavGroupNode;
   sectionId: NavSectionNode["id"];
 }) {
-  const node = props.node;
   const store = useOptionalShellStore();
+  const node = props.node;
   const key = collectionDisclosureKey(props.sectionId, node.key);
-  const open =
-    store?.state.disclosures[key] ??
-    (props.depth === 0 || containsRoute(node, props.context.activeRoute));
+  const open = store?.state.disclosures[key] ?? props.depth === 0;
   const filtered = store ? navigationFiltering(store.state.selection) : false;
   const hidden = store
     ? !navNodeVisible(node, store.state.selection, store.context)

@@ -6,7 +6,7 @@ Implemented alongside [Pages in the catalogue](./mokly-pages.md), with removed
 screen-variant metadata and publication implemented through Milestone 4 of the
 [screen variants plan](../../plans/screen-variants.md). Catalogue impact and
 removed-entry metadata are independent of the visual
-[comparison result](./mokly-changes.md). Verification is tracked in
+[comparison result](./mokly-changes.md). Page verification is tracked in
 [Unified Catalogue Pages](../../plans/unified-catalogue-pages.md). Baseline
 documents, ancestry, and delivery descriptors for removed pages are implemented
 by the [removed content previews plan](../../plans/removed-content-previews.md).

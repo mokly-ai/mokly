@@ -1,5 +1,5 @@
 /** Grouped, compact viewport, theme and inspection controls. */
-import { useShellIdentifierScope } from "./identifier_context.js";
+import { useShellIdentifier } from "./identifier_context.js";
 import { useOptionalShellStore } from "./store_context.js";
 import {
   VIEW_CHANGED_CLASS,
@@ -11,11 +11,6 @@ import {
 } from "./view_marks.js";
 import { WorkspaceIcon } from "./workspace_icons.js";
 
-/**
- * The accent dot and the wording that names it, both held by every control so
- * a client refresh moves the mark by toggling `hidden` and the control's
- * `aria-describedby` rather than rebuilding the head.
- */
 function ViewChangedMark({
   id,
   kind,
@@ -28,16 +23,16 @@ function ViewChangedMark({
   return (
     <>
       <span
-        className={VIEW_CHANGED_CLASS}
         aria-hidden="true"
+        className={VIEW_CHANGED_CLASS}
         data-view-changed={kind}
         hidden={!marked}
       />
       <span
         className={VIEW_CHANGED_TEXT_CLASS}
         data-view-changed-text={kind}
-        id={id}
         hidden={!marked}
+        id={id}
       >
         {VIEW_CHANGED_TEXT[kind]}
       </span>
@@ -60,38 +55,33 @@ export function WorkspaceControls({
   };
 }) {
   const store = useOptionalShellStore();
-  const identifier = useShellIdentifierScope();
-  const ids = {
-    scheme: identifier(VIEW_CHANGED_IDS.scheme),
-    viewport: identifier(VIEW_CHANGED_IDS.viewport),
-  };
-  const marks = viewMarks(
-    changedViews,
-    store?.state.selection.viewport ?? "both",
-    store?.state.selection.colorScheme ?? "light",
-  );
+  const viewport = store?.state.selection.viewport ?? "both";
+  const scheme = store?.state.selection.colorScheme ?? "light";
+  const marks = viewMarks(changedViews, viewport, scheme);
+  const schemeChangedId = useShellIdentifier(VIEW_CHANGED_IDS.scheme);
+  const viewportChangedId = useShellIdentifier(VIEW_CHANGED_IDS.viewport);
   return (
     <div className="mbk-view-tools" role="group" aria-label="View options">
       <label className="mbk-icon-select" title="Viewport">
         <WorkspaceIcon name="viewport" />
         <WorkspaceIcon name="caret" />
         <select
+          aria-describedby={marks.viewport ? viewportChangedId : undefined}
           aria-label="Viewport"
           data-workspace-viewport=""
-          {...(marks.viewport ? { "aria-describedby": ids.viewport } : {})}
           onChange={(event) =>
             store?.selectViewport(
               event.currentTarget.value as "mobile" | "desktop" | "both",
             )
           }
-          value={store?.state.selection.viewport ?? "both"}
+          value={viewport}
         >
           <option value="mobile">Mobile</option>
           <option value="desktop">Desktop</option>
           <option value="both">Both</option>
         </select>
         <ViewChangedMark
-          id={ids.viewport}
+          id={viewportChangedId}
           kind="viewport"
           marked={marks.viewport}
         />
@@ -101,20 +91,19 @@ export function WorkspaceControls({
           type="button"
           className="mbk-icon-button"
           aria-label="Dark mode"
-          aria-pressed={store?.state.selection.colorScheme === "dark"}
+          aria-describedby={marks.scheme ? schemeChangedId : undefined}
+          aria-pressed={scheme === "dark"}
           title="Dark mode"
           data-workspace-scheme=""
-          {...(marks.scheme ? { "aria-describedby": ids.scheme } : {})}
           onClick={() =>
-            store &&
-            store.selectColorScheme(
+            store?.selectColorScheme(
               store.state.selection.colorScheme === "dark" ? "light" : "dark",
             )
           }
         >
           <WorkspaceIcon name="scheme" />
           <ViewChangedMark
-            id={ids.scheme}
+            id={schemeChangedId}
             kind="scheme"
             marked={marks.scheme}
           />

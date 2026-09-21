@@ -203,18 +203,18 @@ test("navigation fences a late response and keeps history usable", async ({
     "Loading previous version…",
   );
   await page.locator('a[data-route="screens/removed.html"]').click();
-  const mobile = page.frameLocator(`${stage} .mbk-frame-mobile iframe`);
-  await expect(mobile.locator("h1")).toHaveText("Previous mobile screen");
+  const desktop = page.frameLocator(`${stage} .mbk-frame-desktop iframe`);
+  await expect(desktop.locator("h1")).toHaveText("Previous desktop screen");
   release();
   await expect.poll(() => handled && settled()).toBe(true);
   await expect(page.locator(".mbk-preview-status")).toHaveCount(0);
-  await expect(mobile.locator("h1")).toHaveText("Previous mobile screen");
+  await expect(desktop.locator("h1")).toHaveText("Previous desktop screen");
   await page.goBack();
   await expect(page.frameLocator(previewFrame).locator("h1")).toHaveText(
     "Previous page",
   );
   await page.goForward();
-  await expect(mobile.locator("h1")).toHaveText("Previous mobile screen");
+  await expect(desktop.locator("h1")).toHaveText("Previous desktop screen");
 });
 
 test("browsing current entries requests no historical bytes", async ({

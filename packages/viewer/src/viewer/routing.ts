@@ -9,8 +9,6 @@ interface RouteIntent {
   id: string | null;
   variantId?: string;
   fragment?: string;
-  viewport?: ViewerSelection["viewport"];
-  colorScheme?: ViewerSelection["colorScheme"];
   navigation?: FrameNavigation;
 }
 interface RouteActions {
@@ -78,11 +76,7 @@ export class ViewerRouting {
         ...(navigation ? { navigation } : {}),
       });
   }
-  shell(
-    id: string | null,
-    url: URL,
-    axes?: Pick<ViewerSelection, "viewport" | "colorScheme">,
-  ): void {
+  shell(id: string | null, url: URL): void {
     const fragment = url.searchParams.getAll("fragment");
     const variant = url.searchParams.getAll("variant");
     this.request({
@@ -91,7 +85,6 @@ export class ViewerRouting {
       ...(fragment.length === 1 && isLogicalFragment(fragment[0]!)
         ? { fragment: fragment[0]! }
         : {}),
-      ...axes,
     });
   }
   frame(navigation: FrameNavigation): void {
@@ -121,28 +114,18 @@ export class ViewerRouting {
     });
   }
   private request(intent: RouteIntent): void {
+    this.pending = intent;
     const selection = this.actions.selection();
-    const routeChanged =
+    if (
       intent.id !== selection.screenId ||
-      intent.variantId !== selection.variantId;
-    const axesChanged =
-      (intent.viewport !== undefined &&
-        intent.viewport !== selection.viewport) ||
-      (intent.colorScheme !== undefined &&
-        intent.colorScheme !== selection.colorScheme);
-    if (routeChanged || axesChanged) {
-      this.pending = intent;
+      intent.variantId !== selection.variantId
+    ) {
       this.actions.select({
         screenId: intent.id,
         variantId: intent.variantId,
-        ...(intent.viewport === undefined ? {} : { viewport: intent.viewport }),
-        ...(intent.colorScheme === undefined
-          ? {}
-          : { colorScheme: intent.colorScheme }),
       });
       return;
     }
-    this.pending = intent;
     const before = this.key();
     this.commit(selection, false);
     if (before === this.key()) {

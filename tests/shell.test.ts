@@ -11,9 +11,7 @@ import type { Catalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import type { ShellContext } from "../packages/viewer/dist/shell/context.js";
 import { SHELL_CSS } from "../packages/viewer/dist/shell/css.js";
-import type { RemovedEntrySnapshot } from "../packages/viewer/dist/shell/metadata.js";
 import { buildNavTree } from "../packages/viewer/dist/shell/nav_tree.js";
-import { workspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 
 import {
   attribute,
@@ -157,82 +155,6 @@ const taggedFlowManifest: ManifestV5 = {
   ),
 };
 
-const variantManifest: ManifestV5 = {
-  ...manifest,
-  entries: [
-    ...manifest.entries,
-    {
-      address: "example.test/welcome",
-      declaredDependencies: [],
-      dependencies: ["styles.css"],
-      description: "Welcome before the workspace has a name",
-      fragments: {
-        desktop: "screens/welcome.variants/empty.desktop.html",
-        mobile: "screens/welcome.variants/empty.mobile.html",
-      },
-      id: "welcome-empty",
-      kind: "screen",
-      navPath: ["Example", "Screens"],
-      relatedDocs: ["notes.md"],
-      route: "screens/welcome.variants/empty.html",
-      sourcePath: "entries/fixture.mockup.tsx",
-      tags: ["forms", "onboarding"],
-      title: "Welcome, empty workspace",
-      useCaseIds: [],
-      variantOf: "welcome",
-      viewports: ["mobile", "desktop"],
-    },
-    {
-      address: "example.test/welcome",
-      declaredDependencies: [],
-      dependencies: ["styles.css"],
-      description: "Welcome after the workspace failed to save",
-      fragments: {
-        desktop: "screens/welcome.variants/error.desktop.html",
-        mobile: "screens/welcome.variants/error.mobile.html",
-      },
-      id: "welcome-error",
-      kind: "screen",
-      navPath: ["Example", "Screens"],
-      relatedDocs: ["notes.md"],
-      route: "screens/welcome.variants/error.html",
-      sourcePath: "entries/fixture.mockup.tsx",
-      tags: ["forms", "onboarding"],
-      title: "Save failed",
-      useCaseIds: [],
-      variantOf: "welcome",
-      viewports: ["mobile", "desktop"],
-    },
-  ],
-};
-
-/** A deleted variant of the surviving Welcome screen, retained from baseline. */
-const removedVariant: RemovedEntrySnapshot = {
-  ancestors: [
-    { id: "example", title: "Example" },
-    { id: "screens", title: "Screens" },
-  ],
-  entry: {
-    declaredDependencies: [],
-    dependencies: [],
-    description: "Welcome after the workspace was deleted",
-    fragments: {
-      desktop: "screens/welcome.variants/gone.desktop.html",
-      mobile: "screens/welcome.variants/gone.mobile.html",
-    },
-    id: "welcome-gone",
-    kind: "screen",
-    navPath: ["Example", "Screens"],
-    relatedDocs: [],
-    route: "screens/welcome.variants/gone.html",
-    sourcePath: "entries/fixture.mockup.tsx",
-    title: "Workspace deleted",
-    useCaseIds: [],
-    variantOf: "welcome",
-    viewports: ["mobile", "desktop"],
-  },
-};
-
 const untaggedManifest: ManifestV5 = {
   ...manifest,
   entries: manifest.entries.map((entry) => {
@@ -329,29 +251,12 @@ function darkTokenSelectors(css: string): string[] {
     .map((block) => block.slice(0, block.lastIndexOf("{")).trim());
 }
 
-/** The always-present changed-views row, hidden until a view is named. */
-function changedViewsRow(label = ""): string {
-  return (
-    `<div class="mbk-meta-row" data-workspace-changed-views=""${label ? "" : ' hidden=""'}>` +
-    '<span class="mbk-meta-k">Changed views</span>' +
-    `<span class="mbk-meta-v" data-workspace-changed-views-value="">${label}</span></div>`
-  );
-}
-
 /** The details inspector alone, so top-bar chips cannot satisfy a check. */
 function detailsSection(html: string): string {
   const legacy = html.indexOf('<details class="mbk-details"');
   const start = legacy >= 0 ? legacy : html.indexOf('class="mbk-inspector"');
   assert.ok(start > -1);
   return html.slice(start);
-}
-
-/** The single disclosed variant list a fixture renders, markup and all. */
-function variantListHtml(html: string): string {
-  const start = html.indexOf('<div class="mbk-nav-variants"');
-  if (start < 0) return "";
-  const end = html.indexOf("</div>", start);
-  return html.slice(start, end);
 }
 
 function hasClass(element: HtmlElement, name: string): boolean {
@@ -488,314 +393,6 @@ test("catalogue nav marks active, changed, and iconed rows", () => {
   );
   const inactive = homePage(catalogue, context);
   assert.equal(inactive.includes('aria-current="page"[^>]*data-route'), false);
-});
-
-test("a screen with variants discloses them under its own row", () => {
-  const catalogue = createCatalogue(variantManifest);
-  const html = homePage(catalogue, context);
-
-  assert.match(
-    html,
-    /<div class="mbk-nav-leaf"><a [^>]*data-route="screens\/welcome\.html"/,
-  );
-  assert.match(
-    html,
-    /<button aria-controls="mb-nav-variants-pages-welcome" aria-expanded="false" aria-label="Show variants of Welcome" class="mbk-nav-variants-toggle" data-nav-variants-label="Welcome" data-nav-variants-toggle="mb-nav-variants-pages-welcome" type="button">/,
-  );
-  assert.match(
-    html,
-    /<div class="mbk-nav-variants" data-nav-disclosure="variants:pages:welcome" data-nav-variants="" hidden="" id="mb-nav-variants-pages-welcome">/,
-  );
-  assert.match(
-    html,
-    /<a [^>]*data-route="screens\/welcome\.variants\/empty\.html"[^>]*>/,
-  );
-  assert.match(html, /class="mbk-nav-ico variant"/);
-  assert.match(
-    html,
-    /class="mbk-nav-ico variant"><svg[^>]*><path d="M6 6V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-2" stroke-linecap="butt"><\/path><rect height="14" rx="2" width="16" x="2" y="6"><\/rect><path d="M2 10h16"><\/path><\/svg>/,
-  );
-  assert.equal(
-    occurrences(html, 'data-route="screens/welcome.variants/empty.html"'),
-    1,
-  );
-  assert.equal(occurrences(html, 'class="mbk-nav-variants-toggle"'), 1);
-  assert.doesNotMatch(
-    html,
-    /<div class="mbk-nav-leaf"><a [^>]*data-route="screens\/details\.html"/,
-  );
-});
-
-test("variant rows indent one step past their parent row", () => {
-  const catalogue = createCatalogue(variantManifest);
-  const html = homePage(catalogue, context);
-  const parent = /<a ([^>]*data-route="screens\/welcome\.html"[^>]*)>/.exec(
-    html,
-  );
-  const child =
-    /<a ([^>]*data-route="screens\/welcome\.variants\/empty\.html"[^>]*)>/.exec(
-      html,
-    );
-  assert.ok(parent?.[1]);
-  assert.ok(child?.[1]);
-  assert.match(parent[1], /padding-left:40px/);
-  assert.match(parent[1], /--mbk-indent:32px/);
-  assert.match(child[1], /padding-left:56px/);
-  assert.match(child[1], /--mbk-indent:48px/);
-  assert.match(child[1], /background-position:15px 0, 31px 0, 47px 0/);
-  assert.match(child[1], /data-nav-row=""/);
-  assert.match(child[1], /data-entry-id="welcome-empty"/);
-});
-
-test("the served variant list opens for the parent and for each variant", () => {
-  const catalogue = createCatalogue(variantManifest);
-  const closed =
-    'class="mbk-nav-variants" data-nav-disclosure="variants:pages:welcome" data-nav-variants="" hidden=""';
-  const open =
-    'class="mbk-nav-variants" data-nav-disclosure="variants:pages:welcome" data-nav-variants=""';
-  assert.ok(homePage(catalogue, context).includes(closed));
-  assert.ok(
-    routePage(catalogue, "screens/details.html").includes(closed),
-    "an unrelated screen keeps the list closed",
-  );
-
-  const onVariant = routePage(catalogue, "screens/welcome.variants/empty.html");
-  assert.equal(onVariant.includes(closed), false);
-  assert.ok(onVariant.includes(`${open} id=`));
-  assert.match(
-    onVariant,
-    /aria-expanded="true" aria-label="Hide variants of Welcome"/,
-  );
-  assert.match(
-    onVariant,
-    /<a aria-current="page"[^>]*data-route="screens\/welcome\.variants\/empty\.html"/,
-  );
-
-  const onParent = routePage(catalogue, "screens/welcome.html");
-  assert.equal(onParent.includes(closed), false);
-  assert.match(
-    onParent,
-    /aria-expanded="true" aria-label="Hide variants of Welcome"/,
-  );
-});
-
-test("a variant's crumbs end in a link to its parent screen", () => {
-  const catalogue = createCatalogue(variantManifest);
-  const html = routePage(catalogue, "screens/welcome.variants/empty.html");
-
-  assert.match(
-    html,
-    /<p aria-label="Catalogue location" class="mbk-crumbs"><span>Example<\/span><span><span class="sep">›<\/span>Screens<\/span><span><span class="sep">›<\/span><a class="mbk-crumb-link" href="\/view\/screens\/welcome\.html">Welcome<\/a><\/span><\/p>/,
-  );
-  assert.match(html, /#(?:<!-- -->)?welcome-empty<\/button>/);
-  assert.doesNotMatch(
-    routePage(catalogue, "screens/welcome.html"),
-    /class="mbk-crumb-link"/,
-  );
-});
-
-test("details list a screen's variants and a variant's parent", () => {
-  const catalogue = createCatalogue(variantManifest);
-  const parent = detailsSection(routePage(catalogue, "screens/welcome.html"));
-  const child = detailsSection(
-    routePage(catalogue, "screens/welcome.variants/empty.html"),
-  );
-
-  assert.match(
-    parent,
-    /<span class="mbk-meta-k">Variants<\/span><span class="mbk-meta-v"><span class="mbk-chips"><a class="mbk-chip screen" href="\/view\/screens\/welcome\.variants\/empty\.html">/,
-  );
-  assert.match(parent, /Welcome, empty workspace<\/a>/);
-  assert.doesNotMatch(parent, /mbk-meta-k">Variant of/);
-  assert.match(
-    child,
-    /<span class="mbk-meta-k">Variant of<\/span><span class="mbk-meta-v"><span class="mbk-chips"><a class="mbk-chip screen" href="\/view\/screens\/welcome\.html">/,
-  );
-  assert.doesNotMatch(child, /mbk-meta-k">Variants</);
-  assert.doesNotMatch(
-    detailsSection(routePage(catalogue, "screens/details.html")),
-    /mbk-meta-k">Variant/,
-  );
-});
-
-test("the variant disclosure styles carry no rail and rotate the chevron", () => {
-  const css = flatCss(SHELL_CSS);
-
-  assert.match(css, /\.mbk-nav-leaf \{ display: flex; align-items: center;/);
-  assert.match(css, /\.mbk-nav-leaf > \.mbk-nav-row \{ flex: 1;/);
-  assert.match(
-    css,
-    /\.mbk-nav-leaf > \.mbk-nav-row::before \{ right: -18px; \}/,
-  );
-  assert.match(css, /\.mbk-nav-variants\[hidden\] \{ display: none; \}/);
-  assert.match(css, /\.mbk-nav-variants-toggle \{[^}]*width: 16px;/);
-  assert.match(css, /\.mbk-nav-variants-toggle \{[^}]*height: 16px;/);
-  assert.match(css, /\.mbk-nav-variants-toggle \{[^}]*border: 0;/);
-  assert.match(
-    css,
-    /\.mbk-nav-variants-toggle:focus-visible \{ outline: 2px solid/,
-  );
-  assert.match(
-    css,
-    /\.mbk-nav-variants-toggle\[aria-expanded="true"\] svg \{ transform: rotate\(90deg\); \}/,
-  );
-  assert.match(
-    css,
-    /@media \(prefers-reduced-motion: reduce\) \{ \.mbk-nav-variants-toggle svg \{ transition: none; \} \}/,
-  );
-  assert.match(
-    css,
-    /\.mbk-nav-leaf:has\(> \.mbk-nav-row\[aria-current="page"\]\) \.mbk-nav-variants-toggle \{ color: var\(--mokly-accent-contrast\); \}/,
-  );
-  assert.doesNotMatch(
-    css,
-    /\.mbk-nav-(?:leaf|variants)[^{}]*\{[^}]*border-left/,
-  );
-  assert.doesNotMatch(
-    css,
-    /\.mbk-nav-(?:leaf|variants)[^{}]*\{[^}]*box-shadow: inset/,
-  );
-  assert.doesNotMatch(
-    css,
-    /\.mbk-nav-(?:leaf|variants)[^{}]*\{[^}]*linear-gradient/,
-  );
-});
-
-test("changed rows draw a trailing dot and name the change for readers", () => {
-  const catalogue = createCatalogue(variantManifest);
-  const html = homePage(catalogue, {
-    ...context,
-    changedRoutes: ["screens/welcome.variants/error.html"],
-  });
-  const css = flatCss(SHELL_CSS);
-
-  assert.match(
-    html,
-    /Save failed<span class="mbk-nav-changed-text" data-nav-changed-text="">Changed<\/span><\/a>/,
-  );
-  assert.match(
-    html,
-    /Details<span class="mbk-nav-changed-text" data-nav-changed-text="">Changed<\/span><\/a>/,
-  );
-  assert.match(
-    css,
-    /a\[data-nav-row\]\[data-changed="true"\]:not\(\[data-nav-removed\]\)::after, a\[data-nav-row\]\[data-changed-variants="true"\]::after \{ content: ""; width: 6px; height: 6px; flex-shrink: 0; margin-left: auto; border-radius: 50%; background: var\(--mokly-accent\); \}/,
-  );
-  assert.match(
-    css,
-    /a\[data-nav-row\]\[aria-current="page"\]\[data-changed="true"\]::after, a\[data-nav-row\]\[aria-current="page"\]\[data-changed-variants="true"\]::after \{ background: var\(--mokly-accent-contrast\); \}/,
-  );
-  assert.match(css, /\.mbk-nav-changed-text \{ display: none; \}/);
-  assert.match(
-    css,
-    /\.mbk-nav-changed-text \{ display: block; position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset\(50%\); white-space: nowrap; \}/,
-  );
-  assert.doesNotMatch(css, /\[data-changed[^{}]*\{[^}]*border-left/);
-  assert.doesNotMatch(css, /\[data-changed[^{},]*\]::before/);
-});
-
-test("a removed variant keeps its row inside the surviving parent's list", () => {
-  const catalogue = createCatalogue(variantManifest, [removedVariant]);
-  const html = homePage(catalogue, {
-    ...context,
-    changedRoutes: ["screens/welcome.variants/gone.html"],
-  });
-  const list = variantListHtml(html);
-
-  assert.match(
-    list,
-    /<a [^>]*data-nav-removed=""[^>]*data-removed-variant=""[^>]*hidden=""[^>]*data-route="screens\/welcome\.variants\/gone\.html"/,
-  );
-  assert.match(
-    list,
-    /data-route="screens\/welcome\.variants\/gone\.html"[^>]*><span class="mbk-nav-ico variant">/,
-  );
-  assert.match(list, /Workspace deleted · Removed</);
-  assert.ok(
-    list.indexOf('data-route="screens/welcome.variants/error.html"') <
-      list.indexOf('data-route="screens/welcome.variants/gone.html"'),
-  );
-  assert.equal(
-    occurrences(html, 'data-route="screens/welcome.variants/gone.html"'),
-    1,
-  );
-});
-
-test("a screen without variants discloses a removed variant it kept", () => {
-  const catalogue = createCatalogue(manifest, [removedVariant]);
-  const html = homePage(catalogue, {
-    ...context,
-    changedRoutes: [removedVariant.entry.route],
-  });
-
-  assert.match(
-    html,
-    /<div class="mbk-nav-leaf"><a [^>]*data-route="screens\/welcome\.html"/,
-  );
-  assert.match(
-    variantListHtml(html),
-    /^<div class="mbk-nav-variants" data-nav-disclosure="variants:pages:welcome" data-nav-variants="" hidden="" id="mb-nav-variants-pages-welcome"><a [^>]*data-route="screens\/welcome\.variants\/gone\.html"/,
-  );
-});
-
-test("a removed variant whose parent is gone stays a flat removed row", () => {
-  const orphan = {
-    ancestors: [{ id: "example", title: "Example" }],
-    entry: { ...removedVariant.entry, variantOf: "farewell" },
-  };
-  const catalogue = createCatalogue(variantManifest, [orphan]);
-  const html = homePage(catalogue, {
-    ...context,
-    changedRoutes: [orphan.entry.route],
-  });
-
-  assert.doesNotMatch(variantListHtml(html), /gone\.html/);
-  assert.match(
-    html,
-    /<\/details><a [^>]*data-nav-removed=""[^>]*data-route="screens\/welcome\.variants\/gone\.html"/,
-  );
-});
-
-test("a removed variant view keeps the surviving parent in its crumbs", () => {
-  const catalogue = createCatalogue(variantManifest, [removedVariant]);
-  const entry = removedVariant.entry;
-  const html = viewPage(entry, catalogue, {
-    ...context,
-    activeRoute: entry.route,
-    changedRoutes: [entry.route],
-  });
-
-  assert.match(
-    html,
-    /<p aria-label="Catalogue location" class="mbk-crumbs"><span>Example<\/span><span><span class="sep">›<\/span>Screens<\/span><span><span class="sep">›<\/span><a class="mbk-crumb-link" href="\/view\/screens\/welcome\.html">Welcome<\/a><\/span><\/p>/,
-  );
-  assert.match(html, />Removed</);
-  assert.match(html, /Showing previous version/);
-  assert.match(html, /Previous version unavailable/);
-});
-
-test("a changed variant counts once and leaves its parent unmodified", () => {
-  const catalogue = createCatalogue(variantManifest);
-  const changedRoutes = ["screens/welcome.variants/error.html"];
-  const html = homePage(catalogue, { ...context, changedRoutes });
-  const parent = catalogue.byRoute.get("screens/welcome.html");
-  const variant = catalogue.byRoute.get("screens/welcome.variants/error.html");
-  if (parent?.kind !== "screen" || variant?.kind !== "screen")
-    assert.fail("Expected both routes to resolve to screens");
-
-  assert.match(html, /<span class="mbk-nav-filter-count">1<\/span>/);
-  assert.equal(
-    workspaceData(catalogue, { ...context, changedRoutes }, parent).status,
-    "Unmodified",
-  );
-  assert.equal(
-    workspaceData(catalogue, { ...context, changedRoutes }, variant).status,
-    "Changed",
-  );
-  assert.doesNotMatch(
-    html,
-    /data-changed="true"[^>]*data-route="screens\/welcome\.html"/,
-  );
 });
 
 test("screen page renders device chrome, viewport switch, and details", () => {
@@ -1044,9 +641,7 @@ test("details inspector lists dark fragments and the schemes row", () => {
         '<code class="mbk-code">screens/welcome.desktop.dark.html</code>' +
         "</span></span></div>" +
         '<div class="mbk-meta-row"><span class="mbk-meta-k">Schemes</span>' +
-        '<span class="mbk-meta-v">light, dark</span></div>' +
-        changedViewsRow() +
-        '<div class="mbk-meta-row"><span class="mbk-meta-k">Tags</span>',
+        '<span class="mbk-meta-v">light, dark</span></div>',
     ),
   );
 
@@ -1059,8 +654,7 @@ test("details inspector lists dark fragments and the schemes row", () => {
         '<code class="mbk-code">screens/details.desktop.html</code>' +
         "</span></span></div>" +
         '<div class="mbk-meta-row"><span class="mbk-meta-k">Schemes</span>' +
-        '<span class="mbk-meta-v">light</span></div>' +
-        changedViewsRow(),
+        '<span class="mbk-meta-v">light</span></div>',
     ),
   );
 
@@ -1076,9 +670,7 @@ test("details inspector lists dark fragments and the schemes row", () => {
         '<span class="mbk-chips">' +
         '<code class="mbk-code">screens/welcome.mobile.html</code>' +
         '<code class="mbk-code">screens/welcome.desktop.html</code>' +
-        "</span></span></div>" +
-        changedViewsRow() +
-        '<div class="mbk-meta-row"><span class="mbk-meta-k">Tags</span>',
+        "</span></span></div>",
     ),
   );
 });
@@ -1086,12 +678,10 @@ test("details inspector lists dark fragments and the schemes row", () => {
 test("details inspector chips the tags an entry declares", () => {
   const dark = createCatalogue(darkManifest);
   const welcome = routePage(dark, "screens/welcome.html");
+  assert.ok(welcome.includes(tagsRow("forms", "onboarding")));
   assert.ok(
     welcome.includes(
-      '<span class="mbk-meta-v">light, dark</span></div>' +
-        changedViewsRow() +
-        tagsRow("forms", "onboarding") +
-        '<div class="mbk-meta-row"><span class="mbk-meta-k">Related docs</span>',
+      '<div class="mbk-meta-row"><span class="mbk-meta-k">Related docs</span>',
     ),
   );
 

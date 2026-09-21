@@ -210,8 +210,10 @@ from All and shown in Changes. A parent with no current variants discloses
 the list for it. When the parent is gone, or is not a current screen, the
 removed variant keeps the flat root-level row the removal rules give it.
 Deleting the parent and its variants yields one removed entry each.
-Comparison eligibility, the status badge, the current empty state, and
-retained baseline comparisons follow the existing removed-screen rules.
+Comparison eligibility, the status badge, and the read-only previous version
+follow the existing removed-screen rules. The previous version retains the
+variant's historical views and opens without comparison controls; it never
+falls back to a current empty state.
 
 Use-case propagation, affected-consumer evidence, selected live comparisons,
 and publication treat a variant as the screen it is; none of them needs a
@@ -230,13 +232,15 @@ The Viewer rebuilds `variantOf` for current and removed screens so its rendered
 hierarchy, breadcrumbs, details rows, aggregate mark, and removed-variant
 adoption match Serve. Activating a shell link while `view` is `changes`
 proposes one atomic selection. An aggregate-only parent proposes the
-`screenId` of its first visible changed variant; a changed destination also
-proposes the first changed view's `viewport` and `colorScheme`, read from the
-public model's per-view comparison states in mobile/light, mobile/dark,
-desktop/light, desktop/dark order, unless the link names either axis. Direct
-`select` calls and supplied `defaultSelection` or `selection` props keep their
-axes. In controlled mode every such activation remains a proposal until the
-host supplies it back.
+`screenId` of its first visible changed variant. If the current selection is not
+itself a changed route, a changed destination also proposes the first changed
+view's `viewport` and `colorScheme`, read from the public model's per-view
+comparison states in mobile/light, mobile/dark, desktop/light, desktop/dark
+order, unless the link names either axis. Once a changed route is selected,
+later activations keep the sticky axes while aggregate-parent redirection stays
+active. Direct `select` calls and supplied `defaultSelection` or `selection`
+props also keep their axes. In controlled mode every such activation remains a
+proposal until the host supplies it back.
 
 ## Verification
 

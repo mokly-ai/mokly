@@ -8,7 +8,7 @@ screens using `MockLink` and `MockLink asChild`. Verification and delivery are t
 
 The [component design inventory](./mokly-component-design.md) extend the
 catalogue with their own state contract and native component/control depictions.
-The Browse/Changes designs retain the canonical links below, including the
+Those 47 Browse/Changes designs retain the canonical links below, including the
 removed previous-version family added by
 [removed previews](./mokly-removed-previews.md).
 They now share native icon inspector tabs and working viewport dropdowns with
@@ -173,7 +173,8 @@ The changed-variant and removed-variant states keep their Welcome breadcrumb as
 text, because no artboard depicts an unmodified parent inside Changes. On the
 removed state the parent row is a depiction too: the deletion is a later state
 of the same group, so it must not open the earlier changed-variant scenario.
-The removed variant has no live product destination and no comparison modes.
+The removed variant has no live product destination and no comparison modes;
+its stage shows the variant's inert previous version.
 The changed-views state shows no comparison band at all; the marks on the theme
 control and the viewport dropdown are evidence about other views, and only the
 theme control navigates.

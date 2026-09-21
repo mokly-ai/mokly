@@ -75,16 +75,16 @@ export default defineConfig({
 });
 ```
 
-Paths are relative to the config file. The default renderer is deliberately
-neutral; point `renderer` at your own module when screens need product theme
-providers, custom document markup, or React Native Web style collection. See
-the [configuration guide](./docs/guides/start/configure.md).
+Paths are relative to the config file. `entriesDir` is shorthand for the
+recommended `<folder>/**/*.mockup.{ts,tsx}` pattern. To co-locate definitions
+with product code, configure repository-relative `entries` globs such as
+`["src/**/*.mockup.{ts,tsx}"]` instead; set exactly one of `entries` or
+`entriesDir`, and ensure every configured glob matches an entry module.
 
-`entriesDir` is shorthand for the conventional
-`<folder>/**/*.mockup.{ts,tsx}` layout. Use repository-relative `entries`
-globs instead when definitions live beside product components or span multiple
-directories; the [authoring configuration reference](./docs/guides/authoring/config.md)
-documents both forms.
+The default renderer is deliberately neutral; point `renderer` at your own
+module when screens need product theme providers, custom document markup, or
+React Native Web style collection. See the
+[configuration guide](./docs/guides/start/configure.md).
 
 ### 3. Add a screen
 
@@ -119,10 +119,6 @@ export const mockups = [
 Replace the example `<main>` nodes with your product components, then list their
 source files or directories in `dependencies`. An entry file ends in
 `.mockup.ts` or `.mockup.tsx` and exports a `mockups` array.
-
-A screen can also declare grouped state variants, such as empty or error states.
-Each variant becomes a complete catalogue screen with its own identity and
-derived route; see [screen authoring](./docs/guides/authoring/screens.md#variants-of-a-screen).
 
 Mokly derives generated output by default. Keep its HTML, manifest, and cache
 out of Git:
@@ -186,7 +182,7 @@ catalogue; your React tree still owns what each screen looks like.
 
 | Concept              | Use it for                                                  | Guide                                                                   |
 | -------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Screens              | Product screens and grouped state variants                  | [Screens](./docs/guides/authoring/screens.md)                           |
+| Screens              | Product states, view renders, and full-screen variants      | [Screens](./docs/guides/authoring/screens.md)                           |
 | Collections and tags | Navigation hierarchy and searchable vocabulary              | [Collections and tags](./docs/guides/authoring/collections-and-tags.md) |
 | Components           | Typed props, saved variants, controls, and usage inspection | [Components](./docs/guides/authoring/components.md)                     |
 | Use-case flows       | Ordered journeys composed from existing screens             | [Use-case flows](./docs/guides/authoring/use-case-flows.md)             |
@@ -203,8 +199,10 @@ so component trees use one React runtime.
 The local **Changes** view compares the working tree with the merge base of
 `HEAD` and `origin/main` by default. It accounts for generated documents,
 reachable resources, catalogue metadata, registered components, and applicable
-stylesheet changes. Changed screens and saved component variants generate
-comparisons only when opened; removed screens and pages load their read-only
+stylesheet changes. Changed screens, screen variants, and saved component
+variants generate comparisons only when an eligible shown view is opened.
+Per-view evidence keeps known unchanged views marked Unmodified without offering
+a comparison. Removed screens and pages load their read-only
 [previous version](./docs/protocol/mokly-removed-previews.md) from the branch
 point.
 
@@ -243,8 +241,8 @@ authentication, or discussion experience.
 - [Browsing the catalogue](./docs/guides/catalogue/browse.md)
 - [Configuration reference](./docs/guides/authoring/config.md)
 - [Protocol and specification index](./docs/protocol/README.md)
-- [Screen variants](./docs/protocol/mokly-screen-variants.md)
 - [Removed content previews](./docs/protocol/mokly-removed-previews.md)
+- [Screen variants](./docs/protocol/mokly-screen-variants.md)
 - [Package ownership boundary](./docs/architecture/package-boundary.md)
 - [React-to-static-HTML pipeline](./docs/architecture/build-pipeline.md)
 - [Implementation plans](./plans/README.md)

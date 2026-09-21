@@ -128,12 +128,12 @@ test("a committed baseline places a removed variant under its parent row", async
     changes.removedEntries,
   );
 
-  const context = {
+  const context = publicShellContext(catalogue, {
     base: "main",
     changedRoutes: changes.changedRoutes,
     updateVersion: 1,
-  };
-  const html = homePage(catalogue, publicShellContext(catalogue, context));
+  });
+  const html = homePage(catalogue, context);
 
   assert.match(
     html,

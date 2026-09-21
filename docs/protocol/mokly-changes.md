@@ -179,12 +179,14 @@ view controls say so rather than leaving the reviewer to find the difference.
 The theme control is marked when a changed view uses the other scheme, and the
 viewport control when a changed view uses the other viewport; selecting both
 viewports shows every viewport at once, so that control is never marked. The
-details inspector lists the same views as `Changed views`. Activating a changed
-row while the Changes filter is selected opens the first changed view instead of
-the sticky selection, unless the URL names a viewport or scheme. A direct URL,
-an All-filter activation, Back, Forward, and a reload all keep the sticky
-selection, because the arrival is recorded once by the activation and cleared
-by the destination.
+details inspector lists the same views as `Changed views`. When the current
+selection is not itself a changed route, activating a changed row while the
+Changes filter is selected opens that destination's first changed view instead
+of the sticky selection, unless the URL names a viewport or scheme. Once a
+changed route is selected, later row activations keep the sticky axes while an
+aggregate parent still redirects to its first visible changed variant. A direct
+URL, an All-filter activation, Back, Forward, and a reload also keep the sticky
+selection.
 These marks and the `Changed views` row apply in exports with Changes as well as
 in Serve.
 

@@ -15,9 +15,9 @@ import {
 } from "../navigation/delivery.js";
 
 import type { Catalogue } from "./catalogue.js";
+import { changesActivation } from "./changes_activation.js";
 import type { ShellContext } from "./context.js";
 import { currentDeploymentMatches } from "./delivery.js";
-import { navActivationAxes } from "./nav_activation.js";
 import type { NavSectionNode } from "./nav_tree.js";
 import { routeDocumentKey, routeFromUrl, routeHref } from "./routes.js";
 import { eligibleShellAnchor, sameShellRoute } from "./store_browser_routes.js";
@@ -67,13 +67,11 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
       push: boolean,
       scrolls: Readonly<Record<string, number>> = {},
       restore = true,
-      activation: ReturnType<typeof navActivationAxes> = {},
+      activated?: ReturnType<typeof routeFromUrl>,
     ) => {
       const win = window;
-      const route = {
-        ...routeFromUrl(input.catalogue, url, input.context.delivery),
-        ...activation,
-      };
+      const route =
+        activated ?? routeFromUrl(input.catalogue, url, input.context.delivery);
       if (push) {
         persistScroll(win, captureScrolls(document));
         win.history.pushState({ scrolls: {} }, "", url);
@@ -95,26 +93,26 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
       requested: URL,
       push: boolean,
       scrolls: Readonly<Record<string, number>> = {},
-      activation: ReturnType<typeof navActivationAxes> = {},
+      activated?: ReturnType<typeof routeFromUrl>,
     ) => {
       if (!input.interactive) return;
       const win = window;
       const sameDocument =
         installedDocumentKey.current === routeDocumentKey(requested);
-      const route = routeFromUrl(
+      const requestedRoute = routeFromUrl(
         input.catalogue,
         requested,
         input.context.delivery,
       );
       let canonical = requested;
-      if (route.view.kind === "target")
+      if (requestedRoute.view.kind === "target")
         canonical = new URL(
           browserRouteHref(
             routeHref(
-              route.view.target.entry.route,
-              route.fragment,
-              route.variant,
-              route,
+              requestedRoute.view.target.entry.route,
+              requestedRoute.fragment,
+              requestedRoute.variant,
+              requestedRoute,
             ),
             providerNormalizedRoutes.current,
           ),
@@ -137,22 +135,27 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
       }
       if (controller.signal.aborted) return;
       if (sameDocument) {
-        if (activation.colorScheme || activation.viewport)
-          install(canonical, false, scrolls, true, activation);
-        else if (push && win.location.href !== requested.href)
+        if (activated) {
+          install(
+            canonical,
+            push && win.location.href !== canonical.href,
+            scrolls,
+            true,
+            activated,
+          );
+        } else if (push && win.location.href !== requested.href)
           win.location.assign(requested.href);
         else if (!push) restoreScrolls(document, scrolls);
         if (sequence.current === controller) sequence.current = undefined;
         return;
       }
-      install(canonical, push, scrolls, true, activation);
+      install(canonical, push, scrolls, true, activated);
       if (sequence.current === controller) sequence.current = undefined;
     },
     [input.catalogue, input.context.delivery, input.interactive, install],
   );
   const navigate = useCallback(
-    (href: string, activation: ReturnType<typeof navActivationAxes> = {}) =>
-      transition(new URL(href, window.location.href), true, {}, activation),
+    (href: string) => transition(new URL(href, window.location.href), true),
     [transition],
   );
   const navigateHistory = useCallback(
@@ -293,9 +296,37 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
       if (!anchor || !eligibleShellAnchor(event, anchor, window.location))
         return;
       event.preventDefault();
-      const activation =
-        state.selection.view === "changes" ? navActivationAxes(anchor) : {};
-      void navigate(anchor.href, activation);
+      const requested = new URL(anchor.href, window.location.href);
+      const route = routeFromUrl(
+        input.catalogue,
+        requested,
+        input.context.delivery,
+      );
+      const activated = anchor.hasAttribute("data-nav-row")
+        ? changesActivation(
+            input.catalogue,
+            input.context,
+            state.selection,
+            route,
+          )
+        : route;
+      if (activated === route || activated.view.kind !== "target") {
+        void navigate(requested.href);
+        return;
+      }
+      const href = routeHref(
+        activated.view.target.entry.route,
+        activated.fragment,
+        activated.variant,
+        {
+          ...(activated.comparison ? { comparison: activated.comparison } : {}),
+          ...(activated.instance ? { instance: activated.instance } : {}),
+          ...(activated.variantValues
+            ? { variantValues: activated.variantValues }
+            : {}),
+        },
+      );
+      void transition(new URL(href, requested), true, {}, activated);
     },
     onShellKeyDown: (event) => {
       if (event.key !== "Escape") return;

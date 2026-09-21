@@ -486,8 +486,7 @@ component shell makes the band conditional on a Changed shown view, a Removed
 component saved variant, or verified affected-consumer evidence. The updated
 mockups omit it on every Browse, Added or Unmodified shown view, Removed screen,
 shared-impact-only, ignored-only, excluded-stylesheet-only, and empty state.
-Removed screens show a status badge over their previous version labelled
-“Showing previous
+Removed screens show a status badge over their previous version labelled “Showing previous
 version” under [removed previews](./mokly-removed-previews.md). A removed screen
 keeps the grouped viewport and theme controls, with the theme control disabled
 because Light is the only scheme its previous views were rendered in.

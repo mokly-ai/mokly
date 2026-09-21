@@ -21,7 +21,7 @@ Every export includes the standalone hydration bundle and matching document
 entry. Live host capability modules remain excluded from the static inventory.
 Removed screens, including screen variants, and pages use the shared catalogue
 change snapshots. A removed variant retains its baseline parent relationship;
-page removal preserves ancestor context without introducing visual comparisons.
+removal preserves ancestor context without introducing visual comparisons.
 Changes-enabled delivery captures every removed page from the same pinned
 baseline before installation. Its typed metadata is written as
 `pages/<route>.json` beside `review.json`, while its original document and local
@@ -45,9 +45,7 @@ unresolved, and excluded stylesheets in Current without fetching comparison
 JSON, and no extra classification pass is needed for this projection.
 The projection omits views without retained or excluded resources and drops
 screens whose evidence slice is empty. Comparison JSON separately retains all
-view states and the material-change flag. The shell evidence separately carries
-every v2 view state, matching Serve so screen-only exports retain their
-changed-view marks and Details row.
+view states and the material-change flag.
 
 With comparisons enabled, derived mode awaits `prepareReviewRepository` before
 compiling or capturing head input. Public capture and its final recheck substitute the accepted

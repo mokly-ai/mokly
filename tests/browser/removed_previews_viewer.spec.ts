@@ -29,8 +29,8 @@ for (const adapter of ["same-origin", "cross"]) {
     );
     await page.locator('#viewer a[data-route="screens/removed.html"]').click();
     await expect(
-      page.frameLocator(`${stage} .mbk-frame-mobile iframe`).locator("h1"),
-    ).toHaveText("Previous mobile screen");
+      page.frameLocator(`${stage} .mbk-frame-desktop iframe`).locator("h1"),
+    ).toHaveText("Previous desktop screen");
     await expect(page.locator(`#viewer .mbk-diff-toolbar`)).toHaveCount(0);
     expect(
       requests.filter((url) => /\/__mokly\/diffs\/review\.json\?/.test(url)),
@@ -69,13 +69,13 @@ test("a viewer selection change fences the previous request", async ({
   );
   await page.locator('#viewer a[data-route="screens/removed.html"]').click();
   await expect(
-    page.frameLocator(`${stage} .mbk-frame-mobile iframe`).locator("h1"),
-  ).toHaveText("Previous mobile screen");
+    page.frameLocator(`${stage} .mbk-frame-desktop iframe`).locator("h1"),
+  ).toHaveText("Previous desktop screen");
   release();
   await expect.poll(() => handled && settled).toBe(true);
   await expect(
-    page.frameLocator(`${stage} .mbk-frame-mobile iframe`).locator("h1"),
-  ).toHaveText("Previous mobile screen");
+    page.frameLocator(`${stage} .mbk-frame-desktop iframe`).locator("h1"),
+  ).toHaveText("Previous desktop screen");
   await expect(page.locator(".mbk-preview-status")).toHaveCount(0);
 });
 

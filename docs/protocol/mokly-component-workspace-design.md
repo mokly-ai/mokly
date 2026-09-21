@@ -104,8 +104,8 @@ neither a ready result nor screen-view evidence exists, retain route-level statu
 eligibility. Viewport, scheme, saved-variant, and background-evidence changes
 recompute both without a page load. When the shown view is Unmodified, its band
 is absent and the view-control marks and `Changed views` row identify changed
-views elsewhere. Removed screens show their badge without a comparison mode row,
-over their previous version under
+views elsewhere. Removed screens show their badge without a comparison mode
+row, over their previous version under
 [removed previews](./mokly-removed-previews.md). Temporary prop
 edits never create committed changes or make comparison controls appear.
 

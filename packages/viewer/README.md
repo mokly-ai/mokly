@@ -14,8 +14,9 @@ transport, surrounding product UI, authentication and selection routing.
 
 ## What This Package Does
 
-- Renders pages, component variants, screen previews and ordered user flows with
-  the existing Browse search, Changes filter, inspector and comparisons.
+- Renders pages, component variants, screen previews and their saved variants,
+  and ordered user flows with the existing Browse search, Changes filter,
+  inspector and comparisons.
 - Supports controlled selection, React slots, selection and inspection events,
   and an imperative handle for choosing, highlighting, scrolling and picking.
 - Provides same-origin and explicitly configured cross-origin frame adapters.

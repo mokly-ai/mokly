@@ -1,10 +1,6 @@
 // The served collapsible details inspector: a native <details> bar above a
 // two-column body with prose on the left and metadata rows on the right —
-// populated from the manifest entry for the selected route: description,
-// rationale, source and generated paths, the views a classification marked
-// changed, declared tags, related docs, dependencies, the variants a screen
-// declares or belongs to, and the use cases a screen belongs to. The rows
-// themselves live in `details_rows.tsx`.
+// populated from the manifest entry for the selected route.
 
 import type { ColorScheme } from "../data/axes.js";
 import type { ManifestScreen } from "../registry/types.js";
@@ -43,7 +39,7 @@ function schemeNames(screen: ManifestScreen): string {
 
 export function EntryDetailsBody(props: {
   catalogue: Catalogue;
-  changedViews?: readonly ChangedView[] | undefined;
+  changedViews?: readonly ChangedView[];
   entry: RoutedEntry;
 }) {
   const entry = props.entry;

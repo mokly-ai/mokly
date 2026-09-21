@@ -133,7 +133,7 @@ test("discovery reports an inaccessible directory with config-invalid and EACCES
     "readdirSync",
     (...args: Parameters<typeof fs.readdirSync>) => {
       if (args[0] === inaccessible)
-        throw Object.assign(new Error("permission denied"), { code: "EACCES" });
+        throw Object.assign(new Error("inaccessible"), { code: "EACCES" });
       return Reflect.apply(readdir, fs, args);
     },
   );

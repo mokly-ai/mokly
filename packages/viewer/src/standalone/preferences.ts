@@ -3,7 +3,7 @@
 import type { ShellInitialState } from "../shell/store_state.js";
 
 import {
-  applyDisclosureOpen,
+  setDisclosureOpen,
   readEarlyDetailsOpen,
   readEarlyDisclosures,
   persistHydrationDisclosures,
@@ -69,8 +69,7 @@ function applyDisclosures(
     "[data-nav-disclosure]",
   )) {
     const key = group.getAttribute("data-nav-disclosure");
-    if (key && values[key] !== undefined)
-      applyDisclosureOpen(doc, group, values[key]);
+    if (key && values[key] !== undefined) setDisclosureOpen(group, values[key]);
   }
 }
 

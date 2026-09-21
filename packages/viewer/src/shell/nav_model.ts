@@ -23,7 +23,7 @@ export function catalogueNavSections(
       route: entry.route,
       tags: entry.tags ?? [],
       removedPage: entry.kind === "page",
-      ...(variantOf ? { variantOf } : {}),
+      ...(variantOf === undefined ? {} : { variantOf }),
     };
   });
   return buildNavSections(catalogue.hierarchy, removed);
@@ -116,7 +116,10 @@ function collectDefaults(
   for (const node of nodes) {
     if (node.kind === "leaf") {
       if (node.entryId && node.variants?.length)
-        result[variantKey(section, node.entryId)] = containsRoute(node, route);
+        result[variantDisclosureKey(section, node.entryId)] = containsRoute(
+          node,
+          route,
+        );
       continue;
     }
     result[collectionKey(section, node.key)] =
@@ -132,12 +135,15 @@ function nodePath(
 ): string[] | undefined {
   for (const node of nodes) {
     if (node.kind === "leaf") {
-      if (node.route === route) return [];
+      if (node.route === route)
+        return node.entryId && node.variants?.length
+          ? [variantDisclosureKey(section, node.entryId)]
+          : [];
       if (
         node.entryId &&
         node.variants?.some((variant) => variant.route === route)
       )
-        return [variantKey(section, node.entryId)];
+        return [variantDisclosureKey(section, node.entryId)];
       continue;
     }
     const child = nodePath(node.children, section, route);
@@ -163,6 +169,10 @@ function collectionKey(section: NavSectionNode["id"], key: string): string {
   return `collection:${section}:${id}`;
 }
 
-function variantKey(section: NavSectionNode["id"], parentId: string): string {
+/** Persisted disclosure identity for one screen's variant list. */
+export function variantDisclosureKey(
+  section: NavSectionNode["id"],
+  parentId: string,
+): string {
   return `variants:${section}:${parentId}`;
 }

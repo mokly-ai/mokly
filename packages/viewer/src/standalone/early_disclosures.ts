@@ -187,7 +187,7 @@ function applyStoredDisclosures(
   )) {
     const key = group.getAttribute("data-nav-disclosure");
     if (!key || !isDisclosureKey(key)) continue;
-    applyDisclosureOpen(doc, group, !isDisclosureClosed(closed, key));
+    setDisclosureOpen(group, !isDisclosureClosed(closed, key));
   }
 }
 
@@ -221,32 +221,34 @@ function isDisclosureClosed(closed: ReadonlySet<string>, key: string): boolean {
 function isDisclosureKey(value: string): boolean {
   return (
     value.startsWith("collection:") ||
-    value.startsWith("variants:") ||
+    /^variants:(?:components|pages):[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value) ||
     value === "section:pages" ||
     value === "section:components"
   );
 }
 
-/** Read either a native details group or a screen-variant disclosure. */
+/** Read either a native group or a screen-variant list disclosure. */
 export function disclosureOpen(group: HTMLElement): boolean {
-  return group instanceof HTMLDetailsElement ? group.open : !group.hidden;
+  return group.hasAttribute("data-nav-variants")
+    ? !group.hidden
+    : (group as HTMLDetailsElement).open;
 }
 
-/** Reflect one disclosure value into the server DOM before React adopts it. */
-export function applyDisclosureOpen(
-  doc: Document,
-  group: HTMLElement,
-  open: boolean,
-): void {
-  if (group instanceof HTMLDetailsElement) {
-    group.open = open;
+/** Apply one disclosure value to its container and associated button. */
+export function setDisclosureOpen(group: HTMLElement, open: boolean): void {
+  if (!group.hasAttribute("data-nav-variants")) {
+    (group as HTMLDetailsElement).open = open;
     return;
   }
-  if (!group.hasAttribute("data-nav-variants")) return;
   group.hidden = !open;
-  const toggle = [
-    ...doc.querySelectorAll<HTMLElement>("[data-nav-variants-toggle]"),
-  ].find((candidate) => candidate.getAttribute("aria-controls") === group.id);
+  const id = group.id;
+  const toggle = id
+    ? [
+        ...group.ownerDocument.querySelectorAll<HTMLElement>(
+          "[data-nav-variants-toggle]",
+        ),
+      ].find((candidate) => candidate.dataset["navVariantsToggle"] === id)
+    : undefined;
   if (!toggle) return;
   toggle.setAttribute("aria-expanded", String(open));
   const label = toggle.getAttribute("data-nav-variants-label");
