@@ -25,8 +25,10 @@ that decides whether the theme and viewport controls carry a mark.
 recomputes from it, so a mark can never disagree between the two.
 `workspace_views_data.ts` derives the changed views themselves, preferring a
 ready comparison result and falling back to the lightweight screen-view
-evidence a screen-only catalogue records; `css_workspace_marks.ts` draws the
-dot and clips its wording.
+evidence a screen-only catalogue records. Workspace data keys those lists by
+saved-variant id for components and entry id for screens, so every reader must
+select the evidence that belongs to the preview; `css_workspace_marks.ts` draws
+the dot and clips its wording.
 
 `css.ts` concatenates the standalone stylesheet. Split string modules preserve
 its exact bytes. The package build scopes an embedded stylesheet separately and

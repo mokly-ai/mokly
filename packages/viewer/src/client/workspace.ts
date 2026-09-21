@@ -202,7 +202,7 @@ export function installWorkspace(
               toggle.focus();
             },
           );
-    syncViewControls(doc, root, data);
+    syncViewControls(doc, root, data, variant.variant?.value.id);
   };
   const activateVariant = () => {
     applyVariant(root, data, variant.variant, variant.error, {
@@ -217,7 +217,7 @@ export function installWorkspace(
     expanded.clear();
     activateVariant();
   };
-  applyInitialView(doc, win, data);
+  applyInitialView(doc, win, data, variant.variant?.value.id);
   applyVariant(root, data, variant.variant, variant.error, {
     preservePreview: Boolean(inspection),
   });

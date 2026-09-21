@@ -1,7 +1,9 @@
 /** Workspace values derived only from the validated public catalogue. */
 import type {
+  CatalogueComponent,
   CatalogueReadModel,
   CatalogueRoutedEntry,
+  CatalogueScreen,
   CatalogueView,
 } from "../catalogue/types.js";
 import { generatedViews } from "../components/views.js";
@@ -11,6 +13,7 @@ import type {
   UsageLink,
   WorkspaceData,
 } from "../shell/workspace_data.js";
+import type { ChangedViewsBySelection } from "../shell/workspace_views_data.js";
 
 import { displayEntry } from "./projection.js";
 import { routedEntries } from "./selection.js";
@@ -37,6 +40,20 @@ function publishedChangedViews(
         ? [{ colorScheme: view.colorScheme, viewport: view.viewport }]
         : [],
     ),
+  );
+}
+
+/** Key public comparison evidence exactly like the served workspace data. */
+function publishedChangedViewsBySelection(
+  entry: CatalogueComponent | CatalogueScreen,
+): ChangedViewsBySelection {
+  if (entry.kind === "screen")
+    return { [entry.id]: publishedChangedViews(entry.views) };
+  return Object.fromEntries(
+    entry.variants.map((variant) => [
+      variant.id,
+      publishedChangedViews(variant.views),
+    ]),
   );
 }
 
@@ -104,11 +121,7 @@ export function publicWorkspace(
       ),
     ].map(({ id, title, route }) => ({ id, title, route })),
     views: generatedViews(entry),
-    changedViews: publishedChangedViews(
-      original.kind === "screen"
-        ? original.views
-        : (original.variants[0]?.views ?? []),
-    ),
+    changedViews: publishedChangedViewsBySelection(original),
     variants,
     usedBy,
     affected: [],

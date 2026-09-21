@@ -25,6 +25,11 @@ test("isolated comparisons stay lazy, immutable, sandboxed, and responsive", asy
     if (response.status() >= 400) failures.push(response.url());
   });
   await page.goto(`${site.url}/view/screens/home.html`);
+  await expect(page.locator('[data-view-changed="scheme"]')).toBeVisible();
+  await page.getByRole("tab", { name: "Details", exact: true }).click();
+  await expect(page.locator("[data-workspace-changed-views]")).toContainText(
+    "Mobile · Light, Mobile · Dark, Desktop · Light, Desktop · Dark",
+  );
   expect(requests.some((url) => /\/diffs\/|\/events/.test(url))).toBe(false);
   const modes = page.getByRole("group", { name: "Comparison mode" });
   for (const width of [1280, 390]) {

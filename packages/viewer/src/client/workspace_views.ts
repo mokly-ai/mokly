@@ -13,6 +13,7 @@ import {
   viewMarks,
 } from "../shell/view_marks.js";
 import type { WorkspaceData } from "../shell/workspace_data.js";
+import { selectedChangedViews } from "../shell/workspace_views_data.js";
 
 import { consumeChangesLanding } from "./browse_landing.js";
 import {
@@ -53,11 +54,13 @@ export function applyViewEvidence(
   data: WorkspaceData,
   viewport: "both" | Viewport,
   scheme: ColorScheme,
+  variantId?: string,
 ): void {
-  const marks = viewMarks(data.changedViews, viewport, scheme);
+  const views = selectedChangedViews(data.entry, data.changedViews, variantId);
+  const marks = viewMarks(views, viewport, scheme);
   applyViewMark(root, "scheme", marks.scheme);
   applyViewMark(root, "viewport", marks.viewport);
-  const label = changedViewsLabel(data.changedViews);
+  const label = changedViewsLabel(views);
   const value = root.querySelector<HTMLElement>(
     "[data-workspace-changed-views-value]",
   );
@@ -71,6 +74,7 @@ export function syncViewControls(
   doc: Document,
   root: HTMLElement,
   data: WorkspaceData,
+  variantId?: string,
 ): void {
   const viewport = currentViewport(doc);
   const scheme = currentColorScheme(doc);
@@ -79,7 +83,7 @@ export function syncViewControls(
   root
     .querySelector(CONTROLS.scheme)
     ?.setAttribute("aria-pressed", String(scheme === "dark"));
-  applyViewEvidence(root, data, viewport, scheme);
+  applyViewEvidence(root, data, viewport, scheme, variantId);
 }
 
 /**
@@ -92,6 +96,7 @@ export function applyInitialView(
   doc: Document,
   win: Window & typeof globalThis,
   data: WorkspaceData,
+  variantId?: string,
 ): void {
   const landing = consumeChangesLanding(win);
   const query = new URLSearchParams(win.location.search);
@@ -104,7 +109,11 @@ export function applyInitialView(
   if (VIEWPORT_VALUES.includes(viewport)) setViewport(doc, viewport);
   if (scheme === "light" || scheme === "dark") setColorScheme(doc, scheme);
   if (named || !landing) return;
-  const first = data.changedViews[0];
+  const first = selectedChangedViews(
+    data.entry,
+    data.changedViews,
+    variantId,
+  )[0];
   if (!first) return;
   setViewport(doc, first.viewport);
   setColorScheme(doc, first.colorScheme);

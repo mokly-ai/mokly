@@ -78,6 +78,55 @@ for (const resource of ["nested.css", "image.svg"]) {
   });
 }
 
+test("screen-only exports retain dark-only changed-view evidence", async (context) => {
+  const fixture = await changedFixture(
+    context,
+    validEntrySource(),
+    {
+      extraConfig: `colorSchemes: ["light", "dark"],
+stylesheets: [{ match: "screens/home.html", stylesheets: [], darkStylesheets: ["dark.css"] }],`,
+    },
+    async ({ mockupsDir }) => {
+      await fs.writeFile(
+        path.join(mockupsDir, "dark.css"),
+        "main { color: black; }\n",
+      );
+    },
+  );
+  await fs.writeFile(
+    path.join(fixture.mockupsDir, "dark.css"),
+    "main { color: red; }\n",
+  );
+
+  const result = await exportCatalogue(fixture.config, {
+    outDir: "site",
+    base: "HEAD",
+  });
+  const html = await fs.readFile(
+    path.join(result.outDir, "view/screens/home.html"),
+    "utf8",
+  );
+  const serialized = html.match(
+    /<script type="application\/json" data-workspace-data="">([\s\S]*?)<\/script>/,
+  );
+  assert.ok(serialized);
+  const workspace = JSON.parse(serialized[1]!) as {
+    changedViews: Readonly<Record<string, readonly unknown[]>>;
+  };
+  assert.deepEqual(workspace.changedViews.home, [
+    { colorScheme: "dark", viewport: "mobile" },
+    { colorScheme: "dark", viewport: "desktop" },
+  ]);
+  assert.match(
+    html,
+    /<span class="mbk-view-changed" aria-hidden="true" data-view-changed="scheme"><\/span>/,
+  );
+  assert.match(
+    html,
+    /data-workspace-changed-views=""><span class="mbk-meta-k">Changed views<\/span><span class="mbk-meta-v" data-workspace-changed-views-value="">Mobile · Dark, Desktop · Dark<\/span>/,
+  );
+});
+
 test("material Changes can use captured documents without reading current file bytes", async (context) => {
   const fixture = await changedFixture(context);
   const manifest = readManifest(fixture.config);

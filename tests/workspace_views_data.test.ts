@@ -9,6 +9,13 @@ import type { ShellContext } from "../packages/viewer/dist/shell/context.js";
 import { workspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 import { changedViews } from "../packages/viewer/dist/shell/workspace_views_data.js";
 
+import {
+  component,
+  componentBaseline,
+  componentManifest,
+  componentVariantResult,
+} from "./helpers/workspace_views_data_fixture.js";
+
 const screen = {
   darkFragments: {
     desktop: "screens/welcome.desktop.dark.html",
@@ -166,7 +173,7 @@ test("unknown evidence leaves the changed views empty", () => {
   );
 });
 
-test("workspace data publishes the changed views the client reads", () => {
+test("workspace data publishes one changed-view list for a screen", () => {
   const result = darkOnlyResult("changed");
   const catalogue = createCatalogue(manifest);
   const data = workspaceData(
@@ -174,11 +181,38 @@ test("workspace data publishes the changed views the client reads", () => {
     context({ baseline: manifest, result }),
     screen,
   );
-  assert.deepEqual(data.changedViews, DARK_VIEWS);
+  assert.deepEqual(data.changedViews, { welcome: DARK_VIEWS });
   assert.equal(data.status, "Changed");
-  assert.deepEqual(
-    workspaceData(catalogue, context(), screen).changedViews,
-    [],
+  assert.deepEqual(workspaceData(catalogue, context(), screen).changedViews, {
+    welcome: [],
+  });
+});
+
+test("workspace data keeps changed views with current and removed variants", () => {
+  const result = componentVariantResult();
+  const data = workspaceData(
+    createCatalogue(componentManifest),
+    {
+      base: "main",
+      componentChanges: { baseline: componentBaseline, result },
+      updateVersion: 1,
+    },
+    component,
+  );
+
+  assert.deepEqual(data.changedViews, {
+    default: [],
+    second: DARK_VIEWS,
+    removed: [
+      { viewport: "mobile", colorScheme: "light" },
+      { viewport: "mobile", colorScheme: "dark" },
+      { viewport: "desktop", colorScheme: "light" },
+      { viewport: "desktop", colorScheme: "dark" },
+    ],
+  });
+  assert.equal(
+    data.variants.find(({ value }) => value.id === "removed")?.removed,
+    true,
   );
 });
 

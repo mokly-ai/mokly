@@ -20,7 +20,9 @@ naming that destination, which `workspace_views.ts` reads and clears as the
 destination installs, so only an arrival from the filter lands on a changed
 view and Back, Forward, a direct URL and a reload stay sticky.
 `workspace_views.ts` also re-applies the changed-view marks and the
-`Changed views` row whenever the viewport, the scheme or the evidence changes.
+`Changed views` row whenever the saved variant, viewport, scheme or evidence
+changes. It selects a component's keyed list for the saved variant currently on
+screen; screens use their single entry-keyed list.
 `browse_evidence_variants.ts` keeps those lists aligned with a background
 baseline — a parent adopts its first list without losing its live row, a
 parent whose last removed variant returned drops the list and the mark, and

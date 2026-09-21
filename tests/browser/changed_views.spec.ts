@@ -1,6 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import type { ScreenViewChanges } from "../../packages/viewer/dist/shell/metadata.js";
+import { secondVariantDarkOnlyResult } from "../helpers/changed_view_fixture.js";
+import { controlsEntrySource } from "../helpers/component_controls_fixture.js";
 import { startEvidenceFixture } from "../helpers/evidence_fixture.js";
 
 import { expectFrameSource } from "./workspace_actions.js";
@@ -141,6 +143,39 @@ test("a background classification moves the marks without reloading the frames",
     await expect(
       page.frameLocator('[data-workspace-frame="mobile"]').locator("body"),
     ).toHaveAttribute("data-test-retained", "true");
+  } finally {
+    await fixture.close();
+  }
+});
+
+test("component view evidence follows the selected saved variant", async ({
+  page,
+}) => {
+  const fixture = await startEvidenceFixture(controlsEntrySource());
+  const { compilation, server } = fixture;
+  try {
+    server.publishUpdate({
+      kind: "evidence",
+      changedRoutes: [],
+      changesStatus: "ready",
+      componentChanges: {
+        baseline: compilation.manifest,
+        result: secondVariantDarkOnlyResult(),
+      },
+    });
+    await page.goto(`${server.url}/view/components/action.html`);
+
+    const row = page.locator("[data-workspace-changed-views]");
+    await expect(page.locator(SCHEME_DOT)).toBeHidden();
+    await expect(row).toBeHidden();
+
+    await page
+      .getByLabel("Saved variant", { exact: true })
+      .selectOption("disabled");
+
+    await expect(page.locator(SCHEME_DOT)).toBeVisible();
+    await expect(row).toBeVisible();
+    await expect(row).toHaveText("Changed viewsMobile · Dark, Desktop · Dark");
   } finally {
     await fixture.close();
   }

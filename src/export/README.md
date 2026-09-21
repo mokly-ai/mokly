@@ -29,7 +29,9 @@ unresolved, and excluded stylesheets in Current without fetching comparison
 JSON, and no extra classification pass is needed for this projection.
 The projection omits views without retained or excluded resources and drops
 screens whose evidence slice is empty. Comparison JSON separately retains all
-view states and the material-change flag.
+view states and the material-change flag. The shell evidence separately carries
+every v2 view state, matching Serve so screen-only exports retain their
+changed-view marks and Details row.
 
 With comparisons enabled, derived mode awaits `prepareReviewRepository` before
 compiling or capturing head input. Public capture and its final recheck substitute the accepted

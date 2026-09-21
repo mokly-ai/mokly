@@ -162,6 +162,16 @@ export function assembleExport(
                         ),
                     }))
                     .filter((screen) => screen.views.length > 0),
+                  screenViews: comparison.result.screens.map(
+                    ({ route, views }) => ({
+                      route,
+                      views: views.map(({ viewport, colorScheme, state }) => ({
+                        viewport,
+                        colorScheme,
+                        state,
+                      })),
+                    }),
+                  ),
                 }),
           },
         }

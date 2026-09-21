@@ -170,6 +170,8 @@ the sticky selection, unless the URL names a viewport or scheme. A direct URL,
 an All-filter activation, Back, Forward, and a reload all keep the sticky
 selection, because the arrival is recorded once by the activation and cleared
 by the destination.
+These marks and the `Changed views` row apply in exports with Changes as well as
+in Serve.
 
 Diffs render inside the existing main region with the catalogue, title, details,
 viewport, and scheme controls retained. Both viewports are supported. Snapshot

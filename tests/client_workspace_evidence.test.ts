@@ -138,11 +138,11 @@ test("a merged snapshot moves the view marks and the changed-views row", () => {
   const workspace = fakeWorkspace();
   const data = {
     base: "main",
-    changedViews: [],
+    changedViews: { default: [], disabled: [] },
     components: [],
     comparisonEligible: false,
     comparisons: true,
-    entry: { id: "home", kind: "screen", route: "screens/home.html" },
+    entry: { id: "action", kind: "component", route: "components/action.html" },
     inputChanges: [],
     relatedComponents: [],
     usedBy: [],
@@ -152,7 +152,7 @@ test("a merged snapshot moves the view marks and the changed-views row", () => {
     views: [],
   } as unknown as WorkspaceData;
 
-  applyViewEvidence(workspace.root, data, "both", "light");
+  applyViewEvidence(workspace.root, data, "both", "light", "default");
   assert.equal(workspace.dot("scheme").hidden, true);
   assert.equal(workspace.row.hidden, true);
   assert.equal(
@@ -163,12 +163,20 @@ test("a merged snapshot moves the view marks and the changed-views row", () => {
   mergeWorkspaceEvidence(data, {
     ...data,
     status: "Changed",
-    changedViews: [
-      { viewport: "mobile", colorScheme: "dark" },
-      { viewport: "desktop", colorScheme: "dark" },
-    ],
+    changedViews: {
+      default: [],
+      disabled: [
+        { viewport: "mobile", colorScheme: "dark" },
+        { viewport: "desktop", colorScheme: "dark" },
+      ],
+    },
   } as unknown as WorkspaceData);
-  applyViewEvidence(workspace.root, data, "both", "light");
+  applyViewEvidence(workspace.root, data, "both", "light", "default");
+
+  assert.equal(workspace.dot("scheme").hidden, true);
+  assert.equal(workspace.row.hidden, true);
+
+  applyViewEvidence(workspace.root, data, "both", "light", "disabled");
 
   assert.equal(workspace.dot("scheme").hidden, false);
   assert.equal(workspace.text("scheme").hidden, false);
@@ -180,7 +188,7 @@ test("a merged snapshot moves the view marks and the changed-views row", () => {
   assert.equal(workspace.row.hidden, false);
   assert.equal(workspace.value.textContent, "Mobile · Dark, Desktop · Dark");
 
-  applyViewEvidence(workspace.root, data, "mobile", "dark");
+  applyViewEvidence(workspace.root, data, "mobile", "dark", "disabled");
   assert.equal(workspace.dot("scheme").hidden, true);
   assert.equal(workspace.dot("viewport").hidden, false);
   assert.equal(
@@ -188,6 +196,10 @@ test("a merged snapshot moves the view marks and the changed-views row", () => {
     "mb-view-changed-viewport",
   );
   assert.equal(workspace.row.hidden, false);
+
+  applyViewEvidence(workspace.root, data, "mobile", "dark", "default");
+  assert.equal(workspace.dot("viewport").hidden, true);
+  assert.equal(workspace.row.hidden, true);
 });
 
 function fakeWorkspace() {

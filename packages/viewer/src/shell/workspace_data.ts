@@ -21,12 +21,14 @@ import { publicWorkspace } from "../viewer/public_workspace.js";
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import { dedupeUsageLinks } from "./usage_links.js";
-import type { ChangedView } from "./view_marks.js";
 import {
   inputChanges as entryInputChanges,
   type InputChange,
 } from "./workspace_input_changes.js";
-import { changedViews } from "./workspace_views_data.js";
+import {
+  changedViewsBySelection,
+  type ChangedViewsBySelection,
+} from "./workspace_views_data.js";
 
 export type EntryStatus = "Added" | "Changed" | "Removed" | "Unmodified";
 export interface WorkspaceVariant {
@@ -53,8 +55,11 @@ export interface WorkspaceData {
   entry: ManifestScreen | ManifestComponent;
   components: readonly Pick<ManifestComponent, "id" | "title" | "route">[];
   views: readonly GeneratedComponentView[];
-  /** Views a ready classification marked changed, in canonical order. */
-  changedViews: readonly ChangedView[];
+  /**
+   * Canonically ordered changed views, keyed by saved-variant id for a
+   * component and by the entry id for a screen.
+   */
+  changedViews: ChangedViewsBySelection;
   variants: readonly WorkspaceVariant[];
   usedBy: readonly UsageLink[];
   affected: readonly UsageLink[];
@@ -225,11 +230,11 @@ export function workspaceData(
       delete demand.usage;
       return demand;
     }),
-    changedViews: changedViews(
+    changedViews: changedViewsBySelection(
       entry,
       context,
       comparison,
-      variants[0]?.value.id,
+      variants.map(({ value }) => value.id),
     ),
     variants,
     usedBy: (catalogue.manifest.schemaVersion === "live-index-1"

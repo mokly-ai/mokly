@@ -3,7 +3,8 @@
 Status: active. Created 2026-09-19 with the user's consent after the design
 discussion in this workspace, then rewritten the same day when the user chose
 own routes over a query parameter. Milestones 1 to 7 are complete;
-Milestone 8 is next.
+Milestones 1 to 8 are complete; Milestone 9 is next and needs the user's
+approval first.
 
 **Goal:** Let a screen declare variants beside its default render, show them as
 an expandable list under the screen's navigation row, give each variant its
@@ -614,8 +615,8 @@ Serve and in every export.
 
 **Steps:**
 
-- [ ] Write the failing tests, then implement.
-- [ ] `npm test && npm run test:browser` green.
+- [x] Write the failing tests, then implement.
+- [x] `npm test && npm run test:browser` green.
 
 #### Task 8.2: Per-view states in screen-only exports
 
@@ -633,9 +634,9 @@ Serve and in every export.
 
 **Steps:**
 
-- [ ] Write the failing tests, then implement.
-- [ ] `npm test && npm run test:browser` green.
-- [ ] Milestone close-out: run `cargo xtask check`; commit
+- [x] Write the failing tests, then implement.
+- [x] `npm test && npm run test:browser` green.
+- [x] Milestone close-out: run `cargo xtask check`; commit
       `fix(browse): keep view evidence on screen` and push.
 
 ---

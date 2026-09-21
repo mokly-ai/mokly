@@ -287,6 +287,8 @@ same rule whenever either changes or fresh evidence arrives. The details
 inspector lists the same views as `Changed views`, in mobile-before-desktop and
 light-before-dark order, and hides the row while nothing is named. A light-only
 catalogue renders no scheme control and therefore no scheme mark.
+For a component, this evidence describes the selected saved variant and changes
+with that selection.
 
 Opening a changed row while the Changes filter is selected lands on the first
 changed view instead of the sticky selection. Arriving from the filter is an

@@ -117,7 +117,13 @@ export function updateWorkspaceEvidence(
   const panel = root.querySelector<HTMLElement>("[data-workspace-evidence]");
   copyChildren(panel, evidence);
   if (panel) panel.hidden = evidence.hidden;
-  applyViewEvidence(root, data, currentViewport(doc), currentColorScheme(doc));
+  applyViewEvidence(
+    root,
+    data,
+    currentViewport(doc),
+    currentColorScheme(doc),
+    selected.variant?.value.id,
+  );
   const json = root.querySelector("[data-workspace-data]");
   if (json) json.textContent = JSON.stringify(data);
   restoreRegionScrolls(doc, scrolls);

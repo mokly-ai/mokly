@@ -3,6 +3,7 @@ import type { Catalogue } from "./catalogue.js";
 import { EntryDetailsBody } from "./details.js";
 import type { WorkspaceData } from "./workspace_data.js";
 import { WorkspaceIcon, type WorkspaceIconName } from "./workspace_icons.js";
+import { selectedChangedViews } from "./workspace_views_data.js";
 
 export function Inspector({
   catalogue,
@@ -110,7 +111,11 @@ export function Inspector({
               <>
                 <EntryDetailsBody
                   catalogue={catalogue}
-                  changedViews={data.changedViews}
+                  changedViews={selectedChangedViews(
+                    data.entry,
+                    data.changedViews,
+                    data.variants[0]?.value.id,
+                  )}
                   entry={data.entry}
                 />
                 <section

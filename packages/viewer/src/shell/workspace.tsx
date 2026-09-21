@@ -7,6 +7,7 @@ import { Inspector } from "./inspector.js";
 import { TargetStage } from "./stages.js";
 import { WorkspaceControls } from "./workspace_controls.js";
 import { workspaceData, type WorkspaceData } from "./workspace_data.js";
+import { selectedChangedViews } from "./workspace_views_data.js";
 
 export function ComponentWorkspace({
   catalogue,
@@ -20,6 +21,11 @@ export function ComponentWorkspace({
   const target = { kind: "entry" as const, entry };
   const head = targetHead(catalogue, target);
   const data = workspaceData(catalogue, context, entry);
+  const initialChangedViews = selectedChangedViews(
+    entry,
+    data.changedViews,
+    data.variants[0]?.value.id,
+  );
   const eligible =
     entry.kind === "component"
       ? (data.variants[0]?.comparisonEligible ?? false)
@@ -49,7 +55,7 @@ export function ComponentWorkspace({
         crumbs={head.crumbs}
         action={
           <WorkspaceControls
-            changedViews={data.changedViews}
+            changedViews={initialChangedViews}
             dark={catalogue.hasDarkFragments}
           />
         }
