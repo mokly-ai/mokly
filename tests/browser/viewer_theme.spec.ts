@@ -106,12 +106,18 @@ test("an appearance change preserves everything the reader is doing", async ({
 
   const before = await page.evaluate(() => {
     const frame = document.querySelector<HTMLIFrameElement>("#one .mbk-frag")!;
-    const identity =
-      (frame as unknown as { __identity?: number }).__identity ?? Math.random();
-    (frame as unknown as { __identity?: number }).__identity = identity;
+    // Tag each element, so a remount is visible as a lost tag rather than
+    // something a selector would happily find again.
+    const mark = (element: Element | null): number | undefined => {
+      if (!element) return undefined;
+      const tagged = element as unknown as { __identity?: number };
+      tagged.__identity ??= Math.random();
+      return tagged.__identity;
+    };
     const host = window.viewerHarness.get("one");
     return {
-      identity,
+      identity: mark(frame),
+      layer: mark(document.querySelector("#one [data-mokly-marker-layer]")),
       src: frame.src,
       events: host.events.length,
       requests: performance
