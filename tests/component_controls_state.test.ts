@@ -3,11 +3,24 @@ import test from "node:test";
 
 import { settledRenderCapability } from "./helpers/component_controls_state.js";
 
-const capability = { token: "test-token", generation: "test-generation" };
+const capability = { token: "b".repeat(64), generation: "a".repeat(32) };
 
 function shell(status?: string, usageComplete = true): string {
   const state = status ? `data-changes-status="${status}"` : "";
-  return `<body data-mokly-update-version="4" ${state}><script data-workspace-data="">${JSON.stringify({ renderCapability: capability, usageComplete })}</script></body>`;
+  const descriptor = {
+    renderCapability: capability,
+    schemaVersion: 1,
+    source: {
+      base: "main",
+      catalogueId: "c".repeat(64),
+      contentRevision: 4,
+      evidenceRevision: 4,
+      renderGeneration: capability.generation,
+      updateVersion: 4,
+    },
+    workspace: { usageComplete },
+  };
+  return `<body data-mokly-update-version="4" ${state}><script data-mokly-host-capability-state="" type="application/json">${JSON.stringify(descriptor)}</script></body>`;
 }
 
 test("completed usage does not settle controls while Changes is pending", () => {
@@ -34,7 +47,9 @@ test("partial usage cannot supply a settled controls baseline", () => {
 test("settled controls require both authority and a published version", () => {
   const ready = shell("ready");
   assert.equal(
-    settledRenderCapability(ready.replace('data-workspace-data=""', "")),
+    settledRenderCapability(
+      ready.replace('data-mokly-host-capability-state=""', ""),
+    ),
     undefined,
   );
   assert.equal(
@@ -43,6 +58,12 @@ test("settled controls require both authority and a published version", () => {
   );
   assert.equal(
     settledRenderCapability(ready.replace(JSON.stringify(capability), "null")),
+    undefined,
+  );
+  assert.equal(
+    settledRenderCapability(
+      ready.replace('"updateVersion":4', '"updateVersion":5'),
+    ),
     undefined,
   );
 });

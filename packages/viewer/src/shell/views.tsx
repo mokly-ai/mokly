@@ -2,6 +2,7 @@
 // home, missing-route, and target views, plus the title and
 // active-route helpers the document scaffold and progressive navigation use.
 
+import { canonicalJson } from "../components/data.js";
 import { sha256 } from "../data/sha256.js";
 
 import type { Catalogue } from "./catalogue.js";
@@ -14,6 +15,7 @@ import {
   targetHead,
   ViewportSwitch,
 } from "./head.js";
+import { useShellIdentifier } from "./identifier_context.js";
 import { EmptyStage, TargetStage } from "./stages.js";
 import type { RouteTarget } from "./target.js";
 import { ComponentWorkspace } from "./workspace.js";
@@ -165,6 +167,7 @@ export function ShellMain(props: {
   context: ShellContext;
   view: ShellView;
 }) {
+  const mainId = useShellIdentifier("mb-main");
   const route = activeRouteForView(props.view);
   const baseline = props.catalogue.removedEntries.find(
     ({ entry }) => entry.route === route,
@@ -174,9 +177,9 @@ export function ShellMain(props: {
       className="mbk-main"
       data-mokly-view=""
       data-mokly-baseline={
-        baseline ? sha256(JSON.stringify(baseline)) : undefined
+        baseline ? sha256(canonicalJson(baseline)) : undefined
       }
-      id="mb-main"
+      id={mainId}
       tabIndex={-1}
     >
       {props.view.kind === "home" ? (
@@ -193,6 +196,7 @@ export function ShellMain(props: {
             catalogue={props.catalogue}
             context={props.context}
             entry={props.view.target.entry}
+            key={props.view.target.entry.route}
           />
         ) : (
           <TargetView

@@ -19,8 +19,15 @@ Browse shell in React hosts using the public
 [catalogue read model](./docs/protocol/mokly-catalogue.md). It provides controlled
 screen and saved-variant selection, slots, inspection events, exact multi-instance
 highlighting, host-owned instance markers, an imperative handle and
-[frame adapters](./docs/protocol/mokly-frame-adapter.md). Serve and export use its
-static renderer and vanilla enhancements; exported browsers contain no React.
+[frame adapters](./docs/protocol/mokly-frame-adapter.md). Serve and export render
+its shell tree on the server and hydrate it in the browser with its bundled
+React, so every delivery mode runs one shell. Implementation and delivery work
+is tracked in the [plans index](./plans/README.md).
+Embedded hosts give each viewer a stable, document-unique `viewerId` and reuse
+it across server rendering and hydration, keeping links and accessibility
+relationships isolated when several viewers share a page.
+Static pages retain their complete first paint and share one catalogue file,
+validated before hydration, instead of copying the catalogue into every page.
 Both packages build, release and are tested together. The viewer publishes before
 the CLI, which depends on its exact version. Viewer 0.1.0 and CLI 0.10.0 were
 published together; local Serve/export presentation remains unchanged.
@@ -850,8 +857,8 @@ bridge; unsupported platforms or filesystems fail without a replacing fallback.
 Each complete export has its own content-derived deployment identity, separate
 from comparison generations. Navigation from an old tab performs a full reload
 when the deployed catalogue, assets, or host aliases change, even if the
-comparison files are unchanged. Within one deployment, navigation remains
-progressive. Hosting must revalidate mutable files so that reload can fetch them.
+comparison files are unchanged. Within one deployment, navigation stays
+in-shell. Hosting must revalidate mutable files so that reload can fetch them.
 
 Exports also include an inert `__mokly/client/inspector.js` for explicit
 cross-origin hosts. Current owned copies contain its bounded identity map;
@@ -1059,7 +1066,7 @@ canonical destinations and the controls that remain visual depictions.
 - [`src/build`](./src/build) — single-graph bundling, compilation, links, check,
   and transactional writes.
 - [`packages/viewer`](./packages/viewer/README.md) — React/SSR shell, catalogue
-  readers, navigation, adapters, inspection and reusable browser enhancements.
+  readers, navigation, frame adapters, inspection and live host capabilities.
 - [`src/server`](./src/server) — manifest-backed HTTP and the watched child lifecycle.
 - [`src/client`](./src/client) — private Serve updates, controls and on-demand loading.
 - [`packages/viewer/src/navigation`](./packages/viewer/src/navigation) and
@@ -1098,9 +1105,8 @@ in the [plans index](./plans/README.md).
 - [Instance identity](./docs/protocol/mokly-instances.md),
   [public catalogue](./docs/protocol/mokly-catalogue.md),
   [viewer API](./docs/protocol/mokly-viewer.md), and
-  [frame adapters](./docs/protocol/mokly-frame-adapter.md) — identity, catalogue and
-  adapters are implemented; the viewer package is verified and awaiting its
-  first release.
+  [frame adapters](./docs/protocol/mokly-frame-adapter.md) — shared data,
+  selection, inspection and transport contracts for the published viewer package.
 - [Package ownership boundary](./docs/architecture/package-boundary.md)
 - [Implementation review prompt](./docs/implementation-review-prompt.md)
 - [Implementation plans](./plans/README.md)

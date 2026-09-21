@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+
 import { compileCatalogue } from "../dist/build/compile.js";
 import { capturePublicFiles } from "../dist/export/public_files.js";
 import { assembleExport } from "../dist/export/site.js";
@@ -10,8 +13,6 @@ import {
   childUpdateMessage,
   parseChildUpdateMessage,
 } from "../dist/server/update_messages.js";
-import { renderWorkspaceEvidence } from "../packages/viewer/dist/client/workspace_evidence.js";
-import { mergeWorkspaceEvidence } from "../packages/viewer/dist/client/workspace_updates.js";
 import type {
   ScreenReview,
   ViewResourceEvidence,
@@ -21,9 +22,10 @@ import {
   workspaceData,
   type WorkspaceData,
 } from "../packages/viewer/dist/shell/workspace_data.js";
+import { WorkspaceEvidence } from "../packages/viewer/dist/shell/workspace_evidence.js";
+import { mergeWorkspaceEvidence } from "../packages/viewer/dist/shell/workspace_evidence_merge.js";
 
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
-import { FakeMarkupDocument, fakeMarkup } from "./helpers/fake_markup.js";
 
 for (const [name, edit, resource] of [
   ["matched and excluded rules", ".auth { padding: 2px; }", "shared.css"],
@@ -80,9 +82,7 @@ for (const [name, edit, resource] of [
       assert.deepEqual(data.resourceEvidence, resourceViews(screen));
       assert.equal(data.change, undefined);
       assert.equal(data.comparison, undefined);
-      const node = new FakeMarkupDocument().createElement("section");
-      renderWorkspaceEvidence(node as unknown as HTMLElement, data);
-      const markup = fakeMarkup(node);
+      const markup = renderEvidence(data);
       if (name === "matched and excluded rules") {
         assert.match(
           markup,
@@ -96,10 +96,13 @@ for (const [name, edit, resource] of [
       delete pending.status;
       mergeWorkspaceEvidence(data, pending);
       assert.equal(data.resourceEvidence, undefined);
-      renderWorkspaceEvidence(node as unknown as HTMLElement, data);
-      assert.equal(node.hidden, true);
+      assert.match(renderEvidence(data), / hidden=""/);
     }
   });
+}
+
+function renderEvidence(data: WorkspaceData): string {
+  return renderToStaticMarkup(createElement(WorkspaceEvidence, { data }));
 }
 
 test("static screen-only shells project evidence from the existing v2 comparison", async (t) => {

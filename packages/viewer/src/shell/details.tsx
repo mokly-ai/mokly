@@ -14,6 +14,7 @@ import type { ManifestScreen, ManifestUseCase } from "../registry/types.js";
 
 import type { Catalogue } from "./catalogue.js";
 import { ChevronIcon, FlowIcon } from "./icons.js";
+import { useOptionalShellStore } from "./store_context.js";
 import { TagChip } from "./tags.js";
 import type { RoutedEntry, RouteTarget } from "./target.js";
 
@@ -178,8 +179,18 @@ export function DetailsPanel(props: {
   catalogue: Catalogue;
   target: RouteTarget;
 }) {
+  const store = useOptionalShellStore();
+  const open = store?.state.detailsOpen ?? false;
   return (
-    <details className="mbk-details" data-mokly-details="">
+    <details
+      className="mbk-details"
+      data-mokly-details=""
+      onToggle={(event) => {
+        if (store?.interactive && event.currentTarget.open !== open)
+          store.setDetails(event.currentTarget.open);
+      }}
+      open={open}
+    >
       <summary className="mbk-details-bar">
         <span className="chev">
           <ChevronIcon size={12} />

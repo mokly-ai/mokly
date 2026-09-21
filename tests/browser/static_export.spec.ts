@@ -40,6 +40,11 @@ test("aliases and frame activations retain canonical files, fragments, and histo
   await expect(page).toHaveURL(
     `${site.url}/view/screens/home.html?fragment=home-mobile`,
   );
+  await expect(page.locator("html")).toHaveAttribute("data-mokly-hydrated", "");
+  await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
+    "data-mokly-frame-state",
+    "ready",
+  );
   await page
     .locator("html")
     .evaluate((root) => root.setAttribute("data-test-retained", "yes"));

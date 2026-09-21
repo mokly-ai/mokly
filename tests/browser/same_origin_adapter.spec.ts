@@ -129,4 +129,73 @@ test("valid local logical navigation works without instance usage", async ({
     )
     .toBe(true);
   expect(page.url()).toBe(`${fixture.host.url}/`);
+
+  await page.evaluate(() =>
+    (window as unknown as FrameTestWindow).unsubscribe(),
+  );
+  await page
+    .frameLocator("#frame")
+    .getByRole("link", { name: "Open Action" })
+    .click();
+  await expect(
+    page.frameLocator("#frame").getByRole("button", {
+      name: "Continue",
+      exact: true,
+    }),
+  ).toBeVisible();
+});
+
+test("temporary previews authenticate masks and preserve logical navigation", async ({
+  page,
+}) => {
+  await page.goto(fixture.host.url);
+  await page.evaluate(
+    async ({ path, usageJson }) => {
+      const { temporaryPreviewAdapter } = (await import(
+        `${location.origin}/__mokly/client/same_origin_adapter.js`
+      )) as typeof LocalAdapter;
+      const state = window as unknown as FrameTestWindow;
+      const usage = JSON.parse(usageJson) as ComponentViewRecord;
+      const frame = document.querySelector<HTMLIFrameElement>("#frame")!;
+      frame.dataset["workspaceFrame"] = usage.viewport;
+      state.frameEvents = [];
+      state.mounted = await temporaryPreviewAdapter().mount(frame, {
+        url: new URL(path, location.origin),
+        usage: {
+          status: "ready",
+          ...usage,
+        },
+      });
+      state.unsubscribe = state.mounted.subscribe((event) =>
+        state.frameEvents.push(event),
+      );
+      const key = usage.instances.find((item) => item.id === "action")!.key;
+      await state.mounted.highlight([key], "pick");
+    },
+    {
+      path: fixture.temporaryPath,
+      usageJson: JSON.stringify(fixture.usage),
+    },
+  );
+
+  await expect(
+    page.locator(
+      `.mbk-highlight-layer[data-highlight-viewport="${fixture.usage.viewport}"]`,
+    ),
+  ).toBeVisible();
+  await page
+    .frameLocator("#frame")
+    .getByRole("link", { name: "Open Action" })
+    .click();
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        (window as unknown as FrameTestWindow).frameEvents.some(
+          (event) =>
+            event.type === "navigation" && event.navigation.id === "action",
+        ),
+      ),
+    )
+    .toBe(true);
+  expect(page.url()).toBe(`${fixture.host.url}/`);
 });

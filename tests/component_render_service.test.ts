@@ -62,19 +62,36 @@ test("private controls rerender actual consumer code, keep immutable bundles and
 
 test("render HTTP validates authority, body limits and methods; memory documents are script-disabled", async (t) => {
   const fixture = await componentReviewFixture(t, (source) => source);
+  const runtime = componentRuntime(fixture.after);
   const server = await startCatalogueServer(fixture.config, {
     base: "main",
     port: 0,
-    componentRuntime: componentRuntime(fixture.after),
+    componentRuntime: runtime,
   });
   t.after(() => server.close());
-  const page = await (
-    await fetch(`${server.url}/view/components/action.html`)
-  ).text();
-  const data = JSON.parse(
-    page.match(/data-workspace-data="">(.*?)<\/script>/s)![1]!,
+  const reactResponse = await fetch(
+    `${server.url}/view/components/action.html`,
   );
-  const capability = data.renderCapability;
+  assert.equal(reactResponse.status, 200, await reactResponse.clone().text());
+  const reactPage = await reactResponse.text();
+  const state = reactPage.match(
+    /data-mokly-host-capability-state="" type="application\/json">([^<]+)<\/script>/,
+  )?.[1];
+  assert.ok(state);
+  const descriptor = JSON.parse(state) as {
+    renderCapability: { generation: string; token: string };
+    source: Record<string, unknown> & { renderGeneration: string };
+    workspace: Record<string, unknown> & {
+      views: { usage?: unknown }[];
+    };
+  };
+  assert.equal(descriptor.renderCapability.generation, runtime.generation);
+  assert.equal(descriptor.source.renderGeneration, runtime.generation);
+  assert.equal("previewGeneration" in descriptor.source, false);
+  assert.equal("previewGeneration" in descriptor.workspace, false);
+  assert.ok(descriptor.workspace.views.length > 0);
+  assert.ok(descriptor.workspace.views.every((view) => view.usage));
+  const capability = descriptor.renderCapability;
   const body = {
     componentId: "action",
     variantId: "default",

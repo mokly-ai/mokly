@@ -54,10 +54,12 @@ export async function smokeRegisteredComponents(
     const page = await (
       await fetch(`${url}/view/components/action.html`)
     ).text();
-    const data = JSON.parse(
-      page.match(/data-workspace-data="">(.*?)<\/script>/s)[1],
+    const state = page.match(
+      /<script[^>]*data-mokly-host-capability-state=""[^>]*>([^<]+)<\/script>/,
     );
-    const capability = data.renderCapability;
+    assert.ok(state);
+    const capability = JSON.parse(state[1]).renderCapability;
+    assert.ok(capability);
     const response = await fetch(`${url}/__mokly/components/render`, {
       method: "POST",
       headers: {

@@ -7,7 +7,7 @@ Serve/export keep today's same-origin sandbox and visible behavior. Only an
 explicit cross-origin host uses the new inspector transport. Host marker
 consumption and the trailing geometry refresh are implemented by the
 [comment anchoring plan](../../plans/viewer-comment-anchoring.md); the adapter
-interface and wire protocol remain unchanged.
+wire protocol remains unchanged.
 
 ## Public Interface
 
@@ -28,6 +28,7 @@ interface FrameMount {
   url: URL;
   usage: CatalogueUsage;
   signal?: AbortSignal;
+  onEvent?: (event: FrameEvent) => void;
 }
 type NavigationTarget =
   | { kind: "self" | "top" | "parent" | "blank" }
@@ -79,8 +80,19 @@ The host supplies the selected catalogue view URL; the adapter confines it to
 current `/static/` HTML paths, the configured origin and a valid logical hash.
 Caller-approved query parameters are retained; no selectors or comparison paths
 are accepted. Mount replaces the document with iframe history
-replacement semantics. A load, view/scheme swap or disposal invalidates the old
-session and its pending work; responses from it never update a new mount.
+replacement semantics while the React shell keeps the portable `src` attribute
+aligned with the selected view. A superseded same-origin load may arrive during
+that handoff; it cannot fail or be adopted by the current mount, which remains
+pending for the exact assigned resource. A load, view/scheme swap or disposal
+invalidates the old session and its pending work; responses from it never update
+a new mount.
+The React shell supplies `onEvent` before calling `mount`. A conforming adapter
+records that receiver before it starts replacing an already-visible document.
+Passing the same callback to `MountedFrame.subscribe` adopts this mount-time
+subscription rather than installing a duplicate; the returned cleanup restores
+ordinary subscription semantics. This closes the interval between React session
+ownership and mount readiness without treating a loading frame as unenhanced.
+Callers that omit `onEvent` retain the explicit post-mount `subscribe` interface.
 An optional mount signal cancels both pending initialization and an active
 session. Built-in adapters remove cancellation listeners on disposal. Viewer
 cleanup also fences late custom-adapter results and disposes them immediately.
@@ -156,13 +168,30 @@ diagnostics are not extracted from consumer text.
 
 ## Same-Origin Implementation
 
-`sameOriginAdapter` moves today's `contentDocument` access behind this interface:
-[`component_geometry.ts`](../../packages/viewer/src/client/component_geometry.ts), range-node
-and occlusion helpers, `component_highlight.ts`, `frame_navigation.ts`, and
-the frame access in Browse state and workspace preview/controls. Preserve URL,
-immediate-document, ownership and range authentication, clipping, highlighting,
-scroll restoration and logical-link classification unchanged. Ready usage is
-required for instance inspection; absent usage does not disable valid navigation.
+`sameOriginAdapter` confines `contentDocument` access to
+[`same_origin_access.ts`](../../packages/viewer/src/client/same_origin_access.ts)
+and the adapter-owned mount. Geometry, pointer inspection and presentation stay
+in their dedicated local modules. A loaded document must retain the exact
+origin, query and decoded resource path. A provider may canonicalize a final
+`.html` suffix to the otherwise identical extensionless path; no other path
+redirect is accepted. The URL fragment is client-only positioning rather than
+resource identity, so the adapter authenticates the document first and then
+applies a missing or changed validated fragment. An authenticated document
+reload renews every document-scoped listener and observer without replacing the
+outer frame session. Preserve ownership and range authentication, clipping,
+highlighting, scroll restoration and logical-link classification unchanged.
+Ready usage is required for instance inspection; absent usage does not disable
+valid navigation.
+
+When a same-origin replacement starts, the adapter installs its mount-time
+navigation receiver on the currently visible immediate document before changing
+`location`. Valid marked activations therefore remain host-owned while the exact
+assigned resource loads. As soon as the new immediate `Document` becomes
+same-origin-accessible, the adapter authenticates its exact origin, decoded
+resource path and query, then moves the receiver before slower subresources can
+delay the iframe `load` event. Readiness installs inspection and geometry over
+that document. Unsubscribing or disposing removes the receiver, so an
+unenhanced document continues to use its portable native links.
 
 The sandbox remains exactly `allow-same-origin`; consumer scripts stay disabled.
 Existing local memory previews retain their authenticated private transport.

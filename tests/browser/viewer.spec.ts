@@ -81,6 +81,20 @@ test("controlled proposals wait for the host and normalize search", async ({
   ).toHaveLength(1);
 });
 
+test("controlled search keeps raw spacing through normalized prop echoes", async ({
+  page,
+}) => {
+  await page.evaluate(() =>
+    window.viewerHarness.start("one", { controlled: true, accept: true }),
+  );
+  const search = page.getByRole("searchbox", { name: "Search catalogue" });
+  await search.pressSequentially("alpha beta ");
+  await expect(search).toHaveValue("alpha beta ");
+  expect(
+    await page.evaluate(() => window.viewerHarness.get("one").props.selection),
+  ).toEqual(expect.objectContaining({ search: "alpha beta", tags: [] }));
+});
+
 test("StrictMode replay and independent roots", async ({ page }) => {
   await page.evaluate(() => {
     window.viewerHarness.start("one", { strict: true });

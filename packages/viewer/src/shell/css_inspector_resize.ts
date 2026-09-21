@@ -41,7 +41,7 @@ export const SHELL_INSPECTOR_RESIZE_CSS = `
 
 .mbk-inspector-resize:hover::after,
 .mbk-inspector-resize:focus-visible::after,
-body.mbk-inspector-resizing .mbk-inspector-resize::after {
+[data-mokly-shell].mbk-inspector-resizing .mbk-inspector-resize::after {
   background: var(--mokly-accent);
   box-shadow: 0 0 0 3px var(--mokly-accent-soft);
 }
@@ -50,16 +50,16 @@ body.mbk-inspector-resizing .mbk-inspector-resize::after {
   box-shadow: inset 0 2px 0 var(--mokly-accent);
 }
 
-body.mbk-inspector-resizing {
+[data-mokly-shell].mbk-inspector-resizing {
   cursor: row-resize;
   user-select: none;
 }
 
-body.mbk-inspector-resizing * {
+[data-mokly-shell].mbk-inspector-resizing * {
   cursor: row-resize !important;
 }
 
-body.mbk-inspector-resizing iframe {
+[data-mokly-shell].mbk-inspector-resizing iframe {
   pointer-events: none;
 }
 

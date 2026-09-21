@@ -9,10 +9,8 @@ import type {
   ViewerSelection,
 } from "@mokly/viewer";
 import { resolveInstance } from "@mokly/viewer/data";
-import { initializeBrowseShell } from "@mokly/viewer/runtime";
 import { renderViewer } from "@mokly/viewer/server";
 
-export const runtimeEntry: typeof initializeBrowseShell = initializeBrowseShell;
 export const dataEntry: typeof resolveInstance = resolveInstance;
 
 export async function highlightComments(
@@ -36,10 +34,16 @@ export function ViewerConsumer({
   onSelectionChange: (selection: ViewerSelection) => void;
 }) {
   const handle = createRef<MoklyViewerHandle>();
-  renderViewer({ catalogue, baseUrl: "https://artifact.example", selection });
+  renderViewer({
+    viewerId: "catalogue",
+    catalogue,
+    baseUrl: "https://artifact.example",
+    selection,
+  });
   return (
     <MoklyViewer
       ref={handle}
+      viewerId="catalogue"
       catalogue={catalogue}
       baseUrl="https://artifact.example"
       selection={selection}

@@ -47,6 +47,8 @@ when the historical primary file is absent, never when it is invalid.
   public inventory v1 beside the private manifest.
 - [Embeddable viewer](./mokly-viewer.md) — approved `@mokly/viewer` API and
   unchanged local shell extraction.
+- [Live viewer capabilities](./mokly-live-capabilities.md) — private Serve
+  evidence, updates, recovery, previews and on-demand rendering for React.
 - [Viewer markers and multi-instance highlights](./mokly-viewer-markers.md) —
   host-owned anchored content and exact atomic highlight behavior.
 - [Viewer frame adapter](./mokly-frame-adapter.md) — approved same-origin

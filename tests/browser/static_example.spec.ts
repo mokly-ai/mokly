@@ -12,6 +12,7 @@ import {
 } from "../helpers/fixture_timing.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 
+import { assertServedShellMarker } from "./export_shell.js";
 import { chooseViewport } from "./workspace_actions.js";
 
 let output: string;
@@ -33,6 +34,7 @@ test.beforeAll(async () => {
     exportCatalogue(config, { base: "HEAD", outDir: output }),
   );
   server = await serveStaticFiles(output);
+  await assertServedShellMarker(server.url, "/view/screens/welcome.html");
 });
 test.afterAll(async () => {
   await server?.close();

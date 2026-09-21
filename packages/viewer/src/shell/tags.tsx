@@ -1,48 +1,112 @@
-// The catalogue's tags as controls. One chip is rendered on two surfaces —
-// the details inspector's metadata row for the selected entry, and the picker
-// the search field drops for every tag the catalogue declares — so both read
-// and behave the same: the Browse client turns a chip into the matching
-// `tag:` search term and marks the chip that the entered query names.
+/** Accessible tag chips shared by search and entry details. */
+
+import { useEffect, useRef } from "react";
+import type { KeyboardEvent } from "react";
 
 import { TagIcon } from "./icons.js";
+import { useShellIdentifier } from "./identifier_context.js";
+import { useOptionalShellStore } from "./store_context.js";
 
-/**
- * One tag as a control. The chip is pressed while the entered query names its
- * tag, which the Browse client keeps in step with the search field.
- */
-export function TagChip(props: { tag: string }) {
+/** One tag control synchronized with the shell's parsed query. */
+export function TagChip({
+  afterSelect,
+  pickerIndex,
+  tag,
+}: {
+  afterSelect?: () => void;
+  pickerIndex?: number;
+  tag: string;
+}) {
+  const store = useOptionalShellStore();
+  const active =
+    store?.state.selection.tags.includes(tag.toLowerCase()) ?? false;
   return (
     <button
-      aria-pressed="false"
-      className="mbk-chip tag"
-      data-mokly-tag={props.tag}
+      aria-pressed={active}
+      className={`mbk-chip tag${active ? " active" : ""}`}
+      data-mokly-tag={tag}
+      onClick={() => {
+        store?.toggleTag(tag);
+        afterSelect?.();
+      }}
+      tabIndex={
+        pickerIndex === undefined || !store?.interactive
+          ? undefined
+          : store.state.tagPickerIndex === pickerIndex
+            ? 0
+            : -1
+      }
       type="button"
     >
       <TagIcon size={11} />
-      {props.tag}
+      {tag}
     </button>
   );
 }
 
-/**
- * The tag control at the trailing edge of the search field and the closed
- * panel it drops under it, listing every tag the catalogue declares. The
- * panel's chip row is a toolbar because the Browse client roves one tab stop
- * across it; the details inspector's chips stay independent tab stops. A
- * catalogue that declares no tags renders neither.
- */
-export function SearchTagPicker(props: { tags: readonly string[] }) {
-  if (props.tags.length === 0) {
-    return null;
-  }
+/** Search-field tag button and ephemeral roving-focus picker. */
+export function SearchTagPicker({ tags }: { tags: readonly string[] }) {
+  const store = useOptionalShellStore();
+  const pickerId = useShellIdentifier("mb-tag-picker");
+  const toggle = useRef<HTMLButtonElement>(null);
+  const panel = useRef<HTMLDivElement>(null);
+  const open = store?.state.tagPickerOpen ?? false;
+  useEffect(() => {
+    if (!open) return;
+    const chips =
+      panel.current?.querySelectorAll<HTMLButtonElement>("[data-mokly-tag]");
+    chips?.[store?.state.tagPickerIndex ?? 0]?.focus();
+  }, [open, store?.state.tagPickerIndex]);
+  if (tags.length === 0) return null;
+
+  const close = (focus: boolean) => {
+    store?.setTagPicker(false);
+    if (focus) queueMicrotask(() => toggle.current?.focus());
+  };
+  const onKeyDown = (event: KeyboardEvent<HTMLSpanElement>) => {
+    if (!store) return;
+    const last = tags.length - 1;
+    let next: number | undefined;
+    if (event.key === "ArrowLeft")
+      next =
+        store.state.tagPickerIndex === 0
+          ? last
+          : store.state.tagPickerIndex - 1;
+    if (event.key === "ArrowRight")
+      next =
+        store.state.tagPickerIndex === last
+          ? 0
+          : store.state.tagPickerIndex + 1;
+    if (event.key === "Home") next = 0;
+    if (event.key === "End") next = last;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopPropagation();
+      close(true);
+      return;
+    }
+    if (next === undefined) return;
+    event.preventDefault();
+    store.setTagPicker(true, next);
+  };
   return (
     <>
       <button
-        aria-controls="mb-tag-picker"
-        aria-expanded="false"
+        aria-controls={pickerId}
+        aria-expanded={open}
         aria-label="Filter by tag"
         className="mbk-search-tag"
         data-mokly-tag-toggle=""
+        onClick={() => {
+          if (open) close(true);
+          else {
+            const selected = tags.findIndex((tag) =>
+              store?.state.selection.tags.includes(tag.toLowerCase()),
+            );
+            store?.setTagPicker(true, selected < 0 ? 0 : selected);
+          }
+        }}
+        ref={toggle}
         type="button"
       >
         <TagIcon />
@@ -50,14 +114,26 @@ export function SearchTagPicker(props: { tags: readonly string[] }) {
       <div
         aria-label="Tags"
         className="mbk-tag-picker"
-        hidden
-        id="mb-tag-picker"
+        data-mokly-tag-picker=""
+        hidden={!open}
+        id={pickerId}
+        ref={panel}
         role="group"
       >
         <div className="mbk-tag-picker-head">Tags</div>
-        <span aria-label="Tag filters" className="mbk-chips" role="toolbar">
-          {props.tags.map((tag) => (
-            <TagChip key={tag} tag={tag} />
+        <span
+          aria-label="Tag filters"
+          className="mbk-chips"
+          onKeyDown={onKeyDown}
+          role="toolbar"
+        >
+          {tags.map((tag, index) => (
+            <TagChip
+              afterSelect={() => queueMicrotask(() => toggle.current?.focus())}
+              key={tag}
+              pickerIndex={index}
+              tag={tag}
+            />
           ))}
         </span>
       </div>

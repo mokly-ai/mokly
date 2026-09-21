@@ -159,8 +159,24 @@ for (const cross of [false, true]) {
         { id: "second", instance: visible },
       ]);
     }, visible);
-    await expectMarkerState(page, "first", "unavailable");
-    await expectMarkerState(page, "second", "unavailable");
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          window.viewerHarness.get("one").events.some((event) => {
+            if (event.name !== "markers" || !Array.isArray(event.value))
+              return false;
+            const states = event.value as { id: string; status: string }[];
+            return (
+              states.length === 2 &&
+              states[0]?.id === "first" &&
+              states[0].status === "unavailable" &&
+              states[1]?.id === "second" &&
+              states[1].status === "unavailable"
+            );
+          }),
+        ),
+      )
+      .toBe(true);
     await expect
       .poll(() =>
         page.evaluate(

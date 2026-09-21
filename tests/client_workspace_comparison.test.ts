@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { renderWorkspaceEvidence } from "../packages/viewer/dist/client/workspace_evidence.js";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 import type { ReviewResultV2 } from "../packages/viewer/dist/review/types.js";
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
-
-import { FakeMarkupDocument, fakeMarkup } from "./helpers/fake_markup.js";
+import { WorkspaceEvidence } from "../packages/viewer/dist/shell/workspace_evidence.js";
 
 test("loaded v2 details merge with classification, deduplicate selectors and suppress retained exclusions", () => {
   const data = workspace();
@@ -53,15 +54,8 @@ test("loaded v2 details merge with classification, deduplicate selectors and sup
       ],
     },
   ];
-  const node = new FakeMarkupDocument().createElement("section");
   const parsed = parseReviewResult(loaded);
-  renderWorkspaceEvidence(
-    node as unknown as HTMLElement,
-    data,
-    undefined,
-    parsed,
-  );
-  const markup = fakeMarkup(node);
+  const markup = renderEvidence(data, parsed);
   assert.match(markup, /Changed styles that apply to this screen:/);
   assert.match(markup, /This change can apply anywhere on the screen/);
   for (const selector of [".auth", ".global", ".saved"])
@@ -71,44 +65,34 @@ test("loaded v2 details merge with classification, deduplicate selectors and sup
   assert.match(markup, /Excluded content: chrome/);
   assert.doesNotMatch(markup, /Examined and excluded|Shared component changes/);
   assert.equal(markup.split("<h3>Comparison details</h3>").length - 1, 1);
-  renderWorkspaceEvidence(
-    node as unknown as HTMLElement,
-    data,
-    undefined,
-    parsed,
-  );
-  assert.equal(fakeMarkup(node), markup);
+  assert.equal(renderEvidence(data, parsed), markup);
 });
 
 test("historical v2 loaded evidence remains available when classification has no view slice", () => {
   const data = workspace();
   delete data.status;
   const loaded = comparison();
-  const node = new FakeMarkupDocument().createElement("section");
-  renderWorkspaceEvidence(
-    node as unknown as HTMLElement,
-    data,
-    undefined,
-    parseReviewResult(loaded),
-  );
-  assert.equal(node.hidden, false);
-  assert.match(fakeMarkup(node), /mockups\/logo.svg/);
-  assert.doesNotMatch(fakeMarkup(node), /Shared component changes/);
+  const markup = renderEvidence(data, parseReviewResult(loaded));
+  assert.doesNotMatch(markup, / hidden=/);
+  assert.match(markup, /mockups\/logo.svg/);
+  assert.doesNotMatch(markup, /Shared component changes/);
 });
 
 test("loaded comparisons for another screen cannot add evidence to the selected workspace", () => {
   const data = workspace();
   const loaded = comparison();
   loaded.screens = [{ ...loaded.screens[0]!, route: "screens/other.html" }];
-  const node = new FakeMarkupDocument().createElement("section");
-  renderWorkspaceEvidence(
-    node as unknown as HTMLElement,
-    data,
-    undefined,
-    loaded,
-  );
-  assert.doesNotMatch(fakeMarkup(node), /mockups\/logo.svg/);
+  assert.doesNotMatch(renderEvidence(data, loaded), /mockups\/logo.svg/);
 });
+
+function renderEvidence(
+  data: WorkspaceData,
+  loaded: ReturnType<typeof parseReviewResult>,
+): string {
+  return renderToStaticMarkup(
+    createElement(WorkspaceEvidence, { data, loaded }),
+  );
+}
 
 function comparison(): ReviewResultV2 {
   return {

@@ -120,7 +120,7 @@ export async function expectMarkerAligned(
         .locator(`[data-mokly-marker="${markerId}"]`)
         .boundingBox();
       const target = await page
-        .locator("iframe[data-mokly-fragment-frame]")
+        .locator("iframe[data-mokly-frame-state]")
         .nth(frameIndex)
         .contentFrame()
         .getByRole("button", { name: label, exact: true })
