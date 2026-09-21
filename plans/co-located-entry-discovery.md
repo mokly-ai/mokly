@@ -2,14 +2,16 @@
 
 ## Status And Outcome
 
-Milestones 1 through 10 are complete, committed, and pushed. Milestone 11 is
-locally committed pending the supervising agent's push and review. It preserves
+Milestones 1 through 11 are complete, committed, and pushed. Milestone 11 preserves
 watcher event kinds and stats through classification, reports discovery failures
 except benign missing-directory races, and records vanished roots in zero-match
 diagnostics. All seven fifth-review findings are addressed with failing-first
-regressions and aligned documentation. `cargo xtask check` passed on its first
-run, including 1,977 unit/integration tests and 466 Chrome tests; the intermittent
-Node fault did not occur. The final post-push review remains outstanding.
+regressions and aligned documentation. The supervising agent replaced the permission
+test's root-only skip with a runtime probe, since capability-holding processes
+read mode-000 directories; the gate then passed with 1,976 unit tests, five
+packed-consumer scenarios, and 466 Chrome tests. The post-push review found no
+regressions and reported seven smaller findings, recorded below and awaiting
+the user's decision.
 
 Mokly currently discovers every `*.mockup.ts` and `*.mockup.tsx` module below
 one configured directory, `entriesDir`, and binds the source-attributed
@@ -171,9 +173,47 @@ guessing. Finding 3 restores loud discovery failures.
       loud-failure rule exactly.
 - [x] Run `cargo xtask check` and commit locally; the supervising agent
       will verify and push before the final review.
-- [ ] Review the complete local diff against `origin/main` after the push
+- [x] Review the complete local diff against `origin/main` after the push
       using `docs/implementation-review-prompt.md`; report findings without
-      changing the implementation.
+      changing the implementation. The post-push review found no regressions
+      and confirmed the event-aware design closed the earlier ones; its seven
+      findings are recorded under "Sixth Review Findings (awaiting decision)".
+
+## Sixth Review Findings (awaiting decision)
+
+Review of the Milestone 11 commit. Nothing has been changed in response. The
+reviewer verified that chokidar's `all` listener carries exactly the five
+forwarded event kinds, that both coalescing orders classify correctly, that
+the raw-rename degradation under descriptor exhaustion is pre-existing and now
+documented, and that discovery's error policy matches the contract.
+
+1. **P2, a matched module that vanishes mid-pass fails the config.** The
+   walk tolerates a directory that disappears, but the per-module denial
+   loop rethrows every projection failure, including `ENOENT`, so an entry
+   deleted between the walk and the loop, the window an atomic editor save
+   opens during watched Serve, aborts the reload. Recommended: skip a module
+   that vanished with `ENOENT` through the shared vanished-directory helper
+   and keep `ENOTDIR` loud.
+2. **P2, the descriptor-exhaustion test cannot fail** on its fail-open
+   branch: it asserts only that the predicate does not throw, and the
+   milestone asked for `lstatSync`, `readFileSync`, and `openSync` to be
+   mocked alongside `statSync`, which was not done although the TODO is
+   ticked. Recommended: assert the fail-open value and add the three mocks.
+3. **P3, duplicated doc comments** in `tests/helpers/watch_config.ts` bind
+   the wrong description to two factory classes.
+4. **P3, a source-text regex** stands in for a behavioural test that the
+   mode mask is gone; the permission-probe test already proves it.
+   Recommended: delete the regex test.
+5. **P3, traversal gained one guarded `statSync`** for denied-name leaves
+   when chokidar supplies no stats; documented, accepted as the better
+   pruning behaviour.
+6. **P3, check-order swap** changes only a diagnostic: a Review output
+   directory named like a denied segment is now listed as not searched.
+   Accept.
+7. **P3, hygiene.** The plans index entry was stale (corrected now); the
+   plan split into a history subdirectory is a convention CLAUDE.md does not
+   state; one README line reflowed long; one non-null assertion in
+   `entry_discovery_paths.ts`.
 
 ## Fifth Review Findings (approved, addressed in Milestone 11)
 

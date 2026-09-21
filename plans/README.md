@@ -8,9 +8,9 @@
   controls; Milestones 1 to 8 are delivered, the design conversion awaits
   approval, and six review findings await the user's decision.
 - [Co-Located Entry Discovery](./co-located-entry-discovery.md) — delivered
-  on the branch with two review rounds applied and the fixed entry filename
-  suffix removed and four review rounds applied; Milestone 11 carries the
-  approved fifth-round fixes as one event-aware classification change.
+  on the branch through Milestone 11 with five review rounds applied; earlier
+  milestones and review rounds are kept in `co-located-entry-discovery/`. A
+  sixth review round reported seven smaller findings awaiting decision.
 - [CLI Terminal Experience](./cli-terminal-experience.md)
 - [Package Documentation](./package-documentation.md) — supersedes the
   unmerged public-site plan and pull request #79 by shipping versioned Markdown
