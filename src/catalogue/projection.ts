@@ -13,11 +13,12 @@ import {
   readSchema,
   projectTree,
   comparisonPath,
-  lexical,
   publicPath,
   relatedDoc,
   repositoryPath,
 } from "@mokly/viewer/data";
+
+import { orderEntriesWithVariants } from "../registry/entry_order.js";
 
 import { entryChanges, comparisonSelection } from "./changes.js";
 import type { CatalogueProjectionInput } from "./projection_input.js";
@@ -162,7 +163,10 @@ export function projectCatalogue(
   };
   const collections: CatalogueCollection[] = [];
   const entries: CatalogueRoutedEntry[] = [];
-  for (const entry of [...catalogue.manifest.entries].sort(entryOrder)) {
+  for (const entry of orderEntriesWithVariants(
+    catalogue.manifest.entries,
+    (value) => value,
+  )) {
     if (entry.kind === "collection")
       collections.push({
         ...common(entry, false),
@@ -190,23 +194,15 @@ export function projectCatalogue(
     removedEntries:
       input.changesStatus !== "ready"
         ? []
-        : [...catalogue.removedEntries]
-            .sort((a, b) => entryOrder(a.entry, b.entry))
-            .map(({ entry, ancestors }) => ({
-              entry: routed(entry, true),
-              ancestors: ancestors.map((ancestor) => ({
-                id: ancestor.id,
-                title: ancestor.title,
-              })),
+        : orderEntriesWithVariants(
+            catalogue.removedEntries,
+            ({ entry }) => entry,
+          ).map(({ entry, ancestors }) => ({
+            entry: routed(entry, true),
+            ancestors: ancestors.map((ancestor) => ({
+              id: ancestor.id,
+              title: ancestor.title,
             })),
+          })),
   };
-}
-
-function entryOrder(left: ManifestEntry, right: ManifestEntry): number {
-  return (
-    lexical(
-      left.kind === "collection" ? "" : left.route,
-      right.kind === "collection" ? "" : right.route,
-    ) || lexical(left.id, right.id)
-  );
 }

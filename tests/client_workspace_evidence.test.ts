@@ -106,6 +106,7 @@ test("the terminal line names the screen or the saved view it compared", () => {
     affected: [],
     removed: false,
     variants: [],
+    viewStates: {},
     views: [],
   };
 
@@ -170,7 +171,17 @@ test("a merged snapshot moves the view marks and the changed-views row", () => {
         { viewport: "desktop", colorScheme: "dark" },
       ],
     },
+    viewStates: {
+      disabled: [
+        { viewport: "mobile", colorScheme: "dark", state: "changed" },
+        { viewport: "desktop", colorScheme: "dark", state: "changed" },
+      ],
+    },
   } as unknown as WorkspaceData);
+  assert.deepEqual(data.viewStates.disabled, [
+    { viewport: "mobile", colorScheme: "dark", state: "changed" },
+    { viewport: "desktop", colorScheme: "dark", state: "changed" },
+  ]);
   applyViewEvidence(workspace.root, data, "both", "light", "default");
 
   assert.equal(workspace.dot("scheme").hidden, true);

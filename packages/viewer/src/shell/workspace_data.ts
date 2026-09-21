@@ -22,15 +22,21 @@ import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import { dedupeUsageLinks } from "./usage_links.js";
 import {
+  shownComparisonEligible,
+  type EntryStatus,
+  type ViewStatesBySelection,
+} from "./view_status.js";
+import {
   inputChanges as entryInputChanges,
   type InputChange,
 } from "./workspace_input_changes.js";
 import {
   changedViewsBySelection,
   type ChangedViewsBySelection,
+  viewStatesBySelection,
 } from "./workspace_views_data.js";
 
-export type EntryStatus = "Added" | "Changed" | "Removed" | "Unmodified";
+export type { EntryStatus } from "./view_status.js";
 export interface WorkspaceVariant {
   value: ManifestComponentVariant;
   removed: boolean;
@@ -60,6 +66,11 @@ export interface WorkspaceData {
    * component and by the entry id for a screen.
    */
   changedViews: ChangedViewsBySelection;
+  /**
+   * Known review states keyed by saved-variant id for a component and by the
+   * entry id for a screen. A missing key means the per-view state is unknown.
+   */
+  viewStates: ViewStatesBySelection;
   variants: readonly WorkspaceVariant[];
   usedBy: readonly UsageLink[];
   affected: readonly UsageLink[];
@@ -73,14 +84,6 @@ export interface WorkspaceData {
   removed: boolean;
   relatedComponents: readonly { title: string; route: string }[];
   inputChanges: readonly InputChange[];
-}
-
-/** Screens compare edits; component variants also retain removed saved values. */
-function isComparisonEligible(
-  status: EntryStatus | undefined,
-  kind: WorkspaceData["entry"]["kind"],
-): boolean {
-  return status === "Changed" || (kind === "component" && status === "Removed");
 }
 
 /** Entry state and actual saved views stay independent of Changes membership. */
@@ -157,7 +160,7 @@ export function workspaceData(
           return {
             value,
             removed: isRemoved,
-            comparisonEligible: isComparisonEligible(
+            comparisonEligible: shownComparisonEligible(
               variantStatus,
               "component",
             ),
@@ -180,7 +183,7 @@ export function workspaceData(
           instanceKey: evidence.via.at(-1)!.instanceKey,
           direct: evidence.via.length === 1,
           removed,
-          comparisonEligible: isComparisonEligible(
+          comparisonEligible: shownComparisonEligible(
             removed ? "Removed" : "Changed",
             evidence.context.kind,
           ),
@@ -215,7 +218,7 @@ export function workspaceData(
     entry,
     removed,
     comparisons: context.comparisons ?? false,
-    comparisonEligible: isComparisonEligible(status, entry.kind),
+    comparisonEligible: shownComparisonEligible(status, entry.kind),
     base: context.base,
     inputChanges,
     relatedComponents: (result?.components ?? [])
@@ -231,6 +234,12 @@ export function workspaceData(
       return demand;
     }),
     changedViews: changedViewsBySelection(
+      entry,
+      context,
+      comparison,
+      variants.map(({ value }) => value.id),
+    ),
+    viewStates: viewStatesBySelection(
       entry,
       context,
       comparison,

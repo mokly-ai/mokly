@@ -29,6 +29,9 @@ evidence a screen-only catalogue records. Workspace data keys those lists by
 saved-variant id for components and entry id for screens, so every reader must
 select the evidence that belongs to the preview; `css_workspace_marks.ts` draws
 the dot and clips its wording.
+The parallel `viewStates` map stores `{ viewport, colorScheme, state }` for each
+ready view under the same key, while a missing key means per-view status is
+unknown and the workspace must retain its route-level status and eligibility.
 
 `css.ts` concatenates the standalone stylesheet. Split string modules preserve
 its exact bytes. The package build scopes an embedded stylesheet separately and

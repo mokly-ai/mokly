@@ -748,7 +748,7 @@ Apply findings 4, 1, and 3 in the data layers: authored sibling order through
 registry canonicalization and the public projection, the Viewer's manifest
 reconstruction, and per-view status and eligibility in the workspace data.
 
-- [ ] Finding 4: keep authored sibling-variant order. In
+- [x] Finding 4: keep authored sibling-variant order. In
       `src/registry/prepare.ts`, sort variants directly after their parent in
       their flattened (authored) order rather than by route; apply the same
       rule in `src/catalogue/projection.ts` (`entryOrder`) and in the
@@ -759,14 +759,14 @@ reconstruction, and per-view status and eligibility in the workspace data.
       assert the prepared registry, the manifest, the hierarchy
       `variantsById`, the nav tree, and the public tree keep
       `[parent, zeta, alpha]`.
-- [ ] Finding 1: copy `variantOf` in `displayEntry`
+- [x] Finding 1: copy `variantOf` in `displayEntry`
       (`packages/viewer/src/viewer/projection.ts`) for current and removed
       screens. Test: a new `tests/viewer_catalogue_variants.test.ts` builds a
       public model with a parent, a current variant, and a removed variant,
       runs `viewerCatalogue`, and asserts `variantsById`,
       `variantParentById`, the removed entry's `variantOf`, and the served
       nav tree from `buildNavSections`.
-- [ ] Finding 3: per-view status. Extend `WorkspaceData` with typed per-view
+- [x] Finding 3: per-view status. Extend `WorkspaceData` with typed per-view
       states keyed like `changedViews` (`viewStates: Record<key,
 { viewport, colorScheme, state }[]>`, where `state` is the review
       state) derived in `workspace_views_data.ts` from the same sources as
@@ -778,7 +778,7 @@ fallback)` in a new `packages/viewer/src/shell/view_status.ts` that
       same keyed states in `public_workspace.ts` from each view's published
       comparison. Tests: `tests/view_status.test.ts` for the rule, and
       `tests/workspace_views_data.test.ts` for the keyed states.
-- [ ] `npm test` green; commit
+- [x] `npm test` green; commit
       `fix(catalogue): keep authored variant order and per-view status` and
       push.
 

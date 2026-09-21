@@ -65,6 +65,62 @@ export const componentBaseline: ManifestV5 = {
   ],
 };
 
+export const screen = {
+  darkFragments: {
+    desktop: "screens/welcome.desktop.dark.html",
+    mobile: "screens/welcome.mobile.dark.html",
+  },
+  declaredDependencies: [],
+  dependencies: [],
+  description: "Landing screen",
+  fragments: {
+    desktop: "screens/welcome.desktop.html",
+    mobile: "screens/welcome.mobile.html",
+  },
+  id: "welcome",
+  kind: "screen",
+  navPath: [],
+  relatedDocs: [],
+  route: "screens/welcome.html",
+  sourcePath: "entries/fixture.mockup.tsx",
+  title: "Welcome",
+  useCaseIds: [],
+  viewports: ["mobile", "desktop"],
+} as const;
+
+export const screenManifest: ManifestV5 = {
+  entries: [screen],
+  generatedBy: "mokly",
+  schemaVersion: 5,
+  sourceFiles: [screen.sourcePath],
+};
+
+/** A v3 comparison whose only material difference is in dark renders. */
+export function darkOnlyResult(state: "changed" | "unchanged"): ReviewResultV3 {
+  return {
+    affectedConsumers: [],
+    baseCommit: "a".repeat(40),
+    baseRef: "main",
+    changedPaths: ["mockups/styles.css"],
+    changes: [],
+    components: [],
+    ignoredImpact: [],
+    schemaVersion: 3,
+    screens: [
+      {
+        dependencies: [],
+        id: screen.id,
+        route: screen.route,
+        sharedImpact: [],
+        state,
+        title: screen.title,
+        views: views("changed"),
+      },
+    ],
+    sharedImpact: [],
+  };
+}
+
 function views(
   dark: ViewReview["state"],
   light: ViewReview["state"] = "unchanged",

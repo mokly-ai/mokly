@@ -7,7 +7,9 @@ import type {
   CatalogueView,
 } from "../catalogue/types.js";
 import { generatedViews } from "../components/views.js";
+import type { ReviewState } from "../review/types.js";
 import { orderChangedViews, type ChangedView } from "../shell/view_marks.js";
+import type { ViewState, ViewStatesBySelection } from "../shell/view_status.js";
 import type {
   EntryStatus,
   UsageLink,
@@ -24,6 +26,12 @@ const statuses = {
   removed: "Removed",
   unmodified: "Unmodified",
 } as const;
+const reviewStates: Readonly<Record<keyof typeof statuses, ReviewState>> = {
+  added: "added",
+  changed: "changed",
+  removed: "removed",
+  unmodified: "unchanged",
+};
 function status(entry: CatalogueRoutedEntry): EntryStatus | undefined {
   return entry.changes.status === "ready"
     ? statuses[entry.changes.kind]
@@ -55,6 +63,40 @@ function publishedChangedViewsBySelection(
       publishedChangedViews(variant.views),
     ]),
   );
+}
+
+/** Keep only published views whose comparison state is ready. */
+function publishedViewStates(
+  views: readonly CatalogueView[],
+): readonly ViewState[] | undefined {
+  const states = views.flatMap((view) =>
+    view.comparison.status === "ready"
+      ? [
+          {
+            colorScheme: view.colorScheme,
+            state: reviewStates[view.comparison.kind],
+            viewport: view.viewport,
+          },
+        ]
+      : [],
+  );
+  return states.length > 0 ? states : undefined;
+}
+
+/** Key published ready states like the served workspace evidence. */
+function publishedViewStatesBySelection(
+  entry: CatalogueComponent | CatalogueScreen,
+): ViewStatesBySelection {
+  if (entry.kind === "screen") {
+    const states = publishedViewStates(entry.views);
+    return states === undefined ? {} : { [entry.id]: states };
+  }
+  const evidence: Record<string, readonly ViewState[]> = {};
+  for (const variant of entry.variants) {
+    const states = publishedViewStates(variant.views);
+    if (states !== undefined) evidence[variant.id] = states;
+  }
+  return evidence;
 }
 
 export function publicWorkspace(
@@ -122,6 +164,7 @@ export function publicWorkspace(
     ].map(({ id, title, route }) => ({ id, title, route })),
     views: generatedViews(entry),
     changedViews: publishedChangedViewsBySelection(original),
+    viewStates: publishedViewStatesBySelection(original),
     variants,
     usedBy,
     affected: [],

@@ -171,6 +171,43 @@ test("registry preparation flattens one exported definition-array level", () => 
   );
 });
 
+test("registry preparation keeps authored sibling variant order", () => {
+  const definitions = attributed(
+    defineScreen({
+      ...parentInput(),
+      variants: [
+        variant("welcome-zeta", "zeta"),
+        variant("welcome-alpha", "alpha"),
+      ],
+    }),
+  );
+  const collection = attributed(
+    defineCollection({
+      childIds: ["welcome"],
+      dependencies: [],
+      description: "Screens",
+      id: "screens",
+      relatedDocs: [],
+      title: "Screens",
+    }),
+  );
+  const next = attributed(
+    defineScreen({
+      ...parentInput(),
+      id: "workspace",
+      route: "screens/workspace.html",
+      title: "Workspace",
+    }),
+  );
+
+  assert.deepEqual(
+    prepareRegistry([next, definitions, collection], config).entries.map(
+      ({ id }) => id,
+    ),
+    ["screens", "welcome", "welcome-zeta", "welcome-alpha", "workspace"],
+  );
+});
+
 function parentInput() {
   return {
     dependencies: [] as readonly string[],

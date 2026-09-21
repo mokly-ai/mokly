@@ -67,6 +67,41 @@ test("page and component sections preserve only their relevant hierarchy", () =>
   );
 });
 
+test("screen variant leaves follow manifest order", () => {
+  const parent = screen("welcome", "Welcome");
+  const zeta = {
+    ...screen("welcome-zeta", "Welcome zeta"),
+    route: "welcome.variants/zeta.html",
+    variantOf: parent.id,
+  };
+  const alpha = {
+    ...screen("welcome-alpha", "Welcome alpha"),
+    route: "welcome.variants/alpha.html",
+    variantOf: parent.id,
+  };
+  const catalogue = createCatalogue(
+    manifest([
+      collection("screens", "Screens", [parent.id]),
+      parent,
+      zeta,
+      alpha,
+    ]),
+  );
+
+  const pages = buildNavSections(catalogue.hierarchy).find(
+    ({ id }) => id === "pages",
+  );
+  assert.ok(pages);
+  const parentLeaf = leaf(
+    group(pages.children, "collection:screens").children,
+    parent.title,
+  );
+  assert.deepEqual(
+    parentLeaf.variants?.map(({ entryId }) => entryId),
+    [zeta.id, alpha.id],
+  );
+});
+
 test("page and component section disclosures persist independently", () => {
   const storage = new FakeStorage();
   const firstPages = disclosure("section:pages", false);

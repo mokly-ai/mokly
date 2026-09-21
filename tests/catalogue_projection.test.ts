@@ -96,23 +96,42 @@ test("projection exposes screen variants beneath their parent entry", async (t) 
   );
   assert.ok(parent);
   const stem = parent.route.slice(0, -5);
-  const variant: CurrentManifestScreen = {
+  const zeta: CurrentManifestScreen = {
     ...structuredClone(parent),
-    description: "Empty workspace",
+    description: "Zeta workspace",
     fragments: {
-      desktop: `${stem}.variants/empty.desktop.html`,
-      mobile: `${stem}.variants/empty.mobile.html`,
+      desktop: `${stem}.variants/zeta.desktop.html`,
+      mobile: `${stem}.variants/zeta.mobile.html`,
     },
-    id: `${parent.id}-empty`,
-    route: `${stem}.variants/empty.html`,
-    title: `${parent.title}, empty`,
+    id: `${parent.id}-zeta`,
+    route: `${stem}.variants/zeta.html`,
+    title: `${parent.title}, zeta`,
     useCaseIds: [],
     variantOf: parent.id,
     ...(parent.darkFragments
       ? {
           darkFragments: {
-            desktop: `${stem}.variants/empty.desktop.dark.html`,
-            mobile: `${stem}.variants/empty.mobile.dark.html`,
+            desktop: `${stem}.variants/zeta.desktop.dark.html`,
+            mobile: `${stem}.variants/zeta.mobile.dark.html`,
+          },
+        }
+      : {}),
+  };
+  const alpha: CurrentManifestScreen = {
+    ...structuredClone(zeta),
+    description: "Alpha workspace",
+    fragments: {
+      desktop: `${stem}.variants/alpha.desktop.html`,
+      mobile: `${stem}.variants/alpha.mobile.html`,
+    },
+    id: `${parent.id}-alpha`,
+    route: `${stem}.variants/alpha.html`,
+    title: `${parent.title}, alpha`,
+    ...(zeta.darkFragments
+      ? {
+          darkFragments: {
+            desktop: `${stem}.variants/alpha.desktop.dark.html`,
+            mobile: `${stem}.variants/alpha.mobile.dark.html`,
           },
         }
       : {}),
@@ -121,7 +140,7 @@ test("projection exposes screen variants beneath their parent entry", async (t) 
     configPath: "mokly.config.ts",
     catalogue: createCatalogue({
       ...fixture.after.manifest,
-      entries: [...fixture.after.manifest.entries, variant],
+      entries: [...fixture.after.manifest.entries, zeta, alpha],
     }),
     changesStatus: "disabled",
     comparisonUrl: null,
@@ -129,15 +148,29 @@ test("projection exposes screen variants beneath their parent entry", async (t) 
   });
 
   assert.equal(
-    model.screens.find(({ id }) => id === variant.id)?.variantOf,
+    model.screens.find(({ id }) => id === zeta.id)?.variantOf,
     parent.id,
   );
+  assert.deepEqual(
+    model.screens
+      .filter(({ id }) => [parent.id, zeta.id, alpha.id].includes(id))
+      .map(({ id }) => id),
+    [parent.id, zeta.id, alpha.id],
+  );
   assert.deepEqual(findNode(model.tree.pages, parent.id), {
-    children: [{ id: variant.id, kind: "entry" }],
+    children: [
+      { id: zeta.id, kind: "entry" },
+      { id: alpha.id, kind: "entry" },
+    ],
     id: parent.id,
     kind: "entry",
   });
-  assert.deepEqual(readCatalogue(JSON.parse(serializeCatalogue(model))), model);
+  const roundTrip = readCatalogue(JSON.parse(serializeCatalogue(model)));
+  assert.deepEqual(roundTrip, model);
+  assert.deepEqual(
+    findNode(roundTrip.tree.pages, parent.id),
+    findNode(model.tree.pages, parent.id),
+  );
 });
 
 test("public v1 fixture conforms and compatible readers ignore additive fields", async () => {

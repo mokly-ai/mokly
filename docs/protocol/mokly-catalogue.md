@@ -214,7 +214,9 @@ collections), then id. The variant screens of one parent are the exception:
 emit them in authored order directly after their parent and before the next
 entry in route order. That sibling order is the order `variantsById`, the
 navigation list, the details `Variants` row, and the public tree's entry-node
-`children` present. Sort removed entries by their entry route/id,
+`children` present. Apply the exception independently to `removedEntries`;
+when a variant's parent is absent from that array, the variant stays in its
+ordinary route-then-id position. Sort all other removed entries by route/id,
 instances/slots by key, and ranges by DOM start order. Tree roots sort by id;
 non-variant children retain `childIds` order. The viewer applies existing
 presentation sorting. Emit required empties, omit absent optionals, use

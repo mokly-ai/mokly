@@ -234,6 +234,9 @@ The variant screens of one parent are the exception: emit them in authored
 order directly after their parent and before the next entry in route order.
 That sibling order is the order `variantsById`, the navigation list, the
 details `Variants` row, and the public tree's entry-node `children` present.
+During pre-validation ordering, a variant without one uniquely valid root
+screen parent stays in ordinary route-then-id position so relationship
+validation can reject it deterministically; invalid entries are never emitted.
 Component saved variants, collection children, use-case steps, and tags retain
 authored order. Legacy pages sort by route.
 Dependency arrays sort uniquely, as do owned paths, supplied slots, and the

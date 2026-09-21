@@ -2,104 +2,24 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { viewPage } from "../dist/server/pages.js";
-import type { ManifestV5 } from "../packages/viewer/dist/registry/types.js";
-import type { ReviewResultV3 } from "../packages/viewer/dist/review/component_types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import type { ShellContext } from "../packages/viewer/dist/shell/context.js";
 import { workspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
-import { changedViews } from "../packages/viewer/dist/shell/workspace_views_data.js";
+import {
+  changedViews,
+  viewStates,
+  viewStatesBySelection,
+} from "../packages/viewer/dist/shell/workspace_views_data.js";
 
 import {
   component,
   componentBaseline,
   componentManifest,
   componentVariantResult,
+  darkOnlyResult,
+  screen,
+  screenManifest,
 } from "./helpers/workspace_views_data_fixture.js";
-
-const screen = {
-  darkFragments: {
-    desktop: "screens/welcome.desktop.dark.html",
-    mobile: "screens/welcome.mobile.dark.html",
-  },
-  declaredDependencies: [],
-  dependencies: [],
-  description: "Landing screen",
-  fragments: {
-    desktop: "screens/welcome.desktop.html",
-    mobile: "screens/welcome.mobile.html",
-  },
-  id: "welcome",
-  kind: "screen",
-  navPath: [],
-  relatedDocs: [],
-  route: "screens/welcome.html",
-  sourcePath: "entries/fixture.mockup.tsx",
-  title: "Welcome",
-  useCaseIds: [],
-  viewports: ["mobile", "desktop"],
-} as const;
-
-const manifest: ManifestV5 = {
-  entries: [screen],
-  generatedBy: "mokly",
-  schemaVersion: 5,
-  sourceFiles: ["entries/fixture.mockup.tsx"],
-};
-
-/**
- * A v3 comparison whose only material difference is in the dark renders. The
- * screen's own state is a parameter because a shared component can change a
- * view without giving the screen an independent entry in Changes.
- */
-function darkOnlyResult(state: "changed" | "unchanged"): ReviewResultV3 {
-  return {
-    affectedConsumers: [],
-    baseCommit: "a".repeat(40),
-    baseRef: "main",
-    changedPaths: ["mockups/styles.css"],
-    changes: [],
-    components: [],
-    ignoredImpact: [],
-    schemaVersion: 3,
-    screens: [
-      {
-        dependencies: [],
-        id: "welcome",
-        route: "screens/welcome.html",
-        sharedImpact: [],
-        state,
-        title: "Welcome",
-        views: [
-          {
-            colorScheme: "light",
-            ignoredIds: [],
-            state: "unchanged",
-            viewport: "mobile",
-          },
-          {
-            colorScheme: "dark",
-            ignoredIds: [],
-            state: "changed",
-            viewport: "mobile",
-          },
-          {
-            colorScheme: "light",
-            ignoredIds: [],
-            state: "unchanged",
-            viewport: "desktop",
-          },
-          {
-            colorScheme: "dark",
-            ignoredIds: [],
-            state: "changed",
-            viewport: "desktop",
-          },
-        ],
-      },
-    ],
-    sharedImpact: [],
-  };
-}
 
 const DARK_VIEWS = [
   { viewport: "mobile", colorScheme: "dark" },
@@ -118,16 +38,48 @@ function context(evidence?: ShellContext["componentChanges"]): ShellContext {
 test("a ready comparison names the views it marked changed", () => {
   const result = darkOnlyResult("changed");
   assert.deepEqual(
-    changedViews(screen, context({ baseline: manifest, result }), {
+    changedViews(screen, context({ baseline: screenManifest, result }), {
       ...result.screens[0]!,
     }),
     DARK_VIEWS,
   );
 });
 
+test("a v3 component result keys every saved variant's view states", () => {
+  const result = componentVariantResult();
+  const comparison = result.components[0];
+  assert.ok(comparison);
+  const evidence = viewStatesBySelection(
+    component,
+    context({ baseline: componentBaseline, result }),
+    comparison,
+  );
+
+  assert.deepEqual(Object.keys(evidence), ["default", "second", "removed"]);
+  assert.deepEqual(
+    evidence.second,
+    comparison.variants
+      .find(({ id }) => id === "second")
+      ?.views.map(({ colorScheme, state, viewport }) => ({
+        colorScheme,
+        state,
+        viewport,
+      })),
+  );
+  assert.deepEqual(
+    viewStates(
+      component,
+      context({ baseline: componentBaseline, result }),
+      comparison,
+      "default",
+    ),
+    evidence.default,
+  );
+});
+
 test("lightweight screen-view evidence names the same views", () => {
   const evidence = {
-    baseline: manifest,
+    baseline: screenManifest,
     screenViews: [
       {
         route: screen.route,
@@ -143,11 +95,28 @@ test("lightweight screen-view evidence names the same views", () => {
   assert.deepEqual(changedViews(screen, context(evidence), undefined), [
     ...DARK_VIEWS,
   ]);
+  assert.deepEqual(viewStates(screen, context(evidence), undefined), [
+    { viewport: "desktop", colorScheme: "dark", state: "changed" },
+    { viewport: "mobile", colorScheme: "light", state: "unchanged" },
+    { viewport: "mobile", colorScheme: "dark", state: "changed" },
+    { viewport: "desktop", colorScheme: "light", state: "unchanged" },
+  ]);
+  assert.deepEqual(
+    viewStatesBySelection(screen, context(evidence), undefined),
+    {
+      welcome: [
+        { viewport: "desktop", colorScheme: "dark", state: "changed" },
+        { viewport: "mobile", colorScheme: "light", state: "unchanged" },
+        { viewport: "mobile", colorScheme: "dark", state: "changed" },
+        { viewport: "desktop", colorScheme: "light", state: "unchanged" },
+      ],
+    },
+  );
 });
 
 test("added and removed views count as changed views", () => {
   const evidence = {
-    baseline: manifest,
+    baseline: screenManifest,
     screenViews: [
       {
         route: screen.route,
@@ -168,24 +137,34 @@ test("added and removed views count as changed views", () => {
 test("unknown evidence leaves the changed views empty", () => {
   assert.deepEqual(changedViews(screen, context(), undefined), []);
   assert.deepEqual(
-    changedViews(screen, context({ baseline: manifest }), undefined),
+    changedViews(screen, context({ baseline: screenManifest }), undefined),
     [],
   );
+  assert.equal(viewStates(screen, context(), undefined), undefined);
+  assert.deepEqual(viewStatesBySelection(screen, context(), undefined), {});
 });
 
 test("workspace data publishes one changed-view list for a screen", () => {
   const result = darkOnlyResult("changed");
-  const catalogue = createCatalogue(manifest);
+  const catalogue = createCatalogue(screenManifest);
   const data = workspaceData(
     catalogue,
-    context({ baseline: manifest, result }),
+    context({ baseline: screenManifest, result }),
     screen,
   );
   assert.deepEqual(data.changedViews, { welcome: DARK_VIEWS });
+  assert.deepEqual(
+    data.viewStates.welcome,
+    result.screens[0]?.views.map(({ colorScheme, state, viewport }) => ({
+      colorScheme,
+      state,
+      viewport,
+    })),
+  );
   assert.equal(data.status, "Changed");
-  assert.deepEqual(workspaceData(catalogue, context(), screen).changedViews, {
-    welcome: [],
-  });
+  const unknown = workspaceData(catalogue, context(), screen);
+  assert.deepEqual(unknown.changedViews, { welcome: [] });
+  assert.deepEqual(unknown.viewStates, {});
 });
 
 test("workspace data keeps changed views with current and removed variants", () => {
@@ -210,6 +189,19 @@ test("workspace data keeps changed views with current and removed variants", () 
       { viewport: "desktop", colorScheme: "dark" },
     ],
   });
+  assert.deepEqual(
+    data.viewStates,
+    Object.fromEntries(
+      result.components[0]!.variants.map(({ id, views }) => [
+        id,
+        views.map(({ colorScheme, state, viewport }) => ({
+          colorScheme,
+          state,
+          viewport,
+        })),
+      ]),
+    ),
+  );
   assert.equal(
     data.variants.find(({ value }) => value.id === "removed")?.removed,
     true,
@@ -217,11 +209,11 @@ test("workspace data keeps changed views with current and removed variants", () 
 });
 
 test("the view controls and details name a dark-only change", () => {
-  const catalogue = createCatalogue(manifest);
+  const catalogue = createCatalogue(screenManifest);
   const html = viewPage(
     screen,
     catalogue,
-    context({ baseline: manifest, result: darkOnlyResult("unchanged") }),
+    context({ baseline: screenManifest, result: darkOnlyResult("unchanged") }),
   );
   assert.match(html, /data-workspace-status="">Unmodified</);
   assert.match(
@@ -248,8 +240,12 @@ test("the view controls and details name a dark-only change", () => {
 });
 
 test("an unchanged screen hides every changed-view mark and row", () => {
-  const catalogue = createCatalogue(manifest);
-  const html = viewPage(screen, catalogue, context({ baseline: manifest }));
+  const catalogue = createCatalogue(screenManifest);
+  const html = viewPage(
+    screen,
+    catalogue,
+    context({ baseline: screenManifest }),
+  );
   assert.match(
     html,
     /<span class="mbk-view-changed" aria-hidden="true" data-view-changed="scheme" hidden=""><\/span>/,

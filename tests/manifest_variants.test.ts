@@ -3,6 +3,7 @@ import test from "node:test";
 
 import type { ResolvedRegistryEntry } from "../dist/authoring/types.js";
 import { createManifest, parseManifest } from "../dist/registry/manifest.js";
+import { analyzeHierarchy } from "../packages/viewer/dist/registry/hierarchy.js";
 
 test("manifest emits variantOf only for screen variants", () => {
   const manifest = variantManifest();
@@ -15,6 +16,32 @@ test("manifest emits variantOf only for screen variants", () => {
     "welcome",
   );
   assert.equal(parseManifest(manifest).schemaVersion, 5);
+});
+
+test("manifest and hierarchy keep authored sibling variant order", () => {
+  const parent = resolvedScreen("welcome", "screens/welcome.html");
+  const zeta = resolvedScreen(
+    "welcome-zeta",
+    "screens/welcome.variants/zeta.html",
+    parent.id,
+  );
+  const alpha = resolvedScreen(
+    "welcome-alpha",
+    "screens/welcome.variants/alpha.html",
+    parent.id,
+  );
+  const manifest = createManifest([parent, zeta, alpha], [], ["light"]);
+
+  assert.deepEqual(
+    manifest.entries.map(({ id }) => id),
+    [parent.id, zeta.id, alpha.id],
+  );
+  assert.deepEqual(
+    analyzeHierarchy(manifest.entries)
+      .hierarchy.variantsById.get(parent.id)
+      ?.map(({ id }) => id),
+    [zeta.id, alpha.id],
+  );
 });
 
 test("manifest validation rejects broken variant parents and routes", () => {
