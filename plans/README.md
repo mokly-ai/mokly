@@ -5,7 +5,8 @@
 - [Screen Variants](./screen-variants.md) — variant screens with their own
   ids and routes grouped under a parent screen, expandable variant rows in
   the navigation, per-variant Changes, and changed-view marks on the view
-  controls.
+  controls; Milestones 1 to 8 are delivered, the design conversion awaits
+  approval, and six review findings await the user's decision.
 - [Co-Located Entry Discovery](./co-located-entry-discovery.md) — delivered
   on the branch with two review rounds applied and the fixed entry filename
   suffix removed and three review rounds applied; a fourth review round

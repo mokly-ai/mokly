@@ -2,9 +2,8 @@
 
 Status: active. Created 2026-09-19 with the user's consent after the design
 discussion in this workspace, then rewritten the same day when the user chose
-own routes over a query parameter. Milestones 1 to 7 are complete;
-Milestones 1 to 8 are complete; Milestone 9 is next and needs the user's
-approval first.
+own routes over a query parameter. Milestones 1 to 8 are complete;
+Milestone 9 is next and needs the user's approval first.
 
 **Goal:** Let a screen declare variants beside its default render, show them as
 an expandable list under the screen's navigation row, give each variant its
@@ -685,10 +684,64 @@ inventories list the new routes, and the plan is closed.
 
 #### Task 9.2: Review
 
-- [ ] After the push, review the complete local diff against `origin/main`
+- [x] After the push, review the complete local diff against `origin/main`
       using [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
       Report numbered findings with severity, context, impact, lettered
       options, and a recommendation without changing the implementation.
+      The findings are recorded below under Review Findings.
+
+## Review Findings (awaiting decision)
+
+Review of the complete branch diff after the Milestone 8 push, run with the
+review prompt by two independent reviewers. Nothing has been changed in
+response; Task 9.1 remains unapproved and untouched.
+
+1. **P2, the embeddable Viewer drops `variantOf`.** `displayEntry` in
+   `packages/viewer/src/viewer/projection.ts` rebuilds a manifest screen from
+   the public entry without copying `variantOf`, so a Viewer host sees every
+   variant as a root row with no grouping, crumb, details rows, aggregate
+   mark, or removed-variant adoption. Recommended: copy the field for current
+   and removed entries and add a public-model-to-Viewer round-trip test that
+   asserts the rendered hierarchy.
+2. **P2, Viewer link activation skips the Changes rules.** `viewerInput`
+   treats every anchor as an ordinary route: an aggregate-only parent opens
+   the parent and `revealSelection` then drops the filter to All, and a
+   changed row keeps the sticky viewport and scheme instead of landing on the
+   first changed view. Recommended: extract one typed Changes-activation
+   decision shared by standalone Browse and the Viewer, returning the
+   destination id, viewport, and scheme together, with controlled and
+   uncontrolled Viewer browser coverage.
+3. **P2, per-view evidence never drives the status or the comparison band.**
+   `workspaceData` derives status and comparison eligibility from route-level
+   membership only, so a dark-only change shows `Changed` and offers
+   comparisons while the light view on screen is known unchanged. The Changes
+   contract, this plan, and the approved `design-browse-changed-views` mockup
+   all require `Unmodified` with no band for the shown view; the browser test
+   locks in the conflicting `Changed`. Recommended: carry typed per-view state
+   keyed by screen or saved variant, define the `Both` aggregation rule, and
+   recompute status and eligibility whenever viewport, scheme, saved variant,
+   or evidence changes, with tests for each transition. Also reword the
+   mockup description, which calls its light state an arrival from Changes.
+4. **P2, registry sorting rewrites authored variant order.**
+   `prepareRegistry` sorts every entry by route before the manifest is built,
+   so sibling variants land in slug order (`zeta` before `alpha` authors as
+   `[parent, alpha, zeta]`), contradicting the authored-order promise in the
+   variants contract and the navigation section, while one contract sentence
+   calls manifest order "the route order". Recommended: preserve a
+   parent-local authored ordinal through canonicalization, fix the sentence,
+   and add an authoring-to-navigation test with reverse-lexical slugs.
+5. **P3, a filtered-out parent leaves an orphan chevron.** `applyNavVisibility`
+   hides the parent link but not the `mbk-nav-leaf` container, so a search
+   that matches only another row still shows the parent's focusable
+   `Show variants of …` button on its own line (confirmed by screenshot).
+   Recommended: hide the leaf container whenever its link is hidden, in the
+   same helper that reconciles variant visibility, and cover it with a
+   navigation-state unit test.
+6. **P3, delivery wording is stale.** The README says navigation grouping
+   "follows in its UI milestone", the variants contract's Delivery Status
+   describes Milestones 5 to 7 as pending and omits Milestone 8, and this
+   plan's header repeats itself. Recommended: state once that Milestones 1 to
+   8 are implemented and Milestone 9 awaits approval.
 
 ## Post-merge follow-up (non-blocking)
 
