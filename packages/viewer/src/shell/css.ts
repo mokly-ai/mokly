@@ -8,6 +8,7 @@ import { SHELL_NAV_CSS } from "./css_nav.js";
 import { SHELL_NAV_RESIZE_CSS } from "./css_nav_resize.js";
 import { SHELL_NAV_STATUS_CSS } from "./css_nav_status.js";
 import { SHELL_REVIEW_CSS } from "./css_review.js";
+import { SHELL_THEME_CSS } from "./css_theme.js";
 import { SHELL_TOKENS_CSS } from "./css_tokens.js";
 import { SHELL_VIEW_CSS } from "./css_views.js";
 import { SHELL_WORKSPACE_CSS } from "./css_workspace.js";
@@ -15,6 +16,7 @@ import { SHELL_WORKSPACE_CSS } from "./css_workspace.js";
 /** The complete shell stylesheet. */
 export const SHELL_CSS =
   SHELL_TOKENS_CSS +
+  SHELL_THEME_CSS +
   SHELL_NAV_CSS +
   SHELL_NAV_STATUS_CSS +
   SHELL_NAV_RESIZE_CSS +

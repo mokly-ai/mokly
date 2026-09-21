@@ -1,14 +1,15 @@
 # Viewer Dark Mode
 
-Status: in progress; the documentation and mockup milestones through 2F are
+Status: in progress; the documentation and mockup milestones through 2M are
 complete: the built-in preview toggle switches every dual-scheme mockup, the
 standalone design shows one Appearance control on every top bar, the legacy
 head-band scheme depictions are consolidated, the branch carries the merge of
-`origin/main`, and the Node CommonJS lexer crash is contained. Milestones 2G
-and 2H close the findings from the 2F review; Milestone 3 is next. The user
-asked on 2026-09-20 for UI milestones to go to Opus 5 and non-UI milestones
-to Codex, each checked by the parent session. Runtime implementation has not
-started. The implementation PR's merge is this plan's completion boundary.
+`origin/main`, the Node compatibility policy is enforced, the lint gate
+ignores git-ignored scratch, and the design boundary audit enforces the
+palette contract. Milestone 3 (runtime) is next. The user asked on
+2026-09-20 for UI milestones to go to Opus 5 and non-UI milestones to Codex,
+each checked by the parent session. The implementation PR's merge is this
+plan's completion boundary.
 
 Give `@mokly/viewer`, local Serve and static exports a complete Auto/Light/Dark
 appearance. The [appearance contract](../docs/protocol/mokly-viewer-appearance.md)

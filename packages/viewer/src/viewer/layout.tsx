@@ -10,7 +10,13 @@ import type { ShellView } from "../shell/views.js";
 import { MarkerLayer } from "./marker_layer.js";
 import type { MarkerStore } from "./marker_store.js";
 import { islandMarkup } from "./markup.js";
-import type { ViewerMarker, ViewerSelection, ViewerSlots } from "./types.js";
+import { themeAttributes } from "./theme.js";
+import type {
+  ViewerMarker,
+  ViewerSelection,
+  ViewerSlots,
+  ViewerTheme,
+} from "./types.js";
 
 export interface LayoutProps {
   catalogue: Catalogue;
@@ -21,6 +27,7 @@ export interface LayoutProps {
   markerStore?: MarkerStore;
   markers?: readonly ViewerMarker[];
   slots?: ViewerSlots;
+  theme?: ViewerTheme;
 }
 // The runtime owns these islands after mount; React only updates the slots.
 const Island = memo(
@@ -44,6 +51,7 @@ export function ViewerLayout({
   markerStore,
   markers,
   slots,
+  theme,
 }: LayoutProps) {
   return (
     <div
@@ -52,6 +60,7 @@ export function ViewerLayout({
       tabIndex={-1}
       data-mokly-shell=""
       data-mokly-color-scheme={selection.colorScheme}
+      {...themeAttributes(theme)}
     >
       <a className="mbk-skip-link" href="#mb-main">
         Skip to content

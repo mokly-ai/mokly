@@ -50,7 +50,7 @@ export const CSS_CHROME_EXPANSION = `
 }
 
 .browser-expand:hover {
-  background: #ffffff;
+  background: var(--chrome-surface);
   color: var(--chrome-accent);
   border-color: var(--chrome-border-strong);
 }
@@ -86,7 +86,7 @@ body.frame-expanded::before {
   position: fixed;
   inset: 0;
   z-index: 900;
-  background: rgba(20, 28, 22, 0.55);
+  background: var(--chrome-scrim);
 }
 
 .browser-frame.is-expanded {
@@ -96,7 +96,7 @@ body.frame-expanded::before {
   width: auto;
   max-width: none;
   height: auto;
-  box-shadow: 0 40px 120px rgba(20, 28, 22, 0.4);
+  box-shadow: var(--chrome-shadow);
 }
 
 body[data-mokly-color-scheme="dark"]

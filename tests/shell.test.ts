@@ -202,7 +202,7 @@ function tagsRow(...tags: readonly string[]): string {
 }
 
 const SCHEME_SWITCH =
-  '<span aria-label="Color scheme" class="mbk-seg" data-mokly-schemeswitch="" role="group">' +
+  '<span aria-label="Preview color scheme" class="mbk-seg" data-mokly-schemeswitch="" role="group">' +
   '<button aria-pressed="true" data-color-scheme-option="light" type="button">Light</button>' +
   '<button aria-pressed="false" data-color-scheme-option="dark" type="button">Dark</button>' +
   "</span>";
@@ -426,7 +426,7 @@ test("scheme switch renders only for catalogues with dark fragments", () => {
   assert.equal(occurrences(home, "data-mokly-schemeswitch"), 1);
   assert.match(
     home,
-    /data-mokly-search[\s\S]*?<\/div><span aria-label="Color scheme"[\s\S]*?<\/span><\/header>/,
+    /data-mokly-search[\s\S]*?<\/div><span aria-label="Preview color scheme"[\s\S]*?<\/span><\/header>/,
   );
 
   const screen = routePage(dark, "screens/welcome.html");
@@ -442,7 +442,7 @@ test("scheme switch renders only for catalogues with dark fragments", () => {
   assert.equal(flow.includes("data-mokly-viewswitch"), false);
   assert.match(
     flow,
-    /<\/div><span aria-label="Color scheme"[\s\S]*?<\/span><\/div><div class="mbk-flow"/,
+    /<\/div><span aria-label="Preview color scheme"[\s\S]*?<\/span><\/div><div class="mbk-flow"/,
   );
 
   const legacy = routePage(dark, "legacy/old.html");
@@ -734,7 +734,7 @@ test("filter renders in the nav only when changed routes are known", () => {
 
 test("shell stylesheet stays aligned with the design contract", () => {
   assert.match(SHELL_CSS, /--mokly-accent: #4f7864/);
-  assert.match(SHELL_CSS, /--mb-added: #1d7a3d/);
+  assert.match(SHELL_CSS, /--mb-added: var\(--mbk-accent-deep\)/);
   assert.match(SHELL_CSS, /--mbk-dark-screen-bg: #121514/);
   assert.match(SHELL_CSS, /--mbk-dark-screen-ink: #eef1ef/);
   assert.match(SHELL_CSS, /color-scheme: light/);
@@ -871,8 +871,8 @@ test("tag chips select in the accent and the bar clears the scrim", () => {
   );
   assert.ok(
     css.includes(
-      ".mbk-chip.tag:is(a, button):active { box-shadow: inset 0 1px 2px " +
-        "rgba(20, 28, 22, 0.14); transform: translateY(1px); }",
+      ".mbk-chip.tag:is(a, button):active { " +
+        "box-shadow: var(--chrome-shadow-press); transform: translateY(1px); }",
     ),
   );
   assert.match(
@@ -967,11 +967,16 @@ test("dark scheme paints device screens and leaves the chrome light", () => {
     assert.ok(selector.startsWith(scope.trim()), selector);
   }
 
-  assert.match(SHELL_CSS, /\.phone-screen \{[^}]*background: #ffffff;/);
+  // Preview surfaces never follow the interface, so the light screen is a
+  // preview token rather than a themed role.
+  assert.match(
+    SHELL_CSS,
+    /\.phone-screen \{[^}]*background: var\(--mbk-screen-bg\);/,
+  );
   assert.match(SHELL_CSS, /\.phone-status \{[^}]*color: var\(--chrome-ink\);/);
   assert.match(
     SHELL_CSS,
-    /\.phone-home \{[^}]*background: rgba\(20, 24, 20, 0\.4\);/,
+    /\.phone-home \{[^}]*background: var\(--mbk-device-home\);/,
   );
   assert.match(
     SHELL_CSS,

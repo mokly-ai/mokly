@@ -21,9 +21,9 @@ export function WorkspaceControls({ dark }: { dark: boolean }) {
         <button
           type="button"
           className="mbk-icon-button"
-          aria-label="Dark mode"
+          aria-label="Dark preview"
           aria-pressed="false"
-          title="Dark mode"
+          title="Dark preview"
           data-workspace-scheme=""
         >
           <WorkspaceIcon name="scheme" />

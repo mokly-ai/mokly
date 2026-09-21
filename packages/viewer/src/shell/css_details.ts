@@ -175,7 +175,7 @@ details.mbk-details[open] > summary.mbk-details-bar .chev svg {
 }
 
 .mbk-chip.tag:is(a, button):active {
-  box-shadow: inset 0 1px 2px rgba(20, 28, 22, 0.14);
+  box-shadow: var(--chrome-shadow-press);
   transform: translateY(1px);
 }
 

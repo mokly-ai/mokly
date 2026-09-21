@@ -6,7 +6,7 @@ export const CSS_CHROME_DEVICES = `
   height: 844px;
   padding: 12px;
   border-radius: 46px;
-  background: #171a18;
+  background: var(--mbk-device-body);
 }
 
 .phone-notch,
@@ -23,7 +23,7 @@ export const CSS_CHROME_DEVICES = `
   height: 30px;
   transform: translateX(-50%);
   border-radius: 999px;
-  background: #0b0d0c;
+  background: var(--mbk-device-notch);
 }
 
 .phone-screen {
@@ -33,7 +33,7 @@ export const CSS_CHROME_DEVICES = `
   height: 100%;
   overflow: hidden;
   border-radius: 36px;
-  background: #ffffff;
+  background: var(--mbk-screen-bg);
 }
 
 .phone-status {
@@ -65,7 +65,7 @@ export const CSS_CHROME_DEVICES = `
   height: 4px;
   transform: translateX(-50%);
   border-radius: 999px;
-  background: rgba(20, 24, 20, 0.4);
+  background: var(--mbk-device-home);
   pointer-events: none;
 }
 
@@ -86,7 +86,7 @@ export const CSS_CHROME_DEVICES = `
   gap: 12px;
   align-items: center;
   padding: 0 14px;
-  background: #ecede9;
+  background: var(--mbk-browser-bar);
   border-bottom: 1px solid var(--chrome-border);
 }
 
@@ -103,15 +103,15 @@ export const CSS_CHROME_DEVICES = `
 }
 
 .lights i:first-child {
-  background: #d9655b;
+  background: var(--mbk-device-light-close);
 }
 
 .lights i:nth-child(2) {
-  background: #dba43d;
+  background: var(--mbk-device-light-minimise);
 }
 
 .lights i:nth-child(3) {
-  background: #50a86d;
+  background: var(--mbk-device-light-expand);
 }
 
 .address {
@@ -149,7 +149,7 @@ export const CSS_CHROME_DEVICES = `
 }
 
 .address:hover {
-  background: #ffffff;
+  background: var(--chrome-surface);
   color: var(--chrome-ink);
 }
 
@@ -163,7 +163,7 @@ export const CSS_CHROME_DEVICES = `
   left: 50%;
   transform: translateX(-50%);
   background: var(--chrome-ink);
-  color: #ffffff;
+  color: var(--chrome-surface);
   padding: 5px 10px;
   border-radius: 6px;
   font-family: var(--sans);
@@ -173,7 +173,7 @@ export const CSS_CHROME_DEVICES = `
   white-space: nowrap;
   z-index: 100;
   pointer-events: none;
-  box-shadow: 0 6px 16px rgba(20, 28, 22, 0.18);
+  box-shadow: var(--chrome-shadow-sheet);
   animation: addressCopiedIn 0.18s ease-out;
 }
 `;

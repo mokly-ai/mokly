@@ -102,7 +102,9 @@ for (const viewport of ["desktop", "mobile"] as const)
     ).toBeDisabled();
     await page.getByLabel("Supply Hint", { exact: true }).uncheck();
     await expect(frame.locator("[data-hint]")).toHaveCount(0);
-    await page.getByRole("button", { name: "Dark mode", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Dark preview", exact: true })
+      .click();
     await expect(
       frame.getByRole("button", { name: "Purchase" }),
     ).toHaveAttribute("data-scheme", "dark");
@@ -216,7 +218,7 @@ test("changing context while the first edit is pending cannot apply an obsolete 
   );
   await page.getByLabel("Label", { exact: true }).fill("Context edit");
   await pending;
-  await page.getByRole("button", { name: "Dark mode", exact: true }).click();
+  await page.getByRole("button", { name: "Dark preview", exact: true }).click();
   await expect(
     page
       .frameLocator('[data-workspace-frame="desktop"]')

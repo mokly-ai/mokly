@@ -13,6 +13,7 @@ import { viewerCatalogue, viewerContext, viewerView } from "./projection.js";
 import { ViewerRuntime } from "./runtime.js";
 import { defaultSelection, normalizeSelection } from "./selection.js";
 import type { LoadedCatalogue } from "./source.js";
+import { themeAttributes } from "./theme.js";
 import type { MoklyViewerProps, ViewerSelection } from "./types.js";
 
 type ReadyProps = MoklyViewerProps & {
@@ -49,7 +50,11 @@ export function ReadyViewer(props: ReadyProps) {
   }, [normalized]);
   if (!normalized)
     return (
-      <div className="mokly-viewer mbk-empty" role="alert">
+      <div
+        className="mokly-viewer mbk-empty"
+        role="alert"
+        {...themeAttributes(props.theme)}
+      >
         The requested view is unavailable.
       </div>
     );
@@ -126,6 +131,7 @@ function MountedViewer(
         baseUrl={props.loaded.url}
         markerStore={markerStore}
         markers={props.markers ?? []}
+        {...(props.theme ? { theme: props.theme } : {})}
         {...(props.slots ? { slots: props.slots } : {})}
       />
     </div>

@@ -82,7 +82,9 @@ test("Usage and Changes completion preserve edited props and their live preview"
     await expect(
       frame.getByRole("button", { name: "Continue" }),
     ).toBeDisabled();
-    await page.getByRole("button", { name: "Dark mode", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Dark preview", exact: true })
+      .click();
     await expect(
       frame.getByRole("button", { name: "Continue" }),
     ).toHaveAttribute("data-scheme", "dark");

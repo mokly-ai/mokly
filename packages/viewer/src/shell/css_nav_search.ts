@@ -51,7 +51,7 @@ details.mbk-nav-group[open] > summary .mbk-nav-ico.folder > svg:nth-child(2) {
 
 .mbk-nav-row.active .mbk-nav-ico,
 .mbk-nav-row[aria-current="page"] .mbk-nav-ico {
-  color: rgba(255, 255, 255, 0.9);
+  color: color-mix(in srgb, var(--mokly-accent-contrast) 90%, transparent);
 }
 
 .mbk-nav-row.active .mbk-nav-label,
@@ -68,7 +68,7 @@ details.mbk-nav-group[open] > summary .mbk-nav-ico.folder > svg:nth-child(2) {
 
 .mbk-nav-row.active .mbk-nav-count,
 .mbk-nav-row[aria-current="page"] .mbk-nav-count {
-  color: rgba(255, 255, 255, 0.75);
+  color: color-mix(in srgb, var(--mokly-accent-contrast) 75%, transparent);
 }
 
 .mbk-nav-row[hidden],
@@ -117,7 +117,7 @@ details.mbk-nav-group > summary::-webkit-details-marker {
   width: 7px;
   height: 7px;
   border-radius: 999px;
-  background: #c98a2b;
+  background: var(--mbk-status-changed-ink);
 }
 
 @media (max-width: 56.25rem) {
@@ -152,7 +152,7 @@ details.mbk-nav-group > summary::-webkit-details-marker {
     max-width: 20rem;
     border-right: 1px solid var(--chrome-border);
     overflow: hidden;
-    box-shadow: 0 0 0 100vmax rgba(20, 28, 22, 0.4);
+    box-shadow: 0 0 0 100vmax var(--chrome-scrim);
   }
 
   .mbk[data-drawer="open"] .mbk-nav {

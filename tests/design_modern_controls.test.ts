@@ -76,7 +76,7 @@ test("every owning design and shared sample omits legacy footer and view markup"
         assert.doesNotMatch(html, /class="mbk-details(?:-bar|-hint)?"/, file);
         assert.doesNotMatch(
           html,
-          /role="group" aria-label="(?:Viewport|Color scheme)"/,
+          /role="group" aria-label="(?:Viewport|Preview color scheme)"/,
           file,
         );
       }

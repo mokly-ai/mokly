@@ -10,7 +10,7 @@ import { ViewerLayout } from "./layout.js";
 import { viewerCatalogue, viewerContext, viewerView } from "./projection.js";
 import { defaultSelection, normalizeSelection } from "./selection.js";
 import { readObjectSource } from "./source.js";
-import type { ViewerSelection, ViewerSlots } from "./types.js";
+import type { ViewerSelection, ViewerSlots, ViewerTheme } from "./types.js";
 
 export interface ServerViewerProps {
   catalogue: CatalogueReadModel;
@@ -18,6 +18,8 @@ export interface ServerViewerProps {
   selection?: ViewerSelection;
   defaultSelection?: Partial<ViewerSelection>;
   slots?: ViewerSlots;
+  /** Interface appearance; omission means `auto`. */
+  theme?: ViewerTheme;
 }
 export interface ViewerServerContext {
   catalogue: Catalogue;
@@ -47,6 +49,7 @@ export function renderViewer(
         view={viewerView(catalogue, selection)}
         selection={selection}
         baseUrl={loaded.url}
+        {...(props.theme ? { theme: props.theme } : {})}
         {...(props.slots ? { slots: props.slots } : {})}
       />
     </div>,

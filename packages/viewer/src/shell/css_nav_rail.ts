@@ -25,7 +25,7 @@ export const CSS_NAV_RAIL = `
   padding: 6px 12px;
   border-radius: 8px;
   background: var(--chrome-ink);
-  color: #ffffff;
+  color: var(--mokly-accent-contrast);
   font-weight: 600;
   text-decoration: none;
 }

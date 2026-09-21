@@ -4,6 +4,7 @@ import { sameOriginAdapter } from "../client/same_origin_adapter.js";
 
 import { ReadyViewer } from "./ready.js";
 import { useCatalogue } from "./source_hook.js";
+import { themeAttributes } from "./theme.js";
 import type { MoklyViewerProps } from "./types.js";
 
 /** Mount a validated catalogue with host-owned slots and isolated runtime state. */
@@ -56,7 +57,11 @@ export function MoklyViewer(props: MoklyViewerProps) {
   }, [source.error, source.key, invalidMode]);
   if (source.error || invalidMode)
     return (
-      <div className="mokly-viewer mbk-empty" role="alert">
+      <div
+        className="mokly-viewer mbk-empty"
+        role="alert"
+        {...themeAttributes(props.theme)}
+      >
         <h2>The catalogue could not be loaded</h2>
         <button type="button" onClick={source.retry}>
           Try again
@@ -65,7 +70,11 @@ export function MoklyViewer(props: MoklyViewerProps) {
     );
   if (!source.loaded)
     return (
-      <div className="mokly-viewer mbk-empty" role="status">
+      <div
+        className="mokly-viewer mbk-empty"
+        role="status"
+        {...themeAttributes(props.theme)}
+      >
         Loading catalogue…
       </div>
     );

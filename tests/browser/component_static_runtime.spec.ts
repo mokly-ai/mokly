@@ -69,7 +69,9 @@ for (const viewport of ["desktop", "mobile"] as const)
         .frameLocator(`[data-workspace-frame="${viewport}"]`)
         .getByRole("button", { name: "Continue" }),
     ).toBeDisabled();
-    await page.getByRole("button", { name: "Dark mode", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Dark preview", exact: true })
+      .click();
     await expect
       .poll(() =>
         page

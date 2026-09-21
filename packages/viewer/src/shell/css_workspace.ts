@@ -34,9 +34,9 @@ export const SHELL_WORKSPACE_CSS = `
   background: var(--chrome-surface); color: var(--chrome-ink); border: 1px solid var(--chrome-border); border-radius: 6px; padding: 6px 28px 6px 8px; font: inherit;
 }
 .mbk-entry-status { border: 1px solid var(--chrome-border); border-radius: 5px; padding: 3px 7px; font-weight: 600; color: var(--chrome-ink-2); }
-.mbk-entry-status[data-status="Added"] { color: #246343; background: #e6f3ea; }
-.mbk-entry-status[data-status="Changed"] { color: #745316; background: #faf1d8; }
-.mbk-entry-status[data-status="Removed"] { color: #873a35; background: #fae9e7; }
+.mbk-entry-status[data-status="Added"] { color: var(--mb-added); background: var(--mb-added-soft); }
+.mbk-entry-status[data-status="Changed"] { color: var(--mb-changed); background: var(--mb-changed-soft); }
+.mbk-entry-status[data-status="Removed"] { color: var(--mb-removed); background: var(--mb-removed-soft); }
 .mbk-variant-status { color: var(--chrome-muted); }
 .mbk-selection-error { margin: 0; padding: 10px 24px; color: var(--chrome-ink); }
 .mbk-workspace-panes { display: flex; flex: 1; flex-direction: column; position: relative; min-height: 0; min-width: 0; }
@@ -78,18 +78,18 @@ export const SHELL_WORKSPACE_CSS = `
 .mbk-comparison-evidence ul + p { margin-top: 14px; }
 .mbk-highlight-layer { position: fixed; pointer-events: none; z-index: 4; overflow: hidden; }
 .mbk-highlight-layer svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.mbk-highlight-label { position: absolute; pointer-events: auto; max-width: 230px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border: 0; border-radius: 4px; background: #336249; color: white; padding: 3px 7px; font: 11px var(--sans); cursor: pointer; }
+.mbk-highlight-label { position: absolute; pointer-events: auto; max-width: 230px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border: 0; border-radius: 4px; background: var(--mbk-accent-deep); color: var(--mokly-accent-contrast); padding: 3px 7px; font: 11px var(--sans); cursor: pointer; }
 .mbk-control-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px 24px; }
 .mbk-control-field { display: flex; flex-direction: column; gap: 6px; position: relative; min-width: 0; }
 .mbk-control-field > label:not(.mbk-control-supplied) { font-size: 12px; font-weight: 600; }
 .mbk-control-field input:not([type=checkbox]), .mbk-control-field select { min-width: 0; width: 100%; padding: 8px 10px; font: inherit; color: var(--chrome-ink); border: 1px solid var(--chrome-border); border-radius: 6px; background: var(--chrome-surface); }
 .mbk-control-field input[type=checkbox] { align-self: start; accent-color: var(--mokly-accent); width: 16px; height: 16px; }
-.mbk-control-field [aria-invalid=true] { border-color: #a33737; }
+.mbk-control-field [aria-invalid=true] { border-color: var(--mbk-danger-ink); }
 .mbk-control-field input:focus-visible, .mbk-control-field select:focus-visible { outline: 2px solid var(--mokly-accent); outline-offset: 2px; }
 .mbk-control-field :disabled { opacity: .6; cursor: default; }
 .mbk-control-field small { color: var(--chrome-muted); }
 .mbk-control-field .mbk-control-supplied { display: flex; align-items: center; gap: 4px; position: absolute; right: 0; top: -3px; color: var(--chrome-muted); font-size: 11px; }
-.mbk-control-field .mbk-control-error, .mbk-control-error { color: #9b3333; }
+.mbk-control-field .mbk-control-error, .mbk-control-error { color: var(--mbk-danger-ink); }
 .mbk-control-actions { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
 .mbk-control-actions p { margin: 0 auto 0 0; color: var(--chrome-muted); }
 @media (max-width: 56.25rem) {
@@ -98,7 +98,7 @@ export const SHELL_WORKSPACE_CSS = `
   .mbk-workspace .mbk-title-row h2 { font-size: 17px; }
   .mbk-selection-bar { padding: 8px 12px; }
   .mbk-workspace-panes { padding-bottom: 46px; }
-  .mbk-inspector { position: absolute; left: 8px; right: 8px; bottom: 0; border: 1px solid var(--chrome-border); border-bottom: 0; border-radius: 14px 14px 0 0; padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -5px 20px #0000000a; }
+  .mbk-inspector { position: absolute; left: 8px; right: 8px; bottom: 0; border: 1px solid var(--chrome-border); border-bottom: 0; border-radius: 14px 14px 0 0; padding-bottom: env(safe-area-inset-bottom); box-shadow: var(--chrome-shadow-sheet); }
   .mbk-inspector[data-open="true"] { height: min(42%, 320px); min-height: 190px; max-height: calc(100% - 36px); }
   .mbk-inspector[data-expanded="true"][data-open="true"] { height: 80%; }
   .mbk-inspector-tabs { padding: 4px 10px; }

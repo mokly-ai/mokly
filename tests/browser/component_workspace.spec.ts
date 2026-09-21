@@ -58,7 +58,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
         await expect(label).toHaveValue("Keep this edit");
       }
       await expect(
-        toolbar.getByRole("switch", { name: "Dark mode" }),
+        toolbar.getByRole("switch", { name: "Dark preview" }),
       ).toHaveCount(0);
       await expect(page.locator(".ce-canvas:visible .ce-scheme")).toHaveText([
         "Light",
