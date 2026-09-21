@@ -261,6 +261,37 @@ first hydration or authenticated handoff continuity.
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
 
+## Milestone 4: Browser CI Synchronization
+
+Tags: ui
+
+Summary: remove timing-dependent waits exposed by the hosted Chromium shards
+without weakening the navigation or handoff assertions.
+
+- [x] Inspect the failed Node 22 trace and both shard-1 logs. Confirm that the
+      hydration test deadlocks by waiting for the full page load while holding
+      a load-blocking image request, and that the design-link test activates
+      `Open Welcome` in the prior document before the preceding parent route
+      and iframe replacement complete.
+- [x] Make the initial-hydration test wait only for the outer document's DOM
+      content before awaiting its deliberately held image request, preserving
+      the assertion that navigation stays host-owned while the frame is still
+      loading.
+- [x] Make the published-design-link test await both the parent route and the
+      completed replacement frame before interacting with controls in that
+      destination document, following the browser-test guidance in the root
+      README.
+- [x] Run the two affected browser specs repeatedly with the CI Chromium
+      channel and run the relevant formatting, lint, and type checks.
+- [x] Run the complete `cargo xtask check` gate with no failures or skips.
+- [ ] After checks pass, `git add -A`, commit with Conventional Commits, and
+      push the branch.
+- [ ] After the push, use
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main`; report
+      numbered, severity-rated findings with options and recommendations
+      without changing the implementation.
+
 ## Post-merge follow-up (non-blocking)
 
 - Publish the viewer version containing the handoff fix; hosts that embed
@@ -334,3 +365,12 @@ found no remaining findings. Residual risk is limited to browser-engine timing
 outside the tested Chromium matrix; the direct adapter and hydrated shell cases
 cover both exact-URL and different-URL unowned documents, first hydration, and
 authenticated replacement continuity.
+
+Milestone 4 traced the hosted failures to two test-ordering defects. The
+initial-hydration test waited for the full outer load while deliberately holding
+a frame image that blocked that load. The published-design test clicked a link
+in the previous iframe document before the preceding parent route and frame
+replacement completed. Two focused Playwright Chromium runs each passed all
+seven affected-spec tests after the synchronization changes. The complete
+`cargo xtask check` gate then passed 2,005 unit/integration tests and 529 browser
+tests with no failures, skips, cancellations, or missing inventory.
