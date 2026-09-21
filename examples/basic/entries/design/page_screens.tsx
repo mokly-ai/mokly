@@ -7,9 +7,9 @@ import { DESTINATIONS } from "./parts/destinations.js";
 import { DetailsPanel } from "./parts/details.js";
 import { MetaRow } from "./parts/metadata_row.js";
 import { NavDrawer, NavTree, type NavNode } from "./parts/nav.js";
+import { REMOVED_DOCUMENTS, RemovedPageScreen } from "./parts/removed_page.js";
 import { ScreenHead, Shell, type ArtboardViewport } from "./parts/shell.js";
-import { Stage } from "./parts/stage.js";
-import { EmptyState } from "./parts/stage_content.js";
+import { DocumentPane, Stage } from "./parts/stage.js";
 
 const nodes: readonly NavNode[] = [
   {
@@ -43,13 +43,7 @@ const nodes: readonly NavNode[] = [
   },
 ];
 
-function PageDetails({
-  removed = false,
-  open = false,
-}: {
-  removed?: boolean;
-  open?: boolean;
-}) {
+function PageDetails({ open = false }: { open?: boolean }) {
   const navigation = useDesignNavigation();
   return (
     <DetailsPanel open={open} destination={navigation.inspector}>
@@ -58,7 +52,6 @@ function PageDetails({
           <p className="mbk-details-desc">
             A handbook to accompany the example screens.
           </p>
-          {removed ? <p>Location: Example › Handbook</p> : null}
         </div>
         <div className="mbk-meta">
           <MetaRow name="source" label="Source">
@@ -82,87 +75,48 @@ function PageDetails({
 function PageView({
   viewport,
   details = false,
-  removed = false,
   drawer = false,
 }: {
   viewport: ArtboardViewport;
   details?: boolean;
-  removed?: boolean;
   drawer?: boolean;
 }) {
-  const label = removed ? "Getting started · Removed" : "Getting started";
-  const tree = removed
-    ? [
-        {
-          key: "removed-handbook",
-          kind: "page" as const,
-          label,
-          depth: 0,
-          to: DESTINATIONS.pageRemoved,
-        },
-      ]
-    : nodes;
   const nav = (
-    <NavTree
-      activeLabel={label}
-      changedOnly={removed}
-      changedCount={1}
-      nodes={tree}
-    />
+    <NavTree activeLabel="Getting started" changedCount={1} nodes={nodes} />
   );
   return (
     <Shell
       design={
-        removed
-          ? DESTINATIONS.pageRemoved
-          : drawer
-            ? DESTINATIONS.pageNavigation
-            : details
-              ? DESTINATIONS.pageDetails
-              : DESTINATIONS.page
+        drawer
+          ? DESTINATIONS.pageNavigation
+          : details
+            ? DESTINATIONS.pageDetails
+            : DESTINATIONS.page
       }
       viewport={viewport}
       nav={nav}
       aside={
         viewport === "mobile" && drawer ? (
           <NavDrawer
-            activeLabel={label}
-            nodes={tree}
-            changedOnly={removed}
+            activeLabel="Getting started"
             changedCount={1}
+            nodes={nodes}
           />
         ) : null
       }
     >
       <ScreenHead
         comparisons={false}
-        crumbs={removed ? ["Example", "Handbook"] : ["Example"]}
+        crumbs={["Example"]}
         idChip="example-handbook"
         title="Getting started"
-        {...(removed ? { status: "removed" as const } : {})}
       />
-      {removed ? (
-        <EmptyState
-          to={DESTINATIONS.home}
-          title="Page removed"
-          body="This document is no longer in the catalogue."
-          linkLabel="Go to the catalogue home"
-        />
-      ) : (
-        <Stage>
-          <div
-            style={{
-              border: "1px solid #e3e5e0",
-              borderRadius: 12,
-              overflow: "auto",
-              width: "100%",
-            }}
-          >
-            <ExampleDocument welcomeId={DESTINATIONS.welcome} />
-          </div>
-        </Stage>
-      )}
-      <PageDetails removed={removed} open={details || removed} />
+      <Stage>
+        <DocumentPane>
+          <ExampleDocument welcomeId={DESTINATIONS.welcome} />
+        </DocumentPane>
+      </Stage>
+      <PageDetails open={details} />
     </Shell>
   );
 }
@@ -185,11 +139,16 @@ function PageNavigationDesktop() {
 function PageNavigationMobile() {
   return <PageView viewport="mobile" drawer />;
 }
-function RemovedPageDesktop() {
-  return <PageView viewport="desktop" removed />;
-}
-function RemovedPageMobile() {
-  return <PageView viewport="mobile" removed />;
+
+/** The previous version of the removed handbook, rendered read-only. */
+function RemovedPageView({ viewport }: { viewport: ArtboardViewport }) {
+  return (
+    <RemovedPageScreen
+      document={<ExampleDocument readOnly />}
+      entry={REMOVED_DOCUMENTS.handbook}
+      viewport={viewport}
+    />
+  );
 }
 
 /** Owning responsive page designs, shared before runtime presentation. */
@@ -226,10 +185,12 @@ export const pageScreens = [
     id: "design-page-removed",
     title: "Removed document",
     description:
-      "A flat Changes row retains baseline context after its parents are deleted.",
+      "A removed document opens its previous version, keeping its flat Changes row and baseline ancestry.",
+    rationale:
+      "Deleting a document should not hide what it said. The previous version is the only readable copy left, so the stage shows it read-only under a quiet label instead of an empty state, while the Removed badge and the ancestry of the deleted parent stay in place.",
     slug: "removed",
     colorSchemes: ["light"],
-    desktop: <RemovedPageDesktop />,
-    mobile: <RemovedPageMobile />,
+    desktop: <RemovedPageView viewport="desktop" />,
+    mobile: <RemovedPageView viewport="mobile" />,
   }),
 ];

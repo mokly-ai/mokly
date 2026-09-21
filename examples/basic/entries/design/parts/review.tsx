@@ -1,6 +1,7 @@
 import { DESTINATIONS, type DesignDestination } from "./destinations.js";
 import { MiniWelcome } from "./mini_screens.js";
 import { NavDrawer, NavTree, type ChangesStatus, type NavNode } from "./nav.js";
+import { REMOVED_SCREEN_ROWS } from "./nav_data.js";
 import { BrowserFrame, PhoneFrame } from "./stage.js";
 
 /** Comparison classification states depicted inside a loaded comparison. */
@@ -35,26 +36,27 @@ const CHANGED_NODES: readonly NavNode[] = [
     label: "Details",
     to: DESTINATIONS.added,
   },
-  {
-    key: "farewell-removed",
+  ...REMOVED_SCREEN_ROWS.map((entry) => ({
+    key: entry.key,
     depth: 0,
-    kind: "screen",
-    label: "Farewell · Removed",
-    to: DESTINATIONS.removed,
-  },
+    kind: "screen" as const,
+    label: `${entry.title} · Removed`,
+    to: entry.design,
+  })),
 ];
 
 /** Changes uses the same catalogue navigation and filter as All. */
 export function ReviewNav({
+  activeDestination,
   activeTitle,
 }: {
+  activeDestination?: DesignDestination | undefined;
   activeTitle?: string | undefined;
 }) {
   return (
     <NavTree
-      activeLabel={
-        activeTitle === "Farewell" ? "Farewell · Removed" : activeTitle
-      }
+      activeDestination={activeDestination}
+      activeLabel={activeTitle}
       changedOnly
       nodes={CHANGED_NODES}
     />

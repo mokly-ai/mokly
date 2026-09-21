@@ -100,9 +100,9 @@ test("development React hydrates removed and renamed finalized routes", async ({
     );
     expect(response?.status(), route).toBe(200);
     await expect(page.locator("html")).toHaveAttribute("data-mokly-static", "");
-    await expect(
-      page.getByText("This document is no longer in the catalogue."),
-    ).toBeVisible();
+    await expect(page.locator(".mbk-previous")).toHaveText(
+      "Showing previous version",
+    );
     await expectCleanHydration(page, errors, route);
   }
 });

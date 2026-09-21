@@ -210,9 +210,14 @@ export function catalogueHtml(json: unknown, artifactOrigin: string) {
 asset resolution. `./runtime` exposes browser-safe live-capability, recovery,
 catalogue-revision, standalone-bootstrap, inspector metadata and local-frame
 helpers used by the CLI host and repository publication adapter. `./data`
-exposes shared pure build/comparison value contracts; it contains no CLI
-execution or filesystem access. Hosts embedding React normally use only the
-root entry and stylesheet.
+exposes shared pure build/comparison value contracts, including the strict
+`parseRemovedPagePreview` reader for advertised page-preview payloads; it
+contains no CLI execution or filesystem access. Public catalogue removed-entry
+types retain optional screen/page preview descriptors, validated against the
+catalogue's comparison generation. Selecting a removed entry renders its
+read-only previous version from those advertised addresses alone; a catalogue
+without them, or without a comparison, shows the unavailable state without any
+request. Hosts embedding React normally use only the root entry and stylesheet.
 
 `@mokly/viewer/browser` is the standalone browser entry paired with full
 documents rendered by `@mokly/viewer/server`. Serve and export bundle that entry

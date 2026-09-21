@@ -1,9 +1,13 @@
-import { invalidData } from "../components/data.js";
+import { exactKeys, invalidData } from "../components/data.js";
 
 import { CHANGE_STATUSES, readCollection, readEntry } from "./entry_reader.js";
 import { assertPublicCatalogue } from "./privacy.js";
 import { validateCatalogueReferences } from "./references.js";
-import type { CatalogueNode, CatalogueReadModel } from "./types.js";
+import type {
+  CatalogueNode,
+  CatalogueReadModel,
+  RemovedEntryPreview,
+} from "./types.js";
 import {
   array,
   choice,
@@ -12,6 +16,7 @@ import {
   hash,
   id,
   object,
+  pagePreviewPath,
   text,
 } from "./values.js";
 
@@ -64,11 +69,27 @@ export function readCatalogue(value: unknown): CatalogueReadModel {
           const ancestor = object(raw);
           return { id: id(ancestor.id), title: text(ancestor.title) };
         }),
+        ...(removed.preview === undefined
+          ? {}
+          : { preview: readPreview(removed.preview) }),
       };
     }),
   };
   validateCatalogueReferences(model);
   return model;
+}
+
+function readPreview(value: unknown): RemovedEntryPreview {
+  const input = object(value),
+    kind = choice(input.kind, ["screen", "page"] as const);
+  exactKeys(
+    input,
+    kind === "screen" ? ["kind"] : ["kind", "path"],
+    "$catalogue.preview",
+  );
+  return kind === "screen"
+    ? { kind }
+    : { kind, path: pagePreviewPath(input.path) };
 }
 
 function readNode(value: unknown): CatalogueNode {

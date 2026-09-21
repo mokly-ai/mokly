@@ -2,10 +2,16 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { mockLink } from "@mokly/mokly";
 
-/** Complete example document shared by the page and its shell designs. */
+/**
+ * Complete example document shared by the page and its shell designs. A
+ * read-only copy keeps the document's own appearance while its links, like
+ * every link in a previous version, do nothing.
+ */
 export function ExampleDocument({
+  readOnly = false,
   welcomeId = "example-welcome",
 }: {
+  readOnly?: boolean;
   welcomeId?: string;
 }) {
   return (
@@ -32,7 +38,13 @@ export function ExampleDocument({
         <li>Return to this handbook whenever you need it.</li>
       </ol>
       <p>
-        <a href={mockLink(welcomeId)}>Open Welcome</a>
+        {readOnly ? (
+          <span style={{ color: "#0000ee", textDecoration: "underline" }}>
+            Open Welcome
+          </span>
+        ) : (
+          <a href={mockLink(welcomeId)}>Open Welcome</a>
+        )}
       </p>
     </article>
   );

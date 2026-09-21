@@ -6,11 +6,13 @@ import { setTimeout } from "node:timers/promises";
 
 import { CachedBaselineBuilder } from "../dist/baseline/rebuild.js";
 import { serve } from "../dist/server/serve.js";
+import { parseRemovedPagePreview } from "../packages/viewer/dist/review/page_preview.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 
 import { processExists } from "./helpers/blocking_git.js";
 import { derivedFixture } from "./helpers/derived_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
+import { removedDeliverySource } from "./helpers/removed_delivery_fixture.js";
 
 for (const watch of [false, true]) {
   test(
@@ -75,6 +77,47 @@ for (const watch of [false, true]) {
     },
   );
 }
+
+test(
+  "derived Serve captures a removed page from its prepared baseline only",
+  { timeout: 30_000 },
+  async (t) => {
+    const fixture = await derivedFixture(t, removedDeliverySource(false), {
+      "assets/page.css":
+        '@import "./nested.css"; body { background: url("./past.png"); }',
+      "assets/nested.css": "main { color: rebeccapurple; }",
+      "assets/past.png": "historical image bytes",
+    });
+    await fs.writeFile(fixture.entryPath, removedDeliverySource(true));
+    await fs.rm(fixture.mockupsDir, { recursive: true });
+    const running = await serve(fixture.config, {
+      base: "origin/main",
+      port: 0,
+      watch: false,
+    });
+    try {
+      await waitFor(async () => {
+        const page = await (await fetch(running.url)).text();
+        return page.includes('data-changes-status="ready"') ? page : undefined;
+      });
+      t.mock.method(CachedBaselineBuilder.prototype, "build", async () => {
+        throw new Error("HTTP must never rebuild a baseline");
+      });
+      const response = await fetch(
+        `${running.url}/__mokly/diffs/review.json?page=archive%2Fremoved.html`,
+      );
+      assert.equal(response.status, 200, await response.clone().text());
+      const preview = parseRemovedPagePreview(await response.json());
+      assert.equal(preview.baseCommit, fixture.commit);
+      assert.match(
+        await (await fetch(new URL(preview.documentPath, response.url))).text(),
+        /Previous page/,
+      );
+    } finally {
+      await running.close();
+    }
+  },
+);
 
 test(
   "Serve shutdown cancels and drains a baseline process that ignores TERM",

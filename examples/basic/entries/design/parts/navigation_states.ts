@@ -55,6 +55,9 @@ export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
     drawer: { open: true, to: D.page },
   },
   [D.pageRemoved]: { all: D.home },
+  [D.pageRemovedLong]: { all: D.home },
+  [D.pageRemovedLoading]: { all: D.home },
+  [D.pageRemovedUnavailable]: { all: D.home },
   [D.publication]: {},
   [D.publicationChanges]: {
     all: D.publicationChanges,
@@ -107,6 +110,10 @@ export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
   [D.difference]: { ...welcomeFilters, comparison: welcomeModes },
   [D.added]: { ...detailsFilters },
   [D.removed]: { all: D.home },
+  [D.removedLong]: { all: D.home },
+  [D.removedLoading]: { all: D.home },
+  [D.removedUnavailable]: { all: D.home },
+  [D.removedNoView]: { all: D.home },
   [D.darkChanged]: {
     ...welcomeFilters,
     scheme: "dark",

@@ -34,7 +34,7 @@ test("consumer export builds unified pages and preserves a removed page's baseli
   assert.equal(removed.idRoutes["handbook"], "/view/handbook.html");
   assert.match(
     documentText(await read("view/handbook.html")),
-    /This page was removed/,
+    /Showing previous version/,
   );
   assert.match(
     await read("view/handbook.html"),
@@ -61,7 +61,7 @@ test("renamed pages retain their old route while the static id resolves to curre
     path.join(fixture.output, "id/handbook/index.html"),
     "utf8",
   );
-  assert.doesNotMatch(documentText(alias), /This page was removed/);
+  assert.doesNotMatch(documentText(alias), /Showing previous version/);
   assert.match(
     documentText(
       await fs.readFile(
@@ -69,6 +69,6 @@ test("renamed pages retain their old route while the static id resolves to curre
         "utf8",
       ),
     ),
-    /This page was removed/,
+    /Showing previous version/,
   );
 });

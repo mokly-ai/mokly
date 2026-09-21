@@ -63,6 +63,8 @@ when the historical primary file is absent, never when it is invalid.
 - [Breaking page migration](./mokly-page-migration.md)
 - [Optional changes in publication](./mokly-publication.md)
 - [Changes and screen comparisons](./mokly-changes.md)
+- [Removed content previews](./mokly-removed-previews.md) — removed screens
+  and pages show their pinned baseline version.
 - [Derived baselines](./mokly-derived-baselines.md) — default uncommitted
   generated output with per-commit rebuilt baselines.
   - [Baseline storage and execution](./mokly-baseline-storage.md) — archive limits,

@@ -150,6 +150,11 @@
   .ce-preview-view {
   display: block;
 }
+.ce-design:has(.ce-viewport-select option[value="both"]:checked)
+  .ce-preview-set[data-viewport]
+  .mbk-preview-switch {
+  display: none;
+}
 .ce-preview-view .ce-canvas--mobile {
   margin-inline: auto;
 }
