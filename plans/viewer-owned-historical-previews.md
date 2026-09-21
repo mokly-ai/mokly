@@ -342,9 +342,9 @@ is typed, and the completed removed-previews plan states the resolution.
       `npm run format:check`, the changed unit tests, and the five preview
       browser specs three times; then the complete `cargo xtask check` gate
       with no failures or skips.
-- [ ] After checks pass, `git add -A`, commit with Conventional Commits, and
+- [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
@@ -464,3 +464,6 @@ tests/removed_preview_presentation_state.test.ts` (21/21), the five preview
   ports 4541, 4542 and 4543 (30/30 on every run), `npm run package:check`, and
   the complete `cargo xtask check` all passed. The complete gate's unit phase
   passed 2068/2068 with no failures, skips or cancellations.
+- The post-push review of `25b4dce` against `origin/main` found no findings.
+  Residual risk is limited to host-specific behavior in a deployed cross-origin
+  preview and remains the non-blocking post-merge smoke above.
