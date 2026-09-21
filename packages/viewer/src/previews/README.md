@@ -10,8 +10,8 @@ Changes baseline, for the served shell, a static export and an embedded
 nothing, so the stage reports the unavailable state instead of requesting an
 address the catalogue never published.
 
-`request.ts` resolves that descriptor to one address. Development uses the
-stable selected endpoint (`route=` for a screen, `page=` for a page); static
+`request.ts` resolves that descriptor to one metadata address. Development uses
+the stable selected endpoint (`route=` for a screen, `page=` for a page); static
 delivery uses `comparisonUrl` for a screen and the catalogue's advertised
 `preview.path` for a page, after checking that the path belongs to the
 comparison's generation and to this exact route. A page's documents resolve
@@ -19,7 +19,16 @@ against the generation root, not the descriptor's own directory. Screen views
 render only where the comparison says `removed`; any `afterPath` for that route
 means a reused generation and is treated as unavailable. `renewPreview`
 extends a live generation's retention before reusing it, exactly as comparisons
-do. `advertisedPreviewPaths` is the complete set an embedded viewer may fetch.
+do. `advertisedPreviewPaths` includes the accepted metadata and historical
+document prefix an embedded viewer may fetch.
+
+`presentation.ts` fetches each metadata-named document beneath that
+generation's `snapshots/before/`, applies the comparison credential and
+cancellation rules, and accepts only an exact, successful `text/html` response
+within 64 MiB. It parses without scripting, removes consumer base and refresh
+directives, prepends the single effective base, and serializes the preserved
+doctype and other nodes for `srcdoc`. These edits affect only the in-memory
+presentation; snapshot and comparison bytes do not change.
 
 `copy.ts` owns the unavailable copy and Retry hook shared by the server render
 and hydrated shell. `shell/previews.tsx` owns loading, retry and loaded states,
@@ -27,15 +36,15 @@ using the same device chrome components as current screens. A selected viewport
 with no captured view keeps a note where its frame would be rather than an empty
 stage; its `mbk-preview-note` and `mbk-preview-switch` classes match the design
 catalogue, and the stylesheet hides the closing sentence while both viewports
-are shown. `read_only.ts`
-cancels link and form activation inside frames the parent can reach, Enter
-included, while preserving scrolling, selection and same-document anchors;
-Space keeps its default so a long previous version stays readable from the
-keyboard, and a cross-origin preview relies on its sandbox instead.
-`shell/use_removed_preview.ts` is the route-owned controller: its first effect
-replaces the honest server-rendered unavailable state with loading, requests on
-selection, renews before presenting a viewport or theme change, and discards
-work after route replacement or unmount.
+are shown. `read_only.ts` guards every viewer-owned presentation. It cancels all
+link and form activation, scrolls a same-document fragment itself without
+applying `:target`, preserves Space for scrolling, and reapplies the accepted
+`srcdoc` if the frame navigates away. `shell/use_removed_preview.ts` is the
+route-owned controller: its first effect replaces the honest server-rendered
+unavailable state with loading, requests on selection, fetches every document
+needed for that viewport and scheme before reporting ready, renews before
+reusing a live presentation, and discards work after route replacement or
+unmount.
 
 The controller and typed review validators are bundled once into the shared
 `react-shell.js` hydration entry. Serve, static export and application-owned

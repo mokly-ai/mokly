@@ -46,18 +46,19 @@ Changes-enabled repository preview retained deleted ancestry, historical
 the current-only preview emitted no removed entries or history URL, and a viewer
 installed from the packed package rendered the removed page.
 
-Remaining risks include one High/P1 finding from the final post-push review:
-cross-origin preview frames cannot receive the parent document's read-only DOM
-guard, while their sandbox still permits self-navigation, so activating a link
-can replace the historical document inside its frame. The implementation is
-unchanged pending the user's decision. A browser probe through the cross-origin
-viewer adapter confirmed the link issued a document request and changed the
-child frame URL to `snapshots/before/screens/current.mobile.html` while the
-outer iframe `src` attribute stayed at the removed page. Intentional tradeoffs
-remain: served unavailable markup changes to loading after the client starts
-its request; branch-point semantics exclude later pre-deletion branch edits;
-and published-package and deployed-preview smokes remain post-merge follow-up
-work.
+The final post-push review's High/P1 cross-origin read-only finding is tracked by
+the [viewer-owned historical previews plan](./viewer-owned-historical-previews.md),
+which adopts its recommended option A. A 2026-09-21 browser probe against the
+exact `origin/main` base `a177abd` confirmed that “Relative link” through the
+`postMessageAdapter` fixture issued a document request for
+`snapshots/before/screens/current.mobile.html` and replaced the historical
+preview, because the parent could not install its DOM guard and the sandbox
+permits frame self-navigation. The same activation through `sameOriginAdapter`
+was cancelled. The implementation remains unchanged until that plan's viewer
+presentation milestone. Intentional tradeoffs remain: served unavailable
+markup changes to loading after the client starts its request; branch-point
+semantics exclude later pre-deletion branch edits; and published-package and
+deployed-preview smokes remain post-merge follow-up work.
 
 The final mainline-preservation audit merged `origin/main` at
 `20e55ca02a7274b659031b2295bc4d3e92360767`, retaining its CI verification,

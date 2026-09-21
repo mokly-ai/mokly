@@ -277,8 +277,10 @@ markup injected into the tree, and no second implementation of any shell
 interaction. Route content renders from the validated catalogue read model;
 navigation never fetches and swaps shell HTML. Controlled props and handle
 methods update shell state, and every rendered attribute is owned by React.
-Frames remain static documents in script-disabled sandboxed iframes; hydration
-never reaches inside a frame.
+Frames remain static documents in sandboxed iframes. Hydration reaches inside
+only the viewer-owned, same-origin `srcdoc` used for a historical removed
+preview, where it installs and restores the read-only guard. Current and
+comparison documents retain their existing adapter and sandbox boundaries.
 
 Shell state is one store scoped to a mounted viewer:
 
@@ -382,9 +384,11 @@ The viewer knows no cloud tenant, auth, comment model, deployment provider or
 host route layout. Marker content is host-owned; hosts own surrounding product
 UI and data. Viewer network
 activity is limited to its configured source and validated public resources or
-pinned comparisons from it; no analytics, discovery, remote fonts or background
-comparison requests are added. Existing authored external fragment resources
-retain export's resource policy. Serve owns its existing private update/control
+pinned comparisons from it. That set includes historical HTML documents beneath
+the advertised generation's `snapshots/before/` directory when a removed entry
+is selected; it adds no analytics, discovery, remote fonts, or background
+comparison requests. Existing authored external fragment resources retain
+export's resource policy. Serve owns its existing private update/control
 transport outside this public fetch boundary. No cookies or ambient credentials
 are read/written, and no `window.top` access occurs. Embedding never commandeers
 an ancestor router; standalone Serve/export retain their current URL lifecycle.

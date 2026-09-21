@@ -40,14 +40,16 @@ script permission. That sandbox withholds forms, popups, downloads and top
 navigation, but it never withholds navigation of the frame itself, so a
 portable relative link, a marked catalogue link rewritten to its relative
 artifact path, or a plain external link replaces the historical document
-inside its frame. The review probe confirmed the link issued a document
-request and changed the child frame URL to
-`snapshots/before/screens/current.mobile.html` while the outer `src`
-attribute stayed at the removed page. The
+inside its frame. A 2026-09-21 probe against the exact `origin/main` base
+`a177abd` confirmed that “Relative link” through the `postMessageAdapter`
+fixture issued a document request for
+`snapshots/before/screens/current.mobile.html` and replaced the preview while
+the outer `src` attribute stayed at the removed page. The same activation
+through `sameOriginAdapter` was cancelled. Before Milestone 1, the
 [removed previews contract](../docs/protocol/mokly-removed-previews.md)
-currently states this limitation ("Cross-origin previews rely on the sandbox
-alone"), so code and docs agree, but the Behavior section's promise that every
-link is inert does not hold for that host.
+documented that limitation even though its Behavior section promised every
+link was inert. Milestone 1 replaces that limitation with the viewer-owned
+contract; the current implementation retains the gap until Milestone 2.
 
 ## Decisions
 
@@ -133,73 +135,64 @@ Summary: define the viewer-owned presentation, the guard rules, the fetch set
 and the host requirements in the specs and package docs so Milestone 2 has a
 complete contract, and register the plan.
 
-- [ ] In [`mokly-removed-previews.md`](../docs/protocol/mokly-removed-previews.md)
+- [x] In [`mokly-removed-previews.md`](../docs/protocol/mokly-removed-previews.md)
       `## Behavior`, keep the read-only paragraph and state that it holds in
       every host, including cross-origin embedded viewers, and that a
       historical document's `:target` styling does not apply.
-- [ ] In `## Public Descriptor`, extend the embedded-viewer fetch sentence with
+- [x] In `## Public Descriptor`, extend the embedded-viewer fetch sentence with
       the historical documents beneath the advertised generation's
-      `snapshots/before/`, and replace "Both frame adapters render previews in
-      script-disabled frames; the cross-origin adapter mounts historical
-      documents without the inspector handshake, so no inspection, marker, or
-      navigation message is exchanged for them" with: neither adapter mounts
-      a preview frame; previews are viewer-owned documents, so no handshake,
-      inspection, marker or navigation message exists for them.
-- [ ] Rewrite `## Frames And Lifecycle` from "Preview frames are the existing
-      shell frames" through "Original historical bytes are not transformed for
-      presentation." as the presentation contract: the fetch and its
-      acceptance rules (exact final URL, OK status, `text/html`, 64 MiB
+      `snapshots/before/`, and establish that neither adapter mounts a preview
+      frame: previews are viewer-owned documents, so no handshake, inspection,
+      marker or navigation message exists for them.
+- [x] Rewrite `## Frames And Lifecycle` as the presentation contract: the fetch
+      and its acceptance rules (exact final URL, OK status, `text/html`, 64 MiB
       bound, comparison credentials rule, mount signal), the parse with
       scripting disabled, the removal of `<base>` and meta refresh, the single
-      prepended `<base href>` and its effective-base rule, unchanged doctype
-      and node serialization, `srcdoc` presentation in a script-disabled
+      prepended `<base href>` and its effective-base rule, unchanged doctype and
+      node serialization, `srcdoc` presentation in a script-disabled
       `allow-same-origin` frame at the viewer's origin, the
       `data-mokly-preview-source` attribute carrying the snapshot address,
       the guard rules from Decisions 4 and 5, and the statement that snapshot
       files and comparison bytes stay byte-identical while only the
       presentation carries these edits.
-- [ ] In `## Acceptance`, add: read-only proof through both adapters in an
+- [x] In `## Acceptance`, add: read-only proof through both adapters in an
       embedded viewer including plain external and relative links; rejection
       of redirected, other-origin, non-HTML and oversized documents; meta
       refresh removal; consumer `<base>` handling; doctype and compatibility
       mode preservation; guard-owned anchor scrolling; presentation restored
       after an external navigation of the frame; a strict-CSP embedded host.
-- [ ] In [`mokly-frame-adapter.md`](../docs/protocol/mokly-frame-adapter.md),
-      replace the Delivery Status sentence "Historical page and screen frames
-      are shell-owned, read-only preview frames and never enter an adapter
-      inspection handshake" and the Same-Origin sentence "Historical removed
-      previews use separate shell-owned frames with the same sandbox and
-      parent-enforced read-only links and forms when the document is
-      same-origin-accessible" with the viewer-owned presentation (guarded in
-      every host) and a link to the removed-previews contract.
-- [ ] In [`mokly-viewer.md`](../docs/protocol/mokly-viewer.md), qualify
-      "hydration never reaches inside a frame" so the parent reaches inside
-      only viewer-owned preview documents to enforce read-only behaviour, and
-      extend the network-activity sentence with historical documents fetched
-      from the advertised generation.
-- [ ] In [`mokly-export-delivery.md`](../docs/protocol/mokly-export-delivery.md)
+- [x] In [`mokly-frame-adapter.md`](../docs/protocol/mokly-frame-adapter.md),
+      document that neither adapter mounts a historical preview, link to the
+      removed-previews contract, and define the viewer-owned presentation and
+      parent guard that apply in every host.
+- [x] In [`mokly-viewer.md`](../docs/protocol/mokly-viewer.md), qualify
+      the frame hydration boundary so the parent reaches inside only
+      viewer-owned preview documents to enforce read-only behaviour, and extend
+      the network-activity sentence with historical documents fetched from the
+      advertised generation.
+- [x] In [`mokly-export-delivery.md`](../docs/protocol/mokly-export-delivery.md)
       and [`mokly-catalogue.md`](../docs/protocol/mokly-catalogue.md), note
       that historical HTML documents under `__mokly/diffs/__generations/**`
       are fetched rather than framed, so the existing CORS, MIME and nosniff
       rules apply to them.
-- [ ] In [`packages/viewer/README.md`](../packages/viewer/README.md), add the
+- [x] In [`packages/viewer/README.md`](../packages/viewer/README.md), add the
       embedded-host requirements: CORS on the generation files, and a host
       CSP that allows the artifact origin in `img-src`, `style-src`,
       `font-src` and `media-src` plus inline styles, because previews are
       presented at the host's origin with scripts disabled.
-- [ ] Update [`packages/viewer/src/previews/README.md`](../packages/viewer/src/previews/README.md),
+- [x] Update [`packages/viewer/src/previews/README.md`](../packages/viewer/src/previews/README.md),
       [`packages/viewer/src/shell/README.md`](../packages/viewer/src/shell/README.md)
       and [`packages/viewer/src/client/README.md`](../packages/viewer/src/client/README.md):
-      describe the new presentation module, the guard's anchor and restore
-      rules, and remove "a cross-origin preview relies on its sandbox instead"
-      and "the frame sandbox supplies the remaining cross-origin boundary".
-- [ ] In [`removed-content-previews.md`](./removed-content-previews.md)
+      describe the new presentation module and the guard's anchor and restore
+      rules, and replace the former cross-origin limitation with the
+      viewer-owned path.
+- [x] In [`removed-content-previews.md`](./removed-content-previews.md)
       "Remaining risks", state that the High finding is tracked by this plan;
       add this plan to the active list in [`plans/README.md`](./README.md)
       and point the completed removed-previews entry at it.
-- [ ] Validate the changed Markdown with `npm run format:check` and review the
+- [x] Validate the changed Markdown with `npm run format:check` and review the
       diff; documentation-only work does not require `cargo xtask check`.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
