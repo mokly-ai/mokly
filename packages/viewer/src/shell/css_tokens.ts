@@ -43,9 +43,12 @@ export const SHELL_TOKENS_CSS = `
   --sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
   --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-  --mokly-accent: #4f7864;
-  --mokly-accent-contrast: #ffffff;
-  --mokly-accent-soft: rgba(79, 120, 100, 0.1);
+  --mokly-accent-default: #4f7864;
+  --mokly-accent-contrast-default: #ffffff;
+  --mokly-accent-soft-default: rgba(79, 120, 100, 0.1);
+  --mokly-accent: var(--mokly-accent-default);
+  --mokly-accent-contrast: var(--mokly-accent-contrast-default);
+  --mokly-accent-soft: var(--mokly-accent-soft-default);
   --mbk-accent-deep: #2f5945;
   --mbk-accent-surface: #edf3ef;
   --mbk-accent-edge: #b9cfc2;

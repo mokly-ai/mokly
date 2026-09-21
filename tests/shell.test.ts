@@ -733,7 +733,7 @@ test("filter renders in the nav only when changed routes are known", () => {
 });
 
 test("shell stylesheet stays aligned with the design contract", () => {
-  assert.match(SHELL_CSS, /--mokly-accent: #4f7864/);
+  assert.match(SHELL_CSS, /--mokly-accent-default: #4f7864/);
   assert.match(SHELL_CSS, /--mb-added: var\(--mbk-accent-deep\)/);
   assert.match(SHELL_CSS, /--mbk-dark-screen-bg: #121514/);
   assert.match(SHELL_CSS, /--mbk-dark-screen-ink: #eef1ef/);

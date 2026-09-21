@@ -28,9 +28,12 @@ const DARK_ROLES = `
   --chrome-shadow-press: inset 0 1px 2px rgba(0, 0, 0, 0.55);
   --chrome-shadow-drawer: 0 18px 50px rgba(0, 0, 0, 0.6);
   --chrome-shadow-sheet: 0 6px 28px rgba(0, 0, 0, 0.55);
-  --mokly-accent: #86b79b;
-  --mokly-accent-contrast: #0e1a14;
-  --mokly-accent-soft: rgba(134, 183, 155, 0.16);
+  --mokly-accent-default: #86b79b;
+  --mokly-accent-contrast-default: #0e1a14;
+  --mokly-accent-soft-default: rgba(134, 183, 155, 0.16);
+  --mokly-accent: var(--mokly-accent-default);
+  --mokly-accent-contrast: var(--mokly-accent-contrast-default);
+  --mokly-accent-soft: var(--mokly-accent-soft-default);
   --mbk-accent-deep: #b6d8c4;
   --mbk-accent-surface: #24312a;
   --mbk-accent-edge: #3c5648;

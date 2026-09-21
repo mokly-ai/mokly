@@ -100,3 +100,37 @@ test("both appearances define exactly the same shell roles", () => {
       `${role} is dark-only; every role belongs to both appearances`,
     );
 });
+
+test("an inherited accent override survives in both appearances", () => {
+  // The scoped shell drops the public accent declarations so a host value on
+  // an ancestor can inherit in. The fallback behind each use must therefore
+  // follow the appearance, or a dark root would paint the Light accent.
+  for (const name of [
+    "--mokly-accent",
+    "--mokly-accent-contrast",
+    "--mokly-accent-soft",
+  ]) {
+    assert.doesNotMatch(
+      EMBEDDED_CSS,
+      new RegExp(`^\\s*${name}: (?!var\\()`, "mu"),
+      `${name} is declared in the scoped shell, shadowing a host override`,
+    );
+    assert.match(
+      EMBEDDED_CSS,
+      new RegExp(`var\\(${name}, var\\(${name}-default\\)\\)`),
+      `${name} has no scheme-aware fallback`,
+    );
+  }
+  for (const [block, accent] of [
+    [/:scope \{([\s\S]*?)\}/, "#4f7864"],
+    [/:scope\[data-mokly-theme="dark"\] \{([\s\S]*?)\}/, "#86b79b"],
+  ] as const) {
+    const declarations = block.exec(EMBEDDED_CSS)?.[1];
+    assert.ok(declarations, `${block} is missing`);
+    assert.match(
+      declarations,
+      new RegExp(`--mokly-accent-default: ${accent};`),
+      `the ${accent} default is missing`,
+    );
+  }
+});
