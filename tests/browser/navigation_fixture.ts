@@ -93,6 +93,7 @@ function Home({ compact }) {
     <a href="mock:details#section" id="named-link" target="DetailsFrame">Named details</a>
     <a href="mock:details#section" id="top-link" target="_top">Top details</a>
     <a href="mock:details#section" id="parent-link" target="_parent">Parent details</a>
+    <a href="./details.mobile.html" id="unowned-details-link">Unowned details</a>
     <a href="#home" id="unmarked-top" target="_top">Ordinary top</a>
     <a href="#home" id="unmarked-parent" target="_parent">Ordinary parent</a>
     <svg viewBox="0 0 100 30"><a href="#home" id="unmarked-svg-top" target="_top"><text x="0" y="20">Ordinary SVG</text></a></svg>
@@ -107,7 +108,7 @@ function Home({ compact }) {
   </main>;
 }
 function Details() {
-  return <main id="section"><h1>Details destination</h1><a href="mock:home" id="return-link">Return home</a></main>;
+  return <main id="section"><h1>Details destination</h1><a href="mock:home" id="return-link">Return home</a><a href="mock:extra" id="extra-link">Extra</a></main>;
 }
 export const mockups = [
   defineCollection({ ...metadata, childIds: ["nested"], description: "Fixture", id: "fixture", title: "Fixture" }),

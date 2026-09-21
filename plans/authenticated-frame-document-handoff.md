@@ -128,7 +128,7 @@ the implementation has a complete contract, and record the plan.
 - [x] Validate the changed Markdown with `npm run format:check` and review the
       diff; documentation-only work does not require `cargo xtask check`.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
@@ -142,14 +142,14 @@ Summary: prove the privilege leak with failing regressions, then gate adoption
 behind a single authentication module while keeping every existing handoff
 regression green.
 
-- [ ] Extend
+- [x] Extend
       [`frame_adapter_fixture.ts`](../tests/browser/frame_adapter_fixture.ts)
       with `static/unowned.html`: a hand-written same-origin document served
       raw (only compilation outputs pass through `adaptBrowseDocument`) that
       carries an `<a>` with a syntactically valid `data-mokly-link="action"`
       marker and a portable `href` to `./silent.html`, plus a raw relative
       link in the fixture home body that navigates the frame to it.
-- [ ] Add a failing adapter-level browser regression (new
+- [x] Add a failing adapter-level browser regression (new
       `tests/browser/same_origin_identity.spec.ts`, keeping
       `same_origin_adapter.spec.ts` near its current length): mount the home
       document, click the raw link so the frame shows the unowned document,
@@ -162,7 +162,7 @@ regression green.
       `navigation` event was emitted; release the response, await the mount,
       and assert a logical click in the authenticated replacement document
       still emits `navigation`.
-- [ ] Add a failing shell-level browser regression to
+- [x] Add a failing shell-level browser regression to
       [`browse_navigation_security.spec.ts`](../tests/browser/browse_navigation_security.spec.ts)
       using [`navigation_fixture.ts`](../tests/browser/navigation_fixture.ts):
       give Home a raw relative `./details.mobile.html` self-link and Details a
@@ -172,9 +172,9 @@ regression green.
       URL stays on home with `defaultPrevented` false. Release the response and
       assert the frame reaches `ready` and a logical activation in it navigates
       the shell, proving continuity after authentication.
-- [ ] Confirm both new tests fail on the current implementation before the fix
+- [x] Confirm both new tests fail on the current implementation before the fix
       (record the assertion that fails in the plan's review record).
-- [ ] Create `packages/viewer/src/client/same_origin_identity.ts` owning:
+- [x] Create `packages/viewer/src/client/same_origin_identity.ts` owning:
       the branded `AuthenticatedDocument` type; a module-level
       `WeakSet<Document>` of authenticated documents (no retention, no
       clearing needed because a `Document` never changes identity);
@@ -185,27 +185,27 @@ regression green.
       document only when it is already recorded for this frame; and the moved
       pure helpers `sameFrameResource`, `assignedFrameResource` and
       `normalizedHtmlPath`. Module and public items carry doc comments.
-- [ ] In `same_origin_mount.ts`, make `adoptActivationDocument` and `create`
+- [x] In `same_origin_mount.ts`, make `adoptActivationDocument` and `create`
       accept only `AuthenticatedDocument`; replace the unconditional adoption
       at mount start with `transferAuthenticatedDocument`; route the watcher
       and `load` handler through `authenticateAssignedDocument`; keep the
       `assignedFrameResource` ignore branch and every other behaviour
       unchanged. The file must shrink below its current 295 lines.
-- [ ] Add a node unit test `tests/same_origin_identity.test.ts` (imported from
+- [x] Add a node unit test `tests/same_origin_identity.test.ts` (imported from
       `packages/viewer/dist/client/same_origin_identity.js` like
       `post_message_adapter.test.ts`) covering resource identity rules
       (origin, userinfo, `.html` canonicalization, query, hash exclusion),
       structural-fake `frameElement` mismatch, transfer of a recorded document,
       and rejection of an unrecorded document at the same URL.
-- [ ] Run the viewer build and typecheck, the new unit test, the two new
+- [x] Run the viewer build and typecheck, the new unit test, the two new
       browser regressions, and the retained handoff regressions
       (`browse_navigation.spec.ts`, `browse_navigation_hydration_handoff.spec.ts`,
       `same_origin_adapter.spec.ts`, `frame_hook_lifecycle.spec.ts`,
       `viewer_replacement.spec.ts`) repeatedly enough to show they are
       deterministic; confirm `npm run package:check` accepts the new browser
       module in the generated inventory.
-- [ ] Run the complete `cargo xtask check` gate with no failures or skips.
-- [ ] After checks pass, `git add -A`, commit with Conventional Commits, and
+- [x] Run the complete `cargo xtask check` gate with no failures or skips.
+- [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
@@ -223,5 +223,12 @@ regression green.
 
 ## Review record
 
-No review has run yet. Record each post-push review outcome here with the
-commit it reviewed, following the React Browse Shell plan's format.
+Milestone 1 (`fb36328`) was reviewed with the implementation review prompt
+after the documentation check and push. No findings remain. The residual risk
+is limited to the implementation and adversarial regressions delivered by
+Milestone 2; the reviewed contract itself is internally aligned.
+
+Before the Milestone 2 fix, both new browser regressions failed at their
+`defaultPrevented` assertion: the adapter-level and shell-level probes each
+received `true` instead of `false`, proving that the provisional receiver had
+intercepted the unowned document's marked activation.
