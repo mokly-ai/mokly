@@ -10,8 +10,10 @@ regressions and aligned documentation. The supervising agent replaced the permis
 test's root-only skip with a runtime probe, since capability-holding processes
 read mode-000 directories; the gate then passed with 1,976 unit tests, five
 packed-consumer scenarios, and 466 Chrome tests. The post-push review found no
-regressions and reported seven smaller findings, recorded below and awaiting
-the user's decision.
+regressions and reported seven smaller findings, recorded below. The user
+approved fixing the first four; findings 5 and 6 are accepted as documented
+behavior, and finding 7's index entry was corrected. Milestone 12 carries the
+fixes.
 
 Mokly currently discovers every `*.mockup.ts` and `*.mockup.tsx` module below
 one configured directory, `entriesDir`, and binds the source-attributed
@@ -179,7 +181,48 @@ guessing. Finding 3 restores loud discovery failures.
       and confirmed the event-aware design closed the earlier ones; its seven
       findings are recorded under "Sixth Review Findings (awaiting decision)".
 
-## Sixth Review Findings (awaiting decision)
+---
+
+### Milestone 12: Sixth review fixes
+
+Apply the four approved sixth-review findings. Discovery tolerates a matched
+module that vanishes mid-pass exactly as it tolerates a vanished directory,
+the descriptor-exhaustion test pins the fail-open value under every
+filesystem call it exercises, and two test-hygiene items are cleaned up.
+Findings 5 and 6 are accepted without change.
+
+- [ ] Finding 1: in `src/config/entry_discovery.ts` `entryModuleDenial`,
+      when `projectRealPath(module)` fails with `ENOENT`, drop the module
+      from the resolved set instead of throwing, using the shared
+      `isVanishedDirectory` policy; keep `ENOTDIR` and every other code
+      loud. When dropping the last match of a glob leaves that glob with
+      zero modules, report the normal zero-match error with the vanished
+      module listed under `not searched`. Add a test that removes a matched
+      module between the walk and the denial loop (mock `fs.realpathSync`
+      or `projectRealPath` to throw `ENOENT` for that one path) and asserts
+      `loadConfig` succeeds with the module absent, plus a test that
+      `ENOTDIR` still fails with `config-invalid`.
+- [ ] Finding 2: in `tests/watch_glob_boundaries.test.ts`, replace the bare
+      `assert.doesNotThrow` in the descriptor-exhaustion test with
+      `assert.equal(..., false)` so the fail-open value is pinned, and mock
+      `fs.lstatSync`, `fs.readFileSync`, and `fs.openSync` to throw `EMFILE`
+      alongside `fs.statSync` so the traversal predicate is proven safe
+      through the export-marker and ownership-header reads too.
+- [ ] Finding 3: in `tests/helpers/watch_config.ts`, delete the duplicated
+      doc comment above `FakeWatcherFactory` and `FakeSupervisorFactory`
+      and give each factory its own one-line description.
+- [ ] Finding 4: delete the source-text regex test in
+      `tests/entry_discovery_edges.test.ts` that reads the discovery module
+      as a string; the permission-probe test already proves the behavior.
+- [ ] Replace the non-null assertion `roots.get(root)!` in
+      `src/config/entry_discovery_paths.ts` with a local variable, and
+      reflow the overlong line in `src/build/README.md`.
+- [ ] Run `cargo xtask check`, commit, and push.
+- [ ] Review the complete local diff against `origin/main` after the push
+      using `docs/implementation-review-prompt.md`; report findings without
+      changing the implementation.
+
+## Sixth Review Findings (approved, addressed in Milestone 12)
 
 Review of the Milestone 11 commit. Nothing has been changed in response. The
 reviewer verified that chokidar's `all` listener carries exactly the five
