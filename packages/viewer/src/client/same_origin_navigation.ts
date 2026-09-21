@@ -4,6 +4,7 @@ import { logicalMarker, parseLogicalMarker } from "../navigation/logical.js";
 import { parseBrowsingTarget } from "../navigation/target.js";
 
 import type { FrameEvent } from "./frame_adapter.js";
+import type { AuthenticatedDocument } from "./same_origin_identity.js";
 
 /** Input facts for one marked frame-link activation. */
 export interface FrameActivationCandidate {
@@ -55,7 +56,7 @@ export function classifyFrameActivation(
 
 /** Install native logical-link interception for one authenticated document. */
 export function listenForFrameActivations(
-  doc: Document,
+  doc: AuthenticatedDocument,
   signal: AbortSignal,
   enabled: () => boolean,
   emit: (event: FrameEvent) => void,
