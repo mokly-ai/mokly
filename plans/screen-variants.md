@@ -768,10 +768,10 @@ reconstruction, and per-view status and eligibility in the workspace data.
       nav tree from `buildNavSections`.
 - [ ] Finding 3: per-view status. Extend `WorkspaceData` with typed per-view
       states keyed like `changedViews` (`viewStates: Record<key,
-  { viewport, colorScheme, state }[]>`, where `state` is the review
+{ viewport, colorScheme, state }[]>`, where `state` is the review
       state) derived in `workspace_views_data.ts` from the same sources as
       `changedViews`, and a pure `shownStatus(states, viewport, scheme,
-  fallback)` in a new `packages/viewer/src/shell/view_status.ts` that
+fallback)` in a new `packages/viewer/src/shell/view_status.ts` that
       applies the Both aggregation rule from Milestone 10 and returns the
       fallback when no per-view evidence exists. Comparison eligibility for
       the shown view is `isComparisonEligible(shownStatus, kind)`. Derive the
