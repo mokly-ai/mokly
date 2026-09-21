@@ -14,6 +14,28 @@ test.afterAll(async () => {
   await fixture.close();
 });
 
+test("embedded viewer fills a host shorter than the viewport", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 900, height: 900 });
+  await page.goto(fixture.host.url);
+  await page.waitForFunction(() => Boolean(window.viewerHarness));
+  await page.evaluate(() => {
+    window.viewerHarness.start("one", { responsive: true });
+    document.getElementById("one")!.style.height = "500px";
+  });
+  await page.waitForFunction(() =>
+    Boolean(window.viewerHarness.get("one").ref.current),
+  );
+
+  const heights = await page.locator("#one .mokly-viewer").evaluate((root) => ({
+    host: root.parentElement!.getBoundingClientRect().height,
+    viewer: root.getBoundingClientRect().height,
+  }));
+
+  expect(heights).toEqual({ host: 500, viewer: 500 });
+});
+
 for (const width of [1440, 900, 390, 320]) {
   for (const colorScheme of ["light", "dark"] as const) {
     test(`embedded layout owns ${width}px ${colorScheme} scrolling and sizing`, async ({

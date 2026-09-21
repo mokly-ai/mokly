@@ -1,7 +1,9 @@
 /** Embedding extensions are scoped away from the standalone shell. */
 export const VIEWER_CSS = `
 .mokly-viewer { position:relative; isolation:isolate; height:100%; min-height:0; color:var(--chrome-ink); font-family:var(--sans); line-height:1.5; }
-.mokly-viewer.mbk { height:100%; min-height:0; overflow:hidden; }
+@scope (.mokly-viewer) to ([data-mokly-slot]) {
+  :scope.mbk { height:100%; min-height:0; overflow:hidden; }
+}
 .mokly-viewer > .mbk-body { display:flex; flex:1; min-height:0; overflow:hidden; }
 .mokly-viewer .mokly-top-host { container:mokly-top-host / inline-size; position:relative; display:flex; flex:none; min-width:0; height:48px; background:var(--chrome-surface); }
 .mokly-viewer .mokly-top-host .mbk-topbar { flex:1; min-width:0; }
