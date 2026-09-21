@@ -47,8 +47,7 @@ export class FakeOutputStore implements GeneratedOutputStore {
   }
 }
 
-/** Capture replacement watch roots and inject readiness failures. */
-/** Deliver typed changes while retaining observable close state. */
+/** Create observable watchers, capture their roots, and inject readiness failures. */
 export class FakeWatcherFactory implements ConsumerWatcherFactory {
   readonly targets: string[][] = [];
   readonly watchers: FakeWatcher[] = [];
@@ -88,8 +87,7 @@ export class FakeWatcher implements ConsumerWatcher {
   }
 }
 
-/** Capture the child arguments for a controlled supervisor. */
-/** Count child restarts without creating a process. */
+/** Return the controlled supervisor and capture its child arguments. */
 export class FakeSupervisorFactory implements ProcessSupervisorFactory {
   baseArguments: string[] = [];
 

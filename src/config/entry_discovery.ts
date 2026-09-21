@@ -9,6 +9,7 @@ import {
   discoveryPathError,
   type DiscoveryPaths,
   isVanishedDirectory,
+  isVanishedModule,
 } from "./entry_discovery_paths.js";
 import { isInside, projectRealPath, toPosixPath } from "./paths.js";
 import { isDeniedSourceSegment } from "./private_directories.js";
@@ -23,6 +24,7 @@ export function discoverEntryModules(
 ): string[] {
   const paths = discoveryPaths(config);
   const discovered = new Set<string>();
+  const vanished = new Set<string>();
   for (const { glob, matcher, root } of paths.globs) {
     const deniedRoots: string[] = [];
     const skippedRoots: string[] = [];
@@ -35,6 +37,19 @@ export function discoverEntryModules(
     )) {
       const relative = toPosixPath(path.relative(config.repoRoot, candidate));
       if (!matcher.match(relative)) continue;
+      if (vanished.has(candidate)) {
+        skippedRoots.push(candidate);
+        continue;
+      }
+      if (!discovered.has(candidate)) {
+        const reason = entryModuleDenial(candidate, paths);
+        if (reason === null) {
+          vanished.add(candidate);
+          skippedRoots.push(candidate);
+          continue;
+        }
+        if (reason) throw entryModuleError(candidate, reason, config);
+      }
       matched += 1;
       discovered.add(candidate);
     }
@@ -50,16 +65,11 @@ export function discoverEntryModules(
       );
     }
   }
-  const modules = [...discovered].sort((left, right) =>
+  return [...discovered].sort((left, right) =>
     toPosixPath(path.relative(config.repoRoot, left)).localeCompare(
       toPosixPath(path.relative(config.repoRoot, right)),
     ),
   );
-  for (const module of modules) {
-    const reason = entryModuleDenial(module, paths);
-    if (reason) throw entryModuleError(module, reason, config);
-  }
-  return modules;
 }
 
 /** List regular files below a root without following links or private trees. */
@@ -85,11 +95,11 @@ function walkEntryCandidates(
     .sort((left, right) => left.localeCompare(right));
 }
 
-/** Validate each module against the identities retained for its matching glob roots. */
+/** Return null for a vanished module, a denial reason, or undefined for an accepted module. */
 function entryModuleDenial(
   module: string,
   paths: DiscoveryPaths,
-): string | undefined {
+): string | null | undefined {
   const { repoRoot, realRepoRoot, reviewOutput } = paths;
   if (isBaselineCachePath(module, repoRoot))
     return `is inside the private ${MOKLY_CACHE} directory`;
@@ -97,6 +107,7 @@ function entryModuleDenial(
   try {
     real = projectRealPath(module);
   } catch (cause) {
+    if (isVanishedModule(cause)) return null;
     throw discoveryPathError(module, repoRoot, cause);
   }
   if (!isInside(repoRoot, module) || !isInside(realRepoRoot, real))

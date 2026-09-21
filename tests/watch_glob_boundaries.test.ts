@@ -113,13 +113,24 @@ test("watch pruning derives denied-leaf directory status from supplied stats", a
   delete config.entriesDir;
   const deniedLeaf = path.join(fixture.root, "src/dist");
   await fs.promises.mkdir(deniedLeaf, { recursive: true });
+  const unowned = path.join(fixture.mockupsDir, "unowned.html");
+  await fs.promises.writeFile(unowned, "<main>Unowned</main>");
+  const fileStats = fs.statSync(unowned);
   assert.equal(isPackageOwnedIgnoredWatchPath(deniedLeaf, config), true);
-  context.mock.method(fs, "statSync", () => {
-    const error = new Error("descriptor limit") as NodeJS.ErrnoException;
-    error.code = "EMFILE";
-    throw error;
-  });
-  assert.doesNotThrow(() => isPackageOwnedIgnoredWatchPath(deniedLeaf, config));
+  const calls = { statSync: 0, lstatSync: 0, readFileSync: 0, openSync: 0 };
+  let allowMetadata = false;
+  for (const method of [
+    "statSync",
+    "lstatSync",
+    "readFileSync",
+    "openSync",
+  ] as const)
+    context.mock.method(fs, method, () => {
+      calls[method] += 1;
+      if (method === "lstatSync" && allowMetadata) return fileStats;
+      throw Object.assign(new Error("descriptor limit"), { code: "EMFILE" });
+    });
+  assert.equal(isPackageOwnedIgnoredWatchPath(deniedLeaf, config), false);
   const directoryStats = { isDirectory: () => true } as fs.Stats;
   assert.equal(
     isPackageOwnedIgnoredWatchPath(deniedLeaf, config, directoryStats),
@@ -129,6 +140,14 @@ test("watch pruning derives denied-leaf directory status from supplied stats", a
     isPackageOwnedIgnoredWatchPath(path.join(deniedLeaf, "x.ts"), config),
     true,
   );
+  assert.equal(isPackageOwnedIgnoredWatchPath(unowned, config), false);
+  assert.ok(calls.statSync > 0);
+  assert.ok(calls.lstatSync > 0);
+  allowMetadata = true;
+  assert.equal(isPackageOwnedIgnoredWatchPath(deniedLeaf, config), false);
+  assert.equal(isPackageOwnedIgnoredWatchPath(unowned, config), false);
+  assert.ok(calls.readFileSync > 0);
+  assert.ok(calls.openSync > 0);
 });
 
 test("a notification gate reports classifier errors and keeps delivering", async (context) => {

@@ -45,8 +45,9 @@ export function discoveryPaths(
   const roots = new Map<string, string>([[config.repoRoot, realRepoRoot]]);
   const globs = config.entryGlobs.map((glob) => {
     const root = path.resolve(config.repoRoot, globStablePrefix(glob));
-    if (!roots.has(root)) {
-      let realRoot = root;
+    let realRoot = roots.get(root);
+    if (realRoot === undefined) {
+      realRoot = root;
       try {
         realRoot = projectRealPath(root);
       } catch (cause) {
@@ -59,7 +60,7 @@ export function discoveryPaths(
       glob,
       root,
       matcher: new Minimatch(glob, { dot: true }),
-      projected: roots.get(root)!,
+      projected: realRoot,
     };
   });
   return {
@@ -72,7 +73,15 @@ export function discoveryPaths(
 
 /** Only missing or replaced directories are benign races during discovery. */
 export function isVanishedDirectory(error: unknown): boolean {
-  return ["ENOENT", "ENOTDIR"].includes(filesystemErrorCode(error));
+  return isVanishedModule(error) || filesystemErrorCode(error) === "ENOTDIR";
+}
+
+/**
+ * Only ENOENT is a benign module race. ENOTDIR means a path component became a
+ * non-directory, a real change that must remain loud when validating a file.
+ */
+export function isVanishedModule(error: unknown): boolean {
+  return filesystemErrorCode(error) === "ENOENT";
 }
 
 /** Preserve the original failure with a repository-relative path and filesystem code. */

@@ -2,18 +2,10 @@
 
 ## Status And Outcome
 
-Milestones 1 through 11 are complete, committed, and pushed. Milestone 11 preserves
-watcher event kinds and stats through classification, reports discovery failures
-except benign missing-directory races, and records vanished roots in zero-match
-diagnostics. All seven fifth-review findings are addressed with failing-first
-regressions and aligned documentation. The supervising agent replaced the permission
-test's root-only skip with a runtime probe, since capability-holding processes
-read mode-000 directories; the gate then passed with 1,976 unit tests, five
-packed-consumer scenarios, and 466 Chrome tests. The post-push review found no
-regressions and reported seven smaller findings, recorded below. The user
-approved fixing the first four; findings 5 and 6 are accepted as documented
-behavior, and finding 7's index entry was corrected. Milestone 12 carries the
-fixes.
+Milestones 1 through 11 are complete, committed, and pushed. Milestone 12 is
+locally committed after `cargo xtask check`, pending the supervising agent's push
+and review. Findings 5 and 6 remain accepted, and finding 7's index is corrected.
+Permission tests retain the capability probe introduced in Milestone 11.
 
 Mokly currently discovers every `*.mockup.ts` and `*.mockup.tsx` module below
 one configured directory, `entriesDir`, and binds the source-attributed
@@ -185,13 +177,10 @@ guessing. Finding 3 restores loud discovery failures.
 
 ### Milestone 12: Sixth review fixes
 
-Apply the four approved sixth-review findings. Discovery tolerates a matched
-module that vanishes mid-pass exactly as it tolerates a vanished directory,
-the descriptor-exhaustion test pins the fail-open value under every
-filesystem call it exercises, and two test-hygiene items are cleaned up.
-Findings 5 and 6 are accepted without change.
+Apply approved fixes for vanished modules, fail-open watch traversal, and test
+hygiene. Findings 5 and 6 remain accepted without change.
 
-- [ ] Finding 1: in `src/config/entry_discovery.ts` `entryModuleDenial`,
+- [x] Finding 1: in `src/config/entry_discovery.ts` `entryModuleDenial`,
       when `projectRealPath(module)` fails with `ENOENT`, drop the module
       from the resolved set instead of throwing, using the shared
       `isVanishedDirectory` policy; keep `ENOTDIR` and every other code
@@ -202,33 +191,32 @@ Findings 5 and 6 are accepted without change.
       or `projectRealPath` to throw `ENOENT` for that one path) and asserts
       `loadConfig` succeeds with the module absent, plus a test that
       `ENOTDIR` still fails with `config-invalid`.
-- [ ] Finding 2: in `tests/watch_glob_boundaries.test.ts`, replace the bare
+- [x] Finding 2: in `tests/watch_glob_boundaries.test.ts`, replace the bare
       `assert.doesNotThrow` in the descriptor-exhaustion test with
       `assert.equal(..., false)` so the fail-open value is pinned, and mock
       `fs.lstatSync`, `fs.readFileSync`, and `fs.openSync` to throw `EMFILE`
       alongside `fs.statSync` so the traversal predicate is proven safe
       through the export-marker and ownership-header reads too.
-- [ ] Finding 3: in `tests/helpers/watch_config.ts`, delete the duplicated
+- [x] Finding 3: in `tests/helpers/watch_config.ts`, delete the duplicated
       doc comment above `FakeWatcherFactory` and `FakeSupervisorFactory`
       and give each factory its own one-line description.
-- [ ] Finding 4: delete the source-text regex test in
+- [x] Finding 4: delete the source-text regex test in
       `tests/entry_discovery_edges.test.ts` that reads the discovery module
       as a string; the permission-probe test already proves the behavior.
-- [ ] Replace the non-null assertion `roots.get(root)!` in
+- [x] Replace the non-null assertion `roots.get(root)!` in
       `src/config/entry_discovery_paths.ts` with a local variable, and
       reflow the overlong line in `src/build/README.md`.
-- [ ] Run `cargo xtask check`, commit, and push.
+- [x] Run `cargo xtask check` and commit locally; the supervising agent
+      will verify and push before the final review.
 - [ ] Review the complete local diff against `origin/main` after the push
       using `docs/implementation-review-prompt.md`; report findings without
       changing the implementation.
 
 ## Sixth Review Findings (approved, addressed in Milestone 12)
 
-Review of the Milestone 11 commit. Nothing has been changed in response. The
-reviewer verified that chokidar's `all` listener carries exactly the five
-forwarded event kinds, that both coalescing orders classify correctly, that
-the raw-rename degradation under descriptor exhaustion is pre-existing and now
-documented, and that discovery's error policy matches the contract.
+The Milestone 11 review verified the five forwarded chokidar event kinds, both
+coalescing orders, discovery's error contract, and the documented pre-existing
+raw-rename degradation under descriptor exhaustion. Approved fixes follow.
 
 1. **P2, a matched module that vanishes mid-pass fails the config.** The
    walk tolerates a directory that disappears, but the per-module denial

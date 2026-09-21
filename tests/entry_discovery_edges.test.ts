@@ -232,14 +232,6 @@ for (const code of ["ENOENT", "ENOTDIR"]) {
   });
 }
 
-test("discovery relies on directory reads rather than a permission mode mask", () => {
-  const source = fs.readFileSync(
-    new URL("../src/config/entry_discovery.ts", import.meta.url),
-    "utf8",
-  );
-  assert.doesNotMatch(source, /stats\.mode|0o555/);
-});
-
 /** Root and capability-holding processes read mode-000 directories; probe rather than guess. */
 async function directoryPermissionsEnforced(
   directory: string,

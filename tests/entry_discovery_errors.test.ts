@@ -52,6 +52,44 @@ for (const code of ["ENOENT", "ENOTDIR"]) {
   });
 }
 
+test("discovery drops a matched module that vanishes before validation", async (context) => {
+  const fixture = await createFixture();
+  context.after(() => removeFixture(fixture));
+  const remaining = ["alpha.mockup.tsx", "omega.mockup.tsx"].map((name) =>
+    path.join(fixture.entriesDir, name),
+  );
+  for (const candidate of remaining)
+    await fs.promises.writeFile(candidate, validEntrySource());
+  failModuleProjection(context, fixture.entryPath, "ENOENT");
+
+  assert.deepEqual((await loadConfig(fixture.root)).entryModules, remaining);
+});
+
+test("discovery lists a vanished only match under not searched", async (context) => {
+  const fixture = await createFixture();
+  context.after(() => removeFixture(fixture));
+  failModuleProjection(context, fixture.entryPath, "ENOENT");
+
+  await assert.rejects(loadConfig(fixture.root), {
+    code: "config-invalid",
+    message:
+      /entries glob matches no module: entries\/\*\*\/\*\.mockup\.\{ts,tsx\}; not searched: entries\/fixture\.mockup\.tsx$/,
+  });
+});
+
+test("discovery reports a matched module projection with ENOTDIR", async (context) => {
+  const fixture = await createFixture();
+  context.after(() => removeFixture(fixture));
+  const failure = failModuleProjection(context, fixture.entryPath, "ENOTDIR");
+
+  await assert.rejects(loadConfig(fixture.root), {
+    code: "config-invalid",
+    message:
+      /cannot discover entry path entries\/fixture\.mockup\.tsx: ENOTDIR$/,
+    cause: failure,
+  });
+});
+
 test("discovery uses lexical review output when its projection fails", async (context) => {
   const { config, root } = await discoveryFixture(context);
   const outDir = path.join(root, "review");
@@ -98,6 +136,23 @@ test("discovery resolves repository and glob identities once for all modules", a
   assert.equal(repositoryReads, 1);
   assert.equal(globReads, 1);
 });
+
+/** Fail after the walk has found a module but before its real path is validated. */
+function failModuleProjection(
+  context: TestContext,
+  candidate: string,
+  code: string,
+): Error {
+  const failure = Object.assign(new Error("module projection failed"), {
+    code,
+  });
+  const realpath = fs.realpathSync.native;
+  context.mock.method(fs.realpathSync, "native", (...args: unknown[]) => {
+    if (args[0] === candidate) throw failure;
+    return Reflect.apply(realpath, fs.realpathSync, args);
+  });
+  return failure;
+}
 
 /** Keep a visible entry so swallowed errors would silently shrink the catalogue. */
 async function discoveryFixture(context: TestContext) {
