@@ -14,11 +14,13 @@ defines the entry shape with no suffix filter; `entriesDir` expands to the
 recommended `<dir>/**/*.mockup.{ts,tsx}` convention. Each glob must match at
 least one entry module. Walks skip `review.outDir` and denied directory trees.
 Directories that vanish or are replaced mid-walk (`ENOENT` or `ENOTDIR`) are
-skipped and listed with denied roots in zero-match diagnostics. A matched module
-that vanishes with `ENOENT` between the walk and validation is dropped and listed
-under `not searched` if its glob is then empty. `ENOTDIR` and other module errors
-remain `config-invalid`. Other read or projection errors also fail with
-`config-invalid`, naming the repository-relative path and error code.
+skipped and listed with denied roots in zero-match diagnostics. Other read or
+projection errors fail with `config-invalid`, naming the repository-relative
+path and error code (`unknown` if absent). A matched module that is deleted, or
+replaced by something other than a regular file, between the directory listing
+and validation is dropped and listed under `not searched` when its glob is then
+empty. A projection or lstat failure with any code other than `ENOENT` fails
+with `config-invalid`.
 Repository and glob roots are projected once per pass;
 Review output is projected once with a lexical fallback on failure. Every
 resolved module is rejected when it sits inside `review.outDir`, `.mokly-cache/`,

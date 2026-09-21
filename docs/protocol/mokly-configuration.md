@@ -228,10 +228,10 @@ The rule is relative to the glob root: `src/dist/x.mockup.tsx` is denied under
 `dist/entries/a.mockup.tsx`; discovery never inspects a denied tree.
 Repository, glob-root, and `review.outDir` identities are projected once per pass;
 Review projection alone falls back to its lexical path. Walks skip either Review
-identity and vanished or replaced directories (`ENOENT` or `ENOTDIR`). A matched
-module that vanishes with `ENOENT` between the walk and validation is dropped;
-`ENOTDIR` and other errors remain `config-invalid`, naming the repository-relative
-path and error code (`unknown` if absent). Other read errors also remain loud.
+identity and vanished or replaced directories (`ENOENT` or `ENOTDIR`).
+Other read or projection errors fail with `config-invalid`, naming the repository-relative path and error code (`unknown` if absent).
+A matched module that is deleted, or replaced by something other than a regular file, between the directory listing and validation is dropped and listed under `not searched` when its glob is then empty.
+A projection or lstat failure with any code other than `ENOENT` fails with `config-invalid`.
 Every glob must retain a module; otherwise `entries glob matches no module: <glob>`
 lists denied and vanished roots, including dropped modules, sorted under
 `; not searched: <repository-relative roots>`.

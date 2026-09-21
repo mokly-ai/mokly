@@ -90,6 +90,48 @@ test("discovery reports a matched module projection with ENOTDIR", async (contex
   });
 });
 
+test("discovery drops a matched module deleted after listing", async (context) => {
+  const fixture = await createFixture();
+  context.after(() => removeFixture(fixture));
+  const remaining = ["alpha.mockup.tsx", "omega.mockup.tsx"].map((name) =>
+    path.join(fixture.entriesDir, name),
+  );
+  for (const candidate of remaining)
+    await fs.promises.writeFile(candidate, validEntrySource());
+  mutateAfterListing(context, fixture.entriesDir, () => {
+    fs.unlinkSync(fixture.entryPath);
+  });
+
+  assert.deepEqual((await loadConfig(fixture.root)).entryModules, remaining);
+});
+
+test("discovery lists an only match deleted after listing under not searched", async (context) => {
+  const fixture = await createFixture();
+  context.after(() => removeFixture(fixture));
+  mutateAfterListing(context, fixture.entriesDir, () => {
+    fs.unlinkSync(fixture.entryPath);
+  });
+
+  await assert.rejects(loadConfig(fixture.root), {
+    code: "config-invalid",
+    message:
+      /entries glob matches no module: entries\/\*\*\/\*\.mockup\.\{ts,tsx\}; not searched: entries\/fixture\.mockup\.tsx$/,
+  });
+});
+
+test("discovery drops a matched module replaced by a directory after listing", async (context) => {
+  const fixture = await createFixture();
+  context.after(() => removeFixture(fixture));
+  const remaining = path.join(fixture.entriesDir, "remaining.mockup.tsx");
+  await fs.promises.writeFile(remaining, validEntrySource());
+  mutateAfterListing(context, fixture.entriesDir, () => {
+    fs.unlinkSync(fixture.entryPath);
+    fs.mkdirSync(fixture.entryPath);
+  });
+
+  assert.deepEqual((await loadConfig(fixture.root)).entryModules, [remaining]);
+});
+
 test("discovery uses lexical review output when its projection fails", async (context) => {
   const { config, root } = await discoveryFixture(context);
   const outDir = path.join(root, "review");
@@ -136,6 +178,20 @@ test("discovery resolves repository and glob identities once for all modules", a
   assert.equal(repositoryReads, 1);
   assert.equal(globReads, 1);
 });
+
+/** Mutate the filesystem after listing a directory, before discovery consumes it. */
+function mutateAfterListing(
+  context: TestContext,
+  directory: string,
+  mutate: () => void,
+): void {
+  const readdir = fs.readdirSync;
+  context.mock.method(fs, "readdirSync", (...args: unknown[]) => {
+    const entries = Reflect.apply(readdir, fs, args);
+    if (args[0] === directory) mutate();
+    return entries;
+  });
+}
 
 /** Fail after the walk has found a module but before its real path is validated. */
 function failModuleProjection(

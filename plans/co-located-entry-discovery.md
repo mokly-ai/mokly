@@ -12,7 +12,7 @@ probe, since capability-holding processes read mode-000 directories. Milestone
 documented behavior. The post-push review of Milestone 12 reported eight
 findings, recorded below. The user approved fixing findings 1 and 2, which
 Milestone 13 carries; findings 3 through 8 are deferred and remain open in the
-list below.
+list below. Milestone 13 is locally committed pending the supervising agent's push and review.
 
 Mokly currently discovers every `*.mockup.ts` and `*.mockup.tsx` module below
 one configured directory, `entriesDir`, and binds the source-attributed
@@ -230,7 +230,7 @@ which the previous fix promised but only delivered for the narrow window
 inside real-path projection. The configuration contract regains the directory
 read and projection error rule it lost.
 
-- [ ] Finding 1: in `src/config/entry_discovery.ts`, before validating a
+- [x] Finding 1: in `src/config/entry_discovery.ts`, before validating a
       matched candidate, confirm it still exists as a regular file with
       `fs.lstatSync`; treat `ENOENT` as vanished (drop it, record it under
       `not searched`) through the shared `isVanishedModule` policy, treat
@@ -246,7 +246,7 @@ read and projection error rule it lost.
       message lists it under `not searched`; and a variant replacing the
       file with a directory of the same name asserts it is dropped rather
       than resolved.
-- [ ] Finding 1 docs: narrow or correct the vanished-module sentence in
+- [x] Finding 1 docs: narrow or correct the vanished-module sentence in
       `docs/protocol/mokly-configuration.md`,
       `docs/architecture/build-pipeline.md`, and `src/build/README.md` so
       each states exactly what the code does after this change: a matched
@@ -254,7 +254,7 @@ read and projection error rule it lost.
       validation is dropped and listed under `not searched` when its glob is
       then empty; a projection failure other than `ENOENT` is
       `config-invalid`.
-- [ ] Finding 2: restore to `docs/protocol/mokly-configuration.md` the full
+- [x] Finding 2: restore to `docs/protocol/mokly-configuration.md` the full
       directory rule, "Other read or projection errors fail with
       `config-invalid`, naming the repository-relative path and error code
       (`unknown` if absent)", stated once, and delete the sentence "Other

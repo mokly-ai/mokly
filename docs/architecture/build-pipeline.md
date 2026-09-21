@@ -48,11 +48,13 @@ baseline cache, or a denied directory below its deepest glob root, and a glob
 with no entry modules is a config error. Walks skip `review.outDir` and denied
 directories. Directories that vanish or are replaced mid-walk (`ENOENT` or
 `ENOTDIR`) are skipped and listed with denied roots in the zero-match message.
-A matched module that vanishes with `ENOENT` between the walk and validation is
-dropped and listed under `not searched` if its glob is then empty. `ENOTDIR`
-and other module errors remain `config-invalid`. Other read or projection errors
-also fail with `config-invalid`, naming the repository-relative path and error
-code. Repository, glob-root, and Review
+Other read or projection errors fail with `config-invalid`, naming the
+repository-relative path and error code (`unknown` if absent).
+A matched module that is deleted, or replaced by something other than a regular
+file, between the directory listing and validation is dropped and listed under
+`not searched` when its glob is then empty. A projection or lstat failure with
+any code other than `ENOENT` fails with `config-invalid`.
+Repository, glob-root, and Review
 identities are projected once per pass; Review projection alone falls back to its
 lexical path on failure. The resolved set travels with the config beside
 `sourceFiles`.

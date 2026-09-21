@@ -95,12 +95,19 @@ function walkEntryCandidates(
     .sort((left, right) => left.localeCompare(right));
 }
 
-/** Return null for a vanished module, a denial reason, or undefined for an accepted module. */
+/** Return null for a vanished or replaced module, a denial reason, or undefined when accepted. */
 function entryModuleDenial(
   module: string,
   paths: DiscoveryPaths,
 ): string | null | undefined {
   const { repoRoot, realRepoRoot, reviewOutput } = paths;
+  try {
+    const stats = fs.lstatSync(module);
+    if (!stats.isFile()) return null;
+  } catch (cause) {
+    if (isVanishedModule(cause)) return null;
+    throw discoveryPathError(module, repoRoot, cause);
+  }
   if (isBaselineCachePath(module, repoRoot))
     return `is inside the private ${MOKLY_CACHE} directory`;
   let real: string;
