@@ -6,8 +6,8 @@ Milestones 1 through 9 are complete, committed, and pushed. Milestone 9
 resolved all six third-review findings, including watcher isolation, combined
 zero-match diagnostics, basename handling, Review-output pruning, and the
 documented duplicate-registration contract. The post-push review of Milestone
-9 reported seven further findings, all P2 or P3, recorded below and awaiting
-the user's decision.
+9 reported seven further findings, all P2 or P3 and all approved by the user;
+Milestone 10 carries them.
 
 Mokly currently discovers every `*.mockup.ts` and `*.mockup.tsx` module below
 one configured directory, `entriesDir`, and binds the source-attributed
@@ -554,7 +554,64 @@ the double-registration risk of broad globs.
       inline code they replaced, and reported seven findings, recorded under
       "Fourth Review Findings (awaiting decision)".
 
-## Fourth Review Findings (awaiting decision)
+---
+
+### Milestone 10: Fourth review fixes
+
+Apply the seven fourth-review findings. The first three remove the filesystem
+calls that the basename and Review-output fixes introduced on hot paths, so
+discovery and watching are no longer sensitive to descriptor or permission
+conditions; the rest are doc, guard, and test hygiene.
+
+- [ ] Finding 1: make the watcher's prune predicate free of new I/O. Extend
+      `WatchIgnorePredicate` in `src/server/watcher.ts` to receive chokidar's
+      optional `stats` second argument and pass it through
+      `ChokidarWatcherFactory`; in `src/server/watch_paths.ts`
+      `isPackageOwnedIgnoredWatchPath`, derive "is a directory" from those
+      stats when present, and when absent fail open (treat the leaf as a
+      file) without calling `fs.statSync`. Keep `isDirectory` only where an
+      event-time check is genuinely needed and make it fail open on every
+      error rather than rethrowing. Add a test that a predicate call for a
+      missing path and for a path whose stat throws `EMFILE` returns without
+      throwing, and that a directory reported through `stats` named `dist`
+      under a `src/**` glob is still pruned.
+- [ ] Finding 2: in `isPackageOwnedIgnoredWatchPath` and
+      `isDiscoveryDeniedEntryPath`, scan the non-leaf segments first and
+      consult the leaf's directory-ness only when the leaf name itself is a
+      denied name, so the common case does no stat at all. Add a test that
+      an `unlinkDir` style event for `src/dist` (path no longer exists) under
+      `src/**` classifies as ignore, not rebuild, and that `src/dist/x.ts`
+      is still ignored.
+- [ ] Finding 3: in `src/config/entry_discovery.ts`, resolve the projected
+      real path of `review.outDir` once per `discoverEntryModules` call and
+      compare each visited directory against it; wrap the per-directory
+      real-path projection so a resolution or permission failure skips that
+      directory instead of escaping `loadConfig`. Add a test using a
+      directory with permissions removed (skip on Windows or when running as
+      root) asserting `loadConfig` succeeds and simply does not search it.
+- [ ] Finding 4: in `docs/architecture/build-pipeline.md`, change "denied
+      segment" to "denied directory" and add the `review.outDir`
+      walk-pruning sentence for parity with the configuration contract.
+- [ ] Finding 5: reword the barrel guidance in
+      `docs/protocol/mokly-configuration.md` and
+      `docs/guides/authoring/config.md` to the actionable remedies: narrow
+      the glob, rename the barrel so the glob no longer matches it, or stop
+      re-exporting registry arrays. Do not claim exclusion syntax exists.
+- [ ] Finding 6: make the reporter a required `NotificationGate`
+      constructor argument in `src/server/watch_events.ts`, update
+      `src/server/resource_watcher.ts` to pass its existing failure reporter,
+      and update every other construction site and test. Keep a test that a
+      gate reports and continues; remove the "bare gate rethrows" case since
+      a bare gate can no longer be constructed.
+- [ ] Finding 7: delete the constant-URL assertion in
+      `tests/watch_boundaries.test.ts`; the restart wait already proves the
+      server stays up.
+- [ ] Run `cargo xtask check`, commit, and push.
+- [ ] Review the complete local diff against `origin/main` after the push
+      using `docs/implementation-review-prompt.md`; report findings without
+      changing the implementation.
+
+## Fourth Review Findings (approved, addressed in Milestone 10)
 
 Review of the Milestone 9 commit. Nothing has been changed in response. All
 seven are P2 or P3; the first three share one cause: the basename and
