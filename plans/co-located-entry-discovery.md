@@ -2,11 +2,13 @@
 
 ## Status And Outcome
 
-Milestones 1 through 9 are complete, committed, and pushed. Milestone 10
-resolves all seven fourth-review findings, including I/O-free watch pruning,
+Milestones 1 through 10 are complete, committed, and pushed. Milestone 10
+resolved all seven fourth-review findings, including I/O-free watch pruning,
 leaf-last denial checks, resilient Review-output discovery, mandatory watcher
-reporting, and the approved documentation and test corrections. Milestone 10
-is locally committed pending the supervising agent's push and review.
+reporting, and the approved documentation and test corrections. The post-push
+review of Milestone 10 reported seven further findings, recorded below and
+awaiting the user's decision; the first is a precedence regression and the
+third turns a loud discovery failure into silent output pruning.
 
 Mokly currently discovers every `*.mockup.ts` and `*.mockup.tsx` module below
 one configured directory, `entriesDir`, and binds the source-attributed
@@ -607,9 +609,55 @@ conditions; the rest are doc, guard, and test hygiene.
       server stays up.
 - [x] Run `cargo xtask check` and commit locally; the supervising agent will
       push the branch.
-- [ ] Review the complete local diff against `origin/main` after the push
+- [x] Review the complete local diff against `origin/main` after the push
       using `docs/implementation-review-prompt.md`; report findings without
-      changing the implementation.
+      changing the implementation. The post-push review of the Milestone 10
+      commit reported seven findings, recorded under "Fifth Review Findings
+      (awaiting decision)".
+
+## Fifth Review Findings (awaiting decision)
+
+Review of the Milestone 10 commit. Nothing has been changed in response. The
+supervising agent confirmed findings 1, 2, and 3 by direct probe.
+
+1. **P1, an existing denied directory no longer outranks user watch rules.**
+   `classifyWatchPath` calls the prune predicate without stats, so an event
+   on an existing `src/dist` under `src/**` is not recognised as a denied
+   directory and falls through to `watch.rules`; with a rule covering
+   `src/**` it now classifies `reload` where it used to be `ignore`. This
+   contradicts the unchanged contract sentence that package-owned
+   classifications take precedence over additional watch rules. Recommended:
+   in event mode, fall back to a fail-open directory check when stats are
+   absent, keeping traversal I/O-free.
+2. **P2, deleting a matched entry module named like a denied directory is
+   ignored.** A removed path cannot be told apart from a removed directory,
+   so deleting `src/target` under a suffix-less glob leaves its page in the
+   catalogue until an unrelated rebuild; one test asserts this inside a test
+   whose name says the opposite. Recommended: thread chokidar's event kind
+   through `ConsumerWatcher.onChange` so `unlink` and `unlinkDir` are exact,
+   and drop the missing-path heuristic; document the limitation meanwhile.
+3. **P2, discovery now swallows every read error.** `readEntryDirectory`
+   returns nothing on any failure, so an `EACCES` or `EIO` mid-walk silently
+   drops entries, and the transactional writer then prunes their generated
+   output as orphans. Before this commit the failure was loud. An unreadable
+   glob root reports a misleading zero-match message. Recommended: swallow
+   only `ENOENT` and `ENOTDIR`, surface other errors as `config-invalid`, and
+   list skipped directories in the zero-match message.
+4. **P2, doc and test overstate "no filesystem I/O".** The prune predicate
+   still reads export markers and ownership headers; only the denied-leaf
+   directory check is stat-free. Recommended: scope the sentence and the
+   test name, then extend the `EMFILE` test to mock the other calls.
+5. **P3, the directory mode mask is redundant and wrong under root.** A
+   `0o000` directory is readable by root yet is now skipped silently; the
+   catch already guards every other case. Recommended: delete the check.
+6. **P3, "resolve once" is only half applied.** The `review.outDir`
+   projection at the top of discovery is unguarded, so a permission error on
+   an ancestor still escapes `loadConfig`, and per-module real-path
+   projections remain. Recommended: guard the projection with a lexical
+   fallback, then hoist the remaining projections.
+7. **P3, two coverage gaps**: no test proves a deleted matched module with an
+   ordinary name still rebuilds, and nothing exercises the non-`Error` wrap in
+   the resource watcher's reporter.
 
 ## Fourth Review Findings (approved, addressed in Milestone 10)
 

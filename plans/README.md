@@ -9,8 +9,8 @@
   approval, and six review findings await the user's decision.
 - [Co-Located Entry Discovery](./co-located-entry-discovery.md) — delivered
   on the branch with two review rounds applied and the fixed entry filename
-  suffix removed and three review rounds applied; Milestone 10 carries the
-  approved fourth-round fixes.
+  suffix removed and four review rounds applied; a fifth review round
+  reported seven findings that await the user's decision.
 - [CLI Terminal Experience](./cli-terminal-experience.md)
 - [Package Documentation](./package-documentation.md) — supersedes the
   unmerged public-site plan and pull request #79 by shipping versioned Markdown
