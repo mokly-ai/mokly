@@ -20,6 +20,10 @@
   — closes the React Browse Shell Milestone 13/14 review finding by attaching
   the same-origin mount-time navigation receiver only to a previously
   authenticated document.
+- [Viewer-Owned Historical Previews](./viewer-owned-historical-previews.md)
+  — closes the removed content previews High finding by presenting every
+  historical document through a viewer-owned same-origin document so the
+  read-only guard applies in cross-origin embedded viewers too.
 
 ## Completed
 
