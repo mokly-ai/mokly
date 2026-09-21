@@ -61,9 +61,11 @@ contract; the current implementation retains the gap until Milestone 2.
    read-only tests must keep passing against the new path.
 2. **Fetch, validate, then present through `srcdoc`.** The viewer fetches each
    historical document with an ordinary GET under the comparison request's
-   credentials rule, accepts the response only when its final URL is exactly
-   the requested snapshot address, the status is OK, the content type is
-   `text/html` and the body is within the existing 64 MiB artifact bound, and
+   credentials rule, accepts the response only when its final URL is the
+   requested snapshot address or its provider-normalized extensionless form
+   (the `.html` canonicalization static hosts already apply to shell pages),
+   the status is OK, the content type is `text/html` and the body is within
+   the existing 64 MiB artifact bound, and
    assigns the presentation to the frame's `srcdoc`. The frame keeps
    `sandbox="allow-same-origin"` and no script permission, so the document
    runs at the viewer's origin, cannot execute, submit, open windows,
@@ -77,8 +79,9 @@ contract; the current implementation retains the gap until Milestone 2.
    prepended to the head naming the document's effective base: the first
    removed `<base href>` resolved against the snapshot address when one
    existed, otherwise the snapshot address itself. The doctype and every
-   other node are serialized unchanged, so the compatibility mode and the
-   consumer's markup are preserved. Rewriting every resource attribute and
+   other node are serialized unchanged, so the consumer's markup is
+   preserved; a `srcdoc` document always renders in no-quirks mode, which is
+   accepted for previous versions. Rewriting every resource attribute and
    stylesheet URL instead would be lossy and fragile. Meta refresh is removed
    because it is a frame navigation the sandbox does not block.
 4. **The guard owns same-document anchors.** Because the presented document's
@@ -225,11 +228,12 @@ every host, keeping every existing preview regression green.
       presentation module, and assert in a real browser: the prepended
       `<base>` is the first head child; a consumer `<base href>` is removed
       and folded into the effective base; meta refresh is removed; an
-      `<html lang>` attribute and the compatibility mode of a standards and a
-      quirks document are preserved, and a document with an implicit head
-      still receives the prepended base first; a fetch whose final
-      URL differs, whose origin differs, whose type is not HTML or whose body
-      exceeds the bound is rejected.
+      `<html lang>` attribute and the doctype of a standards and a quirks
+      document are preserved while both render in no-quirks mode, and a
+      document with an implicit head still receives the prepended base first;
+      a fetch whose final URL only drops the `.html` suffix is accepted, and
+      one whose final URL otherwise differs, whose origin differs, whose type
+      is not HTML or whose body exceeds the bound is rejected.
 - [ ] Create `packages/viewer/src/previews/presentation.ts` owning the fetch,
       acceptance rules, per-address cache for one loaded preview, and the
       parse-edit-serialize step that returns the `srcdoc` text and its snapshot

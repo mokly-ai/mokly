@@ -193,12 +193,14 @@ page-preview response. The GET carries the mount's abort signal and uses the
 comparison credential rule: `credentials: "omit"` for pinned delivery and
 `credentials: "same-origin"` for live delivery.
 
-Accept a response only when its final URL equals the requested snapshot
-address's serialized `href`, its status is OK, its `Content-Type` MIME essence
-is `text/html`, and the body exposed by Fetch is at most 64 MiB (67,108,864
+Accept a response only when its final URL is the requested snapshot address
+or that address with only its final `.html` suffix removed, the
+provider-normalized form a static host may redirect to, with the same origin
+and no query or fragment; its status is OK; its `Content-Type` MIME essence is
+`text/html`; and the body exposed by Fetch is at most 64 MiB (67,108,864
 bytes). MIME parameters are allowed. Count the body instead of trusting
-`Content-Length`; cancellation stops that read. A redirect or origin change
-that produces another final address fails the URL check. A current fetch,
+`Content-Length`; cancellation stops that read. Any other redirect or an
+origin change fails the URL check. A current fetch,
 validation, read, parse, or presentation failure renders the existing
 “Previous version unavailable” state with Retry. Cancellation after unmount or
 replacement is silent, and late work cannot change the replacement stage.
@@ -211,15 +213,18 @@ equals `refresh` under ASCII case-insensitive comparison. Prepend exactly one
 `<base href>` for the effective base as `head`'s first child, including for an
 implicit head. Serialize the source doctype's name, public identifier, and
 system identifier before the document element, or preserve its absence, so the
-presented document keeps its compatibility mode. Otherwise serialize parsed
-nodes without mutation; do not rewrite resource attributes, links, text, or
-styles.
+markup stays faithful. A `srcdoc` document always renders in no-quirks mode,
+so a previous version that relied on quirks or limited-quirks rendering may
+differ from its original presentation; this is accepted. Otherwise serialize
+parsed nodes without mutation; do not rewrite resource attributes, links,
+text, or styles.
 
 The viewer assigns that serialization to `srcdoc`, never `src`, on a frame with
 exactly `sandbox="allow-same-origin"`. The presented document therefore has the
 viewer origin while scripts, forms, popups, downloads, and top navigation stay
-disabled. The frame carries `data-mokly-preview-source` with the exact snapshot
-address. A `srcdoc` document inherits the embedding document's Content Security
+disabled. The frame carries `data-mokly-preview-source` with the requested snapshot
+address, which is also the fallback effective base regardless of any
+provider-normalized final URL. A `srcdoc` document inherits the embedding document's Content Security
 Policy; an embedded host must allow the artifact origin and historical inline
 styles for resources the previous version needs.
 
@@ -260,9 +265,10 @@ invalidation, cancellation, shutdown, idle recovery, both frame adapters,
 read-only enforcement, static delivery without renewal traffic, current-only
 delivery with zero historical work, and old/new catalogue readers. Embedded
 viewer coverage proves both adapters keep plain external and relative links
-inert. Presentation coverage rejects redirects, origin changes, non-HTML and
-oversized documents; removes meta refresh; folds the first consumer base into
-the effective base; preserves doctypes and standards, limited-quirks, and
-quirks modes; owns same-document anchor scrolling; restores presentation after
-frame navigation; and loads historical resources in an embedded host with a
-strict Content Security Policy.
+inert. Presentation coverage accepts a final URL that only drops the `.html` suffix;
+rejects other redirects, origin changes, non-HTML and oversized documents;
+removes meta refresh; folds the first consumer base into the effective base;
+preserves doctypes while quirks and standards documents both render in
+no-quirks mode; owns same-document anchor scrolling; restores presentation
+after frame navigation; and loads historical resources in an embedded host
+with a strict Content Security Policy.

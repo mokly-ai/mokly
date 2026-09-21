@@ -24,8 +24,9 @@ document prefix an embedded viewer may fetch.
 
 `presentation.ts` fetches each metadata-named document beneath that
 generation's `snapshots/before/`, applies the comparison credential and
-cancellation rules, and accepts only an exact, successful `text/html` response
-within 64 MiB. It parses without scripting, removes consumer base and refresh
+cancellation rules, and accepts only a successful `text/html` response within
+64 MiB whose final URL is the requested address or its provider-normalized
+extensionless form. It parses without scripting, removes consumer base and refresh
 directives, prepends the single effective base, and serializes the preserved
 doctype and other nodes for `srcdoc`. These edits affect only the in-memory
 presentation; snapshot and comparison bytes do not change.
