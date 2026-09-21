@@ -209,16 +209,25 @@ test("watch rebuilds for a new co-located entry module and export refuses its di
     fixture.root,
     "src/components/card/card.mockup.tsx",
   );
-  assert.equal(classifyWatchPath(created, config), "rebuild");
+  assert.equal(
+    classifyWatchPath({ path: created, kind: "change" }, config),
+    "rebuild",
+  );
   assert.equal(
     classifyWatchPath(
-      path.join(fixture.root, "src/components/card/card.tsx"),
+      {
+        path: path.join(fixture.root, "src/components/card/card.tsx"),
+        kind: "change",
+      },
       config,
     ),
     "ignore",
   );
   assert.equal(
-    classifyWatchPath(path.join(fixture.root, "docs/card.mockup.tsx"), config),
+    classifyWatchPath(
+      { path: path.join(fixture.root, "docs/card.mockup.tsx"), kind: "change" },
+      config,
+    ),
     "ignore",
   );
   const compiled = {

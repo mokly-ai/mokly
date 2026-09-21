@@ -43,14 +43,18 @@ still prune top-level `.git` and `node_modules`. The discovery walk and broad
 watch traversal skip `review.outDir`; matching file events beneath it are
 ignored too.
 
-Broad traversal checks non-leaf segments first and uses only watcher-supplied
-stats to recognize a denied leaf as a directory; it performs no filesystem
-lookup. Without stats, a denied leaf is treated as a file, while denied
-non-leaf segments are still pruned. Entry-event classification likewise checks
-directory status only for a denied leaf. An existing regular file with that
-name remains ordinary. A missing denied leaf classifies as ignored so removing
-`src/dist` under `src/**` cannot trigger a rebuild, and other directory-status
-lookup failures fail open.
+Broad traversal and entry classification check non-leaf segments first. A denied
+leaf is pruned only when it is a directory. Directory status comes from supplied
+watcher stats, else from the event kind: `addDir` and `unlinkDir` are directories;
+`add`, `change`, and `unlink` are files. Only a `raw` rename fallback or a direct
+call without stats or event evidence needs a directory lookup: each denied-leaf
+check uses one `statSync`, treating any failure as a file. Supplied stats avoid that
+lookup. Traversal still consults export markers and generated ownership headers.
+Thus existing and removed denied directories stay ignored ahead of user rules,
+while deleting a matched regular file named `target` rebuilds just like deleting
+any other matched file. Watch notifications retain path, kind, and optional
+stats through startup gates; resource notifications coalesce by path and deliver
+the latest descriptor for that path.
 
 Exact required files, including the config and its imports, inventoried sources,
 the renderer, and configured stylesheets, retain both their ancestor path and the

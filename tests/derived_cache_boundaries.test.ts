@@ -38,7 +38,11 @@ test("cache exclusions precede broad globs, resource matching and required sourc
   for (const relative of paths) {
     const absolute = path.join(fixture.root, relative);
     assert.equal(
-      classifyWatchPath(absolute, config, new Set([absolute])),
+      classifyWatchPath(
+        { path: absolute, kind: "change" },
+        config,
+        new Set([absolute]),
+      ),
       "ignore",
     );
     assert.equal(isPackageOwnedIgnoredWatchPath(absolute, config), true);

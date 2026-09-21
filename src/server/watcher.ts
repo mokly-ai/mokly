@@ -5,7 +5,7 @@ import chokidar, { type FSWatcher } from "chokidar";
 import type { ResolvedConfig } from "../config/types.js";
 
 import { PlainServeReporter } from "./reporter.js";
-import type { NotificationGate } from "./watch_events.js";
+import type { NotificationGate, WatchEvent } from "./watch_events.js";
 import {
   rawRenamePaths,
   ResourceWatchNotifications,
@@ -16,14 +16,14 @@ import { isPackageOwnedIgnoredWatchPath, watchTargets } from "./watch_paths.js";
 export function createSourceWatcher(
   factory: ConsumerWatcherFactory,
   config: ResolvedConfig,
-  gate: NotificationGate<string>,
+  gate: NotificationGate<WatchEvent>,
   report: (error: unknown) => void = (error) =>
     new PlainServeReporter().runtimeDiagnostic(error),
 ): ConsumerWatcher {
   const watcher = factory.create(watchTargets(config), (candidate, stats) =>
     isPackageOwnedIgnoredWatchPath(candidate, config, stats),
   );
-  watcher.onChange((candidate) => gate.notify(candidate));
+  watcher.onChange((event) => gate.notify(event));
   watcher.onError(report);
   return watcher;
 }
@@ -31,7 +31,7 @@ export function createSourceWatcher(
 /** Consumer-input watcher lifecycle used by watched Serve. */
 export interface ConsumerWatcher {
   close(): Promise<void>;
-  onChange(callback: (path: string) => void): void;
+  onChange(callback: (event: WatchEvent) => void): void;
   onError(callback: (error: Error) => void): void;
   ready(): Promise<void>;
 }
@@ -92,22 +92,30 @@ class ChokidarConsumerWatcher implements ConsumerWatcher {
     return this.watcher.close();
   }
 
-  onChange(callback: (path: string) => void): void {
+  onChange(callback: (event: WatchEvent) => void): void {
     if (!this.observeEntryReplacements) {
-      this.watcher.on("all", (_event, candidate) => callback(candidate));
+      this.watcher.on("all", (kind, candidate, stats) => {
+        if (isEntryEvent(kind))
+          callback({ path: candidate, kind, ...(stats ? { stats } : {}) });
+      });
       return;
     }
     const notifications = new ResourceWatchNotifications(callback);
     this.#notifications.add(notifications);
-    this.watcher.on("all", (_event, candidate) =>
-      notifications.notify(candidate),
-    );
+    this.watcher.on("all", (kind, candidate, stats) => {
+      if (isEntryEvent(kind))
+        notifications.notify({
+          path: candidate,
+          kind,
+          ...(stats ? { stats } : {}),
+        });
+    });
     this.watcher.on(
       "raw",
       (event: string, candidate: string, details: unknown) => {
         if (event !== "rename") return;
         for (const path of rawRenamePaths(candidate, details, this.ignore))
-          notifications.notify(path);
+          notifications.notify({ path, kind: "raw" });
       },
     );
   }
@@ -124,4 +132,11 @@ class ChokidarConsumerWatcher implements ConsumerWatcher {
       this.watcher.once("error", reject);
     });
   }
+}
+
+/** Narrow Chokidar's event-name union to the entry events delivered by all. */
+function isEntryEvent(
+  kind: string,
+): kind is Exclude<WatchEvent["kind"], "raw"> {
+  return ["add", "addDir", "change", "unlink", "unlinkDir"].includes(kind);
 }

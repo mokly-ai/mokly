@@ -25,6 +25,7 @@ import {
   type ProcessSupervisorFactory,
 } from "../dist/server/supervisor.js";
 import type { ChildCommand } from "../dist/server/update_messages.js";
+import type { WatchEvent } from "../dist/server/watch_events.js";
 import type {
   ConsumerWatcher,
   ConsumerWatcherFactory,
@@ -224,7 +225,7 @@ class FakeWatcherFactory implements ConsumerWatcherFactory {
 class FakeWatcher implements ConsumerWatcher {
   async close(): Promise<void> {}
 
-  onChange(_callback: (path: string) => void): void {}
+  onChange(_callback: (event: WatchEvent) => void): void {}
 
   onError(_callback: (error: Error) => void): void {}
 

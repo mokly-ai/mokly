@@ -1,12 +1,15 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { Minimatch } from "minimatch";
-
 import { MoklyError } from "../errors.js";
 
 import { isBaselineCachePath, MOKLY_CACHE } from "./cache_paths.js";
-import { globStablePrefix } from "./entry_globs.js";
+import {
+  discoveryPaths,
+  discoveryPathError,
+  type DiscoveryPaths,
+  isVanishedDirectory,
+} from "./entry_discovery_paths.js";
 import { isInside, projectRealPath, toPosixPath } from "./paths.js";
 import { isDeniedSourceSegment } from "./private_directories.js";
 import type { ResolvedConfig } from "./types.js";
@@ -18,20 +21,17 @@ import type { ResolvedConfig } from "./types.js";
 export function discoverEntryModules(
   config: Pick<ResolvedConfig, "entryGlobs" | "repoRoot" | "review">,
 ): string[] {
-  const reviewOutput: ReviewOutputPaths = {
-    lexical: path.resolve(config.review.outDir),
-    projected: projectRealPath(config.review.outDir),
-  };
+  const paths = discoveryPaths(config);
   const discovered = new Set<string>();
-  for (const glob of config.entryGlobs) {
-    const matcher = new Minimatch(glob, { dot: true });
-    const root = path.resolve(config.repoRoot, globStablePrefix(glob));
+  for (const { glob, matcher, root } of paths.globs) {
     const deniedRoots: string[] = [];
+    const skippedRoots: string[] = [];
     let matched = 0;
     for (const candidate of walkEntryCandidates(
       root,
       deniedRoots,
-      reviewOutput,
+      skippedRoots,
+      paths,
     )) {
       const relative = toPosixPath(path.relative(config.repoRoot, candidate));
       if (!matcher.match(relative)) continue;
@@ -39,7 +39,7 @@ export function discoverEntryModules(
       discovered.add(candidate);
     }
     if (matched === 0) {
-      const notSearched = [...new Set(deniedRoots)]
+      const notSearched = [...new Set([...deniedRoots, ...skippedRoots])]
         .map((deniedRoot) =>
           toPosixPath(path.relative(config.repoRoot, deniedRoot)),
         )
@@ -56,58 +56,58 @@ export function discoverEntryModules(
     ),
   );
   for (const module of modules) {
-    const reason = entryModuleDenial(module, config, reviewOutput);
+    const reason = entryModuleDenial(module, paths);
     if (reason) throw entryModuleError(module, reason, config);
   }
   return modules;
-}
-
-/** Review output identities resolved once for one discovery pass. */
-interface ReviewOutputPaths {
-  readonly lexical: string;
-  readonly projected: string;
 }
 
 /** List regular files below a root without following links or private trees. */
 function walkEntryCandidates(
   root: string,
   deniedRoots: string[],
-  reviewOutput: ReviewOutputPaths,
+  skippedRoots: string[],
+  paths: DiscoveryPaths,
 ): string[] {
-  return readEntryDirectory(root)
+  return readEntryDirectory(root, skippedRoots, paths.repoRoot)
     .flatMap((entry) => {
       const candidate = path.join(root, entry.name);
       if (entry.isDirectory()) {
-        if (isSkippedEntryDirectory(candidate, reviewOutput)) return [];
         if (isDeniedSourceSegment(entry.name)) {
           deniedRoots.push(candidate);
           return [];
         }
-        return walkEntryCandidates(candidate, deniedRoots, reviewOutput);
+        if (isSkippedEntryDirectory(candidate, paths, skippedRoots)) return [];
+        return walkEntryCandidates(candidate, deniedRoots, skippedRoots, paths);
       }
       return entry.isFile() ? [candidate] : [];
     })
     .sort((left, right) => left.localeCompare(right));
 }
 
+/** Validate each module against the identities retained for its matching glob roots. */
 function entryModuleDenial(
   module: string,
-  config: Pick<ResolvedConfig, "entryGlobs" | "repoRoot">,
-  reviewOutput: ReviewOutputPaths,
+  paths: DiscoveryPaths,
 ): string | undefined {
-  if (isBaselineCachePath(module, config.repoRoot))
+  const { repoRoot, realRepoRoot, reviewOutput } = paths;
+  if (isBaselineCachePath(module, repoRoot))
     return `is inside the private ${MOKLY_CACHE} directory`;
-  const real = projectRealPath(module);
-  const realRepoRoot = fs.realpathSync(config.repoRoot);
-  if (!isInside(config.repoRoot, module) || !isInside(realRepoRoot, real))
+  let real: string;
+  try {
+    real = projectRealPath(module);
+  } catch (cause) {
+    throw discoveryPathError(module, repoRoot, cause);
+  }
+  if (!isInside(repoRoot, module) || !isInside(realRepoRoot, real))
     return "resolves outside repoRoot through a symlink";
   if (
     isInside(reviewOutput.lexical, module) ||
     isInside(reviewOutput.projected, real)
   )
     return "is inside review.outDir";
-  const globRoot = deepestContainingGlobRoot(module, config);
-  const realGlobRoot = projectRealPath(globRoot ?? config.repoRoot);
+  const realGlobRoot =
+    deepestContainingGlobRoot(module, paths)?.projected ?? realRepoRoot;
   const privateSegment = path
     .relative(realGlobRoot, real)
     .split(path.sep)
@@ -118,41 +118,50 @@ function entryModuleDenial(
   return undefined;
 }
 
-/** Skip Review output and directories whose identity cannot be projected. */
+/** Skip Review output and record only benign candidate-projection races. */
 function isSkippedEntryDirectory(
   candidate: string,
-  reviewOutput: ReviewOutputPaths,
+  paths: DiscoveryPaths,
+  skippedRoots: string[],
 ): boolean {
-  if (path.resolve(candidate) === reviewOutput.lexical) return true;
+  if (path.resolve(candidate) === paths.reviewOutput.lexical) return true;
   try {
-    return projectRealPath(candidate) === reviewOutput.projected;
-  } catch {
+    return projectRealPath(candidate) === paths.reviewOutput.projected;
+  } catch (cause) {
+    if (!isVanishedDirectory(cause))
+      throw discoveryPathError(candidate, paths.repoRoot, cause);
+    skippedRoots.push(candidate);
     return true;
   }
 }
 
-/** Read a searchable directory, skipping inaccessible or unresolved paths. */
-function readEntryDirectory(candidate: string): fs.Dirent[] {
+/** Read a directory, recording disappearance and reporting every other failure. */
+function readEntryDirectory(
+  candidate: string,
+  skippedRoots: string[],
+  repoRoot: string,
+): fs.Dirent[] {
   try {
-    const stats = fs.statSync(candidate);
-    if (!stats.isDirectory() || (stats.mode & 0o555) === 0) return [];
     return fs.readdirSync(candidate, { withFileTypes: true });
-  } catch {
+  } catch (cause) {
+    if (!isVanishedDirectory(cause))
+      throw discoveryPathError(candidate, repoRoot, cause);
+    skippedRoots.push(candidate);
     return [];
   }
 }
 
-/** Select the most specific configured walk root containing a module. */
+/** Select the most specific configured walk root whose glob matches the module. */
 function deepestContainingGlobRoot(
   module: string,
-  config: Pick<ResolvedConfig, "entryGlobs" | "repoRoot">,
-): string | undefined {
-  const relative = toPosixPath(path.relative(config.repoRoot, module));
-  return config.entryGlobs
-    .filter((glob) => new Minimatch(glob, { dot: true }).match(relative))
-    .map((glob) => path.resolve(config.repoRoot, globStablePrefix(glob)))
-    .filter((root) => isInside(root, module))
-    .sort((left, right) => right.length - left.length)[0];
+  paths: DiscoveryPaths,
+): DiscoveryPaths["globs"][number] | undefined {
+  const relative = toPosixPath(path.relative(paths.repoRoot, module));
+  return paths.globs
+    .filter(
+      ({ matcher, root }) => matcher.match(relative) && isInside(root, module),
+    )
+    .sort((left, right) => right.root.length - left.root.length)[0];
 }
 
 /** Build a typed config error from the shared per-module denial policy. */

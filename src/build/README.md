@@ -12,10 +12,13 @@ export and local prop controls reuse the same consumer graph and validators.
 configuration loads and again here at the start of each compilation. The glob
 defines the entry shape with no suffix filter; `entriesDir` expands to the
 recommended `<dir>/**/*.mockup.{ts,tsx}` convention. Each glob must match at
-least one entry module. Walks skip `review.outDir`, denied directory trees, and
-directories whose identity or contents cannot be read; zero-match diagnostics
-list only denied roots that were not searched. Every resolved module is rejected
-when it sits inside `review.outDir`, `.mokly-cache/`, beneath a denied directory
+least one entry module. Walks skip `review.outDir` and denied directory trees.
+Directories that vanish or are replaced mid-walk (`ENOENT` or `ENOTDIR`) are
+skipped and listed with denied roots in zero-match diagnostics. Other read or
+projection errors fail with `config-invalid`, naming the repository-relative
+path and error code. Repository and glob roots are projected once per pass;
+Review output is projected once with a lexical fallback on failure. Every
+resolved module is rejected when it sits inside `review.outDir`, `.mokly-cache/`, beneath a denied directory
 relative to its glob root, or escapes `repoRoot` through a symlink.
 `load_graph.ts` then bundles those modules, imported helpers,
 the renderer and any compatibility transformer together and refreshes the

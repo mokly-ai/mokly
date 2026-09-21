@@ -48,13 +48,19 @@ test("package-owned watch rules precede broad consumer rules", async (context) =
     ".mokly-write-123/stage/screen.html",
   ]) {
     assert.equal(
-      classifyWatchPath(path.join(fixture.root, candidate), broad),
+      classifyWatchPath(
+        { path: path.join(fixture.root, candidate), kind: "change" },
+        broad,
+      ),
       "ignore",
       candidate,
     );
   }
   assert.equal(
-    classifyWatchPath(path.join(fixture.mockupsDir, "styles.css"), broad),
+    classifyWatchPath(
+      { path: path.join(fixture.mockupsDir, "styles.css"), kind: "change" },
+      broad,
+    ),
     "reload",
   );
   const nestedRenderer = path.join(fixture.root, "target/renderer.ts");
@@ -68,19 +74,22 @@ test("package-owned watch rules precede broad consumer rules", async (context) =
   };
   assert.equal(
     classifyWatchPath(
-      path.join(nestedEntries, "screen.mockup.tsx"),
+      { path: path.join(nestedEntries, "screen.mockup.tsx"), kind: "change" },
       nestedSources,
     ),
     "rebuild",
   );
   assert.equal(
     classifyWatchPath(
-      path.join(nestedEntries, "created.mockup.tsx"),
+      { path: path.join(nestedEntries, "created.mockup.tsx"), kind: "change" },
       nestedSources,
     ),
     "rebuild",
   );
-  assert.equal(classifyWatchPath(nestedRenderer, nestedSources), "rebuild");
+  assert.equal(
+    classifyWatchPath({ path: nestedRenderer, kind: "change" }, nestedSources),
+    "rebuild",
+  );
 });
 
 test(
@@ -137,7 +146,10 @@ test(
       'export default { entriesDir: "entries", mockupsDir: "mockups", repoRoot: ".", watch: { debounceMs: 0, rules: [{ action: "reload", paths: ["mockups/static/**"] }] } };\n',
     );
     const config = await loadConfig(fixture.root);
-    assert.equal(classifyWatchPath(publicHtml, config), "reload");
+    assert.equal(
+      classifyWatchPath({ path: publicHtml, kind: "change" }, config),
+      "reload",
+    );
     const supervisor = new CountingSupervisor();
     const running = await serve(
       config,

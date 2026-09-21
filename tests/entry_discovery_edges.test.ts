@@ -112,11 +112,7 @@ test("a repository-root glob skips review output during discovery", async (conte
   assert.deepEqual(config.entryModules, [fixture.entryPath]);
 });
 
-test("discovery skips an inaccessible directory", async (context) => {
-  if (process.platform === "win32" || process.getuid?.() === 0) {
-    context.skip("directory permissions are not enforced on this platform");
-    return;
-  }
+test("discovery reports an inaccessible directory with config-invalid and EACCES", async (context) => {
   const fixture = await createFixture();
   const visible = path.join(fixture.root, "src/visible.mockup.tsx");
   const inaccessible = path.join(fixture.root, "src/inaccessible");
@@ -131,13 +127,19 @@ test("discovery skips an inaccessible directory", async (context) => {
     await fs.promises.chmod(inaccessible, 0o755);
     await removeFixture(fixture);
   });
+  if (!(await directoryPermissionsEnforced(inaccessible))) {
+    context.skip("this process can read directories regardless of their mode");
+    return;
+  }
   await fs.promises.writeFile(
     fixture.configPath,
     'export default { entries: ["src/**/*.mockup.{ts,tsx}"], mockupsDir: "mockups", repoRoot: "." };\n',
   );
 
-  const config = await loadConfig(fixture.root);
-  assert.deepEqual(config.entryModules, [visible]);
+  await assert.rejects(loadConfig(fixture.root), {
+    code: "config-invalid",
+    message: /src\/inaccessible.*EACCES/,
+  });
 });
 
 test("entry globs with backslashes normalize to POSIX", async (context) => {
@@ -196,3 +198,56 @@ test("direct discovery retains the cache denial as defense in depth", async (con
     },
   );
 });
+
+for (const code of ["ENOENT", "ENOTDIR"]) {
+  test(`discovery lists a directory lost during reading (${code}) with denied roots`, async (context) => {
+    const fixture = await createFixture();
+    context.after(() => removeFixture(fixture));
+    const vanished = path.join(fixture.root, "src/vanished");
+    await fs.promises.mkdir(vanished, { recursive: true });
+    await fs.promises.mkdir(path.join(fixture.root, "src/dist"));
+    await fs.promises.writeFile(
+      path.join(vanished, "entry.mockup.tsx"),
+      validEntrySource(),
+    );
+    await fs.promises.writeFile(
+      fixture.configPath,
+      'export default { entries: ["src/**/*.mockup.tsx"], mockupsDir: "mockups", repoRoot: "." };\n',
+    );
+    const readdir = fs.readdirSync;
+    context.mock.method(
+      fs,
+      "readdirSync",
+      (...args: Parameters<typeof fs.readdirSync>) => {
+        if (args[0] === vanished)
+          throw Object.assign(new Error("vanished"), { code });
+        return Reflect.apply(readdir, fs, args);
+      },
+    );
+    await assert.rejects(loadConfig(fixture.root), {
+      code: "config-invalid",
+      message:
+        /entries glob matches no module: src\/\*\*\/\*\.mockup\.tsx; not searched: src\/dist, src\/vanished$/,
+    });
+  });
+}
+
+test("discovery relies on directory reads rather than a permission mode mask", () => {
+  const source = fs.readFileSync(
+    new URL("../src/config/entry_discovery.ts", import.meta.url),
+    "utf8",
+  );
+  assert.doesNotMatch(source, /stats\.mode|0o555/);
+});
+
+/** Root and capability-holding processes read mode-000 directories; probe rather than guess. */
+async function directoryPermissionsEnforced(
+  directory: string,
+): Promise<boolean> {
+  try {
+    await fs.promises.readdir(directory);
+    return false;
+  } catch (error) {
+    return (error as NodeJS.ErrnoException).code === "EACCES";
+  }
+}

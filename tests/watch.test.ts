@@ -91,13 +91,22 @@ test("watch classification is derived from consumer config", async (context) => 
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
-  assert.equal(classifyWatchPath(fixture.entryPath, config), "rebuild");
   assert.equal(
-    classifyWatchPath(path.join(fixture.root, "notes.md"), config),
+    classifyWatchPath({ path: fixture.entryPath, kind: "change" }, config),
+    "rebuild",
+  );
+  assert.equal(
+    classifyWatchPath(
+      { path: path.join(fixture.root, "notes.md"), kind: "change" },
+      config,
+    ),
     "ignore",
   );
   assert.equal(
-    classifyWatchPath(path.join(fixture.mockupsDir, "generated.html"), config),
+    classifyWatchPath(
+      { path: path.join(fixture.mockupsDir, "generated.html"), kind: "change" },
+      config,
+    ),
     "ignore",
   );
 });

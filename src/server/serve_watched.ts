@@ -29,12 +29,14 @@ import {
   type RuntimeWatchAction,
   WatchActionQueue,
   WatchDebouncer,
+  type WatchEvent,
 } from "./watch_events.js";
 import { watchTargets } from "./watch_paths.js";
 import { reportedWatchProcessor } from "./watch_reporting.js";
 import { WatchedBackground } from "./watched_background.js";
 import { createSourceWatcher } from "./watcher.js";
 
+/** Serve accepted generations while watching typed source and resource changes. */
 export async function serveWatched(
   config: ResolvedConfig,
   options: ServeOptions,
@@ -55,7 +57,7 @@ export async function serveWatched(
     signalShutdown = resolve;
   });
   const report = (error: unknown) => reporter.runtimeDiagnostic(error);
-  const gate = new NotificationGate<string>(report);
+  const gate = new NotificationGate<WatchEvent>(report);
   const failures = new NotificationGate<Error>(report);
   const inventory = await loadConsumerGraph(config, false);
   config.entryModules = inventory.entrySources;
@@ -64,7 +66,7 @@ export async function serveWatched(
   let watcher = createSourceWatcher(watcherFactory, config, gate, report);
   const resources = new ResourceWatcher(
     watcherFactory,
-    (candidate) => gate.notify(candidate),
+    (event) => gate.notify(event),
     report,
   );
   let runtime: ComponentRuntime;
@@ -96,7 +98,7 @@ export async function serveWatched(
   running.onDiagnostic?.((message) => reporter.runtimeDiagnostic(message));
   const previews = new PreviewResources(
     watcherFactory,
-    (candidate) => gate.notify(candidate),
+    (event) => gate.notify(event),
     () => runtime,
     shutdown,
     report,
@@ -119,13 +121,13 @@ export async function serveWatched(
   });
   running.onForeground?.((active) => background.foreground(active));
   let debouncer: WatchDebouncer | undefined;
-  const notify = (candidate: string) => {
+  const notify = (event: WatchEvent) => {
     const action = classifyWatchPath(
-      candidate,
+      event,
       activeConfig,
       new Set([...resources.paths, ...previews.paths]),
     );
-    debouncer?.notify(action, candidate);
+    debouncer?.notify(action, event.path);
   };
 
   const restart = async () => {
@@ -148,7 +150,7 @@ export async function serveWatched(
     const nextInventory = await loadConsumerGraph(nextConfig, false);
     nextConfig.entryModules = nextInventory.entrySources;
     nextConfig.sourceFiles = nextInventory.sourceFiles;
-    const nextGate = new NotificationGate<string>(report);
+    const nextGate = new NotificationGate<WatchEvent>(report);
     const replacement = createSourceWatcher(
       watcherFactory,
       nextConfig,

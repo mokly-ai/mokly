@@ -1,3 +1,4 @@
+import type fs from "node:fs";
 import path from "node:path";
 
 import { minimatch } from "minimatch";
@@ -12,6 +13,16 @@ import {
   isEntryGlobCandidate,
   isPackageOwnedIgnoredWatchPath,
 } from "./watch_paths.js";
+
+/** Filesystem notification with the watcher-provided identity and directory evidence. */
+export type WatchEvent = {
+  readonly path: string;
+  readonly kind: "add" | "addDir" | "change" | "unlink" | "unlinkDir" | "raw";
+  readonly stats?: fs.Stats;
+};
+
+/** Directory evidence shared by traversal pruning and entry classification. */
+export type WatchDirectoryStatus = "directory" | "file" | "unknown";
 
 /** Internal watch work, including package-owned configuration reloads. */
 export type RuntimeWatchAction = "reconfigure" | "evidence" | WatchAction;
@@ -175,11 +186,12 @@ export class WatchActionQueue {
 
 /** Classify one consumer path using configured inputs and reachable resources. */
 export function classifyWatchPath(
-  candidate: string,
+  event: WatchEvent,
   config: ResolvedConfig,
   resources: ReadonlySet<string> = new Set(),
 ): RuntimeWatchAction {
-  const absolute = path.resolve(candidate);
+  const absolute = path.resolve(event.path);
+  const directory = directoryStatus(event);
   if (isBaselineCachePath(absolute, config.repoRoot)) return "ignore";
   if (
     absolute === config.configPath ||
@@ -195,10 +207,18 @@ export function classifyWatchPath(
   )
     return "rebuild";
   if (isAuthoredEntryPath(absolute, config)) return "rebuild";
-  if (isEntryGlobCandidate(absolute, config)) return "rebuild";
+  if (isEntryGlobCandidate(absolute, config, directory)) return "rebuild";
   if (config.renderer === absolute) return "rebuild";
   const relative = toPosixPath(path.relative(config.repoRoot, absolute));
-  if (isPackageOwnedIgnoredWatchPath(absolute, config, undefined, "event"))
+  if (
+    isPackageOwnedIgnoredWatchPath(
+      absolute,
+      config,
+      event.stats,
+      "event",
+      directory,
+    )
+  )
     return "ignore";
   if ([...resources].some((resource) => isInside(absolute, resource)))
     return "reload";
@@ -217,4 +237,17 @@ export function classifyWatchPath(
       return rule.action;
   }
   return "ignore";
+}
+
+/** Prefer supplied stats, retaining deleted-directory identity through the event kind. */
+function directoryStatus(event: WatchEvent): WatchDirectoryStatus {
+  if (event.stats) return event.stats.isDirectory() ? "directory" : "file";
+  if (event.kind === "addDir" || event.kind === "unlinkDir") return "directory";
+  if (
+    event.kind === "add" ||
+    event.kind === "change" ||
+    event.kind === "unlink"
+  )
+    return "file";
+  return "unknown";
 }

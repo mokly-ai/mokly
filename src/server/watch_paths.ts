@@ -12,6 +12,8 @@ import type { ResolvedConfig } from "../config/types.js";
 import { isExportIgnoredPath } from "../export/ignored.js";
 import { MANIFEST_NAME } from "../registry/manifest.js";
 
+import type { WatchDirectoryStatus } from "./watch_events.js";
+
 /** Stable prefixes of every entry glob, watched so new entry modules are found. */
 export function entryGlobRoots(config: ResolvedConfig): string[] {
   return [
@@ -27,6 +29,7 @@ export function entryGlobRoots(config: ResolvedConfig): string[] {
 export function isEntryGlobCandidate(
   absolute: string,
   config: ResolvedConfig,
+  directory: WatchDirectoryStatus = "unknown",
 ): boolean {
   if (!isInside(config.repoRoot, absolute)) return false;
   const relative = toPosixPath(path.relative(config.repoRoot, absolute));
@@ -35,7 +38,7 @@ export function isEntryGlobCandidate(
   );
   return (
     matchingGlobs.length > 0 &&
-    !isDiscoveryDeniedEntryPath(absolute, matchingGlobs, config)
+    !isDiscoveryDeniedEntryPath(absolute, matchingGlobs, config, directory)
   );
 }
 
@@ -45,6 +48,7 @@ export function isPackageOwnedIgnoredWatchPath(
   config: ResolvedConfig,
   stats?: fs.Stats,
   mode: "traverse" | "event" = "traverse",
+  directory: WatchDirectoryStatus = "unknown",
 ): boolean {
   const absolute = path.resolve(candidate);
   if (isBaselineCachePath(absolute, config.repoRoot)) return true;
@@ -62,7 +66,7 @@ export function isPackageOwnedIgnoredWatchPath(
   return (
     leaf !== undefined &&
     isDeniedSourceSegment(leaf) &&
-    (stats?.isDirectory() ?? false)
+    (stats?.isDirectory() ?? isDirectory(candidate, directory))
   );
 }
 
@@ -162,6 +166,7 @@ function isDiscoveryDeniedEntryPath(
   candidate: string,
   matchingGlobs: readonly string[],
   config: ResolvedConfig,
+  directory: WatchDirectoryStatus,
 ): boolean {
   if (isBaselineCachePath(candidate, config.repoRoot)) return true;
   if (isInside(config.review.outDir, candidate)) return true;
@@ -174,18 +179,12 @@ function isDiscoveryDeniedEntryPath(
   const relativeRoot = globRoot ?? config.repoRoot;
   const lexicalSegments = denialSegments(relativeRoot, candidate);
   if (lexicalSegments.slice(0, -1).some(isDeniedSourceSegment)) return true;
-  let deniedLeaf: boolean | undefined;
-  const leafIsDeniedDirectory = () => {
-    deniedLeaf ??= isDirectory(candidate) || isMissing(candidate);
-    return deniedLeaf;
-  };
   const lexicalLeaf = lexicalSegments.at(-1);
-  if (
-    lexicalLeaf !== undefined &&
-    isDeniedSourceSegment(lexicalLeaf) &&
-    leafIsDeniedDirectory()
-  )
-    return true;
+  let leafIsDirectory: boolean | undefined;
+  if (lexicalLeaf !== undefined && isDeniedSourceSegment(lexicalLeaf)) {
+    leafIsDirectory = isDirectory(candidate, directory);
+    if (leafIsDirectory) return true;
+  }
   try {
     const realRepoRoot = projectRealPath(config.repoRoot);
     const realCandidate = projectRealPath(candidate);
@@ -199,7 +198,7 @@ function isDiscoveryDeniedEntryPath(
     return (
       realLeaf !== undefined &&
       isDeniedSourceSegment(realLeaf) &&
-      leafIsDeniedDirectory()
+      (leafIsDirectory ?? isDirectory(candidate, directory))
     );
   } catch (error) {
     if (isPathResolutionFailure(error)) return true;
@@ -216,21 +215,15 @@ function denialSegments(root: string, candidate: string): string[] {
 }
 
 /** Identify an existing directory while treating every lookup failure as a file. */
-function isDirectory(candidate: string): boolean {
+function isDirectory(
+  candidate: string,
+  directory: WatchDirectoryStatus,
+): boolean {
+  if (directory !== "unknown") return directory === "directory";
   try {
     return fs.statSync(candidate).isDirectory();
   } catch {
     return false;
-  }
-}
-
-/** Identify a removed event path without treating other lookup failures as absent. */
-function isMissing(candidate: string): boolean {
-  try {
-    fs.lstatSync(candidate);
-    return false;
-  } catch (error) {
-    return (error as NodeJS.ErrnoException).code === "ENOENT";
   }
 }
 

@@ -11,9 +11,19 @@ descendants. Discovery and watching share one denied-directory policy below the
 relevant glob root: traversal uses the deepest containing root, and entry-file
 classification uses the deepest matching root. The glob itself defines every
 entry-file shape that can trigger rediscovery. Traversal also skips
-`review.outDir`. Traversal uses supplied watcher stats rather than filesystem
-lookups for denied leaf names. Event classification ignores a missing denied
-leaf but accepts an existing regular file with that name. Source notifications
+`review.outDir`. A denied leaf's directory status comes from watcher stats,
+else from its event kind, else from one stat that treats any error as a file.
+`addDir` and `unlinkDir` identify directories; `add`, `change`, and `unlink`
+identify files. Supplied stats avoid that stat, but traversal still reads export
+markers and ownership headers. Deleted matched files rebuild even when named
+`target`; existing and removed denied directories outrank user watch rules.
+Resource notifications coalesce by path with the latest descriptor.
+Discovery skips `review.outDir`, denied directories, and directories that vanish
+or are replaced mid-walk (`ENOENT` or `ENOTDIR`). Zero-match messages list denied
+and vanished roots together. Other read or projection failures report
+`config-invalid` with the repository-relative path and error code. Discovery
+projects repository and glob roots once per pass; Review output alone uses a
+lexical fallback if its projection fails. Source notifications
 are isolated at the gate: classifier failures are reported, that notification
 is dropped, and later notifications continue through the same watcher.
 

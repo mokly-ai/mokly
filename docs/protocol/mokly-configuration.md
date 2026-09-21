@@ -227,16 +227,16 @@ glob root. Regular file basenames are not denied. The names are `.git`,
 This base is relative to the glob root: `src/dist/x.mockup.tsx` is denied under
 `src/**/*.mockup.{ts,tsx}`, while an explicit `dist/entries/**` root can discover
 `dist/entries/a.mockup.tsx` because `dist` is above that root. Discovery never
-inspects a denied tree. It resolves the lexical and projected identities of
-`review.outDir` once per pass, skips either identity, and skips directories that
-cannot be projected or searched without recording them as denied roots. A
-zero-match error starts with `entries glob matches no module: <glob>`; when denied
-directories were skipped, it continues with `; not searched: <repository-relative roots>` using a
-sorted, comma-separated list.
-The union of all globs, deduplicated by repository-relative path and sorted by
-that path, is the resolved entry set. Discovery order therefore depends on
-neither glob order nor filesystem order. Per-glob validation ensures a typo
-cannot silently produce an empty or partial catalogue.
+inspects a denied tree. Repository, glob-root, and `review.outDir` identities are
+projected once per pass; Review projection alone falls back to its lexical path.
+Walks skip either Review identity and vanished or replaced directories (`ENOENT`
+or `ENOTDIR`). Other read or projection errors fail with `config-invalid`, naming
+the repository-relative path and error code (`unknown` if absent). Zero matches
+report `entries glob matches no module: <glob>` and append the sorted union of
+denied and vanished roots as `; not searched: <repository-relative roots>`.
+The resolved entry set is the union of all globs, sorted and deduplicated by
+repository-relative path, independent of glob and filesystem order. Per-glob
+validation ensures a typo cannot silently produce an empty or partial catalogue.
 
 Every resolved entry module is classified before bundling. Discovery fails
 with `config-invalid` naming the module and the matched rule when the module

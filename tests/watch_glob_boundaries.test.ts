@@ -8,6 +8,7 @@ import type { ResolvedConfig } from "../dist/config/types.js";
 import {
   classifyWatchPath,
   NotificationGate,
+  type WatchEvent,
 } from "../dist/server/watch_events.js";
 import {
   isEntryGlobCandidate,
@@ -19,55 +20,6 @@ import {
   removeFixture,
   validEntrySource,
 } from "./helpers/fixture.js";
-
-test("entry glob roots prune ignored descendants without pruning their ancestors", async (context) => {
-  const fixture = await createFixture();
-  context.after(() => removeFixture(fixture));
-  const loaded = await loadConfig(fixture.root);
-  const srcConfig: ResolvedConfig = {
-    ...loaded,
-    entryGlobs: ["src/**/*.mockup.{ts,tsx}"],
-    entryModules: [
-      path.join(fixture.root, "src/components/card/card.mockup.tsx"),
-    ],
-  };
-  delete srcConfig.entriesDir;
-  for (const relative of ["src/node_modules/x/index.js", "src/dist/x.js"]) {
-    assert.equal(
-      isPackageOwnedIgnoredWatchPath(
-        path.join(fixture.root, relative),
-        srcConfig,
-      ),
-      true,
-      relative,
-    );
-  }
-  for (const relative of ["src/components/card/card.mockup.tsx", "src"]) {
-    assert.equal(
-      isPackageOwnedIgnoredWatchPath(
-        path.join(fixture.root, relative),
-        srcConfig,
-      ),
-      false,
-      relative,
-    );
-  }
-
-  const rootConfig: ResolvedConfig = {
-    ...srcConfig,
-    entryGlobs: ["**/*.mockup.{ts,tsx}"],
-  };
-  for (const relative of ["node_modules/x/index.js", ".git/HEAD"]) {
-    assert.equal(
-      isPackageOwnedIgnoredWatchPath(
-        path.join(fixture.root, relative),
-        rootConfig,
-      ),
-      true,
-      relative,
-    );
-  }
-});
 
 test("entry candidates inside discovery-denied trees stay ignored", async (context) => {
   const fixture = await createFixture();
@@ -85,7 +37,10 @@ test("entry candidates inside discovery-denied trees stay ignored", async (conte
     ".review/new.mockup.tsx",
   ]) {
     assert.equal(
-      classifyWatchPath(path.join(fixture.root, relative), config),
+      classifyWatchPath(
+        { path: path.join(fixture.root, relative), kind: "change" },
+        config,
+      ),
       "ignore",
       relative,
     );
@@ -103,7 +58,10 @@ test("a custom entry glob rebuilds for every file shape it matches", async (cont
   };
   delete config.entriesDir;
   assert.equal(
-    classifyWatchPath(path.join(fixture.root, "src/new-entry.ts"), config),
+    classifyWatchPath(
+      { path: path.join(fixture.root, "src/new-entry.ts"), kind: "change" },
+      config,
+    ),
     "rebuild",
   );
 });
@@ -128,7 +86,10 @@ test("denied directory names remain valid regular-file basenames", async (contex
   );
 
   await fs.promises.rm(target);
-  assert.equal(classifyWatchPath(target, config), "ignore");
+  assert.equal(
+    classifyWatchPath({ path: target, kind: "unlink" }, config),
+    "rebuild",
+  );
   const nested = path.join(target, "x.mockup.tsx");
   await fs.promises.mkdir(target);
   await fs.promises.writeFile(nested, validEntrySource());
@@ -140,7 +101,7 @@ test("denied directory names remain valid regular-file basenames", async (contex
   assert.equal(isPackageOwnedIgnoredWatchPath(nested, config), true);
 });
 
-test("watch pruning uses supplied stats without filesystem I/O", async (context) => {
+test("watch pruning derives denied-leaf directory status from supplied stats", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const loaded = await loadConfig(fixture.root);
@@ -151,7 +112,8 @@ test("watch pruning uses supplied stats without filesystem I/O", async (context)
   };
   delete config.entriesDir;
   const deniedLeaf = path.join(fixture.root, "src/dist");
-  assert.doesNotThrow(() => isPackageOwnedIgnoredWatchPath(deniedLeaf, config));
+  await fs.promises.mkdir(deniedLeaf, { recursive: true });
+  assert.equal(isPackageOwnedIgnoredWatchPath(deniedLeaf, config), true);
   context.mock.method(fs, "statSync", () => {
     const error = new Error("descriptor limit") as NodeJS.ErrnoException;
     error.code = "EMFILE";
@@ -166,42 +128,6 @@ test("watch pruning uses supplied stats without filesystem I/O", async (context)
   assert.equal(
     isPackageOwnedIgnoredWatchPath(path.join(deniedLeaf, "x.ts"), config),
     true,
-  );
-});
-
-test("discovery and watching share denied segments below glob roots", async (context) => {
-  const fixture = await createFixture();
-  context.after(() => removeFixture(fixture));
-  const baseline = await loadConfig(fixture.root);
-  const broad: ResolvedConfig = {
-    ...baseline,
-    entryGlobs: ["src/**/*.mockup.{ts,tsx}"],
-    entryModules: [],
-  };
-  delete broad.entriesDir;
-  const denied = path.join(fixture.root, "src/dist/x.mockup.tsx");
-  await fs.promises.mkdir(path.dirname(denied), { recursive: true });
-  await fs.promises.writeFile(denied, validEntrySource());
-  assert.equal(isPackageOwnedIgnoredWatchPath(denied, broad), true);
-  assert.equal(isEntryGlobCandidate(denied, broad), false);
-  await fs.promises.writeFile(
-    fixture.configPath,
-    'export default { entries: ["src/**/*.mockup.{ts,tsx}"], mockupsDir: "mockups", repoRoot: "." };\n',
-  );
-  await assert.rejects(loadConfig(fixture.root), {
-    code: "config-invalid",
-    message:
-      /entries glob matches no module: src\/\*\*\/\*\.mockup\.\{ts,tsx\}; not searched: src\/dist/,
-  });
-
-  const loaded = await loadConfigFor(fixture, "dist/entries/**");
-  const explicit = path.join(fixture.root, "dist/entries/a.mockup.tsx");
-  assert.deepEqual(loaded.entryModules, [explicit]);
-  assert.equal(isPackageOwnedIgnoredWatchPath(explicit, loaded), false);
-  assert.equal(isEntryGlobCandidate(explicit, loaded), true);
-  assert.equal(
-    classifyWatchPath(path.join(fixture.root, "dist/entries/new.ts"), loaded),
-    "rebuild",
   );
 });
 
@@ -228,16 +154,18 @@ test("a notification gate reports classifier errors and keeps delivering", async
     return lstatSync(value);
   });
   assert.throws(
-    () => classifyWatchPath(candidate, config),
+    () => classifyWatchPath({ path: candidate, kind: "change" }, config),
     /unexpected path failure/,
   );
   const reported: unknown[] = [];
   const delivered: string[] = [];
-  const gate = new NotificationGate<string>((error) => reported.push(error));
-  gate.notify(candidate);
+  const gate = new NotificationGate<WatchEvent>((error) =>
+    reported.push(error),
+  );
+  gate.notify({ path: candidate, kind: "add" });
   gate.open((value) => delivered.push(classifyWatchPath(value, config)));
-  gate.notify(candidate);
-  gate.notify(fixture.entryPath);
+  gate.notify({ path: candidate, kind: "add" });
+  gate.notify({ path: fixture.entryPath, kind: "change" });
   assert.deepEqual(
     reported.map((error) => String(error)),
     ["Error: unexpected path failure", "Error: unexpected path failure"],
@@ -245,35 +173,96 @@ test("a notification gate reports classifier errors and keeps delivering", async
   assert.deepEqual(delivered, ["rebuild"]);
 });
 
-test("a non-matching glob root is excluded from the entry denial base", async (context) => {
+for (const kind of ["addDir", "change", "unlinkDir"] as const) {
+  test(`${kind} for a denied directory outranks user watch rules`, async (context) => {
+    const fixture = await createFixture();
+    context.after(() => removeFixture(fixture));
+    const loaded = await loadConfig(fixture.root);
+    const config: ResolvedConfig = {
+      ...loaded,
+      entryGlobs: ["src/**"],
+      entryModules: [],
+      watch: {
+        debounceMs: 0,
+        rules: [{ action: "reload", paths: ["src/**"] }],
+      },
+    };
+    delete config.entriesDir;
+    const candidate = path.join(fixture.root, "src/dist");
+    await fs.promises.mkdir(candidate, { recursive: true });
+    const stats = fs.statSync(candidate);
+    if (kind === "unlinkDir") await fs.promises.rmdir(candidate);
+    const event = {
+      path: candidate,
+      kind,
+      ...(kind === "change" ? { stats } : {}),
+    };
+    context.mock.method(fs, "statSync", () =>
+      assert.fail("event directory status must not stat"),
+    );
+    assert.equal(classifyWatchPath(event, config), "ignore");
+  });
+}
+
+test("unlink of an ordinary matched entry rebuilds and add beneath dist stays ignored", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const loaded = await loadConfig(fixture.root);
   const config: ResolvedConfig = {
     ...loaded,
-    entryGlobs: ["src/**/*.mockup.{ts,tsx}", "src/dist/entries/**/*.json"],
+    entryGlobs: ["src/**"],
     entryModules: [],
   };
   delete config.entriesDir;
+  const candidate = path.join(fixture.root, "src/plain.ts");
+  await fs.promises.mkdir(path.dirname(candidate), { recursive: true });
+  await fs.promises.writeFile(candidate, "export const mockups = [];\n");
+  await fs.promises.rm(candidate);
   assert.equal(
-    isEntryGlobCandidate(
-      path.join(fixture.root, "src/dist/entries/new.mockup.tsx"),
+    classifyWatchPath({ path: candidate, kind: "unlink" }, config),
+    "rebuild",
+  );
+  assert.equal(
+    classifyWatchPath(
+      { path: path.join(fixture.root, "src/dist/x.ts"), kind: "add" },
+      config,
+    ),
+    "ignore",
+  );
+});
+
+test("raw denied-leaf events and traversal fail open under descriptor exhaustion", async (context) => {
+  const fixture = await createFixture();
+  context.after(() => removeFixture(fixture));
+  const loaded = await loadConfig(fixture.root);
+  const config: ResolvedConfig = {
+    ...loaded,
+    entryGlobs: ["src/**"],
+    entryModules: [],
+  };
+  delete config.entriesDir;
+  const candidate = path.join(fixture.root, "src/dist");
+  const failure = Object.assign(new Error("descriptor limit"), {
+    code: "EMFILE",
+  });
+  const stat = context.mock.method(fs, "statSync", () => {
+    throw failure;
+  });
+  assert.equal(
+    classifyWatchPath({ path: candidate, kind: "raw" }, config),
+    "rebuild",
+  );
+  assert.equal(stat.mock.callCount(), 1);
+  for (const method of ["lstatSync", "readFileSync", "openSync"] as const)
+    context.mock.method(fs, method, () => {
+      throw failure;
+    });
+  assert.equal(isPackageOwnedIgnoredWatchPath(candidate, config), false);
+  assert.equal(
+    isPackageOwnedIgnoredWatchPath(
+      path.join(fixture.mockupsDir, "unowned.html"),
       config,
     ),
     false,
   );
 });
-
-async function loadConfigFor(
-  fixture: Awaited<ReturnType<typeof createFixture>>,
-  glob: string,
-): Promise<ResolvedConfig> {
-  const entry = path.join(fixture.root, "dist/entries/a.mockup.tsx");
-  await fs.promises.mkdir(path.dirname(entry), { recursive: true });
-  await fs.promises.writeFile(entry, validEntrySource());
-  await fs.promises.writeFile(
-    fixture.configPath,
-    `export default { entries: [${JSON.stringify(glob)}], mockupsDir: "mockups", repoRoot: "." };\n`,
-  );
-  return loadConfig(fixture.root);
-}
