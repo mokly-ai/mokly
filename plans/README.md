@@ -10,7 +10,8 @@
 - [Co-Located Entry Discovery](./co-located-entry-discovery.md) — delivered
   on the branch through Milestone 11 with five review rounds applied; earlier
   milestones and review rounds are kept in `co-located-entry-discovery/`.
-  Milestone 12 carries the approved sixth-round fixes.
+  A seventh review round reported eight findings that await the user's
+  decision.
 - [CLI Terminal Experience](./cli-terminal-experience.md)
 - [Package Documentation](./package-documentation.md) — supersedes the
   unmerged public-site plan and pull request #79 by shipping versioned Markdown

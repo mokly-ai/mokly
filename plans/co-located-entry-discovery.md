@@ -2,10 +2,16 @@
 
 ## Status And Outcome
 
-Milestones 1 through 11 are complete, committed, and pushed. Milestone 12 is
-locally committed after `cargo xtask check`, pending the supervising agent's push
-and review. Findings 5 and 6 remain accepted, and finding 7's index is corrected.
-Permission tests retain the capability probe introduced in Milestone 11.
+Milestones 1 through 12 are complete, committed, and pushed. Milestone 11
+preserves watcher event kinds and stats through classification and reports
+discovery failures except benign missing-directory races; its gate passed with
+1,976 unit tests, five packed-consumer scenarios, and 466 Chrome tests after the
+supervising agent replaced the permission test's root-only skip with a runtime
+probe, since capability-holding processes read mode-000 directories. Milestone
+12 applied four approved sixth-round findings; findings 5 and 6 are accepted as
+documented behavior. The post-push review of Milestone 12 reported eight
+findings, recorded below and awaiting the user's decision; the first shows the
+vanished-module fix covers a narrower race than the docs state.
 
 Mokly currently discovers every `*.mockup.ts` and `*.mockup.tsx` module below
 one configured directory, `entriesDir`, and binds the source-attributed
@@ -208,9 +214,50 @@ hygiene. Findings 5 and 6 remain accepted without change.
       reflow the overlong line in `src/build/README.md`.
 - [x] Run `cargo xtask check` and commit locally; the supervising agent
       will verify and push before the final review.
-- [ ] Review the complete local diff against `origin/main` after the push
+- [x] Review the complete local diff against `origin/main` after the push
       using `docs/implementation-review-prompt.md`; report findings without
-      changing the implementation.
+      changing the implementation. The post-push review reported eight
+      findings, recorded under "Seventh Review Findings (awaiting decision)".
+
+## Seventh Review Findings (awaiting decision)
+
+Review of the Milestone 12 commit. Nothing has been changed in response. The
+supervising agent confirmed findings 1, 2, and 3 by direct probe. The reviewer
+verified the single-validation and dual-glob counting, the vanished-module
+accounting, the unchanged error text and sort order, the soundness of the
+descriptor-exhaustion test including its second-pass `lstatSync` allowance,
+and the three new discovery tests.
+
+1. **P2, the deleted-module fix handles a narrower race than the docs
+   claim.** `projectRealPath` projects a missing file lexically and never
+   throws `ENOENT` for a module that was simply deleted after the walk
+   listed it; such a module is returned in the resolved set and fails later
+   at bundling. Only the narrow window where `lstat` succeeds and `realpath`
+   then fails is handled, which the new tests reach by mocking. Confirmed by
+   deleting a file immediately after the directory listing. Recommended:
+   also treat a candidate whose `lstat` now fails with `ENOENT` as vanished,
+   add a test that really deletes the file between walk and validation, and
+   narrow the three doc sentences to what the code does.
+2. **P2, the configuration contract lost the directory error rule.** The
+   sentence stating that other read or projection errors fail with
+   `config-invalid` naming the path and code was folded into the module
+   sentence, leaving directories with only "Other read errors also remain
+   loud", weaker than the README and pipeline docs. Recommended: restore
+   the full sentence and delete the vague one.
+3. **P2, plan history deleted outside the milestone.** The Status And
+   Outcome paragraph and the sixth-round preamble were rewritten, erasing
+   the Milestone 11 gate record, the permission-probe note, and the
+   reviewer's verified-items list. Recommended: restore both paragraphs.
+4. **P3, the commit-and-push TODO was reworded to drop "push"** and ticked
+   before any push. Recommended: restore the wording.
+5. **P3, error precedence changed silently.** Validating inside the per-glob
+   loop lets a denied module under an earlier glob pre-empt a later glob's
+   zero-match error. Recommended: document and pin with a test.
+6. **P3, the `not searched` placeholder says roots but now lists files.**
+7. **P3, two explanatory sentences were dropped** from the configuration
+   paragraph: why `dist/entries/**` is discoverable, and that per-glob
+   validation is what prevents silent omissions.
+8. **P3, ragged mid-paragraph line wraps** in two reflowed docs.
 
 ## Sixth Review Findings (approved, addressed in Milestone 12)
 
