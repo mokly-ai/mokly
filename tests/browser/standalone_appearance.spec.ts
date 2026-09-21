@@ -296,8 +296,8 @@ test("a component sample follows the one Appearance control", async ({
   page,
 }) => {
   await page.goto("/view/components/action.html");
-  const sample = page.frameLocator('[data-workspace-frame="desktop"]');
-  await expect(sample.locator("body")).toBeVisible();
+  const sample = page.locator('[data-workspace-frame="desktop"]');
+  await expectFrameSource(sample, /action\.variants\/default\.desktop\.html$/);
   // No separate preview control: the sample follows the interface appearance.
   await expect(page.getByRole("button", { name: "Dark preview" })).toHaveCount(
     0,
@@ -308,14 +308,11 @@ test("a component sample follows the one Appearance control", async ({
     "data-mokly-color-scheme",
     "dark",
   );
-  await expect(sample.locator("[data-scheme]").first()).toHaveAttribute(
-    "data-scheme",
-    "dark",
+  await expectFrameSource(
+    sample,
+    /action\.variants\/default\.desktop\.dark\.html$/,
   );
 
   await page.locator(select).selectOption("light");
-  await expect(sample.locator("[data-scheme]").first()).toHaveAttribute(
-    "data-scheme",
-    "light",
-  );
+  await expectFrameSource(sample, /action\.variants\/default\.desktop\.html$/);
 });

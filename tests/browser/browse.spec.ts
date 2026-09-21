@@ -10,6 +10,8 @@ const designHomeRow =
 const tourRow = 'a[data-nav-row][data-route="user-flows/example-tour.html"]';
 const appearance = ".mbk-topbar [data-mokly-appearance-control]";
 const appearanceSelect = "[data-mokly-appearance-select]";
+const face = (value: string) =>
+  `[data-appearance-option="${value}"] .mbk-appearance-value`;
 const mobileFrame = ".mbk-frame-mobile iframe";
 const desktopFrame = ".mbk-frame-desktop iframe";
 const darkSurface = "rgb(18, 21, 20)";
@@ -530,12 +532,10 @@ test("Appearance stays reachable at both widths", async ({ page }) => {
   // Narrow, the control keeps its glyph and drops only its label, so search
   // and the menu keep their room.
   await expect(page.locator(appearance)).toBeVisible();
+  // The control renders every face and reveals the current one, so the word is
+  // measured on the face the document is actually in.
   expect(
-    await computedStyle(
-      page,
-      `${appearance} .mbk-appearance-value`,
-      "position",
-    ),
+    await computedStyle(page, `${appearance} ${face("auto")}`, "position"),
   ).toBe("absolute");
   await expect(page.locator(".mbk-search")).toBeVisible();
   await expect(page.locator("[data-mokly-menu]")).toBeVisible();
@@ -549,11 +549,7 @@ test("Appearance stays reachable at both widths", async ({ page }) => {
   await page.setViewportSize({ height: 800, width: 1_280 });
   await expect(page.locator(appearance)).toBeVisible();
   expect(
-    await computedStyle(
-      page,
-      `${appearance} .mbk-appearance-value`,
-      "position",
-    ),
+    await computedStyle(page, `${appearance} ${face("dark")}`, "position"),
   ).toBe("static");
   // An explicit choice survives the width change, in the control and in the
   // document mark the previews follow.

@@ -864,7 +864,7 @@ also give the three internal accent fallbacks a private namespace, constrain
 the public accent surface to its three documented overrides and audit every
 status/device palette role against a painted pair.
 
-## Milestone 5: Connect standalone appearance controls
+## Milestone 5: Connect standalone appearance controls (complete)
 
 Tags: ui
 
@@ -875,34 +875,34 @@ Commit and push after the checks pass, then review the complete diff against
 `origin/main` with `docs/implementation-review-prompt.md` and report findings
 without fixing them.
 
-- [ ] Implement the standalone Appearance selector from the shared control
+- [x] Implement the standalone Appearance selector from the shared control
       composition. Add the opt-in startup hook and script before the stylesheet
       in `shell/document.tsx`; render the selector in every standalone
       document, including light-only catalogues; keep embedded hosts' own
       controls separate.
-- [ ] Make the selector drive both the root theme and the existing preview
+- [x] Make the selector drive both the root theme and the existing preview
       scheme application: the document mark, screen and flow frame swaps,
       component samples, comparison frames, fallback captions and recovery
       state. Remove the standalone top-bar and head-band scheme switch and the
       workspace Dark mode button with their placement CSS, drop the clamp that
       depends on a scheme control existing, and update the Browse client tests
       and the shared browser helpers.
-- [ ] Apply the startup precedence: `scheme` URL pin, then stored override,
+- [x] Apply the startup precedence: `scheme` URL pin, then stored override,
       then initial theme, then Auto; a user selection wins for the document's
       lifetime; Auto follows live system changes and re-applies the preview
       scheme. Keep light-only catalogues caption-free under Dark.
-- [ ] Keep Appearance reachable on home, unavailable and light-only catalogues
+- [x] Keep Appearance reachable on home, unavailable and light-only catalogues
       at mobile and desktop widths, without obscuring search or menu access.
-- [ ] Preserve appearance through navigation, evidence refresh and watched
+- [x] Preserve appearance through navigation, evidence refresh and watched
       recovery. Exercise storage failures without losing the current choice;
       hide the manual selector until initialized and retain CSS with JavaScript
       off, where frames keep their server-rendered light sources.
-- [ ] Verify pin/saved/initial/Auto precedence, full reload, live system
+- [x] Verify pin/saved/initial/Auto precedence, full reload, live system
       changes, explicit overrides, keyboard control, early paint and at most
       one first-load frame swap against Serve and a static export. Update the
       runtime and shell-design Color Scheme sections to the shipped behavior
       and run the relevant shell, navigation and export browser suites.
-- [ ] Close the Milestone 4 review findings that this milestone owns: give
+- [x] Close the Milestone 4 review findings that this milestone owns: give
       the standalone startup one shared controller per root (a `WeakMap`) so
       repeated installation returns handles over the same theme and listener
       state, with tests for choices through repeated handles, media changes,
