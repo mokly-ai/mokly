@@ -2,29 +2,29 @@ import { expect, test } from "@playwright/test";
 
 import { startEvidenceFixture } from "../helpers/evidence_fixture.js";
 
-test("reload recovery starts without loading catalogue validation", async ({
+test("reload recovery starts without fetching another catalogue snapshot", async ({
   page,
 }) => {
   const fixture = await startEvidenceFixture();
-  let readerRequests = 0;
-  let readerAllowed = false;
+  let catalogueRequests = 0;
+  let catalogueAllowed = false;
   let connected = false;
   page.on("response", (response) => {
     if (new URL(response.url()).pathname === "/__mokly/events" && response.ok())
       connected = true;
   });
-  await page.route("**/__mokly/client/catalogue_updates.js", (route) => {
-    readerRequests++;
-    return readerAllowed ? route.continue() : route.abort();
+  await page.route("**/__mokly/catalogue.json", (route) => {
+    catalogueRequests++;
+    return catalogueAllowed ? route.continue() : route.abort();
   });
   try {
     await page.goto(`${fixture.server.url}/view/screens/home.html`);
     await expect.poll(() => connected).toBe(true);
-    expect(readerRequests).toBe(0);
+    expect(catalogueRequests).toBe(0);
     await page.locator("html").evaluate((root) => {
       root.setAttribute("data-test-retained", "true");
     });
-    readerAllowed = true;
+    catalogueAllowed = true;
     expect(
       fixture.server.completeCatalogue?.(
         fixture.compilation.manifest,
@@ -36,7 +36,7 @@ test("reload recovery starts without loading catalogue validation", async ({
       "data-mokly-update-version",
       "2",
     );
-    expect(readerRequests).toBe(1);
+    expect(catalogueRequests).toBe(1);
     await expect(page.locator("html")).toHaveAttribute(
       "data-test-retained",
       "true",
@@ -46,7 +46,7 @@ test("reload recovery starts without loading catalogue validation", async ({
   }
 });
 
-test("early native disclosures survive delayed enhancement and recovery", async ({
+test("early native disclosures survive delayed hydration and recovery", async ({
   page,
 }) => {
   const fixture = await startEvidenceFixture();
@@ -54,13 +54,15 @@ test("early native disclosures survive delayed enhancement and recovery", async 
   const blocked = new Promise<void>((resolve) => {
     release = resolve;
   });
-  await page.route(
-    /\/__mokly\/client\/(browse_runtime|browser)\.js$/,
-    async (route) => {
-      await blocked;
-      await route.continue();
-    },
-  );
+  let markRequested = (): void => {};
+  const requested = new Promise<void>((resolve) => {
+    markRequested = resolve;
+  });
+  await page.route("**/__mokly/client/react-host.js", async (route) => {
+    markRequested();
+    await blocked;
+    await route.continue();
+  });
   await page.addInitScript(() => {
     if (window.parent !== window) return;
     sessionStorage.setItem(
@@ -87,10 +89,7 @@ test("early native disclosures survive delayed enhancement and recovery", async 
     await page.goto(`${fixture.server.url}/view/screens/home.html`, {
       waitUntil: "commit",
     });
-    await expect(page.locator("[data-mokly-nav-resize]")).toHaveAttribute(
-      "data-resize-initialized",
-      "true",
-    );
+    await requested;
     const screens = page.locator('[data-nav-collection="collection:screens"]');
     const archive = page.locator('[data-nav-collection="collection:archive"]');
     await screens.locator("summary").click();

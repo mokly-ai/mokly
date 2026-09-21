@@ -10,6 +10,8 @@ import type { ManifestV5 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import type { RemovedEntrySnapshot } from "../packages/viewer/dist/shell/metadata.js";
 
+import { documentText } from "./helpers/html.js";
+import { publicShellContext } from "./helpers/public_shell.js";
 import { createRemovedDeliveryFixture } from "./helpers/removed_delivery_fixture.js";
 
 const metadata = {
@@ -91,12 +93,17 @@ function removedShell(entry: RemovedEntry): string {
   const removed: RemovedEntrySnapshot[] = [
     { entry, ancestors: [{ id: "example", title: "Example" }] },
   ];
-  return viewPage(entry, createCatalogue(manifest, removed), {
-    base: "origin/main",
-    comparisons: true,
-    changedRoutes: [entry.route],
-    updateVersion: 1,
-  });
+  const catalogue = createCatalogue(manifest, removed);
+  return viewPage(
+    entry,
+    catalogue,
+    publicShellContext(catalogue, {
+      base: "origin/main",
+      comparisons: true,
+      changedRoutes: [entry.route],
+      updateVersion: 1,
+    }),
+  );
 }
 
 function descriptor(html: string) {
@@ -162,12 +169,15 @@ test("a served stage claims no request until its client can make one", () => {
 
 test("removed components and flows keep the behavior the contract leaves alone", () => {
   const chip = removedShell(component);
-  assert.match(chip, /This component was removed/);
-  assert.match(chip, /Select a comparison to see the previous version/);
+  assert.match(documentText(chip), /This component was removed/);
+  assert.match(
+    documentText(chip),
+    /Select a comparison to see the previous version/,
+  );
   assert.match(chip, /data-diff-screen/);
   assert.equal(descriptor(chip), undefined);
   const tour = removedShell(flow);
-  assert.match(tour, /This user flow was removed/);
+  assert.match(documentText(tour), /This user flow was removed/);
   assert.equal(descriptor(tour), undefined);
 });
 

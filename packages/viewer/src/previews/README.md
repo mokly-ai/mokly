@@ -21,28 +21,26 @@ means a reused generation and is treated as unavailable. `renewPreview`
 extends a live generation's retention before reusing it, exactly as comparisons
 do. `advertisedPreviewPaths` is the complete set an embedded viewer may fetch.
 
-`copy.ts` owns the unavailable copy and Retry hook shared by the served shell
-and client renderer. `render.ts` owns the loading, client-side
-unavailable-with-retry and loaded stages, cloning the device chrome the shell
-rendered into templates. A selected viewport with no captured view keeps a note
-where its frame would be rather than an empty stage; its `mbk-preview-note` and
-`mbk-preview-switch` classes match the design catalogue, and the stylesheet
-hides the closing sentence while both viewports are shown. `read_only.ts`
+`copy.ts` owns the unavailable copy and Retry hook shared by the server render
+and hydrated shell. `shell/previews.tsx` owns loading, retry and loaded states,
+using the same device chrome components as current screens. A selected viewport
+with no captured view keeps a note where its frame would be rather than an empty
+stage; its `mbk-preview-note` and `mbk-preview-switch` classes match the design
+catalogue, and the stylesheet hides the closing sentence while both viewports
+are shown. `read_only.ts`
 cancels link and form activation inside frames the parent can reach, Enter
 included, while preserving scrolling, selection and same-document anchors;
 Space keeps its default so a long previous version stays readable from the
-keyboard, and a cross-origin preview relies on its sandbox instead. `install.ts`
-is the delegated controller: its first update replaces the shell's served
-unavailable stage with the loading state, then it requests on selection, renews
-before re-rendering a viewport or theme change, and discards any response whose
-stage or entry has since changed.
+keyboard, and a cross-origin preview relies on its sandbox instead.
+`shell/use_removed_preview.ts` is the route-owned controller: its first effect
+replaces the honest server-rendered unavailable state with loading, requests on
+selection, renews before presenting a viewport or theme change, and discards
+work after route replacement or unmount.
 
-The browser build exposes this controller as `client/previews.js`. Browse
-imports that module instead of bundling it into `browse_runtime.js`, and the
-controller imports `parseReviewResult` from the existing `diffs.js` module.
-Serve and static export explicitly ship the resulting graph. The packaged
-`@mokly/viewer` browser build uses the same graph without changing preview
-behavior.
+The controller and typed review validators are bundled once into the shared
+`react-shell.js` hydration entry. Serve, static export and application-owned
+`@mokly/viewer` roots therefore use the same React lifecycle without a second
+Browse runtime.
 
 ```bash
 npm run build

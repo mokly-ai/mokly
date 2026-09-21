@@ -73,6 +73,15 @@ test("static delivery loads only what the catalogue advertises", () => {
     )?.endpoint.href,
     `https://catalogue.test/${pagePath}`,
   );
+  assert.equal(
+    previewEndpoint(
+      { ...removedPage, published: { kind: "page", path: pagePath } },
+      { comparisonUrl: COMPARISON.slice(1) },
+      BASE,
+      false,
+    )?.endpoint.href,
+    `https://catalogue.test/${pagePath}`,
+  );
 });
 
 test("an advertised address from another generation or route is declined", () => {

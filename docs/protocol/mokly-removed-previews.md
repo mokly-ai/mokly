@@ -173,11 +173,9 @@ frames; the cross-origin adapter mounts historical documents without the
 inspector handshake, so no inspection, marker, or navigation message is
 exchanged for them.
 
-Serve and static artifacts publish the preview controller as
-`__mokly/client/previews.js`. It imports the already-served comparison validator
-from `diffs.js`, so the review parser has one delivered implementation. The
-standalone `@mokly/viewer` browser inventory retains the same module graph and
-behavior.
+Serve and static artifacts include the preview controller and comparison
+validator once in `__mokly/client/react-shell.js`. Application-owned
+`@mokly/viewer` roots use the same React components and request lifecycle.
 
 ## Frames And Lifecycle
 

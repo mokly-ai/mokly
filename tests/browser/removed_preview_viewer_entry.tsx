@@ -45,5 +45,6 @@ createRoot(element).render(
         ? postMessageAdapter({ frameOrigin: data.frameOrigin })
         : sameOriginAdapter()
     }
+    viewerId="removed-preview"
   />,
 );

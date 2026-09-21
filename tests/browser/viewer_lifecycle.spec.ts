@@ -106,6 +106,38 @@ test("slot changes keep selection and overlay excludes shell controls", async ({
   expect(overlay).toEqual(preview);
 });
 
+test("slot-only rerenders retain an active pick", async ({ page }) => {
+  await page.evaluate(() => window.viewerHarness.start("one", { slots: true }));
+  await page.waitForFunction(() =>
+    Boolean(window.viewerHarness.get("one").ref.current),
+  );
+  await page.evaluate(() =>
+    window.viewerHarness.get("one").ref.current.startPick(),
+  );
+  const labels = page.locator("[data-mokly-label-layer] button");
+  await expect.poll(() => labels.count()).toBeGreaterThan(0);
+  const labelCount = await labels.count();
+  await page.evaluate(async () => {
+    const host = window.viewerHarness.get("one");
+    host.props.slots = {
+      ...host.props.slots,
+      topBarStart: "Updated while picking",
+    };
+    host.render();
+    await new Promise(requestAnimationFrame);
+    await host.ref.current.startPick();
+  });
+  await expect(page.getByText("Updated while picking")).toBeVisible();
+  await expect(labels).toHaveCount(labelCount);
+  expect(
+    await page.evaluate(() =>
+      window.viewerHarness
+        .get("one")
+        .events.filter((event) => event.name === "pick-start"),
+    ),
+  ).toHaveLength(1);
+});
+
 test("source and adapter replacement end pick and remount; unmount is silent", async ({
   page,
 }) => {
@@ -183,6 +215,32 @@ test("styles and duplicate ids do not escape independent roots", async ({
     };
   });
   expect(result).toEqual({ unique: true, ...before });
+});
+
+test("inspector resizing changes only its mounted viewer root", async ({
+  page,
+}) => {
+  await page.evaluate(() => {
+    window.viewerHarness.start("one");
+    window.viewerHarness.start("two");
+  });
+  const first = page.locator("#one [data-mokly-shell]");
+  const second = page.locator("#two [data-mokly-shell]");
+  await first.getByRole("tab", { name: "Details", exact: true }).click();
+  await second.evaluate((root) => root.classList.add("mbk-inspector-resizing"));
+  const divider = first.getByRole("separator", { name: "Resize inspector" });
+  const box = await divider.boundingBox();
+  if (!box) throw new Error("inspector divider bounds unavailable");
+
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await expect(first).toHaveClass(/mbk-inspector-resizing/);
+  await expect(second).toHaveClass(/mbk-inspector-resizing/);
+  await expect(page.locator("body")).not.toHaveClass(/mbk-inspector-resizing/);
+  await page.mouse.up();
+
+  await expect(first).not.toHaveClass(/mbk-inspector-resizing/);
+  await expect(second).toHaveClass(/mbk-inspector-resizing/);
 });
 
 test("host accent overrides and interactive overlay stay within the viewer", async ({

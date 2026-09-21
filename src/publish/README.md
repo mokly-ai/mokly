@@ -16,9 +16,9 @@ bundles the finalized export map rather than walking the output directory,
 those files participate unchanged in ownership, deployment identity and the
 upload archive. `--no-changes` reaches the exporter's current-only branch and
 therefore packages no removed entries or historical paths.
-The finalized browser inventory also carries the standalone `previews.js`
-module and its imports. Publish archives those already-validated export bytes;
-it neither rebundles the preview controller nor duplicates the review parser.
+The finalized browser inventory carries previous-version handling in the shared
+`react-shell.js` bundle. Publish archives those already-validated export bytes;
+it neither rebundles the controller nor duplicates the review parser.
 
 `metadata.ts` handles repository remotes and Actions context. `manifest.ts` and
 `validation.ts` define the upload envelope invariants. `bundle.ts` uses

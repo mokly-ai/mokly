@@ -1,81 +1,126 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import test from "node:test";
+import { pathToFileURL } from "node:url";
 
-import {
-  loadBrowserClientModules,
-  loadBrowserNavigationModules,
-} from "../dist/server/client_modules.js";
+import { loadBrowserClientModulesFrom } from "../dist/server/client_modules.js";
 
-const COMMENT = /\/\*[\s\S]*?\*\/|(?<!:)\/\/[^\n]*/g;
-const IMPORT = /\b(?:from|import)\s*\(?\s*"([^"]+)"/g;
+type BrowserGraphModule = {
+  inspectBrowserGraph(): number;
+  inspectDeliveredBrowserGraph(modules: ReadonlyMap<string, Buffer>): number;
+  sourceImportSpecifiers(code: string, filename?: string): string[];
+};
 
-test("served browser modules import only modules served beside them", () => {
-  const served = new Map([
-    ["client", loadBrowserClientModules()],
-    ["navigation", loadBrowserNavigationModules()],
-  ]);
-  const inspected: string[] = [];
-  for (const [directory, modules] of served) {
-    for (const [filename, source] of modules) {
-      for (const specifier of importSpecifiers(source.toString("utf8"))) {
-        inspected.push(specifier);
-        const target = resolveSpecifier(specifier, directory);
-        assert.ok(
-          target,
-          `${directory}/${filename} imports non-relative module ${specifier}`,
-        );
-        assert.ok(
-          served.get(target.directory)?.has(target.filename),
-          `${directory}/${filename} imports unserved module ${specifier}`,
-        );
-      }
-    }
-  }
-  assert.ok(inspected.length > 0, "no browser import specifier was inspected");
-  assert.ok(
-    inspected.includes("../navigation/logical.js"),
-    "no served module still imports across the client and navigation directories",
-  );
-  const clients = served.get("client");
-  assert.ok(clients);
-  assert.ok(clients.has("previews.js"));
-  assert.match(
-    clients.get("previews.js")?.toString("utf8") ?? "",
-    /\.\/diffs\.js/,
-  );
-  assert.doesNotMatch(
-    clients.get("browse_runtime.js")?.toString("utf8") ?? "",
-    /function parseReviewResult/,
-  );
-  assert.equal(
-    [...clients.values()].filter((source) =>
-      source.toString("utf8").includes("function parseReviewResult"),
-    ).length,
-    1,
-  );
-  assert.equal(
-    [...clients.values()].filter((source) =>
-      source.toString("utf8").includes("function reviewInvalid"),
-    ).length,
-    1,
+test("browser build enumeration reports a missing output directory", (context) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "mokly-browser-modules-"));
+  context.after(() => fs.rmSync(root, { force: true, recursive: true }));
+  const cli = path.join(root, "cli");
+  fs.mkdirSync(cli);
+  fs.writeFileSync(path.join(cli, "browser.js"), "export {};\n");
+  writeBrowserManifest(cli, ["browser.js"]);
+  assert.throws(
+    () => loadBrowserClientModulesFrom(path.join(root, "missing"), cli),
+    /could not enumerate browser client modules|could not read browser build manifest/,
   );
 });
 
-function importSpecifiers(source: string): string[] {
-  return [...source.replace(COMMENT, "").matchAll(IMPORT)].flatMap((match) =>
-    match[1] === undefined ? [] : [match[1]],
+test("browser build enumeration reports a missing listed file", (context) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "mokly-browser-modules-"));
+  context.after(() => fs.rmSync(root, { force: true, recursive: true }));
+  const viewer = path.join(root, "viewer");
+  const cli = path.join(root, "cli");
+  fs.mkdirSync(viewer);
+  fs.mkdirSync(cli);
+  writeBrowserManifest(viewer, ["missing.js"]);
+  writeBrowserManifest(cli, []);
+  assert.throws(
+    () => loadBrowserClientModulesFrom(viewer, cli),
+    /missing browser build output: missing\.js/,
   );
+});
+
+test("browser build enumeration rejects unexpected output files", (context) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "mokly-browser-modules-"));
+  context.after(() => fs.rmSync(root, { force: true, recursive: true }));
+  const viewer = path.join(root, "viewer");
+  const cli = path.join(root, "cli");
+  fs.mkdirSync(viewer);
+  fs.mkdirSync(cli);
+  fs.writeFileSync(path.join(viewer, "viewer.js"), "export {};\n");
+  fs.writeFileSync(path.join(viewer, "viewer.js.map"), "{}");
+  fs.writeFileSync(path.join(cli, "browser.js"), "export {};\n");
+  writeBrowserManifest(viewer, ["viewer.js"]);
+  writeBrowserManifest(cli, ["browser.js"]);
+  assert.throws(
+    () => loadBrowserClientModulesFrom(viewer, cli),
+    /unexpected browser build output: viewer\.js\.map/,
+  );
+});
+
+test("delivered browser graph resolves every import", async () => {
+  const graph = await loadBrowserGraph();
+  assert.ok(graph.inspectBrowserGraph() > 0);
+});
+
+test("delivered browser graph rejects a missing import target", async () => {
+  const graph = await loadBrowserGraph();
+  const modules = new Map([
+    [
+      "/__mokly/client/react-shell.js",
+      Buffer.from('const hydrateRoot = true;\nimport "./missing.js";\n'),
+    ],
+  ]);
+  assert.throws(
+    () => graph.inspectDeliveredBrowserGraph(modules),
+    /Missing delivered module: \/__mokly\/client\/react-shell\.js -> \.\/missing\.js/,
+  );
+});
+
+test("delivered browser graph confines React to the hydration bundle", async () => {
+  const graph = await loadBrowserGraph();
+  const modules = new Map([
+    [
+      "/__mokly/client/react-shell.js",
+      Buffer.from("const hydrateRoot = true;\n"),
+    ],
+    [
+      "/__mokly/client/frame_adapter.js",
+      Buffer.from("const hydrateRoot = true;\n"),
+    ],
+  ]);
+  assert.throws(
+    () => graph.inspectDeliveredBrowserGraph(modules),
+    /Unexpected React runtime in \/__mokly\/client\/frame_adapter\.js/,
+  );
+});
+
+test("delivered graph parser reads every import form", async () => {
+  const graph = await loadBrowserGraph();
+  assert.deepEqual(
+    graph.sourceImportSpecifiers(
+      'import type { One } from "./one.js";\nimport "./side-effect.js";\nexport { two } from "./two.js";\nvoid import("./dynamic.js");\ntype Five = import("./import-type.js").Five;\n',
+    ),
+    [
+      "./one.js",
+      "./side-effect.js",
+      "./two.js",
+      "./dynamic.js",
+      "./import-type.js",
+    ],
+  );
+});
+
+async function loadBrowserGraph(): Promise<BrowserGraphModule> {
+  return import(
+    pathToFileURL(path.resolve("scripts/package/browser_graph.mjs")).href
+  ) as Promise<BrowserGraphModule>;
 }
 
-function resolveSpecifier(
-  specifier: string,
-  directory: string,
-): { directory: string; filename: string } | undefined {
-  const sibling = /^\.\/([\w.-]+\.js)$/.exec(specifier)?.[1];
-  if (sibling !== undefined) return { directory, filename: sibling };
-  const across = /^\.\.\/([\w-]+)\/([\w.-]+\.js)$/.exec(specifier);
-  const [, acrossDirectory, acrossFilename] = across ?? [];
-  if (acrossDirectory !== undefined && acrossFilename !== undefined)
-    return { directory: acrossDirectory, filename: acrossFilename };
-  return undefined;
+function writeBrowserManifest(directory: string, modules: readonly string[]) {
+  fs.writeFileSync(
+    `${directory}.manifest.json`,
+    `${JSON.stringify({ schemaVersion: 1, modules })}\n`,
+  );
 }

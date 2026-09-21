@@ -229,7 +229,7 @@ test("repository publication packages previews and default replacement removes t
   );
   assert.ok(page?.preview?.kind === "page");
   await assertPublishedPagePreview(output, page.preview);
-  await fs.access(path.join(output, "__mokly/client/previews.js"));
+  await fs.access(path.join(output, "__mokly/client/react-shell.js"));
   await fs.access(path.join(output, page.preview.path));
   await fs.access(
     path.join(

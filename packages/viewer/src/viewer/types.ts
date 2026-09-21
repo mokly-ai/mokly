@@ -115,6 +115,8 @@ export type SourceProps =
 export type MoklyViewerProps = SourceProps &
   SelectionProps &
   ViewerEvents & {
+    /** Stable identifier unique among viewer roots in the host document. */
+    viewerId: string;
     frameAdapter?: FrameAdapter;
     markers?: readonly ViewerMarker[];
     slots?: ViewerSlots;

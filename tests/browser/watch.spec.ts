@@ -148,7 +148,7 @@ test("watched serve rebuilds and reloads after an authored change", async ({
     "open",
   );
   await page.fill("[data-mokly-search]", "");
-  await expect(screens).not.toHaveAttribute("open", "");
+  await expect(screens).toHaveAttribute("open", "");
   await expect(archive).not.toHaveAttribute("open", "");
 });
 

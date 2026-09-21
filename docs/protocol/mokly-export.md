@@ -10,8 +10,9 @@ Normal build validation and the existing comparison schema remain authoritative.
 
 The [viewer library plan](../../plans/mokly-viewer-library.md) tracks the
 implemented public catalogue, inert published inspector and separate viewer
-package. Local Serve/export presentation
-is unchanged.
+package. Serve and export now share a server-rendered React shell that hydrates
+with the bundled viewer runtime. Consumer frames and comparison documents remain
+static, and the existing presentation and interactions are preserved.
 
 ## Scope
 
@@ -253,9 +254,10 @@ must not deep-import package internals or copy repository scripts. The CLI is
 the supported interface for export; no public JavaScript export engine API is
 added. The [`@mokly/viewer`](./mokly-viewer.md) package is a separate supported
 React/SSR viewer API consuming public catalogue data, not an export engine or
-permission to import CLI internals. Serve and export become its first hosts,
-retaining the existing shell, CSS and vanilla browser runtime without shipping
-React in exported browsers.
+permission to import CLI internals. Serve and export are its first hosts:
+they render its shell tree on the server and ship its standalone hydration
+bundle, including React, so exported browsers run the same shell as Serve.
+Consumer code never enters that bundle.
 Keep typed options/results and narrow testable filesystem, Git, and capture
 boundaries. Reuse existing generation/rendering rules rather than creating a
 second screen renderer or weakening build validation.

@@ -18,6 +18,13 @@ Shell pages render through `@mokly/viewer/server` with CLI-owned live context.
 `public_catalogue_model.ts` validates each serialized public revision once and
 reuses it across shell requests until the bytes change. CSS, browser modules,
 fonts, events and static documents bypass that decoding entirely.
+`client_modules.ts` reads the generated viewer and CLI browser manifests,
+requires exact equality with their build directories, rejects missing,
+non-JavaScript, unexpected or colliding outputs, and loads the complete delivery
+inventory before binding. The manifests are emitted from actual completed
+esbuild outputs rather than maintained by hand. Every shell request renders the
+hydrated React document and loads the canonical `react-shell.js` browser entry.
+The CLI host modules retain private live-update and capability transports.
 
 `screen_view_changes.ts` retains per-view screen-only material decisions from
 the existing classification pass. The public projection does not infer Changes
@@ -79,11 +86,10 @@ descriptors: local pages remain selected through the stable private endpoint,
 so ordinary navigation, filtering, search and catalogue reads perform no
 historical capture.
 
-The browser-module allowlist serves `previews.js` beside `diffs.js` and
-`static_delivery.js`. The preview controller imports the review validator from
-`diffs.js`, so Serve ships that parser once. Repository publication may add page
-descriptors to shells after capture; that artifact-only rewrite does not change
-this live boundary.
+The removed-preview controller and review validators are part of the shared
+`react-shell.js` hydration bundle. Repository publication may add page
+descriptors while externalizing captured shells; that artifact-only projection
+does not change the live selected-page boundary.
 
 `update_messages.ts` validates IPC envelopes. `supervisor.ts` orders delivery and
 owns child shutdown. HTTP readiness precedes exhaustive compilation and baseline

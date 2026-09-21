@@ -8,6 +8,7 @@ import { promisify } from "node:util";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
+import { documentText } from "./helpers/html.js";
 import { createPreviewComparisonFixture } from "./helpers/preview_comparison_fixture.js";
 
 const execute = promisify(execFile);
@@ -64,7 +65,7 @@ test("publication pins one baseline for Changes and comparisons when its ref adv
     /Previous home/,
   );
   assert.match(
-    await read("view/removed-document.html"),
+    documentText(await read("view/removed-document.html")),
     /Showing previous version/,
   );
   assert.match(await read("index.html"), /data-removed-page/);

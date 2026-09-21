@@ -138,14 +138,27 @@ export async function startCatalogueServer(
   let updateVersion = options.updateVersion ?? 1;
   let contentVersion = updateVersion;
   let publicComparison: PublicComparison | undefined;
+  const publicChangesStatus = (
+    routes: readonly string[] | undefined,
+    hasEvidence: boolean,
+    status: ChangesStatus,
+  ) =>
+    options.liveChanges === false &&
+    !options.review &&
+    routes === undefined &&
+    !hasEvidence
+      ? ("disabled" as const)
+      : status;
   const publicInput = (
     comparison: PublicComparison | undefined = publicComparison,
   ) =>
     livePublicInput(
       activeCatalogue,
-      options.liveChanges === false && !options.review
-        ? "disabled"
-        : changesStatus,
+      publicChangesStatus(
+        changedRoutes,
+        componentChanges !== undefined,
+        changesStatus,
+      ),
       changedRoutes,
       componentChanges,
       comparison,
@@ -271,9 +284,11 @@ export async function startCatalogueServer(
       publicCatalogue.publish(
         livePublicInput(
           next.activeCatalogue,
-          options.liveChanges === false && !options.review
-            ? "disabled"
-            : next.changesStatus,
+          publicChangesStatus(
+            next.changedRoutes,
+            next.componentChanges !== undefined,
+            next.changesStatus,
+          ),
           next.changedRoutes,
           next.componentChanges,
           undefined,

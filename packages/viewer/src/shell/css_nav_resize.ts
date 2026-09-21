@@ -18,7 +18,8 @@ export const SHELL_NAV_RESIZE_CSS = `
   touch-action: none;
 }
 
-.mbk-nav[data-resize-ready] .mbk-nav-resize {
+html[data-mokly-hydrated] .mbk-nav[data-resize-ready] .mbk-nav-resize,
+:scope.mokly-viewer .mbk-nav[data-resize-ready] .mbk-nav-resize {
   display: block;
 }
 
@@ -36,7 +37,8 @@ export const SHELL_NAV_RESIZE_CSS = `
 
 .mbk-nav-resize:hover::after,
 .mbk-nav-resize:focus-visible::after,
-body.mbk-nav-resizing .mbk-nav-resize::after {
+body.mbk-nav-resizing .mbk-nav-resize::after,
+[data-mokly-shell].mbk-nav-resizing .mbk-nav-resize::after {
   background: var(--mokly-accent);
   box-shadow: 0 0 0 3px var(--mokly-accent-soft);
 }
@@ -45,21 +47,25 @@ body.mbk-nav-resizing .mbk-nav-resize::after {
   box-shadow: inset -2px 0 0 var(--mokly-accent);
 }
 
-body.mbk-nav-resizing {
+body.mbk-nav-resizing,
+[data-mokly-shell].mbk-nav-resizing {
   cursor: col-resize;
   user-select: none;
 }
 
-body.mbk-nav-resizing * {
+body.mbk-nav-resizing *,
+[data-mokly-shell].mbk-nav-resizing * {
   cursor: col-resize !important;
 }
 
-body.mbk-nav-resizing iframe {
+body.mbk-nav-resizing iframe,
+[data-mokly-shell].mbk-nav-resizing iframe {
   pointer-events: none;
 }
 
 @media (max-width: 56.25rem) {
-  .mbk-nav[data-resize-ready] .mbk-nav-resize {
+  html[data-mokly-hydrated] .mbk-nav[data-resize-ready] .mbk-nav-resize,
+  :scope.mokly-viewer .mbk-nav[data-resize-ready] .mbk-nav-resize {
     display: none;
   }
 }

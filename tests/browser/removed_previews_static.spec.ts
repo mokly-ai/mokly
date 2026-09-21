@@ -58,6 +58,17 @@ test("a catalogue that advertises nothing stays quiet", async ({ page }) => {
     );
     await route.fulfill({ response, body });
   });
+  await page.route(`${host.url}/__mokly/catalogue.json`, async (route) => {
+    const response = await route.fetch();
+    const catalogue = (await response.json()) as {
+      removedEntries: { entry: { route: string }; preview?: unknown }[];
+    };
+    const removed = catalogue.removedEntries.find(
+      ({ entry }) => entry.route === "archive/removed.html",
+    );
+    if (removed) delete removed.preview;
+    await route.fulfill({ response, json: catalogue });
+  });
   await page.goto(`${host.url}/view/archive/removed.html`);
   await expect(page.locator(`${stage} h2`)).toHaveText(
     "Previous version unavailable",

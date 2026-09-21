@@ -36,6 +36,11 @@ export async function startNavigationFixture(): Promise<NavigationFixture> {
     path.join(fixture.mockupsDir, "screens", "nested.html"),
     `<!doctype html><html><head><base target="_top"></head><body><div id="local"></div><a id="local-base" href="#local">Base-targeted</a><a id="local-unmarked" href="#local" target="_top">Local</a><a data-mokly-link="details" href="./details.mobile.html" id="local-marked" target="_top">Marked-looking</a></body></html>`,
   );
+  for (const viewport of ["desktop", "mobile"])
+    await fs.promises.writeFile(
+      path.join(fixture.mockupsDir, `slow-navigation-${viewport}.svg`),
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1" />',
+    );
   await fs.promises.writeFile(
     fixture.configPath,
     `export default { colorSchemes: ["light", "dark"], entriesDir: "entries",  mockupsDir: "mockups", repoRoot: "." };\n`,
@@ -80,6 +85,7 @@ const metadata = { dependencies: [], relatedDocs: [] };
 function Home({ compact }) {
   const nestedGenerated = compact ? "./details.mobile.html" : "./details.desktop.html";
   return <main id="home">
+    <img alt="" src={compact ? "../slow-navigation-mobile.svg" : "../slow-navigation-desktop.svg"} />
     {compact ? <MockLink fragment="section" id="mock-link" to="details">MockLink details</MockLink> : <a href="mock:details#section" id="raw-link">Raw details</a>}
     <map name="destinations"><area href="mock:details#section" id="area-link" shape="default" /></map>
     <svg viewBox="0 0 100 30"><a href="mock:details#section" id="svg-link"><text x="0" y="20">SVG details</text></a></svg>

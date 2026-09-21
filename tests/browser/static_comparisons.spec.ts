@@ -5,7 +5,9 @@ import { chooseScheme, chooseViewport } from "./workspace_actions.js";
 
 let site: Awaited<ReturnType<typeof startStaticFixture>>;
 test.beforeAll(async () => {
-  site = await startStaticFixture(true);
+  site = await startStaticFixture({
+    comparisons: true,
+  });
 });
 test.afterAll(async () => {
   await site.close();

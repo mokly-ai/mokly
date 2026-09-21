@@ -11,6 +11,8 @@ import { removedManifestEntries } from "../src/registry/changes.js";
 import { viewPage, homePage } from "../src/server/pages.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { documentText } from "./helpers/html.js";
+import { publicShellContext } from "./helpers/public_shell.js";
 
 function source(
   parent: "app" | "book" = "book",
@@ -78,19 +80,24 @@ test("removed page metadata keeps deleted ancestry and current route/id preceden
   const catalogue = createCatalogue({ ...baseline, entries: [] }, removed);
   const entry = removed[0]!.entry;
   const html = viewPage(entry, catalogue, {
-    base: "main",
-    updateVersion: 1,
-    changedRoutes: [entry.route],
-  });
-  assert.match(html, /Showing previous version/);
-  assert.match(html, /App.*Book/s);
-  assert.doesNotMatch(html, /data-diff-screen|data-nav-collection=/);
-  assert.match(
-    homePage(catalogue, {
+    ...publicShellContext(catalogue, {
       base: "main",
       updateVersion: 1,
       changedRoutes: [entry.route],
     }),
+  });
+  assert.match(documentText(html), /Showing previous version/);
+  assert.match(documentText(html), /App.*Book/s);
+  assert.doesNotMatch(html, /data-diff-screen|data-nav-collection=/);
+  assert.match(
+    homePage(
+      catalogue,
+      publicShellContext(catalogue, {
+        base: "main",
+        updateVersion: 1,
+        changedRoutes: [entry.route],
+      }),
+    ),
     /data-removed-page=""[^>]*hidden/,
   );
   await fs.promises.writeFile(

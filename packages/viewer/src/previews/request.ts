@@ -3,7 +3,6 @@
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import type { ColorScheme, Viewport } from "../data/axes.js";
 import { encodeUrlPath } from "../data/paths.js";
-import type { StaticDelivery } from "../navigation/delivery.js";
 import { parseRemovedPagePreview } from "../review/page_preview.js";
 import { parseReviewResult } from "../review/result_validation.js";
 import type { RemovedPreviewData } from "../shell/previews.js";
@@ -40,6 +39,16 @@ export interface PreviewRequest {
   generation?: URL;
 }
 
+/** Static metadata needed to resolve an advertised previous version. */
+export interface PreviewDelivery {
+  comparisonUrl: string | null;
+}
+
+/** Fetch boundary supplied by the shell that owns the preview. */
+export interface PreviewRequestEnvironment {
+  fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>;
+}
+
 /**
  * The address to request, or `undefined` when the delivery advertises nothing
  * for this entry. Static delivery loads only advertised addresses, so an older
@@ -47,7 +56,7 @@ export interface PreviewRequest {
  */
 export function previewEndpoint(
   data: RemovedPreviewData,
-  delivery: StaticDelivery | undefined,
+  delivery: PreviewDelivery | undefined,
   base: string,
   refresh: boolean,
 ): PreviewRequest | undefined {
@@ -64,9 +73,10 @@ export function previewEndpoint(
   const advertised = data.published;
   if (comparisonUrl === null || !advertised) return undefined;
   if (advertised.kind !== data.kind) return undefined;
-  const generation = new URL(comparisonUrl, base);
+  const comparisonPath = comparisonUrl.replace(/^\/+/, "");
+  const generation = new URL(`/${comparisonPath}`, base);
   if (advertised.kind === "screen") return { endpoint: generation };
-  const prefix = comparisonUrl.slice(1, -REVIEW_FILE.length);
+  const prefix = comparisonPath.slice(0, -REVIEW_FILE.length);
   return advertised.path === `${prefix}pages/${data.route}.json`
     ? {
         endpoint: new URL(`/${encodeUrlPath(advertised.path)}`, base),
@@ -136,10 +146,10 @@ function pageContent(
 export async function requestPreview(
   data: RemovedPreviewData,
   request: PreviewRequest,
-  win: Window & typeof globalThis,
+  environment: PreviewRequestEnvironment,
   signal: AbortSignal,
 ): Promise<LoadedPreview> {
-  const response = await win.fetch(request.endpoint.href, {
+  const response = await environment.fetch(request.endpoint.href, {
     signal,
     headers: { accept: "application/json" },
   });
@@ -162,10 +172,10 @@ export async function requestPreview(
  */
 export async function renewPreview(
   loaded: LoadedPreview,
-  win: Window & typeof globalThis,
+  environment: PreviewRequestEnvironment,
   signal: AbortSignal,
 ): Promise<boolean> {
-  const renewal = await win.fetch(loaded.url, {
+  const renewal = await environment.fetch(loaded.url, {
     cache: "no-store",
     method: "HEAD",
     signal,

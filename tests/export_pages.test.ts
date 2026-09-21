@@ -7,6 +7,7 @@ import { exportCatalogue } from "../dist/export/run.js";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
+import { documentText } from "./helpers/html.js";
 
 function pageSource(route = "handbook.html"): string {
   return `${validEntrySource()}
@@ -31,7 +32,10 @@ test("consumer export builds unified pages and preserves a removed page's baseli
   await fs.writeFile(fixture.entryPath, validEntrySource());
   const removed = await exportCatalogue(fixture.config, { outDir: "site" });
   assert.equal(removed.idRoutes["handbook"], "/view/handbook.html");
-  assert.match(await read("view/handbook.html"), /Showing previous version/);
+  assert.match(
+    documentText(await read("view/handbook.html")),
+    /Showing previous version/,
+  );
   assert.match(
     await read("view/handbook.html"),
     /Catalogue location[^>]*>.*Library/,
@@ -57,9 +61,14 @@ test("renamed pages retain their old route while the static id resolves to curre
     path.join(fixture.output, "id/handbook/index.html"),
     "utf8",
   );
-  assert.doesNotMatch(alias, /Showing previous version/);
+  assert.doesNotMatch(documentText(alias), /Showing previous version/);
   assert.match(
-    await fs.readFile(path.join(fixture.output, "view/handbook.html"), "utf8"),
+    documentText(
+      await fs.readFile(
+        path.join(fixture.output, "view/handbook.html"),
+        "utf8",
+      ),
+    ),
     /Showing previous version/,
   );
 });
