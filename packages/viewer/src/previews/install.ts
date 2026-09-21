@@ -8,6 +8,7 @@
 import { readStaticDelivery } from "../client/static_delivery.js";
 import type { RemovedPreviewData } from "../shell/previews.js";
 
+import { PREVIEW_UNAVAILABLE } from "./copy.js";
 import {
   PREVIEW_ATTRIBUTE,
   previewKey,
@@ -15,7 +16,6 @@ import {
 } from "./descriptor.js";
 import { enforcePreviewReadOnly } from "./read_only.js";
 import {
-  PREVIEW_RETRY_ATTRIBUTE,
   renderPreviewContent,
   renderPreviewLoading,
   renderPreviewUnavailable,
@@ -153,7 +153,8 @@ export function installPreviews(
   doc.addEventListener("click", (event) => {
     const target =
       event.target instanceof win.Element ? event.target : undefined;
-    if (target?.closest(`[${PREVIEW_RETRY_ATTRIBUTE}]`)) update(true);
+    if (target?.closest(`[${PREVIEW_UNAVAILABLE.retry.attribute}]`))
+      update(true);
   });
   return { reset, update };
 }

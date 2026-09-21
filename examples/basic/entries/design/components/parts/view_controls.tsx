@@ -18,6 +18,7 @@ export function ViewControls({
   /** Set when only one scheme exists, as on a removed screen's previous views. */
   schemeDisabled?: boolean | undefined;
 }) {
+  const normalizedSchemeDisabled = schemeDisabled || undefined;
   return (
     <viewControls.Component
       moklyInstance={useDesignInstance("view-controls")}
@@ -25,7 +26,7 @@ export function ViewControls({
       scheme="light"
       destinations={{}}
       {...optional("highlight", highlight?.active)}
-      {...optional("schemeDisabled", schemeDisabled)}
+      {...optional("schemeDisabled", normalizedSchemeDisabled)}
       {...optional("unavailable", highlight?.unavailable)}
     />
   );

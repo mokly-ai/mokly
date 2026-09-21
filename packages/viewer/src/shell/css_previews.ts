@@ -55,7 +55,7 @@ export const SHELL_PREVIEW_CSS = `
   text-wrap: balance;
 }
 
-.mbk-preview[data-viewport="both"] .mbk-preview-switch {
+.mbk-live[data-viewport="both"] .mbk-preview-switch {
   display: none;
 }
 

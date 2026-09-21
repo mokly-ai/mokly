@@ -5,8 +5,10 @@
 The baseline API, static server entry and first-party hosts are implemented by
 the [viewer library plan](../../plans/mokly-viewer-library.md). Saved-variant
 selection, multi-instance highlights and markers are implemented by the
-[comment anchoring plan](../../plans/viewer-comment-anchoring.md). Local
-Serve/export presentation remains unchanged.
+[comment anchoring plan](../../plans/viewer-comment-anchoring.md). Removed pages
+and screens load their advertised previous versions in local, static, and
+embedded hosts as implemented by the
+[removed content previews plan](../../plans/removed-content-previews.md).
 
 ## Package And Props
 

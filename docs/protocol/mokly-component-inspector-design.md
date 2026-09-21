@@ -6,7 +6,9 @@ Design revision for Milestones 4b, 4c, and 4g of the
 [component explorer plan](../../plans/component-explorer.md). It replaces the
 single crowded Details disclosure in component and consuming-screen mockups.
 The runtime inspector implements the same layout and interaction. Existing non-component Browse/Changes
-artboards continue to document the currently implemented shell.
+artboards continue to document the currently implemented shell. Removed
+consumer stages retain this inspector around the previous version delivered by
+the [removed content previews plan](../../plans/removed-content-previews.md).
 
 ## One Inspector
 

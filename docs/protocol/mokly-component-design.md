@@ -10,7 +10,9 @@ original pages and inspection states. The [workspace revision](./mokly-component
 inspection, and local editable previews implement these designs. Published
 catalogues expose read-only saved props. These designs
 extend the [shell design](./mokly-shell-design.md) and depict the
-[component explorer contract](./mokly-component-explorer.md).
+[component explorer contract](./mokly-component-explorer.md). The former
+consumer's previous-version state is implemented by the
+[removed content previews plan](../../plans/removed-content-previews.md).
 
 ## Owning Catalogue
 
@@ -137,8 +139,8 @@ The same consumer DOM is used with highlighting off and on. Welcome uses an SVG 
 
 Mask geometry is fixed to the synthetic artboard's layout and tested against
 its actual DOM bounds. Runtime geometry collection, selection, Escape handling,
-and cleanup belong to Milestone 5. Comparison artboards disable highlighting,
-as does a Removed screen because it has no current preview to inspect.
+and cleanup are implemented. Comparison artboards disable highlighting, as does
+a Removed screen because it has no current preview to inspect.
 An empty usage list says no registered components are used in this view;
 unavailable inspection never claims a zero count. Badge has a visible saved
 example and an explicit empty Used by list.

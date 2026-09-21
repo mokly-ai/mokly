@@ -2,12 +2,15 @@
 
 ## Delivery Status
 
-Implemented in `@mokly/viewer` through [viewer library Milestones 4–5](../../plans/mokly-viewer-library.md). Local
+Implemented in `@mokly/viewer` by the completed
+[viewer library plan](../../plans/mokly-viewer-library.md). Local
 Serve/export keep today's same-origin sandbox and visible behavior. Only an
 explicit cross-origin host uses the new inspector transport. Host marker
 consumption and the trailing geometry refresh are implemented by the
 [comment anchoring plan](../../plans/viewer-comment-anchoring.md); the adapter
-interface and wire protocol remain unchanged.
+interface and wire protocol remain unchanged. Historical page and screen frames
+use both adapters without inspection handshakes, as implemented by the
+[removed content previews plan](../../plans/removed-content-previews.md).
 
 ## Public Interface
 

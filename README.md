@@ -23,7 +23,8 @@ highlighting, host-owned instance markers, an imperative handle and
 static renderer and vanilla enhancements; exported browsers contain no React.
 Both packages build, release and are tested together. The viewer publishes before
 the CLI, which depends on its exact version. Viewer 0.1.0 and CLI 0.10.0 were
-published together; local Serve/export presentation remains unchanged.
+published together; local Serve, export, and embedded hosts share the same
+presentation.
 Viewer inspection references identify an exact viewport, scheme, variant and
 flow step. The viewer positions marker content without owning comments or exposing
 raw geometry. Frame replacement cancels picking and resets inspection; host
@@ -346,22 +347,25 @@ Changed screens and changed or removed saved component variants offer
 Current / Side by side / Overlay / Difference beneath the heading. The controls
 are available from All and Changes, and start in Current. Known unchanged views
 show Unmodified without a comparison band; unknown evidence has no status badge.
-During development, Mokly generates comparison snapshots only after a diff
-option is selected; browsing, filtering, and watched reloads do not trigger
-generation. Opening a diff reuses completed background evidence and captures only
-the selected screen or saved variant and its referenced assets, without rebuilding
-or snapshotting the entire catalogue. Checked-input fingerprints prevent later
-output edits from silently changing a comparison. See the
+During development, Mokly generates changed-screen and saved-variant comparison
+snapshots only after a diff option is selected. Selecting a removed page or
+screen captures its previous version instead; browsing, filtering, and watched
+reloads do not trigger either kind of historical work. Opening a diff reuses
+completed background evidence and captures only the selected screen or saved
+variant and its referenced assets, without rebuilding or snapshotting the
+entire catalogue. Checked-input fingerprints prevent later output edits from
+silently changing a comparison. See the
 [selected comparison contract](./docs/protocol/mokly-selected-comparisons.md).
 Changing viewport, theme or comparison mode renews the loaded snapshots before
 using them. After an idle comparison expires, Mokly automatically reacquires
 the same screen or saved variant. Available snapshots reuse their loaded result;
 published catalogues need no renewal requests.
-Published catalogues with Changes enabled prepare snapshots during publishing, then load
-and render them only after a diff option is selected. Comparisons
-stay in the same screen, with mobile/desktop and light/dark controls, secondary
-impact evidence, and a refresh option. Loading and failure states keep the
-catalogue available and offer a retry. Navigation and reload return to Current.
+Published catalogues with Changes enabled prepare snapshots during publishing.
+Changed-screen comparisons load only after a diff option is selected; removed
+pages and screens load their previous version when selected. Comparisons stay
+in the same screen, with mobile/desktop and light/dark controls, secondary impact
+evidence, and a refresh option. Loading and failure states keep the catalogue
+available and offer a retry. Navigation and reload return to Current.
 Added entries show their current preview and Added status without comparison
 controls because there is no earlier version to compare. Removed screens and
 pages keep their Removed status and open their read-only

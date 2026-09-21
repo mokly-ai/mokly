@@ -5,7 +5,9 @@
 Implemented alongside [Pages in the catalogue](./mokly-pages.md).
 Catalogue impact and removed-entry metadata are independent of the visual
 [comparison result](./mokly-changes.md). Verification is tracked in
-[Unified Catalogue Pages](../../plans/unified-catalogue-pages.md).
+[Unified Catalogue Pages](../../plans/unified-catalogue-pages.md). Baseline
+documents, ancestry, and delivery descriptors for removed pages are implemented
+by the [removed content previews plan](../../plans/removed-content-previews.md).
 
 ## Shared Metadata Contract
 
@@ -128,10 +130,10 @@ screen comparison capture, with safely escaped metadata in the captured shell.
 
 The [publication option](./mokly-publication.md) defaults to current entries
 only: no catalogue-change snapshot is computed or exported. With Changes
-included, retain removed page routes, permitted ID redirects, and missing-current
-views from this model. Static delivery packages each removed page preview and
-its historical resource closure in the comparison generation; pages still
-generate no visual comparison records.
+included, retain removed page routes, permitted ID redirects, and
+previous-version views from this model. Static delivery packages each removed
+page preview and its historical resource closure in the comparison generation;
+pages still generate no visual comparison records.
 Unsupported unmatched v2/v3 legacy documents stay historical artifact records,
 as specified by [migration](./mokly-page-migration.md).
 

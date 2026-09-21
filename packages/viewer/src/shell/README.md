@@ -20,13 +20,16 @@ a removed screen share: the "Showing previous version" label, the stage host
 carrying the descriptor the browser client requests from, and the device chrome
 a screen preview clones. It advertises a packaged address only when the accepted
 public catalogue publishes one, so a delivery without that descriptor stays
-quiet. The served stage holds the unavailable state with its Retry control,
-because a shell whose browser client never runs has no request in flight; the
-client's first update replaces it with the loading state. `views.tsx` uses it
-for removed pages and `workspace.tsx` for removed screens; both drop the
-comparison band there, while removed component variants keep theirs.
+quiet. The served stage holds the unavailable copy without a Retry control,
+because a shell whose browser client never runs cannot honour that action; the
+client's first update replaces it with the loading state and adds Retry only if
+its own request fails. The copy and Retry hook come from `previews/copy.ts`.
+`views.tsx` uses it for removed pages and `workspace.tsx` for removed screens;
+both drop the comparison band there, while removed component variants keep
+theirs.
 `css_previews.ts` styles the stage, including the `mbk-preview-note` and
-`mbk-preview-switch` classes the design catalogue's stage stylesheet owns.
+`mbk-preview-switch` classes the design catalogue's stage stylesheet owns. Its
+Both-only rule reads the normalized `data-viewport` value on the live stage.
 See [previews](../previews/README.md) for the client side.
 
 See [the package README](../../README.md), the

@@ -47,7 +47,7 @@ export function ScreenPage({
         action={
           <ViewControls
             viewport={viewport}
-            schemeDisabled={removed || undefined}
+            schemeDisabled={removed}
             highlight={{
               active: highlighting,
               unavailable: removed
@@ -62,6 +62,7 @@ export function ScreenPage({
       {removed ? <PreviousVersionLabel /> : null}
       <PreviewWorkspace
         inspector={<ScreenDetails state={state} />}
+        viewport={viewport}
         render={(previewViewport) => (
           <ConsumerFrame state={state} viewport={previewViewport} />
         )}

@@ -9,8 +9,9 @@ kept in the repository adapter. Delivery is tracked in the
 [consumer static export plan](../../plans/consumer-static-export.md).
 
 The public catalogue, cross-origin inspector and viewer package are implemented
-through Milestone 5 of the [viewer library plan](../../plans/mokly-viewer-library.md).
-Existing routes and default same-origin Serve/export behavior stay unchanged.
+by the completed [viewer library plan](../../plans/mokly-viewer-library.md).
+Removed page and screen previous versions are packaged and rendered by the
+[removed content previews plan](../../plans/removed-content-previews.md).
 
 ## Hosting Contract
 
@@ -190,7 +191,8 @@ to product screens. The existing light/dark, mobile/desktop shell design applies
 
 ## Viewer Extraction Assets
 
-Milestone 5 preserves all existing `__mokly` paths. `client/browse.js` becomes
+The completed viewer extraction preserves all existing `__mokly` paths.
+`client/browse.js` becomes
 first-party composition and imports `client/browse_runtime.js`, which owns the
 shared vanilla enhancement runtime. Additional modules are
 `client/services.js` (optional private-host capability injection),

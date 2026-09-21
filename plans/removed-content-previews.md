@@ -2,15 +2,15 @@
 
 ## Status And Outcome
 
-Milestones 1 to 5 are complete: the contract lives in
+Milestones 1 to 9 have completed implementation and pre-merge verification.
+The contract lives in
 [removed previews](../docs/protocol/mokly-removed-previews.md), the owning
 protocols describe the shipped behavior, the design catalogue renders every
 previous-version state, the backend captures removed page previews and delivers
 previews through Serve and static catalogues, and the shared shell, browser
-client, and `@mokly/viewer` render the previous version. Milestone 5 found one
-delivery gap — a repository preview advertises no page descriptor — and its
-review found shell and mockup follow-ups, so Milestones 6 to 8 close and verify
-them before the final verification milestone.
+client, and `@mokly/viewer` render the previous version. Milestones 6 to 9
+closed the repository-preview delivery gap and the final shell and mockup
+review follow-ups found after Milestone 5.
 The user requested this plan after discussing the removed-document empty state and
 agreed preview behavior, then approved the amendments recorded below: reuse
 the comparison engine's historical capture for screens, settle the example
@@ -22,9 +22,41 @@ branch-point baseline as Changes, with its original local styles and assets.
 The title keeps its Removed badge, and the stage says “Showing previous
 version.” This makes the deleted content directly reviewable.
 
-Keep this plan Active until its implementation PR merges. Required work must
-finish on the branch or as part of that merge; npm publication, deployment,
-and downstream adoption are post-merge follow-ups, not completion requirements.
+All branch-completable delivery work is complete, and the plan index records the
+change as Completed for its final pre-merge handoff. The PR merge remains the
+completion boundary; npm publication, deployment, and downstream adoption are
+post-merge follow-ups, not completion requirements.
+
+Milestone 9 verification passed `npm run build`, `npm run typecheck`,
+`npm run lint`, `npm run format:check`, `npm test` (1,863 tests),
+`npm run example:check`, `npm run package:check`, `npm run package:smoke`,
+`npm run test:browser` (476 tests), and the complete `cargo xtask check`
+pipeline, including the Rust format, clippy, test, and file-length gates. After
+merging main, the integrated pipeline passed its expanded 2,006-test Node suite
+and all 479 browser tests. Focused design tests passed 65 of 65, and the
+removed-preview browser spec passed 30 of 30 across three repetitions.
+
+The real-Git delivery exercise pinned Serve and consumer export to branch-point
+commit `ec3ca2132db2fb8398140caac89637b57c7798b5`, not the later pre-deletion
+branch edit at `cb222fd0afc7775fc1fa19c524f9de83ca0e7338`. The independent repository
+preview fixture pinned `4d38d3cc55efa081cee342defb1e673a0e709c0d`. Serve, export, and the
+Changes-enabled repository preview retained deleted ancestry, historical
+`rebeccapurple` CSS, and the baseline image bytes with SHA-256
+`431ced6916a2a21a156e38701afe55bbd7f88969fbbfc56d7fe099d47f265460`;
+the current-only preview emitted no removed entries or history URL, and a viewer
+installed from the packed package rendered the removed page.
+
+Remaining risks are bounded and intentional: served unavailable markup changes
+to loading after the client starts its request; branch-point semantics exclude
+later pre-deletion branch edits; and published-package and deployed-preview
+smokes remain post-merge follow-up work.
+
+The final mainline-preservation audit merged `origin/main` at
+`20e55ca02a7274b659031b2295bc4d3e92360767`, retaining its CI verification,
+component fast-path, package-tooling, documentation, and test additions. The
+only conflict was the plan index, resolved by preserving main's active CI plan
+while moving this plan to Completed. The complete feature diff deletes no
+mainline paths.
 
 ## Scope And Decisions
 
@@ -448,7 +480,7 @@ on the new stage note.
 - [x] After the push, review the complete local diff against `origin/main` with
       the implementation review prompt; report findings without changing the
       mockups.
-- [ ] Follow-ups from that review, all mockup-side: widen
+- [x] Follow-ups from that review, all mockup-side: widen
       `tests/design_replaced_copy.test.ts` to every generated `design/`
       document rather than screen entries only; move the Both-selected hint
       rule beside the other `.ce-viewport-select` rules and stamp the mockup's
@@ -514,7 +546,7 @@ version the artifact does not advertise.
 
 Complete the implementation and its review before the PR merge boundary.
 
-- [ ] Close the Milestone 7 and Milestone 8 review follow-ups that are still
+- [x] Close the Milestone 7 and Milestone 8 review follow-ups that are still
       worth taking before the merge, in their owning layers: the mockup-side
       items listed under Milestone 7; and, in the shell, share the unavailable
       stage's copy and the Retry attribute between `shell/previews.tsx` and
@@ -523,24 +555,28 @@ Complete the implementation and its review before the PR merge boundary.
       honour, and key the Both-selected hint off the normalized live-stage
       `data-viewport` value. Record the served-then-loading first paint as an
       accepted tradeoff in the contract rather than adding an inline script.
-- [ ] Exercise a real Git fixture with removed documents/screens, deleted
+- [x] Exercise a real Git fixture with removed documents/screens, deleted
       ancestors and assets, changed historical CSS, and branch edits before
       deletion. Verify baseline identity and rendered resource bytes in local
       Serve, consumer export, both repository preview options, and an embedded
       viewer mounted from a packed package.
-- [ ] Run all relevant tests with a 100% pass rate, package builds, example
+- [x] Run all relevant tests with a 100% pass rate, package builds, example
       build/check, lint, typecheck, packed-consumer checks, and browser suites.
       Run `cargo xtask check`; fix failures and rerun affected checks. If Rust
       changes, include fmt, clippy, tests, and the Rust file-length audit.
-- [ ] Finalize README/guide/protocol delivery status, fixtures, and mockup
+- [x] Finalize README/guide/protocol delivery status, fixtures, and mockup
       alignment; leave changelog generation to the release tooling unless it
       requires a manual entry. Validate Markdown and links. Record checks, smoke
       evidence, and remaining risks; tick only completed tasks and move this
       plan's index entry to Completed in the final pre-merge commit.
-- [ ] Fetch `origin/main`, audit its additions from a captured pre-integration
+- [x] Fetch `origin/main`, audit its additions from a captured pre-integration
       tip, and preserve unrelated features. Inspect the complete diff and
       deletions against `origin/main`; identify the approved replacement of the
       removed-document/screen empty-state behavior and keep all new files tracked.
+- [x] Split the feature-added `tests/client_removed_previews.test.ts` at a
+      behavior boundary so every changed TypeScript file remains within the
+      300-line ceiling, preserving all assertions and rerunning the affected
+      tests and static checks.
 - [ ] After all checks pass, run `git add -A`, commit the completed work using
       Conventional Commits with a title of at most 50 characters and an
       explanatory body, then push the existing branch. Inspect the committed

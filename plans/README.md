@@ -2,7 +2,6 @@
 
 ## Active
 
-- [Removed Content Previews](./removed-content-previews.md)
 - [CI Performance](./ci-performance.md) — parallel verification, complete test
   sharding, reusable preparation and measured CI timing improvements.
 - [CLI Terminal Experience](./cli-terminal-experience.md)
@@ -19,6 +18,9 @@
 
 ## Completed
 
+- [Removed Content Previews](./removed-content-previews.md) — delivered and
+  verified; Serve, exports, repository previews, and embedded viewers render
+  pinned previous versions for removed documents and screens.
 - [Mokly Viewer Library](./mokly-viewer-library.md) — implementation and release
   PRs merged; viewer 0.1.0 and CLI 0.10.0 are published. One P2 review finding
   and the remaining published-package smoke are recorded for follow-up.

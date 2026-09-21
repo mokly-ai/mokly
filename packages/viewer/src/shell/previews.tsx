@@ -4,6 +4,7 @@
 // the browser client fills the host with the historical document.
 
 import type { RemovedEntryPreview } from "../catalogue/types.js";
+import { PREVIEW_UNAVAILABLE } from "../previews/copy.js";
 import type { ManifestEntry } from "../registry/types.js";
 
 import type { Catalogue } from "./catalogue.js";
@@ -74,15 +75,8 @@ export function RemovedPreviewStage(props: { data: RemovedPreviewData }) {
       >
         <div className="mbk-stage">
           <div className="mbk-empty">
-            <h2>Previous version unavailable</h2>
-            <p>The previous version could not be loaded.</p>
-            <button
-              className="mbk-empty-link"
-              data-mokly-preview-retry=""
-              type="button"
-            >
-              Retry
-            </button>
+            <h2>{PREVIEW_UNAVAILABLE.title}</h2>
+            <p>{PREVIEW_UNAVAILABLE.body}</p>
           </div>
         </div>
       </div>

@@ -1,11 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import {
-  designCatalogue,
-  designDocument,
-  textContent,
-} from "./helpers/design_catalogue.js";
+import { parse } from "parse5";
+
+import { designCatalogue, textContent } from "./helpers/design_catalogue.js";
 import {
   normalizeCopy,
   REPLACED_DESIGN_COPY,
@@ -24,19 +22,17 @@ test("the replaced-copy list names a contract and a replacement for each entry",
 });
 
 test("no design entry renders copy a protocol replaced", async () => {
-  const { manifest } = await designCatalogue;
-  const designs = manifest.entries.filter(
-    (entry) => entry.kind === "screen" && entry.id.startsWith("design-"),
+  const { outputs } = await designCatalogue;
+  const designs = [...outputs].filter(
+    ([route]) => route.startsWith("design/") && route.endsWith(".html"),
   );
   assert.ok(designs.length > 0);
-  for (const entry of designs)
-    for (const viewport of ["mobile", "desktop"] as const) {
-      const { document } = await designDocument(entry.id, viewport);
-      const rendered = normalizeCopy(textContent(document));
-      for (const replaced of REPLACED_DESIGN_COPY)
-        assert.ok(
-          !rendered.includes(normalizeCopy(replaced.text)),
-          `${entry.id} (${viewport}) still renders "${replaced.text}"; ${replaced.contract} replaced it, so ${replaced.instead}`,
-        );
-    }
+  for (const [route, html] of designs) {
+    const rendered = normalizeCopy(textContent(parse(html)));
+    for (const replaced of REPLACED_DESIGN_COPY)
+      assert.ok(
+        !rendered.includes(normalizeCopy(replaced.text)),
+        `${route} still renders "${replaced.text}"; ${replaced.contract} replaced it, so ${replaced.instead}`,
+      );
+  }
 });

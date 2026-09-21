@@ -3,13 +3,11 @@
 import type { ColorScheme, Viewport } from "../data/axes.js";
 import type { RemovedPreviewData } from "../shell/previews.js";
 
+import { PREVIEW_UNAVAILABLE } from "./copy.js";
 import type { PreviewContent, PreviewScreenView } from "./request.js";
 
 /** Marks every frame holding historical bytes, for read-only enforcement. */
 export const PREVIEW_FRAME_ATTRIBUTE = "data-mokly-preview-frame";
-
-/** Activates another attempt after the previous version could not be loaded. */
-export const PREVIEW_RETRY_ATTRIBUTE = "data-mokly-preview-retry";
 
 /** The viewport choice the stage currently shows. */
 export function previewViewport(host: Element): Viewport | "both" {
@@ -56,13 +54,13 @@ export function renderPreviewLoading(doc: Document, host: Element): void {
 export function renderPreviewUnavailable(doc: Document, host: Element): void {
   const empty = element(doc, "div", "mbk-empty");
   const heading = element(doc, "h2");
-  heading.textContent = "Previous version unavailable";
+  heading.textContent = PREVIEW_UNAVAILABLE.title;
   const body = element(doc, "p");
-  body.textContent = "The previous version could not be loaded.";
+  body.textContent = PREVIEW_UNAVAILABLE.body;
   const retry = element(doc, "button", "mbk-empty-link");
   retry.type = "button";
-  retry.setAttribute(PREVIEW_RETRY_ATTRIBUTE, "");
-  retry.textContent = "Retry";
+  retry.setAttribute(PREVIEW_UNAVAILABLE.retry.attribute, "");
+  retry.textContent = PREVIEW_UNAVAILABLE.retry.label;
   empty.append(heading, body, retry);
   host.replaceChildren(stage(doc, empty));
 }

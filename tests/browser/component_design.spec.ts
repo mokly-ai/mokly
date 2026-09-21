@@ -251,6 +251,13 @@ for (const viewport of ["desktop", "mobile"] as const) {
           .getByText("Come back whenever you are ready.", { exact: true }),
       ).toBeVisible();
       await expect(
+        page.locator(".ce-preview-view:visible .ce-action--before"),
+      ).toBeVisible();
+      await expect(page.locator(".ce-preview-set")).toHaveAttribute(
+        "data-viewport",
+        viewport,
+      );
+      await expect(
         page.locator(
           viewport === "desktop"
             ? ".ce-preview-view:visible .browser-frame"

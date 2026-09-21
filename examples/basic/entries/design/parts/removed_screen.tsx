@@ -81,6 +81,7 @@ export function RemovedScreen({
           <PreviousVersionLabel />
           <PreviewWorkspace
             inspector={inspector}
+            viewport={selection ?? viewport}
             render={(previewViewport) => preview?.(previewViewport)}
           />
         </>

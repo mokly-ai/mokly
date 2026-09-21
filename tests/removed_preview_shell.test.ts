@@ -156,7 +156,7 @@ test("a served stage claims no request until its client can make one", () => {
     assert.doesNotMatch(html, /Loading previous version…/);
     assert.match(html, /Previous version unavailable/);
     assert.match(html, /The previous version could not be loaded\./);
-    assert.match(html, /data-mokly-preview-retry=""[^>]*>Retry</);
+    assert.doesNotMatch(html, /data-mokly-preview-retry|>Retry</);
   }
 });
 

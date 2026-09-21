@@ -60,6 +60,7 @@ export function ComparePage({
         title={title}
       />
       <PreviewWorkspace
+        viewport={viewport}
         stage={false}
         inspector={
           <DetailsPanel

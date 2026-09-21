@@ -6,7 +6,9 @@ The shared component and screen workspace is implemented in Serve and static
 exports: saved variants, usage, comparison evidence, highlighting, and a resizable
 icon inspector. Local Serve additionally provides editable controls. See the
 [component contract](./mokly-components.md), [attribution contract](./mokly-component-changes.md),
-and [component design catalogue](./mokly-component-design.md).
+and [component design catalogue](./mokly-component-design.md). Removed
+consumers open their historical screen through the behavior implemented by the
+[removed content previews plan](../../plans/removed-content-previews.md).
 
 ## Catalogue And Component Pages
 

@@ -17,22 +17,23 @@ ancestor disclosure, conditional filter clearing, nearest-row scrolling, the
 control with its picker panel, the mark-only narrow brand, and the top bar's
 stacking above the navigation drawer scrim. Every state recorded here is
 implemented. The separate [component explorer designs](./mokly-component-design.md)
-are target mockups delivered before their runtime implementation.
+are implemented mockups whose runtime-backed states are identified in their
+own contract.
 
-The page and publication designs are now recorded in the example catalogue.
-Their runtime implementation is tracked in the linked plans. Whole documents
-use a plain bordered pane and omit device/comparison controls. Removed pages
-are flat Changes rows; baseline breadcrumbs are text even after their parents
-are deleted. Ordinary publications omit the Changes filter and comparison band
-while preserving the same navigation, search, tags, and screen variants.
+The page and publication designs are implemented in the example catalogue and
+shared shell. Whole documents use a plain bordered pane and omit
+device/comparison controls. Removed pages are flat Changes rows; baseline
+breadcrumbs are text even after their parents are deleted. Ordinary
+publications omit the Changes filter and comparison band while preserving the
+same navigation, search, tags, and screen variants.
 
 The removed-document and removed-screen designs depict the shipped
 [removed previews](./mokly-removed-previews.md) behavior: the previous version
 under a quiet "Showing previous version" label, with loading, unavailable, and
 long-content states in their own child pages. The shell renders those states at
 runtime. The removed-screen family also designs a viewport with no captured
-previous view; the shell leaves that viewport's stage empty until the linked
-plan implements the note those mockups fix.
+previous view; the shell renders the note fixed by the
+[removed content previews plan](../../plans/removed-content-previews.md).
 
 ## Design Mockups
 
@@ -99,7 +100,7 @@ Additional owning groups keep each new page at no more than five screens:
 - `design/browse/pages/previous-version/` and
   `design/review/outcomes/previous-version/` hold the removed-preview child
   pages (loading, unavailable with retry, long-document scrolling, and, for
-  screens, a viewport with no captured previous view) planned
+  screens, a viewport with no captured previous view) delivered
   by [removed previews](./mokly-removed-previews.md). Their segment cannot be
   `removed`, because a `view/` alias drops the `.html` suffix and an exported
   `removed.html` would then collide with a `removed/` directory. Each

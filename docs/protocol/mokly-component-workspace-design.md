@@ -5,7 +5,8 @@
 Milestones 4c, 4f, and 4g of the [component explorer plan](../../plans/component-explorer.md)
 revise the existing component, controls, and consuming-screen artboards after
 design feedback. The package-owned runtime implements the same layout. The existing owning routes and mobile/desktop screen components
-remain the review entry points.
+remain the review entry points. The removed-consumer workspace is aligned with
+the [removed content previews plan](../../plans/removed-content-previews.md).
 
 ## View Controls
 

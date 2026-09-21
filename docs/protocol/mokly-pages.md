@@ -6,7 +6,9 @@ Implemented in this branch. All routed entries use one collection hierarchy,
 and current builds emit schema v5. [Page migration](./mokly-page-migration.md)
 defines the required breaking consumer upgrade and historical comparison
 support. Verification is tracked in
-[Unified Catalogue Pages](../../plans/unified-catalogue-pages.md).
+[Unified Catalogue Pages](../../plans/unified-catalogue-pages.md). The
+[removed content previews plan](../../plans/removed-content-previews.md)
+implements the page-only historical capture and delivery boundary.
 
 ## Purpose And Boundary
 

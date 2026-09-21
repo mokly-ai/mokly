@@ -57,6 +57,7 @@ function AvailabilityScreen({
         title="Welcome"
       />
       <PreviewWorkspace
+        viewport={viewport}
         inspector={<DetailsPanel subject="welcome" />}
         render={(previewViewport) => <WelcomeShot viewport={previewViewport} />}
       />

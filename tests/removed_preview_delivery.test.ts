@@ -9,7 +9,7 @@ import { gunzipSync } from "node:zlib";
 import { extract } from "tar-stream";
 
 import { readCatalogue } from "@mokly/viewer";
-import { parseRemovedPagePreview } from "@mokly/viewer/data";
+import { parseRemovedPagePreview, parseReviewResult } from "@mokly/viewer/data";
 
 import {
   EXPORT_MARKER,
@@ -21,7 +21,10 @@ import { bundleUpload } from "../dist/publish/bundle.js";
 import { buildPreview } from "../scripts/preview/catalogue.mjs";
 
 import { assertPublishedPagePreview } from "./helpers/published_preview.js";
-import { createRemovedDeliveryFixture } from "./helpers/removed_delivery_fixture.js";
+import {
+  createRemovedDeliveryFixture,
+  REMOVED_BASELINE_IMAGE_BYTES,
+} from "./helpers/removed_delivery_fixture.js";
 
 test("Changes export packages removed previews into every delivery boundary", async (t) => {
   const fixture = await createRemovedDeliveryFixture();
@@ -53,6 +56,12 @@ test("Changes export packages removed previews into every delivery boundary", as
   );
   assert.deepEqual(screen?.preview, { kind: "screen" });
   assert.ok(page?.preview?.kind === "page");
+  for (const removed of [page, screen])
+    assert.deepEqual(
+      removed?.ancestors.map(({ title }) => title),
+      ["Fixture", "Deleted archive", "Deleted section"],
+    );
+  assert.notEqual(fixture.baseCommit, fixture.branchEditCommit);
   const pagePath = page.preview.path;
   const generationRoot = path.posix.dirname(
     path.posix.dirname(path.posix.dirname(pagePath)),
@@ -63,6 +72,12 @@ test("Changes export packages removed previews into every delivery boundary", as
   );
   assert.equal(preview.baseCommit, fixture.baseCommit);
   assert.equal(preview.documentPath, "snapshots/before/archive/removed.html");
+  const document = await fs.readFile(
+    path.join(fixture.output, generationRoot, preview.documentPath),
+    "utf8",
+  );
+  assert.match(document, /Previous page/);
+  assert.doesNotMatch(document, /Branch edit/);
   for (const name of [
     pagePath,
     `${generationRoot}/snapshots/before/archive/removed.html`,
@@ -80,8 +95,36 @@ test("Changes export packages removed previews into every delivery boundary", as
         `${generationRoot}/snapshots/before/assets/past.png`,
       ),
     ),
-    Buffer.from([0, 17, 34, 51, 68]),
+    REMOVED_BASELINE_IMAGE_BYTES,
   );
+  assert.equal(
+    await fs.readFile(
+      path.join(
+        fixture.output,
+        `${generationRoot}/snapshots/before/assets/nested.css`,
+      ),
+      "utf8",
+    ),
+    "main { color: rebeccapurple; }",
+  );
+  const review = parseReviewResult(
+    JSON.parse(
+      await fs.readFile(
+        path.join(fixture.output, result.comparisonUrl),
+        "utf8",
+      ),
+    ),
+  );
+  const desktop = review.screens
+    .find(({ route }) => route === "screens/removed.html")
+    ?.views.find(({ viewport }) => viewport === "desktop");
+  assert.ok(desktop?.beforePath);
+  const screenDocument = await fs.readFile(
+    path.join(fixture.output, generationRoot, desktop.beforePath),
+    "utf8",
+  );
+  assert.match(screenDocument, /Previous desktop screen/);
+  assert.doesNotMatch(screenDocument, /Branch edit/);
   const ownership = parseExportOwnership(
     await fs.readFile(path.join(fixture.output, EXPORT_MARKER), "utf8"),
   );

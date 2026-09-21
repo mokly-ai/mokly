@@ -2,12 +2,12 @@
 
 ## Delivery Status
 
-This contract is implemented through Milestone 8 of the
-[removed content previews plan](../../plans/removed-content-previews.md). Typed
-capture, the Serve generation lifecycle, consumer export, repository preview,
-upload packaging, and the shared shell and viewer all deliver the previous
-version. Nothing here changes ordinary browsing, Added entries, changed-screen
-comparisons, or removed component variants.
+The [removed content previews plan](../../plans/removed-content-previews.md) is
+implemented and verified. Typed capture, the Serve generation lifecycle,
+consumer export, repository preview, upload packaging, and the shared shell and
+viewer all deliver the previous version. Nothing here changes ordinary
+browsing, Added entries, changed-screen comparisons, or removed component
+variants.
 
 The note for a selected viewport with no captured historical view is fixed
 here and depicted by the design catalogue's
@@ -51,13 +51,14 @@ external HTTP(S) resources load as they did, without offline copies.
 The preview is requested when the removed entry is selected, in development and
 in static delivery alike. Ordinary browsing, All/Changes filtering, search,
 navigation, and evidence updates never request historical bytes. A served or
-packaged shell arrives holding “Previous version unavailable” with its Retry
-control, because a shell whose browser client never runs has nothing on the
-way; the client's first update replaces that with “Loading previous version…”
-and then with the previous version. A failure returns to “Previous version
-unavailable” while the catalogue stays usable. Current bytes, current
-fragments, or invented content never stand in for missing history. Catalogues
-published without Changes have no removed entries and therefore no previews.
+packaged shell arrives holding “Previous version unavailable” without a Retry
+control, because a shell whose browser client never runs cannot honour that
+action. The client's first update replaces that with “Loading previous
+version…” and then with the previous version. A client-side failure returns to
+“Previous version unavailable” with Retry while the catalogue stays usable.
+Current bytes, current fragments, or invented content never stand in for
+missing history. Catalogues published without Changes have no removed entries
+and therefore no previews.
 
 ## Screens Reuse The Comparison
 
@@ -188,6 +189,12 @@ rather than activating a link, so a long previous version stays readable from
 the keyboard. Cross-origin previews rely on the sandbox alone, which already
 withholds forms, popups, downloads, and top navigation. Original historical
 bytes are not transformed for presentation.
+
+The served-then-loading sequence is an accepted first-paint tradeoff: while the
+browser module downloads, the stage can briefly show the honest unavailable
+state before the client starts a request and renders loading. The shell does not
+use an inline script to hide that transition, so script-disabled delivery stays
+truthful and the package keeps its external-module execution model.
 
 Navigation, evidence or source replacement, unmount, and viewport or scheme
 changes fence late responses exactly as comparisons do: a preview response can

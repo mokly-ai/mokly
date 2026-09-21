@@ -9,7 +9,10 @@ import { readCatalogueChanges } from "../dist/server/component_changes.js";
 import { configuredServedReview } from "../dist/server/configured_review.js";
 import { startCatalogueServer } from "../dist/server/http.js";
 
-import { createRemovedDeliveryFixture } from "./helpers/removed_delivery_fixture.js";
+import {
+  createRemovedDeliveryFixture,
+  REMOVED_BASELINE_IMAGE_BYTES,
+} from "./helpers/removed_delivery_fixture.js";
 
 test("Serve routes removed screens and pages without capture during browsing", async (t) => {
   const fixture = await createRemovedDeliveryFixture();
@@ -106,7 +109,7 @@ test("Serve routes removed screens and pages without capture during browsing", a
         )
       ).arrayBuffer(),
     ),
-    Buffer.from([0, 17, 34, 51, 68]),
+    REMOVED_BASELINE_IMAGE_BYTES,
   );
   assert.equal(pageCaptures, 1);
 

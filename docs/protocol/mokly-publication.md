@@ -5,7 +5,10 @@
 Implemented by the repository-only preview builder. Current catalogues publish
 without review by default; an explicit option includes a pinned comparison.
 [Optional Published Changes](../../plans/optional-published-changes.md) records
-implementation verification. This does not change the npm CLI.
+implementation verification. Changes-enabled previews package removed pages and
+screens as implemented by the
+[removed content previews plan](../../plans/removed-content-previews.md). This
+does not change the npm CLI.
 
 ## Publication Option
 

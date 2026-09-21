@@ -23,6 +23,15 @@ for (const watch of [false, true]) {
       });
       try {
         await waitForReady(running.url);
+        const model = readCatalogue(
+          await (await fetch(`${running.url}/__mokly/catalogue.json`)).json(),
+        );
+        for (const removed of model.removedEntries)
+          assert.deepEqual(
+            removed.ancestors.map(({ title }) => title),
+            ["Fixture", "Deleted archive", "Deleted section"],
+          );
+        assert.notEqual(fixture.baseCommit, fixture.branchEditCommit);
         assert.equal(
           (await fetch(`${running.url}/view/screens/current.html`)).status,
           200,
@@ -43,6 +52,20 @@ for (const watch of [false, true]) {
           ).text(),
           /Previous page/,
         );
+        assert.doesNotMatch(
+          await (
+            await fetch(new URL(preview.documentPath, pageResponse.url))
+          ).text(),
+          /Branch edit/,
+        );
+        assert.equal(
+          await (
+            await fetch(
+              new URL("snapshots/before/assets/nested.css", pageResponse.url),
+            )
+          ).text(),
+          "main { color: rebeccapurple; }",
+        );
         const screenResponse = await fetch(
           `${running.url}/__mokly/diffs/review.json?route=screens%2Fremoved.html`,
         );
@@ -57,6 +80,17 @@ for (const watch of [false, true]) {
         assert.ok(
           screen?.views.every((view) => view.beforePath && !view.afterPath),
         );
+        const screenDocument = await (
+          await fetch(
+            new URL(
+              screen?.views.find((view) => view.viewport === "desktop")
+                ?.beforePath ?? "missing",
+              screenResponse.url,
+            ),
+          )
+        ).text();
+        assert.match(screenDocument, /Previous desktop screen/);
+        assert.doesNotMatch(screenDocument, /Branch edit/);
       } finally {
         await running.close();
       }

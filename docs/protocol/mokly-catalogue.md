@@ -5,6 +5,9 @@
 Implemented through [viewer library Milestone 3](../../plans/mokly-viewer-library.md).
 Serve, export and repository preview share the public projection. The manifest
 stays private; local Browse keeps its embedded data, appearance and behavior.
+The additive removed-page and removed-screen preview descriptors are
+implemented by the
+[removed content previews plan](../../plans/removed-content-previews.md).
 
 ## Location And Types
 

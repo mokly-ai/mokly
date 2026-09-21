@@ -142,7 +142,8 @@ test("Space scrolls a previous version while a link holds focus", async ({
   await expect.poll(offset).toBeGreaterThan(0);
   await preview.getByText("Marked catalogue link").focus();
   await page.keyboard.press("Enter");
-  await preview.getByText("Jump to the end").click();
+  await preview.getByText("Jump to the end").focus();
+  await page.keyboard.press("Enter");
   await expect(preview.locator("#foot")).toBeInViewport();
   expect(documents).toEqual([]);
   expect(page.url()).toBe(address);
@@ -241,6 +242,9 @@ test.describe("without its browser client", () => {
     await expect(page.locator("#mb-main")).not.toContainText(
       "Loading previous version",
     );
+    await expect(
+      page.locator(`${stage} [data-mokly-preview-retry]`),
+    ).toHaveCount(0);
     await expect(page.locator(previewFrame)).toHaveCount(0);
   });
 });

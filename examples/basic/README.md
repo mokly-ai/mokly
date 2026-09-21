@@ -246,8 +246,9 @@ Public HTML copies pass through the same ownership-aware link adapter as served
 Browse; direct preview URLs apply one validated `fragment` query progressively
 in the parent shell. PR previews explicitly include Changes and immutable screen and saved component
 comparisons with `--include-changes --base origin/main`. Publishing then prepares
-isolated before/after resources and removed-entry states; browsers fetch screen
-snapshots only after a comparison option is selected. Links inside the design
+isolated before/after resources and removed-entry states. Changed-screen
+snapshots load only after a comparison option is selected; selecting a removed
+page or screen loads its packaged previous version. Links inside the design
 frames navigate between authored artboards; their pictured comparison controls
 do not request actual comparison snapshots. There is no separate Review section
 or comparison CLI command.
