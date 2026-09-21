@@ -2,9 +2,9 @@
 
 Status: active. Created 2026-09-19 with the user's consent after the design
 discussion in this workspace, then rewritten the same day when the user chose
-own routes over a query parameter. Milestones 1 to 8 are complete; Milestones
-10 to 12 apply the approved review findings; Milestone 9 needs the user's
-approval first.
+own routes over a query parameter. Milestones 1 to 8 and 10 to 12 are
+complete; three second-review findings await a decision; Milestone 9 needs
+the user's approval first.
 
 **Goal:** Let a screen declare variants beside its default render, show them as
 an expandable list under the screen's navigation row, give each variant its
@@ -825,9 +825,47 @@ Viewer shares the Changes activation decision.
 - [x] Milestone close-out: run `cargo xtask check`; commit
       `fix(browse): follow the shown view and share Changes activation` and
       push.
-- [ ] After the push, review the complete local diff against `origin/main`
+- [x] After the push, review the complete local diff against `origin/main`
       using [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
-      and report findings without changing the implementation.
+      and report findings without changing the implementation. The review
+      confirmed all six earlier findings closed and reported three new
+      findings, recorded under Second Review Findings.
+
+## Second Review Findings (awaiting decision)
+
+Review of the Milestone 12 commit. All six earlier findings are closed.
+Nothing has been changed in response to the three findings below.
+
+1. **P2, the embedded Viewer ignores explicit `viewport` and `scheme` link
+   parameters.** `changesActivation` correctly returns only the href when a
+   link names an axis, but `ViewerRouting.shell` parses only `variant` and
+   `fragment`, so the Viewer keeps its sticky axes for such a link, and a
+   link naming one or an invalid axis also suppresses the first-changed
+   landing. Recommended: one shared typed parser for valid `viewport` and
+   `scheme` parameters used by standalone landing and the Viewer, applying
+   each named axis and keeping the other, with controlled and uncontrolled
+   Viewer browser coverage.
+2. **P2, Dark selected on a light-only entry resolves status and marks for a
+   view that does not exist.** In a mixed catalogue the scheme control stays
+   available; a light-only screen or saved variant shows its light fallback,
+   but `syncViewControls` passes the raw Dark scheme to `shownStatus` and
+   `viewMarks`, so the badge falls back to the route-level status and a
+   theme mark can appear for an entry with no other theme. Recommended: one
+   effective-view resolution for the selected screen or saved variant
+   (Dark becomes Light when it has no dark render) feeding status, marks,
+   and comparison presentation, with mixed-catalogue tests in Serve and the
+   Viewer.
+3. **P2, a fallback status turns into comparison eligibility.** When per-view
+   evidence is missing or pending, `selectedComparisonEligible` derives
+   eligibility from the returned status, which is the route-level fallback,
+   and never consults the selected saved variant's real eligibility. A
+   changed component with an Unmodified selected variant and no per-view
+   states now offers comparisons it cannot supply, and accepts a
+   `?comparison=side` deep link. Recommended: a resolver that returns
+   status, eligibility, and whether the result came from matching view
+   evidence, deriving eligibility from the shown status only for matched
+   evidence and preserving the variant's or entry's existing eligibility
+   otherwise, used by the server render and every client path.
 
 ## Review Findings (approved, addressed in Milestones 10 to 12)
 
