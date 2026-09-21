@@ -127,7 +127,7 @@ for (const failure of ["missing", "different deployment"] as const)
       "data-mokly-hydrated",
       "",
     );
-    expect(requests).toBe(2);
+    await expect.poll(() => requests).toBe(2);
   });
 
 test("an explicit hydration retry can recover after the shared catalogue returns", async ({

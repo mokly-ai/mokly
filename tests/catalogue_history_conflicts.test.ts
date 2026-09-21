@@ -11,8 +11,8 @@ import { writeCompilation } from "../dist/build/transaction.js";
 import { ConfiguredGitCommandRunner } from "../dist/config/git.js";
 import { exportCatalogue } from "../dist/export/run.js";
 import { CommittedRepository } from "../dist/review/git.js";
+import { configuredServedReview } from "../dist/server/configured_review.js";
 import { startCatalogueServer } from "../dist/server/http.js";
-import { configuredServedReview } from "../dist/server/review_routes.js";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
 

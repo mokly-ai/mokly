@@ -8,6 +8,12 @@ import type {
 import { FrameError } from "./frame_error.js";
 import { ownFrame } from "./frame_mount.js";
 import { localFrameAccess } from "./same_origin_access.js";
+import {
+  assignedFrameResource,
+  createMountAuthentication,
+  type AuthenticatedDocument,
+  type MountAuthentication,
+} from "./same_origin_identity.js";
 import { listenForFrameActivations } from "./same_origin_navigation.js";
 import { localPointer } from "./same_origin_pointer.js";
 
@@ -25,7 +31,10 @@ interface LocalOperations {
 export function mountLocalDocument(
   frame: HTMLIFrameElement,
   url: URL,
-  create: (doc: Document, emit: (event: FrameEvent) => void) => LocalOperations,
+  create: (
+    doc: AuthenticatedDocument,
+    emit: (event: FrameEvent) => void,
+  ) => LocalOperations,
   cancellation?: AbortSignal,
   initialListener?: (event: FrameEvent) => void,
 ): Promise<MountedFrame> {
@@ -38,9 +47,10 @@ export function mountLocalDocument(
     const signal = controller.signal;
     let initialSubscription = initialListener;
     let activationController: AbortController | undefined;
-    let activationDocument: Document | undefined;
+    let activationDocument: AuthenticatedDocument | undefined;
     let operationsController: AbortController | undefined;
     let documentWatch: number | undefined;
+    let mountAuthentication: MountAuthentication | undefined;
     let operations: LocalOperations | undefined;
     let disposed = false;
     let release = () => {};
@@ -54,7 +64,7 @@ export function mountLocalDocument(
       activationController = undefined;
       activationDocument = undefined;
     };
-    const adoptActivationDocument = (doc: Document) => {
+    const adoptActivationDocument = (doc: AuthenticatedDocument) => {
       if (activationDocument === doc) return;
       disposeActivation();
       activationDocument = doc;
@@ -81,14 +91,13 @@ export function mountLocalDocument(
     const inspectReplacementDocument = () => {
       try {
         const doc = localFrameAccess(frame).document();
-        if (
-          doc &&
-          doc !== activationDocument &&
-          doc.defaultView?.frameElement === frame &&
-          sameFrameResource(doc.URL, url)
-        ) {
+        const authenticated = mountAuthentication?.authenticateAssignedDocument(
+          doc,
+          url,
+        );
+        if (authenticated && authenticated !== activationDocument) {
           disposeOperations();
-          adoptActivationDocument(doc);
+          adoptActivationDocument(authenticated);
         }
       } catch {
         /* The load handler owns final origin failure reporting. */
@@ -149,15 +158,19 @@ export function mountLocalDocument(
           dispose();
           return;
         }
-        if (!sameFrameResource(doc.URL, url)) {
+        const authenticated = mountAuthentication?.authenticateAssignedDocument(
+          doc,
+          url,
+        );
+        if (!authenticated) {
           if (assignedFrameResource(frame, url)) return;
           reject(new FrameError("origin"));
           dispose();
           return;
         }
-        if (new URL(doc.URL).hash !== url.hash) {
+        if (new URL(authenticated.URL).hash !== url.hash) {
           try {
-            doc.defaultView.location.replace(url.href);
+            authenticated.defaultView.location.replace(url.href);
           } catch {
             reject(new FrameError("origin"));
             dispose();
@@ -166,15 +179,15 @@ export function mountLocalDocument(
         }
         stopDocumentWatch();
         disposeOperations();
-        adoptActivationDocument(doc);
+        adoptActivationDocument(authenticated);
         win.clearTimeout(timer);
         operationsController = new AbortController();
         const documentSignal = operationsController.signal;
-        operations = create(doc, emit);
+        operations = create(authenticated, emit);
         const inspecting = () =>
           listeners.size > 0 && operations!.inspectable();
         localPointer(
-          doc,
+          authenticated,
           () => operations!.list(),
           emit,
           inspecting,
@@ -188,24 +201,24 @@ export function mountLocalDocument(
               if (inspecting()) emit({ type: "geometry" });
             });
         };
-        doc.addEventListener("scroll", changed, {
+        authenticated.addEventListener("scroll", changed, {
           capture: true,
           passive: true,
           signal: documentSignal,
         });
-        doc.addEventListener("load", changed, {
+        authenticated.addEventListener("load", changed, {
           capture: true,
           signal: documentSignal,
         });
-        doc.fonts.addEventListener("loadingdone", changed, {
+        authenticated.fonts.addEventListener("loadingdone", changed, {
           signal: documentSignal,
         });
         win.addEventListener("resize", changed, { signal: documentSignal });
         const resize = new ResizeObserver(changed),
           mutations = new MutationObserver(changed);
         resize.observe(frame);
-        if (doc.body) resize.observe(doc.body);
-        mutations.observe(doc, {
+        if (authenticated.body) resize.observe(authenticated.body);
+        mutations.observe(authenticated, {
           attributes: true,
           childList: true,
           subtree: true,
@@ -250,9 +263,9 @@ export function mountLocalDocument(
     win.addEventListener("pagehide", dispose, { signal });
     try {
       const current = localFrameAccess(frame).document();
-      if (current?.defaultView?.frameElement === frame) {
-        adoptActivationDocument(current);
-      }
+      mountAuthentication = createMountAuthentication(frame, current);
+      if (mountAuthentication.transferredDocument)
+        adoptActivationDocument(mountAuthentication.transferredDocument);
       watchReplacementDocument();
       localFrameAccess(frame).replace(url);
     } catch {
@@ -260,36 +273,4 @@ export function mountLocalDocument(
       dispose();
     }
   });
-}
-
-function sameFrameResource(documentUrl: string, expected: URL): boolean {
-  const actual = new URL(documentUrl);
-  return (
-    actual.origin === expected.origin &&
-    !actual.username &&
-    !actual.password &&
-    normalizedHtmlPath(actual.pathname) ===
-      normalizedHtmlPath(expected.pathname) &&
-    actual.search === expected.search
-  );
-}
-
-function assignedFrameResource(
-  frame: HTMLIFrameElement,
-  expected: URL,
-): boolean {
-  const source = frame.getAttribute("src");
-  if (!source) return false;
-  try {
-    return sameFrameResource(
-      new URL(source, frame.ownerDocument.baseURI).href,
-      expected,
-    );
-  } catch {
-    return false;
-  }
-}
-
-function normalizedHtmlPath(pathname: string): string {
-  return pathname.endsWith(".html") ? pathname.slice(0, -5) : pathname;
 }

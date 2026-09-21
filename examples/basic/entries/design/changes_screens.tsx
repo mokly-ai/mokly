@@ -62,6 +62,7 @@ function ChangesScreen({
         title="Welcome"
       />
       <PreviewWorkspace
+        viewport={viewport}
         stage={!overlay}
         inspector={
           <DetailsPanel

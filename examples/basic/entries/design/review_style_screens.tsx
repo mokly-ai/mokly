@@ -103,6 +103,7 @@ function ExcludedStyles({ viewport }: { viewport: ArtboardViewport }) {
     >
       <WelcomeHead active={viewport} />
       <PreviewWorkspace
+        viewport={viewport}
         inspector={
           <DetailsPanel
             subject="welcome"

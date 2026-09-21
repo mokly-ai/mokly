@@ -11,6 +11,7 @@ import {
   RepositoryCatalogueChangeClassifier,
   type CatalogueChangeClassifier,
 } from "./component_changes.js";
+import { configuredServedReview } from "./configured_review.js";
 import { BackgroundGeneration } from "./demand/generation.js";
 import {
   NodeCatalogueServerFactory,
@@ -18,7 +19,6 @@ import {
 } from "./factory.js";
 import { PlainServeReporter, type ServeReporter } from "./reporter.js";
 import { ServedReviewRepository } from "./review_repository.js";
-import { configuredServedReview } from "./review_routes.js";
 import { serveWatched } from "./serve_watched.js";
 import {
   NodeProcessSupervisorFactory,

@@ -2,6 +2,7 @@ import type { ComponentRuntime } from "../build/component_runtime.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { bindTimings, timeSync } from "../diagnostics/timings.js";
 
+import { configuredServedReview } from "./configured_review.js";
 import {
   parseRuntimeMessage,
   requestComponentRuntime,
@@ -9,7 +10,6 @@ import {
 } from "./controls/runtime_ipc.js";
 import { startCatalogueServer } from "./http.js";
 import { ServedReviewRepository } from "./review_repository.js";
-import { configuredServedReview } from "./review_routes.js";
 import {
   parseCatalogueCompleteMessage,
   parseChildUpdateMessage,

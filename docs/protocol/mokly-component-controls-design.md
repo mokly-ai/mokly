@@ -2,11 +2,11 @@
 
 ## Delivery Status
 
-Approved mockup scope for Milestone 7 of the
-[component explorer plan](../../plans/component-explorer.md), delivered together
-with the [inspector revision](./mokly-component-inspector-design.md) for one
-sign-off. These authored design states are implemented by the component registration API,
-local rendering service, and editable runtime controls.
+Implemented by the completed
+[component explorer plan](../../plans/component-explorer.md), together with the
+[inspector revision](./mokly-component-inspector-design.md). These authored
+design states are shipped through the component registration API, local
+rendering service, and editable runtime controls.
 
 ## Controls Panel
 

@@ -6,7 +6,7 @@ import { optional, useDesignInstance } from "../library/composition.js";
 
 import { useDesignNavigation } from "./design_navigation.js";
 import type { DesignDestination } from "./destinations.js";
-import { NAV_TREE } from "./nav_data.js";
+import { CHANGED_COUNT, NAV_TREE } from "./nav_data.js";
 
 export type NavNode = CatalogueNavigationProps["rows"][number];
 export type ChangesStatus = NonNullable<
@@ -38,7 +38,7 @@ function CatalogueNavigation({
     <catalogueNavigation.Component
       moklyInstance={useDesignInstance("navigation")}
       rows={nodes ?? NAV_TREE}
-      changedCount={changedCount ?? 3}
+      changedCount={changedCount ?? CHANGED_COUNT}
       showChanges={changes}
       changedOnly={changedOnly ?? false}
       presentation={drawer ? "drawer" : "responsive"}

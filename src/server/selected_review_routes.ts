@@ -1,27 +1,35 @@
-/** Bounded immutable snapshots for the selected live screen or saved variant. */
+/** Bounded immutable snapshots for a selected comparison or removed page. */
 import { randomUUID } from "node:crypto";
 import type { ServerResponse } from "node:http";
 
-import { isSafeCatalogueRoute } from "@mokly/viewer/data";
-
 import { MoklyError } from "../errors.js";
-import type {
-  ReviewSelection,
-  SelectedReviewProvider,
-  SelectedReviewSource,
-} from "../review/selection_types.js";
 
 import { contentType, safeDecodePath, send } from "./respond.js";
 import { redirectReview, sendReviewFailure } from "./review_responses.js";
+import {
+  parseSelectedRequest,
+  prepareSelectedCapture,
+  selectedRequestKey,
+  type SelectedRequest,
+  type SelectedReviewLimits,
+  type SelectedReviewRoutesOptions,
+} from "./selected_review_capture.js";
 
 const PREFIX = "/__mokly/diffs/__generations/selected-";
-const RETENTION_MS = 60_000;
-const CAPACITY_BYTES = 128 * 1024 * 1024;
+const DEFAULT_LIMITS: SelectedReviewLimits = {
+  artifactBytes: 64 * 1024 * 1024,
+  capacityBytes: 128 * 1024 * 1024,
+  deadlineMs: 10_000,
+  generations: 64,
+  pending: 32,
+  retentionMs: 60_000,
+};
 
 interface Generation {
   readonly version: string;
   readonly key: string;
-  readonly selection: ReviewSelection;
+  readonly request: SelectedRequest;
+  readonly document: "preview.json" | "review.json";
   readonly files: ReadonlyMap<string, Uint8Array>;
   readonly bytes: number;
   expires: number;
@@ -31,20 +39,20 @@ export class SelectedReviewRoutes {
   private readonly generations = new Map<string, Generation>();
   private readonly pending = new Map<string, Promise<Generation>>();
   private readonly controllers = new Set<AbortController>();
+  private readonly limits: SelectedReviewLimits;
+  private readonly expiry: NodeJS.Timeout;
   private tail: Promise<unknown> = Promise.resolve();
   private epoch = 0;
   private closed = false;
   private bytes = 0;
-  private readonly expiry = setInterval(
-    () => this.prune(),
-    RETENTION_MS,
-  ).unref();
 
-  constructor(
-    private readonly provider: SelectedReviewProvider,
-    private readonly source: () => SelectedReviewSource | undefined,
-    private readonly base: string,
-  ) {}
+  constructor(private readonly options: SelectedReviewRoutesOptions) {
+    this.limits = { ...DEFAULT_LIMITS, ...options.limits };
+    this.expiry = setInterval(
+      () => this.prune(),
+      this.limits.retentionMs,
+    ).unref();
+  }
 
   invalidate(): void {
     this.epoch++;
@@ -67,113 +75,110 @@ export class SelectedReviewRoutes {
   ): Promise<boolean> {
     const stable =
       url.pathname === "/__mokly/diffs/review.json" &&
-      (url.searchParams.has("route") || url.searchParams.has("variant"));
+      ["page", "route", "variant"].some((name) => url.searchParams.has(name));
     if (!stable && !url.pathname.startsWith(PREFIX)) return false;
     try {
       if (stable) {
-        const selection = parseSelection(url);
-        if (!selection) send(response, 404, "text/plain", "Not found", method);
+        const request = parseSelectedRequest(url);
+        if (!request) send(response, 404, "text/plain", "Not found", method);
         else
           redirectReview(
             response,
             generationUrl(
               await this.generate(
-                selection,
+                request,
                 url.searchParams.get("refresh") === "1",
               ),
             ),
           );
       } else {
-        const relative = safeDecodePath(url.pathname.slice(PREFIX.length));
-        const separator = relative?.indexOf("/") ?? -1;
-        const generation =
-          separator > 0
-            ? this.generations.get(relative!.slice(0, separator))
-            : undefined;
-        const file = relative?.slice(separator + 1);
-        if (
-          generation &&
-          file === "review.json" &&
-          url.searchParams.get("refresh") === "1"
-        )
-          redirectReview(
-            response,
-            generationUrl(await this.generate(generation.selection, true)),
-          );
-        else {
-          const bytes = file && generation?.files.get(file);
-          if (!bytes) send(response, 404, "text/plain", "Not found", method);
-          else {
-            generation!.expires = Date.now() + RETENTION_MS;
-            response.writeHead(200, {
-              "cache-control": "no-store",
-              "content-type": contentType(file),
-              "x-content-type-options": "nosniff",
-            });
-            response.end(method === "HEAD" ? undefined : bytes);
-          }
-        }
+        await this.handleGeneration(url, response, method);
       }
     } catch (error) {
-      sendReviewFailure(response, error, this.base, method);
+      sendReviewFailure(response, error, this.options.base, method);
     }
     return true;
   }
 
+  private async handleGeneration(
+    url: URL,
+    response: ServerResponse,
+    method: string,
+  ): Promise<void> {
+    const relative = safeDecodePath(url.pathname.slice(PREFIX.length));
+    const separator = relative?.indexOf("/") ?? -1;
+    const generation =
+      separator > 0
+        ? this.generations.get(relative!.slice(0, separator))
+        : undefined;
+    const file = relative?.slice(separator + 1);
+    if (
+      generation &&
+      file === generation.document &&
+      url.searchParams.get("refresh") === "1"
+    ) {
+      redirectReview(
+        response,
+        generationUrl(await this.generate(generation.request, true)),
+      );
+      return;
+    }
+    const bytes = file && generation?.files.get(file);
+    if (!bytes) return send(response, 404, "text/plain", "Not found", method);
+    generation!.expires = Date.now() + this.limits.retentionMs;
+    response.writeHead(200, {
+      "cache-control": "no-store",
+      "content-type": contentType(file),
+      "x-content-type-options": "nosniff",
+    });
+    response.end(method === "HEAD" ? undefined : bytes);
+  }
+
   private generate(
-    selection: ReviewSelection,
+    request: SelectedRequest,
     refresh: boolean,
   ): Promise<Generation> {
     if (this.closed)
       return Promise.reject(unavailable("Comparison server is closing"));
-    const source = this.source();
-    if (!source)
-      return Promise.reject(
-        unavailable("The catalogue comparison is not ready"),
-      );
     this.prune();
     const epoch = this.epoch;
-    const key = JSON.stringify([epoch, selection.route, selection.variantId]);
+    const key = selectedRequestKey(epoch, request);
     const active = this.pending.get(key);
     if (active) return active;
     const current = [...this.generations.values()].findLast(
       (generation) => generation.key === key,
     );
     if (current && !refresh) {
-      current.expires = Date.now() + RETENTION_MS;
+      current.expires = Date.now() + this.limits.retentionMs;
       return Promise.resolve(current);
     }
-    if (this.pending.size >= 32)
+    if (this.pending.size >= this.limits.pending)
       return Promise.reject(unavailable("Comparison queue is full"));
+    const capture = prepareSelectedCapture(this.options, request);
     const controller = new AbortController();
     this.controllers.add(controller);
-    const timer = setTimeout(() => controller.abort(), 10_000).unref();
+    const timer = setTimeout(
+      () => controller.abort(),
+      this.limits.deadlineMs,
+    ).unref();
     const pending = this.tail
       .then(async () => {
         controller.signal.throwIfAborted();
-        const artifact = await this.provider.generate(
-          source,
-          selection,
-          controller.signal,
-        );
+        const { document, artifact } = await capture(controller.signal);
         controller.signal.throwIfAborted();
         if (epoch !== this.epoch || this.closed)
           throw unavailable("Comparison generation was replaced");
         const files = new Map(
-          [...artifact.files].map(([route, bytes]) => [
-            route,
-            Buffer.from(bytes),
-          ]),
+          [...artifact].map(([route, bytes]) => [route, Buffer.from(bytes)]),
         );
-        files.set("review.json", Buffer.from(JSON.stringify(artifact.result)));
         const bytes = [...files.values()].reduce(
           (total, file) => total + file.byteLength,
           0,
         );
         if (
-          bytes > 64 * 1024 * 1024 ||
-          this.bytes + bytes > CAPACITY_BYTES ||
-          this.generations.size >= 64
+          bytes > this.limits.artifactBytes ||
+          this.bytes + bytes > this.limits.capacityBytes ||
+          this.generations.size >= this.limits.generations
         )
           throw unavailable(
             "Comparison snapshot capacity is full; try again shortly",
@@ -181,10 +186,11 @@ export class SelectedReviewRoutes {
         const generation = {
           version: randomUUID(),
           key,
-          selection,
+          request,
+          document,
           files,
           bytes,
-          expires: Date.now() + RETENTION_MS,
+          expires: Date.now() + this.limits.retentionMs,
         };
         this.generations.set(generation.version, generation);
         this.bytes += bytes;
@@ -209,22 +215,8 @@ export class SelectedReviewRoutes {
   }
 }
 
-function parseSelection(url: URL): ReviewSelection | undefined {
-  const route = url.searchParams.get("route");
-  const variantId = url.searchParams.get("variant");
-  if (
-    !route ||
-    !isSafeCatalogueRoute(route) ||
-    url.searchParams.getAll("route").length !== 1 ||
-    url.searchParams.getAll("variant").length > 1 ||
-    (variantId !== null && !/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/.test(variantId))
-  )
-    return undefined;
-  return { route, ...(variantId !== null ? { variantId } : {}) };
-}
-
 function generationUrl(generation: Generation): string {
-  return `${PREFIX}${generation.version}/review.json`;
+  return `${PREFIX}${generation.version}/${generation.document}`;
 }
 
 function unavailable(message: string): MoklyError {

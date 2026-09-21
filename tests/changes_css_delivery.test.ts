@@ -10,8 +10,8 @@ import {
   ComponentChangeCache,
   RepositoryComponentChanges,
 } from "../dist/server/component_changes.js";
+import { configuredServedReview } from "../dist/server/configured_review.js";
 import { startCatalogueServer } from "../dist/server/http.js";
-import { configuredServedReview } from "../dist/server/review_routes.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";

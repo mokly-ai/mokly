@@ -51,7 +51,8 @@ containing blocks while retaining inner-scroll clipping and ancestor visibility.
 The overlay host resets consumer presentation with inline important styles;
 the shadow SVG resets inherited styles before drawing its mask and outlines.
 The 9 KiB budget accommodates these correctness fixes after safe pooling and
-minification; the Milestone 7 plan records the measured size and alternatives.
+minification; the completed component explorer plan records the measured size
+and alternatives.
 
 ```bash
 npm run build

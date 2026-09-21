@@ -145,14 +145,21 @@ and enable inspection on the same document without remounting it. Custom adapter
 without this method retain replacement mounts for changed usage. Changing the
 React catalogue source still replaces the runtime as documented above.
 The shell also supplies `FrameMount.onEvent` before an adapter starts loading.
-The same-origin adapter attaches it to the currently visible document before a
-replacement, then authenticates and adopts the exact replacement document as
-soon as it is accessible rather than waiting for slower subresources and the
-iframe `load` event. Valid logical links therefore remain parent-owned
-throughout source handoffs; the first matching `MountedFrame.subscribe` adopts
-that receiver without duplicating events. Custom adapters should honor the same
-mount-time receiver contract. Unsubscribing or disposing restores the portable
-native-link behavior.
+Before a replacement, the same-origin adapter transfers that receiver only to
+the exact currently visible `Document` that an earlier same-origin mount
+authenticated for the frame. It then independently authenticates and adopts the
+exact assigned replacement document as soon as it is accessible rather than
+waiting for slower subresources and the iframe `load` event. Valid logical links
+in an authenticated document therefore remain parent-owned throughout source
+handoffs; a document reached through unowned frame navigation keeps portable
+native-link behavior until the assigned replacement authenticates. The first
+same-origin mount may authenticate a matching server-rendered starting document
+for hydration. Later mounts exclude their exact unrecorded starting document
+from URL-based authentication, even when its URL already matches the new
+assignment; only a different loaded document can authenticate. The first
+matching `MountedFrame.subscribe` adopts the receiver without duplicating
+events. Custom adapters should honor the same authenticated mount-time receiver
+contract. Unsubscribing or disposing restores portable native-link behavior.
 
 Evidence refreshes restore valid inspection masks, outlines and labels without
 ending an active pick. Explicit highlights retain their exact frame scope;
@@ -211,9 +218,14 @@ export function catalogueHtml(json: unknown, artifactOrigin: string) {
 asset resolution. `./runtime` exposes browser-safe live-capability, recovery,
 catalogue-revision, standalone-bootstrap, inspector metadata and local-frame
 helpers used by the CLI host and repository publication adapter. `./data`
-exposes shared pure build/comparison value contracts; it contains no CLI
-execution or filesystem access. Hosts embedding React normally use only the
-root entry and stylesheet.
+exposes shared pure build/comparison value contracts, including the strict
+`parseRemovedPagePreview` reader for advertised page-preview payloads; it
+contains no CLI execution or filesystem access. Public catalogue removed-entry
+types retain optional screen/page preview descriptors, validated against the
+catalogue's comparison generation. Selecting a removed entry renders its
+read-only previous version from those advertised addresses alone; a catalogue
+without them, or without a comparison, shows the unavailable state without any
+request. Hosts embedding React normally use only the root entry and stylesheet.
 
 `@mokly/viewer/browser` is the standalone browser entry paired with full
 documents rendered by `@mokly/viewer/server`. Serve and export bundle that entry

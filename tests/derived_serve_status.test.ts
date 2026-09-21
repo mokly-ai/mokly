@@ -92,6 +92,12 @@ test(
         (await fetch(`${running.url}/view/screens/home.html`)).status,
         200,
       );
+      const builds = builder.builds.length;
+      const preview = await fetch(
+        `${running.url}/__mokly/diffs/review.json?page=archive%2Fremoved.html`,
+      );
+      assert.equal(preview.status, 500);
+      assert.equal(builder.builds.length, builds);
       builder.releaseAll();
       await waitForStatus(running.url, "ready");
       assert.deepEqual(servers.statuses, [
@@ -183,6 +189,12 @@ test(
         (await fetch(`${running.url}/view/screens/home.html`)).status,
         200,
       );
+      const builds = builder.builds.length;
+      const preview = await fetch(
+        `${running.url}/__mokly/diffs/review.json?page=archive%2Fremoved.html`,
+      );
+      assert.equal(preview.status, 500);
+      assert.equal(builder.builds.length, builds);
     } finally {
       await running.close();
     }

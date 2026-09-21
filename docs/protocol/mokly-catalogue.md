@@ -5,6 +5,9 @@
 Implemented through [viewer library Milestone 3](../../plans/mokly-viewer-library.md).
 Serve, export and repository preview share the public projection. The manifest
 stays private; local Browse keeps its embedded data, appearance and behavior.
+The additive removed-page and removed-screen preview descriptors are
+implemented by the
+[removed content previews plan](../../plans/removed-content-previews.md).
 
 ## Location And Types
 
@@ -51,6 +54,7 @@ interface CatalogueReadModel {
   removedEntries: readonly {
     entry: CatalogueRoutedEntry;
     ancestors: readonly { id: string; title: string }[];
+    preview?: { kind: "screen" } | { kind: "page"; path: PublicPath };
   }[];
 }
 type CatalogueRoutedEntry =
@@ -187,8 +191,10 @@ inclusion aggregates descendants without extra counts. Unknown,
 preparing, pending and disabled states never imply unmodified or a zero count.
 Retain removed routed entries with baseline ancestor labels outside the current
 ownership forest; current ids/routes win on conflicts under existing rules.
-Removed variants can remain on a surviving component. Historical missing usage
-is unavailable. Historical screen or removed-variant usage is also unavailable
+Removed variants can remain on a surviving component. The optional `preview`
+field is the additive descriptor defined by
+[removed previews](./mokly-removed-previews.md); readers tolerate its absence.
+Historical missing usage is unavailable. Historical screen or removed-variant usage is also unavailable
 when any referenced component's metadata is omitted under current-id/route
 precedence. The shared projection checks the components actually published in
 the model; it never publishes dangling references or weakens reader validation.

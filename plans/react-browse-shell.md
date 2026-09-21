@@ -927,3 +927,5 @@ document, but the provisional receiver still accepts an arbitrary accessible
 current same-origin document. The authenticated prior-document identity and
 adversarial regression remain the recommended follow-up; no review finding was
 applied automatically.
+That follow-up is now tracked by the
+[Authenticated Frame Document Handoff plan](./authenticated-frame-document-handoff.md).

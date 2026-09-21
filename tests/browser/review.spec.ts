@@ -110,14 +110,16 @@ test("added and removed screens stay current without comparison controls", async
     page.locator('[data-route="screens/removed.html"]'),
   ).toBeVisible();
   await expect(page.locator("[data-workspace-status]")).toHaveText("Removed");
-  await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
-  await expect(page.locator("[data-current-screen]")).toContainText(
-    "This screen was removed",
+  await expect(page.locator(".mbk-diff-toolbar")).toHaveCount(0);
+  await expect(page.locator("[data-current-screen]")).toHaveCount(0);
+  await expect(page.locator(".mbk-previous")).toHaveText(
+    "Showing previous version",
   );
-  await expect(page.locator("[data-current-screen]")).toContainText(
-    "There is no current preview to show.",
-  );
-  await expect(page.locator("[data-diff-stage] iframe")).toHaveCount(0);
+  await expect(
+    page
+      .frameLocator("[data-mokly-preview] .mbk-frame-desktop iframe")
+      .locator("main"),
+  ).toHaveText("removed");
 });
 
 test("pending requests cannot replace Current or a newly navigated screen", async ({

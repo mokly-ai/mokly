@@ -2,6 +2,7 @@ import type {
   ComponentViewRecord,
   CatalogueReadModel,
   ChangesStatus,
+  RemovedEntryPreview,
 } from "@mokly/viewer";
 import type { ReviewResult } from "@mokly/viewer/data";
 import type { Catalogue } from "@mokly/viewer/server";
@@ -17,6 +18,8 @@ export interface CatalogueProjectionInput {
   evidence?: ComponentChangeSnapshot | undefined;
   comparison?: ReviewResult | undefined;
   comparisonUrl: string | null;
+  /** Caller-supplied descriptors for previews published with this generation. */
+  removedPreviews?: ReadonlyMap<string, RemovedEntryPreview> | undefined;
   revision: CatalogueReadModel["revision"];
   /** Actual saved on-demand documents override exhaustive render-order records. */
   usage?: ReadonlyMap<string, ComponentViewRecord> | undefined;

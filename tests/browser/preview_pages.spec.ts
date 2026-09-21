@@ -30,8 +30,14 @@ for (const width of [390, 1280]) {
     await expect(page.locator(".mbk-crumbs")).toHaveText("Documents");
     await expect(page.locator(".mbk-crumbs a")).toHaveCount(0);
     await expect(page.locator("#mb-main")).toContainText(
-      "This page was removed",
+      "Showing previous version",
     );
+    await expect(
+      page.frameLocator("[data-mokly-preview] iframe").locator("body"),
+    ).toContainText("Previous document");
+    await expect(
+      page.locator("[data-mokly-preview] [data-mokly-preview-retry]"),
+    ).toHaveCount(0);
     await expect(
       page.locator("[data-diff-screen], [data-viewport-option]"),
     ).toHaveCount(0);
@@ -69,8 +75,16 @@ for (const width of [390, 1280]) {
     await expect(
       page.frameLocator(".mbk-stage-embed iframe").locator("#overview"),
     ).toBeVisible();
+    expect(requests.filter((url) => /\/__mokly\/events\//.test(url))).toEqual(
+      [],
+    );
     expect(
-      requests.filter((url) => /\/__mokly\/(?:events|diffs)\//.test(url)),
+      requests.filter((url) => /\/__mokly\/diffs\/review\.json/.test(url)),
     ).toEqual([]);
+    expect(
+      requests.filter((url) =>
+        /\/pages\/removed-document\.html\.json$/.test(url),
+      ),
+    ).toHaveLength(1);
   });
 }
