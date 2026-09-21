@@ -13,7 +13,7 @@ documented behavior. The post-push review of Milestone 12 reported eight
 findings, recorded below. The user approved fixing findings 1 and 2; Milestone 13
 delivered them and its post-push review reported two P3 items. Seventh-round
 findings 3 through 8 and both eighth-round items are deferred and remain listed
-below. The plan is ready for a pull request. Milestone 13 is locally committed pending the supervising agent's push and review.
+below. The plan is ready for a pull request.
 
 Mokly currently discovers every `*.mockup.ts` and `*.mockup.tsx` module below
 one configured directory, `entriesDir`, and binds the source-attributed
