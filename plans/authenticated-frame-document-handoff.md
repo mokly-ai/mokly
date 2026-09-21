@@ -255,7 +255,7 @@ first hydration or authenticated handoff continuity.
 - [x] Run the complete `cargo xtask check` gate with no failures or skips.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
@@ -325,3 +325,12 @@ applied automatically.
    the exact-path adversarial matrix would keep future watcher or load-handler
    changes from reintroducing it. Option B is secure but regresses the retained
    hydration behavior, while C abandons the approved trust boundary.
+
+Milestone 3 (`631cfe5`) resolves finding 1 with weak per-frame mount
+provenance and a mount-scoped authentication capability that excludes the exact
+unrecorded starting `Document` from both watcher and `load` authentication.
+The post-push implementation review of the complete diff against `origin/main`
+found no remaining findings. Residual risk is limited to browser-engine timing
+outside the tested Chromium matrix; the direct adapter and hydrated shell cases
+cover both exact-URL and different-URL unowned documents, first hydration, and
+authenticated replacement continuity.
