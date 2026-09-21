@@ -16,6 +16,10 @@
 - [Browse Shell Design Parity](./browse-shell-design-parity.md)
 - [Unchanged View Fast Path](./unchanged-view-fast-path.md) — post-review
   correctness fixes are active until the PR merges.
+- [Authenticated Frame Document Handoff](./authenticated-frame-document-handoff.md)
+  — closes the React Browse Shell Milestone 13/14 review finding by attaching
+  the same-origin mount-time navigation receiver only to a previously
+  authenticated document.
 
 ## Completed
 
