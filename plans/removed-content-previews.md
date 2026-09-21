@@ -50,10 +50,14 @@ Remaining risks include one High/P1 finding from the final post-push review:
 cross-origin preview frames cannot receive the parent document's read-only DOM
 guard, while their sandbox still permits self-navigation, so activating a link
 can replace the historical document inside its frame. The implementation is
-unchanged pending the user's decision. Intentional tradeoffs remain: served
-unavailable markup changes to loading after the client starts its request;
-branch-point semantics exclude later pre-deletion branch edits; and
-published-package and deployed-preview smokes remain post-merge follow-up work.
+unchanged pending the user's decision. A browser probe through the cross-origin
+viewer adapter confirmed the link issued a document request and changed the
+child frame URL to `snapshots/before/screens/current.mobile.html` while the
+outer iframe `src` attribute stayed at the removed page. Intentional tradeoffs
+remain: served unavailable markup changes to loading after the client starts
+its request; branch-point semantics exclude later pre-deletion branch edits;
+and published-package and deployed-preview smokes remain post-merge follow-up
+work.
 
 The final mainline-preservation audit merged `origin/main` at
 `20e55ca02a7274b659031b2295bc4d3e92360767`, retaining its CI verification,
