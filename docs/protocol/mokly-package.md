@@ -71,6 +71,11 @@ Screen comparisons are requested from the catalogue. A flag after
 the package name belongs to Mokly; docs must show npx arguments in a form
 that is unambiguous to current npm.
 
+The approved [`mokly mcp`](./mokly-mcp.md) command is not implemented yet. It
+will join the public commands as a local Model Context Protocol host that
+accepts `--config`, `--port`, `--base` and `--debug-timings`, refuses the
+Serve, export and publish options by name, and ships with its own CLI guide.
+
 Every long option taking a value accepts `--name=value` as well as
 `--name value`. Split at the first `=` only. Assigned values may start with `-`;
 separate values may not. Empty values, unknown options and assignments to

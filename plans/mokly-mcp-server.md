@@ -33,6 +33,10 @@ There is no new user interface, so this plan has no mockup milestone.
 - `/__mokly/events` publishes versioned `ready`/`update` events, and watched
   Serve keeps its first resolved port across child restarts, so one event
   consumer can drive resource-update notifications.
+- Watched Serve evaluates the consumer entry graph in the parent to build the
+  live index and renders only in the child and its workers. A rejected
+  candidate graph leaves the last-good generation active, so the host process
+  survives a broken edit.
 - The watched child is forked with inherited stdout, and consumer render code
   or workers may print to it. MCP stdio reserves stdout for JSON-RPC, so the
   command must remap child stdout to stderr and keep every reporter line off
@@ -70,17 +74,17 @@ There is no new user interface, so this plan has no mockup milestone.
    The only new IPC message carries the render capability to the parent.
 5. **Read-only tools.** No tool writes files, runs Git, builds output or
    publishes. `check_catalogue` runs the CLI `check` as a captured subprocess so
-   validation semantics stay identical to the command and consumer code never
-   executes in the MCP process.
+   validation semantics stay identical to the command and the MCP process never
+   renders or validates documents itself.
 6. **Honest evidence.** Tools report `pending`, `unavailable` and `disabled`
    Changes states exactly as the catalogue does and never invent comparison,
    usage or count data.
 
-## Milestone 1: Protocol and documentation
+## Milestone 1: Protocol and documentation — completed
 
 Define the complete contract before any code changes.
 
-- [ ] Write `docs/protocol/mokly-mcp.md`: scope and delivery status; the `mcp`
+- [x] Write `docs/protocol/mokly-mcp.md`: scope and delivery status; the `mcp`
       command and its options; stdio framing; handshake and version
       negotiation; advertised capabilities, `serverInfo` and agent-facing
       `instructions`; readiness rules (handshake answers immediately, tool
@@ -91,22 +95,26 @@ Define the complete contract before any code changes.
       boundary (loopback only, no file paths accepted, source protection and
       manifest privacy unchanged, token custody, result size bounds); and the
       required verification list.
-- [ ] Write `docs/protocol/mokly-mcp-tools.md`: for each tool its name, input
+- [x] Write `docs/protocol/mokly-mcp-tools.md`: for each tool its name, input
       schema, `structuredContent` and text output, error codes and bounds;
       the `mokly://catalogue` resource with subscription semantics and the
       `mokly://guides/{section}/{slug}` resources; deterministic tool and
       resource ordering; `revision` and `generation` fields on every result.
       Tools: `get_status`, `search_entries`, `get_entry`, `render_view`,
       `render_component`, `list_changes`, `compare_view`, `check_catalogue`.
-- [ ] Update `docs/protocol/README.md`, the CLI list and option table in
+- [x] Keep each protocol document near the ~250-line guideline by moving
+      `render_view`, `render_component`, `compare_view` and `check_catalogue`
+      into `docs/protocol/mokly-mcp-render-tools.md`, cross-linked from the
+      server and tools contracts.
+- [x] Update `docs/protocol/README.md`, the CLI list and option table in
       `docs/protocol/mokly-package.md`, the output-mode rules in
       `docs/protocol/mokly-terminal-output.md`, the token custody paragraph in
       `docs/protocol/mokly-component-controls.md`, and the event-consumer note
       in `docs/protocol/mokly-live-evidence.md`.
-- [ ] Update `README.md`: feature summary, CLI table row, a short
+- [x] Update `README.md`: feature summary, CLI table row, a short
       "Use Mokly with a coding agent" section, and a Key Code entry for
       `src/mcp`.
-- [ ] Validate the changed Markdown with Prettier and review the diff.
+- [x] Validate the changed Markdown with Prettier and review the diff.
 
 ## Milestone 2: Serve host seams
 

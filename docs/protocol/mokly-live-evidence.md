@@ -27,6 +27,11 @@ content version. Source/config replacement, resource edits and explicit reload
 rules remain content changes. An evidence event never claims that actual content
 edits can be ignored.
 
+The browser shell is not the only consumer of the versioned event stream. The
+approved [MCP server](./mokly-mcp.md) reads the same `ready`/`update` events
+to refresh its catalogue snapshot and notify subscribed agents; events stay
+version-only and carry no evidence for either consumer.
+
 ## Browser adoption
 
 For a newer update or reconnect `ready`, the browser requests its current durable

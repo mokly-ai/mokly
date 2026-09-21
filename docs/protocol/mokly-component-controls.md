@@ -88,6 +88,10 @@ The exact request and success-response shapes are below. The response's `view`
 uses [manifest usage records](./mokly-component-manifest.md). Errors retain
 the HTTP/code contract below. The token is a separate
 `X-Mokly-Render-Token` header and is never stored in generated metadata.
+The approved [MCP server](./mokly-mcp.md) adds one typed child-to-parent IPC
+message carrying the current token and generation so the supervising host can
+call this endpoint under the same Host, Origin and token rules; the token
+still never enters generated metadata, diagnostics, timings or any tool result.
 
 ```ts
 interface ComponentRenderRequest {

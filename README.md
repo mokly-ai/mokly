@@ -31,6 +31,10 @@ and embedded hosts share the same viewer presentation. Mokly owns the
 catalogue; your repository keeps ownership of its UI, data, styling, and
 rendering context.
 
+An approved `mokly mcp` command will let coding agents search, render, compare,
+and validate the catalogue through a local Model Context Protocol server; see
+[Use Mokly with a coding agent](#use-mokly-with-a-coding-agent).
+
 > Mokly is pre-1.0. The package is [`@mokly/mokly`](https://www.npmjs.com/package/@mokly/mokly)
 > and the executable is `mokly`.
 
@@ -160,6 +164,7 @@ follow the command, for example `mokly build --config tools/mokly.config.ts`.
 | `mokly check`               | Validate the catalogue without writing output                |
 | `mokly export --out <path>` | Build a complete static catalogue for hosting                |
 | `mokly publish`             | Export and upload to a compatible catalogue service          |
+| `mokly mcp`                 | Approved, not yet shipped: local MCP server for agents       |
 | `mokly --help`              | Show every command and option                                |
 
 The CLI uses stable plain output in CI and a richer interactive display in a
@@ -174,6 +179,33 @@ Detailed command references:
 - [`export`](./docs/guides/cli/export.md) and
   [`publish`](./docs/guides/cli/publish.md)
 - [Options and exit status](./docs/guides/cli/options-and-exit-status.md)
+
+## Use Mokly with a coding agent
+
+The approved [MCP server contract](./docs/protocol/mokly-mcp.md) defines
+`mokly mcp`, a local Model Context Protocol server over standard input and
+output. It is tracked by the [Mokly MCP server plan](./plans/mokly-mcp-server.md)
+and is not part of the published package yet. Once shipped, an agent client is
+configured to launch it from the repository that owns the screens:
+
+```json
+{
+  "mcpServers": {
+    "mokly": { "command": "npx", "args": ["--no-install", "mokly", "mcp"] }
+  }
+}
+```
+
+The process supervises the same watched Serve child as `mokly serve`, so the
+agent's edits are adopted through the normal watch rules and document
+rendering stays in that supervised child. Its
+[tools](./docs/protocol/mokly-mcp-tools.md) search the catalogue, read entry
+details and Changes, render a screen, page or component view, render a
+component with prop overrides, return before and after documents with a
+unified diff for a changed view, and run `mokly check`; its resources expose
+the public catalogue read model with update notifications and the packaged
+guides. Every tool is read-only, accepts catalogue ids rather than paths, and
+reports pending or unavailable evidence as such instead of inventing data.
 
 ## Authoring
 
@@ -287,6 +319,9 @@ See the [xtask README](./xtask/README.md) for focused suites.
 - [`src/build`](./src/build) — bundling, rendering, validation, and generated
   output transactions.
 - [`src/cli`](./src/cli/README.md) — command parsing, reporting, and composition.
+- `src/mcp` — approved location for the stdio Model Context Protocol host
+  defined by the [MCP server contract](./docs/protocol/mokly-mcp.md); it does
+  not exist yet.
 - [`src/server`](./src/server/README.md) — local HTTP server and watched runtime.
 - [`src/review`](./src/review/README.md) — Git baselines, comparison, and change
   attribution.

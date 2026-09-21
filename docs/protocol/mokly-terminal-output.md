@@ -22,6 +22,12 @@ colour. Help and version use their established bytes in either mode and do not
 render progress. Plain mode is the automation contract. Rich mode is the
 interactive developer experience. Stdin is never claimed in plain mode.
 
+The approved [`mokly mcp`](./mokly-mcp.md) command will bypass this selection
+and is exempt from the plain-mode stderr silence rule below: its stdout carries
+only protocol messages, its `Mokly listening at` line and every diagnostic go
+to stderr in plain mode, the supervised child's stdout is mapped to stderr, and
+stdin belongs to the transport, so shortcuts never start.
+
 ## Colour, glyphs, and width
 
 Rich colour uses Node's `util.styleText` with stdout or stderr as the validation

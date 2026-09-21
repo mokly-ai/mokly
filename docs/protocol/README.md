@@ -57,6 +57,10 @@ when the historical primary file is absent, never when it is invalid.
 - [Selected live comparisons](./mokly-selected-comparisons.md)
 - [Live catalogue evidence updates](./mokly-live-evidence.md)
 - [Startup diagnostics and scale fixtures](./mokly-timings.md)
+- [MCP server](./mokly-mcp.md) — approved target: the `mokly mcp` stdio host
+  over watched Serve for coding agents, with its
+  [tools and resources](./mokly-mcp-tools.md) and
+  [rendering and comparison tools](./mokly-mcp-render-tools.md).
 - [Pages in the catalogue](./mokly-pages.md)
 - [Screen variants](./mokly-screen-variants.md) — implemented: variant
   screens grouped under their parent screen with their own ids and routes.
