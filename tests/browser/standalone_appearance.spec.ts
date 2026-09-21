@@ -1,5 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { exportCatalogue } from "../../dist/export/run.js";
+import { createExportFixture } from "../helpers/export_fixture.js";
+import { serveStaticFiles } from "../helpers/static_server.js";
+
 import { expectFrameSource } from "./workspace_actions.js";
 
 const control = ".mbk-topbar [data-mokly-appearance-control]";
@@ -7,6 +11,18 @@ const select = "[data-mokly-appearance-select]";
 const mobileFrame = ".mbk-frame-mobile iframe";
 const desktopFrame = ".mbk-frame-desktop iframe";
 const screen = "/view/screens/welcome.html";
+
+let lightOnlyFixture: Awaited<ReturnType<typeof createExportFixture>>;
+let lightOnlySite: Awaited<ReturnType<typeof serveStaticFiles>>;
+test.beforeAll(async () => {
+  lightOnlyFixture = await createExportFixture();
+  await exportCatalogue(lightOnlyFixture.config, { outDir: "site" });
+  lightOnlySite = await serveStaticFiles(lightOnlyFixture.output);
+});
+test.afterAll(async () => {
+  await lightOnlySite.close();
+  await lightOnlyFixture.close();
+});
 
 /** The appearance the document actually settled on, root mark and all. */
 async function appearance(page: Page): Promise<{
@@ -28,6 +44,55 @@ async function store(page: Page, value: string): Promise<void> {
   await page.addInitScript((theme) => {
     localStorage.setItem("mokly:theme", theme as string);
   }, value);
+}
+
+for (const catalogue of ["mixed", "light-only"] as const) {
+  for (const viewport of [
+    { name: "mobile", width: 390, height: 844 },
+    { name: "desktop", width: 1_280, height: 900 },
+  ] as const) {
+    test(`${catalogue}/${viewport.name}: Auto, Light, Dark and a pin form one appearance matrix`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(viewport);
+      await page.emulateMedia({ colorScheme: "dark" });
+      const target =
+        catalogue === "mixed"
+          ? screen
+          : `${lightOnlySite.url}/view/screens/home.html`;
+      const entry = catalogue === "mixed" ? "welcome" : "home";
+      for (const choice of ["auto", "light", "dark", "pin"] as const) {
+        await page.goto(target);
+        await page.evaluate(() => localStorage.clear());
+        await page.goto(choice === "pin" ? `${target}?scheme=dark` : target);
+        if (choice !== "auto" && choice !== "pin")
+          await page.locator(select).selectOption(choice);
+        const theme = choice === "pin" ? "dark" : choice;
+        const scheme = choice === "auto" ? "dark" : theme;
+        await expect
+          .poll(() => appearance(page))
+          .toEqual({
+            scheme,
+            theme,
+            value: theme,
+          });
+        for (const [frame, frameViewport] of [
+          [mobileFrame, "mobile"],
+          [desktopFrame, "desktop"],
+        ] as const) {
+          const dark =
+            scheme === "dark" && catalogue === "mixed" ? ".dark" : "";
+          await expectFrameSource(
+            page.locator(frame),
+            new RegExp(
+              `screens/${entry}\\.${frameViewport}${dark}\\.html$`,
+              "u",
+            ),
+          );
+        }
+      }
+    });
+  }
 }
 
 test("a scheme pin paints the document without being saved", async ({

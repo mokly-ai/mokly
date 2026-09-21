@@ -12,7 +12,9 @@ the same scheme through `setColorScheme`, so frames swap with history replaced
 and comparison panes and component samples redraw. Each swap compares the
 current source first, so the asset's earlier swap is never repeated. The
 workspace listens for the `mokly:appearance` document event rather than owning
-its own standalone control. See the
+its own standalone control or receiving a second direct comparison update. The
+hook is tied to the Browse document's abort signal and clears the startup
+asset's `window.onAppearance` slot on page exit. See the
 [appearance contract](../../../../docs/protocol/mokly-viewer-appearance.md).
 
 `early_disclosures.ts` bridges native disclosure clicks through deferred startup.

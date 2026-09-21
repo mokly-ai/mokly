@@ -57,6 +57,7 @@ export function Catalogue({
         catalogue={`${artifactOrigin}/__mokly/catalogue.json`}
         frameAdapter={adapter}
         markers={commentMarker ? [commentMarker] : []}
+        theme="auto"
         slots={{
           topBarEnd: (
             <button onClick={() => viewer.current?.select({ screenId: null })}>
@@ -168,7 +169,9 @@ preserves frames, selection, temporary props, picking, highlights and markers,
 emits no events and requests nothing. The appearance lives on the viewer root
 alone, so a host page, its other roots and host slot content are untouched. The
 [appearance contract](../../docs/protocol/mokly-viewer-appearance.md) defines
-the standalone Appearance control, which is not delivered yet.
+the standalone control's preference, URL-pin and first-paint behavior. Serve and
+export render that one Appearance selector on every standalone route; embedded
+React roots do not render it because the host owns `theme`.
 
 Import the stylesheet once. Override `--mokly-accent`,
 `--mokly-accent-contrast`, and `--mokly-accent-soft` on a containing element,
@@ -189,6 +192,7 @@ export function catalogueHtml(json: unknown, artifactOrigin: string) {
     catalogue: readCatalogue(json),
     baseUrl: artifactOrigin,
     defaultSelection: { screenId: null },
+    theme: "light",
   });
 }
 ```

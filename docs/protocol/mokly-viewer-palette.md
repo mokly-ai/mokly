@@ -7,7 +7,8 @@ These are the approved swatches for the
 status for every appearance surface. They are implemented in the design mockups
 under `examples/basic/generated/` (`design.css` for the interface palette,
 `design-stage.css` for preview tokens) and adopted by the package's own
-`SHELL_CSS` and scoped embedded stylesheet.
+`SHELL_CSS` and scoped embedded stylesheet. The same roles now paint standalone
+Auto/Light/Dark documents and independently themed embedded roots.
 
 Contrast ratios below are computed from the listed sRGB values using the
 [WCAG relative-luminance formula](https://www.w3.org/WAI/GL/wiki/Relative_luminance)

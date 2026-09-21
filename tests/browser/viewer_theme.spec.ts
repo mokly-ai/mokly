@@ -5,11 +5,18 @@ import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 import type {} from "./viewer_harness.js";
 
 let fixture: Awaited<ReturnType<typeof viewerFixture>>;
+let dualFixture: Awaited<ReturnType<typeof viewerFixture>>;
 test.beforeAll(async () => {
   fixture = await viewerFixture();
+  dualFixture = await viewerFixture('colorSchemes: ["light", "dark"],', {
+    actionRender:
+      '(props, context) => <div style={{ colorScheme: context.colorScheme }}><input data-native-control="" type="date" /><button>{props.label}</button></div>',
+    body: '<action.Component label="Visible" />',
+  });
 });
 test.afterAll(async () => {
   await fixture.close();
+  await dualFixture.close();
 });
 test.beforeEach(async ({ page }) => {
   await page.goto(fixture.host.url);
@@ -19,13 +26,81 @@ test.beforeEach(async ({ page }) => {
 const ROOT = "#one .mokly-viewer";
 const FRAME = "#one .mbk-frag";
 
-async function startHost(page: Page) {
-  await page.evaluate(() => window.viewerHarness.start("one", { slots: true }));
+async function startHost(page: Page, options: Record<string, unknown> = {}) {
+  await page.evaluate(
+    (options) => window.viewerHarness.start("one", { slots: true, ...options }),
+    options,
+  );
   await page.waitForFunction(
     () => window.viewerHarness.get("one").ref.current !== null,
   );
   await expect(page.locator(FRAME).first()).toHaveAttribute("src", /\.html/);
 }
+
+for (const adapter of ["same-origin", "postMessage"] as const) {
+  test(`${adapter} frames keep every Light/Dark theme and preview pairing independent`, async ({
+    page,
+  }) => {
+    await page.goto(dualFixture.host.url);
+    await page.waitForFunction(() => Boolean(window.viewerHarness));
+    for (const theme of ["light", "dark"] as const) {
+      for (const preview of ["light", "dark"] as const) {
+        const id = `${adapter}-${theme}-${preview}`;
+        await page.evaluate(
+          ({ cross, id, preview, theme }) => {
+            const host = window.viewerHarness.start(id, {
+              cross,
+              defaultSelection: { colorScheme: preview },
+            });
+            host.setTheme(theme);
+          },
+          { cross: adapter === "postMessage", id, preview, theme },
+        );
+        await page.waitForFunction(
+          (id) => window.viewerHarness.get(id).ref.current !== null,
+          id,
+        );
+        const root = page.locator(`#${id} .mokly-viewer`);
+        const frame = page.locator(
+          `#${id} iframe[data-workspace-frame="mobile"]`,
+        );
+        await expect(root).toHaveAttribute("data-mokly-theme", theme);
+        await expect(root).toHaveAttribute("data-mokly-color-scheme", preview);
+        await expect(frame).toHaveCSS("color-scheme", preview);
+        await expect(frame).toHaveAttribute(
+          "src",
+          preview === "dark"
+            ? /home\.mobile\.dark\.html$/u
+            : /home\.mobile\.html$/u,
+        );
+        const content = page.frameLocator(
+          `#${id} iframe[data-workspace-frame="mobile"]`,
+        );
+        const nativeControl = content.locator("[data-native-control]");
+        await expect(nativeControl).toBeVisible();
+        await expect(nativeControl).toHaveCSS("color-scheme", preview);
+      }
+    }
+  });
+}
+
+test("embedded Auto follows the host system without moving its preview", async ({
+  page,
+}) => {
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.goto(dualFixture.host.url);
+  await page.waitForFunction(() => Boolean(window.viewerHarness));
+  await page.evaluate(() => window.viewerHarness.start("auto"));
+  const root = page.locator("#auto .mokly-viewer");
+  const frame = page.locator('#auto iframe[data-workspace-frame="mobile"]');
+  await expect(root).toHaveAttribute("data-mokly-theme", "auto");
+  await expect(root).toHaveCSS("background-color", "rgb(20, 24, 22)");
+  await expect(frame).toHaveCSS("color-scheme", "light");
+
+  await page.emulateMedia({ colorScheme: "light" });
+  await expect(root).toHaveCSS("background-color", "rgb(244, 244, 241)");
+  await expect(frame).toHaveCSS("color-scheme", "light");
+});
 
 test("an explicit theme paints the root and leaves the host page alone", async ({
   page,

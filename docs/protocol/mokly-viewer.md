@@ -5,8 +5,7 @@
 The baseline API, static server entry and first-party hosts are implemented by
 the [viewer library plan](../../plans/mokly-viewer-library.md). Saved-variant
 selection, multi-instance highlights and markers are implemented by the
-[comment anchoring plan](../../plans/viewer-comment-anchoring.md). Local
-Serve/export presentation remains unchanged.
+[comment anchoring plan](../../plans/viewer-comment-anchoring.md).
 
 The [viewer appearance contract](./mokly-viewer-appearance.md) defines
 Auto/Light/Dark interface support, separate from preview color schemes, and
@@ -80,6 +79,7 @@ interface ViewerMarker {
   instance: InstanceRef;
   content: ReactNode;
 }
+type ViewerTheme = "auto" | "light" | "dark";
 type MarkerStatus = "visible" | "hidden" | "unavailable";
 interface MarkerState {
   id: string;
@@ -108,6 +108,7 @@ interface MoklyViewerProps {
   frameAdapter?: FrameAdapter;
   defaultSelection?: Partial<ViewerSelection>;
   selection?: ViewerSelection;
+  theme?: ViewerTheme;
   onSelectionChange?: (selection: ViewerSelection) => void;
   markers?: readonly ViewerMarker[];
   onMarkerChange?: (states: readonly MarkerState[]) => void;
@@ -244,9 +245,13 @@ not a general stage overlay and exposes no raw geometry.
 
 ## Theming And Ownership
 
-The interface currently uses Light styling; `selection.colorScheme` selects
-the preview documents. Independent interface appearance is a
-[planned extension](./mokly-viewer-appearance.md), not an implemented prop.
+`theme` selects the embedded interface appearance as `"auto"`, `"light"` or
+`"dark"`; omission means Auto. `selection.colorScheme` independently selects the
+preview documents, so either preview scheme can sit inside either interface
+appearance. Changing `theme` updates only the viewer root and preserves frame
+sessions, selection, props, inspection and host slots. The complete standalone
+and embedded behavior is the
+[appearance contract](./mokly-viewer-appearance.md).
 
 Import `@mokly/viewer/styles.css` once. The supported overrides are
 `--mokly-accent`, `--mokly-accent-contrast` and `--mokly-accent-soft`, subject to

@@ -10,7 +10,9 @@ setting, which changes the chrome and the screens it shows together. `chrome/top
 always composes it, so every artboard with a top bar draws it; a screen does not
 opt in. The value defaults to the scheme the file was rendered for and is
 overridden only to depict a different setting, as the Auto artboard does. It is
-the only scheme control the design catalogue draws.
+the only scheme control the design catalogue draws. Its three pre-rendered faces
+and `data-*` hooks mirror the shipped shell control, with a regression test
+guarding that shared structural contract.
 
 Those two samples — the appearance selector and the top bar that composes it —
 are the only ones that render in both schemes, because their own subject is the
@@ -22,7 +24,7 @@ sets the value explicitly. Every other sample stays light.
 `view-controls` has no scheme control at all, so every depicted screen header
 carries the viewport dropdown alone. `metadata.ts` owns that
 list, `LibraryHost` stamps the requested scheme on the sample root, and Browse's
-existing preview control switches between the two generated files.
+Appearance control switches between the two generated files.
 
 Catalogue navigation saves each Changes availability state: **Checking for
 changes**, **Preparing comparison** and **Changes unavailable**, in both

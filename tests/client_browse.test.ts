@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import {
+  APPEARANCE_EVENT,
+  installBrowseAppearance,
+} from "../packages/viewer/dist/client/browse_appearance.js";
 import { parseBrowseRecoveryState } from "../packages/viewer/dist/client/browse_recovery.js";
 import {
   captureBrowseState,
@@ -109,6 +113,33 @@ test("a light-only catalogue marks dark without moving a frame", () => {
 
   fake.body.setAttribute("data-mokly-color-scheme", "sepia");
   assert.equal(currentColorScheme(doc), "light");
+});
+
+test("the appearance hook has one event-owned lifetime", () => {
+  const view = schemeView();
+  const doc = asDocument(view.doc);
+  const win = {
+    ...fakeWindow(),
+    Event,
+  } as Window &
+    typeof globalThis & {
+      onAppearance?: (theme: string, scheme: "dark" | "light") => void;
+    };
+  const controller = new AbortController();
+
+  installBrowseAppearance(doc, win, controller.signal);
+  const hook = win.onAppearance;
+  assert.equal(typeof hook, "function");
+  hook?.("dark", "dark");
+
+  assert.equal(currentColorScheme(doc), "dark");
+  assert.deepEqual(
+    view.doc.dispatched.map((event) => event.type),
+    [APPEARANCE_EVENT],
+  );
+
+  controller.abort();
+  assert.equal(win.onAppearance, undefined);
 });
 
 test("recovery state restores color scheme strictly", () => {
@@ -367,6 +398,7 @@ class FakeElement {
 
 class FakeDocument {
   readonly body = new FakeElement("body");
+  readonly dispatched: Event[] = [];
   readonly URL = "http://127.0.0.1:4173/view/screens/welcome.html";
 
   constructor(private readonly elements: readonly FakeElement[]) {}
@@ -377,5 +409,10 @@ class FakeDocument {
 
   querySelectorAll(selector: string): FakeElement[] {
     return this.elements.filter((element) => element.matches(selector));
+  }
+
+  dispatchEvent(event: Event): boolean {
+    this.dispatched.push(event);
+    return true;
   }
 }

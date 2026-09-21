@@ -4,7 +4,8 @@
 
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
   standalone Auto/Light/Dark control for interface and previews, and
-  host-owned theme with independent previews when embedded.
+  host-owned theme with independent previews when embedded. Implementation is
+  complete; move this plan to Completed when its implementation PR merges.
 - [CI Performance](./ci-performance.md) — parallel verification, complete test
   sharding, reusable preparation and measured CI timing improvements.
 - [CLI Terminal Experience](./cli-terminal-experience.md)

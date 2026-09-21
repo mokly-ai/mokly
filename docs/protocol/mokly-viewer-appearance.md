@@ -146,8 +146,12 @@ refreshes and watched reload recovery carry the current effective appearance
 forward rather than a separate preview state.
 
 The asset is served through the existing explicit allowlist and included in
-export inventories, with portable URLs at root and subpath deployments. Do not
-add inline-script/CSP exceptions, React, hydration or remote assets to exports.
+export inventories. Exported shell documents use the root-absolute URL
+`/__mokly/client/appearance-startup.js`: a root deployment works directly, while
+a deployment beneath a URL prefix needs a prefix-stripping hosting mount that
+also resolves the export's root-absolute asset routes. Export does not rewrite a
+deployment prefix; a `--base-path` option is separate work. Do not add
+inline-script/CSP exceptions, React, hydration or remote assets to exports.
 Without JavaScript, CSS still provides the initial/Auto interface appearance,
 frames keep their server-rendered light sources, and the manual selector stays
 hidden until its behavior is installed. Persisted overrides require the asset.
@@ -180,7 +184,7 @@ theme-dependent color literals outside palette definitions.
 Keep the public overrides `--mokly-accent`, `--mokly-accent-contrast` and
 `--mokly-accent-soft`. Unset overrides receive the current theme's defaults;
 host-supplied values, including inherited values, win in both themes. The
-stylesheet builder must stop depending on one hardcoded Light fallback set.
+stylesheet builder does not depend on one hardcoded Light fallback set.
 Internal tokens and selectors remain private; no general palette API is added.
 
 Embedded theme attributes and CSS stay on each `.mokly-viewer` root. Never
@@ -248,7 +252,7 @@ read the building or viewing machine's system theme; the Auto example uses the
 requested scheme as its deterministic system-theme fixture.
 
 Each artboard draws exactly one scheme control: the registered
-`chrome/appearance-selector` composed into the top bar. It depicts the planned
+`chrome/appearance-selector` composed into the top bar. It depicts the delivered
 standalone control and has no authored transitions. The depicted top bar
 component owns it, so every artboard drawing a top bar shows it rather than
 opting in. The depicted screen header carries the viewport control only, with no
@@ -285,14 +289,15 @@ single-control correction. `design-browse-dark-scheme`,
 `design-browse-light-only` and `design-review-dark-scheme` are removed:
 `design-browse-screen`, `design-browse-details-screen` and
 `design-review-changed` render in both schemes and subsume them. No design
-artboard depicts a scheme control, so `controls/view-controls` carries none and
-the design catalogue authors no scheme link pairs. Update inventories, style
-ownership and example documentation, and keep notes outside the screens.
+artboard depicts a separate preview-scheme control, so `controls/view-controls`
+carries none and the design catalogue authors no scheme link pairs. Update
+inventories, style ownership and example documentation, and keep notes outside
+the screens.
 
 ## Required Verification
 
-- For the mockups, use the existing preview toggle to switch Dark → Light → Dark
-  on the same entry in both viewports. Assert actual fragment URLs, computed
+- For the mockups, use the standalone Appearance control to switch Dark → Light
+  → Dark on the same entry in both viewports. Assert actual fragment URLs, computed
   artboard colors, the depicted previews' treatment, the light-only caption and
   the absence of a second scheme control. Validate all four generated variants.
 - Test effective-appearance resolution, preference normalization, the `scheme`

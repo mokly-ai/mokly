@@ -138,7 +138,7 @@ Sixty-eight design screens use `colorSchemes: ["light"]`: they draw the
 Mokly shell, including the existing dark-selection examples. The fifteen
 appearance screens instead inherit the catalogue's light/dark settings, so
 `mokly build` writes a Light and a Dark file for each of their viewports and
-Browse's own preview control moves between them. The two product
+the outer Appearance control moves between them. The two product
 screens inherit the same settings and prove dark generation.
 Design headers retain the approved screen-stack logo: 17px overlapping mobile
 and desktop outlines in a 24px sage square. Desktop keeps the navigation resize
@@ -241,12 +241,12 @@ frames navigate between authored artboards; their pictured comparison controls
 do not request actual comparison snapshots. There is no separate Review section
 or comparison CLI command.
 
-`design/browse/appearance/` designs the planned Auto/Light/Dark interface
+`design/browse/appearance/` records the delivered Auto/Light/Dark interface
 appearance for standalone Browse. `overview.html` is its canonical screen;
 `states/` owns two more and `workspaces/` and `status/` own five each. Every one
 of them is an ordinary dual-scheme entry, so `mokly build` writes a Light and a
-Dark file per viewport and Browse's own Light/Dark preview control switches the
-mockup you are looking at, at the same route. The renderer passes
+Dark file per viewport and Browse's Appearance control switches the mockup you
+are looking at, at the same route. The renderer passes
 `input.colorScheme` to the shared artboard scope, which stamps
 `data-mbk-appearance`; there is no second theme mechanism, no extra control and
 no script inside a mockup.
@@ -265,8 +265,9 @@ palette, and a comparison in Difference mode still blends on a base taken from
 the compared screens. The approved swatches and their contrast are the
 [semantic palette](../../docs/protocol/mokly-viewer-palette.md); the behavior
 is the [appearance contract](../../docs/protocol/mokly-viewer-appearance.md).
-The shipped viewer is still light-only around previews, and the embedded viewer
-keeps its host-supplied theme alongside its own preview controls.
+The shipped standalone viewer uses the depicted one-control model, while the
+embedded viewer keeps its host-supplied theme alongside its own preview
+controls.
 
 The shell designs now include `design/browse/pages/` (document, details,
 and removal) and `design/browse/publication/` (current catalogue and Changes).

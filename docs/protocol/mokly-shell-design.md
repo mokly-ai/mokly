@@ -23,9 +23,8 @@ Auto/Light/Dark interface appearance is designed in the
 `design/browse/appearance/` mockups and specified by the
 [semantic palette](./mokly-viewer-palette.md). The shell now carries that
 palette in both appearances, selected on a viewer root, and an embedded host
-chooses one with `theme`. A standalone document has no Appearance control yet,
-so the shell tokens and preview-scheme behavior below describe what a
-standalone reader sees today.
+chooses one with `theme`. A standalone document carries the delivered Appearance
+control at every width and uses it for both the shell and the previews.
 
 The page and publication designs are now recorded in the example catalogue.
 Their runtime implementation is tracked in the linked plans. Whole documents
@@ -116,17 +115,16 @@ Additional owning groups keep each new page at no more than five screens:
   to its own three aggregate outcomes.
 - `design/browse/appearance/overview.html` is the canonical appearance screen;
   the `states/` group beneath it owns two screens and `workspaces/` and
-  `status/` own five each. Their previews follow the artboard. They specify the planned Auto/Light/Dark interface
-  appearance from [viewer appearance](./mokly-viewer-appearance.md), which the
-  implemented shell does not offer yet; their preview colour-scheme behavior is
-  the implemented behavior recorded below. Every one of them renders in both
-  schemes, so the existing preview control moves between its two generated
+  `status/` own five each. Their previews follow the artboard. They specify the
+  delivered Auto/Light/Dark interface appearance from
+  [viewer appearance](./mokly-viewer-appearance.md). Every one of them renders in
+  both schemes, so the outer Appearance control moves between its two generated
   files at the same route. Existing light-interface routes keep their ids.
 
 `design-browse-screen`, `design-browse-details-screen` and the whole Welcome
 comparison family — `design-changes-current`, `design-changes-overlay`,
 `design-review-changed` and `design-review-difference` — also render in both
-schemes, so the existing preview control shows the selected Welcome, the
+schemes, so the outer Appearance control shows the selected Welcome, the
 light-only Details subject and every comparison mode under either appearance at
 their own routes. A comparison family publishes the same schemes for every
 member, so switching mode inside a dark catalogue never lands on a light
@@ -180,19 +178,18 @@ chrome family is neutral and sage-tinted:
 | `--chrome-surface`       | `#ffffff`                        | Cards, bars, panes       |
 | `--chrome-ink`           | `#1a1d1c`                        | Primary text             |
 | `--chrome-ink-2`         | `#4a4f4d`                        | Secondary text           |
-| `--chrome-muted`         | `#7d8480`                        | Tertiary and labels      |
+| `--chrome-muted`         | `#676e6a`                        | Tertiary and labels      |
 | `--chrome-border`        | `#e3e5e0`                        | Hairline borders         |
 | `--chrome-border-strong` | `#c8ccc4`                        | Frame and strong borders |
+| `--chrome-control-edge`  | `#868e88`                        | Interactive boundaries   |
 | `--chrome-accent`        | `#2a4733`                        | Deep-accent prose links  |
 | `--chrome-shadow`        | `0 30px 90px rgba(20,28,22,.14)` | Overlay elevation        |
 
-The appearance mockups already draw two corrected Light values that the shipped
-shell adopts in its runtime milestone: `--chrome-muted` becomes `#676e6a`, and
-control outlines, grips and field borders move to a new `--chrome-control-edge`
-`#868e88` so `--chrome-border-strong` is left to device and pane frames. Both
-are recorded, with their contrast, in the
-[semantic palette](./mokly-viewer-palette.md). Until that milestone the values
-in the table above are what the shell ships.
+The shipped shell and appearance mockups share the two corrected Light values:
+`--chrome-muted` is `#676e6a`, and control outlines, grips and field borders use
+`--chrome-control-edge` `#868e88` so `--chrome-border-strong` remains limited to
+device and pane frames. Both are recorded, with their contrast, in the
+[semantic palette](./mokly-viewer-palette.md).
 
 Typography is **Inter** (a variable font packaged with the shell and served at
 `/__mokly/fonts/InterVariable.woff2` under its SIL OFL license) via
@@ -220,7 +217,7 @@ scrollable region scrolls internally:
   The decorative mark
   inherits the accent-contrast color and uses two-unit strokes on a 24-unit
   viewBox, with the mobile outline in front and a gap in the desktop outline
-  at the overlap. The bar carries no preview mode switch; the planned
+  at the overlap. The bar carries no preview mode switch; the delivered
   Auto/Light/Dark Appearance control is the one setting that belongs here.
   A query splits into terms: every `tag:<tag>`
   term matches only rows whose entry declares that tag, and the remaining words

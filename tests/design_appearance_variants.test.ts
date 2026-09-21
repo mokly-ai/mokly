@@ -2,8 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { parse } from "parse5";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 
 import { DUAL_SCHEME_SAMPLES } from "../examples/basic/entries/design/library/metadata.js";
+import { AppearanceSelect } from "../packages/viewer/dist/shell/appearance.js";
 
 import {
   attribute,
@@ -128,6 +131,35 @@ function countClass(html: string, className: string): number {
     (attribute(node, "class") ?? "").split(/\s+/u).includes(className),
   ).length;
 }
+
+function appearanceDataAttributes(html: string): string[] {
+  const control = elements(parse(html), (node) =>
+    (attribute(node, "class") ?? "").split(/\s+/u).includes("mbk-appearance"),
+  )[0];
+  assert.ok(control, "Appearance control");
+  return [
+    ...new Set(
+      elements(control, () => true).flatMap((node) =>
+        node.attrs
+          .map(({ name }) => name)
+          .filter((name) => name.includes("appearance")),
+      ),
+    ),
+  ].sort();
+}
+
+test("the depicted and shipped Appearance controls share their data contract", async () => {
+  const depicted = (await appearanceFragments()).find(
+    (view) => view.id === "design-appearance-overview",
+  );
+  assert.ok(depicted);
+  assert.deepEqual(
+    appearanceDataAttributes(depicted.html),
+    appearanceDataAttributes(
+      renderToStaticMarkup(createElement(AppearanceSelect)),
+    ),
+  );
+});
 
 test("an appearance artboard draws exactly one scheme control", async () => {
   for (const view of await appearanceFragments()) {

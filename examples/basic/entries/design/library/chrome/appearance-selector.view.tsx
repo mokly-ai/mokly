@@ -25,19 +25,33 @@ export function AppearanceSelectorView({
   compact,
 }: AppearanceSelectorProps) {
   useDesignStyle("appearance-selector");
-  const Glyph = glyphs[value];
-  const selected = options.find(([id]) => id === value);
   return (
     <label
       className="mbk-appearance"
       data-appearance-value={value}
       data-compact={compact ? "" : undefined}
+      data-mokly-appearance-control=""
       title="Appearance"
     >
-      <Glyph size={15} />
-      <span className="mbk-appearance-value">{selected?.[1] ?? "Auto"}</span>
+      {options.map(([id, label]) => {
+        const Glyph = glyphs[id];
+        return (
+          <span
+            className="mbk-appearance-option"
+            data-appearance-option={id}
+            key={id}
+          >
+            <Glyph size={15} />
+            <span className="mbk-appearance-value">{label}</span>
+          </span>
+        );
+      })}
       <ChevronDownIcon size={12} />
-      <select aria-label="Appearance" defaultValue={value}>
+      <select
+        aria-label="Appearance"
+        data-mokly-appearance-select=""
+        defaultValue={value}
+      >
         {options.map(([id, label]) => (
           <option key={id} value={id}>
             {label}

@@ -73,7 +73,9 @@ export function initializeBrowseShell(
     displayedUrl = new URL(win.location.href);
   };
   const diffs = installDiffs(doc, win);
-  installBrowseAppearance(doc, win, diffs.update);
+  const appearance = new win.AbortController();
+  installBrowseAppearance(doc, win, appearance.signal);
+  win.addEventListener("pagehide", () => appearance.abort(), { once: true });
   let workspace = installWorkspace(doc, win, diffs.update, rememberDocument);
   const persistScroll = (): void => {
     win.history.replaceState(

@@ -1,16 +1,14 @@
 # Viewer Dark Mode
 
-Status: in progress; the documentation and mockup milestones through 2M, the
-shared runtime in Milestone 3 and the standalone startup asset in Milestone 4
-are complete. The built-in preview toggle switches every dual-scheme mockup,
-the standalone design shows one Appearance control on every top bar, the
-legacy head-band scheme depictions are consolidated, the branch carries the
-merge of `origin/main`, the Node compatibility policy is enforced, the lint
-gate ignores git-ignored scratch, and the palette contract and startup asset
-boundaries are enforced. Milestone 5 (standalone controls) is next. The user
-asked on 2026-09-20 for UI milestones to go to Opus 5 and non-UI milestones to
-Codex, each checked by the parent session. The implementation PR's merge is
-this plan's completion boundary.
+Status: implementation complete; the documentation and mockup milestones
+through 2M and delivery Milestones 3 through 6 are complete. The built-in
+preview toggle switches every dual-scheme mockup, the standalone catalogue has
+one Auto/Light/Dark Appearance control, embedded viewers accept a host-owned
+theme, and the runtime, palette, startup asset and verification boundaries are
+enforced. The user asked on 2026-09-20 for UI milestones to go to Opus 5 and
+non-UI milestones to Codex, each checked by the parent session. This plan stays
+under Active until the implementation PR merges; that merge is the plan's
+completion boundary.
 
 Give `@mokly/viewer`, local Serve and static exports a complete Auto/Light/Dark
 appearance. The [appearance contract](../docs/protocol/mokly-viewer-appearance.md)
@@ -916,35 +914,47 @@ without fixing them.
       status and replace the duplicated status prose in the viewer and
       palette protocols with short references.
 
-## Milestone 6: Verify, commit, push and review
+## Milestone 6: Verify, commit, push and review (complete)
 
 Deliver a tested change with accurate documentation and a complete review diff.
 
-- [ ] Run the appearance matrix in `tests/browser`. Standalone: Auto, Light,
+- [x] Run the appearance matrix in `tests/browser`. Standalone: Auto, Light,
       Dark and a `scheme` pin against mixed and light-only catalogues at
       mobile/desktop widths, including component samples and comparisons.
       Embedded: Light/Dark theme × Light/Dark preview, Auto and explicit
       overrides, same-origin/postMessage frames, two roots, SSR,
       loading/error/retry, native controls and active inspection.
-- [ ] Smoke the running server via `npm run dev`, including watched/full reloads,
+- [x] Smoke the running server via `npm run dev`, including watched/full reloads,
       navigation, Props and each comparison mode. Smoke exports hosted at root
       and subpaths, slow startup/first paint, storage denial and JavaScript off.
       Save screenshots under `.context/` and inspect the rendered result.
-- [ ] Exercise clean packed React and SSR consumers using the existing package
+- [x] Exercise clean packed React and SSR consumers using the existing package
       smoke workflow; confirm explicit Light retains the established layout and
       approved colors, and embedded preview output stays independent of theme.
-- [ ] Update delivered API examples and current-status wording in the package
+- [x] Update delivered API examples and current-status wording in the package
       and workspace READMEs, viewer/runtime/shell protocols and example docs.
       Keep the three public accent overrides documented. Prepare the plan-index
       completion transition for the implementation PR's merge.
-- [ ] Run `npm run build`, `npm run example:build`, `npm run example:check` and
+- [x] Close the Milestone 5 review findings: correct the appearance
+      protocol's subpath claim to state that exports emit root-absolute URLs
+      and a subpath deployment needs a prefix-stripping mount (a `--base-path`
+      export option is separate work for its own plan); give the Browse
+      appearance hook an `AbortSignal` and clear `window.onAppearance` on
+      abort, matching the other client installers; drop the duplicate
+      `updateDiffs()` call from the hook if the workspace handler already
+      covers every document with diff panes, otherwise from the handler; and
+      align the mockup `chrome/appearance-selector` view and stylesheet with
+      the shipped three-face structure, adding a test that the mockup and the
+      shell component share the same data attributes so structural drift is
+      detected.
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check` and
       relevant focused tests, then `cargo xtask check`. Require all checks to
       pass; record any real environment blocker and checks already completed.
-- [ ] After checks pass, inspect the complete diff and generated output against
+- [x] After checks pass, inspect the complete diff and generated output against
       `origin/main`; run `git add -A`, commit using Conventional Commits with a
       title of at most 50 characters, and push the current branch. Include all
       newly created files and regenerated artifacts in the commit and push.
-- [ ] Only after the push, use
+- [x] Only after the push, use
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`, including staged,
       unstaged and untracked files. Report numbered findings with severity,

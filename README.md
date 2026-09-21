@@ -19,11 +19,14 @@ Browse shell in React hosts using the public
 [catalogue read model](./docs/protocol/mokly-catalogue.md). It provides controlled
 screen and saved-variant selection, slots, inspection events, exact multi-instance
 highlighting, host-owned instance markers, an imperative handle and
-[frame adapters](./docs/protocol/mokly-frame-adapter.md). Serve and export use its
-static renderer and vanilla enhancements; exported browsers contain no React.
+[frame adapters](./docs/protocol/mokly-frame-adapter.md). Embedded hosts choose an
+independent Auto/Light/Dark interface with `theme`; standalone Browse supplies one
+Appearance selector that changes its interface and previews together. Serve and
+export use the viewer's static renderer and vanilla enhancements; exported
+browsers contain no React.
 Both packages build, release and are tested together. The viewer publishes before
 the CLI, which depends on its exact version. Viewer 0.1.0 and CLI 0.10.0 were
-published together; local Serve/export presentation remains unchanged.
+published together.
 Viewer inspection references identify an exact viewport, scheme, variant and
 flow step. The viewer positions marker content without owning comments or exposing
 raw geometry. Frame replacement cancels picking and resets inspection; host
@@ -310,7 +313,8 @@ picker and the details inspector's chips enter for you, hierarchy-derived
 breadcrumbs with hash-prefixed copyable ID chips, realistic browser chrome with
 an expand-to-overlay toggle, phone chrome whose screen reserves a clock,
 signal, Wi-Fi, and battery status band above the mobile fragment, header
-viewport controls, a Light/Dark switch when the catalogue has dark fragments,
+viewport controls, one Auto/Light/Dark Appearance selector that also sets the
+preview scheme,
 use-case flows, a collapsed-by-default details inspector that remembers its
 disclosure across routes and reloads, id redirects, and watched updates. The
 Changes filter compares
@@ -359,7 +363,8 @@ the same screen or saved variant. Available snapshots reuse their loaded result;
 published catalogues need no renewal requests.
 Published catalogues with Changes enabled prepare snapshots during publishing, then load
 and render them only after a diff option is selected. Comparisons
-stay in the same screen, with mobile/desktop and light/dark controls, secondary
+stay in the same screen, with mobile/desktop controls and the catalogue-wide
+Appearance setting, secondary
 impact evidence, and a refresh option. Loading and failure states keep the
 catalogue available and offer a retry. Navigation and reload return to Current.
 Added entries show their current preview and Added status without comparison
@@ -1051,14 +1056,16 @@ All 78 design screens reuse the 16 registered components in
 provides 63 saved variants, local prop controls, real usage and component-owned
 change attribution. See the [shared design library guide](./examples/basic/entries/design/library/README.md).
 
-**Browse shell → Appearance** designs the planned Auto/Light/Dark appearance for
-standalone Browse, where one control sets the chrome and the screens it shows
-together. Those screens are authored as ordinary Light and Dark renders, so the
-catalogue's existing preview control switches the mockup you are looking at.
+**Browse shell → Appearance** records the delivered Auto/Light/Dark appearance
+for standalone Browse, where one control sets the chrome and the screens it
+shows together. Those screens are authored as ordinary Light and Dark renders,
+so the outer shell's Appearance selector switches the mockup you are looking at
+with the rest of the catalogue.
 Their swatches and contrast live in the
 [semantic palette](./docs/protocol/mokly-viewer-palette.md) and their behavior in
-the [appearance contract](./docs/protocol/mokly-viewer-appearance.md); the
-shipped viewer is still light-only around previews.
+the [appearance contract](./docs/protocol/mokly-viewer-appearance.md). Embedded
+viewers take `theme` independently from their preview selection; Serve and export
+show the standalone Appearance control on every route.
 
 The design mockups use `MockLink` for supported navigation and state transitions;
 the two example buttons demonstrate `MockLink asChild`. See the

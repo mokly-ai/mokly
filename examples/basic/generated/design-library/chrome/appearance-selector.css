@@ -31,6 +31,21 @@
   flex-shrink: 0;
 }
 
+.mbk-appearance-option {
+  align-items: center;
+  display: none;
+  gap: 6px;
+}
+
+.mbk-appearance[data-appearance-value="auto"]
+  > [data-appearance-option="auto"],
+.mbk-appearance[data-appearance-value="light"]
+  > [data-appearance-option="light"],
+.mbk-appearance[data-appearance-value="dark"]
+  > [data-appearance-option="dark"] {
+  display: inline-flex;
+}
+
 .mbk-appearance-value {
   font-size: 12px;
   font-weight: 600;

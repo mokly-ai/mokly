@@ -47,9 +47,9 @@ when the historical primary file is absent, never when it is invalid.
   public inventory v1 beside the private manifest.
 - [Embeddable viewer](./mokly-viewer.md) — approved `@mokly/viewer` API and
   unchanged local shell extraction.
-- [Viewer appearance](./mokly-viewer-appearance.md) — planned Auto/Light/Dark:
-  one standalone Appearance control, and the embedded viewer's host-supplied
-  theme beside its own preview controls.
+- [Viewer appearance](./mokly-viewer-appearance.md) — implemented
+  Auto/Light/Dark: one standalone Appearance control, and the embedded viewer's
+  host-supplied theme beside its own preview controls.
 - [Viewer semantic palette](./mokly-viewer-palette.md) — approved Light and Dark
   swatches, their recorded contrast and the Light corrections they required.
 - [Viewer markers and multi-instance highlights](./mokly-viewer-markers.md) —

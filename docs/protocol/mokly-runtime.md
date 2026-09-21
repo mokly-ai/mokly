@@ -181,6 +181,12 @@ CLI dependency. The appearance asset is present before any shell markup
 references it and is inert unless a standalone document opts in; comparison
 snapshots carry no shell scripts. The mobile drawer does not expose the
 separator.
+
+Standalone shell documents reference client and shell assets with root-absolute
+URLs. A root deployment serves the export directly. A deployment beneath a URL
+prefix must use a hosting mount that strips that prefix and resolves the
+root-absolute asset routes from the export; the exporter does not currently
+rewrite a deployment prefix. A `--base-path` export option is separate work.
 Consumer brand chrome does not appear in the shell. A small set of documented
 CSS custom properties may tune the shell accent without replacing its
 structural styles. The shell serves its packaged Inter variable font from

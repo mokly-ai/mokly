@@ -23,11 +23,19 @@ interface AppearanceHost {
 export function installBrowseAppearance(
   doc: Document,
   win: Window & typeof globalThis,
-  updateDiffs: () => void,
+  signal: AbortSignal,
 ): void {
-  (win as AppearanceHost).onAppearance = (_theme, scheme) => {
+  const host = win as AppearanceHost;
+  const apply = (_theme: string, scheme: BrowseColorScheme): void => {
     setColorScheme(doc, scheme);
     doc.dispatchEvent(new win.Event(APPEARANCE_EVENT));
-    updateDiffs();
   };
+  host.onAppearance = apply;
+  signal.addEventListener(
+    "abort",
+    () => {
+      if (host.onAppearance === apply) host.onAppearance = undefined;
+    },
+    { once: true },
+  );
 }

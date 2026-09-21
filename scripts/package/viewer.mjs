@@ -22,9 +22,24 @@ const props = {catalogue, baseUrl: "https://artifact.example", defaultSelection:
 const html = renderViewer(props);
 assert.equal(html, renderToStaticMarkup(createElement(MoklyViewer, props)));
 assert.ok(html.includes(catalogue.screens[0].title));
+const themedProps = {...props, defaultSelection: {...props.defaultSelection, colorScheme: "dark"}};
+const lightHtml = renderViewer({...themedProps, theme: "light"});
+const darkHtml = renderViewer({...themedProps, theme: "dark"});
+assert.match(lightHtml, /data-mokly-theme="light"/);
+assert.match(lightHtml, /data-mokly-color-scheme="dark"/);
+assert.equal(
+  lightHtml.replace('data-mokly-theme="light"', 'data-mokly-theme="dark"'),
+  darkHtml,
+);
 assert.equal(typeof sameOriginAdapter().mount, "function");
 assert.equal(typeof postMessageAdapter({frameOrigin: "https://frames.example"}).mount, "function");
-assert.ok(fs.readFileSync(new URL(import.meta.resolve("@mokly/viewer/styles.css")), "utf8").includes("@scope (.mokly-viewer)"));
+const styles = fs.readFileSync(new URL(import.meta.resolve("@mokly/viewer/styles.css")), "utf8");
+assert.ok(styles.includes("@scope (.mokly-viewer)"));
+for (const declaration of [
+  "--chrome-bg: #f4f4f1;",
+  "--chrome-surface: #ffffff;",
+  "--chrome-ink: #1a1d1c;",
+]) assert.ok(styles.includes(declaration), declaration);
 `;
   const filename = path.join(root, "verify-viewer.mjs");
   await fs.writeFile(filename, script);

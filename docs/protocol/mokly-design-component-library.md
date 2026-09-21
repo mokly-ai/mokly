@@ -16,7 +16,7 @@ output; the existing shell selects one saved variant at a time.
 Group indexes are pure galleries, containing at most five component entries.
 Samples are light-only except the appearance selector and the top bar that
 composes it, whose own subject is the catalogue's appearance: those render in
-both schemes so the existing preview control switches them like the appearance
+both schemes so the outer Appearance control switches them like the appearance
 screens. A dual-scheme sample derives the props whose own subject is the scheme
 from its render context rather than pinning them in its fixture, so the top
 bar's samples name the scheme they rendered for; a fixture sets such a prop only
