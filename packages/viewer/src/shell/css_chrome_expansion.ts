@@ -99,6 +99,16 @@ body.frame-expanded::before {
   box-shadow: var(--chrome-shadow);
 }
 
+.mbk-frag {
+  color-scheme: light;
+}
+
+body[data-mokly-color-scheme="dark"]
+  :is(.mbk-frame-wrap, .mbk-flow-screen):not([data-color-scheme-fallback])
+  .mbk-frag {
+  color-scheme: dark;
+}
+
 body[data-mokly-color-scheme="dark"]
   :is(.mbk-frame-wrap, .mbk-flow-screen):not([data-color-scheme-fallback])
   .phone-screen {

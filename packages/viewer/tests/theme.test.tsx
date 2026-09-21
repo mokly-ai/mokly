@@ -134,3 +134,42 @@ test("an inherited accent override survives in both appearances", () => {
     );
   }
 });
+
+test("every frame carries its own preview color-scheme", () => {
+  const css = SHELL_CSS.replace(/\s+/g, " ");
+  // A frame declares the scheme of what it shows, so a native control or
+  // scrollbar inside a preview follows the preview and not the interface.
+  assert.ok(
+    css.includes(".mbk-frag { color-scheme: light; }"),
+    "a frame has no default preview color-scheme",
+  );
+  assert.ok(
+    css.includes(
+      'body[data-mokly-color-scheme="dark"] ' +
+        ":is(.mbk-frame-wrap, .mbk-flow-screen):not([data-color-scheme-fallback]) " +
+        ".mbk-frag { color-scheme: dark; }",
+    ),
+    "a dark preview frame does not declare dark",
+  );
+  // It comes from the stylesheet, not an assignment after the element exists,
+  // so it is in force before the frame loads and survives a source swap.
+  assert.doesNotMatch(SHELL_CSS, /style="[^"]*color-scheme/u);
+});
+
+test("a comparison canvas takes an opaque base from its preview scheme", () => {
+  const css = SHELL_CSS.replace(/\s+/g, " ");
+  assert.ok(
+    css.includes(
+      ".mb-pane-doc { width: 100%; background: var(--mbk-screen-bg); }",
+    ),
+    "a comparison canvas has no opaque base",
+  );
+  assert.ok(
+    css.includes(
+      'body[data-mokly-color-scheme="dark"] ' +
+        ".mb-pane-doc:not([data-color-scheme-fallback]) " +
+        "{ background: var(--mbk-dark-screen-bg); }",
+    ),
+    "a dark comparison canvas keeps the light base",
+  );
+});

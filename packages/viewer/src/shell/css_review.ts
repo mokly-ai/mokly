@@ -62,7 +62,8 @@ export const SHELL_REVIEW_CSS = `
   font-size: 12px;
   margin: 0 0 8px;
 }
-.mb-pane-doc { width: 100%; }
+.mb-pane-doc { width: 100%; background: var(--mbk-screen-bg); }
+body[data-mokly-color-scheme="dark"] .mb-pane-doc:not([data-color-scheme-fallback]) { background: var(--mbk-dark-screen-bg); }
 .mb-pane-missing {
   display: grid;
   place-content: center;
