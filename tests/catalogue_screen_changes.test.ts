@@ -9,6 +9,7 @@ import { projectCatalogue } from "../src/catalogue/projection.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
+import { publicShellContext } from "./helpers/public_shell.js";
 import { screenVariantEntrySource } from "./helpers/screen_variant_fixture.js";
 
 test("screen-only live view states use real material attribution without snapshots", async (t) => {
@@ -127,11 +128,12 @@ test("a committed baseline places a removed variant under its parent row", async
     changes.removedEntries,
   );
 
-  const html = homePage(catalogue, {
+  const context = {
     base: "main",
     changedRoutes: changes.changedRoutes,
     updateVersion: 1,
-  });
+  };
+  const html = homePage(catalogue, publicShellContext(catalogue, context));
 
   assert.match(
     html,

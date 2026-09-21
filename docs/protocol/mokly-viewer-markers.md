@@ -117,6 +117,14 @@ This prevents an asynchronous stale snapshot from losing a geometry wake-up.
 Replacement or disposal invalidates the generation, cancels scheduled work and
 prevents late results, errors or callbacks from reaching the host.
 
+The hydrated shell owns one frame registry per shell root. Workspace inspection
+labels and host markers acquire that registry's single geometry scheduler and
+contribute their demanded sessions to one deduplicated set. They therefore
+share a boundary read when both target the same session. Validated usage
+adoption increments the retained session's usage revision; the scheduler
+supersedes unresolved work for the prior revision before refreshing. A late old
+success or failure cannot delay, replace or report against the fresh snapshot.
+
 ## Multi-Instance Highlight
 
 `highlightInstances(refs)` highlights the exact union of all referenced Current

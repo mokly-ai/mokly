@@ -4,7 +4,9 @@ import { startStaticFixture } from "./static_fixture.js";
 
 let site: Awaited<ReturnType<typeof startStaticFixture>>;
 test.beforeAll(async () => {
-  site = await startStaticFixture(false, true);
+  site = await startStaticFixture({
+    noChanges: true,
+  });
 });
 test.afterAll(async () => {
   await site?.close();

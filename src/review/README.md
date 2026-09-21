@@ -27,6 +27,14 @@ mockups root. Historical reads reject non-regular files and do not resolve alias
 through the current filesystem.
 `compare.ts` builds complete comparisons; `selected.ts` retains only a requested
 view's checked snapshot closure. Neither reader executes historical code.
+`page_preview.ts` captures one page selected from an accepted removed-entry
+snapshot. Its caller supplies the pinned `BaselineReader`; the provider verifies
+the page against that snapshot's historical manifest, then reuses
+`GitReviewAssetReader`, `SelectedAssetReader` and `copySnapshotDependencies` for
+the same confinement, source exclusions, regular-file checks, transitive
+resource traversal and 64 MiB bound as screen panes. It returns typed
+`RemovedPagePreview` metadata plus the baseline files; the artifact renderer adds
+strictly validated `preview.json` without creating page records in `review.json`.
 
 Server classification and export use the same interfaces. Export pins only
 repository evidence and retains the same baseline reader, including its optional
@@ -228,7 +236,30 @@ cargo xtask check
 Key code:
 
 - `compare.ts`, `screen_compare.ts`: screen comparisons and retained artifacts.
+- `page_preview.ts`: typed before-only page capture from accepted removal state.
 - `component_classification.ts`, `component_view.ts`: component ownership policy.
+  `compareComponentView` has two paths: an unchanged decision that settles a
+  paired view only when marker-retaining documents, routes, and usage topology
+  agree, followed by head resource discovery in committed mode or independent
+  discovery for both sides in derived mode, and the complete comparison
+  (projection, range validation, CSS analysis, implementation diffing) for
+  views that can differ. Entry-owned props may differ on the fast path and
+  invocation source metadata is ignored; every nested input or
+  ownership-topology difference falls through. One-sided views
+  validate current or historical ranges before normalization. Both paths
+  produce identical records for valid builder output. Identical handcrafted
+  malformed ownership markers are outside that equivalence guarantee because
+  views without ownership text edits do not repeat range validation. Views with
+  instances, styles, or entry-owned slots validate ranges while preparing their resource projection. The
+  internal `useFastPath` classification input and trailing `compareReview`
+  options object exist only for differential tests and default to enabled. The decision rule lives in the
+  [component change attribution contract](../../docs/protocol/mokly-component-changes.md#unchanged-view-decision).
+  Views with instances, styles, or entry-owned slots additionally run the same ownership projection
+  and excluded-resource discovery as the complete comparison. This proves
+  resources that HTML parsing may discard in contexts such as `template` or
+  `select`, including siblings exposed when component implementation text is
+  removed. Views without ownership text edits use actual-document evidence
+  alone.
 - `component_resource_attribution.ts`: actual-invocation CSS ownership and entry
   evidence aggregation without inventing saved variants.
 - `assets.ts`, `component_resources.ts`, `resource_graph.ts`: confined reads and

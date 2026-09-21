@@ -136,8 +136,20 @@ export function validateCatalogueReferences(model: CatalogueReadModel): void {
       }
     }
   }
-  for (const { ancestors } of model.removedEntries)
+  for (const { ancestors, entry, preview } of model.removedEntries) {
     unique(ancestors.map((ancestor) => ancestor.id));
+    if (preview) {
+      require(Boolean(model.comparisonUrl), "preview requires comparison URL");
+      require((preview.kind === "screen" && entry.kind === "screen") ||
+        (preview.kind === "page" &&
+          entry.kind === "page"), "preview kind must match removed entry");
+      if (preview.kind === "page") {
+        const generation = model.comparisonUrl!.slice(0, -"review.json".length);
+        require(preview.path ===
+          `${generation}pages/${entry.route}.json`, "page preview must match comparison generation and route");
+      }
+    }
+  }
   if (model.changesStatus !== "ready")
     require(model.comparisonUrl === null &&
       model.removedEntries.length ===

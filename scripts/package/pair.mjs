@@ -41,7 +41,20 @@ export async function inspectPackagePair(cli, viewer) {
   validateVersionPair(cliMetadata, viewerMetadata);
 }
 
-export async function checkPackagePair(repositoryRoot) {
+export async function readPackagePair(directory) {
+  const read = async (name) => {
+    const root = path.resolve(directory, name);
+    const report = JSON.parse(
+      await fs.readFile(path.join(root, "pack-report.json"), "utf8"),
+    );
+    if (path.basename(report.filename) !== report.filename)
+      throw new Error("invalid archive filename");
+    return { report, archivePath: path.join(root, report.filename) };
+  };
+  return { cli: await read("cli"), viewer: await read("viewer") };
+}
+
+export async function checkPackagePair(repositoryRoot, suppliedPair) {
   const cli = await readPackageManifest(repositoryRoot);
   const viewerRoot = path.join(repositoryRoot, "packages/viewer");
   const viewer = await readPackageManifest(viewerRoot);
@@ -57,6 +70,8 @@ export async function checkPackagePair(repositoryRoot) {
     validatePackageManifest(metadata, metadata.name);
     validateExportFiles(metadata, await inspectDryRun(root, metadata.name));
   }
+  if (suppliedPair)
+    return await inspectPackagePair(suppliedPair.cli, suppliedPair.viewer);
   const temporary = await fs.mkdtemp(
     path.join(os.tmpdir(), "mokly-package-check-"),
   );

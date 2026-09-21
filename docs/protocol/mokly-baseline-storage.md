@@ -129,16 +129,18 @@ including spaces, quotes, percent signs and shell metacharacters. Other Windows
 recipes must name native executables or run JavaScript explicitly with Node;
 Mokly does not enable a shell to interpret arbitrary batch scripts.
 
-POSIX commands run in an owned process group; cancellation sends TERM then KILL
-after one second. Windows commands belong to a non-inheritable, kill-on-close
-Job Object created through the package's existing native bridge. A Node gate
-worker is assigned before it receives the command, preventing an assignment race
-with fast descendants. Assignment or native-bridge failures fail closed before
-historical code starts. Windows cancellation terminates the entire job even if
-the immediate launcher has exited; disposal waits until the job has no active
-processes and all captured pipes close. Successful commands also dispose their
-job, terminating any silent background descendants. If the owning Mokly process
-exits abruptly, Windows closes its job handle and terminates the owned tree.
+POSIX commands run beneath a Node gate worker in an owned process group;
+cancellation sends TERM then KILL after one second. When verification ownership
+is inherited, the group registers atomically before the gate releases the
+command. Windows commands belong to a non-inheritable, kill-on-close Job Object
+created through the package's existing native bridge. The same gate worker is
+assigned before it receives the command. Registration, assignment or
+native-bridge failures fail closed before historical code starts. Windows
+cancellation terminates the entire job even if the immediate launcher has
+exited; disposal waits until the job has no active processes and all captured
+pipes close. Successful commands also dispose their scope, terminating any
+silent background descendants. If the owning Mokly process exits abruptly,
+Windows closes its job handle and terminates the owned tree.
 
 ## Crash Leftovers
 

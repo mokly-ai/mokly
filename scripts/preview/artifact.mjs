@@ -10,6 +10,7 @@ import {
   STAGED_DEPLOYMENT_ID,
 } from "../../dist/export/shell_metadata.js";
 import { stageExport } from "../../dist/export/stage.js";
+import { advertisePublicationShell } from "../../dist/publication/shell_previews.js";
 
 import { comparisonMetadata } from "./comparisons.mjs";
 
@@ -41,6 +42,7 @@ export async function stagePreviewArtifact(
   manifest,
   removed,
   comparison,
+  removedPreviews,
 ) {
   const files = new Map();
   for (const name of (await ownedEntries(stage)).files)
@@ -68,9 +70,20 @@ export async function stagePreviewArtifact(
     if (bytes === undefined)
       throw new Error(`Missing captured preview shell: ${source}`);
     const descriptor = { ...delivery, canonicalPath };
+    const captured = Buffer.from(bytes).toString("utf8");
     files.set(
       name,
-      markCapturedShell(name, Buffer.from(bytes).toString("utf8"), descriptor),
+      markCapturedShell(
+        name,
+        advertisePublicationShell(
+          name,
+          captured,
+          canonicalPath,
+          removed,
+          removedPreviews,
+        ),
+        descriptor,
+      ),
     );
     shells.set(name, descriptor);
   };

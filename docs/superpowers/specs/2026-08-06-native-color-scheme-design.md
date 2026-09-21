@@ -184,8 +184,9 @@ interface ManifestScreenAdditions {
   it works served, in the static preview snapshot, and after watched reloads.
 - A light-only screen under dark selection shows its light fragment and its
   frame label reads `MOBILE — LIGHT ONLY` / `DESKTOP — LIGHT ONLY`.
-- Server-rendered documents default to light; progressive enhancement applies
-  the persisted selection. Without JavaScript, Browse shows light fragments.
+- Server-rendered documents default to light; the hydrated shell applies the
+  persisted selection after its matching first render. Without JavaScript,
+  Browse shows light fragments.
 - Watched-reload state recovery and history restoration persist the scheme
   selection alongside viewport selection in the existing Browse state.
 - The details inspector's Generated row lists dark fragment paths, and a

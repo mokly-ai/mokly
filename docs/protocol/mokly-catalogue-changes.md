@@ -6,8 +6,10 @@ Implemented alongside [Pages in the catalogue](./mokly-pages.md), with removed
 screen-variant metadata and publication implemented through Milestone 4 of the
 [screen variants plan](../../plans/screen-variants.md). Catalogue impact and
 removed-entry metadata are independent of the visual
-[comparison result](./mokly-changes.md). Page verification is tracked in
-[Unified Catalogue Pages](../../plans/unified-catalogue-pages.md).
+[comparison result](./mokly-changes.md). Verification is tracked in
+[Unified Catalogue Pages](../../plans/unified-catalogue-pages.md). Baseline
+documents, ancestry, and delivery descriptors for removed pages are implemented
+by the [removed content previews plan](../../plans/removed-content-previews.md).
 
 ## Shared Metadata Contract
 
@@ -124,7 +126,8 @@ baseline metadata, with the same matching rules as current leaves. The Changes
 count includes each selected removed route once. Current home totals and the
 current tag picker remain based on current entries.
 
-The removed page view shows an explicit missing-current state. Its details show
+The removed page view shows the baseline document from the same snapshot, under
+the [removed previews](./mokly-removed-previews.md) contract. Its details show
 the baseline title, ID, description, tags, dependencies, related docs, and
 root-to-parent breadcrumb labels. Historical ancestors are informational text,
 not collection nodes or links that pretend the old hierarchy still exists.
@@ -146,8 +149,10 @@ screen comparison capture, with safely escaped metadata in the captured shell.
 
 The [publication option](./mokly-publication.md) defaults to current entries
 only: no catalogue-change snapshot is computed or exported. With Changes
-included, retain removed page routes, permitted ID redirects, and missing-current
-views from this model. Pages still generate no visual comparison snapshots.
+included, retain removed page routes, permitted ID redirects, and
+previous-version views from this model. Static delivery packages each removed
+page preview and its historical resource closure in the comparison generation;
+pages still generate no visual comparison records.
 Unsupported unmatched v2/v3 legacy documents stay historical artifact records,
 as specified by [migration](./mokly-page-migration.md).
 

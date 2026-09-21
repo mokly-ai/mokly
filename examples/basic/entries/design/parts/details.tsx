@@ -45,10 +45,12 @@ function DetailsBody({
             {changedViews}
           </MetaRow>
         ) : null}
-        <MetaRow name="tags" label="Tags">
-          <TagChips activeTag={activeTag} tags={metadata.tags} />
-        </MetaRow>
-        {metadata.docs ? (
+        {metadata.tags.length > 0 ? (
+          <MetaRow name="tags" label="Tags">
+            <TagChips activeTag={activeTag} tags={metadata.tags} />
+          </MetaRow>
+        ) : null}
+        {metadata.relatedDocs ? (
           <MetaRow name="related-docs" label="Related docs">
             <span className="mbk-meta-link">Example notes</span>
           </MetaRow>

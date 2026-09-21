@@ -2,11 +2,11 @@
 
 ## Delivery Status
 
-Implementation is tracked by the [derived baselines plan](../../plans/derived-baselines.md).
-Milestones 2–4 implement the separate readers, cached builder, configuration,
-build/check modes and awaiting preparation in Serve/export. Milestone 6 adds the
-`preparing` presentation and the commit-scoped watch lifecycle. Milestone 7 adds
-the detailed rebuild timings and derived scale fixture below.
+Implemented by the completed
+[derived baselines plan](../../plans/derived-baselines.md). Separate readers,
+the cached builder, configuration, build/check modes, Serve/export preparation,
+the `preparing` presentation, the commit-scoped watch lifecycle, detailed
+rebuild timings, and the derived scale fixture are shipped.
 
 ## Purpose
 
@@ -111,6 +111,14 @@ are retained privately across classification and selected comparisons; they
 are not exposed in shell metadata.
 Component resource-byte differences without a changed Git path use a `material`
 reason; `changedPaths` and `dependency` reasons retain actual Git evidence.
+The same reachable-resource byte comparison gates the
+[unchanged view decision](./mokly-component-changes.md#unchanged-view-decision):
+a view with identical normalized documents still takes the complete comparison
+when independently discovered historical and current resource closures differ,
+or when any resource present on both sides has different bytes, even without
+Git evidence. For views with instances, styles, or entry-owned slots, the same independent
+closure and byte proof also applies to ownership-projected documents; actual and
+projected memberships are compared separately.
 
 ## Preparation And Storage
 

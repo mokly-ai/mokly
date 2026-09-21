@@ -20,10 +20,10 @@
   recommendation in the final message so the user can decide what to address
   next
 - When providing review comments or review output, number each review item, give
-  each item a severity, include enough codebase and feature context for readers
-  without prior knowledge, state the impact of not making the change / doing
-  nothing, provide solution options with lettered labels, and clearly state the
-  recommended option
+  each item a severity, and explain it in simple language that assumes the
+  reader has no prior codebase or feature context. State the impact of not
+  making the change / doing nothing, provide solution options with lettered
+  labels, and clearly state the recommended option
 - When suggesting fixes for review items, evaluate whether the direct fix is
   enough or whether a broader rule, test, lint, abstraction, or architectural
   change would prevent the same class of issue from recurring. Do not default to
@@ -160,9 +160,12 @@
   them in the example source tree. Definitions and helpers should compose TSX
   components, not large raw HTML strings or generated static-tree data. When
   changing example entries, the renderer, configuration, or configured styles,
-  run `npm run build`, run `npm run example:build`, commit the matching generated
-  output, run `npm run example:check`, and visually smoke-test the changed pages
-  through `npm run dev`.
+  run `npm run build`, run `npm run example:build`, run
+  `npm run example:check`, and visually smoke-test the changed pages through
+  `npm run dev`. The example uses the default derived output mode: generated
+  HTML and `mokly-manifest.json` under `examples/basic/generated/` are ignored
+  local artifacts validated by `npm run example:check`. Commit only the tracked
+  authored CSS there; never force-add ignored generated output.
 - Do not hand-edit Mokly-owned generated HTML or `mokly-manifest.json` as source
   of truth. Update the entry, imported helper, renderer, or shared component
   first, then regenerate the example catalogue.

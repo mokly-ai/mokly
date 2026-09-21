@@ -5,7 +5,10 @@
 Implemented by the repository-only preview builder. Current catalogues publish
 without review by default; an explicit option includes a pinned comparison.
 [Optional Published Changes](../../plans/optional-published-changes.md) records
-implementation verification. This does not change the npm CLI.
+implementation verification. Changes-enabled previews package removed pages and
+screens as implemented by the
+[removed content previews plan](../../plans/removed-content-previews.md). This
+does not change the npm CLI.
 
 ## Publication Option
 
@@ -148,11 +151,15 @@ performs the same filesystem consistency checks without consulting Git.
 With `--include-changes`, publish the existing All/Changes navigation and screen
 comparison controls, including a zero changed count. Retain removed-screen
 metadata, routes, and comparisons under the existing ID/route precedence rules.
-Render those removed screens with their Removed badge and current empty state,
-without exposing comparison controls.
-Include page impact and removed registered-page missing-current
-states from the [shared catalogue snapshot](./mokly-catalogue-changes.md),
-including flat Changes rows after deleting their parents. Pages have no visual comparisons; screen metadata remains supported.
+Render those removed screens with their Removed badge and no comparison
+controls. Publication packages their baseline views and advertises the
+descriptor defined by [removed previews](./mokly-removed-previews.md), which the
+shell resolves into the previous version.
+Include page impact and removed registered-page states from the
+[shared catalogue snapshot](./mokly-catalogue-changes.md), including flat
+Changes rows after deleting their parents and each removed page's packaged
+preview. Pages have no visual comparisons; screen metadata
+remains supported.
 
 Resolve the effective base and HEAD once, then pin their merge-base commit for
 both route impact and screen comparisons. Capture the current catalogue,
@@ -166,6 +173,10 @@ Package validated comparison data and isolated resources under the existing
 immutable generation path. Browser diff selection loads the packaged result;
 refresh/retry uses that same result. Later Git commits or changes to the base
 ref do not update a published artifact. Only a new publication replaces it.
+After that generation path is known, repository publication uses the consumer
+exporter's typed removed-preview descriptor builder and adds each descriptor to
+the matching captured static shell. This artifact-only step does not advertise
+page paths from the development server used during capture.
 
 An unavailable base, invalid historical manifest, capture inconsistency, or
 comparison failure aborts publication and preserves the previous owned output.

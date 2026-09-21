@@ -13,7 +13,7 @@ for (const name of [
   "index.html",
   "view/screens/home.html",
   "__mokly/shell.css",
-  "__mokly/client/browse.js",
+  "__mokly/client/react-shell.js",
   "__mokly/navigation/delivery.js",
   "__mokly/fonts/InterVariable.woff2",
   "static/extra.txt",

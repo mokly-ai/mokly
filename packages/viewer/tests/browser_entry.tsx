@@ -15,6 +15,8 @@ import type {
   ViewerSelection,
 } from "@mokly/viewer";
 
+import { installFrameHookHarness } from "./frame_hook_harness.js";
+
 interface HostOptions {
   controlled?: boolean;
   accept?: boolean;
@@ -102,6 +104,7 @@ const start = (id: string, options: HostOptions = {}) => {
     options.source !== null &&
     "schemaVersion" in options.source;
   host.props = {
+    viewerId: id,
     catalogue: options.source ?? data.catalogue,
     ...(options.source
       ? objectSource
@@ -149,3 +152,4 @@ const start = (id: string, options: HostOptions = {}) => {
     document.getElementById(id)?.remove();
   },
 };
+installFrameHookHarness();

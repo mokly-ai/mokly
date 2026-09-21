@@ -1,73 +1,105 @@
-import {
-  classifyFrameActivation,
-  type FrameNavigationActions,
-} from "./frame_navigation.js";
-import { localFrameAccess } from "./same_origin_access.js";
+/** Pure classification for logical activations in same-origin frames. */
 
-const attachedFrames = new WeakSet<HTMLIFrameElement>();
-const attachedDocuments = new WeakSet<Document>();
+import { logicalMarker, parseLogicalMarker } from "../navigation/logical.js";
+import { parseBrowsingTarget } from "../navigation/target.js";
 
-/** Attach enhancement to every immediate shell-owned fragment frame. */
-export function attachLocalNavigation(
-  doc: Document,
-  actions: FrameNavigationActions,
-): void {
-  for (const frame of doc.querySelectorAll<HTMLIFrameElement>(
-    "iframe.mbk-frag",
-  )) {
-    if (!attachedFrames.has(frame)) {
-      attachedFrames.add(frame);
-      frame.addEventListener("load", () => attachDocument(frame, actions));
-    }
-    attachDocument(frame, actions);
-  }
+import type { FrameEvent } from "./frame_adapter.js";
+import type { AuthenticatedDocument } from "./same_origin_identity.js";
+
+/** Input facts for one marked frame-link activation. */
+export interface FrameActivationCandidate {
+  altKey: boolean;
+  button: number;
+  ctrlKey: boolean;
+  download: boolean;
+  eventType: "auxclick" | "click";
+  marker: string;
+  metaKey: boolean;
+  shiftKey: boolean;
+  target: string | null;
 }
 
-function attachDocument(
-  frame: HTMLIFrameElement,
-  actions: FrameNavigationActions,
+/** Parent-owned action derived from a trusted marked link. */
+export type FrameActivation =
+  | { href: string; kind: "navigate" }
+  | { href: string; kind: "open"; target: string };
+
+/** Classify an activation without trusting a portable href. */
+export function classifyFrameActivation(
+  candidate: FrameActivationCandidate,
+): FrameActivation | undefined {
+  const destination = parseLogicalMarker(candidate.marker);
+  if (!destination || logicalMarker(destination) !== candidate.marker)
+    return undefined;
+  if (candidate.download || candidate.altKey) return undefined;
+  if (candidate.eventType === "click" && candidate.button !== 0)
+    return undefined;
+  if (candidate.eventType === "auxclick" && candidate.button !== 1)
+    return undefined;
+  const target = parseBrowsingTarget(candidate.target);
+  if (target.kind === "invalid") return undefined;
+  const href = `/id/${encodeURIComponent(destination.id)}${
+    destination.fragment
+      ? `?fragment=${encodeURIComponent(destination.fragment)}`
+      : ""
+  }`;
+  if (target.kind === "top" || target.kind === "parent")
+    return { href, kind: "navigate" };
+  if (target.kind === "blank") return { href, kind: "open", target: "_blank" };
+  if (target.kind === "named")
+    return { href, kind: "open", target: target.name };
+  const modified = candidate.metaKey || candidate.ctrlKey || candidate.shiftKey;
+  return modified || candidate.eventType === "auxclick"
+    ? { href, kind: "open", target: "_blank" }
+    : { href, kind: "navigate" };
+}
+
+/** Install native logical-link interception for one authenticated document. */
+export function listenForFrameActivations(
+  doc: AuthenticatedDocument,
+  signal: AbortSignal,
+  enabled: () => boolean,
+  emit: (event: FrameEvent) => void,
 ): void {
-  let doc: Document | null;
-  try {
-    doc = localFrameAccess(frame).document();
-  } catch {
-    return;
-  }
-  if (!doc || attachedDocuments.has(doc)) return;
-  attachedDocuments.add(doc);
-  const activate = (event: Event): void => {
-    const view = doc.defaultView;
-    if (!view || !(event instanceof view.MouseEvent)) return;
-    const source = event.target;
-    if (!(source instanceof view.Element) || source.ownerDocument !== doc)
+  const activate = (event: MouseEvent) => {
+    const link = (event.target as Element | null)?.closest?.(
+      "[data-mokly-link]",
+    );
+    if (!link || !enabled() || !["a", "area"].includes(link.localName)) return;
+    const marker = link.getAttribute("data-mokly-link") ?? "";
+    const target = parseBrowsingTarget(link.getAttribute("data-mokly-target"));
+    const destination = parseLogicalMarker(marker);
+    if (
+      !destination ||
+      target.kind === "invalid" ||
+      !classifyFrameActivation({
+        altKey: event.altKey,
+        button: event.button,
+        ctrlKey: event.ctrlKey,
+        metaKey: event.metaKey,
+        shiftKey: event.shiftKey,
+        download: link.hasAttribute("download"),
+        eventType: event.type === "click" ? "click" : "auxclick",
+        marker,
+        target: link.getAttribute("data-mokly-target"),
+      })
+    )
       return;
-    const link = source.closest<HTMLElement>("[data-mokly-link]");
-    if (!link || link.ownerDocument !== doc || !isNativeLink(link)) return;
-    const action = classifyFrameActivation({
-      altKey: event.altKey,
-      button: event.button,
-      ctrlKey: event.ctrlKey,
-      download: link.hasAttribute("download"),
-      eventType: event.type === "auxclick" ? "auxclick" : "click",
-      marker: link.getAttribute("data-mokly-link") ?? "",
-      metaKey: event.metaKey,
-      shiftKey: event.shiftKey,
-      target: link.getAttribute("data-mokly-target"),
-    });
-    if (!action) return;
     event.preventDefault();
-    if (action.kind === "navigate") actions.navigate(action.href);
-    else actions.open(action.href, action.target);
+    emit({
+      type: "navigation",
+      navigation: {
+        ...destination,
+        target,
+        activation:
+          event.type === "auxclick"
+            ? "middle"
+            : event.metaKey || event.ctrlKey || event.shiftKey
+              ? "modified"
+              : "primary",
+      },
+    });
   };
-  doc.addEventListener("click", activate);
-  doc.addEventListener("auxclick", activate);
-}
-
-function isNativeLink(element: Element): boolean {
-  const namespace = element.namespaceURI;
-  return (
-    (namespace === "http://www.w3.org/1999/xhtml" &&
-      (element.localName === "a" || element.localName === "area")) ||
-    (namespace === "http://www.w3.org/2000/svg" && element.localName === "a")
-  );
+  doc.addEventListener("click", activate, { signal });
+  doc.addEventListener("auxclick", activate, { signal });
 }

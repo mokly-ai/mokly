@@ -7,6 +7,11 @@ export function Stage({ children }: { children: ReactNode }) {
   return <div className="mbk-stage">{children}</div>;
 }
 
+/** The bordered pane a whole document occupies on the dotted stage. */
+export function DocumentPane({ children }: { children: ReactNode }) {
+  return <div className="mbk-doc-pane">{children}</div>;
+}
+
 interface PhoneFrameProps {
   children: ReactNode;
   dark?: boolean | undefined;

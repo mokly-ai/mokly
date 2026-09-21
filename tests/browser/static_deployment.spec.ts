@@ -8,6 +8,8 @@ import { createExportFixture } from "../helpers/export_fixture.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 
+import { assertServedShellMarker } from "./export_shell.js";
+
 let fixture: Awaited<ReturnType<typeof createExportFixture>>;
 let server: Awaited<ReturnType<typeof serveStaticFiles>>;
 let isolated: string;
@@ -18,7 +20,9 @@ test.beforeAll(async () => {
   isolated = await fs.mkdtemp(
     path.join(repositoryRoot, ".context/static-deployment-"),
   );
-  const before = await exportCatalogue(fixture.config, { outDir: "site" });
+  const before = await exportCatalogue(fixture.config, {
+    outDir: "site",
+  });
   await fs.cp(fixture.output, isolated, { recursive: true });
   const after = await exportCatalogue(fixture.config, {
     outDir: "site",
@@ -34,6 +38,7 @@ test.beforeAll(async () => {
   expect(after.comparisonUrl).toBe(before.comparisonUrl);
   expect(after.deploymentId).not.toBe(before.deploymentId);
   server = await serveStaticFiles(isolated);
+  await assertServedShellMarker(server.url, "/view/screens/home.html");
 });
 
 test.afterAll(async () => {

@@ -20,6 +20,7 @@ import {
   VariantOfChip,
 } from "./details_rows.js";
 import { ChevronIcon } from "./icons.js";
+import { useOptionalShellStore } from "./store_context.js";
 import type { RoutedEntry, RouteTarget } from "./target.js";
 import type { ChangedView } from "./view_marks.js";
 
@@ -42,7 +43,7 @@ function schemeNames(screen: ManifestScreen): string {
 
 export function EntryDetailsBody(props: {
   catalogue: Catalogue;
-  changedViews?: readonly ChangedView[];
+  changedViews?: readonly ChangedView[] | undefined;
   entry: RoutedEntry;
 }) {
   const entry = props.entry;
@@ -118,8 +119,18 @@ export function DetailsPanel(props: {
   catalogue: Catalogue;
   target: RouteTarget;
 }) {
+  const store = useOptionalShellStore();
+  const open = store?.state.detailsOpen ?? false;
   return (
-    <details className="mbk-details" data-mokly-details="">
+    <details
+      className="mbk-details"
+      data-mokly-details=""
+      onToggle={(event) => {
+        if (store?.interactive && event.currentTarget.open !== open)
+          store.setDetails(event.currentTarget.open);
+      }}
+      open={open}
+    >
       <summary className="mbk-details-bar">
         <span className="chev">
           <ChevronIcon size={12} />

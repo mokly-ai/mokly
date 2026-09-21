@@ -19,11 +19,19 @@ Browse shell in React hosts using the public
 [catalogue read model](./docs/protocol/mokly-catalogue.md). It provides controlled
 screen and saved-variant selection, slots, inspection events, exact multi-instance
 highlighting, host-owned instance markers, an imperative handle and
-[frame adapters](./docs/protocol/mokly-frame-adapter.md). Serve and export use its
-static renderer and vanilla enhancements; exported browsers contain no React.
+[frame adapters](./docs/protocol/mokly-frame-adapter.md). Serve and export render
+its shell tree on the server and hydrate it in the browser with its bundled
+React, so every delivery mode runs one shell. Implementation and delivery work
+is tracked in the [plans index](./plans/README.md).
+Embedded hosts give each viewer a stable, document-unique `viewerId` and reuse
+it across server rendering and hydration, keeping links and accessibility
+relationships isolated when several viewers share a page.
+Static pages retain their complete first paint and share one catalogue file,
+validated before hydration, instead of copying the catalogue into every page.
 Both packages build, release and are tested together. The viewer publishes before
 the CLI, which depends on its exact version. Viewer 0.1.0 and CLI 0.10.0 were
-published together; local Serve/export presentation remains unchanged.
+published together; local Serve, export, and embedded hosts share the same
+presentation.
 Viewer inspection references identify an exact viewport, scheme, variant and
 flow step. The viewer positions marker content without owning comments or exposing
 raw geometry. Frame replacement cancels picking and resets inspection; host
@@ -275,6 +283,10 @@ output and generated files unchanged. It separates bundling, rendering,
 validation, file writes, watcher setup, child readiness, and background Changes.
 Review timings distinguish Git baseline and document reads, comparison loops,
 resource traversal, CSS rule analysis, and artifact writes. Build and Check do not run review.
+Once the baseline is cached, classification cost follows the size of the
+change: views whose normalized documents and reachable resources are unchanged
+are settled without the complete comparison, and the `review.compare-screens`
+counts record reports how many views took each path.
 Parent timings include child phases; overlapping timings must not be added
 together. See the [diagnostic contract](./docs/protocol/mokly-timings.md).
 
@@ -376,27 +388,33 @@ Comparison-eligible shown views offer Current / Side by side / Overlay /
 Difference beneath the heading. The controls are available from All and
 Changes, and start in Current. Ready per-view evidence drives the status and
 band: a known unchanged shown view reads Unmodified without the band. Until
-that evidence is ready, route-level status and eligibility remain in force.
-During development, Mokly generates comparison snapshots only after a diff
-option is selected; browsing, filtering, and watched reloads do not trigger
-generation. Opening a diff reuses completed background evidence and captures only
-the selected screen or saved variant and its referenced assets, without rebuilding
-or snapshotting the entire catalogue. Checked-input fingerprints prevent later
-output edits from silently changing a comparison. See the
+that evidence is ready, a known route-level status and eligibility remain in
+force; a route with no evidence has no invented badge. During development,
+Mokly generates changed-screen and saved-variant comparison snapshots only
+after a diff option is selected. Selecting a removed page or screen captures
+its previous version instead; browsing, filtering, and watched reloads do not
+trigger either kind of historical work. Opening a diff reuses completed
+background evidence and captures only the selected screen or saved variant and
+its referenced assets, without rebuilding or snapshotting the entire catalogue.
+Checked-input fingerprints prevent later output edits from silently changing a
+comparison. See the
 [selected comparison contract](./docs/protocol/mokly-selected-comparisons.md).
 Changing viewport, theme or comparison mode renews the loaded snapshots before
 using them. After an idle comparison expires, Mokly automatically reacquires
 the same screen or saved variant. Available snapshots reuse their loaded result;
 published catalogues need no renewal requests.
-Published catalogues with Changes enabled prepare snapshots during publishing, then load
-and render them only after a diff option is selected. Comparisons
-stay in the same screen, with mobile/desktop and light/dark controls, secondary
-impact evidence, and a refresh option. Loading and failure states keep the
-catalogue available and offer a retry. Navigation and reload return to Current.
+Published catalogues with Changes enabled prepare snapshots during publishing.
+Changed-screen comparisons load only after a diff option is selected; removed
+pages and screens load their previous version when selected. Comparisons stay
+in the same screen, with mobile/desktop and light/dark controls, secondary impact
+evidence, and a refresh option. Loading and failure states keep the catalogue
+available and offer a retry. Navigation and reload return to Current.
 Added entries show their current preview and Added status without comparison
-controls because there is no earlier version to compare. Removed screens show
-their Removed status and an explicit current empty state without comparison
-controls; removed component variants retain an explicit missing current side.
+controls because there is no earlier version to compare. Removed screens and
+pages keep their Removed status and open their read-only
+[previous version](./docs/protocol/mokly-removed-previews.md) from the branch
+point, with no comparison controls; removed component variants retain an
+explicit missing current side.
 Affected consumers can show their real before/after differences without entering Changes. Comparison,
 shared-impact, and declared-dependency evidence stays in the Details inspector.
 A changed stylesheet adds a secondary list there naming the changed styles that
@@ -753,6 +771,27 @@ The shared browser example also waits for terminal Changes in global setup
 before tests begin, so comparison and navigation assertions start with complete
 evidence. Loading-state and continuity tests own explicit pending fixtures to
 exercise evidence completion during browsing and editing.
+Navigation and design-link specs share one unique read-only ordinary preview per
+worker. Its owned output must be absent before preparation, and a current-build
+marker proves freshness before the server starts. Setup failures and normal
+teardown drain the full process tree before removing the artifact. If process
+termination cannot be confirmed, teardown fails, retains the owned output, and
+returns the same failure to repeated close calls. A separate preview-preparation
+spec still runs the cold `npm run preview:build` path and checks that generated
+output stays byte-stable. Fixture setup emits structured
+`[mokly:fixture-timing]` phase records and identifies operations that are
+themselves under test.
+Verification wrappers also assign nested subprocess scopes and fixture output
+to a shared hierarchical owner. Abrupt local or CI cancellation drains every
+registered descendant group before removing that owner's resource root; sibling
+test processes retain separate ownership. A failed drain keeps the resources
+for diagnosis and fails the wrapper.
+Wrangler Pages fixtures pass port zero and use the exact readiness URL Wrangler
+reports, so the serving process owns port selection through binding. Nested
+Playwright verification harnesses set an explicit output directory inside their
+temporary root because an implicit directory can resolve at the nearest package
+root. Tests that fork a compiled CLI set `execArgv: []`; test-runner loaders and
+concurrency flags belong only to the parent test process.
 Run the full browser suite separately from other top-level
 checks: publication fixtures rebuild shared package and example output.
 Watched tests that assert a stable update version also wait for final Changes
@@ -783,6 +822,24 @@ consumers, Chromium tests, and all Rust checks. It also audits the freshly
 resolved packed consumer's production dependencies. Registry access is required;
 known advisories or registry errors fail verification. See the
 [dependency security contract](./docs/protocol/dependency-security.md).
+Individual gates can be exercised with `cargo xtask check --suite repository`,
+`package`, `unit`, or `browser`. The unit and browser suites accept a one-based
+`--shard INDEX/TOTAL`; selected suites and shards are partial checks and do not
+replace the complete command.
+
+The public `npm test` and `npm run test:browser` commands prepare their required
+output and retain their native Node and Playwright entrypoints. Browser runner
+arguments such as `npm run test:browser -- --list` or a selected spec path are
+available during development; filtered runs are partial checks. `npm test`
+retains the repository's complete explicit file inventory and two-file
+concurrency. Xtask uses the strict `test:prepared` and
+`test:browser:prepared` scripts after preparing output; those internal scripts
+accept only the optional CI shard argument and write inventory reports for
+completeness validation.
+`npm run package:check -- --artifacts DIR` and
+`npm run package:smoke -- --artifacts DIR` build once and forward the exact
+archive-pair option to their prepared package consumers.
+
 `npm test` limits test-file parallelism to two workers to keep subprocess-heavy
 fixtures within their existing startup deadlines on shared developer machines.
 All tests still run, including their explicit concurrent-writer and race cases.
@@ -846,8 +903,8 @@ bridge; unsupported platforms or filesystems fail without a replacing fallback.
 Each complete export has its own content-derived deployment identity, separate
 from comparison generations. Navigation from an old tab performs a full reload
 when the deployed catalogue, assets, or host aliases change, even if the
-comparison files are unchanged. Within one deployment, navigation remains
-progressive. Hosting must revalidate mutable files so that reload can fetch them.
+comparison files are unchanged. Within one deployment, navigation stays
+in-shell. Hosting must revalidate mutable files so that reload can fetch them.
 
 Exports also include an inert `__mokly/client/inspector.js` for explicit
 cross-origin hosts. Current owned copies contain its bounded identity map;
@@ -1034,7 +1091,7 @@ divider line and shares the navigation separator's affordance, rotated: the same
 rounded short line that turns accent-colored with a soft halo on hover, focus,
 and drag.
 
-All 68 design screens reuse the 15 registered components in
+All 75 design screens reuse the 15 registered components in
 **Components → Design → Shared components**, including the footer tabs panel. The library
 provides 56 saved variants, local prop controls, real usage and component-owned
 change attribution. See the [shared design library guide](./examples/basic/entries/design/library/README.md).
@@ -1055,7 +1112,7 @@ canonical destinations and the controls that remain visual depictions.
 - [`src/build`](./src/build) — single-graph bundling, compilation, links, check,
   and transactional writes.
 - [`packages/viewer`](./packages/viewer/README.md) — React/SSR shell, catalogue
-  readers, navigation, adapters, inspection and reusable browser enhancements.
+  readers, navigation, frame adapters, inspection and live host capabilities.
 - [`src/server`](./src/server) — manifest-backed HTTP and the watched child lifecycle.
 - [`src/client`](./src/client) — private Serve updates, controls and on-demand loading.
 - [`packages/viewer/src/navigation`](./packages/viewer/src/navigation) and
@@ -1094,9 +1151,8 @@ in the [plans index](./plans/README.md).
 - [Instance identity](./docs/protocol/mokly-instances.md),
   [public catalogue](./docs/protocol/mokly-catalogue.md),
   [viewer API](./docs/protocol/mokly-viewer.md), and
-  [frame adapters](./docs/protocol/mokly-frame-adapter.md) — identity, catalogue and
-  adapters are implemented; the viewer package is verified and awaiting its
-  first release.
+  [frame adapters](./docs/protocol/mokly-frame-adapter.md) — shared data,
+  selection, inspection and transport contracts for the published viewer package.
 - [Package ownership boundary](./docs/architecture/package-boundary.md)
 - [Implementation review prompt](./docs/implementation-review-prompt.md)
 - [Implementation plans](./plans/README.md)

@@ -79,7 +79,7 @@ async function expectPresentation(
     );
     return;
   }
-  const frames = page.locator("iframe[data-mokly-fragment-frame]");
+  const frames = page.locator("iframe[data-mokly-frame-state]");
   for (let index = 0; index < (await frames.count()); index++)
     await expect(
       frames.nth(index).contentFrame().locator("[data-mokly-overlay]"),

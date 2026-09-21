@@ -107,7 +107,7 @@ stylesheets: [{ match: "screens/home.html", stylesheets: [], darkStylesheets: ["
     "utf8",
   );
   const serialized = html.match(
-    /<script type="application\/json" data-workspace-data="">([\s\S]*?)<\/script>/,
+    /<script[^>]*data-workspace-data=""[^>]*>([\s\S]*?)<\/script>/,
   );
   assert.ok(serialized);
   const workspace = JSON.parse(serialized[1]!) as {
@@ -176,7 +176,7 @@ test("review export retains a removed variant route, id redirect, and parent con
     path.join(fixture.output, "view", route),
     "utf8",
   );
-  assert.match(removed, /This screen was removed/);
+  assert.match(removed, /Showing previous version/);
   assert.match(
     removed,
     /<div class="mbk-nav-variants" data-nav-disclosure="variants:pages:home"[^>]*id="mb-nav-variants-pages-home"><a [^>]*data-nav-removed=""[^>]*data-removed-variant=""/,
@@ -186,7 +186,7 @@ test("review export retains a removed variant route, id redirect, and parent con
     path.join(fixture.output, "id/home-empty/index.html"),
     "utf8",
   );
-  assert.match(redirect, /This screen was removed/);
+  assert.match(redirect, /Showing previous version/);
 
   const catalogue = JSON.parse(
     await fs.readFile(

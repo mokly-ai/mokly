@@ -157,12 +157,15 @@ without a page load, as does a background evidence refresh.
 
 Eligible views offer Current / Side by side / Overlay / Difference in an opaque
 band beneath the heading. Added and Unmodified views retain their current
-preview without that band; removed screens show their current empty state
-without it. Affected-only consumers can compare actual rendered differences
-while staying outside Changes. Current is selected initially, including
-after navigation and reload. Selecting Changes, opening a screen, changing its
-viewport or color scheme in Current, and receiving a watched update do not generate
-comparison snapshots in development. Publications with Changes prepare snapshots at build time, but never fetch or render them while browsing in Current. The first
+preview without that band; removed screens show their
+[previous version](./mokly-removed-previews.md) without it. Affected-only
+consumers can compare actual rendered differences while staying outside
+Changes. Current is selected initially, including after navigation and reload.
+Selecting Changes, opening a current screen, changing its viewport or color
+scheme in Current, and receiving a watched update do not generate comparison
+snapshots in development; opening a removed entry is the one selection that
+requests its historical preview. Publications with Changes prepare snapshots
+at build time, but never fetch or render them while browsing in Current. The first
 explicit diff selection requests the comparison in either delivery mode.
 Returning to Current cancels pending UI work and restores the current screen.
 Navigation must never let a late comparison response replace another screen.
@@ -197,8 +200,9 @@ available only in Current so it cannot misalign an overlay.
 
 Loading, unavailable, and failed comparison states use plain product copy.
 Failure offers a retry. All and Changes share the same comparison eligibility.
-Removed screens remain discoverable in Changes and show an explicit current
-empty state without offering a comparison. Dependency and ignored-region
+Removed screens remain discoverable in Changes without offering a comparison;
+they show their [previous version](./mokly-removed-previews.md) instead of a
+current preview. Dependency and ignored-region
 evidence stays secondary to the screen preview. Evidence availability is
 independent of comparison-mode eligibility and the inspector's initial
 disclosure; Added and Removed screens can retain factual Details without gaining
@@ -239,8 +243,9 @@ resolves relative snapshot and resource URLs without a live server.
 Snapshot HTTP responses disable caching and MIME sniffing. Diagnostic summaries
 and internal ownership markers are not published.
 
-No comparison data or snapshot document is requested until a user selects a diff.
-Refresh and retry fetch the currently published comparison; only publishing a new
+No comparison data or snapshot document is requested until a user selects a diff
+or opens a removed entry. Refresh and retry fetch the currently published
+comparison; only publishing a new
 artifact updates the underlying snapshots. Removed screens retain their Changes
 rows, screen pages, and id redirects; a current entry takes precedence when an id
 has been reused. Comparison failure aborts publishing transactionally, preserving

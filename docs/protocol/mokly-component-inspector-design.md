@@ -6,7 +6,9 @@ Design revision for Milestones 4b, 4c, and 4g of the
 [component explorer plan](../../plans/component-explorer.md). It replaces the
 single crowded Details disclosure in component and consuming-screen mockups.
 The runtime inspector implements the same layout and interaction. Existing non-component Browse/Changes
-artboards continue to document the currently implemented shell.
+artboards continue to document the currently implemented shell. Removed
+consumer stages retain this inspector around the previous version delivered by
+the [removed content previews plan](../../plans/removed-content-previews.md).
 
 ## One Inspector
 
@@ -19,8 +21,8 @@ style, and a tooltip. Only the active icon has the sage selected treatment.
 
 Details contains the description, secondary source/reference metadata, and any
 comparison evidence. Comparison facts never occupy a separate canvas disclosure
-or header banner. The panel remains available on Removed screen current empty
-states even though those screens expose no comparison modes.
+or header banner. The panel remains available on Removed screen stages even
+though those screens expose no comparison modes.
 Evidence availability, comparison-mode eligibility, and the initially open
 inspector panel are independent authored states. In particular, the Added screen
 mockup includes its factual branch evidence in Details while remaining

@@ -9,7 +9,9 @@ test("a second origin can fetch catalogue and fragment with exact-origin headers
   request,
   context,
 }) => {
-  const site = await startStaticFixture(false, true);
+  const site = await startStaticFixture({
+    noChanges: true,
+  });
   const host = await serveStaticFiles(site.root);
   const source = await serveStaticFiles(site.root, { allowedOrigin: host.url });
   try {
@@ -66,15 +68,19 @@ test("a second origin can fetch catalogue and fragment with exact-origin headers
   }
 });
 
-test("same-origin reads need no CORS or wildcard and the shell never requests the read model", async ({
+test("static hydration reads one same-origin catalogue without CORS or wildcard", async ({
   page,
 }) => {
-  const site = await startStaticFixture(false, true);
+  const site = await startStaticFixture({
+    noChanges: true,
+  });
   const other = await serveStaticFiles(site.root);
   try {
     await page.goto(`${site.url}/view/screens/home.html`);
     await expect(page.locator("#mb-main h2")).toHaveText("Home");
-    expect(site.requests).not.toContain("/__mokly/catalogue.json");
+    expect(
+      site.requests.filter((request) => request === "/__mokly/catalogue.json"),
+    ).toEqual(["/__mokly/catalogue.json"]);
     const result = await page.evaluate(async (otherOrigin) => {
       const same = await fetch("/__mokly/catalogue.json", {
         credentials: "omit",
@@ -105,4 +111,16 @@ test("same-origin reads need no CORS or wildcard and the shell never requests th
     await other.close();
     await site.close();
   }
+});
+
+test("Serve hydrates from its inline catalogue without an initial read", async ({
+  page,
+}) => {
+  const requests: string[] = [];
+  page.on("request", (request) =>
+    requests.push(new URL(request.url()).pathname),
+  );
+  await page.goto("/view/screens/welcome.html");
+  await expect(page.locator("html")).toHaveAttribute("data-mokly-hydrated", "");
+  expect(requests).not.toContain("/__mokly/catalogue.json");
 });

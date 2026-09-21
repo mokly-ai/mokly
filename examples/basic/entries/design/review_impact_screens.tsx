@@ -24,6 +24,7 @@ function SharedImpactSummary({ viewport }: { viewport: ReviewViewport }) {
     >
       <WelcomeHead active={viewport} />
       <PreviewWorkspace
+        viewport={viewport}
         inspector={
           <DetailsPanel
             subject="welcome"
@@ -48,6 +49,7 @@ function IgnoredOnlyCompare({ viewport }: { viewport: ReviewViewport }) {
     >
       <WelcomeHead active={viewport} />
       <PreviewWorkspace
+        viewport={viewport}
         inspector={
           <DetailsPanel
             subject="welcome"
@@ -77,6 +79,7 @@ function EmptyChanges({ viewport }: { viewport: ReviewViewport }) {
     >
       <WelcomeHead active={viewport} />
       <PreviewWorkspace
+        viewport={viewport}
         inspector={<DetailsPanel subject="welcome" />}
         render={(previewViewport) => (
           <WelcomeShot viewport={previewViewport} comparison={false} />

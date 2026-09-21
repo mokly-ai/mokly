@@ -4,6 +4,7 @@ import { PreviewWorkspace } from "../../components/parts/workspace.js";
 import { DESTINATIONS } from "../../parts/destinations.js";
 import { DetailsPanel } from "../../parts/details.js";
 import { ExampleWorkspace } from "../../parts/example_workspace.js";
+import { MiniWelcome } from "../../parts/mini_screens.js";
 import { NavTree } from "../../parts/nav.js";
 import {
   CHANGED_VARIANT_ROWS,
@@ -11,6 +12,7 @@ import {
   NAV_TREE_VARIANTS_OPEN,
   REMOVED_VARIANT_ROWS,
 } from "../../parts/nav_data.js";
+import { PreviousVersionLabel } from "../../parts/removed_preview.js";
 import {
   ScreenHead,
   Shell,
@@ -19,7 +21,7 @@ import {
   type ChangedView,
   type Crumb,
 } from "../../parts/shell.js";
-import { EmptyState } from "../../parts/stage_content.js";
+import { BrowserFrame, PhoneFrame } from "../../parts/stage.js";
 
 /** Only Welcome's dark renders changed, in both viewports. */
 const DARK_VIEWS: readonly ChangedView[] = [
@@ -114,17 +116,29 @@ function RemovedVariant({ viewport }: { viewport: ArtboardViewport }) {
         status="removed"
         title="Save failed"
       />
+      <PreviousVersionLabel />
       <PreviewWorkspace
         inspector={
-          <DetailsPanel comparisonEvidence open subject="welcomeError" />
-        }
-        render={() => (
-          <EmptyState
-            body="There is no current preview to show."
-            title="This screen was removed"
-            to={DESTINATIONS.home}
+          <DetailsPanel
+            comparisonEvidence={
+              <p>The previous version comes from that point.</p>
+            }
+            open
+            subject="welcomeError"
           />
-        )}
+        }
+        viewport={viewport}
+        render={(previewViewport) =>
+          previewViewport === "mobile" ? (
+            <PhoneFrame label="Mobile" small={viewport === "mobile"}>
+              <MiniWelcome compact error />
+            </PhoneFrame>
+          ) : (
+            <BrowserFrame address="example.test/welcome" label="Desktop">
+              <MiniWelcome error />
+            </BrowserFrame>
+          )
+        }
       />
     </Shell>
   );
@@ -192,12 +206,12 @@ export const variantScreens = [
   screen({
     colorSchemes: ["light"],
     description:
-      "A deleted variant retained as a Removed row under its surviving parent.",
+      "A deleted variant retained under its surviving parent with its previous views open.",
     desktop: <RemovedVariant viewport="desktop" />,
     id: "design-browse-variant-removed",
     mobile: <RemovedVariant viewport="mobile" />,
     rationale:
-      "A removed variant follows the removed-screen rules: it is hidden from All, shown in Changes under the parent it belonged to, and has no current preview. Its recorded details stay available so a reviewer can see what was deleted, and All returns to the parent rather than to catalogue home because the parent still exists.",
+      "A removed variant follows the removed-screen rules: it is hidden from All, shown in Changes under the parent it belonged to, and opens the previous mobile or desktop view instead of an empty current stage. Its recorded details stay available so a reviewer can see what was deleted, and All returns to the parent rather than to catalogue home because the parent still exists.",
     slug: "removed",
     title: "Removed variant",
   }),

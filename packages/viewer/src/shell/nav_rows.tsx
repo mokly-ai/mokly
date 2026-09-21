@@ -6,7 +6,9 @@ import type { ShellContext } from "./context.js";
 import { FolderIcon, FolderOpenIcon } from "./icons.js";
 import { navRowStyle } from "./nav_guides.js";
 import { containsRoute, LeafRow } from "./nav_leaf_rows.js";
+import { navNodeVisible, navigationFiltering } from "./nav_model.js";
 import type { NavGroupNode, NavNode, NavSectionNode } from "./nav_tree.js";
+import { useOptionalShellStore } from "./store_context.js";
 
 /** The persisted disclosure identity of one projected collection group. */
 function collectionDisclosureKey(
@@ -27,14 +29,33 @@ function GroupRow(props: {
   sectionId: NavSectionNode["id"];
 }) {
   const node = props.node;
+  const store = useOptionalShellStore();
+  const key = collectionDisclosureKey(props.sectionId, node.key);
   const open =
-    props.depth === 0 || containsRoute(node, props.context.activeRoute);
+    store?.state.disclosures[key] ??
+    (props.depth === 0 || containsRoute(node, props.context.activeRoute));
+  const filtered = store ? navigationFiltering(store.state.selection) : false;
+  const hidden = store
+    ? !navNodeVisible(node, store.state.selection, store.context)
+    : false;
   return (
     <details
       className="mbk-nav-group"
+      data-filter-open={
+        store?.state.filterBaseline
+          ? store.state.filterBaseline[key]
+            ? "1"
+            : "0"
+          : undefined
+      }
       data-nav-collection={node.key}
-      data-nav-disclosure={collectionDisclosureKey(props.sectionId, node.key)}
-      open={open ? true : undefined}
+      data-nav-disclosure={key}
+      hidden={filtered && hidden}
+      onToggle={(event) => {
+        if (store?.interactive && event.currentTarget.open !== open)
+          store.setDisclosure(key, event.currentTarget.open);
+      }}
+      open={open}
     >
       <summary className="mbk-nav-row" style={navRowStyle(props.depth)}>
         <span className="mbk-nav-ico folder">

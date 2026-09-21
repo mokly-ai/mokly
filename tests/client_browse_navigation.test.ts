@@ -1,230 +1,223 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import type { CatalogueReadModel } from "../packages/viewer/dist/catalogue/types.js";
+import type { ShellContext } from "../packages/viewer/dist/shell/context.js";
 import {
-  applyNavVisibility,
-  selectAndRevealRoute,
-} from "../packages/viewer/dist/client/browse_navigation_state.js";
+  navLeafVisible,
+  navNodeVisible,
+} from "../packages/viewer/dist/shell/nav_model.js";
+import type {
+  NavGroupNode,
+  NavLeafNode,
+} from "../packages/viewer/dist/shell/nav_tree.js";
+import { parseSearchQuery } from "../packages/viewer/dist/shell/search_query.js";
+import {
+  closedDisclosures,
+  openDisclosures,
+} from "../packages/viewer/dist/shell/store_state.js";
+import {
+  defaultSelection,
+  revealSelection,
+} from "../packages/viewer/dist/viewer/selection.js";
 
 import {
-  BROWSE_BASE,
-  navFixture,
-  removedVariantRow,
-} from "./helpers/browse_navigation_fixture.js";
-import { asAnchor, asDocument, FakeNode } from "./helpers/fake_dom.js";
+  catalogueModel,
+  fixtureShellState,
+} from "./helpers/viewer_catalogue.js";
+
+const welcome = leaf("welcome", "screens/welcome.html", "Welcome", [
+  "forms",
+  "onboarding",
+]);
+const details = leaf(
+  "transactions-list-transfer-ready",
+  "screens/details.html",
+  "Details",
+  ["forms"],
+);
+const glossary = leaf("glossary", "docs/glossary.html", "Glossary");
+
+test("stable collection keys preserve independent disclosure values", () => {
+  const disclosures = {
+    "collection:pages:alpha": false,
+    "collection:pages:beta": true,
+  };
+  assert.deepEqual(closedDisclosures(disclosures), ["collection:pages:alpha"]);
+  assert.deepEqual(openDisclosures(disclosures, ["collection:pages:alpha"]), {
+    "collection:pages:alpha": true,
+    "collection:pages:beta": true,
+  });
+});
+
+test("legacy label paths cannot match current disclosure keys", () => {
+  const state = fixtureShellState({
+    href: "https://example.test/",
+    initial: { recovery: recovery(["/Example/Screens"]) },
+  });
+  assert.equal(state.disclosures["collection:pages:product"], true);
+});
+
+test("obsolete keys do not discard a valid collection preference", () => {
+  const state = fixtureShellState({
+    href: "https://example.test/",
+    initial: {
+      recovery: recovery(["legacy:example", "collection:product"]),
+    },
+  });
+  assert.equal(state.disclosures["collection:pages:product"], false);
+  assert.equal(state.disclosures["collection:components:product"], false);
+});
 
 test("removed pages appear only in Changes while removed screens remain in All", () => {
-  const nav = navFixture();
-  nav.glossary.setAttribute("data-removed-page", "");
-  nav.glossary.setAttribute("data-changed", "true");
-  nav.details.setAttribute("data-changed", "true");
-  applyNavVisibility(asDocument(nav.root), "preserve");
-  assert.equal(nav.glossary.hidden, true);
-  assert.equal(nav.details.hidden, false);
-  nav.changed.setAttribute("aria-pressed", "true");
-  applyNavVisibility(asDocument(nav.root), "preserve");
-  assert.equal(nav.glossary.hidden, false);
-  assert.equal(nav.details.hidden, false);
+  const context = navigationContext([glossary.route, details.route]);
+  const removedPage = { ...glossary, removedPage: true };
+  assert.equal(navLeafVisible(removedPage, defaultSelection, context), false);
+  assert.equal(navLeafVisible(details, defaultSelection, context), true);
+  const changes = { ...defaultSelection, view: "changes" as const };
+  assert.equal(navLeafVisible(removedPage, changes, context), true);
+  assert.equal(navLeafVisible(details, changes, context), true);
 });
 
-test("a tag term hides untagged rows and the groups they empty", () => {
-  const nav = navFixture();
-  nav.screens.open = false;
-  nav.search.value = "tag:onboarding";
-
-  applyNavVisibility(asDocument(nav.root), "reveal-matches");
-
-  assert.equal(nav.welcome.hidden, false);
-  assert.equal(nav.details.hidden, true);
-  assert.equal(nav.glossary.hidden, true);
-  assert.equal(nav.screens.hidden, false);
-  assert.equal(nav.screens.open, true);
-  assert.equal(nav.docs.hidden, true);
-
-  nav.search.value = "";
-  applyNavVisibility(asDocument(nav.root), "reveal-matches");
-
-  assert.equal(nav.details.hidden, false);
-  assert.equal(nav.glossary.hidden, false);
-  assert.equal(nav.docs.hidden, false);
-  assert.equal(nav.screens.open, false);
+test("a tag term hides unmatched rows and the groups they empty", () => {
+  const context = navigationContext([]);
+  const selection = querySelection("tag:onboarding");
+  const screens = group("Screens", [welcome, details]);
+  const docs = group("Docs", [glossary]);
+  assert.equal(navLeafVisible(welcome, selection, context), true);
+  assert.equal(navLeafVisible(details, selection, context), false);
+  assert.equal(navNodeVisible(screens, selection, context), true);
+  assert.equal(navNodeVisible(docs, selection, context), false);
 });
 
-test("a tag term composes with the Changed filter", () => {
-  const nav = navFixture();
-  nav.welcome.setAttribute("data-changed", "true");
-  nav.glossary.setAttribute("data-changed", "true");
-  nav.changed.setAttribute("aria-pressed", "true");
-  nav.search.value = "tag:onboarding";
-
-  applyNavVisibility(asDocument(nav.root), "reveal-matches");
-
-  assert.equal(nav.welcome.hidden, false);
-  assert.equal(nav.glossary.hidden, true);
-  assert.equal(nav.details.hidden, true);
-  assert.equal(nav.screens.hidden, false);
-  assert.equal(nav.docs.hidden, true);
-
-  nav.welcome.setAttribute("data-changed", "false");
-  applyNavVisibility(asDocument(nav.root), "reveal-matches");
-
-  assert.equal(nav.welcome.hidden, true);
-  assert.equal(nav.screens.hidden, true);
+test("a tag term composes with the Changes filter", () => {
+  const context = navigationContext([welcome.route, glossary.route]);
+  const selection = {
+    ...querySelection("tag:onboarding"),
+    view: "changes" as const,
+  };
+  assert.equal(navLeafVisible(welcome, selection, context), true);
+  assert.equal(navLeafVisible(details, selection, context), false);
+  assert.equal(navLeafVisible(glossary, selection, context), false);
+  assert.equal(
+    navNodeVisible(group("Screens", [welcome, details]), selection, context),
+    true,
+  );
+  assert.equal(
+    navNodeVisible(group("Docs", [glossary]), selection, context),
+    false,
+  );
 });
 
-test("row tags split on any whitespace the markup carries", () => {
-  const nav = navFixture();
-  nav.welcome.setAttribute("data-tags", "forms\tonboarding");
-  nav.search.value = "tag:onboarding";
-
-  applyNavVisibility(asDocument(nav.root), "reveal-matches");
-
-  assert.equal(nav.welcome.hidden, false);
-  assert.equal(nav.details.hidden, true);
-});
-
-test("free text still matches rows that declare no tags", () => {
-  const nav = navFixture();
-  nav.search.value = "GLOSSARY";
-
-  applyNavVisibility(asDocument(nav.root), "reveal-matches");
-
-  assert.equal(nav.glossary.hidden, false);
-  assert.equal(nav.welcome.hidden, true);
-  assert.equal(nav.screens.hidden, true);
-});
-
-test("free text filters structured rows by their page id", () => {
-  const nav = navFixture();
-  nav.search.value = "transactions-list-transfer-ready";
-
-  applyNavVisibility(asDocument(nav.root), "reveal-matches");
-
-  assert.equal(nav.details.hidden, false);
-  assert.equal(nav.welcome.hidden, true);
-  assert.equal(nav.glossary.hidden, true);
-  assert.equal(nav.screens.hidden, false);
-  assert.equal(nav.docs.hidden, true);
+test("free text matches untagged rows and structured entry ids", () => {
+  const context = navigationContext([]);
+  assert.equal(
+    navLeafVisible(glossary, querySelection("GLOSSARY"), context),
+    true,
+  );
+  assert.equal(
+    navLeafVisible(
+      details,
+      querySelection("transactions-list-transfer-ready"),
+      context,
+    ),
+    true,
+  );
 });
 
 test("navigation clears only a query that hides its destination", () => {
-  const nav = navFixture();
-  nav.pages.open = false;
-  nav.screens.open = false;
-  nav.search.value = "tag:onboarding";
-
-  const welcome = selectAndRevealRoute(
-    asDocument(nav.root),
-    "/view/screens/welcome.html",
-    BROWSE_BASE,
-    "navigation",
+  const model = navigationModel();
+  const welcomeSelection = {
+    ...defaultSelection,
+    screenId: "welcome",
+    tags: ["onboarding"],
+  };
+  assert.deepEqual(revealSelection(model, welcomeSelection), welcomeSelection);
+  assert.deepEqual(
+    revealSelection(model, { ...welcomeSelection, screenId: "details" }),
+    { ...defaultSelection, screenId: "details" },
   );
-
-  assert.equal(welcome, asAnchor(nav.welcome));
-  assert.equal(nav.search.value, "tag:onboarding");
-  assert.equal(nav.welcome.getAttribute("aria-current"), "page");
-  assert.equal(nav.welcome.scrolled, true);
-  assert.equal(nav.welcome.hidden, false);
-  assert.equal(nav.details.hidden, true);
-  assert.equal(nav.pages.open, true);
-  assert.equal(nav.screens.open, true);
-
-  const details = selectAndRevealRoute(
-    asDocument(nav.root),
-    "/view/screens/details.html",
-    BROWSE_BASE,
-    "navigation",
-  );
-
-  assert.equal(details, asAnchor(nav.details));
-  assert.equal(nav.search.value, "");
-  assert.equal(nav.details.hidden, false);
-  assert.equal(nav.glossary.hidden, false);
 });
 
-test("a search that matches only a variant keeps its parent row visible", () => {
-  const nav = navFixture();
-  nav.search.value = "Empty workspace";
+function navigationContext(changedRoutes: readonly string[]): ShellContext {
+  return {
+    base: "",
+    changedRoutes,
+    changesStatus: "ready",
+    updateVersion: 0,
+  };
+}
 
-  applyNavVisibility(asDocument(nav.root), "reveal-matches");
+function querySelection(raw: string) {
+  const query = parseSearchQuery(raw);
+  return {
+    ...defaultSelection,
+    search: query.freeText,
+    tags: query.tags,
+  };
+}
 
-  assert.equal(nav.welcomeEmpty.hidden, false);
-  assert.equal(nav.welcome.hidden, false);
-  assert.equal(nav.welcomeLeaf.hidden, false);
-  assert.equal(nav.welcomeList.hidden, false);
-  assert.equal(nav.details.hidden, true);
-  assert.equal(nav.glossary.hidden, true);
-  assert.equal(nav.screens.hidden, false);
+function leaf(
+  entryId: string,
+  route: string,
+  label: string,
+  tags: readonly string[] = [],
+): NavLeafNode {
+  return {
+    entryId,
+    entryKind: "screen",
+    key: `entry:${entryId}`,
+    kind: "leaf",
+    label,
+    route,
+    tags,
+  };
+}
 
-  nav.search.value = "glossary";
-  applyNavVisibility(asDocument(nav.root), "reveal-matches");
+function group(label: string, children: NavLeafNode[]): NavGroupNode {
+  return {
+    children,
+    key: `collection:${label.toLowerCase()}`,
+    kind: "group",
+    label,
+  };
+}
 
-  assert.equal(nav.welcome.hidden, true);
-  assert.equal(nav.welcomeLeaf.hidden, true);
-  assert.equal(nav.welcomeEmpty.hidden, true);
-  assert.equal(nav.welcomeList.hidden, true);
+function recovery(closedCollectionIds: readonly string[]) {
+  return {
+    closedCollectionIds,
+    colorScheme: "light" as const,
+    detailsOpen: false,
+    drawerOpen: false,
+    filterBaselineClosedCollectionIds: null,
+    navScroll: 0,
+    query: "",
+    regionScrolls: {},
+    view: "all" as const,
+    viewport: "both" as const,
+  };
+}
 
-  nav.search.value = "";
-  applyNavVisibility(asDocument(nav.root), "reveal-matches");
-
-  assert.equal(nav.welcome.hidden, false);
-  assert.equal(nav.welcomeLeaf.hidden, false);
-});
-
-test("a changed variant marks its parent row and survives the Changes filter", () => {
-  const nav = navFixture();
-  nav.welcomeEmpty.setAttribute("data-changed", "true");
-  nav.changed.setAttribute("aria-pressed", "true");
-
-  applyNavVisibility(asDocument(nav.root), "reveal-matches");
-
-  assert.equal(nav.welcomeEmpty.hidden, false);
-  assert.equal(nav.welcome.hidden, false);
-  assert.equal(nav.welcome.getAttribute("data-changed-variants"), "true");
-  assert.equal(nav.welcomeList.hidden, false);
-  assert.equal(nav.details.hidden, true);
-
-  nav.welcomeEmpty.removeAttribute("data-changed");
-  applyNavVisibility(asDocument(nav.root), "reveal-matches");
-
-  assert.equal(nav.welcome.getAttribute("data-changed-variants"), null);
-  assert.equal(nav.welcome.hidden, true);
-});
-
-test("a removed variant shows under its parent only while Changes is on", () => {
-  const nav = navFixture();
-  const gone = removedVariantRow();
-  nav.welcomeList.append(gone);
-
-  applyNavVisibility(asDocument(nav.root), "reveal-matches");
-
-  assert.equal(gone.hidden, true);
-  assert.equal(nav.welcome.hidden, false);
-  assert.equal(nav.welcome.getAttribute("data-changed-variants"), "true");
-
-  nav.changed.setAttribute("aria-pressed", "true");
-  applyNavVisibility(asDocument(nav.root), "reveal-matches");
-
-  assert.equal(gone.hidden, false);
-  assert.equal(nav.welcomeEmpty.hidden, true);
-  assert.equal(nav.welcome.hidden, false);
-  assert.equal(nav.welcomeList.hidden, false);
-  assert.equal(nav.details.hidden, true);
-});
-
-test("the mark's reader text never becomes a search term", () => {
-  const nav = navFixture();
-  nav.welcome.append(
-    new FakeNode("span", { "data-nav-changed-text": "" }, "Changed"),
-  );
-  nav.search.value = "changed";
-
-  applyNavVisibility(asDocument(nav.root), "reveal-matches");
-
-  assert.equal(nav.welcome.hidden, true);
-
-  nav.search.value = "welcome";
-  applyNavVisibility(asDocument(nav.root), "reveal-matches");
-
-  assert.equal(nav.welcome.hidden, false);
-});
+function navigationModel(): CatalogueReadModel {
+  const model = catalogueModel();
+  const template = model.screens[0]!;
+  return {
+    ...model,
+    screens: [
+      {
+        ...template,
+        id: welcome.entryId!,
+        route: welcome.route,
+        tags: welcome.tags ?? [],
+        title: welcome.label,
+      },
+      {
+        ...template,
+        id: "details",
+        route: details.route,
+        tags: details.tags ?? [],
+        title: details.label,
+      },
+    ],
+  };
+}

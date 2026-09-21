@@ -19,6 +19,7 @@ export async function cssAttributionFixture(
   options: {
     body?: string;
     prepare?(fixture: TestFixture): Promise<void>;
+    transformSource?(source: string): string;
   } = {},
 ) {
   const source = validEntrySource({
@@ -30,16 +31,17 @@ export async function cssAttributionFixture(
     .join("\n")
     .replaceAll("metadata", "componentMetadata")
     .replace("export const mockups = [", "const library = [");
+  const combinedSource = components
+    ? source.replace(
+        "defineUseCase }",
+        "defineUseCase, defineComponent, MockLink, ReviewIgnore }",
+      ) +
+      library +
+      "\nmockups.push(...library.slice(0, 3));"
+    : source;
   const fixture = await changedFixture(
     t,
-    components
-      ? source.replace(
-          "defineUseCase }",
-          "defineUseCase, defineComponent, MockLink, ReviewIgnore }",
-        ) +
-          library +
-          "\nmockups.push(...library.slice(0, 3));"
-      : source,
+    options.transformSource?.(combinedSource) ?? combinedSource,
     {
       extraConfig:
         'colorSchemes: ["light", "dark"], stylesheets: [{ match: "**/*.html", stylesheets: ["shared.css"] }],',
@@ -75,7 +77,16 @@ export async function cssAttributionFixture(
     config,
     append: (css: string, resource = "shared.css") =>
       fs.appendFile(path.join(fixture.mockupsDir, resource), css),
-    compare: async () =>
-      compareReview(await compileCatalogue(config), config, git, "main"),
+    compare: async (useFastPath?: boolean) =>
+      compareReview(
+        await compileCatalogue(config),
+        config,
+        git,
+        "main",
+        undefined,
+        undefined,
+        [],
+        useFastPath === undefined ? {} : { useFastPath },
+      ),
   };
 }

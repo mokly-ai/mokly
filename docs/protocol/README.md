@@ -28,6 +28,9 @@ when the historical primary file is absent, never when it is invalid.
 
 ## Contracts
 
+- [CI verification](./ci-verification.md) — implemented suite, shard, evidence,
+  cache and aggregation contract; hosted acceptance measurements remain tracked
+  by the active CI performance plan.
 - [Catalogue upload v1](./mokly-upload.md) — public CLI and hosted/self-hosted receiver boundary.
 - [Package and authoring contract](./mokly-package.md)
 - [CLI terminal output](./mokly-terminal-output.md) — plain compatibility,
@@ -44,6 +47,8 @@ when the historical primary file is absent, never when it is invalid.
   public inventory v1 beside the private manifest.
 - [Embeddable viewer](./mokly-viewer.md) — approved `@mokly/viewer` API and
   unchanged local shell extraction.
+- [Live viewer capabilities](./mokly-live-capabilities.md) — private Serve
+  evidence, updates, recovery, previews and on-demand rendering for React.
 - [Viewer markers and multi-instance highlights](./mokly-viewer-markers.md) —
   host-owned anchored content and exact atomic highlight behavior.
 - [Viewer frame adapter](./mokly-frame-adapter.md) — approved same-origin
@@ -60,6 +65,8 @@ when the historical primary file is absent, never when it is invalid.
 - [Breaking page migration](./mokly-page-migration.md)
 - [Optional changes in publication](./mokly-publication.md)
 - [Changes and screen comparisons](./mokly-changes.md)
+- [Removed content previews](./mokly-removed-previews.md) — removed screens
+  and pages show their pinned baseline version.
 - [Derived baselines](./mokly-derived-baselines.md) — default uncommitted
   generated output with per-commit rebuilt baselines.
   - [Baseline storage and execution](./mokly-baseline-storage.md) — archive limits,

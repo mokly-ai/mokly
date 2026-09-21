@@ -40,6 +40,13 @@ Shell pages render through `@mokly/viewer/server` with CLI-owned live context.
 `public_catalogue_model.ts` validates each serialized public revision once and
 reuses it across shell requests until the bytes change. CSS, browser modules,
 fonts, events and static documents bypass that decoding entirely.
+`client_modules.ts` reads the generated viewer and CLI browser manifests,
+requires exact equality with their build directories, rejects missing,
+non-JavaScript, unexpected or colliding outputs, and loads the complete delivery
+inventory before binding. The manifests are emitted from actual completed
+esbuild outputs rather than maintained by hand. Every shell request renders the
+hydrated React document and loads the canonical `react-shell.js` browser entry.
+The CLI host modules retain private live-update and capability transports.
 
 `screen_view_changes.ts` retains per-view screen-only material decisions from
 the existing classification pass. The public projection does not infer Changes
@@ -79,12 +86,32 @@ unselected route reports `config-invalid` for a nested `repoRoot` while All
 remains available. Parent preparation, classification and selected readers use
 the same config-owned validation.
 
-`configuredServedReview` requires an injected `ReadOnlyReviewRepository` or a
+`configured_review.ts` requires an injected `ReadOnlyReviewRepository` or a
 `ReviewRepositorySource` that supplies the current reader. The full comparison
 route fails with typed `review-invalid` ("The comparison is not prepared")
-until a derived reader is available. Selected comparisons retain their pinned
-classification source. Neither route can import or invoke a baseline builder.
-Evidence updates invalidate comparison generations as well as classification.
+until a derived reader is available. `selected_review_routes.ts` owns one
+bounded generation service for screen/component comparisons and removed-page
+previews. The latter uses
+`review.json?page=<encoded-route>`, redirects to an immutable `preview.json`,
+and serves only its captured `snapshots/before/**` closure. Both selection kinds
+share coalescing, refresh, admission, timeout, byte, retention, epoch and
+shutdown bounds. `review_sources.ts` derives selections only from accepted
+evidence; route, baseline commit and base ref must match the provider response.
+Neither route can import or invoke a baseline builder. Preparing or unavailable
+evidence returns the existing retryable failure while current routes remain
+usable. Evidence updates invalidate selected generations and atomically clear
+the public complete-comparison pointer and removed-screen descriptors.
+
+Serve advertises `{ kind: "screen" }` only for a removed screen proven complete
+in the pinned public comparison. It deliberately does not advertise page
+descriptors: local pages remain selected through the stable private endpoint,
+so ordinary navigation, filtering, search and catalogue reads perform no
+historical capture.
+
+The removed-preview controller and review validators are part of the shared
+`react-shell.js` hydration bundle. Repository publication may add page
+descriptors while externalizing captured shells; that artifact-only projection
+does not change the live selected-page boundary.
 
 `update_messages.ts` validates IPC envelopes. `supervisor.ts` orders delivery and
 owns child shutdown. HTTP readiness precedes exhaustive compilation and baseline

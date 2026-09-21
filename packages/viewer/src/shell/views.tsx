@@ -2,6 +2,7 @@
 // home, missing-route, and target views, plus the title and
 // active-route helpers the document scaffold and progressive navigation use.
 
+import { canonicalJson } from "../components/data.js";
 import { sha256 } from "../data/sha256.js";
 
 import type { Catalogue } from "./catalogue.js";
@@ -14,6 +15,8 @@ import {
   targetHead,
   ViewportSwitch,
 } from "./head.js";
+import { useShellIdentifier } from "./identifier_context.js";
+import { removedPreviewData, RemovedPreviewStage } from "./previews.js";
 import { EmptyStage, TargetStage } from "./stages.js";
 import type { RouteTarget } from "./target.js";
 import { ComponentWorkspace } from "./workspace.js";
@@ -43,8 +46,8 @@ function HeadActions(props: { catalogue: Catalogue; target: RouteTarget }) {
 
 function TargetView(props: {
   catalogue: Catalogue;
+  context: ShellContext;
   fragment?: string;
-  comparisons?: boolean;
   target: RouteTarget;
 }) {
   const head = targetHead(props.catalogue, props.target);
@@ -54,16 +57,15 @@ function TargetView(props: {
     props.catalogue.removedEntries.some(
       ({ entry }) => entry.route === target.entry.route,
     );
-  const stage = removed ? (
+  const preview = removed
+    ? removedPreviewData(props.catalogue, props.context, target.entry)
+    : undefined;
+  const stage = preview ? (
+    <RemovedPreviewStage data={preview} />
+  ) : removed ? (
     <div className="mbk-empty" data-mokly-stage="" data-viewport="both">
-      <h2>
-        This {target.entry.kind === "page" ? "page" : "screen"} was removed
-      </h2>
-      {target.entry.kind === "page" ? (
-        <p>This document is no longer in the catalogue.</p>
-      ) : (
-        <p>Select a comparison to see the previous screen.</p>
-      )}
+      <h2>This user flow was removed</h2>
+      <p>This flow is no longer in the catalogue.</p>
     </div>
   ) : (
     <TargetStage
@@ -81,8 +83,16 @@ function TargetView(props: {
         crumbs={head.crumbs}
         heading={head.title}
         id={head.id}
+        status={
+          removed ? (
+            <span className="mbk-entry-status" data-status="Removed">
+              Removed
+            </span>
+          ) : undefined
+        }
       />
-      {props.comparisons &&
+      {!removed &&
+      (props.context.comparisons ?? false) &&
       props.target.kind === "entry" &&
       props.target.entry.kind === "screen" ? (
         <DiffScreen route={props.target.entry.route}>{stage}</DiffScreen>
@@ -165,6 +175,7 @@ export function ShellMain(props: {
   context: ShellContext;
   view: ShellView;
 }) {
+  const mainId = useShellIdentifier("mb-main");
   const route = activeRouteForView(props.view);
   const baseline = props.catalogue.removedEntries.find(
     ({ entry }) => entry.route === route,
@@ -174,9 +185,9 @@ export function ShellMain(props: {
       className="mbk-main"
       data-mokly-view=""
       data-mokly-baseline={
-        baseline ? sha256(JSON.stringify(baseline)) : undefined
+        baseline ? sha256(canonicalJson(baseline)) : undefined
       }
-      id="mb-main"
+      id={mainId}
       tabIndex={-1}
     >
       {props.view.kind === "home" ? (
@@ -193,11 +204,12 @@ export function ShellMain(props: {
             catalogue={props.catalogue}
             context={props.context}
             entry={props.view.target.entry}
+            key={props.view.target.entry.route}
           />
         ) : (
           <TargetView
             catalogue={props.catalogue}
-            comparisons={props.context.comparisons ?? false}
+            context={props.context}
             {...(props.context.fragment
               ? { fragment: props.context.fragment }
               : {})}

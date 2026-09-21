@@ -9,6 +9,7 @@ import { CSS_NAV_CHANGED } from "./css_nav_changed.js";
 import { SHELL_NAV_RESIZE_CSS } from "./css_nav_resize.js";
 import { SHELL_NAV_STATUS_CSS } from "./css_nav_status.js";
 import { CSS_NAV_VARIANTS } from "./css_nav_variants.js";
+import { SHELL_PREVIEW_CSS } from "./css_previews.js";
 import { SHELL_REVIEW_CSS } from "./css_review.js";
 import { SHELL_TOKENS_CSS } from "./css_tokens.js";
 import { SHELL_VIEW_CSS } from "./css_views.js";
@@ -29,4 +30,5 @@ export const SHELL_CSS =
   SHELL_REVIEW_CSS +
   SHELL_WORKSPACE_CSS +
   CSS_WORKSPACE_MARKS +
+  SHELL_PREVIEW_CSS +
   SHELL_INSPECTOR_RESIZE_CSS;

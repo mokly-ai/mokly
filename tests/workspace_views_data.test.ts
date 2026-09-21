@@ -11,6 +11,7 @@ import {
   viewStatesBySelection,
 } from "../packages/viewer/dist/shell/workspace_views_data.js";
 
+import { publicShellContext } from "./helpers/public_shell.js";
 import {
   component,
   componentBaseline,
@@ -213,7 +214,13 @@ test("the view controls and details name a dark-only change", () => {
   const html = viewPage(
     screen,
     catalogue,
-    context({ baseline: screenManifest, result: darkOnlyResult("unchanged") }),
+    publicShellContext(
+      catalogue,
+      context({
+        baseline: screenManifest,
+        result: darkOnlyResult("unchanged"),
+      }),
+    ),
   );
   assert.match(html, /data-workspace-status="">Unmodified</);
   assert.match(
@@ -244,7 +251,7 @@ test("an unchanged screen hides every changed-view mark and row", () => {
   const html = viewPage(
     screen,
     catalogue,
-    context({ baseline: screenManifest }),
+    publicShellContext(catalogue, context({ baseline: screenManifest })),
   );
   assert.match(
     html,

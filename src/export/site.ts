@@ -20,6 +20,7 @@ import {
 } from "../catalogue/serialization.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
+import { staticRemovedPreviews } from "../publication/removed_previews.js";
 import { changedManifestRoutes } from "../registry/changed_routes.js";
 import { removedManifestEntries } from "../registry/changes.js";
 import {
@@ -34,6 +35,16 @@ import { exportError } from "./error.js";
 import { ExportInventory } from "./inventory.js";
 import { exportResourceDenial } from "./resource_policy.js";
 import { STAGED_DEPLOYMENT_ID } from "./shell_metadata.js";
+
+const LIVE_HOST_BUNDLES = new Set([
+  "host_capabilities.js",
+  "host_capability_descriptor.js",
+  "react_capabilities.js",
+  "react_capability_updates.js",
+  "react_transports.js",
+  "react_update_controller.js",
+  "react-host.js",
+]);
 
 /** Assemble one complete shell/resource/comparison tree without a live server. */
 export function assembleExport(
@@ -79,6 +90,12 @@ export function assembleExport(
     );
   const generation = comparisonContentId(comparisonFiles);
   const prefix = `__mokly/diffs/__generations/${generation}`;
+  const removedPreviews = staticRemovedPreviews(
+    removedSnapshots,
+    comparison,
+    comparisonFiles,
+    prefix,
+  );
   const delivery = parseStaticDelivery({
     schemaVersion: 2,
     deploymentId: STAGED_DEPLOYMENT_ID,
@@ -187,6 +204,7 @@ export function assembleExport(
     evidence: context.componentChanges,
     comparison: comparison?.result,
     comparisonUrl: delivery.comparisonUrl?.slice(1) ?? null,
+    removedPreviews,
     revision: { content: 0, evidence: 0 },
   });
   context.readModel = readModel;
@@ -226,7 +244,7 @@ export function assembleExport(
   }
   inventory.add("__mokly/shell.css", SHELL_CSS);
   for (const [name, bytes] of loadBrowserClientModules()) {
-    if (name !== "browser.js" && name !== "live_updates.js")
+    if (!LIVE_HOST_BUNDLES.has(name))
       inventory.add(`__mokly/client/${name}`, bytes);
   }
   for (const [name, bytes] of loadBrowserNavigationModules())

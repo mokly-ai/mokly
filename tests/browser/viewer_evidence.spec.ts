@@ -214,6 +214,52 @@ for (const cross of [false, true]) {
     });
   }
 
+  for (const hold of ["highlight", "list"] as const) {
+    test(`${name} unrelated evidence preserves pending scoped ${hold}`, async ({
+      page,
+    }) => {
+      await start(page, cross);
+      await page.evaluate((hold) => {
+        const probe = window.evidence;
+        probe.calls.length = 0;
+        probe.hold = hold;
+        void probe.frames.highlight(probe.instance).then(
+          () => {
+            probe.outcome = "resolved";
+          },
+          () => {
+            probe.outcome = "rejected";
+          },
+        );
+      }, hold);
+      await page.waitForFunction(() => window.evidence.waiting);
+      await page.evaluate(async () => {
+        window.evidence.update("desktop");
+        await new Promise(requestAnimationFrame);
+        await new Promise(requestAnimationFrame);
+      });
+      await expect
+        .poll(() => page.evaluate(() => window.evidence.updates))
+        .toBe(1);
+      expect(
+        await page.evaluate(() => window.evidence.outcome),
+      ).toBeUndefined();
+      await page.evaluate(() => window.evidence.release());
+      await expect
+        .poll(() => page.evaluate(() => window.evidence.outcome))
+        .toBe("resolved");
+      await presentation(page, cross, 1);
+      expect(
+        await page.evaluate(
+          () =>
+            window.evidence.calls.filter((call) => call === "mobile:highlight")
+              .length,
+        ),
+      ).toBe(1);
+      expect(await page.evaluate(() => window.evidence.events)).toEqual([]);
+    });
+  }
+
   for (const evidence of ["empty", "pending", "unavailable"] as const) {
     test(`${name} ${evidence} evidence ends invalid pick once and allows restart`, async ({
       page,
@@ -234,7 +280,7 @@ for (const cross of [false, true]) {
       ]);
       await page.evaluate(async () => {
         const probe = window.evidence;
-        probe.frames.end({ reason: "cancelled" });
+        probe.frames.cancelPick();
         probe.update("mobile");
         await probe.frames.startPick();
       });

@@ -1,43 +1,27 @@
 # Browse client and frame adapters
 
-These browser modules enhance the existing server-rendered Browse shell. They
-own navigation, viewport and theme state, comparisons, and component inspection.
-The package build bundles their pure dependencies into `dist/browser`; the
-server's explicit client-module allowlist also supplies the export inventory.
+These browser modules provide the frame adapters, message transport, geometry
+and revision-adoption boundaries consumed by the hydrated React shell. Shell
+navigation, selection, comparisons and component inspection live under
+`src/shell`; this directory contains no second interaction runtime. The package
+build bundles the browser-safe modules into `dist/browser` and generates an
+adjacent manifest from the completed esbuild outputs. Serve validates exact
+manifest/directory equality before binding and uses that inventory for delivery
+and export. The package graph check verifies every delivered static and dynamic
+import resolves within that complete inventory.
 
-`disclosures.ts` reads and writes every catalogue disclosure through one pair of
-helpers, so navigation, filtering, reload recovery and `Collapse all` treat a
-collection's native `<details>` and a screen's variant list alike. The list
-carries its state in `hidden` and in its button's `aria-expanded`, which the
-helpers keep in step along with the button's accessible name.
+`host_capability_descriptor.ts` validates the private live Serve bootstrap and
+source identity. `host_capabilities.ts` defines the behavior context, atomic
+public/private evidence revision and route/source cancellation scope. Both are
+kept protocol modules; static export omits their standalone browser outputs.
 
-`browse_clicks.ts` owns the one delegated click path, in the order the chrome
-nests, and is the only place that navigates. `browse_landing.ts` decides where
-activating a catalogue row from the Changes filter lands: a parent that carries
-only the aggregate mark opens the first changed variant its list still shows,
-and every other row opens itself. It also records one session-scoped intent
-naming that destination, which `workspace_views.ts` reads and clears as the
-destination installs, so only an arrival from the filter lands on a changed
-view and Back, Forward, a direct URL and a reload stay sticky.
-`changes_activation.ts` is the side-effect-free activation decision shared by
-standalone Browse and the embedded Viewer; Browse consumes its effective href
-while retaining the session intent needed across a full navigation.
-`workspace_views.ts` also re-applies the changed-view marks and the
-`Changed views` row whenever the saved variant, viewport, scheme or evidence
-changes. It selects a component's keyed list for the saved variant currently on
-screen; screens use their single entry-keyed list.
-`workspace_status.ts` uses that same selection and shown axes to write the title
-status and comparison-band availability, returning the mode to Current before
-an ineligible shown view hides the band.
-`browse_evidence_variants.ts` keeps those lists aligned with a background
-baseline — a parent adopts its first list without losing its live row, a
-parent whose last removed variant returned drops the list and the mark, and
-retained rows move rather than being rebuilt.
-
-`early_disclosures.ts` bridges native disclosure clicks through deferred startup.
-The synchronous navigation bootstrap starts capture; Browse initialization and
-reload recovery reapply the latest native choices. Load or page exit cleans up
-capture state, and unfiltered choices use the existing durable preference.
+Disclosure capture and pre-hydration navigation width capture are owned directly
+under `src/standalone`. The synchronous navigation bootstrap records native
+disclosure choices outside the React-owned DOM, and React reads that state for
+its initial hydration render. Interactive navigation resizing starts after
+hydration. Load or page exit cleans up capture state, and unfiltered choices use
+the existing durable preference. The standalone build continues to deliver
+this entry as `navigation-resize.js`.
 
 `frame_adapter.ts` defines the transport-independent mount, boundary, highlight,
 scroll and event interfaces in the [frame contract](../../../../docs/protocol/mokly-frame-adapter.md).
@@ -52,6 +36,24 @@ Browse state, or controls. `component_geometry.ts` retains its existing geometry
 entrypoints and shares containing-block-aware clipping with the inspector in
 `inspector/clipping.ts`; `same_origin_highlight.ts` owns the unchanged
 mask, labels, selection and observer lifecycle.
+
+`same_origin_identity.ts` is the single document-authentication boundary for
+same-origin mounts. It records authenticated `Document` objects without
+retaining them, transfers mount-time navigation ownership only when the exact
+current object was previously authenticated for that frame, and separately
+checks every watcher or `load` candidate against the assigned resource through
+a mount-scoped capability. Weak frame provenance permits matching SSR content
+on the first same-origin mount. A later mount excludes its exact unrecorded
+starting object even when its URL equals the assignment, so an unowned document
+reached through native frame navigation keeps portable link behavior until a
+different replacement object authenticates.
+
+Frames holding a previous version carry `data-mokly-preview-frame`. They are
+owned directly by the [React preview controller](../previews/README.md), not a
+frame adapter, so no inspector or logical-navigation handshake happens for
+historical documents. The controller cancels marked links and forms in
+same-origin historical documents and the frame sandbox supplies the remaining
+cross-origin boundary.
 
 `post_message_adapter.ts` explicitly opts into a separate HTTP(S) origin. It sets
 the cross-origin sandbox, replaces iframe history, and negotiates a fresh random
@@ -80,11 +82,10 @@ existing route/new-context handling. Events contain logical identities and
 activation metadata, never consumer URLs. The transport does not open windows.
 Local Serve/export do not select this adapter or expose a pick control.
 
-`installWorkspace` preserves standalone saved-variant history by default. The
-React viewer supplies a variant proposal hook instead: the control proposes
-public selection, and the returned `setVariant` operation applies only a
-committed controlled or uncontrolled selection. This avoids a second private
-variant state or direct history write inside embedded viewers.
+Standalone saved variants use shell history. Embedded viewers propose public
+selection through the host boundary, and apply a variant only after controlled
+or uncontrolled selection commits. This avoids a second private variant state
+or direct history write inside embedded viewers.
 
 ```bash
 npm run build

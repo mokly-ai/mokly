@@ -33,6 +33,11 @@ import { ResourceComparison } from "./resource_comparison.js";
 import { compareScreen } from "./screen_compare.js";
 import { aggregateIgnored, fragmentRoutes } from "./screen_views.js";
 
+export interface CompareReviewOptions {
+  /** Disable the unchanged-view optimization for differential tests. */
+  useFastPath?: boolean;
+}
+
 /** Compare checked head output to its Git branch point and retain pane artifacts. */
 export async function compareReview(
   compilation: Compilation,
@@ -42,6 +47,7 @@ export async function compareReview(
   outDir = config.review.outDir,
   assetReader: ReviewAssetReader = new FileSystemReviewAssetReader(config),
   changedPathExclusions: readonly string[] = [],
+  options: CompareReviewOptions = {},
 ): Promise<ReviewArtifact> {
   const baseCommit = await git.evidence.mergeBase(baseRef, "HEAD");
   const baseManifest = await readBaseManifest(git.reader, baseCommit, config);
@@ -74,6 +80,7 @@ export async function compareReview(
       changedPaths,
       baseCommit,
       baseRef,
+      options.useFastPath,
     );
   const files = new Map<string, ReviewArtifactContent>();
   const baseSeeds = new Set<string>();

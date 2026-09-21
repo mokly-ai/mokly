@@ -8,8 +8,13 @@ import { expect, test } from "@playwright/test";
 import { exportCatalogue } from "../../dist/export/run.js";
 import { createExampleBaseline } from "../helpers/example_baseline.js";
 import { repositoryRoot } from "../helpers/fixture.js";
+import {
+  timeExportPreparation,
+  timeFixturePhase,
+} from "../helpers/fixture_timing.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 
+import { assertServedShellMarker } from "./export_shell.js";
 import { chooseViewport } from "./workspace_actions.js";
 
 let site: Awaited<ReturnType<typeof serveStaticFiles>>;
@@ -18,7 +23,12 @@ test.beforeAll(async () => {
   test.setTimeout(180_000);
   await fs.mkdir(path.join(repositoryRoot, ".context"), { recursive: true });
   root = await fs.mkdtemp(path.join(repositoryRoot, ".context/design-export-"));
-  const config = await createExampleBaseline(root);
+  const config = await timeFixturePhase(
+    "design-library-export",
+    "baseline-fixture",
+    false,
+    () => createExampleBaseline(root),
+  );
   const git = (...args: string[]) =>
     promisify(execFile)("git", args, { cwd: root });
   const tracked = (await git("ls-files", "examples/basic/generated")).stdout
@@ -34,8 +44,14 @@ test.beforeAll(async () => {
   expect(source).toContain("{label}");
   await fs.writeFile(file, source.replace("{label}", "{label} revised"));
   const output = path.join(root, "site");
-  await exportCatalogue(config, { base: "HEAD", outDir: output });
+  await timeExportPreparation("design-library-export", () =>
+    exportCatalogue(config, { base: "HEAD", outDir: output }),
+  );
   site = await serveStaticFiles(output);
+  await assertServedShellMarker(
+    site.url,
+    "/view/design/library/chrome/top-bar.html?variant=search",
+  );
 });
 test.afterAll(async () => {
   await site?.close();

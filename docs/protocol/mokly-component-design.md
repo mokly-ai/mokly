@@ -10,7 +10,9 @@ original pages and inspection states. The [workspace revision](./mokly-component
 inspection, and local editable previews implement these designs. Published
 catalogues expose read-only saved props. These designs
 extend the [shell design](./mokly-shell-design.md) and depict the
-[component explorer contract](./mokly-component-explorer.md).
+[component explorer contract](./mokly-component-explorer.md). The former
+consumer's previous-version state is implemented by the
+[removed content previews plan](../../plans/removed-content-previews.md).
 
 ## Owning Catalogue
 
@@ -27,27 +29,27 @@ Published galleries with four, four, and two screens. The linked inspector and
 controls contracts own their additional route inventories. Every screen has a separate
 mobile component and desktop component; there are no new user-flow pages.
 
-| Entry id                                    | Route                                                 | State                                                   |
-| ------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------- |
-| `design-component-overview`                 | `design/components/overview.html`                     | Action page, default variant, props, and Used by        |
-| `design-component-variants`                 | `design/components/pages/variants.html`               | Disabled saved variant                                  |
-| `design-component-comparison`               | `design/components/pages/comparison.html`             | Saved variant before/current comparison                 |
-| `design-component-affected`                 | `design/components/pages/affected.html`               | One changed component and two affected screens          |
-| `design-component-toolbar`                  | `design/components/pages/toolbar.html`                | Component consuming Action                              |
-| `design-component-help`                     | `design/components/pages/help.html`                   | Invoked component with no visible region                |
-| `design-component-inspection-details`       | `design/components/inspection/details.html`           | Repeated instances and selected props                   |
-| `design-component-inspection-highlight`     | `design/components/inspection/highlight.html`         | Outermost component cutouts                             |
-| `design-component-inspection-nested`        | `design/components/inspection/nested.html`            | Nested Action selected in the screen and Props          |
-| `design-component-inspection-direct-change` | `design/components/inspection/direct-change.html`     | Independent screen prop change; two Changes             |
-| `design-component-inspection-consumer`      | `design/components/inspection/consumer.html`          | A second screen reached from Used by                    |
-| `design-component-inspection-toolbar`       | `design/components/inspection/selection/toolbar.html` | Selected container with its own props                   |
-| `design-component-inspection-help`          | `design/components/inspection/selection/help.html`    | Selected invisible instance                             |
-| `design-component-empty`                    | `design/components/states/empty.html`                 | Validated empty usage                                   |
-| `design-component-unavailable`              | `design/components/states/unavailable.html`           | Missing inspection metadata                             |
-| `design-component-unused`                   | `design/components/states/unused.html`                | Saved component with no consumers                       |
-| `design-component-removed`                  | `design/components/states/removed.html`               | Removed saved variant and former consumer               |
-| `design-component-removed-consumer`         | `design/components/states/removed-consumer.html`      | Removed badge and current empty screen state            |
-| `design-component-added`                    | `design/components/states/additions/added.html`       | Added Badge current preview without comparison controls |
+| Entry id                                    | Route                                                 | State                                                     |
+| ------------------------------------------- | ----------------------------------------------------- | --------------------------------------------------------- |
+| `design-component-overview`                 | `design/components/overview.html`                     | Action page, default variant, props, and Used by          |
+| `design-component-variants`                 | `design/components/pages/variants.html`               | Disabled saved variant                                    |
+| `design-component-comparison`               | `design/components/pages/comparison.html`             | Saved variant before/current comparison                   |
+| `design-component-affected`                 | `design/components/pages/affected.html`               | One changed component and two affected screens            |
+| `design-component-toolbar`                  | `design/components/pages/toolbar.html`                | Component consuming Action                                |
+| `design-component-help`                     | `design/components/pages/help.html`                   | Invoked component with no visible region                  |
+| `design-component-inspection-details`       | `design/components/inspection/details.html`           | Repeated instances and selected props                     |
+| `design-component-inspection-highlight`     | `design/components/inspection/highlight.html`         | Outermost component cutouts                               |
+| `design-component-inspection-nested`        | `design/components/inspection/nested.html`            | Nested Action selected in the screen and Props            |
+| `design-component-inspection-direct-change` | `design/components/inspection/direct-change.html`     | Independent screen prop change; two Changes               |
+| `design-component-inspection-consumer`      | `design/components/inspection/consumer.html`          | A second screen reached from Used by                      |
+| `design-component-inspection-toolbar`       | `design/components/inspection/selection/toolbar.html` | Selected container with its own props                     |
+| `design-component-inspection-help`          | `design/components/inspection/selection/help.html`    | Selected invisible instance                               |
+| `design-component-empty`                    | `design/components/states/empty.html`                 | Validated empty usage                                     |
+| `design-component-unavailable`              | `design/components/states/unavailable.html`           | Missing inspection metadata                               |
+| `design-component-unused`                   | `design/components/states/unused.html`                | Saved component with no consumers                         |
+| `design-component-removed`                  | `design/components/states/removed.html`               | Removed saved variant and former consumer                 |
+| `design-component-removed-consumer`         | `design/components/states/removed-consumer.html`      | Former consumer's previous version behind a Removed badge |
+| `design-component-added`                    | `design/components/states/additions/added.html`       | Added Badge current preview without comparison controls   |
 
 Standalone files insert `.mobile` or `.desktop` before `.html`. All thirty-two component
 screens opt into light documents, matching the existing shell mockups. They
@@ -98,7 +100,13 @@ mobile/desktop × light/dark. A component-only appearance edit produces exactly
 one Changes row, Action; Welcome and Details appear under Affected screens.
 An independent Welcome label edit adds Welcome, making two Changes rows.
 The removed-state scenario also retains the former Farewell consumer and links
-it to its current empty state. Farewell is independently removed, so that
+it to its Removed state, which
+[removed previews](./mokly-removed-previews.md) fill with its previous version:
+the “Showing previous version” label, the historical frame for the selected
+viewport, and no comparison band, with the theme control disabled because Light
+is the only scheme that view was rendered in. Its stage carries no escape link,
+because the catalogue navigation keeps Action's affected list one step away.
+Farewell is independently removed, so that
 scenario has two Changes rows: Action and Farewell. The Removed Action variant
 keeps its before/current comparison and explicit missing current side; Farewell
 has no comparison band.
@@ -132,8 +140,8 @@ The same consumer DOM is used with highlighting off and on. Welcome uses an SVG 
 
 Mask geometry is fixed to the synthetic artboard's layout and tested against
 its actual DOM bounds. Runtime geometry collection, selection, Escape handling,
-and cleanup belong to Milestone 5. Comparison artboards disable highlighting,
-as does a Removed screen because it has no current preview to inspect.
+and cleanup are implemented. Comparison artboards disable highlighting, as does
+a Removed screen because it has no current preview to inspect.
 An empty usage list says no registered components are used in this view;
 unavailable inspection never claims a zero count. Badge has a visible saved
 example and an explicit empty Used by list.

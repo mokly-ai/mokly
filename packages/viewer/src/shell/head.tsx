@@ -9,6 +9,7 @@ import type { ManifestEntry } from "../registry/types.js";
 import type { Catalogue } from "./catalogue.js";
 import { structuredCrumbTrail } from "./nav_tree.js";
 import type { CatalogueCrumb } from "./nav_tree.js";
+import { useOptionalShellStore } from "./store_context.js";
 import type { RouteTarget } from "./target.js";
 
 function Crumbs(props: { items: readonly CatalogueCrumb[] }) {
@@ -32,6 +33,7 @@ function Crumbs(props: { items: readonly CatalogueCrumb[] }) {
 
 /** Viewport selection shown in the header of a screen route. */
 export function ViewportSwitch() {
+  const store = useOptionalShellStore();
   const options = [
     ["mobile", "Mobile"],
     ["desktop", "Desktop"],
@@ -46,9 +48,10 @@ export function ViewportSwitch() {
     >
       {options.map(([value, label]) => (
         <button
-          aria-pressed={value === "both" ? "true" : "false"}
+          aria-pressed={(store?.state.selection.viewport ?? "both") === value}
           data-viewport-option={value}
           key={value}
+          onClick={() => store?.selectViewport(value)}
           type="button"
         >
           {label}
@@ -64,6 +67,7 @@ export function ViewportSwitch() {
  * stylesheet reveals whichever fits the current width.
  */
 export function SchemeSwitch() {
+  const store = useOptionalShellStore();
   const options = [
     ["light", "Light"],
     ["dark", "Dark"],
@@ -77,9 +81,12 @@ export function SchemeSwitch() {
     >
       {options.map(([value, label]) => (
         <button
-          aria-pressed={value === "light" ? "true" : "false"}
+          aria-pressed={
+            (store?.state.selection.colorScheme ?? "light") === value
+          }
           data-color-scheme-option={value}
           key={value}
+          onClick={() => store?.selectColorScheme(value)}
           type="button"
         >
           {label}
@@ -97,6 +104,7 @@ export function ScreenHead(props: {
   heading: string;
   id?: string | undefined;
 }) {
+  const store = useOptionalShellStore();
   return (
     <div className="mbk-screen-head">
       <div className="mbk-screen-head-copy">
@@ -109,6 +117,9 @@ export function ScreenHead(props: {
               aria-label={`Copy ID ${props.id}`}
               className="mbk-idchip"
               data-copy-id={props.id}
+              onClick={() =>
+                store?.copy(props.id ?? "", `Copied ID ${props.id}`)
+              }
               type="button"
             >
               #{props.id}

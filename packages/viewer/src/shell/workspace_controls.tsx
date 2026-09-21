@@ -1,4 +1,6 @@
 /** Grouped, compact viewport, theme and inspection controls. */
+import { useShellIdentifierScope } from "./identifier_context.js";
+import { useOptionalShellStore } from "./store_context.js";
 import {
   VIEW_CHANGED_CLASS,
   VIEW_CHANGED_IDS,
@@ -15,9 +17,11 @@ import { WorkspaceIcon } from "./workspace_icons.js";
  * `aria-describedby` rather than rebuilding the head.
  */
 function ViewChangedMark({
+  id,
   kind,
   marked,
 }: {
+  id: string;
   kind: "scheme" | "viewport";
   marked: boolean;
 }) {
@@ -32,7 +36,7 @@ function ViewChangedMark({
       <span
         className={VIEW_CHANGED_TEXT_CLASS}
         data-view-changed-text={kind}
-        id={VIEW_CHANGED_IDS[kind]}
+        id={id}
         hidden={!marked}
       >
         {VIEW_CHANGED_TEXT[kind]}
@@ -44,11 +48,28 @@ function ViewChangedMark({
 export function WorkspaceControls({
   changedViews,
   dark,
+  highlight,
 }: {
   changedViews: readonly ChangedView[];
   dark: boolean;
+  highlight?: {
+    available: boolean;
+    active: boolean;
+    reason?: string;
+    toggle(): void;
+  };
 }) {
-  const marks = viewMarks(changedViews, "both", "light");
+  const store = useOptionalShellStore();
+  const identifier = useShellIdentifierScope();
+  const ids = {
+    scheme: identifier(VIEW_CHANGED_IDS.scheme),
+    viewport: identifier(VIEW_CHANGED_IDS.viewport),
+  };
+  const marks = viewMarks(
+    changedViews,
+    store?.state.selection.viewport ?? "both",
+    store?.state.selection.colorScheme ?? "light",
+  );
   return (
     <div className="mbk-view-tools" role="group" aria-label="View options">
       <label className="mbk-icon-select" title="Viewport">
@@ -57,41 +78,61 @@ export function WorkspaceControls({
         <select
           aria-label="Viewport"
           data-workspace-viewport=""
-          {...(marks.viewport
-            ? { "aria-describedby": VIEW_CHANGED_IDS.viewport }
-            : {})}
-          defaultValue="both"
+          {...(marks.viewport ? { "aria-describedby": ids.viewport } : {})}
+          onChange={(event) =>
+            store?.selectViewport(
+              event.currentTarget.value as "mobile" | "desktop" | "both",
+            )
+          }
+          value={store?.state.selection.viewport ?? "both"}
         >
           <option value="mobile">Mobile</option>
           <option value="desktop">Desktop</option>
           <option value="both">Both</option>
         </select>
-        <ViewChangedMark kind="viewport" marked={marks.viewport} />
+        <ViewChangedMark
+          id={ids.viewport}
+          kind="viewport"
+          marked={marks.viewport}
+        />
       </label>
       {dark ? (
         <button
           type="button"
           className="mbk-icon-button"
           aria-label="Dark mode"
-          aria-pressed="false"
+          aria-pressed={store?.state.selection.colorScheme === "dark"}
           title="Dark mode"
           data-workspace-scheme=""
-          {...(marks.scheme
-            ? { "aria-describedby": VIEW_CHANGED_IDS.scheme }
-            : {})}
+          {...(marks.scheme ? { "aria-describedby": ids.scheme } : {})}
+          onClick={() =>
+            store &&
+            store.selectColorScheme(
+              store.state.selection.colorScheme === "dark" ? "light" : "dark",
+            )
+          }
         >
           <WorkspaceIcon name="scheme" />
-          <ViewChangedMark kind="scheme" marked={marks.scheme} />
+          <ViewChangedMark
+            id={ids.scheme}
+            kind="scheme"
+            marked={marks.scheme}
+          />
         </button>
       ) : null}
       <button
         type="button"
         className="mbk-icon-button"
         aria-label="Highlight components"
-        aria-pressed="false"
-        title="Highlight components"
+        aria-description={
+          highlight?.reason ??
+          "Inspect component regions and their supplied props."
+        }
+        aria-pressed={highlight?.active ?? false}
+        title={highlight?.reason ?? "Highlight components"}
         data-workspace-highlight=""
-        disabled
+        disabled={!highlight?.available}
+        onClick={highlight?.toggle}
       >
         <WorkspaceIcon name="highlight" />
       </button>
