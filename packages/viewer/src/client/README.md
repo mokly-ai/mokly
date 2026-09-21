@@ -1,26 +1,35 @@
 # Browse client and frame adapters
 
-These browser modules enhance the existing server-rendered Browse shell. They
-own navigation, viewport and theme state, comparisons, and component inspection.
-The package build bundles their pure dependencies into `dist/browser`; the
-server's explicit client-module allowlist also supplies the export inventory.
+These browser modules provide the frame adapters, message transport, geometry
+and revision-adoption boundaries consumed by the hydrated React shell. Shell
+navigation, selection, comparisons and component inspection live under
+`src/shell`; this directory contains no second interaction runtime. The package
+build bundles the browser-safe modules into `dist/browser` and generates an
+adjacent manifest from the completed esbuild outputs. Serve validates exact
+manifest/directory equality before binding and uses that inventory for delivery
+and export. The package graph check verifies every delivered static and dynamic
+import resolves within that complete inventory.
 
-`browse_appearance.ts` takes the standalone Appearance control over from the
-classic `appearance-startup.js` asset. The asset paints the appearance before
-this module exists; once Browse is running, its `onAppearance` hook re-applies
-the same scheme through `setColorScheme`, so frames swap with history replaced
-and comparison panes and component samples redraw. Each swap compares the
-current source first, so the asset's earlier swap is never repeated. The
-workspace listens for the `mokly:appearance` document event rather than owning
-its own standalone control or receiving a second direct comparison update. The
-hook is tied to the Browse document's abort signal and clears the startup
-asset's `window.onAppearance` slot on page exit. See the
-[appearance contract](../../../../docs/protocol/mokly-viewer-appearance.md).
+`host_capability_descriptor.ts` validates the private live Serve bootstrap and
+source identity. `host_capabilities.ts` defines the behavior context, atomic
+public/private evidence revision and route/source cancellation scope. Both are
+kept protocol modules; static export omits their standalone browser outputs.
 
-`early_disclosures.ts` bridges native disclosure clicks through deferred startup.
-The synchronous navigation bootstrap starts capture; Browse initialization and
-reload recovery reapply the latest native choices. Load or page exit cleans up
-capture state, and unfiltered choices use the existing durable preference.
+Disclosure capture and pre-hydration navigation width capture are owned directly
+under `src/standalone`. The synchronous navigation bootstrap records native
+disclosure choices outside the React-owned DOM, and React reads that state for
+its initial hydration render. Interactive navigation resizing starts after
+hydration. Load or page exit cleans up capture state, and unfiltered choices use
+the existing durable preference. The standalone build continues to deliver
+this entry as `navigation-resize.js`.
+
+Standalone appearance is also owned under `src/standalone`, not by a second
+client interaction runtime. The classic `appearance-startup.js` bundle restores
+the document mark, preference and system listener before styles paint, updates
+parsed frames and the native selector, and exposes a narrow refresh handoff.
+The browser entry refreshes that controller before hydration; the React bridge
+then adopts its effective preview scheme into the shell store. The complete
+build-output manifest delivers both the classic bundle and `react-shell.js`.
 
 `frame_adapter.ts` defines the transport-independent mount, boundary, highlight,
 scroll and event interfaces in the [frame contract](../../../../docs/protocol/mokly-frame-adapter.md).
@@ -63,11 +72,10 @@ existing route/new-context handling. Events contain logical identities and
 activation metadata, never consumer URLs. The transport does not open windows.
 Local Serve/export do not select this adapter or expose a pick control.
 
-`installWorkspace` preserves standalone saved-variant history by default. The
-React viewer supplies a variant proposal hook instead: the control proposes
-public selection, and the returned `setVariant` operation applies only a
-committed controlled or uncontrolled selection. This avoids a second private
-variant state or direct history write inside embedded viewers.
+Standalone saved variants use shell history. Embedded viewers propose public
+selection through the host boundary, and apply a variant only after controlled
+or uncontrolled selection commits. This avoids a second private variant state
+or direct history write inside embedded viewers.
 
 ```bash
 npm run build

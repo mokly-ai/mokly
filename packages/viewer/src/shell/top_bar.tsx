@@ -1,23 +1,29 @@
+import type { StandaloneAppearanceState } from "../standalone/appearance_bridge.js";
+
 import { AppearanceSelect } from "./appearance.js";
 import type { Catalogue } from "./catalogue.js";
-import type { ShellContext } from "./context.js";
 import { SchemeSwitch } from "./head.js";
 import { BrandIcon, IconSvg, SearchIcon } from "./icons.js";
+import { useShellIdentifier } from "./identifier_context.js";
+import { useOptionalShellStore } from "./store_context.js";
 import { SearchTagPicker } from "./tags.js";
 
 /** The shared 48px catalogue header keeps search available at every width. */
 export function TopBar(props: {
+  appearance?: StandaloneAppearanceState;
   catalogue: Catalogue;
-  context?: ShellContext;
 }) {
+  const store = useOptionalShellStore();
+  const navigationId = useShellIdentifier("mb-nav");
   return (
     <header className="mbk-topbar" data-search="">
       <button
-        aria-controls="mb-nav"
-        aria-expanded="false"
+        aria-controls={navigationId}
+        aria-expanded={store?.state.drawerOpen ?? false}
         aria-label="Open catalogue navigation"
         className="mbk-menu"
         data-mokly-menu=""
+        onClick={() => store?.setDrawer(!store.state.drawerOpen)}
         type="button"
       >
         <IconSvg size={16}>
@@ -35,18 +41,21 @@ export function TopBar(props: {
         <input
           aria-label="Search catalogue"
           data-mokly-search=""
+          onChange={(event) => store?.setSearch(event.currentTarget.value)}
           placeholder="Search catalogue…"
           type="search"
+          value={store?.state.query}
         />
         <SearchTagPicker tags={props.catalogue.tags} />
       </div>
-      {props.context?.embedded ? (
+      {store?.context.embedded ? (
         props.catalogue.hasDarkFragments ? (
           <SchemeSwitch />
         ) : null
       ) : (
         <AppearanceSelect
-          {...(props.context?.theme ? { theme: props.context.theme } : {})}
+          ready={props.appearance?.ready ?? false}
+          theme={props.appearance?.theme ?? "auto"}
         />
       )}
     </header>

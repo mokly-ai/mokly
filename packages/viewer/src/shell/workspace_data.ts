@@ -87,7 +87,11 @@ export function workspaceData(
   entry: WorkspaceData["entry"],
 ): WorkspaceData {
   if (catalogue.publicModel)
-    return publicWorkspace(catalogue.publicModel, entry);
+    return publicWorkspace(
+      catalogue.publicModel,
+      entry,
+      context.comparisons ?? catalogue.publicModel.comparisonUrl !== null,
+    );
   const snapshot = context.componentChanges;
   const result = snapshot?.result;
   const resourceEvidence = snapshot?.screenEvidence?.find(
@@ -234,9 +238,6 @@ export function workspaceData(
     ...(catalogue.manifest.schemaVersion === "live-index-1"
       ? {
           usageComplete: false,
-          ...(context.renderCapability
-            ? { previewGeneration: context.renderCapability.generation }
-            : {}),
         }
       : {}),
     ...(entry.kind === "component" && context.renderCapability
@@ -249,7 +250,14 @@ export function workspaceData(
     base: context.base,
     inputChanges,
     relatedComponents: (result?.components ?? [])
-      .filter((item) => relatedIds.has(item.id))
+      .filter((item) => {
+        const routed = catalogue.byId.get(item.id);
+        return (
+          relatedIds.has(item.id) &&
+          routed?.kind === "component" &&
+          routed.route === item.route
+        );
+      })
       .map(({ title, route }) => ({ title, route })),
     components: [...catalogue.manifest.entries, ...catalogue.removedComponents]
       .filter((item): item is ManifestComponent => item.kind === "component")

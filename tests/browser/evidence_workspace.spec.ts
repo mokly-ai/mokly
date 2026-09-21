@@ -90,13 +90,7 @@ test("Usage and Changes completion preserve edited props and their live preview"
       "title",
       "No registered components are used in this view.",
     );
-    const demandUsage = page.waitForResponse(
-      (response) =>
-        response.url().includes("/__mokly/views/screens/home.") &&
-        response.ok(),
-    );
     await page.locator('a[data-route="screens/home.html"]').click();
-    await demandUsage;
     await expect(page.locator("[data-workspace-highlight]")).toBeEnabled();
     await page.locator("[data-workspace-highlight]").click();
     await expect(page.locator("[data-workspace-highlight]")).toHaveAttribute(

@@ -24,6 +24,7 @@ import {
 /** A frame whose light and dark sources the shell records on the element. */
 interface AppearanceFrame {
   src: string;
+  getAttribute(name: "src"): string | null;
   dataset: {
     fragmentLight?: string | undefined;
     fragmentDark?: string | undefined;
@@ -133,7 +134,7 @@ function applyFrames(
       scheme === "dark"
         ? frame.dataset.fragmentDark
         : frame.dataset.fragmentLight;
-    if (next && frame.src !== next) frame.src = next;
+    if (next && frame.getAttribute("src") !== next) frame.src = next;
   }
 }
 

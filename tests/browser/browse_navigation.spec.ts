@@ -192,6 +192,10 @@ test("raw native links navigate from desktop, area, SVG, flow, and legacy frames
   await navigateFrom(page, ".mbk-frame-mobile iframe", "#svg-link");
 
   await page.goto(`${navigation.url}/view/user-flows/tour.html`);
+  await expect(page.locator(".mbk-flow-screen iframe").first()).toHaveAttribute(
+    "data-mokly-frame-state",
+    "ready",
+  );
   await page
     .frameLocator(".mbk-flow-screen iframe")
     .first()
@@ -200,11 +204,59 @@ test("raw native links navigate from desktop, area, SVG, flow, and legacy frames
   await expectDestination(page);
 
   await page.goto(`${navigation.url}/view/guide.html`);
+  await expect(page.locator(".mbk-stage-embed iframe")).toHaveAttribute(
+    "data-mokly-frame-state",
+    "ready",
+  );
   await page
     .frameLocator(".mbk-stage-embed iframe")
     .locator("#legacy-link")
     .click();
   await expectDestination(page);
+});
+
+test("logical activation stays host-owned during a frame source handoff", async ({
+  page,
+}) => {
+  let releaseRequest = () => {};
+  let reportRequest = () => {};
+  const requestStarted = new Promise<void>((resolve) => {
+    reportRequest = resolve;
+  });
+  const requestReleased = new Promise<void>((resolve) => {
+    releaseRequest = resolve;
+  });
+  await page.route("**/static/screens/home.mobile.dark.html", async (route) => {
+    reportRequest();
+    await requestReleased;
+    await route.continue();
+  });
+
+  try {
+    await page.goto(`${navigation.url}/view/screens/home.html`);
+    await chooseViewport(page, "mobile");
+    await chooseScheme(page, "dark");
+    await requestStarted;
+    await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
+      "data-mokly-frame-state",
+      "loading",
+    );
+    await page
+      .frameLocator(".mbk-frame-mobile iframe")
+      .locator("#area-link")
+      .evaluate((element) =>
+        element.dispatchEvent(
+          new MouseEvent("click", { bubbles: true, cancelable: true }),
+        ),
+      );
+
+    await expectDestination(page);
+    await page.goBack();
+    await expect(page).toHaveURL(/\/view\/screens\/home\.html$/);
+    await expect(page.locator("#mb-main h2")).toHaveText("Home");
+  } finally {
+    releaseRequest();
+  }
 });
 
 async function navigateFrom(
@@ -214,6 +266,10 @@ async function navigateFrom(
   dispatch = false,
 ): Promise<void> {
   await page.goto(`${navigation.url}/view/screens/home.html`);
+  await expect(page.locator(frameSelector)).toHaveAttribute(
+    "data-mokly-frame-state",
+    "ready",
+  );
   const link = page.frameLocator(frameSelector).locator(linkSelector);
   if (dispatch) {
     await link.evaluate((element) =>

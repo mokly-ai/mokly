@@ -16,6 +16,8 @@ import type {
   ViewerTheme,
 } from "@mokly/viewer";
 
+import { installFrameHookHarness } from "./frame_hook_harness.js";
+
 interface HostOptions {
   controlled?: boolean;
   accept?: boolean;
@@ -103,6 +105,7 @@ const start = (id: string, options: HostOptions = {}) => {
     },
   };
   host.props = {
+    viewerId: id,
     catalogue: options.source ?? data.catalogue,
     ...(options.source
       ? {}
@@ -148,3 +151,4 @@ const start = (id: string, options: HostOptions = {}) => {
     document.getElementById(id)?.remove();
   },
 };
+installFrameHookHarness();

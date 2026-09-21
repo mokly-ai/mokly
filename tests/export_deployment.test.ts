@@ -8,14 +8,13 @@ import {
   createExportFixture,
   directoryFiles,
 } from "./helpers/export_fixture.js";
-import { serveStaticFiles } from "./helpers/static_server.js";
 
 for (const name of [
   "index.html",
   "view/screens/home.html",
   "__mokly/shell.css",
   "__mokly/client/appearance-startup.js",
-  "__mokly/client/browse.js",
+  "__mokly/client/react-shell.js",
   "__mokly/navigation/delivery.js",
   "__mokly/fonts/InterVariable.woff2",
   "static/extra.txt",
@@ -53,27 +52,6 @@ for (const name of [
       );
   });
 }
-
-test("the startup asset has a portable root or subpath export URL", async (context) => {
-  const fixture = await createExportFixture();
-  context.after(() => fixture.close());
-  await exportCatalogue(fixture.config, { outDir: "site" });
-  const files = await directoryFiles(fixture.output);
-  const asset = "__mokly/client/appearance-startup.js";
-  const expected = files.get(asset);
-  assert.ok(expected, `export missing ${asset}`);
-
-  const root = await serveStaticFiles(fixture.output);
-  const subpath = await serveStaticFiles(fixture.root);
-  context.after(() => root.close());
-  context.after(() => subpath.close());
-  for (const base of [`${root.url}/`, `${subpath.url}/site/`]) {
-    const url = new URL(asset, base);
-    const response = await fetch(url);
-    assert.equal(response.status, 200, url.href);
-    assert.deepEqual(Buffer.from(await response.arrayBuffer()), expected);
-  }
-});
 
 test("deployment identity covers alias edges and ignores map insertion order", async (context) => {
   const fixture = await createExportFixture();

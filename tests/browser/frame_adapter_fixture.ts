@@ -70,6 +70,14 @@ export async function crossOriginFixture(
     (entry) => entry.kind === "screen" && entry.id === "home",
   );
   if (home?.kind !== "screen") throw new Error("No fixture screen");
+  const renderId = `${"a".repeat(48)}.${"b".repeat(64)}`;
+  const temporaryPath = `/__mokly/components/renders/${renderId}/${home.fragments.mobile}`;
+  const temporaryFile = path.join(root, temporaryPath.slice(1));
+  await fs.mkdir(path.dirname(temporaryFile), { recursive: true });
+  await fs.copyFile(
+    path.join(root, "static", home.fragments.mobile),
+    temporaryFile,
+  );
   const usage = home.componentViews![0]!;
   return {
     host,
@@ -82,6 +90,7 @@ export async function crossOriginFixture(
       comparisonUrl: null,
       revision: { content: 0, evidence: 0 },
     }),
+    temporaryPath,
     usage,
     async close() {
       await frames.close();

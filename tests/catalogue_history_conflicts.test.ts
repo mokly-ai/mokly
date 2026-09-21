@@ -88,6 +88,7 @@ for (const reuse of ["id", "route"] as const) {
       )!.views[0]!.usage;
       await fs.writeFile(fixture.entryPath, source(reuse));
       let model: CatalogueReadModel;
+      let holderHtml: string;
       if (delivery === "Serve") {
         await writeCompilation(
           await compileCatalogue(fixture.config),
@@ -109,6 +110,9 @@ for (const reuse of ["id", "route"] as const) {
         const response = await fetch(`${server.url}/__mokly/catalogue.json`);
         assert.equal(response.status, 200);
         model = (await response.json()) as CatalogueReadModel;
+        const holder = await fetch(`${server.url}/view/components/holder.html`);
+        assert.equal(holder.status, 200);
+        holderHtml = await holder.text();
       } else {
         await exportCatalogue(fixture.config, { outDir: "site" });
         model = JSON.parse(
@@ -117,8 +121,13 @@ for (const reuse of ["id", "route"] as const) {
             "utf8",
           ),
         ) as CatalogueReadModel;
+        holderHtml = await fs.readFile(
+          path.join(fixture.output, "view/components/holder.html"),
+          "utf8",
+        );
       }
       verify(model);
+      assert.doesNotMatch(holderHtml, /Changed component:/);
       const broken = structuredClone(model);
       const home = broken.removedEntries.find(
         ({ entry }) => entry.id === "home",

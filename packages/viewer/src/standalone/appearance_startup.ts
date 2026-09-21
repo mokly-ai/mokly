@@ -7,6 +7,7 @@
  * install is finished once the DOM is ready.
  */
 
+import type { StandaloneAppearanceHost } from "./appearance_host.js";
 import { installAppearance } from "./startup.js";
 
 if (typeof document !== "undefined" && typeof window !== "undefined") {
@@ -23,9 +24,26 @@ if (typeof document !== "undefined" && typeof window !== "undefined") {
     },
     window,
   );
+  const host = window as Window & {
+    __moklyAppearance?: StandaloneAppearanceHost | undefined;
+  };
+  const appearance: StandaloneAppearanceHost = {
+    choose: (theme) => handle.choose(theme),
+    refresh: () => handle.refresh(),
+  };
+  host.__moklyAppearance = appearance;
   if (document.readyState === "loading")
     document.addEventListener("DOMContentLoaded", () => handle.refresh(), {
       once: true,
     });
   else handle.refresh();
+  window.addEventListener(
+    "pagehide",
+    () => {
+      handle.dispose();
+      if (host.__moklyAppearance === appearance)
+        host.__moklyAppearance = undefined;
+    },
+    { once: true },
+  );
 }

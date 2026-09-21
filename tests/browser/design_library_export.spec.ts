@@ -14,6 +14,7 @@ import {
 } from "../helpers/fixture_timing.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 
+import { assertServedShellMarker } from "./export_shell.js";
 import { chooseViewport } from "./workspace_actions.js";
 
 let site: Awaited<ReturnType<typeof serveStaticFiles>>;
@@ -47,6 +48,10 @@ test.beforeAll(async () => {
     exportCatalogue(config, { base: "HEAD", outDir: output }),
   );
   site = await serveStaticFiles(output);
+  await assertServedShellMarker(
+    site.url,
+    "/view/design/library/chrome/top-bar.html?variant=search",
+  );
 });
 test.afterAll(async () => {
   await site?.close();

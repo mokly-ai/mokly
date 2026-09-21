@@ -19,11 +19,18 @@ Browse shell in React hosts using the public
 [catalogue read model](./docs/protocol/mokly-catalogue.md). It provides controlled
 screen and saved-variant selection, slots, inspection events, exact multi-instance
 highlighting, host-owned instance markers, an imperative handle and
-[frame adapters](./docs/protocol/mokly-frame-adapter.md). Embedded hosts choose an
-independent Auto/Light/Dark interface with `theme`; standalone Browse supplies one
-Appearance selector that changes its interface and previews together. Serve and
-export use the viewer's static renderer and vanilla enhancements; exported
-browsers contain no React.
+[frame adapters](./docs/protocol/mokly-frame-adapter.md). Serve and export render
+its shell tree on the server and hydrate it in the browser with its bundled
+React, so every delivery mode runs one shell. Embedded hosts choose an
+independent Auto/Light/Dark interface with `theme`; standalone Browse supplies
+one Appearance selector that changes its interface and previews together.
+Implementation and delivery work
+is tracked in the [plans index](./plans/README.md).
+Embedded hosts give each viewer a stable, document-unique `viewerId` and reuse
+it across server rendering and hydration, keeping links and accessibility
+relationships isolated when several viewers share a page.
+Static pages retain their complete first paint and share one catalogue file,
+validated before hydration, instead of copying the catalogue into every page.
 Both packages build, release and are tested together. The viewer publishes before
 the CLI, which depends on its exact version. Viewer 0.1.0 and CLI 0.10.0 were
 published together.
@@ -357,7 +364,7 @@ the selected screen or saved variant and its referenced assets, without rebuildi
 or snapshotting the entire catalogue. Checked-input fingerprints prevent later
 output edits from silently changing a comparison. See the
 [selected comparison contract](./docs/protocol/mokly-selected-comparisons.md).
-Changing viewport, theme or comparison mode renews the loaded snapshots before
+Changing viewport, preview scheme or comparison mode renews the loaded snapshots before
 using them. After an idle comparison expires, Mokly automatically reacquires
 the same screen or saved variant. Available snapshots reuse their loaded result;
 published catalogues need no renewal requests.
@@ -623,11 +630,10 @@ forcing React peers to the consumer's one runtime.
 
 ## Troubleshooting
 
-- **Node crashes in `cjs_lexer::Parse`:** upgrade to Node 24.19.0 or newer, or
-  use another supported release. Node 24.14.0 through 24.18.x can abort during
-  worker startup or shutdown; this is separate from a Mokly render or validation
-  error. The [CI verification contract](./docs/protocol/ci-verification.md)
-  records the runtime boundary.
+- **Node crashes in `cjs_lexer::Parse`:** upgrade to a patched Node LTS release.
+  Node 24.14.1 has an [upstream native-loader crash](https://github.com/nodejs/node/issues/63323)
+  that can surface during worker startup/shutdown. Node 24.21.0 includes the fix;
+  this is separate from a Mokly render or validation error.
 - **No config found:** run from the consumer repository or pass `--config`
   after the command.
 - **A committed generated file is stale:** run `mokly build`, inspect the diff,
@@ -659,11 +665,8 @@ forcing React peers to the consumer's one runtime.
 
 ## Developer Setup
 
-The repository accepts Node.js `>=22.14.0 <24.14.0` or `>=24.19.0`, npm 11,
-and Rust 1.95 for its repository tasks. Run local gates only on a supported
-Node release. CI tests 22.14.0 and 24.21.0; the checked-in `.node-version` and
-the development sandbox both use 24.21.0 so local verification matches the
-pinned Node 24 lane.
+The repository requires Node.js 22.14 or newer, npm 11, and Rust 1.95 for its
+repository tasks.
 
 ```bash
 npm ci
@@ -690,10 +693,6 @@ The package's own `@mokly/mokly` public entrypoint is always a repository module
 including before `dist/` has been built. `npm run lint -- --fix` applies the
 `import/first` and `import/order` rules, provided by the ESLint 10-compatible
 `eslint-plugin-import-x` package.
-The root ESLint configuration also imports `.gitignore`, so ignored build,
-cache, report, and tool scratch paths stay outside the lint gate even when an
-earlier test command created them. ESLint-only broader ignores remain explicit
-in that configuration.
 
 For local development after installing dependencies, run:
 
@@ -863,8 +862,8 @@ bridge; unsupported platforms or filesystems fail without a replacing fallback.
 Each complete export has its own content-derived deployment identity, separate
 from comparison generations. Navigation from an old tab performs a full reload
 when the deployed catalogue, assets, or host aliases change, even if the
-comparison files are unchanged. Within one deployment, navigation remains
-progressive. Hosting must revalidate mutable files so that reload can fetch them.
+comparison files are unchanged. Within one deployment, navigation stays
+in-shell. Hosting must revalidate mutable files so that reload can fetch them.
 
 Exports also include an inert `__mokly/client/inspector.js` for explicit
 cross-origin hosts. Current owned copies contain its bounded identity map;
@@ -1045,7 +1044,7 @@ provides the canonical mobile and desktop inventory for component pages, screen
 inspection, a collapsible icon inspector, and the complete prop-controls states.
 The [controls designs](./docs/protocol/mokly-component-controls-design.md) show
 saved variants and temporary edits, implemented by the local rendering service. The catalogue hierarchy reaches each design without
-adding navigation footers to the artboards. The [workspace designs](./docs/protocol/mokly-component-workspace-design.md) add working viewport/theme/highlight controls, a fixed shell with a resizable inspector, entry change-status badges, and comparison evidence inside Details. Unmodified examples and ordinary Browse/tag-picker designs omit comparison tabs;
+adding navigation footers to the artboards. The [workspace designs](./docs/protocol/mokly-component-workspace-design.md) add working viewport/appearance/highlight controls, a fixed shell with a resizable inspector, entry change-status badges, and comparison evidence inside Details. Unmodified examples and ordinary Browse/tag-picker designs omit comparison tabs;
 eligible comparisons retain an opaque toolbar. The desktop grip sits on its
 divider line and shares the navigation separator's affordance, rotated: the same
 rounded short line that turns accent-colored with a soft halo on hover, focus,
@@ -1058,14 +1057,12 @@ change attribution. See the [shared design library guide](./examples/basic/entri
 
 **Browse shell → Appearance** records the delivered Auto/Light/Dark appearance
 for standalone Browse, where one control sets the chrome and the screens it
-shows together. Those screens are authored as ordinary Light and Dark renders,
-so the outer shell's Appearance selector switches the mockup you are looking at
-with the rest of the catalogue.
-Their swatches and contrast live in the
-[semantic palette](./docs/protocol/mokly-viewer-palette.md) and their behavior in
-the [appearance contract](./docs/protocol/mokly-viewer-appearance.md). Embedded
-viewers take `theme` independently from their preview selection; Serve and export
-show the standalone Appearance control on every route.
+shows together. Those screens are ordinary Light and Dark renders, so the outer
+shell's Appearance selector switches the mockup with the rest of the catalogue.
+The [semantic palette](./docs/protocol/mokly-viewer-palette.md) records its
+swatches and contrast, and the
+[appearance contract](./docs/protocol/mokly-viewer-appearance.md) defines its
+behavior. Embedded viewers take `theme` independently from preview selection.
 
 The design mockups use `MockLink` for supported navigation and state transitions;
 the two example buttons demonstrate `MockLink asChild`. See the
@@ -1083,7 +1080,7 @@ canonical destinations and the controls that remain visual depictions.
 - [`src/build`](./src/build) — single-graph bundling, compilation, links, check,
   and transactional writes.
 - [`packages/viewer`](./packages/viewer/README.md) — React/SSR shell, catalogue
-  readers, navigation, adapters, inspection and reusable browser enhancements.
+  readers, navigation, frame adapters, inspection and live host capabilities.
 - [`src/server`](./src/server) — manifest-backed HTTP and the watched child lifecycle.
 - [`src/client`](./src/client) — private Serve updates, controls and on-demand loading.
 - [`packages/viewer/src/navigation`](./packages/viewer/src/navigation) and
@@ -1122,9 +1119,8 @@ in the [plans index](./plans/README.md).
 - [Instance identity](./docs/protocol/mokly-instances.md),
   [public catalogue](./docs/protocol/mokly-catalogue.md),
   [viewer API](./docs/protocol/mokly-viewer.md), and
-  [frame adapters](./docs/protocol/mokly-frame-adapter.md) — identity, catalogue and
-  adapters are implemented; the viewer package is verified and awaiting its
-  first release.
+  [frame adapters](./docs/protocol/mokly-frame-adapter.md) — shared data,
+  selection, inspection and transport contracts for the published viewer package.
 - [Package ownership boundary](./docs/architecture/package-boundary.md)
 - [Implementation review prompt](./docs/implementation-review-prompt.md)
 - [Implementation plans](./plans/README.md)

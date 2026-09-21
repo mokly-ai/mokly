@@ -15,6 +15,11 @@ import {
   removeFixture,
   type TestFixture,
 } from "./helpers/fixture.js";
+import {
+  attribute,
+  documentElements,
+  type HtmlElement,
+} from "./helpers/html.js";
 
 test("served Browse adapts current HTML without mutating portable files", async (context) => {
   const fixture = await navigationFixture(context);
@@ -93,13 +98,33 @@ test("served fragment queries validate once and reach every applicable frame", a
     screen,
     /src="\/static\/screens\/details\.desktop\.html#section"/,
   );
-  assert.equal((screen.match(/data-mokly-fragment-frame=""/g) ?? []).length, 2);
+  assert.equal(fragmentFrames(screen).length, 2);
 
   const flow = await (
     await fetch(`${server.url}/view/user-flows/tour.html?fragment=section`)
   ).text();
-  assert.equal((flow.match(/#section/g) ?? []).length, 3);
-  assert.equal((flow.match(/data-mokly-fragment-frame=""/g) ?? []).length, 1);
+  const flowFrames = documentFrames(flow);
+  assert.equal(flowFrames.length, 2);
+  assert.equal(
+    flowFrames.flatMap((frame) =>
+      frame.attrs.filter(
+        ({ name, value }) =>
+          ["src", "data-fragment-dark", "data-fragment-light"].includes(name) &&
+          value.endsWith("#section"),
+      ),
+    ).length,
+    3,
+  );
+  assert.equal(attribute(flowFrames[0]!, "data-mokly-fragment-frame"), "");
+  assert.equal(
+    attribute(flowFrames[1]!, "data-mokly-fragment-frame"),
+    undefined,
+  );
+  assert.equal(fragmentFrames(flow).length, 1);
+  for (const name of ["src", "data-fragment-dark", "data-fragment-light"])
+    assert.equal(attribute(flowFrames[0]!, name)?.endsWith("#section"), true);
+  for (const name of ["src", "data-fragment-light"])
+    assert.equal(attribute(flowFrames[1]!, name)?.endsWith("#section"), false);
 
   for (const query of [
     "fragment=section&fragment=section",
@@ -114,6 +139,16 @@ test("served fragment queries validate once and reach every applicable frame", a
     );
   }
 });
+
+function documentFrames(html: string): HtmlElement[] {
+  return documentElements(html, (element) => element.tagName === "iframe");
+}
+
+function fragmentFrames(html: string): HtmlElement[] {
+  return documentFrames(html).filter(
+    (frame) => attribute(frame, "data-mokly-fragment-frame") !== undefined,
+  );
+}
 
 test("HEAD id errors omit bodies on a reused connection", async (context) => {
   const fixture = await navigationFixture(context);

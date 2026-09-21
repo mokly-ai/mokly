@@ -44,6 +44,7 @@ try {
     packageVersion: pair.cli.report.version,
     viewerVersion: pair.viewer.report.version,
     versions: {
+      esbuild: packageJson.dependencies.esbuild,
       react: packageJson.devDependencies.react,
       reactDom: packageJson.devDependencies["react-dom"],
       reactDomTypes: packageJson.devDependencies["@types/react-dom"],

@@ -1,5 +1,8 @@
 /** Stable catalogue controls distinguish unknown evidence from a real empty result. */
 import type { ShellContext } from "./context.js";
+import { navNodeVisible } from "./nav_model.js";
+import { queryConstrains } from "./search_query.js";
+import { useOptionalShellStore } from "./store_context.js";
 
 /**
  * Copy for the two states that are still working. `spinner` labels the count
@@ -15,8 +18,10 @@ const CHANGES_MESSAGES = {
 } as const;
 
 export function NavFilter({ context }: { context: ShellContext }) {
+  const store = useOptionalShellStore();
   const status = context.changedRoutes ? "ready" : context.changesStatus;
   if (!status) return null;
+  const selected = store?.state.selection.view ?? "all";
   return (
     <div
       aria-label="Catalogue filter"
@@ -26,17 +31,19 @@ export function NavFilter({ context }: { context: ShellContext }) {
       role="group"
     >
       <button
-        aria-pressed="true"
+        aria-pressed={selected === "all"}
         className="mbk-nav-filter-opt"
         data-filter="all"
+        onClick={() => store?.setView("all")}
         type="button"
       >
         All
       </button>
       <button
-        aria-pressed="false"
+        aria-pressed={selected === "changes"}
         className="mbk-nav-filter-opt"
         data-filter="changed"
+        onClick={() => store?.setView("changes")}
         type="button"
       >
         Changes
@@ -59,11 +66,30 @@ export function NavFilter({ context }: { context: ShellContext }) {
 }
 
 export function NavStatus({ context }: { context: ShellContext }) {
+  const store = useOptionalShellStore();
   if (!context.changesStatus && !context.changedRoutes) return null;
   const status = context.changedRoutes ? undefined : context.changesStatus;
   const preparing = status === "preparing";
+  const selected = store?.state.selection.view === "changes";
+  const visible =
+    store?.sections.some((section) =>
+      section.children.some((node) =>
+        navNodeVisible(node, store.state.selection, store.context),
+      ),
+    ) ?? true;
+  const constrained = store
+    ? queryConstrains({
+        freeText: store.state.selection.search,
+        tags: store.state.selection.tags,
+      })
+    : false;
   return (
-    <div className="mbk-nav-status" data-nav-status="" hidden role="status">
+    <div
+      className="mbk-nav-status"
+      data-nav-status=""
+      hidden={!selected || (status === undefined && visible)}
+      role="status"
+    >
       {preparing || status === "pending" ? (
         <span className="mbk-nav-spinner" aria-hidden="true" />
       ) : null}
@@ -81,7 +107,11 @@ export function NavStatus({ context }: { context: ShellContext }) {
             </span>
           </>
         ) : context.changedRoutes ? (
-          "No changes found."
+          constrained ? (
+            "No matching changes."
+          ) : (
+            "No changes found."
+          )
         ) : status === "pending" ? (
           CHANGES_MESSAGES.pending.title
         ) : (

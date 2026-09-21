@@ -11,21 +11,24 @@ import {
 interface FakeFrame {
   src: string;
   dataset: Record<string, string | undefined>;
+  getAttribute(name: "src"): string | null;
   loads: string[];
 }
 
 function frame(light: string, dark?: string): FakeFrame {
-  const element: FakeFrame = {
-    src: light,
+  let source = light;
+  return {
+    get src() {
+      return new URL(source, "https://catalogue.example/static/").href;
+    },
+    set src(value: string) {
+      source = value;
+      this.loads.push(value);
+    },
     dataset: dark ? { fragmentLight: light, fragmentDark: dark } : {},
+    getAttribute: () => source,
     loads: [],
   };
-  return new Proxy(element, {
-    set(target, key, value) {
-      if (key === "src") target.loads.push(String(value));
-      return Reflect.set(target, key, value);
-    },
-  });
 }
 
 function environment(
@@ -164,6 +167,18 @@ test("a dark start swaps each frame's source once, before its first load", () =>
   installAppearance(world.document, world.window);
   assert.deepEqual(dual.loads, ["welcome.dark.html"]);
   handle.dispose();
+});
+
+test("a refresh compares the authored source instead of its resolved URL", () => {
+  const dual = frame("welcome.html", "welcome.dark.html");
+  const world = environment({ search: "?scheme=dark", frames: [dual] });
+  const handle = installAppearance(world.document, world.window);
+  assert.deepEqual(dual.loads, ["welcome.dark.html"]);
+  dual.loads.length = 0;
+
+  handle.refresh();
+
+  assert.deepEqual(dual.loads, []);
 });
 
 test("a light start leaves every server-rendered source alone", () => {

@@ -94,8 +94,12 @@ for (const viewport of ["desktop", "mobile"] as const) {
     ).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(page.locator(".mbk-highlight-layer")).toHaveCount(0);
-    for (const summary of await panel.locator("details > summary").all())
+    for (const summary of await panel.locator("details > summary").all()) {
       await summary.click();
+      await expect(
+        page.getByRole("tab", { name: "Components", exact: true }),
+      ).toHaveAttribute("aria-selected", "true");
+    }
     await panel
       .locator(".mbk-instance-select")
       .filter({ hasText: "Tag chip" })

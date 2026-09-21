@@ -8,6 +8,7 @@ import {
 } from "../../dist/catalogue/serialization.js";
 import { isInside, projectRealPath } from "../../dist/config/paths.js";
 import { errorMessage } from "../../dist/errors.js";
+import { externalizeCapturedShell } from "../../dist/export/captured_shell.js";
 import { withExportCleanup } from "../../dist/export/cleanup.js";
 import { assertExportOwnership } from "../../dist/export/ownership.js";
 import { resolveExportOutput } from "../../dist/export/paths.js";
@@ -32,8 +33,10 @@ import {
 } from "./comparisons.mjs";
 import { capturePublicationInputs } from "./inputs.mjs";
 
-const liveUpdateScript =
-  '<script src="/__mokly/client/browser.js" type="module"></script>';
+const liveHostScript =
+  '<script src="/__mokly/client/react-host.js" type="module"></script>';
+const staticHydrationScript =
+  '<script src="/__mokly/client/react-shell.js" type="module"></script>';
 
 /** Capture already-built output; the supported npm command builds before this boundary. */
 export async function buildPreview(config, output, options = {}) {
@@ -85,20 +88,24 @@ export async function buildPreview(config, output, options = {}) {
         });
         let comparison;
         let removed = [];
+        const capturedShells = new Set();
         try {
           if (review) {
             comparison = await captureComparison(server.url);
             removed = changes.removedEntries.map(({ entry }) => entry);
           }
           await capturePage(server.url, "/", stage, "index.html");
+          capturedShells.add("index.html");
           for (const entry of [...manifest.entries, ...removed]) {
             if (entry.kind === "collection") continue;
+            const name = `view/${entry.route}`;
             await capturePage(
               server.url,
               `/view/${encodePath(entry.route)}`,
               stage,
-              `view/${entry.route}`,
+              name,
             );
+            capturedShells.add(name);
           }
           await capturePage(
             server.url,
@@ -107,6 +114,7 @@ export async function buildPreview(config, output, options = {}) {
             "404.html",
             404,
           );
+          capturedShells.add("404.html");
           await captureAssets(server.url, stage);
         } finally {
           await server.close();
@@ -114,27 +122,33 @@ export async function buildPreview(config, output, options = {}) {
         if (review && comparison)
           comparison = await publishComparison(review, comparison, stage);
         await copyPublicFiles(config, catalogue, stage, excludedRoots);
-        await writeText(
-          stage,
-          CATALOGUE_PATH,
-          serializeCatalogue(
-            projectCatalogue({
-              configPath: path
-                .relative(config.repoRoot, config.configPath)
-                .split(path.sep)
-                .join("/"),
-              catalogue,
-              changesStatus: comparison ? "ready" : "disabled",
-              changedRoutes: changes?.changedRoutes,
-              evidence: snapshot.componentChanges,
-              comparison: comparison?.result,
-              comparisonUrl: comparison
-                ? `${comparison.directory}/review.json`
-                : null,
-              revision: { content: 0, evidence: 0 },
-            }),
-          ),
-        );
+        const readModel = projectCatalogue({
+          configPath: path
+            .relative(config.repoRoot, config.configPath)
+            .split(path.sep)
+            .join("/"),
+          catalogue,
+          changesStatus: comparison ? "ready" : "disabled",
+          changedRoutes: changes?.changedRoutes,
+          evidence: snapshot.componentChanges,
+          comparison: comparison?.result,
+          comparisonUrl: comparison
+            ? `${comparison.directory}/review.json`
+            : null,
+          revision: { content: 0, evidence: 0 },
+        });
+        for (const name of capturedShells) {
+          const html = await fs.promises.readFile(
+            path.join(stage, name),
+            "utf8",
+          );
+          await writeText(
+            stage,
+            name,
+            externalizeCapturedShell(name, html, readModel),
+          );
+        }
+        await writeText(stage, CATALOGUE_PATH, serializeCatalogue(readModel));
         await stagePreviewArtifact(stage, manifest, removed, comparison);
         if (
           inputs.fingerprint !==
@@ -181,7 +195,16 @@ function shellAssets() {
   return [
     "/__mokly/shell.css",
     ...[...loadBrowserClientModules().keys()]
-      .filter((name) => name !== "browser.js" && name !== "live_updates.js")
+      .filter(
+        (name) =>
+          name !== "host_capabilities.js" &&
+          name !== "host_capability_descriptor.js" &&
+          name !== "react_capabilities.js" &&
+          name !== "react_capability_updates.js" &&
+          name !== "react_transports.js" &&
+          name !== "react_update_controller.js" &&
+          name !== "react-host.js",
+      )
       .map((name) => `/__mokly/client/${name}`),
     ...[...loadBrowserNavigationModules().keys()].map(
       (name) => `/__mokly/navigation/${name}`,
@@ -206,15 +229,20 @@ async function capturePage(
     );
   }
   const html = await response.text();
-  if (!html.includes(liveUpdateScript)) {
-    throw new Error(`preview page ${route} is missing its live-update script`);
+  if (!html.includes(liveHostScript)) {
+    throw new Error(`preview page ${route} is missing its live host script`);
   }
   await writeText(stage, relativePath, staticPage(html));
 }
 
 function staticPage(html) {
   return html
-    .replace(liveUpdateScript, "")
+    .replace(' data-mokly-host-capabilities=""', "")
+    .replace(
+      /<script data-mokly-host-capability-state="" type="application\/json">[^<]*<\/script>/,
+      "",
+    )
+    .replace(liveHostScript, staticHydrationScript)
     .replace(
       /(href|src|data-fragment-light|data-fragment-dark)="\/(static|view)\/([^"]+)\.html"/g,
       '$1="/$2/$3"',

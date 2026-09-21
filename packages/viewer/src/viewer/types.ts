@@ -112,16 +112,18 @@ export type SourceProps =
       catalogue: Exclude<CatalogueSource, CatalogueReadModel>;
       baseUrl?: never;
     };
+
 /**
- * The appearance of the interface around previews. `auto` follows the reader's
- * `prefers-color-scheme` and is the default. It is independent of
- * `ViewerSelection.colorScheme`, which stays the scheme of the previews.
+ * Appearance of the interface around previews. `auto` follows the reader's
+ * preferred color scheme and remains independent of preview selection.
  */
 export type ViewerTheme = "auto" | "dark" | "light";
 
 export type MoklyViewerProps = SourceProps &
   SelectionProps &
   ViewerEvents & {
+    /** Stable identifier unique among viewer roots in the host document. */
+    viewerId: string;
     /** Interface appearance; omission means `auto`. */
     theme?: ViewerTheme;
     frameAdapter?: FrameAdapter;

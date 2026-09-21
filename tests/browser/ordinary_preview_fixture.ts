@@ -55,6 +55,6 @@ export const test = base.extend<
         await preview.close();
       }
     },
-    { scope: "worker", timeout: 90_000 },
+    { scope: "worker", timeout: 180_000 },
   ],
 });

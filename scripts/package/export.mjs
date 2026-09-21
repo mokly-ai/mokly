@@ -21,8 +21,8 @@ export async function inspectConsumerExport(
     "__mokly/catalogue.json",
     "__mokly/client/appearance-startup.js",
     "__mokly/client/inspector.js",
-    "__mokly/client/browse.js",
-    "__mokly/client/static_delivery.js",
+    "__mokly/client/navigation-resize.js",
+    "__mokly/client/react-shell.js",
     "__mokly/navigation/delivery.js",
     "__mokly/fonts/InterVariable.woff2",
     ...expected,
@@ -37,9 +37,22 @@ export async function inspectConsumerExport(
     assert.equal(/\.(?:tsx?|map)$/.test(name), false);
     assert.ok((await fs.promises.stat(path.join(output, name))).isFile());
   }
+  assert.equal(marker.files.includes("__mokly/client/react-shell.js"), true);
+  for (const name of [
+    "host_capabilities.js",
+    "host_capability_descriptor.js",
+    "react-host.js",
+    "react_capabilities.js",
+    "react_capability_updates.js",
+    "react_transports.js",
+    "react_update_controller.js",
+  ])
+    assert.equal(marker.files.includes(`__mokly/client/${name}`), false);
   const home = await read("index.html");
   assert.match(home, /data-mokly-static=""/);
+  assert.match(home, /client\/react-shell\.js/);
   assert.doesNotMatch(home, /client\/browser\.js/);
+  assert.doesNotMatch(home, /data-mokly-host-capabilit|react-host\.js/);
   const comparison = marker.files.find((name) =>
     /^__mokly\/diffs\/__generations\/[a-f0-9]{64}\/review\.json$/.test(name),
   );

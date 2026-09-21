@@ -7,20 +7,21 @@ import { runCommand } from "./command.mjs";
 export async function smokeViewer(root) {
   const script = `import assert from "node:assert/strict";
 import fs from "node:fs";
+import { build } from "esbuild";
 import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
+import { renderToString } from "react-dom/server";
 import { MoklyViewer, readCatalogue, sameOriginAdapter, postMessageAdapter } from "@mokly/viewer";
 import { renderViewer } from "@mokly/viewer/server";
-import { initializeBrowseShell } from "@mokly/viewer/runtime";
+import { hydrateMoklyShell } from "@mokly/viewer/browser";
 import { resolveInstance } from "@mokly/viewer/data";
-assert.equal(typeof initializeBrowseShell, "function");
+assert.equal(typeof hydrateMoklyShell, "function");
 assert.equal(typeof resolveInstance, "function");
 const fixture = readCatalogue(JSON.parse(fs.readFileSync("node_modules/@mokly/mokly/docs/protocol/fixtures/catalogue-v1.json", "utf8")));
-assert.ok(renderViewer({catalogue: fixture, baseUrl: "https://fixture.example", defaultSelection: {screenId: fixture.screens[0].id}}).includes(fixture.screens[0].title));
+assert.ok(renderViewer({viewerId: "fixture", catalogue: fixture, baseUrl: "https://fixture.example", defaultSelection: {screenId: fixture.screens[0].id}}).includes(fixture.screens[0].title));
 const catalogue = readCatalogue(JSON.parse(fs.readFileSync("published/__mokly/catalogue.json", "utf8")));
-const props = {catalogue, baseUrl: "https://artifact.example", defaultSelection: {screenId: catalogue.screens[0].id}};
+const props = {viewerId: "catalogue", catalogue, baseUrl: "https://artifact.example", defaultSelection: {screenId: catalogue.screens[0].id}};
 const html = renderViewer(props);
-assert.equal(html, renderToStaticMarkup(createElement(MoklyViewer, props)));
+assert.equal(html, renderToString(createElement(MoklyViewer, props)));
 assert.ok(html.includes(catalogue.screens[0].title));
 const themedProps = {...props, defaultSelection: {...props.defaultSelection, colorScheme: "dark"}};
 const lightHtml = renderViewer({...themedProps, theme: "light"});
@@ -40,6 +41,9 @@ for (const declaration of [
   "--chrome-surface: #ffffff;",
   "--chrome-ink: #1a1d1c;",
 ]) assert.ok(styles.includes(declaration), declaration);
+const browserBundle = await build({bundle: true, format: "esm", logLevel: "silent", platform: "browser", stdin: {contents: 'import "@mokly/viewer/browser";', resolveDir: process.cwd(), sourcefile: "browser-entry.js"}, treeShaking: true, write: false});
+assert.ok(browserBundle.outputFiles[0].contents.length > 0);
+assert.match(browserBundle.outputFiles[0].text, /hydrateRoot/);
 `;
   const filename = path.join(root, "verify-viewer.mjs");
   await fs.writeFile(filename, script);

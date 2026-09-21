@@ -156,7 +156,9 @@ test("the depicted and shipped Appearance controls share their data contract", a
   assert.deepEqual(
     appearanceDataAttributes(depicted.html),
     appearanceDataAttributes(
-      renderToStaticMarkup(createElement(AppearanceSelect)),
+      renderToStaticMarkup(
+        createElement(AppearanceSelect, { ready: true, theme: "auto" }),
+      ),
     ),
   );
 });

@@ -4,7 +4,6 @@
  * switch; an embedded root keeps its own controls instead.
  */
 
-import { normalizeTheme } from "../viewer/theme.js";
 import type { ViewerTheme } from "../viewer/types.js";
 
 import { ChevronIcon, IconSvg } from "./icons.js";
@@ -49,14 +48,17 @@ const GLYPHS = { auto: AutoGlyph, light: LightGlyph, dark: DarkGlyph };
  * installs its behaviour, and CSS alone still gives the initial and Auto
  * appearance, so a reader without JavaScript is never shown a dead control.
  */
-export function AppearanceSelect(props: { theme?: ViewerTheme }) {
-  const value = normalizeTheme(props.theme);
+export function AppearanceSelect(props: {
+  ready: boolean;
+  theme: ViewerTheme;
+}) {
+  const value = props.theme;
   return (
     <label
       className="mbk-appearance"
       data-appearance-value={value}
       data-mokly-appearance-control=""
-      hidden
+      hidden={!props.ready}
       title="Appearance"
     >
       {OPTIONS.map(([option, label]) => {

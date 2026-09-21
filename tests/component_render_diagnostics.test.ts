@@ -6,6 +6,7 @@ import test from "node:test";
 import { componentRuntime } from "../dist/build/component_runtime.js";
 import { startCatalogueServer } from "../dist/server/http.js";
 
+import { renderCapabilityFromShell } from "./helpers/component_controls_state.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 
@@ -31,9 +32,8 @@ test("preview-resource exclusions reach stderr without exposing the cause in HTT
   const page = await (
     await fetch(`${server.url}/view/components/action.html`)
   ).text();
-  const { renderCapability } = JSON.parse(
-    page.match(/data-workspace-data="">(.*?)<\/script>/s)![1]!,
-  );
+  const renderCapability = renderCapabilityFromShell(page);
+  assert.ok(renderCapability);
   const stderr: string[] = [];
   t.mock.method(process.stderr, "write", (chunk: string) => {
     stderr.push(String(chunk));

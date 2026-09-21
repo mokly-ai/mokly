@@ -6,18 +6,17 @@ import type { ViewerTheme } from "../viewer/types.js";
 import type { ShellEvidence } from "./metadata.js";
 import type { LiveChangesStatus } from "./metadata.js";
 
-/** Server-side context shared by every served Mokly shell page. */
-
 /** Server-side context shared by every shell page. */
 export interface ShellContext {
   /** Accepted public snapshot supplied by the first-party server integration. */
   readModel?: CatalogueReadModel;
   /** Revision of the rendered content, independent of background evidence. */
   contentVersion?: number;
-  /** Retained on-demand renderer used even after exhaustive Usage completes. */
+  /** Generation accepted by the on-demand document service. */
   previewGeneration?: string;
   /** Live calculation state; omitted by static catalogues without Changes. */
   changesStatus?: LiveChangesStatus;
+  /** Authenticated temporary renderer, independent of document availability. */
   renderCapability?: RenderCapability;
   /** Validated delivery information for a static export. */
   delivery?: StaticDelivery;

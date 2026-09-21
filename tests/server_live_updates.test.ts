@@ -8,7 +8,7 @@ import { startCatalogueServer } from "../dist/server/http.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
-test("every served document loads the browser update client", async (context) => {
+test("every served document loads the hydrated live host", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
@@ -23,41 +23,62 @@ test("every served document loads the browser update client", async (context) =>
     const document = await (await fetch(`${server.url}${route}`)).text();
     assert.match(
       document,
-      /<script src="\/__mokly\/client\/browser\.js" type="module"><\/script>/,
+      /<script src="\/__mokly\/client\/react-host\.js" type="module"><\/script>/,
       route,
     );
   }
-  const browseDocument = await (
+  const reactDocument = await (
     await fetch(`${server.url}/view/screens/home.html`)
   ).text();
-  const browseClient = browseDocument.indexOf(
-    '<script src="/__mokly/client/browse.js" type="module"></script>',
+  assert.match(reactDocument, /data-mokly-host-capabilities=""/);
+  const capabilityState = reactDocument.match(
+    /data-mokly-host-capability-state="" type="application\/json">([^<]+)<\/script>/,
+  )?.[1];
+  assert.ok(capabilityState);
+  const capability = JSON.parse(capabilityState) as {
+    workspace: Record<string, unknown> & {
+      affected: unknown[];
+      inputChanges: unknown[];
+      relatedComponents: unknown[];
+    };
+  };
+  assert.ok(capability.workspace);
+  assert.ok(Array.isArray(capability.workspace.affected));
+  assert.ok(Array.isArray(capability.workspace.inputChanges));
+  assert.ok(Array.isArray(capability.workspace.relatedComponents));
+  assert.equal("renderCapability" in capability.workspace, false);
+  assert.doesNotMatch(
+    reactDocument,
+    /<script src="\/__mokly\/client\/(?:browse|browser)\.js"/,
   );
-  const updateClient = browseDocument.indexOf(
-    '<script src="/__mokly/client/browser.js" type="module"></script>',
+  for (const retired of [
+    "browse.js",
+    "browse_state.js",
+    "browse_navigation.js",
+    "browser.js",
+    "live_updates.js",
+  ])
+    assert.equal(
+      (await fetch(`${server.url}/__mokly/client/${retired}`)).status,
+      404,
+      retired,
+    );
+  assert.equal(
+    (await fetch(`${server.url}/__mokly/client/react-shell.js`)).status,
+    200,
   );
-  assert.ok(browseClient >= 0 && browseClient < updateClient);
-  const browser = await fetch(`${server.url}/__mokly/client/browser.js`);
-  assert.equal(browser.status, 200);
-  assert.match(browser.headers.get("content-type") ?? "", /javascript/);
-  assert.match(await browser.text(), /EventSource/);
   const appearance = await fetch(
     `${server.url}/__mokly/client/appearance-startup.js`,
   );
   assert.equal(appearance.status, 200);
-  assert.match(appearance.headers.get("content-type") ?? "", /javascript/);
   assert.match(await appearance.text(), /mokly:theme/);
   assert.equal(
-    (await fetch(`${server.url}/__mokly/client/browse_state.js`)).status,
+    (await fetch(`${server.url}/__mokly/client/react-host.js`)).status,
     200,
   );
-  assert.equal(
-    (await fetch(`${server.url}/__mokly/client/browse_navigation.js`)).status,
-    200,
-  );
-  assert.equal(
-    (await fetch(`${server.url}/__mokly/client/live_updates.js`)).status,
-    200,
+  assert.match(
+    await (await fetch(`${server.url}/__mokly/client/react-host.js`)).text(),
+    /\.\/react-shell\.js/,
   );
   assert.equal(
     (await fetch(`${server.url}/__mokly/client/unknown.js`)).status,

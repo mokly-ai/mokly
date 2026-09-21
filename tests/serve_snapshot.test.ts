@@ -15,6 +15,7 @@ import { observeBackgroundClassification } from "./helpers/background_classifica
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
+import { documentText } from "./helpers/html.js";
 
 const page = `
 import { definePage } from "@mokly/mokly";
@@ -49,7 +50,7 @@ test("no-watch startup retains removed metadata from its single Changes calculat
   const home = await (await fetch(running.url)).text();
   const removed = await fetch(`${running.url}/view/guide.html`);
   assert.equal(removed.status, 200);
-  assert.match(await removed.text(), /This page was removed/);
+  assert.match(documentText(await removed.text()), /This page was removed/);
   assert.match(home, /data-removed-page=""/);
   assert.match(home, /class="mbk-nav-filter-count">1</);
   assert.equal(calls, 1);

@@ -139,19 +139,24 @@ on the document root before the shell stylesheet can paint, then installs the
 selector behavior once the controls exist and, under Auto, follows system
 changes while the document is open. When the effective scheme is dark at
 startup, it replaces each frame's server-rendered light source before or as
-early as possible in that frame's first load, and at most once. Keep the asset
-out of the React entry's execution path; installation is idempotent and
-provides cleanup for installed listeners. Progressive navigation, evidence
-refreshes and watched reload recovery carry the current effective appearance
-forward rather than a separate preview state.
+early as possible in that frame's first load, and at most once. The classic
+implementation remains outside the React hydration bundle and exposes only a
+narrow choose/refresh handoff. The standalone browser entry refreshes parsed
+markup before hydration, then the shell bridge adopts the effective scheme into
+its store; later choices and Auto system changes update both owners through the
+same callback. Installation is idempotent and cleans up its listeners.
+React-owned navigation, evidence refreshes and watched reload recovery carry
+the current effective appearance forward rather than a separate preview state.
 
-The asset is served through the existing explicit allowlist and included in
-export inventories. Exported shell documents use the root-absolute URL
+The asset is listed by the generated browser-output manifest, validated with
+the complete build directory, and copied into export inventories. Exported
+shell documents use the root-absolute URL
 `/__mokly/client/appearance-startup.js`: a root deployment works directly, while
 a deployment beneath a URL prefix needs a prefix-stripping hosting mount that
 also resolves the export's root-absolute asset routes. Export does not rewrite a
-deployment prefix; a `--base-path` option is separate work. Do not add
-inline-script/CSP exceptions, React, hydration or remote assets to exports.
+deployment prefix; a `--base-path` option is separate work. The classic asset
+contains no React, inline-script/CSP exception or remote dependency; the
+separate `react-shell.js` bundle hydrates the server-rendered document.
 Without JavaScript, CSS still provides the initial/Auto interface appearance,
 frames keep their server-rendered light sources, and the manual selector stays
 hidden until its behavior is installed. Persisted overrides require the asset.

@@ -1,12 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import {
-  isNavDisclosureClosed,
-  isNavDisclosureKey,
-  NavDisclosurePreference,
-  type NavPreferenceStorage,
-} from "../packages/viewer/dist/client/browse_navigation.js";
 import type { ManifestComponent } from "../packages/viewer/dist/components/manifest_types.js";
 import type {
   ManifestCollection,
@@ -21,8 +15,9 @@ import {
   type NavLeafNode,
   type NavNode,
 } from "../packages/viewer/dist/shell/nav_tree.js";
+import type { ShellRecoverySnapshot } from "../packages/viewer/dist/shell/store_state.js";
 
-import { asDocument, FakeNode } from "./helpers/fake_dom.js";
+import { fixtureShellState } from "./helpers/viewer_catalogue.js";
 
 test("page and component sections preserve only their relevant hierarchy", () => {
   const catalogue = createCatalogue(
@@ -68,35 +63,31 @@ test("page and component sections preserve only their relevant hierarchy", () =>
 });
 
 test("page and component section disclosures persist independently", () => {
-  const storage = new FakeStorage();
-  const firstPages = disclosure("section:pages", false);
-  const firstComponents = disclosure("section:components", true);
-  new NavDisclosurePreference(storage).remember(
-    documentWith(firstPages, firstComponents),
-  );
+  const pagesClosed = fixtureShellState({
+    href: "https://example.test/",
+    initial: { recovery: recovery(["section:pages"]) },
+  });
+  assert.equal(pagesClosed.disclosures["section:pages"], false);
+  assert.equal(pagesClosed.disclosures["section:components"], true);
 
-  const nextPages = disclosure("section:pages", true);
-  const nextComponents = disclosure("section:components", false);
-  new NavDisclosurePreference(storage).apply(
-    documentWith(nextPages, nextComponents),
-  );
-
-  assert.equal(nextPages.open, false);
-  assert.equal(nextComponents.open, true);
+  const componentsClosed = fixtureShellState({
+    href: "https://example.test/",
+    initial: { recovery: recovery(["section:components"]) },
+  });
+  assert.equal(componentsClosed.disclosures["section:pages"], true);
+  assert.equal(componentsClosed.disclosures["section:components"], false);
 });
 
-test("section keys are valid and legacy collection keys reach both projections", () => {
-  assert.equal(isNavDisclosureKey("collection:pages:example"), true);
-  assert.equal(isNavDisclosureKey("section:pages"), true);
-  assert.equal(isNavDisclosureKey("section:components"), true);
-  assert.equal(isNavDisclosureKey("section:other"), false);
-  const closed = new Set(["collection:example"]);
-  assert.equal(isNavDisclosureClosed(closed, "collection:pages:example"), true);
-  assert.equal(
-    isNavDisclosureClosed(closed, "collection:components:example"),
-    true,
-  );
-  assert.equal(isNavDisclosureClosed(closed, "collection:pages:other"), false);
+test("legacy collection keys reach both projections without creating unknown keys", () => {
+  const state = fixtureShellState({
+    href: "https://example.test/",
+    initial: {
+      recovery: recovery(["/Product", "collection:product", "section:other"]),
+    },
+  });
+  assert.equal(state.disclosures["collection:pages:product"], false);
+  assert.equal(state.disclosures["collection:components:product"], false);
+  assert.equal(Object.hasOwn(state.disclosures, "section:other"), false);
 });
 
 function group(nodes: readonly NavNode[], key: string): NavGroupNode {
@@ -195,24 +186,19 @@ function manifest(entries: readonly ManifestEntry[]): ManifestV5 {
   };
 }
 
-function disclosure(key: string, open: boolean): FakeNode {
-  const node = new FakeNode("details", { "data-nav-disclosure": key });
-  node.open = open;
-  return node;
-}
-
-function documentWith(...disclosures: readonly FakeNode[]): Document {
-  return asDocument(new FakeNode("div").append(...disclosures));
-}
-
-class FakeStorage implements NavPreferenceStorage {
-  value: string | null = null;
-
-  getItem(): string | null {
-    return this.value;
-  }
-
-  setItem(_key: string, value: string): void {
-    this.value = value;
-  }
+function recovery(
+  closedCollectionIds: readonly string[],
+): ShellRecoverySnapshot {
+  return {
+    closedCollectionIds,
+    colorScheme: "light",
+    detailsOpen: false,
+    drawerOpen: false,
+    filterBaselineClosedCollectionIds: null,
+    navScroll: 0,
+    query: "",
+    regionScrolls: {},
+    view: "all",
+    viewport: "both",
+  };
 }

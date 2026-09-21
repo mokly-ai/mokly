@@ -30,6 +30,7 @@ const fixture = readCatalogue(
 
 function render(theme?: "auto" | "light" | "dark"): string {
   return renderViewer({
+    viewerId: "theme-test",
     catalogue: fixture,
     baseUrl: "https://catalogue.example",
     ...(theme ? { theme } : {}),
@@ -53,6 +54,7 @@ test("an omitted theme renders Auto, without guessing a scheme", () => {
 
 test("theme is independent of the preview colour scheme", () => {
   const html = renderViewer({
+    viewerId: "theme-test",
     catalogue: fixture,
     baseUrl: "https://catalogue.example",
     theme: "dark",

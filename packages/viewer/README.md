@@ -19,12 +19,13 @@ transport, surrounding product UI, authentication and selection routing.
 - Supports controlled selection, React slots, selection and inspection events,
   and an imperative handle for choosing, highlighting, scrolling and picking.
 - Provides same-origin and explicitly configured cross-origin frame adapters.
-- Renders static shell HTML through the Node-only `@mokly/viewer/server` entry.
-  Standalone exports run vanilla modules without React or hydration.
-- Supplies the CLI host's allowlisted classic `navigation-resize.js` and
-  `appearance-startup.js` assets. Serve, static export and repository preview
-  carry the same files under `__mokly/client/`; the appearance asset stays
-  inert until standalone markup opts in and is not part of the React entry.
+- Renders the shell tree to HTML through the Node-only `@mokly/viewer/server`
+  entry, then hydrates it in the browser. Standalone Serve and export load the
+  package's hydration bundle, which includes React; React hosts hydrate with
+  their own.
+- Delivers a small classic appearance startup before standalone styles so a
+  stored, pinned or automatic Dark appearance is present for first paint; the
+  hydrated shell adopts that state without adding a second shell runtime.
 
 ## Quick Start
 
@@ -54,6 +55,7 @@ export function Catalogue({
     <div style={{ height: "100vh" }}>
       <MoklyViewer
         ref={viewer}
+        viewerId="catalogue"
         catalogue={`${artifactOrigin}/__mokly/catalogue.json`}
         frameAdapter={adapter}
         markers={commentMarker ? [commentMarker] : []}
@@ -93,6 +95,14 @@ runtime and cancels its pending work.
 
 All sources pass through `readCatalogue`. Paths resolve from the artifact origin,
 not the embedding page. Failed loads show a retry action and emit `onError`.
+Every viewer requires a stable `viewerId`: 1–64 ASCII letters, digits, hyphens
+or underscores, starting with a letter or digit. Keep it unique within the host
+document. When hydrating `renderViewer()` output, pass the identical `viewerId`
+to both server and client renders so package-owned IDs and accessibility
+references remain root-local. The package preserves the viewer/local-ID
+boundary even when a valid viewer ID resembles an internal control ID; generated
+DOM ID bytes are not an extension API. Host slot descendants are never
+namespaced.
 
 `defaultSelection` initializes uncontrolled state. Controlled `selection` requires
 `onSelectionChange` and forbids `defaultSelection`. Selection comprises `screenId`
@@ -101,6 +111,15 @@ not the embedding page. Failed loads show a retry action and emit `onError`.
 validate and normalize `tag:` terms;
 controlled changes remain proposals until supplied back. Incoming props do not
 echo callbacks. Remount to change control mode.
+
+`theme` sets the interface around embedded previews to `"auto"`, `"light"` or
+`"dark"`; Auto is the default and follows the reader's system preference. It is
+independent of `selection.colorScheme`, so hosts can combine either interface
+appearance with either preview scheme. Updating `theme` preserves frames,
+selection, temporary props, picking, highlights and markers, and it never
+mutates the host document or sibling roots. Standalone Serve/export instead
+render one Appearance selector that sets interface and previews together; see
+the [appearance contract](../../docs/protocol/mokly-viewer-appearance.md).
 
 `markers` supplies unique host marker ids, exact instance references and React
 content. `onMarkerChange` reports each marker as visible, hidden or unavailable
@@ -119,18 +138,30 @@ include screen, variant when applicable, viewport, scheme and key. Flow events
 also identify their owning entry and step. `resolveInstance` compares saved
 records without fetching evidence.
 Flow `InstanceRef` values include `stepIndex` to address an exact occurrence.
-Imperative highlighting applies masks, labels and events only to that reference's
+Imperative highlighting applies masks and labels only to that reference's
 viewport, scheme, variant and step; workspace selection can still span Both.
 Scoped inspection waits for and measures only its target sessions, so pending or
 unavailable sibling views do not block it. Unrelated masks are cleared without
 inspecting their usage. A failed current highlight removes its masks and labels.
-Automatic hover/click inspection also requires each frame's own ready usage.
-Pending or unavailable siblings keep working links without emitting instance
-events or pointer-driven inspection errors. Built-in adapters implement optional
+Automatic hover/click inspection requires each frame's own ready usage and
+remains available from every current visible ready frame, independent of an
+explicit highlight's mask and label scope. An idle explicit highlight survives
+those pointer events; an accepted click ends an active pick. Pending or
+unavailable siblings keep working links without emitting instance events or
+pointer-driven inspection errors. Built-in adapters implement optional
 `MountedFrame.updateUsage` so the frame update path can adopt validated evidence
 and enable inspection on the same document without remounting it. Custom adapters
 without this method retain replacement mounts for changed usage. Changing the
 React catalogue source still replaces the runtime as documented above.
+The shell also supplies `FrameMount.onEvent` before an adapter starts loading.
+The same-origin adapter attaches it to the currently visible document before a
+replacement, then authenticates and adopts the exact replacement document as
+soon as it is accessible rather than waiting for slower subresources and the
+iframe `load` event. Valid logical links therefore remain parent-owned
+throughout source handoffs; the first matching `MountedFrame.subscribe` adopts
+that receiver without duplicating events. Custom adapters should honor the same
+mount-time receiver contract. Unsubscribing or disposing restores the portable
+native-link behavior.
 
 Evidence refreshes restore valid inspection masks, outlines and labels without
 ending an active pick. Explicit highlights retain their exact frame scope;
@@ -159,25 +190,10 @@ generation. Superseded handle promises reject with `disposed`, while obsolete
 work cannot clear replacement labels, cancel a fresh pick or emit errors against
 it. The rule covers highlights, label refreshes, scrolls and geometry events.
 
-`theme` sets the appearance of the interface around previews: `"auto"`,
-`"light"` or `"dark"`, with `"auto"` the default when it is omitted. Auto
-follows the reader's `prefers-color-scheme` through CSS, so a dark reader never
-sees a light first paint. It is independent of `selection.colorScheme`, which
-stays the scheme of the previews, so a dark interface around a light preview and
-the reverse are both supported and the preview controls remain. Changing `theme`
-preserves frames, selection, temporary props, picking, highlights and markers,
-emits no events and requests nothing. The appearance lives on the viewer root
-alone, so a host page, its other roots and host slot content are untouched. The
-[appearance contract](../../docs/protocol/mokly-viewer-appearance.md) defines
-the standalone control's preference, URL-pin and first-paint behavior. Serve and
-export render that one Appearance selector on every standalone route; embedded
-React roots do not render it because the host owns `theme`.
-
 Import the stylesheet once. Override `--mokly-accent`,
 `--mokly-accent-contrast`, and `--mokly-accent-soft` on a containing element,
-maintaining readable contrast in both appearances; an override that is not
-supplied falls back to the value the palette declares for the current
-appearance. Scoped styles exclude host slots and the
+maintaining readable contrast in both appearances. Unset overrides receive the
+current semantic palette default. Scoped styles exclude host slots and the
 surrounding page; fonts are packaged locally. Internal selectors and geometry are
 not extension APIs.
 
@@ -189,6 +205,7 @@ import { renderViewer } from "@mokly/viewer/server";
 
 export function catalogueHtml(json: unknown, artifactOrigin: string) {
   return renderViewer({
+    viewerId: "catalogue",
     catalogue: readCatalogue(json),
     baseUrl: artifactOrigin,
     defaultSelection: { screenId: null },
@@ -198,11 +215,36 @@ export function catalogueHtml(json: unknown, artifactOrigin: string) {
 ```
 
 `./server` additionally provides typed first-party document context and package
-asset resolution. `./runtime` exposes the standalone runtime, private-service
-injection and validated revision adoption used by the CLI host. `./data` exposes
-shared pure build/comparison value contracts; it contains no CLI execution or
-filesystem access. Hosts embedding React normally use only the root entry and
-stylesheet.
+asset resolution. `./runtime` exposes browser-safe live-capability, recovery,
+catalogue-revision, standalone-bootstrap, inspector metadata and local-frame
+helpers used by the CLI host and repository publication adapter. `./data`
+exposes shared pure build/comparison value contracts; it contains no CLI
+execution or filesystem access. Hosts embedding React normally use only the
+root entry and stylesheet.
+
+`@mokly/viewer/browser` is the standalone browser entry paired with full
+documents rendered by `@mokly/viewer/server`. Serve and export bundle that entry
+with React as `react-shell.js`; application-owned React hosts continue to use
+the root `MoklyViewer` entry instead. Importing the browser entry automatically
+hydrates a matching document, so the published manifest marks its JavaScript
+output as side-effectful and bundlers must retain a side-effect-only import.
+Serve hydrates from its validated inline read model. Exported pages retain full
+server-rendered content and a compact bootstrap; the browser fetches the shared
+finalized `__mokly/catalogue.json`, validates its deployment and revisions, and
+hydrates only after it matches. A failed static catalogue read leaves ordinary
+server-rendered links usable.
+Standalone documents also load `appearance-startup.js` before the shell
+stylesheet. It restores the origin-local Appearance preference, applies a valid
+`scheme` URL pin without saving it, follows system changes under Auto, and
+hands the effective preview scheme to the hydrated store before hydration.
+Local Serve supplies updates, recovery, private workspace evidence, temporary
+previews and on-demand Usage through the separate
+[live capability contract](../../docs/protocol/mokly-live-capabilities.md).
+Those capabilities are not part of the public `MoklyViewer` host API or static
+export. A static shell can read inert route-scoped workspace evidence from the
+destination page in the same finalized deployment, preserving the full Details
+and Usage data during React-owned navigation without enabling live host
+behavior.
 
 ## Releases
 
@@ -235,10 +277,12 @@ auditing includes both packages.
 ### Key Code
 
 - `src/viewer`: React lifecycle, selection, slots and adapter sessions.
-- `src/shell`: shared server markup and standalone CSS.
-- `src/client`: vanilla enhancements, adapters and first-party runtime seams.
-- `src/standalone`: classic browser entries and the standalone appearance
-  preference boundary.
+- `src/shell`: the shell component tree, scoped state/history store, pure
+  route/filter helpers and standalone CSS.
+- `src/browser.tsx` and `src/standalone`: standalone bootstrap validation,
+  full-document hydration, and its browser entry.
+- `src/client`: frame adapters, message transport, geometry and revision
+  adoption consumed by the shell through hooks.
 - `src/catalogue` and `src/components`: public readers and instance contracts.
 - `src/inspector` and `scripts`: bounded in-frame inspector and asset builds.
 - `tests` and root `tests/browser/viewer*.spec.ts`: package conformance tests.
