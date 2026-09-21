@@ -13,6 +13,7 @@ import type {
   MoklyViewerProps,
   ViewerMarker,
   ViewerSelection,
+  ViewerTheme,
 } from "@mokly/viewer";
 
 interface HostOptions {
@@ -32,6 +33,7 @@ interface Host {
   render(): void;
   setMarkers(markers: readonly Omit<ViewerMarker, "content">[]): void;
   setSelection(value: ViewerSelection): void;
+  setTheme(theme: ViewerTheme): void;
   options: HostOptions;
 }
 const hosts = new Map<string, Host>();
@@ -85,6 +87,10 @@ const start = (id: string, options: HostOptions = {}) => {
           ),
         })),
       } as MoklyViewerProps;
+      host.render();
+    },
+    setTheme(theme) {
+      host.props = { ...host.props, theme } as MoklyViewerProps;
       host.render();
     },
     setSelection(value) {
