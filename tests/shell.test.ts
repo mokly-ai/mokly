@@ -1020,6 +1020,8 @@ test("frame labels note a light-only screen only under a dark selection", () => 
 });
 
 test("one scheme switch instance shows per side of the breakpoint", () => {
+  // Only an embedded root renders the preview switch now, but it renders two
+  // instances, so the placement rules still decide which width shows which.
   const css = flatCss(SHELL_CSS);
   assert.ok(
     css.includes(

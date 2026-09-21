@@ -83,7 +83,10 @@ const NO_STORAGE: AppearanceStorage = {
   setItem: () => {},
   removeItem: () => {},
 };
-const CONTROL_SELECTOR = "[data-mokly-appearance-select]";
+const SELECT_SELECTOR = "[data-mokly-appearance-select]";
+// The select carries the value; its label carries the reveal, because the
+// stylesheet hides the whole control until its behaviour exists.
+const CONTROL_SELECTOR = "[data-mokly-appearance-control]";
 const INERT: AppearanceHandle = {
   choose: () => {},
   refresh: () => {},
@@ -155,18 +158,18 @@ function createController(
       // already keys its frames and captions off follows the appearance.
       document.body?.setAttribute("data-mokly-color-scheme", scheme);
       applyFrames(document, scheme);
-      for (const control of document.querySelectorAll(CONTROL_SELECTOR)) {
-        control.value = controller.theme;
+      for (const select of document.querySelectorAll(SELECT_SELECTOR))
+        select.value = controller.theme;
+      for (const control of document.querySelectorAll(CONTROL_SELECTOR))
         control.hidden = false;
-      }
       window.onAppearance?.(controller.theme, scheme);
     },
     bind() {
-      for (const control of document.querySelectorAll(CONTROL_SELECTOR)) {
-        if (bound.has(control)) continue;
-        bound.add(control);
-        control.addEventListener("change", () =>
-          controller.choose(normalizeTheme(control.value)),
+      for (const select of document.querySelectorAll(SELECT_SELECTOR)) {
+        if (bound.has(select)) continue;
+        bound.add(select);
+        select.addEventListener("change", () =>
+          controller.choose(normalizeTheme(select.value)),
         );
       }
     },

@@ -43,7 +43,14 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
   assert.match(welcome, /data-diff-screen="screens\/welcome.html"/);
   for (const mode of ["current", "side", "overlay", "difference"])
     assert.match(welcome, new RegExp(`data-diff-mode="${mode}"`));
-  assert.match(welcome, /data-color-scheme-option="dark"/);
+  // A static export carries the one Appearance control, and requests the asset
+  // that gives it behaviour ahead of the stylesheet so the first paint is right.
+  assert.match(welcome, /data-mokly-appearance-select=""/);
+  assert.match(welcome, /<option value="dark">Dark<\/option>/);
+  assert.doesNotMatch(welcome, /data-color-scheme-option="dark"/);
+  assert.ok(
+    welcome.indexOf("appearance-startup.js") < welcome.indexOf("shell.css"),
+  );
   const frame = welcome.match(
     /<iframe[^>]*data-fragment-light="([^"]+)"[^>]*src="([^"]+)"/,
   );

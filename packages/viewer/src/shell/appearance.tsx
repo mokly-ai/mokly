@@ -53,7 +53,12 @@ export function AppearanceSelect(props: { theme?: ViewerTheme }) {
   const value = normalizeTheme(props.theme);
   const Glyph = GLYPHS[value];
   return (
-    <label className="mbk-appearance" hidden title="Appearance">
+    <label
+      className="mbk-appearance"
+      data-mokly-appearance-control=""
+      hidden
+      title="Appearance"
+    >
       <Glyph />
       <span className="mbk-appearance-value">
         {OPTIONS.find(([option]) => option === value)?.[1]}

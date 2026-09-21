@@ -75,7 +75,7 @@ function environment(
       dataset: options.opted === false ? {} : { moklyAppearance: "" },
     },
     querySelectorAll: (selector: string) =>
-      selector.includes("appearance-select")
+      selector.includes("appearance-")
         ? attached.select
           ? [select]
           : []
