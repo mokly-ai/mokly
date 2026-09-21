@@ -117,6 +117,8 @@ export class FakeNode {
   }
 
   matches(selector: string): boolean {
+    if (/^\.[a-z0-9_-]+$/i.test(selector))
+      return this.classList.contains(selector.slice(1));
     const parts = SELECTOR.exec(selector)?.groups;
     if (!parts) throw new Error(`unmodelled selector: ${selector}`);
     const tag = parts["tag"] ?? "";

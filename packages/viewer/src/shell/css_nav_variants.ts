@@ -6,6 +6,10 @@ export const CSS_NAV_VARIANTS = `
   gap: 2px;
 }
 
+.mbk-nav-leaf[hidden] {
+  display: none;
+}
+
 .mbk-nav-leaf > .mbk-nav-row {
   flex: 1;
   min-width: 0;

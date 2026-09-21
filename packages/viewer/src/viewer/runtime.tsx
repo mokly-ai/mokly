@@ -96,7 +96,7 @@ export class ViewerRuntime implements MoklyViewerHandle {
         baseUrl,
         selection: () => this.selection,
         select: (value) => this.select(value),
-        navigate: (id, url) => this.route.shell(id, url),
+        navigate: (id, url, axes) => this.route.shell(id, url, axes),
         refresh: () => this.apply(false),
         updateDiffs: this.diffs.update,
       });
@@ -153,12 +153,11 @@ export class ViewerRuntime implements MoklyViewerHandle {
     const routeChanged = previous.screenId !== next.screenId;
     const variantChanged = previous.variantId !== next.variantId;
     this.selection = next;
-    if (routeChanged || variantChanged) {
+    if (routeChanged || variantChanged)
       this.frames.end({ reason: "navigation" });
-      this.route.commit(next, routeChanged);
-    }
+    this.route.commit(next, routeChanged);
     this.apply(routeChanged, variantChanged);
-    if (routeChanged || variantChanged) this.route.announce();
+    this.route.announce();
   }
   private apply(routeChanged: boolean, variantChanged = false): void {
     const { doc, win } = this.scope;

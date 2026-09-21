@@ -16,7 +16,7 @@
 const CHANGES_LANDING_KEY = "mokly:changes-landing";
 
 /** Whether the catalogue column is currently filtered to changed entries. */
-function changesFilterSelected(doc: Document): boolean {
+export function changesFilterSelected(doc: Document): boolean {
   return (
     doc
       .querySelector('[data-filter="changed"]')

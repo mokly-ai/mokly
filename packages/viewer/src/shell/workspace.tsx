@@ -5,6 +5,7 @@ import { DiffScreen } from "./diffs.js";
 import { ScreenHead, targetHead } from "./head.js";
 import { Inspector } from "./inspector.js";
 import { TargetStage } from "./stages.js";
+import { shownComparisonEligible, shownStatus } from "./view_status.js";
 import { WorkspaceControls } from "./workspace_controls.js";
 import { workspaceData, type WorkspaceData } from "./workspace_data.js";
 import { selectedChangedViews } from "./workspace_views_data.js";
@@ -26,10 +27,17 @@ export function ComponentWorkspace({
     data.changedViews,
     data.variants[0]?.value.id,
   );
-  const eligible =
-    entry.kind === "component"
-      ? (data.variants[0]?.comparisonEligible ?? false)
-      : data.comparisonEligible;
+  const initialSelection =
+    entry.kind === "component" ? data.variants[0]?.value.id : entry.id;
+  const initialShownStatus = shownStatus(
+    initialSelection === undefined
+      ? undefined
+      : data.viewStates[initialSelection],
+    "both",
+    "light",
+    data.status,
+  );
+  const eligible = shownComparisonEligible(initialShownStatus, entry.kind);
   const stage = data.removed ? (
     <div className="mbk-empty" data-mokly-stage="" data-viewport="both">
       <h2>This {entry.kind} was removed</h2>
@@ -62,10 +70,11 @@ export function ComponentWorkspace({
         status={
           <span
             className="mbk-entry-status"
+            data-status={initialShownStatus}
             data-workspace-status=""
-            hidden={!data.status}
+            hidden={!initialShownStatus}
           >
-            {data.status}
+            {initialShownStatus}
           </span>
         }
       />

@@ -6,6 +6,7 @@ import {
   consumeChangesLanding,
   rememberChangesLanding,
 } from "../packages/viewer/dist/client/browse_landing.js";
+import { changesActivation } from "../packages/viewer/dist/client/changes_activation.js";
 
 import { asElement, FakeNode } from "./helpers/fake_dom.js";
 
@@ -71,6 +72,49 @@ test("rows without the aggregate mark are never redirected", () => {
 
   assert.equal(changesLandingHref(asElement(nav.parent)), undefined);
   assert.equal(changesLandingHref(asElement(nav.error)), undefined);
+});
+
+test("rows outside Changes have no Changes activation", () => {
+  const nav = landingFixture();
+  nav.all.setAttribute("aria-pressed", "true");
+  nav.changed.setAttribute("aria-pressed", "false");
+
+  assert.equal(changesActivation(asElement(nav.error)), undefined);
+});
+
+test("a changed row with named axes keeps only its authored href", () => {
+  const nav = landingFixture();
+  nav.error.setAttribute("href", `${VARIANT}?viewport=desktop&scheme=light`);
+
+  assert.deepEqual(
+    changesActivation(asElement(nav.error), [
+      { viewport: "mobile", colorScheme: "dark" },
+    ]),
+    { href: `${VARIANT}?viewport=desktop&scheme=light` },
+  );
+});
+
+test("a changed row without named axes opens its first changed view", () => {
+  const nav = landingFixture();
+
+  assert.deepEqual(
+    changesActivation(asElement(nav.error), [
+      { viewport: "desktop", colorScheme: "dark" },
+      { viewport: "mobile", colorScheme: "dark" },
+    ]),
+    { href: VARIANT, viewport: "mobile", scheme: "dark" },
+  );
+});
+
+test("an aggregate parent uses its visible variant and that view's axes", () => {
+  const nav = landingFixture();
+
+  assert.deepEqual(
+    changesActivation(asElement(nav.parent), [
+      { viewport: "desktop", colorScheme: "dark" },
+    ]),
+    { href: VARIANT, viewport: "desktop", scheme: "dark" },
+  );
 });
 
 test("a Changes activation of a changed row is remembered once", () => {

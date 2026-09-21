@@ -123,6 +123,7 @@ export function updateWorkspaceEvidence(
     currentViewport(doc),
     currentColorScheme(doc),
     selected.variant?.value.id,
+    selected.error,
   );
   const json = root.querySelector("[data-workspace-data]");
   if (json) json.textContent = JSON.stringify(data);

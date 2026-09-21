@@ -193,14 +193,15 @@ function applyVariantVisibility(doc: Document): void {
   )) {
     const listId = toggle.getAttribute("aria-controls");
     const list = listId === null ? null : doc.getElementById(listId);
-    const parent =
-      toggle.parentElement?.querySelector<HTMLElement>("a[data-nav-row]");
-    if (!list || !parent) continue;
+    const leaf = toggle.parentElement;
+    const parent = leaf?.querySelector<HTMLElement>("a[data-nav-row]");
+    if (!list || !leaf || !parent) continue;
     const rows = [...list.querySelectorAll<HTMLElement>("[data-nav-row]")];
     if (rows.some((row) => !row.hidden)) parent.hidden = false;
     if (rows.some((row) => row.getAttribute("data-changed") === "true"))
       parent.setAttribute("data-changed-variants", "true");
     else parent.removeAttribute("data-changed-variants");
+    leaf.hidden = parent.hidden;
   }
 }
 

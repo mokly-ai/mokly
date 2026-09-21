@@ -22,6 +22,7 @@ import {
   setColorScheme,
   setViewport,
 } from "./browse_state.js";
+import { applyShownStatus } from "./workspace_status.js";
 
 const VIEWPORT_VALUES: readonly string[] = ["both", "desktop", "mobile"];
 const CONTROLS = {
@@ -55,7 +56,13 @@ export function applyViewEvidence(
   viewport: "both" | Viewport,
   scheme: ColorScheme,
   variantId?: string,
+  error?: string,
 ): void {
+  const variant =
+    data.entry.kind === "component"
+      ? data.variants.find((item) => item.value.id === variantId)
+      : undefined;
+  applyShownStatus(root, data, viewport, scheme, variant, error);
   const views = selectedChangedViews(data.entry, data.changedViews, variantId);
   const marks = viewMarks(views, viewport, scheme);
   applyViewMark(root, "scheme", marks.scheme);
@@ -75,6 +82,7 @@ export function syncViewControls(
   root: HTMLElement,
   data: WorkspaceData,
   variantId?: string,
+  error?: string,
 ): void {
   const viewport = currentViewport(doc);
   const scheme = currentColorScheme(doc);
@@ -83,7 +91,7 @@ export function syncViewControls(
   root
     .querySelector(CONTROLS.scheme)
     ?.setAttribute("aria-pressed", String(scheme === "dark"));
-  applyViewEvidence(root, data, viewport, scheme, variantId);
+  applyViewEvidence(root, data, viewport, scheme, variantId, error);
 }
 
 /**

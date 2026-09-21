@@ -790,7 +790,7 @@ Apply findings 3, 5, and 2 in the shell and clients: the badge and band follow
 the shown view, the hidden parent hides its leaf container, and the embedded
 Viewer shares the Changes activation decision.
 
-- [ ] Finding 3: `packages/viewer/src/shell/workspace.tsx` renders the
+- [x] Finding 3: `packages/viewer/src/shell/workspace.tsx` renders the
       initial badge and band from `shownStatus` for Both and light;
       `packages/viewer/src/client/workspace_views.ts` recomputes the badge
       text, `data-status`, and the band's `hidden` state (returning the
@@ -803,7 +803,7 @@ Viewer shares the Changes activation decision.
       variant control. Reword the `design-browse-changed-views` mockup
       description to a direct arrival (not from Changes) and regenerate the
       example catalogue.
-- [ ] Finding 5: in `applyVariantVisibility`
+- [x] Finding 5: in `applyVariantVisibility`
       (`packages/viewer/src/client/browse_navigation_state.ts`), set the
       leaf container's `hidden` to the parent link's `hidden`, and add the
       matching `.mbk-nav-leaf[hidden]` rule in `css_nav_variants.ts`. Test:
@@ -811,7 +811,7 @@ Viewer shares the Changes activation decision.
       hidden when a search hides the parent and shown again when the search
       clears; `tests/browser/browse_variants.spec.ts` asserts the toggle is
       not visible while the parent is filtered out.
-- [ ] Finding 2: extract the Changes activation decision into
+- [x] Finding 2: extract the Changes activation decision into
       `packages/viewer/src/client/changes_activation.ts`:
       `changesActivation(row, data?)` returns `{ href, viewport?, scheme? }`
       from `changesLandingHref` and the destination's first changed view when
@@ -822,7 +822,7 @@ Viewer shares the Changes activation decision.
       the destination. Tests: `tests/browser/viewer_variants.spec.ts` gains an
       aggregate-parent activation and a dark-only landing in uncontrolled and
       controlled mode.
-- [ ] Milestone close-out: run `cargo xtask check`; commit
+- [x] Milestone close-out: run `cargo xtask check`; commit
       `fix(browse): follow the shown view and share Changes activation` and
       push.
 - [ ] After the push, review the complete local diff against `origin/main`

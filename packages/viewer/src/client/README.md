@@ -19,10 +19,16 @@ and every other row opens itself. It also records one session-scoped intent
 naming that destination, which `workspace_views.ts` reads and clears as the
 destination installs, so only an arrival from the filter lands on a changed
 view and Back, Forward, a direct URL and a reload stay sticky.
+`changes_activation.ts` is the side-effect-free activation decision shared by
+standalone Browse and the embedded Viewer; Browse consumes its effective href
+while retaining the session intent needed across a full navigation.
 `workspace_views.ts` also re-applies the changed-view marks and the
 `Changed views` row whenever the saved variant, viewport, scheme or evidence
 changes. It selects a component's keyed list for the saved variant currently on
 screen; screens use their single entry-keyed list.
+`workspace_status.ts` uses that same selection and shown axes to write the title
+status and comparison-band availability, returning the mode to Current before
+an ineligible shown view hides the band.
 `browse_evidence_variants.ts` keeps those lists aligned with a background
 baseline — a parent adopts its first list without losing its live row, a
 parent whose last removed variant returned drops the list and the mark, and

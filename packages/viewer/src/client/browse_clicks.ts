@@ -9,11 +9,9 @@
 
 import { handleBrowseControl } from "./browse_controls.js";
 import { handleAddressClick, handleFrameClick } from "./browse_frames.js";
-import {
-  changesLandingHref,
-  rememberChangesLanding,
-} from "./browse_landing.js";
+import { rememberChangesLanding } from "./browse_landing.js";
 import { browseLinkTarget } from "./browse_links.js";
+import { changesActivation } from "./changes_activation.js";
 import { copyText } from "./clipboard.js";
 import { handleTagControlClick } from "./tag_filter.js";
 
@@ -69,7 +67,7 @@ export function handleBrowseClick(
   if (!url) return;
   event.preventDefault();
   const anchor = target.closest("a");
-  const landing = anchor ? changesLandingHref(anchor) : undefined;
+  const landing = anchor ? changesActivation(anchor)?.href : undefined;
   const destination =
     landing === undefined ? url : new URL(landing, win.location.href).href;
   if (anchor) rememberChangesLanding(win, anchor, destination);

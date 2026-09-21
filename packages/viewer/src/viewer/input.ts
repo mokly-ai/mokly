@@ -4,10 +4,12 @@ import {
   handleFrameClick,
   handleAddressClick,
 } from "../client/browse_frames.js";
+import { changesActivation } from "../client/changes_activation.js";
 import { copyText } from "../client/clipboard.js";
 import { parseSearchQuery } from "../client/search_query.js";
 import { handleTagControlClick } from "../client/tag_filter.js";
 
+import { publishedChangedViews } from "./public_workspace.js";
 import { routedEntries } from "./selection.js";
 import type { ViewerSelection } from "./types.js";
 
@@ -17,7 +19,11 @@ interface InputActions {
   baseUrl: URL;
   selection(): ViewerSelection;
   select(value: Partial<ViewerSelection>): void;
-  navigate(id: string | null, url: URL): void;
+  navigate(
+    id: string | null,
+    url: URL,
+    axes?: Pick<ViewerSelection, "viewport" | "colorScheme">,
+  ): void;
   refresh(): void;
   updateDiffs(): void;
 }
@@ -103,14 +109,39 @@ export function viewerInput(event: Event, actions: InputActions): void {
     (link.target && link.target !== "_self")
   )
     return;
-  const url = new URL(link.href, baseUrl);
+  let url = new URL(link.href, baseUrl);
   if (url.origin !== baseUrl.origin) return;
-  const entry = routedEntries(model).find(
-    (entry) =>
-      url.pathname === `/view/${entry.route}` ||
-      url.pathname === `/id/${entry.id}`,
-  );
+  const resolve = (destination: URL) =>
+    routedEntries(model).find(
+      (entry) =>
+        destination.pathname === `/view/${entry.route}` ||
+        destination.pathname === `/id/${entry.id}`,
+    );
+  let entry = resolve(url);
+  const preliminary = changesActivation(link);
+  if (preliminary) {
+    url = new URL(preliminary.href, baseUrl);
+    entry = resolve(url);
+  }
+  const views =
+    entry?.kind === "screen"
+      ? entry.views
+      : entry?.kind === "component"
+        ? (entry.variants[0]?.views ?? [])
+        : [];
+  const activation = changesActivation(link, publishedChangedViews(views));
+  if (activation) url = new URL(activation.href, baseUrl);
+  entry = resolve(url);
   if (!entry && url.pathname !== "/") return;
   event.preventDefault();
-  actions.navigate(entry?.id ?? null, url);
+  actions.navigate(
+    entry?.id ?? null,
+    url,
+    activation?.viewport && activation.scheme
+      ? {
+          viewport: activation.viewport,
+          colorScheme: activation.scheme,
+        }
+      : undefined,
+  );
 }

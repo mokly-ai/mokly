@@ -204,7 +204,7 @@ export const variantScreens = [
   screen({
     colorSchemes: ["light"],
     description:
-      "A screen opened from Changes whose change is confined to its dark views, with the shown view unmodified.",
+      "A direct or All-filter arrival at a screen whose change is confined to its dark views, with the shown view unmodified.",
     desktop: <ChangedViews viewport="desktop" />,
     id: "design-browse-changed-views",
     mobile: <ChangedViews viewport="mobile" />,

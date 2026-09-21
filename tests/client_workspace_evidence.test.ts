@@ -6,9 +6,9 @@ import { mergeWorkspaceEvidence } from "../packages/viewer/dist/client/workspace
 import { applyViewEvidence } from "../packages/viewer/dist/client/workspace_views.js";
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 
-import { FakeNode } from "./helpers/fake_dom.js";
 import type { FakeMarkupElement } from "./helpers/fake_markup.js";
 import { FakeMarkupDocument, fakeMarkup } from "./helpers/fake_markup.js";
+import { fakeStatusWorkspace } from "./helpers/workspace_status_dom.js";
 
 const SHARED = "mockups/shared.css";
 const TOKENS = "mockups/tokens.css";
@@ -136,7 +136,7 @@ test("the terminal line names the screen or the saved view it compared", () => {
 });
 
 test("a merged snapshot moves the view marks and the changed-views row", () => {
-  const workspace = fakeWorkspace();
+  const workspace = fakeStatusWorkspace();
   const data = {
     base: "main",
     changedViews: { default: [], disabled: [] },
@@ -146,14 +146,35 @@ test("a merged snapshot moves the view marks and the changed-views row", () => {
     entry: { id: "action", kind: "component", route: "components/action.html" },
     inputChanges: [],
     relatedComponents: [],
+    status: "Changed",
     usedBy: [],
     affected: [],
     removed: false,
-    variants: [],
+    variants: [
+      {
+        value: { id: "default" },
+        removed: false,
+        comparisonEligible: false,
+        status: "Unmodified",
+      },
+      {
+        value: { id: "disabled" },
+        removed: false,
+        comparisonEligible: true,
+        status: "Changed",
+      },
+    ],
+    viewStates: {
+      default: [
+        { viewport: "mobile", colorScheme: "light", state: "unchanged" },
+        { viewport: "desktop", colorScheme: "light", state: "unchanged" },
+      ],
+    },
     views: [],
   } as unknown as WorkspaceData;
 
   applyViewEvidence(workspace.root, data, "both", "light", "default");
+  assertShown(workspace, "Unmodified", true);
   assert.equal(workspace.dot("scheme").hidden, true);
   assert.equal(workspace.row.hidden, true);
   assert.equal(
@@ -172,14 +193,24 @@ test("a merged snapshot moves the view marks and the changed-views row", () => {
       ],
     },
     viewStates: {
+      default: [
+        { viewport: "mobile", colorScheme: "light", state: "unchanged" },
+        { viewport: "mobile", colorScheme: "dark", state: "unchanged" },
+        { viewport: "desktop", colorScheme: "light", state: "unchanged" },
+        { viewport: "desktop", colorScheme: "dark", state: "unchanged" },
+      ],
       disabled: [
+        { viewport: "mobile", colorScheme: "light", state: "unchanged" },
         { viewport: "mobile", colorScheme: "dark", state: "changed" },
+        { viewport: "desktop", colorScheme: "light", state: "unchanged" },
         { viewport: "desktop", colorScheme: "dark", state: "changed" },
       ],
     },
   } as unknown as WorkspaceData);
   assert.deepEqual(data.viewStates.disabled, [
+    { viewport: "mobile", colorScheme: "light", state: "unchanged" },
     { viewport: "mobile", colorScheme: "dark", state: "changed" },
+    { viewport: "desktop", colorScheme: "light", state: "unchanged" },
     { viewport: "desktop", colorScheme: "dark", state: "changed" },
   ]);
   applyViewEvidence(workspace.root, data, "both", "light", "default");
@@ -189,6 +220,7 @@ test("a merged snapshot moves the view marks and the changed-views row", () => {
 
   applyViewEvidence(workspace.root, data, "both", "light", "disabled");
 
+  assertShown(workspace, "Unmodified", true);
   assert.equal(workspace.dot("scheme").hidden, false);
   assert.equal(workspace.text("scheme").hidden, false);
   assert.equal(
@@ -200,6 +232,7 @@ test("a merged snapshot moves the view marks and the changed-views row", () => {
   assert.equal(workspace.value.textContent, "Mobile · Dark, Desktop · Dark");
 
   applyViewEvidence(workspace.root, data, "mobile", "dark", "disabled");
+  assertShown(workspace, "Changed", false);
   assert.equal(workspace.dot("scheme").hidden, true);
   assert.equal(workspace.dot("viewport").hidden, false);
   assert.equal(
@@ -208,47 +241,25 @@ test("a merged snapshot moves the view marks and the changed-views row", () => {
   );
   assert.equal(workspace.row.hidden, false);
 
+  workspace.current.setAttribute("aria-pressed", "false");
+  workspace.side.setAttribute("aria-pressed", "true");
   applyViewEvidence(workspace.root, data, "mobile", "dark", "default");
+  assertShown(workspace, "Unmodified", true);
+  assert.equal(workspace.current.getAttribute("aria-pressed"), "true");
+  assert.equal(workspace.side.getAttribute("aria-pressed"), "false");
   assert.equal(workspace.dot("viewport").hidden, true);
   assert.equal(workspace.row.hidden, true);
 });
 
-function fakeWorkspace() {
-  const dots = {
-    scheme: new FakeNode("span", { "data-view-changed": "scheme" }),
-    viewport: new FakeNode("span", { "data-view-changed": "viewport" }),
-  };
-  const texts = {
-    scheme: new FakeNode("span", { "data-view-changed-text": "scheme" }),
-    viewport: new FakeNode("span", { "data-view-changed-text": "viewport" }),
-  };
-  const controls = {
-    scheme: new FakeNode("button", { "data-workspace-scheme": "" }),
-    viewport: new FakeNode("select", { "data-workspace-viewport": "" }),
-  };
-  const value = new FakeNode("span", {
-    "data-workspace-changed-views-value": "",
-  });
-  const row = new FakeNode("div", {
-    "data-workspace-changed-views": "",
-  }).append(value);
-  const root = new FakeNode("section", { "data-workspace": "" }).append(
-    new FakeNode("label").append(
-      controls.viewport,
-      dots.viewport,
-      texts.viewport,
-    ),
-    controls.scheme.append(dots.scheme, texts.scheme),
-    row,
-  );
-  return {
-    control: (kind: "scheme" | "viewport") => controls[kind],
-    dot: (kind: "scheme" | "viewport") => dots[kind],
-    root: root as unknown as HTMLElement,
-    row,
-    text: (kind: "scheme" | "viewport") => texts[kind],
-    value,
-  };
+function assertShown(
+  workspace: ReturnType<typeof fakeStatusWorkspace>,
+  status: "Changed" | "Unmodified",
+  toolbarHidden: boolean,
+): void {
+  assert.equal(workspace.status.textContent, status);
+  assert.equal(workspace.status.getAttribute("data-status"), status);
+  assert.equal(workspace.status.hidden, false);
+  assert.equal(workspace.toolbar.hidden, toolbarHidden);
 }
 
 function fakePanel(): { node: FakeMarkupElement; panel: Element } {

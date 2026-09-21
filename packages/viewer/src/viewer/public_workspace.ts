@@ -38,7 +38,7 @@ function status(entry: CatalogueRoutedEntry): EntryStatus | undefined {
     : undefined;
 }
 /** Published per-view comparisons name the same changed views the shell derives. */
-function publishedChangedViews(
+export function publishedChangedViews(
   views: readonly CatalogueView[],
 ): readonly ChangedView[] {
   return orderChangedViews(

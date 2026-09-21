@@ -4,8 +4,13 @@ import type {
   WorkspaceVariant,
 } from "../shell/workspace_data.js";
 
-import { currentColorScheme, setColorScheme } from "./browse_state.js";
+import {
+  currentColorScheme,
+  currentViewport,
+  setColorScheme,
+} from "./browse_state.js";
 import { element } from "./inspector_panels.js";
+import { applyShownStatus } from "./workspace_status.js";
 
 export interface InstalledWorkspace {
   dispose(): void;
@@ -62,20 +67,6 @@ export function syncVariantControl(
   if (selector) selector.value = value ?? "";
 }
 
-/** Whether the selected saved view can open an on-demand comparison. */
-function selectedComparisonEligible(
-  data: WorkspaceData,
-  variant: WorkspaceVariant | undefined,
-  error?: string,
-): boolean {
-  return (
-    !error &&
-    (data.entry.kind === "component"
-      ? (variant?.comparisonEligible ?? false)
-      : data.comparisonEligible)
-  );
-}
-
 export function applyVariant(
   root: HTMLElement,
   data: WorkspaceData,
@@ -93,11 +84,6 @@ export function applyVariant(
   if (selector) selector.value = variant?.value.id ?? "";
   const diff = root.querySelector<HTMLElement>("[data-diff-screen]");
   if (diff) diff.dataset["diffVariant"] = variant?.value.id ?? "";
-  const title = root.querySelector<HTMLElement>("[data-workspace-status]")!;
-  if (data.status) title.dataset["status"] = data.status;
-  else delete title.dataset["status"];
-  title.textContent = data.status ?? "";
-  title.hidden = data.status === undefined;
   const variantStatus = root.querySelector<HTMLElement>(
     "[data-workspace-variant-status]",
   );
@@ -107,17 +93,14 @@ export function applyVariant(
       ? `${variant.value.title} · ${variant.status}`
       : "";
   }
-  const eligible = selectedComparisonEligible(data, variant, error);
-  const toolbar = root.querySelector<HTMLElement>(".mbk-diff-toolbar");
-  if (toolbar) {
-    if (!eligible)
-      root
-        .querySelector<HTMLButtonElement>(
-          '[data-diff-mode="current"][aria-pressed="false"]',
-        )
-        ?.click();
-    toolbar.hidden = !eligible;
-  }
+  applyShownStatus(
+    root,
+    data,
+    currentViewport(doc),
+    currentColorScheme(doc),
+    variant,
+    error,
+  );
   const preview =
     root.querySelector<HTMLElement>("[data-current-screen]") ??
     root.querySelector<HTMLElement>("[data-workspace-preview]")!;

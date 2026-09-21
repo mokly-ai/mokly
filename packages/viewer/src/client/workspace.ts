@@ -5,6 +5,7 @@ import { collapseFrame, expandedFrame } from "./browse_frames.js";
 /** One disposable controller for the package's component and screen inspector. */
 import {
   currentColorScheme,
+  currentViewport,
   setColorScheme,
   setViewport,
 } from "./browse_state.js";
@@ -31,6 +32,7 @@ import {
   revealWorkspaceInstance,
 } from "./workspace_preview.js";
 import { renderWorkspaceProps } from "./workspace_props.js";
+import { applyShownStatus } from "./workspace_status.js";
 import {
   mergeWorkspaceEvidence,
   updateWorkspaceEvidence,
@@ -202,7 +204,7 @@ export function installWorkspace(
               toggle.focus();
             },
           );
-    syncViewControls(doc, root, data, variant.variant?.value.id);
+    syncViewControls(doc, root, data, variant.variant?.value.id, variant.error);
   };
   const activateVariant = () => {
     applyVariant(root, data, variant.variant, variant.error, {
@@ -280,7 +282,15 @@ export function installWorkspace(
   if (currentInstance()) open("props");
   else if (tabs.preferredOpen ?? data.entry.kind === "component")
     open("details", false);
-  if (query.get("comparison") === "side" && variant.comparisonEligible)
+  const initialComparisonEligible = applyShownStatus(
+    root,
+    data,
+    currentViewport(doc),
+    currentColorScheme(doc),
+    variant.variant,
+    variant.error,
+  );
+  if (query.get("comparison") === "side" && initialComparisonEligible)
     root.querySelector<HTMLButtonElement>('[data-diff-mode="side"]')?.click();
   return { dispose: () => controller.abort(), setVariant };
 }
