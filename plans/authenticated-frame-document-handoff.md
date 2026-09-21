@@ -284,9 +284,9 @@ without weakening the navigation or handoff assertions.
 - [x] Run the two affected browser specs repeatedly with the CI Chromium
       channel and run the relevant formatting, lint, and type checks.
 - [x] Run the complete `cargo xtask check` gate with no failures or skips.
-- [ ] After checks pass, `git add -A`, commit with Conventional Commits, and
+- [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
@@ -374,3 +374,9 @@ replacement completed. Two focused Playwright Chromium runs each passed all
 seven affected-spec tests after the synchronization changes. The complete
 `cargo xtask check` gate then passed 2,005 unit/integration tests and 529 browser
 tests with no failures, skips, cancellations, or missing inventory.
+
+Milestone 4 (`6dc44a2`) was reviewed with the implementation review prompt
+after the full gate and push. The complete diff against `origin/main` had no
+findings. Residual risk is limited to browser-engine scheduling outside the
+focused Playwright Chromium repetitions and complete installed-Chrome browser
+gate; both repaired timing paths passed in each applicable run.
