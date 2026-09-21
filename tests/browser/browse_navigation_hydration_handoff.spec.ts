@@ -68,3 +68,93 @@ test("initial hydration keeps logical frame navigation host-owned", async ({
     await initialNavigation;
   }
 });
+
+test("an unowned exact-resource document stays frame-owned during replacement", async ({
+  page,
+}) => {
+  await page.goto(`${navigation.url}/view/screens/home.html`);
+  const frame = page.frameLocator(".mbk-frame-mobile iframe");
+
+  let matchingRequests = 0;
+  let releaseRequest = () => {};
+  let reportRequest = () => {};
+  const requestStarted = new Promise<void>((resolve) => {
+    reportRequest = resolve;
+  });
+  const requestReleased = new Promise<void>((resolve) => {
+    releaseRequest = resolve;
+  });
+  await page.route("**/static/screens/home.mobile.dark.html", async (route) => {
+    matchingRequests++;
+    if (matchingRequests === 1) {
+      await route.continue();
+      return;
+    }
+    reportRequest();
+    await requestReleased;
+    await route.continue();
+  });
+
+  await frame.locator("#unowned-next-scheme-link").click();
+  await expect
+    .poll(() =>
+      page
+        .locator(".mbk-frame-mobile iframe")
+        .evaluate((element: HTMLIFrameElement) =>
+          element.contentDocument?.URL.endsWith(
+            "/static/screens/home.mobile.dark.html",
+          ),
+        ),
+    )
+    .toBe(true);
+
+  try {
+    await page.getByLabel("Appearance", { exact: true }).selectOption("dark");
+    await requestStarted;
+    await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
+      "data-mokly-frame-state",
+      "loading",
+    );
+
+    const defaultPrevented = await page.evaluate(() => {
+      const iframe = document.querySelector<HTMLIFrameElement>(
+        ".mbk-frame-mobile iframe",
+      )!;
+      const doc = iframe.contentDocument!;
+      const element = doc.querySelector("#mock-link")!;
+      let prevented: boolean | undefined;
+      doc.addEventListener(
+        "click",
+        (event) => {
+          prevented = event.defaultPrevented;
+          event.preventDefault();
+        },
+        { once: true },
+      );
+      element.dispatchEvent(
+        new MouseEvent("click", {
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+      return prevented;
+    });
+    expect(defaultPrevented).toBe(false);
+    await page.waitForTimeout(100);
+    await expect(page).toHaveURL(/\/view\/screens\/home\.html$/);
+    await expect(page.locator("#mb-main h2")).toHaveText("Home");
+
+    releaseRequest();
+    await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
+      "data-mokly-frame-state",
+      "ready",
+    );
+    await frame.locator("#mock-link").click();
+    await expect(page).toHaveURL(
+      /\/view\/screens\/details\.html\?fragment=section$/,
+    );
+    await expect(page.locator("#mb-main h2")).toHaveText("Details");
+  } finally {
+    releaseRequest();
+  }
+});

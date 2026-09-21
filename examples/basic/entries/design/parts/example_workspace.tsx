@@ -28,6 +28,7 @@ export function ExampleWorkspace({
 }) {
   return (
     <PreviewWorkspace
+      viewport={viewport}
       inspector={
         <DetailsPanel
           subject={subject}

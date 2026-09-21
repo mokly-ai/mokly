@@ -6,7 +6,9 @@ The shared component and screen workspace is implemented in Serve and static
 exports: saved variants, usage, comparison evidence, highlighting, and a resizable
 icon inspector. Local Serve additionally provides editable controls. See the
 [component contract](./mokly-components.md), [attribution contract](./mokly-component-changes.md),
-and [component design catalogue](./mokly-component-design.md).
+and [component design catalogue](./mokly-component-design.md). Removed
+consumers open their historical screen through the behavior implemented by the
+[removed content previews plan](../../plans/removed-content-previews.md).
 
 ## Catalogue And Component Pages
 
@@ -71,7 +73,9 @@ variant's viewport/theme fragment. Variant selectors and Used by links are
 shell-owned URLs; do not overload the existing logical fragment grammar with
 component prop JSON or variant suffixes.
 Affected-consumer links carry explicit comparison eligibility. A removed screen
-link opens its Removed current empty state without a comparison query; an
+link opens its Removed state, showing its
+[previous version](./mokly-removed-previews.md) without a
+comparison query; an
 eligible removed component variant may request its retained baseline comparison.
 The destination validates the selected view again before activating any
 comparison query.
@@ -88,8 +92,8 @@ never infer visual explanations from pixels or add a banner above the canvas.
 Props contains the supplied values, and Usage
 contains Used by screens/components derived from current usage. A changed
 component also exposes Affected screens from baseline/current evidence. Removed
-consumers link to their Removed badge and current empty state; their comparison
-evidence remains in Details. Lists distinguish direct and
+consumers link to their Removed state; their comparison evidence remains in
+Details. Lists distinguish direct and
 transitive use and show actual instance/view counts without counting reused flow
 frames as additional screen uses. Empty lists have explicit empty states. The
 [inspector design contract](./mokly-component-inspector-design.md) defines the

@@ -182,6 +182,76 @@ test("sandboxed direct and nested content cannot escape or invoke parent enhance
   await expect(page.locator("#mb-main h2")).toHaveText("Home");
 });
 
+test("an unowned frame document stays frame-owned during shell replacement", async ({
+  page,
+}) => {
+  await page.goto(`${navigation.url}/view/screens/home.html`);
+  const frame = page.frameLocator(".mbk-frame-mobile iframe");
+  await frame.locator("#unowned-details-link").click();
+  await expect(frame.locator("#extra-link")).toBeVisible();
+
+  let releaseRequest = () => {};
+  let reportRequest = () => {};
+  const requestStarted = new Promise<void>((resolve) => {
+    reportRequest = resolve;
+  });
+  const requestReleased = new Promise<void>((resolve) => {
+    releaseRequest = resolve;
+  });
+  await page.route("**/static/screens/home.mobile.dark.html", async (route) => {
+    reportRequest();
+    await requestReleased;
+    await route.continue();
+  });
+
+  try {
+    await page.getByLabel("Appearance", { exact: true }).selectOption("dark");
+    await requestStarted;
+    await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
+      "data-mokly-frame-state",
+      "loading",
+    );
+
+    const defaultPrevented = await page.evaluate(() => {
+      const frame = document.querySelector<HTMLIFrameElement>(
+        ".mbk-frame-mobile iframe",
+      )!;
+      const doc = frame.contentDocument!;
+      const element = doc.querySelector("#extra-link")!;
+      let prevented: boolean | undefined;
+      doc.addEventListener(
+        "click",
+        (event) => {
+          prevented = event.defaultPrevented;
+          event.preventDefault();
+        },
+        { once: true },
+      );
+      element.dispatchEvent(
+        new MouseEvent("click", {
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+      return prevented;
+    });
+    expect(defaultPrevented).toBe(false);
+    await page.waitForTimeout(100);
+    await expect(page).toHaveURL(/\/view\/screens\/home\.html$/);
+    await expect(page.locator("#mb-main h2")).toHaveText("Home");
+
+    releaseRequest();
+    await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
+      "data-mokly-frame-state",
+      "ready",
+    );
+    await frame.locator("#mock-link").click();
+    await expectDestination(page);
+  } finally {
+    releaseRequest();
+  }
+});
+
 test("JavaScript-disabled Browse keeps portable links inside the sandbox", async ({
   browser,
 }) => {

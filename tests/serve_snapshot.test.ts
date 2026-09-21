@@ -6,9 +6,9 @@ import test from "node:test";
 import { MoklyError } from "../dist/errors.js";
 import { GitRepositoryEvidence } from "../dist/review/git_evidence.js";
 import { committedReviewRepository } from "../dist/review/repository.js";
+import { configuredServedReview } from "../dist/server/configured_review.js";
 import { NodeCatalogueServerFactory } from "../dist/server/factory.js";
 import { startCatalogueServer } from "../dist/server/http.js";
-import { configuredServedReview } from "../dist/server/review_routes.js";
 import { serve } from "../dist/server/serve.js";
 
 import { observeBackgroundClassification } from "./helpers/background_classification.js";
@@ -50,7 +50,7 @@ test("no-watch startup retains removed metadata from its single Changes calculat
   const home = await (await fetch(running.url)).text();
   const removed = await fetch(`${running.url}/view/guide.html`);
   assert.equal(removed.status, 200);
-  assert.match(documentText(await removed.text()), /This page was removed/);
+  assert.match(documentText(await removed.text()), /Showing previous version/);
   assert.match(home, /data-removed-page=""/);
   assert.match(home, /class="mbk-nav-filter-count">1</);
   assert.equal(calls, 1);

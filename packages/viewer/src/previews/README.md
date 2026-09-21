@@ -1,0 +1,53 @@
+# Previous versions of removed entries
+
+These modules turn a removed page or screen into the version from the pinned
+Changes baseline, for the served shell, a static export and an embedded
+`@mokly/viewer` alike. They implement the
+[removed previews contract](../../../../docs/protocol/mokly-removed-previews.md).
+
+`descriptor.ts` reads the stage host's `data-mokly-preview` attribute that
+`shell/previews.tsx` renders. A damaged or unknown descriptor advertises
+nothing, so the stage reports the unavailable state instead of requesting an
+address the catalogue never published.
+
+`request.ts` resolves that descriptor to one address. Development uses the
+stable selected endpoint (`route=` for a screen, `page=` for a page); static
+delivery uses `comparisonUrl` for a screen and the catalogue's advertised
+`preview.path` for a page, after checking that the path belongs to the
+comparison's generation and to this exact route. A page's documents resolve
+against the generation root, not the descriptor's own directory. Screen views
+render only where the comparison says `removed`; any `afterPath` for that route
+means a reused generation and is treated as unavailable. `renewPreview`
+extends a live generation's retention before reusing it, exactly as comparisons
+do. `advertisedPreviewPaths` is the complete set an embedded viewer may fetch.
+
+`copy.ts` owns the unavailable copy and Retry hook shared by the server render
+and hydrated shell. `shell/previews.tsx` owns loading, retry and loaded states,
+using the same device chrome components as current screens. A selected viewport
+with no captured view keeps a note where its frame would be rather than an empty
+stage; its `mbk-preview-note` and `mbk-preview-switch` classes match the design
+catalogue, and the stylesheet hides the closing sentence while both viewports
+are shown. `read_only.ts`
+cancels link and form activation inside frames the parent can reach, Enter
+included, while preserving scrolling, selection and same-document anchors;
+Space keeps its default so a long previous version stays readable from the
+keyboard, and a cross-origin preview relies on its sandbox instead.
+`shell/use_removed_preview.ts` is the route-owned controller: its first effect
+replaces the honest server-rendered unavailable state with loading, requests on
+selection, renews before presenting a viewport or theme change, and discards
+work after route replacement or unmount.
+
+The controller and typed review validators are bundled once into the shared
+`react-shell.js` hydration entry. Serve, static export and application-owned
+`@mokly/viewer` roots therefore use the same React lifecycle without a second
+Browse runtime.
+
+```bash
+npm run build
+npx tsx --test tests/client_removed_previews.test.ts tests/removed_preview_shell.test.ts
+npx playwright test tests/browser/removed_previews.spec.ts tests/browser/removed_preview_views.spec.ts tests/browser/removed_previews_static.spec.ts tests/browser/removed_previews_viewer.spec.ts
+```
+
+Related boundaries: [the Browse client](../client/README.md), the
+[shared shell](../shell/README.md), and the
+[selected comparison contract](../../../../docs/protocol/mokly-selected-comparisons.md).

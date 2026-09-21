@@ -21,6 +21,20 @@ Every export includes the standalone hydration bundle and matching document
 entry. Live host capability modules remain excluded from the static inventory.
 Removed screens and pages use the shared catalogue change snapshots; page
 removal preserves ancestor context without introducing visual comparisons.
+Changes-enabled delivery captures every removed page from the same pinned
+baseline before installation. Its typed metadata is written as
+`pages/<route>.json` beside `review.json`, while its original document and local
+resource closure share `snapshots/before/**` with screen comparisons. Removed
+page and screen descriptors are emitted only for a complete generation. These
+files enter comparison identity before the generation path is chosen, then the
+normal reference checks, ownership inventory, deployment identity and upload
+capture. A missing local closure fails the transaction and preserves the prior
+artifact. Current-only assembly branches before preparation or capture and
+replaces any previously owned historical files.
+The descriptor builder lives in `publication/removed_previews.ts` and is shared
+with repository preview packaging. Repository capture therefore cannot publish
+a page path that consumer export would reject, while Serve itself continues to
+omit live page descriptors.
 The shared `server/changed_content.ts` calculation receives the same captured
 asset reader as comparisons, preserving Serve's material-output/resource Changes
 membership without reading a different current-file snapshot.
@@ -73,14 +87,19 @@ finalization. Captured live shell bootstraps are replaced with references to
 that projected model before staging; conversion rejects rendered catalogue
 drift beyond the deployment id, revision counters, and finalized comparison
 path. Shell HTML retains its existing bytes apart from the identity.
+Its opt-in Changes build captures removed pages through the already prepared
+repository reader; the default build performs no Git or historical capture.
+The finalized projection carries validated packaged preview descriptors, and
+externalized shells resolve them from that shared model.
 
-The browser inventory also publishes the package-owned classic
-`__mokly/client/appearance-startup.js` and
-`__mokly/client/navigation-resize.js` bundles, plus
-`__mokly/client/inspector.js`. The first two come from the same explicit Serve
-allowlist and contain no React, Node or CLI dependency. The Browse adapter adds
-the inspector's deferred script and bounded inert identity map only to owned
-current HTML copies. Generated files and immutable comparison snapshots remain
+The browser inventory publishes the hydrated `react-shell.js` bundle, the
+package-owned classic `appearance-startup.js` and `navigation-resize.js`
+bundles, and the React-free `inspector.js` consumer module. The startup and
+navigation bundles come from the same explicit Serve allowlist and contain no
+React, Node or CLI dependency. Removed-preview validation and request handling
+are part of the shared shell bundle, not a parallel browser runtime. The Browse
+adapter adds the inspector's deferred script and bounded inert identity map only
+to owned current HTML copies. Generated files and immutable comparison snapshots remain
 byte-unmodified. Local frames retain `allow-same-origin`, with scripts disabled
 and parent-owned highlighting; an explicit cross-origin host uses the
 [frame adapter handshake](../../packages/viewer/src/inspector/README.md). The script and maps enter the

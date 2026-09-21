@@ -61,6 +61,7 @@ function ErrorAndRetry({ viewport }: { viewport: ArtboardViewport }) {
       />
       <PreviewWorkspace
         inspector={<DetailsPanel subject="welcome" />}
+        viewport={viewport}
         render={() => (
           <EmptyState
             to={DESTINATIONS.appearanceError}
@@ -101,6 +102,7 @@ function AvailabilityScreen({
       />
       <PreviewWorkspace
         inspector={<DetailsPanel subject="welcome" />}
+        viewport={viewport}
         render={(previewViewport) => <WelcomeShot viewport={previewViewport} />}
       />
     </AppearanceShell>

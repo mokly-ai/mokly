@@ -21,7 +21,11 @@ export function LibraryHost({
       : undefined);
   const content =
     slug === "inspector" ? (
-      <PreviewWorkspace inspector={children} render={() => null} />
+      <PreviewWorkspace
+        inspector={children}
+        render={() => null}
+        viewport={input.viewport}
+      />
     ) : slug === "metadata-row" && props?.presentation === "props" ? (
       <dl className="ce-props">{children}</dl>
     ) : (

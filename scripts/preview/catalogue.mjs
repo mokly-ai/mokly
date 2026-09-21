@@ -28,6 +28,7 @@ import { startCatalogueServer } from "../../dist/server/http.js";
 import { previewOwnership, stagePreviewArtifact } from "./artifact.mjs";
 import {
   captureComparison,
+  capturePublicationPagePreviews,
   previewComparisonProvider,
   publishComparison,
 } from "./comparisons.mjs";
@@ -87,12 +88,18 @@ export async function buildPreview(config, output, options = {}) {
           ...(review ? { review } : {}),
         });
         let comparison;
+        let pagePreviews = new Map();
         let removed = [];
         const capturedShells = new Set();
         try {
           if (review) {
             comparison = await captureComparison(server.url);
             removed = changes.removedEntries.map(({ entry }) => entry);
+            pagePreviews = await capturePublicationPagePreviews(
+              config,
+              prepared,
+              changes,
+            );
           }
           await capturePage(server.url, "/", stage, "index.html");
           capturedShells.add("index.html");
@@ -120,7 +127,13 @@ export async function buildPreview(config, output, options = {}) {
           await server.close();
         }
         if (review && comparison)
-          comparison = await publishComparison(review, comparison, stage);
+          comparison = await publishComparison(
+            review,
+            comparison,
+            stage,
+            changes.removedEntries,
+            pagePreviews,
+          );
         await copyPublicFiles(config, catalogue, stage, excludedRoots);
         const readModel = projectCatalogue({
           configPath: path
@@ -135,6 +148,7 @@ export async function buildPreview(config, output, options = {}) {
           comparisonUrl: comparison
             ? `${comparison.directory}/review.json`
             : null,
+          removedPreviews: comparison?.removedPreviews,
           revision: { content: 0, evidence: 0 },
         });
         for (const name of capturedShells) {
@@ -149,7 +163,13 @@ export async function buildPreview(config, output, options = {}) {
           );
         }
         await writeText(stage, CATALOGUE_PATH, serializeCatalogue(readModel));
-        await stagePreviewArtifact(stage, manifest, removed, comparison);
+        await stagePreviewArtifact(
+          stage,
+          manifest,
+          removed,
+          comparison,
+          comparison?.removedPreviews,
+        );
         if (
           inputs.fingerprint !==
           (await capturePublicationInputs(config, excludedRoots)).fingerprint

@@ -1,23 +1,18 @@
 /** Lazy comparison snapshots used by the catalogue diff controls. */
 import type { ServerResponse } from "node:http";
 
-import type { ResolvedConfig } from "../config/types.js";
-import type { ReadOnlyReviewRepository } from "../review/repository.js";
-import { runReview } from "../review/run.js";
-import { RepositorySelectedReview } from "../review/selected.js";
 import type {
-  SelectedReviewProvider,
+  RemovedPagePreviewSource,
   SelectedReviewSource,
 } from "../review/selection_types.js";
 
+import type { ServedReview } from "./configured_review.js";
 import { PublicReviewAliases, type PublicComparison } from "./public_review.js";
 import { safeDecodePath, send } from "./respond.js";
 import {
   ReviewGenerationStore,
-  type ReviewArtifactProvider,
   type ReviewGeneration,
 } from "./review_generations.js";
-import type { ReviewRepositorySource } from "./review_repository.js";
 import {
   redirectReview,
   sendReviewFailure,
@@ -32,43 +27,8 @@ import {
   isSnapshot,
   reviewServerClosing,
 } from "./review_urls.js";
-import { SelectedReviewRoutes } from "./selected_review_routes.js";
-
-/** How Browse obtains the Review artifact it serves under `/__mokly/diffs/`. */
-export interface ServedReview extends ReviewArtifactProvider {
-  /** Comparison base ref, shown when the comparison cannot be generated. */
-  base: string;
-  selected?: SelectedReviewProvider;
-  repository?(): ReadOnlyReviewRepository;
-}
-
-/** Serve the configured Git comparison from the consumer's Review engine. */
-export function configuredServedReview(
-  config: ResolvedConfig,
-  base: string,
-  git: ReadOnlyReviewRepository | ReviewRepositorySource,
-): ServedReview {
-  const repository = () => ("current" in git ? git.current() : git);
-  return {
-    base,
-    repository,
-    selected: new RepositorySelectedReview(
-      config,
-      "current" in git ? undefined : git.reader,
-    ),
-    async generate(options): Promise<void> {
-      await runReview(
-        config,
-        base,
-        config.review.outDir,
-        repository(),
-        undefined,
-        options.changedPathExclusions,
-      );
-    },
-    outDir: config.review.outDir,
-  };
-}
+import type { SelectedReviewRoutes } from "./selected_review_routes.js";
+import { createSelectedReviewRoutes } from "./selected_review_service.js";
 
 /** Serialize lazy Review generation and serve the artifact's files. */
 export class ReviewRoutes {
@@ -90,12 +50,12 @@ export class ReviewRoutes {
     private readonly onPublicComparison?: (
       comparison: PublicComparison,
     ) => void,
+    private readonly pageSource: () =>
+      RemovedPagePreviewSource | undefined = () => undefined,
   ) {
     this.generations = new ReviewGenerationStore(review);
     this.publicAliases = new PublicReviewAliases(this.generations);
-    this.selected = review.selected
-      ? new SelectedReviewRoutes(review.selected, source, review.base)
-      : undefined;
+    this.selected = createSelectedReviewRoutes(review, source, this.pageSource);
   }
 
   /** Mark the cached artifact stale after an update that reloads browsers. */

@@ -80,6 +80,24 @@ hydrates. `appearance_bridge.ts` adopts that theme and effective preview scheme
 into the live shell; embedded roots skip the bridge and receive `theme` from
 their host while retaining independent preview controls.
 
+`previews.tsx` renders the one previous-version presentation a removed page and
+a removed screen share: the "Showing previous version" label, the stage host
+carrying the descriptor the React request lifecycle validates, and the shared
+device chrome around captured screen views. It advertises a packaged address only when the accepted
+public catalogue publishes one, so a delivery without that descriptor stays
+quiet. The served stage holds the unavailable copy without a Retry control,
+because a shell that never hydrates cannot honour that action; the first client
+effect replaces it with the loading state and adds Retry only if its own request
+fails. The request fencing lives in `use_removed_preview.ts`, and the copy and
+Retry contract comes from `previews/copy.ts`.
+`views.tsx` uses it for removed pages and `workspace.tsx` for removed screens;
+both drop the comparison band there, while removed component variants keep
+theirs.
+`css_previews.ts` styles the stage, including the `mbk-preview-note` and
+`mbk-preview-switch` classes the design catalogue's stage stylesheet owns. The
+Both-only rule reads the normalized `data-viewport` value on the live stage.
+See [previews](../previews/README.md) for the client side.
+
 See [the package README](../../README.md), the
 [viewer contract](../../../../docs/protocol/mokly-viewer.md), and the
 [shell design](../../../../docs/protocol/mokly-shell-design.md).

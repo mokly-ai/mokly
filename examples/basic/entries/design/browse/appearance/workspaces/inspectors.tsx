@@ -88,6 +88,7 @@ function PropsValidation({ viewport }: { viewport: ArtboardViewport }) {
             props={<PropsBody />}
           />
         }
+        viewport={viewport}
         render={(previewViewport) => <WelcomeShot viewport={previewViewport} />}
       />
     </AppearanceShell>
@@ -139,6 +140,7 @@ function SelectedInstance({ viewport }: { viewport: ArtboardViewport }) {
             components={<InstanceBody />}
           />
         }
+        viewport={viewport}
         render={(previewViewport) => <WelcomeShot viewport={previewViewport} />}
       />
     </AppearanceShell>

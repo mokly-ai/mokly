@@ -9,8 +9,9 @@ kept in the repository adapter. Delivery is tracked in the
 [consumer static export plan](../../plans/consumer-static-export.md).
 
 The public catalogue, cross-origin inspector and viewer package are implemented
-through Milestone 5 of the [viewer library plan](../../plans/mokly-viewer-library.md).
-Existing routes and default same-origin Serve/export behavior stay unchanged.
+by the completed [viewer library plan](../../plans/mokly-viewer-library.md).
+Removed page and screen previous versions are packaged and rendered by the
+[removed content previews plan](../../plans/removed-content-previews.md).
 
 ## Hosting Contract
 
@@ -80,8 +81,10 @@ and registered whole-document pages. Empty registries remain invalid under the e
 build contract; exporting one preserves the previous artifact. Missing views
 remain explicit in added/removed comparison data; never synthesize content.
 The shell keeps Added entries in Current without exposing comparison modes.
-Removed screens likewise show a Removed badge and current empty state without
-comparison modes; Removed component variants remain eligible for comparison.
+Removed screens likewise show a Removed badge without comparison modes, opening
+the packaged baseline views the shell resolves from that descriptor under
+[removed previews](./mokly-removed-previews.md). Removed
+component variants remain eligible for comparison.
 
 Every manifest, generated, copied, and adapter-added path enters a single
 collision-checked inventory, including file/directory prefix collisions.
@@ -203,7 +206,9 @@ redirect for compatibility.
 Current remains the default after navigation/reload. Browsing, Changes filtering,
 and scheme/viewport switches do not request comparison JSON or snapshot files.
 Added entries retain their current preview without comparison modes. Removed
-screens retain their current empty state without comparison modes. Side by side,
+screens and pages retain no comparison modes; selecting one requests the
+packaged previous version delivered under
+[removed previews](./mokly-removed-previews.md). Side by side,
 Overlay, and Difference retain the existing UI and missing-current state for
 Removed component variants. Refresh/retry reload the same exported generation; only
 another export and deployment produces new comparison content. An open tab
@@ -239,6 +244,11 @@ snapshot; capture listeners and transient out-of-tree state are removed on load
 or page exit. The inspector remains
 `client/inspector.js`, React-free, at the 9,216-byte cap; it runs inside
 consumer documents and shares nothing with the shell bundle.
+The removed-content request lifecycle is part of `react-shell.js`; it reuses the
+same typed review and removed-page validators as the rest of the viewer. Static
+requests are limited to preview descriptors in the accepted public catalogue,
+while live requests use the selected on-demand route. There is no parallel
+vanilla Browse or preview runtime.
 
 The Node-only server renderer and the embedding-only scoped stylesheet are
 excluded from the standalone browser inventory. Standalone `shell.css` and font

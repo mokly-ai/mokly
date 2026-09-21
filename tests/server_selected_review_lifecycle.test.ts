@@ -56,7 +56,10 @@ async function start(
   t: { after(fn: () => Promise<void>): void },
   provider: SelectedReviewProvider,
 ) {
-  const routes = new SelectedReviewRoutes(provider, () => source, "HEAD");
+  const routes = new SelectedReviewRoutes({
+    base: "HEAD",
+    comparison: { provider, source: () => source },
+  });
   const server = createServer((request, response) => {
     void routes.handle(
       new URL(request.url!, "http://localhost"),

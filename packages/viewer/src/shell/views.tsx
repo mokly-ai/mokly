@@ -16,6 +16,7 @@ import {
   ViewportSwitch,
 } from "./head.js";
 import { useShellIdentifier } from "./identifier_context.js";
+import { removedPreviewData, RemovedPreviewStage } from "./previews.js";
 import { EmptyStage, TargetStage } from "./stages.js";
 import type { RouteTarget } from "./target.js";
 import { ComponentWorkspace } from "./workspace.js";
@@ -51,9 +52,8 @@ function HeadActions(props: {
 
 function TargetView(props: {
   catalogue: Catalogue;
-  embedded?: boolean;
+  context: ShellContext;
   fragment?: string;
-  comparisons?: boolean;
   target: RouteTarget;
 }) {
   const head = targetHead(props.catalogue, props.target);
@@ -63,16 +63,15 @@ function TargetView(props: {
     props.catalogue.removedEntries.some(
       ({ entry }) => entry.route === target.entry.route,
     );
-  const stage = removed ? (
+  const preview = removed
+    ? removedPreviewData(props.catalogue, props.context, target.entry)
+    : undefined;
+  const stage = preview ? (
+    <RemovedPreviewStage data={preview} />
+  ) : removed ? (
     <div className="mbk-empty" data-mokly-stage="" data-viewport="both">
-      <h2>
-        This {target.entry.kind === "page" ? "page" : "screen"} was removed
-      </h2>
-      {target.entry.kind === "page" ? (
-        <p>This document is no longer in the catalogue.</p>
-      ) : (
-        <p>Select a comparison to see the previous screen.</p>
-      )}
+      <h2>This user flow was removed</h2>
+      <p>This flow is no longer in the catalogue.</p>
     </div>
   ) : (
     <TargetStage
@@ -87,15 +86,23 @@ function TargetView(props: {
         action={
           <HeadActions
             catalogue={props.catalogue}
-            embedded={props.embedded ?? false}
+            embedded={props.context.embedded ?? false}
             target={props.target}
           />
         }
         crumbs={head.crumbs}
         heading={head.title}
         id={head.id}
+        status={
+          removed ? (
+            <span className="mbk-entry-status" data-status="Removed">
+              Removed
+            </span>
+          ) : undefined
+        }
       />
-      {props.comparisons &&
+      {!removed &&
+      (props.context.comparisons ?? false) &&
       props.target.kind === "entry" &&
       props.target.entry.kind === "screen" ? (
         <DiffScreen route={props.target.entry.route}>{stage}</DiffScreen>
@@ -212,8 +219,7 @@ export function ShellMain(props: {
         ) : (
           <TargetView
             catalogue={props.catalogue}
-            comparisons={props.context.comparisons ?? false}
-            embedded={props.context.embedded ?? false}
+            context={props.context}
             {...(props.context.fragment
               ? { fragment: props.context.fragment }
               : {})}

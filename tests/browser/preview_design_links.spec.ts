@@ -10,6 +10,7 @@ import type { OwnedPreviewFixture } from "./preview_fixture_owner.js";
 import {
   chooseScheme,
   chooseViewport,
+  expectFrameLoaded,
   expectFrameSource,
 } from "./workspace_actions.js";
 
@@ -103,6 +104,11 @@ for (const viewport of ["mobile", "desktop"] as const) {
     await frame.locator(".ce-inspector-link").click();
     await expect(page).toHaveURL(/\/view\/design\/browse\/pages\/details$/);
     await frame.locator(".ce-inspector-link").click();
+    await expect(page).toHaveURL(/\/view\/design\/browse\/pages\/view$/);
+    await expectFrameLoaded(
+      page.locator(`.mbk-frame-${viewport} iframe`),
+      new RegExp(`/static/design/browse/pages/view\\.${viewport}(?:\\.html)?$`),
+    );
     await frame
       .getByRole("link", { name: "Open Welcome", exact: true })
       .click();
