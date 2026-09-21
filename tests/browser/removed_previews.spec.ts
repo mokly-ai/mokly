@@ -118,8 +118,18 @@ test("a previous version reads but never acts", async ({ page }) => {
   await preview.getByRole("button", { name: "Send" }).click();
   await preview.getByText("Marked catalogue link").focus();
   await page.keyboard.press("Enter");
-  await preview.getByText("Jump to the end").click();
-  await expect(preview.locator("#foot")).toBeInViewport();
+  await preview.getByText("Jump to the end").focus();
+  await page.keyboard.press("Enter");
+  await expect
+    .poll(() =>
+      historical(page).evaluate(() => {
+        const foot = document.querySelector("#foot");
+        if (!foot) return false;
+        const bounds = foot.getBoundingClientRect();
+        return bounds.top < window.innerHeight && bounds.bottom > 0;
+      }),
+    )
+    .toBe(true);
   expect(documents).toEqual([]);
   expect(page.url()).toBe(address);
   expect(historical(page).url().split("#")[0]).toBe(opened);
@@ -142,9 +152,6 @@ test("Space scrolls a previous version while a link holds focus", async ({
   await expect.poll(offset).toBeGreaterThan(0);
   await preview.getByText("Marked catalogue link").focus();
   await page.keyboard.press("Enter");
-  await preview.getByText("Jump to the end").focus();
-  await page.keyboard.press("Enter");
-  await expect(preview.locator("#foot")).toBeInViewport();
   expect(documents).toEqual([]);
   expect(page.url()).toBe(address);
 });

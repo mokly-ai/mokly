@@ -39,7 +39,9 @@ test("initial hydration keeps logical frame navigation host-owned", async ({
   });
 
   try {
-    await page.goto(`${navigation.url}/view/screens/home.html`);
+    await page.goto(`${navigation.url}/view/screens/home.html`, {
+      waitUntil: "domcontentloaded",
+    });
     await requestStarted;
     const frame = page.locator(".mbk-frame-desktop iframe");
     await expect(frame).toHaveAttribute("data-mokly-frame-state", "loading");
