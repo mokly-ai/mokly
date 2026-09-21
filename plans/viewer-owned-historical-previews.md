@@ -12,27 +12,28 @@ the parent guard applies everywhere. It is the reviewer's recommended option A.
 
 ## Base And Prerequisites
 
-The modules this plan changes exist only on the removed-content-previews branch
-(`calummoore/bamako-v4`, pull request #98, tip `cf06cfd`); `origin/main` has
-no `packages/viewer/src/previews/` and no removed-previews contract yet. Branch
-this work from that tip, or from its re-integration with the hydrated React
-shell if #98 is rebased first. The contract below does not depend on which
-shell renders the stage; only the file references in Milestone 2 do, and the
-implementer records the actual base commit in the review record.
+This plan is based on `origin/main` at `a177abd`, which contains the merged
+removed content previews change (pull request #98) re-integrated with the
+hydrated React shell. The preview request lifecycle lives in
+`packages/viewer/src/shell/use_removed_preview.ts` and the stage, frames and
+guard installation in `packages/viewer/src/shell/previews.tsx`; the pure
+request, descriptor, copy and guard modules live under
+`packages/viewer/src/previews/`. Serve, static export and application-owned
+`@mokly/viewer` roots share that one React lifecycle.
 
 The user asked for this plan after the review finding was compared with the
-[authenticated frame document handoff plan](https://github.com/mokly-ai/mokly/blob/calummoore/tashkent-v2/plans/authenticated-frame-document-handoff.md)
-on branch `calummoore/tashkent-v2` and found to be a different issue: that
-plan authenticates same-origin document identity for the navigation receiver
-and deliberately preserves frame-owned native links for unowned documents,
-whereas this plan removes native link navigation from historical documents
-entirely.
+authenticated frame document handoff change (pull request #99, merged as
+`b95ad47`) and found to be a different issue: that change authenticates
+same-origin document identity for the navigation receiver and deliberately
+preserves frame-owned native links for unowned documents, whereas this plan
+removes native link navigation from historical documents entirely.
 
 ## Problem
 
 `packages/viewer/src/previews/read_only.ts` installs the guard through
-`frame.contentDocument`. A same-origin host reaches that document and the
-guard cancels link and form activation. In a cross-origin embedded viewer the
+`frame.contentDocument`, called from the `PreviewFrame` component in
+`packages/viewer/src/shell/previews.tsx`. A same-origin host reaches that
+document and the guard cancels link and form activation. In a cross-origin embedded viewer the
 preview frame's `src` points at the artifact origin, `contentDocument` is
 inaccessible, and the frame keeps `sandbox="allow-same-origin"` with no
 script permission. That sandbox withholds forms, popups, downloads and top
@@ -66,7 +67,7 @@ link is inert does not hold for that host.
    runs at the viewer's origin, cannot execute, submit, open windows,
    download or navigate the top window, and the parent can reach it.
    `srcdoc` is chosen over `document.write` and Blob URLs because it is a
-   declarative attribute the future React stage can own directly and needs no
+   declarative attribute the React stage owns directly and needs no
    object-URL lifecycle.
 3. **Resource resolution through one injected `<base href>`.** The historical
    HTML is parsed with scripting disabled, every `<base>` element and every
@@ -118,7 +119,8 @@ link is inert does not hold for that host.
   behaviour.
 - Current screens, pages and component frames keep their adapter mounts,
   authenticated navigation and inspection; nothing here touches
-  `same_origin_mount.ts`, `post_message_adapter.ts` or the inspector.
+  `same_origin_mount.ts`, `same_origin_identity.ts`,
+  `post_message_adapter.ts` or the inspector.
 - Capture, packaging, descriptors, Serve routes and export inventories are
   unchanged; no server or CLI code changes.
 - No mockup work: every visible state (label, loading, unavailable, missing
@@ -131,7 +133,6 @@ Summary: define the viewer-owned presentation, the guard rules, the fetch set
 and the host requirements in the specs and package docs so Milestone 2 has a
 complete contract, and register the plan.
 
-- [ ] Record the actual base commit for this branch at the top of this plan.
 - [ ] In [`mokly-removed-previews.md`](../docs/protocol/mokly-removed-previews.md)
       `## Behavior`, keep the read-only paragraph and state that it holds in
       every host, including cross-origin embedded viewers, and that a
@@ -140,7 +141,8 @@ complete contract, and register the plan.
       the historical documents beneath the advertised generation's
       `snapshots/before/`, and replace "Both frame adapters render previews in
       script-disabled frames; the cross-origin adapter mounts historical
-      documents without the inspector handshake" with: neither adapter mounts
+      documents without the inspector handshake, so no inspection, marker, or
+      navigation message is exchanged for them" with: neither adapter mounts
       a preview frame; previews are viewer-owned documents, so no handshake,
       inspection, marker or navigation message exists for them.
 - [ ] Rewrite `## Frames And Lifecycle` from "Preview frames are the existing
@@ -164,10 +166,12 @@ complete contract, and register the plan.
       after an external navigation of the frame; a strict-CSP embedded host.
 - [ ] In [`mokly-frame-adapter.md`](../docs/protocol/mokly-frame-adapter.md),
       replace the Delivery Status sentence "Historical page and screen frames
-      use both adapters without inspection handshakes" and the Same-Origin
-      sentence "Historical removed previews use the same frames with
-      parent-enforced read-only links and forms" with the viewer-owned
-      presentation and a link to the removed-previews contract.
+      are shell-owned, read-only preview frames and never enter an adapter
+      inspection handshake" and the Same-Origin sentence "Historical removed
+      previews use separate shell-owned frames with the same sandbox and
+      parent-enforced read-only links and forms when the document is
+      same-origin-accessible" with the viewer-owned presentation (guarded in
+      every host) and a link to the removed-previews contract.
 - [ ] In [`mokly-viewer.md`](../docs/protocol/mokly-viewer.md), qualify
       "hydration never reaches inside a frame" so the parent reaches inside
       only viewer-owned preview documents to enforce read-only behaviour, and
@@ -183,10 +187,12 @@ complete contract, and register the plan.
       CSP that allows the artifact origin in `img-src`, `style-src`,
       `font-src` and `media-src` plus inline styles, because previews are
       presented at the host's origin with scripts disabled.
-- [ ] Update [`packages/viewer/src/previews/README.md`](../packages/viewer/src/previews/README.md)
+- [ ] Update [`packages/viewer/src/previews/README.md`](../packages/viewer/src/previews/README.md),
+      [`packages/viewer/src/shell/README.md`](../packages/viewer/src/shell/README.md)
       and [`packages/viewer/src/client/README.md`](../packages/viewer/src/client/README.md):
       describe the new presentation module, the guard's anchor and restore
-      rules, and remove "a cross-origin preview relies on its sandbox instead".
+      rules, and remove "a cross-origin preview relies on its sandbox instead"
+      and "the frame sandbox supplies the remaining cross-origin boundary".
 - [ ] In [`removed-content-previews.md`](./removed-content-previews.md)
       "Remaining risks", state that the High finding is tracked by this plan;
       add this plan to the active list in [`plans/README.md`](./README.md)
@@ -236,34 +242,44 @@ every host, keeping every existing preview regression green.
       parse-edit-serialize step that returns the `srcdoc` text and its snapshot
       address; keep it pure over an injected `fetch` and parser so it is
       unit-testable, and under 300 lines with doc comments on public items.
-- [ ] Extend the embedded viewer's fetch confinement in
-      `packages/viewer/src/viewer/scope.ts` (or its React-shell successor) with
-      the `snapshots/before/` prefix of the advertised comparison generation,
-      keeping exact matching for every other advertised path, and cover it in
+- [ ] Confine historical document fetches: `presentation.ts` accepts only
+      addresses beneath `snapshots/before/` of the generation the loaded
+      preview resolved against, on the same origin, with `credentials: "omit"`
+      for pinned delivery and the comparison request's rule for live
+      delivery; extend `advertisedPreviewPaths` (or a sibling) in
+      `packages/viewer/src/previews/request.ts` so the documented embedded
+      fetch set includes that prefix, and cover both in
       `tests/client_removed_previews.test.ts`.
-- [ ] In `packages/viewer/src/previews/render.ts`, create preview frames from
-      a presentation rather than a URL: assign `srcdoc`, keep
+- [ ] In `packages/viewer/src/shell/previews.tsx`, render `PreviewFrame`
+      from a presentation rather than a URL: assign `srcdoc`, keep
       `sandbox="allow-same-origin"`, set `data-mokly-preview-source` to the
-      snapshot address, and never set `src`. In `install.ts`, fetch and
-      validate every document the selected viewports and scheme need before
-      rendering, reuse the cache on viewport and scheme changes, fence late
-      responses with the existing ownership check, and route any failure to
-      the unavailable state with Retry.
+      snapshot address, and never set `src`. In
+      `packages/viewer/src/shell/use_removed_preview.ts`, fetch and validate
+      every document the selected viewports and scheme need before reporting
+      `ready`, reuse loaded presentations on viewport and scheme changes
+      after the existing renewal check, fence late responses with the
+      existing controller, and route any failure to the failed state with
+      Retry. Keep both files under 300 lines, splitting a
+      `use_removed_preview_documents.ts` hook if needed.
 - [ ] In `packages/viewer/src/previews/read_only.ts`, cancel every link
       activation including same-document anchors, resolving the activated
       link through `composedPath()` so a declarative shadow root cannot hide
       one; scroll the fragment's element into view for anchors that name the
       presented document; keep Space's default; cancel form submission; and
       on every later `load` present the historical document again when the
-      frame's document is not the presented one. Keep `same_origin_navigation.ts` skipping
-      `[data-mokly-preview-frame]`.
+      frame's document is not the presented one. Keep
+      `same_origin_navigation.ts` skipping `[data-mokly-preview-frame]` and
+      keep the module's existing `enforcePreviewReadOnly` entry point.
 - [ ] Update existing specs to the new presentation without weakening them:
-      locate the historical frame through its element instead of
-      `frame.url().includes("snapshots/before")`, assert
-      `data-mokly-preview-source` where `src` was asserted in
-      `removed_preview_views.spec.ts`, and keep the served, static and
-      expired-generation reacquire tests passing against `srcdoc` frames.
-- [ ] Add a strict-CSP embedded-host test: serve the viewer page with a policy
+      in `removed_previews.spec.ts` locate the historical frame through its
+      element instead of `frame.url().includes("snapshots/before")` and
+      assert its document identity through `data-mokly-preview-source`
+      rather than `frame.url()`; assert `data-mokly-preview-source` where
+      `src` was asserted in `removed_preview_views.spec.ts`; and keep the
+      served, static, shell unit and expired-generation reacquire tests
+      passing against `srcdoc` frames.
+- [ ] Add a strict-CSP embedded-host test in
+      `removed_previews_viewer.spec.ts`: serve the viewer page with a policy
       that allows only its own origin and the artifact origin for images,
       styles, fonts and media, assert the historical stylesheet applied
       (`archive.css` background) and that the browser reported no policy
