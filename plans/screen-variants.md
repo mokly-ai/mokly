@@ -2,8 +2,9 @@
 
 Status: active. Created 2026-09-19 with the user's consent after the design
 discussion in this workspace, then rewritten the same day when the user chose
-own routes over a query parameter. Milestones 1 to 8 are complete;
-Milestone 9 is next and needs the user's approval first.
+own routes over a query parameter. Milestones 1 to 8 are complete; Milestones
+10 to 12 apply the approved review findings; Milestone 9 needs the user's
+approval first.
 
 **Goal:** Let a screen declare variants beside its default render, show them as
 an expandable list under the screen's navigation row, give each variant its
@@ -690,11 +691,149 @@ inventories list the new routes, and the plan is closed.
       options, and a recommendation without changing the implementation.
       The findings are recorded below under Review Findings.
 
-## Review Findings (awaiting decision)
+### Milestone 10: Contract updates for the review fixes
+
+Define the four contract changes the review fixes need so the code milestones
+that follow have no guesswork: per-view status and comparison eligibility,
+authored sibling-variant order, the embedded Viewer's variant relationship and
+Changes activation, and the parent row's leaf container under filtering.
+
+- [ ] Finding 3 contract: in `docs/protocol/mokly-changes.md` (Screen
+      controls) and `docs/protocol/mokly-runtime.md` (Browse Shell per-view
+      paragraph), state that the status beside the title and the comparison
+      band describe the shown view: for one viewport and one scheme they
+      follow that view's own state; while Both is selected the shown state is
+      Changed when any shown view is Changed, else Added when any is Added,
+      else Removed when any is Removed, else Unmodified. Comparison
+      eligibility follows the shown status, so a changed screen viewed in an
+      unchanged view shows `Unmodified` with no band and the view-control
+      marks point at the changed views; switching viewport, scheme, or saved
+      variant recomputes both. Unknown or pending per-view evidence keeps the
+      route-level status. Add the same rule to
+      `docs/protocol/mokly-component-workspace-design.md` (Comparison
+      Availability) and one sentence to `docs/guides/catalogue/changes.md`.
+- [ ] Finding 4 contract: in `docs/protocol/mokly-screen-variants.md`, replace
+      "manifest entry order (the route order)" with authored order, and in
+      `docs/protocol/mokly-component-manifest.md` and
+      `docs/protocol/mokly-catalogue.md` state that variant screens of one
+      parent are emitted in authored order directly after their parent,
+      before the next route in route order, so the manifest and public
+      entry arrays keep authored sibling order while every other entry keeps
+      route order.
+- [ ] Findings 1 and 2 contract: in `docs/protocol/mokly-viewer.md`
+      (Selection, Events And Imperative Use) and
+      `docs/protocol/mokly-screen-variants.md` (Public Read Model And
+      Viewer), state that the Viewer rebuilds `variantOf` for current and
+      removed screens so the rendered hierarchy, crumbs, details rows,
+      aggregate mark, and removed-variant adoption match Serve, and that a
+      shell activation while Changes is selected proposes one atomic
+      selection: an aggregate-only parent proposes its first visible changed
+      variant, and a changed row proposes the first changed view's viewport
+      and scheme unless the link names them; a direct `select` call keeps the
+      supplied axes.
+- [ ] Finding 5 contract: in `docs/protocol/mokly-runtime.md` (Browse Shell
+      navigation paragraph) and `docs/protocol/mokly-screen-variants.md`
+      (Navigation), state that a parent row hidden by search or the Changes
+      filter hides its leaf container, so no disclosure button remains
+      visible or focusable without its row.
+- [ ] Finding 6: correct the README feature paragraph and the variants
+      contract's Delivery Status to one current statement that Milestones 1
+      to 8 are implemented and verified.
+- [ ] Validate the changed Markdown with Prettier and review the diff; commit
+      `docs(protocol): define the review fix contracts` and push.
+
+### Milestone 11: Backend fixes for order, Viewer data, and per-view status
+
+Apply findings 4, 1, and 3 in the data layers: authored sibling order through
+registry canonicalization and the public projection, the Viewer's manifest
+reconstruction, and per-view status and eligibility in the workspace data.
+
+- [ ] Finding 4: keep authored sibling-variant order. In
+      `src/registry/prepare.ts`, sort variants directly after their parent in
+      their flattened (authored) order rather than by route; apply the same
+      rule in `src/catalogue/projection.ts` (`entryOrder`) and in the
+      manifest validation that checks entry order, so a manifest whose
+      variants are out of authored order is still accepted only when the
+      order matches this rule. Test: `tests/authoring_variants.test.tsx` and
+      `tests/manifest_variants.test.ts` author `zeta` before `alpha` and
+      assert the prepared registry, the manifest, the hierarchy
+      `variantsById`, the nav tree, and the public tree keep
+      `[parent, zeta, alpha]`.
+- [ ] Finding 1: copy `variantOf` in `displayEntry`
+      (`packages/viewer/src/viewer/projection.ts`) for current and removed
+      screens. Test: a new `tests/viewer_catalogue_variants.test.ts` builds a
+      public model with a parent, a current variant, and a removed variant,
+      runs `viewerCatalogue`, and asserts `variantsById`,
+      `variantParentById`, the removed entry's `variantOf`, and the served
+      nav tree from `buildNavSections`.
+- [ ] Finding 3: per-view status. Extend `WorkspaceData` with typed per-view
+      states keyed like `changedViews` (`viewStates: Record<key,
+    { viewport, colorScheme, state }[]>`, where `state` is the review
+      state) derived in `workspace_views_data.ts` from the same sources as
+      `changedViews`, and a pure `shownStatus(states, viewport, scheme,
+    fallback)` in a new `packages/viewer/src/shell/view_status.ts` that
+      applies the Both aggregation rule from Milestone 10 and returns the
+      fallback when no per-view evidence exists. Comparison eligibility for
+      the shown view is `isComparisonEligible(shownStatus, kind)`. Derive the
+      same keyed states in `public_workspace.ts` from each view's published
+      comparison. Tests: `tests/view_status.test.ts` for the rule, and
+      `tests/workspace_views_data.test.ts` for the keyed states.
+- [ ] `npm test` green; commit
+      `fix(catalogue): keep authored variant order and per-view status` and
+      push.
+
+### Milestone 12: Shell and client fixes for status, landing, and the leaf row
+
+Tags: ui
+
+Apply findings 3, 5, and 2 in the shell and clients: the badge and band follow
+the shown view, the hidden parent hides its leaf container, and the embedded
+Viewer shares the Changes activation decision.
+
+- [ ] Finding 3: `packages/viewer/src/shell/workspace.tsx` renders the
+      initial badge and band from `shownStatus` for Both and light;
+      `packages/viewer/src/client/workspace_views.ts` recomputes the badge
+      text, `data-status`, and the band's `hidden` state (returning the
+      comparison mode to Current when the band hides) inside
+      `applyViewEvidence`, so viewport, scheme, saved-variant, and evidence
+      changes all pass through one path. Update the assertion in
+      `tests/browser/changed_views.spec.ts` to expect `Unmodified` with the
+      band hidden in light and `Changed` with the band shown after switching
+      to dark, add the Both case, and add a component case through the Saved
+      variant control. Reword the `design-browse-changed-views` mockup
+      description to a direct arrival (not from Changes) and regenerate the
+      example catalogue.
+- [ ] Finding 5: in `applyVariantVisibility`
+      (`packages/viewer/src/client/browse_navigation_state.ts`), set the
+      leaf container's `hidden` to the parent link's `hidden`, and add the
+      matching `.mbk-nav-leaf[hidden]` rule in `css_nav_variants.ts`. Test:
+      `tests/client_browse_navigation.test.ts` asserts the container is
+      hidden when a search hides the parent and shown again when the search
+      clears; `tests/browser/browse_variants.spec.ts` asserts the toggle is
+      not visible while the parent is filtered out.
+- [ ] Finding 2: extract the Changes activation decision into
+      `packages/viewer/src/client/changes_activation.ts`:
+      `changesActivation(row, data?)` returns `{ href, viewport?, scheme? }`
+      from `changesLandingHref` and the destination's first changed view when
+      the link names neither axis. `browse_clicks.ts` keeps its current
+      behaviour through it; `viewerInput` resolves the destination entry
+      through it and proposes `{ screenId, viewport, colorScheme }` in one
+      `select` call, using the public model's per-view comparison states for
+      the destination. Tests: `tests/browser/viewer_variants.spec.ts` gains an
+      aggregate-parent activation and a dark-only landing in uncontrolled and
+      controlled mode.
+- [ ] Milestone close-out: run `cargo xtask check`; commit
+      `fix(browse): follow the shown view and share Changes activation` and
+      push.
+- [ ] After the push, review the complete local diff against `origin/main`
+      using [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      and report findings without changing the implementation.
+
+## Review Findings (approved, addressed in Milestones 10 to 12)
 
 Review of the complete branch diff after the Milestone 8 push, run with the
-review prompt by two independent reviewers. Nothing has been changed in
-response; Task 9.1 remains unapproved and untouched.
+review prompt by two independent reviewers. The user approved fixing all six;
+Milestones 10 to 12 apply them. Task 9.1 remains unapproved and untouched.
 
 1. **P2, the embeddable Viewer drops `variantOf`.** `displayEntry` in
    `packages/viewer/src/viewer/projection.ts` rebuilds a manifest screen from
