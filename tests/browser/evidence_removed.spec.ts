@@ -126,6 +126,8 @@ test("background baselines reconcile removed rows and invalidate changed histori
     await expect(
       page.getByRole("heading", { name: "Old page", exact: true }),
     ).toBeVisible();
+    await expect.poll(() => fixture.comparisonRequests).toBeGreaterThan(0);
+    const initialPreviewRequests = fixture.comparisonRequests;
     publish(
       baseline.entries.map((entry) =>
         entry.id === "old-page" ? { ...entry, title: "Earlier page" } : entry,
@@ -138,8 +140,10 @@ test("background baselines reconcile removed rows and invalidate changed histori
       "data-test-retained",
       "true",
     );
+    await expect
+      .poll(() => fixture.comparisonRequests)
+      .toBeGreaterThan(initialPreviewRequests);
     const previewRequests = fixture.comparisonRequests;
-    expect(previewRequests).toBeGreaterThan(0);
     await page.goto(`${server.url}/view/screens/home.html`);
     server.publishUpdate({
       kind: "evidence",
