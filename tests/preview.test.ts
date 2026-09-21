@@ -69,6 +69,10 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
     /data-color-scheme="dark"/,
   );
   assert.match(await read(output, "__mokly/shell.css"), /--mbk-/);
+  assert.match(
+    await read(output, "__mokly/client/appearance-startup.js"),
+    /mokly:theme/,
+  );
   assert.ok(
     (
       await fs.promises.stat(

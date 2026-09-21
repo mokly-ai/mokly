@@ -6,6 +6,7 @@ import { test } from "node:test";
 import { build } from "esbuild";
 
 const root = path.resolve(import.meta.dirname, "..");
+
 test("React entry bundles for browsers without CLI, server or Node code", async () => {
   const result = await build({
     entryPoints: [path.join(root, "src/index.ts")],
@@ -33,11 +34,26 @@ test("standalone browser modules contain no React, hydration or Node imports", a
       const code = await fs.readFile(path.join(directory, file), "utf8");
       assert.doesNotMatch(
         code,
-        /from\s*["'](?:react(?:-dom)?|node:)|react-dom|hydrateRoot|react\.production/,
+        /from\s*["'](?:react(?:-dom)?|node:|@mokly\/mokly)|react-dom|hydrateRoot|react\.production|(?:^|\/)dist\/cli\//,
       );
     }
   }
 });
+
+test("standalone appearance startup is a self-contained classic bundle", async () => {
+  const code = await fs.readFile(
+    path.join(root, "dist/browser/appearance-startup.js"),
+    "utf8",
+  );
+  assert.match(code, /^\s*(?:"use strict";\s*)?\(\(\) => \{/);
+  assert.match(code, /mokly:theme/);
+  assert.doesNotMatch(code, /^\s*(?:import|export)\b/m);
+  assert.doesNotMatch(
+    code,
+    /react-dom|hydrateRoot|react\.production|["'](?:react|node:|@mokly\/mokly)|(?:^|\/)dist\/cli\//,
+  );
+});
+
 test("the Node-only SSR entry cannot be imported into a browser graph", async () => {
   await assert.rejects(
     build({

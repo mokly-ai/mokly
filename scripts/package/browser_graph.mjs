@@ -22,7 +22,7 @@ export function inspectBrowserGraph() {
     const code = bytes.toString("utf8");
     assert.doesNotMatch(
       code,
-      /react-dom|hydrateRoot|react\.production|from\s*["'](?:react|node:)/,
+      /react-dom|hydrateRoot|react\.production|from\s*["'](?:react|node:|@mokly\/mokly)|(?:^|\/)dist\/cli\//,
       `Unexpected runtime in ${name}`,
     );
     for (const match of code.matchAll(

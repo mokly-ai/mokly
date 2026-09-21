@@ -173,9 +173,14 @@ and remembers the served-origin preference; linked breadcrumbs with an id
 chip; viewport and color-scheme switching; realistic phone and browser device
 chrome; a per-frame expand-to-overlay toggle; and a collapsible details
 inspector. Current and comparison views share the same navigation and saved
-width. Static catalogues ship the resize behavior as a self-contained script;
-comparison snapshots carry no shell scripts. The mobile drawer does not expose
-the separator.
+width. Serve loads its package-owned browser graph from one explicit allowlist,
+and export and repository preview copy that same inventory. Alongside the ES
+module graph, `navigation-resize.js` and `appearance-startup.js` are
+self-contained classic IIFEs under `/__mokly/client/`, with no React, Node or
+CLI dependency. The appearance asset is present before any shell markup
+references it and is inert unless a standalone document opts in; comparison
+snapshots carry no shell scripts. The mobile drawer does not expose the
+separator.
 Consumer brand chrome does not appear in the shell. A small set of documented
 CSS custom properties may tune the shell accent without replacing its
 structural styles. The shell serves its packaged Inter variable font from

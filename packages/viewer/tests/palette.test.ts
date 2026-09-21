@@ -5,6 +5,8 @@ import { test } from "node:test";
 
 import { SHELL_CSS } from "../src/shell/css.js";
 
+import { PALETTE_PAIRS } from "./palette_pairs.js";
+
 const SOURCE = new URL("../src/", import.meta.url).pathname;
 
 /**
@@ -57,18 +59,21 @@ test("the shell stylesheets were actually scanned", async () => {
 });
 
 function palette(selector: RegExp): Map<string, string> {
-  const block = selector.exec(SHELL_CSS)?.[1];
-  assert.ok(block, `${selector} is not in the shell stylesheet`);
+  const blocks = [...SHELL_CSS.matchAll(selector)].flatMap((match) =>
+    match[1] === undefined ? [] : [match[1]],
+  );
+  assert.ok(blocks.length > 0, `${selector} is not in the shell stylesheet`);
   return new Map(
-    [...block.matchAll(/(--[a-z0-9-]+):\s*([^;]+);/g)].map((match) => [
-      match[1]!,
-      match[2]!.trim(),
-    ]),
+    blocks.flatMap((block) =>
+      [...block.matchAll(/(--[a-z0-9_-]+):\s*([^;]+);/g)].map(
+        (match) => [match[1]!, match[2]!.trim()] as const,
+      ),
+    ),
   );
 }
 
-const LIGHT = palette(/:root \{([^}]*)\}/);
-const DARK = palette(/:root\[data-mokly-theme="dark"\] \{([^}]*)\}/);
+const LIGHT = palette(/:root \{([^}]*)\}/g);
+const DARK = palette(/:root\[data-mokly-theme="dark"\] \{([^}]*)\}/g);
 
 /**
  * The colour a role paints. A role a theme does not restate keeps its Light
@@ -80,7 +85,7 @@ function resolve(
   tokens: Map<string, string>,
 ): string | undefined {
   const value = tokens.get(role) ?? LIGHT.get(role);
-  const referenced = /^var\((--[a-z0-9-]+)\)$/.exec(value ?? "")?.[1];
+  const referenced = /^var\((--[a-z0-9_-]+)\)$/.exec(value ?? "")?.[1];
   return referenced ? (tokens.get(referenced) ?? LIGHT.get(referenced)) : value;
 }
 
@@ -89,26 +94,49 @@ function channel(value: number): number {
   return ratio <= 0.04045 ? ratio / 12.92 : ((ratio + 0.055) / 1.055) ** 2.4;
 }
 
-function luminance(color: string): number {
-  const hex = color.trim().replace("#", "");
-  const full =
-    hex.length === 3
-      ? hex
-          .split("")
-          .map((part) => part + part)
-          .join("")
-      : hex;
-  assert.match(full, /^[0-9a-fA-F]{6}$/u, `${color} is not an opaque colour`);
+function color(value: string): readonly [number, number, number, number] {
+  const hex = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/u.exec(value.trim())?.[1];
+  if (hex) {
+    const full =
+      hex.length === 3
+        ? hex
+            .split("")
+            .map((part) => part + part)
+            .join("")
+        : hex;
+    return [
+      Number.parseInt(full.slice(0, 2), 16),
+      Number.parseInt(full.slice(2, 4), 16),
+      Number.parseInt(full.slice(4, 6), 16),
+      1,
+    ];
+  }
+  const rgba =
+    /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*(\d*\.?\d+)\s*)?\)$/u.exec(
+      value.trim(),
+    );
+  assert.ok(rgba, `${value} is not a colour`);
+  const [, red, green, blue, alpha] = rgba;
+  assert.ok(red && green && blue);
+  return [Number(red), Number(green), Number(blue), Number(alpha ?? 1)];
+}
+
+function luminance([red, green, blue]: readonly number[]): number {
   return (
-    0.2126 * channel(Number.parseInt(full.slice(0, 2), 16)) +
-    0.7152 * channel(Number.parseInt(full.slice(2, 4), 16)) +
-    0.0722 * channel(Number.parseInt(full.slice(4, 6), 16))
+    0.2126 * channel(red!) + 0.7152 * channel(green!) + 0.0722 * channel(blue!)
   );
 }
 
 function contrast(foreground: string, background: string): number {
-  const first = luminance(foreground);
-  const second = luminance(background);
+  const front = color(foreground);
+  const behind = color(background);
+  assert.equal(behind[3], 1, `${background} is not an opaque background`);
+  const alpha = front[3];
+  const painted = front
+    .slice(0, 3)
+    .map((value, index) => value! * alpha + behind[index]! * (1 - alpha));
+  const first = luminance(painted);
+  const second = luminance(behind);
   return (
     Math.floor(
       ((Math.max(first, second) + 0.05) / (Math.min(first, second) + 0.05)) *
@@ -118,52 +146,14 @@ function contrast(foreground: string, background: string): number {
 }
 
 /**
- * The pairs the shell actually paints, with the criterion each carries: normal
- * text needs 4.5:1 and a required control or state graphic needs 3:1.
+ * The pairs the shell actually paints carry their criteria: normal
+ * text needs 4.5:1 and a required control or state graphic needs 3:1. A null
+ * minimum records a fixed decorative or disabled role whose value still needs
+ * to remain resolvable and paired with the surface it paints on.
  */
-const PAIRS: readonly (readonly [string, string, string, number])[] = [
-  ["ink on surface", "--chrome-ink", "--chrome-surface", 4.5],
-  ["ink on background", "--chrome-ink", "--chrome-bg", 4.5],
-  ["secondary ink on surface", "--chrome-ink-2", "--chrome-surface", 4.5],
-  ["muted on surface", "--chrome-muted", "--chrome-surface", 4.5],
-  ["muted on background", "--chrome-muted", "--chrome-bg", 4.5],
-  ["muted on raised", "--chrome-muted", "--chrome-raised", 4.5],
-  ["muted on hover", "--chrome-muted", "--chrome-hover", 4.5],
-  ["accent link on surface", "--chrome-accent", "--chrome-surface", 4.5],
-  ["accent on surface", "--mokly-accent", "--chrome-surface", 4.5],
-  ["deep accent on surface", "--mbk-accent-deep", "--chrome-surface", 4.5],
-  [
-    "deep accent on accent surface",
-    "--mbk-accent-deep",
-    "--mbk-accent-surface",
-    4.5,
-  ],
-  [
-    "accent contrast on accent",
-    "--mokly-accent-contrast",
-    "--mokly-accent",
-    4.5,
-  ],
-  [
-    "changed ink on its surface",
-    "--mbk-status-changed-ink",
-    "--mbk-status-changed-bg",
-    4.5,
-  ],
-  [
-    "removed ink on its surface",
-    "--mbk-status-removed-ink",
-    "--mbk-status-removed-bg",
-    4.5,
-  ],
-  ["validation ink on its surface", "--mbk-danger-ink", "--mbk-danger-bg", 4.5],
-  ["control edge on surface", "--chrome-control-edge", "--chrome-surface", 3],
-  ["control edge on background", "--chrome-control-edge", "--chrome-bg", 3],
-];
-
 test("every painted token pair meets its criterion in both appearances", () => {
   const failures: string[] = [];
-  for (const [label, foreground, background, minimum] of PAIRS)
+  for (const [label, foreground, background, minimum] of PALETTE_PAIRS)
     for (const [appearance, tokens] of [
       ["light", LIGHT],
       ["dark", DARK],
@@ -172,10 +162,38 @@ test("every painted token pair meets its criterion in both appearances", () => {
       const behind = resolve(background, tokens);
       assert.ok(ink && behind, `${label} is missing a role in ${appearance}`);
       const reached = contrast(ink, behind);
-      if (reached < minimum)
+      if (minimum !== null && reached < minimum)
         failures.push(`${label} reaches only ${reached}:1 in ${appearance}`);
     }
   assert.deepEqual(failures, []);
+});
+
+test("every status and device token value is covered by a painted pair", () => {
+  const paired = new Set(
+    PALETTE_PAIRS.flatMap(([, foreground, background]) => [
+      foreground,
+      background,
+    ]),
+  );
+  const required = [...LIGHT.keys()].filter(
+    (role) =>
+      role.startsWith("--mbk-device-") ||
+      role.startsWith("--mbk-status-") ||
+      role.startsWith("--mbk-danger-") ||
+      [
+        "--mbk-accent-deep",
+        "--mbk-accent-edge",
+        "--mbk-accent-surface",
+      ].includes(role),
+  );
+  assert.ok(
+    required.length > 15,
+    `only ${required.length} status/device roles found`,
+  );
+  assert.deepEqual(
+    required.filter((role) => !paired.has(role)),
+    [],
+  );
 });
 
 test("the palette carries the contract's three Light corrections", () => {

@@ -64,8 +64,12 @@ Export revisions are zero; current-only exports have disabled Changes and a
 null comparison pointer. Repository preview capture uses the same projection
 and finalization. Shell HTML retains its existing bytes apart from the identity.
 
-The browser inventory also publishes `__mokly/client/inspector.js`. The Browse
-adapter adds its deferred script and bounded inert identity map only to owned
+The browser inventory also publishes the package-owned classic
+`__mokly/client/appearance-startup.js` and
+`__mokly/client/navigation-resize.js` bundles, plus
+`__mokly/client/inspector.js`. The first two come from the same explicit Serve
+allowlist and contain no React, Node or CLI dependency. The Browse adapter adds
+the inspector's deferred script and bounded inert identity map only to owned
 current HTML copies. Generated files and immutable comparison snapshots remain
 byte-unmodified. Local frames retain `allow-same-origin`, with scripts disabled
 and parent-owned highlighting; an explicit cross-origin host uses the

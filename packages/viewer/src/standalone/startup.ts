@@ -4,8 +4,9 @@
  * React entry's execution path: a classic asset can run before the shell
  * stylesheet paints, so a dark reader never sees a light first frame.
  *
- * Milestone 4 delivers the asset that calls this; nothing in production markup
- * references it yet.
+ * The package-owned `appearance-startup.js` classic entry calls this. The asset
+ * is delivered ahead of the standalone control, so production markup does not
+ * reference it until that control opts the document in.
  */
 
 import { THEME_ATTRIBUTE } from "../viewer/theme.js";

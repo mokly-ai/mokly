@@ -1,15 +1,16 @@
 # Viewer Dark Mode
 
-Status: in progress; the documentation and mockup milestones through 2M are
-complete: the built-in preview toggle switches every dual-scheme mockup, the
-standalone design shows one Appearance control on every top bar, the legacy
-head-band scheme depictions are consolidated, the branch carries the merge of
-`origin/main`, the Node compatibility policy is enforced, the lint gate
-ignores git-ignored scratch, and the design boundary audit enforces the
-palette contract. Milestone 3 (runtime) is next. The user asked on
-2026-09-20 for UI milestones to go to Opus 5 and non-UI milestones to Codex,
-each checked by the parent session. The implementation PR's merge is this
-plan's completion boundary.
+Status: in progress; the documentation and mockup milestones through 2M, the
+shared runtime in Milestone 3 and the standalone startup asset in Milestone 4
+are complete. The built-in preview toggle switches every dual-scheme mockup,
+the standalone design shows one Appearance control on every top bar, the
+legacy head-band scheme depictions are consolidated, the branch carries the
+merge of `origin/main`, the Node compatibility policy is enforced, the lint
+gate ignores git-ignored scratch, and the palette contract and startup asset
+boundaries are enforced. Milestone 5 (standalone controls) is next. The user
+asked on 2026-09-20 for UI milestones to go to Opus 5 and non-UI milestones to
+Codex, each checked by the parent session. The implementation PR's merge is
+this plan's completion boundary.
 
 Give `@mokly/viewer`, local Serve and static exports a complete Auto/Light/Dark
 appearance. The [appearance contract](../docs/protocol/mokly-viewer-appearance.md)
@@ -828,7 +829,7 @@ but no production markup references them, because the asset is Milestone 4 and
 the control that calls `choose` is Milestone 5. Binding that control is
 therefore deferred with it.
 
-## Milestone 4: Deliver the standalone startup asset
+## Milestone 4: Deliver the standalone startup asset (complete)
 
 Expose the tested startup asset through Serve and export. Existing pages remain
 usable while the next UI milestone connects the manual preference control.
@@ -836,14 +837,32 @@ Commit and push after the checks pass, then review the complete diff against
 `origin/main` with `docs/implementation-review-prompt.md` and report findings
 without fixing them.
 
-- [ ] Bundle the classic startup entry in `packages/viewer/scripts/build.mjs`.
+- [x] Bundle the classic startup entry in `packages/viewer/scripts/build.mjs`.
       Update the explicit server module allowlist and export/preview asset
       inventories, without adding a new HTTP API or changing catalogue schemas.
-- [ ] Test asset serving and export root/subpath URL portability. Confirm that
+- [x] Test asset serving and export root/subpath URL portability. Confirm that
       the packaged startup asset has no imports requiring React, Node or the CLI,
       and needs no inline-script exception or additional sandbox permissions.
-- [ ] Build both packages and run focused asset/export/package-boundary tests;
+- [x] Build both packages and run focused asset/export/package-boundary tests;
       the new asset must exist and be deliverable before markup references it.
+- [x] Close the Milestone 3 review follow-ups that belong to delivery: rename
+      the three internal `--mokly-accent-default` style tokens to an
+      unmistakably private prefix in the token source and `styles.mjs`, and
+      add a test that only the three documented `--mokly-accent*` overrides
+      change the accent; extend the palette contrast-pair test to cover the
+      device and status roles so every token value is checked once; add a
+      comment beside the Auto selector in `css_theme.ts` naming the
+      standalone dependency on the startup asset.
+
+Delivered: `appearance-startup.js` is a self-contained classic IIFE built
+beside `navigation-resize.js` and loaded through the same explicit client-module
+allowlist that feeds Serve, static export and repository preview. Root and
+subpath export tests serve the real asset and compare its bytes, while package
+boundary checks exclude React, Node and CLI imports. Standalone documents do
+not reference the asset until Milestone 5 opts them in. The delivery follow-ups
+also give the three internal accent fallbacks a private namespace, constrain
+the public accent surface to its three documented overrides and audit every
+status/device palette role against a painted pair.
 
 ## Milestone 5: Connect standalone appearance controls
 

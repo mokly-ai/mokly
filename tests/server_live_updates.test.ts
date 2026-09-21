@@ -41,6 +41,12 @@ test("every served document loads the browser update client", async (context) =>
   assert.equal(browser.status, 200);
   assert.match(browser.headers.get("content-type") ?? "", /javascript/);
   assert.match(await browser.text(), /EventSource/);
+  const appearance = await fetch(
+    `${server.url}/__mokly/client/appearance-startup.js`,
+  );
+  assert.equal(appearance.status, 200);
+  assert.match(appearance.headers.get("content-type") ?? "", /javascript/);
+  assert.match(await appearance.text(), /mokly:theme/);
   assert.equal(
     (await fetch(`${server.url}/__mokly/client/browse_state.js`)).status,
     200,

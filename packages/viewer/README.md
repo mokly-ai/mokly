@@ -21,6 +21,10 @@ transport, surrounding product UI, authentication and selection routing.
 - Provides same-origin and explicitly configured cross-origin frame adapters.
 - Renders static shell HTML through the Node-only `@mokly/viewer/server` entry.
   Standalone exports run vanilla modules without React or hydration.
+- Supplies the CLI host's allowlisted classic `navigation-resize.js` and
+  `appearance-startup.js` assets. Serve, static export and repository preview
+  carry the same files under `__mokly/client/`; the appearance asset stays
+  inert until standalone markup opts in and is not part of the React entry.
 
 ## Quick Start
 
@@ -229,6 +233,8 @@ auditing includes both packages.
 - `src/viewer`: React lifecycle, selection, slots and adapter sessions.
 - `src/shell`: shared server markup and standalone CSS.
 - `src/client`: vanilla enhancements, adapters and first-party runtime seams.
+- `src/standalone`: classic browser entries and the standalone appearance
+  preference boundary.
 - `src/catalogue` and `src/components`: public readers and instance contracts.
 - `src/inspector` and `scripts`: bounded in-frame inspector and asset builds.
 - `tests` and root `tests/browser/viewer*.spec.ts`: package conformance tests.

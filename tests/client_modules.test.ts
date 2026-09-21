@@ -14,6 +14,10 @@ test("served browser modules import only modules served beside them", () => {
     ["client", loadBrowserClientModules()],
     ["navigation", loadBrowserNavigationModules()],
   ]);
+  assert.ok(
+    served.get("client")?.has("appearance-startup.js"),
+    "the standalone appearance startup is not allowlisted",
+  );
   const inspected: string[] = [];
   for (const [directory, modules] of served) {
     for (const [filename, source] of modules) {

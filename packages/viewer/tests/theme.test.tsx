@@ -10,6 +10,11 @@ import { VIEWER_CSS } from "../src/viewer/styles.js";
 
 /** Exactly what a host receives, scoped away from its own document. */
 const EMBEDDED_CSS: string = embeddedStyles(SHELL_CSS, VIEWER_CSS);
+const ACCENT_OVERRIDES = new Map([
+  ["--mokly-accent", "--_mokly-private-accent-default"],
+  ["--mokly-accent-contrast", "--_mokly-private-accent-contrast-default"],
+  ["--mokly-accent-soft", "--_mokly-private-accent-soft-default"],
+]);
 
 const fixture = readCatalogue(
   JSON.parse(
@@ -101,15 +106,21 @@ test("both appearances define exactly the same shell roles", () => {
     );
 });
 
-test("an inherited accent override survives in both appearances", () => {
+test("only the three public accent overrides survive from a host", () => {
   // The scoped shell drops the public accent declarations so a host value on
   // an ancestor can inherit in. The fallback behind each use must therefore
   // follow the appearance, or a dark root would paint the Light accent.
-  for (const name of [
-    "--mokly-accent",
-    "--mokly-accent-contrast",
-    "--mokly-accent-soft",
-  ]) {
+  assert.deepEqual(
+    [
+      ...new Set(
+        [...SHELL_CSS.matchAll(/(--mokly-[a-z0-9-]+):/g)].map(
+          (match) => match[1]!,
+        ),
+      ),
+    ].sort(),
+    [...ACCENT_OVERRIDES.keys()].sort(),
+  );
+  for (const [name, fallback] of ACCENT_OVERRIDES) {
     assert.doesNotMatch(
       EMBEDDED_CSS,
       new RegExp(`^\\s*${name}: (?!var\\()`, "mu"),
@@ -117,7 +128,7 @@ test("an inherited accent override survives in both appearances", () => {
     );
     assert.match(
       EMBEDDED_CSS,
-      new RegExp(`var\\(${name}, var\\(${name}-default\\)\\)`),
+      new RegExp(`var\\(${name}, var\\(${fallback}\\)\\)`),
       `${name} has no scheme-aware fallback`,
     );
   }
@@ -129,7 +140,7 @@ test("an inherited accent override survives in both appearances", () => {
     assert.ok(declarations, `${block} is missing`);
     assert.match(
       declarations,
-      new RegExp(`--mokly-accent-default: ${accent};`),
+      new RegExp(`--_mokly-private-accent-default: ${accent};`),
       `the ${accent} default is missing`,
     );
   }

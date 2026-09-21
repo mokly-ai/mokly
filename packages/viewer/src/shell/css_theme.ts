@@ -28,12 +28,12 @@ const DARK_ROLES = `
   --chrome-shadow-press: inset 0 1px 2px rgba(0, 0, 0, 0.55);
   --chrome-shadow-drawer: 0 18px 50px rgba(0, 0, 0, 0.6);
   --chrome-shadow-sheet: 0 6px 28px rgba(0, 0, 0, 0.55);
-  --mokly-accent-default: #86b79b;
-  --mokly-accent-contrast-default: #0e1a14;
-  --mokly-accent-soft-default: rgba(134, 183, 155, 0.16);
-  --mokly-accent: var(--mokly-accent-default);
-  --mokly-accent-contrast: var(--mokly-accent-contrast-default);
-  --mokly-accent-soft: var(--mokly-accent-soft-default);
+  --_mokly-private-accent-default: #86b79b;
+  --_mokly-private-accent-contrast-default: #0e1a14;
+  --_mokly-private-accent-soft-default: rgba(134, 183, 155, 0.16);
+  --mokly-accent: var(--_mokly-private-accent-default);
+  --mokly-accent-contrast: var(--_mokly-private-accent-contrast-default);
+  --mokly-accent-soft: var(--_mokly-private-accent-soft-default);
   --mbk-accent-deep: #b6d8c4;
   --mbk-accent-surface: #24312a;
   --mbk-accent-edge: #3c5648;
@@ -56,6 +56,8 @@ const DARK_ROLES = `
  * sees a light first paint and no script decides the appearance. An explicit
  * choice wins over the system in either direction, and both rules select the
  * root that states the appearance, never the host document.
+ * Standalone Auto depends on `appearance-startup.js` restoring the root mark;
+ * embedded roots receive that mark from their React `theme` prop instead.
  */
 export const SHELL_THEME_CSS = `
 @media (prefers-color-scheme: dark) {

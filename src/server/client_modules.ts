@@ -12,6 +12,7 @@ import { MoklyError, errorMessage } from "../errors.js";
 export function loadBrowserClientModules(): ReadonlyMap<string, Buffer> {
   const modules = new Map<string, Buffer>();
   for (const filename of [
+    "appearance-startup.js",
     "browse.js",
     "browse_runtime.js",
     "services.js",
