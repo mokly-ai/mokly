@@ -11,7 +11,11 @@ source ownership, and collection ancestry as screens and use cases.
 
 The [frame adapters](./mokly-frame-adapter.md) and `@mokly/viewer` package
 are implemented. This document's same-origin interactions remain
-authoritative.
+authoritative. The outer shell is a hydrated React tree that renders routes
+from the catalogue read model, as tracked in the
+[React Browse shell plan](../../plans/react-browse-shell.md). Every marker,
+sandbox, target-parsing and outer-navigation rule below applies to that shared
+shell in Serve, export and embedded hosts.
 
 ## Scope
 
@@ -208,10 +212,10 @@ applies it only to the first step, matching the portable fallback. The query
 remains on the outer history URL while scheme changes retain the iframe hashes.
 
 The deployed preview is a static snapshot and has no request handler that can
-render query-dependent HTML. Its progressive parent client reads at most one
-`fragment` value, validates the grammar, and applies the encoded hash to `src`,
-`data-fragment-light`, and `data-fragment-dark` wherever each attribute exists
-on every current screen frame. On a use-case page it updates only the first
+render query-dependent HTML. Its hydrated parent shell reads at most one
+`fragment` value from the URL, validates the grammar, and renders the encoded
+hash into `src`, `data-fragment-light`, and `data-fragment-dark` wherever each
+attribute exists on every current screen frame. On a use-case page it updates only the first
 step. Authored links already carry the builder's cross-view anchor proof, and
 updating every swap source preserves the anchor through light/dark changes. A
 direct preview URL whose syntactically valid fragment names no anchor simply
@@ -223,28 +227,47 @@ in an HTTP request.
 
 ## Enhanced Navigation And Safe Degradation
 
-With Browse enhancement available, an unmodified primary or keyboard activation
-of a default/`_self` marked link asks the outer shell to navigate through its
-existing latest-wins route transition. The resulting history entry has the
-canonical `/view/<route>[?fragment=...]` URL; the title, breadcrumbs, heading,
-details inspector, frames, focus, and status announcement all describe the
-destination. Back and Forward return through those outer route entries and
-restore their route-owned scroll.
+With the hydrated shell available, an unmodified primary or keyboard
+activation of a default/`_self` marked link asks the outer shell to navigate
+through its latest-wins route transition. The shell resolves the destination in
+its catalogue read model and renders it; it does not fetch a shell document.
+The resulting history entry has the canonical `/view/<route>[?fragment=...]`
+URL; the title, breadcrumbs, heading, details inspector, frames, focus, and
+status announcement all describe the destination. Back and Forward return
+through those outer route entries and restore their route-owned scroll.
+Once React owns a same-origin frame session, that ownership is continuous while
+the adapter replaces its document only when the still-visible document is the
+exact `Document` that an earlier same-origin mount authenticated for that frame.
+The shell transfers its navigation receiver to that authenticated document
+before starting the replacement, so a valid marked activation during a
+viewport, scheme, variant, fragment, or route handoff still navigates the parent
+exactly once. A document the session did not authenticate remains frame-owned
+until a different replacement document passes assigned-resource authentication.
+On the frame's first same-origin mount, a matching server-rendered starting
+document may authenticate for hydration. On every later mount, the exact
+starting `Document` is ineligible for URL-based authentication when it was not
+already authenticated, even if it has the requested replacement URL. The
+receiver follows the new same-origin document as soon as its exact resource
+identity can be authenticated; pending images, fonts, or other subresources
+cannot reopen a native-navigation gap before `load`. Readiness gates inspection,
+not logical navigation. Disposing or unsubscribing the session removes the
+receiver; before hydration, after failed hydration, or without a receiver, the
+portable link remains frame-owned as described below.
 
 Outer same-document links, including the shell's skip link, keep native fragment
 focus and scrolling. Document identity includes origin, pathname and query but
-excludes the hash. A history event within the displayed document must not fetch
-or replace that view, reinstall its workspace, or move focus away from the native
-target. It invalidates any pending route request so an obsolete response cannot
-replace the retained view. Saved scroll positions may be restored without a
-reload. A changed route or query still uses progressive navigation and its
-normal history restoration.
+excludes the hash. A history event within the displayed document must not
+change the rendered route, reinstall its workspace, or move focus away from
+the native target. It invalidates any pending route transition so an obsolete
+result cannot replace the retained view. Saved scroll positions may be
+restored without a reload. A changed route or query still uses in-shell
+navigation and its normal history restoration.
 
 For exported catalogues the shared delivery resolver maps that trusted id to
-the exact `/view/<route>.html` file in shell-owned metadata before fetching or
+the exact `/view/<route>.html` URL in shell-owned metadata before rendering or
 opening any context. Development still follows the `/id` redirect. Real static
 id aliases show full content without JavaScript and normalize their history
-entry progressively; see [Static export delivery](./mokly-export-delivery.md).
+entry once hydrated; see [Static export delivery](./mokly-export-delivery.md).
 
 The same trusted parent enhancement exclusively handles modified pointer
 activation and explicit non-self targets after validating the marker and
@@ -253,8 +276,8 @@ Shift-modified click and middle-button `auxclick` (`button === 1`). A requested
 `_top` or `_parent` uses the normal outer route transition. When a new or named
 browsing context is requested, package-owned parent code opens the canonical
 Mokly URL with `noopener`; it never delegates popup creation to the consumer
-frame. If enhancement is absent or fails, the portable live link remains
-frame-owned and subject to the sandbox; Mokly does not grant native
+frame. If the shell is not hydrated or hydration fails, the portable live link
+remains frame-owned and subject to the sandbox; Mokly does not grant native
 outer-navigation fallback.
 
 Consumer scripts remain disabled in default Browse. It permits same-origin inspection but
@@ -289,7 +312,7 @@ default local Browse and all comparison snapshot restrictions remain unchanged.
 
 ## Active Catalogue Visibility
 
-Every successful outer route change, including progressive navigation, Back,
+Every successful outer route change, including in-shell navigation, Back,
 and Forward, establishes one navigation invariant: when the route has a
 catalogue row, that row is visible and marked `aria-current="page"`.
 
@@ -345,7 +368,8 @@ Coverage must prove:
 - enhanced primary, keyboard, modified, non-self, Back, and Forward navigation
   from `MockLink`, raw HTML anchors and areas, SVG anchors, mobile and desktop
   frames, flow steps, and generated page embeds;
-- safe failed/disabled-enhancement degradation without outer navigation;
+- safe degradation without outer navigation when the shell is not hydrated
+  or hydration fails;
 - active-row selection, ancestor disclosure, conditional filter/search reset,
   nearest scrolling, responsive drawer closure, and preserved shell state; and
 - continued script denial and top-navigation denial across direct, `srcdoc`,

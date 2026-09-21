@@ -20,6 +20,7 @@ const fixture = readCatalogue(
 
 test("SSR renders the public fixture, default state and every host slot", () => {
   const html = renderViewer({
+    viewerId: "fixture",
     catalogue: fixture,
     baseUrl: "https://catalogue.example",
     slots: {
@@ -54,6 +55,7 @@ for (const screenId of [
 ])
   test(`SSR renders ${screenId ?? "home"} from catalogue data`, () => {
     const html = renderViewer({
+      viewerId: "fixture",
       catalogue: fixture,
       baseUrl: "https://catalogue.example",
       defaultSelection: { screenId },
@@ -85,10 +87,11 @@ test("object source requires a valid base and URL sources reject an override", (
   );
 });
 
-test("SSR and initial React render agree for selection and all slots", async () => {
-  const { renderToStaticMarkup } = await import("react-dom/server");
+test("SSR and hydratable React render agree for selection and all slots", async () => {
+  const { renderToString } = await import("react-dom/server");
   const { MoklyViewer } = await import("../src/viewer/component.js");
   const props = {
+    viewerId: "fixture",
     catalogue: fixture,
     baseUrl: "https://catalogue.example",
     defaultSelection: {
@@ -100,10 +103,97 @@ test("SSR and initial React render agree for selection and all slots", async () 
     slots: { topBarEnd: <b>Account</b> },
   };
   const html = renderViewer(props);
-  assert.equal(renderToStaticMarkup(<MoklyViewer {...props} />), html);
+  assert.equal(renderToString(<MoklyViewer {...props} />), html);
   assert.match(html, /data-mokly-color-scheme="dark"/);
   assert.match(html, /data-viewport="mobile"/);
   assert.match(html, /value="phrase tag:forms"/);
+});
+
+test("independent SSR viewers keep IDs and references root-local", () => {
+  const render = (viewerId: string) =>
+    renderViewer({
+      viewerId,
+      catalogue: fixture,
+      baseUrl: "https://catalogue.example",
+      defaultSelection: { screenId: fixture.components[0]!.id },
+    });
+  const first = render("primary");
+  const second = render("secondary");
+  const firstIds = htmlIds(first);
+  const secondIds = htmlIds(second);
+
+  assert.ok(firstIds.size > 0);
+  assert.ok([...firstIds].every((id) => id.startsWith("mokly-7-primary-")));
+  assert.ok([...secondIds].every((id) => id.startsWith("mokly-9-secondary-")));
+  assert.deepEqual(
+    [...firstIds].filter((id) => secondIds.has(id)),
+    [],
+  );
+  assert.ok(htmlReferences(first).every((id) => firstIds.has(id)));
+  assert.ok(htmlReferences(second).every((id) => secondIds.has(id)));
+});
+
+test("distinct valid viewer IDs cannot absorb dynamic control IDs", () => {
+  const model = structuredClone(fixture);
+  const component = model.components[0]!;
+  const variant = component.variants[0]!;
+  component.controls = {
+    ...component.controls,
+    "mb-main": component.controls.label!,
+  };
+  component.propSchema = {
+    ...component.propSchema,
+    properties: {
+      ...component.propSchema.properties,
+      "mb-main": {
+        ...component.propSchema.properties.label!,
+        optional: true,
+      },
+    },
+  };
+  variant.props = {
+    ...variant.props,
+    "mb-main": variant.props.label!,
+  };
+  const render = (viewerId: string) =>
+    htmlIds(
+      renderViewer({
+        viewerId,
+        catalogue: model,
+        baseUrl: "https://catalogue.example",
+        defaultSelection: { screenId: component.id },
+      }),
+    );
+  const firstIds = render("x");
+  const secondIds = render("x-mb-prop-action");
+
+  assert.deepEqual(
+    [...firstIds].filter((id) => secondIds.has(id)),
+    [],
+  );
+});
+
+test("server and React viewer IDs share one validation contract", async () => {
+  const { renderToString } = await import("react-dom/server");
+  const { MoklyViewer } = await import("../src/viewer/component.js");
+  const props = {
+    catalogue: fixture,
+    baseUrl: "https://catalogue.example",
+    defaultSelection: { screenId: null },
+  };
+  for (const viewerId of ["", "-viewer", "viewer space", "é", "v".repeat(65)]) {
+    assert.throws(
+      () => renderViewer({ ...props, viewerId }),
+      /Invalid viewerId/,
+    );
+    assert.throws(
+      () => renderToString(<MoklyViewer {...props} viewerId={viewerId} />),
+      /Invalid viewerId/,
+    );
+  }
+  assert.doesNotThrow(() =>
+    renderViewer({ ...props, viewerId: "v".repeat(64) }),
+  );
 });
 
 test("SSR selects a requested saved variant in its control and preview", () => {
@@ -123,6 +213,7 @@ test("SSR selects a requested saved variant in its control and preview", () => {
     },
   ];
   const html = renderViewer({
+    viewerId: "fixture",
     catalogue: model,
     baseUrl: "https://catalogue.example",
     defaultSelection: { screenId: component.id, variantId: "second" },
@@ -137,9 +228,24 @@ test("invalid current paths are rejected instead of replaced with guessed URLs",
   for (const view of screen.views) view.fragmentPath = null;
   assert.throws(() =>
     renderViewer({
+      viewerId: "fixture",
       catalogue: model,
       baseUrl: "https://catalogue.example",
       defaultSelection: { screenId: screen.id },
     }),
   );
 });
+
+function htmlIds(html: string): Set<string> {
+  return new Set(
+    [...html.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]!),
+  );
+}
+
+function htmlReferences(html: string): string[] {
+  return [
+    ...html.matchAll(
+      /\s(?:aria-controls|aria-describedby|aria-labelledby|for)="([^"]+)"|\shref="#([^"]+)"/g,
+    ),
+  ].flatMap((match) => (match[1] ?? match[2]!).split(" "));
+}

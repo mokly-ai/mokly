@@ -1,10 +1,6 @@
 // The served collapsible details inspector: a native <details> bar above a
 // two-column body with prose on the left and metadata rows on the right —
-// populated from the manifest entry for the selected route: description,
-// rationale, source and generated paths, the views a classification marked
-// changed, declared tags, related docs, dependencies, the variants a screen
-// declares or belongs to, and the use cases a screen belongs to. The rows
-// themselves live in `details_rows.tsx`.
+// populated from the manifest entry for the selected route.
 
 import type { ColorScheme } from "../data/axes.js";
 import type { ManifestScreen } from "../registry/types.js";
@@ -20,6 +16,7 @@ import {
   VariantOfChip,
 } from "./details_rows.js";
 import { ChevronIcon } from "./icons.js";
+import { useOptionalShellStore } from "./store_context.js";
 import type { RoutedEntry, RouteTarget } from "./target.js";
 import type { ChangedView } from "./view_marks.js";
 
@@ -118,8 +115,18 @@ export function DetailsPanel(props: {
   catalogue: Catalogue;
   target: RouteTarget;
 }) {
+  const store = useOptionalShellStore();
+  const open = store?.state.detailsOpen ?? false;
   return (
-    <details className="mbk-details" data-mokly-details="">
+    <details
+      className="mbk-details"
+      data-mokly-details=""
+      onToggle={(event) => {
+        if (store?.interactive && event.currentTarget.open !== open)
+          store.setDetails(event.currentTarget.open);
+      }}
+      open={open}
+    >
       <summary className="mbk-details-bar">
         <span className="chev">
           <ChevronIcon size={12} />

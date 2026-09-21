@@ -22,6 +22,9 @@ import { componentEntrySource } from "../helpers/component_fixture.js";
 import { createFixture, removeFixture } from "../helpers/fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 
+const unownedDocument =
+  '<!doctype html><a data-mokly-link="action" href="./silent.html" id="unowned-marker">Unowned action</a>';
+
 export interface FrameTestWindow extends Window {
   mounted: MountedFrame;
   frameEvents: FrameEvent[];
@@ -35,13 +38,23 @@ export async function crossOriginFixture(
   const fixture = await createFixture(
     componentEntrySource(
       options ?? {
-        body: '<action.Component label="Visible" /><action.Component moklyInstance="hidden" label="Hidden" hidden /><action.Component moklyInstance="multiple" label="Multiple" disabled /><div style={{height:800}} /><div style={{height:100,overflow:"auto"}}><div style={{height:200}}/><action.Component moklyInstance="scroll" label="Scroll" /></div><MockLink to="action">Open Action</MockLink>',
+        body: '<action.Component label="Visible" /><action.Component moklyInstance="hidden" label="Hidden" hidden /><action.Component moklyInstance="multiple" label="Multiple" disabled /><div style={{height:800}} /><div style={{height:100,overflow:"auto"}}><div style={{height:200}}/><action.Component moklyInstance="scroll" label="Scroll" /></div><MockLink to="action">Open Action</MockLink><a href="../unowned.html" id="unowned-link">Open unowned document</a><a href="./home.mobile.html?handoff=exact" id="exact-resource-link">Open exact next document</a>',
         actionRender:
           "(props) => props.hidden ? null : props.disabled ? <><span>First root</span> Text root <strong>Last root</strong></> : <button style={{width:160,height:40}}>{props.label}</button>",
       },
     ),
     { extraConfig },
   );
+  await Promise.all([
+    fs.writeFile(
+      path.join(fixture.mockupsDir, "unowned.html"),
+      unownedDocument,
+    ),
+    fs.writeFile(
+      path.join(fixture.mockupsDir, "silent.html"),
+      "<!doctype html><p>No inspector</p>",
+    ),
+  ]);
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
   const catalogue = createCatalogue(compilation.manifest);
   const root = path.join(fixture.root, "site");
@@ -56,6 +69,7 @@ export async function crossOriginFixture(
   for (const [name, bytes] of compilation.outputs)
     if (name.endsWith(".html"))
       files.set(`static/${name}`, adaptBrowseDocument(bytes, name, catalogue));
+  files.set("static/unowned.html", unownedDocument);
   for (const [name, bytes] of loadBrowserClientModules())
     files.set(`__mokly/client/${name}`, bytes);
   for (const [name, bytes] of loadBrowserNavigationModules())
@@ -70,6 +84,14 @@ export async function crossOriginFixture(
     (entry) => entry.kind === "screen" && entry.id === "home",
   );
   if (home?.kind !== "screen") throw new Error("No fixture screen");
+  const renderId = `${"a".repeat(48)}.${"b".repeat(64)}`;
+  const temporaryPath = `/__mokly/components/renders/${renderId}/${home.fragments.mobile}`;
+  const temporaryFile = path.join(root, temporaryPath.slice(1));
+  await fs.mkdir(path.dirname(temporaryFile), { recursive: true });
+  await fs.copyFile(
+    path.join(root, "static", home.fragments.mobile),
+    temporaryFile,
+  );
   const usage = home.componentViews![0]!;
   return {
     host,
@@ -82,6 +104,7 @@ export async function crossOriginFixture(
       comparisonUrl: null,
       revision: { content: 0, evidence: 0 },
     }),
+    temporaryPath,
     usage,
     async close() {
       await frames.close();

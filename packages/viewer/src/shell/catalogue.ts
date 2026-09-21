@@ -27,6 +27,17 @@ export interface Catalogue {
   removedComponents: readonly ManifestComponent[];
 }
 
+/** Resolve a routed entry, giving current content precedence over history. */
+export function catalogueRouteEntry(
+  catalogue: Catalogue,
+  route: string,
+): ManifestEntry | undefined {
+  return (
+    catalogue.byRoute.get(route) ??
+    catalogue.removedEntries.find(({ entry }) => entry.route === route)?.entry
+  );
+}
+
 /** The union of the tags declared across every entry that can carry them. */
 function collectTags(entries: readonly ManifestEntry[]): readonly string[] {
   const declared: string[] = [];

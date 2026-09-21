@@ -1,6 +1,7 @@
 import type { ServerResponse } from "node:http";
 
 import { encodeUrlPath } from "@mokly/viewer/data";
+import { catalogueRouteEntry } from "@mokly/viewer/server";
 import type { Catalogue, ShellContext } from "@mokly/viewer/server";
 
 import type { ResolvedConfig } from "../config/types.js";
@@ -59,11 +60,7 @@ export async function renderView(
   documents?: DocumentService,
 ): Promise<void> {
   const route = safeDecodePath(encodedRoute);
-  const entry = route
-    ? (catalogue.byRoute.get(route) ??
-      catalogue.removedEntries.find(({ entry }) => entry.route === route)
-        ?.entry)
-    : undefined;
+  const entry = route ? catalogueRouteEntry(catalogue, route) : undefined;
   if (!entry)
     return send(
       response,

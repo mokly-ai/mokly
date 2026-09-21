@@ -5,6 +5,7 @@
   "license": "MIT",
   "type": "module",
   "sideEffects": [
+    "./dist/browser.js",
     "./dist/styles.css"
   ],
   "types": "./dist/index.d.ts",
@@ -20,6 +21,10 @@
     "./runtime": {
       "types": "./dist/runtime.d.ts",
       "import": "./dist/runtime.js"
+    },
+    "./browser": {
+      "types": "./dist/browser.d.ts",
+      "import": "./dist/browser.js"
     },
     "./data": {
       "types": "./dist/data.d.ts",
@@ -51,11 +56,5 @@
     "typecheck": "tsc --project tsconfig.json --noEmit",
     "test": "tsx --test tests/*.test.ts tests/*.test.tsx",
     "prepack": "npm run build"
-  },
-  "imports": {
-    "#markup-renderer": {
-      "node": "react-dom/server",
-      "default": "react-dom/server.browser"
-    }
   }
 }

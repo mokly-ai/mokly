@@ -20,6 +20,12 @@ import {
   directoryFiles,
 } from "./helpers/export_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
+import {
+  attribute,
+  documentElements,
+  documentText,
+  textContent,
+} from "./helpers/html.js";
 import { screenVariantEntrySource } from "./helpers/screen_variant_fixture.js";
 
 for (const resource of ["nested.css", "image.svg"]) {
@@ -107,7 +113,7 @@ stylesheets: [{ match: "screens/home.html", stylesheets: [], darkStylesheets: ["
     "utf8",
   );
   const serialized = html.match(
-    /<script type="application\/json" data-workspace-data="">([\s\S]*?)<\/script>/,
+    /<script[^>]*data-workspace-data=""[^>]*>([\s\S]*?)<\/script>/,
   );
   assert.ok(serialized);
   const workspace = JSON.parse(serialized[1]!) as {
@@ -117,13 +123,21 @@ stylesheets: [{ match: "screens/home.html", stylesheets: [], darkStylesheets: ["
     { colorScheme: "dark", viewport: "mobile" },
     { colorScheme: "dark", viewport: "desktop" },
   ]);
-  assert.match(
+  const schemeMark = documentElements(
     html,
-    /<span class="mbk-view-changed" aria-hidden="true" data-view-changed="scheme"><\/span>/,
-  );
-  assert.match(
+    (element) => attribute(element, "data-view-changed") === "scheme",
+  )[0];
+  assert.ok(schemeMark);
+  assert.equal(attribute(schemeMark, "hidden"), undefined);
+  const changedViews = documentElements(
     html,
-    /data-workspace-changed-views=""><span class="mbk-meta-k">Changed views<\/span><span class="mbk-meta-v" data-workspace-changed-views-value="">Mobile · Dark, Desktop · Dark<\/span>/,
+    (element) =>
+      attribute(element, "data-workspace-changed-views") !== undefined,
+  )[0];
+  assert.ok(changedViews);
+  assert.equal(
+    textContent(changedViews),
+    "Changed viewsMobile · Dark, Desktop · Dark",
   );
 });
 
@@ -176,7 +190,7 @@ test("review export retains a removed variant route, id redirect, and parent con
     path.join(fixture.output, "view", route),
     "utf8",
   );
-  assert.match(removed, /This screen was removed/);
+  assert.match(documentText(removed), /This screen was removed/);
   assert.match(
     removed,
     /<div class="mbk-nav-variants" data-nav-disclosure="variants:pages:home"[^>]*id="mb-nav-variants-pages-home"><a [^>]*data-nav-removed=""[^>]*data-removed-variant=""/,
@@ -186,7 +200,7 @@ test("review export retains a removed variant route, id redirect, and parent con
     path.join(fixture.output, "id/home-empty/index.html"),
     "utf8",
   );
-  assert.match(redirect, /This screen was removed/);
+  assert.match(documentText(redirect), /This screen was removed/);
 
   const catalogue = JSON.parse(
     await fs.readFile(

@@ -1,4 +1,5 @@
 import path from "node:path";
+import { setTimeout } from "node:timers/promises";
 import { pathToFileURL } from "node:url";
 
 import { expect, test } from "@playwright/test";
@@ -6,18 +7,38 @@ import { expect, test } from "@playwright/test";
 import { repositoryRoot } from "../helpers/fixture.js";
 
 import { focusDesignLink } from "./design_test_helpers.js";
-import { chooseScheme, chooseViewport } from "./workspace_actions.js";
-import { expectFrameSource } from "./workspace_actions.js";
+import {
+  chooseScheme,
+  chooseViewport,
+  expectFrameLoaded,
+  expectFrameSource,
+} from "./workspace_actions.js";
 
 for (const viewport of ["mobile", "desktop"] as const) {
   for (const scheme of ["light", "dark"] as const) {
     test(`${viewport}/${scheme}: the basic example buttons work in Browse and on disk`, async ({
       page,
     }) => {
+      if (viewport === "mobile" && scheme === "dark")
+        await page.route(
+          "**/static/screens/welcome.mobile.dark.html",
+          async (route) => {
+            await setTimeout(500);
+            await route.continue();
+          },
+        );
       await page.goto("/view/screens/welcome.html");
       await chooseViewport(page, viewport);
       if (scheme === "dark") await chooseScheme(page, "dark");
-      const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
+      const suffix = `${viewport}${scheme === "dark" ? ".dark" : ""}.html`;
+      const frameElement = page.locator(`.mbk-frame-${viewport} iframe`);
+      await expectFrameLoaded(
+        frameElement,
+        new RegExp(
+          `/static/screens/welcome\\.${suffix.replaceAll(".", "\\.")}$`,
+        ),
+      );
+      const frame = frameElement.contentFrame();
       const next = frame.getByRole("link", {
         name: "View details",
         exact: true,
@@ -43,7 +64,6 @@ for (const viewport of ["mobile", "desktop"] as const) {
         .click();
       await expect(page).toHaveURL(/\/view\/screens\/welcome\.html$/);
 
-      const suffix = `${viewport}${scheme === "dark" ? ".dark" : ""}.html`;
       await page.goto(
         pathToFileURL(
           path.join(

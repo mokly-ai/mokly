@@ -116,24 +116,26 @@ test("discovery reports an inaccessible directory with config-invalid and EACCES
   const fixture = await createFixture();
   const visible = path.join(fixture.root, "src/visible.mockup.tsx");
   const inaccessible = path.join(fixture.root, "src/inaccessible");
+  context.after(() => removeFixture(fixture));
   await fs.promises.mkdir(inaccessible, { recursive: true });
   await fs.promises.writeFile(visible, validEntrySource());
   await fs.promises.writeFile(
     path.join(inaccessible, "hidden.mockup.tsx"),
     validEntrySource(),
   );
-  await fs.promises.chmod(inaccessible, 0o000);
-  context.after(async () => {
-    await fs.promises.chmod(inaccessible, 0o755);
-    await removeFixture(fixture);
-  });
-  if (!(await directoryPermissionsEnforced(inaccessible))) {
-    context.skip("this process can read directories regardless of their mode");
-    return;
-  }
   await fs.promises.writeFile(
     fixture.configPath,
     'export default { entries: ["src/**/*.mockup.{ts,tsx}"], mockupsDir: "mockups", repoRoot: "." };\n',
+  );
+  const readdir = fs.readdirSync;
+  context.mock.method(
+    fs,
+    "readdirSync",
+    (...args: Parameters<typeof fs.readdirSync>) => {
+      if (args[0] === inaccessible)
+        throw Object.assign(new Error("inaccessible"), { code: "EACCES" });
+      return Reflect.apply(readdir, fs, args);
+    },
   );
 
   await assert.rejects(loadConfig(fixture.root), {
@@ -230,16 +232,4 @@ for (const code of ["ENOENT", "ENOTDIR"]) {
         /entries glob matches no module: src\/\*\*\/\*\.mockup\.tsx; not searched: src\/dist, src\/vanished$/,
     });
   });
-}
-
-/** Root and capability-holding processes read mode-000 directories; probe rather than guess. */
-async function directoryPermissionsEnforced(
-  directory: string,
-): Promise<boolean> {
-  try {
-    await fs.promises.readdir(directory);
-    return false;
-  } catch (error) {
-    return (error as NodeJS.ErrnoException).code === "EACCES";
-  }
 }

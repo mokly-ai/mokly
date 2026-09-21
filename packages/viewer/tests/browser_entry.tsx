@@ -15,6 +15,8 @@ import type {
   ViewerSelection,
 } from "@mokly/viewer";
 
+import { installFrameHookHarness } from "./frame_hook_harness.js";
+
 interface HostOptions {
   controlled?: boolean;
   accept?: boolean;
@@ -96,11 +98,15 @@ const start = (id: string, options: HostOptions = {}) => {
       host.render();
     },
   };
+  const sourceNeedsBaseUrl =
+    options.source === undefined ||
+    (typeof options.source === "object" && !(options.source instanceof URL));
   host.props = {
+    viewerId: id,
     catalogue: options.source ?? data.catalogue,
-    ...(options.source
-      ? {}
-      : { baseUrl: options.cross ? data.baseUrl : location.origin }),
+    ...(sourceNeedsBaseUrl
+      ? { baseUrl: options.cross ? data.baseUrl : location.origin }
+      : {}),
     frameAdapter: options.cross
       ? postMessageAdapter({ frameOrigin: data.baseUrl })
       : sameOriginAdapter(),
@@ -142,3 +148,4 @@ const start = (id: string, options: HostOptions = {}) => {
     document.getElementById(id)?.remove();
   },
 };
+installFrameHookHarness();

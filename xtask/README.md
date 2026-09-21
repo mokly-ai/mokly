@@ -8,6 +8,7 @@ internal binary and is not published to npm or crates.io.
 - Run the current source-level TypeScript, package, example, and Rust suite.
 - Fail verification when the live dependency audit reports an advisory or error.
 - Enforce the Rust file-length limit.
+- Keep the complete local gate aligned with the approved independent CI suites.
 
 ## What This Crate Does
 
@@ -20,12 +21,24 @@ workspace dependency categories. It requires registry access; an audit or networ
 failure stops subsequent checks. Packed-consumer smokes separately audit the
 consumer's resolved production dependencies without workspace overrides.
 
+The [CI verification contract](../docs/protocol/ci-verification.md) defines the
+suite boundaries, shard evidence, and fail-closed CI aggregate. Selected suites
+are partial verification; the unqualified command remains the complete gate.
+
 ## Quick Start
 
 ```bash
 cargo xtask check
+cargo xtask check --suite repository
+cargo xtask check --suite package
+cargo xtask check --suite unit --shard 1/4
+cargo xtask check --suite browser --shard 1/4
 cargo xtask rust-file-length-lint --all
 ```
+
+`--shard INDEX/TOTAL` is valid only for the unit and browser suites. Omitting it
+runs the full selected suite. Package, unit, and browser suites prepare their
+required output before invoking prepared npm scripts.
 
 ## Development
 
@@ -46,4 +59,5 @@ cargo test --package xtask
 
 - [Repository README](../README.md)
 - [CI and npm release contract](../docs/protocol/npm-release.md)
+- [CI verification](../docs/protocol/ci-verification.md)
 - [Dependency security](../docs/protocol/dependency-security.md)

@@ -4,88 +4,11 @@ import { test } from "node:test";
 import { compareReview } from "../dist/review/compare.js";
 import { computeChangedRoutes } from "../dist/server/changed.js";
 
+import { componentChangeCases } from "./helpers/component_change_cases.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 
-const cases: readonly [
-  string,
-  (source: string) => string,
-  readonly string[],
-][] = [
-  [
-    "component-only implementation",
-    (s) =>
-      s.replace(
-        "<button data-viewport=",
-        '<button className="new-action" data-viewport=',
-      ),
-    ["components/action.html"],
-  ],
-  [
-    "screen-owned invisible data",
-    (s) =>
-      s.replaceAll('label="Hidden" hidden', 'label="Invisible edit" hidden'),
-    ["screens/home.html"],
-  ],
-  [
-    "screen-owned rendered slot",
-    (s) => s.replaceAll("Screen content", "New screen content"),
-    ["screens/home.html"],
-  ],
-  [
-    "parent-owned child inputs",
-    (s) => s.replace('label="Inside"', 'label="Updated inside"'),
-    ["components/pane.html"],
-  ],
-  [
-    "parent implementation",
-    (s) =>
-      s.replace(
-        "<section>{props.children}",
-        '<section className="new-pane">{props.children}',
-      ),
-    ["components/pane.html"],
-  ],
-  [
-    "slot replay inside component",
-    (s) =>
-      s.replace(
-        "<section>{props.children}",
-        "<section>{props.children}<aside>{props.children}</aside>",
-      ),
-    ["components/pane.html"],
-  ],
-  [
-    "screen-owned instance structure",
-    (s) =>
-      s.replaceAll('moklyInstance="hidden"', 'moklyInstance="other-hidden"'),
-    ["screens/home.html"],
-  ],
-  [
-    "component and screen edits",
-    (s) =>
-      s
-        .replace(
-          "<button data-viewport=",
-          '<button className="new-action" data-viewport=',
-        )
-        .replaceAll("Screen content", "Changed content"),
-    ["components/action.html", "screens/home.html"],
-  ],
-  [
-    "saved variant data",
-    (s) =>
-      s.replace('props: { label: "Continue" }', 'props: { label: "Next" }'),
-    ["components/action.html"],
-  ],
-  [
-    "control schema metadata",
-    (s) => s.replace("maxLength: 80", "maxLength: 100"),
-    ["components/action.html"],
-  ],
-  ["no change", (s) => s, []],
-];
-for (const [name, change, routes] of cases)
+for (const [name, change, routes] of componentChangeCases)
   test(`component Changes attribution: ${name}`, async (t) => {
     const fixture = await componentReviewFixture(t, change);
     const artifact = await compareReview(

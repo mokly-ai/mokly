@@ -44,26 +44,30 @@ test(
     const fixture = await createFixture();
     const config = await loadConfig(fixture.root);
     await writeCompilation(await compileCatalogue(config), config);
-    const child = fork(
-      path.join(repositoryRoot, "dist/cli/bin.js"),
-      [
-        "__serve-child",
-        "--config",
-        fixture.configPath,
-        "--port",
-        "0",
-        "--update-version",
-        "1",
-      ],
-      {
-        cwd: fixture.root,
-        stdio: ["ignore", "ignore", "ignore", "ipc"],
-      },
-    );
+    const childBin = path.join(repositoryRoot, "dist/cli/bin.js");
+    const childArguments = [
+      "__serve-child",
+      "--config",
+      fixture.configPath,
+      "--port",
+      "0",
+      "--update-version",
+      "1",
+    ];
+    const child = fork(childBin, childArguments, {
+      cwd: fixture.root,
+      execArgv: [],
+      stdio: ["ignore", "ignore", "ignore", "ipc"],
+    });
     context.after(async () => {
       await stopChild(child);
       await removeFixture(fixture);
     });
+    assert.deepEqual(child.spawnargs, [
+      process.execPath,
+      childBin,
+      ...childArguments,
+    ]);
     const port = await readyPort(child);
     assert.equal((await fetch(`http://127.0.0.1:${port}`)).status, 200);
 

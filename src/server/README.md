@@ -40,6 +40,13 @@ Shell pages render through `@mokly/viewer/server` with CLI-owned live context.
 `public_catalogue_model.ts` validates each serialized public revision once and
 reuses it across shell requests until the bytes change. CSS, browser modules,
 fonts, events and static documents bypass that decoding entirely.
+`client_modules.ts` reads the generated viewer and CLI browser manifests,
+requires exact equality with their build directories, rejects missing,
+non-JavaScript, unexpected or colliding outputs, and loads the complete delivery
+inventory before binding. The manifests are emitted from actual completed
+esbuild outputs rather than maintained by hand. Every shell request renders the
+hydrated React document and loads the canonical `react-shell.js` browser entry.
+The CLI host modules retain private live-update and capability transports.
 
 `screen_view_changes.ts` retains per-view screen-only material decisions from
 the existing classification pass. The public projection does not infer Changes

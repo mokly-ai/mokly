@@ -1,21 +1,16 @@
-import crypto from "node:crypto";
-import fs from "node:fs/promises";
-import path from "node:path";
+import { expect } from "@playwright/test";
 
-import { expect, test } from "@playwright/test";
-
-import { repositoryRoot, validEntrySource } from "../helpers/fixture.js";
+import { validEntrySource } from "../helpers/fixture.js";
 import { createPreviewComparisonFixture } from "../helpers/preview_comparison_fixture.js";
 
 import { focusDesignLink } from "./design_test_helpers.js";
-import {
-  servePreviewFixture,
-  startPreviewFixture,
-  type PreviewFixture,
-} from "./preview_fixture.js";
+import { test } from "./ordinary_preview_fixture.js";
+import { servePreviewFixture, type PreviewFixture } from "./preview_fixture.js";
+import type { OwnedPreviewFixture } from "./preview_fixture_owner.js";
 import {
   chooseScheme,
   chooseViewport,
+  expectFrameLoaded,
   expectFrameSource,
 } from "./workspace_actions.js";
 
@@ -23,14 +18,12 @@ let comparisonFixture: Awaited<
   ReturnType<typeof createPreviewComparisonFixture>
 >;
 let comparisonPreview: PreviewFixture;
-let preview: PreviewFixture;
+let preview: OwnedPreviewFixture;
 test.describe.configure({ timeout: 90_000 });
 
-test.beforeAll(async () => {
+test.beforeAll(async ({ ordinaryPreview }) => {
   test.setTimeout(180_000);
-  const before = await generatedDigest();
-  preview = await startPreviewFixture();
-  expect(await generatedDigest()).toBe(before);
+  preview = ordinaryPreview;
   comparisonFixture = await createPreviewComparisonFixture(linkEntrySource);
   comparisonPreview = await servePreviewFixture(comparisonFixture.output);
 });
@@ -38,7 +31,26 @@ test.beforeAll(async () => {
 test.afterAll(async () => {
   await comparisonPreview?.close();
   await comparisonFixture?.close();
-  await preview?.close();
+});
+
+test("published scheme swaps survive a redirected source replacement", async ({
+  page,
+}) => {
+  await page.route(
+    /\/static\/screens\/welcome\.desktop\.dark\.html$/,
+    async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      await route.continue();
+    },
+  );
+  await page.goto(`${preview.url}/view/screens/welcome`);
+  await chooseViewport(page, "both");
+  await chooseScheme(page, "dark");
+  for (const viewport of ["mobile", "desktop"] as const) {
+    const frame = page.locator(`.mbk-frame-${viewport} iframe`);
+    await expectFrameSource(frame, new RegExp(`welcome\\.${viewport}\\.dark$`));
+    await expect(frame).toHaveAttribute("data-mokly-frame-state", "ready");
+  }
 });
 
 for (const viewport of ["mobile", "desktop"] as const) {
@@ -48,6 +60,14 @@ for (const viewport of ["mobile", "desktop"] as const) {
     await page.setViewportSize({ width: 1600, height: 1000 });
     await page.goto(`${preview.url}/view/design/browse/views/home`);
     await chooseViewport(page, viewport);
+    await expect(page.locator("html")).toHaveAttribute(
+      "data-mokly-hydrated",
+      "",
+    );
+    await expect(page.locator(`.mbk-frame-${viewport} iframe`)).toHaveAttribute(
+      "data-mokly-frame-state",
+      "ready",
+    );
     const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
     await frame.locator(".mbk-empty-link").click();
     await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen$/);
@@ -59,7 +79,11 @@ for (const viewport of ["mobile", "desktop"] as const) {
       page.locator('a[data-route="design/browse/views/details-screen.html"]'),
     ).toHaveAttribute("aria-current", "page");
     await frame.locator(".mbk-shot-link").first().click();
+    await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen$/);
     await frame.locator(".mbk-search-tag").click();
+    await expect(page).toHaveURL(
+      /\/view\/design\/browse\/states\/tags\/picker$/,
+    );
     await frame
       .getByRole("group", { name: "Tags", exact: true })
       .getByRole("link", { name: "onboarding", exact: true })
@@ -80,12 +104,21 @@ for (const viewport of ["mobile", "desktop"] as const) {
     await frame.locator(".ce-inspector-link").click();
     await expect(page).toHaveURL(/\/view\/design\/browse\/pages\/details$/);
     await frame.locator(".ce-inspector-link").click();
+    await expect(page).toHaveURL(/\/view\/design\/browse\/pages\/view$/);
+    await expectFrameLoaded(
+      page.locator(`.mbk-frame-${viewport} iframe`),
+      new RegExp(`/static/design/browse/pages/view\\.${viewport}(?:\\.html)?$`),
+    );
     await frame
       .getByRole("link", { name: "Open Welcome", exact: true })
       .click();
     await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen$/);
     await page.goto(`${preview.url}/view/screens/welcome`);
     await chooseScheme(page, "dark");
+    await expect(page.locator(`.mbk-frame-${viewport} iframe`)).toHaveAttribute(
+      "data-mokly-frame-state",
+      "ready",
+    );
     await frame
       .getByRole("link", { name: "View details", exact: true })
       .click();
@@ -151,17 +184,4 @@ function linkEntrySource(changed: boolean): string {
   return source
     .replace('<main id="details">Detail</main>', details)
     .replace('<main id="details-mobile">Detail</main>', details);
-}
-
-async function generatedDigest(): Promise<string> {
-  const root = path.join(repositoryRoot, "examples/basic/generated");
-  const hash = crypto.createHash("sha256");
-  for (const relative of (await fs.readdir(root, { recursive: true })).sort()) {
-    const file = path.join(root, relative);
-    if ((await fs.stat(file)).isFile()) {
-      hash.update(relative);
-      hash.update(await fs.readFile(file));
-    }
-  }
-  return hash.digest("hex");
 }

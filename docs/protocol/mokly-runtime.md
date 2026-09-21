@@ -21,8 +21,9 @@ including public CSS, are tracked. Build generates its local HTML and manifest.
 This document defines the release-ready runtime contract. The Build, Check,
 watch, server, and comparison engines, the responsive package-owned catalogue,
 on-demand screen diffs, packed-package consumers, CI/release
-automation, and Playwright browser coverage are implemented. The irreversible
-first publication and downstream consumer cutover remain external steps.
+automation, and Playwright browser coverage are implemented. Both npm packages
+have completed their [initial registration](./npm-bootstrap.md); subsequent
+versions follow the [coordinated release contract](./npm-release.md).
 Canonical outer navigation from links inside fragment frames, request-visible
 fragment transport, ownership-aware preview adaptation, and active-tree
 disclosure are implemented. Their delivery history is recorded in the completed
@@ -31,8 +32,12 @@ disclosure are implemented. Their delivery history is recorded in the completed
 Browse is a first-party host of [`@mokly/viewer`](./mokly-viewer.md). The
 public catalogue (Milestone 3), optional frame transport (Milestone 4) and
 package extraction (Milestone 5) are implemented as recorded in the
-[viewer library plan](../../plans/mokly-viewer-library.md). The existing
-local shell, CSS, interactions and script-disabled sandbox remain unchanged.
+[viewer library plan](../../plans/mokly-viewer-library.md). The
+[React Browse shell plan](../../plans/react-browse-shell.md) delivers one React
+tree shared by standalone Serve, static export and embedded hosts. Standalone
+documents render the complete shell on the server and hydrate it in the browser;
+embedded hosts mount the same components with host-owned selection and slots.
+Consumer frames and comparisons remain static HTML in script-disabled sandboxes.
 
 ## Component Workspaces
 
@@ -162,12 +167,15 @@ source and route directories never create current navigation groups.
 
 ## Browse Shell
 
-This same shell is rendered by the viewer package's
-TSX/SSR entry and enhanced by its existing vanilla runtime. Serve/export mount
-it without slots using the [same-origin adapter](./mokly-frame-adapter.md).
-React remains absent from exported browsers. Slots, theming and host-triggered
-pick mode are public embedding APIs; they add no local UI. First-party Serve
-retains its private control/evidence integration outside the public catalogue.
+The shell is the viewer package's React component tree, rendered on the server
+by its SSR entry and hydrated in the browser by Serve, export and React hosts
+alike, as defined by the [viewer contract](./mokly-viewer.md#shell-tree-and-state).
+Serve/export mount it without slots using the
+[same-origin adapter](./mokly-frame-adapter.md) and load the standalone
+hydration entry, which bundles React. Slots, theming and host-triggered pick
+mode are public embedding APIs; they add no local UI. First-party Serve
+supplies its private control/evidence capabilities to the tree through a typed
+context outside the public catalogue; export supplies none.
 
 The package owns a neutral, responsive Mokly shell: a top bar with brand,
 search with its tag picker; a catalogue navigation
@@ -178,8 +186,9 @@ and remembers the served-origin preference; linked breadcrumbs with an id
 chip; viewport and color-scheme switching; realistic phone and browser device
 chrome; a per-frame expand-to-overlay toggle; and a collapsible details
 inspector. Current and comparison views share the same navigation and saved
-width. Static catalogues ship the resize behavior as a self-contained script;
-comparison snapshots carry no shell scripts. The mobile drawer does not expose
+width. The resize behaviour is part of the hydrated shell; a small
+pre-hydration script still captures native disclosure choices made before
+hydration completes. Comparison snapshots carry no shell scripts. The mobile drawer does not expose
 the separator.
 Consumer brand chrome does not appear in the shell. A small set of documented
 CSS custom properties may tune the shell accent without replacing its
@@ -325,10 +334,13 @@ render keeps its light fragments and names the fallback in its frame label
 (`MOBILE — LIGHT ONLY`), while a use-case step, which has no label, simply
 stays light.
 
-Browse is server rendered first and progressively enhanced. Direct URLs,
-refresh, missing routes, and JavaScript-disabled use remain functional. For an
-eligible unmodified same-origin Browse link, the client replaces only the
-route-owned main view and updates URL, title, active row, focus, and history.
+Browse is server rendered first and hydrated. The server output is the
+complete shell with real anchors, so direct URLs, refresh, missing routes, and
+JavaScript-disabled use remain functional before and without hydration. For an
+eligible unmodified same-origin Browse link, the hydrated shell renders the
+destination from the catalogue read model instead of loading a document, and
+updates URL, title, active row, focus, and history; it never fetches shell HTML
+to swap into the page.
 Logical links activated inside a consumer frame navigate that same outer route
 model rather than replacing only the iframe document. The shell opens the active
 row's ancestor collections, conditionally clears a search or Changes filter
@@ -365,7 +377,9 @@ but a destination path opened by navigation stays open. Navigation groups and
 the details inspector retain explicit disclosure choices across in-shell navigation,
 durable navigation, and browser reloads for that origin. Unavailable or
 malformed browser storage leaves the server-rendered default intact; the latest
-choice still survives in-shell navigation when writes fail. The browser-frame
+choice still survives in-shell navigation when writes fail. A native disclosure
+toggled before hydration completes is captured by the pre-hydration script and
+wins over the stored preference for that load. The browser-frame
 expand toggle overlays one frame at a time and collapses on Escape, on an
 outside click, and on route navigation. Clicking a screen or use-case ID chip
 labelled `#<id>` copies the unprefixed ID without navigating. Clicking a frame
@@ -378,14 +392,14 @@ leading update per animation frame, and route-change focus never overrides the
 restored positions. Overlapping requests are latest-wins. Download,
 external, hash-only, metadata-only, and unmarked links retain their existing
 frame-owned behavior. Trusted parent code owns primary and new-context
-navigation for a marked catalogue link inside a Browse frame when enhancement
-is available.
-There is no native outer-navigation fallback; failed or disabled enhancement
+navigation for a marked catalogue link inside a Browse frame when the shell
+is hydrated.
+There is no native outer-navigation fallback; an unhydrated or failed shell
 keeps the portable link frame-owned and the sandbox prevents direct or nested
 content from replacing the shell. Served Browse applies a request-visible
-logical fragment during server rendering. The static deployed preview applies
-it progressively to each current and light/dark swap source so scheme changes
-retain the anchor.
+logical fragment during server rendering. In the static deployed preview the
+hydrated shell renders it into each current and light/dark swap source so
+scheme changes retain the anchor.
 
 The shell meets keyboard, focus, reduced-motion, contrast, semantics, and status
 announcement requirements. Mobile and desktop shell variants are specified by

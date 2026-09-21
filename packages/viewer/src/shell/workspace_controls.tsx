@@ -1,4 +1,6 @@
 /** Grouped, compact viewport, theme and inspection controls. */
+import { useShellIdentifier } from "./identifier_context.js";
+import { useOptionalShellStore } from "./store_context.js";
 import {
   VIEW_CHANGED_CLASS,
   VIEW_CHANGED_IDS,
@@ -9,31 +11,28 @@ import {
 } from "./view_marks.js";
 import { WorkspaceIcon } from "./workspace_icons.js";
 
-/**
- * The accent dot and the wording that names it, both held by every control so
- * a client refresh moves the mark by toggling `hidden` and the control's
- * `aria-describedby` rather than rebuilding the head.
- */
 function ViewChangedMark({
+  id,
   kind,
   marked,
 }: {
+  id: string;
   kind: "scheme" | "viewport";
   marked: boolean;
 }) {
   return (
     <>
       <span
-        className={VIEW_CHANGED_CLASS}
         aria-hidden="true"
+        className={VIEW_CHANGED_CLASS}
         data-view-changed={kind}
         hidden={!marked}
       />
       <span
         className={VIEW_CHANGED_TEXT_CLASS}
         data-view-changed-text={kind}
-        id={VIEW_CHANGED_IDS[kind]}
         hidden={!marked}
+        id={id}
       >
         {VIEW_CHANGED_TEXT[kind]}
       </span>
@@ -44,54 +43,85 @@ function ViewChangedMark({
 export function WorkspaceControls({
   changedViews,
   dark,
+  highlight,
 }: {
   changedViews: readonly ChangedView[];
   dark: boolean;
+  highlight?: {
+    available: boolean;
+    active: boolean;
+    reason?: string;
+    toggle(): void;
+  };
 }) {
-  const marks = viewMarks(changedViews, "both", "light");
+  const store = useOptionalShellStore();
+  const viewport = store?.state.selection.viewport ?? "both";
+  const scheme = store?.state.selection.colorScheme ?? "light";
+  const marks = viewMarks(changedViews, viewport, scheme);
+  const schemeChangedId = useShellIdentifier(VIEW_CHANGED_IDS.scheme);
+  const viewportChangedId = useShellIdentifier(VIEW_CHANGED_IDS.viewport);
   return (
     <div className="mbk-view-tools" role="group" aria-label="View options">
       <label className="mbk-icon-select" title="Viewport">
         <WorkspaceIcon name="viewport" />
         <WorkspaceIcon name="caret" />
         <select
+          aria-describedby={marks.viewport ? viewportChangedId : undefined}
           aria-label="Viewport"
           data-workspace-viewport=""
-          {...(marks.viewport
-            ? { "aria-describedby": VIEW_CHANGED_IDS.viewport }
-            : {})}
-          defaultValue="both"
+          onChange={(event) =>
+            store?.selectViewport(
+              event.currentTarget.value as "mobile" | "desktop" | "both",
+            )
+          }
+          value={viewport}
         >
           <option value="mobile">Mobile</option>
           <option value="desktop">Desktop</option>
           <option value="both">Both</option>
         </select>
-        <ViewChangedMark kind="viewport" marked={marks.viewport} />
+        <ViewChangedMark
+          id={viewportChangedId}
+          kind="viewport"
+          marked={marks.viewport}
+        />
       </label>
       {dark ? (
         <button
           type="button"
           className="mbk-icon-button"
           aria-label="Dark mode"
-          aria-pressed="false"
+          aria-describedby={marks.scheme ? schemeChangedId : undefined}
+          aria-pressed={scheme === "dark"}
           title="Dark mode"
           data-workspace-scheme=""
-          {...(marks.scheme
-            ? { "aria-describedby": VIEW_CHANGED_IDS.scheme }
-            : {})}
+          onClick={() =>
+            store?.selectColorScheme(
+              store.state.selection.colorScheme === "dark" ? "light" : "dark",
+            )
+          }
         >
           <WorkspaceIcon name="scheme" />
-          <ViewChangedMark kind="scheme" marked={marks.scheme} />
+          <ViewChangedMark
+            id={schemeChangedId}
+            kind="scheme"
+            marked={marks.scheme}
+          />
         </button>
       ) : null}
       <button
         type="button"
         className="mbk-icon-button"
         aria-label="Highlight components"
-        aria-pressed="false"
-        title="Highlight components"
+        aria-description={
+          highlight?.reason ??
+          "Inspect component regions and their supplied props."
+        }
+        aria-pressed={highlight?.active ?? false}
+        title={highlight?.reason ?? "Highlight components"}
         data-workspace-highlight=""
-        disabled
+        disabled={!highlight?.available}
+        onClick={highlight?.toggle}
       >
         <WorkspaceIcon name="highlight" />
       </button>

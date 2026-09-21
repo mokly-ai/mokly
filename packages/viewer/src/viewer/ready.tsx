@@ -1,16 +1,24 @@
+/** Validated public viewer composition over the shared React shell. */
+
 import {
   useEffect,
-  useImperativeHandle,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 
-import { ViewerLayout } from "./layout.js";
-import { MarkerStore } from "./marker_store.js";
+import { EmbeddedViewerShell } from "../shell/embedded_viewer.js";
+import { ShellIdentifierProvider } from "../shell/identifier_context.js";
+import { ShellStoreProvider } from "../shell/store.js";
+
+import {
+  viewerComparisonEnvironment,
+  viewerShellEnvironment,
+} from "./environment.js";
+import { viewerFailures } from "./failures.js";
+import { ViewerHostBridge } from "./host_bridge.js";
 import { viewerCatalogue, viewerContext, viewerView } from "./projection.js";
-import { ViewerRuntime } from "./runtime.js";
 import { defaultSelection, normalizeSelection } from "./selection.js";
 import type { LoadedCatalogue } from "./source.js";
 import type { MoklyViewerProps, ViewerSelection } from "./types.js";
@@ -18,8 +26,14 @@ import type { MoklyViewerProps, ViewerSelection } from "./types.js";
 type ReadyProps = MoklyViewerProps & {
   loaded: LoadedCatalogue;
   adapter: NonNullable<MoklyViewerProps["frameAdapter"]>;
+  bridgeOwner: object;
+  identifierPrefix: string;
   replaced: () => boolean;
 };
+
+const subscribeBrowser = () => () => undefined;
+const browserSnapshot = () => true;
+const serverSnapshot = () => false;
 
 /** Validate host props before React constructs an interactive runtime. */
 export function ReadyViewer(props: ReadyProps) {
@@ -55,79 +69,80 @@ export function ReadyViewer(props: ReadyProps) {
     );
   return <MountedViewer {...props} normalized={normalized} />;
 }
+
 function MountedViewer(
-  props: MoklyViewerProps & {
+  props: ReadyProps & {
     normalized: ViewerSelection;
-    loaded: LoadedCatalogue;
-    adapter: NonNullable<MoklyViewerProps["frameAdapter"]>;
-    replaced: () => boolean;
   },
 ) {
-  const container = useRef<HTMLDivElement>(null);
-  const runtime = useRef<ViewerRuntime | null>(null);
-  const [markerStore] = useState(() => new MarkerStore());
-  const callbacks = useRef(props);
+  const root = useRef<HTMLDivElement>(null);
+  const navigationEnd = useRef<(() => void) | undefined>(undefined);
+  const callbacks = useRef<MoklyViewerProps>(props);
   callbacks.current = props;
+  const [report] = useState(() =>
+    viewerFailures(
+      () => callbacks.current,
+      () => root.current !== null,
+    ),
+  );
   const [initial] = useState(props.normalized);
   const [catalogue] = useState(() => viewerCatalogue(props.loaded.catalogue));
-  useLayoutEffect(() => {
-    const instance = new ViewerRuntime(
-      container.current!.querySelector<HTMLElement>("[data-mokly-shell]")!,
-      props.loaded.catalogue,
-      props.loaded.url,
-      props.adapter,
-      initial,
-      props.selection !== undefined,
-      () => callbacks.current,
-      markerStore,
-    );
-    runtime.current = instance;
-    return () => {
-      runtime.current = null;
-      instance.dispose(props.replaced() ? "source-change" : undefined);
-    };
-  }, []);
-  useLayoutEffect(() => {
-    if (props.selection) runtime.current?.commit(props.normalized);
-  }, [props.normalized]);
-  useLayoutEffect(() => {
-    runtime.current?.refreshLayout();
-  });
-  useLayoutEffect(() => {
-    runtime.current?.updateMarkers(props.markers ?? []);
-  }, [props.markers]);
-  useImperativeHandle(
-    props.ref,
-    () => ({
-      select: (selection) => runtime.current?.select(selection),
-      highlightInstance: (instance) =>
-        runtime.current?.highlightInstance(instance) ??
-        Promise.reject(new Error("The viewer is not ready.")),
-      highlightInstances: (instances) =>
-        runtime.current?.highlightInstances(instances) ??
-        Promise.reject(new Error("The viewer is not ready.")),
-      scrollToInstance: (instance) =>
-        runtime.current?.scrollToInstance(instance) ??
-        Promise.reject(new Error("The viewer is not ready.")),
-      startPick: () =>
-        runtime.current?.startPick() ??
-        Promise.reject(new Error("The viewer is not ready.")),
-      cancelPick: () => runtime.current?.cancelPick(),
-    }),
-    [],
+  const interactive = useSyncExternalStore(
+    subscribeBrowser,
+    browserSnapshot,
+    serverSnapshot,
+  );
+  const environment = useMemo(
+    () =>
+      viewerShellEnvironment(
+        props.loaded,
+        props.normalized,
+        props.selection !== undefined,
+        () => callbacks.current,
+        () => navigationEnd.current?.(),
+      ),
+    [props.loaded, props.normalized, props.selection !== undefined],
+  );
+  const comparisonEnvironment = useMemo(
+    () =>
+      viewerComparisonEnvironment(props.loaded, (error) => {
+        report(error, "comparison");
+      }),
+    [props.loaded, report],
   );
   return (
-    <div ref={container} style={{ display: "contents" }}>
-      <ViewerLayout
+    <ShellIdentifierProvider prefix={props.identifierPrefix}>
+      <ShellStoreProvider
         catalogue={catalogue}
+        comparisonEnvironment={comparisonEnvironment}
         context={viewerContext(props.loaded.catalogue, initial)}
+        embeddedHost={environment}
+        frameAdapter={props.adapter}
+        frameBaseUrl={props.loaded.url}
+        interactive={interactive}
         view={viewerView(catalogue, initial)}
-        selection={initial}
-        baseUrl={props.loaded.url}
-        markerStore={markerStore}
-        markers={props.markers ?? []}
-        {...(props.slots ? { slots: props.slots } : {})}
-      />
-    </div>
+      >
+        <EmbeddedViewerShell
+          inspection={
+            interactive ? (
+              <ViewerHostBridge
+                callbacks={callbacks}
+                failureOwner={props.bridgeOwner}
+                handleRef={props.ref}
+                loaded={props.loaded}
+                navigationEnd={navigationEnd}
+                replaced={props.replaced}
+                root={root}
+              />
+            ) : undefined
+          }
+          markers={props.markers ?? []}
+          onError={props.onError}
+          onMarkerChange={props.onMarkerChange}
+          rootRef={root}
+          {...(props.slots ? { slots: props.slots } : {})}
+        />
+      </ShellStoreProvider>
+    </ShellIdentifierProvider>
   );
 }

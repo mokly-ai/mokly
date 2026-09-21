@@ -38,7 +38,10 @@ export function postMessageAdapter(options: {
       const nonce = [...bytes]
         .map((byte) => byte.toString(16).padStart(2, "0"))
         .join("");
-      const listeners = new Set<(event: FrameEvent) => void>();
+      const listeners = new Set<(event: FrameEvent) => void>(
+        view.onEvent ? [view.onEvent] : [],
+      );
+      let initialSubscription = view.onEvent;
       let loaded = false,
         ready = false,
         disposed = false;
@@ -72,6 +75,7 @@ export function postMessageAdapter(options: {
         if (!ready) rejectReady(new FrameError(code));
         if (code === "timeout") notify({ type: "error", code });
         listeners.clear();
+        initialSubscription = undefined;
       };
       const transport = messageTransport(
         win,
@@ -132,9 +136,17 @@ export function postMessageAdapter(options: {
         },
         subscribe(listener) {
           if (disposed) throw new FrameError("disposed");
+          if (initialSubscription === listener) {
+            initialSubscription = undefined;
+            return () => {
+              if (listeners.delete(listener) && !listeners.size && !disposed)
+                subscribed();
+            };
+          }
           const subscription = (event: FrameEvent) => listener(event);
+          const first = !listeners.size;
           listeners.add(subscription);
-          if (listeners.size === 1) subscribed();
+          if (first) subscribed();
           return () => {
             if (listeners.delete(subscription) && !listeners.size && !disposed)
               subscribed();
@@ -156,6 +168,7 @@ export function postMessageAdapter(options: {
           if (loaded && message.type === "ready") {
             ready = true;
             win.clearTimeout(timer);
+            if (listeners.size) subscribed();
             resolveReady(mounted);
           }
           return;

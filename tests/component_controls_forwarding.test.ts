@@ -6,6 +6,7 @@ import { componentRuntime } from "../dist/build/component_runtime.js";
 import { localHost } from "../dist/server/controls/http.js";
 import { startCatalogueServer } from "../dist/server/http.js";
 
+import { renderCapabilityFromShell } from "./helpers/component_controls_state.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 
 test("controls Host accepts only exact loopback names and canonical valid ports", () => {
@@ -108,9 +109,8 @@ test("forwarded controls preserve POST authority and preview access rules", asyn
   const page = await (
     await fetch(`${server.url}/view/components/action.html`)
   ).text();
-  const { renderCapability } = JSON.parse(
-    page.match(/data-workspace-data="">(.*?)<\/script>/s)![1]!,
-  );
+  const renderCapability = renderCapabilityFromShell(page);
+  assert.ok(renderCapability);
   const body = JSON.stringify({
     componentId: "action",
     variantId: "default",
@@ -125,7 +125,7 @@ test("forwarded controls preserve POST authority and preview access rules", asyn
     host: new URL(server.url).host,
     origin: server.url,
     "content-type": "application/json",
-    "x-mokly-render-token": renderCapability.token as string,
+    "x-mokly-render-token": renderCapability.token,
   };
   const initial = await request(server.url + endpoint, "POST", headers, body);
   assert.equal(initial.status, 200, initial.body);

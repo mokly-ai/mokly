@@ -1,6 +1,4 @@
 import type { CatalogueUsage } from "../catalogue/types.js";
-import { parseLogicalMarker } from "../navigation/logical.js";
-import { parseBrowsingTarget } from "../navigation/target.js";
 
 import type {
   FrameEvent,
@@ -9,8 +7,14 @@ import type {
 } from "./frame_adapter.js";
 import { FrameError } from "./frame_error.js";
 import { ownFrame } from "./frame_mount.js";
-import { classifyFrameActivation } from "./frame_navigation.js";
 import { localFrameAccess } from "./same_origin_access.js";
+import {
+  assignedFrameResource,
+  createMountAuthentication,
+  type AuthenticatedDocument,
+  type MountAuthentication,
+} from "./same_origin_identity.js";
+import { listenForFrameActivations } from "./same_origin_navigation.js";
 import { localPointer } from "./same_origin_pointer.js";
 
 interface LocalOperations {
@@ -27,14 +31,26 @@ interface LocalOperations {
 export function mountLocalDocument(
   frame: HTMLIFrameElement,
   url: URL,
-  create: (doc: Document, emit: (event: FrameEvent) => void) => LocalOperations,
+  create: (
+    doc: AuthenticatedDocument,
+    emit: (event: FrameEvent) => void,
+  ) => LocalOperations,
   cancellation?: AbortSignal,
+  initialListener?: (event: FrameEvent) => void,
 ): Promise<MountedFrame> {
   const win = frame.ownerDocument.defaultView!;
   return new Promise((resolve, reject) => {
-    const listeners = new Set<(event: FrameEvent) => void>();
+    const listeners = new Set<(event: FrameEvent) => void>(
+      initialListener ? [initialListener] : [],
+    );
     const controller = new AbortController();
     const signal = controller.signal;
+    let initialSubscription = initialListener;
+    let activationController: AbortController | undefined;
+    let activationDocument: AuthenticatedDocument | undefined;
+    let operationsController: AbortController | undefined;
+    let documentWatch: number | undefined;
+    let mountAuthentication: MountAuthentication | undefined;
     let operations: LocalOperations | undefined;
     let disposed = false;
     let release = () => {};
@@ -43,16 +59,70 @@ export function mountLocalDocument(
     const emit = (event: FrameEvent) => {
       for (const listener of [...listeners]) listener(event);
     };
+    const disposeActivation = () => {
+      activationController?.abort();
+      activationController = undefined;
+      activationDocument = undefined;
+    };
+    const adoptActivationDocument = (doc: AuthenticatedDocument) => {
+      if (activationDocument === doc) return;
+      disposeActivation();
+      activationDocument = doc;
+      activationController = new AbortController();
+      listenForFrameActivations(
+        doc,
+        activationController.signal,
+        () => listeners.size > 0,
+        emit,
+      );
+    };
+    const disposeOperations = () => {
+      operationsController?.abort();
+      operationsController = undefined;
+      operations?.dispose();
+      operations = undefined;
+      for (const cleanup of cleanups.splice(0)) cleanup();
+    };
+    const stopDocumentWatch = () => {
+      if (documentWatch === undefined) return;
+      win.clearInterval(documentWatch);
+      documentWatch = undefined;
+    };
+    const inspectReplacementDocument = () => {
+      try {
+        const doc = localFrameAccess(frame).document();
+        const authenticated = mountAuthentication?.authenticateAssignedDocument(
+          doc,
+          url,
+        );
+        if (authenticated && authenticated !== activationDocument) {
+          disposeOperations();
+          adoptActivationDocument(authenticated);
+        }
+      } catch {
+        /* The load handler owns final origin failure reporting. */
+      }
+    };
+    const watchReplacementDocument = () => {
+      if (documentWatch !== undefined) return;
+      inspectReplacementDocument();
+      documentWatch = win.setInterval(inspectReplacementDocument, 0);
+    };
+    const disposeDocument = () => {
+      stopDocumentWatch();
+      disposeActivation();
+      disposeOperations();
+    };
     const dispose = () => {
       if (disposed) return;
       disposed = true;
       controller.abort();
       cancellation?.removeEventListener("abort", dispose);
-      operations?.dispose();
-      for (const cleanup of cleanups) cleanup();
+      disposeDocument();
       win.clearTimeout(timer);
       if (pending) win.cancelAnimationFrame(pending);
       listeners.clear();
+      initialSubscription = undefined;
       release();
       reject(new FrameError("disposed"));
     };
@@ -82,31 +152,47 @@ export function mountLocalDocument(
     frame.addEventListener(
       "load",
       () => {
-        if (operations) {
-          dispose();
-          return;
-        }
         const doc = localFrameAccess(frame).document();
-        if (
-          !doc ||
-          doc.defaultView?.frameElement !== frame ||
-          doc.URL !== url.href
-        ) {
+        if (!doc || doc.defaultView?.frameElement !== frame) {
           reject(new FrameError("origin"));
           dispose();
           return;
         }
+        const authenticated = mountAuthentication?.authenticateAssignedDocument(
+          doc,
+          url,
+        );
+        if (!authenticated) {
+          if (assignedFrameResource(frame, url)) return;
+          reject(new FrameError("origin"));
+          dispose();
+          return;
+        }
+        if (new URL(authenticated.URL).hash !== url.hash) {
+          try {
+            authenticated.defaultView.location.replace(url.href);
+          } catch {
+            reject(new FrameError("origin"));
+            dispose();
+            return;
+          }
+        }
+        stopDocumentWatch();
+        disposeOperations();
+        adoptActivationDocument(authenticated);
         win.clearTimeout(timer);
-        operations = create(doc, emit);
+        operationsController = new AbortController();
+        const documentSignal = operationsController.signal;
+        operations = create(authenticated, emit);
         const inspecting = () =>
           listeners.size > 0 && operations!.inspectable();
         localPointer(
-          doc,
+          authenticated,
           () => operations!.list(),
           emit,
           inspecting,
           () => operations!.selecting(),
-          signal,
+          documentSignal,
         );
         const changed = () => {
           if (inspecting() && !pending)
@@ -115,19 +201,24 @@ export function mountLocalDocument(
               if (inspecting()) emit({ type: "geometry" });
             });
         };
-        doc.addEventListener("scroll", changed, {
+        authenticated.addEventListener("scroll", changed, {
           capture: true,
           passive: true,
-          signal,
+          signal: documentSignal,
         });
-        doc.addEventListener("load", changed, { capture: true, signal });
-        doc.fonts.addEventListener("loadingdone", changed, { signal });
-        win.addEventListener("resize", changed, { signal });
+        authenticated.addEventListener("load", changed, {
+          capture: true,
+          signal: documentSignal,
+        });
+        authenticated.fonts.addEventListener("loadingdone", changed, {
+          signal: documentSignal,
+        });
+        win.addEventListener("resize", changed, { signal: documentSignal });
         const resize = new ResizeObserver(changed),
           mutations = new MutationObserver(changed);
         resize.observe(frame);
-        if (doc.body) resize.observe(doc.body);
-        mutations.observe(doc, {
+        if (authenticated.body) resize.observe(authenticated.body);
+        mutations.observe(authenticated, {
           attributes: true,
           childList: true,
           subtree: true,
@@ -137,55 +228,6 @@ export function mountLocalDocument(
           resize.disconnect();
           mutations.disconnect();
         });
-        const activate = (event: MouseEvent) => {
-          const link = (event.target as Element | null)?.closest?.(
-            "[data-mokly-link]",
-          );
-          if (
-            !link ||
-            !listeners.size ||
-            !["a", "area"].includes(link.localName)
-          )
-            return;
-          const marker = link.getAttribute("data-mokly-link") ?? "";
-          const target = parseBrowsingTarget(
-            link.getAttribute("data-mokly-target"),
-          );
-          const destination = parseLogicalMarker(marker);
-          if (
-            !destination ||
-            target.kind === "invalid" ||
-            !classifyFrameActivation({
-              ...event,
-              altKey: event.altKey,
-              button: event.button,
-              ctrlKey: event.ctrlKey,
-              metaKey: event.metaKey,
-              shiftKey: event.shiftKey,
-              download: link.hasAttribute("download"),
-              eventType: event.type === "click" ? "click" : "auxclick",
-              marker,
-              target: link.getAttribute("data-mokly-target"),
-            })
-          )
-            return;
-          event.preventDefault();
-          emit({
-            type: "navigation",
-            navigation: {
-              ...destination,
-              target,
-              activation:
-                event.type === "auxclick"
-                  ? "middle"
-                  : event.metaKey || event.ctrlKey || event.shiftKey
-                    ? "modified"
-                    : "primary",
-            },
-          });
-        };
-        doc.addEventListener("click", activate, { signal });
-        doc.addEventListener("auxclick", activate, { signal });
         resolve({
           updateUsage: (usage) => run(() => operations!.updateUsage(usage)),
           listInstanceBoundaries: () => run(() => operations!.list()),
@@ -194,6 +236,12 @@ export function mountLocalDocument(
           scrollTo: (key) => run(() => operations!.scroll(key)),
           subscribe(listener) {
             if (disposed) throw new FrameError("disposed");
+            if (initialSubscription === listener) {
+              initialSubscription = undefined;
+              return () => {
+                listeners.delete(listener);
+              };
+            }
             const subscription = (event: FrameEvent) => listener(event);
             listeners.add(subscription);
             return () => {
@@ -214,6 +262,11 @@ export function mountLocalDocument(
     release = ownFrame(frame, dispose);
     win.addEventListener("pagehide", dispose, { signal });
     try {
+      const current = localFrameAccess(frame).document();
+      mountAuthentication = createMountAuthentication(frame, current);
+      if (mountAuthentication.transferredDocument)
+        adoptActivationDocument(mountAuthentication.transferredDocument);
+      watchReplacementDocument();
       localFrameAccess(frame).replace(url);
     } catch {
       reject(new FrameError("origin"));

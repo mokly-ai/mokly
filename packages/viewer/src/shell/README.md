@@ -1,9 +1,13 @@
 # Shared Browse shell
 
-These React components render the existing catalogue, stages, navigation and
-inspector. `document.tsx` supplies the standalone document envelope used through
-`@mokly/viewer/server`; React hosts render the same components into stable runtime
-islands with separate host-owned slots.
+These React components are the Browse shell tree: catalogue, stages,
+navigation and inspector. `document.tsx` supplies the standalone document
+envelope used through `@mokly/viewer/server`, and the same tree is hydrated in
+the browser by Serve, export and React hosts, with host-owned slots as ordinary
+children. The [viewer contract](../../../../docs/protocol/mokly-viewer.md#shell-tree-and-state)
+defines the tree and its state model; the
+[React Browse shell plan](../../../../plans/react-browse-shell.md) records how
+Serve, export and the public viewer converged on this tree.
 
 `nav.tsx` renders the catalogue column, `nav_rows.tsx` its collection groups as
 native `<details>`, and `nav_leaf_rows.tsx` its leaves: links carrying their
@@ -12,17 +16,22 @@ button discloses, because a row cannot be both a link and a `<summary>`. A
 deleted variant whose parent survives joins that container as a Removed row,
 which `nav_tree.ts` attaches to the parent instead of the section root.
 `nav_changed.ts` names the changed mark's class, attribute and wording, so the
-row markup here and the Browse client's search and evidence passes agree on
-it; `css_nav_changed.ts` draws the mark from `data-changed` and
-`data-changed-variants` alone. `details_rows.tsx` owns the inspector's
-metadata rows, including the links between a screen and its variants and the
+server row and each React store update use the same presentation contract;
+`css_nav_changed.ts` draws the mark from `data-changed` and
+`data-changed-variants` alone. `nav_model.ts` applies search and Changes
+visibility to parents and their variant children. `changes_activation.ts`
+owns Changes-filter activation for both standalone and embedded shells: an
+aggregate-only parent selects its first visible changed variant, and a changed
+destination selects its first changed view unless the requested URL already
+names a viewport or color scheme. `details_rows.tsx` owns the inspector's
+metadata rows, including links between a screen and its variants and the
 `Changed views` row.
 
 `view_marks.ts` is the shared vocabulary for per-view change evidence: the two
 axes that name a view, their canonical order and reader label, and the rule
 that decides whether the theme and viewport controls carry a mark.
-`workspace_controls.tsx` renders from that rule and the Browse client
-recomputes from it, so a mark can never disagree between the two.
+`workspace_controls.tsx` recomputes those marks directly from React store state,
+so navigation and controlled-host updates cannot leave stale indicators.
 `workspace_views_data.ts` derives the changed views themselves, preferring a
 ready comparison result and falling back to the lightweight screen-view
 evidence a screen-only catalogue records. Workspace data keys those lists by
@@ -38,10 +47,66 @@ its exact bytes. The package build scopes an embedded stylesheet separately and
 uses packaged relative font URLs; standalone Serve/export retain their original
 CSS and font delivery paths.
 
-`catalogue.ts` owns pure display indexing. Historical repository access remains
-in the CLI's `src/server/baseline_catalogue.ts`. `workspace_data.ts` describes
-shell data; the public viewer projects it only from validated catalogue records.
-The CLI supplies its private live capabilities through typed server context.
+`catalogue.ts` owns pure display indexing, including the shared route resolver
+that gives current entries precedence over removed history. Historical
+repository access remains in the CLI's `src/server/baseline_catalogue.ts`.
+`store.tsx` and the focused `store_*` modules own standalone route/history,
+selection, disclosure, drawer, details, recovery and scroll state. `routes.ts`,
+`nav_model.ts`, `search_query.ts` and `entry_wording.ts` are deterministic
+helpers shared by SSR and the live tree; `delivery.ts` validates static
+deployment continuity before a read-model route transition. Frame documents
+remain static while `frame_event_router.tsx` routes authenticated logical-link
+events from visible sessions in the owning `frame_registry.tsx`.
+
+`workspace_data.ts` describes shell data; the public viewer projects it only
+from validated catalogue records. Embedded bootstrap and workspace JSON use
+canonical key ordering so their validated client projections retain the exact
+server bytes during hydration. `comparison_views.tsx` renders React-owned frame
+chrome around the snapshots from validated comparison metadata. The CLI
+supplies its private live capabilities through typed server context. Standalone
+full-document composition lives in `src/standalone`: its bootstrap contains
+the validated public catalogue and shell delivery state for Serve. Static pages
+carry a compact identity/revision reference and resolve the shared finalized
+catalogue before `src/browser.tsx` hydrates that exact server tree. Live Serve places private
+route evidence in a separate descriptor; the capability store adopts the
+fetched page's public bootstrap, source and private workspace as one monotonic
+revision. `use_workspace_data.ts` keeps one route-owned workspace object so
+matching evidence refreshes retain already loaded usage and local editor state.
+Static export uses `src/standalone/static_workspace_evidence.ts` to read inert
+workspace JSON from a destination shell in the mounted deployment, validating
+the response route, compact catalogue reference, and delivery identities against
+the already installed catalogue without enabling live host behavior or fetching
+the catalogue again.
+
+`workspace.tsx` coordinates the React workspace without owning transport or
+frame internals. `component_controls.tsx` owns cancellable temporary prop edits;
+the focused `workspace_*` components render evidence, usage, instances and
+supplied props. `inspector.tsx` and `inspector_resize.ts` own the tab and sheet
+interaction. Each shell root owns one `frame_registry.tsx` instance, so frame
+identity, readiness, validated usage revisions and disposal cannot cross an
+independent embedded viewer. Public-handle inspection and
+`workspace_inspection.tsx` coordinate through the registry's inspection owner.
+Workspace labels and host markers acquire the registry's single geometry
+scheduler; a usage revision supersedes any unresolved measurement before fresh
+evidence is read. Navigation and inspector resize drag state stays on the
+owning shell root so independent embedded viewers cannot alter the host page or
+each other. Embedded roots also own their flex containment and measure host
+stage overlays against the current preview, keeping sibling viewers,
+navigation and the inspector outside an overlay's bounds. Browser transport
+remains behind `useViewerCapabilities`. The
+[live capability contract](../../../../docs/protocol/mokly-live-capabilities.md)
+defines route loading, revision fencing and export omission.
+
+Before standalone hydration, stored disclosure and split-width preferences are
+applied to the server DOM. Disclosure helpers treat native `<details>` groups
+and the button-controlled screen-variant lists as the same persisted state.
+A newer native disclosure activation then wins over that stored value. The
+browser entry reads the resulting DOM into the store's initial state and
+persists the adopted disclosure state; hydration or page exit removes the
+temporary capture. Static catalogue resolution may finish after document load,
+so native choices remain authoritative until hydration starts. React therefore
+adopts the same attributes on its first render instead of replaying preferences
+after hydration.
 
 See [the package README](../../README.md), the
 [viewer contract](../../../../docs/protocol/mokly-viewer.md), and the

@@ -3,12 +3,17 @@ import { canonicalJson } from "@mokly/viewer/data";
 
 import { normalizeHistoricalDocument } from "../review/ignore.js";
 
-import { instanceStructure } from "./instance_structure.js";
+import { instanceInputs, instanceStructure } from "./instance_structure.js";
 import { validateComponentRanges, type RenderedRange } from "./ranges.js";
 
 /** Canonicalize historical material only after its original coordinates are consumed. */
 export function stripHistoricalMarkers(html: string): string {
   return stripMarkers(normalizeHistoricalDocument(html));
+}
+
+/** Strip current component boundary comments without validating ownership ranges. */
+export function stripComponentMarkers(html: string): string {
+  return html.replace(/<!--mokly-component:(?:start|end):r-[0-9]+-->/g, "");
 }
 
 /** Validate ownership before stripping layout-neutral markers for conservative migration. */
@@ -18,7 +23,53 @@ export function stripMarkers(
   validatedRanges?: readonly RenderedRange[],
 ): string {
   if (usage && !validatedRanges) validateComponentRanges(html, usage.ranges);
-  return html.replace(/<!--mokly-component:(?:start|end):r-[0-9]+-->/g, "");
+  return stripComponentMarkers(html);
+}
+
+/** Compare caller-owned component inputs and structure without reading documents. */
+export function componentUsageSignals(
+  beforeView: ComponentViewRecord | undefined,
+  afterView: ComponentViewRecord | undefined,
+): { inputs: boolean; structure: boolean } {
+  const currentInputs = new Map(
+    afterView?.instances
+      .filter((item) => item.owner.kind === "entry")
+      .map((item) => [item.key, item]),
+  );
+  const inputs = Boolean(
+    beforeView?.instances.some(
+      (item) =>
+        item.owner.kind === "entry" &&
+        currentInputs.get(item.key)?.componentId === item.componentId &&
+        currentInputs.get(item.key)?.propsKey !== item.propsKey,
+    ),
+  );
+  const structure = Boolean(
+    beforeView &&
+    afterView &&
+    canonicalJson(structureSignals(beforeView)) !==
+      canonicalJson(structureSignals(afterView)),
+  );
+  return { inputs, structure };
+}
+
+/** Require projection topology to agree while permitting entry-owned input edits. */
+export function componentUsageTopologyEqual(
+  beforeView: ComponentViewRecord | undefined,
+  afterView: ComponentViewRecord | undefined,
+): boolean {
+  if (!beforeView || !afterView) return !beforeView && !afterView;
+  const topology = (view: ComponentViewRecord) => ({
+    ...view,
+    instances: view.instances.map((instance) =>
+      instance.owner.kind === "entry"
+        ? instanceStructure(instance)
+        : instanceInputs(instance),
+    ),
+  });
+  return (
+    canonicalJson(topology(beforeView)) === canonicalJson(topology(afterView))
+  );
 }
 
 export function structureSignals(

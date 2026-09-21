@@ -1,19 +1,27 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
-import { startPreviewFixture, type PreviewFixture } from "./preview_fixture.js";
+import { test } from "./ordinary_preview_fixture.js";
+import type { OwnedPreviewFixture } from "./preview_fixture_owner.js";
 import { chooseScheme } from "./workspace_actions.js";
 
-let preview: PreviewFixture;
+let preview: OwnedPreviewFixture;
 
 test.describe.configure({ timeout: 90_000 });
 
-test.beforeAll(async () => {
+test.beforeAll(async ({ ordinaryPreview }) => {
   test.setTimeout(90_000);
-  preview = await startPreviewFixture();
+  preview = ordinaryPreview;
 });
 
-test.afterAll(async () => {
-  await preview?.close();
+test("ordinary preview output is fresh and shared across worker consumers", async ({
+  ordinaryPreview,
+}) => {
+  expect(ordinaryPreview).toBe(preview);
+  expect(ordinaryPreview.freshness.outputWasAbsent).toBe(true);
+  expect(ordinaryPreview.freshness.markerModifiedAtMs).toBeGreaterThanOrEqual(
+    ordinaryPreview.freshness.preparationStartedAtMs - 2_000,
+  );
+  expect((await fetch(ordinaryPreview.url)).ok).toBe(true);
 });
 
 for (const width of [390, 1280]) {
@@ -49,6 +57,14 @@ for (const width of [390, 1280]) {
     await expect(page.locator(".mbk-stage-embed iframe")).toHaveAttribute(
       "src",
       /#next-steps$/,
+    );
+    await expect(page.locator("html")).toHaveAttribute(
+      "data-mokly-hydrated",
+      "",
+    );
+    await expect(page.locator(".mbk-stage-embed iframe")).toHaveAttribute(
+      "data-mokly-frame-state",
+      "ready",
     );
     await page
       .frameLocator(".mbk-stage-embed iframe")
@@ -129,18 +145,21 @@ test("use-case fragments apply to the first step only", async ({ page }) => {
   await page.goto(
     `${preview.url}/view/user-flows/example-tour?fragment=welcome`,
   );
-  const sources = await frameSources(page, ".mbk-flow-screen iframe");
-  expect(sources).toHaveLength(2);
-  expect(Object.values(sources[0] ?? {})).toEqual([
-    expect.stringContaining("#welcome"),
-    expect.stringContaining("#welcome"),
-    expect.stringContaining("#welcome"),
-  ]);
-  expect(Object.values(sources[1] ?? {})).toEqual([
-    expect.not.stringContaining("#"),
-    expect.not.stringContaining("#"),
-    expect.not.stringContaining("#"),
-  ]);
+  await expect(page.locator("html")).toHaveAttribute("data-mokly-hydrated", "");
+  await expect
+    .poll(() => frameSources(page, ".mbk-flow-screen iframe"))
+    .toEqual([
+      {
+        dark: expect.stringContaining("#welcome"),
+        light: expect.stringContaining("#welcome"),
+        src: expect.stringContaining("#welcome"),
+      },
+      {
+        dark: expect.not.stringContaining("#"),
+        light: expect.not.stringContaining("#"),
+        src: expect.not.stringContaining("#"),
+      },
+    ]);
   await chooseDark(page);
   const darkSources = await frameSources(page, ".mbk-flow-screen iframe");
   expect(darkSources[0]?.src).toContain("#welcome");
@@ -151,6 +170,11 @@ test("a static logical link retains its fragment through navigation and swaps", 
   page,
 }) => {
   await page.goto(`${preview.url}/view/screens/welcome`);
+  await expect(page.locator("html")).toHaveAttribute("data-mokly-hydrated", "");
+  await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
+    "data-mokly-frame-state",
+    "ready",
+  );
   await page
     .frameLocator(".mbk-frame-mobile iframe")
     .getByRole("link", { name: "Open the details screen" })

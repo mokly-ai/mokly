@@ -156,6 +156,26 @@ only affected component evidence cannot produce a use-case screen reason.
 An affected-only consumer has no ChangedEntry unless it has another direct
 reason. Its full comparison remains available through the other result arrays.
 
+A view reported `unchanged` or `ignored-only` through the
+[unchanged view decision](./mokly-component-changes.md#unchanged-view-decision)
+carries no `material`, `reasons`, or `excludedResources` fields, contributes
+nothing to the implementation-impact set or owned-resource aggregation, and
+retains its `ignoredIds`. For valid builder output its record is identical to
+the one the complete comparison produces for that view; the decision changes
+cost, not output. Identical handcrafted documents with identically malformed
+ownership markers are outside that guarantee because the shortcut does not
+repeat range validation.
+Eligibility requires equality with component markers retained outside paired
+ignored regions and canonical equality of usage topology. Only `props` and
+`propsKey` on entry-owned instances may differ, and invocation `source`
+metadata is ignored; nested inputs, ownership, identity, slots, ranges, styles,
+and resources require the complete comparison. Views with instances, styles, or entry-owned slots also prove the reachable resources of the ownership-projected documents before
+the shortcut can settle them, because HTML parsing can discard content that
+projection exposes.
+One-sided views always validate their available range records in the side's
+current or historical marker dialect before producing an added or removed
+record.
+
 Views carry optional dependency-only `reasons` alongside optional
 `excludedResources` in both schemas. Omit either list when empty and sort it
 uniquely by path. `matched` analysis requires selectors; `unresolved` permits an

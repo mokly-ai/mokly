@@ -127,14 +127,50 @@ Do not follow a JS redirect document inside a fetch and mistake it for a page.
 Static id aliases contain the real canonical page, not an empty redirect screen.
 `/id/<id>/index.html` therefore works without host redirect support. Directory
 indexes also support `/id/<id>/`; hosts with normal directory redirects accept
-`/id/<id>`. Parent enhancement normalizes an alias history entry to the canonical
-route without an extra fetch, retaining the single validated `fragment` query.
+`/id/<id>`. The hydrated shell normalizes an alias history entry to the canonical
+route without a fetch, retaining the single validated `fragment` query.
 Without JavaScript the same screen remains visible at the alias URL.
 
-Every alias and canonical page embeds consistent shell metadata. Progressive
+Every alias and canonical page embeds consistent shell metadata. In-shell
 navigation, reload, Back/Forward, new tabs, and browser-normalized response URLs
 retain the same route identity and existing scroll/disclosure behavior. Unknown
-ids are unavailable; there is no synthetic catch-all client router.
+ids are unavailable; the shell renders only routes present in its catalogue
+read model and never invents a catch-all route.
+
+An exported page embeds a compact shell bootstrap containing its route, shell
+context, catalogue identity, and content/evidence revisions. It references the
+single owned `/__mokly/catalogue.json`; it does not repeat the catalogue read
+model in every HTML document. Before hydration, the standalone entry first
+validates the root delivery descriptor, then fetches that exact same-origin path
+with `cache: no-store` and omitted credentials. The response must remain on that
+path, pass the public catalogue reader, carry the finalized deployment identity,
+and match both bootstrap revisions and the catalogue identity. Only then may
+React hydrate the existing server tree. A missing, redirected, malformed, or
+mismatched catalogue leaves the complete server-rendered page and its ordinary
+links in place without installing partial interaction. Serve retains its
+self-contained inline read model and performs no initial catalogue fetch.
+
+The pre-hydration disclosure and navigation-width handoff remains active until
+the asynchronous static catalogue resolution reaches the actual hydration
+boundary. A native choice made after `load` but before that resolution wins over
+stored state and hydrates without a mismatch. Static destination-page evidence
+resolves the compact destination bootstrap against the already installed
+catalogue after deployment fencing; it does not issue another catalogue fetch.
+
+Each exported screen and component page also embeds its route-scoped workspace
+evidence as inert JSON. After an in-shell route transition, React may read the
+destination's canonical shell page to recover evidence that is intentionally
+absent from the public catalogue, including affected consumers, related
+components, supplied-input changes, and resource evidence. This read never
+swaps or executes fetched markup. Accept only one shell bootstrap and one
+workspace payload from a successful same-origin response whose final `.html`
+or provider-normalized extensionless path identifies the requested route. The
+root delivery descriptor must retain the mounted deployment, comparison URL,
+and id map; the bootstrap must retain the catalogue identity, revisions, base,
+and exact destination route; and the workspace entry must match that route's
+id and kind. Abort the read when navigation replaces the route. A rejected,
+failed, or obsolete read leaves the already-committed public workspace in
+place and never falls back to a live endpoint.
 
 Preserve the existing [navigation contract](./mokly-navigation.md): trusted
 ownership-checked link markers only, immediate-frame parent enhancement,
@@ -173,7 +209,7 @@ screens retain their current empty state without comparison modes. Side by side,
 Overlay, and Difference retain the existing UI and missing-current state for
 Removed component variants. Refresh/retry reload the same exported generation; only
 another export and deployment produces new comparison content. An open tab
-retains its loaded deployment's descriptor; reload the page to adopt a newer deployment. Progressive
+retains its loaded deployment's descriptor; reload the page to adopt a newer deployment. In-shell
 navigation encountering a different deployment identity performs a full page load rather
 than mixing its new route with the old catalogue navigation. Hosts may
 retain prior generations for old tabs; if they remove them, the existing
@@ -186,33 +222,35 @@ All product data, counts, and comparison results come from the real captured
 catalogue and Git inputs. No publishing, sandbox, or environment labels are added
 to product screens. The existing light/dark, mobile/desktop shell design applies.
 
-## Viewer Extraction Assets
+## Browser Modules
 
-Milestone 5 preserves all existing `__mokly` paths. `client/browse.js` becomes
-first-party composition and imports `client/browse_runtime.js`, which owns the
-shared vanilla enhancement runtime. Additional modules are
-`client/services.js` (optional private-host capability injection),
-`client/catalogue_updates.js` (validated read-model revision adoption),
-`client/early_disclosures.js` (native choices during module startup),
-`client/control_view_key.js`, `client/workspace_inspection.js` and
-`client/workspace_props.js` (shared workspace helpers). Serve and export use the
-same complete module inventory; static mode never activates private services or
-starts update requests. Serve loads `catalogue_updates.js` dynamically only when
-adopting evidence, so validation cannot delay initial live-state restoration.
-The delivered graph check covers static and dynamic imports.
-`navigation-resize.js` retains its existing delivery
-name and synchronously captures early native disclosure choices. Deferred
-preference and reload recovery retain those newer choices; capture listeners
-and temporary attributes are removed on load or page exit. The inspector
-remains `client/inspector.js` at the 9,216-byte cap.
+The standalone browser inventory under `__mokly/client/` is the hydrated shell:
+the documented standalone hydration entry, which bundles React and React DOM
+with the shell tree, plus the transport, geometry and protocol modules it
+imports (frame adapters, message transport, geometry, catalogue revision
+adoption). Export delivers the viewer-owned inventory from the generated manifest
+of the completed package build outputs; Serve also delivers the CLI-owned live
+host modules. Each manifest must match its directory files exactly. Static mode
+never activates live host capabilities or starts update requests. Its separate
+static evidence reader can issue only the same-origin destination-shell read
+defined above and receives no host token or behavior. `navigation-resize.js` retains its delivery name
+as the pre-hydration script that synchronously captures early native disclosure
+choices without mutating React-owned DOM. The hydrated shell reads those choices
+for its initial render so they win over stored preferences and the reload
+snapshot; capture listeners and transient out-of-tree state are removed on load
+or page exit. The inspector remains
+`client/inspector.js`, React-free, at the 9,216-byte cap; it runs inside
+consumer documents and shares nothing with the shell bundle.
 
-The React entry, React renderer and embedding-only scoped stylesheet are excluded
-from the standalone browser inventory. Standalone `shell.css` and font bytes are
-unchanged. Module changes alter deployment identity as required below. An export
-from a changed workspace also records its new `changedPaths` in `review.json`,
-which changes that generation's hash; snapshot and comparison resource bytes
-remain unchanged. The plan records the measured before/after module inventory
-and byte counts against the pre-extraction export.
+The Node-only server renderer and the embedding-only scoped stylesheet are
+excluded from the standalone browser inventory. Standalone `shell.css` and font
+bytes are unchanged by hydration. Module changes alter deployment identity as
+required below, so the transition to the hydrated shell changes the identity
+of every export exactly once. An export from a changed workspace also records
+its new `changedPaths` in `review.json`, which changes that generation's hash;
+snapshot and comparison resource bytes remain unchanged. The
+[React Browse shell plan](../../plans/react-browse-shell.md) records the runtime
+replacement and its compatibility checks.
 
 ## Deployment Identity
 
@@ -252,10 +290,10 @@ Every owned root's staging placeholder is replaced before installation. This avo
 self-referential hash while covering every deployed byte except the derived
 identity field itself. The comparison generation keeps its separate URL/hash.
 
-Progressive navigation requires both deployment identity and comparison URL to
+In-shell navigation requires both deployment identity and comparison URL to
 match; otherwise it performs a full document load before adopting any new view.
 Old descriptor versions also trigger that fallback. Within one deployment,
-ordinary progressive navigation and browser state preservation remain unchanged.
+ordinary in-shell navigation and browser state preservation remain unchanged.
 
 ## Browser Acceptance
 

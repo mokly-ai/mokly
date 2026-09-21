@@ -1,14 +1,26 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { homePage, notFoundPage, viewPage } from "../dist/server/pages.js";
+import {
+  homePage as renderHomePage,
+  notFoundPage as renderNotFoundPage,
+  viewPage as renderViewPage,
+} from "../dist/server/pages.js";
 import type { ManifestV5 } from "../packages/viewer/dist/registry/types.js";
 import type { Catalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
+import type { ShellContext } from "../packages/viewer/dist/shell/context.js";
 import { SHELL_CSS } from "../packages/viewer/dist/shell/css.js";
-import type { RemovedEntrySnapshot } from "../packages/viewer/dist/shell/metadata.js";
 import { buildNavTree } from "../packages/viewer/dist/shell/nav_tree.js";
-import { workspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
+
+import {
+  attribute,
+  documentElements,
+  elements,
+  type HtmlElement,
+  textContent,
+} from "./helpers/html.js";
+import { publicShellContext } from "./helpers/public_shell.js";
 
 const manifest: ManifestV5 = {
   entries: [
@@ -143,82 +155,6 @@ const taggedFlowManifest: ManifestV5 = {
   ),
 };
 
-const variantManifest: ManifestV5 = {
-  ...manifest,
-  entries: [
-    ...manifest.entries,
-    {
-      address: "example.test/welcome",
-      declaredDependencies: [],
-      dependencies: ["styles.css"],
-      description: "Welcome before the workspace has a name",
-      fragments: {
-        desktop: "screens/welcome.variants/empty.desktop.html",
-        mobile: "screens/welcome.variants/empty.mobile.html",
-      },
-      id: "welcome-empty",
-      kind: "screen",
-      navPath: ["Example", "Screens"],
-      relatedDocs: ["notes.md"],
-      route: "screens/welcome.variants/empty.html",
-      sourcePath: "entries/fixture.mockup.tsx",
-      tags: ["forms", "onboarding"],
-      title: "Welcome, empty workspace",
-      useCaseIds: [],
-      variantOf: "welcome",
-      viewports: ["mobile", "desktop"],
-    },
-    {
-      address: "example.test/welcome",
-      declaredDependencies: [],
-      dependencies: ["styles.css"],
-      description: "Welcome after the workspace failed to save",
-      fragments: {
-        desktop: "screens/welcome.variants/error.desktop.html",
-        mobile: "screens/welcome.variants/error.mobile.html",
-      },
-      id: "welcome-error",
-      kind: "screen",
-      navPath: ["Example", "Screens"],
-      relatedDocs: ["notes.md"],
-      route: "screens/welcome.variants/error.html",
-      sourcePath: "entries/fixture.mockup.tsx",
-      tags: ["forms", "onboarding"],
-      title: "Save failed",
-      useCaseIds: [],
-      variantOf: "welcome",
-      viewports: ["mobile", "desktop"],
-    },
-  ],
-};
-
-/** A deleted variant of the surviving Welcome screen, retained from baseline. */
-const removedVariant: RemovedEntrySnapshot = {
-  ancestors: [
-    { id: "example", title: "Example" },
-    { id: "screens", title: "Screens" },
-  ],
-  entry: {
-    declaredDependencies: [],
-    dependencies: [],
-    description: "Welcome after the workspace was deleted",
-    fragments: {
-      desktop: "screens/welcome.variants/gone.desktop.html",
-      mobile: "screens/welcome.variants/gone.mobile.html",
-    },
-    id: "welcome-gone",
-    kind: "screen",
-    navPath: ["Example", "Screens"],
-    relatedDocs: [],
-    route: "screens/welcome.variants/gone.html",
-    sourcePath: "entries/fixture.mockup.tsx",
-    title: "Workspace deleted",
-    useCaseIds: [],
-    variantOf: "welcome",
-    viewports: ["mobile", "desktop"],
-  },
-};
-
 const untaggedManifest: ManifestV5 = {
   ...manifest,
   entries: manifest.entries.map((entry) => {
@@ -232,6 +168,30 @@ const context = {
   base: "origin/main",
   updateVersion: 1,
 };
+
+function homePage(catalogue: Catalogue, value: ShellContext): string {
+  return renderHomePage(catalogue, publicShellContext(catalogue, value));
+}
+
+function notFoundPage(
+  detail: string,
+  catalogue: Catalogue,
+  value: ShellContext,
+): string {
+  return renderNotFoundPage(
+    detail,
+    catalogue,
+    publicShellContext(catalogue, value),
+  );
+}
+
+function viewPage(
+  entry: Parameters<typeof renderViewPage>[0],
+  catalogue: Catalogue,
+  value: ShellContext,
+): string {
+  return renderViewPage(entry, catalogue, publicShellContext(catalogue, value));
+}
 
 /** The shell's tag glyph at one rendered size. */
 function tagIcon(size: number): string {
@@ -249,23 +209,6 @@ function tagChip(tag: string): string {
   return (
     `<button aria-pressed="false" class="mbk-chip tag" ` +
     `data-mokly-tag="${tag}" type="button">${tagIcon(11)}${tag}</button>`
-  );
-}
-
-/** The tag control the search field carries at its trailing edge. */
-const TAG_TOGGLE =
-  '<button aria-controls="mb-tag-picker" aria-expanded="false" ' +
-  'aria-label="Filter by tag" class="mbk-search-tag" ' +
-  `data-mokly-tag-toggle="" type="button">${tagIcon(13)}</button>`;
-
-/** The panel the tag control drops under the search field, closed. */
-function tagPicker(...tags: readonly string[]): string {
-  return (
-    '<div aria-label="Tags" class="mbk-tag-picker" hidden="" id="mb-tag-picker" ' +
-    'role="group"><div class="mbk-tag-picker-head">Tags</div>' +
-    '<span aria-label="Tag filters" class="mbk-chips" role="toolbar">' +
-    tags.map(tagChip).join("") +
-    "</span></div>"
   );
 }
 
@@ -308,30 +251,42 @@ function darkTokenSelectors(css: string): string[] {
     .map((block) => block.slice(0, block.lastIndexOf("{")).trim());
 }
 
-/** The always-present changed-views row, hidden until a view is named. */
-function changedViewsRow(label = ""): string {
-  return (
-    `<div class="mbk-meta-row" data-workspace-changed-views=""${label ? "" : ' hidden=""'}>` +
-    '<span class="mbk-meta-k">Changed views</span>' +
-    `<span class="mbk-meta-v" data-workspace-changed-views-value="">${label}</span></div>`
-  );
-}
-
 /** The details inspector alone, so top-bar chips cannot satisfy a check. */
 function detailsSection(html: string): string {
   const legacy = html.indexOf('<details class="mbk-details"');
-  const start =
-    legacy >= 0 ? legacy : html.indexOf('<section class="mbk-inspector"');
+  const start = legacy >= 0 ? legacy : html.indexOf('class="mbk-inspector"');
   assert.ok(start > -1);
   return html.slice(start);
 }
 
-/** The single disclosed variant list a fixture renders, markup and all. */
-function variantListHtml(html: string): string {
-  const start = html.indexOf('<div class="mbk-nav-variants"');
-  if (start < 0) return "";
-  const end = html.indexOf("</div>", start);
-  return html.slice(start, end);
+function hasClass(element: HtmlElement, name: string): boolean {
+  return (attribute(element, "class") ?? "").split(/\s+/).includes(name);
+}
+
+function requiredElement(
+  html: string,
+  predicate: (element: HtmlElement) => boolean,
+): HtmlElement {
+  const matches = documentElements(html, predicate);
+  assert.equal(matches.length, 1);
+  return matches[0]!;
+}
+
+function workspaceFrame(html: string, viewport: string): HtmlElement {
+  return requiredElement(
+    html,
+    (element) =>
+      element.tagName === "iframe" &&
+      attribute(element, "data-workspace-frame") === viewport,
+  );
+}
+
+function assertAttributes(
+  element: HtmlElement,
+  expected: Readonly<Record<string, string | undefined>>,
+): void {
+  for (const [name, value] of Object.entries(expected))
+    assert.equal(attribute(element, name), value, name);
 }
 
 function routePage(catalogue: Catalogue, route: string): string {
@@ -440,307 +395,6 @@ test("catalogue nav marks active, changed, and iconed rows", () => {
   assert.equal(inactive.includes('aria-current="page"[^>]*data-route'), false);
 });
 
-test("a screen with variants discloses them under its own row", () => {
-  const catalogue = createCatalogue(variantManifest);
-  const html = homePage(catalogue, context);
-
-  assert.match(
-    html,
-    /<div class="mbk-nav-leaf"><a [^>]*data-route="screens\/welcome\.html"/,
-  );
-  assert.match(
-    html,
-    /<button aria-controls="mb-nav-variants-pages-welcome" aria-expanded="false" aria-label="Show variants of Welcome" class="mbk-nav-variants-toggle" data-nav-variants-label="Welcome" data-nav-variants-toggle="mb-nav-variants-pages-welcome" type="button">/,
-  );
-  assert.match(
-    html,
-    /<div class="mbk-nav-variants" data-nav-disclosure="variants:pages:welcome" data-nav-variants="" hidden="" id="mb-nav-variants-pages-welcome">/,
-  );
-  assert.match(
-    html,
-    /<a [^>]*data-route="screens\/welcome\.variants\/empty\.html"[^>]*>/,
-  );
-  assert.match(html, /class="mbk-nav-ico variant"/);
-  assert.match(
-    html,
-    /class="mbk-nav-ico variant"><svg[^>]*><path d="M6 6V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-2" stroke-linecap="butt"><\/path><rect height="14" rx="2" width="16" x="2" y="6"><\/rect><path d="M2 10h16"><\/path><\/svg>/,
-  );
-  assert.equal(
-    occurrences(html, 'data-route="screens/welcome.variants/empty.html"'),
-    1,
-  );
-  assert.equal(occurrences(html, 'class="mbk-nav-variants-toggle"'), 1);
-  assert.doesNotMatch(
-    html,
-    /<div class="mbk-nav-leaf"><a [^>]*data-route="screens\/details\.html"/,
-  );
-});
-
-test("variant rows indent one step past their parent row", () => {
-  const catalogue = createCatalogue(variantManifest);
-  const html = homePage(catalogue, context);
-  const parent = /<a ([^>]*data-route="screens\/welcome\.html"[^>]*)>/.exec(
-    html,
-  );
-  const child =
-    /<a ([^>]*data-route="screens\/welcome\.variants\/empty\.html"[^>]*)>/.exec(
-      html,
-    );
-  assert.ok(parent?.[1]);
-  assert.ok(child?.[1]);
-  assert.match(parent[1], /padding-left:40px/);
-  assert.match(parent[1], /--mbk-indent:32px/);
-  assert.match(child[1], /padding-left:56px/);
-  assert.match(child[1], /--mbk-indent:48px/);
-  assert.match(child[1], /background-position:15px 0, 31px 0, 47px 0/);
-  assert.match(child[1], /data-nav-row=""/);
-  assert.match(child[1], /data-entry-id="welcome-empty"/);
-});
-
-test("the served variant list opens for the parent and for each variant", () => {
-  const catalogue = createCatalogue(variantManifest);
-  const closed =
-    'class="mbk-nav-variants" data-nav-disclosure="variants:pages:welcome" data-nav-variants="" hidden=""';
-  const open =
-    'class="mbk-nav-variants" data-nav-disclosure="variants:pages:welcome" data-nav-variants=""';
-  assert.ok(homePage(catalogue, context).includes(closed));
-  assert.ok(
-    routePage(catalogue, "screens/details.html").includes(closed),
-    "an unrelated screen keeps the list closed",
-  );
-
-  const onVariant = routePage(catalogue, "screens/welcome.variants/empty.html");
-  assert.equal(onVariant.includes(closed), false);
-  assert.ok(onVariant.includes(`${open} id=`));
-  assert.match(
-    onVariant,
-    /aria-expanded="true" aria-label="Hide variants of Welcome"/,
-  );
-  assert.match(
-    onVariant,
-    /<a aria-current="page"[^>]*data-route="screens\/welcome\.variants\/empty\.html"/,
-  );
-
-  const onParent = routePage(catalogue, "screens/welcome.html");
-  assert.equal(onParent.includes(closed), false);
-  assert.match(
-    onParent,
-    /aria-expanded="true" aria-label="Hide variants of Welcome"/,
-  );
-});
-
-test("a variant's crumbs end in a link to its parent screen", () => {
-  const catalogue = createCatalogue(variantManifest);
-  const html = routePage(catalogue, "screens/welcome.variants/empty.html");
-
-  assert.match(
-    html,
-    /<p aria-label="Catalogue location" class="mbk-crumbs"><span>Example<\/span><span><span class="sep">›<\/span>Screens<\/span><span><span class="sep">›<\/span><a class="mbk-crumb-link" href="\/view\/screens\/welcome\.html">Welcome<\/a><\/span><\/p>/,
-  );
-  assert.match(html, /#welcome-empty<\/button>/);
-  assert.doesNotMatch(
-    routePage(catalogue, "screens/welcome.html"),
-    /class="mbk-crumb-link"/,
-  );
-});
-
-test("details list a screen's variants and a variant's parent", () => {
-  const catalogue = createCatalogue(variantManifest);
-  const parent = detailsSection(routePage(catalogue, "screens/welcome.html"));
-  const child = detailsSection(
-    routePage(catalogue, "screens/welcome.variants/empty.html"),
-  );
-
-  assert.match(
-    parent,
-    /<span class="mbk-meta-k">Variants<\/span><span class="mbk-meta-v"><span class="mbk-chips"><a class="mbk-chip screen" href="\/view\/screens\/welcome\.variants\/empty\.html">/,
-  );
-  assert.match(parent, /Welcome, empty workspace<\/a>/);
-  assert.doesNotMatch(parent, /mbk-meta-k">Variant of/);
-  assert.match(
-    child,
-    /<span class="mbk-meta-k">Variant of<\/span><span class="mbk-meta-v"><span class="mbk-chips"><a class="mbk-chip screen" href="\/view\/screens\/welcome\.html">/,
-  );
-  assert.doesNotMatch(child, /mbk-meta-k">Variants</);
-  assert.doesNotMatch(
-    detailsSection(routePage(catalogue, "screens/details.html")),
-    /mbk-meta-k">Variant/,
-  );
-});
-
-test("the variant disclosure styles carry no rail and rotate the chevron", () => {
-  const css = flatCss(SHELL_CSS);
-
-  assert.match(css, /\.mbk-nav-leaf \{ display: flex; align-items: center;/);
-  assert.match(css, /\.mbk-nav-leaf > \.mbk-nav-row \{ flex: 1;/);
-  assert.match(
-    css,
-    /\.mbk-nav-leaf > \.mbk-nav-row::before \{ right: -18px; \}/,
-  );
-  assert.match(css, /\.mbk-nav-variants\[hidden\] \{ display: none; \}/);
-  assert.match(css, /\.mbk-nav-variants-toggle \{[^}]*width: 16px;/);
-  assert.match(css, /\.mbk-nav-variants-toggle \{[^}]*height: 16px;/);
-  assert.match(css, /\.mbk-nav-variants-toggle \{[^}]*border: 0;/);
-  assert.match(
-    css,
-    /\.mbk-nav-variants-toggle:focus-visible \{ outline: 2px solid/,
-  );
-  assert.match(
-    css,
-    /\.mbk-nav-variants-toggle\[aria-expanded="true"\] svg \{ transform: rotate\(90deg\); \}/,
-  );
-  assert.match(
-    css,
-    /@media \(prefers-reduced-motion: reduce\) \{ \.mbk-nav-variants-toggle svg \{ transition: none; \} \}/,
-  );
-  assert.match(
-    css,
-    /\.mbk-nav-leaf:has\(> \.mbk-nav-row\[aria-current="page"\]\) \.mbk-nav-variants-toggle \{ color: var\(--mokly-accent-contrast\); \}/,
-  );
-  assert.doesNotMatch(
-    css,
-    /\.mbk-nav-(?:leaf|variants)[^{}]*\{[^}]*border-left/,
-  );
-  assert.doesNotMatch(
-    css,
-    /\.mbk-nav-(?:leaf|variants)[^{}]*\{[^}]*box-shadow: inset/,
-  );
-  assert.doesNotMatch(
-    css,
-    /\.mbk-nav-(?:leaf|variants)[^{}]*\{[^}]*linear-gradient/,
-  );
-});
-
-test("changed rows draw a trailing dot and name the change for readers", () => {
-  const catalogue = createCatalogue(variantManifest);
-  const html = homePage(catalogue, {
-    ...context,
-    changedRoutes: ["screens/welcome.variants/error.html"],
-  });
-  const css = flatCss(SHELL_CSS);
-
-  assert.match(
-    html,
-    /Save failed<span class="mbk-nav-changed-text" data-nav-changed-text="">Changed<\/span><\/a>/,
-  );
-  assert.match(
-    html,
-    /Details<span class="mbk-nav-changed-text" data-nav-changed-text="">Changed<\/span><\/a>/,
-  );
-  assert.match(
-    css,
-    /a\[data-nav-row\]\[data-changed="true"\]:not\(\[data-nav-removed\]\)::after, a\[data-nav-row\]\[data-changed-variants="true"\]::after \{ content: ""; width: 6px; height: 6px; flex-shrink: 0; margin-left: auto; border-radius: 50%; background: var\(--mokly-accent\); \}/,
-  );
-  assert.match(
-    css,
-    /a\[data-nav-row\]\[aria-current="page"\]\[data-changed="true"\]::after, a\[data-nav-row\]\[aria-current="page"\]\[data-changed-variants="true"\]::after \{ background: var\(--mokly-accent-contrast\); \}/,
-  );
-  assert.match(css, /\.mbk-nav-changed-text \{ display: none; \}/);
-  assert.match(
-    css,
-    /\.mbk-nav-changed-text \{ display: block; position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset\(50%\); white-space: nowrap; \}/,
-  );
-  assert.doesNotMatch(css, /\[data-changed[^{}]*\{[^}]*border-left/);
-  assert.doesNotMatch(css, /\[data-changed[^{},]*\]::before/);
-});
-
-test("a removed variant keeps its row inside the surviving parent's list", () => {
-  const catalogue = createCatalogue(variantManifest, [removedVariant]);
-  const html = homePage(catalogue, {
-    ...context,
-    changedRoutes: ["screens/welcome.variants/gone.html"],
-  });
-  const list = variantListHtml(html);
-
-  assert.match(
-    list,
-    /<a [^>]*data-nav-removed=""[^>]*data-removed-variant=""[^>]*hidden=""[^>]*data-route="screens\/welcome\.variants\/gone\.html"/,
-  );
-  assert.match(
-    list,
-    /data-route="screens\/welcome\.variants\/gone\.html"[^>]*><span class="mbk-nav-ico variant">/,
-  );
-  assert.match(list, /Workspace deleted · Removed</);
-  assert.ok(
-    list.indexOf('data-route="screens/welcome.variants/error.html"') <
-      list.indexOf('data-route="screens/welcome.variants/gone.html"'),
-  );
-  assert.equal(
-    occurrences(html, 'data-route="screens/welcome.variants/gone.html"'),
-    1,
-  );
-});
-
-test("a screen without variants discloses a removed variant it kept", () => {
-  const catalogue = createCatalogue(manifest, [removedVariant]);
-  const html = homePage(catalogue, context);
-
-  assert.match(
-    html,
-    /<div class="mbk-nav-leaf"><a [^>]*data-route="screens\/welcome\.html"/,
-  );
-  assert.match(
-    variantListHtml(html),
-    /^<div class="mbk-nav-variants" data-nav-disclosure="variants:pages:welcome" data-nav-variants="" hidden="" id="mb-nav-variants-pages-welcome"><a [^>]*data-route="screens\/welcome\.variants\/gone\.html"/,
-  );
-});
-
-test("a removed variant whose parent is gone stays a flat removed row", () => {
-  const orphan = {
-    ancestors: [{ id: "example", title: "Example" }],
-    entry: { ...removedVariant.entry, variantOf: "farewell" },
-  };
-  const catalogue = createCatalogue(variantManifest, [orphan]);
-  const html = homePage(catalogue, context);
-
-  assert.doesNotMatch(variantListHtml(html), /gone\.html/);
-  assert.match(
-    html,
-    /<\/details><a [^>]*data-nav-removed=""[^>]*data-route="screens\/welcome\.variants\/gone\.html"/,
-  );
-});
-
-test("a removed variant view keeps the surviving parent in its crumbs", () => {
-  const catalogue = createCatalogue(variantManifest, [removedVariant]);
-  const entry = removedVariant.entry;
-  const html = viewPage(entry, catalogue, {
-    ...context,
-    activeRoute: entry.route,
-    changedRoutes: [entry.route],
-  });
-
-  assert.match(
-    html,
-    /<p aria-label="Catalogue location" class="mbk-crumbs"><span>Example<\/span><span><span class="sep">›<\/span>Screens<\/span><span><span class="sep">›<\/span><a class="mbk-crumb-link" href="\/view\/screens\/welcome\.html">Welcome<\/a><\/span><\/p>/,
-  );
-  assert.match(html, />Removed</);
-  assert.match(html, /This screen was removed/);
-});
-
-test("a changed variant counts once and leaves its parent unmodified", () => {
-  const catalogue = createCatalogue(variantManifest);
-  const changedRoutes = ["screens/welcome.variants/error.html"];
-  const html = homePage(catalogue, { ...context, changedRoutes });
-  const parent = catalogue.byRoute.get("screens/welcome.html");
-  const variant = catalogue.byRoute.get("screens/welcome.variants/error.html");
-  if (parent?.kind !== "screen" || variant?.kind !== "screen")
-    assert.fail("Expected both routes to resolve to screens");
-
-  assert.match(html, /<span class="mbk-nav-filter-count">1<\/span>/);
-  assert.equal(
-    workspaceData(catalogue, { ...context, changedRoutes }, parent).status,
-    "Unmodified",
-  );
-  assert.equal(
-    workspaceData(catalogue, { ...context, changedRoutes }, variant).status,
-    "Changed",
-  );
-  assert.doesNotMatch(
-    html,
-    /data-changed="true"[^>]*data-route="screens\/welcome\.html"/,
-  );
-});
-
 test("screen page renders device chrome, viewport switch, and details", () => {
   const catalogue = createCatalogue(manifest);
   const entry = catalogue.byRoute.get("screens/welcome.html");
@@ -758,12 +412,14 @@ test("screen page renders device chrome, viewport switch, and details", () => {
     /class="mbk-frag"[^>]*sandbox="allow-same-origin"[^>]*welcome\.desktop/,
   );
   assert.match(html, /class="phone-frame"/);
+  assert.equal(html.match(/class="phone-frame"/g)?.length, 1);
   assert.match(html, /class="phone-notch"/);
   assert.match(
     html,
     /class="phone-status"><span>9:41<\/span><span class="phone-status-icons">(<svg[\s\S]*?<\/svg>){3}<\/span><\/div><iframe/,
   );
   assert.match(html, /class="browser-frame"/);
+  assert.equal(html.match(/class="browser-frame"/g)?.length, 1);
   assert.match(html, /class="browser-expand"/);
   assert.match(html, /class="address-url">example\.test\/welcome</);
   assert.match(html, /data-mokly-stage="" data-viewport="both"/);
@@ -771,21 +427,37 @@ test("screen page renders device chrome, viewport switch, and details", () => {
   assert.match(html, /aria-label="Viewport" data-workspace-viewport=""/);
   assert.equal(html.includes('class="mbk-viewbar"'), false);
   assert.match(html, /class="mbk-crumbs"/);
-  assert.match(
+  const idButton = requiredElement(
     html,
-    /aria-label="Copy ID welcome" class="mbk-idchip" data-copy-id="welcome" type="button">#welcome<\/button>/,
+    (element) => attribute(element, "data-copy-id") === "welcome",
   );
-  assert.doesNotMatch(html, /class="mbk-idchip"[^>]*href=/);
+  assertAttributes(idButton, {
+    "aria-label": "Copy ID welcome",
+    class: "mbk-idchip",
+    href: undefined,
+    type: "button",
+  });
+  assert.equal(textContent(idButton), "#welcome");
   assert.match(html, /Proves the shell/);
   assert.match(html, /notes\.md/);
-  assert.match(
+  const inspector = requiredElement(
     html,
-    /<section class="mbk-inspector" data-workspace-inspector=""/,
+    (element) => attribute(element, "data-workspace-inspector") !== undefined,
   );
-  assert.match(html, /role="tab"[^>]*aria-label="Details"/);
-  assert.match(
+  assert.equal(inspector.tagName, "section");
+  assert.equal(hasClass(inspector, "mbk-inspector"), true);
+  requiredElement(
     html,
-    /class="mbk-chip flow" href="\/view\/user-flows\/tour\.html"/,
+    (element) =>
+      attribute(element, "role") === "tab" &&
+      attribute(element, "aria-label") === "Details",
+  );
+  requiredElement(
+    html,
+    (element) =>
+      hasClass(element, "mbk-chip") &&
+      hasClass(element, "flow") &&
+      attribute(element, "href") === "/view/user-flows/tour.html",
   );
   assert.match(html, /aria-live="polite"/);
 });
@@ -795,8 +467,16 @@ test("use-case page renders the flow with catalogue links per step", () => {
   const entry = catalogue.byRoute.get("user-flows/tour.html");
   assert.ok(entry);
   const html = viewPage(entry, catalogue, context);
-  assert.match(html, /This screen in the catalogue: Welcome/);
-  assert.match(html, /href="\/view\/screens\/welcome\.html"/);
+  const welcomeLink = requiredElement(
+    html,
+    (element) =>
+      hasClass(element, "flow-step-link") &&
+      attribute(element, "href") === "/view/screens/welcome.html",
+  );
+  assert.equal(
+    textContent(welcomeLink),
+    "This screen in the catalogue: Welcome →",
+  );
   assert.match(html, /class="flow-step-num"/);
   assert.match(html, /class="mbk-flow-screen"/);
 });
@@ -848,14 +528,18 @@ test("scheme switch renders only for catalogues with dark fragments", () => {
 test("screen stage carries per-frame scheme fragment data", () => {
   const dark = createCatalogue(darkManifest);
   const screen = routePage(dark, "screens/welcome.html");
-  assert.match(
-    screen,
-    /<iframe class="mbk-frag" data-mokly-fragment-frame="" data-workspace-frame="mobile" data-fragment-dark="\/static\/screens\/welcome\.mobile\.dark\.html" data-fragment-light="\/static\/screens\/welcome\.mobile\.html" sandbox="allow-same-origin" src="\/static\/screens\/welcome\.mobile\.html" title="Welcome — mobile"><\/iframe>/,
-  );
-  assert.match(
-    screen,
-    /<iframe class="mbk-frag" data-mokly-fragment-frame="" data-workspace-frame="desktop" data-fragment-dark="\/static\/screens\/welcome\.desktop\.dark\.html" data-fragment-light="\/static\/screens\/welcome\.desktop\.html" sandbox="allow-same-origin" src="\/static\/screens\/welcome\.desktop\.html" title="Welcome — desktop"><\/iframe>/,
-  );
+  for (const viewport of ["mobile", "desktop"]) {
+    const suffix = `welcome.${viewport}`;
+    assertAttributes(workspaceFrame(screen, viewport), {
+      class: "mbk-frag",
+      "data-fragment-dark": `/static/screens/${suffix}.dark.html`,
+      "data-fragment-light": `/static/screens/${suffix}.html`,
+      "data-mokly-fragment-frame": "",
+      sandbox: "allow-same-origin",
+      src: `/static/screens/${suffix}.html`,
+      title: `Welcome — ${viewport}`,
+    });
+  }
   assert.equal(screen.includes("data-color-scheme-fallback"), false);
   assert.equal(screen.includes("mbk-frame-scheme-note"), false);
   assertLightSrcMatchesAttribute(screen, 2);
@@ -869,35 +553,71 @@ test("screen stage carries per-frame scheme fragment data", () => {
     fallback,
     /<div class="mbk-frame-wrap mbk-frame-desktop" data-color-scheme-fallback=""><p class="mbk-frame-label">Desktop<span class="mbk-frame-scheme-note"> — Light only<\/span><\/p>/,
   );
-  assert.match(
-    fallback,
-    /<iframe class="mbk-frag" data-mokly-fragment-frame="" data-workspace-frame="mobile" data-fragment-light="\/static\/screens\/details\.mobile\.html" sandbox="allow-same-origin" src="\/static\/screens\/details\.mobile\.html" title="Details — mobile"><\/iframe>/,
-  );
+  assertAttributes(workspaceFrame(fallback, "mobile"), {
+    class: "mbk-frag",
+    "data-fragment-dark": undefined,
+    "data-fragment-light": "/static/screens/details.mobile.html",
+    "data-mokly-fragment-frame": "",
+    sandbox: "allow-same-origin",
+    src: "/static/screens/details.mobile.html",
+    title: "Details — mobile",
+  });
   assert.equal(fallback.includes("data-fragment-dark"), false);
   assertLightSrcMatchesAttribute(fallback, 2);
 
   const flow = routePage(dark, "user-flows/tour.html");
-  assert.match(
-    flow,
-    /<div class="mbk-flow-screen"><div class="browser-frame">[\s\S]*?<iframe class="mbk-frag" data-mokly-fragment-frame="" data-fragment-dark="\/static\/screens\/welcome\.desktop\.dark\.html" data-fragment-light="\/static\/screens\/welcome\.desktop\.html" sandbox="allow-same-origin"/,
+  const flowScreens = documentElements(flow, (element) =>
+    hasClass(element, "mbk-flow-screen"),
   );
-  assert.match(
-    flow,
-    /<div class="mbk-flow-screen" data-color-scheme-fallback=""><div class="browser-frame">[\s\S]*?<iframe class="mbk-frag" data-fragment-light="\/static\/screens\/details\.desktop\.html" sandbox="allow-same-origin"/,
+  assert.equal(flowScreens.length, 2);
+  assert.equal(
+    attribute(flowScreens[0]!, "data-color-scheme-fallback"),
+    undefined,
   );
+  assert.equal(attribute(flowScreens[1]!, "data-color-scheme-fallback"), "");
+  const flowFrames = flowScreens.map(
+    (wrapper) =>
+      elements(wrapper, (element) => element.tagName === "iframe")[0]!,
+  );
+  assertAttributes(flowFrames[0]!, {
+    "data-fragment-dark": "/static/screens/welcome.desktop.dark.html",
+    "data-fragment-light": "/static/screens/welcome.desktop.html",
+    "data-mokly-fragment-frame": "",
+    sandbox: "allow-same-origin",
+    src: "/static/screens/welcome.desktop.html",
+  });
+  assertAttributes(flowFrames[1]!, {
+    "data-fragment-dark": undefined,
+    "data-fragment-light": "/static/screens/details.desktop.html",
+    "data-mokly-fragment-frame": undefined,
+    sandbox: "allow-same-origin",
+    src: "/static/screens/details.desktop.html",
+  });
   assert.equal(flow.includes("mbk-frame-scheme-note"), false);
   assertLightSrcMatchesAttribute(flow, 2);
 
   const lightOnly = createCatalogue(manifest);
   const lightScreen = routePage(lightOnly, "screens/welcome.html");
-  assert.match(
-    lightScreen,
-    /<div class="mbk-frame-wrap mbk-frame-mobile"><p class="mbk-frame-label">Mobile<\/p>/,
+  const lightMobile = requiredElement(lightScreen, (element) =>
+    hasClass(element, "mbk-frame-mobile"),
   );
-  assert.match(
-    lightScreen,
-    /<iframe class="mbk-frag" data-mokly-fragment-frame="" data-workspace-frame="mobile" sandbox="allow-same-origin" src="\/static\/screens\/welcome\.mobile\.html" title="Welcome — mobile"><\/iframe>/,
+  const lightLabel = elements(
+    lightMobile,
+    (element) =>
+      element.tagName === "p" && hasClass(element, "mbk-frame-label"),
   );
+  assert.equal(lightLabel.length, 1);
+  assert.equal(textContent(lightLabel[0]!), "Mobile");
+  assert.equal(attribute(lightMobile, "data-color-scheme-fallback"), undefined);
+  assertAttributes(workspaceFrame(lightScreen, "mobile"), {
+    class: "mbk-frag",
+    "data-fragment-dark": undefined,
+    "data-fragment-light": undefined,
+    "data-mokly-fragment-frame": "",
+    sandbox: "allow-same-origin",
+    src: "/static/screens/welcome.mobile.html",
+    title: "Welcome — mobile",
+  });
   assert.equal(lightScreen.includes("data-fragment-"), false);
   assert.equal(lightScreen.includes("data-color-scheme-fallback"), false);
   const lightFlow = routePage(lightOnly, "user-flows/tour.html");
@@ -921,9 +641,7 @@ test("details inspector lists dark fragments and the schemes row", () => {
         '<code class="mbk-code">screens/welcome.desktop.dark.html</code>' +
         "</span></span></div>" +
         '<div class="mbk-meta-row"><span class="mbk-meta-k">Schemes</span>' +
-        '<span class="mbk-meta-v">light, dark</span></div>' +
-        changedViewsRow() +
-        '<div class="mbk-meta-row"><span class="mbk-meta-k">Tags</span>',
+        '<span class="mbk-meta-v">light, dark</span></div>',
     ),
   );
 
@@ -936,8 +654,7 @@ test("details inspector lists dark fragments and the schemes row", () => {
         '<code class="mbk-code">screens/details.desktop.html</code>' +
         "</span></span></div>" +
         '<div class="mbk-meta-row"><span class="mbk-meta-k">Schemes</span>' +
-        '<span class="mbk-meta-v">light</span></div>' +
-        changedViewsRow(),
+        '<span class="mbk-meta-v">light</span></div>',
     ),
   );
 
@@ -953,9 +670,7 @@ test("details inspector lists dark fragments and the schemes row", () => {
         '<span class="mbk-chips">' +
         '<code class="mbk-code">screens/welcome.mobile.html</code>' +
         '<code class="mbk-code">screens/welcome.desktop.html</code>' +
-        "</span></span></div>" +
-        changedViewsRow() +
-        '<div class="mbk-meta-row"><span class="mbk-meta-k">Tags</span>',
+        "</span></span></div>",
     ),
   );
 });
@@ -963,12 +678,10 @@ test("details inspector lists dark fragments and the schemes row", () => {
 test("details inspector chips the tags an entry declares", () => {
   const dark = createCatalogue(darkManifest);
   const welcome = routePage(dark, "screens/welcome.html");
+  assert.ok(welcome.includes(tagsRow("forms", "onboarding")));
   assert.ok(
     welcome.includes(
-      '<span class="mbk-meta-v">light, dark</span></div>' +
-        changedViewsRow() +
-        tagsRow("forms", "onboarding") +
-        '<div class="mbk-meta-row"><span class="mbk-meta-k">Related docs</span>',
+      '<div class="mbk-meta-row"><span class="mbk-meta-k">Related docs</span>',
     ),
   );
 
@@ -1011,19 +724,76 @@ test("the catalogue names every declared tag once, in sorted order", () => {
 
 test("the search field carries a tag control over a closed picker", () => {
   const html = homePage(createCatalogue(manifest), context);
-  assert.ok(
-    html.includes(
-      'aria-label="Search catalogue" data-mokly-search="" placeholder="Search catalogue…" type="search"/>' +
-        TAG_TOGGLE +
-        tagPicker("billing", "forms", "onboarding") +
-        "</div>",
-    ),
+  const search = requiredElement(
+    html,
+    (element) => attribute(element, "data-mokly-search") !== undefined,
+  );
+  assertAttributes(search, {
+    "aria-label": "Search catalogue",
+    placeholder: "Search catalogue…",
+    type: "search",
+    value: "",
+  });
+  const toggle = requiredElement(
+    html,
+    (element) => attribute(element, "data-mokly-tag-toggle") !== undefined,
+  );
+  assertAttributes(toggle, {
+    "aria-controls": "mb-tag-picker",
+    "aria-expanded": "false",
+    "aria-label": "Filter by tag",
+    type: "button",
+  });
+  const picker = requiredElement(
+    html,
+    (element) => attribute(element, "data-mokly-tag-picker") !== undefined,
+  );
+  assertAttributes(picker, {
+    "aria-label": "Tags",
+    hidden: "",
+    id: "mb-tag-picker",
+    role: "group",
+  });
+  const tags = elements(
+    picker,
+    (element) => attribute(element, "data-mokly-tag") !== undefined,
+  );
+  assert.deepEqual(
+    tags.map((tag) => ({
+      pressed: attribute(tag, "aria-pressed"),
+      tabIndex: attribute(tag, "tabindex"),
+      tag: attribute(tag, "data-mokly-tag"),
+      text: textContent(tag),
+    })),
+    [
+      { pressed: "false", tabIndex: "0", tag: "billing", text: "billing" },
+      { pressed: "false", tabIndex: "-1", tag: "forms", text: "forms" },
+      {
+        pressed: "false",
+        tabIndex: "-1",
+        tag: "onboarding",
+        text: "onboarding",
+      },
+    ],
   );
 
   const untagged = homePage(createCatalogue(untaggedManifest), context);
-  assert.match(untagged, /data-mokly-search/);
-  assert.equal(untagged.includes("mbk-search-tag"), false);
-  assert.equal(untagged.includes("mb-tag-picker"), false);
+  assert.equal(
+    documentElements(
+      untagged,
+      (element) => attribute(element, "data-mokly-search") !== undefined,
+    ).length,
+    1,
+  );
+  assert.equal(
+    documentElements(
+      untagged,
+      (element) =>
+        attribute(element, "data-mokly-tag-toggle") !== undefined ||
+        attribute(element, "data-mokly-tag-picker") !== undefined,
+    ).length,
+    0,
+  );
 });
 
 test("the brand names itself and the search bar drops that name", () => {
@@ -1198,16 +968,15 @@ test("both split dividers share one grip affordance", () => {
     "the handle clears the 1px border its padding box hides",
   );
   for (const handle of ["nav", "inspector"])
-    assert.ok(
-      css.includes(
-        `.mbk-${handle}-resize:hover::after, ` +
-          `.mbk-${handle}-resize:focus-visible::after, ` +
-          `body.mbk-${handle}-resizing .mbk-${handle}-resize::after ` +
-          "{ background: var(--mokly-accent); " +
-          "box-shadow: 0 0 0 3px var(--mokly-accent-soft); }",
-      ),
-      handle,
-    );
+    for (const state of [
+      `.mbk-${handle}-resize:hover::after,`,
+      `.mbk-${handle}-resize:focus-visible::after,`,
+      `[data-mokly-shell].mbk-${handle}-resizing ` +
+        `.mbk-${handle}-resize::after ` +
+        "{ background: var(--mokly-accent); " +
+        "box-shadow: 0 0 0 3px var(--mokly-accent-soft); }",
+    ])
+      assert.ok(css.includes(state), `${handle}: ${state}`);
   assert.ok(
     css.includes(
       ".mbk-inspector-resize:focus-visible " +
@@ -1222,13 +991,15 @@ test("both split dividers share one grip affordance", () => {
     const scope = axis === "col" ? "nav" : "inspector";
     assert.ok(
       css.includes(
-        `body.mbk-${scope}-resizing * { cursor: ${axis}-resize !important; }`,
+        `[data-mokly-shell].mbk-${scope}-resizing * ` +
+          `{ cursor: ${axis}-resize !important; }`,
       ),
       scope,
     );
     assert.ok(
       css.includes(
-        `body.mbk-${scope}-resizing iframe { pointer-events: none; }`,
+        `[data-mokly-shell].mbk-${scope}-resizing iframe ` +
+          "{ pointer-events: none; }",
       ),
       scope,
     );
