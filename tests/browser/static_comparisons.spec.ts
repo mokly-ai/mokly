@@ -106,7 +106,11 @@ test("added and removed screens stay current while light-only comparisons retain
   await expect(page.locator("[data-diff-stage]")).toHaveCount(0);
   await page.goto(`${site.url}/view/screens/details.html`);
   await chooseScheme(page, "dark");
+  await expect(page.locator('[data-view-changed="scheme"]')).toBeHidden();
   await page.getByRole("button", { name: "Overlay", exact: true }).click();
+  await expect(page.locator("[data-diff-stage] h3").first()).toContainText(
+    "Light only",
+  );
   for (const frame of await page.locator("[data-diff-stage] iframe").all())
     await expect(frame).not.toHaveAttribute("src", /\.dark\.html$/);
 });

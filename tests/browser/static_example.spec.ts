@@ -85,7 +85,11 @@ test("the exported example discloses a screen's variants without a server", asyn
   const list = page.locator(
     '[data-nav-disclosure="variants:pages:example-welcome"]',
   );
-  const toggle = page.locator("[data-nav-variants-toggle]");
+  const toggle = page
+    .locator(".mbk-nav-leaf", {
+      has: page.locator('a[data-entry-id="example-welcome"]'),
+    })
+    .locator("[data-nav-variants-toggle]");
   const variantRow = page.locator(
     'a[data-nav-row][data-route="screens/welcome.variants/empty.html"]',
   );

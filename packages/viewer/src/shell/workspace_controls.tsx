@@ -43,10 +43,12 @@ function ViewChangedMark({
 export function WorkspaceControls({
   changedViews,
   dark,
+  displayedScheme,
   highlight,
 }: {
   changedViews: readonly ChangedView[];
   dark: boolean;
+  displayedScheme: "dark" | "light";
   highlight?: {
     available: boolean;
     active: boolean;
@@ -57,7 +59,7 @@ export function WorkspaceControls({
   const store = useOptionalShellStore();
   const viewport = store?.state.selection.viewport ?? "both";
   const scheme = store?.state.selection.colorScheme ?? "light";
-  const marks = viewMarks(changedViews, viewport, scheme);
+  const marks = viewMarks(changedViews, viewport, displayedScheme);
   const schemeChangedId = useShellIdentifier(VIEW_CHANGED_IDS.scheme);
   const viewportChangedId = useShellIdentifier(VIEW_CHANGED_IDS.viewport);
   return (

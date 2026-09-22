@@ -166,11 +166,13 @@ Do not spread a manifest, entry, or internal evidence object into public JSON.
 - Components retain schemas, read-only control descriptions, declared slot
   names, saved variants in authored order, their validated wire props and views.
   The first variant is default; ready usage copies only instances/slots/ranges.
-- Collections retain authored `childIds`. Derive the Pages/Components tree and
+- Collections retain authored `childIds`, including an empty array. Derive the Pages/Components tree and
   breadcrumbs from that forest, not `navPath` or source directories. Project
   mixed collections independently into both sections; unclaimed entries stay
   at the root. Collections have no route or tags; emit `tags: []`.
-  Drop empty projections, except authored empty folders remain in Pages.
+  Drop empty projections, except authored empty folders remain in Pages so a
+  stable structural identity can survive temporary or deliberate membership
+  changes. Public readers accept and preserve that empty collection.
   Under the implemented [screen variants contract](./mokly-screen-variants.md),
   a variant screen's entry node is a child of its parent screen's entry node
   in the Pages tree rather than a sibling. Entry-node `children` is present

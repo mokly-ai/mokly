@@ -1,10 +1,10 @@
 [
   {
     "id": "design-browse-dark-scheme",
-    "route": "design/browse/states/dark-scheme.html",
+    "route": "design/browse/views/screen.variants/dark-scheme.html",
     "fragments": {
-      "desktop": "design/browse/states/dark-scheme.desktop.html",
-      "mobile": "design/browse/states/dark-scheme.mobile.html"
+      "desktop": "design/browse/views/screen.variants/dark-scheme.desktop.html",
+      "mobile": "design/browse/views/screen.variants/dark-scheme.mobile.html"
     }
   },
   {
@@ -33,10 +33,10 @@
   },
   {
     "id": "design-browse-light-only",
-    "route": "design/browse/states/light-only.html",
+    "route": "design/browse/views/screen.variants/light-only.html",
     "fragments": {
-      "desktop": "design/browse/states/light-only.desktop.html",
-      "mobile": "design/browse/states/light-only.mobile.html"
+      "desktop": "design/browse/views/screen.variants/light-only.desktop.html",
+      "mobile": "design/browse/views/screen.variants/light-only.mobile.html"
     }
   },
   {
@@ -73,34 +73,34 @@
   },
   {
     "id": "design-browse-tag-forms",
-    "route": "design/browse/states/tags/forms.html",
+    "route": "design/browse/views/screen.variants/forms.html",
     "fragments": {
-      "desktop": "design/browse/states/tags/forms.desktop.html",
-      "mobile": "design/browse/states/tags/forms.mobile.html"
+      "desktop": "design/browse/views/screen.variants/forms.desktop.html",
+      "mobile": "design/browse/views/screen.variants/forms.mobile.html"
     }
   },
   {
     "id": "design-browse-tag-onboarding",
-    "route": "design/browse/states/tags/onboarding.html",
+    "route": "design/browse/views/screen.variants/onboarding.html",
     "fragments": {
-      "desktop": "design/browse/states/tags/onboarding.desktop.html",
-      "mobile": "design/browse/states/tags/onboarding.mobile.html"
+      "desktop": "design/browse/views/screen.variants/onboarding.desktop.html",
+      "mobile": "design/browse/views/screen.variants/onboarding.mobile.html"
     }
   },
   {
     "id": "design-browse-tag-onboarding-picker",
-    "route": "design/browse/states/tags/onboarding-picker.html",
+    "route": "design/browse/views/screen.variants/onboarding-picker.html",
     "fragments": {
-      "desktop": "design/browse/states/tags/onboarding-picker.desktop.html",
-      "mobile": "design/browse/states/tags/onboarding-picker.mobile.html"
+      "desktop": "design/browse/views/screen.variants/onboarding-picker.desktop.html",
+      "mobile": "design/browse/views/screen.variants/onboarding-picker.mobile.html"
     }
   },
   {
     "id": "design-browse-tag-picker",
-    "route": "design/browse/states/tags/picker.html",
+    "route": "design/browse/views/screen.variants/picker.html",
     "fragments": {
-      "desktop": "design/browse/states/tags/picker.desktop.html",
-      "mobile": "design/browse/states/tags/picker.mobile.html"
+      "desktop": "design/browse/views/screen.variants/picker.desktop.html",
+      "mobile": "design/browse/views/screen.variants/picker.mobile.html"
     }
   },
   {

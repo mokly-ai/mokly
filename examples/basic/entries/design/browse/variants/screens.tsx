@@ -9,6 +9,7 @@ import {
   CHANGED_VARIANT_ROWS,
   CHANGED_VIEW_ROWS,
   NAV_TREE_VARIANTS_OPEN,
+  REPARENTED_REMOVED_VARIANT_ROWS,
   REMOVED_VARIANT_ROWS,
 } from "../../parts/nav_data.js";
 import { PreviousVersionLabel } from "../../parts/removed_preview.js";
@@ -136,6 +137,57 @@ function RemovedVariant({ viewport }: { viewport: ArtboardViewport }) {
   );
 }
 
+function ReparentedRemovedVariant({
+  viewport,
+}: {
+  viewport: ArtboardViewport;
+}) {
+  return (
+    <Shell
+      design={DESTINATIONS.variantReparented}
+      viewport={viewport}
+      nav={
+        viewport === "desktop" ? (
+          <NavTree
+            activeLabel="Save failed · Removed"
+            changedCount={1}
+            changedOnly
+            nodes={REPARENTED_REMOVED_VARIANT_ROWS}
+          />
+        ) : null
+      }
+    >
+      <ScreenHead
+        action={<ViewSwitch active={viewport} />}
+        crumbs={VARIANT_CRUMBS}
+        idChip="example-welcome-error"
+        status="removed"
+        title="Save failed"
+      />
+      <PreviousVersionLabel />
+      <PreviewWorkspace
+        viewport={viewport}
+        inspector={
+          <DetailsPanel
+            comparisonEvidence
+            open
+            subject="welcomeErrorReparented"
+          />
+        }
+        render={(previewViewport) => (
+          <RemovedView
+            address="example.test/welcome"
+            compact={viewport === "mobile"}
+            viewport={previewViewport}
+          >
+            <MiniSaveFailed compact={previewViewport === "mobile"} />
+          </RemovedView>
+        )}
+      />
+    </Shell>
+  );
+}
+
 function ChangedViews({ viewport }: { viewport: ArtboardViewport }) {
   return (
     <Shell
@@ -206,6 +258,18 @@ export const variantScreens = [
       "A removed variant follows the removed-screen rules: it is hidden from All, shown in Changes under the parent it belonged to, and has no current preview. Its recorded details stay available so a reviewer can see what was deleted, and All returns to the parent rather than to catalogue home because the parent still exists.",
     slug: "removed",
     title: "Removed variant",
+  }),
+  screen({
+    colorSchemes: ["light"],
+    description:
+      "A removed variant kept as a flat Changes row because its former parent is now another screen's variant.",
+    desktop: <ReparentedRemovedVariant viewport="desktop" />,
+    id: "design-browse-variant-reparented",
+    mobile: <ReparentedRemovedVariant viewport="mobile" />,
+    rationale:
+      "A current variant cannot own its own variant list. When the former parent id is reused as a variant, the historical child remains exactly once in the flat Changes fallback rather than disappearing or nesting a second level.",
+    slug: "reparented",
+    title: "Removed variant after reparenting",
   }),
   screen({
     colorSchemes: ["light"],

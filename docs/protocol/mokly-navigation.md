@@ -28,6 +28,11 @@ Mokly owns navigation between catalogue entries. Consumers continue to own
 their product's application routes and the behavior of ordinary document,
 asset, external, download, and same-document links.
 
+Collections remain viewless navigation folders. An authored collection with no
+children keeps its stable folder row in the Pages projection and has no link or
+destination; its empty Components projection is omitted. Empty membership adds
+no ancestry edge and does not weaken the normal collection-forest checks.
+
 ## Component Navigation
 
 Registered component ids share the existing catalogue namespace. Portable links
@@ -348,6 +353,16 @@ visible.
 Enhanced navigation preserves the selected viewport, color scheme, and details
 disclosure. It collapses an expanded frame before installing the destination.
 Filters and search remain unchanged when the destination is already visible.
+
+Shell destinations may explicitly request `viewport=mobile|desktop|both` and
+`scheme=light|dark`. The parser treats the axes independently and recognizes an
+axis only when exactly one supported value is present. A valid value applies in
+the same atomic route or controlled-selection update while an omitted, invalid,
+or repeated axis retains its sticky selection. This also applies when only an
+axis changes on the current destination. In Changes, at least one valid
+explicit axis suppresses first-changed-view landing; invalid or repeated values
+do not. Embedded and standalone shells use this one parser, so controlled hosts
+receive the complete proposal and commit nothing until they supply it back.
 
 ## Verification Contract
 

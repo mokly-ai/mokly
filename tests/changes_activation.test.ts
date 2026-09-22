@@ -9,6 +9,7 @@ import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { changesActivation } from "../packages/viewer/dist/shell/changes_activation.js";
 import type { ShellContext } from "../packages/viewer/dist/shell/context.js";
 import type { ShellRoute } from "../packages/viewer/dist/shell/routes.js";
+import { routeFromUrl } from "../packages/viewer/dist/shell/routes.js";
 import { defaultSelection } from "../packages/viewer/dist/viewer/selection.js";
 
 type CurrentManifestScreen = ManifestScreen & {
@@ -149,6 +150,40 @@ test("an explicit axis prevents automatic view selection", () => {
   assert.equal(target(activated).id, failure.id);
   assert.equal(activated.viewport, "mobile");
   assert.equal(activated.colorScheme, undefined);
+});
+
+test("only a valid explicit axis suppresses first-changed-view landing", () => {
+  const partial = routeFromUrl(
+    catalogue,
+    new URL(
+      `https://example.test/view/${parent.route}?viewport=invalid&scheme=light`,
+    ),
+  );
+  const partialActivation = changesActivation(
+    catalogue,
+    context,
+    { ...defaultSelection, view: "changes", search: "failure" },
+    partial,
+  );
+  assert.equal(target(partialActivation).id, failure.id);
+  assert.equal(partialActivation.viewport, undefined);
+  assert.equal(partialActivation.colorScheme, "light");
+
+  const invalid = routeFromUrl(
+    catalogue,
+    new URL(
+      `https://example.test/view/${parent.route}?viewport=mobile&viewport=desktop&scheme=invalid`,
+    ),
+  );
+  const automatic = changesActivation(
+    catalogue,
+    context,
+    { ...defaultSelection, view: "changes", search: "failure" },
+    invalid,
+  );
+  assert.equal(target(automatic).id, failure.id);
+  assert.equal(automatic.viewport, "desktop");
+  assert.equal(automatic.colorScheme, "dark");
 });
 
 test("All activation keeps the requested row and sticky axes", () => {

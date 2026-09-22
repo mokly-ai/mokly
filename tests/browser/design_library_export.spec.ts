@@ -93,7 +93,7 @@ for (const viewport of ["desktop", "mobile"] as const)
     ).toHaveAttribute("data-changed", "true");
     await expect(
       page.locator(
-        '[data-nav-row][data-route="design/browse/states/tags/picker.html"]',
+        '[data-nav-row][data-route="design/browse/views/screen.variants/picker.html"]',
       ),
     ).not.toHaveAttribute("data-changed", "true");
     await page.getByRole("tab", { name: "Usage", exact: true }).click();

@@ -7,7 +7,7 @@ application product designs.
 
 Navigation follows the
 [design mockup links contract](../../docs/protocol/mokly-design-links.md).
-The 40 Browse and Changes artboards remain static documents, with native links
+The Browse and Changes artboards remain static documents, with native links
 between their canonical states in both viewport variants.
 
 The `Design` navigation group holds the approved mockups for Mokly's own
@@ -41,6 +41,10 @@ in each entry's description and rationale, never inside the rendered screens:
   documents that draw a shell with dark selected, so they opt out of dark
   generation like every other design screen. Only the depicted device screens
   change; the shell chrome around them stays light in both schemes.
+- The dark-scheme, light-only, and four tag-state artboards are authored as
+  variants of the canonical Welcome design. Their stable ids now derive routes
+  below `design/browse/views/screen.variants/`; the empty `design-browse-tags`
+  collection remains as historical structure and points readers to Welcome.
 - The dark view compare screen shows the same `Welcome` comparison as the
   changed screen, in its dark view. The normal scheme control changes the
   comparison in place, while the catalogue shell remains light.
@@ -62,6 +66,10 @@ workspace` and `Save failed`. Only `Empty workspace` has a design destination;
   views, so the theme control and the viewport dropdown carry a mark and the
   details list them. Color scheme and viewport stay view axes and never become
   variants.
+- The reparented-variant artboard records the one-level fallback: `Welcome` is
+  now another screen's variant, so its removed `Save failed` child remains a
+  flat Changes row exactly once instead of becoming a nested variant or
+  disappearing.
 - The `forms` and `onboarding` tags are synthetic fixture labels that carry no
   product meaning: the Welcome entry declares both and the Details entry
   declares `forms` in their authored metadata, which is why the `tag:forms`

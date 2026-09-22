@@ -2,10 +2,10 @@
 
 ## Delivery Status
 
-Implemented in the basic consumer. All 56 existing design screens retain their
-112 mobile/desktop fragments and now record shared component instances. Fifteen
-registered components and 56 saved variants live under Components → Design → Shared components,
-alongside the separate Example Action and Toolbar.
+Implemented in the basic consumer. All 80 current design screens record shared
+component instances and retain mobile and desktop artboards. Fifteen registered
+components and 61 saved variants live under Components → Design → Shared
+components, alongside the separate Example Action and Toolbar.
 
 This contract and the [library inventory](./mokly-design-component-library.md)
 define the delivered behavior tracked by the [adoption plan](../../plans/mokabook-design-components.md).

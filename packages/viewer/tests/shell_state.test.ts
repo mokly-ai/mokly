@@ -120,6 +120,35 @@ test("shell routes retain invalid component variant requests", () => {
   );
 });
 
+test("shell routes parse explicit view axes independently", () => {
+  const valid = routeFromUrl(
+    catalogue,
+    new URL(
+      "https://example.test/view/screens/home.html?viewport=desktop&scheme=dark",
+    ),
+  );
+  assert.equal(valid.viewport, "desktop");
+  assert.equal(valid.colorScheme, "dark");
+
+  const partial = routeFromUrl(
+    catalogue,
+    new URL(
+      "https://example.test/view/screens/home.html?viewport=invalid&scheme=dark",
+    ),
+  );
+  assert.equal(partial.viewport, undefined);
+  assert.equal(partial.colorScheme, "dark");
+
+  const repeated = routeFromUrl(
+    catalogue,
+    new URL(
+      "https://example.test/view/screens/home.html?viewport=mobile&scheme=light&scheme=dark",
+    ),
+  );
+  assert.equal(repeated.viewport, "mobile");
+  assert.equal(repeated.colorScheme, undefined);
+});
+
 test("filter transitions restore their disclosure baseline and route activation reveals its row", () => {
   const route = routeFromUrl(
     catalogue,

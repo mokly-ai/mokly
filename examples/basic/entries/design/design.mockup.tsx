@@ -1,13 +1,8 @@
 import { collection, defineCollection, defineRoot } from "@mokly/mokly";
 
 import { removedPageScreens } from "./browse/pages/previous-version/screens.js";
-import { formsFilterScreen } from "./browse/states/tags/forms.js";
-import { onboardingPickerScreen } from "./browse/states/tags/onboarding-picker.js";
-import { onboardingFilterScreen } from "./browse/states/tags/onboarding.js";
-import { tagPickerScreen } from "./browse/states/tags/picker.js";
 import { variantScreens } from "./browse/variants/screens.js";
 import { detailsScreen } from "./browse/views/details-screen.js";
-import { browseSchemeScreens } from "./browse_scheme_screens.js";
 import { browseStateScreens, browseViewScreens } from "./browse_screens.js";
 import { browseTagScreens } from "./browse_tag_screens.js";
 import { changesScreens } from "./changes_screens.js";
@@ -42,22 +37,17 @@ const designMockups = defineRoot({
           children: [
             ...browseStateScreens,
             ...browseTagScreens,
-            ...browseSchemeScreens,
             collection({
-              children: [
-                tagPickerScreen,
-                formsFilterScreen,
-                onboardingFilterScreen,
-                onboardingPickerScreen,
-              ],
-              description: "Canonical Welcome tag selection and picker states.",
+              children: [],
+              description:
+                "Welcome owns the canonical tag selection and picker states as screen variants.",
               id: "design-browse-tags",
               segment: "tags",
               title: "Tag states",
             }),
           ],
           description:
-            "Browse states for details, missing routes, narrow layouts, tag filtering, and color schemes.",
+            "Browse states for details, missing routes, narrow layouts, and the standalone tag-filter picker.",
           id: "design-browse-states",
           segment: "states",
           title: "Shell states",
@@ -65,7 +55,7 @@ const designMockups = defineRoot({
         collection({
           children: variantScreens,
           description:
-            "A screen's variants: one selected, one changed, one removed, and a change confined to other views.",
+            "A screen's variants: selected, changed, removed under a surviving parent, removed after reparenting, and a change confined to other views.",
           id: "design-browse-variants",
           segment: "variants",
           title: "Screen variants",

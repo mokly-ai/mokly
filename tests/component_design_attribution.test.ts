@@ -11,11 +11,11 @@ test("mixed component design styles retain their actual rendered resource scope"
     ["design-components.css", 32, 15],
     ["design-component-inspection.css", 32, 15],
     ["design-component-details.css", 32, 15],
-    ["design-component-inspector.css", 79, 15],
-    ["design-component-workspace.css", 79, 15],
+    ["design-component-inspector.css", "all-design", 15],
+    ["design-component-workspace.css", "all-design", 15],
     ["design-component-view.css", 32, 15],
     ["design-component-controls.css", 11, 15],
-    ["design.css", 79, 15],
+    ["design.css", "all-design", 15],
     ["design-library.css", 0, 15],
   ] as const)
     await t.test(stylesheet, async () => {
@@ -29,10 +29,19 @@ test("mixed component design styles retain their actual rendered resource scope"
           fixture.before.outputs.get(view.path)!.includes(`/${stylesheet}"`),
         ),
       );
-      assert.equal(
-        expected.filter((entry) => entry.kind === "screen").length,
-        screens,
+      const expectedScreens = expected.filter(
+        (entry) => entry.kind === "screen",
       );
+      if (screens === "all-design") {
+        const allDesignScreens = fixture.before.manifest.entries.filter(
+          (entry) =>
+            entry.kind === "screen" && entry.route.startsWith("design/"),
+        );
+        assert.deepEqual(
+          expectedScreens.map(({ id }) => id).sort(),
+          allDesignScreens.map(({ id }) => id).sort(),
+        );
+      } else assert.equal(expectedScreens.length, screens);
       assert.equal(
         expected.filter((entry) => entry.kind === "component").length,
         components,

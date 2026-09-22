@@ -68,7 +68,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
         ? { width: 390, height: 844 }
         : { width: 1280, height: 900 },
     );
-    await page.goto("/view/design/browse/states/tags/picker.html");
+    await page.goto("/view/design/browse/views/screen.variants/picker.html");
     await chooseViewport(page, viewport);
     await page.getByRole("tab", { name: "Components", exact: true }).click();
     if (viewport === "mobile")
@@ -121,7 +121,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
       .first()
       .click();
     await expect(page).toHaveURL(
-      /\/view\/design\/browse\/states\/tags\/picker.html/,
+      /\/view\/design\/browse\/views\/screen\.variants\/picker.html/,
     );
     await page.goBack();
     await expect(page).toHaveURL(
@@ -129,7 +129,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
     );
     await page.goForward();
     await expect(page).toHaveURL(
-      /\/view\/design\/browse\/states\/tags\/picker.html/,
+      /\/view\/design\/browse\/views\/screen\.variants\/picker.html/,
     );
   });
 }

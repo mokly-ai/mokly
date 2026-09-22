@@ -1,6 +1,11 @@
 import { screen } from "@mokly/mokly";
 
+import { formsFilterVariant } from "./browse/states/tags/forms.js";
+import { onboardingPickerVariant } from "./browse/states/tags/onboarding-picker.js";
+import { onboardingFilterVariant } from "./browse/states/tags/onboarding.js";
+import { tagPickerVariant } from "./browse/states/tags/picker.js";
 import { useCaseScreen } from "./browse/views/use-case.js";
+import { browseSchemeVariants } from "./browse_scheme_screens.js";
 import { DesignNavigation } from "./parts/design_navigation.js";
 import { DESTINATIONS } from "./parts/destinations.js";
 import { ExampleWorkspace } from "./parts/example_workspace.js";
@@ -157,6 +162,13 @@ export const browseViewScreens = [
     mobile: <SelectedScreenMobile />,
     slug: "screen",
     title: "Selected screen",
+    variants: [
+      ...browseSchemeVariants,
+      tagPickerVariant,
+      formsFilterVariant,
+      onboardingFilterVariant,
+      onboardingPickerVariant,
+    ],
   }),
   useCaseScreen,
 ];

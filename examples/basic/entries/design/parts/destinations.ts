@@ -21,6 +21,7 @@ export const DESTINATIONS = {
   variantSelected: "design-browse-variant-selected",
   variantChanges: "design-browse-variant-changes",
   variantRemoved: "design-browse-variant-removed",
+  variantReparented: "design-browse-variant-reparented",
   changedViews: "design-browse-changed-views",
   tagPicker: "design-browse-tag-picker",
   formsPicker: "design-browse-tag-filter",

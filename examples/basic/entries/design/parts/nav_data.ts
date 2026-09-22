@@ -217,6 +217,30 @@ export const REMOVED_VARIANT_ROWS: NavigationRows = [
   },
 ];
 
+/** A former parent is now a variant, so its removed child stays flat. */
+export const REPARENTED_REMOVED_VARIANT_ROWS: NavigationRows = [
+  ...WELCOME_BRANCH,
+  {
+    key: "workspace",
+    depth: 2,
+    kind: "screen",
+    label: "Workspace",
+    variants: "open",
+  },
+  {
+    key: "welcome",
+    depth: 3,
+    kind: "variant",
+    label: "Welcome",
+  },
+  {
+    key: "welcome-error-removed",
+    depth: 2,
+    kind: "screen",
+    label: "Save failed · Removed",
+  },
+];
+
 /** Changes holding Welcome alone, because only one of its views changed. */
 export const CHANGED_VIEW_ROWS: NavigationRows = [
   ...WELCOME_BRANCH,

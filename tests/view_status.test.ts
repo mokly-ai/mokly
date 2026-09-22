@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  resolveViewPresentation,
   shownComparisonEligible,
   shownStatus,
   type ViewState,
@@ -88,4 +89,61 @@ test("comparison eligibility follows shown status and entry kind", () => {
   assert.equal(shownComparisonEligible("Added", "component"), false);
   assert.equal(shownComparisonEligible("Unmodified", "screen"), false);
   assert.equal(shownComparisonEligible(undefined, "component"), false);
+});
+
+test("matching view evidence owns status and eligibility together", () => {
+  assert.deepEqual(
+    resolveViewPresentation({
+      displayedViews: [{ viewport: "mobile", colorScheme: "light" }],
+      fallbackComparisonEligible: false,
+      fallbackStatus: "Changed",
+      kind: "screen",
+      states: [view("unchanged")],
+    }),
+    {
+      comparisonEligible: false,
+      evidence: "matching",
+      status: "Unmodified",
+    },
+  );
+  assert.deepEqual(
+    resolveViewPresentation({
+      displayedViews: [{ viewport: "mobile", colorScheme: "light" }],
+      fallbackComparisonEligible: false,
+      fallbackStatus: "Unmodified",
+      kind: "component",
+      states: [view("removed")],
+    }),
+    {
+      comparisonEligible: true,
+      evidence: "matching",
+      status: "Removed",
+    },
+  );
+});
+
+test("missing, partial, or nonmatching evidence preserves fallback eligibility", () => {
+  for (const states of [
+    undefined,
+    [],
+    [view("changed", "mobile", "dark")],
+    [view("changed", "mobile", "light")],
+  ] as const)
+    assert.deepEqual(
+      resolveViewPresentation({
+        displayedViews: [
+          { viewport: "mobile", colorScheme: "light" },
+          { viewport: "desktop", colorScheme: "light" },
+        ],
+        fallbackComparisonEligible: false,
+        fallbackStatus: "Changed",
+        kind: "screen",
+        states,
+      }),
+      {
+        comparisonEligible: false,
+        evidence: "fallback",
+        status: "Changed",
+      },
+    );
 });

@@ -1,10 +1,13 @@
 # Screen Variants Follow-up
 
-Status: planned, not started. Created 2026-09-22 at the user's request to close
+Status: implementation verified; delivery and final review in progress. Created 2026-09-22 to close
 [Screen Variants](./screen-variants.md) for
-[PR #101](https://github.com/mokly-ai/mokly/pull/101). All work here belongs in a
-separate PR; creating this plan implements none of it. The design route
-retirement still requires explicit approval before that conversion starts.
+[PR #101](https://github.com/mokly-ai/mokly/pull/101). The user's 2026-09-22
+request to implement this follow-up authorizes its six design route moves and
+related collection cleanup. Delivery belongs in a separate PR. Implementation
+is delegated to Codex 5.6 Sol with max reasoning; the coordinating agent checks
+the implementation, runs the complete gate, commits and pushes, then performs
+the final read-only review. Keep this plan Active until its PR merges.
 
 ## Scope And Contracts
 
@@ -23,8 +26,25 @@ Contract owners:
   [design links](../docs/protocol/mokly-design-links.md), and
   [component workspace](../docs/protocol/mokly-component-workspace-design.md).
 
-The recommendations below define the proposed scope. They do not claim that
-the bugs are fixed or authorize retiring the six existing design routes.
+Use option A for all five findings below. The two later product ideas remain
+non-blocking follow-ups. The approved conversion preserves every existing
+design id and moves exactly these six routes beneath `design-browse-screen`:
+
+| Stable id                             | Old route below `design/browse/`     | New route below `design/browse/views/screen.variants/` |
+| ------------------------------------- | ------------------------------------ | ------------------------------------------------------ |
+| `design-browse-dark-scheme`           | `states/dark-scheme.html`            | `dark-scheme.html`                                     |
+| `design-browse-light-only`            | `states/light-only.html`             | `light-only.html`                                      |
+| `design-browse-tag-picker`            | `states/tags/picker.html`            | `picker.html`                                          |
+| `design-browse-tag-forms`             | `states/tags/forms.html`             | `forms.html`                                           |
+| `design-browse-tag-onboarding`        | `states/tags/onboarding.html`        | `onboarding.html`                                      |
+| `design-browse-tag-onboarding-picker` | `states/tags/onboarding-picker.html` | `onboarding-picker.html`                               |
+
+Remove these six collection memberships. Retain the now-empty
+`design-browse-tags` collection's stable id and all other routes, including
+`design-browse-tag-filter`; update its description to point readers to Welcome.
+Generated fragment moves follow the six route moves automatically. Before
+conversion, capture the manifest's id/route/collection inventory as regression
+evidence; new regression screens may add ids but must not hide unrelated losses.
 
 ## Carried Review Findings
 
@@ -84,103 +104,194 @@ the bugs are fixed or authorize retiring the six existing design routes.
 Documentation first: make the intended behavior explicit before changing
 authoring or navigation.
 
-- [ ] Specify return types for literal, optional, empty, and generic `variants`
-      inputs, including the compatibility decision for finding 4.
-- [ ] Specify valid axis parsing, partial/invalid axis handling and Changes
-      landing in the navigation and Viewer contracts for finding 1.
-- [ ] Define effective view fallback and evidence-backed comparison
+- [x] Specify return types for literal, optional, empty, and generic `variants`
+      inputs: absent or definitely undefined returns one definition; a definite
+      array (including empty) returns a readonly array; a possibly present
+      array returns their union. Preserve distributive literal inference and
+      reject unsafe assignments in broad and generic consumer code.
+- [x] Specify valid axis parsing, partial/invalid axis handling and Changes
+      landing in the navigation and Viewer contracts for finding 1. Parse each
+      axis independently; only one valid value counts as explicit. Ignore
+      invalid or repeated values, apply valid values atomically, and retain
+      the other sticky axis. Only a valid explicit axis suppresses first-change
+      landing. Cover same-destination axis changes and controlled proposals.
+- [x] Define effective view fallback and evidence-backed comparison
       eligibility for findings 2 and 3, including server render, deep links,
       controlled selection, and background evidence updates.
-- [ ] Clarify that removed-variant adoption requires a non-variant current
+- [x] Clarify that removed-variant adoption requires a non-variant current
       parent; preserve every removed route exactly once for finding 5.
-- [ ] Record the user's decision on Task 9.1's six design route retirements
-      before conversion. Specify the old/new route mapping, stable ids and
-      collection changes in the design inventories. Planning permission alone
-      is not approval to retire those routes.
-- [ ] Validate changed Markdown and links; review the documentation diff.
+- [x] Record the implementation request's authorization and exact six-route
+      mapping above, preserving the original plan's historical review record.
+- [x] Copy the approved route mapping, stable ids and collection changes into
+      the design inventories before conversion.
+- [x] Validate changed Markdown and links; review the documentation diff.
 
-### Milestone 2: Design catalogue conversion and regression states
+### Milestone 2: Stage the design catalogue conversion
 
 Tags: mockup
 
-Complete the deferred Task 9.1 only after its route changes are approved, and
-establish the mockups needed for the later UI fixes. Reuse the existing design
-library and standalone mobile/desktop screen components.
+Capture the existing catalogue and prepare the authorized conversion with the
+existing mobile/desktop screen components before changing core behavior.
 
-- [ ] Move `design-browse-dark-scheme`, `design-browse-light-only`, and the four
+- [x] Capture the original manifest's id, route, and collection inventory before
+      conversion: 137 entries and 127 design ids.
+- [x] Add and run the route, `variantOf`, and membership regression assertions
+      before conversion; record the expected three-test failure.
+- [x] Reuse the six existing mobile/desktop screen components as Welcome variant
+      inputs and remove only their six old memberships in the staged source.
+- [x] Record the discovered empty-collection validation gap instead of deleting
+      `design-browse-tags` or retaining a fake child. Continue in the required
+      backend and replacement mockup milestones below; complete this item only
+      after the staged catalogue builds again.
+
+Evidence: the original inventory is in
+`.context/screen-variants-original-inventory.json`; the pre-conversion test
+failed in `.context/screen-variants-design-red.log` before any entry mutation.
+
+### Milestone 3: Support empty structural collections
+
+Allow an intentionally empty collection to retain a stable navigation identity
+while preserving all hierarchy and manifest invariants.
+
+- [x] Update the authoring, manifest, catalogue, and navigation contracts for
+      empty `childIds`; an empty collection remains structural and viewless.
+- [x] Add failing authoring/build, manifest-reader, public-reader, and hierarchy
+      regressions before the fix, including round trips and empty navigation
+      projection.
+- [x] Accept empty collection `childIds` at authored and manifest boundaries;
+      retain duplicate, unknown-child, multi-parent, and cycle checks unchanged.
+- [x] Run the collection validation, manifest, public catalogue, hierarchy, and
+      navigation suites plus `npm run build`.
+
+Evidence: `.context/empty-collections-red.log` records the two authored-boundary
+failures; `.context/empty-collections-green.log` records the five passing
+authoring, build, manifest, reader, and navigation regressions.
+
+### Milestone 4: Complete design conversion and regression states
+
+Tags: mockup
+
+Resume the blocked authorized conversion after empty collections are supported.
+Reuse the existing design library and standalone mobile/desktop components.
+
+- [x] Move `design-browse-dark-scheme`, `design-browse-light-only`, and the four
       tag-state screens into `design-browse-screen` (Welcome) as variants.
       Preserve all six ids and derive the six routes below
       `design/browse/views/screen.variants/`.
-- [ ] Update `examples/basic/entries/design/browse_screens.tsx`,
+- [x] Update `examples/basic/entries/design/browse_screens.tsx`,
       `browse_scheme_screens.tsx`, `browse_tag_screens.tsx`,
       `browse/states/tags/*.tsx`, and `design.mockup.tsx`; reuse screen
       components and remove only the approved old collection memberships.
-- [ ] Update the shell-design and design-links inventories,
+- [x] Update the shell-design and design-links inventories,
       `examples/basic/notes.md`, the example README, and the root README's
       relevant feature paragraph. Keep their delivered-status claims accurate.
-- [ ] Extend the owning design pages for mixed-scheme fallback, ineligible
+- [x] Extend the owning design pages for mixed-scheme fallback, ineligible
       comparisons, and removed variants whose old parent becomes a variant.
       Reuse existing screens where possible; keep mobile and desktop variants,
       reachable design links, and no more than five mockups per screen-spec
       page. User flows must link back to those owning screen components.
-- [ ] Add regression assertions before the conversion, then verify the
-      manifest retains every design id, moves exactly six routes, and adds
-      `variantOf` to those six entries. Run the design screen/link suites,
-      including `tests/design_screens.test.tsx`, `tests/design_links.test.ts`,
-      `tests/browser/design_links.spec.ts`, and
+- [x] Verify the manifest retains every original design id, moves exactly six
+      routes, adds `variantOf` to those entries, and removes only the approved
+      memberships. Run `tests/design_screens.test.tsx`,
+      `tests/design_links.test.ts`, `tests/browser/design_links.spec.ts`, and
       `tests/browser/preview_design_links.spec.ts`.
-- [ ] Run `npm run build`, `npm run example:build`, `npm run example:check`,
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
       and `npm run preview:build`. Smoke through `npm run dev` and the static
       preview: expand Welcome, open every variant, and follow a mini-screen
       design link into a variant at mobile and desktop sizes.
-- [ ] Keep generated HTML and the manifest ignored; commit only authored
+- [x] Keep generated HTML and the manifest ignored; commit only authored
       source and CSS. Record every approved retired route in the conversion
       commit message.
 
-### Milestone 3: Correct the public authoring types
+Evidence: the independent inventory verifier retained all 137 original ids,
+reported only the six authorized moves and one new regression screen, and the
+52-test design unit run passed. The required browser suites passed 10/10;
+Serve/static smoke covered all six variants at both sizes with keyboard links.
+Logs and screenshots are under `.context/`.
+
+### Milestone 5: Correct the public authoring types
 
 Resolve finding 4 at the package boundary while keeping the running product
 and existing authoring use cases functional.
 
-- [ ] Add failing NodeNext packed-consumer checks for annotated `ScreenInput`,
+- [x] Add failing NodeNext packed-consumer checks for annotated `ScreenInput`,
       generic wrappers, omitted/undefined variants, empty arrays, and populated
       arrays; assert that unsafe single-definition assignment is rejected.
-- [ ] Correct `DefineScreenResult` and add matching runtime assertions without
+- [x] Correct `DefineScreenResult` and add matching runtime assertions without
       losing precise inference for known single-screen and array calls.
-- [ ] Run authoring tests, `npm run build`, `npm run typecheck`,
+- [x] Run authoring tests, `npm run build`, `npm run typecheck`,
       `npm run package:check`, and `npm run package:smoke`.
 
-### Milestone 4: Correct Viewer selection and historical navigation
+Evidence: `.context/authoring-packed-consumer-red.log` records the initial and
+caller-owned optional-property failures. The final exact-optional NodeNext
+matrix, 18 authoring tests, build, typecheck, package check, and all five packed
+consumer smoke scenarios passed.
+
+### Milestone 6: Correct Viewer selection and historical navigation
 
 Tags: ui
 
 Resolve findings 1, 2, 3, and 5 through shared decisions that keep standalone,
 embedded, and published navigation consistent.
 
-- [ ] Add failing tests for each finding before implementation. Cover valid,
+- [x] Add failing tests for each finding before implementation. Cover valid,
       partial and invalid explicit axes; controlled/uncontrolled Viewer
       navigation; light-only screens and saved variants in mixed catalogues;
-      missing/pending evidence and comparison deep links.
-- [ ] Share the typed axis parser and effective-view/evidence resolution among
+      missing/pending/nonmatching evidence and comparison deep links. Capture
+      the failing test commands and outcomes before each corresponding fix.
+- [x] Share the typed axis parser and effective-view/evidence resolution among
       the server-rendered shell, client updates and Viewer selection paths.
-- [ ] Restrict removed-variant adoption and test former-parent reparenting,
+      Resolve the displayed scheme from the selected screen/saved variant,
+      retaining the global scheme preference; status, marks and comparison
+      availability must describe those displayed renders. Missing evidence
+      preserves the existing entry/saved-variant eligibility independently of
+      the displayed route-level status. Re-evaluate on background updates.
+- [x] Restrict removed-variant adoption and test former-parent reparenting,
       deletion and kind changes. Assert that every removed route appears
       exactly once, either under an eligible parent or in flat fallback.
-- [ ] Run the navigation, view-status, view-marks, workspace and Viewer unit
+- [x] Run the navigation, view-status, view-marks, workspace and Viewer unit
       suites, plus the affected Serve, Viewer and static browser suites.
-- [ ] Smoke the affected navigation and comparison states through Serve and
+- [x] Smoke the affected navigation and comparison states through Serve and
       static preview at mobile and desktop widths; check keyboard navigation
       and controlled-host proposals as well as pointer input.
 
-### Milestone 5: Verify, deliver, and review the separate PR
+Evidence: `.context/viewer-selection-red.log` records the four pre-fix
+boundaries. The final broad unit selection passed 94/94; focused SSR/rendering
+passed 27/27; Viewer browser passed 7/7; effective fallback, removed comparison,
+and static comparison browser coverage passed 8/8. Controlled keyboard
+proposals remained inert until accepted, background/deep-link evidence stayed
+ineligible when required, and Light-only comparison headings retained their
+fallback label.
+
+### Milestone 7: Verify, deliver, and review the separate PR
 
 Complete the follow-up independently of PR #101. No task requires this PR
 already to be merged.
 
-- [ ] Reconcile every carried item with test or decision evidence, update
-      delivery documentation, and move this plan to Completed when its own PR
-      merges. Keep any genuinely later work in the non-blocking section below.
-- [ ] Run all relevant tests and `cargo xtask check` with a 100% pass rate;
+- [x] Reconcile every carried item with test or decision evidence and update
+      delivery documentation. Record branch readiness here; the PR merge
+      moves this plan to Completed. Keep genuinely later work below.
+- [x] Align the full-suite catalogue assertions with the delivered conversion:
+      derive global design stylesheet scope from the catalogue and scope the
+      example Welcome inheritance assertion to its actual parent. The first
+      full gate exposed obsolete totals of 79 design screens and one variant
+      across the entire catalogue; preserve the tests' behavioral assertions.
+
+Evidence: the focused full-suite follow-up passed 11/11 tests. Shared
+stylesheet assertions now compare the exact design-screen id set, and the
+Welcome test counts only variants whose parent is `example-welcome`.
+
+- [x] Scope the exported example's variant disclosure assertion to the
+      `example-welcome` parent after the design conversion added another valid
+      variant toggle to the complete catalogue.
+
+Evidence: the full retry passed all 2,253 unit tests and 690 of 691 browser
+tests; its only failure was the global toggle locator resolving both the Design
+Selected screen and Example Welcome. The assertion now locates the toggle
+inside the leaf with `data-entry-id="example-welcome"`. The only sibling global
+toggle test uses an isolated fixture with one variant parent.
+
+- [x] Run all relevant tests and `cargo xtask check` with a 100% pass rate;
       inspect the complete diff and mainline preservation before committing.
 - [ ] After checks pass, run `git add -A`, commit with Conventional Commits
       and a title of at most 50 characters, and push the branch. Include all
@@ -189,6 +300,13 @@ already to be merged.
       using [the implementation review prompt](../docs/implementation-review-prompt.md).
       Report every finding with severity, context, impact, lettered options
       and a recommendation; do not automatically fix review findings.
+
+Verification: the complete `cargo xtask check` passed with 2,253 Node tests,
+691 Chromium browser tests, and 10 Rust tests, with no failures or skips.
+The gate also passed dependency audit, formatting, lint, type checks, example
+validation and packed-consumer checks. The branch includes mainline `b4f1aca`;
+all 137 original catalogue ids remain, exactly six routes moved, and no tracked
+files were deleted. Desktop/mobile Serve and static smoke checks passed.
 
 ## Post-merge follow-up (non-blocking)
 

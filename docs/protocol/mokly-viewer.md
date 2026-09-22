@@ -179,13 +179,21 @@ Never mutate supplied objects/arrays.
 
 The Viewer rebuilds `variantOf` for current and removed screens from the public
 model, so its hierarchy, breadcrumbs, details rows, aggregate mark, and
-removed-variant adoption match Serve. A shell-link activation while `view` is
+removed-variant adoption match Serve. Removed variants attach only to a current
+non-variant parent; otherwise each remains one flat fallback row, and every
+removed route appears exactly once. A shell-link activation while `view` is
 `changes` proposes one atomic selection. An aggregate-only parent proposes its
 first visible changed variant's `screenId`. If the current selection is not
 itself a changed route, a changed destination also proposes the first changed
 view's `viewport` and `colorScheme` from the public model's per-view comparison
 states, ordered mobile/light, mobile/dark, desktop/light, desktop/dark, unless
-the link names either axis. Once a changed route is selected, later shell-link
+the link contains at least one valid explicit axis. The shared parser accepts
+an axis only when its query has exactly one supported value; it ignores invalid
+or repeated values and parses the other axis independently. Valid axes apply in
+the same complete selection proposal, omitted axes retain their sticky values,
+and an axis-only link to the current destination still proposes the change.
+Only a valid explicit axis suppresses first-changed-view landing. Once a changed
+route is selected, later shell-link
 activations preserve the sticky axes while aggregate-parent redirection remains
 active. An imperative `select` call and supplied `defaultSelection` or
 `selection` props also keep their axes. Controlled mode emits the complete
@@ -198,6 +206,23 @@ Normalization is deterministic; the visible input still displays those tags
 as today's `tag:` terms. Navigation proposes any filter clearing needed to
 reveal its destination as one atomic selection update. Light-only views retain
 the existing fallback labels when Dark is selected; no fake dark view is made.
+The shell resolves the effective displayed scheme once for a screen or selected
+component saved variant and uses it for frame sources, shown status,
+view-control marks, and comparison presentation. The global Dark preference
+remains sticky while that entry displays Light.
+
+Per-view resolution returns the shown status, comparison eligibility, and
+whether matching evidence produced them. Ready evidence applies only when its
+entry or saved-variant key matches the selected preview. Missing, pending, or
+nonmatching evidence may retain the route-level displayed status, but it must
+preserve the entry or saved variant's existing comparison eligibility rather
+than deriving new eligibility from that fallback status. Server rendering,
+controlled selection, comparison deep links, and background evidence updates
+use the same decision. A deep link is honored only after that decision confirms
+eligibility, and every matching evidence update recomputes it in place.
+When Both is displayed, matching evidence must cover both effective rendered
+views. Partial evidence uses the fallback status and existing eligibility
+together until a complete matching update arrives.
 
 `onSelectionChange` reports requested state changes. `onScreenNavigate` fires
 once after a committed route/variant/fragment transition, including accepted

@@ -2,6 +2,7 @@
 
 import type { StaticDelivery } from "../navigation/delivery.js";
 import { isLogicalFragment } from "../navigation/logical.js";
+import { parseViewAxes } from "../navigation/view_axes.js";
 
 import { catalogueRouteEntry, type Catalogue } from "./catalogue.js";
 import { toRouteTarget } from "./target.js";
@@ -35,8 +36,7 @@ export function routeFromUrl(
       : { kind: "missing" as const, requested: requestedPath(url.pathname) };
   const fragments = url.searchParams.getAll("fragment");
   const variants = url.searchParams.getAll("variant");
-  const viewports = url.searchParams.getAll("viewport");
-  const schemes = url.searchParams.getAll("scheme");
+  const axes = parseViewAxes(url.searchParams);
   const instances = url.searchParams.getAll("instance");
   const comparisons = url.searchParams.getAll("comparison");
   const variant =
@@ -47,13 +47,7 @@ export function routeFromUrl(
     entry?.kind === "component" && variants.length > 0 ? variants : undefined;
   return {
     view,
-    ...(viewports.length === 1 &&
-    ["both", "desktop", "mobile"].includes(viewports[0] ?? "")
-      ? { viewport: viewports[0] as "both" | "desktop" | "mobile" }
-      : {}),
-    ...(schemes.length === 1 && ["dark", "light"].includes(schemes[0] ?? "")
-      ? { colorScheme: schemes[0] as "dark" | "light" }
-      : {}),
+    ...axes,
     ...(instances.length === 1 && /^[a-f0-9]{64}$/.test(instances[0] ?? "")
       ? { instance: instances[0] }
       : {}),

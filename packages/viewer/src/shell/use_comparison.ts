@@ -17,6 +17,7 @@ export type ComparisonMode = "current" | "side" | "overlay" | "difference";
 export interface ComparisonPresentation {
   colorScheme: "dark" | "light";
   mode: Exclude<ComparisonMode, "current">;
+  requestedColorScheme: "dark" | "light";
   viewport: "both" | "desktop" | "mobile";
 }
 
@@ -55,10 +56,12 @@ export interface ComparisonController {
 
 /** Keep one request owner across rapid toolbar, viewport, and scheme changes. */
 export function useComparison({
+  colorScheme,
   eligible,
   route,
   variantId,
 }: {
+  colorScheme?: "dark" | "light";
   eligible: boolean;
   route: string;
   variantId?: string;
@@ -66,6 +69,7 @@ export function useComparison({
   const store = useOptionalShellStore();
   const environment = useComparisonEnvironment();
   const selection = store?.state.selection;
+  const requestedColorScheme = selection?.colorScheme ?? "light";
   const evidenceKey = `${store?.context.updateVersion ?? 0}:${store?.catalogue.publicModel?.revision.evidence ?? 0}`;
   const scope = useMemo<ComparisonScope>(
     () => ({ route, ...(variantId ? { variantId } : {}) }),
@@ -120,7 +124,8 @@ export function useComparison({
           scopeKey,
           mode,
           selection?.viewport ?? "both",
-          selection?.colorScheme ?? "light",
+          colorScheme ?? requestedColorScheme,
+          requestedColorScheme,
         )
       : undefined;
   latestDemand.current = demand;
@@ -169,6 +174,7 @@ export function useComparison({
             scopeKey: latest.scopeKey,
             colorScheme: latest.colorScheme,
             mode: latest.mode,
+            requestedColorScheme: latest.requestedColorScheme,
             viewport: latest.viewport,
           });
           pendingRef.current = undefined;
@@ -275,6 +281,7 @@ function comparisonDemand(
   mode: Exclude<ComparisonMode, "current">,
   viewport: ComparisonPresentation["viewport"],
   colorScheme: ComparisonPresentation["colorScheme"],
+  requestedColorScheme: ComparisonPresentation["requestedColorScheme"],
 ): Demand {
   return {
     scope,
@@ -282,6 +289,13 @@ function comparisonDemand(
     mode,
     viewport,
     colorScheme,
-    key: JSON.stringify([scopeKey, mode, viewport, colorScheme]),
+    requestedColorScheme,
+    key: JSON.stringify([
+      scopeKey,
+      mode,
+      viewport,
+      colorScheme,
+      requestedColorScheme,
+    ]),
   };
 }

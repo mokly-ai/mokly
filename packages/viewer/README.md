@@ -126,6 +126,13 @@ validate and normalize `tag:` terms;
 controlled changes remain proposals until supplied back. Incoming props do not
 echo callbacks. Remount to change control mode.
 
+Shell links may name `viewport` and `scheme` independently. Exactly one valid
+value for an axis applies in the same selection proposal; invalid or repeated
+values retain that sticky axis. A light-only selected screen or saved component
+variant keeps the host's Dark preference but uses its displayed Light views for
+status, marks and comparisons. Missing or partial per-view evidence preserves
+the entry or saved variant's existing comparison eligibility.
+
 `markers` supplies unique host marker ids, exact instance references and React
 content. `onMarkerChange` reports each marker as visible, hidden or unavailable
 without exposing geometry. Marker content is pointer-inert unless it opts in.

@@ -2,13 +2,13 @@
 
 ## Delivery Status
 
-Implemented in the 47 Browse/Changes design screens and two real example
+Implemented in the 48 Browse/Changes design screens and two real example
 screens using `MockLink` and `MockLink asChild`. Verification and delivery are tracked by the
 [implementation plan](../../plans/mokabook-design-mocklinks.md).
 
 The [component design inventory](./mokly-component-design.md) extend the
 catalogue with their own state contract and native component/control depictions.
-Those 47 Browse/Changes designs retain the canonical links below, including the
+Those 48 Browse/Changes designs retain the canonical links below, including the
 removed previous-version family added by
 [removed previews](./mokly-removed-previews.md).
 They now share native icon inspector tabs and working viewport dropdowns with
@@ -76,13 +76,13 @@ The five additions below now render independently in both viewport variants
 and are included in the canonical inventory. Their owning components were
 completed before link adoption.
 
-| Added entry id                        | Route                                              | Depicted state                                                    |
-| ------------------------------------- | -------------------------------------------------- | ----------------------------------------------------------------- |
-| `design-browse-details-screen`        | `design/browse/views/details-screen.html`          | Normal Details screen, light selected, inspector closed           |
-| `design-browse-tag-picker`            | `design/browse/states/tags/picker.html`            | Welcome, empty query, unfiltered catalogue, picker open           |
-| `design-browse-tag-forms`             | `design/browse/states/tags/forms.html`             | Welcome, `tag:forms`, Welcome and Details retained, picker closed |
-| `design-browse-tag-onboarding`        | `design/browse/states/tags/onboarding.html`        | Welcome, `tag:onboarding`, Welcome retained, picker closed        |
-| `design-browse-tag-onboarding-picker` | `design/browse/states/tags/onboarding-picker.html` | The same onboarding filter with the picker open                   |
+| Added entry id                        | Route                                                        | Depicted state                                                    |
+| ------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------- |
+| `design-browse-details-screen`        | `design/browse/views/details-screen.html`                    | Normal Details screen, light selected, inspector closed           |
+| `design-browse-tag-picker`            | `design/browse/views/screen.variants/picker.html`            | Welcome, empty query, unfiltered catalogue, picker open           |
+| `design-browse-tag-forms`             | `design/browse/views/screen.variants/forms.html`             | Welcome, `tag:forms`, Welcome and Details retained, picker closed |
+| `design-browse-tag-onboarding`        | `design/browse/views/screen.variants/onboarding.html`        | Welcome, `tag:onboarding`, Welcome retained, picker closed        |
+| `design-browse-tag-onboarding-picker` | `design/browse/views/screen.variants/onboarding-picker.html` | The same onboarding filter with the picker open                   |
 
 `design-browse-details` continues to mean Welcome's expanded inspector and remains
 reachable from its catalogue entry. Opening/closing the Details icon stays on
@@ -90,8 +90,12 @@ the current screen and retains its query;
 `design-browse-light-only` continues to depict Details with dark selected and
 light-only device content. Neither substitutes for the new normal Details view.
 `design-browse-tag-filter` retains its existing route and depicts the forms
-filter with the picker open. New tag pages live in a matching nested source
-directory and catalogue group without moving the existing page.
+filter with the picker open. The four listed tag states plus
+`design-browse-dark-scheme` and `design-browse-light-only` retain their ids but
+move beneath `design-browse-screen` as variants, at
+`design/browse/views/screen.variants/<slug>.html`. Those six entries leave all
+collection `childIds`. The now-empty `design-browse-tags` collection retains its
+stable id and points readers to Welcome; no unrelated route or membership moves.
 
 ## Navigation Controls
 
@@ -151,7 +155,7 @@ none borrows another subject's inspector or drawer identity.
 
 ## Screen Variants
 
-The four variant states under `design/browse/variants/` depict a screen's
+The five variant states under `design/browse/variants/` depict a screen's
 variants as ordinary catalogue entries grouped under their parent. The
 disclosure beside a parent row is a depiction with no destination, because the
 served shell toggles the list in place; the parent row itself keeps its own
@@ -166,6 +170,7 @@ destination. A variant row without an authored destination stays a depiction.
 | Changed variant: All filter                  | `design-browse-variant-selected`                                     |
 | Changed variant: Welcome parent row          | `design-browse-variant-changes`, the parent's first changed variant  |
 | Removed variant: All filter                  | `design-browse-screen`, because the parent screen still exists       |
+| Reparented removed variant: All filter       | `design-browse-home`, because its former parent is now a variant     |
 | Changed views: All filter                    | `design-browse-screen`                                               |
 | Changed views: theme control                 | `design-review-dark-scheme`, the comparison of the view that changed |
 
@@ -175,6 +180,9 @@ removed state the parent row is a depiction too: the deletion is a later state
 of the same group, so it must not open the earlier changed-variant scenario.
 The removed variant has no live product destination and no comparison modes;
 its stage shows the variant's inert previous version.
+The reparented state draws the former parent as a variant beneath its new
+parent, while the removed child remains one flat screen row at the former
+parent's collection depth. It never draws a nested variant list.
 The changed-views state shows no comparison band at all; the marks on the theme
 control and the viewport dropdown are evidence about other views, and only the
 theme control navigates.

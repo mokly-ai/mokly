@@ -16,7 +16,10 @@ import {
   type WorkspaceVariant,
 } from "../src/shell/workspace_data.js";
 import { usageHref } from "../src/shell/workspace_usage.js";
-import { visibleWorkspaceViews } from "../src/shell/workspace_views.js";
+import {
+  resolveWorkspaceViews,
+  visibleWorkspaceViews,
+} from "../src/shell/workspace_views.js";
 import { viewerCatalogue } from "../src/viewer/projection.js";
 
 const model = readCatalogue(
@@ -162,6 +165,21 @@ test("workspace view selection uses exact contexts and light fallback", () => {
       (view) => view.path,
     ),
     ["desktop-light.html"],
+  );
+  assert.deepEqual(resolveWorkspaceViews(data, "default", "both", "dark"), {
+    colorScheme: "dark",
+    views: [data.views[1], data.views[2]],
+  });
+  const lightOnly = {
+    ...data,
+    views: data.views.filter(({ colorScheme }) => colorScheme === "light"),
+  } satisfies WorkspaceData;
+  assert.deepEqual(
+    resolveWorkspaceViews(lightOnly, "default", "both", "dark"),
+    {
+      colorScheme: "light",
+      views: lightOnly.views,
+    },
   );
 });
 

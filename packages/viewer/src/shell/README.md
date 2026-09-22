@@ -13,8 +13,10 @@ Serve, export and the public viewer converged on this tree.
 native `<details>`, and `nav_leaf_rows.tsx` its leaves: links carrying their
 entry-kind glyph, and a screen's variants as a container the row's chevron
 button discloses, because a row cannot be both a link and a `<summary>`. A
-deleted variant whose parent survives joins that container as a Removed row,
-which `nav_tree.ts` attaches to the parent instead of the section root.
+deleted variant whose non-variant parent survives joins that container as a
+Removed row. `nav_tree.ts` records actual attachment before removing the row
+from flat fallback, so a former parent that is now a variant cannot make its
+historical child disappear and every removed route remains represented once.
 `nav_changed.ts` names the changed mark's class, attribute and wording, so the
 server row and each React store update use the same presentation contract;
 `css_nav_changed.ts` draws the mark from `data-changed` and
@@ -24,8 +26,10 @@ owns Changes-filter activation for both standalone and embedded shells: an
 aggregate-only parent selects its first visible changed variant, and a changed
 destination selects its first changed view only when the current selection is
 not already a changed route. Later navigation within Changes keeps the sticky
-view axes; aggregate-parent redirection still applies, and a requested URL that
-names a viewport or color scheme remains explicit. `details_rows.tsx` owns the inspector's
+view axes; aggregate-parent redirection still applies. The shared typed query
+parser applies each valid viewport or scheme independently and ignores invalid
+or repeated values; the embedded host and standalone router consume the same
+route result. `details_rows.tsx` owns the inspector's
 metadata rows, including links between a screen and its variants and the
 `Changed views` row.
 
@@ -42,9 +46,12 @@ select the evidence that belongs to the preview; `css_workspace_marks.ts` draws
 the dot and clips its wording.
 The parallel `viewStates` map stores `{ viewport, colorScheme, state }` for each
 ready view under the same key, while a missing key means per-view status is
-unknown and the workspace must retain its route-level status and eligibility.
-`workspace.tsx` resolves the shown status and comparison band from that map on
-every viewport, scheme, saved-variant, or evidence change.
+unknown. `workspace_views.ts` resolves the documents actually displayed after
+Light fallback, and `view_status.ts` returns status, eligibility, and evidence
+provenance together. Complete matching evidence owns status and eligibility;
+missing, partial, or nonmatching evidence retains the route or saved variant's
+fallback decision. `workspace.tsx` shares that result with status, marks and
+comparison presentation on every axis, saved-variant, or evidence change.
 
 `css.ts` concatenates the standalone stylesheet. Split string modules preserve
 its exact bytes. The package build scopes an embedded stylesheet separately and

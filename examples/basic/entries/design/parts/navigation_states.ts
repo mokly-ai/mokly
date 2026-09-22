@@ -69,6 +69,7 @@ export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
   [D.variantSelected]: { all: D.welcome, changes: D.variantChanges },
   [D.variantChanges]: { all: D.variantSelected },
   [D.variantRemoved]: { all: D.welcome },
+  [D.variantReparented]: { all: D.home },
   [D.changedViews]: { all: D.welcome, schemeLinks: { dark: D.darkChanged } },
   [D.tour]: {},
   [D.welcome]: { ...welcomeBrowse, schemeLinks: { dark: D.darkWelcome } },

@@ -141,7 +141,11 @@ dropping views or disabling Git file validation.
 ## Screen controls
 
 The status beside the title and the comparison band describe the shown view,
-not the entry's route-wide result. With one viewport and one scheme selected,
+not the entry's route-wide result. Resolve the effective displayed scheme from
+the selected screen or component saved variant first: a Dark preference stays
+selected globally, but a light-only preview is evaluated as Light for its
+status, marks, frames, and comparison presentation. With one viewport and one
+scheme selected,
 the view's review state maps `changed` to Changed, `added` to Added, `removed`
 to Removed, and `unchanged` or `ignored-only` to Unmodified. While Both is
 selected, the shown status is Changed when any shown view is Changed, else
@@ -151,9 +155,19 @@ Changed is eligible, and Removed is eligible only for a component saved
 variant. Thus a route with changes can show Unmodified with no comparison band
 while the marks on the view controls and the `Changed views` row point to the
 views that changed. Unknown or pending per-view evidence — no ready result and
-no screen-view evidence for the entry — preserves the route-level status and
-eligibility. Switching viewport, scheme, or saved variant recomputes both
-without a page load, as does a background evidence refresh.
+no matching screen-view evidence for the selected entry or saved variant —
+preserves the route-level shown status and the independently supplied entry or
+variant eligibility. It must not infer eligibility from that fallback status.
+The resolver reports status, eligibility, and evidence provenance together so
+server rendering, client selection, comparison deep links, controlled hosts,
+and background updates cannot disagree. Switching viewport, effective scheme,
+or saved variant recomputes the decision without a page load, as does a
+matching background evidence refresh; nonmatching evidence leaves it intact.
+For Both, evidence is matching only when it covers every displayed viewport at
+the scheme that viewport actually renders after fallback. Partial coverage uses
+the complete fallback decision; it never combines a per-view status with
+route-level eligibility. Once complete, Both aggregates those matching states
+in the Changed, Added, Removed, Unmodified order above.
 
 Eligible views offer Current / Side by side / Overlay / Difference in an opaque
 band beneath the heading. Added and Unmodified views retain their current
