@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Bug Fixes
+
+* **viewer:** preserve the `.mbk-body` and `.mbk-details-body` selectors while scoping embedded styles, apply shell-root layout rules, and keep search usable beside compact host slots
+
 ## [0.2.0](https://github.com/mokly-ai/mokly/compare/viewer-v0.1.0...viewer-v0.2.0) (2026-09-17)
 
 

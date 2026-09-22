@@ -48,8 +48,10 @@ every viewport, scheme, saved-variant, or evidence change.
 
 `css.ts` concatenates the standalone stylesheet. Split string modules preserve
 its exact bytes. The package build scopes an embedded stylesheet separately and
-uses packaged relative font URLs; standalone Serve/export retain their original
-CSS and font delivery paths.
+uses packaged relative font URLs; its selector-aware transform maps document
+selectors and shell-root `.mbk` selectors to the embedding scope without
+rewriting class names. Standalone Serve/export retain their original CSS and
+font delivery paths.
 
 `catalogue.ts` owns pure display indexing, including the shared route resolver
 that gives current entries precedence over removed history. Historical

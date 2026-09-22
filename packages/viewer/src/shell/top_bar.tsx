@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState } from "react";
+
 import type { Catalogue } from "./catalogue.js";
 import { SchemeSwitch } from "./head.js";
 import { BrandIcon, IconSvg, SearchIcon } from "./icons.js";
@@ -9,8 +11,22 @@ import { SearchTagPicker } from "./tags.js";
 export function TopBar(props: { catalogue: Catalogue }) {
   const store = useOptionalShellStore();
   const navigationId = useShellIdentifier("mb-nav");
+  const searchId = useShellIdentifier("mb-search");
+  const [compactSearchOpen, setCompactSearchOpen] = useState(false);
+  const searchInput = useRef<HTMLInputElement>(null);
+  const searchToggle = useRef<HTMLButtonElement>(null);
+  const searchWasOpen = useRef(false);
+  useEffect(() => {
+    if (compactSearchOpen) searchInput.current?.focus();
+    else if (searchWasOpen.current) searchToggle.current?.focus();
+    searchWasOpen.current = compactSearchOpen;
+  }, [compactSearchOpen]);
   return (
-    <header className="mbk-topbar" data-search="">
+    <header
+      className="mbk-topbar"
+      data-compact-search={compactSearchOpen ? "open" : "closed"}
+      data-search=""
+    >
       <button
         aria-controls={navigationId}
         aria-expanded={store?.state.drawerOpen ?? false}
@@ -30,18 +46,44 @@ export function TopBar(props: { catalogue: Catalogue }) {
         </span>
         <span className="mbk-name">Mokly</span>
       </a>
+      <button
+        aria-controls={searchId}
+        aria-expanded={compactSearchOpen}
+        aria-label="Search catalogue"
+        className="mbk-search-toggle"
+        onClick={() => setCompactSearchOpen(true)}
+        ref={searchToggle}
+        type="button"
+      >
+        <SearchIcon />
+      </button>
       <div className="mbk-search">
         <SearchIcon />
         <input
           aria-label="Search catalogue"
           data-mokly-search=""
+          id={searchId}
           onChange={(event) => store?.setSearch(event.currentTarget.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") setCompactSearchOpen(false);
+          }}
           placeholder="Search catalogue…"
+          ref={searchInput}
           type="search"
           value={store?.state.query}
         />
         <SearchTagPicker tags={props.catalogue.tags} />
       </div>
+      <button
+        aria-label="Close search"
+        className="mbk-search-close"
+        onClick={() => setCompactSearchOpen(false)}
+        type="button"
+      >
+        <IconSvg size={16}>
+          <path d="m6 6 12 12M18 6 6 18" />
+        </IconSvg>
+      </button>
       {props.catalogue.hasDarkFragments ? <SchemeSwitch /> : null}
     </header>
   );
