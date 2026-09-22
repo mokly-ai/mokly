@@ -35,6 +35,50 @@ export const mockups = [action.entry];
 Render it in a screen with `action.Component`, and give repeated siblings
 distinct `moklyInstance` values so their identity survives an edit.
 
+## Keep the registration beside the component
+
+A registration can live next to the component it describes. With an
+`entries` glob such as `src/**/*.mockup.{ts,tsx}`, a `src/components/button`
+folder holds the product component, its registration, and the entry module
+that exports it, and Mokly records the registration file as the component's
+source. That example glob selects the recommended `.mockup.tsx` convention;
+the configured glob itself, not a built-in suffix rule, decides which files
+are entry modules.
+
+```tsx
+// src/components/button/button.mokly.tsx
+import { defineComponent } from "@mokly/mokly";
+
+import { Button } from "./button.js";
+
+export const button = defineComponent({
+  id: "button",
+  title: "Button",
+  description: "The product button.",
+  route: "components/button.html",
+  dependencies: ["src/components/button/button.tsx"],
+  ownedDependencies: ["src/components/button/button.tsx"],
+  relatedDocs: [],
+  propSchema: {
+    kind: "object",
+    properties: { label: { schema: { kind: "string" } } },
+  },
+  render: (props) => <Button>{props.label}</Button>,
+  variants: [{ id: "default", title: "Default", props: { label: "Save" } }],
+});
+```
+
+```tsx
+// src/components/button/button.mockup.tsx
+import { button } from "./button.mokly.js";
+
+export const mockups = [button.entry];
+```
+
+Screens anywhere in the repository import `button` from the registration and
+render `button.Component`; an edit to `button.tsx` is then attributed to the
+component, with those screens listed as affected.
+
 ## Saved variants
 
 Variants are explicit named examples, never inferred. Every variant is built

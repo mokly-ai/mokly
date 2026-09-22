@@ -81,6 +81,10 @@ after its source generation is superseded. Source/config replacement accepts a n
 validated index and rendering graph together; failed candidates retain the previous
 working generation. Replacements invalidate cached documents, usage and comparisons.
 Resource edits invalidate cached resource evidence. Shutdown cancels outstanding work.
+HTTP shutdown stops accepting connections, ends live-update streams, and closes
+all remaining client connections, including incomplete requests and responses.
+It drains every owned service even if another service fails to close; it never
+waits for a browser to finish sending a request or reading a preview.
 
 Background classification runs in the worker, but Git commands run through a private
 request/reply channel owned by the parent. Source replacement, shutdown and worker

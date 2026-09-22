@@ -8,14 +8,15 @@ order: 1
 ## The shape of a config
 
 `defineConfig` takes one object of type `MoklyConfig` and returns it typed.
-`entriesDir` and `mockupsDir` are required; everything else has a default.
+`mockupsDir` and exactly one of `entries` or `entriesDir` are required;
+everything else has a default.
 
 ```ts
 import { defineConfig } from "@mokly/mokly";
 
 export default defineConfig({
   colorSchemes: ["light", "dark"],
-  entriesDir: "docs/mockups/entries",
+  entries: ["src/**/*.mockup.{ts,tsx}"],
   mockupsDir: "docs/mockups/generated",
   renderer: "docs/mockups/renderer.tsx",
   repoRoot: ".",
@@ -28,13 +29,15 @@ export default defineConfig({
 });
 ```
 
-Paths are relative to the config file and stay inside `repoRoot`.
+Folder paths are relative to the config file and stay inside `repoRoot`.
+Globs are relative to `repoRoot`.
 
 ## Fields
 
 | Field              | Meaning                                                                           |
 | ------------------ | --------------------------------------------------------------------------------- |
-| `entriesDir`       | Where your entry modules live                                                     |
+| `entries`          | Globs whose matched regular files are entry modules                               |
+| `entriesDir`       | Shorthand for `<folder>/**/*.mockup.{ts,tsx}`                                     |
 | `mockupsDir`       | Where the generated catalogue is written                                          |
 | `generatedOutput`  | `"derived"` (default) requires untracked output; `"committed"` verifies Git bytes |
 | `colorSchemes`     | Schemes rendered for every screen; defaults to `["light"]`                        |
@@ -46,6 +49,35 @@ Paths are relative to the config file and stay inside `repoRoot`.
 | `review`           | The Git base, the artifact directory and shared-impact globs                      |
 | `watch`            | Extra inputs the watched server reacts to                                         |
 | `compatibility`    | Temporary bridges while a repository moves to the current output                  |
+
+## Entries
+
+`entries` lists repository-relative globs. Every matched regular file is an
+entry module, with no separate suffix or extension filter. A glob such as
+`src/**/*.mockup.{ts,tsx}` selects the recommended naming convention and lets
+each entry live beside the component or screen it describes. A broader glob
+such as `src/**/*.ts` deliberately makes every matched TypeScript file an entry,
+but a file with no registry export simply contributes no definitions. If no
+matched file contributes a definition, compilation reports the normal empty
+registry error. The matched set is sorted by path, so neither glob order nor
+filesystem order changes the catalogue. Discovery skips denied directories and
+`review.outDir`. A glob with no matched module reports the skipped denied roots,
+if any. A matched barrel that re-exports another matched module's registry array
+fails with `duplicate-id`. Narrow the glob, rename the barrel so the glob no
+longer matches it, or stop re-exporting registry arrays.
+
+List multiple globs when entry modules genuinely live in multiple locations,
+for example `entries: ["src/**/*.mockup.{ts,tsx}",
+"docs/mockups/entries/**/*.mockup.tsx"]`. Every item is validated separately,
+so each glob must match at least one entry module.
+
+`entriesDir` names one folder relative to the config file and is exactly
+`entries: ["<folder>/**/*.mockup.{ts,tsx}"]`. Set one of the two fields, not
+both.
+
+Helpers imported by an entry module are attributed to their own file: a
+component registered in `button.mokly.tsx` beside `button.tsx` records that
+file as its source, wherever the entry module that exports it lives.
 
 ## Stylesheets
 

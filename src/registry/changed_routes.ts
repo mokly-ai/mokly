@@ -8,7 +8,7 @@ import type { Manifest, ManifestEntry } from "@mokly/viewer/data";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 
-/** Match manifest entries against repository-relative changed paths. */
+/** Match each routed entry, including each variant, against changed material and metadata. */
 export function changedManifestRoutes(
   manifest: Manifest,
   baseManifest: Manifest,
@@ -99,8 +99,18 @@ function routeChangeProjection(
     fragments: entry.fragments,
     route: entry.route,
     useCaseIds: entry.useCaseIds,
+    variantParent: projectedVariantParent(entry, hierarchy),
+    variantOf: entry.variantOf,
     viewports: entry.viewports,
   };
+}
+
+function projectedVariantParent(
+  entry: ManifestEntry,
+  hierarchy: CatalogueHierarchy<ManifestEntry>,
+): { id: string; title: string } | undefined {
+  const parent = hierarchy.variantParentById.get(entry.id);
+  return parent ? { id: parent.id, title: parent.title } : undefined;
 }
 
 function changedPathCandidates(

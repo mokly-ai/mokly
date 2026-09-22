@@ -33,6 +33,17 @@ complete HTML document from a synchronous render callback, with no device or
 color variants. The [page contract](./mokly-pages.md) defines both explicit
 and nested authoring forms. Ids are explicit,
 globally unique kebab-case values and remain stable across navigation changes.
+A screen may also declare `variants`: each variant flattens into a complete
+screen entry with its own global id, a route derived beneath the parent's,
+and a `variantOf` relationship to the parent. The
+[screen variants contract](./mokly-screen-variants.md) defines that implemented
+field, validation, and public grouping. A variant inherits the parent's
+address, color schemes, dependencies, related docs, and tags when it omits
+them. Its use-case membership never inherits: `useCaseIds` defaults to an empty
+list because a variant must reciprocate only the flows whose steps name that
+variant. `defineScreen` returns one `ScreenDefinition` when `variants` is absent
+and a readonly parent-first array of screen definitions when it is present.
+Entry-module loading flattens that array one level.
 
 Each entry provides a title, description, related docs, and dependency paths.
 A dependency may identify an existing repository file or directory; Review
@@ -51,7 +62,10 @@ may have at most one collection parent. A collection cannot repeat one child,
 reference itself, participate in a longer collection cycle, or reference an
 unknown id. Entries that no collection claims are catalogue roots. Breadcrumbs
 are the root-to-parent sequence of ancestor collection titles; authors never
-provide a separate breadcrumb or navigation-label path.
+provide a separate breadcrumb or navigation-label path. A variant screen is
+the one exception to direct claiming: it belongs to its parent's collection
+through `variantOf`, is never listed in `childIds`, and its breadcrumbs end
+with the parent title.
 
 The common and nested-root input boundary is:
 
@@ -110,10 +124,22 @@ carrying the key at all, so `tags: undefined` is as much a violation as
 `tags: ["forms"]`. Tags are optional catalogue vocabulary, not a second
 hierarchy: an untagged catalogue stays valid.
 
-Imports of `@mokly/mokly` from modules beneath `entriesDir` bind the authoring
-helpers to that importing module. Definitions created at module evaluation or
-later through a shared helper factory therefore retain the helper module's
-repo-relative source path without process-global attribution state.
+Imports of `@mokly/mokly` from any repository-owned module bind the authoring
+helpers to that importing module. A module is repository-owned when its real
+path lies inside `repoRoot` and outside `node_modules`, `.mokly-cache/`, and
+Mokly's own package runtime; installed packages receive the plain, unattributed
+API and cannot self-attribute. Definitions created at module evaluation or
+later through a shared helper factory therefore retain the defining module's
+repo-relative source path without process-global attribution state. A
+definition created in a helper beside a product component is attributed to
+that helper, not to the entry module that imports it, and the helper need not
+match an `entries` glob.
+
+The configured `entries` glob itself defines which regular files Mokly
+evaluates as registry modules; there is no additional filename suffix rule.
+`.mockup.ts` and `.mockup.tsx` are the recommended convention because the
+`entriesDir` shorthand expands to `<dir>/**/*.mockup.{ts,tsx}`, while an
+explicit glob may deliberately select another shape.
 
 Every catalogue-route segment starts with an ASCII letter or digit and then
 uses only URL-unreserved ASCII letters, digits, `.`, `_`, `~`, or `-`. A

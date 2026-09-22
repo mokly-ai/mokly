@@ -37,6 +37,7 @@ export type {
   RoutedEntryInput,
   ScreenDefinition,
   ScreenInput,
+  ScreenVariantInput,
   UseCaseDefinition,
   UseCaseInput,
   UseCaseStep,

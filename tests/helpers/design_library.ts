@@ -11,6 +11,8 @@ export const designLibrary = [
       "loading",
       "preparing",
       "unavailable",
+      "variants",
+      "changed-variants",
     ],
   ],
   ["chrome", "screen-header", ["screen", "component", "changed", "removed"]],
@@ -22,7 +24,7 @@ export const designLibrary = [
   [
     "controls",
     "view-controls",
-    ["default", "both", "highlighted", "unavailable"],
+    ["default", "both", "highlighted", "unavailable", "changed-views"],
   ],
   ["controls", "tag-picker", ["all", "selected", "empty"]],
   ["controls", "tag-chip", ["default", "selected", "inactive"]],

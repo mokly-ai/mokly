@@ -12,7 +12,7 @@ import {
   validEntrySource,
 } from "./fixture.js";
 
-/** Build a consumer and commit its actual generated baseline before an edit. */
+/** Build a committed consumer; register live resources with onCleanup before using it. */
 export async function changedFixture(
   t: TestContext,
   source = validEntrySource(),
@@ -20,7 +20,20 @@ export async function changedFixture(
   prepare?: (fixture: TestFixture) => Promise<void>,
 ) {
   const fixture = await createFixture(source, options);
-  t.after(() => removeFixture(fixture));
+  const resources: (() => Promise<void>)[] = [];
+  t.after(async () => {
+    const failures: unknown[] = [];
+    for (const close of resources.toReversed()) {
+      try {
+        await close();
+      } catch (error) {
+        failures.push(error);
+      }
+    }
+    if (failures.length)
+      throw new AggregateError(failures, "Fixture resources could not close");
+    await removeFixture(fixture);
+  });
   await prepare?.(fixture);
   const config = await loadConfig(fixture.root);
   const build = async () =>
@@ -33,5 +46,13 @@ export async function changedFixture(
   git("config", "user.email", "mokly@example.invalid");
   git("add", ".");
   git("commit", "-qm", "test: catalogue baseline");
-  return { ...fixture, build, config, git };
+  return {
+    ...fixture,
+    build,
+    config,
+    git,
+    onCleanup(close: () => Promise<void>): void {
+      resources.push(close);
+    },
+  };
 }

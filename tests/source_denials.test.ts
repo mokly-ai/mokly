@@ -87,7 +87,7 @@ test("generated-route denials distinguish source roots, reserved names, listed i
     sourceFiles: ["mockups/helper.html"],
   };
   for (const [route, cause] of [
-    ["source-alias/page.html", /authored source root.*entriesDir/],
+    ["source-alias/page.html", /resolved entry module.*entries/],
     ["page.source.html", /reserved source basename/],
     ["helper.html", /authoring input.*sourceFiles/],
     ["metadata.html", /internal catalogue metadata/],

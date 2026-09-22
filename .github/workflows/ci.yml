@@ -19,12 +19,15 @@ jobs:
   repository:
     name: Repository
     runs-on: ubuntu-latest
+    outputs:
+      node-24-version: ${{ steps.node.outputs.node-version }}
     steps:
       - name: Check out repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 0
       - name: Set up Node.js
+        id: node
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 24
@@ -63,7 +66,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
-          node-version: ${{ matrix.node }}
+          node-version: ${{ matrix.node == '24' && needs.repository.outputs.node-24-version || matrix.node }}
           package-manager-cache: false
           cache: npm
           cache-dependency-path: |
@@ -105,7 +108,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
-          node-version: ${{ matrix.node }}
+          node-version: ${{ matrix.node == '24' && needs.repository.outputs.node-24-version || matrix.node }}
           package-manager-cache: false
           cache: npm
           cache-dependency-path: |
@@ -157,7 +160,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
-          node-version: ${{ matrix.node }}
+          node-version: ${{ matrix.node == '24' && needs.repository.outputs.node-24-version || matrix.node }}
           package-manager-cache: false
           cache: npm
           cache-dependency-path: |
@@ -237,7 +240,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
-          node-version: 24
+          node-version: ${{ needs.repository.outputs.node-24-version }}
           package-manager-cache: false
       - name: Download shard evidence
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0

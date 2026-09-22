@@ -10,6 +10,7 @@ export async function closeCatalogueHttp(
   const serverClosing = new Promise<void>((resolve, reject) => {
     server.close((error) => (error ? reject(error) : resolve()));
   });
+  server.closeAllConnections();
   const results = await Promise.allSettled([
     serverClosing,
     ...services.map((service) => service?.close()),

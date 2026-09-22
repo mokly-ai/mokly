@@ -148,6 +148,98 @@ test("malformed cyclic hierarchy cannot recurse during nav construction", () => 
   assert.deepEqual(buildNavTree(catalogue.hierarchy), []);
 });
 
+test("screen variants nest under their parent leaf in manifest order", () => {
+  const catalogue = createCatalogue(
+    manifest([
+      collection("screens", "Screens", ["welcome"]),
+      screen("welcome", "Welcome"),
+      variant("welcome-error", "Save failed", "welcome"),
+      variant("welcome-empty", "Empty workspace", "welcome"),
+    ]),
+  );
+  const children = group(
+    buildNavTree(catalogue.hierarchy),
+    "collection:screens",
+  ).children;
+
+  assert.deepEqual(
+    children.map(({ label }) => label),
+    ["Welcome"],
+  );
+  assert.deepEqual(
+    (leaf(children, "Welcome").variants ?? []).map(
+      ({ entryKind, key, label, route }) => [entryKind, key, label, route],
+    ),
+    [
+      ["screen", "entry:welcome-error", "Save failed", "welcome-error.html"],
+      [
+        "screen",
+        "entry:welcome-empty",
+        "Empty workspace",
+        "welcome-empty.html",
+      ],
+    ],
+  );
+  assert.equal(leaf(children, "Welcome").variants?.[0]?.variants, undefined);
+});
+
+test("a screen without variants carries no variant list", () => {
+  const catalogue = createCatalogue(
+    manifest([
+      collection("screens", "Screens", ["welcome"]),
+      screen("welcome", "Welcome"),
+    ]),
+  );
+  const children = group(
+    buildNavTree(catalogue.hierarchy),
+    "collection:screens",
+  ).children;
+
+  assert.equal(leaf(children, "Welcome").variants, undefined);
+});
+
+test("variants never render as roots or as collection children", () => {
+  const catalogue = createCatalogue(
+    manifest([
+      collection("screens", "Screens", ["welcome"]),
+      screen("welcome", "Welcome"),
+      variant("welcome-empty", "Empty workspace", "welcome"),
+      variant("loose-empty", "Loose variant", "loose"),
+      screen("loose", "Loose"),
+    ]),
+  );
+  const tree = buildNavTree(catalogue.hierarchy);
+
+  assert.deepEqual(
+    tree.map(({ key }) => key),
+    ["collection:screens", "entry:loose"],
+  );
+  assert.deepEqual(
+    group(tree, "collection:screens").children.map(({ key }) => key),
+    ["entry:welcome"],
+  );
+  assert.deepEqual(
+    (leaf(tree, "Loose").variants ?? []).map(({ key }) => key),
+    ["entry:loose-empty"],
+  );
+});
+
+test("a variant inherits its parent's collection crumbs without the parent", () => {
+  const catalogue = createCatalogue(
+    manifest([
+      collection("example", "Example", ["screens"]),
+      collection("screens", "Screens", ["welcome"]),
+      screen("welcome", "Welcome"),
+      variant("welcome-empty", "Empty workspace", "welcome"),
+    ]),
+  );
+
+  assert.deepEqual(structuredCrumbTrail(catalogue.hierarchy, "welcome-empty"), [
+    { label: "Example" },
+    { label: "Screens" },
+  ]);
+});
+
 function group(
   nodes: readonly (NavGroupNode | { kind: "leaf" })[],
   key: string,
@@ -209,6 +301,10 @@ function screen(
     viewports: ["mobile", "desktop"],
     ...(tags ? { tags } : {}),
   };
+}
+
+function variant(id: string, title: string, variantOf: string): ManifestScreen {
+  return { ...screen(id, title), variantOf };
 }
 
 function useCase(

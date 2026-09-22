@@ -8,7 +8,7 @@ import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
 
 import { watcherReadyBeforeShutdown } from "./serve_lifecycle.js";
-import { NotificationGate } from "./watch_events.js";
+import { NotificationGate, type WatchEvent } from "./watch_events.js";
 import {
   discoverWatchResources,
   type ResourceWatchSnapshot,
@@ -29,7 +29,7 @@ export class ResourceWatcher {
 
   constructor(
     private readonly factory: ConsumerWatcherFactory,
-    private readonly changed: (candidate: string) => void,
+    private readonly changed: (event: WatchEvent) => void,
     private readonly failed: (error: Error) => void,
   ) {}
 
@@ -67,7 +67,9 @@ export class ResourceWatcher {
       };
     }
     while (!this.#closed) {
-      const gate = new NotificationGate<string>();
+      const gate = new NotificationGate<WatchEvent>((error) =>
+        this.failed(error instanceof Error ? error : new Error(String(error))),
+      );
       const paths = snapshot.paths;
       const watcher =
         snapshot.paths.size > 0
@@ -84,7 +86,7 @@ export class ResourceWatcher {
               { followSymlinks: false },
             )
           : undefined;
-      watcher?.onChange((candidate) => gate.notify(candidate));
+      watcher?.onChange((event) => gate.notify(event));
       watcher?.onError(this.failed);
       try {
         if (
@@ -115,9 +117,9 @@ export class ResourceWatcher {
             this.#snapshot = snapshot;
             this.#watcher = watcher;
             adopted = true;
-            gate.open((candidate) => {
+            gate.open((event) => {
               if (this.#watcher === watcher && !this.#closed)
-                this.changed(candidate);
+                this.changed(event);
             });
           },
           close: async () => {

@@ -12,6 +12,7 @@ import type { ChildHandle } from "../dist/server/child_process.js";
 import { serve } from "../dist/server/serve.js";
 import { ReadyProcessSupervisor } from "../dist/server/supervisor.js";
 import type { ChildCommand } from "../dist/server/update_messages.js";
+import type { WatchEvent } from "../dist/server/watch_events.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
@@ -74,7 +75,7 @@ for (const action of ["rebuild", "reconfigure", "live"] as const) {
       [],
       0,
     );
-    let changed: ((file: string) => void) | undefined;
+    let changed: ((event: WatchEvent) => void) | undefined;
     const running = await serve(
       config,
       { port: 0, watch: true },
@@ -123,7 +124,10 @@ for (const action of ["rebuild", "reconfigure", "live"] as const) {
           )
         : source.replace("maxLength: 80", "maxLength: 100");
     await fs.writeFile(fixture.entryPath, edit);
-    changed!(action === "reconfigure" ? config.configPath : fixture.entryPath);
+    changed!({
+      path: action === "reconfigure" ? config.configPath : fixture.entryPath,
+      kind: "change",
+    });
     await waitFor(() =>
       first.messages.some(
         (message) =>

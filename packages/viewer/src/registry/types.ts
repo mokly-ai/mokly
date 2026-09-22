@@ -30,6 +30,8 @@ export interface ManifestScreen extends ManifestEntryBase {
   /** Declared classification tags, present only when the entry has them. */
   tags?: readonly string[];
   useCaseIds: readonly string[];
+  /** Parent screen id, present only when this screen is a variant. */
+  variantOf?: string;
   viewports: readonly Viewport[];
 }
 
