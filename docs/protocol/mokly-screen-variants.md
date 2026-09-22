@@ -2,11 +2,13 @@
 
 ## Delivery Status
 
-Milestones 1 to 8 of the
-[screen variants plan](../../plans/screen-variants.md) are implemented and
-verified, covering authoring through per-view evidence for every saved variant
-and every export. Milestone 9's design-catalogue conversion remains pending
-explicit approval; Milestones 10 to 12 apply the approved review findings.
+The [screen variants plan](../../plans/screen-variants.md) is complete for its
+delivered scope: Milestones 1 to 8 and 10 to 12 implement authoring through
+per-view evidence for every saved variant and export, plus the approved review
+fixes. The unimplemented design-catalogue conversion, open review findings and
+later product ideas belong to the separate
+[follow-up plan](../../plans/screen-variants-follow-up.md). The conversion's
+route retirements still require explicit approval.
 
 ## Purpose And Boundary
 

@@ -2,6 +2,13 @@
 
 ## Status And Outcome
 
+Status: completed for PR #101's delivered scope on 2026-09-22, at the user's
+request. Unfinished review and post-merge work is owned by
+[Co-Located Entry Discovery Follow-up](./co-located-entry-discovery-follow-up.md)
+for a separate PR; none of it is implemented by this close-out. The historical
+milestones and review records remain here. PR #101's merge is the delivery
+boundary.
+
 Milestones 1 through 13 are complete, committed, and pushed. Milestone 11
 preserves watcher event kinds and stats through classification and reports
 discovery failures except benign missing-directory races; its gate passed with
@@ -12,8 +19,16 @@ probe, since capability-holding processes read mode-000 directories. Milestone
 documented behavior. The post-push review of Milestone 12 reported eight
 findings, recorded below. The user approved fixing findings 1 and 2; Milestone 13
 delivered them and its post-push review reported two P3 items. Seventh-round
-findings 3 through 8 and both eighth-round items are deferred and remain listed
-below. The plan is ready for a pull request.
+findings 3 through 8 and both eighth-round items are transferred to the
+follow-up, including the eighth-round residual note. Their original
+observations remain below. The follow-up also owns the latest post-CI review's
+conflicting entry-layout documentation finding.
+
+The final local `cargo xtask check` passed with 2,233 unit/integration tests
+and 686 browser tests, with no failures, skips or cancellations. The
+[post-fix CI run](https://github.com/mokly-ai/mokly/actions/runs/35724564158)
+and [preview run](https://github.com/mokly-ai/mokly/actions/runs/35724564195)
+passed. This close-out changes planning and delivery-status documentation only.
 
 Mokly currently discovers every `*.mockup.ts` and `*.mockup.tsx` module below
 one configured directory, `entriesDir`, and binds the source-attributed
@@ -41,6 +56,8 @@ The follow-up idea of installable component-library adapters, adopted from
 `node_modules` through an explicit adoption helper, is out of scope here. It
 depends on the facade relaxation delivered by this plan and gets its own
 protocol document and plan afterwards.
+The [follow-up plan](./co-located-entry-discovery-follow-up.md) now owns that
+planning task and the published-consumer smoke test.
 
 Related contracts:
 
@@ -271,6 +288,10 @@ read and projection error rule it lost.
 
 ## Eighth Review Findings (deferred)
 
+Ownership transferred to
+[Co-Located Entry Discovery Follow-up](./co-located-entry-discovery-follow-up.md).
+The historical observations below are unchanged, including the residual note.
+
 Review of the Milestone 13 commit. Both items are P3 hygiene and are deferred
 with seventh-round findings 3 through 8. The reviewer confirmed that no
 legitimately listed candidate can be dropped by the new type check, that
@@ -289,6 +310,10 @@ immaterial, and that the three docs agree with the code.
    finding 5.
 
 ## Seventh Review Findings (1 and 2 approved in Milestone 13; 3 through 8 deferred)
+
+Findings 3 through 8 are now owned by
+[Co-Located Entry Discovery Follow-up](./co-located-entry-discovery-follow-up.md).
+This section preserves the original observations, not a new implementation claim.
 
 Review of the Milestone 12 commit. Nothing has been changed in response. The
 supervising agent confirmed findings 1, 2, and 3 by direct probe. The reviewer
@@ -408,9 +433,6 @@ supervising agent confirmed findings 1, 2, and 3 by direct probe.
 
 ## Post-merge follow-up (non-blocking)
 
-- Write the component-library adoption protocol document and plan, covering an
-  explicit adoption helper in the attributed facade, package-version
-  dependency evidence in Changes, provider composition in the consumer
-  renderer, and package naming.
-- Smoke-test a consumer repository that uses a monorepo workspace package as a
-  glob root with the published package release.
+The component-library adoption protocol/plan and published-release monorepo
+consumer smoke test are transferred, still unimplemented, to the
+[follow-up plan's non-blocking section](./co-located-entry-discovery-follow-up.md#post-merge-follow-up-non-blocking).

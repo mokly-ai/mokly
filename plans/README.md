@@ -2,18 +2,13 @@
 
 ## Active
 
-- [Screen Variants](./screen-variants.md) — variant screens with their own
-  ids and routes grouped under a parent screen, expandable variant rows in
-  the navigation, per-variant Changes, and changed-view marks on the view
-  controls; Milestones 1 to 8 and the three review-fix milestones are
-  delivered, the design conversion awaits approval, and three second-review
-  findings await the user's decision.
-- [Co-Located Entry Discovery](./co-located-entry-discovery.md) — delivered
-  on the branch through Milestone 11 with five review rounds applied; earlier
-  milestones and review rounds are kept in `co-located-entry-discovery/`.
-  Milestone 13 delivered the two approved seventh-round fixes; eight small
-  deferred findings from the seventh and eighth review rounds remain listed
-  in the plan. Ready for a pull request.
+- [Screen Variants Follow-up](./screen-variants-follow-up.md) — deferred
+  design-catalogue conversion, five open review findings, and later navigation
+  ideas from PR #101; planned for a separate PR, with no implementation started.
+- [Co-Located Entry Discovery Follow-up](./co-located-entry-discovery-follow-up.md)
+  — all deferred seventh/eighth-round findings, the latest entry-layout
+  documentation finding, and the remaining follow-up tasks from PR #101;
+  planned for a separate PR, with no implementation started.
 - [React Browse Shell](./react-browse-shell.md)
 - [CI Performance](./ci-performance.md) — parallel verification, complete test
   sharding, reusable preparation and measured CI timing improvements.
@@ -39,6 +34,14 @@
 
 ## Completed
 
+- [Screen Variants](./screen-variants.md) — PR #101's delivered scope is
+  complete: authoring, navigation, Changes, per-view evidence, and the approved
+  review fixes. Unfinished work is owned by
+  [Screen Variants Follow-up](./screen-variants-follow-up.md).
+- [Co-Located Entry Discovery](./co-located-entry-discovery.md) — PR #101's
+  delivered scope is complete through Milestone 13. Historical milestones and
+  reviews remain in `co-located-entry-discovery/`; open work is owned by
+  [Co-Located Entry Discovery Follow-up](./co-located-entry-discovery-follow-up.md).
 - [Removed Content Previews](./removed-content-previews.md) — delivered and
   verified; Serve, exports, repository previews, and embedded viewers render
   pinned previous versions for removed documents and screens. Its High/P1

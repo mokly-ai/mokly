@@ -1,10 +1,19 @@
 # Screen Variants
 
-Status: active. Created 2026-09-19 with the user's consent after the design
+Status: completed for PR #101's delivered scope on 2026-09-22, at the user's
+request. Created 2026-09-19 with the user's consent after the design
 discussion in this workspace, then rewritten the same day when the user chose
-own routes over a query parameter. Milestones 1 to 8 and 10 to 12 are
-complete; three second-review findings await a decision; Milestone 9 needs
-the user's approval first.
+own routes over a query parameter. Milestones 1 to 8 and 10 to 12 are complete.
+Task 9.1, all open review findings, and the later product ideas are transferred
+to [Screen Variants Follow-up](./screen-variants-follow-up.md) for a separate
+PR. They are not implemented or silently checked off by this close-out; the
+historical record remains below. PR #101's merge is the delivery boundary.
+
+The final local `cargo xtask check` passed with 2,233 unit/integration tests
+and 686 browser tests, with no failures, skips or cancellations. The
+[post-fix CI run](https://github.com/mokly-ai/mokly/actions/runs/35724564158)
+and [preview run](https://github.com/mokly-ai/mokly/actions/runs/35724564195)
+passed. This close-out changes planning and delivery-status documentation only.
 
 **Goal:** Let a screen declare variants beside its default render, show them as
 an expandable list under the screen's navigation row, give each variant its
@@ -49,14 +58,14 @@ user should reconsider):**
   the derived route already satisfies the existing fragment-path rule.
   Comparison schemas stay at v2 and v3 unchanged. The public read model v1
   gains optional `variantOf` on screens, which its additive-field rule allows.
-- Proposed, pending the user's explicit approval before Milestone 9 starts:
+- Deferred to the follow-up, still requiring explicit route-retirement approval:
   the shipped `examples/basic` design catalogue converts the light-only
   `design-browse-dark-scheme`/`design-browse-light-only` pair and the four tag
   states into variants of `design-browse-screen` (Welcome). Ids stay the
   same because variants keep global ids; only their routes and collection
   membership change, which retires six routes on `origin/main` and needs
-  approval under the mainline preservation rule. Without approval, Milestone 9
-  is skipped and the standalone screens stay.
+  approval under the mainline preservation rule. Task 9.1 was not implemented
+  in this PR; the standalone screens stay until the follow-up conversion.
 
 **Spec:** [`docs/protocol/mokly-screen-variants.md`](../docs/protocol/mokly-screen-variants.md)
 plus the targeted updates listed in Milestone 1.
@@ -67,8 +76,8 @@ import from `../dist`), React 19 static rendering, Playwright Chromium against
 
 ## Global Constraints
 
-- Run `cargo xtask check` before declaring any milestone complete. It runs
-  `format:check`, `lint`, `typecheck`, `npm test`, `example:check`,
+- Run `cargo xtask check` before declaring any implementation milestone
+  complete. It runs `format:check`, `lint`, `typecheck`, `npm test`, `example:check`,
   `package:check`, `package:smoke`, `test:browser`, `cargo fmt --check`,
   `clippy -D warnings`, `cargo test`, and the Rust file-length audit.
 - After checks pass at each milestone end: `git add -A`, commit with a
@@ -96,9 +105,10 @@ import from `../dist`), React 19 static rendering, Playwright Chromium against
   tasks, without editing completed milestones.
 - Add the failing test before fixing any regression discovered on the way.
 - Do not delete or override anything on `origin/main` without explicit
-  approval. The only removal this plan proposes is the design-catalogue route
-  retirement in Milestone 9; it needs the user's approval first and must be
-  named in that commit message.
+  approval. The design-catalogue route retirement formerly scoped in
+  Milestone 9 is deferred to the follow-up;
+  it still needs the user's approval first and must be named in that commit
+  message.
 
 ## Milestones
 
@@ -165,7 +175,8 @@ navigation, a selected variant, the Changes filter with a changed variant
 sub-row, a removed variant, and the changed-view marks on the view controls,
 at mobile and desktop widths, using only screen components. The Welcome
 scheme and tag artboards stay standalone screens in this milestone; their
-conversion into real variants is Milestone 9.
+conversion into real variants was scoped in Milestone 9 and is now owned by
+the [follow-up plan](./screen-variants-follow-up.md).
 
 #### Task 2.1: Catalogue navigation library component
 
@@ -641,47 +652,24 @@ Serve and in every export.
 
 ---
 
-### Milestone 9: Design catalogue conversion and verification
+### Milestone 9: Design catalogue conversion and verification (deferred)
 
 Tags: mockup
 
-Requires the user's explicit approval of the route retirement recorded in the
-locked decisions; without it, skip Task 9.1 and go straight to Task 9.2. At
-completion the Welcome design screen owns the dark-scheme, light-only, and four
-tag states as variants under `design/browse/views/screen.variants/`, the
-inventories list the new routes, and the plan is closed.
+Task 9.1 was not implemented. On 2026-09-22 the user requested that unfinished
+work move to a follow-up so the delivered scope could merge. Its route
+retirement still needs the explicit approval recorded in the locked decisions.
+Task 9.2's completed review remains part of this PR's history.
 
-#### Task 9.1: Convert the design states to Welcome variants
+#### Task 9.1: Convert the design states to Welcome variants (transferred)
 
-**Files:**
-
-- Modify: `examples/basic/entries/design/browse_screens.tsx` (Welcome's
-  `design-browse-screen` gains `variants: [...]` composed from the dark-scheme
-  and tag-state screen components), `examples/basic/entries/design/browse_scheme_screens.tsx`,
-  `examples/basic/entries/design/browse_tag_screens.tsx`,
-  `examples/basic/entries/design/browse/states/tags/*.tsx` (export screen
-  components and variant inputs rather than entries),
-  `examples/basic/entries/design/design.mockup.tsx` (drop the moved children
-  from their collections), `docs/protocol/mokly-shell-design.md` and
-  `docs/protocol/mokly-design-links.md` inventories, `examples/basic/notes.md`,
-  `tests/design_links.test.ts`, `tests/design_screens.test.tsx`,
-  `tests/browser/design_links.spec.ts`, `tests/browser/preview_design_links.spec.ts`
-
-**Steps:**
-
-- [ ] Confirm the user's approval is recorded in this plan before touching
-      any file.
-- [ ] Convert, rebuild, check, and run the design link suites; confirm the
-      manifest keeps every design id, moves exactly six routes, and adds
-      `variantOf` to those six entries. Name the retired routes in the
-      commit message as the authorized removal.
-- [ ] Smoke through `npm run dev` and `npm run preview:build`: expand the
-      Welcome design row, open each variant, follow a design link into a
-      variant from a mini screen.
-- [ ] Update `plans/README.md` to move this plan to Completed, and the
-      README feature paragraph.
-- [ ] Milestone close-out: run `cargo xtask check`; commit
-      `refactor(design): model Welcome states as variants` and push.
+The full file list, approval requirement, six-route/id assertions, design link
+suites, rebuild and preview/Serve smoke checks, README update, and delivery
+steps now live in [Screen Variants Follow-up](./screen-variants-follow-up.md),
+Milestones 1, 2 and 5. Its conversion target remains Welcome's dark-scheme,
+light-only and four tag states under `design/browse/views/screen.variants/`.
+Moving this original plan to Completed is the requested scope close-out,
+not evidence that the conversion ran.
 
 #### Task 9.2: Review
 
@@ -831,10 +819,13 @@ Viewer shares the Changes activation decision.
       confirmed all six earlier findings closed and reported three new
       findings, recorded under Second Review Findings.
 
-## Second Review Findings (awaiting decision)
+## Second Review Findings (transferred to follow-up)
 
 Review of the Milestone 12 commit. All six earlier findings are closed.
-Nothing has been changed in response to the three findings below.
+Nothing has been changed in response to the three findings below. They are
+retained here as history and owned by findings 1 to 3 of
+[Screen Variants Follow-up](./screen-variants-follow-up.md). That plan also
+records the latest post-CI review's return-typing and removed-navigation findings.
 
 1. **P2, the embedded Viewer ignores explicit `viewport` and `scheme` link
    parameters.** `changesActivation` correctly returns only the href when a
@@ -922,7 +913,6 @@ Milestones 10 to 12 apply them. Task 9.1 remains unapproved and untouched.
 
 ## Post-merge follow-up (non-blocking)
 
-- Group a component's Affected screens list by parent screen once variants
-  are common enough for the flat list to get long.
-- Consider a variants count on the home stage beside screens and components
-  once the user has seen the feature in use.
+The ideas to group Affected screens by parent and consider a variants count on
+Home are transferred, still unimplemented, to the
+[follow-up plan's non-blocking section](./screen-variants-follow-up.md#post-merge-follow-up-non-blocking).
