@@ -63,6 +63,10 @@ interface ManifestComponentVariant {
 }
 ```
 
+`ManifestScreen` additionally has an optional `variantOf` parent-screen id
+under the implemented [screen variants contract](./mokly-screen-variants.md);
+the field is additive and the schema version stays 5.
+
 Common entry metadata keeps its meaning, including source attribution and
 hierarchy-derived `navPath`. Every v5 entry requires `declaredDependencies`,
 the sorted unique paths explicitly authored in its definition. `dependencies`
@@ -224,9 +228,17 @@ Variant fragment paths must exactly match the component route and suffix rule
 in the authoring contract, including every optional dark path. `ownedDependencies`
 is a subset of `dependencies`; validate and retain direct-screen overlap evidence.
 
-Entries sort by route (empty for collections), then id; lexical ordering in v5
-uses UTF-16 code units rather than a locale-sensitive collator. Variants,
-collection children, use-case steps, and tags retain authored order. Legacy pages sort by route.
+Entries otherwise sort by route (empty for collections), then id; lexical
+ordering in v5 uses UTF-16 code units rather than a locale-sensitive collator.
+The variant screens of one parent are the exception: emit them in authored
+order directly after their parent and before the next entry in route order.
+That sibling order is the order `variantsById`, the navigation list, the
+details `Variants` row, and the public tree's entry-node `children` present.
+During pre-validation ordering, a variant without one uniquely valid root
+screen parent stays in ordinary route-then-id position so relationship
+validation can reject it deterministically; invalid entries are never emitted.
+Component saved variants, collection children, use-case steps, and tags retain
+authored order. Legacy pages sort by route.
 Dependency arrays sort uniquely, as do owned paths, supplied slots, and the
 declared `slots` list. JSON object keys in new structures sort lexically;
 arrays follow their stated order. Omit absent optional fields; emit required

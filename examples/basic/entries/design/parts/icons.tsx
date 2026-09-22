@@ -72,6 +72,25 @@ export function ScreenIcon({ size }: IconProps) {
   );
 }
 
+/**
+ * A screen variant: one authored state of a screen, drawn as a screen sitting
+ * in front of the screen it belongs to. The screen behind is a partial outline
+ * with butt caps so both ends meet the front screen's edge cleanly, the way the
+ * brand mark draws its own overlap.
+ */
+export function VariantIcon({ size }: IconProps) {
+  return (
+    <IconSvg size={size ?? 13}>
+      <path
+        d="M6 6V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-2"
+        strokeLinecap="butt"
+      />
+      <rect height={14} rx={2} width={16} x={2} y={6} />
+      <path d="M2 10h16" />
+    </IconSvg>
+  );
+}
+
 /** The search affordance at the leading edge of the top bar's search field. */
 export function SearchIcon({ size }: IconProps) {
   return (

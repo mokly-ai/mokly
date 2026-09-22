@@ -8,7 +8,8 @@ export type ScreenSubject =
   | "survey"
   | "invite"
   | "archive"
-  | "timeline";
+  | "timeline"
+  | "welcomeError";
 
 interface SubjectMetadata {
   description: string;
@@ -84,5 +85,16 @@ export const SUBJECTS: Record<ScreenSubject, SubjectMetadata> = {
     description: "The timeline was removed from the catalogue.",
     rationale:
       "The timeline was only ever drawn at desktop width, so the stage says which viewport has no previous version instead of leaving that viewport blank.",
+  },
+  welcomeError: {
+    description: "Welcome after saving failed was removed from the catalogue.",
+    generated: "No current screen",
+    rationale:
+      "A deleted state keeps its recorded details under the screen it belonged to, so the group stays readable after the removal.",
+    relatedDocs: false,
+    schemes: "light, dark",
+    source: "Previous version",
+    tags: ["forms"],
+    tour: false,
   },
 };

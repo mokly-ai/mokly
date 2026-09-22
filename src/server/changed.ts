@@ -36,7 +36,7 @@ export async function computeChangedRoutes(
   }
 }
 
-/** Resolve one generation; explicit review callers retain failures instead of empty changes. */
+/** Resolve one generation without aggregating a changed variant into its parent route. */
 export async function computeCatalogueChanges(
   config: ResolvedConfig,
   base: string,

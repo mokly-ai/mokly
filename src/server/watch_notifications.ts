@@ -2,6 +2,7 @@
 
 import path from "node:path";
 
+import type { WatchEvent } from "./watch_events.js";
 import type { WatchIgnorePredicate } from "./watcher.js";
 
 /** Merge normalized file changes and raw rename events into one settled notification. */
@@ -9,16 +10,17 @@ export class ResourceWatchNotifications {
   readonly #pending = new Map<string, ReturnType<typeof setTimeout>>();
   #closed = false;
 
-  constructor(private readonly changed: (candidate: string) => void) {}
+  constructor(private readonly changed: (event: WatchEvent) => void) {}
 
-  notify(candidate: string): void {
+  notify(event: WatchEvent): void {
+    const candidate = event.path;
     if (this.#closed) return;
     clearTimeout(this.#pending.get(candidate));
     this.#pending.set(
       candidate,
       setTimeout(() => {
         this.#pending.delete(candidate);
-        this.changed(candidate);
+        this.changed(event);
       }, 75),
     );
   }

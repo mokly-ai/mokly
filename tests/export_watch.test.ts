@@ -6,10 +6,8 @@ import { setTimeout as delay } from "node:timers/promises";
 
 import { EXPORT_MARKER } from "../dist/export/ownership.js";
 import { exportCatalogue } from "../dist/export/run.js";
-import {
-  classifyWatchPath,
-  isPackageOwnedIgnoredWatchPath,
-} from "../dist/server/watch_events.js";
+import { classifyWatchPath } from "../dist/server/watch_events.js";
+import { isPackageOwnedIgnoredWatchPath } from "../dist/server/watch_paths.js";
 import { ChokidarWatcherFactory } from "../dist/server/watcher.js";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
@@ -31,7 +29,10 @@ test("watch ownership follows the inventory and does not suppress unowned descen
     "new-folder/input.txt",
   ])
     assert.equal(
-      classifyWatchPath(path.join(fixture.output, name), config),
+      classifyWatchPath(
+        { path: path.join(fixture.output, name), kind: "change" },
+        config,
+      ),
       "rebuild",
       name,
     );
@@ -41,7 +42,10 @@ test("watch ownership follows the inventory and does not suppress unowned descen
     "static/screens/home.mobile.html",
   ])
     assert.equal(
-      classifyWatchPath(path.join(fixture.output, name), config),
+      classifyWatchPath(
+        { path: path.join(fixture.output, name), kind: "change" },
+        config,
+      ),
       "ignore",
       name,
     );
@@ -64,7 +68,7 @@ test("the real watcher traverses owned directories to observe later unowned addi
   );
   context.after(() => watcher.close());
   const events: string[] = [];
-  watcher.onChange((candidate) => events.push(candidate));
+  watcher.onChange((event) => events.push(event.path));
   watcher.onError((error) => {
     throw error;
   });

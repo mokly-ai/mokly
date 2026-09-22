@@ -15,6 +15,7 @@ import type {
   ProcessSupervisor,
   ProcessSupervisorFactory,
 } from "../dist/server/supervisor.js";
+import type { WatchEvent } from "../dist/server/watch_events.js";
 import type {
   ConsumerWatcher,
   ConsumerWatcherFactory,
@@ -48,7 +49,7 @@ test(
       },
     );
 
-    context.after(() => running.close());
+    fixture.beforeRemove(() => running.close());
     await output.initialWritten;
     watchers.watchers[0]?.change(config.configPath);
     await output.candidateStarted;
@@ -154,7 +155,7 @@ class FakeWatcherFactory implements ConsumerWatcherFactory {
 class FakeWatcher implements ConsumerWatcher {
   closed = false;
   private markReadyStarted: () => void = () => undefined;
-  private changeCallback: ((candidate: string) => void) | undefined;
+  private changeCallback: ((event: WatchEvent) => void) | undefined;
   readonly readyStarted = new Promise<void>((resolve) => {
     this.markReadyStarted = resolve;
   });
@@ -165,7 +166,7 @@ class FakeWatcher implements ConsumerWatcher {
     this.closed = true;
   }
 
-  onChange(callback: (candidate: string) => void): void {
+  onChange(callback: (event: WatchEvent) => void): void {
     this.changeCallback = callback;
   }
 
@@ -177,7 +178,7 @@ class FakeWatcher implements ConsumerWatcher {
   }
 
   change(candidate: string): void {
-    this.changeCallback?.(candidate);
+    this.changeCallback?.({ path: candidate, kind: "change" });
   }
 }
 

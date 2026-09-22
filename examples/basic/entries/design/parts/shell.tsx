@@ -3,7 +3,10 @@ import type { ReactNode } from "react";
 import type { ChangeStatus } from "../components/parts/comparison_fixtures.js";
 import { screenHeader } from "../library/chrome/screen-header.js";
 import { optional, useDesignInstance } from "../library/composition.js";
-import { viewControls } from "../library/controls/view-controls.js";
+import {
+  viewControls,
+  type ViewControlsProps,
+} from "../library/controls/view-controls.js";
 
 import { DesignNavigation, useDesignNavigation } from "./design_navigation.js";
 import { DESTINATIONS, type DesignDestination } from "./destinations.js";
@@ -82,10 +85,13 @@ export function Shell({
   );
 }
 
+/** A breadcrumb label, optionally opening the entry it names. */
+export type Crumb = string | { label: string; to: DesignDestination };
+
 interface ScreenHeadProps {
   accessibleControls?: boolean;
   action?: ReactNode;
-  crumbs: readonly string[];
+  crumbs: readonly Crumb[];
   idChip?: string;
   comparisonMode?: "current" | "difference" | "overlay" | "side-by-side";
   comparisons?: boolean;
@@ -115,7 +121,11 @@ export function ScreenHead({
           label: "Catalogue home",
           destination: DESTINATIONS.home,
         },
-        ...crumbs.map((item) => ({ key: item, label: item })),
+        ...crumbs.map((item) =>
+          typeof item === "string"
+            ? { key: item, label: item }
+            : { key: item.label, label: item.label, destination: item.to },
+        ),
       ]}
       comparisons={comparisons}
       mode={comparisonMode ?? "current"}
@@ -128,12 +138,19 @@ export function ScreenHead({
   );
 }
 
+/** One viewport and color scheme pairing whose render changed on this branch. */
+export type ChangedView = NonNullable<
+  ViewControlsProps["changedViews"]
+>[number];
+
 interface ViewSwitchProps {
   active: "both" | "desktop" | "mobile";
+  /** Views other than the shown one whose render changed on this branch. */
+  changedViews?: readonly ChangedView[] | undefined;
 }
 
 /** Viewport selection control shown in a selected screen header. */
-export function ViewSwitch({ active }: ViewSwitchProps) {
+export function ViewSwitch({ active, changedViews }: ViewSwitchProps) {
   const navigation = useDesignNavigation();
   const scheme = navigation.scheme ?? "light";
   const nextScheme = scheme === "light" ? "dark" : "light";
@@ -144,6 +161,7 @@ export function ViewSwitch({ active }: ViewSwitchProps) {
       scheme={scheme}
       schemeDisabled={!navigation.schemeLinks?.[nextScheme]}
       destinations={navigation.schemeLinks ?? {}}
+      {...optional("changedViews", changedViews)}
     />
   );
 }

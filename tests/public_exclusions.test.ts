@@ -34,7 +34,7 @@ test("Serve GET and HEAD and Review deny public exclusions while ordinary assets
   const config = await loadConfig(fixture.root);
   await writeCompilation(await compileCatalogue(config), config);
   const server = await startCatalogueServer(config, { base: "main", port: 0 });
-  t.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
   const reader = new FileSystemReviewAssetReader(config);
   for (const name of excludedNames) {
     for (const method of ["GET", "HEAD"])
@@ -154,7 +154,10 @@ test("an excluded imported JSON file remains an authoring input and rebuilds", a
   );
   await writeCompilation(first, config);
   await fs.writeFile(settings, '{"title":"After"}');
-  assert.equal(classifyWatchPath(settings, config), "rebuild");
+  assert.equal(
+    classifyWatchPath({ path: settings, kind: "change" }, config),
+    "rebuild",
+  );
   const second = await compileCatalogue(config);
   assert.equal(
     second.manifest.entries.find((entry) => entry.id === "home")?.title,
@@ -192,7 +195,10 @@ test("public exclusions preserve explicit watch actions", async (t) => {
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   assert.equal(
-    classifyWatchPath(path.join(fixture.mockupsDir, "README.md"), config),
+    classifyWatchPath(
+      { path: path.join(fixture.mockupsDir, "README.md"), kind: "change" },
+      config,
+    ),
     "rebuild",
   );
 });

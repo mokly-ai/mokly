@@ -132,6 +132,8 @@ function comparison(): ReviewResultV2 {
 function workspace(): WorkspaceData {
   return {
     base: "main",
+    changedViews: { home: [] },
+    viewStates: {},
     status: "Changed",
     comparisons: true,
     comparisonEligible: true,

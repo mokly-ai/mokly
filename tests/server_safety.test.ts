@@ -19,7 +19,7 @@ test("Browse frames sandbox generated scripts away from the shell", async (conte
     base: "origin/main",
     port: 0,
   });
-  context.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
 
   const html = await (
     await fetch(`${server.url}/view/screens/home.html`)
@@ -57,7 +57,7 @@ test("static serving rejects symlinks into nested authored source roots", async 
     base: "origin/main",
     port: 0,
   });
-  context.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
 
   const response = await fetch(`${server.url}/static/exposed.tsx`);
 

@@ -11,7 +11,10 @@ section, or `mokly review` command; `--out` belongs only to static `export`.
 
 [Pages](./mokly-pages.md) participate in Changes and removed-entry states,
 while comparison controls remain exclusive to changed screens and eligible
-component variants. The
+component variants. A [variant screen](./mokly-screen-variants.md) is a
+screen for every rule in this document: it has its own route, row, count
+contribution, views, and comparison result, and only its navigation placement
+under the parent screen is variant-specific. The
 [shared catalogue snapshot](./mokly-catalogue-changes.md) supplies metadata
 independently of screen results; removed pages are flat Changes-only rows with
 baseline ancestry. Review reads follow the [source policy](./mokly-source-protection.md).
@@ -28,6 +31,13 @@ A new or edited flow is included independently. Source edits, source moves,
 dependency declaration edits, and shared-impact matches alone do not add
 otherwise unchanged entries. Dependency and shared-impact evidence remains in
 comparison details, accessible for every screen from All.
+
+Each screen variant is projected independently. Its metadata projection
+contains `variantOf`, its parent's `{ id, title }`, and the parent's collection
+ancestors. Changing `variantOf` or the parent title therefore marks the variant
+route, while a material or metadata change confined to the variant never adds
+the parent route. A flow is propagated only when its `screenId` step names the
+exact changed screen, including a variant.
 
 Before marking an existing fragment, compare its branch-point and working-tree
 documents with the same paired ignore normalization and material-key rules as
@@ -130,19 +140,32 @@ dropping views or disabling Git file validation.
 
 ## Screen controls
 
-Review-enabled changed screens and saved component variants with actual Changed
-or Removed comparison views offer Current / Side by side / Overlay / Difference in an opaque band
-beneath the heading. Known unchanged views show Unmodified without that band;
-known added views show Added with their current preview and no comparison band;
-known removed screens show Removed with their
-[previous version](./mokly-removed-previews.md) and no comparison band;
-unknown evidence has no invented status. Eligibility follows saved view evidence,
-so affected-only consumers can compare their actual rendered differences while
-staying outside Changes. Current is selected initially, including
-after navigation and reload. Selecting Changes, opening a current screen, changing
-its viewport or color scheme in Current, and receiving a watched update do not
-generate comparison snapshots in development; opening a removed entry is the one
-selection that requests its historical preview. Publications with Changes prepare snapshots at build time, but never fetch or render them while browsing in Current. The first
+The status beside the title and the comparison band describe the shown view,
+not the entry's route-wide result. With one viewport and one scheme selected,
+the view's review state maps `changed` to Changed, `added` to Added, `removed`
+to Removed, and `unchanged` or `ignored-only` to Unmodified. While Both is
+selected, the shown status is Changed when any shown view is Changed, else
+Added when any is Added, else Removed when any is Removed, else Unmodified.
+Comparison eligibility follows that shown status under the existing kind rule:
+Changed is eligible, and Removed is eligible only for a component saved
+variant. Thus a route with changes can show Unmodified with no comparison band
+while the marks on the view controls and the `Changed views` row point to the
+views that changed. Unknown or pending per-view evidence — no ready result and
+no screen-view evidence for the entry — preserves the route-level status and
+eligibility. Switching viewport, scheme, or saved variant recomputes both
+without a page load, as does a background evidence refresh.
+
+Eligible views offer Current / Side by side / Overlay / Difference in an opaque
+band beneath the heading. Added and Unmodified views retain their current
+preview without that band; removed screens show their
+[previous version](./mokly-removed-previews.md) without it. Affected-only
+consumers can compare actual rendered differences while staying outside
+Changes. Current is selected initially, including after navigation and reload.
+Selecting Changes, opening a current screen, changing its viewport or color
+scheme in Current, and receiving a watched update do not generate comparison
+snapshots in development; opening a removed entry is the one selection that
+requests its historical preview. Publications with Changes prepare snapshots
+at build time, but never fetch or render them while browsing in Current. The first
 explicit diff selection requests the comparison in either delivery mode.
 Returning to Current cancels pending UI work and restores the current screen.
 Navigation must never let a late comparison response replace another screen.
@@ -150,6 +173,22 @@ Shell-owned links carry comparison intent only when the destination saved view
 is eligible. The destination revalidates that eligibility before honoring a
 comparison query, so stale, manually edited, or historical URLs cannot bypass a
 current-only state or trigger a hidden comparison request.
+
+When a ready classification marks only some of a screen's views changed, the
+view controls say so rather than leaving the reviewer to find the difference.
+The theme control is marked when a changed view uses the other scheme, and the
+viewport control when a changed view uses the other viewport; selecting both
+viewports shows every viewport at once, so that control is never marked. The
+details inspector lists the same views as `Changed views`. When the current
+selection is not itself a changed route, activating a changed row while the
+Changes filter is selected opens that destination's first changed view instead
+of the sticky selection, unless the URL names a viewport or scheme. Once a
+changed route is selected, later row activations keep the sticky axes while an
+aggregate parent still redirects to its first visible changed variant. A direct
+URL, an All-filter activation, Back, Forward, and a reload also keep the sticky
+selection.
+These marks and the `Changed views` row apply in exports with Changes as well as
+in Serve.
 
 Diffs render inside the existing main region with the catalogue, title, details,
 viewport, and scheme controls retained. Both viewports are supported. Snapshot

@@ -57,6 +57,25 @@ export async function smokeEsmConsumer(context) {
     fragment,
     /href="\.\/detail\.desktop\.html#packed-section"[^>]+data-mokly-link="packed-detail#packed-section"/,
   );
+  const coLocated = await fs.promises.readFile(
+    path.join(root, "mockups/screens/card.desktop.html"),
+    "utf8",
+  );
+  assert.match(coLocated, /data-packed-card=""/);
+  const packedManifest = JSON.parse(
+    await fs.promises.readFile(
+      path.join(root, "mockups/mokly-manifest.json"),
+      "utf8",
+    ),
+  );
+  assert.equal(
+    packedManifest.entries.find((entry) => entry.id === "packed-card")
+      ?.sourcePath,
+    "src/components/card/card.mockup.tsx",
+  );
+  assert.ok(
+    packedManifest.sourceFiles.includes("src/components/card/card.tsx"),
+  );
   await smokeServer(root);
   await runCommand("npx", ["--no-install", "mokly", "--help"], {
     cwd: root,

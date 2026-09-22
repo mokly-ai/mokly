@@ -4,6 +4,7 @@ import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
 import { sourceDenialMessage } from "../build/source_denial.js";
 import { isAuthoringSource } from "../build/source_inventory.js";
+import { entryModuleRoots } from "../config/entry_membership.js";
 import { isInside, projectRealPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import {
@@ -79,10 +80,10 @@ export function exportResourceDenial(
       "A consumer package root must not equal mockupsDir; choose a separate public output directory.",
     );
   const roots = [
-    {
-      path: config.entriesDir,
+    ...entryModuleRoots(config).map((root) => ({
+      path: root,
       reason: sourceDenialMessage({ kind: "entries" }),
-    },
+    })),
     {
       path: config.review.outDir,
       reason: "is inside the Review output directory",

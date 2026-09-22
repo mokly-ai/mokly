@@ -79,7 +79,8 @@ contribute route segments and real membership, exactly as for nested screens.
 It does not inherit screen addresses, tags, viewports, or color schemes.
 
 Pages reject `mobile`, `desktop`, `colorSchemes`, `address`, `useCaseIds`,
-`steps`, and `childIds`, including keys whose value is `undefined`. Untyped
+`steps`, `childIds`, `variants`, and `variantOf`, including keys whose value
+is `undefined`. Untyped
 JavaScript receives the same validation as typed authoring. A collection can
 claim a page ID; a use-case `screenId` cannot name a page. Duplicate IDs,
 multiple parents, missing children, duplicate child references, and collection

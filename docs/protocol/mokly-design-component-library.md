@@ -15,23 +15,23 @@ The first listed variant is the default. Every variant has mobile and desktop
 light-only output; the existing shell selects one saved variant at a time.
 Group indexes are pure galleries, containing at most five component entries.
 
-| Group / slug                  | Existing implementation                                             | Saved variant ids                                                          |
-| ----------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| chrome / top-bar              | `parts/top_bar.tsx`, `parts/tag_filter.tsx`                         | `default`, `search`, `tag-picker`, `drawer-open`                           |
-| chrome / catalogue-navigation | `parts/nav.tsx`, scenario data in `components/parts/navigation.tsx` | `all`, `changes`, `empty`, `drawer`, `loading`, `preparing`, `unavailable` |
-| chrome / screen-header        | `parts/shell.tsx: ScreenHead`                                       | `screen`, `component`, `changed`, `removed`                                |
-| controls / comparison-toolbar | `parts/compare.tsx: CompareToolbar`                                 | `current`, `side-by-side`, `overlay`, `difference`                         |
-| controls / view-controls      | `components/parts/view_controls.tsx`, `parts/shell.tsx: ViewSwitch` | `default`, `both`, `highlighted`, `unavailable`                            |
-| controls / tag-picker         | `parts/tag_filter.tsx: TagPicker`                                   | `all`, `selected`, `empty`                                                 |
-| controls / tag-chip           | `parts/tag_filter.tsx: TagChips`                                    | `default`, `selected`, `inactive`                                          |
-| controls / change-status      | `components/parts/comparison_details.tsx: ChangeStatusBadge`        | `unmodified`, `added`, `changed`, `removed`                                |
-| inspector / inspector         | `parts/details.tsx`, `components/parts/inspector.tsx`               | `details`, `props`, `closed`                                               |
-| inspector / metadata-row      | `parts/metadata_row.tsx: MetaRow`, shared details/prop rows         | `text`, `code`, `linked`, `tags`                                           |
-| inspector / prop-field        | `components/controls/parts/fields.tsx: field chrome`                | `text`, `boolean`, `invalid-number`, `select`, `optional-unset`            |
-| preview / device-frame        | `parts/stage.tsx: PhoneFrame/BrowserFrame`                          | `phone`, `browser`, `dark`, `light-only`                                   |
-| preview / comparison-pane     | `parts/compare.tsx: Pane/MissingPane`                               | `before`, `current`, `missing-before`, `missing-current`                   |
-| preview / empty-state         | `parts/stage_content.tsx: EmptyState`                               | `home`, `missing-route`, `no-changes`                                      |
-| preview / flow-step           | `parts/stage_content.tsx: FlowStep`                                 | `first`, `second`                                                          |
+| Group / slug                  | Existing implementation                                             | Saved variant ids                                                                                          |
+| ----------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| chrome / top-bar              | `parts/top_bar.tsx`, `parts/tag_filter.tsx`                         | `default`, `search`, `tag-picker`, `drawer-open`                                                           |
+| chrome / catalogue-navigation | `parts/nav.tsx`, scenario data in `components/parts/navigation.tsx` | `all`, `changes`, `empty`, `drawer`, `loading`, `preparing`, `unavailable`, `variants`, `changed-variants` |
+| chrome / screen-header        | `parts/shell.tsx: ScreenHead`                                       | `screen`, `component`, `changed`, `removed`                                                                |
+| controls / comparison-toolbar | `parts/compare.tsx: CompareToolbar`                                 | `current`, `side-by-side`, `overlay`, `difference`                                                         |
+| controls / view-controls      | `components/parts/view_controls.tsx`, `parts/shell.tsx: ViewSwitch` | `default`, `both`, `highlighted`, `unavailable`, `changed-views`                                           |
+| controls / tag-picker         | `parts/tag_filter.tsx: TagPicker`                                   | `all`, `selected`, `empty`                                                                                 |
+| controls / tag-chip           | `parts/tag_filter.tsx: TagChips`                                    | `default`, `selected`, `inactive`                                                                          |
+| controls / change-status      | `components/parts/comparison_details.tsx: ChangeStatusBadge`        | `unmodified`, `added`, `changed`, `removed`                                                                |
+| inspector / inspector         | `parts/details.tsx`, `components/parts/inspector.tsx`               | `details`, `props`, `closed`                                                                               |
+| inspector / metadata-row      | `parts/metadata_row.tsx: MetaRow`, shared details/prop rows         | `text`, `code`, `linked`, `tags`                                                                           |
+| inspector / prop-field        | `components/controls/parts/fields.tsx: field chrome`                | `text`, `boolean`, `invalid-number`, `select`, `optional-unset`                                            |
+| preview / device-frame        | `parts/stage.tsx: PhoneFrame/BrowserFrame`                          | `phone`, `browser`, `dark`, `light-only`                                                                   |
+| preview / comparison-pane     | `parts/compare.tsx: Pane/MissingPane`                               | `before`, `current`, `missing-before`, `missing-current`                                                   |
+| preview / empty-state         | `parts/stage_content.tsx: EmptyState`                               | `home`, `missing-route`, `no-changes`                                                                      |
+| preview / flow-step           | `parts/stage_content.tsx: FlowStep`                                 | `first`, `second`                                                                                          |
 
 Fixtures for each variant come from the corresponding existing screen state,
 assembled into complete explicit props at declaration time. They may reuse the
@@ -55,11 +55,21 @@ Controls below use text, boolean, number and primitive enum selections only.
    picker-open and menu state. Theme controls belong in the screen header. Brand/search structure belongs to this component;
    it composes the registered picker and chip. Preserve compact mobile branding.
 2. **Catalogue navigation:** row records with stable key, label, kind
-   `collection/screen/component/flow`, depth, optional count/open/destination;
-   selected destination, All/Changes state, changed count and presentation
+   `collection/screen/component/flow/page/variant`, depth, optional
+   count/open/destination, an optional changed mark, and an optional
+   `open/closed` variant-list state on a screen row; selected destination,
+   All/Changes state, changed count and presentation
    `responsive/drawer`, and optional Changes availability
    `ready/pending/preparing/unavailable`.
-   Controls: All/Changes, availability and presentation. Pending and preparing
+   Controls: All/Changes, availability and presentation. A `variant` row is a
+   leaf one depth step below the screen row it follows; it renders only while
+   that screen's variant list is open, it never counts as a collection child,
+   and it carries the variant icon — a screen outline over a second, partially
+   drawn screen outline — instead of the screen icon, muted like the screen
+   rows around it. A screen row carrying a variant list adds a trailing 16px
+   chevron disclosure button with its own expanded state and accessible name;
+   the row link is unchanged. The changed mark is a trailing dot, never an edge or
+   rail. Pending and preparing
    both reserve the count slot with a spinner and replace selected Changes rows
    with their own message; only preparing adds a secondary detail line beneath
    its title. Unavailable keeps the tabs with a dash and one plain message for
@@ -77,8 +87,13 @@ Controls below use text, boolean, number and primitive enum selections only.
    depiction and current linked/native/inactive behavior for each screen family.
 5. **View controls:** selected preview `mobile/desktop/both`, depicted scheme,
    optional highlight state and unavailable reason `empty/unavailable/comparison/removed`;
-   optional scheme-disabled state and supported theme destinations. Controls:
-   selection, scheme, highlight and reason. The single icon group lives in the
+   optional scheme-disabled state, optional changed views as
+   viewport/scheme records, and supported theme destinations. Controls:
+   selection, scheme, highlight and reason. A changed view marks the theme
+   control when its scheme differs from the depicted one and the viewport
+   dropdown when its viewport is not the selected one; `both` never marks the
+   dropdown. The mark is evidence about other views, so the details inspector
+   names them and the control keeps its own label. The single icon group lives in the
    screen header: viewport dropdown, theme icon, and optional highlight toggle.
    Authored theme pairs use canonical links; unsupported pairs stay disabled.
    Component previews retain native local theme toggling. The dropdown controls

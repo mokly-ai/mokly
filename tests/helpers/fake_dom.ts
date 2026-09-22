@@ -46,9 +46,14 @@ export class FakeNode {
   constructor(
     private readonly tagName: string,
     attributes: Readonly<Record<string, string>> = {},
-    private readonly label = "",
+    private label = "",
   ) {
     this.#attributes = new Map(Object.entries(attributes));
+  }
+
+  /** The tree root, which the client modules address as the document. */
+  get ownerDocument(): FakeNode {
+    return this.treeRoot();
   }
 
   get textContent(): string {
@@ -56,6 +61,11 @@ export class FakeNode {
       (text, child) => text + child.textContent,
       this.label,
     );
+  }
+
+  set textContent(value: string) {
+    this.#children.length = 0;
+    this.label = value;
   }
 
   append(...children: readonly FakeNode[]): this {

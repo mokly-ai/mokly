@@ -20,7 +20,7 @@ test("occupied ports advance sequentially to the first free port", async (contex
     base: "origin/main",
     port: occupied.start,
   });
-  context.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
 
   assert.equal(server.port, occupied.start + 2);
   assert.equal((await fetch(server.url)).status, 200);

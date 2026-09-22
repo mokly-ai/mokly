@@ -88,12 +88,19 @@ After the repository job succeeds, the workflow fans out to:
 - four browser shards on each Node runtime; and
 - native jobs on macOS and Windows at Node 22.14.0.
 
+The repository job resolves Node 24 once and exposes the installed exact version
+as a job output. Every dependent Node 24 package, unit, browser, and aggregate
+job requests that exact version. A new Node release or differing runner caches
+cannot give sibling shards different Node versions. Matrix labels and report
+runtime identities remain `node-24`; reports still record the exact installed
+version, and the aggregate continues to reject mixed versions within a group.
+
 Matrix jobs use `fail-fast: false`, so one failing shard does not erase evidence
 from its peers. Chromium is installed only in browser jobs. Rust formatting,
 Clippy and tests run only in the repository job; selected suite jobs still
 compile xtask to dispatch their gate. Jobs that execute npm use npm 11.7.0. All
-jobs have read-only repository permissions. Superseded workflow runs remain
-cancellable.
+jobs have read-only repository permissions and a 20-minute execution timeout.
+Superseded workflow runs remain cancellable.
 
 The stable `Required CI` job uses `if: always()` and fails closed unless every
 required job result is exactly `success`. It also validates the evidence
@@ -108,6 +115,12 @@ the contract. Before execution, the unit runner independently discovers all
 matching `.test.ts` and `.test.tsx` files across the root and viewer suites. The
 browser runner independently asks Playwright for the current spec inventory.
 Discovery fails on an empty suite.
+
+Development hydration registers one browser test per unique generated catalogue
+route at discovery time, plus the home, missing-route and id-redirect cases.
+Each route keeps the normal test deadline and error assertions; catalogue growth
+cannot exhaust a shared route-loop deadline. Unit coverage checks that browser
+discovery includes every generated route exactly once.
 
 Each runner records the commit SHA, runtime, suite, optional shard, complete
 discovered file inventory, assigned file inventory, observed executed files,
@@ -171,6 +184,12 @@ removing owned output. If termination cannot be confirmed, teardown fails and
 retains the owned output for diagnosis; concurrent and repeated close calls
 share that same completion or failure.
 
+`changedFixture` owns live test resources through `onCleanup`. It drains them in
+reverse registration order before deleting the consumer tree. Every registered
+cleanup runs even if another fails; failures retain the tree for diagnosis.
+Servers and workers must use this boundary instead of a later test `after` hook,
+which can run after directory removal or be skipped when an earlier hook fails.
+
 Every report-producing wrapper creates a unique verification owner identity and
 passes its registry and resource root to the child. A wrapper nested beneath
 another owner creates a child identity in the same registry; cancellation acts
@@ -211,9 +230,13 @@ timing evidence when possible, and never write a successful outcome until
 independent completeness checks pass.
 
 Temporary fixtures use repository-local `.context` or operating-system temp
-directories and remove owned output on success and failure. Failed browser jobs
-retain only the uploaded diagnostic artifacts selected by the workflow. Jobs
-must not delete, overwrite or reuse another job's writable output.
+directories and remove owned output on success and failure. A fixture drains
+dependent servers, workers, watchers, and other runtime resources in reverse
+registration order before removing its workspace. Concurrent or repeated
+fixture removal shares one teardown, and a dependent cleanup failure retains
+the workspace for diagnosis. Failed browser jobs retain only the uploaded
+diagnostic artifacts selected by the workflow. Jobs must not delete, overwrite
+or reuse another job's writable output.
 
 ## Acceptance Measurement
 

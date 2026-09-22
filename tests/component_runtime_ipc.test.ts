@@ -9,7 +9,7 @@ function startup(publicExclude?: unknown): object {
     type: "component-runtime-startup",
     config: {
       configPath: "/repo/mokly.config.ts",
-      entriesDir: "/repo/entries",
+      entryGlobs: ["entries/**/*.mockup.{ts,tsx}"],
       mockupsDir: "/repo/generated",
       repoRoot: "/repo",
       ...(publicExclude === undefined ? {} : { publicExclude }),

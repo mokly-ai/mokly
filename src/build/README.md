@@ -7,10 +7,31 @@ export and local prop controls reuse the same consumer graph and validators.
 
 ## Consumer Graph
 
-`load_graph.ts` bundles entry modules, imported helpers, the renderer and any
-compatibility transformer together. React and React DOM resolve from consumer
-package roots, including when Mokly runs from an npx installation. The bundle
-stays in memory and retains the consumer's existing rendering/provider graph.
+`config/entry_discovery.ts` resolves the configured `entries` globs, or the
+`entriesDir` shorthand, into one sorted set of matched modules when the
+configuration loads and again here at the start of each compilation. The glob
+defines the entry shape with no suffix filter; `entriesDir` expands to the
+recommended `<dir>/**/*.mockup.{ts,tsx}` convention. Each glob must match at
+least one entry module. Walks skip `review.outDir` and denied directory trees.
+Directories that vanish or are replaced mid-walk (`ENOENT` or `ENOTDIR`) are
+skipped and listed with denied roots in zero-match diagnostics. Other read or
+projection errors fail with `config-invalid`, naming the repository-relative
+path and error code (`unknown` if absent). A matched module that is deleted, or
+replaced by something other than a regular file, between the directory listing
+and validation is dropped and listed under `not searched` when its glob is then
+empty. A projection or lstat failure with any code other than `ENOENT` fails
+with `config-invalid`.
+Repository and glob roots are projected once per pass;
+Review output is projected once with a lexical fallback on failure. Every
+resolved module is rejected when it sits inside `review.outDir`, `.mokly-cache/`,
+beneath a denied directory relative to its glob root, or escapes `repoRoot`
+through a symlink.
+`load_graph.ts` then bundles those modules, imported helpers,
+the renderer and any compatibility transformer together and refreshes the
+resolved set on the config as `entryModules`. React
+and React DOM resolve from consumer package roots, including when Mokly runs
+from an npx installation. The bundle stays in memory and retains the
+consumer's existing rendering/provider graph.
 
 Automatic JSX uses esbuild's `jsxDev` location arguments. `consumer_resolution.ts`
 resolves `react/jsx-dev-runtime` to a private shim exporting the consumer's
@@ -30,8 +51,19 @@ added prop. The wrapper strips the reserved `__moklySource` field before calling
 consumer code; the collector retains it only as optional manifest metadata.
 
 `consumer_entry.ts` attributes definitions to their owning modules and exposes
-the public authoring API, including `resolveInstance`. Source locations do not
-enter instance keys, props keys, slot identities, or Changes projections.
+the public authoring API, including `resolveInstance`. Every repository-owned
+importer of `@mokly/mokly` receives the attributed facade; installed packages
+under `node_modules` and Mokly's own runtime receive the plain API. Registry
+validation and `ownership.ts` accept an attributed owner only when it is a
+resolved entry module or an inventoried source file. Ownership headers and
+tracked output additionally trust repository-relative owners that match an
+entry glob, so deleted matched sources still leave removable orphans. A
+repository-root glob trusts every matching path and no other path through this
+branch. Committed Check lists Mokly-headered HTML outside the resolved,
+inventoried, and glob-matched sets as unclaimed without changing it.
+Export and Review boundaries continue to use directories that hold resolved
+entry modules. Source locations do not enter instance keys, props keys, slot
+identities, or Changes projections.
 
 ## Development
 
@@ -50,7 +82,8 @@ manifest compatibility are tested with isolated consumers.
 - `compile.ts`, `render.ts`, `document_compiler.ts`: exhaustive and requested-view
   compilation using the same validation boundary.
 - `load_graph.ts`, `consumer_entry.ts`, `consumer_resolution.ts`: one consumer
-  graph and its module resolution.
+  graph, discovered through `config/entry_discovery.ts`, and its module
+  resolution.
 - `jsx_dev_runtime.ts`, `component_source.ts`: invocation capture without output
   or input-identity changes.
 - `source_inventory.ts`: complete private authoring inventory, separate from

@@ -19,7 +19,7 @@ test(
     const existing = await compileCatalogue(fixture.config);
     const blocked = await blockingGit(t, fixture.root);
     const background = new BackgroundCompilation(runtime, existing);
-    t.after(() => background.close());
+    fixture.onCleanup(() => background.close());
     const classification = background.classify("main");
     const pid = await blocked.started();
 
@@ -72,7 +72,7 @@ test(
         published();
       },
     );
-    t.after(() => background.close());
+    fixture.onCleanup(() => background.close());
     background.start(runtime, "main", existing);
     const pid = await blocked.started();
 

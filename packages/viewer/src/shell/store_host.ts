@@ -13,6 +13,7 @@ import {
 import type { ViewerEvents, ViewerSelection } from "../viewer/types.js";
 
 import type { Catalogue } from "./catalogue.js";
+import type { ShellContext } from "./context.js";
 import type { NavSectionNode } from "./nav_tree.js";
 import { routeFromUrl, type ShellRoute } from "./routes.js";
 import type { ShellBrowserActions } from "./store_browser.js";
@@ -44,6 +45,7 @@ export interface ShellHostActions extends ShellBrowserActions {
 
 interface HostStoreInput {
   catalogue: Catalogue;
+  context: ShellContext;
   environment?: EmbeddedShellEnvironment;
   interactive: boolean;
   sections: readonly NavSectionNode[];
@@ -149,6 +151,8 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
         {
           screenId,
           variantId: route.variant,
+          ...(route.viewport ? { viewport: route.viewport } : {}),
+          ...(route.colorScheme ? { colorScheme: route.colorScheme } : {}),
         },
       );
       const pending: PendingNavigation = {
@@ -211,6 +215,7 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
       hostClick(
         event,
         input.catalogue,
+        input.context,
         environmentRef.current,
         requestRoute,
         input.setState,

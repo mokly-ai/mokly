@@ -12,7 +12,10 @@ import {
 
 export default defineConfig({
   colorSchemes: ["light", "dark"],
-  entriesDir: "entries",
+  entries: [
+    "examples/basic/entries/**/*.mockup.{ts,tsx}",
+    "examples/basic/src/components/**/*.mockup.{ts,tsx}",
+  ],
   mockupsDir: "generated",
   moduleResolution: {
     aliases: { "react-native": "react-native-web" },
@@ -45,6 +48,7 @@ export default defineConfig({
       "examples/basic/generated/design.css",
       "examples/basic/renderer.tsx",
       "examples/basic/generated/styles.css",
+      "examples/basic/src/components/**",
     ],
   },
   stylesheets: [

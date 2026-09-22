@@ -45,7 +45,7 @@ test("no-watch startup retains removed metadata from its single Changes calculat
     port: 0,
     watch: false,
   });
-  context.after(() => running.close());
+  fixture.onCleanup(() => running.close());
   await classified;
   const home = await (await fetch(running.url)).text();
   const removed = await fetch(`${running.url}/view/guide.html`);
@@ -74,7 +74,7 @@ test("unavailable startup Changes leaves a complete current catalogue without re
     port: 0,
     watch: false,
   });
-  context.after(() => running.close());
+  fixture.onCleanup(() => running.close());
   await classified;
   const home = await (await fetch(running.url)).text();
   assert.match(home, /data-entry-id="home"/);
@@ -140,7 +140,7 @@ test("no-watch HTTP startup reuses the catalogue validated before factory handof
     port: 0,
     watch: false,
   });
-  context.after(() => running.close());
+  fixture.onCleanup(() => running.close());
   await classified;
   const home = await (await fetch(running.url)).text();
   assert.doesNotMatch(home, /Later catalogue/);
@@ -176,7 +176,7 @@ test("a no-watch component catalogue reuses its resolved ownership evidence", as
     port: 0,
     watch: false,
   });
-  context.after(() => running.close());
+  fixture.onCleanup(() => running.close());
   await classified;
   const component = await (
     await fetch(`${running.url}/view/components/action.html`)

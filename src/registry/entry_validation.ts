@@ -1,7 +1,7 @@
 import { isCatalogueId } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
-import { isInside } from "../config/paths.js";
+import { isResolvedEntryOrInventoriedSource } from "../config/entry_membership.js";
 import type { ResolvedConfig } from "../config/types.js";
 
 import {
@@ -15,6 +15,7 @@ import {
   record,
 } from "./entry_metadata.js";
 import type { RegistryViolation } from "./prepared_types.js";
+import { variantEntryViolations } from "./variant_validation.js";
 
 /** Validate metadata, routes, source attribution, and declared paths. */
 export function validateEntry(
@@ -45,13 +46,13 @@ export function validateEntry(
   }
   if (
     entry.sourceRelativePath === "<unattributed>" ||
-    !isInside(config.entriesDir, entry.sourcePath)
+    !isResolvedEntryOrInventoriedSource(entry.sourceRelativePath, config)
   ) {
     violations.push(
       problem(
         entry,
         "invalid-source",
-        "definition is not attributed to entriesDir",
+        "definition is not attributed to a resolved entry module or inventoried source",
       ),
     );
   }
@@ -165,5 +166,6 @@ export function validateEntry(
       }
     }
   }
+  violations.push(...variantEntryViolations(entry));
   return violations;
 }

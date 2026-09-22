@@ -1,7 +1,6 @@
 /** Watched Serve adopts lightweight generations; exhaustive work follows in the background. */
 import { randomBytes } from "node:crypto";
 
-import type { Compilation } from "../build/compile.js";
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import { prepareLiveRuntime } from "../build/live_runtime.js";
 import { loadConsumerGraph } from "../build/load_graph.js";
@@ -9,7 +8,6 @@ import type { ResolvedConfig } from "../config/types.js";
 import { bindTimings, timeAsync } from "../diagnostics/timings.js";
 
 import { RepositoryCatalogueChangeClassifier } from "./component_changes.js";
-import { BackgroundGeneration } from "./demand/generation.js";
 import {
   GitReferenceObserver,
   RepositoryGitReferences,
@@ -31,10 +29,14 @@ import {
   type RuntimeWatchAction,
   WatchActionQueue,
   WatchDebouncer,
-  watchTargets,
+  type WatchEvent,
 } from "./watch_events.js";
+import { watchTargets } from "./watch_paths.js";
+import { reportedWatchProcessor } from "./watch_reporting.js";
+import { WatchedBackground } from "./watched_background.js";
 import { createSourceWatcher } from "./watcher.js";
 
+/** Serve accepted generations while watching typed source and resource changes. */
 export async function serveWatched(
   config: ResolvedConfig,
   options: ServeOptions,
@@ -54,19 +56,20 @@ export async function serveWatched(
   const shutdown = new Promise<void>((resolve) => {
     signalShutdown = resolve;
   });
-  const gate = new NotificationGate<string>();
-  const failures = new NotificationGate<Error>();
   const report = (error: unknown) => reporter.runtimeDiagnostic(error);
-  config.sourceFiles = (await loadConsumerGraph(config, false)).sourceFiles;
+  const gate = new NotificationGate<WatchEvent>(report);
+  const failures = new NotificationGate<Error>(report);
+  const inventory = await loadConsumerGraph(config, false);
+  config.entryModules = inventory.entrySources;
+  config.sourceFiles = inventory.sourceFiles;
   let activeConfig = config;
   let watcher = createSourceWatcher(watcherFactory, config, gate, report);
   const resources = new ResourceWatcher(
     watcherFactory,
-    (candidate) => gate.notify(candidate),
+    (event) => gate.notify(event),
     report,
   );
   let runtime: ComponentRuntime;
-  let activeCompilation: Compilation | undefined;
   let signature: string;
   let supervisor: ProcessSupervisor | undefined;
   let port: number;
@@ -95,91 +98,36 @@ export async function serveWatched(
   running.onDiagnostic?.((message) => reporter.runtimeDiagnostic(message));
   const previews = new PreviewResources(
     watcherFactory,
-    (candidate) => gate.notify(candidate),
+    (event) => gate.notify(event),
     () => runtime,
     shutdown,
     report,
   );
   running.onPreviewResources?.((observation) => previews.observe(observation));
-  let generationStartedAt = Date.now();
-  let changesStartedAt = generationStartedAt;
-  let baselineStartedAt = generationStartedAt;
-  let reportCatalogue = true;
-  const background = new BackgroundGeneration(
-    outputStore,
+  const background = new WatchedBackground({
+    ...(dependencies.baselineBuilder
+      ? { baselineBuilder: dependencies.baselineBuilder }
+      : {}),
+    ...(options.base !== undefined ? { base: options.base } : {}),
     classifier,
-    (compilation, accepted) => {
-      changesStartedAt = Date.now();
-      if (reportCatalogue)
-        reporter.catalogueReady(
-          compilation.manifest,
-          changesStartedAt - generationStartedAt,
-        );
-      activeCompilation = compilation;
-      running.completeCatalogue?.(compilation.manifest, accepted.generation);
-    },
-    (snapshot) => {
-      const duration = Date.now() - changesStartedAt;
-      if (snapshot)
-        reporter.changesReady(snapshot.changedRoutes?.length ?? 0, duration);
-      else reporter.changesUnavailable(duration);
-      running.notifyUpdate(
-        snapshot?.changedRoutes,
-        snapshot,
-        snapshot ? "ready" : "unavailable",
-        "evidence",
-      );
-    },
-    {
-      baselinePrepared: (commit) =>
-        running.notifyUpdate(
-          undefined,
-          undefined,
-          "pending",
-          "evidence",
-          commit,
-        ),
-      baselineStatus: (changesStatus) =>
-        running.notifyUpdate(undefined, undefined, changesStatus, "evidence"),
-      baselineProgress: (event) => {
-        if (event.type === "start") {
-          baselineStartedAt = Date.now();
-          reporter.baselinePreparing(options.base ?? activeConfig.review.base);
-        }
-        if (event.type === "complete")
-          reporter.baselineReady(
-            event.commit,
-            event.cacheHit,
-            Date.now() - baselineStartedAt,
-          );
-      },
-      diagnostic: report,
-      resources,
-      shutdown,
-      ...(dependencies.baselineBuilder
-        ? { builder: dependencies.baselineBuilder }
-        : {}),
-    },
-  );
+    config: () => activeConfig,
+    outputStore,
+    report,
+    reporter,
+    resources,
+    running,
+    runtime: () => runtime,
+    shutdown,
+  });
   running.onForeground?.((active) => background.foreground(active));
-  const schedule = (existing?: Compilation) => {
-    generationStartedAt = Date.now();
-    changesStartedAt = generationStartedAt;
-    reportCatalogue = existing === undefined;
-    background.start(
-      runtime,
-      options.base ?? activeConfig.review.base,
-      existing,
-    );
-  };
   let debouncer: WatchDebouncer | undefined;
-  const notify = (candidate: string) => {
+  const notify = (event: WatchEvent) => {
     const action = classifyWatchPath(
-      candidate,
+      event,
       activeConfig,
       new Set([...resources.paths, ...previews.paths]),
     );
-    debouncer?.notify(action, candidate);
+    debouncer?.notify(action, event.path);
   };
 
   const restart = async () => {
@@ -192,17 +140,17 @@ export async function serveWatched(
         "evidence",
       );
     } finally {
-      if (!closed) schedule(activeCompilation);
+      if (!closed) background.schedule(background.compilation);
     }
   };
 
   const reconfigure = async (candidate?: ResolvedConfig): Promise<void> => {
     const nextConfig =
       candidate ?? (await configLoader.load(activeConfig.configPath));
-    nextConfig.sourceFiles = (
-      await loadConsumerGraph(nextConfig, false)
-    ).sourceFiles;
-    const nextGate = new NotificationGate<string>();
+    const nextInventory = await loadConsumerGraph(nextConfig, false);
+    nextConfig.entryModules = nextInventory.entrySources;
+    nextConfig.sourceFiles = nextInventory.sourceFiles;
+    const nextGate = new NotificationGate<WatchEvent>(report);
     const replacement = createSourceWatcher(
       watcherFactory,
       nextConfig,
@@ -220,7 +168,7 @@ export async function serveWatched(
       const previous = watcher;
       activeConfig = next.config;
       runtime = next;
-      activeCompilation = undefined;
+      background.clearCompilation();
       references.replace(
         activeConfig.repoRoot,
         options.base ?? activeConfig.review.base,
@@ -249,7 +197,7 @@ export async function serveWatched(
     if (closed) return;
     if (action === "reconfigure") return reconfigure();
     if (action === "evidence") {
-      if (activeCompilation) {
+      if (background.compilation) {
         await background.invalidate();
         if (!closed) {
           running.notifyUpdate(
@@ -258,7 +206,7 @@ export async function serveWatched(
             background.changesStatus,
             "evidence",
           );
-          schedule(activeCompilation);
+          background.schedule(background.compilation);
         }
       }
       return;
@@ -275,7 +223,7 @@ export async function serveWatched(
       if (closed) return;
       activeConfig = next.config;
       runtime = next;
-      activeCompilation = undefined;
+      background.clearCompilation();
       const nextSignature = JSON.stringify(next.manifest);
       running.replaceComponentRuntime(
         next,
@@ -286,7 +234,7 @@ export async function serveWatched(
         await restart();
       } else {
         running.notifyUpdate(undefined, undefined, background.changesStatus);
-        schedule();
+        background.schedule();
       }
       return;
     }
@@ -299,31 +247,17 @@ export async function serveWatched(
     );
     if (action === "reload") {
       running.notifyUpdate(undefined, undefined, background.changesStatus);
-      schedule(activeCompilation);
+      background.schedule(background.compilation);
     } else await restart();
   };
-  const processAction = async (
-    action: RuntimeWatchAction,
-    paths: readonly string[],
-  ): Promise<void> => {
-    const reportable = action !== "evidence" || paths.length > 0;
-    const startedAt = Date.now();
-    const watchReport = (durationMs: number) => ({
-      action,
-      durationMs,
-      paths,
-      repoRoot: activeConfig.repoRoot,
-    });
-    if (reportable) reporter.watchStarted(watchReport(0));
-    try {
-      await performAction(action);
-      if (reportable)
-        reporter.watchFinished(watchReport(Date.now() - startedAt));
-    } catch (error) {
-      reporter.watchFailed(watchReport(Date.now() - startedAt), error);
-    }
-  };
-  const queue = new WatchActionQueue(processAction, report);
+  const queue = new WatchActionQueue(
+    reportedWatchProcessor(
+      performAction,
+      reporter,
+      () => activeConfig.repoRoot,
+    ),
+    report,
+  );
   const references = new GitReferenceObserver(
     new RepositoryGitReferences(),
     (initial) => {
@@ -343,7 +277,7 @@ export async function serveWatched(
     }
   });
   gate.open(bindTimings(notify));
-  schedule();
+  background.schedule();
   references.replace(
     activeConfig.repoRoot,
     options.base ?? activeConfig.review.base,

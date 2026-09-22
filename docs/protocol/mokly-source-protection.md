@@ -5,18 +5,26 @@
 Implemented for schema-v5 [pages](./mokly-pages.md), screens, and flows.
 The same resolved inventory protects build, runtime, comparisons, and both
 publication options. Verification is tracked in
-[Unified Catalogue Pages](../../plans/unified-catalogue-pages.md).
+[Unified Catalogue Pages](../../plans/unified-catalogue-pages.md); the
+resolved-entry-set rule was delivered by the
+[co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
 
 ## Protected Inputs
 
 Use one source-classification policy for current HTTP assets, generated-resource
 validation, Review resource reads, static publication, and public content-change
-classification. A file is protected if it is beneath `entriesDir`, appears in
-the validated `sourceFiles` inventory, has a reserved source basename, or matches
-a public exclusion. Apply each rule to both its requested path
+classification. A file is protected if it is a resolved entry module, appears
+in the validated `sourceFiles` inventory, has a reserved source basename, or
+matches a public exclusion. Every resolved entry module is also an inventoried
+source, so the entry-set rule is a stable identity for entries rather than a
+second inventory. Apply each rule to both its requested path
 and its resolved repository-relative target. A public-looking symlink cannot
 make a protected target public. Existing regular-file and root-confinement
-checks remain mandatory.
+checks remain mandatory. The same classifier runs over every resolved entry
+module at discovery, as defined by the
+[configuration contract](./mokly-configuration.md#entry-discovery), so an entry
+can never sit inside the output root, Review output, the baseline cache, or a
+package-owned private directory.
 
 The canonical `mokly-manifest.json`, former `mokabook-manifest.json`, and legacy
 v2 `mockbook-manifest.json` at `mockupsDir` are internal metadata. Deny all
@@ -55,7 +63,12 @@ For example, removing the final import of `old-page.source.tsx` must leave the
 file inaccessible through `/static` and absent from both publication options.
 Deleting source files is not a condition of migration. Arbitrarily named helpers
 are covered by the inventory while imported; helpers retained without imports
-must live under `entriesDir`, use a reserved basename, or match a public exclusion.
+must use a reserved basename, match a public exclusion, or be matched by an
+`entries` glob. A glob-matched file is an entry module and therefore protected
+authored source. If it exports no registry value, it contributes no definitions
+and can only trigger the normal empty-registry error. The `entriesDir` shorthand
+alone keeps the `.mockup.ts` and `.mockup.tsx` naming convention by expanding to
+its suffixed glob.
 Ordinary public browser scripts are not made private merely because they end in `.js`.
 
 Reject generated output routes that use a reserved source basename, match a
@@ -130,9 +143,9 @@ paths. Derive it from the union of file inputs resolved by both the config
 bundle and the consumer bundle, including inputs eliminated by tree shaking:
 
 - The config entry module and every repository-owned authoring import it loads.
-- All discovered entry modules and their transitive authoring imports.
+- Every resolved entry module and its transitive authoring imports.
 - The configured renderer, compatibility transformer, and their transitive
-  authoring imports, including render helpers outside `entriesDir`.
+  authoring imports, including render helpers that no `entries` glob matches.
 - Repository-owned workspace package modules resolved through aliases or package
   imports; a bare package specifier alone does not imply an external dependency.
 
@@ -202,8 +215,9 @@ Current-side resource reads always use the current validated policy.
 ## Acceptance
 
 Add tests before implementation for abandoned reserved files, removing their
-last import, config/renderer/transformer/helper imports outside `entriesDir`,
-tree-shaken inputs, local workspace packages, and arbitrary helper filenames.
+last import, config/renderer/transformer/helper imports that no `entries` glob
+matches, entry modules co-located beside product components, tree-shaken
+inputs, local workspace packages, and arbitrary helper filenames.
 Test missing/stale inventories, logical and realpath aliases, symlink escapes,
 mixed source/asset roles, reserved output routes, and rejected protected links.
 Cover outside config, entry, renderer, transformer, page-helper, and raw-template

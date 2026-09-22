@@ -16,6 +16,7 @@ import type {
   ProcessSupervisor,
   ProcessSupervisorFactory,
 } from "../dist/server/supervisor.js";
+import type { WatchEvent } from "../dist/server/watch_events.js";
 import type {
   ConsumerWatcher,
   ConsumerWatcherFactory,
@@ -34,7 +35,7 @@ test("watched startup attaches the watcher before the initial output write", asy
     { base: "origin/main", port: 0, watch: true },
     dependencies(events, watcher),
   );
-  context.after(() => running.close());
+  fixture.beforeRemove(() => running.close());
 
   assert.equal(events.includes("output:write"), false);
   await waitForEvent(events, "output:write");
@@ -82,7 +83,7 @@ test("watched startup does not await repository classification", async (context)
     { base: "origin/main", port: 0, watch: true },
     dependencies(events, new FakeWatcher(events), classifier),
   );
-  context.after(() => running.close());
+  fixture.beforeRemove(() => running.close());
 
   await waitForEvent(events, "classification:start");
   assert.ok(
@@ -115,7 +116,7 @@ test("watched shutdown cancels background repository classification", async (con
     dependencies(events, new FakeWatcher(events), classifier),
   );
 
-  context.after(() => running.close());
+  fixture.beforeRemove(() => running.close());
   await waitForEvent(events, "classification:start");
   await running.close();
 
@@ -176,7 +177,7 @@ class FakeWatcher implements ConsumerWatcher {
     this.events.push("watcher:close");
   }
 
-  onChange(_callback: (path: string) => void): void {}
+  onChange(_callback: (event: WatchEvent) => void): void {}
 
   onError(_callback: (error: Error) => void): void {}
 

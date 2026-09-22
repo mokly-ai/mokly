@@ -24,6 +24,21 @@ const propSchema = {
       optional: true,
     },
     schemeDisabled: optionalFlag,
+    changedViews: {
+      schema: {
+        kind: "array",
+        items: {
+          kind: "object",
+          properties: {
+            viewport: {
+              schema: { kind: "enum", values: ["mobile", "desktop"] },
+            },
+            scheme,
+          },
+        },
+      },
+      optional: true,
+    },
     destinations: schemeDestinations,
   },
 } as const;
@@ -82,6 +97,17 @@ export const viewControls = defineComponent({
       id: "unavailable",
       title: "Unavailable",
       props: { ...sample, highlight: false, unavailable: "empty" },
+    },
+    {
+      id: "changed-views",
+      title: "Changed views",
+      props: {
+        ...sample,
+        changedViews: [
+          { viewport: "mobile", scheme: "dark" },
+          { viewport: "desktop", scheme: "dark" },
+        ],
+      },
     },
   ],
 });
