@@ -26,6 +26,6 @@ export async function selectedComparisonFixture(lifecycle: {
     componentChanges: changes,
     review: configuredServedReview(fixture.config, "HEAD", fixture.git),
   });
-  lifecycle.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
   return server;
 }

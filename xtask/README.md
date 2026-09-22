@@ -24,9 +24,11 @@ consumer's resolved production dependencies without workspace overrides.
 The [CI verification contract](../docs/protocol/ci-verification.md) defines the
 suite boundaries, shard evidence, and fail-closed CI aggregate. Selected suites
 are partial verification; the unqualified command remains the complete gate.
-CI resolves the latest Node 24 patch once per run and passes that exact version
-to every dependent job, keeping shard evidence consistent across runner caches.
-The single release publishing job independently resolves the latest Node 24.
+Ordinary CI runs functional suites on the minimum Node 22.14 runtime. Release
+Please pull requests add Node 24; CI resolves the latest patch in its repository
+prerequisite and explicitly shares that exact result with dependent jobs,
+keeping shard evidence consistent across runner caches. The single release
+publishing job independently resolves the latest Node 24.
 
 Hydration coverage discovers a separate browser test for every example route,
 so adding screens does not consume one shared test deadline. Tests using

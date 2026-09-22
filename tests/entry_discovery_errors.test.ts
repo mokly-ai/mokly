@@ -132,6 +132,24 @@ test("discovery drops a matched module replaced by a directory after listing", a
   assert.deepEqual((await loadConfig(fixture.root)).entryModules, [remaining]);
 });
 
+test("filesystem race mutation runs once across repeated overlapping discovery", async (context) => {
+  const fixture = await createFixture();
+  context.after(() => removeFixture(fixture));
+  const config = await loadConfig(fixture.root);
+  const remaining = path.join(fixture.entriesDir, "remaining.mockup.tsx");
+  await fs.promises.writeFile(remaining, validEntrySource());
+  mutateAfterListing(context, fixture.entriesDir, () => {
+    fs.unlinkSync(fixture.entryPath);
+  });
+  const overlapping = {
+    ...config,
+    entryGlobs: ["entries/**/*.mockup.{ts,tsx}", "entries/*.mockup.{ts,tsx}"],
+  };
+
+  assert.deepEqual(discoverEntryModules(overlapping), [remaining]);
+  assert.deepEqual(discoverEntryModules(overlapping), [remaining]);
+});
+
 test("discovery uses lexical review output when its projection fails", async (context) => {
   const { config, root } = await discoveryFixture(context);
   const outDir = path.join(root, "review");
@@ -186,9 +204,13 @@ function mutateAfterListing(
   mutate: () => void,
 ): void {
   const readdir = fs.readdirSync;
+  let pending = true;
   context.mock.method(fs, "readdirSync", (...args: unknown[]) => {
     const entries = Reflect.apply(readdir, fs, args);
-    if (args[0] === directory) mutate();
+    if (args[0] === directory && pending) {
+      pending = false;
+      mutate();
+    }
     return entries;
   });
 }

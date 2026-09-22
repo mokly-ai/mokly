@@ -54,7 +54,7 @@ function RenderProbe() { appendFileSync(${JSON.stringify(renderLog)}, "render\\n
     componentChanges: changes,
     review: configuredServedReview(fixture.config, "HEAD", git),
   });
-  t.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
   assert.ok((await fs.readFile(renderLog, "utf8")).includes("render"));
   await fs.writeFile(renderLog, "");
   const unrelated = fixture.after.manifest.entries.find(
@@ -152,7 +152,7 @@ test("component comparison snapshots contain only the selected saved variant", a
     componentChanges: changes,
     review: configuredServedReview(fixture.config, "HEAD", fixture.git),
   });
-  t.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
   const response = await fetch(
     `${server.url}/__mokly/diffs/review.json?route=components%2Faction.html&variant=disabled`,
   );

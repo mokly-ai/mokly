@@ -34,7 +34,7 @@ interface WorkflowJob {
   steps: readonly WorkflowStep[];
   strategy?: {
     "fail-fast"?: boolean;
-    matrix: Readonly<Record<string, readonly (string | number)[]>>;
+    matrix: Readonly<Record<string, readonly (string | number)[] | string>>;
   };
   "timeout-minutes"?: number;
 }
@@ -86,10 +86,12 @@ test("CI shards complete verification behind one prerequisite", async () => {
   assert.equal(required.if, "always()");
   for (const job of [packageJob, unit, browser, native])
     assert.deepEqual(job.needs, ["repository"]);
-  assert.deepEqual(packageJob.strategy?.matrix.node, ["22.14.0", "24"]);
+  const selectedNodeMatrix =
+    "${{ fromJSON(needs.repository.outputs.node-matrix) }}";
+  assert.equal(packageJob.strategy?.matrix.node, selectedNodeMatrix);
   for (const job of [unit, browser]) {
     assert.equal(job.strategy?.["fail-fast"], false);
-    assert.deepEqual(job.strategy?.matrix.node, ["22.14.0", "24"]);
+    assert.equal(job.strategy?.matrix.node, selectedNodeMatrix);
     assert.deepEqual(job.strategy?.matrix.shard, [1, 2, 3, 4]);
   }
   assert.equal(native.strategy?.["fail-fast"], false);

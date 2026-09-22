@@ -2,13 +2,17 @@
 
 ## Active
 
+- [Release-Gated Node Compatibility](./release-gated-node-compatibility.md) —
+  run the minimum supported runtime on ordinary changes and reserve the full
+  Node 22.14/24 compatibility matrix for Release Please pull requests.
 - [Screen Variants Follow-up](./screen-variants-follow-up.md) — deferred
   design-catalogue conversion, five open review findings, and later navigation
   ideas from PR #101; planned for a separate PR, with no implementation started.
 - [Co-Located Entry Discovery Follow-up](./co-located-entry-discovery-follow-up.md)
   — all deferred seventh/eighth-round findings, the latest entry-layout
   documentation finding, and the remaining follow-up tasks from PR #101;
-  planned for a separate PR, with no implementation started.
+  implemented, independently verified, pushed, and reviewed with no actionable
+  findings; [PR #111](https://github.com/mokly-ai/mokly/pull/111) awaits merge.
 - [React Browse Shell](./react-browse-shell.md)
 - [CI Performance](./ci-performance.md) — parallel verification, complete test
   sharding, reusable preparation and measured CI timing improvements.

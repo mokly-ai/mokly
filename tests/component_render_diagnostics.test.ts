@@ -28,7 +28,7 @@ test("preview-resource exclusions reach stderr without exposing the cause in HTT
     port: 0,
     componentRuntime: componentRuntime(fixture.after),
   });
-  t.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
   const page = await (
     await fetch(`${server.url}/view/components/action.html`)
   ).text();
