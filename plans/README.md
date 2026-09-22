@@ -2,6 +2,13 @@
 
 ## Active
 
+- [Screen Variants Follow-up](./screen-variants-follow-up.md) — deferred
+  design-catalogue conversion, five open review findings, and later navigation
+  ideas from PR #101; planned for a separate PR, with no implementation started.
+- [Co-Located Entry Discovery Follow-up](./co-located-entry-discovery-follow-up.md)
+  — all deferred seventh/eighth-round findings, the latest entry-layout
+  documentation finding, and the remaining follow-up tasks from PR #101;
+  planned for a separate PR, with no implementation started.
 - [React Browse Shell](./react-browse-shell.md)
 - [CI Performance](./ci-performance.md) — parallel verification, complete test
   sharding, reusable preparation and measured CI timing improvements.
@@ -27,6 +34,14 @@
 
 ## Completed
 
+- [Screen Variants](./screen-variants.md) — PR #101's delivered scope is
+  complete: authoring, navigation, Changes, per-view evidence, and the approved
+  review fixes. Unfinished work is owned by
+  [Screen Variants Follow-up](./screen-variants-follow-up.md).
+- [Co-Located Entry Discovery](./co-located-entry-discovery.md) — PR #101's
+  delivered scope is complete through Milestone 13. Historical milestones and
+  reviews remain in `co-located-entry-discovery/`; open work is owned by
+  [Co-Located Entry Discovery Follow-up](./co-located-entry-discovery-follow-up.md).
 - [Removed Content Previews](./removed-content-previews.md) — delivered and
   verified; Serve, exports, repository previews, and embedded viewers render
   pinned previous versions for removed documents and screens. Its High/P1

@@ -2,7 +2,6 @@ import type {
   ManifestComponent,
   ManifestComponentVariant,
 } from "../components/manifest_types.js";
-import type { ComponentWireProps } from "../components/prop_types.js";
 import type { RenderCapability } from "../components/render_types.js";
 /** Serializable, source-derived state shared by the served and published inspector. */
 import {
@@ -22,8 +21,22 @@ import { publicWorkspace } from "../viewer/public_workspace.js";
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import { dedupeUsageLinks } from "./usage_links.js";
+import {
+  shownComparisonEligible,
+  type EntryStatus,
+  type ViewStatesBySelection,
+} from "./view_status.js";
+import {
+  inputChanges as entryInputChanges,
+  type InputChange,
+} from "./workspace_input_changes.js";
+import {
+  changedViewsBySelection,
+  type ChangedViewsBySelection,
+  viewStatesBySelection,
+} from "./workspace_views_data.js";
 
-export type EntryStatus = "Added" | "Changed" | "Removed" | "Unmodified";
+export type { EntryStatus } from "./view_status.js";
 export interface WorkspaceVariant {
   value: ManifestComponentVariant;
   removed: boolean;
@@ -41,15 +54,6 @@ export interface UsageLink {
   removed: boolean;
   comparisonEligible: boolean;
 }
-export interface InputChange {
-  instanceId: string;
-  title: string;
-  viewport: "mobile" | "desktop";
-  colorScheme: "light" | "dark";
-  variantId?: string;
-  before: ComponentWireProps;
-  after: ComponentWireProps;
-}
 export interface WorkspaceData {
   previewGeneration?: string;
   usageComplete?: boolean;
@@ -57,6 +61,16 @@ export interface WorkspaceData {
   entry: ManifestScreen | ManifestComponent;
   components: readonly Pick<ManifestComponent, "id" | "title" | "route">[];
   views: readonly GeneratedComponentView[];
+  /**
+   * Canonically ordered changed views, keyed by saved-variant id for a
+   * component and by the entry id for a screen.
+   */
+  changedViews: ChangedViewsBySelection;
+  /**
+   * Known review states keyed by saved-variant id for a component and by the
+   * entry id for a screen. A missing key means the per-view state is unknown.
+   */
+  viewStates: ViewStatesBySelection;
   variants: readonly WorkspaceVariant[];
   usedBy: readonly UsageLink[];
   affected: readonly UsageLink[];
@@ -70,14 +84,6 @@ export interface WorkspaceData {
   removed: boolean;
   relatedComponents: readonly { title: string; route: string }[];
   inputChanges: readonly InputChange[];
-}
-
-/** Screens compare edits; component variants also retain removed saved values. */
-function isComparisonEligible(
-  status: EntryStatus | undefined,
-  kind: WorkspaceData["entry"]["kind"],
-): boolean {
-  return status === "Changed" || (kind === "component" && status === "Removed");
 }
 
 /** Entry state and actual saved views stay independent of Changes membership. */
@@ -158,7 +164,7 @@ export function workspaceData(
           return {
             value,
             removed: isRemoved,
-            comparisonEligible: isComparisonEligible(
+            comparisonEligible: shownComparisonEligible(
               variantStatus,
               "component",
             ),
@@ -181,47 +187,14 @@ export function workspaceData(
           instanceKey: evidence.via.at(-1)!.instanceKey,
           direct: evidence.via.length === 1,
           removed,
-          comparisonEligible: isComparisonEligible(
+          comparisonEligible: shownComparisonEligible(
             removed ? "Removed" : "Changed",
             evidence.context.kind,
           ),
         };
       }),
     );
-  const inputChanges: InputChange[] = [];
-  if (baseline)
-    for (const after of generatedViews(entry)) {
-      const before = generatedViews(baseline).find(
-        (view) =>
-          view.viewport === after.viewport &&
-          view.colorScheme === after.colorScheme &&
-          view.variantId === after.variantId,
-      );
-      for (const current of after.usage?.instances ?? []) {
-        if (current.owner.kind !== "entry") continue;
-        const previous = before?.usage?.instances.find(
-          (item) =>
-            item.key === current.key &&
-            item.componentId === current.componentId,
-        );
-        if (
-          !previous ||
-          JSON.stringify(previous.props) === JSON.stringify(current.props)
-        )
-          continue;
-        inputChanges.push({
-          instanceId: current.id,
-          title:
-            catalogue.byId.get(current.componentId)?.title ??
-            current.componentId,
-          viewport: after.viewport,
-          colorScheme: after.colorScheme,
-          ...(after.variantId ? { variantId: after.variantId } : {}),
-          before: previous.props,
-          after: current.props,
-        });
-      }
-    }
+  const inputChanges = entryInputChanges(catalogue, entry, baseline);
   const relatedIds = new Set(
     result?.affectedConsumers
       .filter((item) =>
@@ -246,7 +219,7 @@ export function workspaceData(
     entry,
     removed,
     comparisons: context.comparisons ?? false,
-    comparisonEligible: isComparisonEligible(status, entry.kind),
+    comparisonEligible: shownComparisonEligible(status, entry.kind),
     base: context.base,
     inputChanges,
     relatedComponents: (result?.components ?? [])
@@ -268,6 +241,18 @@ export function workspaceData(
       delete demand.usage;
       return demand;
     }),
+    changedViews: changedViewsBySelection(
+      entry,
+      context,
+      comparison,
+      variants.map(({ value }) => value.id),
+    ),
+    viewStates: viewStatesBySelection(
+      entry,
+      context,
+      comparison,
+      variants.map(({ value }) => value.id),
+    ),
     variants,
     usedBy: (catalogue.manifest.schemaVersion === "live-index-1"
       ? []

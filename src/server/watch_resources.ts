@@ -15,7 +15,7 @@ import { ResourceGraph } from "../review/resource_graph.js";
 import {
   configuredStylesheetPaths,
   isPackageOwnedIgnoredWatchPath,
-} from "./watch_events.js";
+} from "./watch_paths.js";
 
 /** Reachable inputs and recovery edges from one resource-discovery pass. */
 export interface ResourceWatchSnapshot {

@@ -1,21 +1,17 @@
-import { Button } from "@firna/ui/button";
-import type { CSSProperties } from "react";
-
 import { defineComponent, MockLink } from "@mokly/mokly";
 
+import { Action } from "./action.js";
+
 const dependency = "examples/basic/generated/example-components.css";
-const noop = (): void => undefined;
+const implementation = "examples/basic/src/components/action/action.tsx";
 
 export const action = defineComponent({
   id: "example-action",
   title: "Action",
   description: "A shared action with an optional destination and hint.",
   route: "components/action.html",
-  dependencies: [dependency, "examples/basic/entries/components/action.tsx"],
-  ownedDependencies: [
-    dependency,
-    "examples/basic/entries/components/action.tsx",
-  ],
+  dependencies: [dependency, implementation],
+  ownedDependencies: [dependency, implementation],
   relatedDocs: ["examples/basic/README.md"],
   tags: ["forms"],
   propSchema: {
@@ -56,45 +52,34 @@ export const action = defineComponent({
     hint: { kind: "text", label: "Hint", maxLength: 120 },
   },
   render(props) {
-    const button = (
-      <Button
-        disabled={props.disabled ?? false}
-        onPress={noop}
-        tone={props.tone}
-      >
-        {props.label}
-      </Button>
-    );
+    const destination = props.destination;
     return (
-      <div
-        className="example-action"
-        style={
-          props.radius === undefined
-            ? undefined
-            : ({ "--example-radius": `${props.radius}px` } as CSSProperties)
-        }
-      >
-        {props.destination ? (
-          <MockLink
-            asChild
-            to={
-              props.destination === "details"
-                ? "example-details"
-                : "example-welcome"
-            }
-            {...(props.destination === "details"
-              ? { fragment: "details" }
-              : {})}
-          >
-            {button}
-          </MockLink>
-        ) : (
-          button
-        )}
-        {props.hint === undefined ? null : (
-          <p className="example-action-hint">{props.hint}</p>
-        )}
-      </div>
+      <Action
+        disabled={props.disabled ?? false}
+        label={props.label}
+        tone={props.tone}
+        {...(props.radius === undefined ? {} : { radius: props.radius })}
+        {...(props.hint === undefined ? {} : { hint: props.hint })}
+        {...(destination === undefined
+          ? {}
+          : {
+              wrap: (button) => (
+                <MockLink
+                  asChild
+                  to={
+                    destination === "details"
+                      ? "example-details"
+                      : "example-welcome"
+                  }
+                  {...(destination === "details"
+                    ? { fragment: "details" }
+                    : {})}
+                >
+                  {button}
+                </MockLink>
+              ),
+            })}
+      />
     );
   },
   variants: [

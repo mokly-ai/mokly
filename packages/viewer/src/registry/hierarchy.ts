@@ -4,6 +4,7 @@ export interface HierarchyEntry {
   id: string;
   kind: string;
   title: string;
+  variantOf?: unknown;
 }
 
 /** Structural collection-forest violation. */
@@ -24,6 +25,8 @@ export interface CatalogueHierarchy<T extends HierarchyEntry> {
   childrenById: ReadonlyMap<string, readonly T[]>;
   parentById: ReadonlyMap<string, T>;
   roots: readonly T[];
+  variantsById: ReadonlyMap<string, readonly T[]>;
+  variantParentById: ReadonlyMap<string, T>;
 }
 
 /** Hierarchy data plus any structural issues found while deriving it. */
@@ -46,6 +49,8 @@ export function analyzeHierarchy<T extends HierarchyEntry>(
   const childrenById = new Map<string, readonly T[]>();
   const parentById = new Map<string, T>();
   const collectionEdges = new Map<string, readonly string[]>();
+  const mutableVariantsById = new Map<string, T[]>();
+  const variantParentById = new Map<string, T>();
   const issues: HierarchyIssue<T>[] = [];
 
   for (const collection of collections) {
@@ -88,17 +93,45 @@ export function analyzeHierarchy<T extends HierarchyEntry>(
     collectionEdges.set(collection.id, collectionChildren.sort());
   }
 
+  for (const entry of entries) {
+    if (typeof entry.variantOf !== "string" || byId.get(entry.id) !== entry) {
+      continue;
+    }
+    const parent = byId.get(entry.variantOf);
+    if (!parent) continue;
+    variantParentById.set(entry.id, parent);
+    mutableVariantsById.set(parent.id, [
+      ...(mutableVariantsById.get(parent.id) ?? []),
+      entry,
+    ]);
+  }
+
   issues.push(...cycleIssues(collections, collectionEdges, byId));
   const ancestorsById = new Map<string, readonly T[]>();
   for (const entry of byId.values()) {
-    ancestorsById.set(entry.id, ancestors(entry, parentById));
+    ancestorsById.set(
+      entry.id,
+      ancestors(variantParentById.get(entry.id) ?? entry, parentById),
+    );
   }
   const roots = [...byId.values()]
-    .filter((entry) => !parentById.has(entry.id))
+    .filter(
+      (entry) =>
+        !parentById.has(entry.id) && typeof entry.variantOf !== "string",
+    )
     .sort(compareEntries);
+  const variantsById = new Map<string, readonly T[]>(mutableVariantsById);
 
   return {
-    hierarchy: { ancestorsById, byId, childrenById, parentById, roots },
+    hierarchy: {
+      ancestorsById,
+      byId,
+      childrenById,
+      parentById,
+      roots,
+      variantsById,
+      variantParentById,
+    },
     issues,
   };
 }

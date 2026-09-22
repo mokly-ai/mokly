@@ -43,7 +43,7 @@ test("demand worker coalesces, recovers after idle failure and keeps listeners b
       return worker;
     },
   });
-  t.after(() => service.close());
+  fixture.beforeRemove(() => service.close());
   const first = service.read("screens/home.desktop.html");
   assert.equal(service.read("screens/home.desktop.html"), first);
   workers[0]!.respond();
@@ -79,7 +79,7 @@ test("a failed renderer terminates before its replacement starts", async (t) => 
       return worker;
     },
   });
-  t.after(async () => {
+  fixture.beforeRemove(async () => {
     release();
     await service.close();
   });
@@ -113,7 +113,7 @@ test("demand admission, deadline and shutdown reject work without poisoning a re
       return worker;
     },
   });
-  t.after(() => service.close());
+  fixture.beforeRemove(() => service.close());
   const active = assert.rejects(
     service.read("screens/home.desktop.html"),
     /too long/,

@@ -13,9 +13,11 @@ import { TagChips } from "./tag_filter.js";
 
 function DetailsBody({
   activeTag,
+  changedViews,
   subject,
 }: {
   activeTag?: string | undefined;
+  changedViews?: string | undefined;
   subject: ScreenSubject;
 }) {
   const metadata = SUBJECTS[subject];
@@ -38,6 +40,11 @@ function DetailsBody({
         <MetaRow name="schemes" label="Schemes">
           {metadata.schemes}
         </MetaRow>
+        {changedViews ? (
+          <MetaRow name="changed-views" label="Changed views">
+            {changedViews}
+          </MetaRow>
+        ) : null}
         {metadata.tags.length > 0 ? (
           <MetaRow name="tags" label="Tags">
             <TagChips activeTag={activeTag} tags={metadata.tags} />
@@ -67,6 +74,8 @@ type DetailsPanelProps = {
   destination?: DesignDestination | undefined;
   /** Tag drawn as the selected chip because it is the current search term. */
   activeTag?: string | undefined;
+  /** Views whose render changed, listed when the change misses the shown one. */
+  changedViews?: string | undefined;
   open?: boolean;
   comparisonEvidence?: ReactNode;
 } & (
@@ -78,6 +87,7 @@ type DetailsPanelProps = {
 export function DetailsPanel({
   destination,
   activeTag,
+  changedViews,
   children,
   comparisonEvidence,
   open,
@@ -89,7 +99,11 @@ export function DetailsPanel({
       children
     ) : (
       <>
-        <DetailsBody activeTag={activeTag} subject={subject} />
+        <DetailsBody
+          activeTag={activeTag}
+          changedViews={changedViews}
+          subject={subject}
+        />
         {evidence ? (
           <section
             className="mbk-comparison-details"

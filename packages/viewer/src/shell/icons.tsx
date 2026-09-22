@@ -76,6 +76,23 @@ export function ScreenIcon(props: { size?: number }) {
   );
 }
 
+/**
+ * One screen variant: a screen outline drawn over a second, partially drawn
+ * screen behind it, so a variant row reads as a state of the screen above it.
+ */
+export function VariantIcon(props: { size?: number }) {
+  return (
+    <IconSvg size={props.size ?? 13}>
+      <path
+        d="M6 6V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-2"
+        strokeLinecap="butt"
+      />
+      <rect height={14} rx={2} width={16} x={2} y={6} />
+      <path d="M2 10h16" />
+    </IconSvg>
+  );
+}
+
 /** The search affordance at the leading edge of the top bar's search field. */
 export function SearchIcon(props: { size?: number }) {
   return (

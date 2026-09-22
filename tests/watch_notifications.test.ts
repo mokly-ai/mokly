@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
+import type fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
+import type { WatchEvent } from "../dist/server/watch_events.js";
 import {
   rawRenamePaths,
   ResourceWatchNotifications,
@@ -33,21 +35,26 @@ test("unnamed raw events do not invent an entry or reload its parent", () => {
   assert.deepEqual(rawRenamePaths("image.svg", undefined), []);
 });
 
-test("normalized and raw events coalesce and shutdown cancels delayed notifications", (context) => {
+test("normalized and raw events coalesce by path with the latest descriptor and cancel on shutdown", (context) => {
   context.mock.timers.enable({ apis: ["setTimeout"] });
-  const changes: string[] = [];
+  const changes: WatchEvent[] = [];
+  const latest: WatchEvent = {
+    path: "image.svg",
+    kind: "add",
+    stats: { isDirectory: () => false } as fs.Stats,
+  };
   const notifications = new ResourceWatchNotifications((candidate) =>
     changes.push(candidate),
   );
-  notifications.notify("image.svg");
+  notifications.notify({ path: "image.svg", kind: "raw" });
   context.mock.timers.tick(50);
-  notifications.notify("image.svg");
+  notifications.notify(latest);
   context.mock.timers.tick(74);
   assert.deepEqual(changes, []);
   context.mock.timers.tick(1);
-  assert.deepEqual(changes, ["image.svg"]);
-  notifications.notify("font.woff2");
+  assert.deepEqual(changes, [latest]);
+  notifications.notify({ path: "font.woff2", kind: "unlink" });
   notifications.close();
   context.mock.timers.tick(100);
-  assert.deepEqual(changes, ["image.svg"]);
+  assert.deepEqual(changes, [latest]);
 });

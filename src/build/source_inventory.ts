@@ -7,6 +7,7 @@ import { Minimatch } from "minimatch";
 
 import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
+import { isAuthoredEntryPath } from "../config/entry_membership.js";
 import { locatePath } from "../config/file_locations.js";
 import { isInside, projectRealPath, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -51,7 +52,7 @@ export function isAuthoringSource(
   aliases: "all" | "exclusions" | "none" = "all",
   options: SourceClassificationOptions = {},
 ): SourceDenial | undefined {
-  if (isInside(config.entriesDir, candidate)) return { kind: "entries" };
+  if (isAuthoredEntryPath(candidate, config)) return { kind: "entries" };
   if (isReservedSource(candidate)) return { kind: "reserved" };
   if (isListedSource(candidate, config)) return { kind: "listed" };
   const logicalExclusion = options.ignorePublicExclusions
@@ -81,8 +82,7 @@ export function isAuthoringSource(
   if (physicalExclusion !== undefined)
     return { kind: "exclusion", glob: physicalExclusion };
   if (aliases === "exclusions") return;
-  if (isInside(projectRealPath(config.entriesDir), real))
-    return { kind: "entries" };
+  if (isAuthoredEntryPath(real, config, true)) return { kind: "entries" };
   if (isReservedSource(real)) return { kind: "reserved" };
   const index = sourceIndex(config);
   if (

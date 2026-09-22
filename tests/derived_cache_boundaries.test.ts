@@ -6,11 +6,11 @@ import test from "node:test";
 import { isPublicStaticFile } from "../dist/config/public_files.js";
 import { resolveExportOutput } from "../dist/export/paths.js";
 import { reviewChangedPaths } from "../dist/review/changed_paths.js";
+import { classifyWatchPath } from "../dist/server/watch_events.js";
 import {
-  classifyWatchPath,
   isPackageOwnedIgnoredWatchPath,
   watchTargets,
-} from "../dist/server/watch_events.js";
+} from "../dist/server/watch_paths.js";
 
 import { derivedFixture } from "./helpers/derived_fixture.js";
 
@@ -38,7 +38,11 @@ test("cache exclusions precede broad globs, resource matching and required sourc
   for (const relative of paths) {
     const absolute = path.join(fixture.root, relative);
     assert.equal(
-      classifyWatchPath(absolute, config, new Set([absolute])),
+      classifyWatchPath(
+        { path: absolute, kind: "change" },
+        config,
+        new Set([absolute]),
+      ),
       "ignore",
     );
     assert.equal(isPackageOwnedIgnoredWatchPath(absolute, config), true);

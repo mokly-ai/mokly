@@ -128,3 +128,50 @@ test("public fixture rejects incomplete view axes and private nested extension p
   extended.extension = { absolutePath: "/private/file.tsx" };
   assert.throws(() => readCatalogue(extended));
 });
+
+test("reader retains variant relationships and entry-node children", async () => {
+  const fixture = JSON.parse(
+    await fs.readFile("docs/protocol/fixtures/catalogue-v1.json", "utf8"),
+  );
+  const parent = fixture.screens[0];
+  const stem = parent.route.slice(0, -5);
+  const variant = structuredClone(parent);
+  variant.id = `${parent.id}-empty`;
+  variant.title = `${parent.title}, empty`;
+  variant.route = `${stem}.variants/empty.html`;
+  variant.variantOf = parent.id;
+  variant.useCaseIds = [];
+  for (const view of variant.views) {
+    const dark = view.colorScheme === "dark" ? ".dark" : "";
+    view.fragmentPath = `static/${stem}.variants/empty.${view.viewport}${dark}.html`;
+  }
+  fixture.screens.push(variant);
+  const parentNode = findFixtureNode(fixture.tree.pages, parent.id);
+  assert.ok(parentNode);
+  parentNode.children = [{ id: variant.id, kind: "entry" }];
+
+  const model = readCatalogue(fixture);
+  assert.equal(
+    model.screens.find(({ id }) => id === variant.id)?.variantOf,
+    parent.id,
+  );
+  assert.deepEqual(model.tree.pages, fixture.tree.pages);
+});
+
+interface FixtureNode {
+  children?: FixtureNode[];
+  id: string;
+  kind: string;
+}
+
+function findFixtureNode(
+  nodes: readonly FixtureNode[],
+  id: string,
+): FixtureNode | undefined {
+  for (const node of nodes) {
+    if (node.id === id) return node;
+    const nested = findFixtureNode(node.children ?? [], id);
+    if (nested) return nested;
+  }
+  return undefined;
+}

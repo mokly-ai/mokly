@@ -1,8 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { minimatch } from "minimatch";
+
 import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
+import { isResolvedEntryOrInventoriedSource } from "../config/entry_membership.js";
 import { isInside, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError, errorMessage } from "../errors.js";
@@ -96,6 +99,22 @@ export function pendingGeneratedOrphanRoutes(
   return ownedGeneratedRoutes(config).filter((route) => !expected.has(route));
 }
 
+/** List generated HTML whose ownership header this configuration cannot claim. */
+export function unclaimedGeneratedRoutes(config: ResolvedConfig): string[] {
+  return walkFiles(config.mockupsDir)
+    .flatMap((candidate) => {
+      const relative = toPosixPath(path.relative(config.mockupsDir, candidate));
+      if (!candidate.endsWith(".html") || relative === MANIFEST_NAME) return [];
+      const source = readGeneratedSource(candidate);
+      return source &&
+        isSafeRepositoryPath(source) &&
+        !isAuthoredOwner(source, config)
+        ? [relative]
+        : [];
+    })
+    .sort();
+}
+
 /** Determine whether an existing target may be replaced safely. */
 export function isOwned(candidate: string, config: ResolvedConfig): boolean {
   return generatedOwnershipDenial(candidate, config) === undefined;
@@ -117,23 +136,47 @@ export function generatedOwnershipDenial(
     if (relative === MANIFEST_NAME) return;
     if (!candidate.endsWith(".html")) return "is not generated HTML";
     if (!fs.lstatSync(candidate).isFile()) return "is not a regular file";
+    const source = readGeneratedSource(candidate);
+    if (!source || !isSafeRepositoryPath(source))
+      return "has no valid generated ownership header";
+    if (!isAuthoredOwner(source, config))
+      return "has an owner outside every configured entry glob and the source inventory";
+  } catch (error) {
+    return `could not establish generated ownership: ${errorMessage(error)}`;
+  }
+}
+
+/**
+ * An owner is trusted when it is a resolved entry module, an inventoried input,
+ * or a repository-relative path matched by a configured entry glob.
+ */
+export function isAuthoredOwner(
+  sourceRelativePath: string,
+  config: ResolvedConfig,
+): boolean {
+  if (!isSafeRepositoryPath(sourceRelativePath)) return false;
+  const absolute = path.resolve(config.repoRoot, sourceRelativePath);
+  if (!isInside(config.repoRoot, absolute)) return false;
+  return (
+    isResolvedEntryOrInventoriedSource(sourceRelativePath, config) ||
+    config.entryGlobs.some((glob) =>
+      minimatch(sourceRelativePath, glob, { dot: true }),
+    )
+  );
+}
+
+function readGeneratedSource(candidate: string): string | undefined {
+  try {
     const handle = fs.openSync(candidate, "r");
     try {
       const buffer = Buffer.alloc(8_192);
       const length = fs.readSync(handle, buffer, 0, buffer.length, 0);
-      const source = generatedSource(
-        buffer.subarray(0, length).toString("utf8"),
-      );
-      if (!source || !isSafeRepositoryPath(source))
-        return "has no valid generated ownership header";
-      const absoluteSource = path.resolve(config.repoRoot, source);
-      if (!isInside(config.entriesDir, absoluteSource))
-        return "has an owner outside the configured entriesDir";
+      return generatedSource(buffer.subarray(0, length).toString("utf8"));
     } finally {
       fs.closeSync(handle);
     }
-  } catch (error) {
-    return `could not establish generated ownership: ${errorMessage(error)}`;
+  } catch {
+    return undefined;
   }
 }
 

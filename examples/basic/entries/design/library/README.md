@@ -14,6 +14,23 @@ the reader to wait. Toggle **Changes only** to inspect All in any state, or use
 the **Changes availability** control in Props to move between them. The counter
 reserves its width in every state.
 
+Catalogue navigation also saves the two screen-variant states: **Screen
+variants** shows `Welcome` with its variant list disclosed and one variant
+selected, and **Changed variant** shows the Changes filter holding one changed
+variant under a parent whose own render is unmodified. A screen row that owns
+variants renders a `mbk-nav-leaf` container holding the unchanged row link plus
+a trailing chevron disclosure button; the row cannot be both a link and a
+disclosure summary. Variant rows render one indent step deeper with the variant
+icon — a screen outline over a second, partially drawn screen — on a
+`mbk-nav-ico variant` wrapper, only while the list is open. The changed mark is
+a trailing dot and never an edge or rail. Row rendering lives in
+`catalogue-navigation-row.view.tsx`, which the component owns beside its main
+view.
+
+View controls saves **Changed views**, where a change confined to other views
+marks the theme control and the viewport dropdown. The mark is evidence about
+views other than the shown one, so the details inspector names them.
+
 ## Authoring
 
 For each component, `{group}/{slug}.tsx` declares its typed schema, slots, saved

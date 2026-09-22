@@ -24,7 +24,7 @@ concurrency:
 jobs:
   release-please:
     if: github.event_name == 'push'
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     permissions:
       contents: write
       issues: write
@@ -46,13 +46,13 @@ jobs:
   select-release:
     if: always()
     needs: [release-please]
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     outputs:
       publish_ref: ${{ steps.select.outputs.publish_ref }}
       viewer_ref: ${{ steps.select.outputs.viewer_ref }}
     steps:
       - name: Check out workflow scripts
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
       - name: Select immutable release
         id: select
         env:
@@ -68,7 +68,7 @@ jobs:
   publish:
     if: always() && needs.select-release.result == 'success' && needs.select-release.outputs.publish_ref != '' && needs.select-release.outputs.viewer_ref != ''
     needs: [release-please, select-release]
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     environment: npm
     permissions:
       contents: read
@@ -78,7 +78,7 @@ jobs:
       VIEWER_REF: ${{ needs.select-release.outputs.viewer_ref }}
     steps:
       - name: Check out immutable release tag
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
         with:
           fetch-depth: 0
           ref: ${{ needs.select-release.outputs.publish_ref }}

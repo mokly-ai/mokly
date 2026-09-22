@@ -94,6 +94,7 @@ export function ShellStoreProvider({
   });
   const host = useShellHost({
     catalogue: activeCatalogue,
+    context: activeContext,
     ...(embeddedHost ? { environment: embeddedHost } : {}),
     interactive,
     sections,

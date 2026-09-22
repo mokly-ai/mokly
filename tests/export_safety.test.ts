@@ -83,10 +83,19 @@ test("owned exports and active transactions do not trigger broad watch rules", a
     outDir: "site",
     adapter: {
       transform: () => {
-        assert.equal(classifyWatchPath(outputFile, watched), "ignore");
+        assert.equal(
+          classifyWatchPath({ path: outputFile, kind: "change" }, watched),
+          "ignore",
+        );
         assert.equal(
           classifyWatchPath(
-            path.join(exportReservation(fixture.output), "stage/index.html"),
+            {
+              path: path.join(
+                exportReservation(fixture.output),
+                "stage/index.html",
+              ),
+              kind: "change",
+            },
             watched,
           ),
           "ignore",
@@ -94,10 +103,16 @@ test("owned exports and active transactions do not trigger broad watch rules", a
       },
     },
   });
-  assert.equal(classifyWatchPath(outputFile, watched), "ignore");
+  assert.equal(
+    classifyWatchPath({ path: outputFile, kind: "change" }, watched),
+    "ignore",
+  );
   assert.equal(
     classifyWatchPath(
-      path.join(fixture.root, ".mokly-export-notes.md"),
+      {
+        path: path.join(fixture.root, ".mokly-export-notes.md"),
+        kind: "change",
+      },
       watched,
     ),
     "rebuild",

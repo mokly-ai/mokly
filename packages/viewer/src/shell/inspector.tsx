@@ -17,6 +17,8 @@ import {
 import { useOptionalShellStore } from "./store_context.js";
 import type { WorkspaceData } from "./workspace_data.js";
 import { WorkspaceIcon, type WorkspaceIconName } from "./workspace_icons.js";
+import { selectedVariantId } from "./workspace_selection.js";
+import { selectedChangedViews } from "./workspace_views_data.js";
 
 /** React content supplied by the owning workspace for each dynamic panel. */
 export interface InspectorPanels {
@@ -59,6 +61,15 @@ export function Inspector({
   ];
   const active = store?.state.inspectorTab;
   const open = store?.state.detailsOpen ?? false;
+  const variant = selectedVariantId(
+    data,
+    store?.state.route.variantValues ?? store?.state.route.variant,
+  ).variant;
+  const changedViews = selectedChangedViews(
+    data.entry,
+    data.changedViews,
+    variant?.value.id,
+  );
   const previousTab = useRef<HTMLElement | null>(null);
   const inspector = useRef<HTMLElement>(null);
   const select = (id: string, target: HTMLElement) => {
@@ -162,7 +173,7 @@ export function Inspector({
             key={tab.id}
             role="tabpanel"
           >
-            {panelContent(tab.id, catalogue, data, panels)}
+            {panelContent(tab.id, catalogue, data, changedViews, panels)}
           </section>
         ))}
       </div>
@@ -174,12 +185,17 @@ function panelContent(
   id: WorkspaceIconName,
   catalogue: Catalogue,
   data: WorkspaceData,
+  changedViews: ReturnType<typeof selectedChangedViews>,
   panels: InspectorPanels,
 ): ReactNode {
   if (id === "details")
     return (
       <>
-        <EntryDetailsBody catalogue={catalogue} entry={data.entry} />
+        <EntryDetailsBody
+          catalogue={catalogue}
+          changedViews={changedViews}
+          entry={data.entry}
+        />
         {panels.details}
       </>
     );

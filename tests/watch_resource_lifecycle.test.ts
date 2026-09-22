@@ -26,7 +26,11 @@ test("unmatched stylesheet rules do not require unused resource files", async (c
   };
   const compilation = await compileCatalogue(config);
   const factory = new ResourceWatcherFactory();
-  const resources = new ResourceWatcher(factory, assert.fail, assert.fail);
+  const resources = new ResourceWatcher(
+    factory,
+    () => assert.fail("unexpected resource change"),
+    assert.fail,
+  );
   context.after(() => resources.close());
   const prepared = await resources.prepare(config, compilation, noShutdown);
   assert.ok(prepared);
@@ -41,7 +45,7 @@ test("failed output discards resource candidates and successful adoption removes
   const changes: string[] = [];
   const resources = new ResourceWatcher(
     factory,
-    (candidate) => changes.push(candidate),
+    (event) => changes.push(event.path),
     assert.fail,
   );
   context.after(() => resources.close());
@@ -107,11 +111,19 @@ test("failed output discards resource candidates and successful adoption removes
   assert.deepEqual(changes, [old, next]);
   assert.equal(oldWatcher.closeCount, 1);
   assert.equal(
-    classifyWatchPath(old, fixture.config, resources.paths),
+    classifyWatchPath(
+      { path: old, kind: "change" },
+      fixture.config,
+      resources.paths,
+    ),
     "ignore",
   );
   assert.equal(
-    classifyWatchPath(next, fixture.config, resources.paths),
+    classifyWatchPath(
+      { path: next, kind: "change" },
+      fixture.config,
+      resources.paths,
+    ),
     "reload",
   );
   oldWatcher.change(old);
@@ -129,7 +141,11 @@ test("discovery repeats after attachment so references introduced during readine
       );
     }
   };
-  const resources = new ResourceWatcher(factory, assert.fail, assert.fail);
+  const resources = new ResourceWatcher(
+    factory,
+    () => assert.fail("unexpected resource change"),
+    assert.fail,
+  );
   context.after(() => resources.close());
   const prepared = await resources.prepare(
     fixture.config,
@@ -163,7 +179,11 @@ test(
       markReady();
       await new Promise<void>(() => undefined);
     };
-    const resources = new ResourceWatcher(factory, assert.fail, assert.fail);
+    const resources = new ResourceWatcher(
+      factory,
+      () => assert.fail("unexpected resource change"),
+      assert.fail,
+    );
     const pending = resources.prepare(
       fixture.config,
       fixture.compilation,
@@ -184,7 +204,11 @@ test("resource readiness failures close the candidate before propagating", async
   factory.onReady = async () => {
     throw failure;
   };
-  const resources = new ResourceWatcher(factory, assert.fail, assert.fail);
+  const resources = new ResourceWatcher(
+    factory,
+    () => assert.fail("unexpected resource change"),
+    assert.fail,
+  );
   await assert.rejects(
     resources.prepare(fixture.config, fixture.compilation, noShutdown),
     (error) => error === failure,
