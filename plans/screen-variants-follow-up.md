@@ -1,6 +1,8 @@
 # Screen Variants Follow-up
 
-Status: implementation verified; delivery and final review in progress. Created 2026-09-22 to close
+Status: implemented, verified, pushed, and reviewed in
+[PR #115](https://github.com/mokly-ai/mokly/pull/115). Active pending review
+decisions and merge. Created 2026-09-22 to close
 [Screen Variants](./screen-variants.md) for
 [PR #101](https://github.com/mokly-ai/mokly/pull/101). The user's 2026-09-22
 request to implement this follow-up authorizes its six design route moves and
@@ -293,10 +295,10 @@ toggle test uses an isolated fixture with one variant parent.
 
 - [x] Run all relevant tests and `cargo xtask check` with a 100% pass rate;
       inspect the complete diff and mainline preservation before committing.
-- [ ] After checks pass, run `git add -A`, commit with Conventional Commits
+- [x] After checks pass, run `git add -A`, commit with Conventional Commits
       and a title of at most 50 characters, and push the branch. Include all
       authored new files and record approved route retirements.
-- [ ] Only after the push, review the complete local diff against `origin/main`
+- [x] Only after the push, review the complete local diff against `origin/main`
       using [the implementation review prompt](../docs/implementation-review-prompt.md).
       Report every finding with severity, context, impact, lettered options
       and a recommendation; do not automatically fix review findings.
@@ -307,6 +309,10 @@ The gate also passed dependency audit, formatting, lint, type checks, example
 validation and packed-consumer checks. The branch includes mainline `b4f1aca`;
 all 137 original catalogue ids remain, exactly six routes moved, and no tracked
 files were deleted. Desktop/mobile Serve and static smoke checks passed.
+Delivery: implementation commit `176c7a9` was pushed before the read-only review
+against `origin/main` (`b4f1aca`). Two findings were reported in Conductor's
+Checks panel for the user's decision; no review finding was automatically fixed.
+The PR remains a draft and this plan stays Active until merge.
 
 ## Post-merge follow-up (non-blocking)
 

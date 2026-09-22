@@ -4,8 +4,9 @@
 
 - [Screen Variants Follow-up](./screen-variants-follow-up.md) — implementation
   verified for the six-route design-catalogue conversion and five review
-  fixes from PR #101; delivery and final review in progress, with later navigation
-  ideas retained as non-blocking follow-ups.
+  fixes from PR #101; pushed and reviewed in
+  [PR #115](https://github.com/mokly-ai/mokly/pull/115), awaiting review decisions
+  and merge. Later navigation ideas remain non-blocking follow-ups.
 - [Co-Located Entry Discovery Follow-up](./co-located-entry-discovery-follow-up.md)
   — all deferred seventh/eighth-round findings, the latest entry-layout
   documentation finding, and the remaining follow-up tasks from PR #101;
