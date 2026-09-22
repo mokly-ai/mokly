@@ -69,6 +69,10 @@ export function Catalogue({
 }
 ```
 
+The containing element must have a definite height. The viewer fills that
+height and owns stage scrolling instead of growing the embedding document; the
+full-page example uses `height: 100vh`.
+
 The host creates each `ViewerMarker` from a saved `InstanceRef` and supplies any
 React content, for example a comment-count button with
 `style={{ pointerEvents: "auto" }}`. The viewer positions it on that instance;
@@ -202,6 +206,10 @@ Import the stylesheet once. Override `--mokly-accent`,
 maintaining readable contrast. Scoped styles exclude host slots and the
 surrounding page; fonts are packaged locally. Internal selectors and geometry are
 not extension APIs.
+
+When the embedded viewer is 560px wide or narrower, its search field collapses
+to a 30px control. Opening it uses the same 48px top-bar row for a full-width
+search surface, even when both host top-bar slots are populated.
 
 For synchronous server rendering:
 
