@@ -204,23 +204,23 @@ existing complete path.
 Summary: wire the evidence scripts into `release.yml`, keep every publish
 guard, and prove the workflow contract with tests.
 
-- [ ] In [`release.yml`](../.github/workflows/release.yml): add the
+- [x] In [`release.yml`](../.github/workflows/release.yml): add the
       `workflow_dispatch` input `verification` (`type: choice`, options
       `evidence` and `complete`, default `evidence`); pass it through
       `select-release` as a `verification` output resolved by
       [`resolve-ref.mjs`](../scripts/release/resolve-ref.mjs) with
       `resolveVerificationMode`; set the publish job env
       `RELEASE_VERIFICATION` from that output.
-- [ ] Add `actions: read` to the publish job permissions and pass
+- [x] Add `actions: read` to the publish job permissions and pass
       `GITHUB_TOKEN: ${{ github.token }}` only to the evidence step.
-- [ ] Reorder publish steps to: verify tags → `npm ci` →
+- [x] Reorder publish steps to: verify tags → `npm ci` →
       `Audit workspace dependencies` (`npm run dependencies:check`) →
       `Select verification evidence` (`id: evidence`) → `Set up Rust` and
       `Install Chromium` with `if: steps.evidence.outputs.mode != 'evidence'`
       → `Run complete verification` with the same condition → the unchanged
       pack, smoke, recheck, preserve, guard, publish and verify steps. Add
       `.context/release-evidence/record.json` to the preserved artifact paths.
-- [ ] Update [`tests/release.test.ts`](../tests/release.test.ts): publish
+- [x] Update [`tests/release.test.ts`](../tests/release.test.ts): publish
       permissions equal `{ actions: read, contents: read, id-token: write }`;
       the dispatch input exists with the exact choices and default; the audit
       step precedes evidence selection, which precedes the three conditional
@@ -228,16 +228,17 @@ guard, and prove the workflow contract with tests.
       negative-form condition so a missing output runs the complete gate; the
       token reaches only the evidence step; the preserved paths include the
       record; every action remains pinned to a commit hash.
-- [ ] Extend [`tests/release_refs.test.ts`](../tests/release_refs.test.ts)
+- [x] Extend [`tests/release_refs.test.ts`](../tests/release_refs.test.ts)
       or the context tests for `resolve-ref.mjs` writing the `verification`
       output for push and dispatch events and rejecting an unknown value.
-- [ ] Update [`xtask/README.md`](../xtask/README.md) only if its release
+- [x] Update [`xtask/README.md`](../xtask/README.md) only if its release
       wording changes; confirm the root README's complete-gate guidance is
-      still accurate.
-- [ ] Run the workflow and release tests, `npm run lint`,
+      still accurate. No update was needed: both documents already describe
+      the unqualified command as the complete local gate.
+- [x] Run the workflow and release tests, `npm run lint`,
       `npm run format:check`, then the complete `cargo xtask check`.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] After the push, use
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and report
       findings without changing the implementation.
