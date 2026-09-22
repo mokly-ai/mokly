@@ -24,6 +24,10 @@
   — closes the removed content previews High finding by presenting every
   historical document through a viewer-owned same-origin document so the
   read-only guard applies in cross-origin embedded viewers too.
+- [Evidence-First Release Publish](./evidence-first-release-publish.md)
+  — publish consumes the release PR's validated CI evidence for the same
+  tree instead of re-running the complete gate, with the complete gate as
+  the fail-closed fallback.
 
 ## Completed
 
