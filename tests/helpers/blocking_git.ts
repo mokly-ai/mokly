@@ -3,17 +3,17 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
-import type { TestContext } from "node:test";
 import { setTimeout } from "node:timers/promises";
 
+import type { TestFixture } from "./fixture.js";
 import { killProcessIfPresent, readProcessField } from "./process_state.js";
 
 export async function blockingGit(
-  t: TestContext,
-  root: string,
+  fixture: TestFixture,
   ignoreTermination = false,
   withHelper = false,
 ) {
+  const { root } = fixture;
   const originalPath = process.env.PATH;
   const executable = execFileSync("sh", ["-c", "command -v git"], {
     encoding: "utf8",
@@ -44,7 +44,7 @@ exec ${quote(executable)} "$@"
     else process.env.PATH = originalPath;
   };
   process.env.PATH = `${bin}${path.delimiter}${originalPath ?? ""}`;
-  t.after(async () => {
+  fixture.beforeRemove(async () => {
     restore();
     for (const pid of observed) killProcessIfPresent(pid);
   });

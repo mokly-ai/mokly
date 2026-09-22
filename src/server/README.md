@@ -23,7 +23,8 @@ markers and ownership headers. Deleted matched files rebuild even when named
 Resource notifications coalesce by path with the latest descriptor.
 Discovery skips `review.outDir`, denied directories, and directories that vanish
 or are replaced mid-walk (`ENOENT` or `ENOTDIR`). Zero-match messages list denied
-and vanished roots together. Other read or projection failures report
+and vanished paths together, including modules dropped during validation. Other
+read or projection failures report
 `config-invalid` with the repository-relative path and error code. Discovery
 projects repository and glob roots once per pass; Review output alone uses a
 lexical fallback if its projection fails. Source notifications

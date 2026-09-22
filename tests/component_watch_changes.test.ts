@@ -43,7 +43,7 @@ test(
       base: "main",
       watch: true,
     });
-    fixture.onCleanup(() => server.close());
+    fixture.beforeRemove(() => server.close());
     let html = await waitForClassifiedCount(server.url, 0);
     assert.equal(changedCount(html), 0);
     const workspace = async (route: string): Promise<WorkspaceData> => {

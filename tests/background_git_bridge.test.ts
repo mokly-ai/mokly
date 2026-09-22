@@ -55,7 +55,7 @@ test(
   async (t) => {
     const fixture = await createFixture();
     t.after(() => removeFixture(fixture));
-    const blocked = await blockingGit(t, fixture.root, true);
+    const blocked = await blockingGit(fixture, true);
     const { port1, port2 } = new MessageChannel();
     const host = new BackgroundGitHost(fixture.root, port1);
     const runner = new WorkerGitCommandRunner(port2);
@@ -82,7 +82,7 @@ for (const action of ["block", "crash"] as const) {
     async (t) => {
       const fixture = await createFixture();
       t.after(() => removeFixture(fixture));
-      const blocked = await blockingGit(t, fixture.root);
+      const blocked = await blockingGit(fixture);
       const { port1, port2 } = new MessageChannel();
       const host = new BackgroundGitHost(fixture.root, port1);
       t.after(() => host.close());

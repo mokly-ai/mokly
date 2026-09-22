@@ -282,7 +282,10 @@ cargo xtask check
 
 That command runs formatting, linting, type checks, unit and integration tests,
 packed-package smoke tests, browser tests, dependency checks, and Rust checks.
-See the [xtask README](./xtask/README.md) for focused suites.
+See the [xtask README](./xtask/README.md) for focused suites. Hosted CI runs the
+functional suites on the minimum Node 22.14 runtime for ordinary changes and
+adds Node 24 to the complete matrix before a Release Please pull request can
+merge.
 
 ### Key code
 

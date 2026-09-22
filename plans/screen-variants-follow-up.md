@@ -314,6 +314,31 @@ against `origin/main` (`b4f1aca`). Two findings were reported in Conductor's
 Checks panel for the user's decision; no review finding was automatically fixed.
 The PR remains a draft and this plan stays Active until merge.
 
+### Milestone 8: Preserve subsequent mainline changes
+
+The remote-tracking branch refreshed to `a8f408d` during final review. Preserve
+its CI verification, fixture cleanup, tests and documentation without changing
+the reviewed product implementation or applying review findings.
+
+- [x] Capture source tip `3503f5a` and audit additions since `b4f1aca` before
+      merging the updated mainline.
+- [x] Resolve the Viewer README and plan-index conflicts by retaining the new
+      mainline structure and entries plus this branch's documented behavior.
+- [x] Run repository checks, type checks and the unit/browser tests affected by
+      the incoming CI and fixture changes; verify no mainline files were lost.
+- [ ] After checks pass, run `git add -A`, commit with Conventional Commits,
+      and push the branch with all authored files tracked.
+- [ ] After the push, use
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      against the complete diff from `origin/main`; report findings without
+      changing the implementation.
+
+Integration evidence: repository checks and type checks passed, along with all
+117 affected unit/integration tests and 33 affected browser tests. Incoming
+changes modify CI verification, test fixtures and documentation; the product
+runtime code is identical to the implementation that passed the complete gate.
+No mainline files were deleted and both reported findings remain unchanged.
+
 ## Post-merge follow-up (non-blocking)
 
 These are the original plan's later product ideas, carried forward without

@@ -12,7 +12,7 @@ import {
   validEntrySource,
 } from "./fixture.js";
 
-/** Build a committed consumer; register live resources with onCleanup before using it. */
+/** Build a committed consumer with fixture-owned dependent cleanup. */
 export async function changedFixture(
   t: TestContext,
   source = validEntrySource(),
@@ -20,20 +20,7 @@ export async function changedFixture(
   prepare?: (fixture: TestFixture) => Promise<void>,
 ) {
   const fixture = await createFixture(source, options);
-  const resources: (() => Promise<void>)[] = [];
-  t.after(async () => {
-    const failures: unknown[] = [];
-    for (const close of resources.toReversed()) {
-      try {
-        await close();
-      } catch (error) {
-        failures.push(error);
-      }
-    }
-    if (failures.length)
-      throw new AggregateError(failures, "Fixture resources could not close");
-    await removeFixture(fixture);
-  });
+  t.after(() => removeFixture(fixture));
   await prepare?.(fixture);
   const config = await loadConfig(fixture.root);
   const build = async () =>
@@ -46,13 +33,5 @@ export async function changedFixture(
   git("config", "user.email", "mokly@example.invalid");
   git("add", ".");
   git("commit", "-qm", "test: catalogue baseline");
-  return {
-    ...fixture,
-    build,
-    config,
-    git,
-    onCleanup(close: () => Promise<void>): void {
-      resources.push(close);
-    },
-  };
+  return { ...fixture, build, config, git };
 }
