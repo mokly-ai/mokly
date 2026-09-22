@@ -326,9 +326,9 @@ the reviewed product implementation or applying review findings.
       mainline structure and entries plus this branch's documented behavior.
 - [x] Run repository checks, type checks and the unit/browser tests affected by
       the incoming CI and fixture changes; verify no mainline files were lost.
-- [ ] After checks pass, run `git add -A`, commit with Conventional Commits,
+- [x] After checks pass, run `git add -A`, commit with Conventional Commits,
       and push the branch with all authored files tracked.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       against the complete diff from `origin/main`; report findings without
       changing the implementation.
@@ -338,6 +338,9 @@ Integration evidence: repository checks and type checks passed, along with all
 changes modify CI verification, test fixtures and documentation; the product
 runtime code is identical to the implementation that passed the complete gate.
 No mainline files were deleted and both reported findings remain unchanged.
+Commit `263ba75` was pushed before the final read-only comparison against
+`origin/main` (`a8f408d`); the review confirmed the same two findings and no
+additional implementation changes.
 
 ## Post-merge follow-up (non-blocking)
 
