@@ -45,7 +45,7 @@ test("watched graphs add imported helpers and retain last-good inputs after fail
       watcherFactory: watchers,
     },
   );
-  context.after(() => running.close());
+  fixture.beforeRemove(() => running.close());
   await waitFor(() => output.configs.length === 1);
   assert.ok(watchers.targets[0]?.includes(helper));
   const before = [...(initial.sourceFiles ?? [])];
@@ -121,7 +121,7 @@ test("watched Serve reloads config with a ready replacement watcher", async (con
       watcherFactory: watchers,
     },
   );
-  context.after(() => running.close());
+  fixture.beforeRemove(() => running.close());
 
   await waitFor(() => output.configs.length === 1);
   watchers.watchers[0]?.change(initial.configPath);
@@ -170,7 +170,7 @@ test("failed config adoption retains the last-good watcher and child", async (co
       watcherFactory: watchers,
     },
   );
-  context.after(() => running.close());
+  fixture.beforeRemove(() => running.close());
 
   await waitFor(() => output.configs.length === 1);
   watchers.failNext = true;

@@ -17,7 +17,7 @@ test("every served document loads the hydrated live host", async (context) => {
     base: "origin/main",
     port: 0,
   });
-  context.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
 
   for (const route of ["/", "/review", "/view/screens/home.html", "/absent"]) {
     const document = await (await fetch(`${server.url}${route}`)).text();

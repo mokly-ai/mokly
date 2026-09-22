@@ -32,7 +32,7 @@ test("an in-flight explicit refresh queues one fresh generation", async (context
     outDir,
   };
   const server = await startFixtureServer(fixture.root, review);
-  context.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
 
   const initial = fetch(`${server.url}/__mokly/diffs/review.json`);
   await firstStarted.promise;
@@ -70,7 +70,7 @@ test("an in-flight invalidation queues one fresh generation", async (context) =>
     outDir,
   };
   const server = await startFixtureServer(fixture.root, review);
-  context.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
 
   const initial = fetch(`${server.url}/__mokly/diffs/review.json`);
   await firstStarted.promise;
@@ -98,7 +98,7 @@ test("refresh refuses to archive an unowned output replacement", async (context)
   };
   const server = await startFixtureServer(fixture.root, review);
   let closed = false;
-  context.after(async () => {
+  fixture.beforeRemove(async () => {
     if (!closed) await server.close();
   });
 
@@ -147,7 +147,7 @@ test("failed refresh preserves an unowned concurrent replacement", async (contex
   };
   const server = await startFixtureServer(fixture.root, review);
   let closed = false;
-  context.after(async () => {
+  fixture.beforeRemove(async () => {
     if (!closed) await server.close();
   });
 
@@ -196,7 +196,7 @@ test("shutdown waits for an in-flight refresh to restore output", async (context
   };
   const server = await startFixtureServer(fixture.root, review);
   let closed = false;
-  context.after(async () => {
+  fixture.beforeRemove(async () => {
     if (!closed) await server.close();
   });
 

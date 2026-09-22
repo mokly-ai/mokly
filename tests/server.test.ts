@@ -30,7 +30,7 @@ test("server validates before bind and supports safe no-watch routes on port zer
     base: "origin/main",
     port: 0,
   });
-  context.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
   assert.ok(server.port > 0);
   const home = await fetch(`${server.url}/`);
   assert.equal(home.status, 200);
@@ -79,7 +79,7 @@ test("strict occupied ports fail without disturbing the existing server", async 
     base: "origin/main",
     port: 0,
   });
-  context.after(() => first.close());
+  fixture.beforeRemove(() => first.close());
   await assert.rejects(
     () =>
       startCatalogueServer(config, {
@@ -101,7 +101,7 @@ test("event-stream HEAD releases a keep-alive connection", async (context) => {
     base: "origin/main",
     port: 0,
   });
-  context.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
   const agent = new Agent({ keepAlive: true, maxSockets: 1 });
   context.after(() => agent.destroy());
 

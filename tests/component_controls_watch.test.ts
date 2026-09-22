@@ -24,7 +24,7 @@ test(
     const config = await loadConfig(fixture.root);
     await writeCompilation(await compileCatalogue(config), config);
     const server = await serve(config, { port: 0, watch: true });
-    t.after(() => server.close());
+    fixture.beforeRemove(() => server.close());
     const capabilities = async () => {
       for (let attempt = 0; attempt < 200; attempt += 1) {
         const html = await (

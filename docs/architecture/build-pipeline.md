@@ -42,22 +42,35 @@ then resolved from the config file and confined to `repoRoot`. The `entries`
 globs, or the `entriesDir` shorthand, are resolved once into a sorted set of
 matched modules. The glob defines the entry shape without another suffix
 filter; `entriesDir` preserves the recommended `.mockup.ts` and `.mockup.tsx`
-convention by expanding to a suffixed glob. Each module is classified by the
-shared source policy so none lies inside the output root, Review output, the
-baseline cache, or a denied directory below its deepest glob root, and a glob
-with no entry modules is a config error. Walks skip `review.outDir` and denied
-directories. Directories that vanish or are replaced mid-walk (`ENOENT` or
-`ENOTDIR`) are skipped and listed with denied roots in the zero-match message.
-Other read or projection errors fail with `config-invalid`, naming the
-repository-relative path and error code (`unknown` if absent).
-A matched module that is deleted, or replaced by something other than a regular
-file, between the directory listing and validation is dropped and listed under
-`not searched` when its glob is then empty. A projection or lstat failure with
-any code other than `ENOENT` fails with `config-invalid`.
-Repository, glob-root, and Review
-identities are projected once per pass; Review projection alone falls back to its
-lexical path on failure. The resolved set travels with the config beside
-`sourceFiles`.
+convention by expanding to a suffixed glob.
+
+Before any walk, discovery projects the repository and every distinct glob root
+once for the pass; Review projection alone falls back to its lexical path. A
+non-benign root failure, including one for a later glob, therefore precedes all
+per-glob module validation. Walks and module validation then run in declared
+glob order. An earlier denial precedes a later zero-match failure, and reversing
+the globs reverses that diagnostic precedence. Accepted and vanished candidates
+are validated once per pass; accepted candidates still count for every
+overlapping glob. Every glob must retain a module so another glob cannot hide a
+typo or omission.
+
+Walks skip `review.outDir` and denied directories. Directories that vanish or
+are replaced mid-walk (`ENOENT` or `ENOTDIR`) are skipped and listed with denied
+paths in the zero-match message. Other read or projection errors fail with
+`config-invalid`, naming the repository-relative path and error code (`unknown`
+if absent). A matched module that is deleted, or replaced by something other
+than a regular file, between the directory listing and validation is dropped
+and listed under `not searched` when its glob is then empty. A projection or
+lstat failure with any code other than `ENOENT` fails with `config-invalid`.
+
+Config validation rejects private-cache glob roots before discovery. Direct
+discovery retains a defense for surviving `.mokly-cache/` candidates, while a
+candidate that vanishes during its preceding existence check is dropped. Each
+module is classified by the shared source policy so none lies inside Review
+output, the baseline cache, or a denied directory below its deepest glob root.
+An entry may be nested below `mockupsDir`; it joins `sourceFiles`, stays private
+through lexical and realpath aliases, and cannot overlap a generated route. The
+resolved set travels with the config beside `sourceFiles`.
 
 ## 2. One Consumer Graph
 

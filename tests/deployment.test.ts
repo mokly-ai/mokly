@@ -145,7 +145,7 @@ function assertPinnedActions(workflow: Workflow): void {
 
 function assertFullHistoryCheckout(job: WorkflowJob): void {
   const checkout = job.steps.find((step) =>
-    step.uses?.startsWith("actions/checkout@"),
+    step.uses?.startsWith("useblacksmith/checkout@"),
   );
   assert.ok(checkout);
   assert.equal(checkout.with?.["fetch-depth"], 0);
