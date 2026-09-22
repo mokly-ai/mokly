@@ -21,7 +21,7 @@ for (const hostname of ["127.0.0.1", "localhost"])
         port: 0,
         componentRuntime: componentRuntime(fixture.after),
       });
-      cleanup.push(() => server.close());
+      fixture.beforeRemove(() => server.close());
       const upstream = new URL(server.url);
       const forwarded: {
         host: string | undefined;
@@ -53,7 +53,7 @@ for (const hostname of ["127.0.0.1", "localhost"])
         response.on("close", () => outgoing.destroy());
         incoming.pipe(outgoing);
       });
-      cleanup.push(
+      fixture.beforeRemove(
         () =>
           new Promise<void>((resolve, reject) => {
             proxy.close((error) => (error ? reject(error) : resolve()));

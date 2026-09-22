@@ -68,7 +68,7 @@ test("active controls enforce loopback Host admission on ordinary catalogue rout
     port: 0,
     componentRuntime: componentRuntime(fixture.after),
   });
-  t.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
   const forwardedPort = Number(new URL(server.url).port) === 4173 ? 4174 : 4173;
   for (const route of [
     "/",
@@ -105,7 +105,7 @@ test("forwarded controls preserve POST authority and preview access rules", asyn
     port: 0,
     componentRuntime: componentRuntime(fixture.after),
   });
-  t.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
   const page = await (
     await fetch(`${server.url}/view/components/action.html`)
   ).text();
