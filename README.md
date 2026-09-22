@@ -164,7 +164,6 @@ follow the command, for example `mokly build --config tools/mokly.config.ts`.
 | `mokly check`               | Validate the catalogue without writing output                |
 | `mokly export --out <path>` | Build a complete static catalogue for hosting                |
 | `mokly publish`             | Export and upload to a compatible catalogue service          |
-| `mokly mcp`                 | Approved, not yet shipped: local MCP server for agents       |
 | `mokly --help`              | Show every command and option                                |
 
 The CLI uses stable plain output in CI and a richer interactive display in a
@@ -196,9 +195,9 @@ configured to launch it from the repository that owns the screens:
 }
 ```
 
-The process supervises the same watched Serve child as `mokly serve`, so the
-agent's edits are adopted through the normal watch rules and document
-rendering stays in that supervised child. Its
+The process is a watched Serve parent like `mokly serve`, so the agent's
+edits are adopted through the normal watch rules and running both commands on
+one checkout is supported. Its
 [tools](./docs/protocol/mokly-mcp-tools.md) search the catalogue, read entry
 details and Changes, render a screen, page or component view, render a
 component with prop overrides, return before and after documents with a

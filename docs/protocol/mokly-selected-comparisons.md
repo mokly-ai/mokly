@@ -14,7 +14,10 @@ The live browser requests
 or refresh, or `page=<encoded-catalogue-route>` for a removed page's
 [preview](./mokly-removed-previews.md). Current, navigation and filtering never
 request snapshots. Static delivery continues to request its complete, packaged
-comparison URL without selection parameters.
+comparison URL without selection parameters. A saved-variant id uses the
+catalogue id grammar `^[a-z0-9]+(?:-[a-z0-9]+)*$` that authoring validates;
+the current capture's stricter leading-letter check is a defect tracked by the
+[MCP server plan](../../plans/mokly-mcp-server.md) and must not be relied on.
 Changing viewport or color scheme inside a comparison, or switching between diff
 modes, first renews a loaded live generation with a non-cached HEAD request to its
 immutable `review.json` URL.

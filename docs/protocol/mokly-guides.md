@@ -153,7 +153,8 @@ from different package versions.
 ## Writing And Verification Rules
 
 - Document only commands, flags, fields, exports, and behavior verified against
-  the current implementation.
+  the current implementation. A CLI guide lands in the same change as its
+  command, never before it, so the packaged guides and `--help` always agree.
 - Use present tense. Do not use "coming soon", invent customers or figures, or
   tell readers what Mokly does not do.
 - Prefer one concept per page and keep a guide around 200 lines or fewer.
