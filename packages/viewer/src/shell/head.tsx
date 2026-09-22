@@ -146,6 +146,15 @@ function variantParent(
   if (entry.kind !== "screen") {
     return undefined;
   }
+  const historical = catalogue.removedEntries.some(
+    ({ entry: candidate }) => candidate.route === entry.route,
+  );
+  if (historical)
+    return entry.variantOf === undefined
+      ? undefined
+      : (catalogue.removedEntries.find(
+          ({ entry: candidate }) => candidate.id === entry.variantOf,
+        )?.entry ?? catalogue.byId.get(entry.variantOf));
   return (
     catalogue.hierarchy.variantParentById.get(entry.id) ??
     (entry.variantOf === undefined
@@ -165,13 +174,24 @@ export function targetHead(
       ?.ancestors.map(({ title }) => ({ label: title })) ??
     structuredCrumbTrail(catalogue.hierarchy, target.entry.id);
   const parent = variantParent(catalogue, target);
+  const parentSnapshot =
+    parent && parent.kind !== "collection"
+      ? catalogue.removedEntries.find(
+          ({ entry }) => entry.route === parent.route,
+        )?.snapshotId
+      : undefined;
   return {
     crumbs:
       parent === undefined || parent.kind === "collection"
         ? ancestors
         : [
             ...ancestors,
-            { href: catalogueViewHref(parent.route), label: parent.title },
+            {
+              href: `${catalogueViewHref(parent.route)}${
+                parentSnapshot ? `?snapshot=${parentSnapshot}` : ""
+              }`,
+              label: parent.title,
+            },
           ],
     id: target.entry.id,
     title: target.entry.title,

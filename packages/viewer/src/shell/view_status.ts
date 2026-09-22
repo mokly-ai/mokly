@@ -90,6 +90,16 @@ export function shownStatus(
   );
 }
 
+/** Aggregate a complete set of shown view states in product priority order. */
+export function aggregateViewStatus(
+  states: readonly ViewState[],
+): EntryStatus | undefined {
+  return aggregateStatus(
+    states.map(({ state }) => entryStatus(state)),
+    undefined,
+  );
+}
+
 /** Apply the shared comparison rule to a route-level or shown-view status. */
 export function shownComparisonEligible(
   status: EntryStatus | undefined,

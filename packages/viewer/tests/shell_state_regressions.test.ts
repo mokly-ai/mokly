@@ -8,6 +8,7 @@ import {
   disclosurePath,
 } from "../src/shell/nav_model.js";
 import { routeFromUrl } from "../src/shell/routes.js";
+import { currentContext, selectionForRoute } from "../src/shell/store.js";
 import { createInitialShellState } from "../src/shell/store_initial.js";
 import type {
   ShellInitialState,
@@ -72,6 +73,48 @@ test("reload recovery promotes active ancestry in state and its filter baseline"
       `${key} must remain open when filtering clears`,
     );
   }
+});
+
+test("reload recovery keeps route and snapshot identity synchronized", () => {
+  const historical = model.removedEntries[0]!;
+  assert.ok(historical.snapshotId);
+  const historicalRoute = routeFromUrl(
+    catalogue,
+    new URL(
+      `https://example.test/view/${historical.entry.route}?snapshot=${historical.snapshotId}`,
+    ),
+  );
+  const historicalSelection = selectionForRoute(
+    { ...defaultSelection, screenId: "home" },
+    historicalRoute,
+  );
+  assert.equal(historicalSelection.screenId, historical.entry.id);
+  assert.equal(historicalSelection.snapshotId, historical.snapshotId);
+
+  const currentSelection = selectionForRoute(historicalSelection, route);
+  assert.equal(currentSelection.screenId, "home");
+  assert.equal(currentSelection.snapshotId, undefined);
+});
+
+test("runtime context projects only the route's active snapshot", () => {
+  const historical = model.removedEntries[0]!;
+  assert.ok(historical.snapshotId);
+  const historicalRoute = routeFromUrl(
+    catalogue,
+    new URL(
+      `https://example.test/view/${historical.entry.route}?snapshot=${historical.snapshotId}`,
+    ),
+  );
+  const state = recoveredState();
+  const initial = { ...context, snapshotId: historical.snapshotId };
+  assert.equal(
+    currentContext(initial, { ...state, route }).snapshotId,
+    undefined,
+  );
+  assert.equal(
+    currentContext(initial, { ...state, route: historicalRoute }).snapshotId,
+    historical.snapshotId,
+  );
 });
 
 function recoveredState(initial: Omit<ShellInitialState, "recovery"> = {}) {

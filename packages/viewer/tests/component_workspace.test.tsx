@@ -17,6 +17,7 @@ import {
 } from "../src/shell/workspace_data.js";
 import { usageHref } from "../src/shell/workspace_usage.js";
 import {
+  resolveWorkspaceView,
   resolveWorkspaceViews,
   visibleWorkspaceViews,
 } from "../src/shell/workspace_views.js";
@@ -179,6 +180,85 @@ test("workspace view selection uses exact contexts and light fallback", () => {
     {
       colorScheme: "light",
       views: lightOnly.views,
+    },
+  );
+  const variant = data.variants.find(({ value }) => value.id === "default");
+  assert.ok(variant);
+  const mixedEvidence = {
+    ...data,
+    status: "Changed" as const,
+    comparisonEligible: true,
+    views: data.views.filter(({ colorScheme }) => colorScheme === "light"),
+    viewStates: {
+      default: [
+        {
+          viewport: "mobile" as const,
+          colorScheme: "light" as const,
+          state: "unchanged" as const,
+        },
+        {
+          viewport: "desktop" as const,
+          colorScheme: "light" as const,
+          state: "changed" as const,
+        },
+      ],
+    },
+  };
+  const resolved = resolveWorkspaceView(
+    mixedEvidence,
+    { variant, comparisonEligible: true },
+    "mobile",
+    "dark",
+  );
+  assert.deepEqual(
+    {
+      colorScheme: resolved.colorScheme,
+      comparisonEligible: resolved.comparisonEligible,
+      evidence: resolved.evidence,
+      paths: resolved.views.map(({ path }) => path),
+      status: resolved.status,
+    },
+    {
+      colorScheme: "light",
+      comparisonEligible: false,
+      evidence: "view",
+      paths: ["mobile-light.html"],
+      status: "Unmodified",
+    },
+  );
+
+  assert.deepEqual(
+    resolveWorkspaceView(
+      { ...mixedEvidence, viewStates: {} },
+      { variant, comparisonEligible: false },
+      "mobile",
+      "dark",
+    ),
+    {
+      colorScheme: "light",
+      comparisonEligible: false,
+      evidence: "selection",
+      status: "Changed",
+      views: [mixedEvidence.views[0]!],
+    },
+  );
+
+  assert.deepEqual(
+    resolveWorkspaceView(
+      {
+        ...mixedEvidence,
+        viewStates: { default: [mixedEvidence.viewStates.default[0]!] },
+      },
+      { variant, comparisonEligible: true },
+      "both",
+      "dark",
+    ),
+    {
+      colorScheme: "light",
+      comparisonEligible: true,
+      evidence: "selection",
+      status: "Changed",
+      views: mixedEvidence.views,
     },
   );
 });

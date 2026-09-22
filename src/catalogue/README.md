@@ -11,9 +11,16 @@ evidence; projection performs no filesystem reads, Git commands, or rendering.
 `projection.ts`, `views.ts`, and `changes.ts` select public fields explicitly.
 Changes membership comes from route/component attribution, independently of
 per-view comparison eligibility. Removed entries retain baseline labels and
-null current paths, plus the optional additive `preview` descriptor from the
+null current paths, an opaque per-record `snapshotId` when real immutable
+identity is available, plus the optional additive `preview` descriptor from the
 [removed previews contract](../../docs/protocol/mokly-removed-previews.md);
 uncomputed usage stays pending or unavailable.
+Snapshot ids derive through the viewer-owned shared helper from the catalogue
+identity, exact entry kind/id/route and either the accepted baseline commit or,
+only when no commit exists, an immutable comparison generation. Conflicting
+baseline identities fail projection; revisions and live deployment hashes are
+never substituted. Older generation-backed catalogues normalize safely, while
+identity-less same-id history remains unavailable.
 `CatalogueProjectionInput.removedPreviews` is caller-supplied generation data;
 projection never derives it from Git or the filesystem. Page paths must name the
 same 64-hex generation as `comparisonUrl` and end in the exact removed route,

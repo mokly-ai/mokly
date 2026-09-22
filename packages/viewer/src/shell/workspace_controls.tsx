@@ -1,4 +1,6 @@
 /** Grouped, compact viewport, theme and inspection controls. */
+import type { ColorScheme } from "../data/axes.js";
+
 import { useShellIdentifier } from "./identifier_context.js";
 import { useOptionalShellStore } from "./store_context.js";
 import {
@@ -43,12 +45,12 @@ function ViewChangedMark({
 export function WorkspaceControls({
   changedViews,
   dark,
-  displayedScheme,
+  effectiveColorScheme,
   highlight,
 }: {
   changedViews: readonly ChangedView[];
   dark: boolean;
-  displayedScheme: "dark" | "light";
+  effectiveColorScheme: ColorScheme;
   highlight?: {
     available: boolean;
     active: boolean;
@@ -59,7 +61,7 @@ export function WorkspaceControls({
   const store = useOptionalShellStore();
   const viewport = store?.state.selection.viewport ?? "both";
   const scheme = store?.state.selection.colorScheme ?? "light";
-  const marks = viewMarks(changedViews, viewport, displayedScheme);
+  const marks = viewMarks(changedViews, viewport, effectiveColorScheme);
   const schemeChangedId = useShellIdentifier(VIEW_CHANGED_IDS.scheme);
   const viewportChangedId = useShellIdentifier(VIEW_CHANGED_IDS.viewport);
   return (

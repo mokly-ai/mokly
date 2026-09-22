@@ -139,6 +139,59 @@ test("navigation within Changes still redirects an aggregate parent", () => {
   assert.equal(activated.colorScheme, undefined);
 });
 
+test("a removed variant redirect retains its exact snapshot despite an id collision", () => {
+  const currentCollision = screen(
+    empty.id,
+    "Current empty screen",
+    "screens/current-empty.html",
+  );
+  const collisionManifest = {
+    ...manifest,
+    entries: [parent, currentCollision, failure],
+  };
+  const snapshotId = "a".repeat(64);
+  const collisionCatalogue = createCatalogue(collisionManifest, [
+    { ancestors: [], entry: empty, snapshotId },
+  ]);
+  const collisionContext = {
+    ...context,
+    changedRoutes: [empty.route, failure.route],
+  };
+  const redirected = changesActivation(
+    collisionCatalogue,
+    collisionContext,
+    { ...defaultSelection, search: "empty workspace", view: "changes" },
+    route(parent),
+  );
+  assert.equal(target(redirected).route, empty.route);
+  assert.equal(redirected.snapshot, snapshotId);
+
+  const sticky = changesActivation(
+    collisionCatalogue,
+    collisionContext,
+    {
+      ...defaultSelection,
+      screenId: empty.id,
+      snapshotId,
+      view: "changes",
+    },
+    route(failure),
+  );
+  assert.equal(sticky.viewport, undefined);
+  assert.equal(sticky.colorScheme, undefined);
+
+  const legacyCatalogue = createCatalogue(collisionManifest, [
+    { ancestors: [], entry: empty },
+  ]);
+  const rejected = changesActivation(
+    legacyCatalogue,
+    collisionContext,
+    { ...defaultSelection, search: "empty workspace", view: "changes" },
+    route(parent),
+  );
+  assert.equal(target(rejected).route, parent.route);
+});
+
 test("an explicit axis prevents automatic view selection", () => {
   const activated = changesActivation(
     catalogue,

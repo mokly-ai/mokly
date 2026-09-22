@@ -364,6 +364,21 @@ explicit axis suppresses first-changed-view landing; invalid or repeated values
 do not. Embedded and standalone shells use this one parser, so controlled hosts
 receive the complete proposal and commit nothing until they supply it back.
 
+A removed-entry destination also carries its public `snapshot` identity. Route
+parsing accepts exactly one lowercase 64-hex value and requires it to match that
+historical route and id. The query survives same-entry axis and filter changes,
+Back/Forward and hydration; a current-entry link omits it and therefore clears
+historical selection. Unknown, stale, repeated, mismatched, or identity-less
+same-id history is unavailable through the Viewer error state rather than
+redirected to current content or left to native host navigation.
+Historical snapshot queries are supported only on the exact canonical
+`/view/<old-route>` URL or its provider-normalized extensionless form. The
+normalized form resolves against the retained historical route itself; it does
+not use `idRoutes`, which may map the same stable id to current content.
+`/id/<id>?snapshot=...` is rejected because an id alias cannot distinguish
+current and historical routes. Existing id-only aliases remain available for
+current entries and uniquely identified removed entries.
+
 ## Verification Contract
 
 Coverage must prove:

@@ -36,8 +36,11 @@ metadata rows, including links between a screen and its variants and the
 `view_marks.ts` is the shared vocabulary for per-view change evidence: the two
 axes that name a view, their canonical order and reader label, and the rule
 that decides whether the theme and viewport controls carry a mark.
-`workspace_controls.tsx` recomputes those marks directly from React store state,
-so navigation and controlled-host updates cannot leave stale indicators.
+`workspace_views.ts` resolves the requested axes to the views actually shown,
+including Dark-to-Light fallback, and carries the matching status, comparison
+eligibility, and evidence provenance as one decision. `workspace_controls.tsx`
+uses that effective scheme while retaining the requested scheme as the control
+state, so navigation and controlled-host updates cannot leave stale indicators.
 `workspace_views_data.ts` derives the changed views themselves, preferring a
 ready comparison result and falling back to the lightweight screen-view
 evidence a screen-only catalogue records. Workspace data keys those lists by
@@ -60,8 +63,9 @@ selectors and shell-root `.mbk` selectors to the embedding scope without
 rewriting class names. Standalone Serve/export retain their original CSS and
 font delivery paths.
 
-`catalogue.ts` owns pure display indexing, including the shared route resolver
-that gives current entries precedence over removed history. Historical
+`catalogue.ts` owns pure display indexing, including exact historical snapshot
+resolution when current and removed entries share an id. Current content remains
+the default only when no snapshot is selected. Historical
 repository access remains in the CLI's `src/server/baseline_catalogue.ts`.
 `store.tsx` and the focused `store_*` modules own standalone route/history,
 selection, disclosure, drawer, details, recovery and scroll state. `routes.ts`,
@@ -70,6 +74,17 @@ helpers shared by SSR and the live tree; `delivery.ts` validates static
 deployment continuity before a read-model route transition. Frame documents
 remain static while `frame_event_router.tsx` routes authenticated logical-link
 events from visible sessions in the owning `frame_registry.tsx`.
+
+Static route parsing accepts a provider-normalized extensionless path only when
+its `.html` form names a published current route or an exact retained historical
+route. Historical resolution binds that route to its published snapshot; an
+explicit query must match, while an inferred identity is canonicalized into the
+URL. A same-id `idRoutes` entry can never retarget history to current content.
+
+Snapshot selection is route-owned state as well as public selection state. One
+validated query/parser/resolver carries it through SSR, hydration, controlled
+hosts and history. Headings, crumbs, Details and previous-preview lookup consume
+the resolved historical record and route, never a colliding current-id lookup.
 
 `workspace_data.ts` describes shell data; the public viewer projects it only
 from validated catalogue records. Embedded bootstrap and workspace JSON use
@@ -85,6 +100,10 @@ route evidence in a separate descriptor; the capability store adopts the
 fetched page's public bootstrap, source and private workspace as one monotonic
 revision. `use_workspace_data.ts` keeps one route-owned workspace object so
 matching evidence refreshes retain already loaded usage and local editor state.
+Versioned historical selection adopts new evidence and becomes unavailable if
+that exact snapshot disappears. Identity-less legacy history adopts only an
+unchanged removed record; metadata changes reject live adoption and preserve the
+existing document reload boundary.
 Static export uses `src/standalone/static_workspace_evidence.ts` to read inert
 workspace JSON from a destination shell in the mounted deployment, validating
 the response route, compact catalogue reference, and delivery identities against

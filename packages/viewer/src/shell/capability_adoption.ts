@@ -73,11 +73,39 @@ export function shellStateWithViewerEvidence(
   let route = state.route;
   if (route.view.kind === "target") {
     const previous = route.view.target.entry;
-    const entry = catalogueRouteEntry(catalogue, previous.route);
+    const selected =
+      route.snapshot && catalogue.publicModel
+        ? catalogue.publicModel.removedEntries.find(
+            (record) =>
+              record.entry.id === previous.id &&
+              record.entry.kind === previous.kind &&
+              record.entry.route === previous.route &&
+              record.snapshotId === route.snapshot,
+          )?.entry
+        : undefined;
+    const legacy =
+      route.snapshot === undefined
+        ? catalogue.removedEntries.find(
+            (record) =>
+              record.snapshotId === undefined &&
+              record.entry.id === previous.id &&
+              record.entry.kind === previous.kind &&
+              record.entry.route === previous.route,
+          )?.entry
+        : undefined;
+    const entry = selected
+      ? catalogueRouteEntry(catalogue, selected.route)
+      : route.snapshot === undefined
+        ? (catalogue.byRoute.get(previous.route) ?? legacy)
+        : undefined;
     const target = entry && toRouteTarget(entry);
-    if (!target || entry.id !== previous.id || entry.kind !== previous.kind)
-      return;
-    route = { ...route, view: { kind: "target", target } };
+    route =
+      target && entry.id === previous.id && entry.kind === previous.kind
+        ? { ...route, view: { kind: "target", target } }
+        : {
+            ...route,
+            view: { kind: "missing", requested: previous.route },
+          };
   }
   const next = { ...state, route };
   const status = catalogue.publicModel?.changesStatus;
@@ -104,6 +132,7 @@ export function shellContextWithViewerEvidence(
   delete stable.previewGeneration;
   delete stable.readModel;
   delete stable.renderCapability;
+  delete stable.snapshotId;
   const projected = viewerContext(model, state.selection);
   return {
     ...stable,
@@ -139,10 +168,19 @@ function sameCurrentRoute(
 ): boolean {
   if (route.view.kind !== "target") return true;
   const previous = route.view.target.entry;
-  const currentEntry = catalogueRouteEntry(current, previous.route);
-  const nextEntry = catalogueRouteEntry(next, previous.route);
+  const currentEntry = current.byRoute.get(previous.route);
+  const nextEntry = next.byRoute.get(previous.route);
+  if (!currentEntry) {
+    if (route.snapshot !== undefined) return true;
+    const currentHistory = removedEntry(current.publicModel, previous.route);
+    const nextHistory = removedEntry(next.publicModel, previous.route);
+    return (
+      currentHistory !== undefined &&
+      nextHistory !== undefined &&
+      canonicalJson(currentHistory) === canonicalJson(nextHistory)
+    );
+  }
   if (
-    !currentEntry ||
     !nextEntry ||
     currentEntry.id !== previous.id ||
     currentEntry.kind !== previous.kind ||
@@ -150,13 +188,7 @@ function sameCurrentRoute(
     nextEntry.kind !== previous.kind
   )
     return false;
-  const currentHistory = removedEntry(current.publicModel, previous.route);
-  const nextHistory = removedEntry(next.publicModel, previous.route);
-  if (!currentHistory) return !nextHistory;
-  return (
-    nextHistory !== undefined &&
-    canonicalJson(currentHistory) === canonicalJson(nextHistory)
-  );
+  return true;
 }
 
 function removedEntry(

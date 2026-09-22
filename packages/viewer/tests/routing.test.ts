@@ -59,6 +59,61 @@ test("legacy shell routing parses valid explicit axes independently", () => {
   ]);
 });
 
+test("legacy shell routing carries exact history and clears it for current routes", () => {
+  const historical = model.removedEntries[0]!;
+  assert.ok(historical.snapshotId);
+  let selection = { ...defaultSelection, screenId: "home" };
+  const proposals: Partial<ViewerSelection>[] = [];
+  const navigations: unknown[] = [];
+  const routing = new ViewerRouting(
+    model,
+    new URL("https://catalogue.example"),
+    {
+      selection: () => selection,
+      select: (value) => proposals.push(value),
+      refresh: () => undefined,
+      endPick: () => undefined,
+      open: () => undefined,
+      events: () => ({ onScreenNavigate: (event) => navigations.push(event) }),
+    },
+  );
+
+  routing.shell(
+    historical.entry.id,
+    new URL(
+      `https://catalogue.example/view/${historical.entry.route}?snapshot=${historical.snapshotId}`,
+    ),
+  );
+  assert.deepEqual(proposals.pop(), {
+    screenId: historical.entry.id,
+    snapshotId: historical.snapshotId,
+    variantId: undefined,
+  });
+  selection = {
+    ...selection,
+    screenId: historical.entry.id,
+    snapshotId: historical.snapshotId,
+  };
+  routing.commit(selection, true);
+  routing.announce();
+  assert.deepEqual(navigations, [
+    {
+      route: historical.entry.route,
+      screenId: historical.entry.id,
+      snapshotId: historical.snapshotId,
+    },
+  ]);
+
+  routing.shell(
+    "home",
+    new URL("https://catalogue.example/view/screens/home.html"),
+  );
+  assert.deepEqual(proposals.pop(), {
+    screenId: "home",
+    variantId: undefined,
+  });
+});
+
 function actions(
   selection: ViewerSelection,
   proposals: Partial<ViewerSelection>[],

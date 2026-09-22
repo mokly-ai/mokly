@@ -15,8 +15,10 @@ import { useOptionalShellStore } from "./store_context.js";
 export type ComparisonMode = "current" | "side" | "overlay" | "difference";
 
 export interface ComparisonPresentation {
+  /** Scheme of the comparison artifact actually shown. */
   colorScheme: "dark" | "light";
   mode: Exclude<ComparisonMode, "current">;
+  /** Sticky control selection retained for fallback labels. */
   requestedColorScheme: "dark" | "light";
   viewport: "both" | "desktop" | "mobile";
 }
@@ -56,12 +58,12 @@ export interface ComparisonController {
 
 /** Keep one request owner across rapid toolbar, viewport, and scheme changes. */
 export function useComparison({
-  colorScheme,
+  effectiveColorScheme,
   eligible,
   route,
   variantId,
 }: {
-  colorScheme?: "dark" | "light";
+  effectiveColorScheme?: "dark" | "light";
   eligible: boolean;
   route: string;
   variantId?: string;
@@ -69,7 +71,6 @@ export function useComparison({
   const store = useOptionalShellStore();
   const environment = useComparisonEnvironment();
   const selection = store?.state.selection;
-  const requestedColorScheme = selection?.colorScheme ?? "light";
   const evidenceKey = `${store?.context.updateVersion ?? 0}:${store?.catalogue.publicModel?.revision.evidence ?? 0}`;
   const scope = useMemo<ComparisonScope>(
     () => ({ route, ...(variantId ? { variantId } : {}) }),
@@ -124,8 +125,8 @@ export function useComparison({
           scopeKey,
           mode,
           selection?.viewport ?? "both",
-          colorScheme ?? requestedColorScheme,
-          requestedColorScheme,
+          effectiveColorScheme ?? selection?.colorScheme ?? "light",
+          selection?.colorScheme ?? "light",
         )
       : undefined;
   latestDemand.current = demand;

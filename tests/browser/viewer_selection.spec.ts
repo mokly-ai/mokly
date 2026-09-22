@@ -99,3 +99,47 @@ for (const cross of [false, true])
       },
     ]);
   });
+
+test("host routing preserves unrelated links and blocks invalid historical links", async ({
+  page,
+}) => {
+  await page.evaluate(() => window.viewerHarness.start("one"));
+  const action = page.getByRole("link", { name: "Action", exact: true });
+  const intercepted = async (href: string) =>
+    action.evaluate((link, destination) => {
+      link.setAttribute("href", destination);
+      let prevented = false;
+      document.addEventListener(
+        "click",
+        (event) => {
+          prevented = event.defaultPrevented;
+          event.preventDefault();
+        },
+        { once: true },
+      );
+      (link as HTMLAnchorElement).click();
+      return prevented;
+    }, href);
+
+  expect(await intercepted("/documentation/help.html")).toBe(false);
+  expect(
+    await intercepted(
+      `/view/components/action.html?snapshot=${"f".repeat(64)}`,
+    ),
+  ).toBe(true);
+  expect(
+    await page.evaluate(() =>
+      window.viewerHarness
+        .get("one")
+        .events.filter((event) => event.name === "error"),
+    ),
+  ).toEqual([
+    {
+      name: "error",
+      value: {
+        code: "selection",
+        message: "The requested catalogue selection is unavailable.",
+      },
+    },
+  ]);
+});

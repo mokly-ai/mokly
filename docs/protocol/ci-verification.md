@@ -94,13 +94,15 @@ only when its head repository is this repository and either its head ref starts
 with `release-please--` or it has an `autorelease:` label. A fork cannot opt
 itself into the more expensive profile by choosing a matching branch name.
 
-The repository job resolves Node 24 once and exposes the installed exact
-version plus the selected matrix and report-runtime identities as job outputs.
-Every selected Node 24 package, unit, browser, and aggregate job requests that
-exact version. A new Node release or differing runner caches cannot give sibling
-shards different Node versions. Matrix labels and report runtime identities
-remain `node-24`; reports still record the exact installed version, and the
-aggregate continues to reject mixed versions within a group.
+The repository job resolves floating Node 24 once, then an explicit shell step
+reads `process.versions.node` and exposes that exact version plus the selected
+matrix and report-runtime identities as job outputs. Every package, unit, and
+browser job selected for Node 24, plus the Required CI aggregate, requests the
+captured version. CI therefore adopts new Node 24 patches without allowing
+differing runner caches to give sibling shards different versions. Matrix labels
+and report runtime identities remain `node-24`; reports still record the exact
+installed version, and the aggregate continues to reject mixed versions within
+a group. The setup action itself does not provide the installed version output.
 
 Node 22.14 is the ordinary functional runtime because it is the package's
 declared minimum. The Node 24 repository prerequisite still runs on every

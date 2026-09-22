@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { readCatalogue } from "@mokly/viewer";
+
 import { startStaticFixture } from "./static_fixture.js";
 import { chooseScheme, chooseViewport } from "./workspace_actions.js";
 
@@ -92,7 +94,16 @@ test("added and removed screens stay current while light-only comparisons retain
 
   await page.goto(`${site.url}/id/removed/`);
   await chooseViewport(page, "mobile");
-  await expect(page).toHaveURL(`${site.url}/view/screens/removed.html`);
+  const catalogue = readCatalogue(
+    JSON.parse(site.files.get("__mokly/catalogue.json")!.toString()),
+  );
+  const removed = catalogue.removedEntries.find(
+    ({ entry }) => entry.id === "removed",
+  );
+  expect(removed?.snapshotId).toMatch(/^[a-f0-9]{64}$/);
+  await expect(page).toHaveURL(
+    `${site.url}/view/screens/removed.html?snapshot=${removed!.snapshotId}`,
+  );
   await expect(page.locator("[data-workspace-status]")).toHaveText("Removed");
   await expect(page.locator(".mbk-diff-toolbar")).toHaveCount(0);
   await expect(page.locator(".mbk-previous")).toHaveText(
@@ -108,7 +119,7 @@ test("added and removed screens stay current while light-only comparisons retain
   await chooseScheme(page, "dark");
   await expect(page.locator('[data-view-changed="scheme"]')).toBeHidden();
   await page.getByRole("button", { name: "Overlay", exact: true }).click();
-  await expect(page.locator("[data-diff-stage] h3").first()).toContainText(
+  await expect(page.locator("[data-diff-viewport] h3").first()).toContainText(
     "Light only",
   );
   for (const frame of await page.locator("[data-diff-stage] iframe").all())

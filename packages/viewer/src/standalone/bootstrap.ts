@@ -1,5 +1,6 @@
 /** Serializable state shared by standalone shell SSR and browser hydration. */
 
+import { resolveCatalogueRoute } from "../catalogue/entry_selection.js";
 import { readCatalogue } from "../catalogue/reader.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import { canonicalJson } from "../components/data.js";
@@ -142,12 +143,19 @@ export function serializeShellBootstrap(
 /** Recreate the exact component inputs used by standalone SSR. */
 export function shellBootstrapProps(bootstrap: ShellBootstrap) {
   const catalogue = viewerCatalogue(bootstrap.catalogue);
-  const selectedEntry =
+  const selected =
     bootstrap.view.kind === "target"
-      ? catalogueRouteEntry(catalogue, bootstrap.view.route)
+      ? resolveCatalogueRoute(bootstrap.catalogue, bootstrap.view.route)
       : undefined;
+  const selectedEntry = selected
+    ? catalogueRouteEntry(catalogue, selected.entry.route)
+    : undefined;
   const selectedId = selectedEntry?.id ?? null;
-  const selection = { ...defaultSelection, screenId: selectedId };
+  const selection = {
+    ...defaultSelection,
+    screenId: selectedId,
+    ...(selected?.snapshotId ? { snapshotId: selected.snapshotId } : {}),
+  };
   const projected = viewerContext(bootstrap.catalogue, selection);
   const context: ShellContext = {
     ...projected,
@@ -243,10 +251,7 @@ function validateTarget(
   catalogue: CatalogueReadModel,
   view: BootstrapView,
 ): void {
-  if (
-    view.kind === "target" &&
-    !catalogueRouteEntry(viewerCatalogue(catalogue), view.route)
-  )
+  if (view.kind === "target" && !resolveCatalogueRoute(catalogue, view.route))
     throw new Error("Invalid shell hydration target.");
 }
 

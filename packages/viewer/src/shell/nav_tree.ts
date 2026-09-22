@@ -20,6 +20,7 @@ export interface NavLeafNode {
   kind: "leaf";
   label: string;
   route: string;
+  snapshotId?: string;
   /** Declared classification tags, present only when the entry has them. */
   tags?: readonly string[];
   /**

@@ -126,10 +126,11 @@ jobs, four unit shards, four browser shards, and focused macOS/Windows native
 jobs. Ordinary pull requests and `main` pushes run the functional suites on the
 minimum supported Node 22.14 runtime. Same-repository Release Please pull
 requests add Node 24 to every functional suite, while the shared repository job
-remains on Node 24 for every event. Chromium is installed only by browser jobs.
-Every job that runs npm installs with npm 11.7.0 and `npm ci`; CI caches only npm
-downloads and includes the merge-base lockfile in cache keys for jobs that build
-historical baselines.
+resolves the latest Node 24 patch for every event. An explicit capture step
+passes that exact patch to every selected Node 24 job. Chromium is installed
+only by browser jobs. Every npm-running job installs npm 11.7.0 and runs
+`npm ci`. CI caches only npm downloads and includes the merge-base lockfile in
+cache keys for jobs that build historical baselines.
 
 The stable `Required CI` branch-rule status fails unless every prerequisite
 result is exactly successful and the event-selected eight or sixteen
@@ -253,8 +254,8 @@ The release workflow then:
    output), or explicit manual `publish_ref` and `viewer_ref` inputs. An
    incomplete pair fails closed; ordinary pushes do nothing.
 2. Checks out the CLI tag with history on a GitHub-hosted runner.
-3. Installs Node 24, npm 11.7.0, Rust 1.95.0, and Chromium without a package
-   cache.
+3. Resolves the latest available Node 24 patch for the single publish job, then
+   installs npm 11.7.0, Rust 1.95.0, and Chromium without a package cache.
 4. Verifies both local and remote tags identify `HEAD`, the source tree is clean
    including untracked files, and each tag matches its package version.
 5. Runs `npm ci` and the complete `cargo xtask check` gate.

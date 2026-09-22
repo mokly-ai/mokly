@@ -1,8 +1,9 @@
 # Screen Variants Follow-up
 
-Status: implemented, verified, pushed, and reviewed in
+Status: the initial follow-up is implemented, verified, pushed, and reviewed in
 [PR #115](https://github.com/mokly-ai/mokly/pull/115). Active pending review
-decisions and merge. Created 2026-09-22 to close
+fixes and merge. The user has approved fixing historical snapshot selection;
+Milestones 9–12 carry that work without reopening completed milestones. Created 2026-09-22 to close
 [Screen Variants](./screen-variants.md) for
 [PR #101](https://github.com/mokly-ai/mokly/pull/101). The user's 2026-09-22
 request to implement this follow-up authorizes its six design route moves and
@@ -47,6 +48,16 @@ Remove these six collection memberships. Retain the now-empty
 Generated fragment moves follow the six route moves automatically. Before
 conversion, capture the manifest's id/route/collection inventory as regression
 evidence; new regression screens may add ids but must not hide unrelated losses.
+
+## Parallel mainline delivery
+
+[PR #112](https://github.com/mokly-ai/mokly/pull/112) independently delivered
+`resolveWorkspaceView`, effective Light fallback, and complete-evidence
+eligibility, including SSR, Viewer, partial-evidence and deep-link regressions.
+Those interfaces and tests are retained during this branch's mainline merge.
+Existing embedded routing already applied valid explicit axes; this follow-up
+also consolidates partial/invalid-axis parsing and Changes landing behavior.
+The completed milestones below retain this branch's original finding numbers.
 
 ## Carried Review Findings
 
@@ -341,6 +352,167 @@ No mainline files were deleted and both reported findings remain unchanged.
 Commit `263ba75` was pushed before the final read-only comparison against
 `origin/main` (`a8f408d`); the review confirmed the same two findings and no
 additional implementation changes.
+
+### Milestone 9: Define historical snapshot selection
+
+Fix review item 1 generally for consumer catalogues. Preserve each screen's
+stable id and distinguish its selected historical snapshot. Existing previous-
+version screen components own the presentation; no new visual design is needed.
+Review item 2's mockup alignment remains outside this approved fix.
+
+- [x] Define snapshot identity, public discovery and selection in the catalogue,
+      Viewer and removed-preview contracts before implementation. Reuse real
+      immutable generation/baseline identity where available; cover live history
+      before a comparison is generated without fake or ambiguous identifiers.
+- [x] Specify current selection, same-id historical selection, unknown/stale
+      snapshots, legacy catalogues, controlled proposals, events, URL/history
+      restoration, and evidence updates. Snapshot mismatch must fail closed.
+- [x] Record the compatibility decision and update the relevant READMEs.
+
+### Milestone 10: Publish and resolve historical identities
+
+Keep identity ownership at the catalogue boundary and make every selected
+historical record resolve to its own route, metadata and preview descriptor.
+
+- [x] Add failing projection/reader and workspace-resolution tests for current
+      and removed screens sharing an id; cover absent/pending generation data,
+      stale identities and separate catalogues.
+- [x] Implement typed, validated identity publication/resolution, including
+      older supported catalogue inputs. Avoid duplicating identity algorithms
+      or using current-entry precedence for an explicit historical selection.
+- [x] Reject snapshot intent on logical-id aliases and current routes in both
+      served and static delivery; accept only the exact historical view route,
+      and never canonicalize a rejected snapshot to current content.
+- [x] Bind removed-preview responses to the selected baseline commit or legacy
+      immutable generation, including late responses, retries and final-URL
+      generation changes, before historical bytes can render.
+- [x] Verify package declarations, readers, projection and relevant build tests.
+
+### Milestone 11: Carry historical selection through the Viewer
+
+Tags: ui
+
+Select the requested version consistently without changing the previous-version
+screen design or weakening historical frame isolation.
+
+- [x] Add failing browser regressions for same-id current/historical navigation
+      in controlled and uncontrolled hosts, plus Serve/export history paths.
+- [x] Carry snapshot identity through selection normalization/equality, route
+      proposals, view/context/workspace lookup, navigation events and restoration.
+      Keep historical selection through axis/filter updates and clear it on an
+      explicit return to current content. Stale evidence cannot retarget it.
+- [x] Verify status, exact previous-version content, breadcrumbs, active rows,
+      read-only frames and absence of current-only inspection/comparison actions.
+- [x] Remove obsolete server-rendered preview frame templates so historical
+      screen routes hydrate through the same unavailable-to-ready lifecycle as
+      historical pages without a React tree mismatch.
+- [x] Run targeted Viewer and historical-preview tests and mobile/desktop smoke.
+
+Implementation evidence: exact pre-fix browser and unit runs reproduced the
+same-id selection, stale-preview, alias and history failures. The final Viewer
+suite passed all 100 tests, the focused data/server suite passed all 61 tests,
+and the packed-package consumer check passed. The 34-case browser run covered
+controlled and uncontrolled hosts, Serve and static history, Back/Forward and
+refresh, both frame adapters, mobile and desktop widths, late responses,
+retries, CSP and read-only historical frames with no hydration errors. The
+public API/type probes, four independent boundary probes, lint, formatting and
+304 Markdown-link validation also passed.
+
+### Milestone 12: Prepare mainline integration
+
+Mainline integration uses source tip `01515cb`, merge base `a8f408d`, and fetched
+mainline `d665d06`. The 26-path audit and individually checked resolutions retain
+mainline's effective-view interfaces and regression tests, the completed design
+conversion, and every new historical-selection file. The working-tree conflicts
+are resolved; the merge commit follows the complete gate. The merged resolver
+passed 25 focused workspace/status/SSR tests and the integrated viewer/browser
+checks retained both the snapshot and effective-view behavior.
+
+- [x] After implementation, fetch latest main, capture the source tip and audit
+      additions; prepare the merge in the working tree and resolve conflicts
+      path-by-path while preserving both the fix and every unrelated mainline
+      feature. Finalize the merge commit after the complete gate below.
+- [x] Align strict test-fixture types and the static removed-entry alias
+      assertion with the snapshot contract. Validate the actual published
+      snapshot id while retaining the old route, status and comparison checks.
+
+The first complete gate passed all repository/package/Rust checks and 2,283 of
+2,284 Node tests. Its sole failure was a preview-link assertion that still
+expected a historical URL without a snapshot query. Independent verification
+also found that provider-normalized historical paths used the current id-alias
+map and therefore lost same-id history. Complete the new milestones below
+before rerunning the gate; the original mockup review finding remains separate.
+
+### Milestone 13: Preserve snapshot URLs in preview exports
+
+Keep the preview adapter's URL normalization aligned with the published
+historical-selection contract, preserving both the exact record and its query.
+
+- [x] Clarify the export/navigation contract for provider-normalized historical
+      URLs and document the distinction between route lookup and id aliases.
+- [x] Capture a failing preview-publication assertion for the actual published
+      snapshot id and preserve every historical-content and isolation check.
+- [x] Make any required preview-link normalization preserve snapshot queries
+      while normalizing the known exported path, then run the publication tests.
+
+### Milestone 14: Resolve historical paths after host normalization
+
+Tags: ui
+
+Use the accepted catalogue's historical routes when a static host removes an
+HTML suffix; keep the existing screen presentation and strict snapshot checks.
+
+- [x] Add failing unit and browser coverage for same-id screens and pages at
+      provider-normalized URLs, including hydration, Back/Forward, refresh,
+      return to current content and mismatched snapshot rejection.
+- [x] Resolve normalized paths through exact accepted route records without
+      relying on current id-alias precedence or admitting unknown routes.
+- [x] Run the focused historical navigation and preview browser suites and
+      verify that both exact-file and normalized URLs retain the same snapshot.
+
+Verification: the normalized-route unit regression and both screen/page browser
+regressions failed before the fix. The completed route/publication unit suite
+passed 5/5. All 12 focused browser cases passed, covering controlled/uncontrolled
+selection, exact-file and normalized routes, real preview-host comparisons and
+pages, mobile/desktop widths, history/refresh, and snapshot mismatch rejection.
+The integrated build, type checks, formatting and source lint passed. Generated
+Wrangler temporary files were removed only after their test processes stopped.
+
+### Milestone 15: Preserve legacy historical invalidation
+
+Tags: ui
+
+The second complete gate passed all 2,286 Node tests and 702 of 703 browser
+tests. The remaining browser failure exposed older, identity-less catalogues:
+changing an active historical record must retain their existing reload and
+preview-refresh behavior. Explicit snapshot selections keep the new in-place
+adoption and stale-identity rejection contract.
+
+- [x] Clarify the legacy invalidation rule without fabricating snapshot ids or
+      weakening explicit historical selection.
+- [x] Add failing unit coverage for unchanged and changed identity-less
+      historical records; retain the existing browser reload/request assertions.
+- [x] Restore conservative legacy evidence adoption and verify it alongside
+      versioned snapshot replacement, route history and live evidence races.
+
+Verification: the existing full-suite browser failure and new legacy unit
+regressions failed before the compatibility fix. The completed capability suite
+passed 7/7, and all 16 focused browser tests passed, including the unchanged
+legacy reload assertions, evidence races, current workspace preservation, and
+controlled/exact/normalized snapshot history. Explicit stale snapshots also
+remain unavailable if their former route becomes current content. Build, full
+type checks and formatting passed before the final gate retry.
+
+### Milestone 16: Verify and deliver the integrated snapshot fix
+
+- [ ] Run relevant tests and `cargo xtask check`, inspect the complete diff,
+      validate docs and record results with all authored files included.
+- [ ] After checks pass, run `git add -A`, commit using Conventional Commits
+      and push this branch; update PR #115 for the delivered snapshot fix.
+- [ ] After the push, use
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      on the complete diff against `origin/main`; report numbered findings with
+      severity, impact, lettered options and recommendations without fixing them.
 
 ## Post-merge follow-up (non-blocking)
 

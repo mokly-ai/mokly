@@ -92,6 +92,7 @@ export function resolveDeliveryHref(
   if (!match) return undefined;
   const target = delivery.idRoutes[match[1] ?? ""];
   if (!target) return undefined;
+  if (new URLSearchParams(match[2] ?? "").has("snapshot")) return undefined;
   return `${target}${validFragmentQuery(match[2] ?? "")}`;
 }
 

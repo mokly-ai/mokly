@@ -31,6 +31,8 @@ export interface ShellContext {
   componentChanges?: ShellEvidence;
   /** Validated logical fragment applied to the routed target's frames. */
   fragment?: string;
+  /** Exact removed record selected for this route. */
+  snapshotId?: string;
   /** Update-stream version captured when this page request began. */
   updateVersion: number;
 }

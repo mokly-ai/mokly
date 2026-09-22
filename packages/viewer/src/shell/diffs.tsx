@@ -10,8 +10,8 @@ import { useComparison, type ComparisonMode } from "./use_comparison.js";
 /** Keep the current screen mounted until a comparison is explicitly selected. */
 export function DiffScreen({
   children,
-  colorScheme,
   component = false,
+  effectiveColorScheme,
   eligible = true,
   onComparisonChange,
   onModeChange,
@@ -19,8 +19,8 @@ export function DiffScreen({
   variantId,
 }: {
   children: ReactNode;
-  colorScheme?: "dark" | "light";
   component?: boolean;
+  effectiveColorScheme?: "dark" | "light";
   eligible?: boolean;
   onComparisonChange?(loaded: LoadedComparison | undefined): void;
   onModeChange?(mode: ComparisonMode): void;
@@ -28,7 +28,7 @@ export function DiffScreen({
   variantId?: string;
 }) {
   const comparison = useComparison({
-    ...(colorScheme ? { colorScheme } : {}),
+    ...(effectiveColorScheme ? { effectiveColorScheme } : {}),
     eligible,
     route,
     ...(variantId ? { variantId } : {}),

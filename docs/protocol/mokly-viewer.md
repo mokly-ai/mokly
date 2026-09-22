@@ -160,6 +160,21 @@ Variants are invalid for home, pages and use cases. `view` selects the
 All/Changes **catalogue filter**, not a comparison mode. Logical fragments and
 comparison mode retain their existing route/runtime state.
 
+`snapshotId` is the optional opaque identity published beside a removed entry.
+Without it, `screenId` selects current content when that id exists. With it, the
+pair must resolve exactly one removed record with that id; an unknown, stale, or
+cross-catalogue identity is unavailable and never falls back to the current
+entry. An id-only selection of a unique removed record remains supported and
+normalizes to its published identity when present. A legacy current/removed id
+collision without identity fails closed. The same rules apply to screens,
+pages, components and every routed kind retained in `removedEntries`.
+Evidence adoption can compare an explicit snapshot identity directly: a newer
+catalogue is adopted, and a replaced or missing selected record becomes
+unavailable without retargeting. Identity-less legacy history has no such
+version boundary. It may adopt only when its complete removed record is
+unchanged; changed or removed metadata rejects the live revision so the
+existing full reload path requests a coherent document and preview again.
+
 Defaults are home, All, Both, Light, empty search and no tags, overridden once
 by `defaultSelection`. `selection` supplies the complete controlled state;
 when present, require `onSelectionChange` and do not also accept
@@ -167,14 +182,17 @@ when present, require `onSelectionChange` and do not also accept
 into current state, validates it and emits a complete next state only if changed.
 Controlled changes remain proposals until the host supplies them back; incoming
 props do not echo an event. Uncontrolled mode commits the next state itself.
-Invalid selection props, including invalid variants, render an unavailable state
+Invalid selection props, including invalid variants or snapshots, render an unavailable state
 and emit one selection error; invalid imperative selections reject without
-committing. A partial selection that changes `screenId` without naming
-`variantId` drops the prior variant. Shell links and pending route intents
-propose `{ screenId, variantId }` atomically. The workspace variant control
+committing. A partial selection that explicitly supplies `screenId` without
+`snapshotId` returns to current content and clears a historical selection;
+viewport, scheme, filter, search and tag changes retain it. A changed screen
+also drops an omitted `variantId`. Shell links and pending route intents propose
+`{ screenId, snapshotId, variantId }` atomically. The workspace variant control
 proposes `select({ variantId })`; in controlled mode it changes only after the
 host supplies that selection back. A committed variant replaces frames and
-announces `onScreenNavigate` once. Switching control mode requires remounting.
+announces `onScreenNavigate` once with `snapshotId` when historical content was
+committed. Switching control mode requires remounting.
 Never mutate supplied objects/arrays.
 
 The Viewer rebuilds `variantOf` for current and removed screens from the public
@@ -199,6 +217,16 @@ active. An imperative `select` call and supplied `defaultSelection` or
 `selection` props also keep their axes. Controlled mode emits the complete
 proposal and waits for the host to supply it back.
 
+Historical route URLs carry at most one validated `snapshot=<64-hex>` query.
+Direct URLs, SSR/hydration and Back/Forward restore the exact record. The query
+stays through viewport, scheme and filter changes and is removed by navigation
+to current content. A route/snapshot mismatch is unavailable. Current and
+historical records may share `screenId`; route title, breadcrumbs, Details,
+status, active row, preview lookup and navigation events always use the resolved
+record rather than a current-id lookup. Removed screens expose only their
+read-only previous version: no current component picking, inspection or
+comparison action is inferred from the colliding current entry.
+
 Free text and tags follow [Browse search](./mokly-runtime.md#browse-shell):
 parse case-insensitive `tag:` terms out of search into a deduplicated tag list,
 retain the remaining phrase as `search`, and require every tag plus that phrase.
@@ -206,10 +234,12 @@ Normalization is deterministic; the visible input still displays those tags
 as today's `tag:` terms. Navigation proposes any filter clearing needed to
 reveal its destination as one atomic selection update. Light-only views retain
 the existing fallback labels when Dark is selected; no fake dark view is made.
-The shell resolves the effective displayed scheme once for a screen or selected
-component saved variant and uses it for frame sources, shown status,
-view-control marks, and comparison presentation. The global Dark preference
-remains sticky while that entry displays Light.
+The shared workspace resolver uses that effective Light view for the title
+status, hidden-change marks, and comparison presentation in both SSR and the
+hydrated Viewer. When ready evidence does not cover every effective shown view,
+the Viewer preserves the public entry or saved variant's status and comparison
+eligibility independently instead of deriving eligibility from the fallback
+status.
 
 Per-view resolution returns the shown status, comparison eligibility, and
 whether matching evidence produced them. Ready evidence applies only when its

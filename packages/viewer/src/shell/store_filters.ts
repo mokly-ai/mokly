@@ -26,6 +26,8 @@ export function withRoute(
   sections: readonly NavSectionNode[],
 ): ShellState {
   let selection = { ...state.selection, screenId: routeScreenId(route) };
+  if (route.snapshot) selection.snapshotId = route.snapshot;
+  else delete selection.snapshotId;
   const entry =
     route.view.kind === "target" ? route.view.target.entry : undefined;
   if (
@@ -105,6 +107,5 @@ function sameQuery(left: ViewerSelection, right: ViewerSelection): boolean {
 function routeTitle(catalogue: Catalogue, route: ShellRoute): string {
   if (route.view.kind === "home") return "Mokly";
   if (route.view.kind === "missing") return "Not found · Mokly";
-  const entry = catalogue.byId.get(route.view.target.entry.id);
-  return `${entry?.title ?? route.view.target.entry.title} · Mokly`;
+  return `${route.view.target.entry.title} · Mokly`;
 }

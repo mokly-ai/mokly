@@ -21,7 +21,7 @@ jobs:
     runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 20
     outputs:
-      node-24-version: ${{ steps.node.outputs.node-version }}
+      node-24-version: ${{ steps.node-version.outputs.value }}
       node-matrix: ${{ steps.profile.outputs.node-matrix }}
       verification-runtimes: ${{ steps.profile.outputs.verification-runtimes }}
     steps:
@@ -50,13 +50,15 @@ jobs:
             echo 'verification-runtimes=node-22.14.0' >> "$GITHUB_OUTPUT"
           fi
       - name: Set up Node.js
-        id: node
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 24
           package-manager-cache: false
           cache: npm
           cache-dependency-path: package-lock.json
+      - name: Capture exact Node.js version
+        id: node-version
+        run: echo "value=$(node --print 'process.versions.node')" >> "$GITHUB_OUTPUT"
       - name: Set up npm
         run: npm install --global npm@11.7.0
       - name: Set up Rust

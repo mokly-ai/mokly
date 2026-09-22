@@ -194,12 +194,26 @@ Controlled changes are proposals until the host passes the new selection back.
 Do not provide `defaultSelection` in controlled mode, and remount the viewer if
 you need to change modes.
 
+Removed entries advertise an optional opaque `snapshotId`. Supply it with the
+stable `screenId` to select that exact historical record when current content
+reuses the id. The viewer carries it through controlled proposals, navigation
+events and axis/filter changes. Supplying `screenId` without `snapshotId`
+selects current content; stale or unknown snapshots render unavailable rather
+than silently opening current content. Live evidence may update an explicit
+snapshot in place and makes a replaced identity unavailable. Legacy history
+without an identity is retained only while its complete record is unchanged;
+metadata changes use the full reload path.
+
 Shell links may name `viewport` and `scheme` independently. Exactly one valid
 value for an axis applies in the same selection proposal; invalid or repeated
-values retain that sticky axis. A light-only selected screen or saved component
-variant keeps the host's Dark preference but uses its displayed Light views for
-status, marks and comparisons. Missing or partial per-view evidence preserves
-the entry or saved variant's existing comparison eligibility.
+values retain that sticky axis.
+
+The selected color scheme remains host-visible even when the chosen screen or
+saved variant has only a Light render. In that case the preview keeps the Dark
+selection and Light-only label, while status, change marks, and comparisons use
+the effective Light view. If ready evidence does not cover every shown view,
+the Viewer preserves the selected entry or variant's published status and
+comparison eligibility independently.
 
 ### Host integration
 

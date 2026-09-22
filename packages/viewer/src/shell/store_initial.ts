@@ -1,5 +1,6 @@
 /** Deterministic shell-state initialization shared by SSR and hydration. */
 
+import { resolveCatalogueRoute } from "../catalogue/entry_selection.js";
 import { defaultSelection } from "../viewer/selection.js";
 
 import type { Catalogue } from "./catalogue.js";
@@ -26,9 +27,16 @@ export function createInitialShellState(
   initial: ShellInitialState | undefined,
 ): ShellState {
   const recovery = initial?.recovery;
+  const snapshotId =
+    context.snapshotId ??
+    (context.readModel && view.kind === "target"
+      ? resolveCatalogueRoute(context.readModel, view.target.entry.route)
+          ?.snapshotId
+      : undefined);
   const route: ShellRoute = {
     view,
     ...(context.fragment ? { fragment: context.fragment } : {}),
+    ...(snapshotId ? { snapshot: snapshotId } : {}),
   };
   const sections = catalogueNavSections(catalogue);
   let disclosures = defaultDisclosures(sections, context.activeRoute);
@@ -80,6 +88,7 @@ export function createInitialShellState(
     selection: {
       ...defaultSelection,
       screenId: routeScreenId(route),
+      ...(route.snapshot ? { snapshotId: route.snapshot } : {}),
       view: recovery?.view ?? "all",
       viewport: recovery?.viewport ?? "both",
       colorScheme:
