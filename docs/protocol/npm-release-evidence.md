@@ -22,7 +22,7 @@ treated as proof. The client uses these endpoints:
 - `commits/{sha}/pulls` for merged pull requests associated with the tag commit;
 - `actions/runs/{id}/jobs` for the exact `Required CI` job result;
 - `actions/runs/{id}/artifacts` and `actions/artifacts/{id}/zip` for the 16
-  `verification-*` reports; and
+  dual-runtime Release Please `verification-*` reports; and
 - `git/commits/{sha}` for the tree named by an evidence commit.
 
 Candidates must be completed, successful runs of `.github/workflows/ci.yml`
@@ -36,13 +36,19 @@ workflows, other events, or unsuccessful runs are excluded. Candidate order is:
 Each candidate must also contain exactly one successful job named `Required CI`.
 An absent or unsuccessful job makes that candidate unavailable. An unavailable
 candidate is skipped so an older valid run for the same tree can still apply.
+Ordinary `main` push CI contains only the eight-report Node 22.14 profile, so its
+otherwise successful tag-commit run is unavailable for publishing. The usual
+applicable candidate is the associated Release Please pull-request run, whose
+trusted same-repository profile adds Node 24 and produces all 16 reports.
 
 ## Identity And Completeness Proof
 
 The release checkout supplies the tagged commit with `git rev-parse HEAD` and
 the tagged tree with `git rev-parse HEAD^{tree}`. The downloaded artifact names
 must match the CI verification namespace, be unexpired, and yield exactly 16
-reports. All reports must name one full commit SHA.
+reports across `node-22.14.0` and `node-24`. All reports must name one full
+commit SHA. The ordinary eight-report profile is complete ordinary CI evidence,
+but it is not release evidence and therefore classifies as absent here.
 
 The evidence commit is applicable when it is the tagged commit or when
 `git/commits/{evidence-commit}` names the tagged tree. The latter comparison is

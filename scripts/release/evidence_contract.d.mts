@@ -52,6 +52,10 @@ export const CI_WORKFLOW_PATH: string;
 export const REQUIRED_CI_JOB_NAME: string;
 export const VERIFICATION_ARTIFACT_PATTERN: RegExp;
 export const VERIFICATION_REPORT_COUNT: number;
+export const RELEASE_VERIFICATION_RUNTIMES: readonly [
+  "node-22.14.0",
+  "node-24",
+];
 
 export function resolveVerificationMode(input: {
   eventName: string;
@@ -86,7 +90,11 @@ export function classifyEvidence(
     evidenceTree: string;
     liveUnitFiles: readonly string[];
   },
-  validateReports: (reports: readonly unknown[], commit: string) => void,
+  validateReports: (
+    reports: readonly unknown[],
+    commit: string,
+    runtimes: readonly string[],
+  ) => void,
 ): EvidenceResult;
 
 export function errorMessage(error: unknown): string;

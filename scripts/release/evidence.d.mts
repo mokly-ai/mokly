@@ -25,7 +25,11 @@ export interface ReleaseEvidenceOptions {
   writeOutput?: (name: string, value: string, outputPath?: string) => void;
   fetch?: typeof globalThis.fetch;
   createGithub?: (options: unknown) => EvidenceGithub;
-  validateReports?: (reports: readonly unknown[], commit: string) => void;
+  validateReports?: (
+    reports: readonly unknown[],
+    commit: string,
+    runtimes: readonly string[],
+  ) => void;
   readReports?: (root: string) => Promise<VerificationReport[]>;
   discoverUnitFiles?: (root: string) => Promise<string[]>;
 }

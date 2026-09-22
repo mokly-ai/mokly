@@ -122,6 +122,13 @@ test("evidence classification distinguishes unavailable, unrelated and invalid r
   );
   assert.equal(
     classifyEvidence(
+      { ...base, artifacts: verificationArtifacts().slice(0, 8) },
+      validateCiReports,
+    ).outcome,
+    "absent",
+  );
+  assert.equal(
+    classifyEvidence(
       { ...base, artifacts: verificationArtifacts(true) },
       validateCiReports,
     ).outcome,

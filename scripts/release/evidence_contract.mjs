@@ -2,6 +2,10 @@ export const CI_WORKFLOW_PATH = ".github/workflows/ci.yml";
 export const REQUIRED_CI_JOB_NAME = "Required CI";
 export const VERIFICATION_ARTIFACT_PATTERN = /^verification-/;
 export const VERIFICATION_REPORT_COUNT = 16;
+export const RELEASE_VERIFICATION_RUNTIMES = Object.freeze([
+  "node-22.14.0",
+  "node-24",
+]);
 
 const SHA_PATTERN = /^[a-f0-9]{40}$/;
 
@@ -115,7 +119,11 @@ export function classifyEvidence(input, validateReports) {
       reportCount: input.reports.length,
     };
   try {
-    validateReports(input.reports, identity.commit);
+    validateReports(
+      input.reports,
+      identity.commit,
+      RELEASE_VERIFICATION_RUNTIMES,
+    );
   } catch (error) {
     return invalid(
       `CI report aggregate is invalid: ${errorMessage(error)}`,

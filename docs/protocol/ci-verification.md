@@ -179,11 +179,13 @@ remain attempt-specific. Unit and browser jobs retain inventory, timing, and
 failure details; browser failures additionally retain traces and Playwright
 error context. A successful `Required CI` job plus its revalidated complete
 report aggregate is reusable complete verification for the tree the reports
-name; individual reports remain partial evidence. The release workflow applies
-the additional tree and live unit-inventory checks in the
-[release evidence contract](./npm-release-evidence.md). Reports are retained
-for 14 days, which bounds their release reuse; missing or expired evidence
-falls back to the complete gate.
+name within that event's runtime profile; individual reports remain partial
+evidence. Release publication accepts only the dual-runtime Release Please
+profile, then applies the additional tree and live unit-inventory checks in the
+[release evidence contract](./npm-release-evidence.md). The ordinary
+eight-report profile cannot skip the complete publish gate. Reports are
+retained for 14 days, which bounds their release reuse; missing or expired
+evidence falls back to the complete gate.
 
 ## Dependency Cache And Security
 

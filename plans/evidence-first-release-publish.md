@@ -243,6 +243,29 @@ guard, and prove the workflow contract with tests.
       to review the complete local diff against `origin/main` and report
       findings without changing the implementation.
 
+## Milestone 4: Mainline Runtime-Profile Integration
+
+Summary: merge the latest mainline CI runtime-profile changes and preserve the
+dual-runtime release evidence boundary.
+
+- [x] Merge `origin/main` into the implementation branch without discarding
+      either main's Blacksmith/runtime-profile work or the evidence-first
+      release workflow.
+- [x] Align the release evidence contract and validator with main's explicit
+      aggregate runtime argument: require the 16-report Node 22.14 plus Node 24
+      Release Please profile, while treating an ordinary eight-report `main`
+      push as unavailable evidence that continues to the associated release PR.
+- [x] Extend the cross-workflow contract tests for the selected release runtime
+      profile, report count, artifact namespace and aggregate validation.
+- [x] Run the focused CI/release/evidence tests, `npm run lint`,
+      `npm run format:check`, and the complete `cargo xtask check`.
+- [x] `git add -A`, commit the semantic merge resolution with a Conventional
+      Commit, and push the branch, including the merge commit.
+- [x] After the push, use
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main` and report
+      findings without changing the implementation.
+
 ## Post-merge follow-up (non-blocking)
 
 - Observe the first release-please merge after this change: confirm the

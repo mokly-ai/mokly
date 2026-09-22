@@ -7,6 +7,7 @@ import { parse } from "yaml";
 
 import {
   REQUIRED_CI_JOB_NAME,
+  RELEASE_VERIFICATION_RUNTIMES,
   VERIFICATION_ARTIFACT_PATTERN,
   VERIFICATION_REPORT_COUNT,
 } from "../scripts/release/evidence_contract.mjs";
@@ -15,6 +16,7 @@ import { repositoryRoot } from "./helpers/fixture.js";
 
 interface WorkflowStep {
   name?: string;
+  run?: string;
   with?: Readonly<Record<string, unknown>>;
 }
 
@@ -41,6 +43,13 @@ test("release evidence constants match the CI job and artifact namespace", async
     (step) => step.name === "Download shard evidence",
   );
   assert.equal(download?.with?.pattern, "verification-*");
+  const profile = workflow.jobs.repository?.steps.find(
+    (step) => step.name === "Select Node verification profile",
+  );
+  assert.match(
+    String(profile?.run),
+    /verification-runtimes=node-22\.14\.0,node-24/,
+  );
   for (const jobName of ["unit", "browser"]) {
     const upload = workflow.jobs[jobName]?.steps.find((step) =>
       step.name?.startsWith("Retain "),
@@ -50,7 +59,10 @@ test("release evidence constants match the CI job and artifact namespace", async
   }
   const expectedReports = ["unit", "browser"].reduce((total, jobName) => {
     const matrix = workflow.jobs[jobName]?.strategy?.matrix;
-    return total + (matrix?.node?.length ?? 0) * (matrix?.shard?.length ?? 0);
+    return (
+      total +
+      RELEASE_VERIFICATION_RUNTIMES.length * (matrix?.shard?.length ?? 0)
+    );
   }, 0);
   assert.equal(expectedReports, VERIFICATION_REPORT_COUNT);
 });
