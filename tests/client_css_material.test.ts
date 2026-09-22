@@ -21,6 +21,7 @@ test("a material change with matched stylesheet evidence reads Screen changed", 
       presentation: {
         colorScheme: "light",
         mode: "side",
+        requestedColorScheme: "light",
         viewport: "mobile",
       },
       route: "screens/auth.html",
