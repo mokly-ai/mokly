@@ -16,6 +16,7 @@ import type {
   ProcessSupervisor,
   ProcessSupervisorFactory,
 } from "../dist/server/supervisor.js";
+import type { WatchEvent } from "../dist/server/watch_events.js";
 import type {
   ConsumerWatcher,
   ConsumerWatcherFactory,
@@ -176,7 +177,7 @@ class FakeWatcher implements ConsumerWatcher {
     this.events.push("watcher:close");
   }
 
-  onChange(_callback: (path: string) => void): void {}
+  onChange(_callback: (event: WatchEvent) => void): void {}
 
   onError(_callback: (error: Error) => void): void {}
 

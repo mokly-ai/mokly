@@ -4,6 +4,8 @@ import path from "node:path";
 import { MoklyError } from "../errors.js";
 
 import { isBaselineCachePath } from "./cache_paths.js";
+import { discoverEntryModules } from "./entry_discovery.js";
+import { resolveEntryGlobs } from "./entry_globs.js";
 import {
   baselineBuildCommands,
   generatedOutputMode,
@@ -46,7 +48,6 @@ export function resolveConfig(
   const input = value as unknown as MoklyConfig;
   const publicExclude = resolvePublicExclude(input.publicExclude);
   const generatedOutput = generatedOutputMode(input.generatedOutput);
-  requireString(input.entriesDir, "entriesDir");
   requireString(input.mockupsDir, "mockupsDir");
   if (input.repoRoot !== undefined) requireString(input.repoRoot, "repoRoot");
   const configDir = path.dirname(configPath);
@@ -58,30 +59,22 @@ export function resolveConfig(
     repoRoot,
     configPath,
   );
-  const entriesDir = resolveInside(
-    repoRoot,
-    configDir,
-    input.entriesDir,
-    "entriesDir",
-  );
+  const entryGlobs = resolveEntryGlobs(input, repoRoot, configDir);
+  const entriesDir = entryGlobs.entriesDir;
   const mockupsDir = resolveInside(
     repoRoot,
     configDir,
     input.mockupsDir,
     "mockupsDir",
   );
-  requireDirectory(entriesDir, "entriesDir");
+  if (entriesDir !== undefined) requireDirectory(entriesDir, "entriesDir");
   if (generatedOutput === "committed" || fs.existsSync(mockupsDir))
     requireDirectory(mockupsDir, "mockupsDir");
-  for (const [label, root] of [
-    ["entriesDir", entriesDir],
-    ["mockupsDir", mockupsDir],
-  ])
-    if (isBaselineCachePath(root!, repoRoot))
-      throw new MoklyError(
-        "config-invalid",
-        `${label} must not be inside .mokly-cache`,
-      );
+  if (isBaselineCachePath(mockupsDir, repoRoot))
+    throw new MoklyError(
+      "config-invalid",
+      "mockupsDir must not be inside .mokly-cache",
+    );
   if (generatedOutput === "derived" && mockupsDir === repoRoot)
     throw new MoklyError(
       "config-invalid",
@@ -126,11 +119,11 @@ export function resolveConfig(
     "review.outDir",
   );
   validateReviewOut(reviewOut, {
-    entriesDir,
+    entryRoots: entriesDir ? [entriesDir] : [],
     mockupsDir,
     repoRoot,
   });
-  return {
+  const resolved: ResolvedConfig = {
     publicExclude,
     generatedOutput,
     colorSchemes,
@@ -141,7 +134,8 @@ export function resolveConfig(
         : {}),
     },
     configPath,
-    entriesDir,
+    entryGlobs: entryGlobs.globs,
+    ...(entriesDir ? { entriesDir } : {}),
     mockupsDir,
     moduleResolution,
     ...(renderer ? { renderer } : {}),
@@ -161,6 +155,12 @@ export function resolveConfig(
       rules: watchRules,
     },
   };
+  const discovered = {
+    ...resolved,
+    entryModules: discoverEntryModules(resolved),
+  };
+  validateReviewOut(reviewOut, discovered);
+  return discovered;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

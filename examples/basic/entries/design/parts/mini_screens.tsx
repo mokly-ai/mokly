@@ -3,12 +3,22 @@ import { DESTINATIONS } from "./destinations.js";
 
 interface MiniScreenProps {
   compact?: boolean;
+  /** Nothing entered yet, so the primary action is not available. */
+  empty?: boolean;
+  /** The last save did not complete. */
+  error?: boolean;
   restyled?: boolean;
   revised?: boolean;
 }
 
 /** Miniature depiction of the example Welcome fragment. */
-export function MiniWelcome({ compact, restyled, revised }: MiniScreenProps) {
+export function MiniWelcome({
+  compact,
+  empty,
+  error,
+  restyled,
+  revised,
+}: MiniScreenProps) {
   const navigation = useDesignNavigation();
   return (
     <div className={restyled ? "mbk-shot mbk-shot--restyled" : "mbk-shot"}>
@@ -16,8 +26,19 @@ export function MiniWelcome({ compact, restyled, revised }: MiniScreenProps) {
         <div className="mbk-shot-nav">
           {compact ? "Menu" : "Example navigation"}
         </div>
+        {error ? (
+          <p className="mbk-shot-error">
+            Couldn’t save this workspace. Try again.
+          </p>
+        ) : null}
         <h2>{revised ? "Welcome to the Mokly example" : "Welcome to Mokly"}</h2>
         {revised ? <p>A short introduction now welcomes new readers.</p> : null}
+        {empty ? (
+          <>
+            <div className="mbk-shot-field">Workspace name</div>
+            <span className="mbk-shot-action">Create workspace</span>
+          </>
+        ) : null}
         <DesignLink
           to={
             navigation.scheme === "dark"

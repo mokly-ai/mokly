@@ -75,10 +75,16 @@ export default defineConfig({
 });
 ```
 
-Paths are relative to the config file. The default renderer is deliberately
-neutral; point `renderer` at your own module when screens need product theme
-providers, custom document markup, or React Native Web style collection. See
-the [configuration guide](./docs/guides/start/configure.md).
+Paths are relative to the config file. `entriesDir` is shorthand for the
+recommended `<folder>/**/*.mockup.{ts,tsx}` pattern. To co-locate definitions
+with product code, configure repository-relative `entries` globs such as
+`["src/**/*.mockup.{ts,tsx}"]` instead; set exactly one of `entries` or
+`entriesDir`, and ensure every configured glob matches an entry module.
+
+The default renderer is deliberately neutral; point `renderer` at your own
+module when screens need product theme providers, custom document markup, or
+React Native Web style collection. See the
+[configuration guide](./docs/guides/start/configure.md).
 
 ### 3. Add a screen
 
@@ -176,7 +182,7 @@ catalogue; your React tree still owns what each screen looks like.
 
 | Concept              | Use it for                                                  | Guide                                                                   |
 | -------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Screens              | One product state with mobile and desktop renders           | [Screens](./docs/guides/authoring/screens.md)                           |
+| Screens              | Product states, view renders, and full-screen variants      | [Screens](./docs/guides/authoring/screens.md)                           |
 | Collections and tags | Navigation hierarchy and searchable vocabulary              | [Collections and tags](./docs/guides/authoring/collections-and-tags.md) |
 | Components           | Typed props, saved variants, controls, and usage inspection | [Components](./docs/guides/authoring/components.md)                     |
 | Use-case flows       | Ordered journeys composed from existing screens             | [Use-case flows](./docs/guides/authoring/use-case-flows.md)             |
@@ -193,8 +199,10 @@ so component trees use one React runtime.
 The local **Changes** view compares the working tree with the merge base of
 `HEAD` and `origin/main` by default. It accounts for generated documents,
 reachable resources, catalogue metadata, registered components, and applicable
-stylesheet changes. Changed screens and saved component variants generate
-comparisons only when opened; removed screens and pages load their read-only
+stylesheet changes. Changed screens, screen variants, and saved component
+variants generate comparisons only when an eligible shown view is opened.
+Per-view evidence keeps known unchanged views marked Unmodified without offering
+a comparison. Removed screens and pages load their read-only
 [previous version](./docs/protocol/mokly-removed-previews.md) from the branch
 point.
 
@@ -234,6 +242,7 @@ authentication, or discussion experience.
 - [Configuration reference](./docs/guides/authoring/config.md)
 - [Protocol and specification index](./docs/protocol/README.md)
 - [Removed content previews](./docs/protocol/mokly-removed-previews.md)
+- [Screen variants](./docs/protocol/mokly-screen-variants.md)
 - [Package ownership boundary](./docs/architecture/package-boundary.md)
 - [React-to-static-HTML pipeline](./docs/architecture/build-pipeline.md)
 - [Implementation plans](./plans/README.md)

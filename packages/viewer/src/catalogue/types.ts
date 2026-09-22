@@ -44,7 +44,7 @@ export type CatalogueRoutedEntry =
   CatalogueScreen | CataloguePage | CatalogueUseCase | CatalogueComponent;
 export type CatalogueNode =
   | { kind: "collection"; id: string; children: readonly CatalogueNode[] }
-  | { kind: "entry"; id: string };
+  | { kind: "entry"; id: string; children?: readonly CatalogueNode[] };
 export type CatalogueChanges =
   | { status: "ready"; kind: ChangeKind; included: boolean }
   | { status: Exclude<ChangesStatus, "ready"> };
@@ -92,6 +92,8 @@ export interface CatalogueScreen extends CatalogueEntry {
   colorSchemes: readonly ColorScheme[];
   views: readonly CatalogueView[];
   useCaseIds: readonly string[];
+  /** Parent screen id, present only when this screen is a variant. */
+  variantOf?: string;
 }
 export interface CataloguePage extends CatalogueEntry {
   kind: "page";

@@ -8,15 +8,30 @@ interface NavigationBranch {
   row: NavigationRow;
 }
 
+/**
+ * Build the depicted tree. Collections nest by depth; a variant row belongs to
+ * the leaf it follows rather than to that leaf's collection, so a parent keeps
+ * its variants and a collection never counts them as children.
+ */
 function navigationForest(rows: readonly NavigationRow[]): NavigationBranch[] {
   const roots: NavigationBranch[] = [];
   const parents: Array<{ branch: NavigationBranch; depth: number }> = [];
+  let leaf: NavigationBranch | undefined;
   for (const row of rows) {
-    while ((parents.at(-1)?.depth ?? -1) >= row.depth) parents.pop();
     const branch = { children: [], row };
+    if (row.kind === "variant" && leaf) {
+      leaf.children.push(branch);
+      continue;
+    }
+    while ((parents.at(-1)?.depth ?? -1) >= row.depth) parents.pop();
     const parent = parents.at(-1)?.branch;
     (parent?.children ?? roots).push(branch);
-    if (row.kind === "collection") parents.push({ branch, depth: row.depth });
+    if (row.kind === "collection") {
+      parents.push({ branch, depth: row.depth });
+      leaf = undefined;
+    } else {
+      leaf = branch;
+    }
   }
   return roots;
 }
@@ -27,7 +42,10 @@ function projectBranch(
 ): NavigationBranch | undefined {
   if (branch.row.kind !== "collection") {
     const component = branch.row.kind === "component";
-    return component === (section === "components") ? branch : undefined;
+    if (component !== (section === "components")) return undefined;
+    return branch.row.variants === "open"
+      ? branch
+      : { children: [], row: branch.row };
   }
   const children = branch.children.flatMap((child) => {
     const projected = projectBranch(child, section);

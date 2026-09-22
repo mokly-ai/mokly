@@ -12,6 +12,8 @@ import { routedEntries } from "../viewer/selection.js";
 import type { ViewerSelection } from "../viewer/types.js";
 
 import type { Catalogue } from "./catalogue.js";
+import { changesActivation } from "./changes_activation.js";
+import type { ShellContext } from "./context.js";
 import { disclosurePath } from "./nav_model.js";
 import type { NavSectionNode } from "./nav_tree.js";
 import { routeFromUrl, type ShellRoute } from "./routes.js";
@@ -96,6 +98,7 @@ export function announceNavigation(
 export function hostClick(
   event: MouseEvent<HTMLElement>,
   catalogue: Catalogue,
+  context: ShellContext,
   environment: EmbeddedShellEnvironment | undefined,
   request: (route: ShellRoute) => void,
   setState: Dispatch<SetStateAction<ShellState>>,
@@ -111,7 +114,10 @@ export function hostClick(
   if (!anchor || !eligibleAnchor(event, anchor)) return;
   const href = anchor.getAttribute("href");
   if (!href) return;
-  const route = routeFromUrl(catalogue, new URL(href, environment.baseUrl));
+  const requested = routeFromUrl(catalogue, new URL(href, environment.baseUrl));
+  const route = anchor.hasAttribute("data-nav-row")
+    ? changesActivation(catalogue, context, state.selection, requested)
+    : requested;
   if (route.view.kind === "missing") return;
   event.preventDefault();
   request(route);

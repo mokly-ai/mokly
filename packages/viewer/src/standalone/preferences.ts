@@ -3,6 +3,7 @@
 import type { ShellInitialState } from "../shell/store_state.js";
 
 import {
+  setDisclosureOpen,
   readEarlyDetailsOpen,
   readEarlyDisclosures,
   persistHydrationDisclosures,
@@ -64,11 +65,11 @@ function applyDisclosures(
   doc: Document,
   values: Readonly<Record<string, boolean>>,
 ): void {
-  for (const group of doc.querySelectorAll<HTMLDetailsElement>(
+  for (const group of doc.querySelectorAll<HTMLElement>(
     "[data-nav-disclosure]",
   )) {
     const key = group.getAttribute("data-nav-disclosure");
-    if (key && values[key] !== undefined) group.open = values[key];
+    if (key && values[key] !== undefined) setDisclosureOpen(group, values[key]);
   }
 }
 

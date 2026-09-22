@@ -29,7 +29,7 @@ const baseline: BaselineReader = {
 };
 
 for (const [name, cause] of [
-  ["private/theme.css", /authored source root.*entriesDir/],
+  ["private/theme.css", /resolved entry module.*entries/],
   ["theme.source.html", /reserved source basename/],
   ["helper.css", /authoring input.*sourceFiles/],
   ["README.css", /matches public exclusion.*\*\*\/README\.\*.*publicExclude/],

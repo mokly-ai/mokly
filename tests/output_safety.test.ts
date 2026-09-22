@@ -60,7 +60,7 @@ test("build rejects generated routes inside nested authored roots", async (conte
 
   await assert.rejects(
     () => compileCatalogue(config),
-    /generated route overlaps authored source root/,
+    /generated route overlaps a resolved entry module/,
   );
 });
 
@@ -76,10 +76,10 @@ test("writer rejects crafted output inside nested authored roots", async (contex
 
   await assert.rejects(
     () => writeCompilation(unsafe, config),
-    /generated route overlaps authored source root/,
+    /generated route overlaps a resolved entry module/,
   );
   assert.equal(
-    fs.existsSync(path.join(config.entriesDir, "injected.html")),
+    fs.existsSync(path.join(fixture.mockupsDir, "src/entries/injected.html")),
     false,
   );
 });
@@ -113,7 +113,7 @@ test("build rejects generated routes through authored-root symlinks", async (con
 
   await assert.rejects(
     () => compileCatalogue(config),
-    /generated route overlaps authored source root/,
+    /generated route overlaps a resolved entry module/,
   );
 });
 

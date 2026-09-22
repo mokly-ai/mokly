@@ -17,16 +17,27 @@ const viewportOptions = [
   ["desktop", "Desktop"],
   ["both", "Both"],
 ] as const;
+
+/** Per-view change evidence: a mark points at views other than this one. */
+function ChangedMark() {
+  return <span className="ce-view-changed" aria-hidden="true" />;
+}
+
 export function ViewControlsView({
   selection,
   scheme,
   highlight,
   unavailable,
   schemeDisabled,
+  changedViews,
   destinations,
 }: ViewControlsProps) {
   useDesignStyle("view-controls");
   const reasonId = useId();
+  const changed = changedViews ?? [];
+  const schemeChanged = changed.some((view) => view.scheme !== scheme);
+  const viewportChanged =
+    selection !== "both" && changed.some((view) => view.viewport !== selection);
   const nextScheme = scheme === "light" ? "dark" : "light";
   const schemeDestination = schemeDisabled
     ? undefined
@@ -57,6 +68,7 @@ export function ViewControlsView({
             </option>
           ))}
         </select>
+        {viewportChanged ? <ChangedMark /> : null}
       </label>
       {schemeDestination ? (
         <DesignLink to={schemeDestination}>
@@ -68,6 +80,7 @@ export function ViewControlsView({
           >
             <ViewIcon kind="light" />
             <ViewIcon kind="dark" />
+            {schemeChanged ? <ChangedMark /> : null}
           </span>
         </DesignLink>
       ) : (
@@ -89,6 +102,7 @@ export function ViewControlsView({
           />
           <ViewIcon kind="light" />
           <ViewIcon kind="dark" />
+          {schemeChanged ? <ChangedMark /> : null}
         </label>
       )}
       {highlight === undefined ? null : (

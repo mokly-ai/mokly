@@ -2,10 +2,12 @@
 import type { ComponentRuntime } from "../../build/component_runtime.js";
 import { PlainServeReporter } from "../reporter.js";
 import { ResourceWatcher } from "../resource_watcher.js";
+import type { WatchEvent } from "../watch_events.js";
 import type { ConsumerWatcherFactory } from "../watcher.js";
 
 import type { PreviewObservation } from "./observation.js";
 
+/** Retain and forward watched resource descriptors for the current preview generation. */
 export class PreviewResources {
   private readonly resources: ResourceWatcher;
   private pending: Promise<void> = Promise.resolve();
@@ -13,7 +15,7 @@ export class PreviewResources {
   private closed = false;
   constructor(
     factory: ConsumerWatcherFactory,
-    changed: (path: string) => void,
+    changed: (event: WatchEvent) => void,
     private readonly current: () => ComponentRuntime,
     private readonly shutdown: Promise<void>,
     private readonly diagnostic: (error: unknown) => void = (error) =>

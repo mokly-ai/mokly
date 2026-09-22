@@ -28,7 +28,10 @@ for (const loader of ["dataurl", "base64", "binary", "file", "text"]) {
     const compilation = await compileCatalogue(config);
     await writeCompilation(compilation, config);
     assert.ok(compilation.manifest.sourceFiles.includes("mockups/image.svg"));
-    assert.equal(classifyWatchPath(asset, config), "rebuild");
+    assert.equal(
+      classifyWatchPath({ path: asset, kind: "change" }, config),
+      "rebuild",
+    );
     assert.equal(isPublicStaticFile(asset, config), false);
     const stale = {
       ...compilation.manifest,

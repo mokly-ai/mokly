@@ -14,12 +14,13 @@ import {
   readSchema,
   projectTree,
   comparisonPath,
-  lexical,
   publicPath,
   pagePreviewPath,
   relatedDoc,
   repositoryPath,
 } from "@mokly/viewer/data";
+
+import { orderEntriesWithVariants } from "../registry/entry_order.js";
 
 import { entryChanges, comparisonSelection } from "./changes.js";
 import type { CatalogueProjectionInput } from "./projection_input.js";
@@ -98,6 +99,9 @@ export function projectCatalogue(
         views: projectViews(input, retainedComponents, entry, entry, removed),
         useCaseIds: [...entry.useCaseIds],
         ...(entry.address !== undefined ? { address: entry.address } : {}),
+        ...(entry.variantOf !== undefined
+          ? { variantOf: entry.variantOf }
+          : {}),
       };
     const schema = readSchema(entry.propSchema);
     if (schema.kind !== "object")
@@ -162,7 +166,10 @@ export function projectCatalogue(
   };
   const collections: CatalogueCollection[] = [];
   const entries: CatalogueRoutedEntry[] = [];
-  for (const entry of [...catalogue.manifest.entries].sort(entryOrder)) {
+  for (const entry of orderEntriesWithVariants(
+    catalogue.manifest.entries,
+    (value) => value,
+  )) {
     if (entry.kind === "collection")
       collections.push({
         ...common(entry, false),
@@ -173,9 +180,7 @@ export function projectCatalogue(
   }
   const removedSnapshots =
     input.changesStatus === "ready"
-      ? [...catalogue.removedEntries].sort((a, b) =>
-          entryOrder(a.entry, b.entry),
-        )
+      ? orderEntriesWithVariants(catalogue.removedEntries, ({ entry }) => entry)
       : [];
   const removedRoutes = new Set(
     removedSnapshots.map(({ entry }) => entry.route),
@@ -237,13 +242,4 @@ function projectPreview(
       "page preview must match comparison generation and route",
     );
   return { preview: { kind: "page", path: previewPath } };
-}
-
-function entryOrder(left: ManifestEntry, right: ManifestEntry): number {
-  return (
-    lexical(
-      left.kind === "collection" ? "" : left.route,
-      right.kind === "collection" ? "" : right.route,
-    ) || lexical(left.id, right.id)
-  );
 }

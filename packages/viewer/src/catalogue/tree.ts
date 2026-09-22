@@ -16,10 +16,25 @@ export function projectTree(
 ): CatalogueReadModel["tree"] {
   const section = (components: boolean): CatalogueNode[] => {
     const project = (entry: TreeEntry): CatalogueNode[] => {
+      if (hierarchy.variantParentById.has(entry.id)) return [];
       if (entry.kind !== "collection")
-        return (entry.kind === "component") === components
-          ? [{ kind: "entry", id: entry.id }]
-          : [];
+        if ((entry.kind === "component") === components) {
+          const variants = hierarchy.variantsById.get(entry.id) ?? [];
+          return [
+            {
+              kind: "entry",
+              id: entry.id,
+              ...(variants.length > 0
+                ? {
+                    children: variants.map((variant) => ({
+                      kind: "entry" as const,
+                      id: variant.id,
+                    })),
+                  }
+                : {}),
+            },
+          ];
+        } else return [];
       const children = (hierarchy.childrenById.get(entry.id) ?? []).flatMap(
         project,
       );

@@ -12,7 +12,7 @@ import {
   validEntrySource,
 } from "./fixture.js";
 
-/** Build a consumer and commit its actual generated baseline before an edit. */
+/** Build a committed consumer with fixture-owned dependent cleanup. */
 export async function changedFixture(
   t: TestContext,
   source = validEntrySource(),

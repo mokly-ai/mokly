@@ -12,6 +12,7 @@ const manifest = JSON.parse(
   fs.readFileSync(path.join(directory, "mokly-manifest.json"), "utf8"),
 ) as ManifestV5;
 const changedDesigns = new Set([
+  "design-browse-variant-changes",
   "design-changes-current",
   "design-changes-overlay",
   "design-review-changed",

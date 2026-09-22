@@ -5,7 +5,10 @@ import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 
 import type { Compilation } from "./compile.js";
-import { pendingGeneratedOrphanRoutes } from "./ownership.js";
+import {
+  pendingGeneratedOrphanRoutes,
+  unclaimedGeneratedRoutes,
+} from "./ownership.js";
 
 /** Compare expected bytes with committed output without writing anything. */
 export function checkCompilation(
@@ -27,15 +30,27 @@ export function checkCompilation(
     config,
     compilation.outputs.keys(),
   );
-  if (missing.length === 0 && stale.length === 0 && orphan.length === 0) return;
+  const unclaimed = unclaimedGeneratedRoutes(config);
+  if (
+    missing.length === 0 &&
+    stale.length === 0 &&
+    orphan.length === 0 &&
+    unclaimed.length === 0
+  )
+    return;
   const groups = [
     formatGroup("missing generated files", missing),
     formatGroup("stale generated files", stale),
     formatGroup("orphan generated files", orphan),
+    formatGroup("unclaimed generated files", unclaimed),
   ].filter(Boolean);
+  const unclaimedGuidance =
+    unclaimed.length === 0
+      ? ""
+      : "\nUnclaimed generated files are not changed by build; delete them or restore the source under a configured entry glob.";
   throw new MoklyError(
     "build-invalid",
-    `committed output does not match source; run mokly build:\n${groups.join("\n")}`,
+    `committed output does not match source; run mokly build:\n${groups.join("\n")}${unclaimedGuidance}`,
   );
 }
 

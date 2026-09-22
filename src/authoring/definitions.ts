@@ -15,25 +15,57 @@ import type {
   RootInput,
   ScreenDefinition,
   ScreenInput,
+  ScreenVariantInput,
   UseCaseDefinition,
   UseCaseInput,
 } from "./types.js";
+import { flattenScreenVariants } from "./variants.js";
 
+type DefineScreenResult<T extends ScreenInput> = T extends ScreenInput & {
+  variants: readonly ScreenVariantInput[];
+}
+  ? readonly ScreenDefinition[]
+  : ScreenDefinition;
+
+/** Loader hook used by module-bound consumer authoring facades. */
+export function __attributeDefinition<T extends object>(
+  value: readonly T[],
+  sourceRelativePath: string,
+): readonly (T & { definedIn: string })[];
 /** Loader hook used by module-bound consumer authoring facades. */
 export function __attributeDefinition<T extends object>(
   value: T,
   sourceRelativePath: string,
-): T & { definedIn: string } {
+): T & { definedIn: string };
+export function __attributeDefinition(
+  value: object | readonly object[],
+  sourceRelativePath: string,
+): object | readonly object[] {
+  if (Array.isArray(value)) {
+    return value.map((definition) => ({
+      ...definition,
+      definedIn: sourceRelativePath,
+    }));
+  }
   return { ...value, definedIn: sourceRelativePath };
 }
 
-/** Define one canonical screen. */
-export function defineScreen(input: ScreenInput): ScreenDefinition {
-  return branded({
-    ...input,
-    kind: "screen",
+/** Define one canonical screen and flatten any declared variants after it. */
+export function defineScreen<const T extends ScreenInput>(
+  input: T,
+): DefineScreenResult<T>;
+export function defineScreen(
+  input: ScreenInput,
+): ScreenDefinition | readonly ScreenDefinition[] {
+  const { variants, ...parentInput } = input;
+  const parent = branded({
+    ...parentInput,
+    kind: "screen" as const,
     useCaseIds: input.useCaseIds ?? [],
   });
+  return variants === undefined
+    ? parent
+    : flattenScreenVariants(parent, variants);
 }
 
 /** Define a complete document with an explicit, stable route. */
@@ -120,7 +152,7 @@ function flattenChild(
     return;
   }
   if (node.__nested === "screen") {
-    const definition = defineScreen({
+    const flattened = defineScreen({
       ...(effective.address ? { address: effective.address } : {}),
       ...(node.colorSchemes ? { colorSchemes: node.colorSchemes } : {}),
       dependencies: effective.dependencies ?? [],
@@ -134,9 +166,15 @@ function flattenChild(
       ...(node.tags ? { tags: node.tags } : {}),
       title: node.title,
       useCaseIds: node.useCaseIds ?? [],
+      ...(node.variants ? { variants: node.variants } : {}),
     });
-    if (node.definedIn) definition.definedIn = node.definedIn;
-    definitions.push(definition);
+    const screenDefinitions = Array.isArray(flattened)
+      ? flattened
+      : [flattened];
+    for (const definition of screenDefinitions) {
+      if (node.definedIn) definition.definedIn = node.definedIn;
+      definitions.push(definition);
+    }
     return;
   }
   const definition = defineCollection({

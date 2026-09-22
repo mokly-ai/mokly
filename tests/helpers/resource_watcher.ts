@@ -4,6 +4,7 @@ import type { TestContext } from "node:test";
 
 import { compileCatalogue } from "../../dist/build/compile.js";
 import { loadConfig } from "../../dist/config/load.js";
+import type { WatchEvent } from "../../dist/server/watch_events.js";
 import type {
   ConsumerWatcher,
   ConsumerWatcherFactory,
@@ -57,7 +58,7 @@ export class ResourceWatcherFactory implements ConsumerWatcherFactory {
 /** Observe cleanup and emit queued events without real operating-system watches. */
 export class ResourceTestWatcher implements ConsumerWatcher {
   closeCount = 0;
-  private changed: ((candidate: string) => void) | undefined;
+  private changed: ((event: WatchEvent) => void) | undefined;
 
   constructor(
     readonly targets: readonly string[],
@@ -69,7 +70,7 @@ export class ResourceTestWatcher implements ConsumerWatcher {
   async close(): Promise<void> {
     this.closeCount += 1;
   }
-  onChange(callback: (candidate: string) => void): void {
+  onChange(callback: (event: WatchEvent) => void): void {
     this.changed = callback;
   }
   onError(_callback: (error: Error) => void): void {}
@@ -77,6 +78,6 @@ export class ResourceTestWatcher implements ConsumerWatcher {
     await this.onReady(this);
   }
   change(candidate: string): void {
-    this.changed?.(candidate);
+    this.changed?.({ path: candidate, kind: "change" });
   }
 }

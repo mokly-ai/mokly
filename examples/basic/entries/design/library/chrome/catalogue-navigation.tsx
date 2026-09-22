@@ -1,6 +1,11 @@
 import { defineComponent, type ComponentProps } from "@mokly/mokly";
 
-import { NAV_TREE } from "../../parts/nav_data.js";
+import { DESTINATIONS } from "../../parts/destinations.js";
+import {
+  CHANGED_VARIANT_ROWS,
+  NAV_TREE,
+  NAV_TREE_VARIANTS_OPEN,
+} from "../../parts/nav_data.js";
 import { libraryMetadata } from "../metadata.js";
 import { destination, flag, optionalText, text } from "../schemas.js";
 
@@ -20,7 +25,14 @@ const propSchema = {
             kind: {
               schema: {
                 kind: "enum",
-                values: ["collection", "screen", "component", "flow", "page"],
+                values: [
+                  "collection",
+                  "screen",
+                  "component",
+                  "flow",
+                  "page",
+                  "variant",
+                ],
               },
             },
             depth: { schema: { kind: "number", minimum: 0, integer: true } },
@@ -28,7 +40,12 @@ const propSchema = {
               schema: { kind: "number", minimum: 0, integer: true },
               optional: true,
             },
+            changed: { ...flag, optional: true },
             open: { ...flag, optional: true },
+            variants: {
+              schema: { kind: "enum", values: ["open", "closed"] },
+              optional: true,
+            },
             to: destination,
           },
         },
@@ -69,6 +86,7 @@ export const catalogueNavigation = defineComponent({
     "catalogue-navigation",
     "Catalogue navigation",
     "The catalogue tree and its All or Changes filter.",
+    ["catalogue-navigation-row.view.tsx"],
   ),
   propSchema,
   controls: {
@@ -126,6 +144,28 @@ export const catalogueNavigation = defineComponent({
       id: "unavailable",
       title: "Changes unavailable",
       props: { ...sample, changedOnly: true, changesStatus: "unavailable" },
+    },
+    {
+      id: "variants",
+      title: "Screen variants",
+      props: {
+        ...sample,
+        activeDestination: DESTINATIONS.variantSelected,
+        rows: NAV_TREE_VARIANTS_OPEN,
+      },
+    },
+    {
+      id: "changed-variants",
+      title: "Changed variant",
+      props: {
+        activeLabel: "Save failed",
+        allDestination: DESTINATIONS.variantSelected,
+        changedCount: 1,
+        changedOnly: true,
+        changesDestination: DESTINATIONS.variantChanges,
+        presentation: "responsive",
+        rows: CHANGED_VARIANT_ROWS,
+      },
     },
   ],
 });

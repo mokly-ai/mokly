@@ -19,6 +19,7 @@ const resultVariables = [
 ] as const;
 
 interface WorkflowStep {
+  id?: string;
   name?: string;
   run?: string;
   uses?: string;
@@ -29,6 +30,7 @@ interface WorkflowJob {
   if?: string;
   name?: string;
   needs?: readonly string[];
+  outputs?: Readonly<Record<string, string>>;
   steps: readonly WorkflowStep[];
   strategy?: {
     "fail-fast"?: boolean;
@@ -153,6 +155,36 @@ test("CI shards complete verification behind one prerequisite", async () => {
     assert.ok(job.steps.some((step) => step.run === "npm ci"));
   }
   assertPinnedActions(workflow);
+});
+
+test("CI resolves Node 24 once for every dependent job", async () => {
+  const workflow = parse(await workflowSource()) as Workflow;
+  const repository = workflow.jobs.repository;
+  assert.ok(repository);
+  const resolver = repository.steps.find((step) =>
+    step.uses?.startsWith("actions/setup-node@"),
+  );
+  assert.ok(resolver?.id, "the prerequisite must expose its resolved runtime");
+  assert.equal(resolver.with?.["node-version"], 24);
+  assert.equal(
+    repository.outputs?.["node-24-version"],
+    `\${{ steps.${resolver.id}.outputs.node-version }}`,
+  );
+  for (const name of ["package", "unit", "browser", "required"]) {
+    const job = workflow.jobs[name];
+    assert.ok(job, name);
+    assert.ok(job.needs?.includes("repository"), name);
+    const setup = job.steps.find((step) =>
+      step.uses?.startsWith("actions/setup-node@"),
+    );
+    assert.equal(
+      setup?.with?.["node-version"],
+      name === "required"
+        ? "${{ needs.repository.outputs.node-24-version }}"
+        : "${{ matrix.node == '24' && needs.repository.outputs.node-24-version || matrix.node }}",
+      `${name} must reuse the prerequisite's exact Node 24 version`,
+    );
+  }
 });
 
 test("Required CI fails closed for every prerequisite result", async (context) => {

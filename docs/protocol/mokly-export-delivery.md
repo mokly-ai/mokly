@@ -211,6 +211,8 @@ redirect for compatibility.
 
 Current remains the default after navigation/reload. Browsing, Changes filtering,
 and scheme/viewport switches do not request comparison JSON or snapshot files.
+An export with Changes carries the same per-view states as Serve, so its shell
+marks hidden changed views and lists them in Details without fetching that JSON.
 Added entries retain their current preview without comparison modes. Removed
 screens and pages retain no comparison modes; selecting one requests the
 packaged previous version delivered under
