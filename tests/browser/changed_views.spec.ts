@@ -6,6 +6,7 @@ import {
 } from "../helpers/changed_view_fixture.js";
 import { controlsEntrySource } from "../helpers/component_controls_fixture.js";
 import { startEvidenceFixture } from "../helpers/evidence_fixture.js";
+import { reparentedEntrySource } from "../helpers/fixture.js";
 
 import { expectFrameSource } from "./workspace_actions.js";
 
@@ -127,6 +128,67 @@ test("a dark-only change marks the views it hides and opens on one", async ({
       "aria-pressed",
       "true",
     );
+  } finally {
+    await fixture.close();
+  }
+});
+
+test("a light fallback rejects an ineligible comparison deep link", async ({
+  page,
+}) => {
+  const source = reparentedEntrySource("screens").replace(
+    'defineScreen({ ...metadata, description: "Home screen"',
+    'defineScreen({ ...metadata, colorSchemes: ["light"], description: "Home screen"',
+  );
+  const fixture = await startEvidenceFixture(source);
+  const { compilation, server } = fixture;
+  try {
+    server.publishUpdate({
+      kind: "evidence",
+      changedRoutes: [HOME],
+      changesStatus: "ready",
+      componentChanges: {
+        baseline: compilation.manifest,
+        screenViews: [
+          {
+            route: HOME,
+            views: [
+              {
+                viewport: "mobile",
+                colorScheme: "light",
+                state: "unchanged",
+              },
+              {
+                viewport: "desktop",
+                colorScheme: "light",
+                state: "unchanged",
+              },
+            ],
+          },
+        ],
+      },
+    });
+    await page.goto(
+      `${server.url}/view/${HOME}?viewport=mobile&scheme=dark&comparison=side`,
+    );
+
+    await expect(
+      page.getByRole("button", { name: "Dark mode", exact: true }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await expectFrameSource(
+      page.locator('[data-workspace-frame="mobile"]'),
+      /screens\/home\.mobile\.html$/,
+    );
+    await expect(page.locator(".mbk-frame-mobile")).toHaveAttribute(
+      "data-color-scheme-fallback",
+      "",
+    );
+    await expectShownStatus(page, "Unmodified", false);
+    await expect(page.locator('[data-diff-mode="current"]')).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(fixture.comparisonRequests).toBe(0);
   } finally {
     await fixture.close();
   }

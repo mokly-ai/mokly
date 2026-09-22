@@ -16,6 +16,11 @@ timing, coverage, queue, cache, and runner-use evidence.
 This change covers repository verification, CI configuration, test fixtures,
 and their documentation. It requires no product UI or mockup work. Release
 publication and preview deployment behavior remain outside the change.
+The later
+[release-gated Node compatibility plan](./release-gated-node-compatibility.md)
+refines this plan's always-dual runtime layout: its measured timings remain the
+baseline, while ordinary changes use Node 22.14 and Release Please pull requests
+retain the complete Node 22.14/24 matrix.
 
 Contract owners:
 

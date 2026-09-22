@@ -190,8 +190,7 @@ guessing. Finding 3 restores loud discovery failures.
       `docs/architecture/build-pipeline.md`, `src/build/README.md`, and
       `src/server/README.md` so they state the event-aware rule and the
       loud-failure rule exactly.
-- [x] Run `cargo xtask check` and commit locally; the supervising agent
-      will verify and push before the final review.
+- [x] Run `cargo xtask check`, commit, and push.
 - [x] Review the complete local diff against `origin/main` after the push
       using `docs/implementation-review-prompt.md`; report findings without
       changing the implementation. The post-push review found no regressions
@@ -231,8 +230,7 @@ hygiene. Findings 5 and 6 remain accepted without change.
 - [x] Replace the non-null assertion `roots.get(root)!` in
       `src/config/entry_discovery_paths.ts` with a local variable, and
       reflow the overlong line in `src/build/README.md`.
-- [x] Run `cargo xtask check` and commit locally; the supervising agent
-      will verify and push before the final review.
+- [x] Run `cargo xtask check`, commit, and push.
 - [x] Review the complete local diff against `origin/main` after the push
       using `docs/implementation-review-prompt.md`; report findings without
       changing the implementation. The post-push review reported eight

@@ -32,8 +32,11 @@ metadata rows, including links between a screen and its variants and the
 `view_marks.ts` is the shared vocabulary for per-view change evidence: the two
 axes that name a view, their canonical order and reader label, and the rule
 that decides whether the theme and viewport controls carry a mark.
-`workspace_controls.tsx` recomputes those marks directly from React store state,
-so navigation and controlled-host updates cannot leave stale indicators.
+`workspace_views.ts` resolves the requested axes to the views actually shown,
+including Dark-to-Light fallback, and carries the matching status, comparison
+eligibility, and evidence provenance as one decision. `workspace_controls.tsx`
+uses that effective scheme while retaining the requested scheme as the control
+state, so navigation and controlled-host updates cannot leave stale indicators.
 `workspace_views_data.ts` derives the changed views themselves, preferring a
 ready comparison result and falling back to the lightweight screen-view
 evidence a screen-only catalogue records. Workspace data keys those lists by
@@ -41,10 +44,11 @@ saved-variant id for components and entry id for screens, so every reader must
 select the evidence that belongs to the preview; `css_workspace_marks.ts` draws
 the dot and clips its wording.
 The parallel `viewStates` map stores `{ viewport, colorScheme, state }` for each
-ready view under the same key, while a missing key means per-view status is
-unknown and the workspace must retain its route-level status and eligibility.
-`workspace.tsx` resolves the shown status and comparison band from that map on
-every viewport, scheme, saved-variant, or evidence change.
+ready view under the same key. Missing or partial matching evidence means the
+workspace must retain the selected entry or saved variant's fallback status and
+eligibility independently. `workspace.tsx` consumes the shared resolution on
+every viewport, scheme, saved-variant, or evidence change and passes its
+effective scheme to the controls and comparison presentation.
 
 `css.ts` concatenates the standalone stylesheet. Split string modules preserve
 its exact bytes. The package build scopes an embedded stylesheet separately and
