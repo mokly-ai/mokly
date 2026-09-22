@@ -126,6 +126,13 @@ validate and normalize `tag:` terms;
 controlled changes remain proposals until supplied back. Incoming props do not
 echo callbacks. Remount to change control mode.
 
+The selected color scheme remains host-visible even when the chosen screen or
+saved variant has only a Light render. In that case the preview keeps the Dark
+selection and Light-only label, while status, change marks, and comparisons use
+the effective Light view. If ready evidence does not cover every shown view,
+the Viewer preserves the selected entry or variant's published status and
+comparison eligibility independently.
+
 `markers` supplies unique host marker ids, exact instance references and React
 content. `onMarkerChange` reports each marker as visible, hidden or unavailable
 without exposing geometry. Marker content is pointer-inert unless it opts in.

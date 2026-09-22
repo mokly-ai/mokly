@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  aggregateViewStatus,
   shownComparisonEligible,
-  shownStatus,
   type ViewState,
 } from "../packages/viewer/dist/shell/view_status.js";
 
@@ -21,63 +21,36 @@ test("single-view status follows the selected view state", () => {
     ["unchanged", "Unmodified"],
     ["ignored-only", "Unmodified"],
   ] as const)
-    assert.equal(
-      shownStatus([view(state)], "mobile", "light", "Added"),
-      expected,
-    );
+    assert.equal(aggregateViewStatus([view(state)]), expected);
 });
 
 test("Both aggregates Changed, Added, Removed, then Unmodified", () => {
   assert.equal(
-    shownStatus(
-      [view("removed", "mobile"), view("changed", "desktop")],
-      "both",
-      "light",
-      undefined,
-    ),
+    aggregateViewStatus([
+      view("removed", "mobile"),
+      view("changed", "desktop"),
+    ]),
     "Changed",
   );
   assert.equal(
-    shownStatus(
-      [view("removed", "mobile"), view("added", "desktop")],
-      "both",
-      "light",
-      undefined,
-    ),
+    aggregateViewStatus([view("removed", "mobile"), view("added", "desktop")]),
     "Added",
   );
   assert.equal(
-    shownStatus(
-      [view("unchanged", "mobile"), view("removed", "desktop")],
-      "both",
-      "light",
-      undefined,
-    ),
+    aggregateViewStatus([
+      view("unchanged", "mobile"),
+      view("removed", "desktop"),
+    ]),
     "Removed",
   );
   assert.equal(
-    shownStatus(
-      [view("ignored-only", "mobile"), view("unchanged", "desktop")],
-      "both",
-      "light",
-      undefined,
-    ),
+    aggregateViewStatus([
+      view("ignored-only", "mobile"),
+      view("unchanged", "desktop"),
+    ]),
     "Unmodified",
   );
-});
-
-test("missing evidence preserves the route-level fallback", () => {
-  assert.equal(shownStatus(undefined, "mobile", "light", "Changed"), "Changed");
-  assert.equal(shownStatus([], "both", "light", "Removed"), "Removed");
-  assert.equal(
-    shownStatus(
-      [view("changed", "mobile", "dark")],
-      "mobile",
-      "light",
-      "Added",
-    ),
-    "Added",
-  );
+  assert.equal(aggregateViewStatus([]), undefined);
 });
 
 test("comparison eligibility follows shown status and entry kind", () => {

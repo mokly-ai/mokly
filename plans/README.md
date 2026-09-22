@@ -3,8 +3,9 @@
 ## Active
 
 - [Screen Variants Follow-up](./screen-variants-follow-up.md) — deferred
-  design-catalogue conversion, five open review findings, and later navigation
-  ideas from PR #101; planned for a separate PR, with no implementation started.
+  design-catalogue conversion, two open review findings, two delivered
+  view-resolution fixes, and later navigation ideas from PR #101;
+  implementation is in progress on a separate branch.
 - [Co-Located Entry Discovery Follow-up](./co-located-entry-discovery-follow-up.md)
   — all deferred seventh/eighth-round findings, the latest entry-layout
   documentation finding, and the remaining follow-up tasks from PR #101;

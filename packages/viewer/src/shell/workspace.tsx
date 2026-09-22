@@ -17,7 +17,6 @@ import { useOptionalShellStore } from "./store_context.js";
 import type { ComparisonMode } from "./use_comparison.js";
 import { useWorkspaceData } from "./use_workspace_data.js";
 import { useWorkspaceUsage } from "./use_workspace_usage.js";
-import { shownComparisonEligible, shownStatus } from "./view_status.js";
 import { WorkspaceControls } from "./workspace_controls.js";
 import type { WorkspaceData } from "./workspace_data.js";
 import { WorkspaceEvidence } from "./workspace_evidence.js";
@@ -28,7 +27,10 @@ import { selectedVariantId } from "./workspace_selection.js";
 import { WorkspaceStage } from "./workspace_stage.js";
 import { WorkspaceUsage } from "./workspace_usage.js";
 import { WorkspaceVariantBar } from "./workspace_variant_bar.js";
-import { visibleWorkspaceViews } from "./workspace_views.js";
+import {
+  resolveWorkspaceView,
+  visibleWorkspaceViews,
+} from "./workspace_views.js";
 import { selectedChangedViews } from "./workspace_views_data.js";
 
 /** Render a routed screen or component with its evidence and inspection tools. */
@@ -61,10 +63,22 @@ export function ComponentWorkspace({
   );
   const viewport = store?.state.selection.viewport ?? "both";
   const colorScheme = store?.state.selection.colorScheme ?? "light";
-  const savedViews = useMemo(
-    () => visibleWorkspaceViews(data, variantId, viewport, colorScheme),
-    [colorScheme, data.views, variantId, viewport],
+  const resolvedView = useMemo(
+    () => resolveWorkspaceView(data, selection, viewport, colorScheme),
+    [
+      colorScheme,
+      data,
+      data.status,
+      data.views,
+      data.viewStates,
+      selection.comparisonEligible,
+      selection.error,
+      variant?.status,
+      variantId,
+      viewport,
+    ],
   );
+  const savedViews = resolvedView.views;
   const [comparisonMode, setComparisonMode] =
     useState<ComparisonMode>("current");
   const [loadedComparison, setLoadedComparison] = useState<
@@ -166,15 +180,6 @@ export function ComponentWorkspace({
     ...(selectedKey ? { selectedKey } : {}),
     views,
   });
-  const evidenceKey = entry.kind === "component" ? variantId : entry.id;
-  const currentStatus = shownStatus(
-    evidenceKey === undefined ? undefined : data.viewStates[evidenceKey],
-    viewport,
-    colorScheme,
-    variant?.status ?? data.status,
-  );
-  const comparisonEligible =
-    !selection.error && shownComparisonEligible(currentStatus, entry.kind);
   const target = { kind: "entry" as const, entry };
   const head = targetHead(catalogue, target);
   const preview = data.removed
@@ -223,6 +228,7 @@ export function ComponentWorkspace({
           <WorkspaceControls
             changedViews={changedViews}
             dark={catalogue.hasDarkFragments}
+            effectiveColorScheme={resolvedView.colorScheme}
             highlight={highlight}
           />
         }
@@ -232,11 +238,11 @@ export function ComponentWorkspace({
         status={
           <span
             className="mbk-entry-status"
-            data-status={currentStatus}
+            data-status={resolvedView.status}
             data-workspace-status=""
-            hidden={!currentStatus}
+            hidden={!resolvedView.status}
           >
-            {currentStatus}
+            {resolvedView.status}
           </span>
         }
       />
@@ -259,8 +265,9 @@ export function ComponentWorkspace({
             <RemovedPreviewStage data={preview} />
           ) : data.comparisons ? (
             <DiffScreen
+              effectiveColorScheme={resolvedView.colorScheme}
               component={entry.kind === "component"}
-              eligible={comparisonEligible}
+              eligible={resolvedView.comparisonEligible}
               onComparisonChange={setLoadedComparison}
               onModeChange={setComparisonMode}
               route={entry.route}
