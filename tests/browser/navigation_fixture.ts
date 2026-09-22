@@ -20,6 +20,36 @@ export interface NavigationFixture {
   close(): Promise<void>;
 }
 
+/**
+ * A variant of Home deleted on this branch. Its retained `variantOf` keeps the
+ * Removed row inside the surviving parent's list instead of at the root.
+ */
+const REMOVED_HOME_VARIANT = {
+  ancestors: [
+    { id: "fixture", title: "Fixture" },
+    { id: "nested", title: "Nested" },
+  ],
+  entry: {
+    declaredDependencies: [],
+    dependencies: [],
+    description: "Home after the workspace was deleted",
+    fragments: {
+      desktop: "screens/home.variants/gone.desktop.html",
+      mobile: "screens/home.variants/gone.mobile.html",
+    },
+    id: "home-gone",
+    kind: "screen" as const,
+    navPath: ["Fixture", "Nested"],
+    relatedDocs: [],
+    route: "screens/home.variants/gone.html",
+    sourcePath: "entries/fixture.mockup.tsx",
+    title: "Workspace deleted",
+    useCaseIds: [],
+    variantOf: "home",
+    viewports: ["mobile" as const, "desktop" as const],
+  },
+};
+
 /** Build and serve the navigation/security browser fixture. */
 export async function startNavigationFixture(): Promise<NavigationFixture> {
   const fixture = await createFixture(navigationSource(), {
@@ -61,10 +91,11 @@ export async function startNavigationFixture(): Promise<NavigationFixture> {
       baseCommit: "a".repeat(40),
       changedRoutes: [
         "screens/extra.html",
-        "screens/home.html",
+        "screens/home.variants/error.html",
+        "screens/home.variants/gone.html",
         "user-flows/tour.html",
       ],
-      removedEntries: [],
+      removedEntries: [REMOVED_HOME_VARIANT],
     })),
     port: 0,
   });
@@ -115,7 +146,10 @@ export const mockups = [
   defineCollection({ ...metadata, childIds: ["nested"], description: "Fixture", id: "fixture", title: "Fixture" }),
   defineCollection({ ...metadata, childIds: ["home", "details", "tour"], description: "Nested", id: "nested", title: "Nested" }),
   defineCollection({ ...metadata, childIds: ["extra"], description: "Other", id: "other", title: "Other" }),
-  defineScreen({ ...metadata, description: "Home", desktop: <Home compact={false} />, id: "home", mobile: <Home compact />, route: "screens/home.html", title: "Home", useCaseIds: ["tour"] }),
+  defineScreen({ ...metadata, description: "Home", desktop: <Home compact={false} />, id: "home", mobile: <Home compact />, route: "screens/home.html", title: "Home", useCaseIds: ["tour"], variants: [
+    { description: "Home before any workspace exists", desktop: <main id="home-empty">Empty workspace</main>, id: "home-empty", mobile: <main id="home-empty">Empty workspace</main>, slug: "empty", title: "Empty workspace" },
+    { description: "Home after saving failed", desktop: <main id="home-error">Save failed</main>, id: "home-error", mobile: <main id="home-error">Save failed</main>, slug: "error", title: "Save failed" },
+  ] }),
   defineScreen({ ...metadata, description: "Details", desktop: <Details />, id: "details", mobile: <Details />, route: "screens/details.html", title: "Details", useCaseIds: ["tour"] }),
   defineScreen({ ...metadata, description: "Extra", desktop: <main>Extra</main>, id: "extra", mobile: <main>Extra</main>, route: "screens/extra.html", title: "Extra", useCaseIds: [] }),
   defineUseCase({ ...metadata, description: "Tour", id: "tour", route: "user-flows/tour.html", steps: [{ screenId: "home" }, { screenId: "details" }], title: "Tour" })

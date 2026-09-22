@@ -3,6 +3,8 @@ import fs from "node:fs/promises";
 import test from "node:test";
 
 import { readCatalogueChanges } from "../dist/server/component_changes.js";
+import type { CatalogueNode } from "../packages/viewer/dist/catalogue/types.js";
+import type { ManifestV5 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { readCatalogue } from "../packages/viewer/src/catalogue/reader.js";
 import { projectCatalogue } from "../src/catalogue/projection.js";
@@ -87,6 +89,90 @@ test("projection exposes real usage and attribution without private evidence", a
   );
 });
 
+test("projection exposes screen variants beneath their parent entry", async (t) => {
+  const fixture = await componentReviewFixture(t, (source) => source);
+  const parent = fixture.after.manifest.entries.find(
+    (entry): entry is CurrentManifestScreen => entry.kind === "screen",
+  );
+  assert.ok(parent);
+  const stem = parent.route.slice(0, -5);
+  const zeta: CurrentManifestScreen = {
+    ...structuredClone(parent),
+    description: "Zeta workspace",
+    fragments: {
+      desktop: `${stem}.variants/zeta.desktop.html`,
+      mobile: `${stem}.variants/zeta.mobile.html`,
+    },
+    id: `${parent.id}-zeta`,
+    route: `${stem}.variants/zeta.html`,
+    title: `${parent.title}, zeta`,
+    useCaseIds: [],
+    variantOf: parent.id,
+    ...(parent.darkFragments
+      ? {
+          darkFragments: {
+            desktop: `${stem}.variants/zeta.desktop.dark.html`,
+            mobile: `${stem}.variants/zeta.mobile.dark.html`,
+          },
+        }
+      : {}),
+  };
+  const alpha: CurrentManifestScreen = {
+    ...structuredClone(zeta),
+    description: "Alpha workspace",
+    fragments: {
+      desktop: `${stem}.variants/alpha.desktop.html`,
+      mobile: `${stem}.variants/alpha.mobile.html`,
+    },
+    id: `${parent.id}-alpha`,
+    route: `${stem}.variants/alpha.html`,
+    title: `${parent.title}, alpha`,
+    ...(zeta.darkFragments
+      ? {
+          darkFragments: {
+            desktop: `${stem}.variants/alpha.desktop.dark.html`,
+            mobile: `${stem}.variants/alpha.mobile.dark.html`,
+          },
+        }
+      : {}),
+  };
+  const model = projectCatalogue({
+    configPath: "mokly.config.ts",
+    catalogue: createCatalogue({
+      ...fixture.after.manifest,
+      entries: [...fixture.after.manifest.entries, zeta, alpha],
+    }),
+    changesStatus: "disabled",
+    comparisonUrl: null,
+    revision: { content: 0, evidence: 0 },
+  });
+
+  assert.equal(
+    model.screens.find(({ id }) => id === zeta.id)?.variantOf,
+    parent.id,
+  );
+  assert.deepEqual(
+    model.screens
+      .filter(({ id }) => [parent.id, zeta.id, alpha.id].includes(id))
+      .map(({ id }) => id),
+    [parent.id, zeta.id, alpha.id],
+  );
+  assert.deepEqual(findNode(model.tree.pages, parent.id), {
+    children: [
+      { id: zeta.id, kind: "entry" },
+      { id: alpha.id, kind: "entry" },
+    ],
+    id: parent.id,
+    kind: "entry",
+  });
+  const roundTrip = readCatalogue(JSON.parse(serializeCatalogue(model)));
+  assert.deepEqual(roundTrip, model);
+  assert.deepEqual(
+    findNode(roundTrip.tree.pages, parent.id),
+    findNode(model.tree.pages, parent.id),
+  );
+});
+
 test("public v1 fixture conforms and compatible readers ignore additive fields", async () => {
   const json = await fs.readFile(
     "docs/protocol/fixtures/catalogue-v1.json",
@@ -164,3 +250,22 @@ test("reader rejects unsafe paths, private extensions and broken known reference
     assert.throws(() => readCatalogue(value), String(mutate));
   }
 });
+
+function findNode(
+  nodes: readonly CatalogueNode[],
+  id: string,
+): CatalogueNode | undefined {
+  for (const node of nodes) {
+    if (node.id === id) return node;
+    if (node.kind === "collection") {
+      const nested = findNode(node.children, id);
+      if (nested) return nested;
+    }
+  }
+  return undefined;
+}
+
+type CurrentManifestScreen = Extract<
+  ManifestV5["entries"][number],
+  { kind: "screen" }
+>;

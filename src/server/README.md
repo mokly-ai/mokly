@@ -4,6 +4,32 @@ Serve publishes a validated catalogue, renders requested documents and exposes
 comparison snapshots. `serve.ts` owns single-process Serve; `serve_watched.ts`
 owns watchers, background work and the supervised HTTP child. `http.ts` and
 `child.ts` serve accepted inputs and never prepare historical baselines.
+`http_shutdown.ts` stops HTTP admission, ends live-update streams, and disconnects
+open clients before draining every owned service. Incomplete request headers or
+unfinished responses cannot keep shutdown waiting for the browser.
+`watch_events.ts` owns classification and serialized event handling;
+`watch_paths.ts` owns watch roots and pruning, including entry-glob traversal
+boundaries that retain each stable prefix without exempting its ignored
+descendants. Discovery and watching share one denied-directory policy below the
+relevant glob root: traversal uses the deepest containing root, and entry-file
+classification uses the deepest matching root. The glob itself defines every
+entry-file shape that can trigger rediscovery. Traversal also skips
+`review.outDir`. A denied leaf's directory status comes from watcher stats,
+else from its event kind, else from one stat that treats any error as a file.
+`addDir` and `unlinkDir` identify directories; `add`, `change`, and `unlink`
+identify files. Supplied stats avoid that stat, but traversal still reads export
+markers and ownership headers. Deleted matched files rebuild even when named
+`target`; existing and removed denied directories outrank user watch rules.
+Resource notifications coalesce by path with the latest descriptor.
+Discovery skips `review.outDir`, denied directories, and directories that vanish
+or are replaced mid-walk (`ENOENT` or `ENOTDIR`). Zero-match messages list denied
+and vanished paths together, including modules dropped during validation. Other
+read or projection failures report
+`config-invalid` with the repository-relative path and error code. Discovery
+projects repository and glob roots once per pass; Review output alone uses a
+lexical fallback if its projection fails. Source notifications
+are isolated at the gate: classifier failures are reported, that notification
+is dropped, and later notifications continue through the same watcher.
 
 GET/HEAD `/__mokly/catalogue.json` returns the public v1
 [read model](../catalogue/README.md) as JSON with `Cache-Control: no-store`.

@@ -12,6 +12,7 @@ import type {
   RunningServer,
   ServerOptions,
 } from "../dist/server/http_types.js";
+import { PlainServeReporter } from "../dist/server/reporter.js";
 import { serve } from "../dist/server/serve.js";
 import type {
   ProcessSupervisor,
@@ -47,29 +48,48 @@ test("package-owned watch rules precede broad consumer rules", async (context) =
     ".mokly-write-123/stage/screen.html",
   ]) {
     assert.equal(
-      classifyWatchPath(path.join(fixture.root, candidate), broad),
+      classifyWatchPath(
+        { path: path.join(fixture.root, candidate), kind: "change" },
+        broad,
+      ),
       "ignore",
       candidate,
     );
   }
   assert.equal(
-    classifyWatchPath(path.join(fixture.mockupsDir, "styles.css"), broad),
+    classifyWatchPath(
+      { path: path.join(fixture.mockupsDir, "styles.css"), kind: "change" },
+      broad,
+    ),
     "reload",
   );
   const nestedRenderer = path.join(fixture.root, "target/renderer.ts");
+  const nestedEntries = path.join(fixture.root, "dist/entries");
   const nestedSources: ResolvedConfig = {
     ...broad,
-    entriesDir: path.join(fixture.root, "dist/entries"),
+    entriesDir: nestedEntries,
+    entryGlobs: ["dist/entries/**/*.mockup.{ts,tsx}"],
+    entryModules: [path.join(nestedEntries, "screen.mockup.tsx")],
     renderer: nestedRenderer,
   };
   assert.equal(
     classifyWatchPath(
-      path.join(nestedSources.entriesDir, "screen.mockup.tsx"),
+      { path: path.join(nestedEntries, "screen.mockup.tsx"), kind: "change" },
       nestedSources,
     ),
     "rebuild",
   );
-  assert.equal(classifyWatchPath(nestedRenderer, nestedSources), "rebuild");
+  assert.equal(
+    classifyWatchPath(
+      { path: path.join(nestedEntries, "created.mockup.tsx"), kind: "change" },
+      nestedSources,
+    ),
+    "rebuild",
+  );
+  assert.equal(
+    classifyWatchPath({ path: nestedRenderer, kind: "change" }, nestedSources),
+    "rebuild",
+  );
 });
 
 test(
@@ -126,7 +146,10 @@ test(
       'export default { entriesDir: "entries", mockupsDir: "mockups", repoRoot: ".", watch: { debounceMs: 0, rules: [{ action: "reload", paths: ["mockups/static/**"] }] } };\n',
     );
     const config = await loadConfig(fixture.root);
-    assert.equal(classifyWatchPath(publicHtml, config), "reload");
+    assert.equal(
+      classifyWatchPath({ path: publicHtml, kind: "change" }, config),
+      "reload",
+    );
     const supervisor = new CountingSupervisor();
     const running = await serve(
       config,
@@ -146,6 +169,65 @@ test(
 
     await fs.promises.writeFile(publicHtml, "<!doctype html><p>After</p>\n");
     await waitFor(() => supervisor.updates === 1);
+  },
+);
+
+test(
+  "watched Serve reports classifier errors and processes later changes",
+  { timeout: 10_000 },
+  async (context) => {
+    const fixture = await createFixture();
+    await fs.promises.writeFile(
+      fixture.configPath,
+      'export default { entries: ["entries/**/*.mockup.{ts,tsx}"], mockupsDir: "mockups", repoRoot: ".", watch: { debounceMs: 0, rules: [{ action: "restart", paths: ["**/*.txt"] }] } };\n',
+    );
+    const config = await loadConfig(fixture.root);
+    const supervisor = new CountingSupervisor();
+    const diagnostics: string[] = [];
+    const running = await serve(
+      config,
+      { port: 0, watch: true },
+      {
+        configLoader: new FileSystemConfigLoader(),
+        outputStore: new FakeOutputStore(),
+        processSupervisorFactory: new CountingSupervisorFactory(supervisor),
+        reporter: new PlainServeReporter((value) => diagnostics.push(value)),
+        serverFactory: new UnusedServerFactory(),
+        watcherFactory: new ChokidarWatcherFactory(),
+      },
+    );
+    context.after(async () => {
+      await running.close();
+      await removeFixture(fixture);
+    });
+    const rejected = path.join(fixture.entriesDir, "unreadable.mockup.tsx");
+    const realpath = fs.realpathSync.native;
+    context.mock.method(fs.realpathSync, "native", (candidate: fs.PathLike) => {
+      if (candidate === rejected) {
+        const error = new Error(
+          "watch path unavailable",
+        ) as NodeJS.ErrnoException;
+        error.code = "EIO";
+        throw error;
+      }
+      return realpath(candidate);
+    });
+
+    await fs.promises.writeFile(rejected, "export const mockups = [];\n");
+    await waitFor(() =>
+      diagnostics.some((value) => value.includes("watch path unavailable")),
+    );
+    await fs.promises.writeFile(
+      path.join(fixture.root, "consumer-input.txt"),
+      "changed\n",
+    );
+    await waitFor(() => supervisor.restarts === 1);
+
+    assert.equal(
+      diagnostics.filter((value) => value.includes("watch path unavailable"))
+        .length,
+      1,
+    );
   },
 );
 

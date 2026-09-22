@@ -130,8 +130,11 @@ export function readHydrationDisclosures(
   doc: Document,
 ): Readonly<Record<string, boolean>> {
   return Object.fromEntries(
-    [...doc.querySelectorAll<HTMLDetailsElement>("[data-nav-disclosure]")]
-      .map((group) => [group.getAttribute("data-nav-disclosure"), group.open])
+    [...doc.querySelectorAll<HTMLElement>("[data-nav-disclosure]")]
+      .map((group) => [
+        group.getAttribute("data-nav-disclosure"),
+        disclosureOpen(group),
+      ])
       .filter((entry): entry is [string, boolean] => entry[0] !== null),
   );
 }
@@ -161,10 +164,10 @@ function rememberDisclosures(
   win: Window & typeof globalThis,
 ): void {
   const closed = [
-    ...doc.querySelectorAll<HTMLDetailsElement>("details[data-nav-disclosure]"),
+    ...doc.querySelectorAll<HTMLElement>("[data-nav-disclosure]"),
   ].flatMap((group) => {
     const key = group.getAttribute("data-nav-disclosure");
-    return !group.open && key && isDisclosureKey(key) ? [key] : [];
+    return !disclosureOpen(group) && key && isDisclosureKey(key) ? [key] : [];
   });
   try {
     win.localStorage.setItem(storageKey, JSON.stringify(closed));
@@ -179,12 +182,12 @@ function applyStoredDisclosures(
 ): void {
   const closed = storedClosedDisclosures(win);
   if (!closed) return;
-  for (const group of doc.querySelectorAll<HTMLDetailsElement>(
+  for (const group of doc.querySelectorAll<HTMLElement>(
     "[data-nav-disclosure]",
   )) {
     const key = group.getAttribute("data-nav-disclosure");
     if (!key || !isDisclosureKey(key)) continue;
-    group.open = !isDisclosureClosed(closed, key);
+    setDisclosureOpen(group, !isDisclosureClosed(closed, key));
   }
 }
 
@@ -218,7 +221,40 @@ function isDisclosureClosed(closed: ReadonlySet<string>, key: string): boolean {
 function isDisclosureKey(value: string): boolean {
   return (
     value.startsWith("collection:") ||
+    /^variants:(?:components|pages):[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value) ||
     value === "section:pages" ||
     value === "section:components"
   );
+}
+
+/** Read either a native group or a screen-variant list disclosure. */
+export function disclosureOpen(group: HTMLElement): boolean {
+  return group.hasAttribute("data-nav-variants")
+    ? !group.hidden
+    : (group as HTMLDetailsElement).open;
+}
+
+/** Apply one disclosure value to its container and associated button. */
+export function setDisclosureOpen(group: HTMLElement, open: boolean): void {
+  if (!group.hasAttribute("data-nav-variants")) {
+    (group as HTMLDetailsElement).open = open;
+    return;
+  }
+  group.hidden = !open;
+  const id = group.id;
+  const toggle = id
+    ? [
+        ...group.ownerDocument.querySelectorAll<HTMLElement>(
+          "[data-nav-variants-toggle]",
+        ),
+      ].find((candidate) => candidate.dataset["navVariantsToggle"] === id)
+    : undefined;
+  if (!toggle) return;
+  toggle.setAttribute("aria-expanded", String(open));
+  const label = toggle.getAttribute("data-nav-variants-label");
+  if (label)
+    toggle.setAttribute(
+      "aria-label",
+      `${open ? "Hide" : "Show"} variants of ${label}`,
+    );
 }

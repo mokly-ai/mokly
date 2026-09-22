@@ -19,6 +19,7 @@ interface TestEntry {
   id: string;
   kind: "collection" | "screen" | "use-case";
   title: string;
+  variantOf?: string;
 }
 
 test("hierarchy derives roots, children, parents, and ordered ancestors", () => {
@@ -52,6 +53,36 @@ test("hierarchy derives roots, children, parents, and ordered ancestors", () => 
   );
   assert.deepEqual(hierarchy.ancestorsById.get("home"), []);
   assert.deepEqual(hierarchy.ancestorsById.get("tour"), []);
+});
+
+test("hierarchy groups variants without treating their parent as an ancestor", () => {
+  const root = entry("root", "collection", "Root", ["welcome"]);
+  const welcome = entry("welcome", "screen", "Welcome");
+  const retry = {
+    ...entry("welcome-retry", "screen", "Retry"),
+    variantOf: "welcome",
+  };
+  const empty = {
+    ...entry("welcome-empty", "screen", "Empty"),
+    variantOf: "welcome",
+  };
+
+  const { hierarchy, issues } = analyzeHierarchy([root, welcome, retry, empty]);
+
+  assert.deepEqual(issues, []);
+  assert.deepEqual(
+    hierarchy.variantsById.get("welcome")?.map(({ id }) => id),
+    ["welcome-retry", "welcome-empty"],
+  );
+  assert.equal(hierarchy.variantParentById.get("welcome-empty"), welcome);
+  assert.deepEqual(
+    hierarchy.ancestorsById.get("welcome-empty")?.map(({ id }) => id),
+    ["root"],
+  );
+  assert.deepEqual(
+    hierarchy.roots.map(({ id }) => id),
+    ["root"],
+  );
 });
 
 test("hierarchy reports forest violations deterministically", () => {

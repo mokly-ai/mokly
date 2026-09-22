@@ -18,13 +18,39 @@ concurrency:
 jobs:
   repository:
     name: Repository
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 20
+    outputs:
+      node-24-version: ${{ steps.node.outputs.node-version }}
+      node-matrix: ${{ steps.profile.outputs.node-matrix }}
+      verification-runtimes: ${{ steps.profile.outputs.verification-runtimes }}
     steps:
       - name: Check out repository
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
         with:
           fetch-depth: 0
+      - name: Select Node verification profile
+        id: profile
+        env:
+          RELEASE_PULL_REQUEST: >-
+            ${{
+              github.event_name == 'pull_request' &&
+              github.event.pull_request.head.repo.full_name == github.repository &&
+              (
+                startsWith(github.event.pull_request.head.ref, 'release-please--') ||
+                contains(join(github.event.pull_request.labels.*.name, ','), 'autorelease:')
+              )
+            }}
+        run: |
+          if [ "$RELEASE_PULL_REQUEST" = "true" ]; then
+            echo 'node-matrix=["22.14.0","24"]' >> "$GITHUB_OUTPUT"
+            echo 'verification-runtimes=node-22.14.0,node-24' >> "$GITHUB_OUTPUT"
+          else
+            echo 'node-matrix=["22.14.0"]' >> "$GITHUB_OUTPUT"
+            echo 'verification-runtimes=node-22.14.0' >> "$GITHUB_OUTPUT"
+          fi
       - name: Set up Node.js
+        id: node
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 24
@@ -45,14 +71,15 @@ jobs:
   package:
     name: Package (Node ${{ matrix.node }})
     needs: [repository]
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        node: ["22.14.0", "24"]
+        node: ${{ fromJSON(needs.repository.outputs.node-matrix) }}
     steps:
       - name: Check out repository
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
         with:
           fetch-depth: 0
       - name: Read baseline dependency lockfile
@@ -63,7 +90,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
-          node-version: ${{ matrix.node }}
+          node-version: ${{ matrix.node == '24' && needs.repository.outputs.node-24-version || matrix.node }}
           package-manager-cache: false
           cache: npm
           cache-dependency-path: |
@@ -83,18 +110,19 @@ jobs:
   unit:
     name: Unit (Node ${{ matrix.node }}, shard ${{ matrix.shard }}/4)
     needs: [repository]
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        node: ["22.14.0", "24"]
+        node: ${{ fromJSON(needs.repository.outputs.node-matrix) }}
         shard: [1, 2, 3, 4]
     env:
       MOKLY_VERIFICATION_RUNTIME: node-${{ matrix.node }}
       MOKLY_VERIFICATION_REPORT: .context/verification-reports/unit-node-${{ matrix.node }}-shard-${{ matrix.shard }}-of-4.json
     steps:
       - name: Check out repository
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
         with:
           fetch-depth: 0
       - name: Read baseline dependency lockfile
@@ -105,7 +133,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
-          node-version: ${{ matrix.node }}
+          node-version: ${{ matrix.node == '24' && needs.repository.outputs.node-24-version || matrix.node }}
           package-manager-cache: false
           cache: npm
           cache-dependency-path: |
@@ -135,18 +163,19 @@ jobs:
   browser:
     name: Browser (Node ${{ matrix.node }}, shard ${{ matrix.shard }}/4)
     needs: [repository]
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        node: ["22.14.0", "24"]
+        node: ${{ fromJSON(needs.repository.outputs.node-matrix) }}
         shard: [1, 2, 3, 4]
     env:
       MOKLY_VERIFICATION_RUNTIME: node-${{ matrix.node }}
       MOKLY_VERIFICATION_REPORT: .context/verification-reports/browser-node-${{ matrix.node }}-shard-${{ matrix.shard }}-of-4.json
     steps:
       - name: Check out repository
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
         with:
           fetch-depth: 0
       - name: Read baseline dependency lockfile
@@ -157,7 +186,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
-          node-version: ${{ matrix.node }}
+          node-version: ${{ matrix.node == '24' && needs.repository.outputs.node-24-version || matrix.node }}
           package-manager-cache: false
           cache: npm
           cache-dependency-path: |
@@ -197,13 +226,14 @@ jobs:
     name: Native filesystem (${{ matrix.os }})
     needs: [repository]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest]
+        os: [blacksmith-6vcpu-macos-15, blacksmith-4vcpu-windows-2025]
     steps:
       - name: Check out repository
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
         with:
           fetch-depth: 0
       - name: Set up Node.js
@@ -230,14 +260,15 @@ jobs:
     name: Required CI
     if: always()
     needs: [repository, package, unit, browser, native]
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 20
     steps:
       - name: Check out report validator
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
-          node-version: 24
+          node-version: ${{ needs.repository.outputs.node-24-version }}
           package-manager-cache: false
       - name: Download shard evidence
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
@@ -258,4 +289,6 @@ jobs:
           test "$BROWSER_RESULT" = success
           test "$NATIVE_RESULT" = success
       - name: Require complete shard evidence
-        run: node scripts/verification/aggregate.mjs --reports .context/downloaded-verification --commit "${GITHUB_SHA}"
+        env:
+          EXPECTED_RUNTIMES: ${{ needs.repository.outputs.verification-runtimes }}
+        run: node scripts/verification/aggregate.mjs --reports .context/downloaded-verification --commit "${GITHUB_SHA}" --runtimes "$EXPECTED_RUNTIMES"

@@ -17,6 +17,7 @@ import { useOptionalShellStore } from "./store_context.js";
 import type { ComparisonMode } from "./use_comparison.js";
 import { useWorkspaceData } from "./use_workspace_data.js";
 import { useWorkspaceUsage } from "./use_workspace_usage.js";
+import { shownComparisonEligible, shownStatus } from "./view_status.js";
 import { WorkspaceControls } from "./workspace_controls.js";
 import type { WorkspaceData } from "./workspace_data.js";
 import { WorkspaceEvidence } from "./workspace_evidence.js";
@@ -28,6 +29,7 @@ import { WorkspaceStage } from "./workspace_stage.js";
 import { WorkspaceUsage } from "./workspace_usage.js";
 import { WorkspaceVariantBar } from "./workspace_variant_bar.js";
 import { visibleWorkspaceViews } from "./workspace_views.js";
+import { selectedChangedViews } from "./workspace_views_data.js";
 
 /** Render a routed screen or component with its evidence and inspection tools. */
 export function ComponentWorkspace({
@@ -52,6 +54,11 @@ export function ComponentWorkspace({
   );
   const variant = selection.variant;
   const variantId = variant?.value.id;
+  const changedViews = selectedChangedViews(
+    entry,
+    data.changedViews,
+    variantId,
+  );
   const viewport = store?.state.selection.viewport ?? "both";
   const colorScheme = store?.state.selection.colorScheme ?? "light";
   const savedViews = useMemo(
@@ -159,6 +166,15 @@ export function ComponentWorkspace({
     ...(selectedKey ? { selectedKey } : {}),
     views,
   });
+  const evidenceKey = entry.kind === "component" ? variantId : entry.id;
+  const currentStatus = shownStatus(
+    evidenceKey === undefined ? undefined : data.viewStates[evidenceKey],
+    viewport,
+    colorScheme,
+    variant?.status ?? data.status,
+  );
+  const comparisonEligible =
+    !selection.error && shownComparisonEligible(currentStatus, entry.kind);
   const target = { kind: "entry" as const, entry };
   const head = targetHead(catalogue, target);
   const preview = data.removed
@@ -205,6 +221,7 @@ export function ComponentWorkspace({
       <ScreenHead
         action={
           <WorkspaceControls
+            changedViews={changedViews}
             dark={catalogue.hasDarkFragments}
             highlight={highlight}
           />
@@ -215,11 +232,11 @@ export function ComponentWorkspace({
         status={
           <span
             className="mbk-entry-status"
-            data-status={data.status}
+            data-status={currentStatus}
             data-workspace-status=""
-            hidden={!data.status}
+            hidden={!currentStatus}
           >
-            {data.status}
+            {currentStatus}
           </span>
         }
       />
@@ -243,7 +260,7 @@ export function ComponentWorkspace({
           ) : data.comparisons ? (
             <DiffScreen
               component={entry.kind === "component"}
-              eligible={selection.comparisonEligible}
+              eligible={comparisonEligible}
               onComparisonChange={setLoadedComparison}
               onModeChange={setComparisonMode}
               route={entry.route}

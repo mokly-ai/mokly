@@ -18,7 +18,11 @@ export async function prepareLiveRuntime(
 ): Promise<ComponentRuntime> {
   return timeAsync("catalogue.prepare-index", async () => {
     const graph = await loadConsumerGraph(config);
-    config = { ...config, sourceFiles: graph.sourceFiles };
+    config = {
+      ...config,
+      entryModules: graph.entrySources,
+      sourceFiles: graph.sourceFiles,
+    };
     const registry = prepareRegistry(graph.definitions, config);
     const manifest = createCatalogueIndex(
       registry.entries,

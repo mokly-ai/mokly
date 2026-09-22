@@ -93,12 +93,17 @@ fails for:
 - missing `lightStylesheets` / `darkStylesheets` files, or a stylesheet path one
   rule would link twice into the same fragment;
 - invalid or colliding `darkFragments` manifest routes;
-- stale, missing, or proven-orphan generated output in committed mode;
+- stale, missing, proven-orphan, or unclaimed generated output in committed
+  mode; unclaimed means Mokly-headered HTML whose owner is outside every
+  configured entry-glob prefix and the current source inventory;
 - malformed Review-ignore markers or material keys;
 - protected-source or source-inventory violations.
 
-The failure report groups problems by class and tells the author whether to run
-`mokly build` or edit source/config. `check` never rewrites output.
+The committed failure report groups missing, stale, orphan, and unclaimed paths.
+Run `mokly build` for the first three. Build does not alter unclaimed files;
+delete them or restore their source under a configured entry glob. Consumer HTML
+without a valid Mokly ownership header is authored public content and is not an
+unclaimed-file error. `check` never rewrites output.
 
 ## Catalogue And Routes
 
@@ -264,7 +269,61 @@ rendered and persisted identities. A collection projected into a section uses
 independent state. Labels remain presentation only. Stored pre-section
 `collection:<id>` keys apply to either projection during migration; obsolete
 `legacy:` and label-path keys are ignored while valid disclosure keys remain
-effective.
+effective. The [screen variants contract](./mokly-screen-variants.md) adds
+`variants:<section>:<parent id>` for the variant list a screen row discloses,
+persisted, restored, and collapsed beside the collection keys. That list is a
+container rather than a `<details>`, because the row beside it is a link and
+cannot also be a summary; its `hidden` state and its button's `aria-expanded`
+carry the same disclosure the collection keys carry, and the button's
+accessible name follows the state. When search or the Changes filter hides a
+parent row, it hides the entire leaf container, so no disclosure button remains
+visible or focusable without its row; the container reappears with the row. A
+parent row whose list holds a changed route carries `data-changed-variants`,
+the aggregate mark that keeps the group visible under the Changes filter
+without claiming the parent itself changed.
+The stylesheet draws that attribute and `data-changed` as the same trailing
+dot, and reveals the row's visually hidden change wording to assistive
+technology, so a background evidence refresh moves the mark by toggling the
+attributes alone. A Removed row is never marked. Activating a parent row that
+carries only the aggregate mark while the Changes filter is selected navigates
+to the first changed variant row its list still shows.
+
+Per-view change evidence drives the status beside the title and the comparison
+band, so both describe the shown view rather than the route-wide result. With
+one viewport and one scheme selected, `changed`, `added`, and `removed` map to
+Changed, Added, and Removed; `unchanged` and `ignored-only` map to Unmodified.
+While Both is selected, the shown status is Changed if any shown view is
+Changed, else Added if any is Added, else Removed if any is Removed, else
+Unmodified. Comparison eligibility follows the shown status under the existing
+kind rule: Changed, or Removed for a component saved variant. If neither a ready
+result nor screen-view evidence exists for the entry, route-level status and
+eligibility remain in force. Switching viewport, scheme, or saved variant
+recomputes both without a page load, and a background evidence refresh does the
+same.
+
+The workspace publishes the changed views in its serialized data. Each view
+control carries a mark for changed views the reader cannot currently see: the
+theme control for the other scheme and the viewport control for the other
+viewport. Both shows every viewport, so its control is never marked. The 6px
+accent dot has a visually hidden description named through `aria-describedby`,
+keeping it distinct from the pressed state and independent of color. The
+details inspector lists the same views as `Changed views`, in mobile-before-
+desktop and light-before-dark order, and hides the row while nothing is named.
+The marks and row point to the changed views when the shown view is Unmodified.
+A light-only catalogue has no scheme control or scheme mark. For a component,
+this evidence describes the selected saved variant and changes with that
+selection.
+
+Opening a changed row while the Changes filter is selected lands on the first
+changed view instead of the sticky selection. Arriving from the filter is an
+explicit signal rather than a guess: activating the row records one
+session-scoped intent naming the destination, and the destination workspace
+reads and clears that intent as it installs, landing only when the intent names
+the page being installed. A URL that names `viewport` or `scheme` is an
+explicit request and wins outright. Because the intent is consumed once, a
+direct URL, an All-filter activation, Back, Forward, and a reload all keep the
+sticky selection. A light-only catalogue clamps the requested scheme to light,
+so it never lands on dark.
 
 A catalogue with dark fragments offers a `Light | Dark` scheme switch; a
 light-only catalogue offers none. One switch renders in the top bar and one in

@@ -7,8 +7,8 @@ application product designs.
 
 Navigation follows the
 [design mockup links contract](../../docs/protocol/mokly-design-links.md).
-The 24 artboards remain static documents, with native links between their
-canonical states in both viewport variants.
+The 40 Browse and Changes artboards remain static documents, with native links
+between their canonical states in both viewport variants.
 
 The `Design` navigation group holds the approved mockups for Mokly's own
 catalogue shell and Changes controls. Implementation notes for those mockups live here and
@@ -44,6 +44,24 @@ in each entry's description and rationale, never inside the rendered screens:
 - The dark view compare screen shows the same `Welcome` comparison as the
   changed screen, in its dark view. The normal scheme control changes the
   comparison in place, while the catalogue shell remains light.
+- The screen variant artboards depict `Welcome` owning two variants, `Empty
+workspace` and `Save failed`. Only `Empty workspace` has a design destination;
+  `Save failed` is selected by the Changes artboards that own it. The variant
+  rows come from the static navigation fixture in `parts/nav_data.ts`, which the
+  shared catalogue-navigation samples reuse, so the saved samples and the
+  in-screen trees stay aligned. The example Welcome screen now authors the
+  `Empty workspace` state as `example-welcome-empty`; `Save failed` remains a
+  design-only comparison scenario until its Changes milestone lands.
+- A variant's inspector shows the metadata it inherits from its parent, because
+  a variant inherits the parent's address, schemes, dependencies, tags, and
+  related docs. It supplies its own title, description, render, and any
+  reciprocal flow membership; omitted `useCaseIds` defaults to an empty list.
+  The removed variant has its own recorded details, like every removed screen.
+- The changed-views artboard records a direct or All-filter arrival at `Welcome`
+  while its shown light view is unmodified: the change is confined to the dark
+  views, so the theme control and the viewport dropdown carry a mark and the
+  details list them. Color scheme and viewport stay view axes and never become
+  variants.
 - The `forms` and `onboarding` tags are synthetic fixture labels that carry no
   product meaning: the Welcome entry declares both and the Details entry
   declares `forms` in their authored metadata, which is why the `tag:forms`

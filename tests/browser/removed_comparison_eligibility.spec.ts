@@ -54,10 +54,10 @@ test.beforeAll(async () => {
       },
     },
   });
+  fixture.beforeRemove(() => server.close());
 });
 
 test.afterAll(async () => {
-  await server?.close();
   for (const dispose of cleanup.reverse()) await dispose();
 });
 

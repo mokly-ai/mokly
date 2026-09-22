@@ -19,6 +19,7 @@ const resultVariables = [
 ] as const;
 
 interface WorkflowStep {
+  id?: string;
   name?: string;
   run?: string;
   uses?: string;
@@ -29,11 +30,13 @@ interface WorkflowJob {
   if?: string;
   name?: string;
   needs?: readonly string[];
+  outputs?: Readonly<Record<string, string>>;
   steps: readonly WorkflowStep[];
   strategy?: {
     "fail-fast"?: boolean;
-    matrix: Readonly<Record<string, readonly (string | number)[]>>;
+    matrix: Readonly<Record<string, readonly (string | number)[] | string>>;
   };
+  "timeout-minutes"?: number;
 }
 
 interface Workflow {
@@ -69,6 +72,8 @@ test("CI shards complete verification behind one prerequisite", async () => {
   assert.ok(browser);
   assert.ok(native);
   assert.ok(required);
+  for (const job of Object.values(workflow.jobs))
+    assert.equal(job["timeout-minutes"], 20);
   assert.deepEqual(required.needs, [
     "repository",
     "package",
@@ -80,16 +85,18 @@ test("CI shards complete verification behind one prerequisite", async () => {
   assert.equal(required.if, "always()");
   for (const job of [packageJob, unit, browser, native])
     assert.deepEqual(job.needs, ["repository"]);
-  assert.deepEqual(packageJob.strategy?.matrix.node, ["22.14.0", "24"]);
+  const selectedNodeMatrix =
+    "${{ fromJSON(needs.repository.outputs.node-matrix) }}";
+  assert.equal(packageJob.strategy?.matrix.node, selectedNodeMatrix);
   for (const job of [unit, browser]) {
     assert.equal(job.strategy?.["fail-fast"], false);
-    assert.deepEqual(job.strategy?.matrix.node, ["22.14.0", "24"]);
+    assert.equal(job.strategy?.matrix.node, selectedNodeMatrix);
     assert.deepEqual(job.strategy?.matrix.shard, [1, 2, 3, 4]);
   }
   assert.equal(native.strategy?.["fail-fast"], false);
   assert.deepEqual(native.strategy?.matrix.os, [
-    "macos-latest",
-    "windows-latest",
+    "blacksmith-6vcpu-macos-15",
+    "blacksmith-4vcpu-windows-2025",
   ]);
   assert.ok(
     repository.steps.some((step) =>
@@ -152,6 +159,36 @@ test("CI shards complete verification behind one prerequisite", async () => {
   assertPinnedActions(workflow);
 });
 
+test("CI resolves Node 24 once for every dependent job", async () => {
+  const workflow = parse(await workflowSource()) as Workflow;
+  const repository = workflow.jobs.repository;
+  assert.ok(repository);
+  const resolver = repository.steps.find((step) =>
+    step.uses?.startsWith("actions/setup-node@"),
+  );
+  assert.ok(resolver?.id, "the prerequisite must expose its resolved runtime");
+  assert.equal(resolver.with?.["node-version"], 24);
+  assert.equal(
+    repository.outputs?.["node-24-version"],
+    `\${{ steps.${resolver.id}.outputs.node-version }}`,
+  );
+  for (const name of ["package", "unit", "browser", "required"]) {
+    const job = workflow.jobs[name];
+    assert.ok(job, name);
+    assert.ok(job.needs?.includes("repository"), name);
+    const setup = job.steps.find((step) =>
+      step.uses?.startsWith("actions/setup-node@"),
+    );
+    assert.equal(
+      setup?.with?.["node-version"],
+      name === "required"
+        ? "${{ needs.repository.outputs.node-24-version }}"
+        : "${{ matrix.node == '24' && needs.repository.outputs.node-24-version || matrix.node }}",
+      `${name} must reuse the prerequisite's exact Node 24 version`,
+    );
+  }
+});
+
 test("Required CI fails closed for every prerequisite result", async (context) => {
   const source = await workflowSource();
   const workflow = parse(source) as Workflow;
@@ -209,7 +246,7 @@ function assertPinnedActions(workflow: Workflow): void {
 
 function assertFullHistoryCheckout(job: WorkflowJob): void {
   const checkout = job.steps.find((step) =>
-    step.uses?.startsWith("actions/checkout@"),
+    step.uses?.startsWith("useblacksmith/checkout@"),
   );
   assert.ok(checkout);
   assert.equal(checkout.with?.["fetch-depth"], 0);

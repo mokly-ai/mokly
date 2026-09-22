@@ -1,43 +1,24 @@
 // The served collapsible details inspector: a native <details> bar above a
 // two-column body with prose on the left and metadata rows on the right —
-// populated from the manifest entry for the selected route: description,
-// rationale, source and generated paths, declared tags, related docs,
-// dependencies, and the use cases a screen belongs to. The tag chips are the
-// one interactive metadata row: the Browse client turns a chip into the
-// matching `tag:` search term.
-
-import type { ReactNode } from "react";
+// populated from the manifest entry for the selected route.
 
 import type { ColorScheme } from "../data/axes.js";
-import { catalogueViewHref } from "../navigation/delivery.js";
-import type { ManifestScreen, ManifestUseCase } from "../registry/types.js";
+import type { ManifestScreen } from "../registry/types.js";
 
 import type { Catalogue } from "./catalogue.js";
-import { ChevronIcon, FlowIcon } from "./icons.js";
+import {
+  ChangedViewsRow,
+  MetaRow,
+  PathChips,
+  TagChips,
+  UsedByChips,
+  VariantChips,
+  VariantOfChip,
+} from "./details_rows.js";
+import { ChevronIcon } from "./icons.js";
 import { useOptionalShellStore } from "./store_context.js";
-import { TagChip } from "./tags.js";
 import type { RoutedEntry, RouteTarget } from "./target.js";
-
-function MetaRow(props: { children: ReactNode; label: string }) {
-  return (
-    <div className="mbk-meta-row">
-      <span className="mbk-meta-k">{props.label}</span>
-      <span className="mbk-meta-v">{props.children}</span>
-    </div>
-  );
-}
-
-function PathChips(props: { values: readonly string[] }) {
-  return (
-    <span className="mbk-chips">
-      {props.values.map((value) => (
-        <code className="mbk-code" key={value}>
-          {value}
-        </code>
-      ))}
-    </span>
-  );
-}
+import type { ChangedView } from "./view_marks.js";
 
 /** Generated fragment routes for a screen, dark renders after the light ones. */
 function generatedPaths(screen: ManifestScreen): string[] {
@@ -56,59 +37,9 @@ function schemeNames(screen: ManifestScreen): string {
   return schemes.join(", ");
 }
 
-/**
- * The tags an entry declares. Each chip is a control: the Browse client enters
- * `tag:<tag>` in the search field for it, so an unenhanced page still reads the
- * tags as text.
- */
-function TagChips(props: { values: readonly string[] }) {
-  if (props.values.length === 0) {
-    return null;
-  }
-  return (
-    <MetaRow label="Tags">
-      <span className="mbk-chips">
-        {props.values.map((tag) => (
-          <TagChip key={tag} tag={tag} />
-        ))}
-      </span>
-    </MetaRow>
-  );
-}
-
-function UsedByChips(props: {
-  catalogue: Catalogue;
-  useCaseIds: readonly string[];
-}) {
-  const useCases = props.useCaseIds
-    .map((id) => props.catalogue.byId.get(id))
-    .filter(
-      (entry): entry is ManifestUseCase =>
-        entry !== undefined && entry.kind === "use-case",
-    );
-  if (useCases.length === 0) {
-    return null;
-  }
-  return (
-    <MetaRow label="Used by">
-      <span className="mbk-chips">
-        {useCases.map((useCase) => (
-          <a
-            className="mbk-chip flow"
-            href={catalogueViewHref(useCase.route)}
-            key={useCase.id}
-          >
-            <FlowIcon size={11} />
-            {useCase.title}
-          </a>
-        ))}
-      </span>
-    </MetaRow>
-  );
-}
-
 export function EntryDetailsBody(props: {
   catalogue: Catalogue;
+  changedViews?: readonly ChangedView[];
   entry: RoutedEntry;
 }) {
   const entry = props.entry;
@@ -142,6 +73,9 @@ export function EntryDetailsBody(props: {
         {entry.kind === "screen" && props.catalogue.hasDarkFragments ? (
           <MetaRow label="Schemes">{schemeNames(entry)}</MetaRow>
         ) : null}
+        {entry.kind === "screen" || entry.kind === "component" ? (
+          <ChangedViewsRow views={props.changedViews ?? []} />
+        ) : null}
         {props.catalogue.removedEntries.find(
           (removed) => removed.entry.route === entry.route,
         ) ? (
@@ -152,6 +86,8 @@ export function EntryDetailsBody(props: {
               .join(" › ")}
           </MetaRow>
         ) : null}
+        <VariantOfChip catalogue={props.catalogue} entry={entry} />
+        <VariantChips catalogue={props.catalogue} entry={entry} />
         <TagChips values={entry.tags ?? []} />
         {entry.relatedDocs.length > 0 ? (
           <MetaRow label="Related docs">

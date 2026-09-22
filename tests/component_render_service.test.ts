@@ -17,7 +17,7 @@ test("private controls rerender actual consumer code, keep immutable bundles and
   const runtime = componentRuntime(fixture.after);
   assert.equal(new Map(runtime.outputs).has(MANIFEST_NAME), false);
   const service = new ComponentRenderService(runtime);
-  t.after(() => service.close());
+  fixture.beforeRemove(() => service.close());
   const baseline = await files(fixture.root);
   await fs.writeFile(fixture.entryPath, "invalid candidate source");
   const request = {
@@ -68,7 +68,7 @@ test("render HTTP validates authority, body limits and methods; memory documents
     port: 0,
     componentRuntime: runtime,
   });
-  t.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
   const reactResponse = await fetch(
     `${server.url}/view/components/action.html`,
   );
@@ -192,7 +192,7 @@ test("a running server can attach the retained component runtime after readiness
     base: "main",
     port: 0,
   });
-  t.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
 
   const before = await (
     await fetch(`${server.url}/view/components/action.html`)

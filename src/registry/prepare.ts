@@ -12,6 +12,7 @@ import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 
 import { problem } from "./entry_metadata.js";
+import { orderEntriesWithVariants } from "./entry_order.js";
 import { validateEntry } from "./entry_validation.js";
 import type { PreparedRegistry, RegistryViolation } from "./prepared_types.js";
 import {
@@ -19,21 +20,26 @@ import {
   duplicateViolations,
 } from "./relationships.js";
 
-/** Validate loaded values and prepare stable source-attributed entries. */
+/**
+ * Validate loaded values and prepare stable source-attributed entries. Valid
+ * sibling variants follow their parent in authored order; a variant without a
+ * uniquely valid root-screen parent stays in route/id order for validation.
+ */
 export function prepareRegistry(
   values: readonly unknown[],
   config: ResolvedConfig,
 ): PreparedRegistry {
   const violations: RegistryViolation[] = [];
   const entries: ResolvedRegistryEntry[] = [];
-  values.forEach((value, index) => {
+  const flattened = values.flatMap((value) =>
+    Array.isArray(value) ? value : [value],
+  );
+  flattened.forEach((value, index) => {
     if (!isDefinition(value)) {
       violations.push({
         code: "invalid-definition",
         message: `exported definition #${index + 1} is not a registry definition`,
-        sourceRelativePath: toPosixPath(
-          path.relative(config.repoRoot, config.entriesDir),
-        ),
+        sourceRelativePath: entryGlobLabel(config),
       });
       return;
     }
@@ -60,23 +66,31 @@ export function prepareRegistry(
       }
     } else entries.push(entry);
   });
-  entries.sort(compareEntries);
+  const orderedEntries = orderEntriesWithVariants(entries, (entry) => entry);
   violations.push(
-    ...duplicateViolations(entries, "id"),
-    ...duplicateViolations(entries, "route"),
-    ...crossReferenceViolations(entries),
+    ...duplicateViolations(orderedEntries, "id"),
+    ...duplicateViolations(orderedEntries, "route"),
+    ...crossReferenceViolations(orderedEntries),
   );
   if (entries.length === 0) {
     violations.push({
       code: "empty-registry",
       message: "no registry definitions were exported",
-      sourceRelativePath: toPosixPath(
-        path.relative(config.repoRoot, config.entriesDir),
-      ),
+      sourceRelativePath: entryGlobLabel(config),
     });
   }
   if (violations.length > 0) throw invalidRegistry(violations);
-  return { byId: new Map(entries.map((entry) => [entry.id, entry])), entries };
+  return {
+    byId: new Map(orderedEntries.map((entry) => [entry.id, entry])),
+    entries: orderedEntries,
+  };
+}
+
+/** Label registry-wide violations with the configured entry globs. */
+function entryGlobLabel(config: ResolvedConfig): string {
+  return config.entriesDir
+    ? toPosixPath(path.relative(config.repoRoot, config.entriesDir))
+    : config.entryGlobs.join(", ");
 }
 
 function isDefinition(value: unknown): value is RegistryDefinition {
@@ -91,23 +105,6 @@ function isDefinition(value: unknown): value is RegistryDefinition {
     kind === "use-case" ||
     kind === "component"
   );
-}
-
-function compareEntries(
-  left: ResolvedRegistryEntry,
-  right: ResolvedRegistryEntry,
-): number {
-  const leftRoute = left.kind === "collection" ? "" : left.route;
-  const rightRoute = right.kind === "collection" ? "" : right.route;
-  return leftRoute < rightRoute
-    ? -1
-    : leftRoute > rightRoute
-      ? 1
-      : left.id < right.id
-        ? -1
-        : left.id > right.id
-          ? 1
-          : 0;
 }
 
 function invalidRegistry(violations: readonly RegistryViolation[]): MoklyError {

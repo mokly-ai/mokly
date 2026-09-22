@@ -2,9 +2,11 @@
 
 ## Delivery Status
 
-Implemented alongside [Pages in the catalogue](./mokly-pages.md).
-Catalogue impact and removed-entry metadata are independent of the visual
-[comparison result](./mokly-changes.md). Verification is tracked in
+Implemented alongside [Pages in the catalogue](./mokly-pages.md), with removed
+screen-variant metadata and publication implemented through Milestone 4 of the
+[screen variants plan](../../plans/screen-variants.md). Catalogue impact and
+removed-entry metadata are independent of the visual
+[comparison result](./mokly-changes.md). Page verification is tracked in
 [Unified Catalogue Pages](../../plans/unified-catalogue-pages.md). Baseline
 documents, ancestry, and delivery descriptors for removed pages are implemented
 by the [removed content previews plan](../../plans/removed-content-previews.md).
@@ -47,7 +49,13 @@ and tags. Historical screen readers normalize older supported shapes first;
 pages enter `removedEntries` only from v5 or the historical page-v4 format with a real catalogue ID.
 `ancestors` is the baseline's root-to-parent collection path, captured before
 current hierarchy lookup. It never depends on a surviving current parent or on
-serialized `navPath` labels.
+serialized `navPath` labels. A removed variant screen retains its baseline
+`variantOf` in the entry DTO and its parent's collection ancestry, so the
+shell can place its Removed row under a surviving parent as the
+[screen variants contract](./mokly-screen-variants.md) specifies; when the
+parent is also removed, each is its own removed entry. `variantOf` is not a
+parallel snapshot field: retaining the complete baseline screen DTO preserves
+it on schema-v5 baselines, while historical v3/v4 screens simply omit it.
 
 `changedRoutes` is the sorted, unique union of affected current routed entries
 and the selected removed-entry routes. Current route attribution keeps the
@@ -76,6 +84,12 @@ current routed entry. Sort removed entries by canonical route, then ID. Current
 route ownership always wins, including a different entry kind reusing a route.
 Never attach a removed-state view to a current route.
 
+A removed screen variant follows these same selection and precedence rules.
+Its relationship does not make it subordinate for selection: deleting only the
+variant yields one removed entry, while deleting both parent and variant yields
+one removed entry for each. A surviving parent does not claim or suppress the
+variant's retained route or ID redirect.
+
 A current ID also wins its `/id` destination. When the same ID moves to a new
 route, retain the old route's removed row/view if that route is free, but omit
 its historical ID redirect. Removed rows link by their old route, not by an ID
@@ -102,7 +116,12 @@ historical folder, extra App root, or expandable Removed group.
 
 Removed-page rows are hidden from All. Preserve existing removed-screen
 navigation visibility and comparison behavior; this page rule does not narrow
-those screen features. Search by ID/title/route/tags and tag filtering use the
+those screen features. A removed screen variant is the one screen exception to
+the flat root-level placement: while its `variantOf` still names a current
+screen, its Removed row belongs inside that parent's variant list, after the
+parent's current variants, and is hidden from All like a removed page. A
+parent with no current variants discloses the list for it. Once the parent is
+gone, the variant takes the ordinary flat row. Search by ID/title/route/tags and tag filtering use the
 baseline metadata, with the same matching rules as current leaves. The Changes
 count includes each selected removed route once. Current home totals and the
 current tag picker remain based on current entries.

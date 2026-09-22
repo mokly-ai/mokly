@@ -16,11 +16,3 @@ export function walkFiles(root: string): string[] {
     })
     .sort((left, right) => left.localeCompare(right));
 }
-
-/** Discover structured registry source modules. */
-export function discoverEntryModules(entriesDir: string): string[] {
-  return walkFiles(entriesDir).filter(
-    (candidate) =>
-      candidate.endsWith(".mockup.ts") || candidate.endsWith(".mockup.tsx"),
-  );
-}

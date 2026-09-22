@@ -19,11 +19,15 @@ your own theme from the color scheme in your renderer.
 ```ts
 export default defineConfig({
   colorSchemes: ["light", "dark"],
-  entriesDir: "docs/mockups/entries",
+  entries: ["src/**/*.mockup.{ts,tsx}"],
   mockupsDir: "docs/mockups/generated",
   renderer: "docs/mockups/renderer.tsx",
 });
 ```
+
+This `entries` glob selects the recommended `.mockup.ts` and `.mockup.tsx`
+names. The glob itself defines the entry shape, while `entriesDir` is shorthand
+for the same suffixed pattern beneath one folder.
 
 ```tsx
 export default function render(input: RenderInput): string {

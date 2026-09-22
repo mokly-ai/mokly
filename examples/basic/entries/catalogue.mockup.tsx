@@ -11,8 +11,9 @@ import {
   reviewMaterialKey,
 } from "@mokly/mokly";
 
-import { action } from "./components/action.js";
-import { toolbar } from "./components/toolbar.js";
+import { action } from "../src/components/action/action.mokly.js";
+import { toolbar } from "../src/components/toolbar/toolbar.mokly.js";
+
 import { renderExampleDocument } from "./document.js";
 
 const metadata = {
@@ -69,6 +70,36 @@ function Welcome({ compact }: { compact: boolean }) {
   );
 }
 
+function EmptyWorkspace({ compact }: { compact: boolean }) {
+  return (
+    <main id="welcome-empty" className="example-screen">
+      <ReviewIgnore
+        id="example-nav"
+        materialKey={reviewMaterialKey({ compact })}
+      >
+        <nav>{compact ? "Menu" : "Example navigation"}</nav>
+      </ReviewIgnore>
+      <header className="example-head">
+        <h1>Create your first workspace</h1>
+        <Badge tone="primary">Welcome</Badge>
+      </header>
+      <Input
+        aria-label="Workspace name"
+        onChangeText={noop}
+        placeholder="Name this workspace"
+        value=""
+      />
+      <action.Component
+        disabled
+        label="Create workspace"
+        moklyInstance="create-workspace"
+        tone="primary"
+      />
+      <p>Enter a workspace name to continue.</p>
+    </main>
+  );
+}
+
 function Details({ compact }: { compact: boolean }) {
   return (
     <main id="details" className="example-screen">
@@ -92,8 +123,6 @@ function Details({ compact }: { compact: boolean }) {
 }
 
 export const mockups = [
-  action.entry,
-  toolbar.entry,
   defineCollection({
     ...metadata,
     id: "example-components",
@@ -131,6 +160,16 @@ export const mockups = [
     tags: ["forms", "onboarding"],
     title: "Welcome",
     useCaseIds: ["example-tour"],
+    variants: [
+      {
+        description: "The welcome screen before a workspace has a name.",
+        desktop: <EmptyWorkspace compact={false} />,
+        id: "example-welcome-empty",
+        mobile: <EmptyWorkspace compact />,
+        slug: "empty",
+        title: "Welcome, empty workspace",
+      },
+    ],
   }),
   defineScreen({
     ...metadata,

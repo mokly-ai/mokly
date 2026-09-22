@@ -461,6 +461,7 @@ function workspaceEvidence(
   return {
     affected: [],
     base: descriptorBase(),
+    changedViews: {},
     comparisonEligible: false,
     comparisons: true,
     components: [],
@@ -471,6 +472,7 @@ function workspaceEvidence(
     removed: false,
     usedBy: [],
     variants: [],
+    viewStates: {},
     views: [],
   };
 }

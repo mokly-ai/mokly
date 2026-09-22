@@ -87,8 +87,10 @@ export interface MoklyConfig {
   generatedOutput?: "committed" | "derived";
   /** Color schemes rendered for screens; defaults to light only. */
   colorSchemes?: readonly ColorScheme[];
-  /** Config-relative structured mockup source directory. */
-  entriesDir: string;
+  /** Repository-relative POSIX globs whose matched files are entry modules. */
+  entries?: readonly string[];
+  /** Config-relative shorthand for one `entries` glob covering a directory. */
+  entriesDir?: string;
   /** Config-relative generated catalogue/output root. */
   mockupsDir: string;
   /** Additional private POSIX globs relative to mockupsDir; extends shipped defaults. */
@@ -122,7 +124,12 @@ export interface ResolvedConfig {
   sourceFiles?: readonly string[];
   /** Inputs to the separately bundled configuration graph. */
   configSourceFiles?: readonly string[];
-  entriesDir: string;
+  /** Validated repository-relative entry globs in declaration order. */
+  entryGlobs: readonly string[];
+  /** Sorted absolute entry modules resolved from `entryGlobs` by discovery. */
+  entryModules?: readonly string[];
+  /** Absolute shorthand directory when `entriesDir` supplied the single glob. */
+  entriesDir?: string;
   mockupsDir: string;
   /** Shipped defaults followed by validated consumer exclusions. */
   readonly publicExclude: readonly string[];

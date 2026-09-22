@@ -96,6 +96,12 @@ function readNode(value: unknown): CatalogueNode {
   const input = object(value),
     kind = choice(input.kind, ["collection", "entry"] as const);
   return kind === "entry"
-    ? { kind, id: id(input.id) }
+    ? {
+        kind,
+        id: id(input.id),
+        ...(input.children !== undefined
+          ? { children: array(input.children).map(readNode) }
+          : {}),
+      }
     : { kind, id: id(input.id), children: array(input.children).map(readNode) };
 }

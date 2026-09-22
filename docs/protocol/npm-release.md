@@ -126,22 +126,27 @@ must continue to exercise pending states and command-to-preview timings.
 `.github/workflows/ci.yml` runs on pull requests and pushes to `main`, with
 read-only repository contents permission and concurrency cancellation for
 superseded validation. An audit-first repository job gates independent package
-jobs on Node 22.14.0 and Node 24, four unit shards per runtime, four browser
-shards per runtime, and focused macOS/Windows native jobs. Chromium is installed
-only by browser jobs. Every job that runs npm installs with npm 11.7.0 and
-`npm ci`; CI caches only npm downloads and includes the merge-base lockfile in
-cache keys for jobs that build historical baselines.
+jobs, four unit shards, four browser shards, and focused macOS/Windows native
+jobs. Ordinary pull requests and `main` pushes run the functional suites on the
+minimum supported Node 22.14 runtime. Same-repository Release Please pull
+requests add Node 24 to every functional suite, while the shared repository job
+remains on Node 24 for every event. Chromium is installed only by browser jobs.
+Every job that runs npm installs with npm 11.7.0 and `npm ci`; CI caches only npm
+downloads and includes the merge-base lockfile in cache keys for jobs that build
+historical baselines.
 
 The stable `Required CI` branch-rule status fails unless every prerequisite
-result is exactly successful and all 16 unit/browser reports prove the expected
-commit, runtimes, shards, and complete test inventories. Stable report artifact
+result is exactly successful and the event-selected eight or sixteen
+unit/browser reports prove the expected commit, runtimes, shards, and complete
+test inventories. Only a same-repository branch with the Release Please prefix
+or autorelease label can select the dual-runtime profile. Stable report artifact
 names support failed-job and whole-workflow reruns by replacing each shard's
 evidence; browser traces remain attempt-specific. Full Git history is available
-where baseline resolution requires `origin/main`. Action revisions are immutable
-commit hashes with reviewed version comments, runtime versions are explicit,
-and fork pull requests receive no release secrets or write permissions. The
-[CI verification contract](./ci-verification.md) defines the complete graph,
-evidence, caching, and failure semantics.
+where baseline resolution requires `origin/main`. Action revisions are
+immutable commit hashes with reviewed version comments, runtime versions are
+explicit, and fork pull requests receive no release secrets or write
+permissions. The [CI verification contract](./ci-verification.md) defines the
+complete graph, evidence, caching, and failure semantics.
 
 ## Preview Deployments
 
@@ -185,9 +190,10 @@ Both options omit the live-update entrypoint, watch-only modules, event routes,
 and stale comparison directories. Full history remains available in both jobs.
 Static shell metadata addresses an included comparison generation directly;
 the stable comparison redirect remains available when Changes is enabled.
-Eligible changed views offer comparison controls; known unchanged views show
-Unmodified, while unknown evidence has no invented status. Pages retain Changes
-membership but never offer visual comparisons.
+Eligible shown views offer comparison controls; known unchanged views show
+Unmodified. Missing per-view evidence uses route-level status and eligibility;
+absent change evidence never invents a status. Pages retain Changes membership
+but never offer visual comparisons.
 The [Changes contract](./mokly-changes.md) owns the shared interaction and
 snapshot rules. Artifact
 replacement uses the shared exclusive reservation, ownership inventory, and

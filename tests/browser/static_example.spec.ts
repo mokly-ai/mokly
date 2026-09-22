@@ -78,3 +78,35 @@ test("the owning example stays usable when HEAD is the unchanged baseline", asyn
     false,
   );
 });
+
+test("the exported example discloses a screen's variants without a server", async ({
+  page,
+}) => {
+  const list = page.locator(
+    '[data-nav-disclosure="variants:pages:example-welcome"]',
+  );
+  const toggle = page.locator("[data-nav-variants-toggle]");
+  const variantRow = page.locator(
+    'a[data-nav-row][data-route="screens/welcome.variants/empty.html"]',
+  );
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto(`${server.url}/view/screens/details.html`);
+  await expect(list).toBeHidden();
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+
+  await toggle.click();
+  await expect(list).toBeVisible();
+  await expect(variantRow).toBeVisible();
+
+  await variantRow.click();
+  await expect(page).toHaveURL(
+    `${server.url}/view/screens/welcome.variants/empty.html`,
+  );
+  await expect(page.locator("#mb-main h2")).toHaveText(
+    "Welcome, empty workspace",
+  );
+  await expect(variantRow).toHaveAttribute("aria-current", "page");
+  await expect(page.getByLabel("Catalogue location").locator("a")).toHaveText(
+    "Welcome",
+  );
+});
