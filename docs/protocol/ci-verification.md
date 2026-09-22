@@ -6,16 +6,22 @@ The suite CLI, inventory evidence, parallel workflow graph, and fixture reuse in
 this document are implemented. The
 [hosted acceptance measurement](../reviews/ci-performance.md) records the
 delivered timing, capacity, cache, cost, and coverage evidence. The
-authoritative complete local and release gate remains `cargo xtask check`.
-The public package forwarding and hierarchical cancellation additions below are
-implemented by the corresponding review-follow-up milestones.
+authoritative complete local and complete-mode release gate remains
+`cargo xtask check`; the full hosted aggregate is reusable evidence for its
+exact tree. The public package forwarding and hierarchical cancellation
+additions below are implemented by the corresponding review-follow-up
+milestones.
 
 ## Verification Boundary
 
-`cargo xtask check` is the complete local and release verification entrypoint.
-With no options it runs every gate sequentially in one checkout, beginning with
-the live workspace dependency audit. A selected suite is partial evidence and
-must never report that the complete gate passed.
+`cargo xtask check` is the complete local verification entrypoint and the
+release workflow's complete-mode entrypoint. With no options it runs every gate
+sequentially in one checkout, beginning with the live workspace dependency
+audit. A selected suite is partial evidence and must never report that the
+complete gate passed. CI's validated aggregate of every required job and all
+sharded reports is complete verification of the exact tree named by those
+reports; the [release evidence contract](./npm-release-evidence.md) defines how
+a publish may reuse that proof.
 
 The CLI is:
 
@@ -139,8 +145,13 @@ available; whole-workflow reruns replace all report artifacts. The aggregate
 downloads only the `verification-*` report namespace. Browser trace artifacts
 remain attempt-specific. Unit and browser jobs retain inventory, timing, and
 failure details; browser failures additionally retain traces and Playwright
-error context. Reports are diagnostic evidence, not a substitute for successful
-commands or assertions.
+error context. A successful `Required CI` job plus its revalidated complete
+report aggregate is reusable complete verification for the tree the reports
+name; individual reports remain partial evidence. The release workflow applies
+the additional tree and live unit-inventory checks in the
+[release evidence contract](./npm-release-evidence.md). Reports are retained
+for 14 days, which bounds their release reuse; missing or expired evidence
+falls back to the complete gate.
 
 ## Dependency Cache And Security
 

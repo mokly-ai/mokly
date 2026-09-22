@@ -93,7 +93,7 @@ absent. This is option C from the 22 September 2026 release investigation.
 Summary: define the evidence-first publish contract in the protocol docs so
 Milestones 2 and 3 have no open questions, and register the plan.
 
-- [ ] Create `docs/protocol/npm-release-evidence.md` (~120 lines) covering:
+- [x] Create `docs/protocol/npm-release-evidence.md` (~120 lines) covering:
       the two verification modes and how each event selects one; the candidate
       run rules from Decision 2 including the REST endpoints
       (`actions/workflows/ci.yml/runs`, `commits/{sha}/pulls`,
@@ -106,7 +106,7 @@ Milestones 2 and 3 have no open questions, and register the plan.
       each; the always-run live audit; the evidence record schema and
       location; the `actions: read` token permission; and the expected timing
       (about 10 minutes in evidence mode versus 54 minutes measured today).
-- [ ] In [`npm-release.md`](../docs/protocol/npm-release.md): replace step 5
+- [x] In [`npm-release.md`](../docs/protocol/npm-release.md): replace step 5
       of `## Release Management` with the audit-then-evidence-or-complete
       sequence and link the new doc; add the `verification` dispatch input to
       the manual-retry paragraph; add `actions: read` to the publish
@@ -114,20 +114,20 @@ Milestones 2 and 3 have no open questions, and register the plan.
       mode and referenced CI run; keep `## Local Verification` describing
       `cargo xtask check` as the complete local gate and the `complete`
       publish mode.
-- [ ] In [`ci-verification.md`](../docs/protocol/ci-verification.md)
+- [x] In [`ci-verification.md`](../docs/protocol/ci-verification.md)
       `## Verification Boundary` and `## Inventory And Report Evidence`, state
       that the validated aggregate of all sharded reports is complete
       verification of the tree they name, that the release evidence contract
       consumes it, and that the 14-day retention bounds evidence availability.
-- [ ] In [`dependency-security.md`](../docs/protocol/dependency-security.md),
+- [x] In [`dependency-security.md`](../docs/protocol/dependency-security.md),
       replace "The release workflow retains that complete audit-first command"
       with the always-live publish audit rule from Decision 4.
-- [ ] In [`docs/protocol/README.md`](../docs/protocol/README.md), list the new
+- [x] In [`docs/protocol/README.md`](../docs/protocol/README.md), list the new
       doc beneath the CI and npm release contract entry.
 - [x] Add this plan to `plans/README.md` under Active.
-- [ ] Run `npx prettier --check` on the changed Markdown and review the diff.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] After the push, use
+- [x] Run `npx prettier --check` on the changed Markdown and review the diff.
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and report
       findings without changing the implementation.
