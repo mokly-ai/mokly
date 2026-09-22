@@ -9,9 +9,10 @@ explicit cross-origin host uses the new inspector transport. Host marker
 consumption and the trailing geometry refresh are implemented by the
 [comment anchoring plan](../../plans/viewer-comment-anchoring.md); the adapter
 wire protocol remains unchanged.
-Historical page and screen frames are shell-owned, read-only preview frames and
-never enter an adapter inspection handshake, as implemented by the
-[removed content previews plan](../../plans/removed-content-previews.md).
+Historical pages and screens use the viewer-owned presentation defined by the
+[removed previews contract](./mokly-removed-previews.md). Neither adapter mounts
+those frames or enters an inspection handshake; the viewer presents a
+same-origin document and enforces the read-only guard in every host.
 
 ## Public Interface
 
@@ -220,9 +221,10 @@ the receiver, so an unenhanced document continues to use its portable native
 links.
 
 The sandbox remains exactly `allow-same-origin`; consumer scripts stay disabled.
-Historical [removed previews](./mokly-removed-previews.md) use separate
-shell-owned frames with the same sandbox and parent-enforced read-only links and
-forms when the document is same-origin-accessible.
+Historical [removed previews](./mokly-removed-previews.md) do not enter this
+adapter. The viewer fetches and presents them as viewer-origin `srcdoc`
+documents in separate frames with the same sandbox, so its parent guard enforces
+read-only links and forms in every host.
 Existing local memory previews retain their authenticated private transport.
 No inspector handshake, extra badge, pick control, or visible affordance appears
 locally. Unsupported/unowned documents and comparison snapshots gain no privilege.

@@ -2,17 +2,16 @@
 // removed screens. The React shell owns the request, lifecycle, and historical
 // frames while the server render remains an explicit unavailable state.
 
-import { useEffect, useRef } from "react";
-
 import type { RemovedEntryPreview } from "../catalogue/types.js";
-import { PREVIEW_UNAVAILABLE } from "../previews/copy.js";
-import { enforcePreviewReadOnly } from "../previews/read_only.js";
+import type { PreviewPresentation } from "../previews/presentation.js";
 import type { LoadedPreview, PreviewScreenView } from "../previews/request.js";
 import type { ManifestEntry } from "../registry/types.js";
 
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import { BrowserFrame, PhoneFrame } from "./frames.js";
+import { PreviewFrame } from "./preview_frame.js";
+import { PreviewUnavailable } from "./preview_unavailable.js";
 import { useOptionalShellStore } from "./store_context.js";
 import { useRemovedPreview } from "./use_removed_preview.js";
 
@@ -61,23 +60,6 @@ function PreviousVersionLabel() {
   return <p className="mbk-previous">Showing previous version</p>;
 }
 
-function PreviewFrame(props: { src: string; title: string }) {
-  const frame = useRef<HTMLIFrameElement>(null);
-  useEffect(() => {
-    if (frame.current) enforcePreviewReadOnly(frame.current);
-  }, [props.src]);
-  return (
-    <iframe
-      className="mbk-frag"
-      data-mokly-preview-frame=""
-      ref={frame}
-      sandbox="allow-same-origin"
-      src={props.src}
-      title={props.title}
-    />
-  );
-}
-
 function MissingView(props: { viewport: "desktop" | "mobile" }) {
   const other = props.viewport === "desktop" ? "Mobile" : "Desktop";
   return (
@@ -92,6 +74,7 @@ function MissingView(props: { viewport: "desktop" | "mobile" }) {
 
 function ScreenFrame(props: {
   data: RemovedPreviewData;
+  presentation: PreviewPresentation;
   scheme: "dark" | "light";
   view: PreviewScreenView;
   viewport: "desktop" | "mobile";
@@ -99,7 +82,7 @@ function ScreenFrame(props: {
   const fallback = props.view.colorScheme !== props.scheme;
   const content = (
     <PreviewFrame
-      src={props.view.url}
+      presentation={props.presentation}
       title={`${props.data.title} — ${props.viewport}`}
     />
   );
@@ -128,54 +111,69 @@ function ScreenFrame(props: {
   );
 }
 
-function ReadyPreview(props: {
+/** Render a loaded preview, or the retryable unavailable state if it is incomplete. */
+export function ReadyPreview(props: {
   colorScheme: "dark" | "light";
   data: RemovedPreviewData;
   loaded: LoadedPreview;
+  presentations: ReadonlyMap<string, PreviewPresentation>;
+  retry(): void;
   viewport: "both" | "desktop" | "mobile";
 }) {
   const content = props.loaded.content;
-  if (content.kind === "page")
+  if (content.kind === "page") {
+    const presentation = presentationFor(props.presentations, content.url);
+    if (!presentation) return <PreviewUnavailable retry={props.retry} />;
     return (
       <div className="mbk-stage-embed" data-mokly-scroll="embed">
-        <PreviewFrame src={content.url} title={props.data.title} />
+        <PreviewFrame presentation={presentation} title={props.data.title} />
       </div>
     );
+  }
   const viewports =
     props.viewport === "both"
       ? (["mobile", "desktop"] as const)
       : ([props.viewport] as const);
+  const frames = viewports.map((viewport) => {
+    const view =
+      content.views.find(
+        (item) =>
+          item.viewport === viewport && item.colorScheme === props.colorScheme,
+      ) ??
+      content.views.find(
+        (item) => item.viewport === viewport && item.colorScheme === "light",
+      );
+    if (!view) return <MissingView key={viewport} viewport={viewport} />;
+    const presentation = presentationFor(props.presentations, view.url);
+    return presentation ? (
+      <ScreenFrame
+        data={props.data}
+        key={viewport}
+        presentation={presentation}
+        scheme={props.colorScheme}
+        view={view}
+        viewport={viewport}
+      />
+    ) : undefined;
+  });
+  if (frames.some((frame) => frame === undefined))
+    return <PreviewUnavailable retry={props.retry} />;
   return (
     <div
       className="mbk-stage mbk-live"
       data-mokly-scroll="stage"
       data-viewport={props.viewport}
     >
-      {viewports.map((viewport) => {
-        const view =
-          content.views.find(
-            (item) =>
-              item.viewport === viewport &&
-              item.colorScheme === props.colorScheme,
-          ) ??
-          content.views.find(
-            (item) =>
-              item.viewport === viewport && item.colorScheme === "light",
-          );
-        return view ? (
-          <ScreenFrame
-            data={props.data}
-            key={viewport}
-            scheme={props.colorScheme}
-            view={view}
-            viewport={viewport}
-          />
-        ) : (
-          <MissingView key={viewport} viewport={viewport} />
-        );
-      })}
+      {frames}
     </div>
   );
+}
+
+function presentationFor(
+  presentations: ReadonlyMap<string, PreviewPresentation>,
+  address: string,
+): PreviewPresentation | undefined {
+  return presentations.get(address);
 }
 
 function PreviewState(props: {
@@ -196,6 +194,8 @@ function PreviewState(props: {
         colorScheme={props.colorScheme}
         data={props.data}
         loaded={preview.state.loaded}
+        presentations={preview.state.presentations}
+        retry={preview.retry}
         viewport={props.viewport}
       />
     );
@@ -211,22 +211,9 @@ function PreviewState(props: {
       </div>
     );
   return (
-    <div className="mbk-stage">
-      <div className="mbk-empty">
-        <h2>{PREVIEW_UNAVAILABLE.title}</h2>
-        <p>{PREVIEW_UNAVAILABLE.body}</p>
-        {preview.state.status === "failed" ? (
-          <button
-            className="mbk-empty-link"
-            data-mokly-preview-retry=""
-            onClick={preview.retry}
-            type="button"
-          >
-            {PREVIEW_UNAVAILABLE.retry.label}
-          </button>
-        ) : null}
-      </div>
-    </div>
+    <PreviewUnavailable
+      retry={preview.state.status === "failed" ? preview.retry : undefined}
+    />
   );
 }
 

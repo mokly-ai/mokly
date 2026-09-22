@@ -5,14 +5,11 @@ import path from "node:path";
 /** Exact files plus directory indexes: no extension guessing or provider rules. */
 export async function serveStaticFiles(
   root: string,
-  options: { allowedOrigin?: string } = {},
+  options: { allowedOrigin?: string; csp?: string } = {},
 ) {
-  if (
-    options.allowedOrigin &&
-    (!/^https?:\/\//.test(options.allowedOrigin) ||
-      new URL(options.allowedOrigin).origin !== options.allowedOrigin)
-  )
-    throw new Error("Static fixture requires an exact origin");
+  const allowedOrigins = new Set<string>();
+  if (options.allowedOrigin)
+    allowedOrigins.add(exactOrigin(options.allowedOrigin));
   const requests: string[] = [];
   const requestHeaders: http.IncomingHttpHeaders[] = [];
   const server = http.createServer((request, response) => {
@@ -20,12 +17,12 @@ export async function serveStaticFiles(
     requests.push(pathname);
     requestHeaders.push(request.headers);
     response.setHeader("X-Content-Type-Options", "nosniff");
-    if (options.allowedOrigin) {
+    if (allowedOrigins.size > 0) {
       response.setHeader("Vary", "Origin");
-      if (request.headers.origin === options.allowedOrigin)
+      if (request.headers.origin && allowedOrigins.has(request.headers.origin))
         response.setHeader(
           "Access-Control-Allow-Origin",
-          options.allowedOrigin,
+          request.headers.origin,
         );
     }
     if (request.method !== "GET" && request.method !== "HEAD") {
@@ -53,6 +50,8 @@ export async function serveStaticFiles(
         "Content-Type",
         types[path.extname(filename)] ?? "application/octet-stream",
       );
+      if (options.csp && path.extname(filename) === ".html")
+        response.setHeader("Content-Security-Policy", options.csp);
       const contents = await fs.promises.readFile(filename);
       response.end(request.method === "HEAD" ? undefined : contents);
     })().catch(() => {
@@ -65,6 +64,9 @@ export async function serveStaticFiles(
   if (!address || typeof address === "string")
     throw new Error("No static test port");
   return {
+    allowOrigin(origin: string): void {
+      allowedOrigins.add(exactOrigin(origin));
+    },
     requests,
     requestHeaders,
     url: `http://127.0.0.1:${address.port}`,
@@ -74,4 +76,16 @@ export async function serveStaticFiles(
         server.close((error) => (error ? reject(error) : resolve()));
       }),
   };
+}
+
+function exactOrigin(value: string): string {
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    throw new Error("Static fixture requires an exact origin");
+  }
+  if (!/^https?:\/\//.test(value) || parsed.origin !== value)
+    throw new Error("Static fixture requires an exact origin");
+  return value;
 }

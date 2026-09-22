@@ -80,6 +80,19 @@ the host owns the comment data and interaction.
 
 The example requires a separate, nonopaque HTTP(S) artifact origin with the
 [documented CORS headers](../../docs/protocol/mokly-export-delivery.md).
+Apply those headers to every advertised generation file, including preview
+metadata and historical HTML beneath `__mokly/diffs/__generations/**`, and serve
+historical documents as `text/html` with `nosniff`.
+
+Removed historical documents are fetched, then presented as script-disabled
+`srcdoc` at the embedding host's origin. They inherit the host document's
+Content Security Policy. In addition to permitting the source fetch in
+`connect-src`, a host CSP must permit the artifact origin in `img-src`,
+`style-src`, `font-src`, and `media-src`; `style-src` must also permit the inline
+styles carried by generated documents, normally with `'unsafe-inline'`. This
+does not grant script execution because the preview frame omits
+`allow-scripts`.
+
 For same-origin artifacts, omit `frameAdapter`. Adapters and object/fetcher source
 identities should remain stable between host renders; changing one remounts the
 runtime and cancels its pending work.

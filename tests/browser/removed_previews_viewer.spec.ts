@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 import { startViewerPreviews } from "./removed_preview_fixture.js";
 
@@ -13,6 +13,15 @@ test.afterAll(async () => {
 });
 
 const stage = "[data-mokly-preview]";
+
+/** Every top-level document requested after a previous version is ready. */
+function documentRequests(page: Page): string[] {
+  const requested: string[] = [];
+  page.on("request", (request) => {
+    if (request.resourceType() === "document") requested.push(request.url());
+  });
+  return requested;
+}
 
 for (const adapter of ["same-origin", "cross"]) {
   test(`an embedded viewer shows previous versions through the ${adapter} adapter`, async ({
@@ -42,6 +51,103 @@ for (const adapter of ["same-origin", "cross"]) {
     ).toEqual([]);
   });
 }
+
+for (const adapter of ["same-origin", "cross"]) {
+  test(`a previous version stays inert through the ${adapter} adapter`, async ({
+    page,
+  }) => {
+    await page.goto(`${host.url}/viewer.html?adapter=${adapter}`);
+    const preview = page.frameLocator(`${stage} iframe`);
+    await expect(preview.locator("h1")).toHaveText("Previous page");
+    const address = page.url();
+    const documents = documentRequests(page);
+    for (const label of [
+      "Marked catalogue link",
+      "Relative link",
+      "Plain external link",
+      "Download link",
+      "Shadow link",
+      "SVG link",
+    ]) {
+      await preview.getByText(label, { exact: true }).click();
+      await expect(preview.locator("h1")).toHaveText("Previous page");
+    }
+    await preview.getByRole("button", { name: "Send" }).click();
+    await preview.getByText("Marked catalogue link", { exact: true }).focus();
+    await page.keyboard.press("Enter");
+    await expect(preview.locator("h1")).toHaveText("Previous page");
+    expect(documents).toEqual([]);
+    expect(page.url()).toBe(address);
+    expect(
+      await page.evaluate(
+        () => (window as unknown as { frameMessages: string[] }).frameMessages,
+      ),
+    ).toEqual([]);
+  });
+}
+
+test("a cross-origin frame navigation restores the presentation", async ({
+  page,
+}) => {
+  await page.goto(`${host.url}/viewer.html?adapter=cross`);
+  const frame = page.locator(`${stage} iframe`);
+  await expect(page.frameLocator(`${stage} iframe`).locator("h1")).toHaveText(
+    "Previous page",
+  );
+  const source = await frame.getAttribute("data-mokly-preview-source");
+  expect(source).not.toBeNull();
+  await frame.evaluate((element, destination) => {
+    const preview = element as HTMLIFrameElement;
+    if (preview.contentWindow)
+      preview.contentWindow.location.href = destination;
+  }, `${host.frameOrigin}/view/screens/current.html`);
+  await expect(page.frameLocator(`${stage} iframe`).locator("h1")).toHaveText(
+    "Previous page",
+  );
+  await expect(frame).toHaveAttribute("data-mokly-preview-source", source!);
+});
+
+test("an embedded host CSP permits historical resources", async ({ page }) => {
+  const consoleErrors: string[] = [];
+  page.on("console", (message) => {
+    if (
+      message.type() === "error" &&
+      /content security policy|violates the following directive/i.test(
+        message.text(),
+      )
+    )
+      consoleErrors.push(message.text());
+  });
+  await page.addInitScript(() => {
+    const probe = window as unknown as { cspViolations: string[] };
+    probe.cspViolations = [];
+    document.addEventListener("securitypolicyviolation", (event) => {
+      probe.cspViolations.push(
+        `${event.effectiveDirective}:${event.blockedURI}`,
+      );
+    });
+  });
+  await page.goto(`${host.cspUrl}/viewer.html?adapter=cross`);
+  const preview = page.frameLocator(`${stage} iframe`);
+  await expect(preview.locator("h1")).toHaveText("Previous page");
+  await expect(preview.locator("body")).toHaveCSS(
+    "background-color",
+    "rgb(244, 239, 228)",
+  );
+  const violations = await Promise.all(
+    page
+      .frames()
+      .map((frame) =>
+        frame.evaluate(
+          () =>
+            (window as unknown as { cspViolations?: string[] }).cspViolations ??
+            [],
+        ),
+      ),
+  );
+  expect(violations.flat()).toEqual([]);
+  expect(consoleErrors).toEqual([]);
+});
 
 test("a viewer selection change fences the previous request", async ({
   page,

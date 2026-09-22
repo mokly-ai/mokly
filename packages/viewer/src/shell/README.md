@@ -83,8 +83,15 @@ public catalogue publishes one, so a delivery without that descriptor stays
 quiet. The served stage holds the unavailable copy without a Retry control,
 because a shell that never hydrates cannot honour that action; the first client
 effect replaces it with the loading state and adds Retry only if its own request
-fails. The request fencing lives in `use_removed_preview.ts`, and the copy and
-Retry contract comes from `previews/copy.ts`.
+fails. The request fencing lives in `use_removed_preview.ts`; it asks
+`previews/presentation.ts` to fetch and validate the historical documents needed
+by the selected views before reporting ready. Each loaded frame receives only a
+script-disabled, viewer-origin `srcdoc`, with
+`data-mokly-preview-source` naming the immutable snapshot address. The
+viewer-owned guard cancels links and forms, scrolls same-document anchors
+without native navigation, and restores the accepted presentation after any
+later frame navigation. The copy and Retry contract comes from
+`previews/copy.ts`.
 `views.tsx` uses it for removed pages and `workspace.tsx` for removed screens;
 both drop the comparison band there, while removed component variants keep
 theirs.

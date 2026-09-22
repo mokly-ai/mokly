@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Frame, type Page } from "@playwright/test";
 
 import {
   startServedPreviews,
@@ -18,11 +18,12 @@ test.afterAll(async () => {
 const stage = "[data-mokly-preview]";
 const previewFrame = `${stage} iframe`;
 
-/** The historical document itself, so its own address can be inspected. */
-function historical(page: Page) {
-  return page
-    .frames()
-    .find((frame) => frame.url().includes("snapshots/before"))!;
+/** The viewer-owned historical document behind the preview frame element. */
+async function historical(page: Page): Promise<Frame> {
+  const handle = await page.locator(previewFrame).elementHandle();
+  const frame = await handle?.contentFrame();
+  if (!frame) throw new Error("Historical preview frame was unavailable");
+  return frame;
 }
 
 /**
@@ -106,13 +107,18 @@ test("a previous version reads but never acts", async ({ page }) => {
   const preview = page.frameLocator(previewFrame);
   await expect(preview.locator("h1")).toHaveText("Previous page");
   const address = page.url();
-  const opened = historical(page).url();
+  const historicalFrame = await historical(page);
+  const opened = await page
+    .locator(previewFrame)
+    .getAttribute("data-mokly-preview-source");
+  expect(opened).not.toBeNull();
   const documents = documentRequests(page);
   for (const label of [
     "Marked catalogue link",
     "Relative link",
     "External link",
     "Download link",
+    "SVG link",
   ])
     await preview.getByText(label, { exact: true }).click();
   await preview.getByRole("button", { name: "Send" }).click();
@@ -122,8 +128,31 @@ test("a previous version reads but never acts", async ({ page }) => {
   await page.keyboard.press("Enter");
   await expect
     .poll(() =>
-      historical(page).evaluate(() => {
+      historicalFrame.evaluate(() => {
         const foot = document.querySelector("#foot");
+        if (!foot) return false;
+        const bounds = foot.getBoundingClientRect();
+        return bounds.top < window.innerHeight && bounds.bottom > 0;
+      }),
+    )
+    .toBe(true);
+  await historicalFrame.evaluate(() => {
+    window.scrollTo(0, 0);
+    const link = document.createElement("a");
+    link.href = "#named-foot";
+    link.textContent = "Jump to the named end";
+    document.body.prepend(link);
+    const target = document.createElement("a");
+    target.name = "named-foot";
+    target.textContent = "Named end";
+    document.body.append(target);
+  });
+  await preview.getByText("Jump to the named end").focus();
+  await page.keyboard.press("Enter");
+  await expect
+    .poll(() =>
+      historicalFrame.evaluate(() => {
+        const foot = document.querySelector('a[name="named-foot"]');
         if (!foot) return false;
         const bounds = foot.getBoundingClientRect();
         return bounds.top < window.innerHeight && bounds.bottom > 0;
@@ -132,7 +161,10 @@ test("a previous version reads but never acts", async ({ page }) => {
     .toBe(true);
   expect(documents).toEqual([]);
   expect(page.url()).toBe(address);
-  expect(historical(page).url().split("#")[0]).toBe(opened);
+  await expect(page.locator(previewFrame)).toHaveAttribute(
+    "data-mokly-preview-source",
+    opened!,
+  );
 });
 
 test("Space scrolls a previous version while a link holds focus", async ({
@@ -143,8 +175,9 @@ test("Space scrolls a previous version while a link holds focus", async ({
   await expect(preview.locator("h1")).toHaveText("Previous page");
   const address = page.url();
   const documents = documentRequests(page);
+  const historicalFrame = await historical(page);
   const offset = () =>
-    historical(page).evaluate(
+    historicalFrame.evaluate(
       () => document.documentElement.scrollTop || document.body.scrollTop,
     );
   await preview.getByText("Marked catalogue link").focus();
@@ -154,6 +187,28 @@ test("Space scrolls a previous version while a link holds focus", async ({
   await page.keyboard.press("Enter");
   expect(documents).toEqual([]);
   expect(page.url()).toBe(address);
+});
+
+test("a later frame navigation restores the accepted presentation", async ({
+  page,
+}) => {
+  await page.goto(`${host.url}/view/archive/removed.html`);
+  const frame = page.locator(previewFrame);
+  await expect(page.frameLocator(previewFrame).locator("h1")).toHaveText(
+    "Previous page",
+  );
+  const source = await frame.getAttribute("data-mokly-preview-source");
+  expect(source).not.toBeNull();
+  await frame.evaluate((element) => {
+    const preview = element as HTMLIFrameElement;
+    if (preview.contentWindow)
+      preview.contentWindow.location.href = "/view/screens/current.html";
+  });
+  await expect(page.frameLocator(previewFrame).locator("h1")).toHaveText(
+    "Previous page",
+  );
+  await expect(frame).toHaveAttribute("data-mokly-preview-source", source!);
+  await expect(frame).not.toHaveAttribute("src", /.+/);
 });
 
 test("a preview that cannot be loaded offers another attempt", async ({
