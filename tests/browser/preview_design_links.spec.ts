@@ -1,6 +1,7 @@
 import { expect } from "@playwright/test";
 
 import { validEntrySource } from "../helpers/fixture.js";
+import { FULL_CATALOGUE_SETUP_TIMEOUT_MS } from "../helpers/fixture_timing.js";
 import { createPreviewComparisonFixture } from "../helpers/preview_comparison_fixture.js";
 
 import { focusDesignLink } from "./design_test_helpers.js";
@@ -22,7 +23,7 @@ let preview: OwnedPreviewFixture;
 test.describe.configure({ timeout: 90_000 });
 
 test.beforeAll(async ({ ordinaryPreview }) => {
-  test.setTimeout(180_000);
+  test.setTimeout(FULL_CATALOGUE_SETUP_TIMEOUT_MS);
   preview = ordinaryPreview;
   comparisonFixture = await createPreviewComparisonFixture(linkEntrySource);
   comparisonPreview = await servePreviewFixture(comparisonFixture.output);

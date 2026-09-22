@@ -22,10 +22,12 @@ affected and otherwise unsupported runtimes stop before the application module
 graph is evaluated. `run.ts` loads configuration and invokes the existing
 package services. The reporter directory preserves stable plain output for
 pipes, CI, and timing diagnostics while rendering progress, lifecycle events,
-and actionable errors for interactive terminals. Rich success ticks are green
-when the terminal supports colour and remain unstyled when colour is disabled.
-`main.ts` is the application process boundary: it selects the reporter before
-parsing arguments, applies secret redaction, and controls the exit code.
+and actionable errors for interactive terminals. Serve arms graceful shutdown
+before reporting its ready URL, so any announced process can accept an immediate
+interrupt. Rich success ticks are green when the terminal supports colour and
+remain unstyled when colour is disabled. `main.ts` is the application process
+boundary: it selects the reporter before parsing arguments, applies secret
+redaction, and controls the exit code.
 
 Publish-only modules are loaded after command selection. Build, Check, Export,
 and supervised Serve children therefore do not initialize the upload archiver.

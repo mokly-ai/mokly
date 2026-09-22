@@ -177,6 +177,12 @@ async function execute(
       { reporter },
     ),
   );
+  const shutdown = waitForShutdown(
+    running,
+    environment,
+    reporter,
+    arguments_.watch ?? true,
+  );
   reporter.serveReady({
     base,
     configPath:
@@ -188,12 +194,7 @@ async function execute(
   });
   if (arguments_.open)
     await openServedBrowser(environment.browserOpener, reporter, running.url);
-  await waitForShutdown(
-    running,
-    environment,
-    reporter,
-    arguments_.watch ?? true,
-  );
+  await shutdown;
   return 0;
 }
 

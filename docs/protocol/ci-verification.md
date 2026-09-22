@@ -123,8 +123,11 @@ Matrix jobs use `fail-fast: false`, so one failing shard does not erase evidence
 from its peers. Chromium is installed only in browser jobs. Rust formatting,
 Clippy and tests run only in the repository job; selected suite jobs still
 compile xtask to dispatch their gate. Jobs that execute npm use npm 11.7.0. All
-jobs have read-only repository permissions and a 20-minute execution timeout.
-Superseded workflow runs remain cancellable.
+Linux and Windows jobs across the CI, preview, and release workflows use
+Blacksmith's 2-vCPU tiers. Native macOS verification uses the provider's
+smallest available tier, which is 6 vCPUs. CI jobs have read-only repository
+permissions and a 20-minute execution timeout. Superseded workflow runs remain
+cancellable.
 
 The supported range is Node.js `>=22.14.0 <24.14.0` or `>=24.19.0`. Node
 24.14.0 through 24.18.x can abort concurrent ESM-to-CommonJS loading before
@@ -258,9 +261,10 @@ Fixture phases emit `[mokly:fixture-timing]` JSON with the fixture, phase,
 duration, status, and whether the operation itself is under test.
 
 Full-catalogue browser preparations share a five-minute setup budget in
-`tests/helpers/fixture_timing.ts`. Cold package/example builds, baseline exports
+`tests/helpers/fixture_timing.ts`. Cold package/example builds, baseline exports,
 and ordinary publication fixtures use that budget independently of the default
-one-minute browser test timeout. Server readiness retains its own bound.
+one-minute browser test timeout. Assertion deadlines, retries, and worker limits
+remain unchanged; server readiness retains its own bound.
 
 Wrangler Pages fixtures pass port zero and adopt the exact readiness URL
 Wrangler reports; they do not release a probe socket before server startup.
