@@ -22,9 +22,16 @@ and its resolved repository-relative target. A public-looking symlink cannot
 make a protected target public. Existing regular-file and root-confinement
 checks remain mandatory. The same classifier runs over every resolved entry
 module at discovery, as defined by the
-[configuration contract](./mokly-configuration.md#entry-discovery), so an entry
-can never sit inside the output root, Review output, the baseline cache, or a
-package-owned private directory.
+[configuration contract](./mokly-configuration.md#entry-discovery). An entry
+may be nested below `mockupsDir`, including a `docs/mockups/src` layout, but it
+remains an inventoried protected input: public reads and exports deny both its
+lexical path and realpath aliases, and generated routes cannot collide with it.
+An entry cannot sit inside Review output, the baseline cache, or a
+package-owned private directory. The supported nesting and its output and alias
+protections are exercised by
+[`entry_discovery.test.ts`](../../tests/entry_discovery.test.ts),
+[`output_safety.test.ts`](../../tests/output_safety.test.ts), and
+[`server_safety.test.ts`](../../tests/server_safety.test.ts).
 
 The canonical `mokly-manifest.json`, former `mokabook-manifest.json`, and legacy
 v2 `mockbook-manifest.json` at `mockupsDir` are internal metadata. Deny all
