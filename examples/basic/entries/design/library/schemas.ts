@@ -3,6 +3,7 @@ import {
   CONTROLS_PAGES,
   INSPECTION_PAGES,
 } from "../components/parts/destinations.js";
+import { INTERACTIVE_PAGES } from "../interactive/parts/destinations.js";
 import { DESTINATIONS } from "../parts/destinations.js";
 
 export const text = { schema: { kind: "string" } } as const;
@@ -17,6 +18,7 @@ export const destination = {
       ...Object.values(COMPONENT_PAGES),
       ...Object.values(CONTROLS_PAGES),
       ...Object.values(INSPECTION_PAGES),
+      ...Object.values(INTERACTIVE_PAGES),
     ],
   },
   optional: true,

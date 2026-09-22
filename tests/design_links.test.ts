@@ -120,6 +120,18 @@ for (const viewport of ["mobile", "desktop"] as const) {
   });
 }
 
+/**
+ * Artboards that draw the component workspace and therefore keep its native
+ * depicted controls, including the two Static/Live workspace states.
+ */
+function drawsComponentWorkspace(id: string): boolean {
+  return (
+    id.startsWith("design-component-") ||
+    id === "design-interactive-component" ||
+    id === "design-interactive-static-catalogue"
+  );
+}
+
 test("every design link resolves to a real same-viewport design artifact without scripts or nested controls", async () => {
   const { manifest } = await designCatalogue;
   const designs = manifest.entries.filter(
@@ -128,8 +140,15 @@ test("every design link resolves to a real same-viewport design artifact without
   const componentDesigns = designs.filter((entry) =>
     entry.id.startsWith("design-component-"),
   );
+  const interactiveDesigns = designs.filter((entry) =>
+    entry.id.startsWith("design-interactive-"),
+  );
   assert.equal(componentDesigns.length, 32);
-  assert.equal(designs.length - componentDesigns.length, 47);
+  assert.equal(interactiveDesigns.length, 6);
+  assert.equal(
+    designs.length - componentDesigns.length - interactiveDesigns.length,
+    47,
+  );
   for (const entry of designs) {
     for (const viewport of ["mobile", "desktop"] as const) {
       const { document, route } = await designDocument(entry.id, viewport);
@@ -168,7 +187,7 @@ test("every design link resolves to a real same-viewport design artifact without
           );
         }
       }
-      if (!entry.id.startsWith("design-component-"))
+      if (!drawsComponentWorkspace(entry.id))
         assert.equal(
           elements(
             document,
@@ -214,6 +233,7 @@ test("the canonical documented inventory exactly matches the complete design reg
         "docs/protocol/mokly-component-design.md",
         "docs/protocol/mokly-component-inspector-design.md",
         "docs/protocol/mokly-component-controls-design.md",
+        "docs/protocol/mokly-interactive-views-design.md",
       ].map((file) => fs.readFile(path.join(repositoryRoot, file), "utf8")),
     )
   ).join("\n");

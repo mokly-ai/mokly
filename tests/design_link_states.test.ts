@@ -19,6 +19,14 @@ function destinations(nodes: Element[]) {
     ]);
 }
 
+/**
+ * The same toolbar also carries the Static/Live segments, so the canonical
+ * selected screen has one extra anchor beside its theme control.
+ */
+const previewModeLinks: Record<string, [undefined, string]> = {
+  "design-browse-screen": [undefined, "design-interactive-overview"],
+};
+
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: scheme pairs retain their subject and comparison mode`, async () => {
     for (const [light, dark] of [
@@ -36,12 +44,13 @@ for (const viewport of ["mobile", "desktop"] as const) {
           (node) => attribute(node, "aria-label") === "Preview options",
         )[0];
         assert.ok(group);
+        const preview = previewModeLinks[source!];
         assert.deepEqual(
           elements(group, (node) => node.tagName === "a").map((node) => [
             attribute(node, "aria-label"),
             attribute(node, "data-mokly-link"),
           ]),
-          [[label, target]],
+          preview ? [[label, target], preview] : [[label, target]],
         );
       }
     }

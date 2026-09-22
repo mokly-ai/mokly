@@ -137,3 +137,21 @@ height: 40px;
 .ce-theme-control[data-scheme="dark"] [data-view-icon="dark"] {
   display: block;
 }
+
+/* Static/Live sits between the theme toggle and Highlight components and
+   keeps the shared segmented look at the icon controls' height. */
+.ce-preview-mode {
+align-items: center;
+  flex-shrink: 0;
+  height: 36px;
+}
+
+.ce-preview-mode-off {
+cursor: default;
+  opacity: 0.55;
+  position: relative;
+}
+
+.ce-design .mbk-shell--mobile .ce-preview-mode {
+height: 40px;
+}

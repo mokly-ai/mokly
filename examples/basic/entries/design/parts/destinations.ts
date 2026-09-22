@@ -1,4 +1,5 @@
 import type { ComponentDesignDestination } from "../components/parts/destinations.js";
+import type { InteractiveDesignDestination } from "../interactive/parts/destinations.js";
 
 /** Stable catalogue destinations, independent of the depicted product ids. */
 export const DESTINATIONS = {
@@ -52,7 +53,9 @@ export const DESTINATIONS = {
 } as const;
 
 export type DesignDestination =
-  (typeof DESTINATIONS)[keyof typeof DESTINATIONS] | ComponentDesignDestination;
+  | (typeof DESTINATIONS)[keyof typeof DESTINATIONS]
+  | ComponentDesignDestination
+  | InteractiveDesignDestination;
 export type ComparisonMode =
   "current" | "side-by-side" | "overlay" | "difference";
 export type DepictedScheme = "light" | "dark";

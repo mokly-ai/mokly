@@ -2,8 +2,9 @@
 
 ## Active
 
-- [Interactive Views](./interactive-views.md) — Milestone 1 contract
-  documentation in progress; mockups and implementation follow.
+- [Interactive Views](./interactive-views.md) — Milestones 1 and 2 complete:
+  the contract documentation and the Static/Live design catalogue; the browser
+  bundle, interactive origin and shell control follow.
 - [Screen Variants Follow-up](./screen-variants-follow-up.md) — deferred
   design-catalogue conversion, five open review findings, and later navigation
   ideas from PR #101; planned for a separate PR, with no implementation started.

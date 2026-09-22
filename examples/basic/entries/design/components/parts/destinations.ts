@@ -1,3 +1,4 @@
+import type { InteractiveDesignDestination } from "../../interactive/parts/destinations.js";
 import type { ControlsState } from "../controls/parts/fixtures.js";
 
 import type { ComponentPageState } from "./component_details.js";
@@ -50,3 +51,10 @@ export type ComponentDesignDestination =
   | (typeof CONTROLS_PAGES)[keyof typeof CONTROLS_PAGES]
   | (typeof COMPONENT_PAGES)[keyof typeof COMPONENT_PAGES]
   | (typeof INSPECTION_PAGES)[keyof typeof INSPECTION_PAGES];
+
+/**
+ * Every artboard that draws the component workspace, including the Static and
+ * Live gallery, which reuses the same page without owning component states.
+ */
+export type WorkspaceDesignDestination =
+  ComponentDesignDestination | InteractiveDesignDestination;

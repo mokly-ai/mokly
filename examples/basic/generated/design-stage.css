@@ -74,6 +74,13 @@
   display: flex;
 }
 
+/* Inside a device frame the state stage fills its screen, so a spinner sits in
+   the middle of the preview rather than at the top of the chrome. */
+.phone-screen > .mbk-preview-state,
+.browser-viewport > .mbk-preview-state {
+  height: 100%;
+}
+
 .mbk-preview-status {
   align-items: center;
   color: var(--chrome-ink-2);

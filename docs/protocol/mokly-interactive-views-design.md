@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-Approved mockup scope for Milestone 2 of the
+Delivered mockup scope for Milestone 2 of the
 [interactive views plan](../../plans/interactive-views.md). These authored
 design states depict the [interactive views contract](./mokly-interactive-views.md)
 and extend the [shell design](./mokly-shell-design.md) and
@@ -51,12 +51,10 @@ today; comparison panes have no Static/Live control.
 
 Source lives under `examples/basic/entries/design/interactive/`; generated
 artboards live under `examples/basic/generated/design/interactive/`. The
-canonical screen shows a product screen in Live, followed by links to the
-child galleries outside the artboard. Every screen has separate mobile and
-desktop components. The screens reuse the existing shell, view toolbar,
-artboard, device frames and icon inspector parts; they add no new shell
-chrome. The page is reached from the design navigation and from the component
-workspace page.
+canonical screen shows a product screen in Live. Every screen has separate
+mobile and desktop components. The screens reuse the existing shell, view
+toolbar, artboard, device frames and icon inspector parts; they add no new
+shell chrome.
 
 | Entry id                              | Route                                           | State                                                       |
 | ------------------------------------- | ----------------------------------------------- | ----------------------------------------------------------- |
@@ -72,6 +70,52 @@ galleries with three and two owning screens. All screens are light-only
 documents, matching the existing shell mockups. Links use the logical-id
 navigation contract so they work from disk and in Browse. Static depictions of
 the control do not implement the separate runtime behaviour.
+
+## Reaching These States
+
+The control itself carries every transition, exactly as the theme and
+comparison controls do; no design-only navigation is added inside or under an
+artboard.
+
+| Source                         | Segment | Destination                    |
+| ------------------------------ | ------- | ------------------------------ |
+| `design-browse-screen`         | Live    | `design-interactive-overview`  |
+| `design-interactive-overview`  | Static  | `design-interactive-static`    |
+| `design-interactive-static`    | Live    | `design-interactive-preparing` |
+| `design-interactive-preparing` | Static  | `design-interactive-static`    |
+| `design-component-overview`    | Live    | `design-interactive-component` |
+| `design-interactive-component` | Static  | `design-component-overview`    |
+
+Selecting Live for the first time prepares the preview, so the static screen
+opens the preparing state while the ready pair keeps its own transition.
+`design-interactive-unavailable` and `design-interactive-static-catalogue`
+have no incoming control transition, because no product action reaches them:
+they are entered from the catalogue navigation, exactly like the Changes
+availability states. Unavailable is also the only artboard whose Live segment
+is a described depiction instead of a link, and the static-only catalogue is
+the only workspace with no segments at all.
+
+Only the two canonical entry points — the selected Browse screen and the
+component page — record a preview mode. Every other existing artboard keeps
+its toolbar unchanged, which is also the depiction of a catalogue that never
+offers Live. Each artboard declares its own mode, links and availability in
+`entries/design/parts/navigation_states.ts`, so a screen that has not been
+designed for Live cannot acquire the control implicitly.
+
+Both Workspace screens show the Highlight components toggle so they differ
+only by the preview-mode control: Live disables highlighting with its reason,
+and the static-only catalogue keeps the ordinary enabled toggle.
+
+## Shared Component
+
+The control belongs to the registered `design-ui-view-controls` component, not
+to a new control family. Its schema gains an optional `previewMode`, an
+optional `previewModeDisabled` and an optional `previewModeDestinations`; the
+existing highlight `unavailable` reason gains a `live` value. Its saved `live`
+example shows Live selected with highlighting disabled. Exclusive sizing and
+disabled-segment rules live in
+`generated/design-library/controls/view-controls.css`; the segmented surface
+itself stays the shared `.mbk-seg` style.
 
 ## Verification
 

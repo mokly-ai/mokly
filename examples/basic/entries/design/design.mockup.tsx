@@ -12,6 +12,7 @@ import { browseStateScreens, browseViewScreens } from "./browse_screens.js";
 import { browseTagScreens } from "./browse_tag_screens.js";
 import { changesScreens } from "./changes_screens.js";
 import { componentDesign } from "./components/index.js";
+import { interactiveDesign } from "./interactive/index.js";
 import { pageScreens } from "./page_screens.js";
 import { publicationScreens } from "./publication_screens.js";
 import { removedOutcomeScreens } from "./review/outcomes/previous-version/screens.js";
@@ -28,6 +29,7 @@ const DESIGN_DEPENDENCIES = [
 const designMockups = defineRoot({
   children: [
     componentDesign,
+    interactiveDesign,
     collection({
       children: [
         collection({

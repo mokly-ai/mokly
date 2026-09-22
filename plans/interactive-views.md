@@ -124,7 +124,7 @@ Documentation only. Every later milestone implements this contract.
 - [x] Validate Markdown with `npm run format:check`, check local link targets,
       review the diff, commit and push.
 
-## Milestone 2: Design the Static/Live views
+## Milestone 2: Design the Static/Live views — completed
 
 Tags: mockup
 
@@ -133,18 +133,31 @@ Add the approved states to the design catalogue under
 artboard and inspector parts. Both mobile and desktop variants for each screen;
 at most five screens per page, split into nested pages if needed.
 
-- [ ] Add a screen-spec page for interactive views with: the view toolbar
+- [x] Add a screen-spec page for interactive views with: the view toolbar
       showing Static selected; Live selected with the same artboard; the
       preparing state while the bundle builds; the unavailable state with
       Static still selectable; and the component workspace in Live with the
       Props/Controls tab showing its Static-only notice.
-- [ ] Extend the existing browse and component workspace mockups so the
+- [x] Extend the existing browse and component workspace mockups so the
       toggle appears in their toolbars, and add the no-toggle variant for a
       static-only catalogue, keeping all copy free of implementation detail.
-- [ ] Reach the new page from the design navigation and from the component
+- [x] Reach the new page from the design navigation and from the component
       workspace page; keep screens as standalone components so flows can
       reuse them.
-- [ ] Run `npm run build`, `npm run example:build`, `npm run example:check`,
+- [x] Add the control to the registered `design-ui-view-controls` component
+      rather than a new control family: optional `previewMode`,
+      `previewModeDisabled` and `previewModeDestinations` props, a `live`
+      highlight reason, a saved `live` example, and exclusive sizing and
+      disabled-segment rules in its owned stylesheet.
+- [x] Record the preview mode per artboard in `navigation_states.ts` so a
+      screen that has not been designed for Live cannot acquire the control
+      implicitly, and document the transition table in the design contract.
+- [x] Extend the design suites for the six screens: ids and routes in both
+      viewports, segment labels and selected states, the disabled Live segment
+      and its description, the preparing copy inside both device frames, the
+      inspector notice and disabled highlighting, the absent control on the
+      static-only screen, and the control's absence everywhere else.
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
       smoke the pages through `npm run dev`, commit and push.
 
 ## Milestone 3: Browser bundle and hydration runtime

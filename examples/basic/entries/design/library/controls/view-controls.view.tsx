@@ -2,6 +2,7 @@ import { useId } from "react";
 
 import { ViewIcon } from "../../components/parts/view_icons.js";
 import { DesignLink } from "../../parts/design_navigation.js";
+import { SelectionControl } from "../../parts/selection_control.js";
 import { useDesignStyle } from "../style_context.js";
 
 import type { ViewControlsProps } from "./view-controls.js";
@@ -11,7 +12,9 @@ const reasons = {
   unavailable: "Component inspection is unavailable",
   comparison: "Highlighting is unavailable in comparisons",
   removed: "Highlighting is unavailable for removed screens",
+  live: "Highlighting works in Static.",
 } as const;
+const LIVE_UNAVAILABLE = "Live preview is unavailable for this view.";
 const viewportOptions = [
   ["mobile", "Mobile"],
   ["desktop", "Desktop"],
@@ -23,12 +26,64 @@ function ChangedMark() {
   return <span className="ce-view-changed" aria-hidden="true" />;
 }
 
+/**
+ * Static and Live for one view. The segment stays a depiction when the
+ * catalogue has no artboard for the other mode, and Live becomes a described
+ * non-control when the view cannot offer it.
+ */
+function PreviewModeControl({
+  mode,
+  disabled,
+  destinations,
+}: {
+  mode: NonNullable<ViewControlsProps["previewMode"]>;
+  disabled: boolean;
+  destinations: NonNullable<ViewControlsProps["previewModeDestinations"]>;
+}) {
+  const reasonId = useId();
+  return (
+    <span
+      className="mbk-seg ce-preview-mode"
+      role="group"
+      aria-label="Preview mode"
+    >
+      <SelectionControl
+        active={mode === "static"}
+        label="Static"
+        to={mode === "static" ? undefined : destinations.static}
+      />
+      {disabled ? (
+        <span
+          className="ce-preview-mode-off"
+          aria-disabled="true"
+          aria-describedby={reasonId}
+          title={LIVE_UNAVAILABLE}
+        >
+          Live
+          <span id={reasonId} className="ce-control-description">
+            {LIVE_UNAVAILABLE}
+          </span>
+        </span>
+      ) : (
+        <SelectionControl
+          active={mode === "live"}
+          label="Live"
+          to={mode === "live" ? undefined : destinations.live}
+        />
+      )}
+    </span>
+  );
+}
+
 export function ViewControlsView({
   selection,
   scheme,
   highlight,
   unavailable,
   schemeDisabled,
+  previewMode,
+  previewModeDisabled,
+  previewModeDestinations,
   changedViews,
   destinations,
 }: ViewControlsProps) {
@@ -104,6 +159,13 @@ export function ViewControlsView({
           <ViewIcon kind="dark" />
           {schemeChanged ? <ChangedMark /> : null}
         </label>
+      )}
+      {previewMode === undefined ? null : (
+        <PreviewModeControl
+          mode={previewMode}
+          disabled={previewModeDisabled ?? false}
+          destinations={previewModeDestinations ?? {}}
+        />
       )}
       {highlight === undefined ? null : (
         <label

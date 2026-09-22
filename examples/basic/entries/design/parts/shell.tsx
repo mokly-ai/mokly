@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import type { ChangeStatus } from "../components/parts/comparison_fixtures.js";
+import { previewModeProps } from "../components/parts/view_controls.js";
 import { screenHeader } from "../library/chrome/screen-header.js";
 import { optional, useDesignInstance } from "../library/composition.js";
 import {
@@ -161,6 +162,7 @@ export function ViewSwitch({ active, changedViews }: ViewSwitchProps) {
       scheme={scheme}
       schemeDisabled={!navigation.schemeLinks?.[nextScheme]}
       destinations={navigation.schemeLinks ?? {}}
+      {...previewModeProps(navigation.preview)}
       {...optional("changedViews", changedViews)}
     />
   );

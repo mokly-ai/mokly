@@ -1,10 +1,19 @@
 import { MockLink } from "@mokly/mokly";
 
+import type { DesignDestination } from "../../parts/destinations.js";
+
 import type { ComponentPageState } from "./component_details.js";
 import { COMPONENT_PAGES } from "./destinations.js";
 
 /** Saved variants are links between canonical mockup states, with one selected. */
-export function VariantPicker({ state }: { state: ComponentPageState }) {
+export function VariantPicker({
+  state,
+  current,
+}: {
+  state: ComponentPageState;
+  /** The artboard drawing this strip, when it is not the state's own page. */
+  current?: DesignDestination | undefined;
+}) {
   const disabled = state === "disabled";
   const removed = state === "removed";
   const defaultId =
@@ -19,7 +28,11 @@ export function VariantPicker({ state }: { state: ComponentPageState }) {
     <nav className="ce-variants" aria-label="Saved variants">
       <span>Variant</span>
       <MockLink
-        to={!disabled && !removed ? COMPONENT_PAGES[state] : defaultId}
+        to={
+          !disabled && !removed
+            ? (current ?? COMPONENT_PAGES[state])
+            : defaultId
+        }
         aria-current={!disabled && !removed ? "page" : undefined}
       >
         Default

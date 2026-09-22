@@ -29,7 +29,14 @@ view.
 
 View controls saves **Changed views**, where a change confined to other views
 marks the theme control and the viewport dropdown. The mark is evidence about
-views other than the shown one, so the details inspector names them.
+views other than the shown one, so the details inspector names them. It also
+saves **Live preview**: the Static/Live segments between the theme toggle and
+Highlight components, with highlighting disabled because it works in Static.
+The segments reuse the shared `.mbk-seg` surface and the shared selection
+control, so a preview mode is never a second control family. An artboard opts
+in through its own navigation record; without one the toolbar is unchanged and
+leaves no gap. Its contract is the
+[interactive views design](../../../../../docs/protocol/mokly-interactive-views-design.md).
 
 ## Authoring
 

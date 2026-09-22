@@ -1,3 +1,4 @@
+import { INTERACTIVE_PAGES } from "../../interactive/parts/destinations.js";
 import type { NavigationState } from "../../parts/navigation_states.js";
 
 import {
@@ -22,7 +23,9 @@ export const COMPONENT_NAVIGATION_STATES = {
   [CONTROLS_PAGES["readonly-variant"]]: {},
   [COMPONENT_PAGES.closed]: {},
   [INSPECTION_PAGES.closed]: {},
-  [COMPONENT_PAGES.default]: {},
+  [COMPONENT_PAGES.default]: {
+    preview: { mode: "static", links: { live: INTERACTIVE_PAGES.component } },
+  },
   [COMPONENT_PAGES.disabled]: {},
   [COMPONENT_PAGES.comparison]: {},
   [COMPONENT_PAGES.affected]: {},

@@ -2,6 +2,7 @@ import { defineComponent, type ComponentProps } from "@mokly/mokly";
 
 import { libraryMetadata } from "../metadata.js";
 import {
+  destination,
   optionalFlag,
   previewViewport,
   scheme,
@@ -10,6 +11,10 @@ import {
 
 import { ViewControlsView } from "./view-controls.view.js";
 
+const previewMode = {
+  schema: { kind: "enum", values: ["static", "live"] },
+  optional: true,
+} as const;
 const propSchema = {
   kind: "object",
   properties: {
@@ -19,11 +24,20 @@ const propSchema = {
     unavailable: {
       schema: {
         kind: "enum",
-        values: ["empty", "unavailable", "comparison", "removed"],
+        values: ["empty", "unavailable", "comparison", "removed", "live"],
       },
       optional: true,
     },
     schemeDisabled: optionalFlag,
+    previewMode,
+    previewModeDisabled: optionalFlag,
+    previewModeDestinations: {
+      schema: {
+        kind: "object",
+        properties: { static: destination, live: destination },
+      },
+      optional: true,
+    },
     changedViews: {
       schema: {
         kind: "array",
@@ -53,7 +67,7 @@ export const viewControls = defineComponent({
     "controls",
     "view-controls",
     "View controls",
-    "Viewport, theme and component highlighting controls.",
+    "Viewport, theme, preview mode and component highlighting controls.",
   ),
   propSchema,
   controls: {
@@ -70,6 +84,15 @@ export const viewControls = defineComponent({
       label: "Theme",
       options: scheme.schema.values.map((value) => ({ label: value, value })),
     },
+    previewMode: {
+      kind: "select",
+      label: "Preview mode",
+      options: previewMode.schema.values.map((value) => ({
+        label: value,
+        value,
+      })),
+    },
+    previewModeDisabled: { kind: "boolean", label: "Live unavailable" },
     highlight: { kind: "boolean", label: "Highlight components" },
     unavailable: {
       kind: "select",
@@ -97,6 +120,16 @@ export const viewControls = defineComponent({
       id: "unavailable",
       title: "Unavailable",
       props: { ...sample, highlight: false, unavailable: "empty" },
+    },
+    {
+      id: "live",
+      title: "Live preview",
+      props: {
+        ...sample,
+        previewMode: "live",
+        highlight: false,
+        unavailable: "live",
+      },
     },
     {
       id: "changed-views",

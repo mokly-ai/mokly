@@ -72,6 +72,10 @@ export default defineConfig({
       stylesheets: withLibraryStyles(designBaseStyles, componentLayoutStyles),
     },
     {
+      match: "design/interactive/workspace/**",
+      stylesheets: withLibraryStyles(designBaseStyles, componentLayoutStyles),
+    },
+    {
       match: "design/review/**",
       stylesheets: withLibraryStyles(
         ["design.css", "design-stage.css", "design-review.css"],

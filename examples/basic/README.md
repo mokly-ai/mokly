@@ -29,9 +29,9 @@ The [large fixture](../../tests/fixtures/large/README.md)
 uses the same Firna/React Native Web rendering stack with configurable volume,
 without expanding this example or slowing ordinary development startup.
 
-Mokly's 79 design screens now use 15 registered shared components, including
+Mokly's 85 design screens now use 15 registered shared components, including
 the footer tabs panel. Open **Components → Design → Shared components** for Chrome, Controls,
-Inspector and Preview galleries with 58 saved variants, real mobile/desktop
+Inspector and Preview galleries with 62 saved variants, real mobile/desktop
 previews and editable local props. The outer Components and Usage tabs show actual
 recorded relationships; pictured example data inside an artboard stays separate.
 See the [library authoring guide](./entries/design/library/README.md),
@@ -104,7 +104,11 @@ screens cover navigation, Details, tags, color schemes, comparison outcomes,
 stylesheet evidence, the preparing and unavailable comparison states, and the
 previous-version states of removed documents and screens. Thirty-two component
 explorer screens add component pages, saved variants, affected screens,
-repeated/nested inspection, highlighting, and empty or removed states. The shared icon inspector and complete controls
+repeated/nested inspection, highlighting, and empty or removed states. Six
+Static and Live screens under `design/interactive/` add the preview-mode
+control: a screen in Live, the same screen in Static, the wait while a live
+preview is prepared, a view that cannot offer one, a component example in
+Live, and a catalogue that offers no live preview at all. The shared icon inspector and complete controls
 mockups include edited/reset, optional, loading, validation, retry, comparison,
 and published saved-variant states. Every
 screen has distinct mobile and desktop components. The component designs are
@@ -116,7 +120,10 @@ keep the drawer fixed. The recorded tokens and responsive rules live in
 [`docs/protocol/mokly-shell-design.md`](../../docs/protocol/mokly-shell-design.md).
 
 A grouped icon toolbar switches Mobile/Desktop/Both previews, light/dark, and
-screen highlighting. The original Browse/Changes theme pairs retain their
+screen highlighting. The canonical selected screen and the canonical component
+page also carry the Static/Live segments, which open the matching Static and
+Live artboards; every other design toolbar stays unchanged, which is how a
+catalogue without a live preview looks. The original Browse/Changes theme pairs retain their
 canonical links; component previews change locally. Leaf components omit Nested components;
 Toolbar demonstrates composition. Unchanged fixtures show Unmodified and omit
 comparison modes. The fixed desktop shell contains separate preview and inspector
@@ -146,7 +153,7 @@ galleries; `inspector` shows both closed-panel layouts.
 Each child gallery lists at most five owning screens; inspection also links
 two selected-instance screens in a nested gallery.
 
-All seventy-nine design screens use `colorSchemes: ["light"]`: they draw the
+All eighty-five design screens use `colorSchemes: ["light"]`: they draw the
 Mokly shell, including the existing dark-selection examples. The two product
 screens inherit the catalogue's light/dark settings and prove dark generation.
 Design headers retain the approved screen-stack logo: 17px overlapping mobile
@@ -163,10 +170,11 @@ A shared implementation edit appears on its component page and lists consuming
 screens as affected; independent screen inputs, slots or instance changes still
 appear in Changes. This is tested against fully registered baseline snapshots.
 
-The shared inspector/workspace sheets cover all 79 design screens and standalone
+The shared inspector/workspace sheets cover all 85 design screens and standalone
 library hosts. Other mixed component-design sheets remain scoped to the 32
-component-design routes and hosts; the controls sheet additionally remains
-scoped to its eleven owning screen routes. `review.sharedImpact` is fallback
+component-design routes, the two Static and Live workspace routes, and hosts;
+the controls sheet additionally remains scoped to its eleven owning screen
+routes. `review.sharedImpact` is fallback
 impact evidence for files the rendered resource graph cannot see, such as source
 or token modules. Linked stylesheets, including imported sheets, are attributed
 by rule: a changed rule must potentially match a view or be unresolved to keep

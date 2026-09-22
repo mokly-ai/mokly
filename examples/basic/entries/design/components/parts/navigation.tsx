@@ -8,7 +8,7 @@ import { Shell, type ArtboardViewport } from "../../parts/shell.js";
 import {
   COMPONENT_PAGES,
   INSPECTION_PAGES,
-  type ComponentDesignDestination,
+  type WorkspaceDesignDestination,
 } from "./destinations.js";
 import type { CatalogueIdentity } from "./metadata.js";
 
@@ -18,7 +18,7 @@ export type ChangeScenario =
 function nodes(
   scenario: ChangeScenario,
   active: CatalogueIdentity,
-  design: ComponentDesignDestination,
+  design: WorkspaceDesignDestination,
 ): NavNode[] {
   if (scenario === "added")
     return [
@@ -41,7 +41,7 @@ function nodes(
   const reading = active === "reading-room";
   const destination = (
     identity: CatalogueIdentity,
-    canonical: ComponentDesignDestination,
+    canonical: WorkspaceDesignDestination,
   ) => (active === identity ? design : canonical);
   const screens: NavNode[] =
     scenario === "component"
@@ -159,7 +159,7 @@ export function ExplorerShell({
 }: {
   active?: CatalogueIdentity;
   children: ReactNode;
-  design: ComponentDesignDestination;
+  design: WorkspaceDesignDestination;
   scenario?: ChangeScenario;
   viewport: ArtboardViewport;
 }) {

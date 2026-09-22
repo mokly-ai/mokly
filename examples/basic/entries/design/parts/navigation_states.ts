@@ -1,4 +1,6 @@
 import { COMPONENT_NAVIGATION_STATES } from "../components/parts/navigation_states.js";
+import { INTERACTIVE_PAGES } from "../interactive/parts/destinations.js";
+import { INTERACTIVE_NAVIGATION_STATES } from "../interactive/parts/navigation_states.js";
 
 import {
   DESTINATIONS as D,
@@ -13,6 +15,14 @@ interface TagState {
   picker: boolean;
 }
 
+/** Static or Live for this artboard, with the states its segments open. */
+export interface PreviewModeState {
+  mode: "static" | "live";
+  /** Live cannot run for this view, so its segment is a described depiction. */
+  unavailable?: boolean;
+  links?: Partial<Record<"static" | "live", DesignDestination>>;
+}
+
 /** Only authored transitions are present; absence always means a depiction. */
 export interface NavigationState {
   inspector?: DesignDestination;
@@ -20,6 +30,7 @@ export interface NavigationState {
   all?: DesignDestination;
   changes?: DesignDestination;
   comparison?: Partial<Record<ComparisonMode, DesignDestination>>;
+  preview?: PreviewModeState;
   scheme?: DepictedScheme;
   schemeLinks?: Partial<Record<DepictedScheme, DesignDestination>>;
   tags?: TagState;
@@ -41,6 +52,7 @@ const welcomeBrowse: NavigationState = {
 /** Canonical states for the entire design registry, never inferred from labels. */
 export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
   ...COMPONENT_NAVIGATION_STATES,
+  ...INTERACTIVE_NAVIGATION_STATES,
   [D.home]: {},
   [D.page]: {
     inspector: D.pageDetails,
@@ -71,7 +83,11 @@ export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
   [D.variantRemoved]: { all: D.welcome },
   [D.changedViews]: { all: D.welcome, schemeLinks: { dark: D.darkChanged } },
   [D.tour]: {},
-  [D.welcome]: { ...welcomeBrowse, schemeLinks: { dark: D.darkWelcome } },
+  [D.welcome]: {
+    ...welcomeBrowse,
+    preview: { mode: "static", links: { live: INTERACTIVE_PAGES.overview } },
+    schemeLinks: { dark: D.darkWelcome },
+  },
   [D.details]: { ...detailsFilters, schemeLinks: { dark: D.darkDetails } },
   [D.inspector]: { ...welcomeBrowse },
   [D.darkWelcome]: {
