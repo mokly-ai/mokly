@@ -25,6 +25,8 @@ interface HostOptions {
   slots?: boolean;
   source?: MoklyViewerProps["catalogue"];
   defaultSelection?: Partial<ViewerSelection>;
+  responsive?: boolean;
+  topBarSlots?: boolean;
 }
 interface Host {
   root: Root;
@@ -45,7 +47,10 @@ const data = (
 const start = (id: string, options: HostOptions = {}) => {
   const element = document.createElement("section");
   element.id = id;
-  element.style.cssText = "height:900px;width:1200px;position:relative";
+  element.style.cssText = options.responsive
+    ? "height:900px;width:100%;position:relative;font-size:18px"
+    : "height:900px;width:1200px;position:relative";
+  if (options.responsive) document.body.style.margin = "0";
   document.body.append(element);
   const ref = createRef<MoklyViewerHandle>();
   const events: Host["events"] = [];
@@ -122,15 +127,33 @@ const start = (id: string, options: HostOptions = {}) => {
     onMarkerChange: (states) => log("markers", states),
     onError: (error) => log("error", error),
   } as MoklyViewerProps;
-  if (options.slots)
+  if (options.slots || options.topBarSlots)
     host.props.slots = {
-      topBarStart: <button onClick={() => log("slot")}>Host start</button>,
-      topBarEnd: <span>Host end</span>,
-      railStart: <span>Rail start</span>,
-      railEnd: <span>Rail end</span>,
-      sidePanel: { content: <span>Side panel</span>, width: 240 },
-      stageOverlay: { content: <span>Annotation</span>, pointerEvents: "none" },
-      emptyState: <p>Host home</p>,
+      topBarStart: (
+        <button
+          onClick={() => log("slot")}
+          style={options.responsive ? { width: 106 } : undefined}
+        >
+          Host start
+        </button>
+      ),
+      topBarEnd: options.responsive ? (
+        <button style={{ width: 76 }}>Host end</button>
+      ) : (
+        <span>Host end</span>
+      ),
+      ...(options.slots
+        ? {
+            railStart: <span>Rail start</span>,
+            railEnd: <span>Rail end</span>,
+            sidePanel: { content: <span>Side panel</span>, width: 240 },
+            stageOverlay: {
+              content: <span>Annotation</span>,
+              pointerEvents: "none" as const,
+            },
+            emptyState: <p>Host home</p>,
+          }
+        : {}),
     };
   hosts.set(id, host);
   host.render();
