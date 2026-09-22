@@ -45,11 +45,11 @@ Milestone 1). Related contracts: [runtime](../docs/protocol/mokly-runtime.md),
 [component controls](../docs/protocol/mokly-component-controls.md),
 [export](../docs/protocol/mokly-export.md).
 
-## Milestone 1: Define the interactive-view contract
+## Milestone 1: Define the interactive-view contract — completed
 
 Documentation only. Every later milestone implements this contract.
 
-- [ ] Create `docs/protocol/mokly-interactive-views.md` (about 250 lines)
+- [x] Create `docs/protocol/mokly-interactive-views.md` (about 250 lines)
       covering: the `interactive` option and its `off` default; the optional
       per-entry `interactive: false` opt-out on `defineScreen`,
       `defineComponent` and nested `screen` markers; which views offer Live
@@ -68,7 +68,7 @@ Documentation only. Every later milestone implements this contract.
       derived baselines, export or publication); and explicit failure states
       (bundle failed, Node-only import in the graph, live origin unavailable,
       hydration mismatch, entry opted out).
-- [ ] Define the interactive origin: a second HTTP listener bound to loopback,
+- [x] Define the interactive origin: a second HTTP listener bound to loopback,
       default port `serve port + 1` advancing past occupied ports unless
       `--strict-port`, overridable with `--interactive-port <port>`; the
       routes it serves (`/static/**.html` as Live documents, `/static/**`
@@ -81,7 +81,7 @@ Documentation only. Every later milestone implements this contract.
       where the browser reaches the second listener through a different
       host name, with the shell otherwise deriving the origin from its own
       host name and the announced port.
-- [ ] Define the browser bundle: the same consumer graph and module
+- [x] Define the browser bundle: the same consumer graph and module
       resolution as `src/build/load_graph.ts` built with esbuild
       `platform: "browser"`, `format: "esm"`, React and React DOM resolved
       from the consumer, built lazily per catalogue generation on the first
@@ -89,7 +89,7 @@ Documentation only. Every later milestone implements this contract.
       while frames unload, and rebuilt after watched source changes. Node
       built-ins or Node-only consumer modules fail the bundle with a typed
       diagnostic that names the importing module; Static stays available.
-- [ ] Define the optional renderer export `interactive(input): ReactNode` in
+- [x] Define the optional renderer export `interactive(input): ReactNode` in
       `mokly-rendering.md`, with `InteractiveRenderInput` as the pure subset
       of `RenderInput` (`entry`, `variantId`, `componentProps`, `node`,
       `viewport`, `colorScheme`). When absent, the runtime hydrates `node`
@@ -97,13 +97,15 @@ Documentation only. Every later milestone implements this contract.
       consumer keeps `render` and `interactive` structurally equivalent and
       that head-injected server styles (for example collected React Native
       Web styles) are replaced by the runtime's own injection in Live.
-- [ ] Update `mokly-runtime.md` so "Browse frames are sandboxed without
+- [x] Update `mokly-runtime.md` so "Browse frames are sandboxed without
       script permission" becomes "Static frames are sandboxed without script
       permission; Live frames use the cross-origin frame-adapter policy on the
       interactive origin". Update `mokly-frame-adapter.md` so local Serve may
       adopt the cross-origin policy for Live frames only, and record that Live
       mounts supply pending usage and therefore subscribe to navigation only.
-- [ ] Update `mokly-configuration.md` (option, default, CLI flags, rejection
+- [x] Keep the packaged guides under `docs/guides` unchanged until the
+      implementing milestones, because they describe shipped behavior only.
+- [x] Update `mokly-configuration.md` (option, default, CLI flags, rejection
       of unknown values and of `interactive` under export), `mokly-authoring.md`
       (per-entry opt-out grammar), `mokly-component-controls.md` (controls and
       inspection remain Static-only; the Live toggle is disabled while edits
@@ -111,15 +113,15 @@ Documentation only. Every later milestone implements this contract.
       `mokly-export.md` and `mokly-package.md` (exports still contain no
       React; `interactive` is ignored by export and check), `mokly-watch.md`
       (bundle invalidation on rebuild), and `mokly-timings.md` (bundle timing).
-- [ ] Create `docs/protocol/mokly-interactive-views-design.md` describing the
+- [x] Create `docs/protocol/mokly-interactive-views-design.md` describing the
       approved mockup scope for Milestone 2: the Static/Live segmented control
       in the view toolbar beside viewport and scheme, the preparing state, the
       unavailable state, the inspector's Static-only notice, and the hidden
       toggle when the catalogue or entry is not interactive.
-- [ ] Add both docs to `docs/protocol/README.md`; update the README's
+- [x] Add both docs to `docs/protocol/README.md`; update the README's
       components and Serve sections; link this plan from `plans/README.md`
       under Active.
-- [ ] Validate Markdown with `npm run format:check`, check local link targets,
+- [x] Validate Markdown with `npm run format:check`, check local link targets,
       review the diff, commit and push.
 
 ## Milestone 2: Design the Static/Live views
@@ -154,6 +156,8 @@ test browser, with no server or UI changes yet.
       `define.ts` as a typed value with `off` default; reject unknown strings;
       add `--interactive-port` and `--interactive-origin` to
       `src/cli/arguments.ts` and `help.ts`, valid only for `serve`.
+- [ ] Update the packaged guide `docs/guides/authoring/config.md` with the
+      `interactive` row and the renderer's optional `interactive` export.
 - [ ] Add per-entry `interactive?: boolean` to screen and component
       definitions in `src/authoring`, validated like `tags`, and carry it into
       the catalogue index so the shell can hide the toggle.
@@ -213,6 +217,9 @@ Live documents, but the shell still shows Static only.
       the shell can present as the unavailable state while a build is in
       progress or after it failed; log the diagnostic to stderr.
 - [ ] Record bundle build time in `src/diagnostics/timings.ts` output.
+- [ ] Update the packaged CLI guides `docs/guides/cli/serve.md` and
+      `docs/guides/cli/options-and-exit-status.md` with `--interactive-port`
+      and `--interactive-origin` once they exist.
 - [ ] Tests: origin opens only when configured; forwarded and non-loopback
       hosts are refused; shell, controls and review paths are 404 on the
       interactive origin; bundle rebuild after a watched change; 503 during
@@ -225,14 +232,19 @@ Live documents, but the shell still shows Static only.
 
 Tags: ui
 
-- [ ] Add the segmented Static/Live control to the view toolbar in the viewer
-      shell and Browse controls (`packages/viewer/src/client/browse_controls.ts`,
-      `browse_state.ts`, workspace preview), persisted like viewport and
-      scheme, hidden when the bootstrap has no interactive origin or the entry
-      opted out, and never shown for pages, use-case steps or comparisons.
-- [ ] Mount Live frames through `postMessageAdapter({ frameOrigin })` with
-      pending usage, the same `/static/` path and query parameters, and the
-      device frame unchanged; mount Static frames exactly as today.
+- [ ] Add the segmented Static/Live control to the view toolbar in the React
+      shell (`packages/viewer/src/shell/head.tsx` beside `ViewportSwitch` and
+      `SchemeSwitch`, with a `previewMode` selection in the shell store and
+      actions), kept in memory like viewport and scheme, hidden when the
+      private descriptor has no interactive origin or the entry opted out, and
+      never shown for pages, use-case steps or comparisons.
+- [ ] Mount Live frames through `postMessageAdapter({ frameOrigin })` in
+      `packages/viewer/src/shell/frame_registry.tsx` with pending usage, the
+      same `/static/` path and query parameters, and the device frame
+      unchanged; mount Static frames exactly as today. Carry the interactive
+      origin in the private capability descriptor
+      (`packages/viewer/src/client/host_capability_descriptor.ts`), never in
+      the public catalogue.
 - [ ] Present the preparing and unavailable states from the design milestone,
       keep Static reachable in both, and disable highlight, pick and controls
       with the Static-only notice while Live is selected.
@@ -242,7 +254,7 @@ Tags: ui
       and sandbox attributes per mode, navigation from a Live frame opens the
       destination in the shell, state persists across view changes, and the
       inspector notice appears.
-- [ ] Update `packages/viewer/README.md` and `packages/viewer/src/client/README.md`;
+- [ ] Update `packages/viewer/README.md` and `packages/viewer/src/shell/README.md`;
       run the full check set and `cargo xtask check`; commit and push.
 
 ## Milestone 6: Example adoption, smoke test and review

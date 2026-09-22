@@ -114,6 +114,13 @@ supported opt-out from a dark-enabled catalogue. A declaration must be
 non-empty, duplicate-free, include `"light"`, and be a subset of the config.
 Nested trees do not inherit this field from their collections or root.
 
+`defineScreen`, `defineComponent`, and nested `screen` inputs may declare
+`interactive: false` to remove the Live preview from that entry in local
+Serve. Only `false` is accepted; `true`, `undefined`, and other values are
+rejected. Screen variants inherit the parent's value unless they declare their
+own. Collections, pages, and use cases reject the field. See the
+[interactive views contract](./mokly-interactive-views.md).
+
 `defineScreen`, `definePage`, `defineUseCase`, and nested `screen` and `page`
 inputs may also declare
 `tags`, a classification list whose values use the same lowercase kebab-case

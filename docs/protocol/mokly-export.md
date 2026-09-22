@@ -259,7 +259,10 @@ React/SSR viewer API consuming public catalogue data, not an export engine or
 permission to import CLI internals. Serve and export are its first hosts:
 they render its shell tree on the server and ship its standalone hydration
 bundle, including React, so exported browsers run the same shell as Serve.
-Consumer code never enters that bundle.
+Consumer code never enters that bundle. The `interactive` configuration option
+is ignored by export and publication: no consumer browser bundle, Live
+bootstrap or interactive origin is produced, as defined by the
+[interactive views contract](./mokly-interactive-views.md).
 Keep typed options/results and narrow testable filesystem, Git, and capture
 boundaries. Reuse existing generation/rendering rules rather than creating a
 second screen renderer or weakening build validation.

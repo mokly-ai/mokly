@@ -38,6 +38,10 @@ tree shared by standalone Serve, static export and embedded hosts. Standalone
 documents render the complete shell on the server and hydrate it in the browser;
 embedded hosts mount the same components with host-owned selection and slots.
 Consumer frames and comparisons remain static HTML in script-disabled sandboxes.
+An optional Live preview mode for local Serve is an approved target defined by
+the [interactive views contract](./mokly-interactive-views.md); it hydrates the
+same static document on a separate loopback origin and never changes the bytes
+that comparisons read.
 Selecting a removed page or screen captures and renders its pinned previous
 version in that shared tree through the lifecycle implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md).
@@ -237,8 +241,10 @@ controls. All ancestors are structural collection crumbs and stay text. The deta
 source and fragment paths including dark renders, the schemes a screen renders
 in, the tags the entry declares, related docs, dependencies, use cases, and
 comparison context.
-Default Browse fragments and document pages are sandboxed without script permission
-so they cannot alter the same-origin Browse shell. Package-owned same-origin
+Static Browse fragments and document pages are sandboxed without script permission
+so they cannot alter the same-origin Browse shell. A Live frame, when the
+catalogue enables interactive views, is mounted on the separate interactive
+origin under the cross-origin frame-adapter policy instead. Package-owned same-origin
 inspection permits parent-owned outer navigation after explicit user
 activation. Browse does not grant either
 top-navigation sandbox token, so direct and nested consumer contexts retain the
@@ -433,5 +439,6 @@ and on-demand comparison with shared impact and ignored-region classification.
 ## Related Docs
 
 - [Package and authoring contract](./mokly-package.md)
+- [Interactive views](./mokly-interactive-views.md)
 - [Changes and comparisons](./mokly-changes.md)
 - [CI and npm release](./npm-release.md)

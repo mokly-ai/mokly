@@ -35,7 +35,8 @@ the following contract:
   directory;
 - shared-impact globs for comparisons;
 - additional authored inputs and static assets for watched Serve;
-- an optional temporary document transformer for an existing consumer cutover.
+- an optional temporary document transformer for an existing consumer cutover;
+- an optional Static/Live mode for local Serve previews.
 
 The resolved config has one repository root, one mockups root, one sorted
 resolved entry-module set, and normalized repo-relative POSIX paths. Config
@@ -85,6 +86,7 @@ interface MoklyConfig {
   entries?: readonly string[]; // exactly one of entries or entriesDir
   entriesDir?: string; // shorthand for [`${dir}/**/*.mockup.{ts,tsx}`]
   generatedOutput?: "committed" | "derived"; // "derived"
+  interactive?: "off" | "serve"; // "off"
   mockupsDir: string;
   publicExclude?: readonly string[]; // extends shipped public exclusions
   repoRoot?: string; // config directory
@@ -140,6 +142,13 @@ order.
 `baselineBuild` is invalid in committed mode, including a staged migration;
 omit `generatedOutput` or set it to `"derived"` when supplying a
 repository-specific recipe.
+`interactive` defaults to `"off"`, which builds no browser bundle and shows no
+Static/Live control. `"serve"` enables Live views in local Serve only, as
+defined by the [interactive views contract](./mokly-interactive-views.md);
+unknown strings are `config-invalid`. Build, check, export and publication
+ignore the option and emit identical bytes in both values. Serve's
+`--interactive-port` and `--interactive-origin` options are rejected when the
+resolved value is `"off"`.
 Derived Check accepts absent local generated output, rejects Git-tracked routes,
 the manifest and cache files, and prints their paths plus ignore guidance.
 Build writes transactionally in both modes. Serve and export await preparation

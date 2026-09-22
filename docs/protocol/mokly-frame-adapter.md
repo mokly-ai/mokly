@@ -238,8 +238,12 @@ opaque frames and redirects to another origin. Set exactly
 `sandbox="allow-same-origin allow-scripts"`; grant no forms, popups, downloads
 or top-navigation token. The frame must be hosted on a separate origin from
 the app. `allow-scripts` enables document scripts as a browser capability;
-it cannot selectively authorize only Mokly's script. The local adapter never
-adopts this policy. Content hosting/isolation remains the host's responsibility.
+it cannot selectively authorize only Mokly's script. The local same-origin
+adapter never adopts this policy; local Serve uses this cross-origin policy
+only for Live frames on its separate interactive origin, as defined by the
+[interactive views contract](./mokly-interactive-views.md). Those mounts
+supply pending usage and therefore subscribe to navigation only. Content
+hosting/isolation remains the host's responsibility.
 
 On each mount, generate 128 random bits using `crypto.getRandomValues` and
 encode them as 32 lowercase hex characters. Set one `mokly-host` query parameter

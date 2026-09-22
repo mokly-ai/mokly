@@ -24,7 +24,11 @@ by generated output:
 - header-proven generated output plus `.git`, `.context`, `node_modules`,
   `dist`, `target`, coverage, browser-test output, comparison output, and Mokly
   transaction trees are pruned from broad watches and classify as ignored;
-- additional inputs use the explicit action declared in config.
+- additional inputs use the explicit action declared in config;
+- every rebuild and configuration reload also invalidates the in-memory Live
+  browser bundle defined by the
+  [interactive views contract](./mokly-interactive-views.md), which is rebuilt
+  lazily on the next Live request.
 
 An entry glob's stable prefix is a traversal waypoint, not an exemption for its
 whole subtree. A candidate that is an ancestor of, or equal to, the prefix is

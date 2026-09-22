@@ -142,6 +142,12 @@ The development server prints its URL, renders previews on demand, watches
 authored inputs, and prepares Git change evidence in the background. The
 default port is `4173`; use `--port 0` to choose any available port.
 
+Previews are static documents, so comparisons read exact bytes. Setting
+`interactive: "serve"` in the config is an approved target that adds a
+Static/Live switch to local previews so the same React tree runs in the
+browser; comparisons and exports stay static. See the
+[interactive views contract](./docs/protocol/mokly-interactive-views.md).
+
 When the first screen is working, continue with the guides for
 [theming and configuration](./docs/guides/authoring/config.md),
 [screen authoring](./docs/guides/authoring/screens.md), and
@@ -243,6 +249,7 @@ authentication, or discussion experience.
 - [Protocol and specification index](./docs/protocol/README.md)
 - [Removed content previews](./docs/protocol/mokly-removed-previews.md)
 - [Screen variants](./docs/protocol/mokly-screen-variants.md)
+- [Interactive views](./docs/protocol/mokly-interactive-views.md)
 - [Package ownership boundary](./docs/architecture/package-boundary.md)
 - [React-to-static-HTML pipeline](./docs/architecture/build-pipeline.md)
 - [Implementation plans](./plans/README.md)

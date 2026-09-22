@@ -63,7 +63,9 @@ mokly --version       Show the installed package version
 
 Common options include `--config <path>` and opt-in `--debug-timings`
 ([diagnostic contract](./mokly-timings.md)). Serve accepts `--port`, `--base`,
-`--watch`, `--no-watch`, and `--open`. Export requires `--out` and accepts `--base`;
+`--watch`, `--no-watch`, `--open`, and, when the config enables
+[interactive views](./mokly-interactive-views.md), `--interactive-port` and
+`--interactive-origin`. Export requires `--out` and accepts `--base`;
 Publish accepts an optional `--out` and the options in the
 [upload contract](./mokly-upload.md). `--out` on other commands and the removed
 `review` command are rejected.

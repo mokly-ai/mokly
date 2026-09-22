@@ -31,7 +31,9 @@ that optional Git evidence was available.
 `serve.ready` ends when Serve returns a listening URL, not when the process
 shuts down. Complete rendering and Changes run separately after listener readiness
 for both watched and non-watched Serve. `catalogue.prepare-index` measures foreground
-metadata preparation; `preview.render` measures requested documents. Exhaustive
+metadata preparation; `preview.render` measures requested documents;
+`interactive.bundle` measures one lazy browser-bundle build for a catalogue
+generation when [interactive views](./mokly-interactive-views.md) are enabled. Exhaustive
 Serve compilation has role `background`, not `serve`. Timings
 continue for rebuilds and later classification. The parent forwards the flag to
 every replacement child; the child reports startup transfer, source-inventory
