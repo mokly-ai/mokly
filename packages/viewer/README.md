@@ -217,8 +217,8 @@ frame sessions.
 Instance events return an `InstanceRef` scoped to a screen, saved variant or
 flow step, viewport, color scheme and stable component key. Persist that value
 to reconnect external data such as a review comment. `resolveInstance` compares
-a saved component record with a newer catalogue without fetching preview
-evidence.
+a saved component record with its corresponding current record from a newer
+catalogue without fetching preview evidence.
 
 Markers accept unique IDs, exact instance references and React content. Marker
 content is pointer-inert by default; opt an interactive child in with
