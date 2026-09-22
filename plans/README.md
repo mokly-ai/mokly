@@ -8,8 +8,8 @@
 - [Co-Located Entry Discovery Follow-up](./co-located-entry-discovery-follow-up.md)
   — all deferred seventh/eighth-round findings, the latest entry-layout
   documentation finding, and the remaining follow-up tasks from PR #101;
-  implemented and independently verified with contract clarification and
-  regression coverage; delivery and post-push review are in progress.
+  implemented, independently verified, pushed, and reviewed with no actionable
+  findings; [PR #111](https://github.com/mokly-ai/mokly/pull/111) awaits merge.
 - [React Browse Shell](./react-browse-shell.md)
 - [CI Performance](./ci-performance.md) — parallel verification, complete test
   sharding, reusable preparation and measured CI timing improvements.

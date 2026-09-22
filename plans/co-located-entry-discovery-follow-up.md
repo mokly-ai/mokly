@@ -1,7 +1,7 @@
 # Co-Located Entry Discovery Follow-up
 
-Status: implemented and verified on 2026-09-22; delivery and post-push review
-are in progress. Created at the user's request to close
+Status: implemented, verified, pushed, and reviewed on 2026-09-22;
+[PR #111](https://github.com/mokly-ai/mokly/pull/111) awaits merge. Created at the user's request to close
 [Co-Located Entry Discovery](./co-located-entry-discovery.md) for
 [PR #101](https://github.com/mokly-ai/mokly/pull/101). All work here belongs in a
 separate PR. The user requested a plan audit before delegating the fixes to
@@ -192,7 +192,7 @@ Finding traceability:
 | 8                     | Configuration and source-protection contracts allow nested sources below `mockupsDir` while retaining inventory, alias, public-read, and generated-route protections. |
 | Eighth-round residual | Config rejects cache-root globs; direct discovery drops a concurrently vanished cache candidate but denies a surviving one. Both paths have regression coverage.      |
 
-### Milestone 3: Verify, deliver, and review the separate PR
+### Milestone 3: Verify, deliver, and review the separate PR (completed)
 
 Finish this follow-up on its own branch; published-release smoke remains
 outside merge-blocking milestones.
@@ -204,10 +204,10 @@ outside merge-blocking milestones.
       PR merges, then move its index link to Completed.
 - [x] Run all relevant tests and `cargo xtask check` with a 100% pass rate;
       inspect the complete diff and mainline preservation before committing.
-- [ ] After checks pass, run `git add -A`, commit with Conventional Commits
+- [x] After checks pass, run `git add -A`, commit with Conventional Commits
       and a title of at most 50 characters, and push the branch, including all
       authored new files.
-- [ ] Only after the push, review the complete local diff against `origin/main`
+- [x] Only after the push, review the complete local diff against `origin/main`
       using [the implementation review prompt](../docs/implementation-review-prompt.md).
       Report every finding with severity, context, impact, lettered options
       and a recommendation; do not automatically fix review findings.
@@ -221,6 +221,15 @@ The first gate attempt stopped on unformatted test additions; after formatting,
 the complete gate passed. Relative Markdown links (104 targets), code fences,
 whitespace, and preservation against `origin/main` were checked separately.
 No production files or generated artifacts changed, and no files were deleted.
+
+Implementation commit `b9ea846` was pushed to `calummoore/minnetonka-v4` before
+the supervising review. The review used `docs/implementation-review-prompt.md`
+against `origin/main` and found no actionable findings. A separate temporary
+consumer confirmed that glob-matched entries directly below `mockupsDir` are
+accepted by configuration and compilation. Residual coverage is limited to the
+Linux/Chromium environment exercised here; the published-release monorepo
+consumer smoke remains a non-blocking follow-up. This final delivery record is
+a documentation-only update; the tested implementation is unchanged.
 
 ## Post-merge follow-up (non-blocking)
 
