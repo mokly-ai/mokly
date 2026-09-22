@@ -19,6 +19,7 @@ import { viewerIdentifierPrefix } from "./identifiers.js";
 import { viewerCatalogue, viewerContext, viewerView } from "./projection.js";
 import { defaultSelection, normalizeSelection } from "./selection.js";
 import { readObjectSource } from "./source.js";
+import { normalizeTheme } from "./theme.js";
 import type { ViewerSelection, ViewerSlots, ViewerTheme } from "./types.js";
 
 export interface ServerViewerProps {
@@ -44,7 +45,13 @@ export function renderViewer(
   props: ServerViewerProps,
   host?: ViewerServerContext,
 ): string {
-  if (host) return renderShellPage(host.catalogue, host.view, host.context);
+  if (host) {
+    const context =
+      props.theme === undefined
+        ? host.context
+        : { ...host.context, theme: normalizeTheme(props.theme) };
+    return renderShellPage(host.catalogue, host.view, context);
+  }
   const identifierPrefix = viewerIdentifierPrefix(props.viewerId);
   const loaded = readObjectSource(props.catalogue, props.baseUrl);
   if (!loaded) throw new Error("Server rendering requires a catalogue object.");

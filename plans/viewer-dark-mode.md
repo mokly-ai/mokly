@@ -960,3 +960,41 @@ Deliver a tested change with accurate documentation and a complete review diff.
       unstaged and untracked files. Report numbered findings with severity,
       feature context, impact, lettered solution options and a recommended
       scope. Do not change the implementation or automatically fix findings.
+
+## Milestone 7: Close appearance review findings (complete)
+
+Tags: ui
+
+Separate the standalone document appearance from available preview fragments,
+fail closed when its startup behavior is absent, preserve the controller through
+back-forward-cache restoration, and honor the server theme override.
+
+- [x] Define the corrected hydration, missing-startup, full-document SSR and
+      back-forward-cache contracts in the appearance protocol and nearby viewer
+      READMEs.
+- [x] Add regressions that fail on all four reported behaviors before changing
+      production code.
+- [x] Hydrate the body from the startup controller's effective scheme while the
+      preview store independently selects an available fragment scheme.
+- [x] Keep the Appearance selector hidden without its classic host, refresh a
+      persisted controller after restoration, dispose it only on a final exit,
+      and apply an explicit `renderViewer` theme to full-document host context.
+
+## Milestone 8: Verify, integrate main, push and review
+
+Validate the corrections, incorporate the latest target branch, and review the
+complete pushed result without changing it in response to that review.
+
+- [x] Run the focused viewer unit and standalone browser suites, formatting,
+      linting, type checks, builds, and `cargo xtask check`; require every check
+      to pass.
+- [ ] Commit the verified review fixes with a Conventional Commit, then merge
+      the latest `origin/main` and resolve every conflict without dropping work
+      from either side.
+- [ ] Re-run the focused checks and `cargo xtask check` on the merged tree.
+- [ ] Run `git add -A`, commit the merge using a Conventional Commit, push the
+      current branch, and verify the remote ref and clean worktree.
+- [ ] Only after the push, use
+      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main`. Report findings
+      without changing the implementation.

@@ -4,6 +4,12 @@ import { exportCatalogue } from "../../dist/export/run.js";
 import { createExportFixture } from "../helpers/export_fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 
+import {
+  buildDevelopmentBundle,
+  captureBrowserErrors,
+  expectCleanHydration,
+  installDevelopmentBundle,
+} from "./react_shell_hydration_helpers.js";
 import { expectFrameSource } from "./workspace_actions.js";
 
 const control = ".mbk-topbar [data-mokly-appearance-control]";
@@ -14,7 +20,9 @@ const screen = "/view/screens/welcome.html";
 
 let lightOnlyFixture: Awaited<ReturnType<typeof createExportFixture>>;
 let lightOnlySite: Awaited<ReturnType<typeof serveStaticFiles>>;
+let developmentBundle: string;
 test.beforeAll(async () => {
+  developmentBundle = await buildDevelopmentBundle();
   lightOnlyFixture = await createExportFixture();
   await exportCatalogue(lightOnlyFixture.config, { outDir: "site" });
   lightOnlySite = await serveStaticFiles(lightOnlyFixture.output);
@@ -141,6 +149,37 @@ test("a saved appearance is restored on a later visit", async ({ page }) => {
   );
 });
 
+test("a light-only catalogue hydrates a saved Dark appearance cleanly", async ({
+  page,
+}) => {
+  const errors = captureBrowserErrors(page);
+  await store(page, "dark");
+  await installDevelopmentBundle(page, developmentBundle);
+  await page.goto(`${lightOnlySite.url}/view/screens/home.html`);
+
+  await expectCleanHydration(page, errors);
+  await expect
+    .poll(() => appearance(page))
+    .toEqual({ scheme: "dark", theme: "dark", value: "dark" });
+  await expectFrameSource(
+    page.locator(mobileFrame),
+    /screens\/home\.mobile\.html$/,
+  );
+});
+
+test("a missing appearance startup asset leaves its control hidden", async ({
+  page,
+}) => {
+  await page.route("**/__mokly/client/appearance-startup.js", (route) =>
+    route.abort(),
+  );
+  await installDevelopmentBundle(page, developmentBundle);
+  await page.goto(screen);
+
+  await expect(page.locator("html")).toHaveAttribute("data-mokly-hydrated", "");
+  await expect(page.locator(control)).toBeHidden();
+});
+
 test("a saved appearance outranks the system and the pin outranks it", async ({
   page,
 }) => {
@@ -205,6 +244,34 @@ test("Auto follows the system while the document stays open", async ({
       theme: "light",
       value: "light",
     });
+});
+
+test("Auto keeps following the system after a back-forward cache restore", async ({
+  page,
+}) => {
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.goto(screen);
+  await expect
+    .poll(() => appearance(page))
+    .toEqual({ scheme: "light", theme: "auto", value: "auto" });
+
+  await page.evaluate(() => {
+    window.dispatchEvent(
+      new PageTransitionEvent("pagehide", { persisted: true }),
+    );
+    window.dispatchEvent(
+      new PageTransitionEvent("pageshow", { persisted: true }),
+    );
+  });
+  await page.emulateMedia({ colorScheme: "dark" });
+
+  await expect
+    .poll(() => appearance(page))
+    .toEqual({ scheme: "dark", theme: "auto", value: "auto" });
+  await expectFrameSource(
+    page.locator(mobileFrame),
+    /screens\/welcome\.mobile\.dark\.html$/,
+  );
 });
 
 test("a restored dark appearance swaps each frame at most once", async ({

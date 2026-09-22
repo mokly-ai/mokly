@@ -5,6 +5,12 @@ import { test } from "node:test";
 import { embeddedStyles } from "../scripts/styles.mjs";
 import { readCatalogue } from "../src/catalogue/reader.js";
 import { SHELL_CSS } from "../src/shell/css.js";
+import {
+  viewerCatalogue,
+  viewerContext,
+  viewerView,
+} from "../src/viewer/projection.js";
+import { defaultSelection } from "../src/viewer/selection.js";
 import { renderViewer } from "../src/viewer/server.js";
 import { VIEWER_CSS } from "../src/viewer/styles.js";
 
@@ -62,6 +68,31 @@ test("theme is independent of the preview colour scheme", () => {
   });
   assert.match(html, /data-mokly-theme="dark"/);
   assert.match(html, /data-mokly-color-scheme="light"/);
+});
+
+test("a full-document render applies the theme prop over its host context", () => {
+  const catalogue = viewerCatalogue(fixture);
+  const context = {
+    ...viewerContext(fixture, defaultSelection),
+    embedded: false,
+    theme: "light" as const,
+  };
+  const host = {
+    catalogue,
+    context,
+    view: viewerView(catalogue, defaultSelection),
+  };
+  const props = {
+    viewerId: "theme-test",
+    catalogue: fixture,
+    baseUrl: "https://catalogue.example",
+  };
+
+  assert.match(
+    renderViewer({ ...props, theme: "dark" }, host),
+    /data-mokly-theme="dark"/,
+  );
+  assert.match(renderViewer(props, host), /data-mokly-theme="light"/);
 });
 
 test("Auto resolves through CSS, so no script decides the appearance", () => {

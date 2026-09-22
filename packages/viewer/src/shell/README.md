@@ -78,9 +78,12 @@ its first render instead of replaying preferences after hydration.
 Appearance has the same explicit handoff with an earlier first-paint boundary.
 `appearance-startup.js` runs before the stylesheet, resolves Auto/Light/Dark,
 and refreshes the parsed control and frame sources before `src/browser.tsx`
-hydrates. `appearance_bridge.ts` adopts that theme and effective preview scheme
-into the live shell; embedded roots skip the bridge and receive `theme` from
-their host while retaining independent preview controls.
+hydrates. `appearance_bridge.ts` adopts that theme and the body's effective
+scheme into the live shell, independently asking the store for matching preview
+files. A light-only catalogue can therefore keep Light previews without
+rewriting a Dark interface during hydration. Without the startup host, the
+bridge leaves the selector hidden. Embedded roots skip the bridge and receive
+`theme` from their host while retaining independent preview controls.
 
 `previews.tsx` renders the one previous-version presentation a removed page and
 a removed screen share: the "Showing previous version" label, the stage host

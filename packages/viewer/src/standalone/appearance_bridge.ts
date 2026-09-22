@@ -11,6 +11,7 @@ import { standaloneAppearanceHost } from "./appearance_host.js";
 /** Appearance values rendered by the standalone document and top bar. */
 export interface StandaloneAppearanceState {
   ready: boolean;
+  scheme: "dark" | "light";
   theme: ViewerTheme;
 }
 
@@ -26,24 +27,19 @@ export function useStandaloneAppearance(
   const storeRef = useRef(store);
   storeRef.current = store;
   const [appearance, setAppearance] = useState(() =>
-    initialAppearance(store.context.theme),
+    initialAppearance(store.context.theme, store.state.selection.colorScheme),
   );
 
   useEffect(() => {
     if (!store.interactive || typeof window === "undefined") return;
     const host = window as Window & AppearanceCallbackWindow;
     const apply = (theme: ViewerTheme, scheme: "dark" | "light") => {
-      setAppearance({ ready: true, theme: normalizeTheme(theme) });
+      setAppearance({ ready: true, scheme, theme: normalizeTheme(theme) });
       storeRef.current.selectColorScheme(scheme);
     };
     host.onAppearance = apply;
     const appearanceHost = standaloneAppearanceHost(host);
     if (appearanceHost) appearanceHost.refresh();
-    else {
-      const theme = document.documentElement.getAttribute(THEME_ATTRIBUTE);
-      const scheme = document.body.getAttribute("data-mokly-color-scheme");
-      apply(normalizeTheme(theme), scheme === "dark" ? "dark" : "light");
-    }
     return () => {
       if (host.onAppearance === apply) host.onAppearance = undefined;
     };
@@ -52,14 +48,23 @@ export function useStandaloneAppearance(
   return appearance;
 }
 
-function initialAppearance(theme: ViewerTheme | undefined) {
+function initialAppearance(
+  theme: ViewerTheme | undefined,
+  fallbackScheme: "dark" | "light",
+): StandaloneAppearanceState {
   if (typeof document === "undefined")
-    return { ready: false, theme: normalizeTheme(theme) };
+    return {
+      ready: false,
+      scheme: fallbackScheme,
+      theme: normalizeTheme(theme),
+    };
   const control = document.querySelector<HTMLElement>(
     "[data-mokly-appearance-control]",
   );
+  const scheme = document.body.getAttribute("data-mokly-color-scheme");
   return {
     ready: control ? !control.hidden : false,
+    scheme: scheme === "dark" || scheme === "light" ? scheme : fallbackScheme,
     theme: normalizeTheme(
       document.documentElement.getAttribute(THEME_ATTRIBUTE),
     ),

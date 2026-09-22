@@ -124,9 +124,7 @@ function StandaloneDocumentContents({
       </head>
       <body
         className={`mbk-fs${store.state.expandedFrame ? " frame-expanded" : ""}`}
-        data-mokly-color-scheme={
-          hydrated ? store.state.selection.colorScheme : undefined
-        }
+        data-mokly-color-scheme={hydrated ? appearance.scheme : undefined}
         onClick={store.onShellClick}
         onKeyDown={store.onShellKeyDown}
       >

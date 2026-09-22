@@ -37,13 +37,19 @@ if (typeof document !== "undefined" && typeof window !== "undefined") {
       once: true,
     });
   else handle.refresh();
-  window.addEventListener(
-    "pagehide",
-    () => {
-      handle.dispose();
-      if (host.__moklyAppearance === appearance)
-        host.__moklyAppearance = undefined;
-    },
-    { once: true },
-  );
+  const dispose = (): void => {
+    handle.dispose();
+    if (host.__moklyAppearance === appearance)
+      host.__moklyAppearance = undefined;
+    window.removeEventListener("pagehide", pagehide);
+    window.removeEventListener("pageshow", pageshow);
+  };
+  const pagehide = (event: PageTransitionEvent): void => {
+    if (!event.persisted) dispose();
+  };
+  const pageshow = (event: PageTransitionEvent): void => {
+    if (event.persisted) handle.refresh();
+  };
+  window.addEventListener("pagehide", pagehide);
+  window.addEventListener("pageshow", pageshow);
 }

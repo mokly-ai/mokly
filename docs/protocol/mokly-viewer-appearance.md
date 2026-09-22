@@ -47,8 +47,11 @@ catalogue, its device screens, component samples and comparisons change
 together. A screen with no dark render keeps its light frames and the existing
 fallback caption when the catalogue has dark fragments elsewhere; a catalogue
 with no dark fragments shows light previews with no captions under a dark
-interface. The standalone top bar, head band and component workspace carry no
-separate preview scheme control.
+interface. That light-only preview fallback does not change the document's
+effective Dark appearance: React hydrates from the scheme already applied to
+the body while its preview selection independently normalizes to the available
+Light files. The standalone top bar, head band and component workspace carry
+no separate preview scheme control.
 
 In an embedded root, `selection.colorScheme` keeps its preview meaning and
 stays independent of `theme`: a dark interface around a light preview and the
@@ -98,10 +101,12 @@ updates may run when needed, without triggering fragment requests or comparison
 generation.
 
 `renderViewer` applies the same prop to embedded static markup and to its
-first-party full-document rendering path. Explicit modes must be present in
-the initial markup. Auto resolves through CSS, without a server guess or a
-client-only light render before dark styling. Matching server/client inputs
-must not produce theme-related hydration differences.
+first-party full-document rendering path. On that path an explicit prop
+overrides the host context's initial theme, while an omitted prop preserves the
+host context. Explicit modes must be present in the initial markup. Auto
+resolves through CSS, without a server guess or a client-only light render
+before dark styling. Matching server/client inputs must not produce
+theme-related hydration differences.
 
 ## Standalone Appearance Control
 
@@ -142,9 +147,14 @@ startup, it replaces each frame's server-rendered light source before or as
 early as possible in that frame's first load, and at most once. The classic
 implementation remains outside the React hydration bundle and exposes only a
 narrow choose/refresh handoff. The standalone browser entry refreshes parsed
-markup before hydration, then the shell bridge adopts the effective scheme into
-its store; later choices and Auto system changes update both owners through the
-same callback. Installation is idempotent and cleans up its listeners.
+markup before hydration, then the shell bridge adopts the effective document
+scheme and asks the store for matching preview files; later choices and Auto
+system changes update both owners through the same callback. Installation is
+idempotent and cleans up its listeners.
+Persisted `pagehide` events keep the controller alive for the browser's
+back-forward cache, and persisted `pageshow` refreshes the restored document;
+a final non-persisted `pagehide` disposes it and removes its lifecycle
+listeners.
 React-owned navigation, evidence refreshes and watched reload recovery carry
 the current effective appearance forward rather than a separate preview state.
 
@@ -159,7 +169,9 @@ contains no React, inline-script/CSP exception or remote dependency; the
 separate `react-shell.js` bundle hydrates the server-rendered document.
 Without JavaScript, CSS still provides the initial/Auto interface appearance,
 frames keep their server-rendered light sources, and the manual selector stays
-hidden until its behavior is installed. Persisted overrides require the asset.
+hidden until its behavior is installed. If the startup asset is missing but
+React still hydrates, the selector remains hidden rather than exposing a
+control with no change handler. Persisted overrides require the asset.
 
 ## Palette And Ownership
 
@@ -307,10 +319,12 @@ the screens.
   the absence of a second scheme control. Validate all four generated variants.
 - Test effective-appearance resolution, preference normalization, the `scheme`
   URL pin, storage failures, startup ordering and cleanup; SSR markup and
-  exports; semantic contrast and inherited accent overrides.
+  exports; missing-startup fail-closed behavior; back-forward-cache restoration;
+  semantic contrast and inherited accent overrides.
 - In standalone browsers, cross Auto/Light/Dark with mixed and light-only
   catalogues at both widths, including live system changes under Auto, a
-  `scheme` pin, component samples and comparison frames. In embedded browsers,
+  `scheme` pin, clean Dark hydration for a light-only catalogue, component
+  samples and comparison frames. In embedded browsers,
   cross Light/Dark `theme` with Light/Dark previews and light-only catalogues,
   including native/media-query-driven preview fixtures for both adapters.
 - Test Auto changes, explicit overrides, theme-prop updates, two independent

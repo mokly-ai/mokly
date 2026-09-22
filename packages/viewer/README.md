@@ -124,6 +124,9 @@ selection, temporary props, picking, highlights and markers, and it never
 mutates the host document or sibling roots. Standalone Serve/export instead
 render one Appearance selector that sets interface and previews together; see
 the [appearance contract](../../docs/protocol/mokly-viewer-appearance.md).
+For first-party full-document rendering, an explicit `theme` passed to
+`renderViewer` overrides the host context theme; omitting it preserves the
+context value.
 
 `markers` supplies unique host marker ids, exact instance references and React
 content. `onMarkerChange` reports each marker as visible, hidden or unavailable
@@ -256,7 +259,10 @@ server-rendered links usable.
 Standalone documents also load `appearance-startup.js` before the shell
 stylesheet. It restores the origin-local Appearance preference, applies a valid
 `scheme` URL pin without saving it, follows system changes under Auto, and
-hands the effective preview scheme to the hydrated store before hydration.
+hands the effective scheme to React before hydration. The document appearance
+stays Dark when a light-only catalogue must keep Light preview files. A missing
+startup asset leaves the selector hidden, and a back-forward-cache restore
+keeps and refreshes the controller rather than losing live Auto updates.
 Local Serve supplies updates, recovery, private workspace evidence, temporary
 previews and on-demand Usage through the separate
 [live capability contract](../../docs/protocol/mokly-live-capabilities.md).

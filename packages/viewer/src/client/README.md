@@ -28,8 +28,12 @@ client interaction runtime. The classic `appearance-startup.js` bundle restores
 the document mark, preference and system listener before styles paint, updates
 parsed frames and the native selector, and exposes a narrow refresh handoff.
 The browser entry refreshes that controller before hydration; the React bridge
-then adopts its effective preview scheme into the shell store. The complete
-build-output manifest delivers both the classic bundle and `react-shell.js`.
+then adopts its effective document scheme while the shell store independently
+selects an available preview scheme. The selector stays hidden if the classic
+host is absent. Persisted page exits keep the controller for back-forward-cache
+restoration and refresh it on return; final exits dispose it and its lifecycle
+listeners. The complete build-output manifest delivers both the classic bundle
+and `react-shell.js`.
 
 `frame_adapter.ts` defines the transport-independent mount, boundary, highlight,
 scroll and event interfaces in the [frame contract](../../../../docs/protocol/mokly-frame-adapter.md).
