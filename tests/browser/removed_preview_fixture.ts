@@ -57,7 +57,7 @@ export async function startServedPreviews(): Promise<RemovedPreviewHost> {
  * frame adapters exercise the same packaged previews.
  */
 export async function startViewerPreviews(): Promise<
-  RemovedPreviewHost & { frameOrigin: string }
+  RemovedPreviewHost & { cspUrl: string; frameOrigin: string }
 > {
   const fixture = await createRemovedPreviewFixture();
   try {
@@ -87,10 +87,7 @@ export async function startViewerPreviews(): Promise<
         recursive: true,
       },
     );
-    const host = await serveStaticFiles(fixture.output);
-    const artifact = await serveStaticFiles(fixture.output, {
-      allowedOrigin: host.url,
-    });
+    const artifact = await serveStaticFiles(fixture.output);
     const catalogue: unknown = JSON.parse(
       await fs.readFile(
         path.join(fixture.output, "__mokly/catalogue.json"),
@@ -102,14 +99,36 @@ export async function startViewerPreviews(): Promise<
       frameOrigin: artifact.url,
     }).replaceAll("<", "\\u003c");
     await fs.writeFile(
-      path.join(fixture.output, "viewer.html"),
-      `<!doctype html><link rel="stylesheet" href="/viewer.css"><body><script>window.fixture=${data}</script><script type="module" src="/viewer.js"></script></body>`,
+      path.join(fixture.output, "fixture.js"),
+      `window.fixture=${data};`,
     );
+    await fs.writeFile(
+      path.join(fixture.output, "viewer.html"),
+      '<!doctype html><link rel="stylesheet" href="/viewer.css"><body><script src="/fixture.js"></script><script type="module" src="/viewer.js"></script></body>',
+    );
+    const host = await serveStaticFiles(fixture.output);
+    const cspHost = await serveStaticFiles(fixture.output, {
+      csp: [
+        "default-src 'self'",
+        "script-src 'self'",
+        `connect-src 'self' ${artifact.url}`,
+        `img-src 'self' ${artifact.url}`,
+        `style-src 'self' 'unsafe-inline' ${artifact.url}`,
+        `font-src 'self' ${artifact.url}`,
+        `media-src 'self' ${artifact.url}`,
+        `frame-src 'self' ${artifact.url}`,
+        "object-src 'none'",
+      ].join("; "),
+    });
+    artifact.allowOrigin(host.url);
+    artifact.allowOrigin(cspHost.url);
     return {
+      cspUrl: cspHost.url,
       frameOrigin: artifact.url,
       url: host.url,
       close: async () => {
         await host.close();
+        await cspHost.close();
         await artifact.close();
         await fixture.close();
       },

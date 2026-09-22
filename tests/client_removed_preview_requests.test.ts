@@ -92,6 +92,10 @@ test("a screen preview renders only its captured previous views", async () => {
     AbortSignal.timeout(5_000),
   );
   assert.equal(loaded.url, generation);
+  assert.equal(
+    loaded.generation,
+    `https://catalogue.test/__mokly/diffs/__generations/${GENERATION}/`,
+  );
   assert.deepEqual(loaded.content, {
     kind: "screen",
     views: [
@@ -197,6 +201,7 @@ test("a page preview must describe the entry that asked for it", async () => {
 test("a generation that resolved elsewhere is not reused", async () => {
   const loaded = {
     content: { kind: "page", url: "https://catalogue.test/old.html" },
+    generation: `https://catalogue.test/__mokly/diffs/__generations/${GENERATION}/`,
     url: `https://catalogue.test${COMPARISON}`,
   } as const;
   const same = respond(null, loaded.url);

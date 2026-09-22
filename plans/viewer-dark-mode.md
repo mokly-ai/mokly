@@ -988,11 +988,11 @@ complete pushed result without changing it in response to that review.
 - [x] Run the focused viewer unit and standalone browser suites, formatting,
       linting, type checks, builds, and `cargo xtask check`; require every check
       to pass.
-- [ ] Commit the verified review fixes with a Conventional Commit, then merge
+- [x] Commit the verified review fixes with a Conventional Commit, then merge
       the latest `origin/main` and resolve every conflict without dropping work
       from either side.
-- [ ] Re-run the focused checks and `cargo xtask check` on the merged tree.
-- [ ] Run `git add -A`, commit the merge using a Conventional Commit, push the
+- [x] Re-run the focused checks and `cargo xtask check` on the merged tree.
+- [x] Run `git add -A`, commit the merge using a Conventional Commit, push the
       current branch, and verify the remote ref and clean worktree.
 - [ ] Only after the push, use
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)

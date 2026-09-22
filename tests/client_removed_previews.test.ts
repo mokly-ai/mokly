@@ -173,15 +173,15 @@ test("an embedded viewer may request only advertised addresses", () => {
       { entry: { route: "flows/tour.html" } },
     ],
   } as unknown as CatalogueReadModel;
-  assert.deepEqual(advertisedPreviewPaths(model), [
-    COMPARISON.slice(1),
-    pagePath,
-  ]);
+  assert.deepEqual(advertisedPreviewPaths(model), {
+    files: [COMPARISON.slice(1), pagePath],
+    prefixes: [`__mokly/diffs/__generations/${GENERATION}/snapshots/before/`],
+  });
   assert.deepEqual(
     advertisedPreviewPaths({
       comparisonUrl: null,
       removedEntries: [],
     } as unknown as CatalogueReadModel),
-    [],
+    { files: [], prefixes: [] },
   );
 });

@@ -24,13 +24,18 @@
   — closes the React Browse Shell Milestone 13/14 review finding by attaching
   the same-origin mount-time navigation receiver only to a previously
   authenticated document.
+- [Viewer-Owned Historical Previews](./viewer-owned-historical-previews.md)
+  — closes the removed content previews High finding by presenting every
+  historical document through a viewer-owned same-origin document so the
+  read-only guard applies in cross-origin embedded viewers too.
 
 ## Completed
 
 - [Removed Content Previews](./removed-content-previews.md) — delivered and
   verified; Serve, exports, repository previews, and embedded viewers render
-  pinned previous versions for removed documents and screens. One High/P1
-  cross-origin read-only finding is recorded for the user's decision.
+  pinned previous versions for removed documents and screens. Its High/P1
+  cross-origin read-only finding is addressed by
+  [Viewer-Owned Historical Previews](./viewer-owned-historical-previews.md).
 - [Mokly Viewer Library](./mokly-viewer-library.md) — implementation and release
   PRs merged; viewer 0.1.0 and CLI 0.10.0 are published. One P2 review finding
   and the remaining published-package smoke are recorded for follow-up.
