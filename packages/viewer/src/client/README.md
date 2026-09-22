@@ -48,12 +48,14 @@ starting object even when its URL equals the assignment, so an unowned document
 reached through native frame navigation keeps portable link behavior until a
 different replacement object authenticates.
 
-Frames holding a previous version carry `data-mokly-preview-frame`. They are
-owned directly by the [React preview controller](../previews/README.md), not a
-frame adapter, so no inspector or logical-navigation handshake happens for
-historical documents. The controller cancels marked links and forms in
-same-origin historical documents and the frame sandbox supplies the remaining
-cross-origin boundary.
+Frames holding a previous version carry `data-mokly-preview-frame` and
+`data-mokly-preview-source`. They are owned directly by the
+[React preview controller](../previews/README.md), not a frame adapter, so no
+inspector or logical-navigation handshake happens for historical documents.
+The controller fetches each historical document and presents it as a
+viewer-origin, script-disabled `srcdoc`; its parent guard therefore cancels
+every link and form in every host, owns same-document anchor scrolling, and
+restores the accepted presentation if the frame navigates.
 
 `post_message_adapter.ts` explicitly opts into a separate HTTP(S) origin. It sets
 the cross-origin sandbox, replaces iframe history, and negotiates a fresh random

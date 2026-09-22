@@ -1,15 +1,9 @@
-/**
- * Keep a previous version readable but inert. Scrolling, text selection and
- * same-document anchors work; links and forms never leave the preview or reach
- * current content. Frames the parent cannot reach are already withheld forms,
- * popups, downloads and top navigation by their sandbox.
- *
- * Only Enter activates a link, so only Enter is cancelled. Space scrolls the
- * document even while a link holds focus, and cancelling it would take reading
- * a long previous version away from keyboard users.
- */
+/** Keep a viewer-owned historical document readable but inert. */
+
+import type { PreviewPresentation } from "./presentation.js";
 
 const guarded = new WeakSet<Document>();
+const XLINK_NAMESPACE = "http://www.w3.org/1999/xlink";
 
 function accessible(frame: HTMLIFrameElement): Document | undefined {
   try {
@@ -19,36 +13,63 @@ function accessible(frame: HTMLIFrameElement): Document | undefined {
   }
 }
 
-function activated(target: EventTarget | null, doc: Document): Element | null {
+function activated(event: Event, doc: Document): Element | undefined {
   const view = doc.defaultView;
-  if (!view || !(target instanceof view.Element)) return null;
-  return target.closest("a[href], area[href]");
+  if (!view) return;
+  return event
+    .composedPath()
+    .find(
+      (candidate): candidate is Element =>
+        candidate instanceof view.Element &&
+        (candidate.localName === "a" || candidate.localName === "area"),
+    );
 }
 
-/** Only an anchor into the same historical document keeps its default. */
-function sameDocumentAnchor(link: Element, doc: Document): boolean {
-  if (link.hasAttribute("download") || link.getAttribute("target"))
-    return false;
+function fragmentName(link: Element, doc: Document, source: string) {
+  let target: URL;
   try {
-    const target = new URL(link.getAttribute("href") ?? "", doc.baseURI);
-    const here = new URL(doc.URL);
-    return (
-      target.hash !== "" &&
-      target.origin === here.origin &&
-      target.pathname === here.pathname &&
-      target.search === here.search
-    );
+    const href =
+      link.getAttribute("href") ??
+      link.getAttributeNS(XLINK_NAMESPACE, "href") ??
+      "";
+    target = new URL(href, doc.baseURI);
   } catch {
-    return false;
+    return;
+  }
+  if (!target.hash) return;
+  const encoded = target.hash.slice(1);
+  target.hash = "";
+  if (target.href !== source) return;
+  try {
+    return decodeURIComponent(encoded);
+  } catch {
+    return encoded;
   }
 }
 
-function guard(doc: Document): void {
+function scrollToFragment(
+  link: Element,
+  doc: Document,
+  presentation: PreviewPresentation,
+): void {
+  const name = fragmentName(link, doc, presentation.snapshotAddress);
+  if (!name) return;
+  const target =
+    doc.getElementById(name) ??
+    Array.from(doc.getElementsByName(name)).find(
+      (candidate) => candidate.localName === "a",
+    );
+  target?.scrollIntoView();
+}
+
+function guard(doc: Document, presentation: PreviewPresentation): void {
   if (guarded.has(doc)) return;
   guarded.add(doc);
   const block = (event: Event): void => {
-    const link = activated(event.target, doc);
-    if (link && !sameDocumentAnchor(link, doc)) event.preventDefault();
+    const link = activated(event, doc);
+    if (!link) return;
+    event.preventDefault();
+    scrollToFragment(link, doc, presentation);
   };
   doc.addEventListener("click", block, true);
   doc.addEventListener("auxclick", block, true);
@@ -56,20 +77,44 @@ function guard(doc: Document): void {
     "keydown",
     (event) => {
       const view = doc.defaultView;
-      if (!view || !(event instanceof view.KeyboardEvent)) return;
-      if (event.key === "Enter") block(event);
+      if (view && event instanceof view.KeyboardEvent && event.key === "Enter")
+        block(event);
     },
     true,
   );
   doc.addEventListener("submit", (event) => event.preventDefault(), true);
 }
 
-/** Guard one historical frame now and after every document it loads. */
-export function enforcePreviewReadOnly(frame: HTMLIFrameElement): void {
+/** Guard one accepted presentation and restore it after any later navigation. */
+export function enforcePreviewReadOnly(
+  frame: HTMLIFrameElement,
+  presentation: PreviewPresentation,
+): () => void {
+  let recorded: Document | undefined;
+  let restoring = false;
   const attach = (): void => {
     const doc = accessible(frame);
-    if (doc) guard(doc);
+    if (!doc) {
+      if (recorded && !restoring) {
+        restoring = true;
+        frame.srcdoc = presentation.srcdoc;
+      }
+      return;
+    }
+    if (doc.URL === "about:srcdoc" && (!recorded || restoring)) {
+      recorded = doc;
+      restoring = false;
+      guard(doc, presentation);
+      return;
+    }
+    if (recorded && doc !== recorded && !restoring) {
+      restoring = true;
+      frame.srcdoc = presentation.srcdoc;
+      return;
+    }
+    if (doc === recorded) guard(doc, presentation);
   };
   frame.addEventListener("load", attach);
   attach();
+  return () => frame.removeEventListener("load", attach);
 }

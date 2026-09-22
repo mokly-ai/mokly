@@ -24,7 +24,11 @@ export type PreviewContent =
 
 /** A parsed preview and the immutable address its documents resolve against. */
 export interface LoadedPreview {
+  /** Validated page or screen documents named by the preview metadata. */
   content: PreviewContent;
+  /** Absolute generation root that owns every historical document. */
+  generation: string;
+  /** Final metadata response URL used to renew a live generation. */
   url: string;
 }
 
@@ -47,6 +51,14 @@ export interface PreviewDelivery {
 /** Fetch boundary supplied by the shell that owns the preview. */
 export interface PreviewRequestEnvironment {
   fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>;
+}
+
+/** Exact files and confined directory prefixes advertised for a preview. */
+export interface AdvertisedPreviewPaths {
+  /** Metadata files an embedded viewer may request directly. */
+  files: readonly string[];
+  /** Directory prefixes beneath which historical documents may be requested. */
+  prefixes: readonly string[];
 }
 
 /**
@@ -91,13 +103,20 @@ export function previewEndpoint(
  */
 export function advertisedPreviewPaths(
   model: CatalogueReadModel,
-): readonly string[] {
-  return [
-    ...(model.comparisonUrl === null ? [] : [model.comparisonUrl]),
-    ...model.removedEntries.flatMap((removed) =>
-      removed.preview?.kind === "page" ? [removed.preview.path] : [],
-    ),
-  ];
+): AdvertisedPreviewPaths {
+  const comparison = model.comparisonUrl;
+  return {
+    files: [
+      ...(comparison === null ? [] : [comparison]),
+      ...model.removedEntries.flatMap((removed) =>
+        removed.preview?.kind === "page" ? [removed.preview.path] : [],
+      ),
+    ],
+    prefixes:
+      comparison === null
+        ? []
+        : [`${comparison.slice(0, -REVIEW_FILE.length)}snapshots/before/`],
+  };
 }
 
 function unavailable(): never {
@@ -161,6 +180,7 @@ export async function requestPreview(
       data.kind === "screen"
         ? screenContent(data, payload, base)
         : pageContent(data, payload, base),
+    generation: new URL(".", base).href,
     url: response.url,
   };
 }

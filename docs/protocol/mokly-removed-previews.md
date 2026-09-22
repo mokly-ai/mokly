@@ -2,10 +2,11 @@
 
 ## Delivery Status
 
-The [removed content previews plan](../../plans/removed-content-previews.md) is
-implemented and verified. Typed capture, the Serve generation lifecycle,
-consumer export, repository preview, upload packaging, and the shared shell and
-viewer all deliver the previous version. Nothing here changes ordinary
+The [removed content previews plan](../../plans/removed-content-previews.md)
+delivered typed capture, the Serve generation lifecycle, consumer export,
+repository preview, upload packaging, and the shared shell and viewer. The
+[viewer-owned historical previews plan](../../plans/viewer-owned-historical-previews.md)
+defines the host-independent presentation below. Nothing here changes ordinary
 browsing, Added entries, changed-screen comparisons, or removed component
 variants.
 
@@ -41,11 +42,13 @@ its closing sentence the `mbk-preview-switch` class, the classes the design
 catalogue's stage stylesheet owns, and the second sentence is hidden rather
 than rewritten while both viewports are selected.
 
-Historical content is read-only. Scrolling, text selection, and same-document
-anchors work. Forms cannot submit, and every link is inert: marked catalogue
-links, portable relative links, and external links do nothing, so old links
-cannot open current content or leave the preview. Historical documents keep
-the existing script-disabled sandbox and the existing external-resource policy;
+Historical content is read-only in every host, including a viewer embedded
+across origins. Scrolling, text selection, and same-document anchors work, but
+the guard scrolls to anchors without changing the document URL, so `:target`
+styling does not apply. Forms cannot submit, and every link is inert: marked
+catalogue links, portable relative links, and external links do nothing, so old
+links cannot open current content or leave the preview. Historical documents
+keep the script-disabled sandbox and existing external-resource policy;
 external HTTP(S) resources load as they did, without offline copies.
 
 The preview is requested when the removed entry is selected, in development and
@@ -163,15 +166,17 @@ it on current entries or when `comparisonUrl` is null.
 When the readers learn the field, the shipped
 [v1 fixture](./fixtures/catalogue-v1.json) must exercise both variants.
 
-The embedded viewer loads previews only from advertised paths: `comparisonUrl`
-for screens and `preview.path` for pages, resolved against the source origin
-root for object and URL sources. It never discovers `/__mokly/diffs/review.json`,
-runs Git, or derives a historical URL from a removed entry's current path. A
-catalogue without the field, or with `comparisonUrl: null`, shows the unavailable
-state without a request. Both frame adapters render previews in script-disabled
-frames; the cross-origin adapter mounts historical documents without the
-inspector handshake, so no inspection, marker, or navigation message is
-exchanged for them.
+The embedded viewer loads preview metadata only from advertised paths:
+`comparisonUrl` for screens and `preview.path` for pages, resolved against the
+source origin root for object and URL sources. Validated metadata may then name
+a historical document only on that source origin beneath the advertised
+generation's `snapshots/before/` directory. It never discovers
+`/__mokly/diffs/review.json`, runs Git, or derives a historical URL from a
+removed entry's current path. A catalogue without the field, or with
+`comparisonUrl: null`, shows the unavailable state without a request. Neither
+frame adapter mounts a preview frame. Previews are viewer-owned documents, so
+no adapter handshake or inspection, marker, or navigation message exists for
+them.
 
 Serve and static artifacts include the preview controller and comparison
 validator once in `__mokly/client/react-shell.js`. Application-owned
@@ -179,14 +184,63 @@ validator once in `__mokly/client/react-shell.js`. Application-owned
 
 ## Frames And Lifecycle
 
-Preview frames are the existing shell frames with the existing sandbox. The
-parent enforces read-only behavior for same-origin documents by cancelling link
-and form activation, including activation with Enter, popup targets, and
-download attributes. Space keeps its default, because it scrolls the document
-rather than activating a link, so a long previous version stays readable from
-the keyboard. Cross-origin previews rely on the sandbox alone, which already
-withholds forms, popups, downloads, and top navigation. Original historical
-bytes are not transformed for presentation.
+Serve, static export, and embedded viewers with either adapter use one
+presentation path. After preview metadata validates, the viewer fetches every
+historical document needed by the selected viewport and scheme before reporting
+ready. Its URL must be on the configured source origin beneath
+`snapshots/before/` of the generation established by the accepted comparison or
+page-preview response. The GET carries the mount's abort signal and uses the
+comparison credential rule: `credentials: "omit"` for pinned delivery and
+`credentials: "same-origin"` for live delivery.
+
+Accept a response only when its final URL is the requested snapshot address
+or that address with only its final `.html` suffix removed, the
+provider-normalized form a static host may redirect to, with the same origin
+and no query or fragment; its status is OK; its `Content-Type` MIME essence is
+`text/html`; and the body exposed by Fetch is at most 64 MiB (67,108,864
+bytes). MIME parameters are allowed. Count the body instead of trusting
+`Content-Length`; cancellation stops that read. Any other redirect or an
+origin change fails the URL check. A current fetch,
+validation, read, parse, or presentation failure renders the existing
+“Previous version unavailable” state with Retry. Cancellation after unmount or
+replacement is silent, and late work cannot change the replacement stage.
+
+Parse the body as an inert HTML document. Preserve document-level comments
+before and after the document element in their parsed order. Resolve the first
+`<base href>` in document order against the snapshot address, falling back to
+that address when there is no such element or its value is unresolvable. Remove every consumer
+`<base>` and every `<meta>` whose `http-equiv`, after trimming ASCII whitespace,
+equals `refresh` under ASCII case-insensitive comparison. Prepend exactly one
+`<base href>` for the effective base as `head`'s first child, including for an
+implicit head. Serialize the source doctype's name, public identifier, and
+system identifier before the document element, or preserve its absence, so the
+markup stays faithful. A `srcdoc` document always renders in no-quirks mode,
+so a previous version that relied on quirks or limited-quirks rendering may
+differ from its original presentation; this is accepted. Otherwise serialize
+parsed nodes without mutation; do not rewrite resource attributes, links,
+text, or styles.
+
+The viewer assigns that serialization to `srcdoc`, never `src`, on a frame with
+exactly `sandbox="allow-same-origin"`. The presented document therefore has the
+viewer origin while scripts, forms, popups, downloads, and top navigation stay
+disabled. The frame carries `data-mokly-preview-source` with the requested snapshot
+address, which is also the fallback effective base regardless of any
+provider-normalized final URL. A `srcdoc` document inherits the embedding document's Content Security
+Policy; an embedded host must allow the artifact origin and historical inline
+styles for resources the previous version needs.
+
+On each load, the parent installs the guard in the viewer-owned document. It
+finds links through the event's composed path; cancels every click, auxiliary
+click, and Enter activation regardless of target or download attributes; and
+cancels form submission. When a link has a nonempty fragment and its resolved
+URL without that fragment equals the snapshot address, the guard scrolls the
+matching target into view. Navigation remains cancelled, so `:target` does not
+apply. Space keeps its scrolling default. If a later load is not the recorded
+presentation document, the parent reapplies the accepted `srcdoc` and guard.
+
+These edits exist only in the in-memory presentation. Captured snapshot files,
+packaged artifacts, comparison bytes, and comparison-pane documents stay
+byte-identical.
 
 The served-then-loading sequence is an accepted first-paint tradeoff: while the
 browser module downloads, the stage can briefly show the honest unavailable
@@ -210,4 +264,12 @@ historical CSS, historical page-v4 manifests, path traversal and symlinks,
 current same-path files, malformed and mixed selections, coalescing, refresh,
 invalidation, cancellation, shutdown, idle recovery, both frame adapters,
 read-only enforcement, static delivery without renewal traffic, current-only
-delivery with zero historical work, and old/new catalogue readers.
+delivery with zero historical work, and old/new catalogue readers. Embedded
+viewer coverage proves both adapters keep plain external and relative links
+inert. Presentation coverage accepts a final URL that only drops the `.html` suffix;
+rejects other redirects, origin changes, non-HTML and oversized documents;
+removes meta refresh; folds the first consumer base into the effective base;
+preserves doctypes while quirks and standards documents both render in
+no-quirks mode; owns same-document anchor scrolling; restores presentation
+after frame navigation; and loads historical resources in an embedded host
+with a strict Content Security Policy.
