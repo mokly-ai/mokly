@@ -211,6 +211,9 @@ export, clean-install and cache-invalidation behavior continue to create
 independent inputs because preparation is part of what those tests verify.
 Fixture phases emit `[mokly:fixture-timing]` JSON with the fixture, phase,
 duration, status, and whether the operation itself is under test.
+Fixtures that install, build, and export the complete example share a
+240-second setup budget. Assertion deadlines, retries, and worker limits remain
+unchanged.
 
 Wrangler Pages fixtures pass port zero and adopt the exact readiness URL
 Wrangler reports; they do not release a probe socket before server startup.
@@ -234,9 +237,13 @@ directories and remove owned output on success and failure. A fixture drains
 dependent servers, workers, watchers, and other runtime resources in reverse
 registration order before removing its workspace. Concurrent or repeated
 fixture removal shares one teardown, and a dependent cleanup failure retains
-the workspace for diagnosis. Failed browser jobs retain only the uploaded
-diagnostic artifacts selected by the workflow. Jobs must not delete, overwrite
-or reuse another job's writable output.
+the workspace for diagnosis. Tests that create a runtime after obtaining a
+shared fixture register that cleanup through the fixture's `beforeRemove`
+lifecycle; they must not add a later test-runner teardown hook that can race
+workspace removal. Source-level verification enforces this ownership rule for
+shared fixture helpers. Failed browser jobs retain only the uploaded diagnostic
+artifacts selected by the workflow. Jobs must not delete, overwrite or reuse
+another job's writable output.
 
 ## Acceptance Measurement
 

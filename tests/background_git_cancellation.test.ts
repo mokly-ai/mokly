@@ -17,9 +17,9 @@ test(
     const fixture = await changedFixture(t);
     const runtime = await prepareLiveRuntime(fixture.config);
     const existing = await compileCatalogue(fixture.config);
-    const blocked = await blockingGit(t, fixture.root);
+    const blocked = await blockingGit(fixture);
     const background = new BackgroundCompilation(runtime, existing);
-    fixture.onCleanup(() => background.close());
+    fixture.beforeRemove(() => background.close());
     const classification = background.classify("main");
     const pid = await blocked.started();
 
@@ -57,7 +57,7 @@ test(
     const fixture = await changedFixture(t);
     const runtime = await prepareLiveRuntime(fixture.config);
     const existing = await compileCatalogue(fixture.config);
-    const blocked = await blockingGit(t, fixture.root);
+    const blocked = await blockingGit(fixture);
     let publications = 0;
     let published: () => void = () => {};
     const ready = new Promise<void>((resolve) => {
@@ -72,7 +72,7 @@ test(
         published();
       },
     );
-    fixture.onCleanup(() => background.close());
+    fixture.beforeRemove(() => background.close());
     background.start(runtime, "main", existing);
     const pid = await blocked.started();
 

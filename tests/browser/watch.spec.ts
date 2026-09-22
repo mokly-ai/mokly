@@ -2,7 +2,7 @@ import { spawn, type ChildProcess } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
 
 import {
   createFixture,
@@ -20,6 +20,21 @@ const cli = path.join(repositoryRoot, "dist/cli/bin.js");
 let fixture: TestFixture;
 let child: ChildProcess;
 let url: string;
+
+async function toggleDisclosure(disclosure: Locator): Promise<void> {
+  const toggled = disclosure.evaluate(
+    (element) =>
+      new Promise<void>((resolve) => {
+        element.addEventListener(
+          "toggle",
+          () => requestAnimationFrame(() => resolve()),
+          { once: true },
+        );
+      }),
+  );
+  await disclosure.locator("summary").click();
+  await toggled;
+}
 
 test.beforeAll(async () => {
   fixture = await createFixture(reparentedEntrySource("screens"), {
@@ -81,7 +96,7 @@ test("watched serve rebuilds and reloads after an authored change", async ({
     'details[data-nav-collection="collection:archive"]',
   );
   await expect(screens).toHaveAttribute("open", "");
-  await screens.locator("summary").click();
+  await toggleDisclosure(screens);
   await expect(screens).not.toHaveAttribute("open", "");
   await expect(archive).not.toHaveAttribute("open", "");
   await page.fill("[data-mokly-search]", "html");
@@ -160,11 +175,11 @@ test("watched reload reopens collapsed active route ancestry", async ({
     'details[data-nav-collection="collection:screens"]',
   );
   await expect(screens).toHaveAttribute("open", "");
-  await screens.locator("summary").click();
+  await toggleDisclosure(screens);
   await expect(screens).not.toHaveAttribute("open", "");
   await page.fill("[data-mokly-search]", "html");
   await expect(screens).toHaveAttribute("open", "");
-  await screens.locator("summary").click();
+  await toggleDisclosure(screens);
   await expect(screens).not.toHaveAttribute("open", "");
 
   await fs.promises.writeFile(
@@ -196,7 +211,7 @@ test("watched reparenting moves navigation and crumbs together", async ({
   const archive = page.locator(
     'details[data-nav-collection="collection:archive"]',
   );
-  await screens.locator("summary").click();
+  await toggleDisclosure(screens);
   await expect(screens).not.toHaveAttribute("open", "");
 
   await fs.promises.writeFile(
@@ -243,9 +258,9 @@ test("duplicate titles retain independent disclosure across reloads", async ({
     "Same title",
   );
 
-  await screens.locator("summary").click();
+  await toggleDisclosure(screens);
   await expect(screens).toHaveAttribute("open", "");
-  await screens.locator("summary").click();
+  await toggleDisclosure(screens);
   await expect(screens).not.toHaveAttribute("open", "");
   await expect(archive).toHaveAttribute("open", "");
   await expect
