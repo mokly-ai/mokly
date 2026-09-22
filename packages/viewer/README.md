@@ -194,6 +194,13 @@ Controlled changes are proposals until the host passes the new selection back.
 Do not provide `defaultSelection` in controlled mode, and remount the viewer if
 you need to change modes.
 
+The selected color scheme remains host-visible even when the chosen screen or
+saved variant has only a Light render. In that case the preview keeps the Dark
+selection and Light-only label, while status, change marks, and comparisons use
+the effective Light view. If ready evidence does not cover every shown view,
+the Viewer preserves the selected entry or variant's published status and
+comparison eligibility independently.
+
 ### Host integration
 
 The viewer owns catalogue presentation, navigation, comparison and inspection.

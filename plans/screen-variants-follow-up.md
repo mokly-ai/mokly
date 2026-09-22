@@ -1,16 +1,17 @@
 # Screen Variants Follow-up
 
-Status: planned, not started. Created 2026-09-22 at the user's request to close
+Status: in progress. Created 2026-09-22 at the user's request to close
 [Screen Variants](./screen-variants.md) for
 [PR #101](https://github.com/mokly-ai/mokly/pull/101). All work here belongs in a
-separate PR; creating this plan implements none of it. The design route
-retirement still requires explicit approval before that conversion starts.
+separate PR. The design route retirement still requires explicit approval
+before that conversion starts.
 
 ## Scope And Contracts
 
-Carry forward Task 9.1, all three second-review findings, the two latest
-variant-related findings, and both later product ideas. The original plan
-retains its completed milestones and historical review record.
+Carry forward Task 9.1, the two second-review findings resolved on this branch,
+the two still-open latest variant-related findings, and both later product
+ideas. The original plan retains its completed milestones and historical
+review record.
 
 Contract owners:
 
@@ -23,39 +24,46 @@ Contract owners:
   [design links](../docs/protocol/mokly-design-links.md), and
   [component workspace](../docs/protocol/mokly-component-workspace-design.md).
 
-The recommendations below define the proposed scope. They do not claim that
-the bugs are fixed or authorize retiring the six existing design routes.
+The remaining recommendations below define proposed scope and do not authorize
+retiring the six existing design routes.
+
+## Resolved Before This Follow-up
+
+The original second-review finding that embedded links ignored explicit view
+axes is already resolved. `store_host_routes.ts` parses links through the
+shared `routeFromUrl` path, and `store_host.ts` applies each valid explicit
+viewport or scheme while retaining the other selection axis. It is no longer
+counted or carried by this plan.
 
 ## Carried Review Findings
 
-1. **P2 — Embedded links ignore explicit view axes.** Original second review,
-   item 1. `ViewerRouting.shell` parses the saved variant and fragment but not
-   valid `viewport` or `scheme` parameters. A linked screen can open at the
-   wrong size or theme; even an invalid axis suppresses first-changed landing.
-   **A (recommended):** share a typed axis parser between standalone Browse and
-   the Viewer, applying each valid explicit axis and retaining the other.
-   **B:** patch the two navigation paths independently. A prevents the same
-   drift and needs controlled and uncontrolled Viewer browser coverage.
-2. **P2 — A light-only preview uses Dark for its status and marks.** Original
-   second review, item 2. In a mixed catalogue, `syncViewControls` passes the
-   selected Dark scheme to `shownStatus` and `viewMarks` even when the screen
-   or saved component variant displays its Light fallback. Users can see a
-   misleading Changed badge or a mark for a theme that has no render.
+1. **P2 — A light-only preview uses Dark for its status and marks.** Original
+   second review, item 2. In a mixed catalogue, the workspace passed the
+   selected Dark scheme to status and mark decisions even when the screen or
+   saved component variant displayed its Light fallback. Users could see a
+   misleading Changed badge or a mark for a theme that had no render.
    **A (recommended):** resolve the effective view once and share it across
    status, marks, and comparison presentation, with mixed-catalogue tests in
    Serve and the Viewer. **B:** add local fallback checks at each consumer.
    A protects future consumers from presenting inconsistent view evidence.
-3. **P2 — Fallback status grants unavailable comparisons.** Original second
-   review, item 3. With missing or pending per-view evidence,
-   `selectedComparisonEligible` uses route-level Changed status even when the
-   selected saved component variant is Unmodified and ineligible. Users can
-   select unavailable comparisons, including through `?comparison=side`.
+   **Resolved 2026-09-22:** `resolveWorkspaceView` now supplies the effective
+   scheme, status, eligibility, and evidence provenance to SSR and hydrated
+   consumers, with mixed-catalogue Serve and Viewer coverage.
+2. **P2 — Fallback status grants unavailable comparisons.** Original second
+   review, item 3. With missing or pending per-view evidence, the workspace
+   used route-level Changed status even when the selected saved component
+   variant was ineligible. Users could select unavailable comparisons,
+   including through `?comparison=side`.
    **A (recommended):** return status, eligibility, and evidence provenance
    together; derive eligibility from shown status only for matching evidence,
    retaining existing entry/variant eligibility otherwise. Reuse the resolver
    in server rendering and every client path. **B:** guard only comparison
    controls. A also closes deep-link and background-update paths.
-4. **P2 — Broadly typed screen inputs promise the wrong return shape.** Latest
+   **Resolved 2026-09-22:** the shared resolver treats per-view evidence as
+   authoritative only when it covers every shown view and otherwise preserves
+   selection-level status and eligibility independently. SSR, Viewer, partial
+   evidence, and deep-link regressions cover the decision.
+3. **P2 — Broadly typed screen inputs promise the wrong return shape.** Latest
    post-CI review, item 1; `src/authoring/definitions.ts:24`.
    `defineScreen(input)` for an `input: ScreenInput` is typed as one
    `ScreenDefinition`, but returns an array when `variants` is present, even
@@ -65,7 +73,7 @@ the bugs are fixed or authorize retiring the six existing design routes.
    in packed-consumer type tests and runtime tests. **B:** always return an
    array, requiring a broader breaking API migration. A fixes the public
    contract and adds boundary coverage without changing established behavior.
-5. **P2 — Historical variants disappear when their parent becomes a variant.**
+4. **P2 — Historical variants disappear when their parent becomes a variant.**
    Latest post-CI review, item 2; `packages/viewer/src/shell/nav_tree.ts:124`.
    A former parent can retain its id while becoming another screen's variant.
    Removed children are then adopted and excluded from flat fallback, but
@@ -85,14 +93,12 @@ Documentation first: make the intended behavior explicit before changing
 authoring or navigation.
 
 - [ ] Specify return types for literal, optional, empty, and generic `variants`
-      inputs, including the compatibility decision for finding 4.
-- [ ] Specify valid axis parsing, partial/invalid axis handling and Changes
-      landing in the navigation and Viewer contracts for finding 1.
-- [ ] Define effective view fallback and evidence-backed comparison
-      eligibility for findings 2 and 3, including server render, deep links,
+      inputs, including the compatibility decision for finding 3.
+- [x] Define effective view fallback and evidence-backed comparison
+      eligibility for findings 1 and 2, including server render, deep links,
       controlled selection, and background evidence updates.
 - [ ] Clarify that removed-variant adoption requires a non-variant current
-      parent; preserve every removed route exactly once for finding 5.
+      parent; preserve every removed route exactly once for finding 4.
 - [ ] Record the user's decision on Task 9.1's six design route retirements
       before conversion. Specify the old/new route mapping, stable ids and
       collection changes in the design inventories. Planning permission alone
@@ -139,7 +145,7 @@ library and standalone mobile/desktop screen components.
 
 ### Milestone 3: Correct the public authoring types
 
-Resolve finding 4 at the package boundary while keeping the running product
+Resolve finding 3 at the package boundary while keeping the running product
 and existing authoring use cases functional.
 
 - [ ] Add failing NodeNext packed-consumer checks for annotated `ScreenInput`,
@@ -154,20 +160,21 @@ and existing authoring use cases functional.
 
 Tags: ui
 
-Resolve findings 1, 2, 3, and 5 through shared decisions that keep standalone,
+Resolve findings 1, 2, and 4 through shared decisions that keep standalone,
 embedded, and published navigation consistent.
 
-- [ ] Add failing tests for each finding before implementation. Cover valid,
-      partial and invalid explicit axes; controlled/uncontrolled Viewer
-      navigation; light-only screens and saved variants in mixed catalogues;
-      missing/pending evidence and comparison deep links.
-- [ ] Share the typed axis parser and effective-view/evidence resolution among
-      the server-rendered shell, client updates and Viewer selection paths.
+- [x] Add failing tests for effective fallback and evidence provenance before
+      implementation. Cover light-only screens and saved variants in mixed
+      catalogues, missing/pending evidence, and comparison deep links.
+- [x] Share effective-view/evidence resolution among the server-rendered shell,
+      client updates and Viewer selection paths.
+- [ ] Add failing tests for historical variant adoption before implementation.
 - [ ] Restrict removed-variant adoption and test former-parent reparenting,
       deletion and kind changes. Assert that every removed route appears
       exactly once, either under an eligible parent or in flat fallback.
-- [ ] Run the navigation, view-status, view-marks, workspace and Viewer unit
-      suites, plus the affected Serve, Viewer and static browser suites.
+- [x] Run the view-status, view-marks, workspace and Viewer unit suites plus the
+      affected Serve, Viewer and static browser suites for findings 1 and 2.
+- [ ] Run the historical navigation suites for finding 4.
 - [ ] Smoke the affected navigation and comparison states through Serve and
       static preview at mobile and desktop widths; check keyboard navigation
       and controlled-host proposals as well as pointer input.

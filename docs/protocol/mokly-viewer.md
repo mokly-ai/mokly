@@ -198,6 +198,12 @@ Normalization is deterministic; the visible input still displays those tags
 as today's `tag:` terms. Navigation proposes any filter clearing needed to
 reveal its destination as one atomic selection update. Light-only views retain
 the existing fallback labels when Dark is selected; no fake dark view is made.
+The shared workspace resolver uses that effective Light view for the title
+status, hidden-change marks, and comparison presentation in both SSR and the
+hydrated Viewer. When ready evidence does not cover every effective shown view,
+the Viewer preserves the public entry or saved variant's status and comparison
+eligibility independently instead of deriving eligibility from the fallback
+status.
 
 `onSelectionChange` reports requested state changes. `onScreenNavigate` fires
 once after a committed route/variant/fragment transition, including accepted
