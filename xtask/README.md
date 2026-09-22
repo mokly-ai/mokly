@@ -25,6 +25,11 @@ The [CI verification contract](../docs/protocol/ci-verification.md) defines the
 suite boundaries, shard evidence, and fail-closed CI aggregate. Selected suites
 are partial verification; the unqualified command remains the complete gate.
 
+Hydration coverage discovers a separate browser test for every example route,
+so adding screens does not consume one shared test deadline. Tests using
+`changedFixture` register servers and workers with `fixture.onCleanup` to drain
+them before removing their working tree.
+
 ## Quick Start
 
 ```bash
