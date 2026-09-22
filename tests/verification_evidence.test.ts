@@ -223,10 +223,12 @@ test("browser shard evidence requires every independently discovered test once",
 });
 
 test("the CI aggregate requires every runtime, suite, shard, and commit", () => {
-  const reports = ciReports();
-  validateCiReports(reports, "a".repeat(40));
+  const ordinaryRuntimes = ["node-22.14.0"];
+  const releaseRuntimes = ["node-22.14.0", "node-24"];
+  const reports = ciReports(releaseRuntimes);
+  validateCiReports(reports, "a".repeat(40), releaseRuntimes);
   assert.throws(
-    () => validateCiReports(reports.slice(1), "a".repeat(40)),
+    () => validateCiReports(reports.slice(1), "a".repeat(40), releaseRuntimes),
     /expected 16|missing/i,
   );
   assert.throws(
@@ -234,8 +236,30 @@ test("the CI aggregate requires every runtime, suite, shard, and commit", () => 
       validateCiReports(
         [{ ...reports[0]!, runtime: "node-23" }, ...reports.slice(1)],
         "a".repeat(40),
+        releaseRuntimes,
       ),
     /unexpected|runtime/i,
   );
-  assert.throws(() => validateCiReports(reports, "b".repeat(40)), /commit/i);
+  assert.throws(
+    () => validateCiReports(reports, "b".repeat(40), releaseRuntimes),
+    /commit/i,
+  );
+
+  const ordinaryReports = ciReports(ordinaryRuntimes);
+  validateCiReports(ordinaryReports, "a".repeat(40), ordinaryRuntimes);
+  assert.throws(
+    () => validateCiReports(reports, "a".repeat(40), ordinaryRuntimes),
+    /expected 8|extra/i,
+  );
+  for (const unsupported of [
+    [],
+    ["node-24"],
+    ["node-22.14.0", "node-22.14.0"],
+    ["node-22.14.0", "node-23"],
+  ]) {
+    assert.throws(
+      () => validateCiReports(ordinaryReports, "a".repeat(40), unsupported),
+      /runtime profile/i,
+    );
+  }
 });
