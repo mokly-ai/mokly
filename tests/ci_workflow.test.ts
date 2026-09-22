@@ -88,8 +88,8 @@ test("CI shards complete verification behind one prerequisite", async () => {
   }
   assert.equal(native.strategy?.["fail-fast"], false);
   assert.deepEqual(native.strategy?.matrix.os, [
-    "macos-latest",
-    "windows-latest",
+    "blacksmith-6vcpu-macos-15",
+    "blacksmith-4vcpu-windows-2025",
   ]);
   assert.ok(
     repository.steps.some((step) =>
@@ -209,7 +209,7 @@ function assertPinnedActions(workflow: Workflow): void {
 
 function assertFullHistoryCheckout(job: WorkflowJob): void {
   const checkout = job.steps.find((step) =>
-    step.uses?.startsWith("actions/checkout@"),
+    step.uses?.startsWith("useblacksmith/checkout@"),
   );
   assert.ok(checkout);
   assert.equal(checkout.with?.["fetch-depth"], 0);
