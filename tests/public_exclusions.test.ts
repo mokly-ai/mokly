@@ -34,7 +34,7 @@ test("Serve GET and HEAD and Review deny public exclusions while ordinary assets
   const config = await loadConfig(fixture.root);
   await writeCompilation(await compileCatalogue(config), config);
   const server = await startCatalogueServer(config, { base: "main", port: 0 });
-  t.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
   const reader = new FileSystemReviewAssetReader(config);
   for (const name of excludedNames) {
     for (const method of ["GET", "HEAD"])

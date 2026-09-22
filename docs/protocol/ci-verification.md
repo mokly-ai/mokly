@@ -92,8 +92,8 @@ Matrix jobs use `fail-fast: false`, so one failing shard does not erase evidence
 from its peers. Chromium is installed only in browser jobs. Rust formatting,
 Clippy and tests run only in the repository job; selected suite jobs still
 compile xtask to dispatch their gate. Jobs that execute npm use npm 11.7.0. All
-jobs have read-only repository permissions. Superseded workflow runs remain
-cancellable.
+jobs have read-only repository permissions and a 20-minute execution timeout.
+Superseded workflow runs remain cancellable.
 
 The stable `Required CI` job uses `if: always()` and fails closed unless every
 required job result is exactly `success`. It also validates the evidence
@@ -211,9 +211,13 @@ timing evidence when possible, and never write a successful outcome until
 independent completeness checks pass.
 
 Temporary fixtures use repository-local `.context` or operating-system temp
-directories and remove owned output on success and failure. Failed browser jobs
-retain only the uploaded diagnostic artifacts selected by the workflow. Jobs
-must not delete, overwrite or reuse another job's writable output.
+directories and remove owned output on success and failure. A fixture drains
+dependent servers, workers, watchers, and other runtime resources in reverse
+registration order before removing its workspace. Concurrent or repeated
+fixture removal shares one teardown, and a dependent cleanup failure retains
+the workspace for diagnosis. Failed browser jobs retain only the uploaded
+diagnostic artifacts selected by the workflow. Jobs must not delete, overwrite
+or reuse another job's writable output.
 
 ## Acceptance Measurement
 

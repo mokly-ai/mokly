@@ -54,7 +54,7 @@ test("a stale historical-manifest alias does not prevent ordinary public resourc
     publicJson,
   );
   const server = await startCatalogueServer(config, { base: "HEAD", port: 0 });
-  context.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
   assert.equal(
     await (await fetch(`${server.url}/static/public.json`)).text(),
     publicJson,
@@ -121,7 +121,7 @@ test("HTTP and current Review deny internal manifests and aliases but allow publ
     publicJson,
   );
   const server = await startCatalogueServer(config, { base: "HEAD", port: 0 });
-  context.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
   const reader = new FileSystemReviewAssetReader(config);
   for (const route of metadataRoutes) {
     for (const method of ["GET", "HEAD"])

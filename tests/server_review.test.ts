@@ -67,7 +67,7 @@ test("comparisons generate on demand and retain immutable snapshots after refres
   t.after(() => removeFixture(fixture));
   const review = countingReview(path.join(fixture.root, ".review"));
   const server = await start(fixture, review);
-  t.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
   await fetch(`${server.url}/view/screens/home.html`);
   assert.equal(review.generations, 0);
   assert.equal((await fetch(`${server.url}/review`)).status, 404);
@@ -116,7 +116,7 @@ test("watched invalidation waits for the next comparison request", async (t) => 
   t.after(() => removeFixture(fixture));
   const review = countingReview(path.join(fixture.root, ".review"));
   const server = await start(fixture, review);
-  t.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
   const initial = await fetch(`${server.url}${endpoint}`);
   server.publishUpdate();
   assert.equal(review.generations, 1);
@@ -137,7 +137,7 @@ test("comparison failures return product copy and permit a retry", async (t) => 
   const review = countingReview(path.join(fixture.root, ".review"));
   review.failAt = 1;
   const server = await start(fixture, review);
-  t.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
   const failed = await fetch(`${server.url}${endpoint}`);
   assert.equal(failed.status, 500);
   assert.equal(failed.headers.get("cache-control"), "no-store");
@@ -164,7 +164,7 @@ test("failed refresh restores previous snapshots and shutdown removes archives",
   review.failAt = 2;
   const server = await start(fixture, review);
   let closed = false;
-  t.after(() => (closed ? undefined : server.close()));
+  fixture.beforeRemove(() => (closed ? undefined : server.close()));
   const first = await fetch(`${server.url}${endpoint}`);
   const failed = await fetch(`${server.url}${endpoint}?refresh=1`);
   assert.equal(failed.status, 500);
@@ -189,7 +189,7 @@ test("static catalogue servers omit unavailable diff controls and Review routes"
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
   const server = await start(fixture);
-  t.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
   const html = await (
     await fetch(`${server.url}/view/screens/home.html`)
   ).text();

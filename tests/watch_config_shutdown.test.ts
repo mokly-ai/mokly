@@ -48,7 +48,7 @@ test(
       },
     );
 
-    context.after(() => running.close());
+    fixture.beforeRemove(() => running.close());
     await output.initialWritten;
     watchers.watchers[0]?.change(config.configPath);
     await output.candidateStarted;

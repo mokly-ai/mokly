@@ -110,7 +110,7 @@ test("watched Serve restarts through the action queue after an unexpected child 
       watcherFactory: new FakeWatcherFactory(),
     },
   );
-  context.after(() => running.close());
+  fixture.beforeRemove(() => running.close());
 
   supervisor.exitUnexpectedly();
   const deadline = performance.now() + 5000;
