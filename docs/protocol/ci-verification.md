@@ -109,6 +109,12 @@ matching `.test.ts` and `.test.tsx` files across the root and viewer suites. The
 browser runner independently asks Playwright for the current spec inventory.
 Discovery fails on an empty suite.
 
+Development hydration registers one browser test per unique generated catalogue
+route at discovery time, plus the home, missing-route and id-redirect cases.
+Each route keeps the normal test deadline and error assertions; catalogue growth
+cannot exhaust a shared route-loop deadline. Unit coverage checks that browser
+discovery includes every generated route exactly once.
+
 Each runner records the commit SHA, runtime, suite, optional shard, complete
 discovered file inventory, assigned file inventory, observed executed files,
 per-file timing, process outcome, and skipped/cancelled evidence. Browser
@@ -170,6 +176,12 @@ teardown. Cleanup drains the complete POSIX process group or Windows job before
 removing owned output. If termination cannot be confirmed, teardown fails and
 retains the owned output for diagnosis; concurrent and repeated close calls
 share that same completion or failure.
+
+`changedFixture` owns live test resources through `onCleanup`. It drains them in
+reverse registration order before deleting the consumer tree. Every registered
+cleanup runs even if another fails; failures retain the tree for diagnosis.
+Servers and workers must use this boundary instead of a later test `after` hook,
+which can run after directory removal or be skipped when an earlier hook fails.
 
 Every report-producing wrapper creates a unique verification owner identity and
 passes its registry and resource root to the child. A wrapper nested beneath
