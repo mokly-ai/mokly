@@ -62,7 +62,7 @@ test(
     t.after(() => removeFixture(fixture));
     const runtime = await prepareLiveRuntime(await loadConfig(fixture.root));
     const service = new DocumentService(runtime, () => {}, { timeoutMs: 1000 });
-    t.after(() => service.close());
+    fixture.beforeRemove(() => service.close());
     await assert.rejects(service.read("screens/home.desktop.html"), /too long/);
     assert.match(
       (await service.read("screens/details.desktop.html")).html,
@@ -82,7 +82,7 @@ test("metadata and complete catalogue adoption require the current generation", 
     manifest: runtime.manifest,
     componentRuntime: runtime,
   });
-  t.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
   const metadata = `${server.url}/__mokly/views/screens/home.desktop.html`;
   assert.equal((await fetch(`${metadata}?generation=stale`)).status, 409);
   const response = await fetch(`${metadata}?generation=${runtime.generation}`);
