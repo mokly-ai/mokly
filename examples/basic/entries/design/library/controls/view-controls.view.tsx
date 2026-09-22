@@ -16,13 +16,23 @@ const viewportOptions = [
   ["desktop", "Desktop"],
   ["both", "Both"],
 ] as const;
+
+/** Per-view change evidence: a mark points at views other than this one. */
+function ChangedMark() {
+  return <span className="ce-view-changed" aria-hidden="true" />;
+}
+
 export function ViewControlsView({
   selection,
   highlight,
   unavailable,
+  changedViews,
 }: ViewControlsProps) {
   useDesignStyle("view-controls");
   const reasonId = useId();
+  const changed = changedViews ?? [];
+  const viewportChanged =
+    selection !== "both" && changed.some((view) => view.viewport !== selection);
   const reason = unavailable ? reasons[unavailable] : undefined;
   return (
     <div
@@ -49,6 +59,7 @@ export function ViewControlsView({
             </option>
           ))}
         </select>
+        {viewportChanged ? <ChangedMark /> : null}
       </label>
       {highlight === undefined ? null : (
         <label

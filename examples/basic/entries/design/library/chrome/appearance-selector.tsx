@@ -1,7 +1,7 @@
 import { defineComponent, type ComponentProps } from "@mokly/mokly";
 
 import { libraryMetadata } from "../metadata.js";
-import { flag } from "../schemas.js";
+import { flag, optionalFlag } from "../schemas.js";
 
 import { AppearanceSelectorView } from "./appearance-selector.view.js";
 
@@ -10,6 +10,7 @@ const propSchema = {
   properties: {
     value: { schema: { kind: "enum", values: ["auto", "light", "dark"] } },
     compact: flag,
+    otherSchemeChanged: optionalFlag,
   },
 } as const;
 export type AppearanceSelectorProps = ComponentProps<typeof propSchema, []>;
@@ -32,6 +33,7 @@ export const appearanceSelector = defineComponent({
       ],
     },
     compact: { kind: "boolean", label: "Compact" },
+    otherSchemeChanged: { kind: "boolean", label: "Other theme changed" },
   },
   render: AppearanceSelectorView,
   variants: [

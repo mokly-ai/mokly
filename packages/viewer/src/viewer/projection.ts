@@ -80,6 +80,9 @@ export function displayEntry(
         viewports: entry.viewports,
         useCaseIds: entry.useCaseIds,
         ...(entry.address ? { address: entry.address } : {}),
+        ...(entry.variantOf !== undefined
+          ? { variantOf: entry.variantOf }
+          : {}),
         ...fragments(entry.views, (axis, scheme) =>
           entry.route.replace(
             /\.html$/,

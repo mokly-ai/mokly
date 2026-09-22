@@ -5,6 +5,7 @@ import { build } from "esbuild";
 import type { RegistryDefinition } from "../authoring/types.js";
 import type { CompatibilityTransformer } from "../compatibility/types.js";
 import type { ComponentGraphRenderer } from "../components/render.js";
+import { discoverEntryModules } from "../config/entry_discovery.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timeSync, timingCounts } from "../diagnostics/timings.js";
 import { MoklyError, errorMessage } from "../errors.js";
@@ -20,7 +21,6 @@ import {
   consumerReactPlugin,
   packageNodePaths,
 } from "./consumer_resolution.js";
-import { discoverEntryModules } from "./discovery.js";
 import { graphSourceFiles, normalizeSourceFiles } from "./source_inventory.js";
 
 /** Consumer modules loaded in one React-safe esbuild graph. */
@@ -48,8 +48,9 @@ async function loadGraph(
   evaluate: boolean,
 ): Promise<LoadedGraph> {
   const entrySources = timeSync("graph.discover", () =>
-    discoverEntryModules(config.entriesDir),
+    discoverEntryModules(config),
   );
+  config = { ...config, entryModules: entrySources };
   timingCounts("graph", () => ({ entryModules: entrySources.length }));
   const outputPath = path.join(
     path.dirname(config.configPath),

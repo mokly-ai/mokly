@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import type { Plugin, PluginBuild } from "esbuild";
 
+import { MOKLY_CACHE } from "../config/cache_paths.js";
 import { isInside, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 
@@ -33,7 +34,7 @@ export function consumerEntryPlugin(
 
 /** Resolve consumer imports of the public package with source attribution. */
 export function packageApiPlugin(config: ResolvedConfig): Plugin {
-  const realEntries = fs.realpathSync(config.entriesDir);
+  const realRepoRoot = fs.realpathSync(config.repoRoot);
   const indexPath = runtimeModule("../index.js", "../index.ts");
   const definitionsPath = runtimeModule(
     "../authoring/definitions.js",
@@ -50,7 +51,8 @@ export function packageApiPlugin(config: ResolvedConfig): Plugin {
         } catch {
           return { path: indexPath };
         }
-        if (!isInside(realEntries, realImporter)) return { path: indexPath };
+        if (!isRepositoryOwnedModule(realImporter, realRepoRoot))
+          return { path: indexPath };
         return {
           namespace: "mokly-attributed-api",
           path: toPosixPath(path.relative(config.repoRoot, args.importer)),
@@ -104,6 +106,20 @@ function virtualEntryContents(
     `export { renderer };`,
     `export { renderWithComponents } from ${quote(runtimeModule("../components/render.js", "../components/render.tsx"))};`,
   ].join("\n");
+}
+
+/** Repository code binds the attributed facade; installed packages do not. */
+function isRepositoryOwnedModule(
+  realImporter: string,
+  realRepoRoot: string,
+): boolean {
+  if (!isInside(realRepoRoot, realImporter)) return false;
+  const runtime = path.resolve(fileURLToPath(new URL("../", import.meta.url)));
+  if (isInside(runtime, realImporter)) return false;
+  return !path
+    .relative(realRepoRoot, realImporter)
+    .split(path.sep)
+    .some((segment) => segment === "node_modules" || segment === MOKLY_CACHE);
 }
 
 function attributedApiContents(

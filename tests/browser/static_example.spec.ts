@@ -7,6 +7,7 @@ import { exportCatalogue } from "../../dist/export/run.js";
 import { createExampleBaseline } from "../helpers/example_baseline.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 import {
+  FULL_CATALOGUE_SETUP_TIMEOUT_MS,
   timeExportPreparation,
   timeFixturePhase,
 } from "../helpers/fixture_timing.js";
@@ -19,7 +20,7 @@ let output: string;
 let root: string;
 let server: Awaited<ReturnType<typeof serveStaticFiles>>;
 test.beforeAll(async () => {
-  test.setTimeout(180_000);
+  test.setTimeout(FULL_CATALOGUE_SETUP_TIMEOUT_MS);
   root = await fs.promises.mkdtemp(
     path.join(repositoryRoot, ".context/mokly-example-export-"),
   );
@@ -76,5 +77,37 @@ test("the owning example stays usable when HEAD is the unchanged baseline", asyn
   expect(failures).toEqual([]);
   expect(server.requests.some((url) => url.includes("/__mokly/events"))).toBe(
     false,
+  );
+});
+
+test("the exported example discloses a screen's variants without a server", async ({
+  page,
+}) => {
+  const list = page.locator(
+    '[data-nav-disclosure="variants:pages:example-welcome"]',
+  );
+  const toggle = page.locator("[data-nav-variants-toggle]");
+  const variantRow = page.locator(
+    'a[data-nav-row][data-route="screens/welcome.variants/empty.html"]',
+  );
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto(`${server.url}/view/screens/details.html`);
+  await expect(list).toBeHidden();
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+
+  await toggle.click();
+  await expect(list).toBeVisible();
+  await expect(variantRow).toBeVisible();
+
+  await variantRow.click();
+  await expect(page).toHaveURL(
+    `${server.url}/view/screens/welcome.variants/empty.html`,
+  );
+  await expect(page.locator("#mb-main h2")).toHaveText(
+    "Welcome, empty workspace",
+  );
+  await expect(variantRow).toHaveAttribute("aria-current", "page");
+  await expect(page.getByLabel("Catalogue location").locator("a")).toHaveText(
+    "Welcome",
   );
 });

@@ -11,6 +11,7 @@ import {
   destination,
   flag,
   optionalText,
+  optionalFlag,
   tagRecords,
   text,
 } from "../schemas.js";
@@ -35,6 +36,7 @@ const propSchema = {
       optional: true,
     },
     pickerOpen: flag,
+    appearanceChanged: optionalFlag,
     brandDestination: destination,
     menuDestination: destination,
     pickerDestination: destination,

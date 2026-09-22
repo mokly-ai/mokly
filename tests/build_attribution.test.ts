@@ -56,6 +56,41 @@ export const mockups = [
   assert.equal(sources.get("second"), "entries/second.mockup.ts");
 });
 
+test("flattened screen variants retain their defining module", async (context) => {
+  const fixture = await createFixture(`
+import { defineScreen } from "@mokly/mokly";
+export const mockups = [defineScreen({
+  dependencies: [],
+  description: "Parent",
+  desktop: "Parent",
+  id: "parent",
+  mobile: "Parent",
+  relatedDocs: [],
+  route: "screens/parent.html",
+  title: "Parent",
+  variants: [{
+    description: "Empty",
+    desktop: "Empty",
+    id: "parent-empty",
+    mobile: "Empty",
+    slug: "empty",
+    title: "Parent, empty"
+  }]
+})];
+`);
+  context.after(() => removeFixture(fixture));
+
+  const manifest = (await compileCatalogue(await loadConfig(fixture.root)))
+    .manifest;
+  assert.deepEqual(
+    manifest.entries.map(({ id, sourcePath }) => [id, sourcePath]),
+    [
+      ["parent", "entries/fixture.mockup.tsx"],
+      ["parent-empty", "entries/fixture.mockup.tsx"],
+    ],
+  );
+});
+
 test("dark fragment changes attribute their screen", async (context) => {
   const fixture = await createFixture(undefined, {
     extraConfig: 'colorSchemes: ["light", "dark"],',

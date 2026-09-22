@@ -29,6 +29,24 @@ export function MiniFarewell({ compact }: { compact?: boolean }) {
   );
 }
 
+/** The failed-save variant as it appeared before that variant was removed. */
+export function MiniSaveFailed({ compact }: { compact?: boolean }) {
+  return (
+    <div className="mbk-shot">
+      <div className="mbk-shot-pad">
+        <div className="mbk-shot-nav">
+          {compact ? "Menu" : "Example navigation"}
+        </div>
+        <p className="mbk-shot-error">
+          Couldn’t save this workspace. Try again.
+        </p>
+        <h2>Welcome to Mokly</h2>
+        <span className="mbk-shot-link">Open the details screen</span>
+      </div>
+    </div>
+  );
+}
+
 const TIMELINE_ENTRIES = [
   ["Spring", "The first screens were written and the tour was drafted."],
   ["Summer", "Notes moved next to the screens they describe."],

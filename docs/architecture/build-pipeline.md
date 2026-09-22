@@ -6,7 +6,7 @@
 mokly.config.ts
         |
         v
-discover *.mockup.tsx + renderer + optional compatibility modules
+resolve `entries` globs -> matched entry modules + renderer + optional compatibility modules
         |
         v
 one esbuild graph, with React resolved from the consumer
@@ -24,7 +24,7 @@ adapt explicit child controls -> resolve mock:id links -> compatibility bridge
 validate markers/links/resources
         |
         v
-mobile/desktop light and optional dark HTML, saved component variants, whole documents + schema-v5 manifest in memory
+mobile/desktop light and optional dark HTML for every screen and variant screen, saved component variants, whole documents + schema-v5 manifest in memory
         |
         +---- check (committed): compare with disk, write nothing
         |
@@ -38,11 +38,43 @@ mobile/desktop light and optional dark HTML, saved component variants, whole doc
 Mokly searches upward from the process working directory, or loads the path
 given by `--config`. Config code is bundled to a temporary ESM module so `.ts`,
 `.mts`, `.js`, and `.mjs` work from a local install or npx cache. Every path is
-then resolved from the config file and confined to `repoRoot`.
+then resolved from the config file and confined to `repoRoot`. The `entries`
+globs, or the `entriesDir` shorthand, are resolved once into a sorted set of
+matched modules. The glob defines the entry shape without another suffix
+filter; `entriesDir` preserves the recommended `.mockup.ts` and `.mockup.tsx`
+convention by expanding to a suffixed glob.
+
+Before any walk, discovery projects the repository and every distinct glob root
+once for the pass; Review projection alone falls back to its lexical path. A
+non-benign root failure, including one for a later glob, therefore precedes all
+per-glob module validation. Walks and module validation then run in declared
+glob order. An earlier denial precedes a later zero-match failure, and reversing
+the globs reverses that diagnostic precedence. Accepted and vanished candidates
+are validated once per pass; accepted candidates still count for every
+overlapping glob. Every glob must retain a module so another glob cannot hide a
+typo or omission.
+
+Walks skip `review.outDir` and denied directories. Directories that vanish or
+are replaced mid-walk (`ENOENT` or `ENOTDIR`) are skipped and listed with denied
+paths in the zero-match message. Other read or projection errors fail with
+`config-invalid`, naming the repository-relative path and error code (`unknown`
+if absent). A matched module that is deleted, or replaced by something other
+than a regular file, between the directory listing and validation is dropped
+and listed under `not searched` when its glob is then empty. A projection or
+lstat failure with any code other than `ENOENT` fails with `config-invalid`.
+
+Config validation rejects private-cache glob roots before discovery. Direct
+discovery retains a defense for surviving `.mokly-cache/` candidates, while a
+candidate that vanishes during its preceding existence check is dropped. Each
+module is classified by the shared source policy so none lies inside Review
+output, the baseline cache, or a denied directory below its deepest glob root.
+An entry may be nested below `mockupsDir`; it joins `sourceFiles`, stays private
+through lexical and realpath aliases, and cannot overlap a generated route. The
+resolved set travels with the config beside `sourceFiles`.
 
 ## 2. One Consumer Graph
 
-Registry `*.mockup.ts(x)` files, the configured renderer, imported page
+The resolved entry modules, the configured renderer, imported page
 helpers, and an optional temporary compatibility transformer are imported by a single virtual entry and
 bundled together. The internal bundle is CommonJS so Node-oriented consumer
 dependencies can retain dynamic built-in imports. Esbuild returns this bundle
@@ -72,10 +104,21 @@ extensions, and in-repository package roots pass directly to this graph after
 strict config validation. This supports React Native Web or other workspace
 layouts without putting an app alias or TypeScript-root assumption in Mokly.
 
-Every module beneath `entriesDir` imports a module-bound Mokly authoring
-facade. Each definition or nested marker is therefore attributed at the helper
-call itself, including calls made later through a shared helper factory, without
-sticky process-global state or an absolute checkout path.
+Every repository-owned module, meaning one whose real path is inside
+`repoRoot` and outside `node_modules`, `.mokly-cache/`, and Mokly's own runtime,
+imports a module-bound Mokly authoring facade. Each definition or nested marker
+is therefore attributed at the helper call itself, including calls made later
+through a shared helper factory or from a helper beside a product component,
+without sticky process-global state or an absolute checkout path. Installed
+packages import the plain API and cannot self-attribute. Registry validation
+accepts an attributed source only when it is a resolved entry module or an
+inventoried source file. Generated and Git-tracked ownership additionally trust
+a repository-relative owner that matches a configured entry glob with dotfile
+matching enabled, preserving cleanup after a matched source is renamed or
+deleted. A repository-root glob trusts every matching owner path and no other
+path through this branch. Export and Review confinement remain limited to
+directories that hold resolved entry modules; a repository-root glob does not
+protect the whole repository as an export source root.
 
 Both config and consumer bundle metafiles supply the complete source inventory,
 including tree-shaken repository inputs. Serving and publication resolve these
@@ -177,9 +220,14 @@ ordinary and `data-nav-href` links, anchors, local HTML resource attributes,
 Review-ignore/material markers, protected source inventory, and manifest data are
 validated before output changes. All expected bytes are held in memory.
 In committed mode, `check` compares those bytes with disk and reports grouped
-missing, stale, and proven-orphan paths. In derived mode, it rejects Git-tracked
-generated routes, the manifest and cache contents; local generated files may be
-absent or stale. Authored public assets remain tracked in either mode.
+missing, stale, proven-orphan, and unclaimed paths. Unclaimed paths are HTML
+files with a valid Mokly ownership header whose owner is neither a resolved
+entry, an inventoried source, nor matched by a configured entry glob; ordinary
+authored HTML is not reported.
+In derived mode, Check does not add this filesystem diagnostic and instead
+rejects Git-tracked generated routes, the manifest and cache contents; local
+generated files may be absent or stale. Authored public assets remain tracked
+in either mode.
 
 This repository's example uses derived mode. Both test entrypoints build the
 package and example before tests read generated files, so the verification order

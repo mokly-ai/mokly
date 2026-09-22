@@ -40,8 +40,10 @@ export function browserTest(id: string, file: string) {
   };
 }
 
-export function ciReports() {
-  return ["node-22.14.0", "node-24.21.0"].flatMap((runtime) =>
+export function ciReports(
+  runtimes: readonly string[] = ["node-22.14.0", "node-24"],
+) {
+  return runtimes.flatMap((runtime) =>
     ["unit", "browser"].flatMap((suite) => {
       const files = [1, 2, 3, 4].map(
         (index) =>

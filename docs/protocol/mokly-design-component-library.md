@@ -22,24 +22,24 @@ from its render context rather than pinning them in its fixture, so the top
 bar's samples name the scheme they rendered for; a fixture sets such a prop only
 to depict a different setting, as the `auto-appearance` sample does.
 
-| Group / slug                  | Existing implementation                                             | Saved variant ids                                                          |
-| ----------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| chrome / top-bar              | `parts/top_bar.tsx`, `parts/tag_filter.tsx`                         | `default`, `search`, `tag-picker`, `drawer-open`, `auto-appearance`        |
-| chrome / catalogue-navigation | `parts/nav.tsx`, scenario data in `components/parts/navigation.tsx` | `all`, `changes`, `empty`, `drawer`, `loading`, `preparing`, `unavailable` |
-| chrome / screen-header        | `parts/shell.tsx: ScreenHead`                                       | `screen`, `component`, `changed`, `removed`                                |
-| chrome / appearance-selector  | new for the appearance mockups                                      | `auto`, `light`, `dark`, `compact`                                         |
-| controls / comparison-toolbar | `parts/compare.tsx: CompareToolbar`                                 | `current`, `side-by-side`, `overlay`, `difference`                         |
-| controls / view-controls      | `components/parts/view_controls.tsx`, `parts/shell.tsx: ViewSwitch` | `default`, `both`, `highlighted`, `unavailable`                            |
-| controls / tag-picker         | `parts/tag_filter.tsx: TagPicker`                                   | `all`, `selected`, `empty`                                                 |
-| controls / tag-chip           | `parts/tag_filter.tsx: TagChips`                                    | `default`, `selected`, `inactive`                                          |
-| controls / change-status      | `components/parts/comparison_details.tsx: ChangeStatusBadge`        | `unmodified`, `added`, `changed`, `removed`                                |
-| inspector / inspector         | `parts/details.tsx`, `components/parts/inspector.tsx`               | `details`, `props`, `closed`                                               |
-| inspector / metadata-row      | `parts/metadata_row.tsx: MetaRow`, shared details/prop rows         | `text`, `code`, `linked`, `tags`                                           |
-| inspector / prop-field        | `components/controls/parts/fields.tsx: field chrome`                | `text`, `boolean`, `invalid-number`, `select`, `optional-unset`            |
-| preview / device-frame        | `parts/stage.tsx: PhoneFrame/BrowserFrame`                          | `phone`, `browser`, `dark`, `light-only`                                   |
-| preview / comparison-pane     | `parts/compare.tsx: Pane/MissingPane`                               | `before`, `current`, `missing-before`, `missing-current`                   |
-| preview / empty-state         | `parts/stage_content.tsx: EmptyState`                               | `home`, `missing-route`, `no-changes`                                      |
-| preview / flow-step           | `parts/stage_content.tsx: FlowStep`                                 | `first`, `second`                                                          |
+| Group / slug                  | Existing implementation                                             | Saved variant ids                                                                                          |
+| ----------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| chrome / top-bar              | `parts/top_bar.tsx`, `parts/tag_filter.tsx`                         | `default`, `search`, `tag-picker`, `drawer-open`, `auto-appearance`                                        |
+| chrome / catalogue-navigation | `parts/nav.tsx`, scenario data in `components/parts/navigation.tsx` | `all`, `changes`, `empty`, `drawer`, `loading`, `preparing`, `unavailable`, `variants`, `changed-variants` |
+| chrome / screen-header        | `parts/shell.tsx: ScreenHead`                                       | `screen`, `component`, `changed`, `removed`                                                                |
+| chrome / appearance-selector  | new for the appearance mockups                                      | `auto`, `light`, `dark`, `compact`                                                                         |
+| controls / comparison-toolbar | `parts/compare.tsx: CompareToolbar`                                 | `current`, `side-by-side`, `overlay`, `difference`                                                         |
+| controls / view-controls      | `components/parts/view_controls.tsx`, `parts/shell.tsx: ViewSwitch` | `default`, `both`, `highlighted`, `unavailable`, `changed-views`                                           |
+| controls / tag-picker         | `parts/tag_filter.tsx: TagPicker`                                   | `all`, `selected`, `empty`                                                                                 |
+| controls / tag-chip           | `parts/tag_filter.tsx: TagChips`                                    | `default`, `selected`, `inactive`                                                                          |
+| controls / change-status      | `components/parts/comparison_details.tsx: ChangeStatusBadge`        | `unmodified`, `added`, `changed`, `removed`                                                                |
+| inspector / inspector         | `parts/details.tsx`, `components/parts/inspector.tsx`               | `details`, `props`, `closed`                                                                               |
+| inspector / metadata-row      | `parts/metadata_row.tsx: MetaRow`, shared details/prop rows         | `text`, `code`, `linked`, `tags`                                                                           |
+| inspector / prop-field        | `components/controls/parts/fields.tsx: field chrome`                | `text`, `boolean`, `invalid-number`, `select`, `optional-unset`                                            |
+| preview / device-frame        | `parts/stage.tsx: PhoneFrame/BrowserFrame`                          | `phone`, `browser`, `dark`, `light-only`                                                                   |
+| preview / comparison-pane     | `parts/compare.tsx: Pane/MissingPane`                               | `before`, `current`, `missing-before`, `missing-current`                                                   |
+| preview / empty-state         | `parts/stage_content.tsx: EmptyState`                               | `home`, `missing-route`, `no-changes`                                                                      |
+| preview / flow-step           | `parts/stage_content.tsx: FlowStep`                                 | `first`, `second`                                                                                          |
 
 Fixtures for each variant come from the corresponding existing screen state,
 assembled into complete explicit props at declaration time, apart from the
@@ -71,11 +71,21 @@ Controls below use text, boolean, number and primitive enum selections only.
    Brand/search structure belongs to this component;
    it composes the registered picker, chip and appearance selector. Preserve compact mobile branding.
 2. **Catalogue navigation:** row records with stable key, label, kind
-   `collection/screen/component/flow`, depth, optional count/open/destination;
-   selected destination, All/Changes state, changed count and presentation
+   `collection/screen/component/flow/page/variant`, depth, optional
+   count/open/destination, an optional changed mark, and an optional
+   `open/closed` variant-list state on a screen row; selected destination,
+   All/Changes state, changed count and presentation
    `responsive/drawer`, and optional Changes availability
    `ready/pending/preparing/unavailable`.
-   Controls: All/Changes, availability and presentation. Pending and preparing
+   Controls: All/Changes, availability and presentation. A `variant` row is a
+   leaf one depth step below the screen row it follows; it renders only while
+   that screen's variant list is open, it never counts as a collection child,
+   and it carries the variant icon — a screen outline over a second, partially
+   drawn screen outline — instead of the screen icon, muted like the screen
+   rows around it. A screen row carrying a variant list adds a trailing 16px
+   chevron disclosure button with its own expanded state and accessible name;
+   the row link is unchanged. The changed mark is a trailing dot, never an edge or
+   rail. Pending and preparing
    both reserve the count slot with a spinner and replace selected Changes rows
    with their own message; only preparing adds a secondary detail line beneath
    its title. Unavailable keeps the tabs with a dash and one plain message for
@@ -92,12 +102,14 @@ Controls below use text, boolean, number and primitive enum selections only.
    a band supply eligible fixture data. Preserve the opaque background, refresh
    depiction and current linked/native/inactive behavior for each screen family.
 5. **View controls:** selected preview `mobile/desktop/both`, optional
-   highlight state and unavailable reason `empty/unavailable/comparison/removed`.
-   Controls: selection, highlight and reason. The single icon group lives in the
-   screen header: viewport dropdown and optional highlight toggle. The component
-   carries no scheme control, because one Appearance control in the top bar sets
-   the whole catalogue. The dropdown controls actual mobile/desktop previews
-   inside the bounded scrolling workspace.
+   highlight state, unavailable reason `empty/unavailable/comparison/removed`,
+   and optional changed views as viewport/scheme records. Controls: selection,
+   highlight and reason. A changed view marks the viewport dropdown when its
+   viewport is not selected; `both` never marks the dropdown. The top-bar
+   Appearance selector marks changes in another scheme. Both marks describe
+   evidence about other views, and the details inspector names them. The single
+   header icon group contains the viewport dropdown and optional highlight
+   toggle; one Appearance control sets the catalogue scheme.
 6. **Tag picker:** tag records containing stable id, label and optional
    destination, plus optional active id. Controls: optional active tag using
    the existing forms/onboarding examples. Empty input follows the current hidden

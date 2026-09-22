@@ -7,6 +7,10 @@
 import type { ViewerTheme } from "../viewer/types.js";
 
 import { ChevronIcon, IconSvg } from "./icons.js";
+import { useShellIdentifier } from "./identifier_context.js";
+import { ViewChangedMark } from "./view_changed_mark.js";
+import { VIEW_CHANGED_IDS } from "./view_marks.js";
+import { useActiveWorkspace } from "./workspace_context.js";
 
 const OPTIONS: readonly (readonly [ViewerTheme, string])[] = [
   ["auto", "Auto"],
@@ -53,6 +57,8 @@ export function AppearanceSelect(props: {
   theme: ViewerTheme;
 }) {
   const value = props.theme;
+  const changed = useActiveWorkspace()?.marks.scheme ?? false;
+  const changedId = useShellIdentifier(VIEW_CHANGED_IDS.scheme);
   return (
     <label
       className="mbk-appearance"
@@ -76,6 +82,7 @@ export function AppearanceSelect(props: {
       })}
       <ChevronIcon size={12} />
       <select
+        aria-describedby={changed ? changedId : undefined}
         aria-label="Appearance"
         data-mokly-appearance-select=""
         defaultValue={value}
@@ -86,6 +93,7 @@ export function AppearanceSelect(props: {
           </option>
         ))}
       </select>
+      <ViewChangedMark id={changedId} kind="scheme" marked={changed} />
     </label>
   );
 }

@@ -4,6 +4,15 @@ import type { ViewerSelection } from "../viewer/types.js";
 
 import type { LiveChangesStatus } from "./metadata.js";
 import type { ShellRoute } from "./routes.js";
+import type { ViewMarks } from "./view_marks.js";
+import type { EntryStatus } from "./view_status.js";
+
+/** Server-rendered workspace metadata adopted for the first hydration render. */
+export interface WorkspaceHydrationState {
+  status: EntryStatus | undefined;
+  comparisonEligible: boolean;
+  marks: ViewMarks;
+}
 
 /** Browser state captured for one automatic watched reload. */
 export interface ShellRecoverySnapshot {
@@ -22,6 +31,7 @@ export interface ShellRecoverySnapshot {
 
 /** Optional browser values applied before React begins hydration. */
 export interface ShellInitialState {
+  workspace?: WorkspaceHydrationState;
   colorScheme?: ViewerSelection["colorScheme"];
   detailsOpen?: boolean;
   disclosures?: Readonly<Record<string, boolean>>;

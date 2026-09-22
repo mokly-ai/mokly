@@ -2,13 +2,13 @@
 
 ## Delivery Status
 
-Implemented in the 53 Browse/Changes design screens and two real example
+Implemented in the 57 Browse/Changes design screens and two real example
 screens using `MockLink` and `MockLink asChild`. Verification and delivery are tracked by the
 [implementation plan](../../plans/mokabook-design-mocklinks.md).
 
 The [component design inventory](./mokly-component-design.md) extend the
 catalogue with their own state contract and native component/control depictions.
-The Browse/Changes designs retain the canonical links below, including the
+Those 57 Browse/Changes designs retain the canonical links below, including the
 removed previous-version family added by
 [removed previews](./mokly-removed-previews.md).
 They now share native icon inspector tabs and working viewport dropdowns with
@@ -153,6 +153,37 @@ state keeps a flat row and returns to catalogue home without inventing parents.
 its Changes action opens `design-changes-current`. Unsupported combinations
 remain depictions. These six states retain their own typed navigation records;
 none borrows another subject's inspector or drawer identity.
+
+## Screen Variants
+
+The four variant states under `design/browse/variants/` depict a screen's
+variants as ordinary catalogue entries grouped under their parent. The
+disclosure beside a parent row is a depiction with no destination, because the
+served shell toggles the list in place; the parent row itself keeps its own
+destination. A variant row without an authored destination stays a depiction.
+
+| Control/context                              | Destination                                                         |
+| -------------------------------------------- | ------------------------------------------------------------------- |
+| All catalogue: Welcome parent row            | `design-browse-screen`, the parent's own screen                     |
+| All catalogue: `Empty workspace` variant row | `design-browse-variant-selected`                                    |
+| Selected variant: Welcome breadcrumb         | `design-browse-screen`, because a variant keeps its parent's crumbs |
+| Selected variant: Changes filter             | `design-browse-variant-changes`                                     |
+| Changed variant: All filter                  | `design-browse-variant-selected`                                    |
+| Changed variant: Welcome parent row          | `design-browse-variant-changes`, the parent's first changed variant |
+| Removed variant: All filter                  | `design-browse-screen`, because the parent screen still exists      |
+| Changed views: All filter                    | `design-browse-screen`                                              |
+| Changed views: Details view list             | `design-review-changed`, the canonical comparison with both schemes |
+
+The changed-variant and removed-variant states keep their Welcome breadcrumb as
+text, because no artboard depicts an unmodified parent inside Changes. On the
+removed state the parent row is a depiction too: the deletion is a later state
+of the same group, so it must not open the earlier changed-variant scenario.
+The removed variant has no live product destination and no comparison modes;
+its stage shows the variant's inert previous version.
+The changed-views state shows no comparison band. Its marks on Appearance
+and the viewport dropdown identify evidence about other views. The Details
+view list opens the canonical comparison; the outer Appearance control chooses
+its generated scheme. The depicted Appearance selector has no authored transition.
 
 ## Scheme, Comparison, And Tag States
 

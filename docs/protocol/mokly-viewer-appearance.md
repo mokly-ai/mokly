@@ -63,6 +63,16 @@ that wants previews to follow its application theme passes a matching
 rendering color-scheme fields keep their preview meaning everywhere. Appearance
 creates no catalogue, manifest, comparison or adapter-wire schema change.
 
+## Changed Preview Indicators
+
+A change confined to another preview scheme marks the standalone Appearance
+selector with the shared change dot and an `Other theme changed` description.
+The viewport dropdown keeps the separate other-viewport indicator. Embedded
+viewers mark their Dark preview control instead. The active workspace supplies
+both controls from one route-owned evidence and view resolution, including
+Light fallback, selected component variant, and later evidence updates. Leaving
+a workspace clears its mark; no control depends on a second evidence fetch.
+
 ## React And Server API
 
 The root package exports a documented `ViewerTheme` type:
@@ -353,3 +363,10 @@ the screens.
   hover/disabled/error states, expanded frames and comparison compositing.
 - Smoke Serve, saved appearance after full/watched reload, root/subpath exports,
   SSR first paint and packaged React/SSR consumers. Run the repository gate.
+
+During standalone hydration, the workspace adopts the server-rendered status,
+comparison availability and change marks for its first React render. It then
+recomputes that metadata from the active preview selection immediately after
+hydration. The early appearance script already selected the preview files;
+this metadata handoff preserves those frames and avoids rebuilding the shell
+when stored Dark appearance differs from the server's initial Light evidence.

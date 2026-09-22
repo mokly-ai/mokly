@@ -50,7 +50,11 @@ for (const screens of [10, 11, 20, 21]) {
     await generateLargeFixture(root, { areas: 1, screens, rows: 1 });
     const config = await loadConfig(root);
     const graph = await loadConsumerGraph(config);
-    const registry = prepareRegistry(graph.definitions, config);
+    const registry = prepareRegistry(graph.definitions, {
+      ...config,
+      entryModules: graph.entrySources,
+      sourceFiles: graph.sourceFiles,
+    });
     assert.equal(
       registry.entries.filter((entry) => entry.kind === "screen").length,
       screens,

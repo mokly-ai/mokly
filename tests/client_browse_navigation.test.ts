@@ -4,12 +4,15 @@ import test from "node:test";
 import type { CatalogueReadModel } from "../packages/viewer/dist/catalogue/types.js";
 import type { ShellContext } from "../packages/viewer/dist/shell/context.js";
 import {
+  defaultDisclosures,
+  disclosurePath,
   navLeafVisible,
   navNodeVisible,
 } from "../packages/viewer/dist/shell/nav_model.js";
 import type {
   NavGroupNode,
   NavLeafNode,
+  NavSectionNode,
 } from "../packages/viewer/dist/shell/nav_tree.js";
 import { parseSearchQuery } from "../packages/viewer/dist/shell/search_query.js";
 import {
@@ -123,6 +126,67 @@ test("free text matches untagged rows and structured entry ids", () => {
     ),
     true,
   );
+});
+
+test("a parent remains visible when a filtered variant matches", () => {
+  const failure = leaf(
+    "welcome-failure",
+    "screens/welcome.variants/failure.html",
+    "Failure",
+    ["errors"],
+  );
+  const parent = { ...welcome, variants: [failure] };
+  const context = navigationContext([failure.route]);
+  const selection = {
+    ...querySelection("tag:errors"),
+    view: "changes" as const,
+  };
+
+  assert.equal(navLeafVisible(parent, selection, context), false);
+  assert.equal(navLeafVisible(failure, selection, context), true);
+  assert.equal(navNodeVisible(parent, selection, context), true);
+});
+
+test("a removed variant is hidden in All and visible in Changes", () => {
+  const removed = {
+    ...leaf(
+      "welcome-legacy",
+      "screens/welcome.variants/legacy.html",
+      "Legacy · Removed",
+    ),
+    removedVariant: true,
+  };
+  const context = navigationContext([removed.route]);
+
+  assert.equal(navLeafVisible(removed, defaultSelection, context), false);
+  assert.equal(
+    navLeafVisible(removed, { ...defaultSelection, view: "changes" }, context),
+    true,
+  );
+});
+
+test("an active variant opens its persisted list and ancestry", () => {
+  const failure = leaf(
+    "welcome-failure",
+    "screens/welcome.variants/failure.html",
+    "Failure",
+  );
+  const section: NavSectionNode = {
+    children: [{ ...welcome, variants: [failure] }],
+    id: "pages",
+    key: "section:pages",
+    label: "Pages",
+  };
+  const sections = [section];
+
+  assert.equal(
+    defaultDisclosures(sections, failure.route)["variants:pages:welcome"],
+    true,
+  );
+  assert.deepEqual(disclosurePath(sections, failure.route), [
+    "section:pages",
+    "variants:pages:welcome",
+  ]);
 });
 
 test("navigation clears only a query that hides its destination", () => {

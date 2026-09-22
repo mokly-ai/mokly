@@ -77,6 +77,22 @@ outline: 2px solid var(--mbk-sage-deep);
   outline-offset: 3px;
 }
 
+.ce-view-changed {
+background: var(--mbk-sage);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px white;
+  height: 6px;
+  pointer-events: none;
+  position: absolute;
+  right: 3px;
+  top: 3px;
+  width: 6px;
+}
+
+.ce-icon-control:has(input:disabled) .ce-view-changed {
+background: var(--chrome-muted);
+}
+
 .ce-control-description {
 clip-path: inset(50%);
   height: 1px;

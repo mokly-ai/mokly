@@ -27,6 +27,11 @@ test("isolated comparisons stay lazy, immutable, sandboxed, and responsive", asy
     if (response.status() >= 400) failures.push(response.url());
   });
   await page.goto(`${site.url}/view/screens/home.html`);
+  await expect(page.locator('[data-view-changed="scheme"]')).toBeVisible();
+  await page.getByRole("tab", { name: "Details", exact: true }).click();
+  await expect(page.locator("[data-workspace-changed-views]")).toContainText(
+    "Mobile · Light, Mobile · Dark, Desktop · Light, Desktop · Dark",
+  );
   expect(requests.some((url) => /\/diffs\/|\/events/.test(url))).toBe(false);
   const modes = page.getByRole("group", { name: "Comparison mode" });
   for (const width of [1280, 390]) {
@@ -103,6 +108,9 @@ test("added and removed screens stay current while light-only comparisons retain
   await page.goto(`${site.url}/view/screens/details.html`);
   await chooseScheme(page, "dark");
   await page.getByRole("button", { name: "Overlay", exact: true }).click();
+  await expect(page.locator("[data-diff-viewport] h3").first()).toContainText(
+    "Light only",
+  );
   for (const frame of await page.locator("[data-diff-stage] iframe").all()) {
     await expect(frame).not.toHaveAttribute("src", /\.dark\.html$/);
     await expect(frame).toHaveCSS("color-scheme", "light");

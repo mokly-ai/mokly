@@ -79,6 +79,7 @@ const AUDITED_BOUNDARIES = [
   "design-components.css .ce-variants a[aria-current]",
   "design-library/chrome/appearance-selector.css .mbk-appearance:focus-within",
   "design-library/chrome/appearance-selector.css .mbk-appearance:hover",
+  "design-library/chrome/catalogue-navigation.css .mbk-nav-variants-toggle:focus-visible",
   "design-library/controls/change-status.css .ce-added",
   "design-library/controls/change-status.css .ce-changed",
   "design-library/controls/change-status.css .ce-removed",

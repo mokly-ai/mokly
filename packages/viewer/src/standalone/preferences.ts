@@ -1,8 +1,12 @@
 /** Browser preference handoff performed before standalone hydration. */
 
-import type { ShellInitialState } from "../shell/store_state.js";
+import type {
+  ShellInitialState,
+  WorkspaceHydrationState,
+} from "../shell/store_state.js";
 
 import {
+  setDisclosureOpen,
   readEarlyDetailsOpen,
   readEarlyDisclosures,
   persistHydrationDisclosures,
@@ -39,7 +43,9 @@ export function prepareHydrationState(
     ...earlyDisclosures,
   });
   persistHydrationDisclosures(doc);
+  const workspace = readWorkspaceHydration(doc);
   return {
+    ...(workspace ? { workspace } : {}),
     ...(colorScheme === "dark" || colorScheme === "light"
       ? { colorScheme }
       : {}),
@@ -56,6 +62,30 @@ export function prepareHydrationState(
   };
 }
 
+function readWorkspaceHydration(
+  doc: Document,
+): WorkspaceHydrationState | undefined {
+  const workspace = doc.querySelector<HTMLElement>("[data-workspace]");
+  if (!workspace) return;
+  const status = workspace.querySelector<HTMLElement>("[data-workspace-status]")
+    ?.dataset["status"];
+  const toolbar = workspace.querySelector<HTMLElement>(".mbk-diff-toolbar");
+  const mark = (kind: "scheme" | "viewport") =>
+    doc.querySelector<HTMLElement>(`[data-view-changed="${kind}"]`)?.hidden ===
+    false;
+  return {
+    status:
+      status === "Added" ||
+      status === "Changed" ||
+      status === "Removed" ||
+      status === "Unmodified"
+        ? status
+        : undefined,
+    comparisonEligible: toolbar?.hidden === false,
+    marks: { scheme: mark("scheme"), viewport: mark("viewport") },
+  };
+}
+
 function persistDetailsPreference(win: Window | null, open: boolean): void {
   try {
     win?.localStorage.setItem(detailsStorageKey, open ? "open" : "closed");
@@ -68,11 +98,11 @@ function applyDisclosures(
   doc: Document,
   values: Readonly<Record<string, boolean>>,
 ): void {
-  for (const group of doc.querySelectorAll<HTMLDetailsElement>(
+  for (const group of doc.querySelectorAll<HTMLElement>(
     "[data-nav-disclosure]",
   )) {
     const key = group.getAttribute("data-nav-disclosure");
-    if (key && values[key] !== undefined) group.open = values[key];
+    if (key && values[key] !== undefined) setDisclosureOpen(group, values[key]);
   }
 }
 

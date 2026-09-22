@@ -145,6 +145,15 @@ function validateScreen(entry: Record<string, unknown>): void {
       `${String(entry.id)} has invalid address`,
     );
   }
+  if (
+    "variantOf" in entry &&
+    (typeof entry.variantOf !== "string" || !isCatalogueId(entry.variantOf))
+  ) {
+    throw new MoklyError(
+      "manifest-invalid",
+      `${String(entry.id)} has invalid variantOf`,
+    );
+  }
 }
 
 function validateUseCase(entry: Record<string, unknown>): void {
@@ -213,6 +222,7 @@ export function validateCurrentFields(
                 "darkFragments",
                 "fragments",
                 "useCaseIds",
+                "variantOf",
                 "viewports",
                 ...(components ? ["componentViews"] : []),
               ]

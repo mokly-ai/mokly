@@ -40,10 +40,12 @@ const validationConfig: ResolvedConfig = {
   compatibility: { readManifestV2: false },
   configPath: path.join(repositoryRoot, "mokly.config.ts"),
   entriesDir: path.join(repositoryRoot, "tests"),
+  entryGlobs: ["tests/**/*.mockup.{ts,tsx}"],
   mockupsDir: path.join(repositoryRoot, "mockups"),
   moduleResolution: { aliases: {}, loaders: {}, packageRoots: [] },
   repoRoot: repositoryRoot,
   review: { base: "main", outDir: ".review", sharedImpact: [] },
+  sourceFiles: [sourceRelativePath],
   stylesheets: [],
   watch: { debounceMs: 100, rules: [] },
 };
@@ -148,6 +150,25 @@ test("nested screens retain colorSchemes through root flattening", () => {
   assert.equal(definition?.kind, "screen");
   if (definition?.kind !== "screen") throw new Error("screen missing");
   assert.deepEqual(definition.colorSchemes, ["light"]);
+});
+
+test("defineScreen flattens declared variants after their parent", () => {
+  const definitions = defineScreen({
+    ...screenBase,
+    variants: [
+      {
+        description: "Empty tagged screen",
+        desktop: "Empty desktop",
+        id: "tagged-screen-empty",
+        mobile: "Empty mobile",
+        slug: "empty",
+        title: "Tagged screen, empty",
+      },
+    ],
+  });
+
+  assert.equal(definitions[0]?.id, "tagged-screen");
+  assert.equal(definitions[1]?.id, "tagged-screen-empty");
 });
 
 test("define helpers keep authored tags on screens and use cases", () => {

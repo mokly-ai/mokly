@@ -201,6 +201,7 @@ function toManifestEntry(
     route: entry.route,
     ...(entry.tags && entry.tags.length > 0 ? { tags: [...entry.tags] } : {}),
     useCaseIds: [...entry.useCaseIds],
+    ...(entry.variantOf !== undefined ? { variantOf: entry.variantOf } : {}),
     viewports: ["mobile", "desktop"],
   };
 }

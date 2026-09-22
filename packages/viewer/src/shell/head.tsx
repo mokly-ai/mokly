@@ -3,6 +3,9 @@
 
 import type { ReactNode } from "react";
 
+import { catalogueViewHref } from "../navigation/delivery.js";
+import type { ManifestEntry } from "../registry/types.js";
+
 import type { Catalogue } from "./catalogue.js";
 import { structuredCrumbTrail } from "./nav_tree.js";
 import type { CatalogueCrumb } from "./nav_tree.js";
@@ -15,7 +18,13 @@ function Crumbs(props: { items: readonly CatalogueCrumb[] }) {
       {props.items.map((item, index) => (
         <span key={`${item.label}-${index}`}>
           {index > 0 ? <span className="sep">›</span> : null}
-          {item.label}
+          {item.href === undefined ? (
+            item.label
+          ) : (
+            <a className="mbk-crumb-link" href={item.href}>
+              {item.label}
+            </a>
+          )}
         </span>
       ))}
     </p>
@@ -125,17 +134,47 @@ export function ScreenHead(props: {
   );
 }
 
+/**
+ * The parent screen a variant belongs to. A variant's own ancestors are the
+ * parent's collection ancestors, so the parent itself closes the trail; a
+ * removed variant resolves through its retained `variantOf` instead of the
+ * hierarchy, which holds current entries only.
+ */
+function variantParent(
+  catalogue: Catalogue,
+  target: RouteTarget,
+): ManifestEntry | undefined {
+  const entry = target.entry;
+  if (entry.kind !== "screen") {
+    return undefined;
+  }
+  return (
+    catalogue.hierarchy.variantParentById.get(entry.id) ??
+    (entry.variantOf === undefined
+      ? undefined
+      : catalogue.byId.get(entry.variantOf))
+  );
+}
+
 /** The breadcrumb trail, id, and title for one resolved route target. */
 export function targetHead(
   catalogue: Catalogue,
   target: RouteTarget,
 ): { crumbs: CatalogueCrumb[]; id?: string; title: string } {
+  const ancestors =
+    catalogue.removedEntries
+      .find(({ entry }) => entry.route === target.entry.route)
+      ?.ancestors.map(({ title }) => ({ label: title })) ??
+    structuredCrumbTrail(catalogue.hierarchy, target.entry.id);
+  const parent = variantParent(catalogue, target);
   return {
     crumbs:
-      catalogue.removedEntries
-        .find(({ entry }) => entry.route === target.entry.route)
-        ?.ancestors.map(({ title }) => ({ label: title })) ??
-      structuredCrumbTrail(catalogue.hierarchy, target.entry.id),
+      parent === undefined || parent.kind === "collection"
+        ? ancestors
+        : [
+            ...ancestors,
+            { href: catalogueViewHref(parent.route), label: parent.title },
+          ],
     id: target.entry.id,
     title: target.entry.title,
   };

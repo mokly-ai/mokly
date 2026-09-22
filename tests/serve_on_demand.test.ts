@@ -28,7 +28,7 @@ for (const watch of [false, true]) {
     t.after(() => removeFixture(fixture));
     const config = await loadConfig(fixture.root);
     const running = await serve(config, { watch, port: 0 });
-    t.after(() => running.close());
+    fixture.beforeRemove(() => running.close());
     const home = await (await fetch(running.url)).text();
     assert.match(home, /data-entry-id="broken"/);
     assert.match(home, /Search catalogue/);
@@ -61,7 +61,7 @@ test("demand rendering validates logical anchors without rendering navigation-on
     watch: false,
     port: 0,
   });
-  t.after(() => running.close());
+  fixture.beforeRemove(() => running.close());
   const response = await fetch(
     `${running.url}/static/screens/home.desktop.html`,
   );
@@ -97,7 +97,7 @@ test(
       watch: true,
       port: 0,
     });
-    t.after(() => running.close());
+    fixture.beforeRemove(() => running.close());
     assert.equal(
       (await fetch(`${running.url}/static/screens/home.desktop.html`)).status,
       200,

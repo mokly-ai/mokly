@@ -17,6 +17,7 @@ export function TopBarView({
   tags,
   activeTag,
   appearance,
+  appearanceChanged,
   pickerOpen,
   brandDestination,
   menuDestination,
@@ -83,6 +84,9 @@ export function TopBarView({
       </div>
       <appearanceSelector.Component
         value={appearance}
+        {...(appearanceChanged === undefined
+          ? {}
+          : { otherSchemeChanged: appearanceChanged })}
         compact={viewport === "mobile"}
       />
     </header>

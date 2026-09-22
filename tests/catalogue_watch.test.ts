@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
+import path from "node:path";
 import test from "node:test";
 import { setTimeout } from "node:timers/promises";
 
+import { loadConfig } from "../dist/config/load.js";
 import { serve } from "../dist/server/serve.js";
 import { readCatalogue } from "../packages/viewer/dist/catalogue/reader.js";
 import type { CatalogueReadModel } from "../packages/viewer/dist/catalogue/types.js";
@@ -62,6 +64,62 @@ test(
     );
     assert.equal(replacement.identity.id, initial.identity.id);
     assert.notEqual(replacement.deploymentId, updated.deploymentId);
+  },
+);
+
+test(
+  "watched serve discovers a new entry beneath a configured glob root",
+  { timeout: 30_000 },
+  async (t) => {
+    const fixture = await createExportFixture();
+    await fs.writeFile(
+      fixture.configPath,
+      `export default {
+  generatedOutput: "committed",
+  entries: ["**/*.mockup.{ts,tsx}"],
+  mockupsDir: "mockups",
+  repoRoot: ".",
+  review: { outDir: ".review", sharedImpact: ["notes.md"] },
+  watch: { debounceMs: 0 }
+};\n`,
+    );
+    const config = await loadConfig(fixture.root);
+    const startup = serve(config, { port: 0, watch: true });
+    t.after(async () => {
+      const running = await startup.catch(() => undefined);
+      await running?.close();
+      await fixture.close();
+    });
+    const running = await startup;
+    const initial = await waitForCatalogue(running.url, () => true);
+    const created = path.join(
+      fixture.root,
+      "src/components/card/card.mockup.tsx",
+    );
+    await fs.mkdir(path.dirname(created), { recursive: true });
+    await fs.writeFile(
+      created,
+      `import { defineScreen } from "@mokly/mokly";
+export const mockups = [defineScreen({
+  dependencies: [],
+  description: "Newly discovered card",
+  desktop: "Card",
+  id: "new-card",
+  mobile: "Card",
+  relatedDocs: [],
+  route: "screens/new-card.html",
+  title: "New card",
+  useCaseIds: []
+})];\n`,
+    );
+
+    const updated = await waitForCatalogue(
+      running.url,
+      (model) =>
+        model.revision.content > initial.revision.content &&
+        model.screens.some((screen) => screen.id === "new-card"),
+    );
+    assert.ok(updated.screens.some((screen) => screen.id === "new-card"));
   },
 );
 

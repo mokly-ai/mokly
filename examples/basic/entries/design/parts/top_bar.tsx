@@ -14,6 +14,7 @@ interface TopBarProps {
   activeTag?: string | undefined;
   /** Overrides the depicted setting; defaults to the rendered scheme. */
   appearanceChoice?: AppearanceChoice | undefined;
+  appearanceChanged?: boolean | undefined;
   searchValue?: string | undefined;
   tagPickerOpen?: boolean | undefined;
   viewport: ArtboardViewport;
@@ -24,6 +25,7 @@ interface TopBarProps {
 export function TopBar({
   activeTag,
   appearanceChoice,
+  appearanceChanged,
   drawerOpen,
   menuPresentation,
   searchValue,
@@ -44,6 +46,7 @@ export function TopBar({
       tags={designTagRecords(navigation.tags)}
       pickerOpen={tagPickerOpen ?? false}
       appearance={appearanceChoice ?? rendered}
+      {...optional("appearanceChanged", appearanceChanged)}
       brandDestination={DESTINATIONS.home}
       menuDestination={
         navigation.drawer?.to ??

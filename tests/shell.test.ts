@@ -659,8 +659,7 @@ test("details inspector lists dark fragments and the schemes row", () => {
         '<code class="mbk-code">screens/welcome.desktop.dark.html</code>' +
         "</span></span></div>" +
         '<div class="mbk-meta-row"><span class="mbk-meta-k">Schemes</span>' +
-        '<span class="mbk-meta-v">light, dark</span></div>' +
-        '<div class="mbk-meta-row"><span class="mbk-meta-k">Tags</span>',
+        '<span class="mbk-meta-v">light, dark</span></div>',
     ),
   );
 
@@ -689,8 +688,7 @@ test("details inspector lists dark fragments and the schemes row", () => {
         '<span class="mbk-chips">' +
         '<code class="mbk-code">screens/welcome.mobile.html</code>' +
         '<code class="mbk-code">screens/welcome.desktop.html</code>' +
-        "</span></span></div>" +
-        '<div class="mbk-meta-row"><span class="mbk-meta-k">Tags</span>',
+        "</span></span></div>",
     ),
   );
 });
@@ -698,11 +696,10 @@ test("details inspector lists dark fragments and the schemes row", () => {
 test("details inspector chips the tags an entry declares", () => {
   const dark = createCatalogue(darkManifest);
   const welcome = routePage(dark, "screens/welcome.html");
+  assert.ok(welcome.includes(tagsRow("forms", "onboarding")));
   assert.ok(
     welcome.includes(
-      '<span class="mbk-meta-v">light, dark</span></div>' +
-        tagsRow("forms", "onboarding") +
-        '<div class="mbk-meta-row"><span class="mbk-meta-k">Related docs</span>',
+      '<div class="mbk-meta-row"><span class="mbk-meta-k">Related docs</span>',
     ),
   );
 

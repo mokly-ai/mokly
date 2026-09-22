@@ -63,6 +63,8 @@ when the historical primary file is absent, never when it is invalid.
 - [Live catalogue evidence updates](./mokly-live-evidence.md)
 - [Startup diagnostics and scale fixtures](./mokly-timings.md)
 - [Pages in the catalogue](./mokly-pages.md)
+- [Screen variants](./mokly-screen-variants.md) — implemented: variant
+  screens grouped under their parent screen with their own ids and routes.
 - [Source protection](./mokly-source-protection.md)
 - [Catalogue change metadata](./mokly-catalogue-changes.md)
 - [Breaking page migration](./mokly-page-migration.md)

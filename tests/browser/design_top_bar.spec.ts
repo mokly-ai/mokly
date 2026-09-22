@@ -21,6 +21,27 @@ const barDesigns = [
 ] as const;
 
 for (const viewport of ["desktop", "mobile"] as const) {
+  test(`${viewport}: the changed-view indicator is painted on Appearance`, async ({
+    page,
+  }) => {
+    await page.goto(
+      pathToFileURL(
+        path.join(
+          directory,
+          `design/browse/variants/changed-views.${viewport}.html`,
+        ),
+      ).href,
+    );
+    const appearance = page.locator(".mbk-appearance");
+    const mark = appearance.locator('[data-view-changed="scheme"]');
+    await expect(mark).toBeVisible();
+    await expect(mark).toHaveCSS("background-color", "rgb(79, 120, 100)");
+    await expect(mark).toHaveCSS("width", "6px");
+    await expect(
+      appearance.getByLabel("Appearance", { exact: true }),
+    ).toHaveAccessibleDescription("Other theme changed");
+  });
+
   test(`${viewport}: the tag picker panel escapes the search field it anchors to`, async ({
     page,
   }) => {

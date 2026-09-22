@@ -9,6 +9,49 @@ defines the tree and its state model; the
 [React Browse shell plan](../../../../plans/react-browse-shell.md) records how
 Serve, export and the public viewer converged on this tree.
 
+`nav.tsx` renders the catalogue column, `nav_rows.tsx` its collection groups as
+native `<details>`, and `nav_leaf_rows.tsx` its leaves: links carrying their
+entry-kind glyph, and a screen's variants as a container the row's chevron
+button discloses, because a row cannot be both a link and a `<summary>`. A
+deleted variant whose parent survives joins that container as a Removed row,
+which `nav_tree.ts` attaches to the parent instead of the section root.
+`nav_changed.ts` names the changed mark's class, attribute and wording, so the
+server row and each React store update use the same presentation contract;
+`css_nav_changed.ts` draws the mark from `data-changed` and
+`data-changed-variants` alone. `nav_model.ts` applies search and Changes
+visibility to parents and their variant children. `changes_activation.ts`
+owns Changes-filter activation for both standalone and embedded shells: an
+aggregate-only parent selects its first visible changed variant, and a changed
+destination selects its first changed view only when the current selection is
+not already a changed route. Later navigation within Changes keeps the sticky
+view axes; aggregate-parent redirection still applies, and a requested URL that
+names a viewport or color scheme remains explicit. `details_rows.tsx` owns the inspector's
+metadata rows, including links between a screen and its variants and the
+`Changed views` row.
+
+`view_marks.ts` is the shared vocabulary for per-view change evidence: the two
+axes that name a view, their canonical order and reader label, and the rule
+that decides whether the theme and viewport controls carry a mark.
+`workspace_views.ts` resolves the requested axes to the views actually shown,
+including Dark-to-Light fallback, and carries the matching status, comparison
+eligibility, and evidence provenance as one decision. `workspace_controls.tsx`
+uses that effective scheme while retaining the requested scheme as the control
+state, so navigation and controlled-host updates cannot leave stale indicators.
+`workspace_views_data.ts` derives the changed views themselves, preferring a
+ready comparison result and falling back to the lightweight screen-view
+evidence a screen-only catalogue records. Workspace data keys those lists by
+saved-variant id for components and entry id for screens, so every reader must
+select the evidence that belongs to the preview; `css_workspace_marks.ts` draws
+the dot and clips its wording.
+The parallel `viewStates` map stores `{ viewport, colorScheme, state }` for each
+ready view under the same key. Missing or partial matching evidence means the
+workspace must retain the selected entry or saved variant's fallback status and
+eligibility independently. `workspace_context.tsx` owns one routed workspace and its resolved views for
+both the top-bar Appearance indicator and the workspace. `workspace.tsx` consumes
+that shared resolution on
+every viewport, scheme, saved-variant, or evidence change and passes its
+effective scheme to the controls and comparison presentation.
+
 `css.ts` concatenates the standalone stylesheet. Split string modules preserve
 its exact bytes. The package build scopes an embedded stylesheet separately and
 uses packaged relative font URLs; its selector-aware transform maps document
@@ -67,13 +110,15 @@ remains behind `useViewerCapabilities`. The
 defines route loading, revision fencing and export omission.
 
 Before standalone hydration, stored disclosure and split-width preferences are
-applied to the server DOM. A newer native disclosure activation then wins over
-that stored value. The browser entry reads the resulting DOM into the store's
-initial state and persists the adopted disclosure state; hydration or page exit
-removes the temporary capture. Static catalogue resolution may finish after
-document load, so native choices remain authoritative until hydration starts.
-React therefore adopts the same attributes on
-its first render instead of replaying preferences after hydration.
+applied to the server DOM. Disclosure helpers treat native `<details>` groups
+and the button-controlled screen-variant lists as the same persisted state.
+A newer native disclosure activation then wins over that stored value. The
+browser entry reads the resulting DOM into the store's initial state and
+persists the adopted disclosure state; hydration or page exit removes the
+temporary capture. Static catalogue resolution may finish after document load,
+so native choices remain authoritative until hydration starts. React therefore
+adopts the same attributes on its first render instead of replaying preferences
+after hydration.
 
 Appearance has the same explicit handoff with an earlier first-paint boundary.
 `appearance-startup.js` runs before the stylesheet, resolves Auto/Light/Dark,
@@ -126,3 +171,10 @@ See [previews](../previews/README.md) for the client side.
 See [the package README](../../README.md), the
 [viewer contract](../../../../docs/protocol/mokly-viewer.md), and the
 [shell design](../../../../docs/protocol/mokly-shell-design.md).
+
+During standalone hydration, the workspace adopts the server-rendered status,
+comparison availability and change marks for its first React render. It then
+recomputes that metadata from the active preview selection immediately after
+hydration. The early appearance script already selected the preview files;
+this metadata handoff preserves those frames and avoids rebuilding the shell
+when stored Dark appearance differs from the server's initial Light evidence.

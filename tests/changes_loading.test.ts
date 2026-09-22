@@ -18,7 +18,7 @@ test("live navigation keeps its filters while Changes is pending, ready or unava
     manifest: compilation.manifest,
     changesStatus: "pending",
   });
-  t.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
   const read = async () => (await fetch(server.url)).text();
   const pending = await read();
   assert.match(pending, /data-filter="all"/);
@@ -53,7 +53,7 @@ test("live navigation prepares a derived comparison before it checks for changes
     manifest: compilation.manifest,
     changesStatus: "preparing",
   });
-  t.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
   const read = async () => (await fetch(server.url)).text();
   const preparing = await read();
   assert.match(preparing, /data-changes-status="preparing"/);
@@ -97,7 +97,7 @@ test("static capture omits live Changes states but retains supplied evidence", a
     manifest: compilation.manifest,
     liveChanges: false,
   });
-  t.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
   const read = async () => (await fetch(server.url)).text();
   assert.doesNotMatch(await read(), /data-mokly-filter|data-nav-status/);
   server.publishUpdate({ changesStatus: "pending" });

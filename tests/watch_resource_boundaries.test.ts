@@ -4,11 +4,15 @@ import path from "node:path";
 import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
+import { ResourceWatcher } from "../dist/server/resource_watcher.js";
 import { serve } from "../dist/server/serve.js";
 import { discoverWatchResources } from "../dist/server/watch_resources.js";
+import { ChokidarWatcherFactory } from "../dist/server/watcher.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
+import { mockChokidar } from "./helpers/chokidar_watcher.js";
 import { validEntrySource } from "./helpers/fixture.js";
+import { resourceFixture } from "./helpers/resource_watcher.js";
 import {
   version,
   waitForChangedCount,
@@ -142,3 +146,43 @@ test(
     }
   },
 );
+
+test("the resource gate reports non-Error descriptor failures and continues delivering", async (context) => {
+  const fixture = await resourceFixture(context);
+  const emitter = mockChokidar(context);
+  const failures: Error[] = [];
+  const delivered: string[] = [];
+  const rejected = path.join(fixture.mockupsDir, "a.svg");
+  const accepted = path.join(fixture.mockupsDir, "b.svg");
+  const resources = new ResourceWatcher(
+    new ChokidarWatcherFactory(),
+    (event) => {
+      if (event.path !== accepted) throw event.path;
+      delivered.push(event.path);
+    },
+    (error) => failures.push(error),
+  );
+  context.after(() => resources.close());
+  const prepared = await resources.prepare(
+    fixture.config,
+    fixture.compilation,
+    new Promise<void>(() => undefined),
+  );
+  assert.ok(prepared);
+  context.mock.timers.enable({ apis: ["setTimeout"] });
+  emitter.emit("all", "change", rejected);
+  context.mock.timers.tick(75);
+  assert.equal(failures.length, 0);
+  assert.doesNotThrow(() => prepared.adopt());
+  emitter.emit("all", "change", rejected);
+  context.mock.timers.tick(75);
+  emitter.emit("all", "change", accepted);
+  context.mock.timers.tick(75);
+  assert.equal(failures.length, 2);
+  for (const error of failures) {
+    assert.ok(error instanceof Error);
+    assert.equal(error.message, rejected);
+  }
+  assert.deepEqual(delivered, [accepted]);
+  await prepared.close();
+});

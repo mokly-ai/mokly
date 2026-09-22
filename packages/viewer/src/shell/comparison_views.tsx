@@ -67,7 +67,7 @@ export function ComparisonViews({
             <h3>
               {viewport === "mobile" ? "Mobile" : "Desktop"} ·{" "}
               {wording.label(label)}
-              {presentation.colorScheme !== view.colorScheme
+              {presentation.requestedColorScheme !== view.colorScheme
                 ? " · Light only"
                 : ""}
             </h3>

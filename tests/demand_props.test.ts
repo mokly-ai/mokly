@@ -33,7 +33,7 @@ test("Props renders only its view and freezes resources without copying linked p
   await fs.writeFile(asset, '<svg width="12"/>');
   const runtime = await prepareLiveRuntime(await loadConfig(fixture.root));
   const service = new ComponentRenderService(runtime);
-  t.after(() => service.close());
+  fixture.beforeRemove(() => service.close());
   const request: ComponentRenderRequest = {
     componentId: "action",
     variantId: "default",

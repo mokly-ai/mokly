@@ -154,10 +154,12 @@ independent frames; it owns no global document state.
 
 ## Selection, Events And Imperative Use
 
-`screenId` addresses any routed catalogue entry, including pages, components
-and use cases; null selects home. Unknown ids show the existing not-found view
+`screenId` addresses any routed catalogue entry, including pages, components,
+use cases and [variant screens](./mokly-screen-variants.md); null selects
+home. Unknown ids show the existing not-found view
 with usable navigation. `variantId` is valid only for a component or removed
 component that declares that saved variant; omission selects its default.
+It never addresses a variant screen, which is selected by its own `screenId`.
 Variants are invalid for home, pages and use cases. `view` selects the
 All/Changes **catalogue filter**, not a comparison mode. Logical fragments and
 comparison mode retain their existing route/runtime state.
@@ -179,6 +181,20 @@ host supplies that selection back. A committed variant replaces frames and
 announces `onScreenNavigate` once. Switching control mode requires remounting.
 Never mutate supplied objects/arrays.
 
+The Viewer rebuilds `variantOf` for current and removed screens from the public
+model, so its hierarchy, breadcrumbs, details rows, aggregate mark, and
+removed-variant adoption match Serve. A shell-link activation while `view` is
+`changes` proposes one atomic selection. An aggregate-only parent proposes its
+first visible changed variant's `screenId`. If the current selection is not
+itself a changed route, a changed destination also proposes the first changed
+view's `viewport` and `colorScheme` from the public model's per-view comparison
+states, ordered mobile/light, mobile/dark, desktop/light, desktop/dark, unless
+the link names either axis. Once a changed route is selected, later shell-link
+activations preserve the sticky axes while aggregate-parent redirection remains
+active. An imperative `select` call and supplied `defaultSelection` or
+`selection` props also keep their axes. Controlled mode emits the complete
+proposal and waits for the host to supply it back.
+
 Free text and tags follow [Browse search](./mokly-runtime.md#browse-shell):
 parse case-insensitive `tag:` terms out of search into a deduplicated tag list,
 retain the remaining phrase as `search`, and require every tag plus that phrase.
@@ -186,6 +202,12 @@ Normalization is deterministic; the visible input still displays those tags
 as today's `tag:` terms. Navigation proposes any filter clearing needed to
 reveal its destination as one atomic selection update. Light-only views retain
 the existing fallback labels when Dark is selected; no fake dark view is made.
+The shared workspace resolver uses that effective Light view for the title
+status, hidden-change marks, and comparison presentation in both SSR and the
+hydrated Viewer. When ready evidence does not cover every effective shown view,
+the Viewer preserves the public entry or saved variant's status and comparison
+eligibility independently instead of deriving eligibility from the fallback
+status.
 
 `onSelectionChange` reports requested state changes. `onScreenNavigate` fires
 once after a committed route/variant/fragment transition, including accepted

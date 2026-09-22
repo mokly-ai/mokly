@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 import {
   AutoAppearanceIcon,
   ChevronDownIcon,
@@ -23,8 +25,10 @@ const glyphs = {
 export function AppearanceSelectorView({
   value,
   compact,
+  otherSchemeChanged,
 }: AppearanceSelectorProps) {
   useDesignStyle("appearance-selector");
+  const changedId = useId();
   return (
     <label
       className="mbk-appearance"
@@ -48,6 +52,7 @@ export function AppearanceSelectorView({
       })}
       <ChevronDownIcon size={12} />
       <select
+        aria-describedby={otherSchemeChanged ? changedId : undefined}
         aria-label="Appearance"
         data-mokly-appearance-select=""
         defaultValue={value}
@@ -58,6 +63,18 @@ export function AppearanceSelectorView({
           </option>
         ))}
       </select>
+      {otherSchemeChanged ? (
+        <>
+          <span
+            aria-hidden="true"
+            className="mbk-view-changed"
+            data-view-changed="scheme"
+          />
+          <span className="mbk-view-changed-text" id={changedId}>
+            Other theme changed
+          </span>
+        </>
+      ) : null}
     </label>
   );
 }

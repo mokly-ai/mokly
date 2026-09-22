@@ -61,7 +61,7 @@ type CatalogueRoutedEntry =
   CatalogueScreen | CataloguePage | CatalogueUseCase | CatalogueComponent;
 type CatalogueNode =
   | { kind: "collection"; id: string; children: readonly CatalogueNode[] }
-  | { kind: "entry"; id: string };
+  | { kind: "entry"; id: string; children?: readonly CatalogueNode[] };
 type CatalogueChanges =
   | { status: "ready"; kind: ChangeKind; included: boolean }
   | { status: Exclude<ChangesStatus, "ready"> };
@@ -105,6 +105,7 @@ interface CatalogueScreen extends CatalogueEntry {
   kind: "screen";
   route: string;
   address?: string;
+  variantOf?: string; // Present exactly on variant screens.
   viewports: readonly Viewport[];
   colorSchemes: readonly ColorScheme[];
   views: readonly CatalogueView[];
@@ -170,6 +171,11 @@ Do not spread a manifest, entry, or internal evidence object into public JSON.
   mixed collections independently into both sections; unclaimed entries stay
   at the root. Collections have no route or tags; emit `tags: []`.
   Drop empty projections, except authored empty folders remain in Pages.
+  Under the implemented [screen variants contract](./mokly-screen-variants.md),
+  a variant screen's entry node is a child of its parent screen's entry node
+  in the Pages tree rather than a sibling. Entry-node `children` is present
+  only for that screen-variant grouping, and `variantOf` is an additive field
+  that v1 readers tolerate.
 - Details retain authored display metadata already exposed by the inspector.
   `details.dependencies` contains repository-relative display labels only.
   `sourcePath`, optional invocation `source.path`, and local related-doc paths
@@ -209,12 +215,19 @@ Review v2/v3 bytes stay unchanged; comparison files load only on selection.
 ## Serialization, Identity And Versions
 
 Sort object keys recursively by UTF-16 code units; preserve authored variants,
-children, steps and tags. Sort entry arrays by route (empty for collections),
-then id; removed entries by their entry route/id, instances/slots by key, ranges
-by DOM start order. Tree roots sort by id; children retain `childIds` order.
-The viewer applies existing presentation sorting. Emit required empties, omit
-absent optionals, use two-space indentation and a final LF. Identical inputs
-produce identical bytes regardless of enumeration, time or output location.
+children, steps and tags. Entry arrays otherwise sort by route (empty for
+collections), then id. The variant screens of one parent are the exception:
+emit them in authored order directly after their parent and before the next
+entry in route order. That sibling order is the order `variantsById`, the
+navigation list, the details `Variants` row, and the public tree's entry-node
+`children` present. Apply the exception independently to `removedEntries`;
+when a variant's parent is absent from that array, the variant stays in its
+ordinary route-then-id position. Sort all other removed entries by route/id,
+instances/slots by key, and ranges by DOM start order. Tree roots sort by id;
+non-variant children retain `childIds` order. The viewer applies existing
+presentation sorting. Emit required empties, omit absent optionals, use
+two-space indentation and a final LF. Identical inputs produce identical bytes
+regardless of enumeration, time or output location.
 
 `deploymentId` is the artifact's 64-hex identity. The
 [delivery hashing rule](./mokly-export-delivery.md#deployment-identity) additionally

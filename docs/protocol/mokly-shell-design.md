@@ -71,6 +71,10 @@ contract until their standalone screens are implemented.
 | `design-browse-tag-forms`             | `design/browse/states/tags/forms.html`                          | Forms filter, picker closed                                |
 | `design-browse-tag-onboarding`        | `design/browse/states/tags/onboarding.html`                     | Onboarding filter, picker closed                           |
 | `design-browse-tag-onboarding-picker` | `design/browse/states/tags/onboarding-picker.html`              | Onboarding filter, picker open                             |
+| `design-browse-variant-selected`      | `design/browse/variants/selected.html`                          | Selected variant under its parent screen                   |
+| `design-browse-variant-changes`       | `design/browse/variants/changes.html`                           | Changed variant row inside its parent group                |
+| `design-browse-variant-removed`       | `design/browse/variants/removed.html`                           | Removed variant under a surviving parent                   |
+| `design-browse-changed-views`         | `design/browse/variants/changed-views.html`                     | Change confined to the views that are not shown            |
 | `design-changes-current`              | `design/review/controls/current.html`                           | Current screen in Changes                                  |
 | `design-changes-overlay`              | `design/review/controls/overlay.html`                           | On-demand overlay comparison                               |
 | `design-review-changed`               | `design/review/outcomes/changed.html`                           | Changed screen, side-by-side compare                       |
@@ -139,6 +143,13 @@ Additional owning groups keep each new page at no more than five screens:
   previews are identical, so no static-delivery variant is designed.
 - `design/browse/publication/catalogue.html` and `changes.html` specify review
   omitted and included, using the existing Welcome stage.
+- `design/browse/variants/selected.html`, `changes.html`, `removed.html`, and
+  `changed-views.html` specify a screen's variants: the disclosed variant list
+  with one variant selected, a changed variant row under a parent whose own
+  render is unmodified, a deleted variant retained under its surviving parent,
+  and a change confined to views other than the one shown. `selected.html`
+  is the group's canonical screen. Their behavior contract is
+  [screen variants](./mokly-screen-variants.md).
 - `design/review/impact/stylesheets/matched.html`, `unresolved.html`,
   `unnamed.html`, and `excluded.html` specify rule-aware stylesheet evidence
   beneath the impact states, so the impact page itself keeps its three screens.
@@ -336,11 +347,28 @@ scrollable region scrolls internally:
     authored collections remain in Pages. Collection groups are native
     `<details>` whose summary row shows a closed/open folder SVG pair (swapped
     via the `[open]` state), a bold label, and a monospace child count. Leaves
-    show a screen, page, flow, or component SVG; flow icons read in the accent.
+    show a screen, variant, page, flow, or component SVG; flow icons read in
+    the accent.
   - Rows indent 16px per depth from an 8px root inset and paint one faint
     1px vertical guide per ancestor depth. The hover/active highlight is an
     inset pill starting at the row's indent (`--mbk-indent`), so guides stay
     visible; the active row uses the accent with contrast text.
+  - A screen with variants keeps its link row and adds a 16px chevron
+    disclosure button at the row's trailing edge that toggles a list of its
+    variant rows one indent step deeper, each with the variant icon — a screen
+    outline over a second, partially drawn screen outline, muted like the
+    screen icon so only the flow icon takes the accent. The row and its button
+    share one hover/selected pill, and the button rotates its chevron while
+    open. The Changes filter shows only changed variant rows and marks the
+    parent when any variant changed. The changed mark is a
+    6px accent dot at the row's trailing edge, drawn in the contrast color on
+    the active row; no edge, rail, or border marks a row. Beside the dot the
+    row carries the visually hidden word `Changed`, which assistive technology
+    reads and the search box ignores. A Removed row takes neither, because its
+    label already ends in `· Removed`. The
+    [screen variants contract](./mokly-screen-variants.md) owns the behavior,
+    and `design/browse/variants/selected.html`, `changes.html`, and
+    `removed.html` own its mockups.
   - Catalogue-link navigation opens the active section and every collection on the active
     row's path and scrolls that row into view. Search and Changes filtering may
     stay selected only while the active row remains visible. Reapplying an
@@ -359,6 +387,12 @@ scrollable region scrolls internally:
   Mobile/Desktop/Both dropdown and component highlighting when applicable.
   Tooltips name each action. The head band carries no scheme control; the
   catalogue's one Appearance control lives in the top bar.
+  A control whose axis hides a changed view carries a 6px accent dot in its
+  top-right corner, ringed 1.5px in the surface colour: Appearance when a
+  changed view uses another scheme and the viewport dropdown when another
+  viewport changed. Both never marks the viewport dropdown. The control names
+  a visually hidden `Other theme changed` or `Other viewport changed` through
+  `aria-describedby`; the dot stays distinct from selection and draws no rail.
 - **Stage** — dotted-grid background (22px radial dots), centred frames with
   40px gap, internal `overflow: auto`, `MOBILE` / `DESKTOP` uppercase frame
   labels, and no separate toolbar above the grid.
@@ -370,10 +404,13 @@ scrollable region scrolls internally:
   Details contains a two-column
   body (`1.35fr / 1fr`) with description and
   `Why this screen —` rationale on the left and uppercase-labelled metadata
-  rows (Source, Generated, Schemes, Tags, Related docs, Dependencies, Used by)
-  on the right. Paths render as monospace chips; use cases render as pill chips
-  with the flow icon; the Schemes row is plain text naming the schemes the
-  screen renders in (`light, dark`). The Tags row lists the tags the entry
+  rows (Source, Generated, Schemes, Changed views, Tags, Related docs,
+  Dependencies, Used by) on the right. Paths render as monospace chips; use
+  cases render as pill chips with the flow icon; the Schemes row is plain text
+  naming the schemes the screen renders in (`light, dark`). The Changed views
+  row is plain text naming the views a ready classification marked changed
+  (`Mobile · Dark, Desktop · Dark`), mobile before desktop and light before
+  dark; it is hidden while no view is named. The Tags row lists the tags the entry
   declares as pill chips with the tag icon: selecting one enters `tag:<tag>` in
   the search field, so the filter stays visible and clearable there, and the
   chip whose tag is in the entered query carries the accent active state with
@@ -491,16 +528,16 @@ The shell has one breakpoint at **56.25rem (900px)**:
 
 ## In-place Comparisons
 
-The catalogue remains the only shell. An eligible screen has a compact Current /
+The catalogue remains the only shell. An eligible shown view has a compact Current /
 Side by side / Overlay / Difference band below its heading. Current is the initial
 state in both All and Changes. Diff selections load snapshots on demand in the
 same main region; controls, navigation, and details stay in place. Refresh and
 retry controls are available after an explicit comparison request. The target
-component shell makes the band conditional on changed screens, Changed or
-Removed component variants, or verified affected-consumer evidence. The updated mockups omit it on
-every Browse, Added screen/variant, Removed screen, shared-impact-only,
-ignored-only, excluded-stylesheet-only, and empty state. Removed screens show a
-status badge instead, over their previous version labelled “Showing previous
+component shell makes the band conditional on a Changed shown view, a Removed
+component saved variant, or verified affected-consumer evidence. The updated
+mockups omit it on every Browse, Added or Unmodified shown view, Removed screen,
+shared-impact-only, ignored-only, excluded-stylesheet-only, and empty state.
+Removed screens show a status badge over their previous version labelled “Showing previous
 version” under [removed previews](./mokly-removed-previews.md). A removed screen
 keeps the grouped viewport control. The catalogue-wide Appearance selector
 remains the only theme control, while the historical frame stays Light because

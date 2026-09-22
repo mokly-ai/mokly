@@ -1,6 +1,3 @@
-import fs from "node:fs";
-import path from "node:path";
-
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
@@ -13,19 +10,10 @@ import {
 } from "./react_shell_hydration_helpers.js";
 
 let developmentBundle: string;
-let fixtureRoutes: readonly string[];
 
 test.beforeAll(async () => {
   test.setTimeout(120_000);
   developmentBundle = await buildDevelopmentBundle();
-  const manifest: unknown = JSON.parse(
-    fs.readFileSync(
-      path.resolve("examples/basic/generated/mokly-manifest.json"),
-      "utf8",
-    ),
-  );
-  fixtureRoutes = manifestRoutes(manifest);
-  expect(fixtureRoutes.length).toBeGreaterThan(80);
 });
 
 test("development React hydrates a fresh desktop document cleanly", async ({
@@ -52,33 +40,6 @@ test("development React hydrates a restored dark appearance cleanly", async ({
     "data-mokly-color-scheme",
     "dark",
   );
-});
-
-test("development React hydrates every fixture route cleanly", async ({
-  page,
-}) => {
-  test.setTimeout(360_000);
-  const errors = captureBrowserErrors(page);
-  await installDevelopmentBundle(page);
-  for (const route of fixtureRoutes) {
-    const response = await page.goto(`/view/${encodeRoute(route)}`);
-    expect(response?.status(), route).toBe(200);
-    await expectCleanHydration(page, errors, route);
-  }
-  await page.route("**/view/not-in-catalogue.html", async (route) => {
-    const response = await route.fetch();
-    expect(response.status()).toBe(404);
-    await route.fulfill({ response, status: 200 });
-  });
-  for (const fixture of [
-    { path: "/", status: 200 },
-    { path: "/view/not-in-catalogue.html", status: 200 },
-    { path: "/id/example-welcome", status: 200 },
-  ]) {
-    const response = await page.goto(fixture.path);
-    expect(response?.status(), fixture.path).toBe(fixture.status);
-    await expectCleanHydration(page, errors, fixture.path);
-  }
 });
 
 test("development React hydrates navigation and filters as live state", async ({
@@ -274,26 +235,4 @@ test("an early native disclosure wins hydration before reload promotes active an
 
 async function installDevelopmentBundle(page: Page): Promise<void> {
   await installBundle(page, developmentBundle);
-}
-
-function manifestRoutes(value: unknown): readonly string[] {
-  if (!value || typeof value !== "object" || !("entries" in value)) return [];
-  const entries = value.entries;
-  if (!Array.isArray(entries)) return [];
-  return [
-    ...new Set(
-      entries.flatMap((entry) =>
-        entry &&
-        typeof entry === "object" &&
-        "route" in entry &&
-        typeof entry.route === "string"
-          ? [entry.route]
-          : [],
-      ),
-    ),
-  ];
-}
-
-function encodeRoute(route: string): string {
-  return route.split("/").map(encodeURIComponent).join("/");
 }

@@ -37,7 +37,7 @@ test(
   async (t) => {
     const fixture = await createFixture();
     t.after(() => removeFixture(fixture));
-    const blocked = await blockingGit(t, fixture.root, true);
+    const blocked = await blockingGit(fixture, true);
     const controller = new AbortController();
     const runner = new NodeGitCommandRunner(fixture.root, controller.signal);
     const command = assert.rejects(
@@ -77,7 +77,7 @@ test(
   async (t) => {
     const fixture = await createFixture();
     t.after(() => removeFixture(fixture));
-    const blocked = await blockingGit(t, fixture.root, true, true);
+    const blocked = await blockingGit(fixture, true, true);
     const controller = new AbortController();
     const runner = new NodeGitCommandRunner(fixture.root, controller.signal);
     const command = assert.rejects(

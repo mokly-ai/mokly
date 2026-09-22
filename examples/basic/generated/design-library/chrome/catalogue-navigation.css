@@ -260,6 +260,87 @@ color: var(--chrome-muted);
 color: color-mix(in srgb, var(--mbk-accent-contrast) 75%, var(--mbk-sage));
 }
 
+.mbk-nav-leaf {
+align-items: center;
+  display: flex;
+  gap: 2px;
+}
+
+.mbk-nav-leaf > .mbk-nav-row {
+flex: 1;
+  min-width: 0;
+}
+
+/* The row's inset pill continues under the trailing disclosure, so one
+   highlight covers the whole leaf without painting a second surface. */
+.mbk-nav-leaf > .mbk-nav-row::before {
+right: -18px;
+}
+
+.mbk-nav-variants-toggle {
+align-items: center;
+  background: none;
+  border: 0;
+  border-radius: 4px;
+  color: var(--chrome-muted);
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 16px;
+  justify-content: center;
+  padding: 0;
+  position: relative;
+  width: 16px;
+}
+
+.mbk-nav-variants-toggle:hover,
+.mbk-nav-variants-toggle:focus-visible {
+color: var(--mbk-sage-deep);
+}
+
+.mbk-nav-variants-toggle:focus-visible {
+outline: 2px solid var(--mbk-sage-deep);
+  outline-offset: 2px;
+}
+
+.mbk-nav-leaf:has(> .mbk-nav-row.active) .mbk-nav-variants-toggle {
+color: var(--mbk-accent-contrast);
+}
+
+.mbk-nav-variants-toggle svg {
+transition: transform 120ms ease;
+}
+
+.mbk-nav-variants-toggle[aria-expanded="true"] svg {
+transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mbk-nav-variants-toggle svg { transition: none; }
+}
+
+.mbk-nav-changed {
+background: var(--mbk-sage);
+  border-radius: 50%;
+  flex-shrink: 0;
+  height: 6px;
+  margin-left: auto;
+  width: 6px;
+}
+
+.mbk-nav-row.active .mbk-nav-changed {
+background: var(--mbk-accent-contrast);
+}
+
+.mbk-nav-changed-text {
+clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
 .mbk-drawer {
 border-right: 1px solid var(--chrome-border);
   bottom: 0;

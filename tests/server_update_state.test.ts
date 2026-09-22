@@ -25,7 +25,7 @@ test("published updates replace or clear changed-route shell state", async (cont
     })),
     port: 0,
   });
-  context.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
 
   const initial = await (await fetch(server.url)).text();
   assert.match(initial, /data-mokly-update-version="1"/);

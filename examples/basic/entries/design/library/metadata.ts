@@ -17,16 +17,22 @@ export function libraryMetadata(
   slug: LibraryStyle,
   title: string,
   description: string,
+  /** Extra owned view modules in the same group, beyond `{slug}.view.tsx`. */
+  views: readonly string[] = [],
 ) {
-  const view = `examples/basic/entries/design/library/${group}/${slug}.view.tsx`;
+  const directory = `examples/basic/entries/design/library/${group}`;
+  const modules = [
+    `${directory}/${slug}.view.tsx`,
+    ...views.map((view) => `${directory}/${view}`),
+  ];
   const stylesheet = `examples/basic/generated/${libraryStyleFiles[slug]}`;
   return {
     id: `design-ui-${slug}`,
     route: `design/library/${group}/${slug}.html`,
     title,
     description,
-    dependencies: [view, stylesheet],
-    ownedDependencies: [view, stylesheet],
+    dependencies: [...modules, stylesheet],
+    ownedDependencies: [...modules, stylesheet],
     relatedDocs: ["docs/protocol/mokly-design-component-library.md"],
     colorSchemes: DUAL_SCHEME_SAMPLES.has(slug)
       ? (["light", "dark"] as const)

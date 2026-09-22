@@ -14,16 +14,24 @@ export function ExampleWorkspace({
   viewport,
   open = false,
   activeTag,
+  changedViews,
   comparisonEvidence,
   dark = false,
+  empty = false,
+  error = false,
   lightOnly = false,
 }: {
   subject: "welcome" | "details";
   viewport: ArtboardViewport;
   open?: boolean;
   activeTag?: string | undefined;
+  changedViews?: ReactNode;
   comparisonEvidence?: ReactNode;
   dark?: boolean;
+  /** Depict Welcome before anything has been entered. */
+  empty?: boolean;
+  /** Depict Welcome after a save did not complete. */
+  error?: boolean;
   lightOnly?: boolean;
 }) {
   return (
@@ -34,13 +42,18 @@ export function ExampleWorkspace({
           subject={subject}
           open={open}
           activeTag={activeTag}
+          changedViews={changedViews}
           comparisonEvidence={comparisonEvidence}
         />
       }
       render={(previewViewport) => {
         const content =
           subject === "welcome" ? (
-            <MiniWelcome compact={previewViewport === "mobile"} />
+            <MiniWelcome
+              compact={previewViewport === "mobile"}
+              empty={empty}
+              error={error}
+            />
           ) : (
             <MiniDetails compact={previewViewport === "mobile"} />
           );

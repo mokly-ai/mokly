@@ -1,13 +1,10 @@
-import path from "node:path";
-
 import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
-import { isInside } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import type { GitCommandRunner } from "../review/git.js";
 import { GitProcessError } from "../review/git_process.js";
 
-import { generatedSource } from "./ownership.js";
+import { generatedSource, isAuthoredOwner } from "./ownership.js";
 
 /** Read ownership proofs from the index; local generated files may be stale or absent. */
 export async function trackedOwnedOutput(
@@ -54,7 +51,7 @@ export async function trackedOwnedOutput(
       file.endsWith(".html") &&
       source &&
       isSafeRepositoryPath(source) &&
-      isInside(config.entriesDir, path.resolve(config.repoRoot, source))
+      isAuthoredOwner(source, config)
     )
       owned.push(file);
     start = lineEnd + 1;

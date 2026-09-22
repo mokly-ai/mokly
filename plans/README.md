@@ -6,6 +6,18 @@
   standalone Auto/Light/Dark control for interface and previews, and
   host-owned theme with independent previews when embedded. Implementation is
   complete; move this plan to Completed when its implementation PR merges.
+- [Release-Gated Node Compatibility](./release-gated-node-compatibility.md) —
+  run the minimum supported runtime on ordinary changes and reserve the full
+  Node 22.14/24 compatibility matrix for Release Please pull requests.
+- [Screen Variants Follow-up](./screen-variants-follow-up.md) — deferred
+  design-catalogue conversion, two open review findings, two delivered
+  view-resolution fixes, and later navigation ideas from PR #101;
+  implementation is in progress on a separate branch.
+- [Co-Located Entry Discovery Follow-up](./co-located-entry-discovery-follow-up.md)
+  — all deferred seventh/eighth-round findings, the latest entry-layout
+  documentation finding, and the remaining follow-up tasks from PR #101;
+  implemented, independently verified, pushed, and reviewed with no actionable
+  findings; [PR #111](https://github.com/mokly-ai/mokly/pull/111) awaits merge.
 - [React Browse Shell](./react-browse-shell.md)
 - [CI Performance](./ci-performance.md) — parallel verification, complete test
   sharding, reusable preparation and measured CI timing improvements.
@@ -31,6 +43,14 @@
 
 ## Completed
 
+- [Screen Variants](./screen-variants.md) — PR #101's delivered scope is
+  complete: authoring, navigation, Changes, per-view evidence, and the approved
+  review fixes. Unfinished work is owned by
+  [Screen Variants Follow-up](./screen-variants-follow-up.md).
+- [Co-Located Entry Discovery](./co-located-entry-discovery.md) — PR #101's
+  delivered scope is complete through Milestone 13. Historical milestones and
+  reviews remain in `co-located-entry-discovery/`; open work is owned by
+  [Co-Located Entry Discovery Follow-up](./co-located-entry-discovery-follow-up.md).
 - [Removed Content Previews](./removed-content-previews.md) — delivered and
   verified; Serve, exports, repository previews, and embedded viewers render
   pinned previous versions for removed documents and screens. Its High/P1

@@ -15,19 +15,19 @@ import { useInspectorResize } from "./inspector_resize.js";
 import { removedPreviewData, RemovedPreviewStage } from "./previews.js";
 import { useOptionalShellStore } from "./store_context.js";
 import type { ComparisonMode } from "./use_comparison.js";
-import { useWorkspaceData } from "./use_workspace_data.js";
 import { useWorkspaceUsage } from "./use_workspace_usage.js";
+import { useActiveWorkspace } from "./workspace_context.js";
 import { WorkspaceControls } from "./workspace_controls.js";
 import type { WorkspaceData } from "./workspace_data.js";
 import { WorkspaceEvidence } from "./workspace_evidence.js";
 import { useWorkspaceInspection } from "./workspace_inspection.js";
 import { WorkspaceInstances } from "./workspace_instances.js";
 import { WorkspaceProps } from "./workspace_props.js";
-import { selectedVariantId } from "./workspace_selection.js";
 import { WorkspaceStage } from "./workspace_stage.js";
 import { WorkspaceUsage } from "./workspace_usage.js";
 import { WorkspaceVariantBar } from "./workspace_variant_bar.js";
 import { visibleWorkspaceViews } from "./workspace_views.js";
+import { selectedChangedViews } from "./workspace_views_data.js";
 
 /** Render a routed screen or component with its evidence and inspection tools. */
 export function ComponentWorkspace({
@@ -41,23 +41,20 @@ export function ComponentWorkspace({
 }) {
   const store = useOptionalShellStore();
   const workspaceRef = useRef<HTMLElement>(null);
-  const { data, refresh, request } = useWorkspaceData(
-    catalogue,
-    context,
-    entry,
-  );
-  const selection = selectedVariantId(
-    data,
-    store?.state.route.variantValues ?? store?.state.route.variant,
-  );
+  const workspace = useActiveWorkspace();
+  if (!workspace) throw new Error("The active workspace is unavailable.");
+  const { data, refresh, request, selection, resolvedView, presentation } =
+    workspace;
   const variant = selection.variant;
   const variantId = variant?.value.id;
+  const changedViews = selectedChangedViews(
+    entry,
+    data.changedViews,
+    variantId,
+  );
   const viewport = store?.state.selection.viewport ?? "both";
   const colorScheme = store?.state.selection.colorScheme ?? "light";
-  const savedViews = useMemo(
-    () => visibleWorkspaceViews(data, variantId, viewport, colorScheme),
-    [colorScheme, data.views, variantId, viewport],
-  );
+  const savedViews = resolvedView.views;
   const [comparisonMode, setComparisonMode] =
     useState<ComparisonMode>("current");
   const [loadedComparison, setLoadedComparison] = useState<
@@ -205,7 +202,9 @@ export function ComponentWorkspace({
       <ScreenHead
         action={
           <WorkspaceControls
+            changedViews={changedViews}
             dark={Boolean(context.embedded) && catalogue.hasDarkFragments}
+            effectiveColorScheme={resolvedView.colorScheme}
             highlight={highlight}
           />
         }
@@ -215,11 +214,11 @@ export function ComponentWorkspace({
         status={
           <span
             className="mbk-entry-status"
-            data-status={data.status}
+            data-status={presentation.status}
             data-workspace-status=""
-            hidden={!data.status}
+            hidden={!presentation.status}
           >
-            {data.status}
+            {presentation.status}
           </span>
         }
       />
@@ -242,8 +241,9 @@ export function ComponentWorkspace({
             <RemovedPreviewStage data={preview} />
           ) : data.comparisons ? (
             <DiffScreen
+              effectiveColorScheme={resolvedView.colorScheme}
               component={entry.kind === "component"}
-              eligible={selection.comparisonEligible}
+              eligible={presentation.comparisonEligible}
               onComparisonChange={setLoadedComparison}
               onModeChange={setComparisonMode}
               route={entry.route}

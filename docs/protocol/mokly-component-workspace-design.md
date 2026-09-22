@@ -95,12 +95,18 @@ empty designs retain Current without comparison controls.
 
 All is a catalogue filter, not evidence that the selected example changed.
 Known examples show Added, Changed, Removed, or Unmodified beside the title,
-using the selected entry's comparison state. Added and Unmodified examples retain
-their current preview with no comparison mode row. Removed screens show their
-badge without a comparison mode row, over their previous version under
-[removed previews](./mokly-removed-previews.md). Changed screens,
-Changed or Removed component variants, and affected examples retain the relevant
-comparison controls. Temporary prop
+using the shown view's state. One selected viewport and scheme maps `changed`,
+`added`, and `removed` to their matching status, and `unchanged` or
+`ignored-only` to Unmodified. Both uses the first status present in this order:
+Changed, Added, Removed, Unmodified. Comparison controls follow that result:
+Changed is eligible, as is Removed only for a component saved variant. If
+neither a ready result nor screen-view evidence exists, retain route-level status and
+eligibility. Viewport, scheme, saved-variant, and background-evidence changes
+recompute both without a page load. When the shown view is Unmodified, its band
+is absent and the view-control marks and `Changed views` row identify changed
+views elsewhere. Removed screens show their badge without a comparison mode
+row, over their previous version under
+[removed previews](./mokly-removed-previews.md). Temporary prop
 edits never create committed changes or make comparison controls appear.
 
 Normal component/control fixtures depict an unchanged saved example and zero
@@ -111,8 +117,8 @@ its previous version.
 Missing inspection metadata is distinct from comparison availability.
 
 The runtime uses actual comparison eligibility for the selected saved example.
-Unknown/pending evidence must not be presented as Unmodified, and controls cannot
-trigger eager screenshot work merely to decide whether to show a mode row.
+Missing per-view evidence uses the route-level fallback and cannot trigger eager
+screenshot work merely to decide whether to show a mode row.
 Affected consumers may still expose comparisons while staying out of Changes.
 
 Entry status and variant status are distinct. Removing Compact from Action is

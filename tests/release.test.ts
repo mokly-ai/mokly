@@ -116,6 +116,10 @@ test("release workflow selects only releases and isolates OIDC publish", async (
   assert.match(source, /group: npm-release/);
   assert.match(source, /verify-ref\.mjs "\$CLI_REF" "\$VIEWER_REF"/);
   assert.match(source, /--artifacts .context\/release-artifact/);
+  const setupNode = publish.steps.find((step) =>
+    step.uses?.startsWith("actions/setup-node@"),
+  );
+  assert.equal(setupNode?.with?.["node-version"], 24);
   assertPinnedActions(workflow);
 });
 

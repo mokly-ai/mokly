@@ -149,6 +149,11 @@ details.mbk-details[open] > summary.mbk-details-bar .chev svg {
   color: var(--mokly-accent);
 }
 
+.mbk-chip.screen svg {
+  flex-shrink: 0;
+  color: var(--chrome-muted);
+}
+
 .mbk-chip.tag:is(a, button) {
   font: inherit;
   font-size: 11.5px;

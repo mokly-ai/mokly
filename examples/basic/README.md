@@ -11,8 +11,13 @@ variants plus text, boolean, number, optional hint and emphasis controls; Toolba
 has an editable title and nested Action instances. Open Props in local Serve to
 edit them. Published exports provide the same saved examples read-only.
 `example-components.css` declares exact shared ownership, separate from global
-styles and the design mockups. Registration and source ownership live in
-`entries/components/action.tsx` and `toolbar.tsx`.
+styles and the design mockups. Action and Toolbar are co-located with their
+product-style implementations under `src/components/`: each directory holds
+the plain React component (`action.tsx`), its catalogue registration
+(`action.mokly.tsx`), and the entry module that exports it
+(`action.mockup.tsx`). The configuration discovers those entry modules with a
+second `entries` glob beside the `entries/` catalogue, so the shared
+components need no mirror files under `entries/`.
 It contains no consumer product screens.
 
 Authoring imports use the public package `@mokly/mokly`. The local executable
@@ -24,9 +29,9 @@ The [large fixture](../../tests/fixtures/large/README.md)
 uses the same Firna/React Native Web rendering stack with configurable volume,
 without expanding this example or slowing ordinary development startup.
 
-Mokly's 85 design screens now use 16 registered shared components, including
+Mokly's 89 design screens now use 16 registered shared components, including
 the footer tabs panel and the appearance selector. Open **Components → Design → Shared components** for Chrome, Controls,
-Inspector and Preview galleries with 63 saved variants, real mobile/desktop
+Inspector and Preview galleries with 66 saved variants, real mobile/desktop
 previews and editable local props. The outer Components and Usage tabs show actual
 recorded relationships; pictured example data inside an artboard stays separate.
 See the [library authoring guide](./entries/design/library/README.md),
@@ -94,7 +99,7 @@ render plain React DOM need none of this and can keep a plain
 `renderToStaticMarkup` adapter.
 
 The `Design` navigation group is the owning design catalogue for Mokly's
-Browse and Changes views. Its fifty-three Browse, page, publication, appearance and Changes
+Browse and Changes views. Its fifty-seven Browse, page, publication, appearance and Changes
 screens cover navigation, Details, tags, color schemes, comparison outcomes,
 stylesheet evidence, the preparing and unavailable comparison states, and the
 previous-version states of removed documents and screens. Thirty-two component
@@ -141,7 +146,7 @@ galleries; `inspector` shows both closed-panel layouts.
 Each child gallery lists at most five owning screens; inspection also links
 two selected-instance screens in a nested gallery.
 
-Sixty-six design screens use `colorSchemes: ["light"]` and draw only the light
+Seventy design screens use `colorSchemes: ["light"]` and draw only the light
 Mokly shell. Nineteen screens instead inherit the catalogue's light/dark
 settings: the thirteen Appearance screens, four Changes designs, and two
 product screens. `mokly build` writes a Light and a Dark file for each of their
@@ -160,7 +165,7 @@ A shared implementation edit appears on its component page and lists consuming
 screens as affected; independent screen inputs, slots or instance changes still
 appear in Changes. This is tested against fully registered baseline snapshots.
 
-The shared inspector/workspace sheets cover all 85 design screens and standalone
+The shared inspector/workspace sheets cover all 89 design screens and standalone
 library hosts. Other mixed component-design sheets remain scoped to the 32
 component-design routes and hosts; the controls sheet additionally remains
 scoped to its eleven owning screen routes. `review.sharedImpact` is fallback

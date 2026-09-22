@@ -6,6 +6,7 @@ import { formsFilterScreen } from "./browse/states/tags/forms.js";
 import { onboardingPickerScreen } from "./browse/states/tags/onboarding-picker.js";
 import { onboardingFilterScreen } from "./browse/states/tags/onboarding.js";
 import { tagPickerScreen } from "./browse/states/tags/picker.js";
+import { variantScreens } from "./browse/variants/screens.js";
 import { detailsScreen } from "./browse/views/details-screen.js";
 import { browseStateScreens, browseViewScreens } from "./browse_screens.js";
 import { browseTagScreens } from "./browse_tag_screens.js";
@@ -59,6 +60,14 @@ const designMockups = defineRoot({
           id: "design-browse-states",
           segment: "states",
           title: "Shell states",
+        }),
+        collection({
+          children: variantScreens,
+          description:
+            "A screen's variants: one selected, one changed, one removed, and a change confined to other views.",
+          id: "design-browse-variants",
+          segment: "variants",
+          title: "Screen variants",
         }),
         collection({
           children: [
