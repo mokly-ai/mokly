@@ -1,5 +1,38 @@
 # Changelog
 
+## [0.12.0](https://github.com/mokly-ai/mokly/compare/v0.11.0...v0.12.0) (2026-09-22)
+
+
+### Features
+
+* **cli:** color rich success ticks green ([#91](https://github.com/mokly-ai/mokly/issues/91)) ([48af447](https://github.com/mokly-ai/mokly/commit/48af447ce2834bc4b03266066a2210845aab18c4))
+* **cli:** improve terminal experience ([#85](https://github.com/mokly-ai/mokly/issues/85)) ([ddb263b](https://github.com/mokly-ai/mokly/commit/ddb263ba694f94484debbea73916f67226d5b1f5))
+* show previous versions of removed pages and screens ([#98](https://github.com/mokly-ai/mokly/issues/98)) ([a177abd](https://github.com/mokly-ai/mokly/commit/a177abd22da825576a11c7d102232c71b7d83f32))
+* **viewer:** hydrate the shared Browse shell ([#95](https://github.com/mokly-ai/mokly/issues/95)) ([b5c9f07](https://github.com/mokly-ai/mokly/commit/b5c9f07dc70290c990f9608fc0d75e58188a50b5))
+* **viewer:** present removed previews as viewer-owned documents ([#104](https://github.com/mokly-ai/mokly/issues/104)) ([f23c376](https://github.com/mokly-ai/mokly/commit/f23c376966343a226a8b7e76aee32a784cf08fa4))
+
+
+### Bug Fixes
+
+* align mobile inspector surface ([#92](https://github.com/mokly-ai/mokly/issues/92)) ([310749a](https://github.com/mokly-ai/mokly/commit/310749aa2b715638ee95bf610657f45ef949f463))
+* **release:** extend registry retry window ([#86](https://github.com/mokly-ai/mokly/issues/86)) ([8c4701f](https://github.com/mokly-ai/mokly/commit/8c4701f7bc26347d0b061cf4e78e0e2ef0e400a0))
+* **shell:** match inspector divider to nav divider ([#90](https://github.com/mokly-ai/mokly/issues/90)) ([9bd6f20](https://github.com/mokly-ai/mokly/commit/9bd6f20ab10cc8fb403de68359de59dd82d94141))
+* **viewer:** authenticate frame document handoffs ([#99](https://github.com/mokly-ai/mokly/issues/99)) ([b95ad47](https://github.com/mokly-ai/mokly/commit/b95ad472c04768e777bc8f2d3b0555380f0e8f61))
+* **viewer:** repair embedded stylesheet layout ([#103](https://github.com/mokly-ai/mokly/issues/103)) ([dde661c](https://github.com/mokly-ai/mokly/commit/dde661c7695773170e8c86ee1960bf9e4eab144c))
+
+
+### Performance Improvements
+
+* **ci:** parallelize verification suites ([#93](https://github.com/mokly-ai/mokly/issues/93)) ([3f6ea42](https://github.com/mokly-ai/mokly/commit/3f6ea4265129112d7626c1fc16e6d100b33fdf4f))
+* **review:** skip unchanged component view comparisons ([#94](https://github.com/mokly-ai/mokly/issues/94)) ([20e55ca](https://github.com/mokly-ai/mokly/commit/20e55ca02a7274b659031b2295bc4d3e92360767))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @mokly/viewer bumped from 0.2.0 to 0.3.0
+
 ## [0.11.0](https://github.com/mokly-ai/mokly/compare/v0.10.0...v0.11.0) (2026-09-17)
 
 
