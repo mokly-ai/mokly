@@ -25,6 +25,9 @@ import {
 interface AppearanceFrame {
   src: string;
   getAttribute(name: "src"): string | null;
+  closest(
+    selector: string,
+  ): { setAttribute(name: string, value: string): void } | null;
   dataset: {
     fragmentLight?: string | undefined;
     fragmentDark?: string | undefined;
@@ -37,6 +40,7 @@ interface AppearanceControl {
   hidden: boolean;
   setAttribute(name: string, value: string): void;
   addEventListener(type: "change", handler: () => void): void;
+  removeEventListener(type: "change", handler: () => void): void;
 }
 
 /** The document surface this module touches, so a test can supply its own. */
@@ -62,7 +66,7 @@ export interface AppearanceWindow {
     removeEventListener(type: "change", handler: () => void): void;
   };
   localStorage?: AppearanceStorage | undefined;
-  /** Notified after each application, so a host can mirror the scheme. */
+  /** Hydrated owner of preview navigation, notified after each application. */
   onAppearance?:
     ((theme: ViewerTheme, scheme: "dark" | "light") => void) | undefined;
 }
@@ -70,6 +74,8 @@ export interface AppearanceWindow {
 /** A live installation: choose an appearance, or remove what it installed. */
 export interface AppearanceHandle {
   choose(theme: ViewerTheme): void;
+  /** Apply a route pin without persisting it or overriding a reader choice. */
+  applyRoute(scheme: "dark" | "light" | undefined): void;
   /**
    * Re-applies once the document has a body, frames and controls. The asset
    * runs in the head so the root is right before the first paint, and calls
@@ -92,6 +98,7 @@ const CONTROL_SELECTOR = "[data-mokly-appearance-control]";
 const VALUE_ATTRIBUTE = "data-appearance-value";
 const INERT: AppearanceHandle = {
   choose: () => {},
+  applyRoute: () => {},
   refresh: () => {},
   dispose: () => {},
 };
@@ -103,10 +110,12 @@ const INERT: AppearanceHandle = {
  */
 interface Controller {
   theme: ViewerTheme;
+  chosen: boolean;
   handles: number;
   apply(): void;
   bind(): void;
   choose(theme: ViewerTheme): void;
+  applyRoute(scheme: "dark" | "light" | undefined): void;
   release(): void;
 }
 const CONTROLLERS = new WeakMap<object, Controller>();
@@ -134,6 +143,10 @@ function applyFrames(
       scheme === "dark"
         ? frame.dataset.fragmentDark
         : frame.dataset.fragmentLight;
+    if (next)
+      frame
+        .closest("[data-preview-color-scheme]")
+        ?.setAttribute("data-preview-color-scheme", scheme);
     if (next && frame.getAttribute("src") !== next) frame.src = next;
   }
 }
@@ -146,13 +159,14 @@ function createController(
   const storage = storageOf(window);
   const initial = root.getAttribute(THEME_ATTRIBUTE);
   const media = window.matchMedia("(prefers-color-scheme: dark)");
-  const bound = new WeakSet<object>();
+  const bound = new Map<AppearanceControl, () => void>();
   const controller: Controller = {
     theme: resolveAppearance({
       pin: schemePin(window.location.search),
       stored: readStoredAppearance(storage),
       ...(initial ? { initial: initial as ViewerTheme } : {}),
     }),
+    chosen: false,
     handles: 0,
     apply() {
       root.setAttribute(THEME_ATTRIBUTE, controller.theme);
@@ -160,7 +174,7 @@ function createController(
       // The preview scheme is the same choice, so the document mark the shell
       // already keys its frames and captions off follows the appearance.
       document.body?.setAttribute("data-mokly-color-scheme", scheme);
-      applyFrames(document, scheme);
+      if (!window.onAppearance) applyFrames(document, scheme);
       for (const select of document.querySelectorAll(SELECT_SELECTOR))
         select.value = controller.theme;
       for (const control of document.querySelectorAll(CONTROL_SELECTOR)) {
@@ -174,21 +188,28 @@ function createController(
     bind() {
       for (const select of document.querySelectorAll(SELECT_SELECTOR)) {
         if (bound.has(select)) continue;
-        bound.add(select);
-        select.addEventListener("change", () =>
-          controller.choose(normalizeTheme(select.value)),
-        );
+        const onChange = () => controller.choose(normalizeTheme(select.value));
+        bound.set(select, onChange);
+        select.addEventListener("change", onChange);
       }
     },
     choose(theme) {
+      controller.chosen = true;
       controller.theme = theme;
       storeAppearance(storage, theme);
+      controller.apply();
+    },
+    applyRoute(scheme) {
+      if (scheme && !controller.chosen) controller.theme = scheme;
       controller.apply();
     },
     release() {
       controller.handles -= 1;
       if (controller.handles > 0) return;
       media.removeEventListener("change", followSystem);
+      for (const [select, handler] of bound)
+        select.removeEventListener("change", handler);
+      bound.clear();
       CONTROLLERS.delete(root);
     },
   };
@@ -220,6 +241,9 @@ export function installAppearance(
     choose(theme) {
       // A disposed handle no longer speaks for a document it does not own.
       if (live) controller.choose(theme);
+    },
+    applyRoute(scheme) {
+      if (live) controller.applyRoute(scheme);
     },
     refresh() {
       if (!live) return;

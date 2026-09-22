@@ -26,7 +26,7 @@ export const CSS_CHROME_EXPANSION = `
 .browser-viewport {
   height: calc(100% - 40px);
   overflow: hidden;
-  background: var(--chrome-surface);
+  background: var(--mbk-screen-bg);
 }
 
 .browser-expand {
@@ -103,21 +103,15 @@ body.frame-expanded::before {
   color-scheme: light;
 }
 
-body[data-mokly-color-scheme="dark"]
-  :is(.mbk-frame-wrap, .mbk-flow-screen):not([data-color-scheme-fallback])
-  .mbk-frag {
+[data-preview-color-scheme="dark"] .mbk-frag {
   color-scheme: dark;
 }
 
-body[data-mokly-color-scheme="dark"]
-  :is(.mbk-frame-wrap, .mbk-flow-screen):not([data-color-scheme-fallback])
-  .phone-screen {
+[data-preview-color-scheme="dark"] .phone-screen {
   background: var(--mbk-dark-screen-bg);
 }
 
-body[data-mokly-color-scheme="dark"]
-  :is(.mbk-frame-wrap, .mbk-flow-screen):not([data-color-scheme-fallback])
-  .phone-screen::after {
+[data-preview-color-scheme="dark"] .phone-screen::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -131,27 +125,19 @@ body[data-mokly-color-scheme="dark"]
   pointer-events: none;
 }
 
-body[data-mokly-color-scheme="dark"]
-  :is(.mbk-frame-wrap, .mbk-flow-screen):not([data-color-scheme-fallback])
-  .phone-status {
+[data-preview-color-scheme="dark"] .phone-status {
   color: var(--mbk-dark-screen-ink);
 }
 
-body[data-mokly-color-scheme="dark"]
-  :is(.mbk-frame-wrap, .mbk-flow-screen):not([data-color-scheme-fallback])
-  .phone-home {
+[data-preview-color-scheme="dark"] .phone-home {
   background: color-mix(in srgb, var(--mbk-dark-screen-ink) 40%, transparent);
 }
 
-body[data-mokly-color-scheme="dark"]
-  :is(.mbk-frame-wrap, .mbk-flow-screen):not([data-color-scheme-fallback])
-  .browser-viewport {
+[data-preview-color-scheme="dark"] .browser-viewport {
   background: var(--mbk-dark-screen-bg);
 }
 
-body[data-mokly-color-scheme="dark"]
-  :is(.mbk-frame-wrap, .mbk-flow-screen):not([data-color-scheme-fallback])
-  .mbk-frag {
+[data-preview-color-scheme="dark"] .mbk-frag {
   background: var(--mbk-dark-screen-bg);
 }
 

@@ -29,6 +29,7 @@ if (typeof document !== "undefined" && typeof window !== "undefined") {
   };
   const appearance: StandaloneAppearanceHost = {
     choose: (theme) => handle.choose(theme),
+    applyRoute: (scheme) => handle.applyRoute(scheme),
     refresh: () => handle.refresh(),
   };
   host.__moklyAppearance = appearance;

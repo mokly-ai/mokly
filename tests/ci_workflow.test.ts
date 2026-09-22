@@ -164,10 +164,11 @@ test("CI shards complete verification behind one prerequisite", async () => {
 });
 
 test("local, package and CI runtimes share the Node compatibility policy", async () => {
-  const [version, manifestSource, lockSource] = await Promise.all([
+  const [version, manifestSource, lockSource, readme] = await Promise.all([
     fs.readFile(path.join(repositoryRoot, ".node-version"), "utf8"),
     fs.readFile(path.join(repositoryRoot, "package.json"), "utf8"),
     fs.readFile(path.join(repositoryRoot, "package-lock.json"), "utf8"),
+    fs.readFile(path.join(repositoryRoot, "README.md"), "utf8"),
   ]);
   const manifest = JSON.parse(manifestSource) as {
     engines: { node: string };
@@ -178,6 +179,14 @@ test("local, package and CI runtimes share the Node compatibility policy", async
   assert.equal(version.trim(), currentTestedNode);
   assert.equal(manifest.engines.node, SUPPORTED_NODE_RANGE);
   assert.equal(lock.packages[""].engines.node, manifest.engines.node);
+  assert.ok(
+    readme.includes(`\`${SUPPORTED_NODE_RANGE}\``),
+    "the README must document the supported Node range",
+  );
+  assert.ok(
+    readme.includes("[`.node-version`](./.node-version)"),
+    "development setup must follow the tested Node version",
+  );
   assert.ok(TESTED_NODE_VERSIONS.every(isSupportedNodeVersion));
   assert.ok(testedNodeVersions.includes(version.trim()));
 });

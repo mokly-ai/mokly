@@ -123,7 +123,12 @@ Choosing a value applies the interface appearance and the effective preview
 scheme together: the document's scheme mark, every screen and flow frame's
 light/dark fragment swap, component samples and comparison frames. The existing
 swap rules apply unchanged, including the light-only fallback caption. In-shell
-navigation, Back and Forward keep the current choice.
+navigation, Back and Forward keep the current reader choice, even when the
+destination URL contains an older or conflicting `scheme` pin. Before any
+reader choice, a scheme-bearing in-shell destination applies its pin to the
+whole appearance without saving it; an unpinned destination keeps the current
+document appearance. Only the appearance controller interprets these pins;
+route installation must never independently overwrite preview selection.
 
 On a full page load the effective appearance is resolved in this order: a
 `scheme` URL parameter of `light` or `dark` pins the appearance for that
@@ -146,11 +151,17 @@ changes while the document is open. When the effective scheme is dark at
 startup, it replaces each frame's server-rendered light source before or as
 early as possible in that frame's first load, and at most once. The classic
 implementation remains outside the React hydration bundle and exposes only a
-narrow choose/refresh handoff. The standalone browser entry refreshes parsed
+narrow choose/route/refresh handoff. The standalone browser entry refreshes parsed
 markup before hydration, then the shell bridge adopts the effective document
 scheme and asks the store for matching preview files; later choices and Auto
-system changes update both owners through the same callback. Installation is
-idempotent and cleans up its listeners.
+system changes update both owners through the same callback. Once the bridge
+installs that callback, only React's frame adapters navigate preview documents;
+the startup controller no longer assigns their sources. Appearance changes must
+not add iframe history entries or consume catalogue Back/Forward actions.
+Installation is
+idempotent; the final handle release removes both the system-theme listener
+and every bound selector listener so a later installation cannot duplicate
+callbacks or storage writes.
 Persisted `pagehide` events keep the controller alive for the browser's
 back-forward cache, and persisted `pageshow` refreshes the restored document;
 a final non-persisted `pagehide` disposes it and removes its lifecycle
@@ -237,7 +248,11 @@ traffic-light artwork retain their intended colors.
 
 Set each managed iframe's CSS `color-scheme` to its effective preview scheme
 before loading it, including page/component/flow and comparison frames. For
-documents without a scheme axis, retain the existing Light context. CSS color
+documents without a scheme axis, retain the existing Light context. Frame
+wrappers record the selected file's scheme independently of the outer document
+and of fallback captions; iframe context, device-screen styling and comparison
+bases read that per-frame value. The classic startup updates it before swapping
+a fragment source, so the same contract holds before React hydrates. CSS color
 scheme can otherwise affect an embedded document's media queries, even across
 origins; see [MDN embedded color schemes](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme#embedded_elements).
 
@@ -323,7 +338,8 @@ the screens.
   semantic contrast and inherited accent overrides.
 - In standalone browsers, cross Auto/Light/Dark with mixed and light-only
   catalogues at both widths, including live system changes under Auto, a
-  `scheme` pin, clean Dark hydration for a light-only catalogue, component
+  `scheme` pin, pinned navigation and Back/Forward after Light or Auto choices,
+  clean Dark hydration for a light-only catalogue, component
   samples and comparison frames. In embedded browsers,
   cross Light/Dark `theme` with Light/Dark previews and light-only catalogues,
   including native/media-query-driven preview fixtures for both adapters.

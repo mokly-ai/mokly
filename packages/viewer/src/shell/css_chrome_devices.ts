@@ -45,7 +45,7 @@ export const CSS_CHROME_DEVICES = `
   align-items: flex-start;
   height: 44px;
   padding: 14px 28px 0;
-  color: var(--chrome-ink);
+  color: var(--mbk-screen-ink);
   font-size: 13.5px;
   font-weight: 600;
   font-feature-settings: "tnum";

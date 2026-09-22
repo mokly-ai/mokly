@@ -13,6 +13,7 @@ import {
   resolveDeliveryHref,
   validFragmentQuery,
 } from "../navigation/delivery.js";
+import { standaloneAppearanceHost } from "../standalone/appearance_host.js";
 
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
@@ -78,6 +79,7 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
         pendingScroll.current = scrolls;
         pendingFocus.current = true;
       }
+      standaloneAppearanceHost(win)?.applyRoute(route.colorScheme);
       input.setState((state) =>
         withRoute(state, route, input.catalogue, input.sections),
       );

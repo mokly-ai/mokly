@@ -273,9 +273,13 @@ Standalone documents also load `appearance-startup.js` before the shell
 stylesheet. It restores the origin-local Appearance preference, applies a valid
 `scheme` URL pin without saving it, follows system changes under Auto, and
 hands the effective scheme to React before hydration. The document appearance
-stays Dark when a light-only catalogue must keep Light preview files. A missing
+stays Dark when a light-only catalogue must keep Light preview files and their
+Light browser context. A reader's choice continues to win over URL pins during
+in-shell navigation and Back/Forward. Before a reader chooses, an in-shell pin
+updates the whole appearance without saving a preference. A missing
 startup asset leaves the selector hidden, and a back-forward-cache restore
-keeps and refreshes the controller rather than losing live Auto updates.
+keeps and refreshes the controller rather than losing live Auto updates. Final
+disposal removes both system and selector listeners before any reinstallation.
 Local Serve supplies updates, recovery, private workspace evidence, temporary
 previews and on-demand Usage through the separate
 [live capability contract](../../docs/protocol/mokly-live-capabilities.md).

@@ -84,6 +84,19 @@ files. A light-only catalogue can therefore keep Light previews without
 rewriting a Dark interface during hydration. Without the startup host, the
 bridge leaves the selector hidden. Embedded roots skip the bridge and receive
 `theme` from their host while retaining independent preview controls.
+Standalone route installation sends scheme pins to that controller; it never
+changes preview selection separately. A reader's choice wins over later pins
+through navigation and browser history. Each preview wrapper records its actual
+file's scheme for iframe media queries, native controls, device colors and
+comparison backgrounds, including globally light-only catalogues. Startup
+updates this frame value before changing a fragment source.
+After the bridge mounts, React's frame adapters exclusively own source changes;
+the startup controller only reports the effective scheme, avoiding iframe
+history entries during manual or automatic appearance changes. The frame-source
+hook preserves initial markup and updates sources only for frames without an
+active adapter; it must not race adapter-owned history-replacing navigation.
+Display-only selection updates preserve manually collapsed filtered groups;
+only changed search, tag or Changes filters reveal their matching groups.
 
 `previews.tsx` renders the one previous-version presentation a removed page and
 a removed screen share: the "Showing previous version" label, the stage host

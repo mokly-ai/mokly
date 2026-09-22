@@ -90,6 +90,7 @@ function ScreenFrame(props: {
     <div
       className={`mbk-frame-wrap mbk-frame-${props.viewport}`}
       data-color-scheme-fallback={fallback ? "" : undefined}
+      data-preview-color-scheme={props.view.colorScheme}
     >
       <p className="mbk-frame-label">
         {props.viewport === "mobile" ? "Mobile" : "Desktop"}
@@ -125,7 +126,11 @@ export function ReadyPreview(props: {
     const presentation = presentationFor(props.presentations, content.url);
     if (!presentation) return <PreviewUnavailable retry={props.retry} />;
     return (
-      <div className="mbk-stage-embed" data-mokly-scroll="embed">
+      <div
+        className="mbk-stage-embed"
+        data-mokly-scroll="embed"
+        data-preview-color-scheme="light"
+      >
         <PreviewFrame presentation={presentation} title={props.data.title} />
       </div>
     );

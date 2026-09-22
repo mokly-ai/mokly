@@ -8,6 +8,7 @@ import {
   disclosurePath,
 } from "../src/shell/nav_model.js";
 import { routeFromUrl } from "../src/shell/routes.js";
+import { withFilterSelection, withRoute } from "../src/shell/store_filters.js";
 import { createInitialShellState } from "../src/shell/store_initial.js";
 import type {
   ShellInitialState,
@@ -50,6 +51,57 @@ const unrelated = unrelatedDisclosure();
 test("reload recovery details outrank the older stored preference", () => {
   const state = recoveredState({ detailsOpen: true });
   assert.equal(state.detailsOpen, false);
+});
+
+test("route pins cannot overwrite the appearance controller's preview selection", () => {
+  for (const colorScheme of ["light", "dark"] as const) {
+    const state = createInitialShellState(
+      catalogue,
+      context,
+      route.view,
+      undefined,
+    );
+    state.selection.colorScheme = colorScheme;
+    const pinned = {
+      ...route,
+      colorScheme:
+        colorScheme === "light" ? ("dark" as const) : ("light" as const),
+    };
+    const next = withRoute(
+      state,
+      pinned,
+      { ...catalogue, hasDarkFragments: true },
+      sections,
+    );
+    assert.equal(next.selection.colorScheme, colorScheme);
+    assert.equal(next.route.colorScheme, pinned.colorScheme);
+  }
+});
+
+test("display-only selection updates preserve collapsed filtered groups", () => {
+  const initial = createInitialShellState(
+    catalogue,
+    context,
+    route.view,
+    undefined,
+  );
+  const expanded = withFilterSelection(initial, {
+    ...initial.selection,
+    view: "changes",
+  });
+  const filtered = {
+    ...expanded,
+    disclosures: { ...expanded.disclosures, [unrelated]: false },
+  };
+  for (const colorScheme of ["light", "dark"] as const) {
+    const next = withFilterSelection(filtered, {
+      ...filtered.selection,
+      colorScheme,
+    });
+    assert.deepEqual(next.disclosures, filtered.disclosures);
+    assert.deepEqual(next.filterBaseline, filtered.filterBaseline);
+    assert.equal(next.selection.colorScheme, colorScheme);
+  }
 });
 
 test("reload recovery disclosures outrank the older stored preference map", () => {

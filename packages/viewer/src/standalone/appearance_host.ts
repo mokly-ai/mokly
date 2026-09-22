@@ -6,6 +6,8 @@ import type { ViewerTheme } from "../viewer/types.js";
 export interface StandaloneAppearanceHost {
   /** Apply and persist a reader-selected appearance. */
   choose(theme: ViewerTheme): void;
+  /** Adopt a destination pin unless this document has a reader-selected choice. */
+  applyRoute(scheme: "dark" | "light" | undefined): void;
   /** Re-apply the current appearance to newly rendered shell elements. */
   refresh(): void;
 }

@@ -2,132 +2,23 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { APPEARANCE_STORAGE_KEY } from "../src/standalone/preference.js";
-import {
-  installAppearance,
-  type AppearanceDocument,
-  type AppearanceWindow,
-} from "../src/standalone/startup.js";
+import { installAppearance } from "../src/standalone/startup.js";
 
-interface FakeFrame {
-  src: string;
-  dataset: Record<string, string | undefined>;
-  getAttribute(name: "src"): string | null;
-  loads: string[];
-}
+import { environment, frame } from "./appearance_fixture.js";
 
-function frame(light: string, dark?: string): FakeFrame {
-  let source = light;
-  return {
-    get src() {
-      return new URL(source, "https://catalogue.example/static/").href;
-    },
-    set src(value: string) {
-      source = value;
-      this.loads.push(value);
-    },
-    dataset: dark ? { fragmentLight: light, fragmentDark: dark } : {},
-    getAttribute: () => source,
-    loads: [],
-  };
-}
-
-function environment(
-  options: {
-    search?: string;
-    stored?: string | null;
-    initial?: string;
-    systemDark?: boolean;
-    frames?: FakeFrame[];
-    opted?: boolean;
-    failStorage?: boolean;
-  } = {},
-) {
-  const root: { attributes: Record<string, string> } = { attributes: {} };
-  const listeners: { type: string; handler: () => void }[] = [];
-  const media = {
-    matches: options.systemDark ?? false,
-    addEventListener(type: string, handler: () => void) {
-      listeners.push({ type, handler });
-    },
-    removeEventListener(type: string, handler: () => void) {
-      const index = listeners.findIndex((entry) => entry.handler === handler);
-      if (index >= 0) listeners.splice(index, 1);
-    },
-  };
-  let value = options.stored ?? null;
-  const body: { attributes: Record<string, string> } = { attributes: {} };
-  const select = {
-    value: "auto",
-    hidden: true,
-    attributes: {} as Record<string, string>,
-    handlers: [] as (() => void)[],
-    setAttribute(name: string, next: string) {
-      select.attributes[name] = next;
-    },
-    addEventListener(_type: string, handler: () => void) {
-      select.handlers.push(handler);
-    },
-    fire() {
-      for (const handler of select.handlers) handler();
-    },
-  };
-  let attached: { frames?: FakeFrame[]; body?: boolean; select?: boolean } = {};
-  const document = {
-    body: undefined as unknown,
-    documentElement: {
-      getAttribute: (name: string) => root.attributes[name] ?? null,
-      setAttribute: (name: string, next: string) => {
-        root.attributes[name] = next;
-      },
-      dataset: options.opted === false ? {} : { moklyAppearance: "" },
-    },
-    querySelectorAll: (selector: string) =>
-      selector.includes("appearance-")
-        ? attached.select
-          ? [select]
-          : []
-        : (attached.frames ?? options.frames ?? []),
-  } as unknown as AppearanceDocument;
-  const window = {
-    location: { search: options.search ?? "" },
-    matchMedia: () => media,
-    localStorage: {
-      getItem: () => {
-        if (options.failStorage) throw new Error("blocked");
-        return value;
-      },
-      setItem: (_key: string, next: string) => {
-        if (options.failStorage) throw new Error("blocked");
-        value = next;
-      },
-      removeItem: () => {
-        if (options.failStorage) throw new Error("blocked");
-        value = null;
-      },
-    },
-  } as unknown as AppearanceWindow;
-  if (options.initial) root.attributes["data-mokly-theme"] = options.initial;
-  const attach = (next: typeof attached): void => {
-    attached = next;
-    if (next.body)
-      (document as unknown as { body: unknown }).body = {
-        setAttribute: (name: string, value: string) => {
-          body.attributes[name] = value;
-        },
-      };
-  };
-  return {
-    document,
-    window,
-    root,
-    body,
-    select,
-    attach,
-    listeners,
-    media,
-    stored: () => value,
-  };
-}
+test("startup assigns each preview's browser context before changing its source", () => {
+  const dual = frame("welcome.html", "welcome.dark.html");
+  const lightOnly = frame("details.html");
+  const world = environment({
+    search: "?scheme=dark",
+    frames: [dual, lightOnly],
+  });
+  const handle = installAppearance(world.document, world.window);
+  assert.deepEqual(dual.schemesAtLoad, ["dark"]);
+  assert.equal(lightOnly.scheme, "light");
+  handle.choose("light");
+  assert.deepEqual(dual.schemesAtLoad, ["dark", "light"]);
+});
 
 test("the effective appearance is applied to the document root", () => {
   for (const [options, expected] of [
@@ -230,6 +121,36 @@ test("repeated installation is idempotent and each disposes cleanly", () => {
   second.dispose();
   first.dispose();
   assert.equal(world.listeners.length, 0);
+});
+
+test("final disposal removes selector listeners before a later installation", () => {
+  const world = environment();
+  world.attach({ body: true, select: true });
+  const first = installAppearance(world.document, world.window);
+  const second = installAppearance(world.document, world.window);
+  first.refresh();
+  second.refresh();
+  assert.equal(world.select.handlers.length, 1);
+  first.dispose();
+  assert.equal(world.select.handlers.length, 1);
+  second.dispose();
+  assert.equal(world.select.handlers.length, 0);
+
+  const reinstalled = installAppearance(world.document, world.window);
+  reinstalled.refresh();
+  let applications = 0;
+  world.window.onAppearance = () => {
+    applications += 1;
+  };
+  world.select.value = "dark";
+  world.select.fire();
+  assert.equal(applications, 1);
+  assert.equal(world.stored(), "dark");
+  reinstalled.dispose();
+  world.select.value = "light";
+  world.select.fire();
+  assert.equal(applications, 1);
+  assert.equal(world.stored(), "dark");
 });
 
 test("a document that has not opted in is left untouched", () => {

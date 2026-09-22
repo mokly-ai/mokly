@@ -58,7 +58,9 @@ styling, and rendering context.
 
 ### 1. Install
 
-Mokly requires Node.js 22.14 or newer, npm 11, and React 19 or newer.
+Mokly requires Node.js 22.14 or newer, except Node 24.14 through 24.18.
+The supported range is `>=22.14.0 <24.14.0 || >=24.19.0`. You also need npm 11
+and React 19 or newer.
 
 ```bash
 npm install --save-dev @mokly/mokly react react-dom
@@ -252,8 +254,9 @@ viewer, generated output, and tests aligned.
 
 ## Develop Mokly
 
-Repository development requires Node.js 22.14 or newer, npm 11.7, Rust 1.95,
-and Chromium for the browser suite.
+For repository development, use the tested Node.js version in
+[`.node-version`](./.node-version), npm 11.7, Rust 1.95, and Chromium for the
+browser suite.
 
 ```bash
 git clone https://github.com/mokly-ai/mokly.git

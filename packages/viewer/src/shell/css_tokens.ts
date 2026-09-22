@@ -90,6 +90,7 @@ export const SHELL_TOKENS_CSS = `
  */
 :root {
   --mbk-screen-bg: #ffffff;
+  --mbk-screen-ink: #1a1d1c;
   --mbk-dark-screen-bg: #121514;
   --mbk-dark-screen-ink: #eef1ef;
   --mbk-device-body: #171a18;

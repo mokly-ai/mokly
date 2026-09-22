@@ -98,6 +98,12 @@ export const PALETTE_PAIRS: readonly PalettePair[] = [
     null,
   ],
   [
+    "light screen ink on its surface",
+    "--mbk-screen-ink",
+    "--mbk-screen-bg",
+    4.5,
+  ],
+  [
     "dark screen ink on its surface",
     "--mbk-dark-screen-ink",
     "--mbk-dark-screen-bg",

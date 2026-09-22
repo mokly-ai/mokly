@@ -281,7 +281,8 @@ export function mountLocalDocument(
           current?.defaultView?.frameElement === frame &&
           current.readyState === "complete" &&
           current.URL !== "about:blank" &&
-          !recordedFrameResource(frame, current.URL)
+          (mountAuthentication.transferredDocument ||
+            !recordedFrameResource(frame, current.URL))
         ) {
           localFrameAccess(frame).replace(url);
         }

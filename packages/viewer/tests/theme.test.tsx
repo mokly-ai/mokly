@@ -189,8 +189,7 @@ test("every frame carries its own preview color-scheme", () => {
   );
   assert.ok(
     css.includes(
-      'body[data-mokly-color-scheme="dark"] ' +
-        ":is(.mbk-frame-wrap, .mbk-flow-screen):not([data-color-scheme-fallback]) " +
+      '[data-preview-color-scheme="dark"] ' +
         ".mbk-frag { color-scheme: dark; }",
     ),
     "a dark preview frame does not declare dark",
@@ -210,8 +209,7 @@ test("a comparison canvas takes an opaque base from its preview scheme", () => {
   );
   assert.ok(
     css.includes(
-      'body[data-mokly-color-scheme="dark"] ' +
-        ".mb-pane-doc:not([data-color-scheme-fallback]) " +
+      '.mb-pane-doc[data-preview-color-scheme="dark"] ' +
         "{ background: var(--mbk-dark-screen-bg); }",
     ),
     "a dark comparison canvas keeps the light base",

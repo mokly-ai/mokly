@@ -59,6 +59,11 @@ on the first same-origin mount. A later mount excludes its exact unrecorded
 starting object even when its URL equals the assignment, so an unowned document
 reached through native frame navigation keeps portable link behavior until a
 different replacement object authenticates.
+Once hydrated, adapters exclusively navigate live previews with history
+replacement. The server's initial `src` may therefore remain unchanged after a
+scheme swap. A transferred authenticated document at a different URL must be
+replaced even when that initial attribute names the requested URL; only the
+first mount may wait for a startup-assigned fragment already loading.
 
 Frames holding a previous version carry `data-mokly-preview-frame` and
 `data-mokly-preview-source`. They are owned directly by the

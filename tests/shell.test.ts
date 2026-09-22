@@ -565,11 +565,11 @@ test("screen stage carries per-frame scheme fragment data", () => {
   const fallback = routePage(dark, "screens/details.html");
   assert.match(
     fallback,
-    /<div class="mbk-frame-wrap mbk-frame-mobile" data-color-scheme-fallback=""><p class="mbk-frame-label">Mobile<span class="mbk-frame-scheme-note"> — Light only<\/span><\/p>/,
+    /<div class="mbk-frame-wrap mbk-frame-mobile" data-color-scheme-fallback="" data-preview-color-scheme="light"><p class="mbk-frame-label">Mobile<span class="mbk-frame-scheme-note"> — Light only<\/span><\/p>/,
   );
   assert.match(
     fallback,
-    /<div class="mbk-frame-wrap mbk-frame-desktop" data-color-scheme-fallback=""><p class="mbk-frame-label">Desktop<span class="mbk-frame-scheme-note"> — Light only<\/span><\/p>/,
+    /<div class="mbk-frame-wrap mbk-frame-desktop" data-color-scheme-fallback="" data-preview-color-scheme="light"><p class="mbk-frame-label">Desktop<span class="mbk-frame-scheme-note"> — Light only<\/span><\/p>/,
   );
   assertAttributes(workspaceFrame(fallback, "mobile"), {
     class: "mbk-frag",
@@ -641,7 +641,7 @@ test("screen stage carries per-frame scheme fragment data", () => {
   const lightFlow = routePage(lightOnly, "user-flows/tour.html");
   assert.match(
     lightFlow,
-    /<div class="mbk-flow-screen"><div class="browser-frame">/,
+    /<div class="mbk-flow-screen" data-preview-color-scheme="light"><div class="browser-frame">/,
   );
   assert.equal(lightFlow.includes("data-fragment-"), false);
 });
@@ -1120,9 +1120,7 @@ test("the tag picker drops from the field and sheets under the bar", () => {
 
 test("dark scheme paints device screens and leaves the chrome light", () => {
   const css = flatCss(SHELL_CSS);
-  const scope =
-    'body[data-mokly-color-scheme="dark"] ' +
-    ":is(.mbk-frame-wrap, .mbk-flow-screen):not([data-color-scheme-fallback]) ";
+  const scope = '[data-preview-color-scheme="dark"] ';
 
   assert.ok(
     css.includes(
@@ -1164,7 +1162,7 @@ test("dark scheme paints device screens and leaves the chrome light", () => {
   assert.equal(selectors.length, 7);
   for (const selector of selectors) {
     assert.ok(
-      selector.startsWith('body[data-mokly-color-scheme="dark"]'),
+      selector.includes('[data-preview-color-scheme="dark"]'),
       selector,
     );
   }
@@ -1177,14 +1175,17 @@ test("dark scheme paints device screens and leaves the chrome light", () => {
     SHELL_CSS,
     /\.phone-screen \{[^}]*background: var\(--mbk-screen-bg\);/,
   );
-  assert.match(SHELL_CSS, /\.phone-status \{[^}]*color: var\(--chrome-ink\);/);
+  assert.match(
+    SHELL_CSS,
+    /\.phone-status \{[^}]*color: var\(--mbk-screen-ink\);/,
+  );
   assert.match(
     SHELL_CSS,
     /\.phone-home \{[^}]*background: var\(--mbk-device-home\);/,
   );
   assert.match(
     SHELL_CSS,
-    /\.browser-viewport \{[^}]*background: var\(--chrome-surface\);/,
+    /\.browser-viewport \{[^}]*background: var\(--mbk-screen-bg\);/,
   );
 });
 
