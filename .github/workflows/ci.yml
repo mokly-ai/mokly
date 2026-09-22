@@ -18,7 +18,7 @@ concurrency:
 jobs:
   repository:
     name: Repository
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: blacksmith-2vcpu-ubuntu-2404
     timeout-minutes: 20
     outputs:
       node-24-version: ${{ steps.node.outputs.node-version }}
@@ -49,7 +49,7 @@ jobs:
   package:
     name: Package (Node ${{ matrix.node }})
     needs: [repository]
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: blacksmith-2vcpu-ubuntu-2404
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -88,7 +88,7 @@ jobs:
   unit:
     name: Unit (Node ${{ matrix.node }}, shard ${{ matrix.shard }}/4)
     needs: [repository]
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: blacksmith-2vcpu-ubuntu-2404
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -141,7 +141,7 @@ jobs:
   browser:
     name: Browser (Node ${{ matrix.node }}, shard ${{ matrix.shard }}/4)
     needs: [repository]
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: blacksmith-2vcpu-ubuntu-2404
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -208,7 +208,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [blacksmith-6vcpu-macos-15, blacksmith-4vcpu-windows-2025]
+        os: [blacksmith-6vcpu-macos-15, blacksmith-2vcpu-windows-2025]
     steps:
       - name: Check out repository
         uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
@@ -238,7 +238,7 @@ jobs:
     name: Required CI
     if: always()
     needs: [repository, package, unit, browser, native]
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: blacksmith-2vcpu-ubuntu-2404
     timeout-minutes: 20
     steps:
       - name: Check out report validator

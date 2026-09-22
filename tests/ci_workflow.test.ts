@@ -94,7 +94,7 @@ test("CI shards complete verification behind one prerequisite", async () => {
   assert.equal(native.strategy?.["fail-fast"], false);
   assert.deepEqual(native.strategy?.matrix.os, [
     "blacksmith-6vcpu-macos-15",
-    "blacksmith-4vcpu-windows-2025",
+    "blacksmith-2vcpu-windows-2025",
   ]);
   assert.ok(
     repository.steps.some((step) =>
