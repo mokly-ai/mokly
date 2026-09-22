@@ -83,17 +83,19 @@ create historical baselines receive complete Git history.
 
 After the repository job succeeds, the workflow fans out to:
 
-- package jobs on Node 22.14.0 and Node 24;
+- package jobs on Node 22.14.0 and the latest available Node 24 patch;
 - four unit shards on each Node runtime;
 - four browser shards on each Node runtime; and
 - native jobs on macOS and Windows at Node 22.14.0.
 
-The repository job resolves Node 24 once and exposes the installed exact version
-as a job output. Every dependent Node 24 package, unit, browser, and aggregate
-job requests that exact version. A new Node release or differing runner caches
-cannot give sibling shards different Node versions. Matrix labels and report
-runtime identities remain `node-24`; reports still record the exact installed
-version, and the aggregate continues to reject mixed versions within a group.
+The repository job resolves floating Node 24 once, then an explicit shell step
+reads `process.versions.node` and exposes that exact value as a job output.
+Every dependent Node 24 package, unit, browser, and aggregate job requests the
+captured version, so CI adopts new Node 24 patches without allowing differing
+runner caches to give sibling shards different versions. Matrix labels and
+report runtime identities remain `node-24`; reports still record the exact
+installed version, and the aggregate continues to reject mixed versions within
+a group. The setup action itself does not provide the installed version output.
 
 Matrix jobs use `fail-fast: false`, so one failing shard does not erase evidence
 from its peers. Chromium is installed only in browser jobs. Rust formatting,
