@@ -980,7 +980,7 @@ back-forward-cache restoration, and honor the server theme override.
       persisted controller after restoration, dispose it only on a final exit,
       and apply an explicit `renderViewer` theme to full-document host context.
 
-## Milestone 8: Verify, integrate main, push and review
+## Milestone 8: Verify, integrate main, push and review (complete)
 
 Validate the corrections, incorporate the latest target branch, and review the
 complete pushed result without changing it in response to that review.
@@ -994,7 +994,7 @@ complete pushed result without changing it in response to that review.
 - [x] Re-run the focused checks and `cargo xtask check` on the merged tree.
 - [x] Run `git add -A`, commit the merge using a Conventional Commit, push the
       current branch, and verify the remote ref and clean worktree.
-- [ ] Only after the push, use
+- [x] Only after the push, use
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`. Report findings
       without changing the implementation.
