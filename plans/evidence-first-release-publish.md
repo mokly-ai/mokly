@@ -138,7 +138,7 @@ Summary: implement the evidence contract as testable release scripts that are
 not yet wired into the workflow, so the repository stays releasable through the
 existing complete path.
 
-- [ ] Add `scripts/release/evidence_contract.mjs` with pure functions:
+- [x] Add `scripts/release/evidence_contract.mjs` with pure functions:
       `selectCandidateRuns(runs, pulls, tagCommit, repository)` returning
       same-repository successful CI runs ordered push-for-tag first, then
       merged-PR head runs newest first; `classifyEvidence(...)` returning
@@ -147,14 +147,14 @@ existing complete path.
       tree comparison and the live unit inventory; and
       `resolveVerificationMode({ eventName, manualVerification })` (push →
       `evidence`; dispatch → `evidence` or `complete`, rejecting other values).
-- [ ] Add `scripts/release/evidence_github.mjs` with an injectable
+- [x] Add `scripts/release/evidence_github.mjs` with an injectable
       `{ fetch, execute, write }` client: JSON requests with the workflow
       token, pagination-free bounded listings (`per_page=100`), artifact zip
       download that follows the redirect without an `Authorization` header on
       the blob host, and `unzip -o -q` extraction into
       `.context/release-evidence/reports/<artifact>/`. Transport failures
       return a typed `absent` reason instead of throwing.
-- [ ] Add `scripts/release/evidence.mjs` entrypoint: reads
+- [x] Add `scripts/release/evidence.mjs` entrypoint: reads
       `RELEASE_VERIFICATION`, `GITHUB_TOKEN`, `GITHUB_REPOSITORY` and
       `GITHUB_SERVER_URL`; resolves the tagged commit from `HEAD`; in
       `evidence` mode selects, downloads, revalidates with
@@ -166,7 +166,12 @@ existing complete path.
       output (`evidence` only for `applicable`, otherwise `complete`); exits
       non-zero only for `invalid` or usage errors. Keep each file under 200
       lines.
-- [ ] Add `tests/release_evidence.test.ts` covering: mode resolution for push
+- [x] Add `scripts/release/evidence_record.mjs` so Git identity and release
+      record persistence stay independently testable without pushing the
+      evidence entrypoint beyond the plan's 200-line target.
+- [x] Add typed module declarations for the evidence scripts consumed by the
+      TypeScript contract tests.
+- [x] Add `tests/release_evidence.test.ts` covering: mode resolution for push
       and dispatch inputs; candidate ordering and exclusion of forks, other
       workflows, failed runs and runs whose `Required CI` job is not
       `success`; expired or missing artifacts → `absent`; tree mismatch →
@@ -174,20 +179,22 @@ existing complete path.
       naming two commits or failing the aggregate → `invalid` throws; the
       redirect download never resends the token; the record JSON shape and
       the `GITHUB_OUTPUT` line; `complete` mode performs no requests.
-- [ ] Add `tests/release_evidence_contract.test.ts` that asserts the script's
+- [x] Add `tests/release_evidence_contract.test.ts` that asserts the script's
       `Required CI` job-name constant and `verification-*` artifact pattern
       match [`ci.yml`](../.github/workflows/ci.yml) so a rename cannot
       silently turn every publish into `absent`.
-- [ ] Real-API smoke before merge: in a detached worktree at `v0.12.0`, run
+- [x] Real-API smoke before merge: in a detached worktree at `v0.12.0`, run
       `GITHUB_TOKEN="$(gh auth token)" GITHUB_REPOSITORY=mokly-ai/mokly RELEASE_VERIFICATION=evidence node scripts/release/evidence.mjs`
       and confirm it selects PR #87's run 35714338596, downloads 16 reports,
       proves tree `3a38f3ca…` and reports `applicable` (after 6 October 2026
       the artifacts expire and the expected outcome becomes `absent` with the
       expiry reason; record whichever was observed).
-- [ ] Run the new tests, `npm run lint`, `npm run format:check`, then the
+      Observed `applicable` on 22 September 2026: run 35714338596 supplied 16
+      reports naming `b24a8a49…`, whose tree matched tag tree `3a38f3ca…`.
+- [x] Run the new tests, `npm run lint`, `npm run format:check`, then the
       complete `cargo xtask check`.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] After the push, use
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and report
       findings without changing the implementation.
