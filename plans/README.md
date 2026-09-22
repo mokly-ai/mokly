@@ -8,7 +8,8 @@
 - [Co-Located Entry Discovery Follow-up](./co-located-entry-discovery-follow-up.md)
   — all deferred seventh/eighth-round findings, the latest entry-layout
   documentation finding, and the remaining follow-up tasks from PR #101;
-  planned for a separate PR, with no implementation started.
+  implemented and independently verified with contract clarification and
+  regression coverage; delivery and post-push review are in progress.
 - [React Browse Shell](./react-browse-shell.md)
 - [CI Performance](./ci-performance.md) — parallel verification, complete test
   sharding, reusable preparation and measured CI timing improvements.
