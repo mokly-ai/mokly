@@ -104,7 +104,7 @@ test("a component catalogue without review never asks for Git Changes", async (t
       },
     },
   });
-  t.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
   for (const route of [
     "/",
     "/view/handbook.html",

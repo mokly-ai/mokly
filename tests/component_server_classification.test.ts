@@ -28,7 +28,7 @@ test("Browse responds before separately computed component evidence arrives", as
     port: 0,
     changesStatus: "pending",
   });
-  t.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
   const initial = await (await fetch(server.url)).text();
   assert.match(initial, /data-mokly-filter/);
   assert.match(initial, /data-changes-status="pending"/);
@@ -74,7 +74,7 @@ test("ordinary Browse serves cached component evidence without generating or wri
       },
     },
   });
-  t.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
   for (const route of [
     "/",
     "/view/screens/home.html",
