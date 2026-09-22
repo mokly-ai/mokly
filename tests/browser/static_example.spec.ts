@@ -13,13 +13,14 @@ import {
 import { serveStaticFiles } from "../helpers/static_server.js";
 
 import { assertServedShellMarker } from "./export_shell.js";
+import { REAL_EXPORT_FIXTURE_TIMEOUT_MS } from "./fixture_timeouts.js";
 import { chooseViewport } from "./workspace_actions.js";
 
 let output: string;
 let root: string;
 let server: Awaited<ReturnType<typeof serveStaticFiles>>;
 test.beforeAll(async () => {
-  test.setTimeout(180_000);
+  test.setTimeout(REAL_EXPORT_FIXTURE_TIMEOUT_MS);
   root = await fs.promises.mkdtemp(
     path.join(repositoryRoot, ".context/mokly-example-export-"),
   );

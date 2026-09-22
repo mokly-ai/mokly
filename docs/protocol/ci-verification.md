@@ -117,8 +117,11 @@ Matrix jobs use `fail-fast: false`, so one failing shard does not erase evidence
 from its peers. Chromium is installed only in browser jobs. Rust formatting,
 Clippy and tests run only in the repository job; selected suite jobs still
 compile xtask to dispatch their gate. Jobs that execute npm use npm 11.7.0. All
-jobs have read-only repository permissions and a 20-minute execution timeout.
-Superseded workflow runs remain cancellable.
+Linux and Windows jobs across the CI, preview, and release workflows use
+Blacksmith's 2-vCPU tiers. Native macOS verification uses the provider's
+smallest available tier, which is 6 vCPUs. CI jobs have read-only repository
+permissions and a 20-minute execution timeout. Superseded workflow runs remain
+cancellable.
 
 The stable `Required CI` job uses `if: always()` and fails closed unless every
 required job result is exactly `success`. It also validates the evidence
@@ -233,6 +236,9 @@ export, clean-install and cache-invalidation behavior continue to create
 independent inputs because preparation is part of what those tests verify.
 Fixture phases emit `[mokly:fixture-timing]` JSON with the fixture, phase,
 duration, status, and whether the operation itself is under test.
+Fixtures that install, build, and export the complete example share a
+240-second setup budget. Assertion deadlines, retries, and worker limits remain
+unchanged.
 
 Wrangler Pages fixtures pass port zero and adopt the exact readiness URL
 Wrangler reports; they do not release a probe socket before server startup.

@@ -15,12 +15,13 @@ import {
 import { serveStaticFiles } from "../helpers/static_server.js";
 
 import { assertServedShellMarker } from "./export_shell.js";
+import { REAL_EXPORT_FIXTURE_TIMEOUT_MS } from "./fixture_timeouts.js";
 import { chooseViewport } from "./workspace_actions.js";
 
 let site: Awaited<ReturnType<typeof serveStaticFiles>>;
 let root: string;
 test.beforeAll(async () => {
-  test.setTimeout(180_000);
+  test.setTimeout(REAL_EXPORT_FIXTURE_TIMEOUT_MS);
   await fs.mkdir(path.join(repositoryRoot, ".context"), { recursive: true });
   root = await fs.mkdtemp(path.join(repositoryRoot, ".context/design-export-"));
   const config = await timeFixturePhase(

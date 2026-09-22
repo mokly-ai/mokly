@@ -6,12 +6,13 @@ import { expect, test } from "@playwright/test";
 
 import { repositoryRoot } from "../helpers/fixture.js";
 
+import { REAL_EXPORT_FIXTURE_TIMEOUT_MS } from "./fixture_timeouts.js";
 import { startPreviewFixture } from "./preview_fixture.js";
 
 test("the real preview build preserves generated output and serves fresh publication bytes", async ({
   page,
 }) => {
-  test.setTimeout(180_000);
+  test.setTimeout(REAL_EXPORT_FIXTURE_TIMEOUT_MS);
   const before = await generatedDigest();
   const preview = await startPreviewFixture();
   try {
