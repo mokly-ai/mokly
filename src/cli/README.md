@@ -19,10 +19,12 @@ presentation.
 `run.ts` loads configuration and invokes the existing package services. The
 reporter directory preserves stable plain output for pipes, CI, and timing
 diagnostics while rendering progress, lifecycle events, and actionable errors
-for interactive terminals. Rich success ticks are green when the terminal
-supports colour and remain unstyled when colour is disabled. `bin.ts` is the
-process boundary: it selects the reporter before parsing arguments, applies
-secret redaction, and controls the exit code.
+for interactive terminals. Serve arms graceful shutdown before reporting its
+ready URL, so any announced process can accept an immediate interrupt. Rich
+success ticks are green when the terminal supports colour and remain unstyled
+when colour is disabled. `bin.ts` is the process boundary: it selects the
+reporter before parsing arguments, applies secret redaction, and controls the
+exit code.
 
 Rich presentation never changes `MoklyError`, generated output, HTTP responses,
 or timing JSON. The supervised Serve child stays plain and forwards diagnostics
