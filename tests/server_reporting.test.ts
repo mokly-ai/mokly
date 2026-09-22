@@ -123,7 +123,7 @@ test(
         watcherFactory: new ChokidarWatcherFactory(),
       },
     );
-    t.after(() => running.close());
+    fixture.beforeRemove(() => running.close());
     await reporter.complete;
     assert.deepEqual(
       reporter.events.map((event) => event.split(":")[0]),
@@ -143,7 +143,7 @@ test("the watched RunningServe rebuild hook uses the serialized queue", async (t
     { port: 0, watch: true },
     { reporter },
   );
-  t.after(() => running.close());
+  fixture.beforeRemove(() => running.close());
   assert.ok(running.rebuild);
   running.rebuild();
   for (let attempt = 0; attempt < 400; attempt++) {

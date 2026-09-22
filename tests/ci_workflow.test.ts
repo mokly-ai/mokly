@@ -36,6 +36,7 @@ interface WorkflowJob {
     "fail-fast"?: boolean;
     matrix: Readonly<Record<string, readonly (string | number)[]>>;
   };
+  "timeout-minutes"?: number;
 }
 
 interface Workflow {
@@ -71,6 +72,8 @@ test("CI shards complete verification behind one prerequisite", async () => {
   assert.ok(browser);
   assert.ok(native);
   assert.ok(required);
+  for (const job of Object.values(workflow.jobs))
+    assert.equal(job["timeout-minutes"], 20);
   assert.deepEqual(required.needs, [
     "repository",
     "package",

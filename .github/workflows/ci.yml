@@ -19,6 +19,7 @@ jobs:
   repository:
     name: Repository
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     outputs:
       node-24-version: ${{ steps.node.outputs.node-version }}
     steps:
@@ -49,6 +50,7 @@ jobs:
     name: Package (Node ${{ matrix.node }})
     needs: [repository]
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -87,6 +89,7 @@ jobs:
     name: Unit (Node ${{ matrix.node }}, shard ${{ matrix.shard }}/4)
     needs: [repository]
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -139,6 +142,7 @@ jobs:
     name: Browser (Node ${{ matrix.node }}, shard ${{ matrix.shard }}/4)
     needs: [repository]
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -200,6 +204,7 @@ jobs:
     name: Native filesystem (${{ matrix.os }})
     needs: [repository]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -234,6 +239,7 @@ jobs:
     if: always()
     needs: [repository, package, unit, browser, native]
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Check out report validator
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3

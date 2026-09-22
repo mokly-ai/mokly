@@ -26,7 +26,7 @@ test("served Browse adapts current HTML without mutating portable files", async 
   const diskPath = path.join(fixture.mockupsDir, "screens/home.mobile.html");
   const disk = await fs.promises.readFile(diskPath, "utf8");
   const server = await startFixtureServer(fixture);
-  context.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
 
   const response = await fetch(`${server.url}/static/screens/home.mobile.html`);
   const served = await response.text();
@@ -73,7 +73,7 @@ test("served Browse adapts current HTML without mutating portable files", async 
 test("served fragment queries validate once and reach every applicable frame", async (context) => {
   const fixture = await navigationFixture(context);
   const server = await startFixtureServer(fixture);
-  context.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
 
   const redirect = await fetch(`${server.url}/id/details?fragment=section`, {
     redirect: "manual",
@@ -153,7 +153,7 @@ function fragmentFrames(html: string): HtmlElement[] {
 test("HEAD id errors omit bodies on a reused connection", async (context) => {
   const fixture = await navigationFixture(context);
   const server = await startFixtureServer(fixture);
-  context.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
   const agent = new Agent({ keepAlive: true, maxSockets: 1 });
   context.after(() => agent.destroy());
 
@@ -190,7 +190,7 @@ test("safe URL paths reject decoded path separators", () => {
 test("served Browse fails closed on post-build trusted tampering", async (context) => {
   const fixture = await navigationFixture(context);
   const server = await startFixtureServer(fixture);
-  context.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
   const target = path.join(fixture.mockupsDir, "screens/home.mobile.html");
   const original = await fs.promises.readFile(target, "utf8");
   await fs.promises.writeFile(

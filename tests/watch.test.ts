@@ -128,7 +128,7 @@ test("Serve orchestration accepts fake filesystem, server, and watcher boundarie
       watcherFactory: new UnusedWatcherFactory(),
     },
   );
-  context.after(() => running.close());
+  fixture.beforeRemove(() => running.close());
   assert.equal(
     outputStore.writes,
     0,

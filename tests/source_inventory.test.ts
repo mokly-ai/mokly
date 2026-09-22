@@ -69,7 +69,7 @@ test("both graphs retain raw and tree-shaken inputs while public resources stay 
   );
   await writeCompilation(compilation, config);
   const server = await startCatalogueServer(config, { base: "main", port: 0 });
-  context.after(() => server.close());
+  fixture.beforeRemove(() => server.close());
   const reader = new FileSystemReviewAssetReader(config);
   for (const route of [
     ...Object.keys(files).filter(
