@@ -22,11 +22,33 @@ jobs:
     timeout-minutes: 20
     outputs:
       node-24-version: ${{ steps.node.outputs.node-version }}
+      node-matrix: ${{ steps.profile.outputs.node-matrix }}
+      verification-runtimes: ${{ steps.profile.outputs.verification-runtimes }}
     steps:
       - name: Check out repository
         uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
         with:
           fetch-depth: 0
+      - name: Select Node verification profile
+        id: profile
+        env:
+          RELEASE_PULL_REQUEST: >-
+            ${{
+              github.event_name == 'pull_request' &&
+              github.event.pull_request.head.repo.full_name == github.repository &&
+              (
+                startsWith(github.event.pull_request.head.ref, 'release-please--') ||
+                contains(join(github.event.pull_request.labels.*.name, ','), 'autorelease:')
+              )
+            }}
+        run: |
+          if [ "$RELEASE_PULL_REQUEST" = "true" ]; then
+            echo 'node-matrix=["22.14.0","24"]' >> "$GITHUB_OUTPUT"
+            echo 'verification-runtimes=node-22.14.0,node-24' >> "$GITHUB_OUTPUT"
+          else
+            echo 'node-matrix=["22.14.0"]' >> "$GITHUB_OUTPUT"
+            echo 'verification-runtimes=node-22.14.0' >> "$GITHUB_OUTPUT"
+          fi
       - name: Set up Node.js
         id: node
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
@@ -54,7 +76,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ["22.14.0", "24"]
+        node: ${{ fromJSON(needs.repository.outputs.node-matrix) }}
     steps:
       - name: Check out repository
         uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
@@ -93,7 +115,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ["22.14.0", "24"]
+        node: ${{ fromJSON(needs.repository.outputs.node-matrix) }}
         shard: [1, 2, 3, 4]
     env:
       MOKLY_VERIFICATION_RUNTIME: node-${{ matrix.node }}
@@ -146,7 +168,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ["22.14.0", "24"]
+        node: ${{ fromJSON(needs.repository.outputs.node-matrix) }}
         shard: [1, 2, 3, 4]
     env:
       MOKLY_VERIFICATION_RUNTIME: node-${{ matrix.node }}
@@ -267,4 +289,6 @@ jobs:
           test "$BROWSER_RESULT" = success
           test "$NATIVE_RESULT" = success
       - name: Require complete shard evidence
-        run: node scripts/verification/aggregate.mjs --reports .context/downloaded-verification --commit "${GITHUB_SHA}"
+        env:
+          EXPECTED_RUNTIMES: ${{ needs.repository.outputs.verification-runtimes }}
+        run: node scripts/verification/aggregate.mjs --reports .context/downloaded-verification --commit "${GITHUB_SHA}" --runtimes "$EXPECTED_RUNTIMES"
