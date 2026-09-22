@@ -2,8 +2,8 @@
 
 ## Delivery Status
 
-The suite CLI, inventory evidence, parallel workflow graph, and fixture reuse in
-this document are implemented. The
+The suite CLI, inventory evidence, event-specific parallel workflow graph, and
+fixture reuse in this document are implemented. The
 [hosted acceptance measurement](../reviews/ci-performance.md) records the
 delivered timing, capacity, cache, cost, and coverage evidence. The
 authoritative complete local and release gate remains `cargo xtask check`.
@@ -44,7 +44,7 @@ fail before any subprocess starts.
 | Unit/integration | One ordinary package/example preparation followed by every discovered Node test file, with at most two files active. A shard runs its whole-file partition.                                                                                                                                                                                                                                |
 | Browser          | One ordinary package/example preparation followed by every discovered Playwright spec, with `fullyParallel: false`, one worker, existing timeouts and zero retries. A shard runs its whole-file partition.                                                                                                                                                                                 |
 | Native platforms | On macOS and Windows, build once and run export transaction and destination-race tests, CSS parser/diff tests, and baseline/process-tree tests.                                                                                                                                                                                                                                            |
-| Required CI      | Evaluate the result and evidence from the repository job, both package runtimes, all unit and browser runtime/shard combinations, and both native platforms.                                                                                                                                                                                                                               |
+| Required CI      | Evaluate the result and evidence from the repository job, every package runtime selected for this event, all selected unit and browser runtime/shard combinations, and both native platforms.                                                                                                                                                                                              |
 
 The complete command and selected suites must be generated from the same gate
 definitions. Adding a command to a suite therefore adds it to the complete
@@ -81,19 +81,35 @@ example, fixture, report, and trace output. No live checkout or writable build
 directory is transferred between jobs. All jobs that resolve `origin/main` or
 create historical baselines receive complete Git history.
 
-After the repository job succeeds, the workflow fans out to:
+For ordinary pull requests and pushes to `main`, the workflow fans out to:
 
-- package jobs on Node 22.14.0 and Node 24;
-- four unit shards on each Node runtime;
-- four browser shards on each Node runtime; and
+- one package job on Node 22.14.0;
+- four unit shards on Node 22.14.0;
+- four browser shards on Node 22.14.0; and
 - native jobs on macOS and Windows at Node 22.14.0.
 
-The repository job resolves Node 24 once and exposes the installed exact version
-as a job output. Every dependent Node 24 package, unit, browser, and aggregate
-job requests that exact version. A new Node release or differing runner caches
-cannot give sibling shards different Node versions. Matrix labels and report
-runtime identities remain `node-24`; reports still record the exact installed
-version, and the aggregate continues to reject mixed versions within a group.
+For a same-repository Release Please pull request, the package job and every
+unit/browser shard also run on Node 24. A release pull request is recognized
+only when its head repository is this repository and either its head ref starts
+with `release-please--` or it has an `autorelease:` label. A fork cannot opt
+itself into the more expensive profile by choosing a matching branch name.
+
+The repository job resolves Node 24 once and exposes the installed exact
+version plus the selected matrix and report-runtime identities as job outputs.
+Every selected Node 24 package, unit, browser, and aggregate job requests that
+exact version. A new Node release or differing runner caches cannot give sibling
+shards different Node versions. Matrix labels and report runtime identities
+remain `node-24`; reports still record the exact installed version, and the
+aggregate continues to reject mixed versions within a group.
+
+Node 22.14 is the ordinary functional runtime because it is the package's
+declared minimum. The Node 24 repository prerequisite still runs on every
+event. Deferring the second complete functional run means a Node 24-only
+regression can reach unreleased `main`, but the dual-runtime Release Please gate
+must catch it before versions, tags or npm artifacts can be published. Release
+Please normally updates its pull request after a releasable merge, keeping that
+feedback close to the originating change without paying for both full suites on
+every ordinary pull-request and `main` run.
 
 Matrix jobs use `fail-fast: false`, so one failing shard does not erase evidence
 from its peers. Chromium is installed only in browser jobs. Rust formatting,
@@ -104,9 +120,12 @@ Superseded workflow runs remain cancellable.
 
 The stable `Required CI` job uses `if: always()` and fails closed unless every
 required job result is exactly `success`. It also validates the evidence
-aggregate described below. A failed, skipped, cancelled, absent, duplicated,
-wrong-runtime, wrong-shard, or wrong-commit report fails the aggregate. The
-aggregate may not infer success from a matrix job's presence alone.
+aggregate described below against the runtime profile emitted by the repository
+job: eight unit/browser reports for ordinary events and sixteen for a Release
+Please pull request. A failed, skipped, cancelled, absent, duplicated,
+wrong-runtime, wrong-shard, wrong-commit, unsupported-profile, missing or extra
+report fails the aggregate. The aggregate may not infer success from a matrix
+job's presence alone.
 
 ## Inventory And Report Evidence
 
@@ -165,9 +184,10 @@ A cache miss is an ordinary cold install and never permits a skipped command.
 
 The live workspace audit runs first in the repository prerequisite and does not
 depend on cache state. The complete local and release commands retain the same
-audit-first ordering. Both package-runtime jobs also preserve the separate
-production audit of the freshly resolved ESM consumer, which is outside the
-workspace lockfile and overrides. Intentionally isolated clean-cache consumer
+audit-first ordering. Every selected package-runtime job also preserves the
+separate production audit of the freshly resolved ESM consumer, which is
+outside the workspace lockfile and overrides; the release profile proves it on
+both runtimes. Intentionally isolated clean-cache consumer
 tests keep private empty npm caches. Release publishing retains its uncached,
 OIDC-scoped boundary and exact-artifact checks.
 

@@ -2,6 +2,9 @@
 
 ## Active
 
+- [Release-Gated Node Compatibility](./release-gated-node-compatibility.md) —
+  run the minimum supported runtime on ordinary changes and reserve the full
+  Node 22.14/24 compatibility matrix for Release Please pull requests.
 - [Screen Variants Follow-up](./screen-variants-follow-up.md) — deferred
   design-catalogue conversion, two open review findings, two delivered
   view-resolution fixes, and later navigation ideas from PR #101;
