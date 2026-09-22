@@ -62,6 +62,22 @@ export const CSS_NAV_RAIL = `
   cursor: pointer;
 }
 
+.mbk-search-toggle,
+.mbk-search-close {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  padding: 0;
+  border: 1px solid var(--chrome-border);
+  border-radius: 8px;
+  background: var(--chrome-surface);
+  color: var(--chrome-ink-2);
+  cursor: pointer;
+}
+
 .mbk-brand {
   display: flex;
   align-items: center;

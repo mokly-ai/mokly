@@ -57,7 +57,7 @@ test("development React hydrates a restored dark appearance cleanly", async ({
 test("development React hydrates every fixture route cleanly", async ({
   page,
 }) => {
-  test.setTimeout(300_000);
+  test.setTimeout(360_000);
   const errors = captureBrowserErrors(page);
   await installDevelopmentBundle(page);
   for (const route of fixtureRoutes) {

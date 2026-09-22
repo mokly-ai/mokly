@@ -37,10 +37,10 @@ assert.equal(typeof postMessageAdapter({frameOrigin: "https://frames.example"}).
 const styles = fs.readFileSync(new URL(import.meta.resolve("@mokly/viewer/styles.css")), "utf8");
 assert.ok(styles.includes("@scope (.mokly-viewer)"));
 for (const declaration of [
-  "--chrome-bg: #f4f4f1;",
-  "--chrome-surface: #ffffff;",
-  "--chrome-ink: #1a1d1c;",
-]) assert.ok(styles.includes(declaration), declaration);
+  /--chrome-bg:\\s*#f4f4f1;/,
+  /--chrome-surface:\\s*#(?:fff|ffffff);/,
+  /--chrome-ink:\\s*#1a1d1c;/,
+]) assert.match(styles, declaration);
 const browserBundle = await build({bundle: true, format: "esm", logLevel: "silent", platform: "browser", stdin: {contents: 'import "@mokly/viewer/browser";', resolveDir: process.cwd(), sourcefile: "browser-entry.js"}, treeShaking: true, write: false});
 assert.ok(browserBundle.outputFiles[0].contents.length > 0);
 assert.match(browserBundle.outputFiles[0].text, /hydrateRoot/);

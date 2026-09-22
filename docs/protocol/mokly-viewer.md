@@ -263,6 +263,15 @@ into their DOM or event handlers.
 The separate marker layer positions host React content on exact instances; it is
 not a general stage overlay and exposes no raw geometry.
 
+The embedded top-bar host remains one 48px row even when both top-bar slots are
+present. At a container width of 560px or less, the package-owned search field
+becomes a 30px square search control. Activating it opens a full-width search
+surface over the same row, focuses an input at least 160px wide down to a 320px
+viewer, and leaves both host slot subtrees mounted. Close or Escape restores the
+search control and its focus. This behavior follows the viewer container rather
+than the browser viewport, so a narrow viewer embedded in a wide page still
+uses compact search.
+
 ## Theming And Ownership
 
 `theme` selects an embedded root's interface appearance as `"auto"`, `"light"`
@@ -279,6 +288,11 @@ Import `@mokly/viewer/styles.css` once. The supported overrides are
 the [shell contrast contract](./mokly-shell-design.md). Internal selectors,
 geometry, structure and `--chrome-*` tokens are not APIs. Scoped styles exclude
 the host page and slot content; do not inject host CSS into frames.
+The host must give the viewer's containing element a definite height. The viewer
+fills that height, clips its outer shell and owns scrolling within the stage and
+other bounded shell regions; the embedding document must not be the stage scroll
+container. `height: 100vh` is appropriate for a full-page host, while panels can
+use any definite application-owned height.
 
 ## Shell Tree And State
 
