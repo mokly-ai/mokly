@@ -236,6 +236,9 @@ export, clean-install and cache-invalidation behavior continue to create
 independent inputs because preparation is part of what those tests verify.
 Fixture phases emit `[mokly:fixture-timing]` JSON with the fixture, phase,
 duration, status, and whether the operation itself is under test.
+Fixtures that install, build, and export the complete example share a
+240-second setup budget. Assertion deadlines, retries, and worker limits remain
+unchanged.
 
 Wrangler Pages fixtures pass port zero and adopt the exact readiness URL
 Wrangler reports; they do not release a probe socket before server startup.

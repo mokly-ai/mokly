@@ -7,6 +7,7 @@ import { test as base } from "@playwright/test";
 import { repositoryRoot } from "../helpers/fixture.js";
 import { timeFixturePhase } from "../helpers/fixture_timing.js";
 
+import { REAL_EXPORT_FIXTURE_TIMEOUT_MS } from "./fixture_timeouts.js";
 import { servePreviewFixture } from "./preview_fixture.js";
 import {
   previewFixtureContextRoot,
@@ -55,6 +56,6 @@ export const test = base.extend<
         await preview.close();
       }
     },
-    { scope: "worker", timeout: 180_000 },
+    { scope: "worker", timeout: REAL_EXPORT_FIXTURE_TIMEOUT_MS },
   ],
 });
