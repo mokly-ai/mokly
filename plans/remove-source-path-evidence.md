@@ -3,8 +3,9 @@
 ## Status And Outcome
 
 Status: planned; no milestone has started. The user approved removing all three
-inputs on 2026-09-24. The pull request merge is the completion boundary; keep
-this plan active until then.
+inputs on 2026-09-24, and on the same day chose component-declared stylesheets
+to replace the stylesheet role of `ownedDependencies`. The pull request merge
+is the completion boundary; keep this plan active until then.
 
 Remove the three author-maintained inputs that link mockups to repository paths:
 
@@ -14,11 +15,15 @@ Remove the three author-maintained inputs that link mockups to repository paths:
 - `ownedDependencies` on `defineComponent`.
 - `review.sharedImpact` in the configuration.
 
+Add one input: `stylesheets` on `defineComponent`. Mokly links a declared
+stylesheet into every document that renders the component and records that
+component as the stylesheet's owner.
+
 Afterwards Changes and comparison evidence come only from generated output, the
 rendered resources a view references, reviewable metadata, collection ancestry
 and component usage attribution, in every catalogue.
 
-Today the same inputs follow two rules. In a catalogue without registered
+Today the removed inputs follow two rules. In a catalogue without registered
 components they are comparison evidence only. In a catalogue with registered
 components a match adds screens, flows and components to Changes. Most docs
 describe only the first rule. Pull request #47 removed path-only matches from
@@ -31,13 +36,15 @@ so no compatibility shims are kept.
 
 Contract owners:
 
-- [Authoring](../docs/protocol/mokly-authoring.md) and
+- [Authoring](../docs/protocol/mokly-authoring.md),
+  [components](../docs/protocol/mokly-components.md) and
   [configuration](../docs/protocol/mokly-configuration.md).
+- [Rendering](../docs/protocol/mokly-rendering.md) and
+  [watch](../docs/protocol/mokly-watch.md).
 - [Changes](../docs/protocol/mokly-changes.md),
   [component attribution](../docs/protocol/mokly-component-changes.md) and
   [CSS attribution](../docs/protocol/mokly-css-attribution.md).
-- [Component manifest](../docs/protocol/mokly-component-manifest.md),
-  [rendering](../docs/protocol/mokly-rendering.md) and the
+- [Component manifest](../docs/protocol/mokly-component-manifest.md) and the
   [catalogue read model](../docs/protocol/mokly-catalogue.md).
 
 ## Decisions And Scope
@@ -49,13 +56,33 @@ milestone.
   Changes and never appears as comparison evidence. Rendered-resource evidence,
   CSS rule analysis, Review-ignore, metadata, ancestry, flow propagation and
   component usage attribution stay unchanged.
-- Component ownership of rendered material comes only from the renderer's
-  `styles` and `resources` records. `ownedDependencies` has a second role today:
-  it assigns rendered stylesheets to components, so an exclusive component
-  stylesheet edit lists the component in Changes and its consumers under
-  Affected screens. The example's design library and `example-components.css`
-  rely on it. Milestone 3 moves that ownership into the example renderer before
-  the field stops working, so the example keeps the same attribution.
+- Component stylesheets replace the stylesheet role of `ownedDependencies`:
+  - `defineComponent` accepts `stylesheets`: unique `mockupsDir`-relative
+    public CSS files in authored order. HTTP(S) URLs are rejected, because
+    Mokly must compare the files.
+  - When a screen or component document renders at least one instance of a
+    component, even an instance with no markup, Mokly links each of that
+    component's stylesheets once. Links follow the order in which components
+    first render and use the same href encoding as configured links. Pages are
+    unchanged.
+  - A configured stylesheet list may contain the `componentStylesheets`
+    marker, exported by `@mokly/mokly`, once in its shared list. Component
+    stylesheets go at the marker. Without the marker they go after the shared
+    list and before the scheme-specific list.
+  - Mokly inserts the links next to the neighbouring configured `<link>`
+    elements that the renderer emitted, or at the end of `<head>` when the
+    route has no configured stylesheets. A missing neighbouring link fails the
+    build. `RenderInput` does not change.
+  - Mokly records a `resources` ownership record for each linked declared
+    stylesheet, owned by the rendered components that declare it. A file
+    cannot be both configured and declared, and a renderer cannot report
+    `resources` for a declared file. Files that a declared stylesheet imports
+    stay unowned.
+  - Serve reloads declared stylesheets like configured ones. Exports and
+    publication handle them as public resources.
+  - This replaces the documented rule "Separate stylesheet loading from review
+    dependency declaration" and the example's per-render style collector.
+    Renderer `styles` and `resources` records remain for all other material.
 - Removed inputs fail loudly. `dependencies` on an entry, nested marker or
   variant, and `ownedDependencies` on a component, produce the registry
   violation `removed-field`. `review.sharedImpact` fails configuration loading
@@ -90,12 +117,20 @@ Verified on 2026-09-24 with temporary fixtures:
   `tests/component_asset_changes.test.ts`).
 - `ownedDependencies` also suppresses consumer resource evidence for owned
   rendered stylesheets (`suppressResource`) and routes CSS evidence to owners
-  (`ownedCssReasons` in `src/review/component_resource_attribution.ts`).
+  (`ownedCssReasons` in `src/review/component_resource_attribution.ts`). The
+  same code already accepts renderer `resources` records, so ownership records
+  that Mokly derives from declared stylesheets need no new classification path.
 
-Where the inputs live:
+Where the work lands:
 
 - Authoring: `src/authoring/{types,definitions,variants}.ts` and
   `src/components/{types,definition,manifest_build,manifest_validation,dependency_validation}.ts`.
+- Rendering: `stylesheetsFor` in `src/build/render.ts` resolves configured
+  links; `renderWithComponents` in `src/components/render.tsx` knows the
+  rendered instances and ownership records after the renderer returns;
+  `src/components/output_validation.ts` validates resource ownership;
+  `src/config/rules.ts` validates stylesheet rules; `src/server/watch_paths.ts`
+  lists the stylesheets Serve reloads.
 - Registry and manifest:
   `src/registry/{entry_validation,entry_metadata,manifest,manifest_entries,manifest_validation,catalogue_index,dependency_paths}.ts`,
   plus the viewer data types in `packages/viewer/src/registry/types.ts` and
@@ -113,9 +148,10 @@ Where the inputs live:
   and legacy shared-impact paths in
   `packages/viewer/src/shell/workspace_evidence{,_data}.ts(x)`.
 - Example: `examples/basic/mokly.config.ts`, `renderer.tsx`,
-  `entries/design/library/{metadata.ts,style_context.tsx}`,
-  `src/components/*/*.mokly.tsx` and every entry's `dependencies`. Design
-  mockups: `entries/design/review_impact_screens.tsx`,
+  `entries/design/library/{metadata.ts,style_files.ts,style_context.tsx}` (the
+  per-render style collector), `src/components/*/*.mokly.tsx` and every
+  entry's `dependencies`. Design mockups:
+  `entries/design/review_impact_screens.tsx`,
   `entries/design/parts/{review.tsx,destinations.ts,navigation_states.ts}`,
   `entries/design/design.mockup.tsx` and
   `entries/design/components/parts/{component_info.tsx,metadata.ts}`.
@@ -131,7 +167,7 @@ Where the inputs live:
 - Never hand-edit generated example output; regenerate it with
   `npm run example:build`.
 - Keep every milestone green with its focused tests, `npm run typecheck` and
-  `npm run lint`. Milestone 7 runs `cargo xtask check`.
+  `npm run lint`. Milestone 8 runs `cargo xtask check`.
 - Update each protocol doc's Delivery Status when its milestone lands.
 - Report review findings; do not fix them automatically.
 
@@ -140,25 +176,31 @@ Where the inputs live:
 - Upgrade `@mokly/viewer` in mokly-cloud to catalogue v2 and comparison v4/v5,
   then re-export and re-publish stored catalogues.
 - Migrate consumer catalogues such as Accounting: delete the three inputs,
-  rebuild committed output once for manifest v6, and report stylesheet
-  ownership from the renderer where `ownedDependencies` assigned it.
+  declare component CSS with `stylesheets` instead of `ownedDependencies` and
+  route rules, and rebuild committed output once for manifest v6.
 
-## Milestone 1: Define the removal contract
+## Milestone 1: Define the contract
 
 Document the complete target before any code changes.
 
+- [ ] Component stylesheets: define the `stylesheets` input, the
+      `componentStylesheets` marker, link order and placement, the anchor
+      failure, derived ownership records, the conflicts, watch reloads and
+      public-resource handling. Replace the style-collector guidance
+      (`mokly-components`, `mokly-rendering`, `mokly-configuration`,
+      `mokly-component-manifest`, `mokly-component-changes`, `mokly-watch`,
+      `mokly-source-protection`, `mokly-design-components`,
+      `mokly-design-component-library`, and the root export list in
+      `mokly-authoring`).
 - [ ] Authoring: remove `dependencies` from entry, root-collection, nested and
       variant inputs and from inheritance, and define the `removed-field`
       violation (`mokly-authoring`, `mokly-screen-variants`, `mokly-pages`,
       `mokly-page-migration`).
-- [ ] Components: remove `ownedDependencies` and `declaredDependencies`, make
-      renderer `styles`/`resources` the only ownership, and describe how a
-      renderer reports stylesheet ownership (`mokly-components`,
-      `mokly-component-manifest`, `mokly-component-changes`,
-      `mokly-component-review`, `mokly-design-components`,
-      `mokly-design-component-library`, `mokly-component-design`,
+- [ ] Ownership: remove `ownedDependencies` and `declaredDependencies`;
+      ownership comes from declared stylesheets and renderer `styles` and
+      `resources` (`mokly-component-review`, `mokly-component-design`,
       `mokly-component-workspace-design`, `mokly-component-explorer`,
-      `mokly-component-inspector-design`, `mokly-rendering`).
+      `mokly-component-inspector-design`).
 - [ ] Changes: state the single membership rule and remove shared-impact and
       declared-dependency evidence, the exact-screen-dependency CSS rule, the
       Shared impact state, and the impact counts and "Shared-impact paths" in
@@ -166,7 +208,7 @@ Document the complete target before any code changes.
       `mokly-css-attribution`, `mokly-css-evidence-shell`,
       `mokly-shell-design`, `mokly-runtime`, `mokly-timings`, `mokly-export`,
       `mokly-export-delivery`, `mokly-baseline-storage`,
-      `mokly-derived-baselines`, `mokly-source-protection`).
+      `mokly-derived-baselines`).
 - [ ] Configuration: remove `review.sharedImpact` and define its
       `config-invalid` error (`mokly-configuration`).
 - [ ] Formats: specify manifest v6 with historical v3 to v5 normalization,
@@ -176,7 +218,7 @@ Document the complete target before any code changes.
       `docs/protocol/README.md`).
 - [ ] Guides and READMEs: `docs/guides/authoring/{screens,pages,collections-and-tags,components,config,use-case-flows}.md`,
       `docs/guides/catalogue/{changes,details}.md`,
-      `docs/guides/start/your-first-screen.md`, `README.md`,
+      `docs/guides/start/{configure,your-first-screen}.md`, `README.md`,
       `examples/basic/{README,notes}.md`,
       `examples/basic/entries/design/library/README.md`,
       `src/components/README.md`, `src/review/README.md`,
@@ -184,7 +226,8 @@ Document the complete target before any code changes.
       `tests/fixtures/consumers/esm/notes.md`.
 - [ ] Mark each contract change as planned in its doc's Delivery Status.
 - [ ] Validate the changed Markdown with `npx prettier --check`, review the
-      diff, and confirm no current doc describes the inputs except as removed.
+      diff, and confirm no current doc describes the removed inputs except as
+      removed.
 
 ## Milestone 2: Remove the depictions from the design mockups
 
@@ -209,51 +252,84 @@ rendered-resource evidence.
       and the design tests. Smoke-test the review impact and component
       inspector pages at mobile and desktop widths through `npm run dev`.
 
-## Milestone 3: Base Changes and evidence only on rendered output
+## Milestone 3: Let components declare their stylesheets
 
-Remove source-path evidence from classification and configuration, and move
-stylesheet ownership into the example renderer.
+Add the `stylesheets` input and move the example's component CSS to it. The
+migrated example pages must render exactly as before; this milestone changes
+how CSS loads, not the design.
 
-- [ ] Preservation test first: an edit to one exclusive design library
-      stylesheet and an edit to `examples/basic/generated/example-components.css`
-      each list only their owning components in Changes, with consumers under
-      Affected screens. It passes with `ownedDependencies` today.
-- [ ] Renderer ownership: one shared example collector records
-      `design-ui-<slug>` for each requested library style, and the
-      `example-action` and `example-toolbar` registrations record themselves
-      for `example-components.css`. The renderer returns `{ html, resources }`
-      with only components that rendered in the view. Prove with
-      `npm run example:build` that ownership validation accepts every route,
-      component page and variant. If a view requests a style without rendering
-      its registered component, render it through the component or leave the
-      style unowned, and record the difference in this plan.
-- [ ] Classification: delete declared-path reasons, shared-glob reasons and
-      the exact-screen CSS rule, and take ownership only from renderer usage
-      records (`component_metadata.ts`, `component_resource_attribution.ts`,
+- [ ] Failure-first tests on a fixture catalogue with registered components:
+      a declared stylesheet is linked only in documents that render the
+      component, at the marker and at the default position; its ownership
+      record names the rendered declaring components; an edit to it adds only
+      the component to Changes and lists consumers under Affected screens
+      without `ownedDependencies`; and each invalid case fails (missing file,
+      HTTP URL, duplicate, a file both configured and declared, renderer
+      `resources` for a declared file, a second or scheme-specific marker, a
+      missing neighbouring link).
+- [ ] Authoring and configuration: add `stylesheets` to the component input,
+      definition and validation; export the `componentStylesheets` marker and
+      accept it in configured stylesheet lists.
+- [ ] Rendering: `stylesheetsFor` reports the marker position;
+      `renderWithComponents` inserts the links after the renderer returns,
+      derives the ownership records and rebases style-ownership offsets through
+      the insertion. Serve's on-demand and transient renders use the same path.
+- [ ] Serve and resources: reload declared stylesheets in Serve and confirm
+      resource validation, export and publication include them.
+- [ ] Migrate the example: each design library component declares its sheet
+      through `libraryMetadata`; `example-action` and `example-toolbar`
+      declare `example-components.css`, which leaves the `**/*.html` rule;
+      configured design lists use the marker instead of the candidate pool;
+      the renderer emits `input.stylesheets` directly. Delete the style
+      collector (`style_context.tsx`, the `useDesignStyle` calls,
+      `libraryStyleCandidates` and `withLibraryStyles`).
+- [ ] Update the design library tests (`tests/design_library_styles.test.ts`,
+      `tests/component_design_attribution.test.ts`) and add a declared mode to
+      the ownership tests (`tests/component_asset_changes.test.ts`,
+      `tests/changes_css_ownership.test.ts`).
+- [ ] Run `npm run build`, `npm run example:build` and
+      `npm run example:check`. Smoke-test design library pages and example
+      component screens at both widths through `npm run dev`, and confirm the
+      styles match the previous build.
+- [ ] Run the focused rendering, component, CSS, design and Serve tests,
+      `npm run typecheck` and `npm run lint`.
+
+## Milestone 4: Base Changes and evidence only on rendered output
+
+Remove source-path evidence and `ownedDependencies` ownership from
+classification, and remove `review.sharedImpact`.
+
+- [ ] Preservation test first on the example: an edit to one exclusive design
+      library stylesheet and an edit to `example-components.css` each list
+      only their owning components in Changes, with consumers under Affected
+      screens. It passes after Milestone 3 and must keep passing.
+- [ ] Classification: delete declared-path reasons, shared-glob reasons, the
+      exact-screen CSS rule and `ownedDependencies` ownership, so ownership
+      comes only from view usage `styles` and `resources` records
+      (`component_metadata.ts`, `component_resource_attribution.ts`,
       `component_classification.ts`, `component_view.ts`,
       `component_projection_resources.ts`). Remove dependency and shared-glob
       matching from `screen_compare.ts` and `compare.ts`, and delete
       `src/registry/dependency_paths.ts`.
 - [ ] Failure-first tests: with and without registered components, a changed
       repository file that no view renders adds nothing to Changes or
-      comparison evidence, even when an entry still declares it. The
-      preservation test still passes.
+      comparison evidence, even when an entry still declares it.
 - [ ] Configuration: remove `review.sharedImpact` from types and validation,
       reject the key with `config-invalid`, and delete it from the example,
       consumer fixture configs and test helpers.
 - [ ] Remove the impact counts and "Shared-impact paths" from `summary.md`
       (`artifact.ts`, `materiality.ts`).
 - [ ] Update or delete the tests that asserted source-path behavior,
-      including `tests/{review,server_changed,component_asset_changes,changes_css_ownership,server_changed_assets,export_cases,review_artifact_ui,design_library_styles}.test.ts`
+      including `tests/{review,server_changed,component_asset_changes,changes_css_ownership,server_changed_assets,export_cases,review_artifact_ui}.test.ts`
       and `scripts/package/consumer_cases.mjs`.
 - [ ] Run the focused review, Changes, CSS, component and design tests,
       `npm run typecheck` and `npm run lint`.
 
-Until Milestone 5, `dependencies` and `ownedDependencies` are accepted but have
-no effect on Changes or evidence. Until Milestone 6, comparison `sharedImpact`
+Until Milestone 6, `dependencies` and `ownedDependencies` are accepted but have
+no effect on Changes or evidence. Until Milestone 7, comparison `sharedImpact`
 holds only rendered-resource paths.
 
-## Milestone 4: Remove the dependency displays from the viewer
+## Milestone 5: Remove the dependency displays from the viewer
 
 Tags: ui
 
@@ -271,7 +347,7 @@ Tags: ui
 - [ ] Run the focused viewer and browser tests, `npm run typecheck` and
       `npm run lint`.
 
-## Milestone 5: Remove the authoring fields and move the manifest to v6
+## Milestone 6: Remove the authoring fields and move the manifest to v6
 
 - [ ] Failure-first `removed-field` tests: `dependencies` on each define
       helper, nested marker, root collection and variant, and
@@ -287,7 +363,7 @@ Tags: ui
       comparison. Failure-first test: a v5 baseline that carries all three
       fields, compared with the same catalogue built as v6, adds nothing to
       Changes in committed and derived modes.
-- [ ] Until Milestone 6, the public writers emit an empty
+- [ ] Until Milestone 7, the public writers emit an empty
       `details.dependencies` and empty comparison entry `dependencies`.
 - [ ] Migrate the example (every entry, the design library metadata, the
       component registrations and now-unused helpers such as
@@ -299,7 +375,7 @@ Tags: ui
 - [ ] Run the focused authoring, manifest, baseline, build and example tests,
       `npm run typecheck` and `npm run lint`.
 
-## Milestone 6: Version the public catalogue and comparison formats
+## Milestone 7: Version the public catalogue and comparison formats
 
 - [ ] Catalogue read model v2 without `details.dependencies`: projection,
       serialization, viewer reader, types, display projection and privacy
@@ -319,17 +395,19 @@ Tags: ui
 - [ ] Run the focused catalogue, export, publication, viewer and package
       tests, `npm run typecheck` and `npm run lint`.
 
-## Milestone 7: Verify, deliver and review
+## Milestone 8: Verify, deliver and review
 
 - [ ] Search the repository, excluding historical plans, `docs/reviews/**` and
       `CHANGELOG.md`, for `ownedDependencies`, `declaredDependencies`,
-      `sharedImpact`, entry `dependencies` and "impact evidence". Each
-      remaining hit must describe the removal or be unrelated.
+      `sharedImpact`, entry `dependencies`, `useDesignStyle` and "impact
+      evidence". Each remaining hit must describe the removal or be unrelated.
 - [ ] Mark every changed protocol doc's Delivery Status as implemented and
       update this plan's status.
-- [ ] Smoke test through `npm run dev`: edit an exclusive component stylesheet
-      and an unreferenced source file, and confirm Changes, Affected screens
-      and comparison details match the contract. Run `npm run example:check`.
+- [ ] Smoke test through `npm run dev`: design library pages and example
+      component screens load their declared stylesheets; an edit to an
+      exclusive component stylesheet lists only its component in Changes with
+      consumers under Affected screens; an edit to an unreferenced source file
+      adds nothing. Run `npm run example:check`.
 - [ ] Run `cargo xtask check` and require a 100% pass rate.
 - [ ] Inspect `git diff --name-status origin/main` and its deletions, and
       record every approved removal in the commit body.
