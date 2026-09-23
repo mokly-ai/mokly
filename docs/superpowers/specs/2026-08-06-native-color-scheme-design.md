@@ -276,7 +276,7 @@ Per repository rules, mockups land before UI implementation:
   shell tokens themselves stay light-only.
 - The design catalogue in `examples/basic/entries/design/` adds approved
   screens (mobile and desktop variants each): a Browse screen view with dark
-  selected (`design/browse/states/dark-scheme.html`) and a Review compare
+  selected (now `design/browse/views/screen.variants/dark-scheme.html`) and a Review compare
   page with the scheme control (`design/review/outcomes/dark-scheme.html`).
 
 ## Example, Tests, And Docs

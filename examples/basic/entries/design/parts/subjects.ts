@@ -9,7 +9,8 @@ export type ScreenSubject =
   | "invite"
   | "archive"
   | "timeline"
-  | "welcomeError";
+  | "welcomeError"
+  | "welcomeErrorReparented";
 
 interface SubjectMetadata {
   description: string;
@@ -91,6 +92,17 @@ export const SUBJECTS: Record<ScreenSubject, SubjectMetadata> = {
     generated: "No current screen",
     rationale:
       "A deleted state keeps its recorded details under the screen it belonged to, so the group stays readable after the removal.",
+    relatedDocs: false,
+    schemes: "light, dark",
+    source: "Previous version",
+    tags: ["forms"],
+    tour: false,
+  },
+  welcomeErrorReparented: {
+    description: "Welcome after saving failed was removed from the catalogue.",
+    generated: "No current screen",
+    rationale:
+      "Welcome is now another screen's variant, so this removed state stays as one flat Changes row instead of nesting a second variant level.",
     relatedDocs: false,
     schemes: "light, dark",
     source: "Previous version",

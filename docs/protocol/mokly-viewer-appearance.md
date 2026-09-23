@@ -336,12 +336,14 @@ screen markup. Keep no more than five owning screen definitions per page. The
 exact ids and routes are listed in the
 [shell design inventory](./mokly-shell-design.md#design-mockups). The
 branch-only `light-preview` and `dark-preview` scenarios are removed by the
-single-control correction. `design-browse-dark-scheme`,
-`design-browse-light-only` and `design-review-dark-scheme` are removed:
-`design-browse-screen`, `design-browse-details-screen` and
-`design-review-changed` render in both schemes and subsume them. No design
-artboard depicts a separate preview-scheme control, so `controls/view-controls`
-carries none and the design catalogue authors no scheme link pairs. Update
+single-control correction. `design-review-dark-scheme` is removed; `design-review-changed` renders in
+both schemes and subsumes its comparison state. The existing
+`design-browse-dark-scheme` and `design-browse-light-only` ids remain as
+Welcome variants with generated Light and Dark artboards. Their content now
+follows the one Appearance selector, as do `design-browse-screen` and
+`design-browse-details-screen`; none depicts a separate preview-scheme control.
+`controls/view-controls` carries no scheme control, and the design catalogue
+authors no scheme link pairs. Update
 inventories, style ownership and example documentation, and keep notes outside
 the screens.
 

@@ -155,7 +155,8 @@
       "preview": {
         "kind": "page",
         "path": "__mokly/diffs/__generations/cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc/pages/archive/removed-page.html.json"
-      }
+      },
+      "snapshotId": "a7042a1b5ec9559bf51fa7c3db21d37ee42ee05522608d9d3bfd055daaff2640"
     },
     {
       "entry": {
@@ -225,7 +226,8 @@
       },
       "preview": {
         "kind": "screen"
-      }
+      },
+      "snapshotId": "4f7cddf3d4b42e077227e71776d5b065ead88700de46b96445b4c652d78fdac8"
     }
   ],
   "revision": {

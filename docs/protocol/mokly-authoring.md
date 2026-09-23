@@ -42,9 +42,14 @@ address, color schemes, dependencies, related docs, and tags when it omits
 them. Its use-case membership never inherits: `useCaseIds` defaults to an empty
 list because a variant must reciprocate only the flows whose steps name that
 variant. Its `navPath` is always copied from its parent, never authored on
-the variant. `defineScreen` returns one `ScreenDefinition` when `variants` is absent
-and a readonly parent-first array of screen definitions when it is present.
-Entry-module loading flattens that array one level.
+the variant. `defineScreen` returns one `ScreenDefinition` when `variants` is
+absent or definitely `undefined`, and a readonly parent-first array of screen
+definitions when it is definitely an array, including an empty array. An input
+whose type allows either form, such as an annotated `ScreenInput`, returns their
+union. The conditional result distributes across union inputs and preserves
+literal results through generic wrappers; code must narrow a broad result before
+using it as one definition. Entry-module loading flattens an array result one
+level.
 
 Each entry provides a title, description, related docs, and dependency paths.
 A dependency may identify an existing repository file or directory; Review

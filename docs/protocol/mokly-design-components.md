@@ -91,10 +91,10 @@ and closing Details acts locally through its icon; its canonical owning artboard
 remains in the catalogue. Preserve descriptions, metadata, tags and comparison
 evidence when moving the previous disclosure content into its Details slot.
 
-Selected-screen view options appear once, together in the header: a viewport
-dropdown, a theme icon and highlighting where relevant. Remove the old top-bar
-theme placement. Authored light/dark links retain their canonical destinations;
-unsupported transitions stay disabled. Viewport changes select the actual
+Selected-screen view options appear once in the header: a viewport dropdown
+and highlighting where relevant. The top-bar Appearance selector owns the
+catalogue-wide scheme; there is no second scheme icon in the header and no
+authored light/dark link pair. Unsupported transitions stay disabled. Viewport changes select the actual
 mobile/desktop previews without scrolling the whole page. Simultaneous previews
 reserve their intrinsic minimum width and wrap when needed; full-size phone
 frames must never overlap adjacent desktop content. Comparison mode

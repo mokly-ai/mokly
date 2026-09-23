@@ -5,10 +5,10 @@
 The [screen variants plan](../../plans/screen-variants.md) is complete for its
 delivered scope: Milestones 1 to 8 and 10 to 12 implement authoring through
 per-view evidence for every saved variant and export, plus the approved review
-fixes. The unimplemented design-catalogue conversion, open review findings and
-later product ideas belong to the separate
-[follow-up plan](../../plans/screen-variants-follow-up.md). The conversion's
-route retirements still require explicit approval.
+fixes. The approved design-catalogue conversion and remaining correctness work
+belong to the separate
+[follow-up plan](../../plans/screen-variants-follow-up.md). That plan records
+the six authorized route moves and preserves every existing design id.
 
 ## Purpose And Boundary
 
@@ -56,7 +56,7 @@ interface ScreenVariantInput {
 
 interface ScreenInput extends RoutedEntryInput {
   // Existing fields unchanged.
-  variants?: readonly ScreenVariantInput[];
+  variants?: readonly ScreenVariantInput[] | undefined;
 }
 ```
 
@@ -65,11 +65,17 @@ The helper flattens each variant into a full `ScreenDefinition` carrying
 parent definition itself is unchanged and never lists its variants; the
 relationship is stored on the variant. A module's `mockups` export therefore
 contains the parent and every variant as separate entries. A `defineScreen`
-call without `variants` returns one `ScreenDefinition`, preserving the existing
-typed API. A call with `variants` returns a readonly `ScreenDefinition[]`,
-ordered parent first and then variants in authored order. Entry-module exports
-may place that result directly in `mockups`; registry preparation flattens that
-one array level.
+call whose input omits `variants`, or whose `variants` property is definitely
+`undefined`, returns one `ScreenDefinition`. A call with a definitely present
+`variants` array returns a readonly `ScreenDefinition[]`, ordered parent first
+and then variants in authored order; this includes a definitely empty array,
+whose result contains only the parent. When the input type permits either an
+array or `undefined`, including the exported broad `ScreenInput` type, the
+return type is the union of those two results. The conditional result
+distributes over unions and preserves these precise results through generic
+helpers, so broad or optional input cannot be assigned unsafely to one
+definition. Entry-module exports may place any array result directly in
+`mockups`; registry preparation flattens that one array level.
 
 The derived route is `<parent route without .html>.variants/<slug>.html`. For a
 parent at `screens/welcome.html`, the variant with slug `empty` lives at
@@ -207,10 +213,13 @@ free text in the search box never matches it.
 
 A deleted variant is a removed screen. The removed-entry snapshot retains its
 `variantOf` and its parent's ancestry so the shell places its Removed row
-inside a surviving parent's variant list, after the current variants, hidden
-from All and shown in Changes. A parent with no current variants discloses
-the list for it. When the parent is gone, or is not a current screen, the
-removed variant keeps the flat root-level row the removal rules give it.
+inside a surviving current non-variant parent's variant list, after the current
+variants, hidden from All and shown in Changes. A parent with no current
+variants discloses the list for it. When the former parent's id is absent,
+belongs to another kind, or now names a variant of another screen, the removed
+variant keeps the flat root-level row the removal rules give it. Hierarchy
+construction must represent every removed route exactly once: adoption removes
+that route from flat fallback only after attaching it to an eligible parent.
 Deleting the parent and its variants yields one removed entry each.
 Comparison eligibility, the status badge, and the read-only previous version
 follow the existing removed-screen rules. The previous version retains the
@@ -237,7 +246,13 @@ proposes one atomic selection. An aggregate-only parent proposes the
 itself a changed route, a changed destination also proposes the first changed
 view's `viewport` and `colorScheme`, read from the public model's per-view
 comparison states in mobile/light, mobile/dark, desktop/light, desktop/dark
-order, unless the link names either axis. Once a changed route is selected,
+order, unless the link names at least one valid explicit axis. A valid explicit
+axis has exactly one query value from its supported enum. Each axis is parsed
+independently: a valid `viewport` or `scheme` applies while the other sticky
+axis is retained, and invalid or repeated values are ignored. One or two valid
+axes form part of the same atomic navigation proposal, including when the link
+points to the already selected entry. Invalid or repeated values do not suppress
+first-changed-view landing. Once a changed route is selected,
 later activations keep the sticky axes while aggregate-parent redirection stays
 active. Direct `select` calls and supplied `defaultSelection` or `selection`
 props also keep their axes. In controlled mode every such activation remains a

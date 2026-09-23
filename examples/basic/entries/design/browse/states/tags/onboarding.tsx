@@ -1,4 +1,4 @@
-import { screen } from "@mokly/mokly";
+import type { ScreenVariantInput } from "@mokly/mokly";
 
 import { DESTINATIONS } from "../../../parts/destinations.js";
 import { TagScreen } from "../../../parts/tag_screen.js";
@@ -23,7 +23,7 @@ export function OnboardingFilterMobile() {
   );
 }
 
-export const onboardingFilterScreen = screen({
+export const onboardingFilterVariant = {
   colorSchemes: ["light"],
   description: "Welcome with tag:onboarding and the tag picker closed.",
   desktop: <OnboardingFilterDesktop />,
@@ -31,4 +31,4 @@ export const onboardingFilterScreen = screen({
   mobile: <OnboardingFilterMobile />,
   slug: "onboarding",
   title: "Onboarding filter",
-});
+} satisfies ScreenVariantInput;

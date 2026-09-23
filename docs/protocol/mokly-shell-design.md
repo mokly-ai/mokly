@@ -67,13 +67,16 @@ contract until their standalone screens are implemented.
 | `design-browse-missing-route`         | `design/browse/states/missing-route.html`                       | Not-found view with navigation                             |
 | `design-browse-navigation`            | `design/browse/states/navigation.html`                          | Collapsed navigation drawer                                |
 | `design-browse-tag-filter`            | `design/browse/states/tag-filter.html`                          | Tag picker over a filtered tree                            |
-| `design-browse-tag-picker`            | `design/browse/states/tags/picker.html`                         | Empty query, tag picker open                               |
-| `design-browse-tag-forms`             | `design/browse/states/tags/forms.html`                          | Forms filter, picker closed                                |
-| `design-browse-tag-onboarding`        | `design/browse/states/tags/onboarding.html`                     | Onboarding filter, picker closed                           |
-| `design-browse-tag-onboarding-picker` | `design/browse/states/tags/onboarding-picker.html`              | Onboarding filter, picker open                             |
+| `design-browse-tag-picker`            | `design/browse/views/screen.variants/picker.html`               | Empty query, tag picker open                               |
+| `design-browse-tag-forms`             | `design/browse/views/screen.variants/forms.html`                | Forms filter, picker closed                                |
+| `design-browse-tag-onboarding`        | `design/browse/views/screen.variants/onboarding.html`           | Onboarding filter, picker closed                           |
+| `design-browse-tag-onboarding-picker` | `design/browse/views/screen.variants/onboarding-picker.html`    | Onboarding filter, picker open                             |
+| `design-browse-dark-scheme`           | `design/browse/views/screen.variants/dark-scheme.html`          | Welcome with one catalogue-wide Appearance setting         |
+| `design-browse-light-only`            | `design/browse/views/screen.variants/light-only.html`           | Details keeps a light preview under Dark                   |
 | `design-browse-variant-selected`      | `design/browse/variants/selected.html`                          | Selected variant under its parent screen                   |
 | `design-browse-variant-changes`       | `design/browse/variants/changes.html`                           | Changed variant row inside its parent group                |
 | `design-browse-variant-removed`       | `design/browse/variants/removed.html`                           | Removed variant under a surviving parent                   |
+| `design-browse-variant-reparented`    | `design/browse/variants/reparented.html`                        | Removed variant kept flat after its parent becomes variant |
 | `design-browse-changed-views`         | `design/browse/variants/changed-views.html`                     | Change confined to the views that are not shown            |
 | `design-changes-current`              | `design/review/controls/current.html`                           | Current screen in Changes                                  |
 | `design-changes-overlay`              | `design/review/controls/overlay.html`                           | On-demand overlay comparison                               |
@@ -117,6 +120,13 @@ contract until their standalone screens are implemented.
 | `design-appearance-unavailable`       | `design/browse/appearance/status/unavailable.html`              | Changes unavailable                                        |
 | `design-appearance-flow`              | `design/browse/appearance/status/flow.html`                     | Use-case steps around light screens                        |
 
+The six entries under `screen.variants/` are variants of
+`design-browse-screen` and are absent from every collection's `childIds`. The
+stable `design-browse-tags` collection remains present with no children and
+directs readers to Welcome's variants. `design-browse-states` retains all other
+memberships, including `design-browse-tag-filter`; no other id or route changes
+in this conversion.
+
 Additional owning groups keep each new page at no more than five screens:
 
 - `design/browse/pages/view.html`, `details.html`, `navigation.html`, and
@@ -143,12 +153,13 @@ Additional owning groups keep each new page at no more than five screens:
   previews are identical, so no static-delivery variant is designed.
 - `design/browse/publication/catalogue.html` and `changes.html` specify review
   omitted and included, using the existing Welcome stage.
-- `design/browse/variants/selected.html`, `changes.html`, `removed.html`, and
-  `changed-views.html` specify a screen's variants: the disclosed variant list
-  with one variant selected, a changed variant row under a parent whose own
-  render is unmodified, a deleted variant retained under its surviving parent,
-  and a change confined to views other than the one shown. `selected.html`
-  is the group's canonical screen. Their behavior contract is
+- `design/browse/variants/selected.html`, `changes.html`, `removed.html`,
+  `reparented.html`, and `changed-views.html` specify a screen's variants: the
+  disclosed variant list with one variant selected, a changed variant row under
+  a parent whose own render is unmodified, a deleted variant retained under its
+  surviving parent, a deleted variant kept flat when its former parent becomes
+  another screen's variant, and a change confined to views other than the one
+  shown. `selected.html` is the group's canonical screen. Their behavior contract is
   [screen variants](./mokly-screen-variants.md).
 - `design/review/impact/stylesheets/matched.html`, `unresolved.html`,
   `unnamed.html`, and `excluded.html` specify rule-aware stylesheet evidence
