@@ -998,3 +998,33 @@ complete pushed result without changing it in response to that review.
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`. Report findings
       without changing the implementation.
+
+## Milestone 9: Close preview background and reconnect findings (complete)
+
+Tags: ui
+
+Keep transparent previews independent of interface appearance and reconnect
+same-origin frames without weakening document authentication.
+
+- [x] Clarify preview surface ownership and authenticated reuse in the protocols
+      and relevant viewer READMEs.
+- [x] Add failing browser regressions for transparent preview backgrounds and
+      reconnecting a newly loaded document at the same assigned URL.
+- [x] Centralize preview surface and color-scheme rules across screen, page,
+      component, historical and comparison layouts.
+- [x] Reload rejected starting documents while preserving authenticated reuse
+      and the initial hydration handoff.
+
+## Milestone 10: Validate, commit, push and review the corrections
+
+Complete the focused browser checks and repository verification before delivery.
+
+- [x] Run focused tests and a live browser smoke test, then `cargo xtask check`.
+      Passed 2,338 unit/integration tests, 755 Chromium tests, all five packed
+      consumer scenarios, and the desktop/mobile live smoke checks.
+- [ ] After all checks pass, run `git add -A`, commit using Conventional Commits,
+      push the current branch, and verify the remote ref and clean worktree.
+- [ ] Only after the push, use
+      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main`. Report findings
+      without changing the implementation.

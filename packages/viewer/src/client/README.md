@@ -64,6 +64,10 @@ replacement. The server's initial `src` may therefore remain unchanged after a
 scheme swap. A transferred authenticated document at a different URL must be
 replaced even when that initial attribute names the requested URL; only the
 first mount may wait for a startup-assigned fragment already loading.
+Matching URLs do not authorize reuse: a ready document must pass the current
+mount's authentication. An unrecorded replacement at the assigned URL gets a
+fresh history-replacing load, while an authenticated document can reconnect
+without reloading.
 
 Frames holding a previous version carry `data-mokly-preview-frame` and
 `data-mokly-preview-source`. They are owned directly by the

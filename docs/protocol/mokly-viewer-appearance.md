@@ -256,6 +256,13 @@ frame's effective preview scheme. Use independent preview tokens rather than
 deriving a light phone's text from dark shell ink. Fixed phone hardware and
 traffic-light artwork retain their intended colors.
 
+One preview stylesheet owns iframe color schemes and the opaque backgrounds
+behind transparent preview content. Screen, page, component, flow, historical
+and comparison canvases use the selected preview's Light or Dark surface;
+layout styles must not override them with an interface surface or a fixed
+color. Switching interface appearance alone must preserve the pixels of a
+transparent preview, including its loading surface and comparison base.
+
 Set each managed iframe's CSS `color-scheme` to its effective preview scheme
 before loading it, including page/component/flow and comparison frames. For
 documents without a scheme axis, retain the existing Light context. Frame

@@ -84,9 +84,10 @@ Each mount owns one immediate viewer-created frame and its current URL/usage.
 The host supplies the selected catalogue view URL; the adapter confines it to
 current `/static/` HTML paths, the configured origin and a valid logical hash.
 Caller-approved query parameters are retained; no selectors or comparison paths
-are accepted. Mount replaces the document with iframe history
-replacement semantics while the React shell keeps the portable `src` attribute
-aligned with the selected view. A superseded same-origin load may arrive during
+are accepted. Mount navigates with iframe history replacement semantics; the
+React shell retains its initial portable `src` after an adapter takes ownership.
+A ready same-origin document may be reused only after mount-scoped
+authentication accepts it. A superseded same-origin load may arrive during
 that handoff; it cannot fail or be adopted by the current mount, which remains
 pending for the exact assigned resource. A load, view/scheme swap or disposal
 invalidates the old session and its pending work; responses from it never update
@@ -207,8 +208,12 @@ pre-replacement `Document`. When that exact object was not previously
 authenticated for the frame, both the watcher and `load` handler exclude it
 from assigned-resource authentication even if its URL exactly equals the new
 assignment. Only a different replacement `Document` may then pass the resource
-check. Frame and document provenance is weakly held and does not extend either
-object's lifetime.
+check. A rejected starting document must trigger a fresh history-replacing
+navigation even when both its URL and the iframe's `src` equal the assignment;
+URL equality alone cannot justify reuse or waiting for a load that is not in
+progress. Authenticated ready documents and the initial matching server-rendered
+document are reused without reloading. Frame and document provenance is weakly
+held and does not extend either object's lifetime.
 
 As soon as the new immediate `Document` becomes same-origin-accessible, the
 adapter independently authenticates its exact origin, decoded resource path and

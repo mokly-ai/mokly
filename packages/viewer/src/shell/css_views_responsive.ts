@@ -70,7 +70,6 @@ body[data-mokly-color-scheme="dark"]
   min-height: 520px;
   border: 1px solid var(--chrome-border);
   border-radius: 12px;
-  background: var(--chrome-surface);
 }
 
 .mbk-empty {
@@ -119,7 +118,6 @@ body[data-mokly-color-scheme="dark"]
   width: 100%;
   height: 100%;
   border: 0;
-  background: var(--chrome-surface);
 }
 
 .phone-screen .mbk-frag {

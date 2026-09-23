@@ -1149,10 +1149,9 @@ test("dark scheme paints device screens and leaves the chrome light", () => {
       `${scope}.browser-viewport { background: var(--mbk-dark-screen-bg); }`,
     ),
   );
-  assert.ok(
-    css.includes(
-      `${scope}.mbk-frag { background: var(--mbk-dark-screen-bg); }`,
-    ),
+  assert.match(
+    css,
+    /\[data-preview-color-scheme="dark"\] \.mbk-frag \{[^}]*background: var\(--mbk-dark-screen-bg\);/,
   );
 
   const selectors = darkTokenSelectors(SHELL_CSS).map(flatCss);

@@ -276,7 +276,9 @@ export function mountLocalDocument(
           current.readyState === "complete" &&
           sameFrameResource(current.URL, url)
         ) {
-          adoptLoadedDocument();
+          if (mountAuthentication.authenticateAssignedDocument(current, url))
+            adoptLoadedDocument();
+          else localFrameAccess(frame).replace(url);
         } else if (
           current?.defaultView?.frameElement === frame &&
           current.readyState === "complete" &&

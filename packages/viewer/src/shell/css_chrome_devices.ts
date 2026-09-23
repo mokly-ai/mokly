@@ -33,7 +33,6 @@ export const CSS_CHROME_DEVICES = `
   height: 100%;
   overflow: hidden;
   border-radius: 36px;
-  background: var(--mbk-screen-bg);
 }
 
 .phone-status {
@@ -45,7 +44,6 @@ export const CSS_CHROME_DEVICES = `
   align-items: flex-start;
   height: 44px;
   padding: 14px 28px 0;
-  color: var(--mbk-screen-ink);
   font-size: 13.5px;
   font-weight: 600;
   font-feature-settings: "tnum";
@@ -65,7 +63,6 @@ export const CSS_CHROME_DEVICES = `
   height: 4px;
   transform: translateX(-50%);
   border-radius: 999px;
-  background: var(--mbk-device-home);
   pointer-events: none;
 }
 

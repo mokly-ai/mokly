@@ -56,10 +56,10 @@ export const SHELL_WORKSPACE_CSS = `
 .mbk-component-canvas { flex: none; }
 .mbk-component-canvas.mbk-frame-mobile { width: 390px; }
 .mbk-component-canvas.mbk-frame-desktop { width: 1024px; }
-.mbk-component-canvas iframe { width: 100%; height: 520px; display: block; border: 1px solid var(--chrome-border); border-radius: 8px; background: white; }
+.mbk-component-canvas iframe { width: 100%; height: 520px; display: block; border: 1px solid var(--chrome-border); border-radius: 8px; }
 .mbk-workspace [data-mokly-stage][data-viewport="mobile"] .mbk-frame-desktop,
 .mbk-workspace [data-mokly-stage][data-viewport="desktop"] .mbk-frame-mobile { display: none; }
-.mbk-diff-screen[data-diff-component] .mb-pane-doc iframe { width: 100%; min-width: 390px; height: 520px; border: 1px solid var(--chrome-border); background: white; }
+.mbk-diff-screen[data-diff-component] .mb-pane-doc iframe { width: 100%; min-width: 390px; height: 520px; border: 1px solid var(--chrome-border); }
 .mbk-instance-context { display: inline-block; margin: 0 8px 12px 0; }
 .mbk-instance-tree, .mbk-usage-list { list-style: none; padding: 0; margin: 0; }
 .mbk-instance-tree .mbk-instance-tree { padding-left: 20px; border-left: 1px solid var(--chrome-border); }

@@ -183,15 +183,14 @@ test("every frame carries its own preview color-scheme", () => {
   const css = SHELL_CSS.replace(/\s+/g, " ");
   // A frame declares the scheme of what it shows, so a native control or
   // scrollbar inside a preview follows the preview and not the interface.
-  assert.ok(
-    css.includes(".mbk-frag { color-scheme: light; }"),
+  assert.match(
+    css,
+    /\.mbk-frag \{[^}]*color-scheme: light;/,
     "a frame has no default preview color-scheme",
   );
-  assert.ok(
-    css.includes(
-      '[data-preview-color-scheme="dark"] ' +
-        ".mbk-frag { color-scheme: dark; }",
-    ),
+  assert.match(
+    css,
+    /\[data-preview-color-scheme="dark"\] \.mbk-frag \{[^}]*color-scheme: dark;/,
     "a dark preview frame does not declare dark",
   );
   // It comes from the stylesheet, not an assignment after the element exists,
@@ -202,9 +201,7 @@ test("every frame carries its own preview color-scheme", () => {
 test("a comparison canvas takes an opaque base from its preview scheme", () => {
   const css = SHELL_CSS.replace(/\s+/g, " ");
   assert.ok(
-    css.includes(
-      ".mb-pane-doc { width: 100%; background: var(--mbk-screen-bg); }",
-    ),
+    css.includes(".mb-pane-doc { background: var(--mbk-screen-bg); }"),
     "a comparison canvas has no opaque base",
   );
   assert.ok(

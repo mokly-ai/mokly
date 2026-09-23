@@ -36,6 +36,7 @@ async function expectLightPreviews(page: Page): Promise<void> {
     const frame = page.locator(`[data-workspace-frame="${viewport}"]`);
     await expectFrameSource(frame, new RegExp(`home\\.${viewport}\\.html$`));
     await expect(frame).toHaveCSS("color-scheme", "light");
+    await expect(frame).toHaveCSS("background-color", "rgb(255, 255, 255)");
     const input = frame.contentFrame().getByLabel("Date");
     await expect(input).toHaveCSS("color-scheme", "light");
     expect(

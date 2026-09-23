@@ -26,7 +26,6 @@ export const CSS_CHROME_EXPANSION = `
 .browser-viewport {
   height: calc(100% - 40px);
   overflow: hidden;
-  background: var(--mbk-screen-bg);
 }
 
 .browser-expand {
@@ -97,48 +96,6 @@ body.frame-expanded::before {
   max-width: none;
   height: auto;
   box-shadow: var(--chrome-shadow);
-}
-
-.mbk-frag {
-  color-scheme: light;
-}
-
-[data-preview-color-scheme="dark"] .mbk-frag {
-  color-scheme: dark;
-}
-
-[data-preview-color-scheme="dark"] .phone-screen {
-  background: var(--mbk-dark-screen-bg);
-}
-
-[data-preview-color-scheme="dark"] .phone-screen::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  box-shadow: inset 0 0 0 1px
-    color-mix(
-      in srgb,
-      var(--mbk-dark-screen-ink) 12%,
-      var(--mbk-dark-screen-bg)
-    );
-  pointer-events: none;
-}
-
-[data-preview-color-scheme="dark"] .phone-status {
-  color: var(--mbk-dark-screen-ink);
-}
-
-[data-preview-color-scheme="dark"] .phone-home {
-  background: color-mix(in srgb, var(--mbk-dark-screen-ink) 40%, transparent);
-}
-
-[data-preview-color-scheme="dark"] .browser-viewport {
-  background: var(--mbk-dark-screen-bg);
-}
-
-[data-preview-color-scheme="dark"] .mbk-frag {
-  background: var(--mbk-dark-screen-bg);
 }
 
 .flow-track {

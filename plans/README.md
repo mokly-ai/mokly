@@ -4,8 +4,9 @@
 
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
   standalone Auto/Light/Dark control for interface and previews, and
-  host-owned theme with independent previews when embedded. Implementation is
-  complete; move this plan to Completed when its implementation PR merges.
+  host-owned theme with independent previews when embedded. Preview background
+  and reconnect review fixes are in progress; move this plan to Completed when
+  its implementation PR merges.
 - [Release-Gated Node Compatibility](./release-gated-node-compatibility.md) —
   run the minimum supported runtime on ordinary changes and reserve the full
   Node 22.14/24 compatibility matrix for Release Please pull requests.

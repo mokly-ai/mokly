@@ -135,6 +135,10 @@ through navigation and browser history. Each preview wrapper records its actual
 file's scheme for iframe media queries, native controls, device colors and
 comparison backgrounds, including globally light-only catalogues. Startup
 updates this frame value before changing a fragment source.
+`css_preview_scheme.ts` owns every preview surface background and iframe
+color scheme. Transparent content therefore keeps its selected Light or Dark
+base in screen, page, component, historical and comparison frames, independently
+of interface appearance. Layout styles leave those properties to this module.
 After the bridge mounts, React's frame adapters exclusively own source changes;
 the startup controller only reports the effective scheme, avoiding iframe
 history entries during manual or automatic appearance changes. The frame-source
