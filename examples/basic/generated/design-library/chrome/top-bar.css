@@ -19,6 +19,13 @@ align-items: center;
   gap: 8px;
 }
 
+/* The artboard-scoped copy outranks the later `.ce-design a` rule, which
+   otherwise tints the brand link's wordmark like a prose link. */
+.ce-design .mbk-brand {
+color: inherit;
+  text-decoration: none;
+}
+
 .mbk-mark {
 color: var(--chrome-brand);
   display: inline-grid;
