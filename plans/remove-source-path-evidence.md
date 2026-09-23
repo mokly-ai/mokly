@@ -5,8 +5,9 @@
 Status: in progress; Milestone 1 documentation is complete and Milestones 2–8
 remain. The binding Decisions And Scope remove all three inputs and adopt
 component-declared stylesheets in place of the stylesheet role of
-`ownedDependencies`. The pull request merge is the completion boundary; keep
-this plan active until then.
+`ownedDependencies`. The user approved both the removals and the component
+stylesheet design on 2026-09-23 (UTC). The pull request merge is the
+completion boundary; keep this plan active until then.
 
 Remove the three author-maintained inputs that link mockups to repository paths:
 
@@ -107,7 +108,7 @@ milestone.
 
 ## Current Implementation Boundaries
 
-Verified on 2026-09-24 with temporary fixtures:
+Verified on 2026-09-23 (UTC) with temporary fixtures:
 
 - Without registered components, a changed file under a screen dependency or a
   `sharedImpact` glob adds nothing to Changes and is recorded as comparison
@@ -410,6 +411,8 @@ Tags: ui
       evidence". Each remaining hit must describe the removal or be unrelated.
 - [ ] Mark every changed protocol doc's Delivery Status as implemented and
       update this plan's status.
+- [ ] Remove plan-milestone references from normative protocol text; keep
+      them only in Delivery Status sections.
 - [ ] Smoke test through `npm run dev`: design library pages and example
       component screens load their declared stylesheets; an edit to an
       exclusive component stylesheet lists only its component in Changes with
