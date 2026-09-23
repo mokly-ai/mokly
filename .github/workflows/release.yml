@@ -13,6 +13,14 @@ on:
         description: Paired immutable viewer-vX.Y.Z tag from the same commit
         required: true
         type: string
+      verification:
+        description: Reuse exact-tree CI evidence or run complete verification
+        required: true
+        type: choice
+        options:
+          - evidence
+          - complete
+        default: evidence
 
 permissions:
   contents: read
@@ -50,6 +58,7 @@ jobs:
     outputs:
       publish_ref: ${{ steps.select.outputs.publish_ref }}
       viewer_ref: ${{ steps.select.outputs.viewer_ref }}
+      verification: ${{ steps.select.outputs.verification }}
     steps:
       - name: Check out workflow scripts
         uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
@@ -57,6 +66,7 @@ jobs:
         id: select
         env:
           MANUAL_REF: ${{ inputs.publish_ref }}
+          MANUAL_VERIFICATION: ${{ inputs.verification }}
           MANUAL_VIEWER_REF: ${{ inputs.viewer_ref }}
           RELEASE_CREATED: ${{ needs.release-please.outputs.release_created }}
           RELEASE_EVENT: ${{ github.event_name }}
@@ -71,10 +81,12 @@ jobs:
     runs-on: blacksmith-2vcpu-ubuntu-2404
     environment: npm
     permissions:
+      actions: read
       contents: read
       id-token: write
     env:
       CLI_REF: ${{ needs.select-release.outputs.publish_ref }}
+      RELEASE_VERIFICATION: ${{ needs.select-release.outputs.verification }}
       VIEWER_REF: ${{ needs.select-release.outputs.viewer_ref }}
     steps:
       - name: Check out immutable release tag
@@ -90,17 +102,27 @@ jobs:
           registry-url: https://registry.npmjs.org
       - name: Set up npm
         run: npm install --global npm@11.7.0
-      - name: Set up Rust
-        run: |
-          rustup toolchain install 1.95.0 --profile minimal --component rustfmt --component clippy
-          rustup default 1.95.0
       - name: Verify immutable tags
         run: node scripts/release/verify-ref.mjs "$CLI_REF" "$VIEWER_REF"
       - name: Install dependencies
         run: npm ci
+      - name: Audit workspace dependencies
+        run: npm run dependencies:check
+      - name: Select verification evidence
+        id: evidence
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/release/evidence.mjs
+      - name: Set up Rust
+        if: steps.evidence.outputs.mode != 'evidence'
+        run: |
+          rustup toolchain install 1.95.0 --profile minimal --component rustfmt --component clippy
+          rustup default 1.95.0
       - name: Install Chromium
+        if: steps.evidence.outputs.mode != 'evidence'
         run: npx playwright install --with-deps chromium
       - name: Run complete verification
+        if: steps.evidence.outputs.mode != 'evidence'
         run: cargo xtask check
       - name: Prepare exact publish artifacts
         id: package
@@ -115,6 +137,7 @@ jobs:
           name: mokly-${{ steps.package.outputs.cli_version }}-viewer-${{ steps.package.outputs.viewer_version }}
           path: |
             .context/release-artifact/
+            .context/release-evidence/record.json
           if-no-files-found: error
       - name: Guard existing viewer version
         id: viewer_registry

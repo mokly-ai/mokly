@@ -103,6 +103,7 @@ when the historical primary file is absent, never when it is invalid.
   — implemented shared design components and ownership rules, with the
   [component library inventory](./mokly-design-component-library.md).
 - [CI and npm release contract](./npm-release.md)
+  - [Release verification evidence](./npm-release-evidence.md)
   - [One-time registry bootstrap](./npm-bootstrap.md)
   - [GitHub publishing protections](./npm-github-protections.md)
 - [Dependency security](./dependency-security.md) — advisory gates, targeted

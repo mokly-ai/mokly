@@ -10,9 +10,12 @@ vulnerability fails the command. Registry or transport errors also fail; they
 are not an audit exemption or a successful security result.
 
 `cargo xtask check` runs this audit first and stops on failure. The release
-workflow retains that complete audit-first command. Parallel CI assigns the
-same live audit to the shared repository prerequisite, which
-must succeed before any package, unit, browser or native job starts. A cache hit
+workflow always runs the live audit immediately after installing dependencies,
+before it selects reusable CI evidence or the complete fallback. Complete mode
+therefore repeats the audit when the full gate starts; evidence mode never
+relies on an earlier CI audit for time-sensitive security evidence. Parallel CI
+assigns the same live audit to the shared repository prerequisite, which must
+succeed before any package, unit, browser or native job starts. A cache hit
 never replaces an audit. Verification requires registry access and is
 deliberately sensitive to newly published advisories, even when source and
 lockfile have not changed. An audit is evidence about known advisories at
