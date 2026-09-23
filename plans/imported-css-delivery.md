@@ -3,8 +3,10 @@
 ## Status
 
 Active. Created 2026-09-24 from the CSS-in-JS investigation on this branch. No
-milestone has started. The plan keeps esbuild as the only bundler; the optional
-Vite compatibility package and PostCSS are recorded as follow-up plans.
+milestone has started. Updated the same day to include PostCSS, so Tailwind v4
+and autoprefixer work through the consumer's own PostCSS configuration. The plan
+keeps esbuild as the only bundler; the optional Vite compatibility package is
+recorded as a follow-up plan.
 
 ## Problem
 
@@ -36,7 +38,10 @@ Deliver every stylesheet the consumer graph imports as generated public output,
 link it into every view that can use it, and keep every Mokly guarantee that
 applies to generated HTML: complete source inventory, deterministic bytes,
 stable routes for Changes, transactional writes, committed and derived Check,
-on-demand Serve, export, and publication.
+on-demand Serve, export, and publication. Run the consumer's PostCSS
+configuration over every imported stylesheet so Tailwind v4 and autoprefixer
+work without a separate build step, with plugin-reported dependencies joining
+the same inventory.
 
 ## Decisions
 
@@ -112,10 +117,41 @@ path>` through esbuild's `file` loader with a path-mirroring asset name, and
     commit's own tooling. The first comparison after adopting this version
     shows every view that links a generated stylesheet as changed. This is
     documented, not worked around.
+12. **PostCSS is explicit and runs before Mokly's own transforms.** A new
+    top-level `postcss` config key names a config-relative PostCSS
+    configuration module inside `repoRoot`; absent means PostCSS never runs.
+    Mokly loads that module through the same esbuild-based loader used for
+    `mokly.config`, so the module and its imports join `configSourceFiles`, are
+    watched, and stay private. The module must default-export an object whose
+    `plugins` is an array of plugin instances or an object mapping package
+    names to options; package names resolve from the PostCSS module's
+    directory, which keeps Tailwind, autoprefixer, and every other plugin a
+    consumer dependency. `map` is accepted and ignored because Mokly emits no
+    source maps; `parser`, `syntax`, `stringifier`, and any other key fail
+    validation. Mokly runs the plugins once per stylesheet with `from` set to
+    the source path, before CSS Modules naming and before the bundle pass, and
+    memoizes per compilation so both passes share one result. Tailwind v4
+    through `@tailwindcss/postcss` and autoprefixer are the tested plugins.
+13. **Plugin-reported dependencies join the inventory.** A `dependency`
+    message adds its repository file to `sourceFiles`. A `dir-dependency`
+    message is expanded with the discovery walker, skipping denied
+    directories, and its directory joins the watch inputs so added files
+    trigger rebuilds. Paths outside `repoRoot` or under `node_modules` are
+    ignored for inventory. In committed mode a directory dependency whose glob
+    reaches Mokly-owned generated output fails the build with guidance to add
+    `@source not "<mockupsDir>"`, because Tailwind would otherwise scan the
+    previous build's fragments and make output order-dependent; in derived
+    mode Tailwind's own `.gitignore` handling already skips them. A plugin
+    exception fails the build naming the plugin and the stylesheet. PostCSS
+    output is as deterministic as the plugins; Mokly documents that and pins
+    nothing.
 
 ## Non-goals
 
-- Sass, Less, Stylus, PostCSS, Tailwind, and build-time CSS-in-JS plugins.
+- Sass, Less, Stylus, and build-time CSS-in-JS tools that are not PostCSS
+  plugins.
+- PostCSS custom syntaxes, source maps, and PostCSS configuration discovery
+  outside the configured module.
 - JavaScript asset imports that return a URL.
 - Vite configuration reuse or Vite plugin compatibility.
 - A `define` setting for `import.meta.env`.
@@ -134,16 +170,21 @@ no guesswork.
       determinism, committed and derived Check behavior, Serve delivery, export
       and publication inclusion, watch classification, Changes attribution and
       the one-time jump, the `file` loader error, the `.css` `empty` opt-out,
-      and every error message class with its guidance.
+      the `postcss` key with its module shape and plugin resolution, PostCSS
+      run order and memoization, dependency and directory-dependency inventory,
+      the committed-mode generated-output rule, the determinism caveat, and
+      every error message class with its guidance.
 - [ ] Register the new contract in `docs/protocol/README.md`.
 - [ ] Update `docs/protocol/mokly-configuration.md`: package-owned `.css`
       handling in `moduleResolution.loaders`, the reserved directory rejection
-      for entry globs, `stylesheets` paths, `publicExclude`, and `review.outDir`.
+      for entry globs, `stylesheets` paths, `publicExclude`, and `review.outDir`,
+      and the new `postcss` key with its validation rules.
 - [ ] Update `docs/protocol/mokly-rendering.md`: stylesheet link order and the
       reserved directory entries in the Generated Contract list.
 - [ ] Update `docs/protocol/mokly-source-protection.md` for the reserved
-      directory and the union inventory, and `docs/protocol/mokly-watch.md` for
-      stylesheet-pass inputs as rebuild inputs.
+      directory, the union inventory, and plugin-reported dependencies, and
+      `docs/protocol/mokly-watch.md` for stylesheet-pass inputs and PostCSS
+      directory dependencies as rebuild inputs.
 - [ ] Update `docs/protocol/mokly-on-demand.md`, `mokly-export.md`,
       `mokly-publication.md`, and `mokly-derived-baselines.md` for reserved
       routes served from the live compilation, binary generated bytes in
@@ -156,8 +197,10 @@ no guesswork.
 - [ ] Add `docs/guides/authoring/styles.md` (section `authoring`, order 10)
       covering plain CSS imports, CSS Modules, assets, runtime CSS-in-JS through
       the renderer including the `mainFields` note for styled-components in
-      `"type": "module"` repositories, and the unsupported list. Update
-      `docs/guides/authoring/config.md` where it describes `stylesheets`.
+      `"type": "module"` repositories, a Tailwind v4 and autoprefixer
+      walkthrough with `@source` scoping, and the unsupported list. Update
+      `docs/guides/authoring/config.md` where it describes `stylesheets` and
+      add the `postcss` key to its field table.
 - [ ] Update `src/build/README.md` and the README's Authoring and Key code
       sections.
 - [ ] Run `npx prettier --check` on every changed Markdown file and review the
@@ -260,7 +303,46 @@ Make the delivered CSS reach rendered documents and pass validation.
       example catalogue, which imports no CSS yet, is byte-identical.
 - [ ] Run the build, relevant tests, and `cargo xtask check`.
 
-## Milestone 6: Serve, watch, export, publication, and Changes
+## Milestone 6: PostCSS pipeline
+
+Run the consumer's PostCSS configuration over every imported stylesheet so
+Tailwind v4 and autoprefixer work, with complete inventory and watch coverage.
+
+- [ ] Add `postcss` with `npm install postcss` and confirm
+      `npm run dependencies:check` still passes.
+- [ ] Add the `postcss` config key to `src/config/types.ts` and a new
+      `src/config/postcss.ts` that validates the config-relative path, requires
+      a regular file inside `repoRoot`, loads the module through the shared
+      esbuild config loader in `src/config/load.ts`, adds its metafile inputs
+      to `configSourceFiles`, and normalizes the exported shape with the
+      documented errors for missing `plugins`, unknown keys, and unresolvable
+      package names.
+- [ ] Add `src/build/styles/postcss.ts`: run the plugins per stylesheet with
+      `from` set to the source path and `map: false`, collect `dependency` and
+      `dir-dependency` messages, expand directory dependencies through the
+      discovery walker, apply the committed-mode generated-output rule, and
+      memoize results per compilation.
+- [ ] Wire the runner into the load hook in `src/build/styles/collect.ts`
+      ahead of CSS Modules naming for both passes, union dependency files into
+      `sourceFiles`, and register directory dependencies as package-owned watch
+      inputs.
+- [ ] Add `tests/build_postcss.test.ts` using synthetic plugins with no new
+      dev dependencies: a transform applies to imported and `@import`ed
+      stylesheets; a transform inside a CSS Module runs before naming; each
+      stylesheet is processed once per compilation; `dependency` files join
+      the inventory and are private through `/static`; `dir-dependency`
+      expansion joins the inventory and skips denied directories; the
+      committed-mode generated-output error and its guidance; a plugin error
+      names the plugin and file; package-name resolution from the PostCSS
+      module's directory; `map` ignored and other keys rejected; a missing or
+      escaping path rejected; and byte-identical output across two
+      compilations.
+- [ ] Add a `tests/catalogue_watch.test.ts` case where editing the PostCSS
+      module, a reported dependency, or a file added under a directory
+      dependency rebuilds and reloads.
+- [ ] Run the build, relevant tests, and `cargo xtask check`.
+
+## Milestone 7: Serve, watch, export, publication, and Changes
 
 Carry the new outputs through every delivery path.
 
@@ -279,7 +361,7 @@ Carry the new outputs through every delivery path.
       and a case for a catalogue whose baseline predates generated stylesheets.
 - [ ] Run the build, relevant tests, and `cargo xtask check`.
 
-## Milestone 7: Example, guides, and smoke tests
+## Milestone 8: Example, guides, and smoke tests
 
 Exercise the feature end to end in the tracked example.
 
@@ -287,16 +369,24 @@ Exercise the feature end to end in the tracked example.
       CSS Module and a plain stylesheet that references a small font or image,
       and use it from an existing entry so `npm run example:build` and
       `npm run example:check` cover generated stylesheets and assets.
+- [ ] Add `tailwindcss`, `@tailwindcss/postcss`, and `autoprefixer` as root
+      devDependencies for the example, add `examples/basic/postcss.config.mjs`
+      and `postcss: "postcss.config.mjs"` to `examples/basic/mokly.config.ts`,
+      and style one example component with Tailwind utilities scoped by
+      `@source` to `examples/basic/src` plus one declaration autoprefixer
+      expands for the configured browserslist. Confirm
+      `npm run dependencies:check` passes with the new dev dependencies.
 - [ ] Verify the guide added in Milestone 1 matches the shipped behavior and
       that `tests/package.test.ts` includes it in the packaged guides.
 - [ ] Smoke test: run `npm run dev`, open the styled screen in mobile and
-      desktop views and both color schemes, edit the CSS Module while serving,
-      confirm the reload and that Changes lists only the affected screen, then
-      run an export and open the exported screen from disk.
+      desktop views and both color schemes, edit the CSS Module and then a
+      Tailwind utility while serving, confirm each reload and that Changes
+      lists only the affected screen, then run an export and open the exported
+      screen from disk.
 - [ ] Run the complete `npm test`, `npm run typecheck`, `npm run lint`, and
       `cargo xtask check`.
 
-## Milestone 8: Commit, push, and review
+## Milestone 9: Commit, push, and review
 
 - [ ] Run `git add -A`, commit using Conventional Commits, and push the branch.
 - [ ] Review the complete local diff against `origin/main` using
@@ -311,12 +401,10 @@ Exercise the feature end to end in the tracked example.
 
 ## Follow-up plans (not part of this change)
 
-- PostCSS step driven by the consumer's PostCSS configuration, plugging into
-  the per-file load hook from Milestone 4 and adding reported dependencies to
-  the inventory.
 - `define` support for `import.meta.env` style constants.
 - Page render input carrying resolved stylesheet links.
-- Rebuilding only the stylesheet pass when only CSS inputs changed.
+- Rebuilding only the stylesheet pass when only CSS inputs changed, and a
+  cross-compilation PostCSS cache for Serve.
 - Optional `@mokly/vite` compatibility package that runs Vite's plugin
   container as the transform stage while esbuild keeps bundling.
 - Ownership inference and bundle mapping listed under
