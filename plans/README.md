@@ -2,6 +2,11 @@
 
 ## Active
 
+- [Imported CSS Delivery](./imported-css-delivery.md) — deliver CSS imported
+  by consumer modules as per-root generated stylesheets and assets under a
+  reserved `mokly-generated/` directory, linked into every view, with Mokly's
+  inventory, determinism, Check, Serve, export, and Changes guarantees; esbuild
+  only, no Vite.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
   standalone Auto/Light/Dark control for interface and previews, and
   host-owned theme with independent previews when embedded. Dark neutrals align
