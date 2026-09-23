@@ -2,6 +2,10 @@
 
 ## Active
 
+- [Markdown And MDX Docs](./markdown-docs.md) — discover Markdown and MDX
+  files from a `docs` glob, show each as a `doc` entry beside the screens it
+  describes, render through the consumer renderer in both schemes, and carry
+  docs through navigation, details, links, Changes, watch, export, and publish.
 - [Delta Publishing](./delta-publishing.md) — replace the single-archive
   `mokly publish` upload with the content-addressed plan, blob and complete
   exchange, the schema 2 export ownership marker, v2 fixtures and guides for
