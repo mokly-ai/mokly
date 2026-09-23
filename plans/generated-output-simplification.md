@@ -111,10 +111,10 @@ Documentation only. Every later milestone implements these contracts.
 
 Change A:
 
-- [ ] `docs/protocol/mokly-configuration.md`: remove `generatedOutput`;
+- [x] `docs/protocol/mokly-configuration.md`: remove `generatedOutput`;
       `review.baselineBuild` is always valid; define tracked-state detection
       from the index, the mixed-state error, and the no-Git rule.
-- [ ] `docs/protocol/mokly-derived-baselines.md`: retitle the contract around
+- [x] `docs/protocol/mokly-derived-baselines.md`: retitle the contract around
       per-commit baseline selection; replace the Command Behavior table with
       one keyed on tracked and untracked output; define `check` as validate
       then compare-if-tracked; define the per-commit selection rule (no
@@ -122,48 +122,48 @@ Change A:
       state that only `build`, `build --watch`, and `serve --build` write;
       drop the head-side equality requirement and the moving-`mockupsDir`
       restriction where per-commit selection lifts it.
-- [ ] `docs/protocol/mokly-changes.md`,
+- [x] `docs/protocol/mokly-changes.md`,
       `docs/protocol/mokly-component-changes.md`,
       `docs/protocol/mokly-export.md`, and `docs/protocol/mokly-on-demand.md`:
       the head side is always the in-memory compilation; Serve and export
       never write generated output; background completion finalizes files
       only under `serve --build`.
-- [ ] `docs/protocol/mokly-terminal-output.md`: the Serve header drops the
+- [x] `docs/protocol/mokly-terminal-output.md`: the Serve header drops the
       mode word; `check` summary lines for tracked and untracked output;
       `build --watch` and `serve --build` output; the `build` summary names
       `<mockupsDir>/.generated`.
-- [ ] `docs/protocol/mokly-timings.md`: the large fixture's `--derived` flag
+- [x] `docs/protocol/mokly-timings.md`: the large fixture's `--derived` flag
       becomes a tracked-output choice; remove mode wording from benchmark
       descriptions.
 
 Change B:
 
-- [ ] `docs/protocol/mokly-configuration.md`: redefine `mockupsDir` as the
+- [x] `docs/protocol/mokly-configuration.md`: redefine `mockupsDir` as the
       catalogue directory with the Mokly-owned `.generated` child; configured
       inputs may live anywhere under it except inside `.generated`; stylesheet
       rule paths stay relative to `mockupsDir`; remove `publicExclude`; define
       `config-invalid` for inputs inside `.generated`.
-- [ ] `docs/protocol/mokly-source-protection.md` and
+- [x] `docs/protocol/mokly-source-protection.md` and
       `docs/protocol/mokly-authoring.md`: the referenced asset closure is the
       public surface; closure files must be regular files under `mockupsDir`
       outside `.generated` and not protected source; remove hand-written
       public HTML and the directory-based policy; keep symlink and
       confinement rules.
-- [ ] `docs/protocol/mokly-runtime.md`, `docs/protocol/mokly-navigation.md`,
+- [x] `docs/protocol/mokly-runtime.md`, `docs/protocol/mokly-navigation.md`,
       and `docs/architecture/build-pipeline.md`: documents reference assets
       in place with hrefs relative to their location inside `.generated/`; the
       Serve and export URL layout mirrors disk; a build replaces `.generated/`
       atomically.
-- [ ] `docs/protocol/mokly-baseline-storage.md`: the harvest moves
+- [x] `docs/protocol/mokly-baseline-storage.md`: the harvest moves
       `<source>/<mockupsDir>/.generated` and copies the manifest's closure
       files into the cache entry; the legacy single-directory layout is
       harvested as today; readers resolve repository-relative paths against
       the entry.
-- [ ] Manifest contract (`docs/protocol/mokly-runtime.md` or the manifest
+- [x] Manifest contract (`docs/protocol/mokly-runtime.md` or the manifest
       section that owns the schema): add the closure list and the
       generated-path inventory with blob hashes, bump the schema version, and
       keep compatibility readers for historical manifests.
-- [ ] `docs/protocol/mokly-export.md` and `docs/protocol/mokly-on-demand.md`:
+- [x] `docs/protocol/mokly-export.md` and `docs/protocol/mokly-on-demand.md`:
       export ships `.generated/` plus the closure at catalogue-relative paths;
       Serve serves generated routes from memory under the `.generated/` prefix
       and closure files live from their authored location; the export output
@@ -171,7 +171,7 @@ Change B:
 
 Change C:
 
-- [ ] `docs/protocol/mokly-page-migration.md`,
+- [x] `docs/protocol/mokly-page-migration.md`,
       `docs/protocol/mokly-derived-baselines.md`, and
       `docs/protocol/mokly-runtime.md`: remove ownership headers, unclaimed
       files, orphan discovery, and overwrite refusal; committed-style `check`
@@ -179,7 +179,7 @@ Change C:
 
 Shared:
 
-- [ ] Guides (`docs/guides/authoring/config.md`, `components.md`,
+- [x] Guides (`docs/guides/authoring/config.md`, `components.md`,
       `docs/guides/cli/build.md`, `check.md`, `serve.md`, `export.md`,
       `options-and-exit-status.md`, `docs/guides/start/configure.md`,
       `build.md`, `serve.md`) and `README.md`: no modes; `mockupsDir` examples
@@ -187,11 +187,11 @@ Shared:
       `<mockupsDir>/.generated/` for repositories that do not commit output;
       document `build --watch` and `serve --build`; the command table
       describes the new behaviour.
-- [ ] `examples/basic/README.md`, `src/build/README.md`, `src/server/README.md`,
+- [x] `examples/basic/README.md`, `src/build/README.md`, `src/server/README.md`,
       `src/export/README.md`, `src/review/README.md`, `src/baseline/README.md`,
       and the example bullet in `AGENTS.md`: describe the new layout and
       workflow.
-- [ ] Update this plan's index entry in `plans/README.md`; run
+- [x] Update this plan's index entry in `plans/README.md`; run
       `npm run format:check` on the changed Markdown; review the diff; commit
       and push.
 
@@ -234,6 +234,10 @@ compiled-route intersection until Milestone 3 gives it a single directory.
       transition commit; `check` outcomes; Serve and export write nothing;
       `serve --build` and `build --watch` write after a successful compile and
       not after a failed one; committed-style baselines still read blobs.
+- [ ] Update `tests/guides_authoring.test.ts` to validate index-derived
+      tracking and the removed `generatedOutput` config field, and
+      `tests/guides_cli.test.ts` to validate the new `--build` and `--watch`
+      options when the corresponding config and CLI changes land.
 - [ ] Smoke test on the example: delete local generated files, run
       `npm run dev`, browse, wait for Changes, confirm nothing written; run
       `npm run example:check`; run `node dist/cli/bin.js build --watch` on the
@@ -300,6 +304,8 @@ all of it lands together.
       layouts; per-commit selection for absent, complete, incomplete, and
       stale committed output; the example baseline fixture rebuilds; a v5
       manifest baseline still compares.
+- [ ] Update `tests/component_protocol_docs.test.ts` to assert manifest v6
+      format rows and README text once manifest-v6 generation and readers land.
 - [ ] Smoke test: `npm run example:build` produces `examples/basic/.generated/`
       only; open a generated document from disk and confirm it is styled;
       `npm run dev` styles screens from the authored files and reflects a CSS

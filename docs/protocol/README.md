@@ -11,16 +11,17 @@ The first public release remains an external delivery step.
 
 | Catalogue                     | Generated manifest | Comparison result |
 | ----------------------------- | ------------------ | ----------------- |
-| Without registered components | 5                  | 2                 |
-| With registered components    | 5                  | 3                 |
+| Without registered components | 6                  | 2                 |
+| With registered components    | 6                  | 3                 |
 
-All current catalogues emit manifest v5 with explicit pages, the complete
-source inventory and declared dependencies. Component catalogues also include
+All current catalogues emit manifest v6 with explicit pages, the complete
+source inventory, referenced asset closure, Git blob inventory and declared
+dependencies. Component catalogues also include
 saved variants and complete per-view usage. Comparisons use v3 whenever either
 side contains registered components, including when the last component is removed;
 otherwise they use v2. Pages participate in Browse Changes without visual comparisons.
 
-The current primary file requires v5. Git baseline readers accept v3 and both
+The current primary file requires v6. Git baseline readers accept v5, v3 and both
 historical v4 formats: pages with `sourceFiles`, or components with `legacyPages`.
 These envelopes are disjoint; combining them is invalid. Explicit
 `compatibility.readManifestV2` permits the legacy v2-format fallback only
@@ -37,7 +38,9 @@ when the historical primary file is absent, never when it is invalid.
   interactive progress, errors, watched events, and shortcuts.
 - [Packaged CLI guides](./mokly-guides.md) — versioned Markdown consumed by the
   cloud documentation site.
-- [Configuration contract](./mokly-configuration.md) — includes public-exclusion validation and defaults.
+- [Configuration contract](./mokly-configuration.md) — catalogue paths and settings.
+- [Generated output, Git state and asset closure](./mokly-generated-output.md)
+  — approved layout, manifest v6, tracked-state, closure and writer contracts.
 - [Public authoring API](./mokly-authoring.md)
 - [Rendering and generated output](./mokly-rendering.md)
 - [Build and Browse runtime](./mokly-runtime.md)
@@ -67,13 +70,13 @@ when the historical primary file is absent, never when it is invalid.
 - [Changes and screen comparisons](./mokly-changes.md)
 - [Removed content previews](./mokly-removed-previews.md) — removed screens
   and pages show their pinned baseline version.
-- [Derived baselines](./mokly-derived-baselines.md) — default uncommitted
-  generated output with per-commit rebuilt baselines.
+- [Per-commit baseline selection](./mokly-derived-baselines.md) — Git blobs
+  when complete, otherwise a trusted historical rebuild.
   - [Baseline storage and execution](./mokly-baseline-storage.md) — archive limits,
     command environments, locking and crash cleanup.
 - [Registered components](./mokly-components.md)
 - [Component runtime prop schema](./mokly-component-props.md)
-- [Current manifest v5 schema](./mokly-component-manifest.md)
+- [Component manifest fields](./mokly-component-manifest.md) — retained in v6.
 - [Component comparison v3 schema](./mokly-component-review.md)
 - [Component change attribution](./mokly-component-changes.md)
 - [CSS change attribution](./mokly-css-attribution.md) — approved

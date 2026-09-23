@@ -79,9 +79,9 @@ state navigation without adding a footer to the rendered product artboard.
 ## Verification
 
 Use the real generator and build/check every matching generated artboard. In the
-default derived mode, keep generated HTML and the manifest ignored and commit the
-authored changes; in explicit committed mode, commit the matching generated
-artifacts. Test all input labels/types, current variant identity, full reset
+untracked layout, keep `.generated/` ignored and commit the authored changes;
+if the repository tracks output, commit the entire matching `.generated/`
+tree. Test all input labels/types, current variant identity, full reset
 values, optional/unset states, pending/error preservation, validation errors,
 disabled comparison inputs, read-only guidance, and links between owning states.
 Open every artboard from disk and visually inspect both viewport variants. Test

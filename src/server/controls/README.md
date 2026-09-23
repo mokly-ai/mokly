@@ -30,8 +30,8 @@ never include resource paths, exclusion globs, or other diagnostic details.
 `transient.ts` uses Build's stylesheet selection, renderer, compatibility/link
 transformation, ownership, range, prop, per-view metadata and resource checks.
 It retains one `DocumentCompiler` per generation instead of cloning and validating
-the full catalogue for each keystroke. Existing
-public resources are copied into the edited document's immutable memory bundle.
+the full catalogue for each keystroke. Referenced closure resources are copied
+into the edited document's immutable memory bundle.
 Generated inline styles remain part of its HTML. No generated file, manifest,
 watch event, Review artifact, or export inventory is written by this service.
 
@@ -43,9 +43,9 @@ ids; malformed or foreign ids return 404. Every response is `no-store` and
 Watched Serve transfers the accepted configuration, live catalogue index and bundle
 over private IPC before readiness. No rendered HTML or full manifest file is sent.
 The child validates metadata and source freshness and binds with controls enabled.
-It requires the already-resolved `publicExclude` array and uses the shared
-config validator to adopt a frozen copy without prepending defaults again.
-Missing, non-array or unsafe values reject the startup message.
+It uses the shared config validator to adopt a frozen copy without prepending
+defaults again. Missing or unsafe configuration and closure paths reject the
+startup message.
 The controls worker evaluates a compact retained runtime once, without unrelated
 HTML or usage. A successful source update with an unchanged index applies its
 runtime to the live child before publishing the reload event. A changed index or

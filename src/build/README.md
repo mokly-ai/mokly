@@ -1,7 +1,7 @@
 # Catalogue Compilation
 
 This internal module loads consumer definitions, renders every configured view,
-validates the complete catalogue and produces deterministic HTML and manifest v5.
+validates the complete catalogue and produces deterministic HTML and manifest v6.
 The supported external interface is `mokly build` and `mokly check`; Serve,
 export and local prop controls reuse the same consumer graph and validators.
 
@@ -69,13 +69,11 @@ consumer code; the collector retains it only as optional manifest metadata.
 the public authoring API, including `resolveInstance`. Every repository-owned
 importer of `@mokly/mokly` receives the attributed facade; installed packages
 under `node_modules` and Mokly's own runtime receive the plain API. Registry
-validation and `ownership.ts` accept an attributed owner only when it is a
-resolved entry module or an inventoried source file. Ownership headers and
-tracked output additionally trust repository-relative owners that match an
-entry glob, so deleted matched sources still leave removable orphans. A
-repository-root glob trusts every matching path and no other path through this
-branch. Committed Check lists Mokly-headered HTML outside the resolved,
-inventoried, and glob-matched sets as unclaimed without changing it.
+validation accepts an attributed definition source only when it is a resolved
+entry module or an inventoried source file. Build replaces the entire
+`<mockupsDir>/.generated/` tree without owner headers or orphan scans. Check
+uses the Git index to decide whether to compare the tree and reports missing,
+stale or extra files when fully tracked.
 Export and Review boundaries continue to use directories that hold resolved
 entry modules. Source locations do not enter instance keys, props keys, slot
 identities, or Changes projections.
@@ -90,9 +88,11 @@ npm run example:check
 cargo xtask check
 ```
 
-The example uses derived output: generation writes local ignored HTML and a
-manifest; authored public CSS remains tracked. Committed output and historical
-manifest compatibility are tested with isolated consumers.
+The example ignores `examples/basic/.generated/`; authored CSS remains tracked
+alongside it. Baseline selection checks each commit independently and reads
+complete Git blobs or rebuilds a missing/incomplete tree. Export and plain
+Serve compile in memory and never write that tree; `build --watch` and
+`serve --build` write only after successful complete compilations.
 
 - `compile.ts`, `render.ts`, `document_compiler.ts`: exhaustive and requested-view
   compilation using the same validation boundary.

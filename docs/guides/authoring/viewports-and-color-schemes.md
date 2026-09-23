@@ -20,7 +20,7 @@ your own theme from the color scheme in your renderer.
 export default defineConfig({
   colorSchemes: ["light", "dark"],
   entries: ["src/**/*.mockup.{ts,tsx}"],
-  mockupsDir: "docs/mockups/generated",
+  mockupsDir: "docs/mockups",
   renderer: "docs/mockups/renderer.tsx",
 });
 ```

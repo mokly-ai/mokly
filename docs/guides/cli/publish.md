@@ -38,8 +38,8 @@ history. For a token that begins with `-`, use the assigned form
 ## Comparisons
 
 Comparisons are included unless you pass `--no-changes`, which needs no
-history and cannot be combined with `--base`. A derived catalogue also skips
-the historical rebuild in that mode. Either way, publish needs a Git checkout
+history and cannot be combined with `--base`. Publishing without Changes skips
+the historical rebuild regardless of head tracking. Either way, publish needs a Git checkout
 with a commit, because the upload identifies the revision it came from.
 
 ## Repository identity

@@ -50,8 +50,8 @@ enter timing records. See the [timing contract](../../docs/protocol/mokly-timing
 Preparation lives in `review/prepare.ts`; read-only factories live separately
 in `review/repository.ts`:
 `prepareReviewRepository(config, base, { signal, onProgress })` creates the Node
-builder or committed reader and returns a pinned repository. Serve's
-`BackgroundGeneration` uses a retained `BackgroundBaseline` in the parent after output adoption and before
+builder or Git-blob reader per commit and returns a pinned repository. Serve's
+`BackgroundGeneration` uses a retained `BackgroundBaseline` in the parent after compilation and before
 `BackgroundCompilation.classify(base, commit)`. The classification worker reads
 the cache and its accepted compiled head output; it cannot start a rebuild.
 `BackgroundBaseline` passes an observer at that parent call that publishes the
@@ -65,7 +65,11 @@ a changed commit or build settings and shutdown cancel and drain it.
 
 `cache_layout.ts` owns `.mokly-cache/baselines/<commit>`. The builder extracts
 to `source`, runs commands, validates the historical manifest and output tree,
-moves the generated directory to `output`, deletes the extraction, and writes
+moves only `.generated/` and copies the manifest's authored asset closure to
+their repository-relative paths under `output/`; pre-v6 single-directory
+baselines move the whole historical catalogue. Readers resolve
+repository-relative paths against `output/`, regardless of the current
+`mockupsDir`. It deletes the extraction and writes
 `complete.json`. Completion of the marker write commits the result immediately.
 Cancellation before that point removes partial output; cancellation afterward
 returns the completed result and skips remaining retention work. Cleanup and
@@ -76,7 +80,7 @@ maintenance failures and continues with other eligible entries. The maintenance
 reporter receives each entry and original error without adding failure events
 to a successful build. Its `report(failure)` method must not
 throw; the stderr implementation tolerates a closed diagnostic stream.
-`inputs.json` records the repository-relative output path;
+`inputs.json` records the historical repository-relative catalogue path;
 the marker records the commands. A complete entry for different settings fails
 explicitly and remains intact. Remove that commit's cache entry before changing
 its catalogue/build settings. Partial entries are rebuilt under the entry lock.

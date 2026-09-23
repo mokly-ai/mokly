@@ -17,7 +17,7 @@ import { defineConfig } from "@mokly/mokly";
 export default defineConfig({
   colorSchemes: ["light", "dark"],
   entries: ["src/**/*.mockup.{ts,tsx}"],
-  mockupsDir: "docs/mockups/generated",
+  mockupsDir: "docs/mockups",
   renderer: "docs/mockups/renderer.tsx",
   repoRoot: ".",
   stylesheets: [{ match: "app/**/*.html", stylesheets: ["app.css"] }],
@@ -34,21 +34,19 @@ Globs are relative to `repoRoot`.
 
 ## Fields
 
-| Field              | Meaning                                                                           |
-| ------------------ | --------------------------------------------------------------------------------- |
-| `entries`          | Globs whose matched regular files are entry modules                               |
-| `entriesDir`       | Shorthand for `<folder>/**/*.mockup.{ts,tsx}`                                     |
-| `mockupsDir`       | Where the generated catalogue is written                                          |
-| `generatedOutput`  | `"derived"` (default) requires untracked output; `"committed"` verifies Git bytes |
-| `colorSchemes`     | Schemes rendered for every screen; defaults to `["light"]`                        |
-| `repoRoot`         | The root every path is confined to; defaults to the config directory              |
-| `renderer`         | Your module that wraps a screen in your theme and returns a document              |
-| `stylesheets`      | Ordered route-to-stylesheet rules                                                 |
-| `publicExclude`    | Extra globs under `mockupsDir` that stay private                                  |
-| `moduleResolution` | Aliases, conditions, fields, extensions and loaders for your sources              |
-| `review`           | The Git base, the artifact directory and shared-impact globs                      |
-| `watch`            | Extra inputs the watched server reacts to                                         |
-| `compatibility`    | Temporary bridges while a repository moves to the current output                  |
+| Field              | Meaning                                                                 |
+| ------------------ | ----------------------------------------------------------------------- |
+| `entries`          | Globs whose matched regular files are entry modules                     |
+| `entriesDir`       | Shorthand for `<folder>/**/*.mockup.{ts,tsx}`                           |
+| `mockupsDir`       | Catalogue root; generated files live only under its `.generated/` child |
+| `colorSchemes`     | Schemes rendered for every screen; defaults to `["light"]`              |
+| `repoRoot`         | The root every path is confined to; defaults to the config directory    |
+| `renderer`         | Your module that wraps a screen in your theme and returns a document    |
+| `stylesheets`      | Ordered route-to-stylesheet rules                                       |
+| `moduleResolution` | Aliases, conditions, fields, extensions and loaders for your sources    |
+| `review`           | The Git base, the artifact directory and shared-impact globs            |
+| `watch`            | Extra inputs the watched server reacts to                               |
+| `compatibility`    | Temporary bridges while a repository moves to the current output        |
 
 ## Entries
 
@@ -104,10 +102,10 @@ point a comparison reads; it defaults to `origin/main`. `review.outDir` is the
 config-relative artifact directory. `review.sharedImpact` lists globs for
 files the rendered resource graph cannot see, such as token modules, so an
 edit to them still marks the screens that may depend on them.
-`review.baselineBuild` is only for derived output: an ordered list of argv
-arrays run without a shell to rebuild the historical catalogue. It defaults to
-`npm ci` followed by `npx --no-install mokly build --config` and the config
-path, and it is rejected in committed mode.
+`review.baselineBuild` is valid regardless of head Git tracking: an ordered
+list of argv arrays run without a shell if a historical commit needs rebuilding.
+It defaults to `npm ci` followed by `npx --no-install mokly build --config`
+and the config path. A complete committed baseline is read from Git blobs.
 
 ## Watch
 
@@ -143,10 +141,11 @@ one React runtime even when the executable came from an npx cache.
 
 ## Public files
 
-Everything below `mockupsDir` is public unless the source policy or a public
-exclusion protects it. `publicExclude` extends the shipped defaults
-`**/README`, `**/README.*`, `**/tsconfig.json` and `**/tsconfig.*.json`, which
-are matched case-insensitively; an empty list keeps them.
+Only authored regular files referenced by a rendered document, a stylesheet
+rule or a renderer resource record are public; nested HTML and CSS URLs are
+followed transitively. Keep these files under `mockupsDir` and outside
+`.generated/`; source files, symlinks and unreferenced files stay private.
+Stylesheet hrefs are relative to each generated document inside `.generated/`.
 
 ## Exported types
 

@@ -114,14 +114,9 @@ builder indexes anchors from the final documents and repeats cross-view
 fragment validation for every retained logical-reference record. A transformer
 that removes or renames an anchor in any destination viewport or scheme
 therefore fails the build even when the source link record itself is unchanged.
-The builder also requires every transformed screen fragment and page document
-to retain a generated ownership header that decodes to its expected source
-path. The versioned header encodes that identity with canonical base64 so no
-source filename can alter HTML comment parsing. Header parsing accepts LF and
-CRLF line endings. Final transformed output must retain the current encoded
-form; safe legacy raw-path headers remain recognizable only for migration,
-while a missing, malformed, downgraded, or changed source identity fails before
-any output is written.
+The builder validates every transformed screen fragment and page document
+against its in-memory manifest route and expected link records; it does not
+parse a source-path header. The plain generated marker has no security role.
 
 The marker is inert metadata, not a second resource URL. HTML escaping must be
 deterministic, and link/resource validation continues to inspect the portable
@@ -133,8 +128,9 @@ prevents Mokly from taking over product or asset navigation accidentally.
 
 ## Portable And Comparison Output
 
-Generated documents in both output modes keep their relative artifact `href`
-values. They must remain navigable when opened directly or copied without the
+Generated documents under `.generated/` keep relative artifact `href` values
+to other generated documents and authored closure files. They must remain
+navigable when opened directly or copied with the matching closure without the
 Browse shell. Comparison snapshot trees copy the same portable documents and do
 not promote their marked links into Browse routes; link activation inside a
 comparison pane retains the existing sandbox behavior.
@@ -142,12 +138,11 @@ comparison pane retains the existing sandbox behavior.
 ## Browse Presentation
 
 When an eligible marked native link from a manifest-owned generated document is
-presented beneath `/static/` in served Browse or in the deployed Browse preview,
+presented beneath `/static/.generated/` in served Browse or in the deployed Browse preview,
 Mokly authenticates its marker for trusted parent enhancement while retaining
 the portable `href` and live `target`. The trusted-document set is exactly every
 current manifest screen fragment, including dark fragments, plus every
-generated page in that manifest. Its generated header must name the same
-`sourcePath` as that manifest entry. The parent derives the canonical
+generated page in that manifest and accepted compiled output. The parent derives the canonical
 `/id/<encoded-id>` or
 `/id/<encoded-id>?fragment=<encoded-fragment>` destination from the marker; it
 never trusts the portable URL as route identity. The adapter removes any
@@ -163,13 +158,13 @@ The portable file on disk must not be mutated. The development server and
 preview builder share one deterministic Browse-document adapter for marker
 authentication and derived target metadata. Every HTML response or preview
 copy beneath `/static/` passes through it. Only a route in the trusted set above
-whose bytes retain that matching ownership header may promote a marker. The
+whose bytes match the accepted generated document may promote a marker. The
 adapter recomputes the source view's expected portable `href` and requires the
 marked link to match it exactly. On any other HTML route, including
-consumer-authored unowned files, it removes `data-mokly-link` and
+authored closure files, it removes `data-mokly-link` and
 `data-mokly-target` from the adapted copy and never promotes them; removal
 covers every raw occurrence even when HTML parsing hides duplicates. A missing
-or mismatched ownership header, duplicate reserved attribute, malformed or
+or mismatched compiled document, duplicate reserved attribute, malformed or
 manifest-invalid marker, or mismatched portable `href` on a trusted route
 yields HTTP 500 without serving that document and fails the preview build. A
 trusted document that carries an activatable marker and `<base href>` fails

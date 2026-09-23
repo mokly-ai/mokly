@@ -39,7 +39,7 @@ route, while a material or metadata change confined to the variant never adds
 the parent route. A flow is propagated only when its `screenId` step names the
 exact changed screen, including a variant.
 
-Before marking an existing fragment, compare its branch-point and working-tree
+Before marking an existing fragment, compare its branch-point and in-memory
 documents with the same paired ignore normalization and material-key rules as
 the comparison engine. Ignored-only changes are excluded from Changes; real
 content changes, material-key changes, and one-sided ignored-region adoption
@@ -47,8 +47,8 @@ with changed content remain eligible. Both viewports and every available color
 scheme participate. Metadata includes route/address, titles, descriptions,
 rationale, tags, related-doc links, flow steps and memberships, view structure,
 and collection ancestry; it excludes source locations and dependencies.
-Valid generated ownership headers are excluded from document comparison, so a
-source move alone stays unchanged. Stored snapshots retain the original headers.
+The plain generated marker is not material comparison evidence, so a source
+move alone stays unchanged. Stored snapshots retain the document bytes.
 
 Changes to local resources referenced by a fragment also keep that screen in
 Changes. Follow CSS imports, CSS URLs, and embedded-document resources
@@ -106,7 +106,7 @@ exclusions, and legacy shared-impact/ignored-content details without duplicate
 cards. See [CSS evidence in the shell](./mokly-css-evidence-shell.md#shell-derivation).
 
 This detection reads baseline files without writing snapshots or generating a
-comparison; derived mode obtains them from the completed cache entry. Baseline reads are batched; shared resource edges
+comparison; commits without complete generated blobs use the completed cache entry. Baseline reads are batched; shared resource edges
 are cached within one calculation and cycles terminate. Apart from verified
 resource deletions, an unavailable or invalid input leaves Changes explicitly
 unavailable, preserving the tabs and access through All in live Serve.
@@ -278,15 +278,15 @@ See [the shell design](./mokly-shell-design.md) and
 Live background classification, complete comparison generation, and publishing
 with `--include-changes` compare the workspace with a configured base ref, defaulting
 to `origin/main`. It resolves the merge base shared by `HEAD` and that ref, then
-reads the `mockupsDir` tree at that branch point without checking it out. In
-committed mode those are Git blobs; in
-[derived mode](./mokly-derived-baselines.md) they come from the cached
-rebuild of that commit produced with the commit's own code. The baseline is
+reads the manifest and generated tree at that branch point without checking
+it out. Complete tracked output uses Git blobs; otherwise
+[per-commit baseline selection](./mokly-derived-baselines.md) uses the cached
+rebuild of that commit produced with its own code. The baseline is
 never rendered with the current tree's code. Commits reachable only from the
 configured base do not enter the comparison. Head generated artifacts come from
-the validated compilation. Committed mode additionally checks their working-tree
-bytes; derived mode retains compiled bytes through selected comparisons and
-compares all generated views even without changed Git output paths. Selected live
+the validated in-memory compilation. It never requires matching working-tree
+bytes. Comparisons retain compiled bytes through selected comparisons and
+compare all generated views even without changed Git output paths. Selected live
 diffs reuse the accepted manifest and pinned classification; checked-input digests
 reject changed snapshot inputs without repeating an exhaustive build.
 Review inspects only the requested base paths, grouping exact literal pathspecs
@@ -303,7 +303,7 @@ scheme, enumerated from the union of base and head manifest entries. Each side's
 view set is `["light", ...(screen.darkFragments ? ["dark"] : [])]`: a dark
 view present only in head is `added`, and one present only in base is
 `removed`. Mobile and desktop still classify separately from their fragments.
-Added, removed, changed, and unchanged states handle historical versions 2/3/4 and current version 5
+Added, removed, changed, and unchanged states handle historical versions 2/3/4/5 and current version 6
 manifests during staged migrations; pre-dark bases simply have no
 `darkFragments`. Configured shared-impact globs and manifest dependencies
 identify changes that can affect many screens. A dependency is a repository file

@@ -24,13 +24,13 @@ adapt explicit child controls -> resolve mock:id links -> compatibility bridge
 validate markers/links/resources
         |
         v
-mobile/desktop light and optional dark HTML for every screen and variant screen, saved component variants, whole documents + schema-v5 manifest in memory
+mobile/desktop light and optional dark HTML for every screen and variant screen, saved component variants, whole documents + schema-v6 manifest in memory
         |
-        +---- check (committed): compare with disk, write nothing
+        +---- check (tracked): compare entire .generated/ tree, write nothing
         |
-        +---- check (derived): reject Git-tracked generated output, write nothing
+        +---- check (untracked): validate compilation, ignore local output
         |
-        `---- build: stage, back up owned files, rename, roll back on failure
+        `---- build: stage and replace .generated/ tree, roll back on failure
 ```
 
 ## 1. Config Loading
@@ -112,11 +112,8 @@ through a shared helper factory or from a helper beside a product component,
 without sticky process-global state or an absolute checkout path. Installed
 packages import the plain API and cannot self-attribute. Registry validation
 accepts an attributed source only when it is a resolved entry module or an
-inventoried source file. Generated and Git-tracked ownership additionally trust
-a repository-relative owner that matches a configured entry glob with dotfile
-matching enabled, preserving cleanup after a matched source is renamed or
-deleted. A repository-root glob trusts every matching owner path and no other
-path through this branch. Export and Review confinement remain limited to
+inventoried source file. Generated output needs no header ownership proof:
+`.generated/` is entirely replaceable. Export and Review confinement remain limited to
 directories that hold resolved entry modules; a repository-root glob does not
 protect the whole repository as an export source root.
 
@@ -156,10 +153,11 @@ see the [component manifest](../protocol/mokly-component-manifest.md).
 Registered entries render each saved variant in every configured context through
 the same consumer graph. Wrappers record actual invocations, data, caller-owned
 slots, and layout-neutral ranges. The root saved variant is not its own instance.
-All catalogues emit manifest v5 with the complete source inventory. Registered
+All catalogues emit manifest v6 with the complete source inventory, closure
+and generated-path Git blob inventory. Registered
 components add saved variants and complete per-view invocation/ownership records;
 explicit page callbacks still emit exactly one complete document. Both historical
-v4 envelopes remain readable only at the Git boundary. Current readers require v5.
+v4 envelopes and v5 remain readable only at the Git boundary. Current readers require v6.
 
 The [child-control adapter](../protocol/mokly-link-controls.md) uses parsed
 source locations to patch only the marked control and its boundary templates.
@@ -188,12 +186,9 @@ During a staged migration only, a configured consumer transformer receives the
 complete document, current route/viewport/color scheme, repository-relative
 output path, available static/output routes, and view-resolved logical routes. The
 transformed document must remain complete and then passes every normal
-Review-marker, link, resource, path, and ownership check.
-The final ownership header must still decode to the route's expected source.
-Its versioned canonical-base64 field keeps the source path comment-safe, and
-the shared parser accepts either an LF or CRLF line ending. Final transformed
-output must retain this current encoding; safe legacy raw-path headers remain
-readable only so existing files can be recognized and migrated.
+Review-marker, link, resource, and path check. Route identity comes from the
+accepted in-memory manifest and compilation; the plain generated marker is
+never parsed for ownership.
 
 This boundary preserves complete catalogue-reference records rather than
 markers alone. A transformer cannot add, remove, or alter an expected marker,
@@ -219,39 +214,32 @@ ordinary and `data-nav-href` links, anchors, local HTML resource attributes,
 `srcset`, inline/style-block CSS, transitive CSS imports/URLs,
 Review-ignore/material markers, protected source inventory, and manifest data are
 validated before output changes. All expected bytes are held in memory.
-In committed mode, `check` compares those bytes with disk and reports grouped
-missing, stale, proven-orphan, and unclaimed paths. Unclaimed paths are HTML
-files with a valid Mokly ownership header whose owner is neither a resolved
-entry, an inventoried source, nor matched by a configured entry glob; ordinary
-authored HTML is not reported.
-In derived mode, Check does not add this filesystem diagnostic and instead
-rejects Git-tracked generated routes, the manifest and cache contents; local
-generated files may be absent or stale. Authored public assets remain tracked
-in either mode.
+`check` compares expected bytes with every file under `.generated/` when
+the Git index tracks complete output; it reports missing, stale and extra
+paths. When no generated output is indexed it validates compilation without
+reading local output. Mixed index state fails with both recovery options.
+Authored closure assets may be tracked independently of generated output.
 
-This repository's example uses derived mode. Both test entrypoints build the
+This repository's example ignores `.generated/`. Both test entrypoints build the
 package and example before tests read generated files, so the verification order
 (`npm test` before `example:check`) works on a fresh clone. Comparisons rebuild
 the baseline commit with `npm ci`, `npm run build`, then `npm run example:build`
 inside its extraction and read the validated cached output. Head and baseline
 compilation use their respective source and package versions; see the
-[derived baseline contract](../protocol/mokly-derived-baselines.md).
+[per-commit baseline contract](../protocol/mokly-derived-baselines.md).
 
 Declared dependency paths may be files or directories. The manifest preserves
 that declaration, and downstream Browse/Review impact matching treats a
 directory as a root containing every changed descendant rather than requiring
 an exact Git path match.
 
-Pending generated orphans are derived once from the same ownership rule used by
-Check and the output transaction. Link/resource validation and the temporary
-compatibility route inventory exclude those routes before any write begins, so
-a document cannot validate against a file that the successful transaction will
-remove.
+Link/resource validation targets only the candidate generated tree and its
+referenced authored closure, never files left by an earlier build. The closure
+and generated-file inventory are recorded in manifest v6; see
+[generated output](../protocol/mokly-generated-output.md).
 
-Watched Serve and Browse authentication reuse that same versioned,
-comment-safe, newline-portable ownership proof when pruning or presenting
-generated HTML. Public HTML without the header remains a consumer-owned static
-input and may be classified by an explicit watch rule.
+Watched Serve and Browse use the accepted compiled route and validated
+manifest to authenticate generated HTML. They do not parse generated markers.
 
 Catalogue routes use portable URL-unreserved segments, reject Windows device
 filename stems, and end in `.html`. Framework-generated links and redirects
@@ -259,12 +247,11 @@ still percent-encode every path segment defensively; static asset paths may
 therefore contain characters such as spaces without corrupting HTML attributes
 or URL query/fragment boundaries.
 
-`build` writes a same-filesystem staging tree, backs up only files identified by
-Mokly's generated header and a source path beneath this config's authored
-roots, or by the reserved manifest name. It installs staged files by rename and
-restores backups on error. It refuses to overwrite an unknown or foreign HTML
-file, rejects lexical or symlink-resolved targets beneath authored roots, and
-never recursively replaces the consumer's mixed source/asset root.
+`build` stages the whole `.generated/` tree on the same filesystem, moves
+the previous tree aside, installs the staged tree by rename, and restores
+the previous tree on failure. It never replaces the catalogue's authored
+asset/source paths. Serve, export and publication capture in-memory generated
+output and never write the catalogue.
 
 ## Package Browser Assets
 

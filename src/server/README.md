@@ -18,7 +18,7 @@ entry-file shape that can trigger rediscovery. Traversal also skips
 else from its event kind, else from one stat that treats any error as a file.
 `addDir` and `unlinkDir` identify directories; `add`, `change`, and `unlink`
 identify files. Supplied stats avoid that stat, but traversal still reads export
-markers and ownership headers. Deleted matched files rebuild even when named
+markers; `.generated/` is ignored by prefix. Deleted matched files rebuild even when named
 `target`; existing and removed denied directories outrank user watch rules.
 Resource notifications coalesce by path with the latest descriptor.
 Discovery skips `review.outDir`, denied directories, and directories that vanish
@@ -84,7 +84,11 @@ Watched Serve sends that commit as `baselineCommit` on the existing versioned
 uses `ServedReviewRepository` in `review_repository.ts` to open a confined cached
 reader through `readOnlyRepositoryForCommit` / `baselineReaderForCommit` and
 ignore stale versions. The single-process host uses the same holder directly.
-Committed mode can open a Git-blob reader locally, without preparation.
+The Serve parent selects the pinned baseline reader per commit, using complete
+Git blobs or the cache. The child receives the prepared reader; it neither
+builds baselines nor writes output. `serve --build` writes in the parent only
+after complete compilation and resource-watch readiness, including once with
+`--no-watch`; plain Serve never writes output.
 That reader validates the configured Git top level on its first read, so the
 unselected route reports `config-invalid` for a nested `repoRoot` while All
 remains available. Parent preparation, classification and selected readers use
@@ -127,14 +131,11 @@ watch-action boundaries. Diagnostics originating in a supervised child cross a
 validated IPC message so the parent remains the sole terminal owner; a child
 without IPC retains direct diagnostic output.
 
-The [public-exclusion policy](../../docs/protocol/mokly-source-protection.md#public-exclusions)
-adds config-owned `publicExclude` globs to the shared source classifier.
-Case-insensitive README/tsconfig defaults remain when consumers add globs.
-Serve HTTP, generated-resource validation, Review reads, static export and
-public content-change classification test both candidate and realpath-alias
-paths relative to `mockupsDir`. Excluded requests return 404; excluded edits are
-not public content evidence, and exclusion alone never adds `sourceFiles`.
-Manifest/cache privacy and independently discovered authoring inputs remain protected.
+The [referenced asset closure](../../docs/protocol/mokly-generated-output.md#closure-urls-and-publication)
+is the only authored public surface. Serve reads generated routes from memory
+under `.generated/` and referenced assets live at catalogue-relative paths;
+unreferenced requests return 404. Manifest/cache privacy, realpath confinement
+and independently discovered authoring inputs remain protected.
 
 When controls are active, every Serve request uses the
 [Host contract](../../docs/protocol/mokly-component-controls.md#request-and-lifecycle-rules):

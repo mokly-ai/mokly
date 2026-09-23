@@ -155,7 +155,7 @@ views/documents use null, never baseline HTML disguised as current output.
 
 ## Projection And Privacy
 
-Construct an explicit allowlist projection from validated manifest v5, the
+Construct an explicit allowlist projection from validated manifest v6, the
 validated collection forest, and the accepted Changes/comparison snapshot.
 Do not spread a manifest, entry, or internal evidence object into public JSON.
 

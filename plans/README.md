@@ -3,10 +3,10 @@
 ## Active
 
 - [Generated Output Simplification](./generated-output-simplification.md)
-  — Git state replaces the committed/derived modes, only `build` writes
-  (plus `build --watch` and `serve --build`), all generated content moves
-  into a disposable `<mockupsDir>/.generated/` directory referencing authored
-  assets in place, and the ownership machinery is removed.
+  — contracts defined for Git-index tracking, per-commit baselines, opt-in
+  writers, a disposable `<mockupsDir>/.generated/` tree with referenced
+  authored assets, and removal of generated-file ownership machinery;
+  implementation milestones remain active.
 - [Release-Gated Node Compatibility](./release-gated-node-compatibility.md) —
   run the minimum supported runtime on ordinary changes and reserve the full
   Node 22.14/24 compatibility matrix for Release Please pull requests.

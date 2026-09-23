@@ -22,9 +22,10 @@ npx mokly export --out .context/mokly-site
 
 ## What it produces
 
-Export builds first, then packages the catalogue: every screen and page, the
-real id aliases, the assets and the Git comparisons. The result is a directory
-of static files. Export never uploads anything.
+Export compiles without writing generated files to your catalogue, then
+packages every screen and page under `.generated/`, the referenced authored
+assets at their catalogue-relative paths, real id aliases and Git comparisons.
+It does not copy unrelated files or upload anything.
 
 Deploy the directory's contents at the root of an HTTP(S) origin. Hosting
 requirements are on the Catalogue page for export and hosting.
@@ -33,7 +34,8 @@ requirements are on the Catalogue page for export and hosting.
 
 `--out` resolves beside the loaded config rather than your working directory,
 and an absolute path must stay inside the repository root. Choose a directory
-that is missing or empty and outside your source, generated, dependency and
+that is missing or empty and neither contains nor is contained by
+`.generated/`; it must also stay outside source, dependency and
 comparison roots, and keep unrelated files out of it.
 
 A re-export replaces only the output it owns, and restores the previous site
@@ -44,6 +46,6 @@ kept for you to recover by hand.
 ## History
 
 `--base` overrides `review.base`, which defaults to `origin/main`. The branch
-point must exist in the checkout together with the authored assets and either
-the committed generated output or the tooling a derived baseline rebuild
-needs. In CI, check out the full history.
+point must exist in the checkout with enough history to read its complete
+generated tree or rebuild it using that commit's own dependencies and tooling.
+In CI, check out the full history and use a trusted base for rebuilds.

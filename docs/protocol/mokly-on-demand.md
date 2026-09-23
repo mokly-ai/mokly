@@ -7,11 +7,11 @@ hierarchy, schemas, source inventory and output confinement before listening.
 It does not render every document, write output, classify Git changes or transfer
 generated HTML as a prerequisite for Browse. This applies with and without watch.
 
-The live catalogue index is a distinct internal format, not a schema-v5 manifest.
-It describes available views, not completed rendering or usage evidence. A v5
+The live catalogue index is a distinct internal format, not a schema-v6 manifest.
+It describes available views, not completed rendering or usage evidence. A v6
 manifest still requires every view's validated records. Build, Check and Export
-remain exhaustive and produce the same portable artifacts, committed or
-[derived](./mokly-derived-baselines.md) according to `generatedOutput`.
+remain exhaustive and produce the same portable artifacts regardless of
+Git tracking; only explicit Build and `serve --build` write them to disk.
 
 The scale target is command start to searchable navigation and a real selected
 preview visible in under five seconds, cold and warm on the default large fixture.
@@ -21,7 +21,7 @@ reported separately and never repeated during ordinary large-fixture startup.
 
 ## Foreground documents
 
-Generated `/static/` routes render the requested page or screen/component variant,
+Generated `/static/.generated/` routes render the requested page or screen/component variant,
 viewport and scheme through the retained consumer graph. Rendering runs outside
 the HTTP event loop in a bounded, terminable worker. Concurrent requests for the
 same view share work. Only validated results enter the generation-local bounded
@@ -34,7 +34,7 @@ before replacements start. Exhaustive background work uses one worker with a
 1 GiB heap limit and yields between documents and major validation phases.
 
 The single-document compiler reuses exhaustive Build's validation primitives: rendering,
-stylesheet selection, compatibility, logical links, ownership, component ranges,
+stylesheet selection, compatibility, logical links, component ranges,
 props, style/resource metadata, ignore markers, output confinement, and resource
 validation. Navigation without anchors needs the destination's registered route,
 not its rendered HTML. Anchors require the actual destination document; logical
@@ -103,10 +103,12 @@ validation cannot render a destination ahead of that order. Stateful style regis
 can include different unused CSS in on-demand previews; the exhaustive background
 artifacts retain Build's bytes and do not create artificial Changes.
 
-Full generated output is finalized only through the existing transactional output
-store. It never substitutes for demand rendering of the current generation.
-Git-only baseline changes are observed off the HTTP request path, as is any
-derived-mode baseline rebuild. Ref observation
+Full generated output stays in memory unless the parent is running
+`serve --build`; only after a complete successful compilation and ready
+resource watches does the parent transactionally replace `.generated/`.
+The child and HTTP requests never write. Complete output never substitutes
+for demand rendering of the current generation. Git-only baseline changes
+and per-commit baseline rebuilds are observed off the HTTP request path. Ref observation
 must support worktrees and packed refs. Publication and offline consumers accept
 only exhaustive, validated artifacts, never the live index.
 

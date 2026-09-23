@@ -3,7 +3,7 @@
 ## Scope
 
 Mokly is shared developer tooling for repositories that keep visual mockups
-as code with committed or derived static artifacts. The package owns catalogue definitions,
+as code with optional Git-tracked static artifacts. The package owns catalogue definitions,
 generation, validation, browsing, and on-demand comparisons. A consumer owns all product
 screens, product copy, product components, styling, theme setup, and generated
 product output.
@@ -20,7 +20,7 @@ the completed
 [in-frame catalogue link navigation plan](../../plans/in-frame-catalogue-link-navigation.md).
 
 [Whole-document pages](./mokly-pages.md) use the same IDs and hierarchy as
-screens and flows. Current manifests require v5. The
+screens and flows. Current manifests require v6. The
 [breaking migration](./mokly-page-migration.md) removes legacy configuration,
 discovery, and rendering adapters; consumers use ordinary page definitions.
 The co-located layout below, discovered through `entries` globs, was delivered
@@ -39,7 +39,7 @@ by the [co-located entry discovery plan](../../plans/co-located-entry-discovery.
   workflow.
 - The unscoped `mokly`, `mokabook`, and `mockbook` names are not package aliases.
   The latter two are not executable aliases either. Config discovery continues
-  to use `mokly.config.*`; generator identities, ownership markers, and
+  to use `mokly.config.*`; generator identities, plain generated markers, and
   `MOKLY_*` environment variables do not include the npm scope.
 
 The initial supported runtime is Node.js 22.14 or newer. CI must exercise the
@@ -54,7 +54,8 @@ The public commands are:
 mokly                 Alias for `mokly serve`
 mokly serve           Serve the catalogue and diffs; watch by default
 mokly build           Generate static artifacts and the manifest
-mokly check           Validate source and generated output for the configured mode
+mokly build --watch   Generate and update output when inputs change
+mokly check           Validate source; compare disk only when output is tracked
 mokly export --out <path>  Build a complete static catalogue for hosting
 mokly publish         Export and upload to a configured catalogue service
 mokly --help          Show commands, options, and config discovery
@@ -63,7 +64,8 @@ mokly --version       Show the installed package version
 
 Common options include `--config <path>` and opt-in `--debug-timings`
 ([diagnostic contract](./mokly-timings.md)). Serve accepts `--port`, `--base`,
-`--watch`, `--no-watch`, and `--open`. Export requires `--out` and accepts `--base`;
+`--watch`, `--no-watch`, `--build`, and `--open`. Build accepts `--watch`.
+Export requires `--out` and accepts `--base`;
 Publish accepts an optional `--out` and the options in the
 [upload contract](./mokly-upload.md). `--out` on other commands and the removed
 `review` command are rejected.
@@ -78,7 +80,8 @@ boolean flags (including `--help=false`) fail. The same value validation and
 command restrictions apply to both forms; short flags do not take assignments.
 
 The consumer `export` command and its config-relative `--out` option follow the
-[static export contract](./mokly-export.md). It builds first, packages
+[static export contract](./mokly-export.md). It compiles without writing to
+the catalogue, packages
 comparisons using the configured or overridden Git base, and never uploads.
 It adds no public JavaScript API or hosting-provider dependency.
 
@@ -103,16 +106,14 @@ Mokly searches upward for `mokly.config.ts`, `.mts`, `.js`, or `.mjs`, unless
 The [configuration contract](./mokly-configuration.md) defines the complete typed
 shape, path validation, source/output boundaries, and individual field behavior.
 
-`publicExclude` defaults and validation follow the
-[configuration contract](./mokly-configuration.md#public-exclusion-configuration),
-with matching and public access defined by the
-[source-protection contract](./mokly-source-protection.md#public-exclusions).
+Only referenced, validated closure assets are served and exported; see
+[generated output](./mokly-generated-output.md#closure-urls-and-publication).
 
 Two layouts are recommended. Sibling source and output directories use
-`entriesDir: "docs/mockups/entries"`, `mockupsDir: "docs/mockups/generated"`,
+`entriesDir: "docs/mockups/entries"`, `mockupsDir: "docs/mockups"`,
 and `renderer: "docs/mockups/renderer.tsx"` for a repository-root config, with
-public assets in `generated` and development documentation/configuration
-beside it. Co-located entries use `entries: ["src/**/*.mockup.{ts,tsx}"]` so
+referenced authored assets in the catalogue and generated pages only in
+`.generated/`. Co-located entries use `entries: ["src/**/*.mockup.{ts,tsx}"]` so
 each entry module sits beside the product component or screen it describes,
 with the same output and renderer locations. Nested `docs/mockups/src` layouts
 remain supported; source protection applies to every layout. These are
@@ -135,12 +136,12 @@ consumer renderer, React resolution, stylesheet application, and validation.
 ### Temporary Document Compatibility
 
 The [temporary transformer contract](./mokly-rendering.md#temporary-document-compatibility)
-defines the consumer cutover adapter and its ownership constraints.
+defines the consumer cutover adapter and its route/link constraints.
 
 ## Generated Contract
 
-The [generated-output contract](./mokly-rendering.md#generated-contract) defines
-fragments, manifest v5, deterministic ordering, and generated-file ownership.
+The [generated-output contract](./mokly-generated-output.md) defines
+fragments, manifest v6, deterministic ordering, Git tracking and asset closure.
 
 ## Page Migration And Historical Comparisons
 
@@ -148,9 +149,9 @@ fragments, manifest v5, deterministic ordering, and generated-file ownership.
 Register complete synchronous HTML with `definePage` or nested `page`; move
 comment components, source allowlists, and stage policy into consumer code.
 The [migration contract](./mokly-page-migration.md) specifies safe archival
-of verified old artifacts without weakening generated-file ownership.
+of verified old artifacts without weakening source protection.
 
-Current reads accept only canonical `mokly-manifest.json` schema v5 with a
+Current reads accept only canonical `.generated/mokly-manifest.json` schema v6 with a
 `mokly` generator identity and validate the
 [resolved source inventory](./mokly-source-protection.md). Git comparisons
 prefer that filename, then accept the former `mokabook-manifest.json` and

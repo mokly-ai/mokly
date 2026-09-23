@@ -154,12 +154,12 @@ viewport, and effective color scheme. For a route `components/action.html`,
 the default variant's mobile light file is
 `components/action.variants/default.mobile.html`; dark and desktop use the
 existing suffix conventions. Every variant follows this same rule. Output
-collision, ownership, resource, orphan, and transactional-write checks apply.
+collision, resource, closure, and transactional whole-tree checks apply.
 
-Catalogues with registered components emit manifest schema v5, including typed
+Catalogues with registered components emit manifest schema v6, retaining typed
 component entries, variant fragments, and per-view usage records for screens
 and components. The [manifest schema](./mokly-component-manifest.md) defines
-every record, reference, ordering rule, and validation boundary. All current catalogues use v5, including those without components. Historical
+every record, reference, ordering rule, and validation boundary. All current catalogues use v6, including those without components. Historical
 Git readers accept v3, both disjoint v4 formats, and the explicit v2 fallback;
 unknown versions fail. Historical manifests without usage metadata do not imply an empty
 component tree or justify suppressing changes.

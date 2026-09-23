@@ -71,7 +71,7 @@ import { defineConfig } from "@mokly/mokly";
 
 export default defineConfig({
   entriesDir: "docs/mockups/entries",
-  mockupsDir: "docs/mockups/generated",
+  mockupsDir: "docs/mockups",
 });
 ```
 
@@ -120,17 +120,21 @@ Replace the example `<main>` nodes with your product components, then list their
 source files or directories in `dependencies`. An entry file ends in
 `.mockup.ts` or `.mockup.tsx` and exports a `mockups` array.
 
-Mokly derives generated output by default. Keep its HTML, manifest, and cache
-out of Git:
+To keep generated output local, ignore its dedicated directory and cache:
 
 ```gitignore
 .mokly-cache/
-docs/mockups/generated/**/*.html
-docs/mockups/generated/mokly-manifest.json
+/docs/mockups/.generated/
 ```
 
-Mokly's current output requires manifest v5; compatibility readers for older
-formats are limited to historical Git baselines.
+`build` writes only under `docs/mockups/.generated/`; referenced authored
+assets stay under `docs/mockups/` and are served and exported in place. If you
+prefer committed output, commit every file in `.generated/` instead of ignoring
+it. `check` compares the entire tree only when Git indexes it; an incomplete
+index fails with both remedies. Comparison baselines use complete Git blobs or
+rebuild the historical commit independently of today's tracking policy.
+Current output requires manifest v6 (closure and blob-hash inventory); older
+formats are readable only as historical baselines.
 
 ### 4. Open the catalogue
 
@@ -157,8 +161,10 @@ follow the command, for example `mokly build --config tools/mokly.config.ts`.
 | `mokly`                     | Serve the catalogue, render on demand, and watch for changes |
 | `mokly serve --open`        | Serve and open the local URL in a browser                    |
 | `mokly build`               | Validate and transactionally write generated output          |
-| `mokly check`               | Validate the catalogue without writing output                |
-| `mokly export --out <path>` | Build a complete static catalogue for hosting                |
+| `mokly build --watch`       | Write after each successful compilation while watching       |
+| `mokly serve --build`       | Browse and write complete output after successful compiles   |
+| `mokly check`               | Validate; compare disk when Git tracks generated output      |
+| `mokly export --out <path>` | Compile and export without writing catalogue output          |
 | `mokly publish`             | Export and upload to a compatible catalogue service          |
 | `mokly --help`              | Show every command and option                                |
 

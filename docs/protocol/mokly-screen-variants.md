@@ -111,12 +111,12 @@ attribution to the defining module.
 
 Build renders a variant exactly as it renders any screen: one document per
 effective viewport and color scheme through the consumer renderer, with the
-same ownership header, link rewriting, fragment validation, resource
-validation, compatibility transformation, collision and orphan checks, and
-transactional writes. The renderer input carries the variant's own
+same plain generated marker, link rewriting, fragment validation, resource
+validation, compatibility transformation, route collision checks, and
+transactional whole-tree writes. The renderer input carries the variant's own
 `ScreenDefinition`; its `variantId` field is unused for screens.
 
-The manifest stays at schema v5. `ManifestScreen` gains one optional field:
+The manifest stays at schema v6, retaining the v5 variant fields. `ManifestScreen` has one optional field:
 
 ```ts
 interface ManifestScreen {
@@ -265,7 +265,7 @@ Coverage must prove:
 
 - [Public authoring API](./mokly-authoring.md)
 - [Rendering and generated output](./mokly-rendering.md)
-- [Current manifest v5 schema](./mokly-component-manifest.md)
+- [Current manifest v6 and historical component fields](./mokly-generated-output.md)
 - [Catalogue navigation contract](./mokly-navigation.md)
 - [Changes and screen comparisons](./mokly-changes.md)
 - [Catalogue change metadata](./mokly-catalogue-changes.md)

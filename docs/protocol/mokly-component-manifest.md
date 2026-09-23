@@ -2,7 +2,8 @@
 
 ## Delivery Status
 
-Manifest-v5 generation, validation, Serve, and static export are implemented
+Manifest-v5 generation, validation, Serve, and static export established the
+component fields retained by the approved v6 target
 through the public `defineComponent` API. These are the normative interfaces
 for the [component contract](./mokly-components.md). `ManifestEntryBase`,
 `ManifestScreen`, `ManifestPage`, `ManifestCollection`, `ManifestUseCase`,
@@ -15,16 +16,20 @@ and `Viewport` retain the [package contract](./mokly-package.md) and the named
 The optional instance `source` field below is implemented in
 [viewer library Milestone 2](../../plans/mokly-viewer-library.md).
 All existing v5 fields retain their contracts. Updated readers accept
-instances with or without `source`; the manifest version remains 5.
+instances with or without `source`; current output adds the v6 closure and
+generated-file inventory without changing these component records.
 
 ## Entries And Variants
 
 ```ts
-interface ManifestV5 {
-  schemaVersion: 5;
+interface ManifestV6 {
+  schemaVersion: 6;
   generatedBy: "mokly";
   entries: readonly ManifestEntryV5[];
   sourceFiles: readonly string[];
+  assetClosure: readonly string[];
+  generatedFiles: readonly { path: string; blobHash: string }[];
+  blobHashAlgorithm: "sha1" | "sha256";
 }
 
 type ManifestEntryV5 = (
@@ -65,7 +70,7 @@ interface ManifestComponentVariant {
 
 `ManifestScreen` additionally has an optional `variantOf` parent-screen id
 under the implemented [screen variants contract](./mokly-screen-variants.md);
-the field is additive and the schema version stays 5.
+the field is additive and remains unchanged in schema v6.
 
 Common entry metadata keeps its meaning, including source attribution and
 hierarchy-derived `navPath`. Every v5 entry requires `declaredDependencies`,
@@ -217,7 +222,7 @@ render in the view, including its component root when applicable. Ownership is
 an explicit renderer/author assertion, not CSS-selector inference.
 
 Use one schema implementation for Build output, Browse, historical manifest
-parsing, and publishing. Reject unknown fields in current v5 structures, incorrect
+parsing, and publishing. Reject unknown fields in current v6 structures, incorrect
 types, invalid keys/ids/hashes, inconsistent props/schema, duplicate records,
 unsafe paths, and broken cross-references. Preserve current validation of the
 inherited v3 entry forms. The hash must match decoded/validated props.
@@ -229,7 +234,7 @@ in the authoring contract, including every optional dark path. `ownedDependencie
 is a subset of `dependencies`; validate and retain direct-screen overlap evidence.
 
 Entries otherwise sort by route (empty for collections), then id; lexical
-ordering in v5 uses UTF-16 code units rather than a locale-sensitive collator.
+ordering in v6 retains UTF-16 code units rather than a locale-sensitive collator.
 The variant screens of one parent are the exception: emit them in authored
 order directly after their parent and before the next entry in route order.
 That sibling order is the order `variantsById`, the navigation list, the
@@ -244,13 +249,15 @@ declared `slots` list. JSON object keys in new structures sort lexically;
 arrays follow their stated order. Omit absent optional fields; emit required
 empty arrays/objects. Serialize with two-space indentation and a final LF.
 
-Emit v5 for every current catalogue, including those without components. Its
+Emit v6 for every current catalogue, including those without components. Its
 sorted private `sourceFiles` inventory and explicit page entries replace legacy
 discovery; component records retain their complete usage and declaration proof.
-Historical Git readers retain v3, opt-in v2, and both earlier v4 shapes: main's
+Historical Git readers retain v5, v3, opt-in v2, and both earlier v4 shapes: main's
 component format has `legacyPages`, while the page migration format has
 `sourceFiles`. These v4 shapes are disjoint; mixed top-level fields are invalid.
 Current loading rejects every earlier version with a rebuild diagnostic.
+The v6-only closure paths and Git blob-hash algorithm are defined in
+[generated output](./mokly-generated-output.md#manifest-v6-and-per-commit-baselines).
 Do not invent component usage for historical screen/page-only entries or revive
 legacy configuration. Registered document pages retain their material Changes
 and baseline context without screen/component visual comparisons or controls.

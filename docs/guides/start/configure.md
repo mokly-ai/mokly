@@ -9,7 +9,8 @@ order: 2
 
 Create `mokly.config.ts` at the root of the repository and export the result
 of `defineConfig`. Two things are required: where your entry modules live, and
-`mockupsDir`, the folder that receives the generated catalogue.
+`mockupsDir`, the catalogue folder whose `.generated/` child receives only
+generated pages and the manifest.
 
 Entry modules can sit beside the components and screens they describe. List
 one or more `entries` globs, relative to the repository root. Every matched
@@ -22,7 +23,7 @@ import { defineConfig } from "@mokly/mokly";
 
 export default defineConfig({
   entries: ["src/**/*.mockup.{ts,tsx}"],
-  mockupsDir: "docs/mockups/generated",
+  mockupsDir: "docs/mockups",
 });
 ```
 
@@ -33,7 +34,7 @@ If you would rather keep all entry modules in one folder, name it with
 ```ts
 export default defineConfig({
   entriesDir: "docs/mockups/entries",
-  mockupsDir: "docs/mockups/generated",
+  mockupsDir: "docs/mockups",
 });
 ```
 
@@ -54,14 +55,15 @@ import { defineConfig } from "@mokly/mokly";
 export default defineConfig({
   colorSchemes: ["light", "dark"],
   entries: ["src/**/*.mockup.{ts,tsx}"],
-  mockupsDir: "docs/mockups/generated",
+  mockupsDir: "docs/mockups",
   renderer: "docs/mockups/renderer.tsx",
   stylesheets: [{ match: "app/**/*.html", stylesheets: ["app.css"] }],
 });
 ```
 
-Keep public assets such as `app.css` inside `mockupsDir` so the catalogue can
-serve them. Entry modules and the helpers they import are never served, even
+Keep referenced assets such as `app.css` inside `mockupsDir` but outside
+`.generated/` so the catalogue can serve them. Unreferenced files stay
+private. Entry modules and the helpers they import are never served, even
 when a glob reaches into a folder below `mockupsDir`.
 
 ## Where the config is found

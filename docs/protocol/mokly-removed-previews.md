@@ -18,7 +18,8 @@ here and depicted by the design catalogue's
 
 Opening a removed screen or registered page shows the version from the pinned
 Changes baseline: the same branch-point commit that produced its Changes row,
-in committed or [derived](./mokly-derived-baselines.md) mode. The heading keeps
+whether the commit has complete generated blobs or needs a
+[rebuilt baseline](./mokly-derived-baselines.md). The heading keeps
 its Removed badge, breadcrumbs keep the textual baseline ancestry, and Details
 keeps its historical metadata. A quiet label above the stage reads “Showing
 previous version.” No Current selector, comparison band, refresh control, Props
@@ -259,7 +260,7 @@ without inventing views.
 ## Acceptance
 
 Regressions cover removed screens through the selected and complete comparison
-paths in both output modes, removed pages with deleted assets and changed
+paths with either Git-blob or rebuilt baselines, removed pages with deleted assets and changed
 historical CSS, historical page-v4 manifests, path traversal and symlinks,
 current same-path files, malformed and mixed selections, coalescing, refresh,
 invalidation, cancellation, shutdown, idle recovery, both frame adapters,

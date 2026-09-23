@@ -177,9 +177,10 @@ build. The complete API and rendering rules are in
 [Styled catalogue link controls](./mokly-link-controls.md).
 Local resource URLs in HTML source attributes, `srcset`, inline/style-block
 CSS, and transitively referenced HTML/CSS must likewise resolve to public
-static files beneath `mockupsDir` that remain after the pending build. An owned
-generated file absent from the next output set is a pending orphan, never a
-valid link or resource target merely because it still exists before commit.
+regular, unprotected files in the referenced closure beneath `mockupsDir`.
+Generated links must target the new in-memory `.generated/` tree, not a
+previous build's on-disk files. Closure collection and href computation are
+specified in [generated output](./mokly-generated-output.md).
 
 All public exports ship ESM JavaScript and declarations usable by NodeNext and
 bundler TypeScript resolution. The package export map and packed-tarball tests

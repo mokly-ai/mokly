@@ -34,7 +34,7 @@ not remove it from this list. Links can open the actual before/current screen
 comparison even when the screen has no row in Changes.
 
 Affected describes dependency/usage evidence, not proof of a visual regression.
-In derived mode, a resource-byte difference without a changed Git path is a
+For any baseline source, a resource-byte difference without a changed Git path is a
 material change. It does not invent a Git dependency reason or changed path.
 No pixel counts or layout-safety claims are inferred. A changed component can
 alter surrounding layout without changing any screen-owned markup.
@@ -49,8 +49,8 @@ detailed comparisons; unregistered catalogues retain `changedManifestRoutes`.
 
 Lightweight Browse classification reads the current compiled manifest and usage
 metadata together with the baseline manifest and required fragment material.
-Committed mode reads the baseline side from Git branch-point blobs; derived mode
-reads it from the validated rebuilt cache. It does not generate snapshots or copy
+Per-commit selection reads complete Git blobs or the validated rebuilt cache.
+It does not generate snapshots or copy
 comparison assets. Opening All/Changes, navigating, changing viewport/theme in
 Current, and watch notifications retain the no-eager-comparison-generation
 contract. Cache classification by catalogue generation and resolved baseline;
@@ -141,18 +141,17 @@ The decision, in order:
    the actual normalized pair by stripping historical component markers
    from the base, stripping current component markers from the head, and
    applying paired manual-ignore normalization. If the normalized documents
-   differ, take the complete path. Discover the head closure in committed
-   mode and both closures independently in derived mode.
+   differ, take the complete path. Discover both historical and head closures
+   independently, regardless of whether historical bytes came from Git or cache.
 4. When either usage record has instances, styles, or entry-owned slots,
    compute the same ownership projection as the complete comparison, including
    historical/current range validation in each side's marker dialect and
    root-specific ownership.
    Require the projected HTML pair to be equal and discover its resources with
-   the same exclusion policy. In committed mode discover the head closure; in
-   derived mode discover both closures.
+   the same exclusion policy. Discover both closures independently in every case.
 5. If any actual or projected resource is a changed Git path, take the complete
    path; ownership, exclusion, and rule analysis are decided there.
-6. In derived mode, compare historical and current closure membership and
+6. Compare historical and current closure membership and
    bytes independently for actual material and projected material. Any
    difference in either comparison takes the complete path; equal unions do
    not substitute for equal per-comparison sets.

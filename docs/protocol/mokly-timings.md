@@ -74,8 +74,8 @@ Review phases use the same session, role and parent context as their caller:
   inventory keeps its own stages.
   For fast-path-eligible views in a component-aware classification where no
   view differs, the loop emits at most one actual occurrence per paired view
-  in committed mode and two in derived mode. Views with instances, styles, or
-  entry-owned slots may add one committed or two derived projected occurrences. One-sided views add
+  for complete Git-blob baselines and two for rebuilt baselines. Views with instances, styles, or
+  entry-owned slots may add one Git-blob or two rebuilt projected occurrences. One-sided views add
   one occurrence. A repeated discovery for the same side,
   route, content digest, and exclusion callback identity is a defect.
 - `review.css-analysis` measures the synchronous parse/diff/match/reduce pass
@@ -150,11 +150,11 @@ zero-count/share cases and the separate complete-export measurement.
 `fixture:large` explicitly prepares and records an isolated baseline under
 `.context`; setup time includes exhaustive Build and Git and is reported separately.
 `dev:large` and `benchmark:large` reuse that fixture without compiling the package.
-Rebuild Mokly explicitly after package-source edits. Committed mode reuses the
-generated files in Git. Pass `--derived` to setup, Serve and benchmark to select
-a separate record for the same dimensions. Derived setup archives a packaged
-Mokly version and a consumer lockfile, installs the head dependencies, and
-commits only source, authored resources and tooling. Serve rebuilds the archived
+Rebuild Mokly explicitly after package-source edits. A fixture whose generated
+output is tracked reuses complete Git blobs. To benchmark rebuilding, configure
+the fixture with `.generated/` ignored and commit only source, authored
+resources and tooling. Its setup archives a packaged Mokly version and a
+consumer lockfile and installs the head dependencies. Serve rebuilds the archived
 commit through its `baselineBuild` recipe; no cached or committed HTML stands in
 for that build.
 The benchmark launches Chrome before timing a fresh Serve subprocess and measures
@@ -163,7 +163,7 @@ and browser context for an OS-warm restart. “Cold” means application-cold, n
 flushed OS page cache. It also verifies theme/viewport changes, a real Props edit,
 whole-document pages and eventual Changes. Stdout reports each measurement as JSON.
 
-For derived mode, the benchmark clears only the pinned cache entry under the
+For the rebuilt-baseline fixture, the benchmark clears only the pinned cache entry under the
 builder's exclusive lock before the cold run. A locked entry fails setup; stop
 other fixture servers before benchmarking. The warm run retains that output.
 Both runs enforce `usableMs < 5000` and require successful baseline timings with

@@ -26,7 +26,7 @@ ID, route or slug, render callback, and metadata.
 Collections own its membership. Existing `.source.ts`/`.source.tsx` modules may
 remain as ordinary imported render helpers; their filename has no discovery
 meaning. The compiler never scans them into a second inventory. Consumers with
-only structured entries need no screen API rewrite but must rebuild v5 output.
+only structured entries need no screen API rewrite but must rebuild v6 output.
 
 Consumers replace `.source.html` comment templates with ordinary TSX/function
 composition returning complete HTML. Preserve the rendered component content
@@ -39,7 +39,7 @@ Only historical manifest parsing remains for old Git comparisons, as defined
 below. The existing unrelated document-transformer API retains its contract;
 it cannot accept obsolete `legacy` configuration or restore legacy discovery.
 
-## Consumer Migration And Output Ownership
+## Consumer Migration And Generated Output
 
 Before changing the dependency or config, record the old manifest, generated
 page bytes, source/route inventory, anchors, and resources in a clean, recoverable
@@ -48,50 +48,41 @@ its ID from the intended collection. Import its existing `source()` callback
 where possible, with the source in its declared dependencies. Remove `legacy`
 configuration and replace consumer rules that depend on its discovery model.
 
-New page ownership headers name the repository-owned defining module, which
-is an inventoried source: a resolved entry module or a helper it imports.
-An old page header can name a helper beneath the removed `legacy.pagesDir`,
-which is no longer an authorized output owner. The upgraded writer must
-continue refusing that overwrite; do not add a permissive owner fallback or a
-permanent legacy root to make rebuilding succeed.
-
-During the consumer migration, verify each old generated page against the
-saved validated manifest and old config: exact route and source/header match,
-regular file, in-root path, no symlink escape, and no authored-source collision.
-Archive its bytes, then remove only those verified generated files before
-rebuilding at the same routes. This is a consumer migration step, not an
-automatic runtime cleanup command. Unowned or mismatched files require manual
-resolution and must not be deleted. Never remove source files, static assets,
-whole output directories, or generated files outside the recorded inventory.
+Generated pages now live under `<mockupsDir>/.generated/`. Archive old generated
+pages and the old manifest first if those bytes are needed for review. Do not
+migrate a hand-written page into `.generated/`: register it with `definePage`
+or nested `page`. Remove historical output only after verifying it is
+generated; a new build replaces **only** `.generated/`, never authored source
+or closure assets. No source-path header, owner proof, orphan discovery, or
+overwrite refusal is part of the new writer. Its plain marker is not an
+ownership claim.
 
 On failure, restore the previous dependency/config, authoring tree, and artifacts;
 do not commit a half-migrated catalogue. On success, compare old and new route,
-anchor, resource, and rendered-content inventories. Derived mode keeps the
-regenerated pages and v5 manifest as ignored local artifacts and commits the
-authored migration; committed mode commits the regenerated pages with their new
-ownership headers and v5 manifest. A missing document is a migration failure even
+anchor, resource, and rendered-content inventories. Ignore `.generated/` if
+generated output is local-only; if Git tracks it, commit the entire regenerated
+v6 tree with the authored migration. A missing document is a migration failure even
 when the remaining catalogue builds successfully.
 
 Follow the [source-protection contract](./mokly-source-protection.md): record
 the complete config and consumer authoring graphs, validate inventory freshness,
 and protect reserved source basenames even when unimported. Give retained
-unimported helpers a reserved source name or a public exclusion. Removing
+unimported helpers a reserved source name or register them as entries. Removing
 `legacy.pagesDir` must not make authoring inputs public or stop watching imports.
 
 ## Manifest Readers And Git Baselines
 
-New successful builds emit only schema v5. In committed mode, `check` recomputes
-that output without rewriting files and reports an older manifest as stale. In
-derived mode, `check` validates the current compilation and rejects a tracked
-manifest without comparing local artifact bytes. A current Browse or publication
-reader requires v5; encountering v2/v3/v4 reports that the catalogue must be
+New successful builds emit only schema v6. Tracked `check` recomputes the
+entire tree without rewriting files and reports older output as stale;
+untracked `check` validates without comparing local bytes. A current Browse
+or publication reader requires v6; encountering v2/v3/v4/v5 reports that the catalogue must be
 migrated and rebuilt before serving. Watched Serve retains its last-good child if
 a candidate migration fails validation.
 
 Historical v3 manifests remain valid Git baselines; v2 keeps its existing
 `compatibility.readManifestV2` opt-in and filename fallback. A present malformed
 canonical manifest never falls back to the older filename. Build a dedicated,
-typed historical reader so current-v5 validation cannot reject an otherwise
+typed historical reader so current-v6 validation cannot reject an otherwise
 valid screen comparison against a v2/v3 base or silently accept legacy current
 navigation. Parse and validate historical source/route/artifact fields before
 using them; never rewrite the Git baseline or synthesize a current legacy tree.
@@ -145,6 +136,6 @@ workflow. Do not publish a release that implies unchanged consumer compatibility
 Actual npm publication and durable consumer adoption remain coordinated
 follow-ups after an available package version is selected. Deliver consumer
 changes through that repository's commit/push/review workflow, including
-generated output only when the consumer explicitly uses committed mode. Package
+generated output only when the consumer tracks the entire `.generated/` tree. Package
 completion and a disposable rehearsal do not prove that an existing consumer
 catalogue has been updated.

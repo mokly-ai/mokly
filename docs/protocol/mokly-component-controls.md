@@ -127,7 +127,7 @@ registration schema and control constraints, including uneditable props.
 The server resolves the request against the current validated registry,
 merges overrides into that variant's props, validates types/constraints, then
 calls the same consumer render adapter, theme, stylesheet selection, marker,
-link, resource, and ownership validation as Build. Server-supplied context and
+link, resource, and manifest-bound route validation as Build. Server-supplied context and
 uneditable props cannot be overridden. Optional values use an explicit unset
 operation; the tagged null value remains an actual value, not an unset sentinel.
 
@@ -197,7 +197,7 @@ renderer or React resolution graph is permitted.
 Keep transient HTML, usage/props metadata, and generated style/resource bytes
 only in a process-local memory store behind opaque render ids. Mokly never
 spills these artifacts to disk, including `.context`, the OS temporary directory,
-or any source/output root. They never enter a manifest, Check/orphan transaction,
+or any source/output root. They never enter a manifest, Check's tree comparison,
 Git changed-path calculation, watch event stream, or publication inventory.
 Reading existing validated public assets is allowed; generated asset bytes stay
 in the same memory bundle as their document and are served through its render id.
@@ -240,7 +240,7 @@ catalogue routes with rejected non-loopback and accepted forwarded Hosts.
 Prove repeat renders use the same consumer providers and React runtime
 resolution as saved variants and never mutate generated output. Assert that
 control requests create no filesystem output, Git status change, watch event,
-rebuild/reload notification, Check orphan, or publication entry, including when
+rebuild/reload notification, Check extra-file report, or publication entry, including when
 a consumer explicitly watches its repository root. Test aggregate bundle byte
 tracking, expiration/eviction, MIME/headers, and memory release on shutdown.
 

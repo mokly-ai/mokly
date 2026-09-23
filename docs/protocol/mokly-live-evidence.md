@@ -50,7 +50,7 @@ follow the canonical server order after the current tree. Existing rules for
 removed screens/components in All and removed pages only in Changes still apply.
 Changes preparing, loading and empty/unavailable states use the existing
 sidebar design; `preparing` precedes loading only in
-[derived mode](./mokly-derived-baselines.md). A status-only evidence update
+[a per-commit baseline rebuild](./mokly-derived-baselines.md). A status-only evidence update
 carries no routes or snapshot, so entering and leaving `preparing` replaces the
 count slot and the selected-Changes sidebar without touching the tree, the
 current documents, or the focused control. The tree stays `aria-busy` while

@@ -55,7 +55,7 @@ shell can place its Removed row under a surviving parent as the
 [screen variants contract](./mokly-screen-variants.md) specifies; when the
 parent is also removed, each is its own removed entry. `variantOf` is not a
 parallel snapshot field: retaining the complete baseline screen DTO preserves
-it on schema-v5 baselines, while historical v3/v4 screens simply omit it.
+it on schema-v5/v6 baselines, while historical v3/v4 screens simply omit it.
 
 `changedRoutes` is the sorted, unique union of affected current routed entries
 and the selected removed-entry routes. Current route attribution keeps the

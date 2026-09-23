@@ -1,6 +1,6 @@
 # Baseline Storage And Execution
 
-This is the storage and command contract for [derived baselines](./mokly-derived-baselines.md).
+This is the storage and command contract for [per-commit baseline selection](./mokly-derived-baselines.md).
 Historical commands execute trusted repository code; preparation is never an HTTP operation.
 
 ## Rebuild Procedure
@@ -8,7 +8,7 @@ Historical commands execute trusted repository code; preparation is never an HTT
 The builder runs the following steps for one merge-base commit.
 
 The [package `repoRoot` rule](./mokly-package.md#configuration-discovery) applies at
-every Git boundary in both output modes. A root mismatch remains `config-invalid`
+every Git boundary. A root mismatch remains `config-invalid`
 and is not converted to a baseline history error.
 
 1. Resolve the merge base of `HEAD` and the configured base ref with Git. A
@@ -32,15 +32,23 @@ and is not converted to a baseline history error.
    `baseline-command-failed` with the
    zero-based command index, argv, exit code or signal, and the last 40 output
    lines.
-5. Locate `<source>/<mockupsDir>` using the current config's repository-relative
-   `mockupsDir`. Parse its manifest with the historical-manifest reader; the
-   same version rules apply as for committed baselines. A missing directory,
-   missing manifest, or invalid manifest fails as
-   `baseline-output-invalid`. Moving `mockupsDir` between the base and head
-   commits is therefore unsupported in derived mode until the move is merged.
-6. Move `<source>/<mockupsDir>` to the entry's `output` directory, delete the
-   remaining `source` extraction including installed dependencies, write the
-   completion marker. Successful completion of that write is the commit point:
+5. Locate the historical build's actual catalogue root; prefer its
+   `.generated/mokly-manifest.json` and accept historical single-directory
+   manifests for pre-v6 builds. If no valid manifest exists or multiple roots
+   are plausible, fail `baseline-output-invalid`, rather than guessing from
+   the current config. The base and head may use different `mockupsDir` paths.
+6. For v6, move `<source>/<historical mockupsDir>/.generated/` into
+   `output/<historical mockupsDir>/.generated/`, then copy exactly the
+   manifest's `assetClosure` from the source to
+   `output/<historical mockupsDir>/<closure path>`. Validate each file as a
+   confined regular file and reject symlink aliases, missing or protected
+   sources as `baseline-output-invalid`. For old single-directory manifests,
+   move the entire historical catalogue into flat `output/` as before. Readers
+   map validated repository-relative paths into the v6 cache directly, or
+   strip the validated historical mockups prefix for legacy flat cache entries,
+   never today's prefix. Delete the remaining extraction including
+   installed dependencies and write the completion marker. Successful
+   completion of that write is the commit point:
    the result is adopted immediately and cannot be removed by this build's
    failure path. Retention cleanup and lock release are separate best-effort
    post-steps; their failures are reported on stderr and do not fail the build.
@@ -61,24 +69,28 @@ The cache lives at `<repoRoot>/.mokly-cache/baselines/`. It is package
 owned: never served, never watched, never a comparison resource, excluded from
 changed-path evidence and shared-impact globs before those globs are evaluated,
 and never a valid `mockupsDir`, entry glob root, resolved entry module,
-`review.outDir`, or export destination. Consumers add `.mokly-cache/` to their ignore file; derived
-`check` also fails when Git tracks anything under it.
+`review.outDir`, or export destination. Consumers add `.mokly-cache/` to their
+ignore file; the index guard fails if Git tracks anything under it.
 
 ```text
 .mokly-cache/baselines/<commit>/
   lock            # holder pid and start time, created exclusively
   source/         # extraction, removed after adoption
-  output/         # the rebuilt mockupsDir tree
+  output/         # v6: repo-relative .generated plus closure; legacy: flat catalogue contents
   complete.json   # completion marker
-  inputs.json     # JSON string containing repository-relative mockupsDir
+  inputs.json     # JSON string containing repository-relative historical mockupsDir
 ```
 
 `complete.json` is `{ schemaVersion: 1, commit, finishedAt, commands,
-manifestVersion }`. An entry is complete only when the marker parses, its
-`commit` matches the directory name, and `output/<manifest>` exists. Anything
-else is a partial entry and is removed under the lock before the next attempt.
-The historical manifest is validated again on reuse. A complete entry with a
-different `inputs.json` output path or command list fails as
+manifestVersion }`, accepting historical versions 2–5 and current v6. An entry
+is complete only when the marker parses, its `commit` matches the directory
+name, and the manifest exists either in the v6 repository-relative
+`output/<historical mockupsDir>/.generated/` or in the legacy flat `output/`
+tree. Anything else is a partial entry and is removed under the lock before the
+next attempt.
+The historical manifest and its harvested closure are validated again on reuse.
+A complete entry with a different `inputs.json` historical path or
+`complete.json` command list fails as
 `baseline-output-invalid` and remains intact. The commit-only cache holds one
 catalogue/build configuration; remove that entry before changing those settings.
 

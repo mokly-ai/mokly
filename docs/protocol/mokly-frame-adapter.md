@@ -82,7 +82,7 @@ declare function postMessageAdapter(options: {
 
 Each mount owns one immediate viewer-created frame and its current URL/usage.
 The host supplies the selected catalogue view URL; the adapter confines it to
-current `/static/` HTML paths, the configured origin and a valid logical hash.
+current `/static/.generated/` HTML paths, the configured origin and a valid logical hash.
 Caller-approved query parameters are retained; no selectors or comparison paths
 are accepted. Mount replaces the document with iframe history
 replacement semantics while the React shell keeps the portable `src` attribute

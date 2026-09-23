@@ -3,7 +3,7 @@
 ## Scope
 
 This contract defines the user-visible terminal behavior of the `mokly` CLI.
-It covers output-mode selection, rich progress, plain compatibility, errors,
+It covers reporter selection, rich progress, plain compatibility, errors,
 watched Serve events, and interactive shortcuts. It does not change catalogue
 HTTP errors, `MoklyError` messages, generated files, or timing records.
 
@@ -75,7 +75,7 @@ Watch timestamps use the local `HH:mm:ss` clock.
 
 ## Serve layout
 
-Rich Serve begins with the installed version, generation mode, comparison base,
+Rich Serve begins with the installed version, comparison base,
 and config path, followed by its stable URL in a compact bordered panel. The
 panel contains only the address so it remains the primary action; watch state
 and shortcut guidance are dim secondary copy beneath it:
@@ -85,7 +85,7 @@ the ready layout or opens the browser. Once a URL is visible, an immediate
 interrupt must close Serve cleanly rather than terminate it by signal.
 
 ```text
-  mokly 0.10.0                          derived · comparing against origin/main
+  mokly 0.10.0                          comparing against origin/main
   examples/basic/mokly.config.ts
 
   ┌─────────────────────────┐
@@ -111,7 +111,7 @@ watched catalogue then reports existing lifecycle boundaries:
 
 Catalogue counts come from accepted manifest entries. Zero-valued kinds are
 omitted. A baseline cache hit says `Baseline ready · reused <short-sha>`; a
-committed catalogue omits baseline preparation. Unavailable Changes says
+complete Git-blob baseline omits baseline preparation. Unavailable Changes says
 `! Changes unavailable` and preserves All browsing.
 
 Watched actions use one durable line after the action settles:
@@ -152,7 +152,7 @@ actually performs. Phase labels are outcome-oriented: `Loading configuration`,
 Completion summaries are:
 
 ```text
-  ✔ Generated 278 files in examples/basic/generated (5.9s)
+  ✔ Generated 278 files in examples/basic/.generated (5.9s)
   ✔ Mokly output is valid and untracked · 278 files (5.9s)
   ✔ Mokly output is current · 278 files (5.9s)
   ✔ Exported Mokly to .context/mokly-site (8.1s)
@@ -182,6 +182,28 @@ Plain commands add no phase or watch-event lines. Successful plain commands
 write nothing to stderr unless `--debug-timings` was requested. Expected plain
 errors remain exactly `[mokly/<code>] <message>\n`. Timing mode retains the
 same stdout and writes only its documented JSON lines plus existing failures.
+
+`check` prints exactly one success summary: tracked output uses
+`Mokly output is current (<n> files).` and untracked output uses
+`Mokly output is valid and untracked (<n> files).` The rich variants above
+use the same conditions. Missing, stale or extra tracked output is
+`build-invalid`, with each sorted path in its own group, followed by:
+`Run mokly build and commit every file under <mockupsDir>/.generated/, or run git rm -r --cached -- <mockupsDir>/.generated/ and add /<mockupsDir>/.generated/ to .gitignore.`
+Mixed index state uses the exact groups and message in
+[generated output](./mokly-generated-output.md#tracked-state-and-commands).
+
+`build --watch` prints the normal `Generated <n> Mokly files.` (or rich
+`✔ Generated <n> files in <mockupsDir>/.generated (<duration>)`) on the
+initial success and on each subsequent successful compilation/write; rich
+subsequent writes also use the watch timestamp. `serve --build` keeps the
+mode-free Serve header and reports
+`✔ Generated <n> files in <mockupsDir>/.generated (<duration>)` in rich mode,
+or `Generated <n> Mokly files.` in plain mode, after each successful complete
+write. With `--no-watch` that line occurs once after initial compilation.
+Failure prints the normal typed error, leaves the last good generated tree
+intact, and never prints a success line for that generation; watched commands
+remain active for subsequent input changes. Plain watch-event suppression
+does not suppress these explicitly requested write-confirmation lines.
 
 ## Rich errors
 
@@ -237,7 +259,7 @@ state is restored on close. Mokly removes listeners and pauses stdin during
 shutdown so a piped or spawned process cannot be kept alive by shortcuts.
 
 `serve --open` invokes the same browser opener once, after the URL is ready. It
-works in either output mode and with `--no-watch`; the flag is rejected for
+works regardless of Git tracking and with `--no-watch`; the flag is rejected for
 other commands. macOS uses `open`, Linux uses `xdg-open`, and Windows uses
 `cmd.exe /d /s /c start "" <url>`, detached with ignored stdio. A launch failure
 is a warning and does not stop Serve.

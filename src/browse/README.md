@@ -2,13 +2,14 @@
 
 `adaptBrowseDocument(content, route, catalogue)` authenticates current published
 HTML copies for Serve and export. It never writes generated source files or
-comparison snapshots. `trusted_document.ts` derives ownership and the expected
-portable href from the current manifest; unowned resources receive no inspector.
+comparison snapshots. `trusted_document.ts` derives trusted routes and
+expected portable hrefs from the accepted manifest and in-memory compilation;
+authored resources receive no inspector.
 
-The adapter checks the ownership header, complete component marker forest,
+The adapter checks route membership and bytes, complete component marker forest,
 native logical links, duplicate reserved attributes and portable destinations
 before adding package metadata. It preserves live hrefs and targets, deriving
-only the trusted target metadata that parent navigation consumes. Unowned HTML
+only the trusted target metadata that parent navigation consumes. Authored HTML
 has existing reserved navigation attributes stripped from the published copy.
 
 `inspector_metadata.ts` supplies one inert template and the deferred inspector

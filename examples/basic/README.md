@@ -135,8 +135,8 @@ changes. Disabled highlighting explains its specific reason, and outline labels
 use separate rounded chips with a gap above the highlighted region.
 
 Open `design/components/overview.html` in Browse, or open
-[`generated/design/components/overview.desktop.html`](./generated/design/components/overview.desktop.html)
-and [`overview.mobile.html`](./generated/design/components/overview.mobile.html)
+`.generated/design/components/overview.desktop.html` and
+`.generated/design/components/overview.mobile.html`
 directly from disk after `npm run build && npm run example:build`.
 The catalogue hierarchy links all owning design pages;
 there is no navigation footer inside an artboard. Product links connect
@@ -155,7 +155,7 @@ grip; mobile keeps its fixed drawer. The component designs reuse the existing sh
 and a shared icon inspector, with synthetic usage fixtures under
 `entries/design/components/parts`. The real examples use the public `defineComponent` API.
 
-Exclusive component styles live under `generated/design-library/`. Each component
+Exclusive component styles live under `design-library/`. Each component
 owns only its view module and stylesheet. A per-render collector emits exclusive
 sheets only when the component actually renders, including transient prop edits.
 Registration/variant/control metadata stays outside implementation dependencies.
@@ -229,17 +229,18 @@ npm run example:check
 npm run preview:build
 ```
 
-This example uses the default `generatedOutput: "derived"`. Generated HTML and
-the schema-v5 manifest under `generated/` are ignored local artifacts, absent in a fresh clone.
-`example:build` writes them transactionally; `example:check` validates the current
-compilation and rejects tracked generated output without requiring files on disk.
-Committed-mode stale and deterministic-output tests use isolated consumer fixtures.
+This example uses `mockupsDir: "."`. Generated HTML and the schema-v6
+manifest under `.generated/` are ignored local artifacts, absent in a fresh clone.
+`example:build` replaces only that directory transactionally; `example:check`
+validates the current compilation without requiring output on disk. Tracked
+output checks and historical manifest compatibility use isolated fixtures.
 Both `npm test` and `npm run test:browser` build the example before tests read its
 generated files. Baseline fixtures copy authored inputs and use the normal cached
 rebuild through the historical commit's own package source and lockfile. The
 hand-authored stylesheets (`styles.css`, `design.css`, `design-stage.css`,
-`design-review.css`, and the component design stylesheets) also live under `generated/` because it doubles as the
-public static root and remain tracked. The config's `review.baselineBuild` runs
+`design-review.css`, and the component design stylesheets) stay under the
+catalogue root and `design-library/`, referenced in place and tracked. The
+config's `review.baselineBuild` runs
 `npm ci`, `npm run build`, then `npm run example:build` in the historical commit's
 extraction. The package build step ensures comparisons use that commit's own
 Mokly code. The resulting baseline is cached under `.mokly-cache/`.
@@ -247,7 +248,7 @@ Mokly code. The resulting baseline is cached under `.mokly-cache/`.
 package engine into `.context/mokly-preview` for Cloudflare Pages; it is the same
 current catalogue used by the main preview workflow. It preserves search, tags,
 navigation, Light/Dark choices, client assets, and light/dark fragment files.
-Public HTML copies pass through the same ownership-aware link adapter as served
+Generated HTML copies pass through the same manifest-bound link adapter as served
 Browse; direct preview URLs apply one validated `fragment` query progressively
 in the parent shell. PR previews explicitly include Changes and immutable screen and saved component
 comparisons with `--include-changes --base origin/main`. Publishing then prepares

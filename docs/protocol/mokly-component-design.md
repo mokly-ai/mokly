@@ -17,7 +17,7 @@ consumer's previous-version state is implemented by the
 ## Owning Catalogue
 
 Source lives under `examples/basic/entries/design/components/`; generated
-artboards live under `examples/basic/generated/design/components/`. The existing
+artboards live under `examples/basic/.generated/design/components/`. The existing
 Pages → Design → Mokly design → Component explorer collection reaches every
 screen.
 The canonical `overview` screen shows a component page, followed by links to the

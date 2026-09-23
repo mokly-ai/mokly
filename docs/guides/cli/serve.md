@@ -24,6 +24,7 @@ that URL in your default browser as soon as the server is ready.
 | `--base <ref>`    | Git base ref used to find the branch point                     |
 | `--watch`         | Watch your inputs; this is the default                         |
 | `--no-watch`      | Serve one deterministic snapshot                               |
+| `--build`         | Write `.generated/` after each successful complete compilation |
 | `--open`          | Open the served URL in your default browser                    |
 | `--debug-timings` | Report phase timings and catalogue counts on standard error    |
 
@@ -40,6 +41,14 @@ Navigation and local controls are available immediately, and each preview is
 rendered and validated when you ask for it. The complete generated output and
 the Git comparison finish in the background while you read, and previews and
 prop edits take priority over that work.
+
+Generated pages appear under `/static/.generated/` in the served URL; only
+their referenced authored assets are served at `/static/<catalogue path>`.
+Serve normally writes nothing to `.generated/`, even after background work.
+Pass `--build` to write after each successful complete compilation. With
+`--build --no-watch`, Serve writes once after the initial compilation.
+Failures preserve the last-good output and browsing; the parent process,
+never the HTTP child, performs opted-in writes.
 
 A watched server also notices Git ref changes, reloads the page when your
 sources change and keeps your place. `--no-watch` starts the same way but does

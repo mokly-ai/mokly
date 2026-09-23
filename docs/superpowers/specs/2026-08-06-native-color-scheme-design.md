@@ -5,6 +5,9 @@
 - Scope: Mokabook package (authoring, config, build/check, Browse, Review,
   shell design, example)
 
+This is a historical design record. The current generated-output lifecycle and
+manifest schema are defined by [generated output](../../protocol/mokly-generated-output.md).
+
 ## Goal
 
 Make color scheme a first-class variant axis in Mokabook, alongside the
@@ -54,8 +57,8 @@ output.
    current names (`<route>.mobile.html`, `<route>.desktop.html`); dark adds
    `<route>.mobile.dark.html` and `<route>.desktop.dark.html`. Why: enabling
    dark is purely additive — no renames, no diff churn for existing
-   catalogues; disabling dark later makes dark fragments proven orphans that
-   `build` removes and `check` reports through the existing lifecycle.
+   catalogues. Under the current output contract, disabling dark removes those
+   fragments on build; tracked `check` reports them as extra files.
 5. **Manifest schema v3 with one additive optional field**, not a v4
    restructure. Screen entries gain `darkFragments?: { mobile; desktop }`,
    present exactly when the screen's effective schemes include dark. Why:
@@ -171,9 +174,9 @@ interface ManifestScreenAdditions {
 - `darkFragments` is present exactly when the screen's effective schemes
   include dark, and omitted otherwise (never `null`). Validation checks the
   routes like `fragments`. Version 2 compatibility input never produces it.
-- Dark fragments carry the standard generated header, participate in
-  transactional writes, stale/missing/orphan detection, and proven-orphan
-  removal. Turning dark off orphans them; `build` removes, `check` reports.
+- Dark fragments participate in whole-tree transactional writes and tracked
+  missing/stale/extra detection. Turning dark off removes them on build; tracked
+  `check` reports old fragments as extra files.
 
 ## Browse Shell
 
@@ -249,7 +252,7 @@ interface ReviewResultV2 {
 ## Check And Validation
 
 `mokabook check` extends its existing failure classes over dark fragments
-(stale/missing/orphan output, link and resource resolution, anchors,
+(stale/missing/extra tracked output, link and resource resolution, anchors,
 collisions) and adds:
 
 - invalid config `colorSchemes` (empty, duplicates, unknown value, missing

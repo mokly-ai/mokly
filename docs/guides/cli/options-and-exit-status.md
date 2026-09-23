@@ -25,8 +25,9 @@ takes no value. There are no silent positional arguments.
 | `--config <path>`                    | every command                | Use an explicit `mokly.config` file                            |
 | `--debug-timings`                    | every command                | Report phase timings and catalogue counts on standard error    |
 | `--port <port>`                      | `serve`                      | Starting port; advances if occupied, `0` selects any free port |
-| `--watch`                            | `serve`                      | Watch your inputs; the default                                 |
+| `--watch`                            | `serve`, `build`             | Watch inputs; default for Serve                                |
 | `--no-watch`                         | `serve`                      | Serve one deterministic snapshot                               |
+| `--build`                            | `serve`                      | Write `.generated/` after successful compilation               |
 | `--base <ref>`                       | `serve`, `export`, `publish` | Git base ref used to find the branch point                     |
 | `--out <path>`                       | `export`, `publish`          | Config-relative output directory                               |
 | `--endpoint <url>`                   | `publish`                    | Upload URL, or `MOKLY_ENDPOINT`                                |

@@ -50,7 +50,7 @@ values from the same view. It returns `missing` for an absent or different key,
 classify visual or material Changes.
 
 Compiled JSX invocations record optional `source: { path, line, column }` in
-manifest v5. The path identifies the caller inside the repository, with 1-based
+manifest v6. The path identifies the caller inside the repository, with 1-based
 coordinates. Programmatic or already-compiled calls can omit it. The internal
 `__moklySource` prop is reserved from data schemas and slots and stripped before
 validation, hashing and rendering. Source metadata never affects identity or

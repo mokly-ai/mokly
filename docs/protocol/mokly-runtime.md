@@ -7,14 +7,15 @@ defines the required consumer upgrade.
 ## Source Of Truth
 
 Consumer-authored registry modules and imported render helpers are the source of
-truth. In the default [derived mode](./mokly-derived-baselines.md), generated
-fragments, page HTML, and the manifest are local artifacts and the baseline is
-rebuilt from the merge-base commit. Explicit committed mode instead keeps those
-artifacts in Git so they can be reviewed without executing historical code.
+truth. Build writes fragments, page HTML, and manifest v6 only into the
+catalogue's `.generated/` child. The Git index determines whether output is
+tracked; [per-commit baseline selection](./mokly-derived-baselines.md) reads
+complete Git blobs or rebuilds an absent/incomplete historical output.
 Browsing and comparisons consume the same rendered documents and definitions;
 neither may introduce a second screen renderer or catalogue. This repository's
-basic example uses the default derived mode: only its authored inputs,
-including public CSS, are tracked. Build generates its local HTML and manifest.
+basic example tracks authored CSS and ignores `.generated/`; only an explicit
+Build generates its local HTML and manifest. See the
+[generated-output contract](./mokly-generated-output.md) for the complete layout.
 
 ## Delivery Status
 
@@ -25,7 +26,7 @@ automation, and Playwright browser coverage are implemented. Both npm packages
 have completed their [initial registration](./npm-bootstrap.md); subsequent
 versions follow the [coordinated release contract](./npm-release.md).
 Canonical outer navigation from links inside fragment frames, request-visible
-fragment transport, ownership-aware preview adaptation, and active-tree
+fragment transport, manifest-bound preview adaptation, and active-tree
 disclosure are implemented. Their delivery history is recorded in the completed
 [in-frame catalogue link navigation plan](../../plans/in-frame-catalogue-link-navigation.md).
 
@@ -66,18 +67,21 @@ Changes. Screen-owned prop and slot changes still count as screen changes.
 3. Validate registry metadata, routes, relationships, and output collisions.
 4. Render screen fragments and registered whole-document pages in deterministic order.
 5. Resolve id links and validate document links and anchors.
-6. Build the version 5 manifest and resolved source inventory.
-7. Stage every generated file before changing the last-good output.
-8. Atomically replace generated files and remove proven generated orphans.
+6. Build the version 6 manifest, asset closure, generated-file inventory and
+   resolved source inventory; validate closure and hrefs from `.generated/`.
+7. Stage the entire `.generated/` tree before changing the last-good output.
+8. Replace that tree transactionally; restore it on failure.
 
 An error leaves the last-good generated tree unchanged. Build output and
 diagnostics use repo-relative paths and deterministic ordering.
 
 ## Check
 
-`mokly check` computes expected output without mutating files. In
-derived mode it fails when Git tracks generated routes, the manifest or cache
-contents, and does not require generated output to exist or match on disk. It
+`mokly check` computes expected output without mutating files. When the index
+tracks all expected output it compares the entire `.generated/` tree, including
+missing, stale, and extra files. When no output is indexed it ignores local
+output. A mixture fails `build-invalid` with both remedies; indexed cache
+contents fail independently. It
 fails for:
 
 - invalid config or registry metadata;
@@ -93,17 +97,15 @@ fails for:
 - missing `lightStylesheets` / `darkStylesheets` files, or a stylesheet path one
   rule would link twice into the same fragment;
 - invalid or colliding `darkFragments` manifest routes;
-- stale, missing, proven-orphan, or unclaimed generated output in committed
-  mode; unclaimed means Mokly-headered HTML whose owner is outside every
-  configured entry-glob prefix and the current source inventory;
+- missing, stale, or extra generated files when output is tracked;
 - malformed Review-ignore markers or material keys;
 - protected-source or source-inventory violations.
 
-The committed failure report groups missing, stale, orphan, and unclaimed paths.
-Run `mokly build` for the first three. Build does not alter unclaimed files;
-delete them or restore their source under a configured entry glob. Consumer HTML
-without a valid Mokly ownership header is authored public content and is not an
-unclaimed-file error. `check` never rewrites output.
+The tracked failure report groups missing, stale, and extra paths. Run
+`mokly build` and commit the whole tree, or untrack and ignore `.generated/`.
+`check` never rewrites output; Serve, export, and publication never write it.
+Only `build`, `build --watch`, and `serve --build` write after a complete
+successful compilation, as specified in [generated output](./mokly-generated-output.md).
 
 ## Catalogue And Routes
 
@@ -116,7 +118,7 @@ comparisons are defined by [Static export delivery](./mokly-export-delivery.md).
 No server or watcher is started for export; served behavior below is unchanged.
 
 Serve validates its distinct live catalogue index and independently resolves both
-source graphs before binding. Full-manifest consumers still require validated v5
+source graphs before binding. Full-manifest consumers still require validated v6
 output and a current source inventory. These scans never render pages or rewrite
 output. The [on-demand contract](./mokly-on-demand.md) defines completeness,
 worker isolation and generation-local caches. Browse exposes:
@@ -124,7 +126,8 @@ worker isolation and generation-local caches. Browse exposes:
 - `/` for the catalogue home;
 - `/view/<route>` for screens, use cases, and registered whole-document pages;
 - `/id/<id>` as a canonical redirect for routed registry entries;
-- `/static/<path>` for generated fragments, document pages, and consumer assets,
+- `/static/.generated/<route>` for generated fragments and document pages,
+  and `/static/<catalogue-relative closure path>` for referenced authored assets,
   always delivered with `Cache-Control: no-store` because watched rebuilds
   replace bytes at stable URLs;
 - `/__mokly/diffs/review.json` for explicitly requested comparisons, with
@@ -244,15 +247,10 @@ activation. Browse does not grant either
 top-navigation sandbox token, so direct and nested consumer contexts retain the
 active restriction that prevents them from replacing the shell. The
 served/preview adapter authenticates markers only for current-manifest
-screen fragments and generated document pages whose ownership header names that
-entry's manifest `sourcePath`. The versioned header stores that identity as
-canonical base64, keeping arbitrary repository filename bytes out of the HTML
-comment grammar. The adapter shares the strict build/cleanup decoder and
-accepts either LF or CRLF after that exact header. During migration it also
-recognizes the former raw-path header only when its source is valid comment
-content. Unowned HTML loses
-package-reserved metadata in the adapted copy; a trusted route with
-missing/mismatched ownership, invalid markers, or a marker/portable-href
+screen fragments and generated document pages present in the accepted
+in-memory compilation and validated manifest. No textual header provides
+authentication. Any other HTML loses package-reserved metadata in the adapted
+copy; a trusted route with invalid markers or a marker/portable-href
 mismatch fails closed. One strict typed
 target parser supplies inert metadata only to trusted parent enhancement. A
 trusted document that carries an activatable marker and `<base href>` also

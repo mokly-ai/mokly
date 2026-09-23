@@ -12,7 +12,7 @@ paths, and synthetic tests.
 | Registry definitions and validation     | Product screens and fixture data | Source and output roots    |
 | esbuild discovery and one-graph loading | Product component library        | Renderer/module resolution |
 | Static fragments and manifest schema    | Theme/tokens/providers           | Stylesheet rules           |
-| Generated-file ownership and check      | Product CSS/fonts/images         | Document transformer       |
+| Generated-tree replacement and check    | Product CSS/fonts/images         | Document transformer       |
 | Safe routes and catalogue navigation    | Product route semantics          | Additional watch inputs    |
 | Git comparison and Review-ignore rules  | Comparison policy                | Base, output, impact globs |
 | Complete static catalogue export        | Hosting, credentials, deployment | Export output and Git base |
@@ -100,9 +100,9 @@ normal validation. Historical v2/v3 support belongs only to Git comparisons.
 
 Browse serves only the configured mockups root and rejects protected authoring inputs, traversal, and symlink escapes. Watch targets come from resolved config and the complete source inventory; package-owned dependency/build/test/output trees are
 pruned before broad consumer rules, while explicit source modules and
-stylesheets retain their required action. Output HTML is pruned only when its
-versioned, comment-safe generated header decodes to a source beneath an authored
-root; consumer-authored public HTML may use explicit watch rules. A child closes
+referenced stylesheets retain their required action. Generated output under
+`.generated/` is pruned by path, without parsing its plain marker; referenced
+authored closure files remain watched. A child closes
 on either an orderly message/signal or loss of its parent IPC channel, and
 supervisor shutdown waits for confirmed exit while escalating from IPC to
 SIGTERM and SIGKILL. On-demand comparisons read the base
@@ -122,8 +122,8 @@ drains generation work before removing them.
 
 Browse promotes only explicit id-addressed
 catalogue links from manifest-owned generated fragments and complete pages
-whose ownership header matches the entry's manifest `sourcePath` into outer
-Browse routes. Adapted public unowned HTML loses reserved-looking metadata and
+whose route and bytes match the accepted manifest and compilation into outer
+Browse routes. Other adapted authored HTML loses reserved-looking metadata and
 is never trusted. A generated document with an activatable catalogue link
 rejects `<base href>` so its relative fallback cannot resolve differently from
 the portable bytes Browse authenticates. Browse uses same-origin inspection

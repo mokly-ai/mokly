@@ -58,7 +58,7 @@ For inventory group `G` and slug `S`:
 - Registration/schema/variants: `entries/design/library/G/S.tsx`, split into
   short metadata siblings if needed. Render logic: `G/S.view.tsx` and its
   exclusive implementation helpers. Source and visible hierarchy must agree.
-- Public stylesheet: `generated/design-library/G/S.css` when styles are owned
+- Public stylesheet: `design-library/G/S.css` when styles are owned
   exclusively by that component. It is authored CSS, not generated HTML.
 - Saved variant ids and exposed props are defined by the inventory. A single
   selected variant renders at a time, in both actual viewport contexts.
