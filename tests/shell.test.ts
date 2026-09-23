@@ -12,6 +12,7 @@ import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import type { ShellContext } from "../packages/viewer/dist/shell/context.js";
 import { SHELL_CSS } from "../packages/viewer/dist/shell/css.js";
 import { buildNavTree } from "../packages/viewer/dist/shell/nav_tree.js";
+import { renderViewer } from "../packages/viewer/dist/viewer/server.js";
 
 import {
   attribute,
@@ -223,7 +224,7 @@ function tagsRow(...tags: readonly string[]): string {
 }
 
 const SCHEME_SWITCH =
-  '<span aria-label="Color scheme" class="mbk-seg" data-mokly-schemeswitch="" role="group">' +
+  '<span aria-label="Preview color scheme" class="mbk-seg" data-mokly-schemeswitch="" role="group">' +
   '<button aria-pressed="true" data-color-scheme-option="light" type="button">Light</button>' +
   '<button aria-pressed="false" data-color-scheme-option="dark" type="button">Dark</button>' +
   "</span>";
@@ -289,10 +290,28 @@ function assertAttributes(
     assert.equal(attribute(element, name), value, name);
 }
 
-function routePage(catalogue: Catalogue, route: string): string {
+function routePage(
+  catalogue: Catalogue,
+  route: string,
+  extra: Partial<ShellContext> = {},
+): string {
   const entry = catalogue.byRoute.get(route);
   assert.ok(entry);
-  return viewPage(entry, catalogue, { ...context, activeRoute: route });
+  return viewPage(entry, catalogue, {
+    ...context,
+    activeRoute: route,
+    ...extra,
+  });
+}
+
+function embeddedPage(catalogue: Catalogue, screenId: string | null): string {
+  const { readModel } = publicShellContext(catalogue, context);
+  return renderViewer({
+    viewerId: "shell-test",
+    catalogue: readModel,
+    baseUrl: "https://catalogue.example",
+    defaultSelection: { screenId },
+  });
 }
 
 /**
@@ -481,47 +500,46 @@ test("use-case page renders the flow with catalogue links per step", () => {
   assert.match(html, /class="mbk-flow-screen"/);
 });
 
-test("scheme switch renders only for catalogues with dark fragments", () => {
+test("embedded preview switches render only for catalogues with dark fragments", () => {
   const lightOnly = createCatalogue(manifest);
   assert.equal(lightOnly.hasDarkFragments, false);
   assert.equal(
-    homePage(lightOnly, context).includes("data-mokly-schemeswitch"),
+    embeddedPage(lightOnly, null).includes("data-mokly-schemeswitch"),
     false,
   );
   assert.equal(
-    routePage(lightOnly, "screens/welcome.html").includes(
-      "data-mokly-schemeswitch",
-    ),
+    embeddedPage(lightOnly, "welcome").includes("data-mokly-schemeswitch"),
     false,
   );
 
   const dark = createCatalogue(darkManifest);
   assert.equal(dark.hasDarkFragments, true);
-  const home = homePage(dark, context);
+  const home = embeddedPage(dark, null);
   assert.ok(home.includes(SCHEME_SWITCH));
   assert.equal(occurrences(home, "data-mokly-schemeswitch"), 1);
   assert.match(
     home,
-    /data-mokly-search[\s\S]*?class="mbk-search-close"[\s\S]*?<\/button><span aria-label="Color scheme"[\s\S]*?<\/span><\/header>/,
+    /data-mokly-search[\s\S]*?class="mbk-search-close"[\s\S]*?<\/button><span aria-label="Preview color scheme"[\s\S]*?<\/span><\/header>/,
   );
 
-  const screen = routePage(dark, "screens/welcome.html");
+  const screen = embeddedPage(dark, "welcome");
   assert.equal(occurrences(screen, "data-mokly-schemeswitch"), 1);
   assert.equal(occurrences(screen, "data-workspace-scheme"), 1);
+  assert.match(screen, /aria-label="Dark preview"/);
   assert.match(
     screen,
     /class="mbk-view-tools"[\s\S]*?data-workspace-viewport=""[\s\S]*?data-workspace-scheme=""/,
   );
 
-  const flow = routePage(dark, "user-flows/tour.html");
+  const flow = embeddedPage(dark, "tour");
   assert.equal(occurrences(flow, "data-mokly-schemeswitch"), 2);
   assert.equal(flow.includes("data-mokly-viewswitch"), false);
   assert.match(
     flow,
-    /<\/div><span aria-label="Color scheme"[\s\S]*?<\/span><\/div><div class="mbk-flow"/,
+    /<\/div><span aria-label="Preview color scheme"[\s\S]*?<\/span><\/div><div class="mbk-flow"/,
   );
 
-  const legacy = routePage(dark, "legacy/old.html");
+  const legacy = embeddedPage(dark, "old");
   assert.equal(occurrences(legacy, "data-mokly-schemeswitch"), 1);
 });
 
@@ -547,11 +565,11 @@ test("screen stage carries per-frame scheme fragment data", () => {
   const fallback = routePage(dark, "screens/details.html");
   assert.match(
     fallback,
-    /<div class="mbk-frame-wrap mbk-frame-mobile" data-color-scheme-fallback=""><p class="mbk-frame-label">Mobile<span class="mbk-frame-scheme-note"> — Light only<\/span><\/p>/,
+    /<div class="mbk-frame-wrap mbk-frame-mobile" data-color-scheme-fallback="" data-preview-color-scheme="light"><p class="mbk-frame-label">Mobile<span class="mbk-frame-scheme-note"> — Light only<\/span><\/p>/,
   );
   assert.match(
     fallback,
-    /<div class="mbk-frame-wrap mbk-frame-desktop" data-color-scheme-fallback=""><p class="mbk-frame-label">Desktop<span class="mbk-frame-scheme-note"> — Light only<\/span><\/p>/,
+    /<div class="mbk-frame-wrap mbk-frame-desktop" data-color-scheme-fallback="" data-preview-color-scheme="light"><p class="mbk-frame-label">Desktop<span class="mbk-frame-scheme-note"> — Light only<\/span><\/p>/,
   );
   assertAttributes(workspaceFrame(fallback, "mobile"), {
     class: "mbk-frag",
@@ -623,7 +641,7 @@ test("screen stage carries per-frame scheme fragment data", () => {
   const lightFlow = routePage(lightOnly, "user-flows/tour.html");
   assert.match(
     lightFlow,
-    /<div class="mbk-flow-screen"><div class="browser-frame">/,
+    /<div class="mbk-flow-screen" data-preview-color-scheme="light"><div class="browser-frame">/,
   );
   assert.equal(lightFlow.includes("data-fragment-"), false);
 });
@@ -912,8 +930,8 @@ test("filter renders in the nav only when changed routes are known", () => {
 });
 
 test("shell stylesheet stays aligned with the design contract", () => {
-  assert.match(SHELL_CSS, /--mokly-accent: #4f7864/);
-  assert.match(SHELL_CSS, /--mb-added: #1d7a3d/);
+  assert.match(SHELL_CSS, /--_mokly-private-accent-default: #4f7864/);
+  assert.match(SHELL_CSS, /--mb-added: var\(--mbk-accent-deep\)/);
   assert.match(SHELL_CSS, /--mbk-dark-screen-bg: #121514/);
   assert.match(SHELL_CSS, /--mbk-dark-screen-ink: #eef1ef/);
   assert.match(SHELL_CSS, /color-scheme: light/);
@@ -1023,7 +1041,7 @@ test("tag chips select in the accent and the bar clears the scrim", () => {
   const css = flatCss(SHELL_CSS);
   assert.match(
     SHELL_CSS,
-    /\.mbk-chip\.tag \{[^}]*font: inherit;[^}]*cursor: pointer;/,
+    /\.mbk-chip\.tag:is\(a, button\) \{[^}]*font: inherit;[^}]*cursor: pointer;/,
   );
   assert.ok(
     css.includes(
@@ -1032,25 +1050,25 @@ test("tag chips select in the accent and the bar clears the scrim", () => {
   );
   assert.ok(
     css.includes(
-      ".mbk-chip.tag:hover { background: var(--mokly-accent-soft); }",
+      ".mbk-chip.tag:is(a, button):hover { background: var(--mokly-accent-soft); }",
     ),
   );
   assert.ok(
     css.includes(
-      ".mbk-chip.tag.active { background: var(--mokly-accent); " +
+      ".mbk-chip.tag:is(a, button).active { background: var(--mokly-accent); " +
         "border-color: var(--mokly-accent); " +
         "color: var(--mokly-accent-contrast); }",
     ),
   );
   assert.ok(
     css.includes(
-      ".mbk-chip.tag.active svg { color: var(--mokly-accent-contrast); }",
+      ".mbk-chip.tag:is(a, button).active svg { color: var(--mokly-accent-contrast); }",
     ),
   );
   assert.ok(
     css.includes(
-      ".mbk-chip.tag:active { box-shadow: inset 0 1px 2px " +
-        "rgba(20, 28, 22, 0.14); transform: translateY(1px); }",
+      ".mbk-chip.tag:is(a, button):active { " +
+        "box-shadow: var(--chrome-shadow-press); transform: translateY(1px); }",
     ),
   );
   assert.match(
@@ -1099,9 +1117,7 @@ test("the tag picker drops from the field and sheets under the bar", () => {
 
 test("dark scheme paints device screens and leaves the chrome light", () => {
   const css = flatCss(SHELL_CSS);
-  const scope =
-    'body[data-mokly-color-scheme="dark"] ' +
-    ":is(.mbk-frame-wrap, .mbk-flow-screen):not([data-color-scheme-fallback]) ";
+  const scope = '[data-preview-color-scheme="dark"] ';
 
   assert.ok(
     css.includes(
@@ -1133,27 +1149,39 @@ test("dark scheme paints device screens and leaves the chrome light", () => {
       `${scope}.browser-viewport { background: var(--mbk-dark-screen-bg); }`,
     ),
   );
-  assert.ok(
-    css.includes(
-      `${scope}.mbk-frag { background: var(--mbk-dark-screen-bg); }`,
-    ),
+  assert.match(
+    css,
+    /\[data-preview-color-scheme="dark"\] \.mbk-frag \{[^}]*background: var\(--mbk-dark-screen-bg\);/,
   );
 
   const selectors = darkTokenSelectors(SHELL_CSS).map(flatCss);
-  assert.equal(selectors.length, 6);
+  assert.equal(selectors.length, 7);
   for (const selector of selectors) {
-    assert.ok(selector.startsWith(scope.trim()), selector);
+    assert.ok(
+      selector.includes('[data-preview-color-scheme="dark"]'),
+      selector,
+    );
   }
+  assert.equal(
+    selectors.filter((selector) => selector.startsWith(scope.trim())).length,
+    6,
+  );
 
-  assert.match(SHELL_CSS, /\.phone-screen \{[^}]*background: #ffffff;/);
-  assert.match(SHELL_CSS, /\.phone-status \{[^}]*color: var\(--chrome-ink\);/);
   assert.match(
     SHELL_CSS,
-    /\.phone-home \{[^}]*background: rgba\(20, 24, 20, 0\.4\);/,
+    /\.phone-screen \{[^}]*background: var\(--mbk-screen-bg\);/,
   );
   assert.match(
     SHELL_CSS,
-    /\.browser-viewport \{[^}]*background: var\(--chrome-surface\);/,
+    /\.phone-status \{[^}]*color: var\(--mbk-screen-ink\);/,
+  );
+  assert.match(
+    SHELL_CSS,
+    /\.phone-home \{[^}]*background: var\(--mbk-device-home\);/,
+  );
+  assert.match(
+    SHELL_CSS,
+    /\.browser-viewport \{[^}]*background: var\(--mbk-screen-bg\);/,
   );
 });
 
@@ -1187,4 +1215,82 @@ test("one scheme switch instance shows per side of the breakpoint", () => {
         "{ display: inline-flex; } }",
     ),
   );
+});
+
+test("a full document states its appearance and starts it before styles", () => {
+  const catalogue = createCatalogue(manifest);
+  for (const theme of ["light", "dark", "auto"] as const) {
+    const html = homePage(catalogue, { ...context, theme });
+    assert.match(
+      html,
+      new RegExp(`<html[^>]*data-mokly-theme="${theme}"`),
+      theme,
+    );
+    assert.match(html, /<html[^>]*data-mokly-appearance=""/);
+    assert.ok(
+      html.indexOf("appearance-startup.js") < html.indexOf('rel="stylesheet"'),
+      "the startup asset is requested after the stylesheet",
+    );
+  }
+});
+
+test("an omitted or unusable standalone theme renders Auto", () => {
+  const catalogue = createCatalogue(manifest);
+  for (const theme of [undefined, "sideways" as never])
+    assert.match(
+      homePage(catalogue, { ...context, ...(theme ? { theme } : {}) }),
+      /<html[^>]*data-mokly-theme="auto"/,
+      String(theme),
+    );
+});
+
+test("standalone documents offer Appearance instead of preview switches", () => {
+  const light = createCatalogue(manifest);
+  const dark = createCatalogue(darkManifest);
+  for (const [name, catalogue] of [
+    ["light-only", light],
+    ["dual-scheme", dark],
+  ] as const) {
+    const html = homePage(catalogue, context);
+    assert.equal(occurrences(html, "data-mokly-appearance-select"), 1, name);
+    assert.match(html, /aria-label="Appearance"/, name);
+    for (const option of ["Auto", "Light", "Dark"])
+      assert.match(
+        html,
+        new RegExp(`<option value="${option.toLowerCase()}"`),
+        `${name} ${option}`,
+      );
+    assert.equal(html.includes("data-mokly-schemeswitch"), false, name);
+    assert.equal(html.includes("data-workspace-scheme"), false, name);
+  }
+  for (const html of [
+    notFoundPage("view/unknown.html", light, context),
+    routePage(dark, "screens/welcome.html"),
+    routePage(dark, "user-flows/tour.html"),
+  ])
+    assert.equal(occurrences(html, "data-mokly-appearance-select"), 1);
+});
+
+test("the Appearance selector carries every face and starts hidden", () => {
+  const html = homePage(createCatalogue(manifest), context);
+  for (const option of ["auto", "light", "dark"])
+    assert.equal(
+      occurrences(html, `data-appearance-option="${option}"`),
+      1,
+      option,
+    );
+  assert.match(html, /class="mbk-appearance"[^>]*data-appearance-value="auto"/);
+  assert.match(html, /class="mbk-appearance"[^>]*hidden=""/);
+  assert.match(SHELL_CSS, /\.mbk-appearance-option \{\s*display: none;/);
+  assert.match(
+    SHELL_CSS,
+    /\.mbk-appearance\[data-appearance-value="dark"\] > \[data-appearance-option="dark"\]/,
+  );
+  assert.match(SHELL_CSS, /\.mbk-appearance\[hidden\] \{[^}]*display: none;/);
+});
+
+test("an embedded root keeps independent preview controls", () => {
+  const html = embeddedPage(createCatalogue(darkManifest), null);
+  assert.equal(html.includes("data-mokly-appearance-select"), false);
+  assert.equal(occurrences(html, "data-mokly-schemeswitch"), 1);
 });

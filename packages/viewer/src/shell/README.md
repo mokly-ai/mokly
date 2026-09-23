@@ -49,12 +49,14 @@ select the evidence that belongs to the preview; `css_workspace_marks.ts` draws
 the dot and clips its wording.
 The parallel `viewStates` map stores `{ viewport, colorScheme, state }` for each
 ready view under the same key, while a missing key means per-view status is
-unknown. `workspace_views.ts` resolves the documents actually displayed after
-Light fallback, and `view_status.ts` returns status, eligibility, and evidence
-provenance together. Complete matching evidence owns status and eligibility;
-missing, partial, or nonmatching evidence retains the route or saved variant's
-fallback decision. `workspace.tsx` shares that result with status, marks and
-comparison presentation on every axis, saved-variant, or evidence change.
+unknown. `workspace_views.ts` resolves documents actually displayed after
+Light fallback. `view_status.ts` returns status, eligibility, and evidence
+provenance together; missing or partial matching evidence retains the
+selected entry or saved variant's fallback status and eligibility.
+`workspace_context.tsx` owns one routed workspace and its resolved views for
+the top-bar Appearance indicator and workspace. `workspace.tsx` consumes that
+shared resolution on every viewport, scheme, saved-variant, or evidence change
+and passes the effective scheme to controls and comparison presentation.
 
 `css.ts` concatenates the standalone stylesheet. Split string modules preserve
 its exact bytes. The package build scopes an embedded stylesheet separately and
@@ -140,6 +142,33 @@ so native choices remain authoritative until hydration starts. React therefore
 adopts the same attributes on its first render instead of replaying preferences
 after hydration.
 
+Appearance has the same explicit handoff with an earlier first-paint boundary.
+`appearance-startup.js` runs before the stylesheet, resolves Auto/Light/Dark,
+and refreshes the parsed control and frame sources before `src/browser.tsx`
+hydrates. `appearance_bridge.ts` adopts that theme and the body's effective
+scheme into the live shell, independently asking the store for matching preview
+files. A light-only catalogue can therefore keep Light previews without
+rewriting a Dark interface during hydration. Without the startup host, the
+bridge leaves the selector hidden. Embedded roots skip the bridge and receive
+`theme` from their host while retaining independent preview controls.
+Standalone route installation sends scheme pins to that controller; it never
+changes preview selection separately. A reader's choice wins over later pins
+through navigation and browser history. Each preview wrapper records its actual
+file's scheme for iframe media queries, native controls, device colors and
+comparison backgrounds, including globally light-only catalogues. Startup
+updates this frame value before changing a fragment source.
+`css_preview_scheme.ts` owns every preview surface background and iframe
+color scheme. Transparent content therefore keeps its selected Light or Dark
+base in screen, page, component, historical and comparison frames, independently
+of interface appearance. Layout styles leave those properties to this module.
+After the bridge mounts, React's frame adapters exclusively own source changes;
+the startup controller only reports the effective scheme, avoiding iframe
+history entries during manual or automatic appearance changes. The frame-source
+hook preserves initial markup and updates sources only for frames without an
+active adapter; it must not race adapter-owned history-replacing navigation.
+Display-only selection updates preserve manually collapsed filtered groups;
+only changed search, tag or Changes filters reveal their matching groups.
+
 `previews.tsx` renders the one previous-version presentation a removed page and
 a removed screen share: the "Showing previous version" label, the stage host
 carrying the descriptor the React request lifecycle validates, and the shared
@@ -161,10 +190,17 @@ later frame navigation. The copy and Retry contract comes from
 both drop the comparison band there, while removed component variants keep
 theirs.
 `css_previews.ts` styles the stage, including the `mbk-preview-note` and
-`mbk-preview-switch` classes the design catalogue's stage stylesheet owns. Its
+`mbk-preview-switch` classes the design catalogue's stage stylesheet owns. The
 Both-only rule reads the normalized `data-viewport` value on the live stage.
 See [previews](../previews/README.md) for the client side.
 
 See [the package README](../../README.md), the
 [viewer contract](../../../../docs/protocol/mokly-viewer.md), and the
 [shell design](../../../../docs/protocol/mokly-shell-design.md).
+
+During standalone hydration, the workspace adopts the server-rendered status,
+comparison availability and change marks for its first React render. It then
+recomputes that metadata from the active preview selection immediately after
+hydration. The early appearance script already selected the preview files;
+this metadata handoff preserves those frames and avoids rebuilding the shell
+when stored Dark appearance differs from the server's initial Light evidence.

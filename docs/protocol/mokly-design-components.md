@@ -2,10 +2,13 @@
 
 ## Delivery Status
 
-Implemented in the basic consumer. All 80 current design screens record shared
-component instances and retain mobile and desktop artboards. Fifteen registered
-components and 61 saved variants live under Components → Design → Shared
-components, alongside the separate Example Action and Toolbar.
+Implemented in the basic consumer. Every existing design screen retains its
+mobile/desktop fragments and now records shared component instances, and the
+registered components and their saved variants live under
+Components → Design → Shared components, alongside the separate Example Action
+and Toolbar. The manifest `npm run example:build` generates at
+`examples/basic/generated/mokly-manifest.json` is the source of the screen,
+fragment, component and variant counts; this contract does not restate them.
 
 This contract and the [library inventory](./mokly-design-component-library.md)
 define the delivered behavior tracked by the [adoption plan](../../plans/mokabook-design-components.md).
@@ -87,10 +90,10 @@ and closing Details acts locally through its icon; its canonical owning artboard
 remains in the catalogue. Preserve descriptions, metadata, tags and comparison
 evidence when moving the previous disclosure content into its Details slot.
 
-Selected-screen view options appear once, together in the header: a viewport
-dropdown, a theme icon and highlighting where relevant. Remove the old top-bar
-theme placement. Authored light/dark links retain their canonical destinations;
-unsupported transitions stay disabled. Viewport changes select the actual
+Selected-screen view options appear once in the header: a viewport dropdown
+and highlighting where relevant. The top-bar Appearance selector owns the
+catalogue-wide scheme; there is no second scheme icon in the header and no
+authored light/dark link pair. Unsupported transitions stay disabled. Viewport changes select the actual
 mobile/desktop previews without scrolling the whole page. Simultaneous previews
 reserve their intrinsic minimum width and wrap when needed; full-size phone
 frames must never overlap adjacent desktop content. Comparison mode
@@ -140,9 +143,13 @@ Mobile comparison buttons, links and static labels share the same compact
 sizing so the control remains usable with different system fonts.
 No renderer imports of entire screen registries or circular variant imports.
 
-All new design components use `colorSchemes: ["light"]`, like the owning
-artboards. A depicted dark-preview state is an explicit prop, distinct from the
-outer catalogue's color scheme. Select real mobile/desktop render contexts;
+Design components use `colorSchemes: ["light"]`, like the artboards that own
+them, except the appearance selector and the top bar that composes it: their own
+subject is the catalogue's appearance, so they render in both schemes alongside
+the appearance screens. A depicted dark-preview state is an explicit prop,
+distinct from the outer catalogue's color scheme; the appearance artboards set
+that prop from the scheme they were rendered for, so their chrome and previews
+change together. Select real mobile/desktop render contexts;
 device-frame `device` chooses a pictured phone/browser independently of the
 artboard viewport, so a mobile artboard may still depict a desktop comparison.
 

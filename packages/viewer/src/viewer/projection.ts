@@ -164,6 +164,7 @@ export function viewerContext(
   const selected = resolved?.entry;
   return {
     base: "",
+    embedded: true,
     updateVersion: model.revision.evidence,
     comparisons: model.comparisonUrl !== null,
     ...(model.changesStatus === "disabled"

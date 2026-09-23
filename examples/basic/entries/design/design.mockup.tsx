@@ -1,5 +1,6 @@
 import { collection, defineCollection, defineRoot } from "@mokly/mokly";
 
+import { appearanceDesign } from "./browse/appearance/index.js";
 import { removedPageScreens } from "./browse/pages/previous-version/screens.js";
 import { variantScreens } from "./browse/variants/screens.js";
 import { detailsScreen } from "./browse/views/details-screen.js";
@@ -86,6 +87,7 @@ const designMockups = defineRoot({
           segment: "publication",
           title: "Published catalogue",
         }),
+        appearanceDesign,
       ],
       description:
         "The package-owned responsive Browse shell around consumer fragments.",

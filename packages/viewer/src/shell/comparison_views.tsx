@@ -118,6 +118,7 @@ function ComparisonPane({
           data-color-scheme-fallback={
             view.colorScheme === "light" ? "" : undefined
           }
+          data-preview-color-scheme={view.colorScheme}
         >
           <ComparisonFrame
             component={component}

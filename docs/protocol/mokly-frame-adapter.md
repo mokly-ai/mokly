@@ -84,9 +84,10 @@ Each mount owns one immediate viewer-created frame and its current URL/usage.
 The host supplies the selected catalogue view URL; the adapter confines it to
 current `/static/` HTML paths, the configured origin and a valid logical hash.
 Caller-approved query parameters are retained; no selectors or comparison paths
-are accepted. Mount replaces the document with iframe history
-replacement semantics while the React shell keeps the portable `src` attribute
-aligned with the selected view. A superseded same-origin load may arrive during
+are accepted. Mount navigates with iframe history replacement semantics; the
+React shell retains its initial portable `src` after an adapter takes ownership.
+A ready same-origin document may be reused only after mount-scoped
+authentication accepts it. A superseded same-origin load may arrive during
 that handoff; it cannot fail or be adopted by the current mount, which remains
 pending for the exact assigned resource. A load, view/scheme swap or disposal
 invalidates the old session and its pending work; responses from it never update
@@ -199,7 +200,8 @@ assigned resource loads. A document that no mount authenticated, including one
 the frame reached through its own native navigation, keeps portable native-link
 behavior until the replacement authenticates.
 
-The adapter records weak per-frame mount provenance. On the first same-origin
+The adapter records weak per-frame mount provenance and the last assigned
+resource, separately from the iframe's initial `src` attribute. On the first same-origin
 mount only, its immediate watcher may authenticate an already rendered
 document whose resource exactly matches the assignment; this is the explicit
 server-rendered hydration path. Every later mount captures the immediate
@@ -207,8 +209,21 @@ pre-replacement `Document`. When that exact object was not previously
 authenticated for the frame, both the watcher and `load` handler exclude it
 from assigned-resource authentication even if its URL exactly equals the new
 assignment. Only a different replacement `Document` may then pass the resource
-check. Frame and document provenance is weakly held and does not extend either
-object's lifetime.
+check. A rejected starting document must trigger a fresh history-replacing
+navigation even when both its URL and the iframe's `src` equal the assignment;
+URL equality alone cannot justify reuse or waiting for a load that is not in
+progress. This decision is independent of document readiness: rejected starting
+documents and different assigned resources are replaced while loading or
+interactive as well as after completion. Changing the assigned resource also
+cancels any earlier navigation, even when the still-visible authenticated
+document already matches the new choice. A delayed superseded response must
+never overwrite the latest preview selection.
+
+Authenticated matching documents and the initial matching server-rendered
+document are reused without reloading; incomplete accepted documents wait only
+for their own load completion. Only the first mount may wait for a
+startup-assigned recorded fragment that has not committed yet. Frame and
+document provenance is weakly held and does not extend either object's lifetime.
 
 As soon as the new immediate `Document` becomes same-origin-accessible, the
 adapter independently authenticates its exact origin, decoded resource path and

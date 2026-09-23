@@ -205,7 +205,7 @@ test("an unowned frame document stays frame-owned during shell replacement", asy
   });
 
   try {
-    await page.locator("[data-workspace-scheme]").click();
+    await page.getByLabel("Appearance", { exact: true }).selectOption("dark");
     await requestStarted;
     await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
       "data-mokly-frame-state",

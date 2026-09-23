@@ -8,6 +8,11 @@ import {
   type ViewControlsProps,
 } from "../library/controls/view-controls.js";
 
+import {
+  DesignAppearanceScope,
+  useRenderedAppearance,
+  type AppearanceChoice,
+} from "./appearance.js";
 import { DesignNavigation, useDesignNavigation } from "./design_navigation.js";
 import { DESTINATIONS, type DesignDestination } from "./destinations.js";
 import { TopBar } from "./top_bar.js";
@@ -17,6 +22,9 @@ export type ArtboardViewport = "desktop" | "mobile";
 
 interface ShellProps {
   design: DesignDestination;
+  /** Draws the depicted Appearance selector holding this setting. */
+  appearanceChoice?: AppearanceChoice | undefined;
+  changedViews?: readonly ChangedView[] | undefined;
   searchPlaceholder?: string | undefined;
   activeTag?: string | undefined;
   aside?: ReactNode;
@@ -31,6 +39,8 @@ interface ShellProps {
 /** The Mokly shell scaffold for one design mockup. */
 export function Shell({
   activeTag,
+  appearanceChoice,
+  changedViews,
   aside,
   children,
   design,
@@ -41,46 +51,39 @@ export function Shell({
   tagPickerOpen,
   viewport,
 }: ShellProps) {
-  if (viewport === "desktop") {
-    return (
-      <DesignNavigation design={design}>
-        <div className="ce-design">
+  const scheme = useRenderedAppearance();
+  const bar = (
+    <TopBar
+      menuPresentation={menuPresentation}
+      searchPlaceholder={searchPlaceholder}
+      drawerOpen={design === DESTINATIONS.navigation}
+      activeTag={activeTag}
+      appearanceChoice={appearanceChoice}
+      appearanceChanged={changedViews?.some((view) => view.scheme !== scheme)}
+      searchValue={searchValue}
+      tagPickerOpen={tagPickerOpen}
+      viewport={viewport}
+    />
+  );
+  return (
+    <DesignNavigation design={design}>
+      <DesignAppearanceScope>
+        {viewport === "desktop" ? (
           <div className="mbk-shell mbk-shell--desktop">
-            <TopBar
-              menuPresentation={menuPresentation}
-              searchPlaceholder={searchPlaceholder}
-              drawerOpen={design === DESTINATIONS.navigation}
-              activeTag={activeTag}
-              searchValue={searchValue}
-              tagPickerOpen={tagPickerOpen}
-              viewport={viewport}
-            />
+            {bar}
             <div className="mbk-body">
               {nav}
               <main className="mbk-main">{children}</main>
             </div>
           </div>
-        </div>
-      </DesignNavigation>
-    );
-  }
-  return (
-    <DesignNavigation design={design}>
-      <div className="ce-design">
-        <div className="mbk-shell mbk-shell--mobile">
-          <TopBar
-            menuPresentation={menuPresentation}
-            searchPlaceholder={searchPlaceholder}
-            drawerOpen={design === DESTINATIONS.navigation}
-            activeTag={activeTag}
-            searchValue={searchValue}
-            tagPickerOpen={tagPickerOpen}
-            viewport={viewport}
-          />
-          <main className="mbk-main">{children}</main>
-          {aside}
-        </div>
-      </div>
+        ) : (
+          <div className="mbk-shell mbk-shell--mobile">
+            {bar}
+            <main className="mbk-main">{children}</main>
+            {aside}
+          </div>
+        )}
+      </DesignAppearanceScope>
     </DesignNavigation>
   );
 }
@@ -151,16 +154,10 @@ interface ViewSwitchProps {
 
 /** Viewport selection control shown in a selected screen header. */
 export function ViewSwitch({ active, changedViews }: ViewSwitchProps) {
-  const navigation = useDesignNavigation();
-  const scheme = navigation.scheme ?? "light";
-  const nextScheme = scheme === "light" ? "dark" : "light";
   return (
     <viewControls.Component
       moklyInstance={useDesignInstance("viewport")}
       selection={active}
-      scheme={scheme}
-      schemeDisabled={!navigation.schemeLinks?.[nextScheme]}
-      destinations={navigation.schemeLinks ?? {}}
       {...optional("changedViews", changedViews)}
     />
   );

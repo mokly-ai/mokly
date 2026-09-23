@@ -8,8 +8,10 @@ const detailsRow = 'a[data-nav-row][data-route="screens/details.html"]';
 const designHomeRow =
   'a[data-nav-row][data-route="design/browse/views/home.html"]';
 const tourRow = 'a[data-nav-row][data-route="user-flows/example-tour.html"]';
-const topBarScheme = ".mbk-topbar [data-mokly-schemeswitch]";
-const headScheme = ".mbk-screen-head [data-workspace-scheme]";
+const appearance = ".mbk-topbar [data-mokly-appearance-control]";
+const appearanceSelect = "[data-mokly-appearance-select]";
+const face = (value: string) =>
+  `[data-appearance-option="${value}"] .mbk-appearance-value`;
 const mobileFrame = ".mbk-frame-mobile iframe";
 const desktopFrame = ".mbk-frame-desktop iframe";
 const darkSurface = "rgb(18, 21, 20)";
@@ -48,13 +50,13 @@ async function expectSchemeSelected(
   page: Page,
   value: "dark" | "light",
 ): Promise<void> {
-  await expect(page.locator(headScheme)).toHaveAttribute(
-    "aria-pressed",
-    String(value === "dark"),
+  // The document mark is what every frame and caption follows. The control
+  // may read Auto while resolving to the same scheme, so it is asserted where
+  // an explicit choice was actually made.
+  await expect(page.locator("body")).toHaveAttribute(
+    "data-mokly-color-scheme",
+    value,
   );
-  await expect(
-    page.locator(`${topBarScheme} [data-color-scheme-option="${value}"]`),
-  ).toHaveAttribute("aria-pressed", "true");
 }
 
 function computedStyle(
@@ -579,14 +581,19 @@ test("scheme selection survives progressive navigation", async ({ page }) => {
   );
 });
 
-test("grouped scheme controls stay beside the title at both widths", async ({
-  page,
-}) => {
+test("Appearance stays reachable at both widths", async ({ page }) => {
   await page.setViewportSize({ height: 844, width: 390 });
   await page.goto("/view/screens/welcome.html");
-  await expect(page.locator(topBarScheme)).toBeHidden();
-  expect(await computedStyle(page, topBarScheme, "display")).toBe("none");
-  await expect(page.locator(headScheme)).toBeVisible();
+  // Narrow, the control keeps its glyph and drops only its label, so search
+  // and the menu keep their room.
+  await expect(page.locator(appearance)).toBeVisible();
+  // The control renders every face and reveals the current one, so the word is
+  // measured on the face the document is actually in.
+  expect(
+    await computedStyle(page, `${appearance} ${face("auto")}`, "position"),
+  ).toBe("absolute");
+  await expect(page.locator(".mbk-search")).toBeVisible();
+  await expect(page.locator("[data-mokly-menu]")).toBeVisible();
 
   await chooseScheme(page, "dark");
   await expectFrameSource(
@@ -595,22 +602,23 @@ test("grouped scheme controls stay beside the title at both widths", async ({
   );
 
   await page.setViewportSize({ height: 800, width: 1_280 });
-  await expect(page.locator(topBarScheme)).toBeHidden();
-  await expect(page.locator(headScheme)).toBeVisible();
+  await expect(page.locator(appearance)).toBeVisible();
+  expect(
+    await computedStyle(page, `${appearance} ${face("dark")}`, "position"),
+  ).toBe("static");
+  // An explicit choice survives the width change, in the control and in the
+  // document mark the previews follow.
+  await expect(page.locator(appearanceSelect)).toHaveValue("dark");
   await expectSchemeSelected(page, "dark");
 });
 
-test("the catalogue home carries no scheme control when narrow", async ({
-  page,
-}) => {
+test("the catalogue home carries Appearance when narrow", async ({ page }) => {
   await page.setViewportSize({ height: 844, width: 390 });
   await page.goto("/");
+  // Home has no screen head band, so the one control has to be in the top bar.
   await expect(page.locator(".mbk-screen-head")).toHaveCount(0);
-  await expect(page.locator(headScheme)).toHaveCount(0);
-  await expect(page.locator(topBarScheme)).toBeHidden();
-  await expect(page.locator("[data-mokly-schemeswitch]:visible")).toHaveCount(
-    0,
-  );
+  await expect(page.locator(appearance)).toBeVisible();
+  await expect(page.locator("[data-mokly-schemeswitch]")).toHaveCount(0);
 });
 
 test("ID chips copy their ID without navigating", async ({ page }) => {

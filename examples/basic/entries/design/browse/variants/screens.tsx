@@ -1,4 +1,4 @@
-import { screen } from "@mokly/mokly";
+import { MockLink, screen } from "@mokly/mokly";
 
 import { PreviewWorkspace } from "../../components/parts/workspace.js";
 import { DESTINATIONS } from "../../parts/destinations.js";
@@ -192,6 +192,7 @@ function ChangedViews({ viewport }: { viewport: ArtboardViewport }) {
   return (
     <Shell
       design={DESTINATIONS.changedViews}
+      changedViews={DARK_VIEWS}
       viewport={viewport}
       nav={
         viewport === "desktop" ? (
@@ -212,7 +213,11 @@ function ChangedViews({ viewport }: { viewport: ArtboardViewport }) {
         title="Welcome"
       />
       <ExampleWorkspace
-        changedViews="Mobile · Dark, Desktop · Dark"
+        changedViews={
+          <MockLink to={DESTINATIONS.changed}>
+            Mobile · Dark, Desktop · Dark
+          </MockLink>
+        }
         open
         subject="welcome"
         viewport={viewport}
@@ -279,7 +284,7 @@ export const variantScreens = [
     id: "design-browse-changed-views",
     mobile: <ChangedViews viewport="mobile" />,
     rationale:
-      "Color scheme and viewport stay view axes rather than variants, so a change confined to one view is evidence on the view controls: a mark on the theme control and on the viewport dropdown points at the views that changed, the status beside the title describes the shown view, and the details list names them exactly. The theme control opens the dark comparison so the reviewer can reach the change in one step.",
+      "Color scheme and viewport stay view axes rather than variants, so a change confined to one view is evidence on the view controls: a mark on top-bar Appearance and on the viewport dropdown points at the views that changed, the status beside the title describes the shown view, and the details list names them exactly. Appearance selects the scheme; the navigation and Details retain the links to the changed screen.",
     slug: "changed-views",
     title: "Changed views",
   }),

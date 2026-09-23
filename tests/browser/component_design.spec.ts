@@ -67,7 +67,14 @@ for (const viewport of ["desktop", "mobile"] as const) {
       await expect(page).toHaveURL(
         componentDesignUrl("pages/variants", viewport),
       );
-      await expect(page.locator(".ce-canvas:visible button")).toBeDisabled();
+      const preview = page.getByRole("region", {
+        name: `${viewport === "desktop" ? "Desktop" : "Mobile"} component preview`,
+        exact: true,
+      });
+      await expect(page.locator(".ce-canvas:visible")).toHaveCount(1);
+      await expect(
+        preview.getByRole("button", { name: "Continue" }),
+      ).toBeDisabled();
       await expect(page.getByLabel("Supplied props")).toContainText("true");
       await page.getByRole("button", { name: "Usage", exact: true }).click();
       const welcome = page
@@ -95,8 +102,8 @@ for (const viewport of ["desktop", "mobile"] as const) {
       await expect(selectedView).toBeFocused();
       await expect(selectedView).toHaveValue(viewport);
       await expect(
-        page.getByRole("switch", { name: "Dark mode" }),
-      ).not.toBeChecked();
+        page.getByRole("switch", { name: "Dark preview" }),
+      ).toHaveCount(0);
       await page.goto(componentDesignUrl("pages/affected", viewport));
       await expect(
         page
@@ -268,9 +275,12 @@ for (const viewport of ["desktop", "mobile"] as const) {
         page.getByRole("group", { name: "Comparison mode" }),
       ).toHaveCount(0);
       await expect(page.locator(".mbk-pane-missing")).toHaveCount(0);
-      await expect(
-        page.getByRole("switch", { name: "Dark mode" }),
-      ).toBeDisabled();
+      await expect(page.getByRole("switch", { name: "Dark mode" })).toHaveCount(
+        0,
+      );
+      await expect(page.getByLabel("Appearance", { exact: true })).toHaveValue(
+        "light",
+      );
       await expect(
         page.getByRole("switch", { name: "Highlight components" }),
       ).toBeDisabled();

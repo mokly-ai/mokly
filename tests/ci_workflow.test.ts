@@ -7,9 +7,17 @@ import { promisify } from "node:util";
 
 import { parse } from "yaml";
 
+import {
+  SUPPORTED_NODE_RANGE,
+  TESTED_NODE_VERSIONS,
+  isSupportedNodeVersion,
+} from "../dist/cli/bootstrap.js";
+
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
+const testedNodeVersions: readonly string[] = TESTED_NODE_VERSIONS;
+const [minimumTestedNode, currentTestedNode] = TESTED_NODE_VERSIONS;
 const resultVariables = [
   "REPOSITORY_RESULT",
   "PACKAGE_RESULT",
@@ -157,7 +165,41 @@ test("CI shards complete verification behind one prerequisite", async () => {
     assert.equal(setupNode?.with?.cache, "npm");
     assert.ok(job.steps.some((step) => step.run === "npm ci"));
   }
+  assert.equal(setupNodeVersion(repository), 24);
+  assert.equal(setupNodeVersion(native), minimumTestedNode);
+  assert.equal(
+    setupNodeVersion(required),
+    "${{ needs.repository.outputs.node-24-version }}",
+  );
   assertPinnedActions(workflow);
+});
+
+test("local, package and CI runtimes share the Node compatibility policy", async () => {
+  const [version, manifestSource, lockSource, readme] = await Promise.all([
+    fs.readFile(path.join(repositoryRoot, ".node-version"), "utf8"),
+    fs.readFile(path.join(repositoryRoot, "package.json"), "utf8"),
+    fs.readFile(path.join(repositoryRoot, "package-lock.json"), "utf8"),
+    fs.readFile(path.join(repositoryRoot, "README.md"), "utf8"),
+  ]);
+  const manifest = JSON.parse(manifestSource) as {
+    engines: { node: string };
+  };
+  const lock = JSON.parse(lockSource) as {
+    packages: { "": { engines: { node: string } } };
+  };
+  assert.equal(version.trim(), currentTestedNode);
+  assert.equal(manifest.engines.node, SUPPORTED_NODE_RANGE);
+  assert.equal(lock.packages[""].engines.node, manifest.engines.node);
+  assert.ok(
+    readme.includes(`\`${SUPPORTED_NODE_RANGE}\``),
+    "the README must document the supported Node range",
+  );
+  assert.ok(
+    readme.includes("[`.node-version`](./.node-version)"),
+    "development setup must follow the tested Node version",
+  );
+  assert.ok(TESTED_NODE_VERSIONS.every(isSupportedNodeVersion));
+  assert.ok(testedNodeVersions.includes(version.trim()));
 });
 
 test("CI resolves the latest Node 24 patch once for every dependent job", async () => {
@@ -264,4 +306,9 @@ function assertFullHistoryCheckout(job: WorkflowJob): void {
   );
   assert.ok(checkout);
   assert.equal(checkout.with?.["fetch-depth"], 0);
+}
+
+function setupNodeVersion(job: WorkflowJob): unknown {
+  return job.steps.find((step) => step.uses?.startsWith("actions/setup-node@"))
+    ?.with?.["node-version"];
 }

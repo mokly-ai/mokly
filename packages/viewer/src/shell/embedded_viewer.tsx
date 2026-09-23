@@ -3,10 +3,12 @@
 import { useRef } from "react";
 import type { ReactNode, RefObject } from "react";
 
+import { themeAttributes } from "../viewer/theme.js";
 import type {
   ViewerEvents,
   ViewerMarker,
   ViewerSlots,
+  ViewerTheme,
 } from "../viewer/types.js";
 
 import { EmbeddedStageOverlay } from "./embedded_stage_overlay.js";
@@ -25,6 +27,7 @@ export interface EmbeddedViewerShellProps {
   onMarkerChange?: ViewerEvents["onMarkerChange"];
   rootRef?: RefObject<HTMLDivElement | null>;
   slots?: ViewerSlots;
+  theme?: ViewerTheme;
 }
 
 /** Render the actual shell components while preserving ordinary host slots. */
@@ -35,6 +38,7 @@ export function EmbeddedViewerShell({
   onMarkerChange,
   rootRef,
   slots,
+  theme,
 }: EmbeddedViewerShellProps) {
   const store = useShellStore();
   const localRoot = useRef<HTMLDivElement>(null);
@@ -52,6 +56,7 @@ export function EmbeddedViewerShell({
       onKeyDown={store.onShellKeyDown}
       ref={root}
       tabIndex={-1}
+      {...themeAttributes(theme)}
     >
       <a className="mbk-skip-link" href={mainFragment}>
         Skip to content

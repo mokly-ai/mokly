@@ -2,6 +2,11 @@
 
 ## Active
 
+- [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
+  standalone Auto/Light/Dark control for interface and previews, and
+  host-owned theme with independent previews when embedded. Dark neutrals align
+  with Mokly Cloud. Implementation is complete; move this plan to Completed when
+  its implementation PR merges.
 - [Release-Gated Node Compatibility](./release-gated-node-compatibility.md) —
   run the minimum supported runtime on ordinary changes and reserve the full
   Node 22.14/24 compatibility matrix for Release Please pull requests.
@@ -10,7 +15,8 @@
   fixes from PR #101; pushed and reviewed in
   [PR #115](https://github.com/mokly-ai/mokly/pull/115). The historical
   snapshot-selection and mockup parity fixes are verified, pushed and
-  reviewed. The plan stays Active until merge. Later navigation ideas
+  reviewed. Mainline Appearance integration is underway before merge. The
+  plan stays Active until merge. Later navigation ideas
   remain non-blocking follow-ups.
 - [Co-Located Entry Discovery Follow-up](./co-located-entry-discovery-follow-up.md)
   — all deferred seventh/eighth-round findings, the latest entry-layout

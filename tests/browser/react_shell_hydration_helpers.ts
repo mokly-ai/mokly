@@ -53,8 +53,11 @@ export function captureBrowserErrors(page: Page): string[] {
   page.on("console", (message) => {
     if (message.type() !== "error") return;
     const sandboxDiagnostic =
-      message.location().url.includes("/static/") &&
-      message.text().startsWith("Blocked script execution in");
+      message.text().startsWith("Blocked script execution in") &&
+      (message.location().url.includes("/static/") ||
+        /^Blocked script execution in 'https?:\/\/[^/]+\/static\//u.test(
+          message.text(),
+        ));
     if (!sandboxDiagnostic) errors.push(message.text());
   });
   page.on("pageerror", (error) => errors.push(error.message));

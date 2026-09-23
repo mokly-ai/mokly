@@ -20,8 +20,8 @@ in each entry's description and rationale, never inside the rendered screens:
   deliberately has no standalone entry: it depicts a screen that was removed
   on a branch.
 - Supported controls are `MockLink` anchors: brand/home, catalogue leaves,
-  content and flow references, Welcome inspector, paired schemes, comparison
-  modes, and Welcome tag states. Links navigate to design ids, independently of
+  content and flow references, Welcome inspector, comparison modes, and
+  Welcome tag states. Links navigate to design ids, independently of
   the example ids shown in the secondary metadata. The two actual example
   buttons use `MockLink asChild` with their original Firna styles.
 - Viewport, copy, refresh, resize, and collapse-all remain depictions without
@@ -37,17 +37,15 @@ in each entry's description and rationale, never inside the rendered screens:
   [design mockup adoption](../../docs/protocol/mokly-design-links.md#canonical-destination-inventory)
   adds normal light Details and four tag states; that contract owns their
   destinations. The original inspector and forms-open routes stay available.
-- The dark-scheme, light-only, and dark view compare screens are light
-  documents that draw a shell with dark selected, so they opt out of dark
-  generation like every other design screen. Only the depicted device screens
-  change; the shell chrome around them stays light in both schemes.
-- The dark-scheme, light-only, and four tag-state artboards are authored as
-  variants of the canonical Welcome design. Their stable ids now derive routes
-  below `design/browse/views/screen.variants/`; the empty `design-browse-tags`
-  collection remains as historical structure and points readers to Welcome.
-- The dark view compare screen shows the same `Welcome` comparison as the
-  changed screen, in its dark view. The normal scheme control changes the
-  comparison in place, while the catalogue shell remains light.
+- The two established scheme example ids and four tag-state artboards remain
+  variants of the canonical Welcome design. Their routes live below
+  `design/browse/views/screen.variants/`; the empty `design-browse-tags`
+  collection preserves its historical identity and points readers to Welcome.
+- The two retained scheme variants now render both Light and Dark artboards
+  through the shared Appearance selector. Welcome's device screen follows the
+  catalogue scheme; Details keeps its light frames under Dark and names the
+  fallback. The former separate dark comparison artboard is replaced by the
+  dual-scheme canonical changed screen.
 - The screen variant artboards depict `Welcome` owning two variants, `Empty
 workspace` and `Save failed`. Only `Empty workspace` has a design destination;
   `Save failed` is selected by the Changes artboards that own it. The variant
@@ -63,7 +61,7 @@ workspace` and `Save failed`. Only `Empty workspace` has a design destination;
   The removed variant has its own recorded details, like every removed screen.
 - The changed-views artboard records a direct or All-filter arrival at `Welcome`
   while its shown light view is unmodified: the change is confined to the dark
-  views, so the theme control and the viewport dropdown carry a mark and the
+  views, so top-bar Appearance and the viewport dropdown carry a mark and the
   details list them. Color scheme and viewport stay view axes and never become
   variants.
 - The reparented-variant artboard records the one-level fallback: `Welcome` is

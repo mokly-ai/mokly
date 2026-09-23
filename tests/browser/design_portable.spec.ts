@@ -84,9 +84,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       await row.click({ position: { x: (bounds?.width ?? 200) - 5, y: 12 } });
       await expect(page).toHaveURL(design("browse/views/screen", viewport));
     }
-    await page.goto(
-      design("browse/views/screen.variants/dark-scheme", viewport),
-    );
+    await page.goto(design("browse/views/screen", `${viewport}.dark`));
     const link = page.locator(".mbk-shot-link:visible").first();
     await link.focus();
     await expect(link).toHaveCSS("outline-style", "solid");
@@ -95,11 +93,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       path: `.context/design-dark-focus-${viewport}.png`,
       fullPage: true,
     });
-    for (const route of [
-      "review/outcomes/removed",
-      "review/outcomes/dark-scheme",
-      "review/impact/empty",
-    ]) {
+    for (const route of ["review/outcomes/removed", "review/impact/empty"]) {
       await page.goto(design(route, viewport));
       await expect(page.locator(".mbk-cmp-toolbar a")).toHaveCount(0);
       for (const control of await page

@@ -10,12 +10,15 @@ import type { ShellRoute } from "./routes.js";
 import { routeScreenId } from "./routes.js";
 import { openDisclosures, type ShellState } from "./store_state.js";
 
-/** Apply a user-authored search or filter and reveal its matching groups. */
+/** Reveal matching groups only when the selection's filters actually change. */
 export function withFilterSelection(
   state: ShellState,
   selection: ViewerSelection,
 ): ShellState {
-  return withSelection(state, selection, true);
+  const filtersChanged =
+    !sameQuery(state.selection, selection) ||
+    state.selection.view !== selection.view;
+  return withSelection(state, selection, filtersChanged);
 }
 
 /** Install a route, revealing only the destination path and hidden constraints. */
@@ -38,10 +41,6 @@ export function withRoute(
     selection.variantId = route.variant;
   else delete selection.variantId;
   if (route.viewport) selection.viewport = route.viewport;
-  if (route.colorScheme)
-    selection.colorScheme = catalogue.hasDarkFragments
-      ? route.colorScheme
-      : "light";
   if (catalogue.publicModel)
     selection = revealSelection(catalogue.publicModel, selection);
   let next = withSelection(state, selection, false);

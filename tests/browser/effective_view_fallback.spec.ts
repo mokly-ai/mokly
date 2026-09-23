@@ -51,9 +51,9 @@ test("a light-only screen deep link keeps effective Light evidence through a bac
       "aria-pressed",
       "true",
     );
-    await expect(
-      page.getByRole("button", { name: "Dark mode", exact: true }),
-    ).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator("[data-mokly-appearance-select]")).toHaveValue(
+      "dark",
+    );
     await expect(page.locator(SCHEME_DOT)).toBeHidden();
     expect(fixture.comparisonRequests).toBe(0);
   } finally {
@@ -93,9 +93,9 @@ test("a light-only saved variant uses its displayed scheme for status and marks"
 
     await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");
     await expect(page.locator(TOOLBAR)).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "Dark mode", exact: true }),
-    ).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator("[data-mokly-appearance-select]")).toHaveValue(
+      "dark",
+    );
     await expect(page.locator(SCHEME_DOT)).toBeHidden();
     for (const frame of await page.locator("[data-workspace-frame]").all())
       await expect(frame).not.toHaveAttribute("src", /\.dark\.html$/);

@@ -3,7 +3,6 @@ import { COMPONENT_NAVIGATION_STATES } from "../components/parts/navigation_stat
 import {
   DESTINATIONS as D,
   type ComparisonMode,
-  type DepictedScheme,
   type DesignDestination,
 } from "./destinations.js";
 import type { CatalogueTag } from "./tags.js";
@@ -20,14 +19,13 @@ export interface NavigationState {
   all?: DesignDestination;
   changes?: DesignDestination;
   comparison?: Partial<Record<ComparisonMode, DesignDestination>>;
-  scheme?: DepictedScheme;
-  schemeLinks?: Partial<Record<DepictedScheme, DesignDestination>>;
   tags?: TagState;
 }
 
 const welcomeFilters = { all: D.welcome, changes: D.current };
 const detailsFilters = { all: D.details, changes: D.added };
-const welcomeModes = {
+/** Welcome routes that form one complete comparison family. */
+export const welcomeModes = {
   current: D.current,
   "side-by-side": D.changed,
   overlay: D.overlay,
@@ -36,6 +34,16 @@ const welcomeModes = {
 const welcomeBrowse: NavigationState = {
   ...welcomeFilters,
   tags: { active: null, picker: false },
+};
+const appearanceFilters = {
+  all: D.appearance,
+  changes: D.appearanceSideBySide,
+};
+/** Appearance routes that form one complete comparison family. */
+export const appearanceModes = {
+  current: D.appearance,
+  "side-by-side": D.appearanceSideBySide,
+  difference: D.appearanceDifference,
 };
 
 /** Canonical states for the entire design registry, never inferred from labels. */
@@ -70,21 +78,38 @@ export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
   [D.variantChanges]: { all: D.variantSelected },
   [D.variantRemoved]: { all: D.welcome },
   [D.variantReparented]: { all: D.home },
-  [D.changedViews]: { all: D.welcome, schemeLinks: { dark: D.darkChanged } },
+  [D.changedViews]: { all: D.welcome },
   [D.tour]: {},
-  [D.welcome]: { ...welcomeBrowse, schemeLinks: { dark: D.darkWelcome } },
-  [D.details]: { ...detailsFilters, schemeLinks: { dark: D.darkDetails } },
+  [D.welcome]: { ...welcomeBrowse },
+  [D.welcomeAppearanceVariant]: { ...welcomeBrowse },
+  [D.detailsAppearanceVariant]: { ...detailsFilters },
+  [D.details]: { ...detailsFilters },
   [D.inspector]: { ...welcomeBrowse },
-  [D.darkWelcome]: {
-    ...welcomeFilters,
-    scheme: "dark",
-    schemeLinks: { light: D.welcome },
+  [D.appearance]: {
+    ...appearanceFilters,
+    comparison: appearanceModes,
   },
-  [D.darkDetails]: {
-    ...detailsFilters,
-    scheme: "dark",
-    schemeLinks: { light: D.details },
+  [D.appearanceLightOnly]: { ...appearanceFilters },
+  [D.appearanceAuto]: { ...appearanceFilters },
+  [D.appearanceProps]: { ...appearanceFilters },
+  [D.appearanceInstance]: { ...appearanceFilters },
+  [D.appearanceDrawer]: {
+    ...appearanceFilters,
+    drawer: { open: true, to: D.appearance },
   },
+  [D.appearanceSideBySide]: {
+    ...appearanceFilters,
+    comparison: appearanceModes,
+  },
+  [D.appearanceDifference]: {
+    ...appearanceFilters,
+    comparison: appearanceModes,
+  },
+  [D.appearanceHome]: { all: D.appearance },
+  [D.appearanceLoading]: { all: D.appearance },
+  [D.appearanceError]: { all: D.appearance },
+  [D.appearanceUnavailable]: { all: D.appearance },
+  [D.appearanceFlow]: { all: D.appearance },
   [D.tagPicker]: {
     ...welcomeBrowse,
     tags: { active: null, picker: true },
@@ -107,11 +132,7 @@ export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
   },
   [D.current]: { ...welcomeFilters, comparison: welcomeModes },
   [D.overlay]: { ...welcomeFilters, comparison: welcomeModes },
-  [D.changed]: {
-    ...welcomeFilters,
-    comparison: welcomeModes,
-    schemeLinks: { dark: D.darkChanged },
-  },
+  [D.changed]: { ...welcomeFilters, comparison: welcomeModes },
   [D.difference]: { ...welcomeFilters, comparison: welcomeModes },
   [D.added]: { ...detailsFilters },
   [D.removed]: { all: D.home },
@@ -119,11 +140,6 @@ export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
   [D.removedLoading]: { all: D.home },
   [D.removedUnavailable]: { all: D.home },
   [D.removedNoView]: { all: D.home },
-  [D.darkChanged]: {
-    ...welcomeFilters,
-    scheme: "dark",
-    schemeLinks: { light: D.changed },
-  },
   [D.shared]: { all: D.welcome, changes: D.styleMatched },
   [D.ignored]: { all: D.welcome, changes: D.styleUnresolved },
   [D.empty]: { all: D.welcome },

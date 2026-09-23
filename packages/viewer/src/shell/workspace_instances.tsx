@@ -43,7 +43,6 @@ export function WorkspaceInstances({
               type="button"
             >
               {context.viewport === "mobile" ? "Mobile" : "Desktop"}
-              {` · ${context.colorScheme}`}
             </button>
           ))}
         </div>

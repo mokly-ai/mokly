@@ -25,8 +25,8 @@ export interface RoutedWorkspaceData {
 export function useWorkspaceData(
   catalogue: Catalogue,
   context: ShellContext,
-  entry: WorkspaceData["entry"],
-): RoutedWorkspaceData {
+  entry: WorkspaceData["entry"] | undefined,
+): RoutedWorkspaceData | undefined {
   const live = useViewerLiveState();
   const initial = useViewerInitialWorkspace();
   const staticEvidence = useStaticWorkspaceEvidence();
@@ -34,7 +34,7 @@ export function useWorkspaceData(
     WorkspaceData | undefined
   >();
   const fallback = useMemo(
-    () => workspaceData(catalogue, context, entry),
+    () => (entry ? workspaceData(catalogue, context, entry) : undefined),
     [catalogue, context, entry],
   );
   const [, refresh] = useReducer((value: number) => value + 1, 0);
@@ -50,13 +50,14 @@ export function useWorkspaceData(
   if (!matchingWorkspace(dataRef.current, entry)) {
     dataRef.current = selected;
     adoptedRef.current = selected;
-  } else if (adoptedRef.current !== selected) {
+  } else if (dataRef.current && selected && adoptedRef.current !== selected) {
     mergeWorkspaceEvidence(dataRef.current, selected);
     adoptedRef.current = selected;
   }
 
   useEffect(() => {
     if (
+      !entry ||
       !staticEvidence ||
       matchingWorkspace(initial, entry) ||
       matchingWorkspace(staticWorkspace, entry)
@@ -76,18 +77,21 @@ export function useWorkspaceData(
     return () => controller.abort();
   }, [entry, initial, staticEvidence, staticWorkspace]);
 
-  return {
-    data: dataRef.current,
-    refresh,
-    ...(live.request ? { request: live.request } : {}),
-  };
+  return dataRef.current
+    ? {
+        data: dataRef.current,
+        refresh,
+        ...(live.request ? { request: live.request } : {}),
+      }
+    : undefined;
 }
 
 function matchingWorkspace(
   data: WorkspaceData | undefined,
-  entry: WorkspaceData["entry"],
+  entry: WorkspaceData["entry"] | undefined,
 ): data is WorkspaceData {
   return (
+    entry !== undefined &&
     data?.entry.id === entry.id &&
     data.entry.kind === entry.kind &&
     data.entry.route === entry.route

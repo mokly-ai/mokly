@@ -92,7 +92,8 @@ export function createInitialShellState(
       view: recovery?.view ?? "all",
       viewport: recovery?.viewport ?? "both",
       colorScheme:
-        catalogue.hasDarkFragments && recovery?.colorScheme === "dark"
+        catalogue.hasDarkFragments &&
+        (initial?.colorScheme ?? recovery?.colorScheme) === "dark"
           ? "dark"
           : "light",
       search: parsed.freeText,

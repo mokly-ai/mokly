@@ -32,14 +32,20 @@ export type ShellView =
  * screens, and the narrow-width home of the scheme switch, which the top bar
  * has no room for below the breakpoint.
  */
-function HeadActions(props: { catalogue: Catalogue; target: RouteTarget }) {
+function HeadActions(props: {
+  catalogue: Catalogue;
+  embedded?: boolean;
+  target: RouteTarget;
+}) {
   if (props.target.entry.kind === "page") {
     return null;
   }
   return (
     <>
       {props.target.entry.kind === "screen" ? <ViewportSwitch /> : null}
-      {props.catalogue.hasDarkFragments ? <SchemeSwitch /> : null}
+      {props.embedded && props.catalogue.hasDarkFragments ? (
+        <SchemeSwitch />
+      ) : null}
     </>
   );
 }
@@ -78,7 +84,11 @@ function TargetView(props: {
     <>
       <ScreenHead
         action={
-          <HeadActions catalogue={props.catalogue} target={props.target} />
+          <HeadActions
+            catalogue={props.catalogue}
+            embedded={props.context.embedded ?? false}
+            target={props.target}
+          />
         }
         crumbs={head.crumbs}
         heading={head.title}

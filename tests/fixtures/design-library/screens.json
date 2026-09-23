@@ -400,14 +400,6 @@
     }
   },
   {
-    "id": "design-review-dark-scheme",
-    "route": "design/review/outcomes/dark-scheme.html",
-    "fragments": {
-      "desktop": "design/review/outcomes/dark-scheme.desktop.html",
-      "mobile": "design/review/outcomes/dark-scheme.mobile.html"
-    }
-  },
-  {
     "id": "design-review-difference",
     "route": "design/review/outcomes/difference.html",
     "fragments": {

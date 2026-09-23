@@ -89,11 +89,10 @@ for (const viewport of ["mobile", "desktop"] as const) {
     assert.doesNotMatch(components, /Welcome|Example tour/);
   });
 
-  test(`${viewport}: all five owning destinations render as light-only designs`, async () => {
+  test(`${viewport}: all five owning destinations keep their route and frame`, async () => {
     for (const [id, route] of additions) {
       const { entry, document } = await designDocument(id, viewport);
       assert.equal(entry.route, route);
-      assert.equal(entry.darkFragments, undefined);
       assert.equal(byClass(document, "mbk-shell").length, 1);
       assert.equal(
         byClass(
@@ -135,39 +134,6 @@ for (const viewport of ["mobile", "desktop"] as const) {
         assert.ok(!rows.includes("Example tour"), id);
       }
     }
-  });
-
-  test(`${viewport}: light endpoints expose the paired scheme control`, async () => {
-    for (const id of [
-      "design-browse-screen",
-      "design-browse-details-screen",
-      "design-review-changed",
-    ]) {
-      const { document } = await designDocument(id, viewport);
-      assert.equal(
-        elements(
-          document,
-          (node) => attribute(node, "aria-label") === "Switch to dark mode",
-        ).length,
-        1,
-        id,
-      );
-    }
-  });
-
-  test(`${viewport}: a light-only fallback presents its effective Light status`, async () => {
-    const { document } = await designDocument(
-      "design-browse-light-only",
-      viewport,
-    );
-    assert.deepEqual(
-      byClass(document, "ce-change-status").map((node) =>
-        textContent(node).trim(),
-      ),
-      ["Unmodified"],
-    );
-    assert.equal(byClass(document, "ce-view-changed").length, 0);
-    assert.equal(byClass(document, "mbk-cmp-toolbar").length, 0);
   });
 }
 

@@ -66,7 +66,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
     );
   });
 
-  test(`${viewport} scheme, comparison, tags, and flow links use canonical designs`, async ({
+  test(`${viewport} comparison, tags, and flow links use canonical designs`, async ({
     page,
   }) => {
     await page.route("**/id/design-browse-screen", async (route) => {
@@ -77,15 +77,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
     await page.goto("/view/design/browse/views/screen.html");
     await chooseViewport(page, viewport);
     const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
-    await frame.getByRole("link", { name: "Switch to dark mode" }).click();
-    await expect(page).toHaveURL(
-      /\/design\/browse\/views\/screen\.variants\/dark-scheme\.html$/,
-    );
     await frame.locator(".mbk-shot-link:visible").first().click();
-    await expect(page).toHaveURL(
-      /\/design\/browse\/views\/screen\.variants\/light-only\.html$/,
-    );
-    await frame.getByRole("link", { name: "Switch to light mode" }).click();
     await expect(page).toHaveURL(
       /\/design\/browse\/views\/details-screen\.html$/,
     );

@@ -593,6 +593,37 @@ The residual risk is behavior in browsers other than the Chromium runs covered
 by the gate and desktop/mobile Serve smoke. This review record is a
 documentation-only follow-up; it does not change the reviewed implementation.
 
+### Milestone 20: Align retained Welcome variants with Appearance
+
+Tags: mockup
+
+Retain the approved variant IDs and six route moves in the catalogue while
+adopting mainline Appearance's shared screen layout. The retired
+`design-review-dark-scheme` mockup remains removed.
+
+- [x] Rebuild the two retained Welcome appearance variants with the shared
+      Light/Dark artboards, preserving their stable IDs and moved routes.
+- [x] Align mockup contracts, example documentation, and the frozen inventory
+      with the four other approved route moves and both retained variants.
+- [x] Verify the focused design and frozen-inventory regressions.
+
+### Milestone 21: Verify and deliver the mainline merge
+
+- [x] Merge `origin/main` at `d4228f9`, resolve conflicts, and preserve both
+      branches' features and approved routes.
+- [x] Repair the merged browser tests that still target retired design paths
+      or the old Dark-mode button, and verify the affected cases (8/8 Chromium
+      focused cases pass).
+- [x] Run the full `cargo xtask check` gate and Serve smoke tests in both
+      appearances; inspect the resulting diff against main. The full gate
+      passed 2,412/2,412 Node and 777/777 Chromium cases; real Serve passed
+      all eight appearance and viewport checks without page errors.
+- [ ] After checks pass, run `git add -A`, commit the merge using a
+      Conventional Commit, and push the branch.
+- [ ] After the push, review the complete local diff against `origin/main`
+      using [the implementation review prompt](../docs/implementation-review-prompt.md);
+      report findings without changing the implementation.
+
 ## Post-merge follow-up (non-blocking)
 
 These are the original plan's later product ideas, carried forward without

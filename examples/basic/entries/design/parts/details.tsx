@@ -17,7 +17,7 @@ function DetailsBody({
   subject,
 }: {
   activeTag?: string | undefined;
-  changedViews?: string | undefined;
+  changedViews?: ReactNode;
   subject: ScreenSubject;
 }) {
   const metadata = SUBJECTS[subject];
@@ -75,7 +75,7 @@ type DetailsPanelProps = {
   /** Tag drawn as the selected chip because it is the current search term. */
   activeTag?: string | undefined;
   /** Views whose render changed, listed when the change misses the shown one. */
-  changedViews?: string | undefined;
+  changedViews?: ReactNode;
   open?: boolean;
   comparisonEvidence?: ReactNode;
 } & (

@@ -23,6 +23,18 @@ hydration. Load or page exit cleans up capture state, and unfiltered choices use
 the existing durable preference. The standalone build continues to deliver
 this entry as `navigation-resize.js`.
 
+Standalone appearance is also owned under `src/standalone`, not by a second
+client interaction runtime. The classic `appearance-startup.js` bundle restores
+the document mark, preference and system listener before styles paint, updates
+parsed frames and the native selector, and exposes a narrow refresh handoff.
+The browser entry refreshes that controller before hydration; the React bridge
+then adopts its effective document scheme while the shell store independently
+selects an available preview scheme. The selector stays hidden if the classic
+host is absent. Persisted page exits keep the controller for back-forward-cache
+restoration and refresh it on return; final exits dispose it and its lifecycle
+listeners. The complete build-output manifest delivers both the classic bundle
+and `react-shell.js`.
+
 `frame_adapter.ts` defines the transport-independent mount, boundary, highlight,
 scroll and event interfaces in the [frame contract](../../../../docs/protocol/mokly-frame-adapter.md).
 They are exported by `@mokly/viewer`. A host supplies
@@ -47,6 +59,18 @@ on the first same-origin mount. A later mount excludes its exact unrecorded
 starting object even when its URL equals the assignment, so an unowned document
 reached through native frame navigation keeps portable link behavior until a
 different replacement object authenticates.
+Once hydrated, adapters exclusively navigate live previews with history
+replacement. The server's initial `src` may therefore remain unchanged after a
+scheme swap. `same_origin_load.ts` decides reuse, waiting, or replacement from
+document ownership and the last assigned resource before considering readiness.
+A new resource assignment cancels any superseded navigation, even if the
+still-visible document already matches the latest choice. Rejected starting
+documents are replaced while loading or interactive as well as after completion;
+slow resources must not strand a scheme switch or reconnect. Only the first
+mount may wait for a startup-assigned recorded fragment already loading.
+An authenticated matching document can reconnect without reloading and waits
+for completion before inspection becomes ready. Matching URLs alone do not
+authorize reuse.
 
 Frames holding a previous version carry `data-mokly-preview-frame` and
 `data-mokly-preview-source`. They are owned directly by the
