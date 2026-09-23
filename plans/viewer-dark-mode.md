@@ -1,7 +1,7 @@
 # Viewer Dark Mode
 
-Status: dark palette alignment is in progress; the documentation and mockup milestones
-through 2M and delivery Milestones 3 through 10 are complete. The built-in
+Status: implementation complete; the documentation and mockup milestones
+through 2M and delivery Milestones 3 through 14 are complete. The built-in
 preview toggle switches every dual-scheme mockup, the standalone catalogue has
 one Auto/Light/Dark Appearance control, embedded viewers accept a host-owned
 theme, and the runtime, palette, startup asset and verification boundaries are
@@ -1057,7 +1057,7 @@ Use the same Dark neutral roles in standalone and embedded viewers.
 - [x] Check contrast and visually smoke-test mobile and desktop through
       `npm run dev`, including appearance switching and light preview isolation.
 
-## Milestone 14: Verify, commit, push and review the palette
+## Milestone 14: Verify, commit, push and review the palette (complete)
 
 Validate and deliver the palette alignment on the current branch.
 
@@ -1065,9 +1065,9 @@ Validate and deliver the palette alignment on the current branch.
       `npm run example:check`, and `cargo xtask check`. Passed 2,338
       unit/integration tests, 755 Chromium tests, 10 Rust tests, all five packed
       consumers, 22 focused palette/theme tests, and desktop/mobile live smoke.
-- [ ] After checks pass, run `git add -A`, commit using Conventional Commits,
+- [x] After checks pass, run `git add -A`, commit using Conventional Commits,
       push the current branch, and verify the remote ref and clean worktree.
-- [ ] Only after the push, use
+- [x] Only after the push, use
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`. Report findings
       without changing the implementation.

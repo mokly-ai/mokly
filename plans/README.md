@@ -4,8 +4,8 @@
 
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
   standalone Auto/Light/Dark control for interface and previews, and
-  host-owned theme with independent previews when embedded. Dark palette
-  alignment with Mokly Cloud is in progress; move this plan to Completed when
+  host-owned theme with independent previews when embedded. Dark neutrals align
+  with Mokly Cloud. Implementation is complete; move this plan to Completed when
   its implementation PR merges.
 - [Release-Gated Node Compatibility](./release-gated-node-compatibility.md) —
   run the minimum supported runtime on ordinary changes and reserve the full
