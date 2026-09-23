@@ -10,7 +10,7 @@ records delivery. Unregistered catalogue and legacy behavior remains intact.
 
 Changes counts directly changed routed entries, including components, once per
 entry. Variants, instances, and affected consumers do not increase that count.
-Existing collection ancestor disclosure and screen-to-use-case propagation
+Existing folder ancestor disclosure and screen-to-use-case propagation
 remain; an affected-only screen does not make its use cases changed.
 
 | Edit                                                          | Direct Changes entries | Secondary impact                                              |

@@ -41,7 +41,7 @@ styling, and rendering context.
 
 - **Use real product UI.** Screens are React nodes composed from the same
   components, providers, styles, and assets as the product.
-- **See the whole product in one place.** Collections, search, tags, mobile and
+- **See the whole product in one place.** Path-based folders, search, tags, mobile and
   desktop views, color schemes, pages, components, and user flows share one
   catalogue.
 - **Review outcomes, not file lists.** The Changes view compares rendered
@@ -93,24 +93,20 @@ React Native Web style collection. See the
 
 ### 3. Add a screen
 
+The path-based authoring example below describes the approved target contract;
+its implementation is tracked in the [plans index](./plans/README.md).
+
 Create `docs/mockups/entries/account.mockup.tsx`:
 
 ```tsx
-import { defineCollection, defineScreen } from "@mokly/mokly";
+import { defineScreen } from "@mokly/mokly";
 
 export const mockups = [
-  defineCollection({
-    id: "account",
-    title: "Account",
-    description: "Account product screens.",
-    childIds: ["account-home"],
-    dependencies: [],
-    relatedDocs: [],
-  }),
   defineScreen({
     id: "account-home",
     title: "Account home",
     description: "The account landing screen.",
+    navPath: ["Account"],
     route: "account/home.html",
     mobile: <main>Account on mobile</main>,
     desktop: <main>Account on desktop</main>,
@@ -134,7 +130,7 @@ docs/mockups/generated/**/*.html
 docs/mockups/generated/mokly-manifest.json
 ```
 
-Mokly's current output requires manifest v5; compatibility readers for older
+The target output requires manifest v6; compatibility readers for older
 formats are limited to historical Git baselines.
 
 ### 4. Open the catalogue
@@ -185,14 +181,14 @@ Detailed command references:
 Mokly's public API is declarative. Definitions describe what belongs in a
 catalogue; your React tree still owns what each screen looks like.
 
-| Concept              | Use it for                                                  | Guide                                                                   |
-| -------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Screens              | Product states, view renders, and full-screen variants      | [Screens](./docs/guides/authoring/screens.md)                           |
-| Collections and tags | Navigation hierarchy and searchable vocabulary              | [Collections and tags](./docs/guides/authoring/collections-and-tags.md) |
-| Components           | Typed props, saved variants, controls, and usage inspection | [Components](./docs/guides/authoring/components.md)                     |
-| Use-case flows       | Ordered journeys composed from existing screens             | [Use-case flows](./docs/guides/authoring/use-case-flows.md)             |
-| Pages                | Existing complete HTML documents without device variants    | [Pages](./docs/guides/authoring/pages.md)                               |
-| `MockLink`           | Portable links between catalogue entries                    | [Links](./docs/guides/authoring/links.md)                               |
+| Concept          | Use it for                                                  | Guide                                                               |
+| ---------------- | ----------------------------------------------------------- | ------------------------------------------------------------------- |
+| Screens          | Product states, view renders, and full-screen variants      | [Screens](./docs/guides/authoring/screens.md)                       |
+| Folders and tags | Navigation paths and searchable vocabulary                  | [Folders and tags](./docs/guides/authoring/collections-and-tags.md) |
+| Components       | Typed props, saved variants, controls, and usage inspection | [Components](./docs/guides/authoring/components.md)                 |
+| Use-case flows   | Ordered journeys composed from existing screens             | [Use-case flows](./docs/guides/authoring/use-case-flows.md)         |
+| Pages            | Existing complete HTML documents without device variants    | [Pages](./docs/guides/authoring/pages.md)                           |
+| `MockLink`       | Portable links between catalogue entries                    | [Links](./docs/guides/authoring/links.md)                           |
 
 A custom renderer is the integration boundary for product providers, themes,
 stylesheets, fonts, and full-document markup. Mokly resolves React from the

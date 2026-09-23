@@ -30,6 +30,7 @@ export const accountHome = defineScreen({
 | ---------------------- | ---------------------------------------------------------- |
 | `id`                   | Lowercase kebab-case identity, stable across renames       |
 | `title`, `description` | What the catalogue shows                                   |
+| `navPath`              | Folder labels above this screen (defaults to `[]`)         |
 | `route`                | Where the documents are written under `mockupsDir`         |
 | `mobile`, `desktop`    | The React node each viewport renders                       |
 | `dependencies`         | Repository paths this screen is made from                  |
@@ -79,8 +80,8 @@ color schemes, dependencies and related docs unless it sets its own, and it
 keeps its own global id, so a link to `account-home-empty` opens it like any
 screen. Its `useCaseIds` defaults to an empty list and never inherits; list a
 flow only when one of that flow's steps names the variant. A variant cannot
-declare variants of its own, and a collection never lists a variant directly;
-it belongs to the parent's collection through the parent. The call returns a
+declare variants of its own or an independent `navPath`; it copies the
+parent's path and appears beneath the parent row. The call returns a
 readonly array containing the parent first and then the variants in authored
 order; `mockups` exports may include that result directly. A call without
 `variants` continues to return one screen definition. Nested `screen` markers
@@ -90,25 +91,19 @@ accept the same `variants` field and flatten in the same order.
 
 `defineRoot` flattens a nested tree into ordinary definitions, so a folder of
 related screens is described once. Children are markers made by `screen` and
-`collection`, and their routes come from the root path, the collection
+`folder`, and their routes come from the root path, the folder
 segments and each slug.
 
 ```tsx
-import { collection, defineRoot, screen } from "@mokly/mokly";
+import { defineRoot, folder, screen } from "@mokly/mokly";
 
 export const mockups = defineRoot({
   path: "account",
-  collection: {
-    id: "account",
-    title: "Account",
-    description: "Account product screens.",
-  },
+  title: "Account",
   children: [
-    collection({
-      id: "account-billing",
+    folder({
       segment: "billing",
       title: "Billing",
-      description: "Billing screens.",
       children: [
         screen({
           id: "account-invoice",
@@ -125,9 +120,10 @@ export const mockups = defineRoot({
 ```
 
 The route of that screen is `account/billing/invoice.html`: the root path, the
-collection segment and the slug, with the extension added for you. A nested
-child inherits `dependencies` and `relatedDocs` from its ancestors; tags are
-never inherited.
+folder segment and the slug, with the extension added for you. The screen's
+`navPath` is `["Account", "Billing"]`; changing those titles does not change
+its route. A nested child inherits `dependencies` and `relatedDocs` from its
+ancestors; tags are never inherited. An empty `folder()` is an authoring error.
 
 ## Exported types
 

@@ -137,7 +137,7 @@ interface MoklyUploadV1 {
 
 - `moklyVersion` is the installed package's exact SemVer (at most 255 bytes), including prerelease
   or build metadata when present. `schemaVersion` versions this envelope,
-  independently of catalogue manifest v5 and review v2/v3.
+  independently of catalogue manifest v6 and review v2/v3.
 - `repository` obeys the identity grammar above; it is an assertion to authorize,
   not proof of repository ownership. `host` is at most 253 bytes; owner and name
   are each at most 255 bytes.

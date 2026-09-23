@@ -9,8 +9,8 @@ consumer rendering follows the [rendering contract](./mokly-rendering.md).
 The root package export supplies typed, documented authoring helpers:
 
 - `defineConfig`;
-- `defineScreen`, `definePage`, `defineCollection`, and `defineUseCase`;
-- `defineRoot`, `collection`, `screen`, and `page` for nested trees;
+- `defineScreen`, `definePage`, and `defineUseCase`;
+- `defineRoot`, `folder`, `screen`, and `page` for nested trees;
 - `defineComponent` and its schema-derived props, variants, and control types;
 - `mockLink` and `MockLink` for id-addressed links;
 - `ReviewIgnore`, `ReviewIgnoreScope`, and `reviewMaterialKey`.
@@ -23,12 +23,12 @@ renderer, and compatibility-transformer interfaces. `ColorScheme` is exactly
 The [registered component contract](./mokly-components.md) owns the complete
 `defineComponent` shape, slots, repeated-instance identity, dependencies, saved
 variants, and runtime prop schema. It returns a renderable `Component` facade
-and a registry `entry`; collections can reference that entry like a screen.
+and a registry `entry` with its own `navPath` like a screen.
 Component pages and controls use the existing consumer renderer and providers.
 
-A screen owns one mobile React node and one desktop React node. A collection is
-structural and owns child ids but no route. A use case owns ordered references
-to existing screens and never defines a screen inline. A page owns one
+A screen owns one mobile React node and one desktop React node. A use case
+owns ordered references to existing screens and never defines a screen inline.
+A page owns one
 complete HTML document from a synchronous render callback, with no device or
 color variants. The [page contract](./mokly-pages.md) defines both explicit
 and nested authoring forms. Ids are explicit,
@@ -41,7 +41,8 @@ field, validation, and public grouping. A variant inherits the parent's
 address, color schemes, dependencies, related docs, and tags when it omits
 them. Its use-case membership never inherits: `useCaseIds` defaults to an empty
 list because a variant must reciprocate only the flows whose steps name that
-variant. `defineScreen` returns one `ScreenDefinition` when `variants` is absent
+variant. Its `navPath` is always copied from its parent, never authored on
+the variant. `defineScreen` returns one `ScreenDefinition` when `variants` is absent
 and a readonly parent-first array of screen definitions when it is present.
 Entry-module loading flattens that array one level.
 
@@ -50,22 +51,24 @@ A dependency may identify an existing repository file or directory; Review
 matches the path itself and every descendant and reports the concrete changed
 path as impact evidence. Dependency declarations and source paths alone do not
 add entries to Browse Changes: that filter compares output, rendered resources,
-reviewable metadata, and collection ancestry, then propagates affected screens
+reviewable metadata, and `navPath`, then propagates affected screens
 to their flows. See [the Changes contract](./mokly-changes.md).
 Screens, pages, and use cases provide a stable relative `.html` route; use cases live
 under `user-flows/`. Screens may
 provide an address-bar label and use-case membership. Nested definitions
 inherit declared metadata, but ids never derive from tree position.
 
-Collection `childIds` are the only structured navigation hierarchy. Each child
-may have at most one collection parent. A collection cannot repeat one child,
-reference itself, participate in a longer collection cycle, or reference an
-unknown id. Entries that no collection claims are catalogue roots. Breadcrumbs
-are the root-to-parent sequence of ancestor collection titles; authors never
-provide a separate breadcrumb or navigation-label path. A variant screen is
-the one exception to direct claiming: it belongs to its parent's collection
-through `variantOf`, is never listed in `childIds`, and its breadcrumbs end
-with the parent title.
+Every routed screen, page, use case, and component has `navPath: readonly
+string[]`: the ordered folder labels from its section root to its parent.
+Flat inputs may omit it or pass `undefined` (default `[]`, a top-level leaf); nested leaves derive
+it and must not author it. The Pages section holds screens, pages, and use
+cases; Components holds components. Each section builds its own folder tree
+from shared path prefixes. Identical labels under one parent merge across
+modules; the same path in different sections makes independent folders.
+The rendered navigation omits a section with no matching current or retained
+removed entries; the public tree retains both section arrays as `[]` when
+they have no current entries. No empty folder is emitted. Breadcrumbs
+are the `navPath` labels, followed by the parent screen title for a variant.
 
 The common and nested-root input boundary is:
 
@@ -74,55 +77,88 @@ interface EntryInput {
   dependencies: readonly string[];
   description: string;
   id: string;
+  navPath?: readonly string[];
   rationale?: string;
   relatedDocs: readonly string[];
   title: string;
 }
 
-interface CollectionInput extends EntryInput {
-  childIds: readonly string[];
-}
-
-interface RootCollectionInput {
+interface NestedFolderInput {
   address?: string;
+  children: readonly NestedChild[];
   dependencies?: readonly string[];
-  description: string;
-  id: string;
-  rationale?: string;
   relatedDocs?: readonly string[];
+  segment: string;
   title: string;
 }
 
 interface RootInput {
+  address?: string;
   children: readonly NestedChild[];
-  collection?: RootCollectionInput;
+  dependencies?: readonly string[];
   path: string;
+  relatedDocs?: readonly string[];
+  title?: string;
 }
 ```
 
-`defineRoot` always flattens nested children into ordinary definitions and
-preserves their real `childIds` relationships. With `collection` metadata it
-also emits that titled collection as the parent of every direct child. Without
-`collection`, its direct children remain catalogue roots. A migration that
-previously used a synthetic path label must add a real parent collection if
-that visible group and breadcrumb should remain; genuinely top-level entries
-stay unclaimed.
+`defineRoot({ path, title?, children, address?, dependencies?, relatedDocs? })`
+flattens nested `screen()` and `page()` leaves into ordinary definitions;
+`folder({ title, segment, children, address?, dependencies?, relatedDocs? })`
+groups children without creating an entry or route. A leaf's `navPath` is
+`[root.title?, ...ancestor folder titles]`, excluding its own title. An
+omitted root title leaves direct children top-level. Root `path`, folder
+`segment`s, and leaf `slug` compose routes; changing titles only moves
+navigation, not routes. Ancestor dependencies and related docs inherit with
+existing override behavior; address inheritance applies to screens only.
+Folders have no id, description, rationale, or entry status. An authored
+`navPath` key on a nested `screen()` or `page()` is an `invalid-nested-nav-path`
+registry violation naming the leaf id, even when its value is `undefined`:
+flattening retains the fact that it was authored rather than overwriting it.
+An empty `folder().children` fails at `defineRoot` flattening with
+`MoklyError("build-invalid", "folder <route directory> has no children")`,
+where `<route directory>` is root `path` followed by ancestor and current
+`segment`s joined by `/`. An empty titled root has no leaf to report a
+per-entry issue and would silently discard a folder: `defineRoot` rejects it
+with `MoklyError("build-invalid", "root <path> has no children")`. An untitled
+empty root returns no definitions.
+
+Each folder label (every path segment, root title if supplied, and folder
+title) must be a string, nonempty, have no leading or trailing ECMAScript
+whitespace (`/^\s|\s$/u`), and contain no `/`. Invalid segments yield a
+per-entry `invalid-nav-path` registry issue naming the entry id, zero-based
+offending index, and offending label (including its value for non-strings).
+An explicit non-array path is `invalid-nav-path` with index `-1` and the raw
+path as its offending value; `undefined` is the omitted default.
+For an empty folder, the authoring error above takes precedence. Conflict
+matching uses exactly
+`label.normalize("NFKC").replace(/\s/gu, "").toUpperCase().toLowerCase()`.
+Within the same section and parent, two folder labels with that key but
+different bytes yield `nav-path-conflict`, naming both labels and their parent
+path; byte-identical labels merge. A
+leaf's title is its display label: a leaf sharing a conflict key with a
+sibling folder is also `nav-path-conflict`, naming both labels and suggesting
+appending that folder label to the leaf's `navPath`. Leaf titles are otherwise
+free text; two leaves with identical titles in one folder are allowed. Order
+every sibling list by folders before leaves, then
+`left.label.localeCompare(right.label, "en")`, then UTF-16 code-unit comparison
+of the folder path key or leaf id. Variants stay under their parent in authored
+order and never join a folder as separate members. See the
+[read model](./mokly-catalogue.md) for tree validation and key construction.
 
 `defineScreen` and nested `screen` inputs may declare `colorSchemes`. When
 omitted, a screen inherits the catalogue set; `colorSchemes: ["light"]` is the
 supported opt-out from a dark-enabled catalogue. A declaration must be
 non-empty, duplicate-free, include `"light"`, and be a subset of the config.
-Nested trees do not inherit this field from their collections or root.
+Nested trees do not inherit this field from their folders or root.
 
 `defineScreen`, `definePage`, `defineUseCase`, and nested `screen` and `page`
 inputs may also declare
 `tags`, a classification list whose values use the same lowercase kebab-case
 grammar as ids. A list must not repeat a tag, and authored order is preserved
-rather than sorted. Collections are structural and reject the field, and nested
-trees never inherit it from a collection or root. A collection is rejected for
-carrying the key at all, so `tags: undefined` is as much a violation as
-`tags: ["forms"]`. Tags are optional catalogue vocabulary, not a second
-hierarchy: an untagged catalogue stays valid.
+rather than sorted. Nested trees never inherit tags from folders or roots.
+Tags are optional catalogue vocabulary, not a second hierarchy: an untagged
+catalogue stays valid.
 
 Imports of `@mokly/mokly` from any repository-owned module bind the authoring
 helpers to that importing module. A module is repository-owned when its real

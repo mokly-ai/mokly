@@ -320,7 +320,7 @@ Device-screen tokens stay independent of the interface palette.
 
 A linked Appearance section sits under Browse, with matching source directories
 under `examples/basic/entries/design/browse/appearance/`. Each page's canonical
-route is the group's own collection; its children are the owning screens.
+route is the folder's canonical owning screen; its other screens share that `navPath`.
 
 | Page                         | Owning screens                                                                             |
 | ---------------------------- | ------------------------------------------------------------------------------------------ |

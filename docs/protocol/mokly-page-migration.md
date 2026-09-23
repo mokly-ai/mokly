@@ -23,10 +23,10 @@ migration procedure.
 Every whole-document page must be a `definePage` or nested `page` entry in a
 resolved entry module or a repository-owned helper it imports, with an explicit
 ID, route or slug, render callback, and metadata.
-Collections own its membership. Existing `.source.ts`/`.source.tsx` modules may
+An authored or tree-derived `navPath` places it in navigation. Existing `.source.ts`/`.source.tsx` modules may
 remain as ordinary imported render helpers; their filename has no discovery
 meaning. The compiler never scans them into a second inventory. Consumers with
-only structured entries need no screen API rewrite but must rebuild v5 output.
+only structured entries need no screen API rewrite but must rebuild v6 output.
 
 Consumers replace `.source.html` comment templates with ordinary TSX/function
 composition returning complete HTML. Preserve the rendered component content
@@ -43,8 +43,8 @@ it cannot accept obsolete `legacy` configuration or restore legacy discovery.
 
 Before changing the dependency or config, record the old manifest, generated
 page bytes, source/route inventory, anchors, and resources in a clean, recoverable
-checkout. Add a normal page definition for every retained document and claim
-its ID from the intended collection. Import its existing `source()` callback
+checkout. Add a normal page definition for every retained document and give
+it the intended `navPath`. Import its existing `source()` callback
 where possible, with the source in its declared dependencies. Remove `legacy`
 configuration and replace consumer rules that depend on its discovery model.
 
@@ -67,9 +67,9 @@ whole output directories, or generated files outside the recorded inventory.
 On failure, restore the previous dependency/config, authoring tree, and artifacts;
 do not commit a half-migrated catalogue. On success, compare old and new route,
 anchor, resource, and rendered-content inventories. Derived mode keeps the
-regenerated pages and v5 manifest as ignored local artifacts and commits the
+regenerated pages and v6 manifest as ignored local artifacts and commits the
 authored migration; committed mode commits the regenerated pages with their new
-ownership headers and v5 manifest. A missing document is a migration failure even
+ownership headers and v6 manifest. A missing document is a migration failure even
 when the remaining catalogue builds successfully.
 
 Follow the [source-protection contract](./mokly-source-protection.md): record
@@ -80,18 +80,18 @@ unimported helpers a reserved source name or a public exclusion. Removing
 
 ## Manifest Readers And Git Baselines
 
-New successful builds emit only schema v5. In committed mode, `check` recomputes
+New successful builds emit only schema v6. In committed mode, `check` recomputes
 that output without rewriting files and reports an older manifest as stale. In
 derived mode, `check` validates the current compilation and rejects a tracked
 manifest without comparing local artifact bytes. A current Browse or publication
-reader requires v5; encountering v2/v3/v4 reports that the catalogue must be
+reader requires v6; encountering v2/v3/v4/v5 reports that the catalogue must be
 migrated and rebuilt before serving. Watched Serve retains its last-good child if
 a candidate migration fails validation.
 
 Historical v3 manifests remain valid Git baselines; v2 keeps its existing
 `compatibility.readManifestV2` opt-in and filename fallback. A present malformed
 canonical manifest never falls back to the older filename. Build a dedicated,
-typed historical reader so current-v5 validation cannot reject an otherwise
+typed historical reader so current-v6 validation cannot reject an otherwise
 valid screen comparison against a v2/v3 base or silently accept legacy current
 navigation. Parse and validate historical source/route/artifact fields before
 using them; never rewrite the Git baseline or synthesize a current legacy tree.
@@ -99,9 +99,9 @@ using them; never rewrite the Git baseline or synthesize a current legacy tree.
 Match a historical legacy page to a current page by its exact preserved route,
 whose uniqueness has been validated. Use the historical document/source for
 artifact comparison and the current ID for attribution. This is a comparison
-adapter only: it cannot assign a current collection or change a current title.
+adapter only: it cannot assign a current `navPath` or change a current title.
 The typed page-baseline index maps each current ID to a validated historical
-document: v5 and page-v4 match by ID; legacy records in v2/v3 or component-v4
+document: v5/v6 and page-v4 match by ID; legacy records in v2/v3 or component-v4
 match only by route. It feeds
 the existing paired-ignore/material comparison and rendered-resource traversal.
 Historical source paths retain the baseline's own source-protection policy;
@@ -112,7 +112,7 @@ promise of a zero Changes count during adoption. A changed historical route
 without an explicit preserved match is treated as an added current page.
 
 Unmatched legacy records have no catalogue IDs and remain historical
-artifact records; they never become synthetic removed-page entries. Normal v5
+artifact records; they never become synthetic removed-page entries. Normal v5/v6
 page removals have real IDs and open their
 [previous version](./mokly-removed-previews.md) through the page contract and
 its [shared metadata](./mokly-catalogue-changes.md) wherever Changes is

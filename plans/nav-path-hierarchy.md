@@ -1,7 +1,8 @@
 # Path-Based Navigation Hierarchy
 
-Status: created 2026-09-23 with the user's consent after the design discussion
-in this workspace. No milestone is started. This plan supersedes the
+Status: Milestone 1 contract documentation is complete and committed.
+Milestones 2–4 have not started. Created 2026-09-23 with the user's
+consent after the design discussion in this workspace. This plan supersedes the
 collection-forest contract delivered by
 [Hierarchy-Inferred Breadcrumbs](./hierarchy-inferred-breadcrumbs.md); that
 plan stays in Completed as history.
@@ -66,8 +67,8 @@ user should reconsider):**
   targets, breadcrumb sources, or removed-entry candidates. The baseline's
   routed entries use their stored `navPath` as-is, so a v5 baseline compares
   against a v6 current catalogue without special cases.
-- Removed-entry `ancestors` (`{ id, title }[]`) becomes `navPath` labels in
-  the change DTO and the read model.
+- Removed entries retain the baseline entry's own `navPath` labels in the
+  change DTO and read model; there is no separate `ancestors` field.
 - Persisted disclosure keys move from `collection:<section>:<id>` to
   `folder:<section>:<path key>`, where the path key joins labels with `/`.
   Obsolete `collection:` keys are ignored on restore under the existing
@@ -88,7 +89,7 @@ describes collections so the documentation is the complete contract for the
 milestones that follow. Documentation only: no `cargo xtask check`; validate
 the Markdown and review the diff instead.
 
-- [ ] `docs/protocol/mokly-authoring.md`: replace the collection hierarchy
+- [x] `docs/protocol/mokly-authoring.md`: replace the collection hierarchy
       section and interfaces. Define `navPath` on `EntryInput`, remove
       `CollectionInput` and `RootCollectionInput`, add `NestedFolderInput`
       (`title`, `segment`, `children`, inherited `address`, `dependencies`,
@@ -96,34 +97,34 @@ the Markdown and review the diff instead.
       optional `title`, `children`, inherited fields), state that nested
       leaves derive `navPath` and reject an authored one, and record the label,
       merge, collision, ordering, and variant-inheritance rules above.
-- [ ] `docs/protocol/mokly-pages.md`: rewrite the purpose paragraph and the
+- [x] `docs/protocol/mokly-pages.md`: rewrite the purpose paragraph and the
       example around `navPath`, drop "a collection can claim a page", update
       the rejected-field list, and say pages with an empty `navPath` are
       top-level.
-- [ ] `docs/protocol/mokly-rendering.md` and
+- [x] `docs/protocol/mokly-rendering.md` and
       `docs/protocol/mokly-component-manifest.md`: manifest v6 entry shape
       (four kinds, authored `navPath`, no collection variant, no `childIds`),
       sorting text without collections, and the v6 statement.
-- [ ] `docs/protocol/mokly-catalogue.md`: read model v2 with no
+- [x] `docs/protocol/mokly-catalogue.md`: read model v2 with no
       `collections`, `CatalogueNode` as `{ kind: "folder"; label; children }`
       or `{ kind: "entry"; id; children? }`, `navPath` on routed entries and
       removed entries, the ordering rule, the versioning paragraph, and the
       `fixtures/catalogue-v2.json` fixture replacing v1.
-- [ ] `docs/protocol/mokly-catalogue-changes.md`: `ancestors` becomes
-      `navPath` labels; reword "no synthetic collection" as no recreated
-      folder.
-- [ ] `docs/protocol/mokly-runtime.md`: the validation failure list, the
+- [x] `docs/protocol/mokly-catalogue-changes.md`: remove the separate
+      `ancestors` field; the baseline entry retains its own `navPath` labels.
+      Reword "no synthetic collection" as no recreated folder.
+- [x] `docs/protocol/mokly-runtime.md`: the validation failure list, the
       "Collections are navigation folders" passage, the changed-projection
       paragraph, breadcrumb derivation, and disclosure keys (`folder:` keys,
       obsolete `collection:` keys ignored).
-- [ ] `docs/protocol/mokly-screen-variants.md`: replace every collection rule
+- [x] `docs/protocol/mokly-screen-variants.md`: replace every collection rule
       with `navPath` inheritance and the rejected `navPath` field on variants.
-- [ ] Smaller passages: `mokly-navigation.md` (a folder is not a destination),
+- [x] Smaller passages: `mokly-navigation.md` (a folder is not a destination),
       `mokly-viewer.md` (disclosure key kinds), `mokly-design-components.md`
       (`design-root.childIds` and the nested marker), `mokly-instances.md`,
       `mokly-timings.md`, and `docs/protocol/README.md` (manifest v6 primary,
       historical v3 to v5, read model link text).
-- [ ] Guides and READMEs: retitle `docs/guides/authoring/collections-and-tags.md`
+- [x] Guides and READMEs: retitle `docs/guides/authoring/collections-and-tags.md`
       to "Folders and tags" and rewrite its hierarchy section; update the
       nested example in `docs/guides/authoring/screens.md`, the `childIds`
       text in `docs/guides/authoring/pages.md`, the example in
@@ -131,11 +132,21 @@ the Markdown and review the diff instead.
       line, authoring example, and guide table, and the hierarchy paragraphs
       in `examples/basic/README.md`. Check `tests/guides_authoring.test.ts`
       and `tests/guides_structure.test.ts` for title expectations.
-- [ ] Run `npx prettier --check` on the changed Markdown, confirm every
+- [x] Add the sorted, two-space, LF-terminated
+      `docs/protocol/fixtures/catalogue-v2.json` fixture as the v2 translation
+      of v1 without removing v1 yet; link it from the read model and previews.
+- [x] Sweep non-historical docs and READMEs beyond the initial file list for
+      stale collection/childIds assumptions, plus current version references.
+- [x] Run `npx prettier --check` on changed Markdown and canonical JSON, a
+      relative-link check on every changed Markdown, and confirm every
       relative link resolves, and read the diff for contradictions with
       `mokly-derived-baselines.md`, `mokly-removed-previews.md`, and
       `mokly-export.md`.
-- [ ] Commit `docs(protocol): define path-based navigation` and push.
+- [x] Run `npx tsx --test tests/guides_*.test.ts` without changing tests:
+      19/20 pass. The unchanged public-export test reads the v5 `src/index.ts`
+      and still expects the removed helper `collection` to be documented.
+      Milestone 2 removes that export and reruns the suite to a full pass.
+- [x] Commit `docs(protocol): define path-based navigation` and push.
 
 ## Milestone 2: Authoring, registry, manifest v6, and read model v2
 
@@ -156,6 +167,10 @@ so persisted disclosures keep working across this milestone.
       authored `navPath` on nested screens and pages. Update `src/index.ts`
       exports and the generated consumer API in
       `src/build/consumer_entry.ts`.
+- [ ] Reject a titled `defineRoot` with no children at authoring time (there
+      is no entry on which to report a path-label issue), while an untitled
+      empty root emits no definitions. Cover the exact error alongside empty
+      nested folders and nested authored-path violations.
 - [ ] Variants: in `src/authoring/variants.ts` replace `childIds` with
       `navPath` in the forbidden fields and copy the parent's `navPath` onto
       each flattened variant.
@@ -196,6 +211,34 @@ so persisted disclosures keep working across this milestone.
       `navPath` on routed and removed entries). Replace
       `docs/protocol/fixtures/catalogue-v1.json` with `catalogue-v2.json` and
       update any package file list that names it.
+- [ ] Repoint every v1 fixture reference (including `tests/`,
+      `packages/viewer/tests/`, `scripts/package/archive.mjs`,
+      `tests/helpers/release_fixture.ts`, `tests/helpers/bootstrap_fixture.ts`,
+      and `src/catalogue/README.md`) to the v2 fixture; delete v1 only after
+      all readers and fixtures have migrated. Re-run the guide export-coverage
+      test after removing old public collection exports; this test cannot pass
+      against the new guide while Milestone 1 leaves `src/index.ts` unchanged.
+- [ ] Remove the Milestone 1 transitional target-contract notes once the
+      implementation lands: both the note above the authoring example and
+      “The target output requires manifest v6” in `README.md`, the target
+      contract note in `docs/protocol/README.md`, and “follows in Milestone 2”
+      in `examples/basic/README.md`.
+- [ ] Align the design mock's navigation row kinds with the folder contract,
+      without visual changes: rename `collection` to `folder` in the prop schema
+      enum, view, section helper, and saved variants under
+      `examples/basic/entries/design/library/chrome/catalogue-navigation*.ts(x)`,
+      `examples/basic/entries/design/components/parts/navigation.tsx`, and
+      other design mock data. Update descriptions and comments that still call
+      folders “collections,” including `page_screens.tsx` and
+      `parts/removed_page.tsx`, to match `mokly-shell-design.md`.
+- [ ] Extend `docs/protocol/fixtures/catalogue-v2.json` so the v2 reader and
+      byte-equality round-trip exercise nested folders, a top-level entry
+      with `navPath: []`, and a screen with a variant nested in its entry-node
+      `children` and carrying its parent's `navPath`. Keep removed-entry
+      previews and canonical sorted-key/two-space/LF formatting.
+- [ ] Verify the change DTO and public `removedEntries` retain each baseline
+      entry's own `navPath` labels without a separate `ancestors` field;
+      cover removed screens, pages, components, and variants in tests.
 - [ ] Shell compile-only updates with no behavior change: remove the
       impossible collection guards in `packages/viewer/src/shell/*` and
       `packages/viewer/src/standalone/*`, build group nodes from folder nodes

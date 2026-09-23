@@ -75,7 +75,7 @@ no five-second budget. To smoke-test faster, add matching
 Defaults are 30 areas, 40 screens per area, and 12 records per screen. Each area
 adds two registered components with three saved variants, a page and one flow
 per ten screens. The default therefore has 1,410 routed entries and 5,550
-documents plus the manifest. Collections are additional non-routed entries.
+documents plus the manifest. Folder paths group entries without additional records.
 Each screen and component variant renders in mobile/desktop and light/dark.
 Flows reuse the canonical screens rather than adding documents. Shared panels
 contain nested actions and caller-owned slots; screens also invoke repeated

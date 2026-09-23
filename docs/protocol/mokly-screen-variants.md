@@ -15,7 +15,7 @@ route retirements still require explicit approval.
 A variant records one screen with one deliberate shift: the same route family,
 the same place in the catalogue, and one changed state such as an empty
 workspace, an error, a loading pass, or a filter applied. Today such states
-are authored as sibling screens in the same collection, which places them
+are authored as sibling screens with the same `navPath`, which places them
 near their default but gives the reader no structure. A variant is grouped
 under its parent screen in the navigation tree, keeps the parent's breadcrumb,
 and is otherwise a complete screen.
@@ -24,8 +24,7 @@ A variant is an ordinary screen entry with one extra relationship: `variantOf`
 names its parent screen. It has its own global id, its own route, its own
 generated documents, its own Changes row, and its own comparison result.
 Everything that addresses a screen by id or route addresses a variant the
-same way. This document adds no new link grammar, query parameter, manifest
-version, or comparison schema.
+same way. This document adds no new link grammar, query parameter, or comparison schema.
 
 Light and dark are not variants. Color scheme remains a view axis selected by
 the existing switch, and a viewport is likewise a view. Per-view change
@@ -81,7 +80,8 @@ mirrors the component variant folder and cannot collide with the parent's
 viewport fragments. The slug obeys the route-segment grammar, and an author
 never supplies `route` on a variant.
 
-A variant inherits the parent's `address`, `colorSchemes`, `dependencies`,
+A variant always copies the parent's `navPath`; it cannot author its own.
+It inherits the parent's `address`, `colorSchemes`, `dependencies`,
 `relatedDocs`, and `tags` unless it declares its own value, which replaces
 rather than merges the inherited list. `useCaseIds` defaults to an empty list
 and is never inherited because membership is reciprocal with the flow's steps;
@@ -92,13 +92,13 @@ position, so `welcome-empty` is authored as `welcome-empty`.
 
 Validation rejects, with source attribution:
 
-- a variant that declares `variants`, `route`, or `childIds`;
+- a variant that declares `variants`, `route`, or `navPath`, even when `undefined`;
 - two variants of one parent sharing a slug;
 - a `variantOf` that names an unknown entry, a non-screen, or a screen that
   is itself a variant, so nesting is exactly one level deep;
-- a variant id listed in any collection's `childIds`; a variant belongs to
-  its parent's collection through the parent and is never claimed directly;
-- a page, collection, or use case carrying `variants` or `variantOf`, including
+- a flattened variant whose `navPath` differs from its parent's; variants
+  live under the parent entry node, not directly inside a folder;
+- a page or use case carrying `variants` or `variantOf`, including
   keys whose value is `undefined`;
 - a component carrying `variantOf`. A component's required `variants` field
   remains the unrelated saved-component-view contract.
@@ -116,7 +116,7 @@ validation, compatibility transformation, collision and orphan checks, and
 transactional writes. The renderer input carries the variant's own
 `ScreenDefinition`; its `variantId` field is unused for screens.
 
-The manifest stays at schema v5. `ManifestScreen` gains one optional field:
+The current manifest is schema v6. `ManifestScreen` has one optional field:
 
 ```ts
 interface ManifestScreen {
@@ -127,15 +127,15 @@ interface ManifestScreen {
 
 `variantOf` is present exactly on variants. Manifest validation requires the
 named parent to be a current screen entry without `variantOf`, requires the
-variant's route to match the derived form for that parent, and rejects a
-variant listed in any `childIds`. Canonical entry sorting follows the manifest
-contract; key ordering, `navPath`, and `sourceFiles` are unchanged. Historical
+variant's route to match the derived form for that parent, and requires its
+`navPath` to equal the parent's. Flattening copies the path. Canonical entry
+sorting follows the manifest contract; `sourceFiles` ordering is unchanged. Historical
 readers accept manifests without the field; a baseline screen without
 `variantOf` is an ordinary screen.
 
-The hierarchy analysis exposes variants beside collection membership: each
-screen's variants in authored order, and each variant's parent. A variant's
-ancestors are its parent's collection ancestors, so its breadcrumbs and its
+The hierarchy analysis exposes each screen's variants in authored order and
+each variant's parent. A variant's ancestor labels are its parent's `navPath`,
+so its breadcrumbs and its
 removed-entry ancestry read the same as the parent's, followed by the parent
 title. The parent title is a link when the parent is viewable.
 
@@ -168,11 +168,11 @@ Pages projection and the responsive drawer:
   outline behind it, so a variant row is distinguishable from its parent
   screen row by more than its indent. It is muted like the screen icon; only
   flow icons take the accent. Its disclosure identity is
-  `variants:<section>:<parent id>`, persisted and restored beside collection
+  `variants:<section>:<parent id>`, persisted and restored beside folder
   keys, closed by `Collapse all`, and captured by watched-reload recovery.
 - The active-row invariant applies to variant rows: opening a variant marks
   its row `aria-current="page"` and opens its variant list, its parent's
-  collections, and its section.
+  folders, and its section.
 - Search matches a variant row by its own id, title, route, and tags. A
   parent row stays visible while any of its variants matches, and a
   filtering constraint that keeps only a variant opens the list. When search
@@ -227,8 +227,7 @@ variant-specific rule.
 the public tree carries variants beneath their parent's entry node so hosts
 can render the same grouping. A `ViewerSelection.screenId` may name a variant
 like any screen; `variantId` remains reserved for component saved variants.
-Readers of catalogue v1 tolerate the added field under the existing
-additive-field rule.
+Catalogue v2 readers validate the parent/variant relationship and path.
 
 The Viewer rebuilds `variantOf` for current and removed screens so its rendered
 hierarchy, breadcrumbs, details rows, aggregate mark, and removed-variant
@@ -265,7 +264,7 @@ Coverage must prove:
 
 - [Public authoring API](./mokly-authoring.md)
 - [Rendering and generated output](./mokly-rendering.md)
-- [Current manifest v5 schema](./mokly-component-manifest.md)
+- [Current manifest v6 schema](./mokly-component-manifest.md)
 - [Catalogue navigation contract](./mokly-navigation.md)
 - [Changes and screen comparisons](./mokly-changes.md)
 - [Catalogue change metadata](./mokly-catalogue-changes.md)

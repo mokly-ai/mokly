@@ -139,11 +139,12 @@ references while retaining the same input owner.
 Actual rendering supplies usage. Imports, unused branches, or declared
 dependencies do not invent instances. Mobile, desktop, light, dark, and saved
 variants have separate usage records. A registered component that renders null
-is still an invoked instance, but has no visible bounds. Collection and use-case
+is still an invoked instance, but has no visible bounds. Folder and use-case
 membership never duplicates canonical usage records.
 
-Collection entries can contain component ids. Components have normal routes,
-id redirects, tags, and hierarchy-derived breadcrumbs. Use-case steps continue
+Components author their own `navPath`; Components-section folders form from
+matching paths, independently of Pages. Components have normal routes,
+id redirects, tags, and path-derived breadcrumbs. Use-case steps continue
 to reference screens only. Component-to-component and screen-to-component
 backlinks are derived from usage rather than separately authored relationships.
 
@@ -156,11 +157,11 @@ the default variant's mobile light file is
 existing suffix conventions. Every variant follows this same rule. Output
 collision, ownership, resource, orphan, and transactional-write checks apply.
 
-Catalogues with registered components emit manifest schema v5, including typed
+Catalogues with registered components emit manifest schema v6, including typed
 component entries, variant fragments, and per-view usage records for screens
 and components. The [manifest schema](./mokly-component-manifest.md) defines
-every record, reference, ordering rule, and validation boundary. All current catalogues use v5, including those without components. Historical
-Git readers accept v3, both disjoint v4 formats, and the explicit v2 fallback;
+every record, reference, ordering rule, and validation boundary. All current catalogues use v6, including those without components. Historical
+Git readers accept v3, both disjoint v4 formats, v5, and the explicit v2 fallback;
 unknown versions fail. Historical manifests without usage metadata do not imply an empty
 component tree or justify suppressing changes.
 
@@ -188,7 +189,7 @@ Implementations must not silently register an unreachable component page.
 
 - [Component change attribution](./mokly-component-changes.md)
 - [Runtime prop schema and codec](./mokly-component-props.md)
-- [Manifest v5 schema](./mokly-component-manifest.md)
+- [Manifest v6 schema](./mokly-component-manifest.md)
 - [Comparison v3 schema](./mokly-component-review.md)
 - [Component pages and screen inspection](./mokly-component-explorer.md)
 - [Component controls](./mokly-component-controls.md)

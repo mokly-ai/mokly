@@ -16,6 +16,16 @@ Use `--include-changes` to package a frozen baseline and comparisons. Both
 options omit development updates. Release automation must record these changes
 as breaking; version numbers and `CHANGELOG.md` remain release-PR owned.
 
+## Breaking Navigation Path Upgrade Release Note
+
+The navigation-path release removes `defineCollection`/`collection` and their
+exported types, adds per-entry `navPath` and nested `folder()` authoring, and
+replaces collection edges with independent section folder trees. Consumers must
+regenerate manifest v6 and adopt catalogue read model v2. Obsolete
+`collection:` disclosure keys are ignored on restore. Release automation must
+record this upgrade as breaking; version numbers and `CHANGELOG.md` remain
+release-PR owned.
+
 ## Package Metadata
 
 `package.json` describes the published, scoped public ESM package `@mokly/mokly`,

@@ -142,7 +142,7 @@ never copied into the npm package.
 
 Screen and use-case routes are durable identifiers and do not imply a composed
 HTML file. A screen's fragments are bare product renders with required head
-content but without Mokly shell chrome. Collections generate no page.
+content but without Mokly shell chrome. Navigation folders generate no page.
 Light fragments remain canonical and unsuffixed. Turning dark off makes the
 previous dark documents proven generated orphans: `check` reports them and
 `build` removes them through the normal ownership-safe lifecycle.
@@ -162,14 +162,14 @@ header's source must belong to the current entries root even when
 that source was just deleted. It never deletes an unknown or foreign-catalogue
 file.
 
-All catalogues emit [manifest v5](./mokly-component-manifest.md), including
+All catalogues emit [manifest v6](./mokly-component-manifest.md), including
 pages, source inventory, saved component variants and per-view invocation/ownership
-records. Historical readers accept v3, both disjoint v4 formats, and opt-in v2.
+records. Historical readers accept v3, both disjoint v4 formats, v5, and opt-in v2.
 The common current shape is:
 
 ```ts
-interface ManifestV5 {
-  schemaVersion: 5;
+interface ManifestV6 {
+  schemaVersion: 6;
   generatedBy: "mokly";
   entries: readonly ManifestEntry[];
   sourceFiles: readonly string[];
@@ -177,7 +177,7 @@ interface ManifestV5 {
 
 interface CommonEntry {
   id: string;
-  kind: "screen" | "collection" | "use-case" | "page" | "component";
+  kind: "screen" | "use-case" | "page" | "component";
   title: string;
   description: string;
   rationale?: string;
@@ -204,10 +204,6 @@ type ManifestEntry =
       useCaseIds: readonly string[];
     })
   | (CommonEntry & {
-      kind: "collection";
-      childIds: readonly string[];
-    })
-  | (CommonEntry & {
       kind: "use-case";
       route: string;
       tags?: readonly string[];
@@ -221,9 +217,10 @@ type ManifestEntry =
 
 Entries sort by route then id; source inputs, dependencies, and generated files
 sort lexically. Optional properties are omitted, not emitted as `null`.
-`navPath` is derived output derived from collection ancestry;
-it contains the ordered ancestor collection titles and is empty for catalogue
-roots. It is not an authoring input and it is not a second source of hierarchy.
+`navPath` is authored (or derived once while flattening a nested root), is
+required on every v6 entry, and contains the ordered folder labels from its
+section root to its parent. An absent flat input emits `[]`; variants copy
+their parent's path. It is the only navigation hierarchy source.
 `darkFragments` is present exactly when the screen's effective schemes include
 dark. Its routes use the `.mobile.dark.html` and `.desktop.dark.html` names and
 participate in the same safe-route and collision validation as light fragments.

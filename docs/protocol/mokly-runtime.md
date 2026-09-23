@@ -1,6 +1,6 @@
 # Mokly Build And Browse Runtime
 
-[Whole-document pages](./mokly-pages.md) share the same explicit collection
+[Whole-document pages](./mokly-pages.md) share the same path-derived folder
 hierarchy as screens and flows. The [migration contract](./mokly-page-migration.md)
 defines the required consumer upgrade.
 
@@ -82,9 +82,12 @@ fails for:
 
 - invalid config or registry metadata;
 - duplicate ids/routes or route/fragment/page collisions;
-- missing collection children, duplicate child references, children claimed by
-  multiple collections, collection cycles, missing use-case screens, or
-  reciprocal memberships;
+- forbidden authored `navPath` on a nested leaf (`invalid-nested-nav-path`
+  naming the entry id); invalid `navPath` labels (`invalid-nav-path` with entry id, zero-based
+  index and offending label), conflicting sibling folder labels or
+  folder-versus-leaf labels (`nav-path-conflict` with both labels and a
+  suggestion to append the folder label to the leaf's `navPath`), empty
+  authored folders, missing use-case screens, or reciprocal memberships;
 - unresolved `mock:` links, raw document links, local HTML/CSS resources, or
   anchors;
 - missing stylesheets and declared dependencies;
@@ -116,7 +119,7 @@ comparisons are defined by [Static export delivery](./mokly-export-delivery.md).
 No server or watcher is started for export; served behavior below is unchanged.
 
 Serve validates its distinct live catalogue index and independently resolves both
-source graphs before binding. Full-manifest consumers still require validated v5
+source graphs before binding. Full-manifest consumers still require validated v6
 output and a current source inventory. These scans never render pages or rewrite
 output. The [on-demand contract](./mokly-on-demand.md) defines completeness,
 worker isolation and generation-local caches. Browse exposes:
@@ -152,7 +155,7 @@ headers without a body, including `/id` not-found and fragment-validation
 errors. A HEAD request to the update endpoint completes without opening or
 registering an event stream.
 
-Collections are navigation folders, not destinations. Unknown ids and routes
+Folders are navigation groups, not destinations. Unknown ids and routes
 return a not-found main view while keeping catalogue navigation available.
 Static path handling rejects traversal and does not expose repository files
 outside configured public roots. The shared relative-path decoder rejects
@@ -160,13 +163,18 @@ malformed encoding, absolute and empty paths, dot segments, and forward or
 backslash separators introduced by decoding one original URL segment before
 any filesystem resolution.
 
-Browse caches the validated collection forest from manifest `childIds`.
-Structured roots, nested navigation, and breadcrumbs all consume that one
-model; serialized `navPath` labels from current or historical manifests never
-override it. An unclaimed screen, page, or use case renders directly at the
-catalogue root with no invented group or breadcrumb. Registered pages use the
-same collection forest. Historical legacy records are comparison inputs only;
-source and route directories never create current navigation groups.
+Browse builds and caches independent Pages (screens, pages, use cases) and
+Components folder trees from validated current manifest v6 `navPath` labels.
+Equal paths merge within a section, not across sections; the rendered navigation
+omits a section with no matching current or retained removed entries, while the
+public tree retains both required arrays.
+A routed entry with `navPath: []` renders at the section root without
+an invented group or breadcrumb. Variants stay below their parent screen;
+their path must equal the parent's. Historical paths are comparison and
+removed-entry context only; source and route directories never create groups.
+The serve-mode `live-index-1` retains that literal `schemaVersion` but carries
+the v6 four-kind routed entry shape and authored `navPath` (with unrendered
+usage metadata omitted), validated through the v6 metadata schema.
 
 ## Browse Shell
 
@@ -219,10 +227,9 @@ matches material fragment changes and changes to rendered local resources.
 Source modules, declared dependencies, and configured shared-impact globs alone
 must not mark unchanged screens or propagate unchanged screens into use cases.
 Entry comparison uses an explicit projection of route-affecting fields plus
-the ordered ancestor collection ids and titles derived from `childIds`.
-Serialized `navPath` labels are compatibility output and cannot independently
-mark a screen or use case as changed. Reparenting an entry or renaming one of
-its ancestor collections marks the routed entry as changed.
+its authored `navPath` labels. A difference from the baseline `navPath`
+marks that routed entry changed, including a move or renamed folder. A
+folder itself never has change status.
 The projection excludes source locations and dependency declarations; changes
 to those implementation details remain secondary comparison evidence. Fragment
 comparison applies the same paired ignore rules and material keys as screen
@@ -238,7 +245,7 @@ fragments is affected too and remains visible in the changed-only filter.
 A screen embeds its generated mobile and desktop fragments inside package-owned
 device frames. A use case renders ordered steps that reference those same
 fragments and link back to their standalone screens. A page embeds its complete generated document without viewport or comparison
-controls. All ancestors are structural collection crumbs and stay text. The details inspector may show description, rationale,
+controls. All folder crumbs come from `navPath` and stay text. The details inspector may show description, rationale,
 source and fragment paths including dark renders, the schemes a screen renders
 in, the tags the entry declares, related docs, dependencies, use cases, and
 comparison context.
@@ -269,17 +276,20 @@ explicit cross-origin host exception is confined to the frame-adapter contract.
 Review panes retain their stricter sandbox and byte-unmodified documents.
 
 The top-level disclosures use `section:pages` and `section:components` as their
-rendered and persisted identities. A collection projected into a section uses
-`collection:<section>:<id>`, so the two appearances of a mixed collection retain
-independent state. Labels remain presentation only. Stored pre-section
-`collection:<id>` keys apply to either projection during migration; obsolete
-`legacy:` and label-path keys are ignored while valid disclosure keys remain
-effective. The [screen variants contract](./mokly-screen-variants.md) adds
+rendered and persisted identities. A folder group's navigation key is
+`folder:<path key>`; its disclosure key is
+`folder:<section>:<path key>`, with `<section>` `pages` or `components` and
+`<path key>` the root-to-folder labels joined by `/`. These remain independent
+for the same path in both sections. Labels may contain `:`, so parsers must
+match the fixed prefixes, never split on `:`. Persist only `section:`,
+`folder:`, and `variants:` disclosures; ignore obsolete `collection:` and
+`legacy:` keys on restore, without attempting migration to new keys.
+The [screen variants contract](./mokly-screen-variants.md) adds
 `variants:<section>:<parent id>` for the variant list a screen row discloses,
-persisted, restored, and collapsed beside the collection keys. That list is a
+persisted, restored, and collapsed beside the folder keys. That list is a
 container rather than a `<details>`, because the row beside it is a link and
 cannot also be a summary; its `hidden` state and its button's `aria-expanded`
-carry the same disclosure the collection keys carry, and the button's
+carry the same disclosure the folder keys carry, and the button's
 accessible name follows the state. When search or the Changes filter hides a
 parent row, it hides the entire leaf container, so no disclosure button remains
 visible or focusable without its row; the container reappears with the row. A
@@ -353,7 +363,7 @@ updates URL, title, active row, focus, and history; it never fetches shell HTML
 to swap into the page.
 Logical links activated inside a consumer frame navigate that same outer route
 model rather than replacing only the iframe document. The shell opens the active
-row's ancestor collections, conditionally clears a search or Changes filter
+row's ancestor folders, conditionally clears a search or Changes filter
 that would hide it, and scrolls it into view. The complete target,
 portable-link, safe-degradation,
 sandbox, fragment, and active-tree behavior is defined by the

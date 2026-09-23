@@ -34,7 +34,7 @@ explicitly instead of showing a zero, and a completed empty result shows zero.
 ## What survives a reload
 
 Editing the search or the filter reveals the matches you are looking for.
-While Changes is active, moving to another screen keeps the collections you
+While Changes is active, moving to another screen keeps the folders you
 collapsed and opens only the path to where you arrived. Clearing the search
 and the filter restores the disclosures you had before, except for the path to
 the screen you navigated to.

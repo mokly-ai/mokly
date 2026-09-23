@@ -175,7 +175,7 @@ the last-good disk output without claiming completeness. Errors are reported whi
 the watcher waits for another authored change. A
 successful rebuild or healthy restart publishes a new update version. Browsers
 reload their current durable URL and restore search, changed-only selection,
-current collection disclosure, the disclosure baseline captured before active
+current folder disclosure, the disclosure baseline captured before active
 filtering, details disclosure, viewport and color-scheme selection, responsive
 drawer, catalogue scroll, and per-region stage scroll once. Recovery is strictly
 parsed with one compatibility rule: a payload from before filter-baseline
@@ -191,10 +191,10 @@ status (older payloads omit it). A selected Changes filter survives pending or
 unavailable states and their completion rather than switching to All to reveal an
 unchanged current preview. Explicit navigation still reveals its destination.
 
-When an authored rebuild reparents an entry, the new manifest relationships
+When an authored rebuild changes an entry's `navPath`, the new folder paths
 move its navigation row and ancestor crumbs in the same reload. Disclosure
-recovery still applies to every unchanged stable collection id; removed ids and
-obsolete label-path keys have no target and are ignored.
+recovery still applies to every unchanged stable folder path key; removed
+keys and obsolete `collection:` keys have no target and are ignored.
 
 When a successful rebuild leaves the manifest structure unchanged, or a
 resource edit or explicit watch rule requests a reload, the parent keeps the

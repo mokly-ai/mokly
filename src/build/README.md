@@ -1,7 +1,7 @@
 # Catalogue Compilation
 
 This internal module loads consumer definitions, renders every configured view,
-validates the complete catalogue and produces deterministic HTML and manifest v5.
+validates the complete catalogue and produces deterministic HTML and manifest v6.
 The supported external interface is `mokly build` and `mokly check`; Serve,
 export and local prop controls reuse the same consumer graph and validators.
 

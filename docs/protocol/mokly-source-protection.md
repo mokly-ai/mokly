@@ -145,7 +145,7 @@ remain public unless another protection rule or consumer exclusion matches.
 
 ## Complete Source Inventory
 
-Manifest v5 `sourceFiles` is a sorted, unique array of repository-relative POSIX
+Manifest v6 `sourceFiles` is a sorted, unique array of repository-relative POSIX
 paths. Derive it from the union of file inputs resolved by both the config
 bundle and the consumer bundle, including inputs eliminated by tree shaking:
 
@@ -186,7 +186,7 @@ inside `repoRoot` or explicitly configure a common root containing it.
 ## Freshness And Lifecycle
 
 Build/check derive the inventory from the same resolved graphs used for that
-compilation. Before serving or publishing a current v5 catalogue, independently
+compilation. Before serving or publishing a current v6 catalogue, independently
 resolve the config and consumer input graphs and require the persisted inventory
 to match. This scan may bundle modules but must not run page render callbacks,
 rewrite generated output, or read Git history. A missing, malformed, or stale

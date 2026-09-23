@@ -70,7 +70,7 @@ existing validated route grammar and are encoded once when written into URLs.
 | `id/<id>/index.html`          | Static alias showing the same shell as the canonical route            |
 | `static/<public-path>`        | Adapted current fragments and public consumer resources               |
 | `__mokly/`                    | Required shell CSS, fonts, browser modules, and comparison generation |
-| `__mokly/catalogue.json`      | Public catalogue read model v1                                        |
+| `__mokly/catalogue.json`      | Public catalogue read model v2                                        |
 | `__mokly/client/inspector.js` | Inert cross-origin frame inspector                                    |
 | `404.html`                    | Existing catalogue not-found view                                     |
 | `.mokly-export-artifact`      | Public-safe versioned ownership inventory                             |
@@ -82,7 +82,7 @@ resource references must address actual exported files. Hosts that normalize
 HTML URLs remain compatible provided their redirects preserve the query and
 resolve to the same page; Cloudflare tests protect this existing deployment.
 
-Collections remain navigation folders, not new routed pages. Include use cases
+Folders derived from `navPath` are not new routed pages. Include use cases
 and registered whole-document pages. Empty registries remain invalid under the existing
 build contract; exporting one preserves the previous artifact. Missing views
 remain explicit in added/removed comparison data; never synthesize content.
@@ -320,7 +320,7 @@ Copy only the export to a separate directory before serving; its requests must
 not reach the consumer project, `.git`, Node modules, or a live Mokly process.
 
 Verify direct and reloaded nested pages, aliases with/without enhancement,
-collection navigation, search/tags/Changes, details, both viewports and schemes,
+folder navigation, search/tags/Changes, details, both viewports and schemes,
 use cases, ordinary fallback links, all logical-link activation modes, fragments,
 Back/Forward, and removed/renamed screens. Assert that every local request
 resolves and that Current makes no comparison or event-stream requests.

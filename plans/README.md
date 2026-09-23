@@ -5,7 +5,8 @@
 - [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) — replace
   collection entities and `childIds` with a Storybook-style `navPath` on
   every leaf, derived from nested `folder` titles; manifest v6 and read
-  model v2. Created 2026-09-23; no milestone started.
+  model v2. Milestone 1 documentation is complete; Milestones 2–4 are not
+  started.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
   standalone Auto/Light/Dark control for interface and previews, and
   host-owned theme with independent previews when embedded. Dark neutrals align

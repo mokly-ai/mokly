@@ -15,8 +15,8 @@ consumers open their historical screen through the behavior implemented by the
 Components are a distinct entry kind in a dedicated collapsible Components
 section, with a component icon and the same All/Changes filter, count, search,
 tags, breadcrumbs, id chip, and responsive navigation. Screens, whole-document
-pages, and use cases stay in the sibling Pages section. Collection membership
-remains the hierarchy within both projections; a separate explorer application
+pages, and use cases stay in the sibling Pages section. Section-scoped `navPath`
+folders remain the hierarchy within both projections; a separate explorer application
 or automatically invented Components folder is not required. The example
 catalogue still provides its authored Components group.
 

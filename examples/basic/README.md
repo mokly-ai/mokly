@@ -2,9 +2,9 @@
 
 This is a synthetic external-consumer fixture. It contains two distinct mobile
 and desktop product-style screens built with `@firna/ui` controls, nested
-collections, one use case, id-addressed links, a Firna renderer adapter, local
+folders, one use case, id-addressed links, a Firna renderer adapter, local
 stylesheets, light and dark product fragments, and a safe Review-ignore region.
-The Components → Example → Components collection contains real registered Action and Toolbar
+The Components → Example → Components folder contains real registered Action and Toolbar
 components. Both product screens use Action repeatedly, directly and inside the
 Toolbar, with caller-owned slots. Action has Default, Disabled and Secondary
 variants plus text, boolean, number, optional hint and emphasis controls; Toolbar
@@ -39,13 +39,13 @@ See the [library authoring guide](./entries/design/library/README.md),
 [library inventory](../../docs/protocol/mokly-design-component-library.md)
 and [plans index](../../plans/README.md).
 
-The entry definitions use collection membership as their only navigation
-hierarchy. The real `Example` collection owns `Screens`, the example tour, and
-Getting started; the real `Design` collection owns the `Mokly design` tree. Those parent
-collections preserve the intended visible groups and automatically produce
-the same breadcrumb ancestry. Consumer code does not provide `navPath`; when
-migrating an older catalogue, keep a former synthetic group only by adding an
-equivalent parent collection.
+The approved target for the entry definitions uses `navPath` as their only
+navigation hierarchy; the example entry migration follows in Milestone 2.
+`Example` groups Screens, the example tour, and Getting started; `Design`
+groups the Mokly design tree. Matching path labels merge within Pages or
+Components independently and produce the same breadcrumb labels. The flat
+component definitions author paths; nested screen and page definitions derive
+them from root and folder titles. Routes are independent of those labels.
 
 The Welcome screen uses
 `<MockLink to="example-details" fragment="details">` to prove that generated
@@ -146,7 +146,7 @@ and [`overview.mobile.html`](./generated/design/components/overview.mobile.html)
 directly from disk after `npm run build && npm run example:build`.
 The catalogue hierarchy links all owning design pages;
 there is no navigation footer inside an artboard. Product links connect
-component pages, variants, and consuming screens. The `controls` collection
+component pages, variants, and consuming screens. The Controls folder
 provides the canonical controls example plus Editing, States, and Published
 galleries; `inspector` shows both closed-panel layouts.
 Each child gallery lists at most five owning screens; inspection also links
@@ -304,7 +304,7 @@ keeps the document's own appearance while its link, like every link in a
 previous version, does nothing.
 
 The `example-handbook` page imports the shared example document and belongs to
-the existing Example collection alongside Screens and Example tour. Its exact
+the Example folder alongside Screens and Example tour. Its exact
 `handbook.html` route, `next-steps` anchor, and incoming Welcome link exercise
 the public page API. The design catalogue has seven responsive page states and
 two publication states.

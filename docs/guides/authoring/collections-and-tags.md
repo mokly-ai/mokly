@@ -1,37 +1,46 @@
 ---
-title: "Collections and tags"
-description: "Collections are the navigation hierarchy; tags are the vocabulary you search by."
+title: "Folders and tags"
+description: "Navigation paths group entries into folders; tags are the vocabulary you search by."
 section: "authoring"
 order: 5
 ---
 
-## Group entries with a collection
+## Group entries with a path
 
-A collection is structural: it owns child ids and no route.
+A `navPath` lists the folders above a screen, page, flow, or component. An
+omitted path is `[]`, placing the entry at the top of its section. Paths
+create folders in Pages and Components independently.
 
 ```tsx
-import { defineCollection } from "@mokly/mokly";
+import { defineScreen } from "@mokly/mokly";
 
-export const account = defineCollection({
-  id: "account",
-  title: "Account",
-  description: "Account product screens.",
-  childIds: ["account-home", "account-invoice"],
-  dependencies: ["src/account"],
+export const accountHome = defineScreen({
+  id: "account-home",
+  title: "Account home",
+  description: "The account landing screen.",
+  route: "account/home.html",
+  navPath: ["Account", "Screens"],
+  mobile: <main>Account</main>,
+  desktop: <main>Account</main>,
+  dependencies: ["src/account/home.tsx"],
   relatedDocs: ["docs/account.md"],
+  useCaseIds: [],
 });
 ```
 
-`childIds` are the only navigation hierarchy in the catalogue. Each child has
-at most one collection parent, a collection cannot repeat a child, name itself,
-take part in a cycle or name an unknown id, and an entry no collection claims
-is a catalogue root.
+Matching path segments merge into one folder within a section even across
+files. A label must be nonempty, lack leading/trailing whitespace, and cannot
+contain `/`. Labels differing only by Unicode case or whitespace under one
+parent conflict; so does a folder whose name matches a sibling entry title.
+Different entries can have the same title, however.
 
-Breadcrumbs come from that hierarchy: the titles of the ancestors from the
-root down to the parent. You never write a breadcrumb path yourself.
+Breadcrumbs use the path labels in order. Moving a path changes navigation
+and breadcrumbs without changing the entry's route. Variants copy their
+parent's path and appear beneath its row.
 
-Inside a nested tree the `collection` marker does the same work and adds a
-`segment` that becomes part of its children's routes.
+Inside a `defineRoot` tree, optional root `title` and ancestor `folder()`
+titles derive each leaf's path; `segment` builds routes and never moves a
+folder in navigation. Nested leaves must not author their own `navPath`.
 
 ## Classify with tags
 
@@ -46,13 +55,15 @@ defineScreen({
 ```
 
 Tags are optional vocabulary, not a second hierarchy: an untagged catalogue is
-perfectly valid. A list must not repeat a tag, and collections reject the
-field altogether. In the catalogue, search for `tag:forms` to narrow the tree,
+perfectly valid. A list must not repeat a tag, and folders have no tags or
+other entry metadata. In the catalogue, search for `tag:forms` to narrow the tree,
 and the details of a screen list its tags as chips you can search from.
 
 ## Exported types
 
-| Type                                      | Use                                       |
-| ----------------------------------------- | ----------------------------------------- |
-| `CollectionInput`, `CollectionDefinition` | What `defineCollection` takes and returns |
-| `NestedCollectionInput`                   | What `collection` takes inside a tree     |
+| Type                 | Use                                 |
+| -------------------- | ----------------------------------- |
+| `NestedFolderInput`  | What `folder` takes inside a tree   |
+| `NestedFolderMarker` | What `folder` returns in a tree     |
+| `RootInput`          | What `defineRoot` takes for a tree  |
+| `EntryInput`         | Common metadata including `navPath` |

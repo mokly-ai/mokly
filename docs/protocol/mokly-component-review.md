@@ -132,7 +132,7 @@ All registered components appear in `components`, even if unchanged or unused.
 All current/base screens appear in `screens`, including affected-only screens.
 Neither array is the Changes filter. `changes` is its sole membership source;
 its length is the Changes count, with no duplicate routed entry records.
-Component variants, usages, or collection ancestors do not add rows/counts.
+Component variants, usages, or ancestor folders do not add rows/counts.
 
 ## Reasons And Secondary Evidence
 

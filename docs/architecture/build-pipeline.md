@@ -156,10 +156,10 @@ see the [component manifest](../protocol/mokly-component-manifest.md).
 Registered entries render each saved variant in every configured context through
 the same consumer graph. Wrappers record actual invocations, data, caller-owned
 slots, and layout-neutral ranges. The root saved variant is not its own instance.
-All catalogues emit manifest v5 with the complete source inventory. Registered
+All catalogues emit manifest v6 with the complete source inventory. Registered
 components add saved variants and complete per-view invocation/ownership records;
 explicit page callbacks still emit exactly one complete document. Both historical
-v4 envelopes remain readable only at the Git boundary. Current readers require v5.
+v4 envelopes and v5 remain readable only at the Git boundary. Current readers require v6.
 
 The [child-control adapter](../protocol/mokly-link-controls.md) uses parsed
 source locations to patch only the marked control and its boundary templates.

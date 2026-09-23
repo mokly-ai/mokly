@@ -10,7 +10,7 @@ order: 3
 Changes compares your working tree with the branch point shared by `HEAD` and
 the Git base your configuration names, which is `origin/main` unless you say
 otherwise. It compares the generated documents, the local resources they
-render, route-level catalogue metadata and the collection ancestry an entry
+render, route-level catalogue metadata and the `navPath` an entry
 sits in.
 
 Commits added to the base branch after you diverged do not appear as your

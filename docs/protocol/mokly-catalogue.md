@@ -36,13 +36,12 @@ type ChangeKind = "added" | "changed" | "removed" | "unmodified";
 type PublicPath = string;
 
 interface CatalogueReadModel {
-  schemaVersion: 1;
+  schemaVersion: 2;
   identity: { id: string; title: string };
   deploymentId: string;
   revision: { content: number; evidence: number };
   changesStatus: ChangesStatus;
   comparisonUrl: PublicPath | null;
-  collections: readonly CatalogueCollection[];
   tree: {
     pages: readonly CatalogueNode[];
     components: readonly CatalogueNode[];
@@ -53,14 +52,13 @@ interface CatalogueReadModel {
   components: readonly CatalogueComponent[];
   removedEntries: readonly {
     entry: CatalogueRoutedEntry;
-    ancestors: readonly { id: string; title: string }[];
     preview?: { kind: "screen" } | { kind: "page"; path: PublicPath };
   }[];
 }
 type CatalogueRoutedEntry =
   CatalogueScreen | CataloguePage | CatalogueUseCase | CatalogueComponent;
 type CatalogueNode =
-  | { kind: "collection"; id: string; children: readonly CatalogueNode[] }
+  | { kind: "folder"; label: string; children: readonly CatalogueNode[] }
   | { kind: "entry"; id: string; children?: readonly CatalogueNode[] };
 type CatalogueChanges =
   | { status: "ready"; kind: ChangeKind; included: boolean }
@@ -82,10 +80,6 @@ interface CatalogueEntry {
   details: CatalogueDetails;
   changes: CatalogueChanges;
 }
-interface CatalogueCollection extends CatalogueEntry {
-  kind: "collection";
-  childIds: readonly string[];
-}
 type CatalogueUsage =
   | {
       status: "ready";
@@ -103,6 +97,7 @@ interface CatalogueView {
 }
 interface CatalogueScreen extends CatalogueEntry {
   kind: "screen";
+  navPath: readonly string[];
   route: string;
   address?: string;
   variantOf?: string; // Present exactly on variant screens.
@@ -113,16 +108,19 @@ interface CatalogueScreen extends CatalogueEntry {
 }
 interface CataloguePage extends CatalogueEntry {
   kind: "page";
+  navPath: readonly string[];
   route: string;
   documentPath: PublicPath | null;
 }
 interface CatalogueUseCase extends CatalogueEntry {
   kind: "use-case";
+  navPath: readonly string[];
   route: string;
   steps: readonly { screenId: string; title?: string; description?: string }[];
 }
 interface CatalogueComponent extends CatalogueEntry {
   kind: "component";
+  navPath: readonly string[];
   route: string;
   viewports: readonly Viewport[];
   colorSchemes: readonly ColorScheme[];
@@ -151,12 +149,14 @@ views/documents use null, never baseline HTML disguised as current output.
 
 `identity.id` is lowercase SHA-256 of UTF-8 JSON, without LF, for
 `["mokly-catalogue-v1", repoRelativeConfigPath]`, scoped to the source origin.
+`mokly-catalogue-v1` is the permanent identity-hash namespace, not the read
+model `schemaVersion`; changing it would change published catalogue ids.
 `identity.title` is `Mokly`; host slots own branding. No account data is inferred.
 
 ## Projection And Privacy
 
-Construct an explicit allowlist projection from validated manifest v5, the
-validated collection forest, and the accepted Changes/comparison snapshot.
+Construct an explicit allowlist projection from validated manifest v6, the
+validated per-section folder trees, and the accepted Changes/comparison snapshot.
 Do not spread a manifest, entry, or internal evidence object into public JSON.
 
 - Screens derive schemes from real fragments. Views sort mobile/light,
@@ -166,16 +166,19 @@ Do not spread a manifest, entry, or internal evidence object into public JSON.
 - Components retain schemas, read-only control descriptions, declared slot
   names, saved variants in authored order, their validated wire props and views.
   The first variant is default; ready usage copies only instances/slots/ranges.
-- Collections retain authored `childIds`. Derive the Pages/Components tree and
-  breadcrumbs from that forest, not `navPath` or source directories. Project
-  mixed collections independently into both sections; unclaimed entries stay
-  at the root. Collections have no route or tags; emit `tags: []`.
-  Drop empty projections, except authored empty folders remain in Pages.
+- Derive Pages (screens, pages, use cases) and Components (components) trees
+  independently from routed entries' authored `navPath`. Equal labels beneath
+  one parent merge across files; the same path in both sections creates two
+  separate folders. Empty paths produce top-level entries; no empty folders
+  appear. Both public section arrays are required and are `[]` when they have
+  no current entries. The rendered navigation omits a section only when it has
+  no matching current or retained removed entries.
+  Routes and source directories do not form folders.
   Under the implemented [screen variants contract](./mokly-screen-variants.md),
   a variant screen's entry node is a child of its parent screen's entry node
   in the Pages tree rather than a sibling. Entry-node `children` is present
   only for that screen-variant grouping, and `variantOf` is an additive field
-  that v1 readers tolerate.
+  that v2 readers validate.
 - Details retain authored display metadata already exposed by the inspector.
   `details.dependencies` contains repository-relative display labels only.
   `sourcePath`, optional invocation `source.path`, and local related-doc paths
@@ -192,11 +195,11 @@ Reject private filesystem paths in path fields; display strings/props are data.
 
 Per-entry Changes comes from the existing route/component attribution, not a
 count of visual comparisons. `included` is membership in Changes; affected
-consumers can have eligible comparisons while `included` is false. Collection
-inclusion aggregates descendants without extra counts. Unknown,
+consumers can have eligible comparisons while `included` is false. Folder
+visibility aggregates descendants without extra counts or folder-level status. Unknown,
 preparing, pending and disabled states never imply unmodified or a zero count.
-Retain removed routed entries with baseline ancestor labels outside the current
-ownership forest; current ids/routes win on conflicts under existing rules.
+Retain removed routed entries with baseline `navPath` labels outside the current
+folder trees; current ids/routes win on conflicts under existing rules.
 Removed variants can remain on a surviving component. The optional `preview`
 field is the additive descriptor defined by
 [removed previews](./mokly-removed-previews.md); readers tolerate its absence.
@@ -215,17 +218,18 @@ Review v2/v3 bytes stay unchanged; comparison files load only on selection.
 ## Serialization, Identity And Versions
 
 Sort object keys recursively by UTF-16 code units; preserve authored variants,
-children, steps and tags. Entry arrays otherwise sort by route (empty for
-collections), then id. The variant screens of one parent are the exception:
+steps and tags. Entry arrays otherwise sort by route, then id. The variant screens of one parent are the exception:
 emit them in authored order directly after their parent and before the next
 entry in route order. That sibling order is the order `variantsById`, the
 navigation list, the details `Variants` row, and the public tree's entry-node
 `children` present. Apply the exception independently to `removedEntries`;
 when a variant's parent is absent from that array, the variant stays in its
 ordinary route-then-id position. Sort all other removed entries by route/id,
-instances/slots by key, and ranges by DOM start order. Tree roots sort by id;
-non-variant children retain `childIds` order. The viewer applies existing
-presentation sorting. Emit required empties, omit absent optionals, use
+instances/slots by key, and ranges by DOM start order. At every tree level sort
+folders before entries, then `left.label.localeCompare(right.label, "en")`,
+then compare folder path keys or entry ids by UTF-16 code units as a total
+tie-break. An entry node's variant children remain in authored order. The
+shell uses this same comparator. Emit required empties, omit absent optionals, use
 two-space indentation and a final LF. Identical inputs produce identical bytes
 regardless of enumeration, time or output location.
 
@@ -235,15 +239,38 @@ normalizes this owned JSON's top-level `deploymentId` to 64 zeroes before hashin
 and stamps it afterward, alongside shell descriptors. Other catalogue bytes
 participate unchanged. Export revisions are `{ content: 0, evidence: 0 }`.
 
-Readers reject unsupported `schemaVersion`; compatible v1 readers tolerate
-unknown additive fields but validate all known fields/references. Writers remain
-allowlisted. Optional fields are additive; removals, required additions, changed
-meaning, new union discriminants or incompatible paths require a new version.
+Readers require `schemaVersion: 2` and reject older and unknown versions; writers
+remain allowlisted. The move from v1's authored `childIds` order to the shared
+sorted tree order is intentional, as are the removal of collection records and
+the addition of `navPath`. Optional fields are additive; removals, required
+additions, changed meaning, new union discriminants or incompatible paths
+require a new version.
 This file and the inspector asset are additive inventory entries: ownership v1,
 upload v1, review v2/v3 and delivery descriptor v2 remain unchanged.
 
-The [public v1 fixture](./fixtures/catalogue-v1.json) ships in the npm package
+The [public v2 fixture](./fixtures/catalogue-v2.json) ships in the npm package
 and is checked by the reader/projection conformance tests.
+
+The reader requires both `tree.pages` and `tree.components` arrays. An empty
+array is valid for a section with no current routed entries, including when
+that section has only removed entries; a nonempty section must be a
+well-formed tree. It requires every current routed entry's `navPath` to be an
+array of valid folder labels under the
+[authoring rules](./mokly-authoring.md), and every routed non-variant id to
+appear exactly once in the correct section at precisely that path. Every
+folder has a valid label, at least one child, and a path represented by at
+least one routed descendant; folder labels under one parent are unique by
+bytes and cannot collide by the shared conflict key. No leaf label may
+conflict with a sibling folder; repeated leaf titles remain legal. Child
+arrays at each level follow the shared comparator (folders first, English
+locale label order, UTF-16 path-key/id tie-break); only variant children
+depart from this order. Entry-node `children` exists only on a parent screen
+with variants and contains exactly those variants in authored order, with
+`navPath` identical to the parent. Variants appear nowhere else in the tree;
+entry references must resolve and cannot be duplicated or missing. Removed
+entries never appear in the current tree: their `navPath` is validated only
+as an array of strings (historical labels need not satisfy current folder
+rules). Unknown fields follow the existing reader policy for public JSON.
 
 ## Serve And Fetch Rules
 

@@ -54,7 +54,7 @@ Consumer `mokly export` performs its own build and always includes Changes.
 ## Current Catalogue By Default
 
 Publish the current home, catalogue routes, resources, metadata, search, tags,
-collection hierarchy, ID redirects, and not-found page. Preserve screen
+folder hierarchy, ID redirects, and not-found page. Preserve screen
 viewport/color selection and page rendering.
 
 Omit All/Changes controls and counts, screen comparison controls, removed-entry

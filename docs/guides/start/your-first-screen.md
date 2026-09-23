@@ -16,21 +16,14 @@ file is beside the account screen it describes, for example
 expanding to `<folder>/**/*.mockup.{ts,tsx}`.
 
 ```tsx
-import { defineCollection, defineScreen } from "@mokly/mokly";
+import { defineScreen } from "@mokly/mokly";
 
 export const mockups = [
-  defineCollection({
-    id: "account",
-    title: "Account",
-    description: "Account product screens.",
-    childIds: ["account-home"],
-    relatedDocs: ["docs/account.md"],
-    dependencies: ["src/account"],
-  }),
   defineScreen({
     id: "account-home",
     title: "Account home",
     description: "The account landing screen.",
+    navPath: ["Account"],
     route: "account/home.html",
     mobile: <main>Account</main>,
     desktop: <main>Account</main>,
@@ -47,9 +40,9 @@ export const mockups = [
 components your product ships. Each view is generated as its own standalone
 page, so wrap the content in a landmark such as `main`.
 
-The collection is also the navigation hierarchy. Because `account-home` is a
-child of `account`, the catalogue shows it under Account and builds its
-breadcrumb from that relationship.
+The `navPath` creates an Account folder and its breadcrumb; `route` stays
+`account/home.html` even if you rename the folder. Without a `navPath`, the
+screen appears at the top of Pages.
 
 ## Give it a route
 

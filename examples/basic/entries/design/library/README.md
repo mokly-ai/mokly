@@ -58,7 +58,8 @@ views other than the shown one, so the details inspector names them.
 
 For each component, `{group}/{slug}.tsx` declares its typed schema, slots, saved
 variants and supported controls. `{slug}.view.tsx` implements its markup.
-`library.mockup.ts` registers the entries in four flat gallery collections.
+`library.mockup.ts` registers the entries with four flat-authored gallery
+folder paths.
 
 Call the registered `.Component` from screen adapters. Never import a `.view`
 module into a screen or create a second standalone implementation. Leave whole

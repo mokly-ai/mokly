@@ -139,12 +139,11 @@ static shell metadata. The development server it captured remains unchanged.
 
 ## Public Descriptor
 
-Catalogue v1 gains one optional, additive field on each removed entry:
+Catalogue v2 retains the optional preview descriptor on each removed entry:
 
 ```ts
 interface RemovedEntry {
   entry: CatalogueRoutedEntry;
-  ancestors: readonly { id: string; title: string }[];
   preview?: { kind: "screen" } | { kind: "page"; path: PublicPath };
 }
 ```
@@ -164,7 +163,7 @@ path for pages whose generation matches `comparisonUrl` and whose suffix is the
 exact removed page route plus `.json`, tolerate the field's absence, and reject
 it on current entries or when `comparisonUrl` is null.
 When the readers learn the field, the shipped
-[v1 fixture](./fixtures/catalogue-v1.json) must exercise both variants.
+[v2 fixture](./fixtures/catalogue-v2.json) exercises both variants.
 
 The embedded viewer loads preview metadata only from advertised paths:
 `comparisonUrl` for screens and `preview.path` for pages, resolved against the

@@ -19,7 +19,7 @@ what you are reading.
 
 ## Find your way
 
-Breadcrumbs above a screen come from the collection hierarchy and end in a
+Breadcrumbs above a screen come from its `navPath` labels and end in a
 copyable id chip, so the name to use in a link is always in front of you. A
 link inside a screen opens its destination's canonical page, carries its
 fragment and reveals it in the tree.
@@ -52,5 +52,5 @@ depends on and the evidence behind a change.
 ## While you work
 
 A watched server reloads the catalogue when your sources change and restores
-your search, your filter, the collections you opened, the viewport, the drawer
+your search, your filter, the folders you opened, the viewport, the drawer
 and your scroll position. Back and Forward return to the position you left.

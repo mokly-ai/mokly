@@ -5,24 +5,28 @@ implemented pre-release behavior unless a document's Delivery Status explicitly
 labels an approved target that is still tracked by an active plan. Package,
 authoring, static build/check, responsive Browse, watched development, on-demand comparisons,
 packed consumer verification, CI, and npm release automation are implemented.
-The first public release remains an external delivery step.
+The first public release remains an external delivery step. Path-based
+navigation, manifest v6, and read model v2 below are the approved target
+contract in the active [plan](../../plans/nav-path-hierarchy.md); its subsequent
+milestones replace the current implementation.
 
 ## Supported Formats
 
 | Catalogue                     | Generated manifest | Comparison result |
 | ----------------------------- | ------------------ | ----------------- |
-| Without registered components | 5                  | 2                 |
-| With registered components    | 5                  | 3                 |
+| Without registered components | 6                  | 2                 |
+| With registered components    | 6                  | 3                 |
 
-All current catalogues emit manifest v5 with explicit pages, the complete
+All current catalogues emit manifest v6 with explicit pages, authored `navPath`, the complete
 source inventory and declared dependencies. Component catalogues also include
 saved variants and complete per-view usage. Comparisons use v3 whenever either
 side contains registered components, including when the last component is removed;
 otherwise they use v2. Pages participate in Browse Changes without visual comparisons.
 
-The current primary file requires v5. Git baseline readers accept v3 and both
+The current primary file requires v6. Git baseline readers accept v3 and both
 historical v4 formats: pages with `sourceFiles`, or components with `legacyPages`.
-These envelopes are disjoint; combining them is invalid. Explicit
+These envelopes are disjoint; combining them is invalid. Historical v5 and
+v6 are accepted; v3–v5 `collection` records are dropped after validation. Explicit
 `compatibility.readManifestV2` permits the legacy v2-format fallback only
 when the historical primary file is absent, never when it is invalid.
 
@@ -43,8 +47,8 @@ when the historical primary file is absent, never when it is invalid.
 - [Build and Browse runtime](./mokly-runtime.md)
 - [Component instance identity](./mokly-instances.md) — existing key/boundary
   rules and approved resolution/source-location target.
-- [Public catalogue read model](./mokly-catalogue.md) — implemented:
-  public inventory v1 beside the private manifest.
+- [Public catalogue read model v2](./mokly-catalogue.md) — public inventory
+  beside the private manifest.
 - [Embeddable viewer](./mokly-viewer.md) — approved `@mokly/viewer` API and
   shared hydrated shell.
 - [Live viewer capabilities](./mokly-live-capabilities.md) — private Serve
@@ -78,7 +82,7 @@ when the historical primary file is absent, never when it is invalid.
     command environments, locking and crash cleanup.
 - [Registered components](./mokly-components.md)
 - [Component runtime prop schema](./mokly-component-props.md)
-- [Current manifest v5 schema](./mokly-component-manifest.md)
+- [Current manifest v6 schema](./mokly-component-manifest.md)
 - [Component comparison v3 schema](./mokly-component-review.md)
 - [Component change attribution](./mokly-component-changes.md)
 - [CSS change attribution](./mokly-css-attribution.md) — approved

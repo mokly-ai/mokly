@@ -7,7 +7,7 @@ in the completed
 [in-frame catalogue link navigation plan](../../plans/in-frame-catalogue-link-navigation.md).
 
 [Whole-document pages](./mokly-pages.md) use the same logical links, IDs,
-source ownership, and collection ancestry as screens and use cases.
+source ownership, and `navPath` breadcrumbs as screens and use cases.
 
 The [frame adapters](./mokly-frame-adapter.md) and `@mokly/viewer` package
 are implemented. This document's same-origin interactions remain
@@ -70,8 +70,8 @@ build instead of becoming an accidental resource request. Authors use
 `data-nav-href` for metadata-only references; it is valid on any element but
 does not invent click or keyboard semantics. A logical `data-nav-href` may
 coexist with an eligible logical `href`, in which case both must name the same
-destination. The entry's `route` is its current Browse location. A collection
-remains an invalid destination. A use-case destination opens the use-case page,
+destination. The entry's `route` is its current Browse location. A folder has
+no id or route and is not a destination. A use-case destination opens the use-case page,
 even though its portable fragment fallback resolves through the first screen in
 that use case.
 
@@ -325,7 +325,7 @@ To establish the invariant, Browse must:
    [screen variants contract](./mokly-screen-variants.md). That list is a
    container rather than a `<details>`, so opening it clears its `hidden`
    state and presses its disclosure button instead of setting `open`;
-3. preserve unrelated collection disclosures;
+3. preserve unrelated folder disclosures;
 4. clear a search query only when it would hide the destination;
 5. switch Changes to All only when the destination is not changed;
 6. reapply navigation visibility after those adjustments; and

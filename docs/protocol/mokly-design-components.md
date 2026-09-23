@@ -42,18 +42,19 @@ samples contain no implementation notes, environment badges or extra footers.
 
 ## Catalogue And Source Ownership
 
-Add `Components → Design → Shared components` from the same authored root that
-places `Pages → Design → Mokly design` in the Pages projection. Keep the
+Add `Components → Design → Shared components` by reusing the `Design` label
+from `Pages → Design → Mokly design`; this forms an independent folder in the
+Components section, not a shared root entity. Keep the
 existing Component explorer design section and Components → Example → Components group.
-The new pure gallery collections are `design-library` and
-`design-library-{chrome,controls,inspector,preview}`. They contain the 15 routed
-components in the inventory, with no duplicate screen entries for variants.
+The gallery folders are `Design → Shared components` and its
+`Chrome`, `Controls`, `Inspector`, and `Preview` children. They contain the 15
+routed components in the inventory, with no duplicate screens for variants.
 
-Use flat `defineComponent`/`defineCollection` exports from
-`entries/design/library/library.mockup.ts`, adding `design-library` to the
-existing `design-root.childIds`. The current nested `collection` marker accepts
-screens and collections, not component entries; this adoption must not cast
-components into that marker or require a new package API.
+Use flat `defineComponent` exports from
+`entries/design/library/library.mockup.ts`, authoring a `navPath` on each
+component. Nested `folder()` groups screens and pages only; components stay
+flat-authored. Reuse the `Design` label in both sections without sharing
+folder identity across sections.
 
 For inventory group `G` and slug `S`:
 
@@ -66,7 +67,7 @@ For inventory group `G` and slug `S`:
 - Saved variant ids and exposed props are defined by the inventory. A single
   selected variant renders at a time, in both actual viewport contexts.
 
-Gallery-only collection indexes need no additional canonical artboard. Any
+Gallery-only folder indexes need no additional canonical artboard. Any
 later screen-spec sub-page must retain the canonical-screen and five-screen
 limits; variants must not become an unbounded screenshot gallery.
 
@@ -170,7 +171,7 @@ attributed until an actual exclusive owner exists.
 Use exact `ownedDependencies` for a component's exclusive implementation modules
 and stylesheet, with matching entries in its `dependencies`. Shared fixtures,
 navigation tables, icons and mixed helpers are not exclusively owned. Screens
-and ancestor collections must not explicitly depend on an extracted exclusive
+and ancestor folder definitions must not explicitly depend on an extracted exclusive
 component file: the classifier intentionally treats an exact declared screen
 dependency as independent evidence. Keep their genuine layout/global dependencies.
 

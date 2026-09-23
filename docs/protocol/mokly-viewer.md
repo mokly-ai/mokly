@@ -142,7 +142,7 @@ origin root. A URL/string source must be an absolute HTTP(S) catalogue URL;
 its validated final response URL establishes that root. A fetcher returns the
 same pair explicitly and must honor cancellation; `baseUrl` is invalid for URL
 or fetcher sources. Do not resolve artifact paths relative to the embedding app.
-Validate every source as [catalogue v1](./mokly-catalogue.md) before rendering.
+Validate every source as [catalogue v2](./mokly-catalogue.md) before rendering.
 Fetchers are host-supplied source transports, not permission for viewer telemetry.
 Fetch failure renders an explicit error/retry state and emits `onError`.
 Missing data is never replaced by examples or invented counts.
@@ -344,7 +344,8 @@ Shell state is one store scoped to a mounted viewer:
 - **Selection** is the public `ViewerSelection`: screen, saved variant, All/Changes view,
   viewport, colour scheme, search phrase and tags. Standalone modes keep
   viewport, scheme and filters in memory across in-shell navigation.
-- **Disclosure** covers navigation groups (`section:*` and `collection:*`
+- **Disclosure** covers navigation groups (`section:*`,
+  `folder:<section>:<path key>`, and `variants:<section>:<parent id>`
   identities), the details inspector, the navigation split width and the
   responsive drawer. Navigation, details and split-width choices persist per
   served origin in browser storage under the existing keys; the drawer and the

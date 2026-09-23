@@ -121,8 +121,8 @@ directory and catalogue group without moving the existing page.
 | Empty Changes All filter                        | `design-browse-screen`                                                                                         |
 | Removed consumer return, component explorer     | `design-component-removed`, from the desktop Action row and the narrow Changes shortcut, never from the stage  |
 
-Collection headings and collection-only breadcrumbs are not catalogue-link
-targets: the public API rejects collection ids. Leave grouping labels as text,
+Folder headings and folder-only breadcrumbs are not catalogue-link
+targets: folders have no id or route. Leave grouping labels as text,
 or use native disclosure markup for a group that actually contains children.
 Any added home crumb has a distinct label and the home destination above.
 Keep the design tree's existing groups and make screen leaves use explicit ids.
@@ -293,7 +293,7 @@ normal enhanced navigation. Do not equate these two contexts.
   navigation, miniature-screen, flow-reference, and example-button links.
 - Verify expected control destinations against the built real example manifest
   in both viewports, plus every light/dark example-button output. Detect wrong
-  subjects, self-links masquerading as transitions, collection/absent ids,
+  subjects, self-links masquerading as transitions, folder/absent destinations,
   duplicate/nested focus targets, and inactive controls becoming links.
 - Check the canonical existing-design inventory against the complete manifest
   design-screen set, including exact id/route pairs. Keep unimplemented planned

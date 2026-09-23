@@ -133,7 +133,7 @@ smoke-tested using the opt-in browser benchmark's under-five-second usable-start
 assertion. It runs with other heavy checks idle; CI's small correctness fixtures
 have no machine-specific wall-clock assertion.
 
-The fixture uses real React Native Web and Firna rendering, nested collections,
+The fixture uses real React Native Web and Firna rendering, nested folders,
 saved component variants, repeated and nested component usage, caller-owned
 slots, both viewports and color schemes, logical links, whole-document pages,
 flows, local CSS imports, and images. Sizes are configurable. It is a repeatable

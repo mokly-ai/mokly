@@ -67,7 +67,7 @@ Edits that keep it, provided those inputs stay the same, are:
 - Editing data props, slot content, component implementation, styles or assets.
 - Reordering siblings, or inserting/removing other siblings with distinct ids.
 - Changing source filename, invocation line/column, comments or formatting.
-- Renaming an entry title, route, collection, or containing entry id; moving
+- Renaming an entry title, route, `navPath`, or containing entry id; moving
   between entry scopes can retain the digest but changes the scoped reference.
 - Changing viewport/scheme or variant context; each context has its own record.
 - Moving, forwarding, or replaying an unchanged captured slot in the rendered
@@ -124,7 +124,7 @@ errors, not a fourth resolution state.
 
 ## Optional Invocation Source
 
-Manifest v5 includes this optional instance field:
+Manifest v6 includes this optional instance field:
 
 ```ts
 interface ComponentSourceLocation {
@@ -163,7 +163,7 @@ The name is reserved from authored data props and slots. Capture it in the
 collector only; do not emit DOM attributes, source maps, or debug markup.
 Programmatic `createElement` calls and already-transformed modules without
 invocation information may omit `source`. Replayed slots retain the original
-invocation location. Existing v5 records without `source` remain valid; updated
+invocation location. Historical v5 records without `source` remain valid; updated
 readers accept both forms without a schema-version bump.
 
 `source` is excluded from instance/slot keys, `propsKey`, direct-input comparison,

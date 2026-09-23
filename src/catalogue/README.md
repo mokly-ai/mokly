@@ -1,12 +1,12 @@
 # Public catalogue data
 
 This module projects accepted catalogue and Changes evidence into the public
-`schemaVersion: 1` read model at `__mokly/catalogue.json`. Serve, consumer export,
+`schemaVersion: 2` read model at `__mokly/catalogue.json`. Serve, consumer export,
 and repository preview use the same projection. The local shell keeps its embedded private data; Serve
 evidence updates also adopt the validated public snapshot in place.
 
 `projection_input.ts` is the typed input boundary. It accepts validated manifest
-v5 or live-index metadata, the collection forest, and accepted comparison/usage
+v6 or live-index metadata, the section-scoped folder trees, and accepted comparison/usage
 evidence; projection performs no filesystem reads, Git commands, or rendering.
 `projection.ts`, `views.ts`, and `changes.ts` select public fields explicitly.
 Changes membership comes from route/component attribution, independently of
@@ -19,8 +19,8 @@ projection never derives it from Git or the filesystem. Page paths must name the
 same 64-hex generation as `comparisonUrl` and end in the exact removed route,
 while screen descriptors reuse that generation's comparison. Readers reject
 descriptors on current entries, mismatched entry kinds, missing comparison URLs,
-and cross-generation or mismatched page paths while accepting older catalogues
-that omit the field.
+and cross-generation or mismatched page paths while accepting v2 catalogues
+that omit the optional preview field.
 Serve supplies only removed-screen descriptors after a complete comparison is
 pinned; selected-only generations never change the public model, and live page
 descriptors remain absent. Changes-enabled consumer export and repository
@@ -43,12 +43,13 @@ metadata never grants permission to serve source files.
 
 `serialization.ts` writes recursively sorted object keys, two-space indentation,
 and a final newline. Entry arrays and usage records have canonical ordering;
-authored children, variants, steps and tags retain their order. Catalogue identity
+authored variants, steps and tags retain their order; tree siblings use the
+shared folder-first English-locale comparator. Catalogue identity
 depends only on the repository-relative config path. Export stamps the complete
 artifact identity; Serve hashes its canonical snapshot with the identity field
 zeroed and advances content/evidence revisions on accepted updates.
 
-The [public fixture](../../docs/protocol/fixtures/catalogue-v1.json) ships in the
+The [public fixture](../../docs/protocol/fixtures/catalogue-v2.json) ships in the
 npm package. Consumers need the documented JSON artifact, not a CLI deep import.
 The viewer package consumes this projection without importing the CLI.
 

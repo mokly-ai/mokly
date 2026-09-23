@@ -33,8 +33,8 @@ otherwise unchanged entries. Dependency and shared-impact evidence remains in
 comparison details, accessible for every screen from All.
 
 Each screen variant is projected independently. Its metadata projection
-contains `variantOf`, its parent's `{ id, title }`, and the parent's collection
-ancestors. Changing `variantOf` or the parent title therefore marks the variant
+contains `variantOf`, its parent's `{ id, title }`, and its copied `navPath`.
+Changing `variantOf`, its `navPath`, or the parent title therefore marks the variant
 route, while a material or metadata change confined to the variant never adds
 the parent route. A flow is propagated only when its `screenId` step names the
 exact changed screen, including a variant.
@@ -46,7 +46,7 @@ content changes, material-key changes, and one-sided ignored-region adoption
 with changed content remain eligible. Both viewports and every available color
 scheme participate. Metadata includes route/address, titles, descriptions,
 rationale, tags, related-doc links, flow steps and memberships, view structure,
-and collection ancestry; it excludes source locations and dependencies.
+and `navPath`; it excludes source locations and dependencies.
 Valid generated ownership headers are excluded from document comparison, so a
 source move alone stays unchanged. Stored snapshots retain the original headers.
 

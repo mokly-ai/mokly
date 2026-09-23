@@ -71,7 +71,7 @@ Controls below use text, boolean, number and primitive enum selections only.
    Brand/search structure belongs to this component;
    it composes the registered picker, chip and appearance selector. Preserve compact mobile branding.
 2. **Catalogue navigation:** row records with stable key, label, kind
-   `collection/screen/component/flow/page/variant`, depth, optional
+   `folder/screen/component/flow/page/variant`, depth, optional
    count/open/destination, an optional changed mark, and an optional
    `open/closed` variant-list state on a screen row; selected destination,
    All/Changes state, changed count and presentation
@@ -79,7 +79,7 @@ Controls below use text, boolean, number and primitive enum selections only.
    `ready/pending/preparing/unavailable`.
    Controls: All/Changes, availability and presentation. A `variant` row is a
    leaf one depth step below the screen row it follows; it renders only while
-   that screen's variant list is open, it never counts as a collection child,
+   that screen's variant list is open, it never counts as a folder child,
    and it carries the variant icon — a screen outline over a second, partially
    drawn screen outline — instead of the screen icon, muted like the screen
    rows around it. A screen row carrying a variant list adds a trailing 16px

@@ -9,7 +9,7 @@ defines the tree and its state model; the
 [React Browse shell plan](../../../../plans/react-browse-shell.md) records how
 Serve, export and the public viewer converged on this tree.
 
-`nav.tsx` renders the catalogue column, `nav_rows.tsx` its collection groups as
+`nav.tsx` renders the catalogue column, `nav_rows.tsx` its folder groups as
 native `<details>`, and `nav_leaf_rows.tsx` its leaves: links carrying their
 entry-kind glyph, and a screen's variants as a container the row's chevron
 button discloses, because a row cannot be both a link and a `<summary>`. A

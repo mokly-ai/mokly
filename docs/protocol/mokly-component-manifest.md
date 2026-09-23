@@ -2,10 +2,10 @@
 
 ## Delivery Status
 
-Manifest-v5 generation, validation, Serve, and static export are implemented
-through the public `defineComponent` API. These are the normative interfaces
+Manifest-v6 generation, validation, Serve, and static export use the public
+`defineComponent` API. These are the normative interfaces
 for the [component contract](./mokly-components.md). `ManifestEntryBase`,
-`ManifestScreen`, `ManifestPage`, `ManifestCollection`, `ManifestUseCase`,
+`ManifestScreen`, `ManifestPage`, `ManifestUseCase`,
 and `Viewport` retain the [package contract](./mokly-package.md) and the named
 [registry interfaces](../../packages/viewer/src/registry/types.ts).
 `ColorScheme` is `"light" | "dark"`. Prop/wire types come from the
@@ -14,25 +14,21 @@ and `Viewport` retain the [package contract](./mokly-package.md) and the named
 
 The optional instance `source` field below is implemented in
 [viewer library Milestone 2](../../plans/mokly-viewer-library.md).
-All existing v5 fields retain their contracts. Updated readers accept
-instances with or without `source`; the manifest version remains 5.
+Existing component fields retain their contracts. Readers accept instances
+with or without `source`; the current manifest version is 6.
 
 ## Entries And Variants
 
 ```ts
-interface ManifestV5 {
-  schemaVersion: 5;
+interface ManifestV6 {
+  schemaVersion: 6;
   generatedBy: "mokly";
-  entries: readonly ManifestEntryV5[];
+  entries: readonly ManifestEntryV6[];
   sourceFiles: readonly string[];
 }
 
-type ManifestEntryV5 = (
-  | ManifestCollection
-  | ManifestUseCase
-  | ManifestPage
-  | ManifestScreen
-  | ManifestComponent
+type ManifestEntryV6 = (
+  ManifestUseCase | ManifestPage | ManifestScreen | ManifestComponent
 ) & { declaredDependencies: readonly string[] };
 
 interface ComponentAwareScreen extends ManifestScreen {
@@ -64,11 +60,11 @@ interface ManifestComponentVariant {
 ```
 
 `ManifestScreen` additionally has an optional `variantOf` parent-screen id
-under the implemented [screen variants contract](./mokly-screen-variants.md);
-the field is additive and the schema version stays 5.
+under the implemented [screen variants contract](./mokly-screen-variants.md).
 
 Common entry metadata keeps its meaning, including source attribution and
-hierarchy-derived `navPath`. Every v5 entry requires `declaredDependencies`,
+authored `navPath` (required on every v6 routed entry, copied from the parent
+for a variant). Every v6 entry requires `declaredDependencies`,
 the sorted unique paths explicitly authored in its definition. `dependencies`
 remains exactly their union with `sourcePath`. Keeping both prevents automatically
 added source attribution from masquerading as an exact direct-screen dependency;
@@ -217,19 +213,19 @@ render in the view, including its component root when applicable. Ownership is
 an explicit renderer/author assertion, not CSS-selector inference.
 
 Use one schema implementation for Build output, Browse, historical manifest
-parsing, and publishing. Reject unknown fields in current v5 structures, incorrect
+parsing, and publishing. Reject unknown fields in current v6 structures, incorrect
 types, invalid keys/ids/hashes, inconsistent props/schema, duplicate records,
 unsafe paths, and broken cross-references. Preserve current validation of the
 inherited v3 entry forms. The hash must match decoded/validated props.
 
-Ids, routes, dependency roots, source paths, collection/use-case relationships,
+Ids, routes, dependency roots, source paths, `navPath`/use-case relationships,
 tags, resource confinement, and global output collisions retain existing rules.
 Variant fragment paths must exactly match the component route and suffix rule
 in the authoring contract, including every optional dark path. `ownedDependencies`
 is a subset of `dependencies`; validate and retain direct-screen overlap evidence.
 
-Entries otherwise sort by route (empty for collections), then id; lexical
-ordering in v5 uses UTF-16 code units rather than a locale-sensitive collator.
+Entries otherwise sort by route then id; lexical
+manifest ordering in v6 uses UTF-16 code units rather than a locale-sensitive collator.
 The variant screens of one parent are the exception: emit them in authored
 order directly after their parent and before the next entry in route order.
 That sibling order is the order `variantsById`, the navigation list, the
@@ -237,20 +233,23 @@ details `Variants` row, and the public tree's entry-node `children` present.
 During pre-validation ordering, a variant without one uniquely valid root
 screen parent stays in ordinary route-then-id position so relationship
 validation can reject it deterministically; invalid entries are never emitted.
-Component saved variants, collection children, use-case steps, and tags retain
+Component saved variants, use-case steps, and tags retain
 authored order. Legacy pages sort by route.
 Dependency arrays sort uniquely, as do owned paths, supplied slots, and the
 declared `slots` list. JSON object keys in new structures sort lexically;
 arrays follow their stated order. Omit absent optional fields; emit required
 empty arrays/objects. Serialize with two-space indentation and a final LF.
 
-Emit v5 for every current catalogue, including those without components. Its
+Emit v6 for every current catalogue, including those without components. Its
 sorted private `sourceFiles` inventory and explicit page entries replace legacy
 discovery; component records retain their complete usage and declaration proof.
-Historical Git readers retain v3, opt-in v2, and both earlier v4 shapes: main's
+Historical Git readers retain v3, opt-in v2, both earlier v4 shapes, v5, and v6: main's
 component format has `legacyPages`, while the page migration format has
 `sourceFiles`. These v4 shapes are disjoint; mixed top-level fields are invalid.
-Current loading rejects every earlier version with a rebuild diagnostic.
+After validating each historical shape, drop v3–v5 `collection` entries before
+comparison. Historical `navPath` is checked only as an array of strings, not
+for current label/conflict rules. Current loading rejects every earlier
+version with a rebuild diagnostic.
 Do not invent component usage for historical screen/page-only entries or revive
 legacy configuration. Registered document pages retain their material Changes
 and baseline context without screen/component visual comparisons or controls.

@@ -94,7 +94,7 @@ contract until their standalone screens are implemented.
 | `design-review-style-excluded`        | `design/review/impact/stylesheets/excluded.html`                | Changed stylesheet examined and excluded                   |
 | `design-review-preparing`             | `design/review/availability/preparing.html`                     | Changes selected while the comparison is prepared          |
 | `design-review-unavailable`           | `design/review/availability/unavailable.html`                   | Changes selected after the comparison could not be made    |
-| `design-page-view`                    | `design/browse/pages/view.html`                                 | Complete document in its declared collection               |
+| `design-page-view`                    | `design/browse/pages/view.html`                                 | Complete document in its folder                            |
 | `design-page-details`                 | `design/browse/pages/details.html`                              | Document metadata and close action                         |
 | `design-page-navigation`              | `design/browse/pages/navigation.html`                           | Document with its narrow drawer open                       |
 | `design-page-removed`                 | `design/browse/pages/removed.html`                              | Removed document's previous version with baseline ancestry |
@@ -339,13 +339,13 @@ scrollable region scrolls internally:
   - The tree begins with separate `Pages` and `Components` native disclosures,
     both open by default and both closed by `Collapse all`. Pages contains
     screens, whole-document pages, and use cases; Components contains component
-    entries. A section is omitted when it has no matching current or retained
-    removed entries. Search and Changes hide a section when they hide every row
+    entries. A section is omitted from the rendered navigation when it has no
+    matching current or retained removed entries. Search and Changes hide a section when they hide every row
     in it.
-  - Each section projects the authored collection hierarchy rather than
-    inventing route folders. A mixed collection appears in both projections
-    with only its matching descendants and a projected child count. Empty
-    authored collections remain in Pages. Collection groups are native
+  - Each section builds folders from the authored `navPath`, not route directories.
+    Matching labels in Pages and Components produce independent folders with
+    their own matching descendants and child count. Empty folders never appear.
+    Folder groups are native
     `<details>` whose summary row shows a closed/open folder SVG pair (swapped
     via the `[open]` state), a bold label, and a monospace child count. Leaves
     show a screen, variant, page, flow, or component SVG; flow icons read in
@@ -370,7 +370,7 @@ scrollable region scrolls internally:
     [screen variants contract](./mokly-screen-variants.md) owns the behavior,
     and `design/browse/variants/selected.html`, `changes.html`, and
     `removed.html` own its mockups.
-  - Catalogue-link navigation opens the active section and every collection on the active
+  - Catalogue-link navigation opens the active section and every folder on the active
     row's path and scrolls that row into view. Search and Changes filtering may
     stay selected only while the active row remains visible. Reapplying an
     active filter during navigation preserves collapsed groups outside the

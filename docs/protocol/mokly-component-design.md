@@ -18,10 +18,10 @@ consumer's previous-version state is implemented by the
 
 Source lives under `examples/basic/entries/design/components/`; generated
 artboards live under `examples/basic/generated/design/components/`. The existing
-Pages → Design → Mokly design → Component explorer collection reaches every
+Pages → Design → Mokly design → Component explorer folder reaches every
 screen.
 The canonical `overview` screen shows a component page, followed by links to the
-owning child pages outside the artboard. The original Pages, Inspection, and States child collections are gallery
+owning child pages outside the artboard. The original Pages, Inspection, and States child folders are gallery
 indexes, each with at most five direct owning screens; inspection also links a nested
 selection gallery with two owning screens. The Inspector gallery adds two closed
 states. Controls has one canonical parent screen and Editing, States, and
@@ -72,7 +72,7 @@ spans for unsupported controls.
 
 Reuse the existing top bar, split navigation tree, screen heading, comparison band,
 stage, and comparison controls, adding the shared icon inspector and compact view toolbar. Components use a small cube
-icon in the Components section and its authored Components collection. Desktop keeps the resizable navigation;
+icon in the Components section and its authored Components folder. Desktop keeps the resizable navigation;
 mobile keeps the compact header and adds short Screen/Components/Changes links
 above the heading so the relevant destinations and change count remain visible.
 
@@ -157,10 +157,10 @@ small gap above an intact rounded outline, shared by all three region layouts.
 
 Use the real generator; never hand-edit generated HTML. Six shared component
 stylesheets are hand-authored public inputs, confined to `design/components/**`.
-Route-scoped stylesheet matching links them only from the thirty-two component design routes; Changes follows those rendered resource references. The collection also declares inherited dependencies for comparison evidence. The controls stylesheet is scoped
+Route-scoped stylesheet matching links them only from the thirty-two component design routes; Changes follows those rendered resource references. The folder marker supplies inherited dependencies to its leaves for comparison evidence. The controls stylesheet is scoped
 further to its eleven owning routes, with a matching dependency and watch rule. Keep them out of the global
 `review.sharedImpact` list; watched stylesheet rules still reload their edits.
-Child collection dependency lists replace inherited lists; Controls explicitly
+Child folder dependency lists replace inherited lists; Controls explicitly
 spreads the shared stylesheet dependency set before adding its own stylesheet.
 Shared fixtures and reusable screen parts live beside the owning screen modules.
 
