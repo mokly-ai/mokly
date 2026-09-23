@@ -17,10 +17,11 @@ test("derived Changes and selected comparisons use compiled source when generate
     validEntrySource({ body: "Source-only change" }),
   );
   await fs.rm(fixture.mockupsDir, { recursive: true });
+  const prepared = await prepareReviewRepository(fixture.config, "HEAD");
   const changes = await computeCatalogueChanges(
     fixture.config,
     "HEAD",
-    await prepareReviewRepository(fixture.config, "HEAD"),
+    prepared,
   );
   assert.deepEqual(changes.changedRoutes, [
     "screens/home.html",
@@ -38,6 +39,7 @@ test("derived Changes and selected comparisons use compiled source when generate
   );
   const comparison = await new RepositorySelectedReview(
     fixture.config,
+    prepared.reader,
   ).generate(
     {
       ...snapshot.comparison,

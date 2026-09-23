@@ -15,10 +15,9 @@ import { copyExampleSources } from "./example_sources.js";
 import { repositoryRoot } from "./fixture.js";
 
 /** Copy the actual consumer so source-edit tests never mutate the working catalogue. */
-export async function designLibraryFixture(
-  t: { after(fn: () => Promise<void>): void },
-  mode?: "committed" | "derived",
-) {
+export async function designLibraryFixture(t: {
+  after(fn: () => Promise<void>): void;
+}) {
   await fs.mkdir(path.join(repositoryRoot, ".context"), { recursive: true });
   const root = await fs.mkdtemp(
     path.join(repositoryRoot, ".context/design-library-test-"),
@@ -26,8 +25,6 @@ export async function designLibraryFixture(
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   await copyExampleSources(root);
   const config = await loadConfig(path.join(root, "examples/basic"));
-  if (mode) config.generatedOutput = mode;
-  if (mode === "committed") delete config.review.baselineBuild;
   const before = await compileCatalogue(config);
   const resources = new Map<string, string>();
   for (const file of await fs.readdir(config.mockupsDir, { recursive: true })) {

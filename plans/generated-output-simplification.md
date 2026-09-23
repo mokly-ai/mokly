@@ -220,49 +220,61 @@ milestone there is no mode option; only explicit `build`, `build --watch` and
 Tracked-state detection uses the existing
 compiled-route intersection until Milestone 3 gives it a single directory.
 
-- [ ] Config: delete `generatedOutput` from `src/config/types.ts`,
+- [x] Config: delete `generatedOutput` from `src/config/types.ts`,
       `validate.ts`, `generated_output.ts`, and `src/cli/help.ts`; keep
       `review.baselineBuild` and its defaults; reject the removed key with
       guidance.
-- [ ] Tracked state: a typed `GeneratedOutputTracking` (`tracked`,
+- [x] Tracked state: a typed `GeneratedOutputTracking` (`tracked`,
       `untracked`, or a mixed error) computed only by `check` from the index
       through `src/build/tracked_output.ts`, treating a missing repository as
       untracked. The `.mokly-cache/` index guard also runs only under `check`.
       Test all three outcomes, no Git, a new entry built before Git staging,
       and no tracking reads by other commands.
-- [ ] Baseline selection: `src/review/repository.ts` and
+- [x] Baseline selection: `src/review/repository.ts` and
       `src/review/prepare.ts` choose `CommittedBaselineReader` when the
       merge-base commit contains the manifest and the rebuilt reader
       otherwise (inventory verification arrives with the schema bump in
       Milestone 3); remove every `generatedOutput` branch in `src/review`,
       `src/server`, `src/export`, and `src/cli`; the Serve child and export
       keep the prepared-repository handoff without head tracking state.
-- [ ] `check`: `src/cli/run.ts` and `src/build/output_store.ts` validate,
+- [x] `check`: `src/cli/run.ts` and `src/build/output_store.ts` validate,
       then compare with disk only when tracked; summary lines per the terminal
       contract; `review/run.ts` no longer calls the output-store check.
-- [ ] Only `build` writes: remove the writes in `src/server/serve_lifecycle.ts`,
+- [x] Only `build` writes: remove the writes in `src/server/serve_lifecycle.ts`,
       `src/server/demand/generation.ts`, and `src/export/run.ts`; add
       `serve --build` (`src/cli/arguments.ts`, serve options, the parent's
       candidate handoff) writing after each successful complete compilation;
       add `build --watch` reusing `ConsumerWatcherFactory` and the watch rules
       to recompile and rewrite with the same debounce, reporting each result.
-- [ ] Serve header (`src/cli/reporter/serve_ready.ts`) and the large fixture
+- [x] Serve header (`src/cli/reporter/serve_ready.ts`) and the large fixture
       scripts (`scripts/large/*.mjs`, `tests/fixtures/large/generate.ts`) drop
       the mode.
-- [ ] Tests: replace the 26 test files' `generatedOutput` fixtures with
+- [x] Repository preview capture compiles its own head generation and reads
+      generated routes from those bytes without touching local generated output;
+      test missing local output, stale output and alias collisions.
+- [x] Refresh publication snapshot, document-enumeration, and manifest
+      confinement tests for in-memory capture while retaining input-drift checks.
+- [x] Correct transitional READMEs so flat output paths and public-file
+      delivery describe Milestone 2, not the future `.generated/` layout.
+- [x] Audit the quick-start and code-area READMEs for transitional Git-blob
+      selection and ignore instructions before shipping Milestone 2.
+- [x] Tests: replace the 26 test files' `generatedOutput` fixtures with
       tracked and untracked fixtures; per-commit reader selection across a
       transition commit; `check` outcomes; Serve and export write nothing;
       `serve --build` and `build --watch` write after a successful compile and
       not after a failed one; committed-style baselines still read blobs.
-- [ ] Update `tests/guides_authoring.test.ts` to validate index-derived
+- [x] Update `tests/guides_authoring.test.ts` to validate index-derived
       tracking and the removed `generatedOutput` config field, and
       `tests/guides_cli.test.ts` to validate the new `--build` and `--watch`
       options when the corresponding config and CLI changes land.
-- [ ] Smoke test on the example: delete local generated files, run
+- [x] Smoke test on the example: delete local generated files, run
       `npm run dev`, browse, wait for Changes, confirm nothing written; run
       `npm run example:check`; run `node dist/cli/bin.js build --watch` on the
       example, edit an entry, confirm a rewrite; run `npm run example:build`.
-- [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
+- [x] Isolate the clean-cache packed consumer in its own Git repository before
+      `check`; commit its generated baseline after renaming the config so
+      export still exercises committed blobs.
+- [x] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
       `npm test`, `npm run test:browser`, `npm run example:check`, and
       `cargo xtask check`; commit and push.
 

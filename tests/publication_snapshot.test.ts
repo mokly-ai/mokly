@@ -61,7 +61,7 @@ test("publication fingerprints inventoried helpers inside an otherwise ignored c
 });
 
 for (const includeChanges of [false, true]) {
-  test(`publication includes a rebuild before its initial fingerprint in every surface (changes: ${includeChanges})`, async (context) => {
+  test(`publication compiles edits without writing local output (changes: ${includeChanges})`, async (context) => {
     const fixture = await createFixture();
     context.after(() => removeFixture(fixture));
     const config = await loadConfig(fixture.root);
@@ -80,22 +80,12 @@ for (const includeChanges of [false, true]) {
         "test: publication baseline",
       ]);
     }
-    const original = fs.promises.readdir;
-    let rebuilt = false;
-    context.mock.method(
-      fs.promises,
-      "readdir",
-      async (...args: Parameters<typeof original>) => {
-        if (String(args[0]) === config.repoRoot && !rebuilt) {
-          rebuilt = true;
-          await fs.promises.appendFile(
-            fixture.entryPath,
-            '\nimport { definePage } from "@mokly/mokly"; mockups.push(definePage({ id: "publication-added", title: "Added during publication", route: "publication-added.html", description: "A new document", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><body>Added document</body></html>" }));\n',
-          );
-          await writeCompilation(await compileCatalogue(config), config);
-        }
-        return original.apply(fs.promises, args);
-      },
+    const originalManifest = await fs.promises.readFile(
+      path.join(fixture.mockupsDir, "mokly-manifest.json"),
+    );
+    await fs.promises.appendFile(
+      fixture.entryPath,
+      '\nimport { definePage } from "@mokly/mokly"; mockups.push(definePage({ id: "publication-added", title: "Added during publication", route: "publication-added.html", description: "A new document", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><body>Added document</body></html>" }));\n',
     );
     const output = path.join(fixture.root, ".context/published");
     await buildPreview(
@@ -103,7 +93,16 @@ for (const includeChanges of [false, true]) {
       output,
       includeChanges ? { includeChanges, base: "HEAD" } : {},
     );
-    assert.equal(rebuilt, true);
+    assert.deepEqual(
+      await fs.promises.readFile(
+        path.join(fixture.mockupsDir, "mokly-manifest.json"),
+      ),
+      originalManifest,
+    );
+    assert.equal(
+      fs.existsSync(path.join(fixture.mockupsDir, "publication-added.html")),
+      false,
+    );
     const read = (file: string) =>
       fs.promises.readFile(path.join(output, file), "utf8");
     assert.match(await read("index.html"), /data-entry-id="publication-added"/);
@@ -124,7 +123,7 @@ for (const includeChanges of [false, true]) {
   });
 }
 
-test("a manifest change after its snapshot read aborts default publication and preserves the previous artifact", async (context) => {
+test("an entry edit after snapshot capture aborts default publication and preserves the previous artifact", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
@@ -135,19 +134,18 @@ test("a manifest change after its snapshot read aborts default publication and p
     path.join(output, "index.html"),
     "utf8",
   );
-  const manifestPath = path.join(fixture.mockupsDir, "mokly-manifest.json");
-  const original = fs.promises.readFile;
+  const original = globalThis.fetch;
   let mutated = false;
   context.mock.method(
-    fs.promises,
-    "readFile",
+    globalThis,
+    "fetch",
     async (...args: Parameters<typeof original>) => {
-      const result = await original.apply(fs.promises, args);
-      if (String(args[0]) === manifestPath && !mutated) {
+      const result = await original(...args);
+      if (!mutated && String(args[0]).includes("/view/")) {
         mutated = true;
-        fs.writeFileSync(
-          manifestPath,
-          result.toString().replace('"title": "Home"', '"title": "New title"'),
+        await fs.promises.appendFile(
+          fixture.entryPath,
+          '\nmockups[0].title = "New title";',
         );
       }
       return result;

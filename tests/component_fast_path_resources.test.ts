@@ -32,7 +32,7 @@ for (const direction of ["added", "removed"] as const)
         ...(direction === "added" ? { "nested.css": "head" } : {}),
       }),
       changedPaths: [],
-      config: { ...fixture.config, generatedOutput: "derived" },
+      config: fixture.config,
     });
     assert.ok(
       result.changes.some((entry) =>
@@ -41,40 +41,37 @@ for (const direction of ["added", "removed"] as const)
     );
   });
 
-for (const generatedOutput of ["derived", "committed"] as const)
-  test(`relocated views use the complete path in ${generatedOutput} mode`, async (t) => {
-    const fixture = await relocatedFixture(t);
-    const beforePath = actionViewPath(fixture.before);
-    const afterPath = actionViewPath(fixture.after);
-    assert.notEqual(beforePath, afterPath);
-    assert.equal(
-      fixture.before.outputs.get(beforePath),
-      fixture.after.outputs.get(afterPath),
-    );
-    const changedPaths = ["entries/fixture.mockup.tsx"];
-    if (generatedOutput === "committed")
-      changedPaths.push("mockups/components/image.svg");
-    const beforeResources = {
-      "image.svg": "image",
-      "components/image.svg": "image",
-    };
-    const afterResources = {
-      ...beforeResources,
-      "components/nested/image.svg": "image",
-    };
-    const result = await assertFastPathEquivalent({
-      before: fixture.before.manifest,
-      after: fixture.after.manifest,
-      beforeFiles: compilationFiles(fixture.before, beforeResources),
-      afterFiles: compilationFiles(fixture.after, afterResources),
-      changedPaths,
-      config: { ...fixture.config, generatedOutput },
-    });
-    assert.equal(
-      result.components.find((component) => component.id === "action")?.state,
-      "changed",
-    );
+test("relocated views use the complete in-memory path", async (t) => {
+  const fixture = await relocatedFixture(t);
+  const beforePath = actionViewPath(fixture.before);
+  const afterPath = actionViewPath(fixture.after);
+  assert.notEqual(beforePath, afterPath);
+  assert.equal(
+    fixture.before.outputs.get(beforePath),
+    fixture.after.outputs.get(afterPath),
+  );
+  const changedPaths = ["entries/fixture.mockup.tsx"];
+  const beforeResources = {
+    "image.svg": "image",
+    "components/image.svg": "image",
+  };
+  const afterResources = {
+    ...beforeResources,
+    "components/nested/image.svg": "image",
+  };
+  const result = await assertFastPathEquivalent({
+    before: fixture.before.manifest,
+    after: fixture.after.manifest,
+    beforeFiles: compilationFiles(fixture.before, beforeResources),
+    afterFiles: compilationFiles(fixture.after, afterResources),
+    changedPaths,
+    config: fixture.config,
   });
+  assert.equal(
+    result.components.find((component) => component.id === "action")?.state,
+    "changed",
+  );
+});
 
 async function relocatedFixture(t: TestContext) {
   const source = componentEntrySource({

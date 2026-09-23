@@ -34,6 +34,10 @@ export class PlainReporter implements CliReporter {
 
   catalogueReady(_manifest: ManifestV5, _durationMs: number): void {}
 
+  outputWritten(count: number): void {
+    this.write(`Generated ${count} Mokly files.\n`);
+  }
+
   changesReady(_changed: number, _durationMs: number): void {}
 
   changesUnavailable(_durationMs: number): void {}

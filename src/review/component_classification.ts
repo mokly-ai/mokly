@@ -83,7 +83,7 @@ export async function classifyComponents(
       prefix,
       new CssResourceAnalysis(input.cssParser),
     ),
-    compareResourceBytes: config.generatedOutput === "derived",
+    compareResourceBytes: true,
     ...(input.useFastPath === undefined
       ? {}
       : { useFastPath: input.useFastPath }),

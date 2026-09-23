@@ -273,7 +273,14 @@ test("changed-route detection degrades to undefined when Git fails", async (cont
     reader: {
       ...failing.reader,
       fileExists: () => Promise.resolve(true),
+      fileKind: () => Promise.resolve("regular"),
       readFile: () => Promise.resolve(JSON.stringify(compilation.manifest)),
+      readFileBytes: (_commit, file) =>
+        Promise.resolve(
+          Buffer.from(
+            compilation.outputs.get(file.slice("mockups/".length)) ?? "",
+          ),
+        ),
     },
   };
   assert.deepEqual(

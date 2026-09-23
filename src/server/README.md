@@ -18,8 +18,10 @@ entry-file shape that can trigger rediscovery. Traversal also skips
 else from its event kind, else from one stat that treats any error as a file.
 `addDir` and `unlinkDir` identify directories; `add`, `change`, and `unlink`
 identify files. Supplied stats avoid that stat, but traversal still reads export
-markers; `.generated/` is ignored by prefix. Deleted matched files rebuild even when named
-`target`; existing and removed denied directories outrank user watch rules.
+markers; the current flat layout ignores header-proven generated files and
+the manifest. Milestone 3 ignores `.generated/` by prefix. Deleted matched
+files rebuild even when named `target`; existing and removed denied
+directories outrank user watch rules.
 Resource notifications coalesce by path with the latest descriptor.
 Discovery skips `review.outDir`, denied directories, and directories that vanish
 or are replaced mid-walk (`ENOENT` or `ENOTDIR`). Zero-match messages list denied
@@ -79,13 +81,14 @@ redundant top-level lookup on every poll.
 Shutdown cancels the current generation before draining preparation, preventing
 an in-flight Git resolution from launching a replacement during the drain.
 
-Watched Serve sends that commit as `baselineCommit` on the existing versioned
-`update` IPC envelope. Omission retains the reader; null revokes it. The child
+Watched Serve sends the commit and selected reader (`blobs` or `rebuild`) on the
+versioned `update` IPC envelope. Omission retains the reader; null revokes it. The child
 uses `ServedReviewRepository` in `review_repository.ts` to open a confined cached
 reader through `readOnlyRepositoryForCommit` / `baselineReaderForCommit` and
 ignore stale versions. The single-process host uses the same holder directly.
-The Serve parent selects the pinned baseline reader per commit, using complete
-Git blobs or the cache. The child receives the prepared reader; it neither
+The Serve parent selects the pinned baseline reader per commit, using the
+historical manifest's presence (inventory verification follows in Milestone 3)
+or the rebuild cache. The child receives that selection; it neither
 builds baselines nor writes output. `serve --build` writes in the parent only
 after complete compilation and resource-watch readiness, including once with
 `--no-watch`; plain Serve never writes output.
@@ -133,11 +136,12 @@ watch-action boundaries. Diagnostics originating in a supervised child cross a
 validated IPC message so the parent remains the sole terminal owner; a child
 without IPC retains direct diagnostic output.
 
-The [referenced asset closure](../../docs/protocol/mokly-generated-output.md#closure-urls-and-publication)
-is the only authored public surface. Serve reads generated routes from memory
-under `.generated/` and referenced assets live at catalogue-relative paths;
-unreferenced requests return 404. Manifest/cache privacy, realpath confinement
-and independently discovered authoring inputs remain protected.
+Milestone 2 retains the flat `mockupsDir` URL layout and legacy public-file
+policy. The [referenced asset closure](../../docs/protocol/mokly-generated-output.md#closure-urls-and-publication)
+becomes the only authored public surface in Milestone 3: generated routes move
+under `.generated/`, referenced assets remain catalogue-relative, and unreferenced
+requests return 404. Manifest/cache privacy, realpath confinement and authoring
+inputs remain protected now.
 
 When controls are active, every Serve request uses the
 [Host contract](../../docs/protocol/mokly-component-controls.md#request-and-lifecycle-rules):

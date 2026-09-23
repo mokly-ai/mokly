@@ -42,10 +42,14 @@ for (const watch of [false, true]) {
           `${running.url}/__mokly/diffs/review.json`,
         );
         assert.equal(unselected.status, 200, await unselected.clone().text());
+        await assert.rejects(fs.stat(fixture.mockupsDir), { code: "ENOENT" });
         assert.equal(
           parseReviewResult(await unselected.json()).baseCommit,
           fixture.commit,
         );
+        await fs.mkdir(path.join(fixture.mockupsDir, "screens"), {
+          recursive: true,
+        });
         await fs.writeFile(
           path.join(fixture.mockupsDir, "screens/home.mobile.html"),
           "wrong local bytes",
@@ -71,6 +75,44 @@ for (const watch of [false, true]) {
           (await fetch(`${running.url}/static/.mokly-cache/private`)).status,
           404,
         );
+      } finally {
+        await running.close();
+      }
+    },
+  );
+}
+
+for (const watch of [false, true]) {
+  test(
+    `serve --build writes only complete compilations (watch=${watch})`,
+    { timeout: 30000 },
+    async (context) => {
+      const fixture = await derivedFixture(context);
+      await fs.rm(fixture.mockupsDir, { recursive: true });
+      const running = await serve(fixture.config, {
+        port: 0,
+        watch,
+        build: true,
+      });
+      try {
+        const file = path.join(fixture.mockupsDir, "screens/home.mobile.html");
+        await waitFor(async () =>
+          fs.readFile(file, "utf8").catch(() => undefined),
+        );
+        const initial = await fs.readFile(file, "utf8");
+        if (watch) {
+          await fs.writeFile(
+            fixture.entryPath,
+            validEntrySource({ body: "Watched successful build" }),
+          );
+          await waitFor(async () => {
+            const current = await fs.readFile(file, "utf8");
+            return current.includes("Watched successful build")
+              ? current
+              : undefined;
+          });
+          assert.notEqual(await fs.readFile(file, "utf8"), initial);
+        }
       } finally {
         await running.close();
       }

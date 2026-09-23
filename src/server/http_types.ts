@@ -29,6 +29,8 @@ export interface ServerOptions {
   componentChangeSource?: ComponentChangeSource;
   /** Parent-validated manifest supplied to a watched server child. */
   manifest?: ComponentRuntime["manifest"];
+  /** Immutable compiled documents supplied by a static capture. */
+  generatedOutputs?: ReadonlyMap<string, string>;
   port: number;
   /** Enables on-demand comparison JSON and isolated snapshots. */
   review?: ServedReview;

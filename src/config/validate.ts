@@ -6,10 +6,7 @@ import { MoklyError } from "../errors.js";
 import { isBaselineCachePath } from "./cache_paths.js";
 import { discoverEntryModules } from "./entry_discovery.js";
 import { resolveEntryGlobs } from "./entry_globs.js";
-import {
-  baselineBuildCommands,
-  generatedOutputMode,
-} from "./generated_output.js";
+import { baselineBuildCommands } from "./generated_output.js";
 import { resolveModuleResolution } from "./module_resolution.js";
 import {
   optionalModule,
@@ -45,20 +42,20 @@ export function resolveConfig(
       "config-invalid",
       "legacy configuration was removed; register whole documents with definePage",
     );
+  const removedModeKey = `generated${"Output"}`;
+  if (Object.hasOwn(value, removedModeKey))
+    throw new MoklyError(
+      "config-invalid",
+      `${removedModeKey} was removed; use Git tracking for check and run mokly build to write output`,
+    );
   const input = value as unknown as MoklyConfig;
   const publicExclude = resolvePublicExclude(input.publicExclude);
-  const generatedOutput = generatedOutputMode(input.generatedOutput);
   requireString(input.mockupsDir, "mockupsDir");
   if (input.repoRoot !== undefined) requireString(input.repoRoot, "repoRoot");
   const configDir = path.dirname(configPath);
   const repoRoot = path.resolve(configDir, input.repoRoot ?? ".");
   requireDirectory(repoRoot, "repoRoot");
-  const baselineBuild = baselineBuildCommands(
-    input,
-    generatedOutput,
-    repoRoot,
-    configPath,
-  );
+  const baselineBuild = baselineBuildCommands(input, repoRoot, configPath);
   const entryGlobs = resolveEntryGlobs(input, repoRoot, configDir);
   const entriesDir = entryGlobs.entriesDir;
   const mockupsDir = resolveInside(
@@ -68,17 +65,16 @@ export function resolveConfig(
     "mockupsDir",
   );
   if (entriesDir !== undefined) requireDirectory(entriesDir, "entriesDir");
-  if (generatedOutput === "committed" || fs.existsSync(mockupsDir))
-    requireDirectory(mockupsDir, "mockupsDir");
+  if (fs.existsSync(mockupsDir)) requireDirectory(mockupsDir, "mockupsDir");
   if (isBaselineCachePath(mockupsDir, repoRoot))
     throw new MoklyError(
       "config-invalid",
       "mockupsDir must not be inside .mokly-cache",
     );
-  if (generatedOutput === "derived" && mockupsDir === repoRoot)
+  if (mockupsDir === repoRoot)
     throw new MoklyError(
       "config-invalid",
-      "derived mockupsDir must be a directory below repoRoot",
+      "mockupsDir must be a directory below repoRoot",
     );
   const renderer = optionalModule(
     repoRoot,
@@ -125,7 +121,6 @@ export function resolveConfig(
   });
   const resolved: ResolvedConfig = {
     publicExclude,
-    generatedOutput,
     colorSchemes,
     compatibility: {
       readManifestV2: input.compatibility?.readManifestV2 ?? false,

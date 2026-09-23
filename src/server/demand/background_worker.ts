@@ -8,6 +8,7 @@ import { compileRuntime } from "../../build/compile_runtime.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
 import { runWithTimings, timeAsync } from "../../diagnostics/timings.js";
 import { errorMessage } from "../../errors.js";
+import type { BaselineSelection } from "../../review/repository.js";
 import { RepositoryCatalogueChangeClassifier } from "../component_changes.js";
 
 import { WorkerGitCommandRunner } from "./git_worker.js";
@@ -44,17 +45,25 @@ if (!existingManifest)
   });
 parentPort?.on(
   "message",
-  (message: { type: string; base: string; commit?: string }) => {
+  (message: {
+    type: string;
+    base: string;
+    commit?: string;
+    selection?: BaselineSelection;
+  }) => {
     if (message.type !== "classify" || !manifest) return;
     void runWithTimings(debug, "background", async () => {
-      if (runtime.config.generatedOutput === "derived" && !message.commit) {
+      if (!message.commit || !message.selection) {
         parentPort?.postMessage({ type: "classified" });
         return;
       }
+      const commit = message.commit;
+      const selection = message.selection;
       await checkpoint();
       const snapshot = await timeAsync("changes.classify", () =>
         classifier.read(runtime.config, manifest!, message.base, undefined, {
-          ...(message.commit ? { commit: message.commit } : {}),
+          commit,
+          selection,
           ...(outputs ? { outputs } : {}),
         }),
       );

@@ -49,7 +49,7 @@ for (const includeChanges of [false, true]) {
   }
 
   for (const route of ["handbook.html", "screens/home.desktop.html"]) {
-    test(`publication requires the exported ${route} even if enumeration omits it (changes: ${includeChanges})`, async (context) => {
+    test(`publication captures compiled ${route} even if enumeration omits it (changes: ${includeChanges})`, async (context) => {
       const fixture = await changedFixture(
         context,
         pageSource("handbook.html"),
@@ -57,7 +57,7 @@ for (const includeChanges of [false, true]) {
       const output = path.join(fixture.root, ".context/published");
       await buildPreview(fixture.config, output, options);
       const before = await fs.promises.readFile(
-        path.join(output, "index.html"),
+        path.join(output, "static", route),
       );
       const original = fs.promises.readdir;
       const omitted = path.join(fixture.mockupsDir, route);
@@ -73,14 +73,12 @@ for (const includeChanges of [false, true]) {
             : entries;
         },
       );
-      await assert.rejects(
-        buildPreview(fixture.config, output, options),
-        /exported resource/,
-      );
+      await buildPreview(fixture.config, output, options);
       assert.deepEqual(
-        await fs.promises.readFile(path.join(output, "index.html")),
+        await fs.promises.readFile(path.join(output, "static", route)),
         before,
       );
+      assert.equal(fs.existsSync(path.join(output, "static", route)), true);
     });
   }
 }

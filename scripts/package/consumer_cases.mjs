@@ -136,14 +136,6 @@ export async function smokeNodeNextConsumer(context) {
 export async function smokeCleanCacheExecution(context) {
   const root = path.join(context.workingRoot, "npx-consumer");
   await copyFixture(path.join(context.fixturesRoot, "esm"), root);
-  const configPath = path.join(root, "mokly.config.ts");
-  await fs.promises.writeFile(
-    configPath,
-    (await fs.promises.readFile(configPath, "utf8")).replace(
-      "export default defineConfig({",
-      'export default defineConfig({\n  generatedOutput: "committed",',
-    ),
-  );
   const packageJson = consumerPackage(
     "clean-cache-npx-consumer",
     context,
@@ -162,6 +154,7 @@ export async function smokeCleanCacheExecution(context) {
     fs.existsSync(path.join(root, "node_modules/@mokly/mokly")),
     false,
   );
+  await initializeGit(root);
   const cache = path.join(context.workingRoot, "empty-npx-cache");
   const packageSpec = `file:${context.archivePath}`;
   const npx = [
@@ -186,7 +179,10 @@ export async function smokeCleanCacheExecution(context) {
     path.join(root, "mokly.config.ts"),
     path.join(root, "custom.config.ts"),
   );
-  await initializeGit(root);
+  await runCommand("git", ["add", "."], { cwd: root });
+  await runCommand("git", ["commit", "-qm", "test: generated baseline"], {
+    cwd: root,
+  });
   await runCommand("git", ["branch", "export-baseline"], { cwd: root });
   const exportArgs = npx.map((arg) =>
     arg === cache ? path.join(context.workingRoot, "empty-export-cache") : arg,

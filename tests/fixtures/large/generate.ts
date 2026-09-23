@@ -41,7 +41,7 @@ export function largeSize(input: Partial<LargeSize>): LargeSize {
 export async function generateLargeFixture(
   root: string,
   input: Partial<LargeSize>,
-  generatedOutput: "committed" | "derived" = "committed",
+  trackedOutput = false,
 ) {
   const size = largeSize(input);
   if ((await fs.readdir(root)).length)
@@ -102,7 +102,7 @@ export async function generateLargeFixture(
   await fs.writeFile(
     path.join(root, ".gitignore"),
     ".review/\n.mokly-cache/\nnode_modules/\n" +
-      (generatedOutput === "derived"
+      (!trackedOutput
         ? "mockups/**/*.html\nmockups/mokly-manifest.json\n"
         : ""),
   );
@@ -110,16 +110,11 @@ export async function generateLargeFixture(
     path.join(root, "mokly.config.ts"),
     `import { defineConfig } from "@mokly/mokly";
 export default defineConfig({
-  generatedOutput: ${JSON.stringify(generatedOutput)},
   repoRoot: ".", entriesDir: "entries", mockupsDir: "mockups", renderer: "renderer.tsx",
   colorSchemes: ["light", "dark"],
   moduleResolution: { aliases: { "react-native": "react-native-web" }, conditions: ["react-native", "import", "module", "default"], loaders: { ".js": "jsx" }, mainFields: ["react-native", "module", "main"], resolveExtensions: [".web.tsx", ".web.ts", ".web.js", ".tsx", ".ts", ".js", ".jsx", ".json"] },
   stylesheets: ${JSON.stringify(stylesheets)},
-  review: { base: "main", outDir: ".review"${
-    generatedOutput === "derived"
-      ? ', baselineBuild: [["npm", "ci"], ["npx", "--no-install", "mokly", "build", "--config", "mokly.config.ts"]]'
-      : ""
-  } }
+  review: { base: "main", outDir: ".review", baselineBuild: [["npm", "ci"], ["npx", "--no-install", "mokly", "build", "--config", "mokly.config.ts"]] }
 });\n`,
   );
   await fs.writeFile(
@@ -139,7 +134,7 @@ export const mockups = createArea(${JSON.stringify(id)}, ${size.screens}, ${size
   const flows = Math.ceil(size.screens / 10);
   return {
     root,
-    generatedOutput,
+    trackedOutput,
     configPath: path.join(root, "mokly.config.ts"),
     size,
     routes: size.areas * (size.screens + 2 + flows + 1),

@@ -54,103 +54,89 @@ const selectCases = [
 ] as const;
 
 for (const templateCase of templateCases)
-  for (const generatedOutput of ["committed", "derived"] as const)
-    test(`${templateCase.name} caller slots use complete ${generatedOutput} comparison`, async (t) => {
-      const fixture = await createFixture(componentEntrySource(templateCase));
-      t.after(() => removeFixture(fixture));
-      await fs.writeFile(path.join(fixture.mockupsDir, "image.svg"), "image");
-      const config = await loadConfig(fixture.root);
-      const compilation = await compileCatalogue(config);
-      const files = (content: string) => ({
-        read: async (route: string) => {
-          const value =
-            compilation.outputs.get(route) ??
-            (route === "image.svg" ? content : undefined);
-          assert.notEqual(value, undefined, route);
-          return Buffer.from(value!);
-        },
-        readIfExists: async (route: string) =>
-          route === "image.svg" ? Buffer.from(content) : undefined,
-      });
-      const classify = (useFastPath: boolean) =>
-        classifyComponents({
-          before: compilation.manifest,
-          after: compilation.manifest,
-          beforeReader: files("base image"),
-          afterReader: files("head image"),
-          config: { ...config, generatedOutput },
-          changedPaths:
-            generatedOutput === "committed" ? ["mockups/image.svg"] : [],
-          baseCommit: "a".repeat(40),
-          baseRef: "main",
-          useFastPath,
-        });
-      const [optimized, complete] = await Promise.all([
-        classify(true),
-        classify(false),
-      ]);
-      assert.deepEqual(optimized, complete);
-      const screenChange = optimized.changes.find(
-        (change) => change.kind === "screen" && change.after?.id === "home",
-      );
-      assert.ok(screenChange);
-      assert.ok(
-        screenChange.reasons.some((reason) =>
-          generatedOutput === "committed"
-            ? reason.kind === "dependency" &&
-              reason.path === "mockups/image.svg"
-            : reason.kind === "material",
-        ),
-      );
+  test(`${templateCase.name} caller slots use complete in-memory comparison`, async (t) => {
+    const fixture = await createFixture(componentEntrySource(templateCase));
+    t.after(() => removeFixture(fixture));
+    await fs.writeFile(path.join(fixture.mockupsDir, "image.svg"), "image");
+    const config = await loadConfig(fixture.root);
+    const compilation = await compileCatalogue(config);
+    const files = (content: string) => ({
+      read: async (route: string) => {
+        const value =
+          compilation.outputs.get(route) ??
+          (route === "image.svg" ? content : undefined);
+        assert.notEqual(value, undefined, route);
+        return Buffer.from(value!);
+      },
+      readIfExists: async (route: string) =>
+        route === "image.svg" ? Buffer.from(content) : undefined,
     });
+    const classify = (useFastPath: boolean) =>
+      classifyComponents({
+        before: compilation.manifest,
+        after: compilation.manifest,
+        beforeReader: files("base image"),
+        afterReader: files("head image"),
+        config,
+        changedPaths: [],
+        baseCommit: "a".repeat(40),
+        baseRef: "main",
+        useFastPath,
+      });
+    const [optimized, complete] = await Promise.all([
+      classify(true),
+      classify(false),
+    ]);
+    assert.deepEqual(optimized, complete);
+    const screenChange = optimized.changes.find(
+      (change) => change.kind === "screen" && change.after?.id === "home",
+    );
+    assert.ok(screenChange);
+    assert.ok(
+      screenChange.reasons.some((reason) => reason.kind === "material"),
+    );
+  });
 
 for (const selectCase of selectCases)
-  for (const generatedOutput of ["committed", "derived"] as const)
-    test(`${selectCase.name} resources agree in ${generatedOutput} mode`, async (t) => {
-      const fixture = await createFixture(componentEntrySource(selectCase));
-      t.after(() => removeFixture(fixture));
-      await fs.writeFile(path.join(fixture.mockupsDir, "image.svg"), "image");
-      const config = await loadConfig(fixture.root);
-      const compilation = await compileCatalogue(config);
-      const reader = (content: string) => ({
-        read: async (route: string) => {
-          const value =
-            compilation.outputs.get(route) ??
-            (route === "image.svg" ? content : undefined);
-          assert.notEqual(value, undefined, route);
-          return Buffer.from(value!);
-        },
-        readIfExists: async (route: string) =>
-          route === "image.svg" ? Buffer.from(content) : undefined,
-      });
-      const classify = (useFastPath: boolean) =>
-        classifyComponents({
-          before: compilation.manifest,
-          after: compilation.manifest,
-          beforeReader: reader("base image"),
-          afterReader: reader("head image"),
-          config: { ...config, generatedOutput },
-          changedPaths:
-            generatedOutput === "committed" ? ["mockups/image.svg"] : [],
-          baseCommit: "a".repeat(40),
-          baseRef: "main",
-          useFastPath,
-        });
-      const [optimized, complete] = await Promise.all([
-        classify(true),
-        classify(false),
-      ]);
-      assert.deepEqual(optimized, complete);
-      const screenChange = optimized.changes.find(
-        (change) => change.kind === "screen" && change.after?.id === "home",
-      );
-      assert.ok(screenChange);
-      assert.ok(
-        screenChange.reasons.some((reason) =>
-          generatedOutput === "committed"
-            ? reason.kind === "dependency" &&
-              reason.path === "mockups/image.svg"
-            : reason.kind === "material",
-        ),
-      );
+  test(`${selectCase.name} resources agree in memory`, async (t) => {
+    const fixture = await createFixture(componentEntrySource(selectCase));
+    t.after(() => removeFixture(fixture));
+    await fs.writeFile(path.join(fixture.mockupsDir, "image.svg"), "image");
+    const config = await loadConfig(fixture.root);
+    const compilation = await compileCatalogue(config);
+    const reader = (content: string) => ({
+      read: async (route: string) => {
+        const value =
+          compilation.outputs.get(route) ??
+          (route === "image.svg" ? content : undefined);
+        assert.notEqual(value, undefined, route);
+        return Buffer.from(value!);
+      },
+      readIfExists: async (route: string) =>
+        route === "image.svg" ? Buffer.from(content) : undefined,
     });
+    const classify = (useFastPath: boolean) =>
+      classifyComponents({
+        before: compilation.manifest,
+        after: compilation.manifest,
+        beforeReader: reader("base image"),
+        afterReader: reader("head image"),
+        config,
+        changedPaths: [],
+        baseCommit: "a".repeat(40),
+        baseRef: "main",
+        useFastPath,
+      });
+    const [optimized, complete] = await Promise.all([
+      classify(true),
+      classify(false),
+    ]);
+    assert.deepEqual(optimized, complete);
+    const screenChange = optimized.changes.find(
+      (change) => change.kind === "screen" && change.after?.id === "home",
+    );
+    assert.ok(screenChange);
+    assert.ok(
+      screenChange.reasons.some((reason) => reason.kind === "material"),
+    );
+  });

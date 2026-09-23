@@ -4,6 +4,7 @@ import { MessageChannel, Worker } from "node:worker_threads";
 import type { Compilation } from "../../build/compile.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
 import { timingArguments } from "../../diagnostics/timings.js";
+import type { PreparedReviewRepository } from "../../review/prepare.js";
 import type { ComponentChangeSnapshot } from "../component_changes.js";
 
 import { BackgroundGitHost } from "./git_host.js";
@@ -37,9 +38,7 @@ export class BackgroundCompilation {
             ...(existing
               ? {
                   existingManifest: existing.manifest,
-                  ...(runtime.config.generatedOutput === "derived"
-                    ? { existingOutputs: existing.outputs }
-                    : {}),
+                  existingOutputs: existing.outputs,
                 }
               : {}),
           },
@@ -91,7 +90,7 @@ export class BackgroundCompilation {
   }
   classify(
     base: string,
-    commit?: string,
+    prepared?: Pick<PreparedReviewRepository, "commit" | "selection">,
   ): Promise<ComponentChangeSnapshot | undefined> {
     if (this.closed) return Promise.resolve(undefined);
     return new Promise((resolve, reject) => {
@@ -99,7 +98,9 @@ export class BackgroundCompilation {
       this.worker.postMessage({
         type: "classify",
         base,
-        ...(commit ? { commit } : {}),
+        ...(prepared
+          ? { commit: prepared.commit, selection: prepared.selection }
+          : {}),
       });
     });
   }

@@ -8,11 +8,11 @@ import { start, stop } from "./process.mjs";
 import { prepareDerivedToolchain } from "./toolchain.mjs";
 
 const run = promisify(execFile);
-export function fixtureRecord(repository, size, generatedOutput = "committed") {
+export function fixtureRecord(repository, size, trackedOutput = false) {
   return path.join(
     repository,
     ".context",
-    `large-${size.areas}-${size.screens}-${size.rows}-${size.stylesheets}-${size.stylesheetShare}${generatedOutput === "derived" ? "-derived" : ""}.json`,
+    `large-${size.areas}-${size.screens}-${size.rows}-${size.stylesheets}-${size.stylesheetShare}${trackedOutput ? "-tracked" : ""}.json`,
   );
 }
 
@@ -20,7 +20,7 @@ export async function prepareFixture(
   repository,
   size,
   debug,
-  generatedOutput = "committed",
+  trackedOutput = false,
 ) {
   const { generateLargeFixture } =
     await import("../../tests/fixtures/large/generate.ts");
@@ -28,13 +28,12 @@ export async function prepareFixture(
   const context = path.join(repository, ".context");
   await fs.mkdir(context, { recursive: true });
   const root = await fs.mkdtemp(path.join(context, "mokly-large-"));
-  const fixture = await generateLargeFixture(root, size, generatedOutput);
+  const fixture = await generateLargeFixture(root, size, trackedOutput);
   process.stdout.write(
     `Preparing ${fixture.routes} routes and ${fixture.documents} documents in ${root}\n`,
   );
-  if (generatedOutput === "derived")
-    await prepareDerivedToolchain(repository, root);
-  else {
+  await prepareDerivedToolchain(repository, root);
+  if (trackedOutput) {
     const baseline = start(
       [
         path.join(repository, "dist/cli/bin.js"),
@@ -81,33 +80,26 @@ export async function prepareFixture(
     setupMs: Math.round(performance.now() - beginning),
   };
   await fs.writeFile(
-    fixtureRecord(repository, size, generatedOutput),
+    fixtureRecord(repository, size, trackedOutput),
     JSON.stringify(record) + "\n",
   );
   process.stdout.write(
-    `Fixture setup ${JSON.stringify(record)}\nReady for npm run dev:large or npm run benchmark:large${generatedOutput === "derived" ? " -- --derived" : ""}.\n`,
+    `Fixture setup ${JSON.stringify(record)}\nReady for npm run dev:large or npm run benchmark:large${trackedOutput ? " -- --tracked-output" : ""}.\n`,
   );
 }
 
-export async function preparedFixture(
-  repository,
-  size,
-  generatedOutput = "committed",
-) {
+export async function preparedFixture(repository, size, trackedOutput = false) {
   try {
     const fixture = JSON.parse(
-      await fs.readFile(
-        fixtureRecord(repository, size, generatedOutput),
-        "utf8",
-      ),
+      await fs.readFile(fixtureRecord(repository, size, trackedOutput), "utf8"),
     );
     await fs.access(fixture.configPath);
-    if ((fixture.generatedOutput ?? "committed") !== generatedOutput)
-      throw new Error("Fixture output mode changed");
+    if (fixture.trackedOutput !== trackedOutput)
+      throw new Error("Fixture output tracking changed");
     return fixture;
   } catch {
     throw new Error(
-      `Prepare this fixture first: npm run fixture:large -- --areas ${size.areas} --screens ${size.screens} --rows ${size.rows} --stylesheets ${size.stylesheets} --stylesheet-share ${size.stylesheetShare}${generatedOutput === "derived" ? " --derived" : ""}`,
+      `Prepare this fixture first: npm run fixture:large -- --areas ${size.areas} --screens ${size.screens} --rows ${size.rows} --stylesheets ${size.stylesheets} --stylesheet-share ${size.stylesheetShare}${trackedOutput ? " --tracked-output" : ""}`,
     );
   }
 }

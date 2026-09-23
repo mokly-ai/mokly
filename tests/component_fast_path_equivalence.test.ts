@@ -132,7 +132,7 @@ test("derived byte-only image changes take the complete path", async (t) => {
     beforeFiles: compilationFiles(compilation, baseImages),
     afterFiles: compilationFiles(compilation, headImages),
     changedPaths: [],
-    config: { ...config, generatedOutput: "derived" },
+    config,
   });
   assert.ok(
     result.changes.some((entry) =>

@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { compileCatalogue } from "../../dist/build/compile.js";
 import { projectCatalogue } from "../../dist/catalogue/projection.js";
 import {
   CATALOGUE_PATH,
@@ -39,7 +40,7 @@ const liveHostScript =
 const staticHydrationScript =
   '<script src="/__mokly/client/react-shell.js" type="module"></script>';
 
-/** Capture already-built output; the supported npm command builds before this boundary. */
+/** Capture one compiled generation without writing to the consumer catalogue. */
 export async function buildPreview(config, output, options = {}) {
   const ownership = previewOwnership(config);
   const capability = publicationOptions(options);
@@ -67,11 +68,23 @@ export async function buildPreview(config, output, options = {}) {
           ? await prepareReviewRepository(config, base)
           : undefined;
         const git = prepared;
-        const inputs = await capturePublicationInputs(config, excludedRoots);
+        const compilation = await compileCatalogue(config);
+        const inputs = await capturePublicationInputs(
+          config,
+          excludedRoots,
+          compilation,
+        );
         const snapshot = await loadCatalogueSnapshot(
           config,
           git
-            ? (manifest) => computeCatalogueChanges(config, base, git, manifest)
+            ? (manifest) =>
+                computeCatalogueChanges(
+                  config,
+                  base,
+                  git,
+                  manifest,
+                  compilation.outputs,
+                )
             : undefined,
           inputs.manifest,
         );
@@ -84,6 +97,7 @@ export async function buildPreview(config, output, options = {}) {
           base,
           liveChanges: false,
           snapshot,
+          generatedOutputs: compilation.outputs,
           port: 0,
           ...(review ? { review } : {}),
         });
@@ -134,7 +148,13 @@ export async function buildPreview(config, output, options = {}) {
             changes.removedEntries,
             pagePreviews,
           );
-        await copyPublicFiles(config, catalogue, stage, excludedRoots);
+        await copyPublicFiles(
+          config,
+          catalogue,
+          stage,
+          excludedRoots,
+          compilation.outputs,
+        );
         const readModel = projectCatalogue({
           configPath: path
             .relative(config.repoRoot, config.configPath)
@@ -172,7 +192,13 @@ export async function buildPreview(config, output, options = {}) {
         );
         if (
           inputs.fingerprint !==
-          (await capturePublicationInputs(config, excludedRoots)).fingerprint
+          (
+            await capturePublicationInputs(
+              config,
+              excludedRoots,
+              await compileCatalogue(config),
+            )
+          ).fingerprint
         )
           throw new Error(
             "consumer inputs changed during publication; retry with stable inputs",

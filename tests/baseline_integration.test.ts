@@ -36,7 +36,7 @@ test("real Git baseline lifecycle: reuse, interruption, failure and confinement"
   );
   await fs.writeFile(
     path.join(root, "mokly.config.ts"),
-    'export default { entriesDir: "entries", mockupsDir: "generated/catalogue", generatedOutput: "derived" };\n',
+    'export default { entriesDir: "entries", mockupsDir: "generated/catalogue" };\n',
   );
   await fs.writeFile(path.join(root, ".gitignore"), ".mokly-cache/\n");
   await fs.writeFile(path.join(root, "baseline-build.cjs"), buildScript);

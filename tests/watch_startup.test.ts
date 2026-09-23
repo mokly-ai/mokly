@@ -32,7 +32,7 @@ test("watched startup attaches the watcher before the initial output write", asy
   const watcher = new FakeWatcher(events);
   const running = await serve(
     config,
-    { base: "origin/main", port: 0, watch: true },
+    { base: "origin/main", build: true, port: 0, watch: true },
     dependencies(events, watcher),
   );
   fixture.beforeRemove(() => running.close());

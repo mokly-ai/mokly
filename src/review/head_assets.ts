@@ -58,12 +58,11 @@ export class CompiledReviewAssetReader extends FileSystemReviewAssetReader {
 }
 
 /** Direct non-HTTP callers may compile once; workers supply their accepted output. */
-export async function derivedHeadOutputs(
+export async function compiledHeadOutputs(
   config: ResolvedConfig,
   manifest: Manifest,
   outputs?: ReadonlyMap<string, string>,
-): Promise<ReadonlyMap<string, string> | undefined> {
-  if (config.generatedOutput !== "derived") return;
+): Promise<ReadonlyMap<string, string>> {
   if (outputs) return outputs;
   const compilation = await compileCatalogue(config);
   if (!isDeepStrictEqual(compilation.manifest, manifest))

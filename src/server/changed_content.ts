@@ -101,11 +101,8 @@ export async function classifyChangedContent(
         : [route];
     }),
   );
-  const derived = config.generatedOutput === "derived";
-  if (!derived && publicChanges.size === 0)
-    return { changedPaths: [], screens: [] };
   const pairs = documentPairs(manifest, baseline, publicChanges, documents);
-  if (derived) for (const pair of pairs) pair.changed = true;
+  for (const pair of pairs) pair.changed = true;
   const baseReader = new GitReviewAssetReader(
     baselineResourceConfig(config, baseline),
     git,
@@ -145,7 +142,7 @@ export async function classifyChangedContent(
       normalizedBases.set(pair.head, normalized.base);
       if (normalized.base !== normalized.head) {
         result.add(repoPath(pair.head));
-        if (derived) publicChanges.add(pair.head);
+        publicChanges.add(pair.head);
       } else if (pair.base === pair.head) publicChanges.delete(pair.head);
     }
   };
@@ -153,8 +150,6 @@ export async function classifyChangedContent(
     for (let offset = 0; offset < changedPairs.length; offset += 32)
       await readBases(changedPairs.slice(offset, offset + 32));
   });
-  if (!derived && publicChanges.size === 0)
-    return { changedPaths: [...result].sort(), screens: [] };
   const screens = new Map<string, ViewResourceEvidence[]>();
   const resources = new ChangedResourceGraph(
     headReader,
@@ -162,7 +157,7 @@ export async function classifyChangedContent(
     publicChanges,
     normalizedDocuments,
     undefined,
-    derived,
+    true,
   );
   await timeAsync("review.compare-screens", async () => {
     for (let offset = 0; offset < pairs.length; offset += 32) {

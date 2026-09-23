@@ -21,7 +21,6 @@ test("the example fixture rebuilds an untracked baseline from its own source and
   );
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const config = await createExampleBaseline(root);
-  assert.equal(config.generatedOutput, "derived");
   const tracked = (
     await execute("git", ["ls-files", "examples/basic/generated"], {
       cwd: root,

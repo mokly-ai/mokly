@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
 import {
   runWithTimings,
@@ -110,6 +111,7 @@ test("resolution timings capture pinned commits and missing history without priv
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
+  const manifest = (await compileCatalogue(config)).manifest;
   const events: TimingEvent[] = [];
   await runWithTimings(
     true,
@@ -119,24 +121,22 @@ test("resolution timings capture pinned commits and missing history without priv
         commit: "a".repeat(40),
         runner: {
           async run(argv) {
-            assert.equal(argv[0], "rev-parse");
-            return fixture.root;
+            if (argv[0] === "rev-parse") return fixture.root;
+            if (argv[0] === "ls-tree") return "100644\n";
+            assert.equal(argv[0], "show");
+            return JSON.stringify(manifest);
           },
         },
       });
       assert.equal(prepared.commit, "a".repeat(40));
       await assert.rejects(
-        prepareReviewRepository(
-          { ...config, generatedOutput: "derived" },
-          "private-ref",
-          {
-            runner: {
-              async run() {
-                throw new Error("private missing history");
-              },
+        prepareReviewRepository(config, "private-ref", {
+          runner: {
+            async run() {
+              throw new Error("private missing history");
             },
           },
-        ),
+        }),
         { code: "baseline-history-unavailable" },
       );
     },

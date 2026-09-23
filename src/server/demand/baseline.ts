@@ -115,7 +115,6 @@ export class BackgroundBaseline {
 
 function preparationKey(config: ResolvedConfig): string {
   return JSON.stringify([
-    config.generatedOutput,
     config.repoRoot,
     config.configPath,
     config.mockupsDir,

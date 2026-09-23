@@ -34,7 +34,6 @@ import { repositoryRoot } from "./helpers/fixture.js";
 const sourceRelativePath = "tests/authoring.test.tsx";
 
 const validationConfig: ResolvedConfig = {
-  generatedOutput: "committed",
   publicExclude: DEFAULT_PUBLIC_EXCLUDE,
   colorSchemes: ["light"],
   compatibility: { readManifestV2: false },

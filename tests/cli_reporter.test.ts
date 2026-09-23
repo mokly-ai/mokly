@@ -116,14 +116,13 @@ test("rich Serve makes its URL the sole content of a bordered panel", () => {
   reporter.serveReady({
     base: "origin/main",
     configPath: "examples/basic/mokly.config.ts",
-    generatedOutput: "derived",
     url: "http://127.0.0.1:4173",
     version: "0.10.0",
     watch: true,
   });
   assert.equal(
     terminal.stdout(),
-    "  mokly 0.10.0  derived · comparing against origin/main\n" +
+    "  mokly 0.10.0  comparing against origin/main\n" +
       "  examples/basic/mokly.config.ts\n" +
       "\n" +
       `  ┌${"─".repeat(25)}┐\n` +
@@ -140,7 +139,6 @@ test("rich Serve keeps snapshot and non-interactive status secondary", () => {
   snapshotReporter.serveReady({
     base: "origin/main",
     configPath: "mokly.config.ts",
-    generatedOutput: "committed",
     url: "http://127.0.0.1:4173",
     version: "0.10.0",
     watch: false,
@@ -157,7 +155,6 @@ test("rich Serve keeps snapshot and non-interactive status secondary", () => {
   watchedReporter.serveReady({
     base: "origin/main",
     configPath: "mokly.config.ts",
-    generatedOutput: "committed",
     url: "http://127.0.0.1:4173",
     version: "0.10.0",
     watch: true,
@@ -175,7 +172,6 @@ test("rich Serve contracts its URL panel to a narrow terminal", () => {
   reporter.serveReady({
     base: "origin/main",
     configPath: "mokly.config.ts",
-    generatedOutput: "committed",
     url: "http://127.0.0.1:4173",
     version: "0.10.0",
     watch: false,

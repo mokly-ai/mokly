@@ -42,14 +42,13 @@ bulk-read capability. Current output and public assets have separate readers.
 
 `prepare.ts` is the asynchronous composition boundary for CLI/export,
 publication and the Serve parent. `prepareReviewRepository(config, base,
-{ signal, onProgress })` resolves one commit, checks for complete generated
-Git blobs and otherwise rebuilds it. It returns a branded
+{ signal, onProgress })` resolves one commit, selects Git blobs when a valid
+historical manifest exists, and rebuilds it otherwise. Inventory and hash
+verification arrive with manifest v6 in Milestone 3. It returns a branded
 `PreparedReviewRepository`: pinned `commit`, `evidence`, `reader`, completion
-`marker` (undefined for Git-blob baselines), historical catalogue descriptor
-(layout, catalogue root and generated root), and `assertUnchanged()` for the
-publication recheck. All comparison readers use the descriptor to pair logical
-routes and catalogue-relative resources across different historical/current roots; Git
-changed paths remain repository-relative. See
+`marker` (undefined for Git-blob baselines), `selection`, and `assertUnchanged()`
+for the publication recheck. The cross-layout historical catalogue descriptor
+arrives in Milestone 3; Git changed paths remain repository-relative. See
 [baseline addressing](../../docs/protocol/mokly-baseline-addressing.md).
 Only that factory constructs the prepared type.
 

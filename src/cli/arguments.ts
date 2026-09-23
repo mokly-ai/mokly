@@ -7,6 +7,7 @@ export type CliCommand =
 /** Fully validated CLI arguments. */
 export interface CliArguments {
   base?: string;
+  build?: boolean;
   command: CliCommand;
   config?: string;
   debugTimings?: boolean;
@@ -57,6 +58,7 @@ export function parseArguments(argv: readonly string[]): CliArguments {
     else if (argument === "--debug-timings") parsed.debugTimings = true;
     else if (argument === "--watch") parsed.watch = true;
     else if (argument === "--no-watch") parsed.watch = false;
+    else if (argument === "--build") parsed.build = true;
     else if (argument === "--open") parsed.open = true;
     else if (argument === "--retained-runtime") parsed.retainedRuntime = true;
     else if (argument === "--strict-port") parsed.strictPort = true;
@@ -158,15 +160,22 @@ function validateCommandOptions(arguments_: CliArguments): void {
     throw new MoklyError("cli-invalid", "--out is required for export");
   const serve =
     arguments_.command === "serve" || arguments_.command === "__serve-child";
+  if (!serve && arguments_.port !== undefined) {
+    throw new MoklyError("cli-invalid", "--port belongs to serve");
+  }
   if (
+    arguments_.watch !== undefined &&
     !serve &&
-    (arguments_.port !== undefined || arguments_.watch !== undefined)
-  ) {
+    arguments_.command !== "build"
+  )
     throw new MoklyError(
       "cli-invalid",
-      "--port and --watch options belong to serve",
+      "--watch options belong to serve or build",
     );
-  }
+  if (arguments_.command === "build" && arguments_.watch === false)
+    throw new MoklyError("cli-invalid", "--no-watch belongs to serve");
+  if (arguments_.build && arguments_.command !== "serve")
+    throw new MoklyError("cli-invalid", "--build belongs to serve");
   if (arguments_.open && arguments_.command !== "serve")
     throw new MoklyError("cli-invalid", "--open belongs to serve");
   if (

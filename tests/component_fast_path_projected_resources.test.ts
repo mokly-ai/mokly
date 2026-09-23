@@ -47,68 +47,59 @@ const hiddenResourceCases = [
 ] as const;
 
 for (const resourceCase of hiddenResourceCases)
-  for (const generatedOutput of ["committed", "derived"] as const)
-    test(`select-hidden ${resourceCase.name} agrees in ${generatedOutput} mode`, async (t) => {
-      const fixture = await createFixture(
-        componentEntrySource({
-          paneRender: "(props) => <select>{props.children}</select>",
-          body: `<pane.Component>${resourceCase.content}</pane.Component>`,
-        }),
-      );
-      t.after(() => removeFixture(fixture));
-      const config = await loadConfig(fixture.root);
-      const compilation = await compileCatalogue(config);
-      const reader = (changedContent: string) => ({
-        read: async (route: string) => {
-          const generated = compilation.outputs.get(route);
-          if (generated !== undefined) return Buffer.from(generated);
-          const content =
-            resourceCase.files[route as keyof typeof resourceCase.files];
-          assert.notEqual(content, undefined, route);
-          return Buffer.from(
-            route === resourceCase.changed ? changedContent : content,
-          );
-        },
-        readIfExists: async (route: string) => {
-          const content =
-            resourceCase.files[route as keyof typeof resourceCase.files];
-          if (content === undefined) return undefined;
-          return Buffer.from(
-            route === resourceCase.changed ? changedContent : content,
-          );
-        },
-      });
-      const classify = (useFastPath: boolean) =>
-        classifyComponents({
-          before: compilation.manifest,
-          after: compilation.manifest,
-          beforeReader: reader(resourceCase.before),
-          afterReader: reader(resourceCase.after),
-          config: { ...config, generatedOutput },
-          changedPaths:
-            generatedOutput === "committed"
-              ? [`mockups/${resourceCase.changed}`]
-              : [],
-          baseCommit: "a".repeat(40),
-          baseRef: "main",
-          useFastPath,
-        });
-      const [optimized, complete] = await Promise.all([
-        classify(true),
-        classify(false),
-      ]);
-      assert.deepEqual(optimized, complete);
-      assert.ok(
-        optimized.changes.some((change) =>
-          change.reasons.some((reason) =>
-            generatedOutput === "committed"
-              ? reason.kind === "dependency" &&
-                reason.path === `mockups/${resourceCase.changed}`
-              : reason.kind === "material",
-          ),
-        ),
-      );
+  test(`select-hidden ${resourceCase.name} agrees in memory`, async (t) => {
+    const fixture = await createFixture(
+      componentEntrySource({
+        paneRender: "(props) => <select>{props.children}</select>",
+        body: `<pane.Component>${resourceCase.content}</pane.Component>`,
+      }),
+    );
+    t.after(() => removeFixture(fixture));
+    const config = await loadConfig(fixture.root);
+    const compilation = await compileCatalogue(config);
+    const reader = (changedContent: string) => ({
+      read: async (route: string) => {
+        const generated = compilation.outputs.get(route);
+        if (generated !== undefined) return Buffer.from(generated);
+        const content =
+          resourceCase.files[route as keyof typeof resourceCase.files];
+        assert.notEqual(content, undefined, route);
+        return Buffer.from(
+          route === resourceCase.changed ? changedContent : content,
+        );
+      },
+      readIfExists: async (route: string) => {
+        const content =
+          resourceCase.files[route as keyof typeof resourceCase.files];
+        if (content === undefined) return undefined;
+        return Buffer.from(
+          route === resourceCase.changed ? changedContent : content,
+        );
+      },
     });
+    const classify = (useFastPath: boolean) =>
+      classifyComponents({
+        before: compilation.manifest,
+        after: compilation.manifest,
+        beforeReader: reader(resourceCase.before),
+        afterReader: reader(resourceCase.after),
+        config,
+        changedPaths: [],
+        baseCommit: "a".repeat(40),
+        baseRef: "main",
+        useFastPath,
+      });
+    const [optimized, complete] = await Promise.all([
+      classify(true),
+      classify(false),
+    ]);
+    assert.deepEqual(optimized, complete);
+    assert.ok(
+      optimized.changes.some((change) =>
+        change.reasons.some((reason) => reason.kind === "material"),
+      ),
+    );
+  });
 
 for (const direction of ["added", "removed"] as const)
   test(`select-hidden stylesheet ${direction} import membership agrees`, async (t) => {
@@ -144,7 +135,7 @@ for (const direction of ["added", "removed"] as const)
         after: compilation.manifest,
         beforeReader: reader(direction === "removed"),
         afterReader: reader(direction === "added"),
-        config: { ...config, generatedOutput: "derived" },
+        config,
         changedPaths: [],
         baseCommit: "a".repeat(40),
         baseRef: "main",
@@ -166,56 +157,49 @@ for (const direction of ["added", "removed"] as const)
   });
 
 for (const context of ["select", "template"] as const)
-  for (const generatedOutput of ["committed", "derived"] as const)
-    test(`instance projection exposes a sibling hidden by unclosed ${context} HTML in ${generatedOutput} mode`, async (t) => {
-      const fixture = await createFixture(
-        componentEntrySource({
-          actionRender: `(props) => <div dangerouslySetInnerHTML={{ __html: "<${context}>" }} />`,
-          body: '<action.Component label="Continue" /><img loading="lazy" src="../image.svg" />',
-        }),
-      );
-      t.after(() => removeFixture(fixture));
-      const config = await loadConfig(fixture.root);
-      const compilation = await compileCatalogue(config);
-      const reader = (content: string) => ({
-        read: async (route: string) => {
-          const generated = compilation.outputs.get(route);
-          if (generated !== undefined) return Buffer.from(generated);
-          assert.equal(route, "image.svg");
-          return Buffer.from(content);
-        },
-        readIfExists: async (route: string) =>
-          route === "image.svg" ? Buffer.from(content) : undefined,
-      });
-      const classify = (useFastPath: boolean) =>
-        classifyComponents({
-          before: compilation.manifest,
-          after: compilation.manifest,
-          beforeReader: reader("base image"),
-          afterReader: reader("head image"),
-          config: { ...config, generatedOutput },
-          changedPaths:
-            generatedOutput === "committed" ? ["mockups/image.svg"] : [],
-          baseCommit: "a".repeat(40),
-          baseRef: "main",
-          useFastPath,
-        });
-      const [optimized, complete] = await Promise.all([
-        classify(true),
-        classify(false),
-      ]);
-      assert.deepEqual(optimized, complete);
-      assert.ok(
-        optimized.changes.some(
-          (change) =>
-            change.kind === "screen" &&
-            change.after?.id === "home" &&
-            change.reasons.some((reason) =>
-              generatedOutput === "committed"
-                ? reason.kind === "dependency" &&
-                  reason.path === "mockups/image.svg"
-                : reason.kind === "material",
-            ),
-        ),
-      );
+  test(`instance projection exposes a sibling hidden by unclosed ${context} HTML`, async (t) => {
+    const fixture = await createFixture(
+      componentEntrySource({
+        actionRender: `(props) => <div dangerouslySetInnerHTML={{ __html: "<${context}>" }} />`,
+        body: '<action.Component label="Continue" /><img loading="lazy" src="../image.svg" />',
+      }),
+    );
+    t.after(() => removeFixture(fixture));
+    const config = await loadConfig(fixture.root);
+    const compilation = await compileCatalogue(config);
+    const reader = (content: string) => ({
+      read: async (route: string) => {
+        const generated = compilation.outputs.get(route);
+        if (generated !== undefined) return Buffer.from(generated);
+        assert.equal(route, "image.svg");
+        return Buffer.from(content);
+      },
+      readIfExists: async (route: string) =>
+        route === "image.svg" ? Buffer.from(content) : undefined,
     });
+    const classify = (useFastPath: boolean) =>
+      classifyComponents({
+        before: compilation.manifest,
+        after: compilation.manifest,
+        beforeReader: reader("base image"),
+        afterReader: reader("head image"),
+        config,
+        changedPaths: [],
+        baseCommit: "a".repeat(40),
+        baseRef: "main",
+        useFastPath,
+      });
+    const [optimized, complete] = await Promise.all([
+      classify(true),
+      classify(false),
+    ]);
+    assert.deepEqual(optimized, complete);
+    assert.ok(
+      optimized.changes.some(
+        (change) =>
+          change.kind === "screen" &&
+          change.after?.id === "home" &&
+          change.reasons.some((reason) => reason.kind === "material"),
+      ),
+    );
+  });

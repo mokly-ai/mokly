@@ -127,7 +127,7 @@ test("CLI defaults to watched serve and rejects misplaced options", () => {
   );
   assert.throws(
     () => parseArguments(["build", "--port", "1234"]),
-    /belong to serve/,
+    /belongs to serve/,
   );
   assert.throws(
     () => parseArguments(["serve", "--update-version", "2"]),

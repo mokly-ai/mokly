@@ -1,16 +1,11 @@
 /** Shutdown and child-restart helpers for watched Serve orchestration. */
 import { fileURLToPath } from "node:url";
 
-import type { Compilation } from "../build/compile.js";
-import type { GeneratedOutputStore } from "../build/output_store.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timingArguments } from "../diagnostics/timings.js";
 
 import type { RunningServer } from "./http_types.js";
-import type {
-  PreparedResourceWatch,
-  ResourceWatcher,
-} from "./resource_watcher.js";
+import type { ResourceWatcher } from "./resource_watcher.js";
 import type { RunningServe, ServeOptions } from "./serve.js";
 import type {
   ProcessSupervisor,
@@ -52,32 +47,6 @@ export async function watcherReadyBeforeShutdown(
     watcher.ready().then(() => true),
     shutdownStarted.then(() => false),
   ]);
-}
-
-/** Write candidate output only after its resource watches are ready. */
-export async function prepareWatchedOutput(
-  config: ResolvedConfig,
-  compilation: Compilation,
-  resources: ResourceWatcher,
-  outputStore: GeneratedOutputStore,
-  shutdownStarted: Promise<void>,
-  isClosed: () => boolean,
-): Promise<PreparedResourceWatch | undefined> {
-  const prepared = await resources.prepare(
-    config,
-    compilation,
-    shutdownStarted,
-  );
-  if (!prepared) return undefined;
-  try {
-    if (!isClosed()) await outputStore.write(compilation, config);
-    if (!isClosed()) return prepared;
-  } catch (error) {
-    await prepared.close();
-    throw error;
-  }
-  await prepared.close();
-  return undefined;
 }
 
 /** Close queued work, active watchers, and child while preserving first failure. */

@@ -38,7 +38,7 @@ test("derived check accepts missing or stale local output and tracked authored p
   );
 });
 
-test("derived check lists every tracked generated or cache path with ignore guidance", async (t) => {
+test("check guards indexed cache paths and reports mixed generated paths", async (t) => {
   const fixture = await derivedFixture(t);
   const store = new FileSystemGeneratedOutputStore();
   await store.write(fixture.baseline, fixture.config);
@@ -57,15 +57,26 @@ test("derived check lists every tracked generated or cache path with ignore guid
     async () => store.check(fixture.baseline, fixture.config),
     (error: Error & { code?: string }) => {
       assert.equal(error.code, "build-invalid");
-      for (const name of tracked) assert.ok(error.message.includes(name), name);
+      assert.ok(error.message.includes(".mokly-cache/forced.txt"));
       assert.match(error.message, /\.gitignore/);
       assert.match(error.message, /git rm --cached/);
       return true;
     },
   );
+  await fixture.git("rm", "--cached", "--", ".mokly-cache/forced.txt");
+  await assert.rejects(
+    () => store.check(fixture.baseline, fixture.config),
+    (error: Error & { code?: string }) => {
+      assert.equal(error.code, "build-invalid");
+      for (const name of tracked.slice(0, 2))
+        assert.ok(error.message.includes(name), name);
+      assert.match(error.message, /untracked:/);
+      return true;
+    },
+  );
 });
 
-test("derived check rejects retired generated routes from the index even when their local files are absent", async (t) => {
+test("check ignores indexed routes outside the current compilation", async (t) => {
   const fixture = await derivedFixture(t);
   const store = new FileSystemGeneratedOutputStore();
   await store.write(fixture.baseline, fixture.config);
@@ -76,13 +87,9 @@ test("derived check rejects retired generated routes from the index even when th
   );
   await fixture.git("add", "-f", "--", retired);
   await fs.rm(path.join(fixture.root, retired));
-  await assert.rejects(
-    async () => store.check(fixture.baseline, fixture.config),
-    (error: Error & { code?: string }) => {
-      assert.equal(error.code, "build-invalid");
-      assert.ok(error.message.includes(retired));
-      return true;
-    },
+  assert.equal(
+    await store.check(fixture.baseline, fixture.config),
+    "untracked",
   );
   await fixture.git("rm", "--cached", "--", retired);
   const guide = "mockups/guide.html";
@@ -95,22 +102,21 @@ test("derived check rejects retired generated routes from the index even when th
   await store.check(fixture.baseline, fixture.config);
 });
 
-test("indexed ownership checking accepts only Git's defined no-match status", async (t) => {
+test("index read failures never masquerade as absent tracking", async (t) => {
   const fixture = await derivedFixture(t);
   for (const exitCode of [1, 128]) {
     const tracking = new GitTrackedGeneratedOutput({
       async run(argv) {
         if (argv[0] === "rev-parse") return fixture.root;
-        if (argv[0] === "ls-files") return "";
-        throw new GitProcessError(exitCode, null, "index read failed");
+        if (argv[0] === "ls-files")
+          throw new GitProcessError(exitCode, null, "index read failed");
+        throw new Error(`unexpected Git command: ${argv[0]}`);
       },
     });
-    if (exitCode === 1) await tracking.check(fixture.baseline, fixture.config);
-    else
-      await assert.rejects(
-        () => tracking.check(fixture.baseline, fixture.config),
-        { code: "build-invalid" },
-      );
+    await assert.rejects(
+      () => tracking.state(fixture.baseline, fixture.config),
+      { code: "build-invalid" },
+    );
   }
 });
 

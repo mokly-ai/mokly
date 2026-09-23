@@ -12,8 +12,8 @@ import { baselineMeasurement } from "./timings.mjs";
 
 export async function benchmark(repository, fixture) {
   const config = await loadConfig(fixture.root, fixture.configPath);
-  const derived = config.generatedOutput === "derived";
-  if (derived) await resetFixtureBaseline(config);
+  const rebuilt = !fixture.trackedOutput;
+  if (rebuilt) await resetFixtureBaseline(config);
   const browser = await chromium.launch({
     channel: process.env.PLAYWRIGHT_CHANNEL ?? "chrome",
   });
@@ -129,7 +129,7 @@ export async function benchmark(repository, fixture) {
         );
         const changesReadyMs = Math.round(performance.now() - beginning);
         expect(errors).toEqual([]);
-        const baseline = derived
+        const baseline = rebuilt
           ? baselineMeasurement(running.timings, beginning, state === "warm")
           : {};
         runs.push({ ...measured, changesReadyMs, changedRoutes, ...baseline });
@@ -147,7 +147,5 @@ export async function benchmark(repository, fixture) {
   } finally {
     await browser.close();
   }
-  process.stdout.write(
-    `Benchmark ${JSON.stringify({ ...fixture, generatedOutput: config.generatedOutput, runs })}\n`,
-  );
+  process.stdout.write(`Benchmark ${JSON.stringify({ ...fixture, runs })}\n`);
 }

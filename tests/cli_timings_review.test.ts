@@ -172,12 +172,22 @@ for (const [components, watch] of [
         }
       }
       const events = timingEvents(stderr);
+      const backgroundEvents = events.filter(
+        (event) => event.role === "background",
+      );
+      assert.ok(
+        events.some(
+          (event) =>
+            event.role === "serve" && event.stage === "review.base-commit",
+        ),
+      );
       assertReviewTimings(
-        events,
+        backgroundEvents,
         "background",
         "changes.classify",
         [...reviewStages, "review.css-analysis"].filter(
-          (stage) => stage !== "review.write-artifact",
+          (stage) =>
+            stage !== "review.write-artifact" && stage !== "review.base-commit",
         ),
       );
       if (components) assertComparisonCounts(events, "background");

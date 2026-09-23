@@ -210,9 +210,13 @@ export class ChangedResourceGraph {
       }
       const extension = path.posix.extname(route).toLowerCase();
       if (this.compareBytes) {
-        const before = this.baseline.readIfExists
-          ? await this.baseline.readIfExists(route)
-          : await this.baseline.read(route);
+        const historicalRoute = asset.location.physicalRelativePath;
+        const before =
+          this.isChanged(route) && historicalRoute !== route
+            ? undefined
+            : this.baseline.readIfExists
+              ? await this.baseline.readIfExists(historicalRoute)
+              : await this.baseline.read(historicalRoute);
         if (before === undefined) this.#byteChanges.add(route);
         else if ([".html", ".htm"].includes(extension)) {
           const pair = normalizeReviewPair(

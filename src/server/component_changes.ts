@@ -21,10 +21,11 @@ import { reviewChangedPaths } from "../review/changed_paths.js";
 import { classifyComponents } from "../review/component_classification.js";
 import { EvidenceAssetReader } from "../review/evidence_assets.js";
 import { CommittedRepository, type GitCommandRunner } from "../review/git.js";
-import { derivedHeadOutputs } from "../review/head_assets.js";
+import { compiledHeadOutputs } from "../review/head_assets.js";
 import {
   baselineReaderForCommit,
   comparisonNotPrepared,
+  type BaselineSelection,
 } from "../review/repository.js";
 import type { ReadOnlyReviewRepository } from "../review/repository.js";
 import type { ReviewEvidence } from "../review/selection_types.js";
@@ -51,6 +52,7 @@ export interface ComponentChangeSource {
 /** Background-owned inputs; a prepared commit prevents builds in disposable workers. */
 export interface CatalogueClassificationInputs {
   readonly commit?: string;
+  readonly selection?: BaselineSelection;
   readonly outputs?: ReadonlyMap<string, string>;
 }
 
@@ -145,21 +147,20 @@ export class RepositoryComponentChanges implements ComponentChangeSource {
   }
   async baseline(): Promise<string> {
     await this.runner.requireTopLevel();
-    if (this.accepted?.commit) {
+    if (this.accepted?.commit && this.accepted.selection) {
       this.git = {
         ...this.git,
         reader: baselineReaderForCommit(
           this.config,
           this.accepted.commit,
+          this.accepted.selection,
           this.runner,
           this.signal,
         ),
       };
       return this.accepted.commit;
     }
-    if (this.config.generatedOutput === "derived")
-      throw comparisonNotPrepared();
-    return this.git.evidence.mergeBase(this.base, "HEAD");
+    throw comparisonNotPrepared();
   }
   async read(commit: string): Promise<ComponentChangeSnapshot | undefined> {
     return readCatalogueChanges(
@@ -182,7 +183,7 @@ export async function readCatalogueChanges(
   commit: string,
   outputs?: ReadonlyMap<string, string>,
 ): Promise<ComponentChangeSnapshot> {
-  outputs = await derivedHeadOutputs(config, manifest, outputs);
+  outputs = await compiledHeadOutputs(config, manifest, outputs);
   const baseline = await readBaseManifest(git.reader, commit, config);
   const changedPaths = await reviewChangedPaths(
     git.evidence,

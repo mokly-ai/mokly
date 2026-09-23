@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
+import { setTimeout } from "node:timers/promises";
 
 import { MoklyError } from "../dist/errors.js";
 import { GitRepositoryEvidence } from "../dist/review/git_evidence.js";
@@ -58,7 +59,6 @@ test("no-watch startup retains removed metadata from its single Changes calculat
 
 test("unavailable startup Changes leaves a complete current catalogue without retrying Git", async (context) => {
   const fixture = await changedFixture(context, validEntrySource() + page);
-  const classified = observeBackgroundClassification(context, fixture.config);
   await fs.writeFile(fixture.entryPath, validEntrySource());
   let calls = 0;
   context.mock.method(
@@ -75,8 +75,12 @@ test("unavailable startup Changes leaves a complete current catalogue without re
     watch: false,
   });
   fixture.beforeRemove(() => running.close());
-  await classified;
-  const home = await (await fetch(running.url)).text();
+  let home = "";
+  for (let attempt = 0; attempt < 100; attempt++) {
+    home = await (await fetch(running.url)).text();
+    if (home.includes('data-changes-status="unavailable"')) break;
+    await setTimeout(50);
+  }
   assert.match(home, /data-entry-id="home"/);
   assert.match(home, /data-changes-status="unavailable"/);
   assert.doesNotMatch(home, /data-removed-page/);

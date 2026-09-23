@@ -136,10 +136,9 @@ test("missing baseline documents and absent history fail before installing outpu
   assert.equal(fs.existsSync(fixture.output), false);
   await fixture.git("checkout", "--orphan", "unrelated");
   await fixture.git("commit", "-qm", "test: unrelated history");
-  await assert.rejects(
-    exportCatalogue(fixture.config, { outDir: "site" }),
-    /merge base/,
-  );
+  await assert.rejects(exportCatalogue(fixture.config, { outDir: "site" }), {
+    code: "baseline-history-unavailable",
+  });
   assert.equal(fs.existsSync(fixture.output), false);
 });
 

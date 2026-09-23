@@ -187,8 +187,9 @@ test("CLI no-watch lifecycle becomes ready and exits cleanly on SIGTERM", async 
     await (await fetch(`${url}/static/screens/home.desktop.html`)).text(),
     /id="home"/,
   );
-  await waitFor(async () =>
+  assert.equal(
     fs.existsSync(path.join(fixture.mockupsDir, "mokly-manifest.json")),
+    false,
   );
   child.kill("SIGTERM");
   const code = await new Promise<number | null>((resolve) =>
@@ -197,7 +198,7 @@ test("CLI no-watch lifecycle becomes ready and exits cleanly on SIGTERM", async 
   assert.equal(code, 0);
   assert.equal(
     fs.existsSync(path.join(fixture.mockupsDir, "mokly-manifest.json")),
-    true,
+    false,
   );
 });
 
@@ -215,6 +216,7 @@ test(
         fixture.configPath,
         "--port",
         "0",
+        "--build",
       ],
       { cwd: fixture.root, stdio: ["ignore", "pipe", "pipe"] },
     );

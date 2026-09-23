@@ -32,7 +32,7 @@ export interface WatchConfig {
 
 /** Git comparison and artifact configuration. */
 export interface ReviewConfig {
-  /** Shell-free commands run using trusted historical code in derived mode. */
+  /** Shell-free commands run using trusted historical code for missing baselines. */
   baselineBuild?: readonly (readonly string[])[];
   /** Git ref whose merge base with HEAD is the comparison branch point. */
   base?: string;
@@ -83,8 +83,6 @@ export interface ModuleResolutionConfig {
 
 /** Public, serializable host configuration. */
 export interface MoklyConfig {
-  /** Rebuild historical output or retain generated files in Git; defaults to derived. */
-  generatedOutput?: "committed" | "derived";
   /** Color schemes rendered for screens; defaults to light only. */
   colorSchemes?: readonly ColorScheme[];
   /** Repository-relative POSIX globs whose matched files are entry modules. */
@@ -113,7 +111,6 @@ export interface MoklyConfig {
 
 /** Absolute, validated configuration consumed by runtime engines. */
 export interface ResolvedConfig {
-  generatedOutput: "committed" | "derived";
   colorSchemes: readonly ColorScheme[];
   compatibility: {
     readManifestV2: boolean;

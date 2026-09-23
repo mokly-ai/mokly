@@ -113,7 +113,11 @@ function waitForChildShutdown(
       }
       const update = parseChildUpdateMessage(message);
       if (update) {
-        repository.accept(update.baselineCommit, update.version);
+        repository.accept(
+          update.baselineCommit,
+          update.version,
+          update.baselineSelection,
+        );
         server.publishUpdate({
           ...(update.kind ? { kind: update.kind } : {}),
           changesStatus:

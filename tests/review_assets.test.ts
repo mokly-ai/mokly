@@ -69,7 +69,6 @@ test("Review copies local stylesheet dependencies for both snapshots", async (co
     fixture.configPath,
     `import { defineConfig } from "@mokly/mokly";
 export default defineConfig({
-  generatedOutput: "committed",
   entriesDir: "entries",
   mockupsDir: "mockups",
   repoRoot: ".",
@@ -126,7 +125,6 @@ test("Review rejects base dependencies beneath authored source roots", async (co
     fixture.configPath,
     `import { defineConfig } from "@mokly/mokly";
 export default defineConfig({
-  generatedOutput: "committed",
   entriesDir: "mockups/src/entries",
   mockupsDir: "mockups",
   repoRoot: ".",

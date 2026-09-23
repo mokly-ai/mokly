@@ -25,12 +25,14 @@ export interface ReadOnlyReviewRepository {
   readonly reader: BaselineReader;
 }
 
-/** Committed mode needs no preparation; derived mode must receive a pinned commit. */
+/** Only the parent preparation boundary chooses which historical reader to open. */
+export type BaselineSelection = "blobs" | "rebuild";
+
+/** Explicit Git-blob fixture adapter; production comparisons prepare per commit. */
 export function committedReviewRepository(
   config: ResolvedConfig,
   runner: GitCommandRunner = new ConfiguredGitCommandRunner(config),
 ): ReadOnlyReviewRepository {
-  if (config.generatedOutput === "derived") throw comparisonNotPrepared();
   return new CommittedRepository(runner);
 }
 
@@ -42,6 +44,7 @@ export function comparisonNotPrepared(): MoklyError {
 export function readOnlyRepositoryForCommit(
   config: ResolvedConfig,
   commit: string,
+  selection: BaselineSelection,
   runner: GitCommandRunner = new ConfiguredGitCommandRunner(config),
   signal?: AbortSignal,
   filesystem: BaselineFileSystem = new NodeBaselineFileSystem(),
@@ -53,7 +56,14 @@ export function readOnlyRepositoryForCommit(
       changedPaths: (baseCommit, excluded) =>
         evidence.changedPaths(baseCommit, excluded),
     },
-    reader: baselineReaderForCommit(config, commit, runner, signal, filesystem),
+    reader: baselineReaderForCommit(
+      config,
+      commit,
+      selection,
+      runner,
+      signal,
+      filesystem,
+    ),
   };
 }
 
@@ -61,11 +71,12 @@ export function readOnlyRepositoryForCommit(
 export function baselineReaderForCommit(
   config: ResolvedConfig,
   commit: string,
+  selection: BaselineSelection,
   runner: GitCommandRunner = new ConfiguredGitCommandRunner(config),
   signal?: AbortSignal,
   filesystem: BaselineFileSystem = new NodeBaselineFileSystem(),
 ): BaselineReader {
-  return config.generatedOutput === "derived"
+  return selection === "rebuild"
     ? new RebuiltBaselineReader(
         filesystem,
         config.repoRoot,

@@ -4,9 +4,14 @@ import path from "node:path";
 import type { Catalogue } from "@mokly/viewer/server";
 
 import { adaptBrowseDocument } from "../browse/document_adapter.js";
+import { isOwned } from "../build/ownership.js";
 import { locatePath } from "../config/file_locations.js";
-import { publicFileLocation } from "../config/public_files.js";
+import {
+  publicFileLocation,
+  publicPathLocation,
+} from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
+import { MANIFEST_NAME } from "../registry/manifest.js";
 import { referencedRoutes } from "../review/asset_references.js";
 
 import { publicationFiles, readPublicationFile } from "./files.js";
@@ -17,6 +22,7 @@ export async function copyPublicFiles(
   catalogue: Catalogue,
   stage: string,
   excludedRoots: readonly string[],
+  generatedOutputs: ReadonlyMap<string, string>,
 ): Promise<void> {
   const root = path.join(stage, "static");
   const copied = new Set<string>();
@@ -31,11 +37,25 @@ export async function copyPublicFiles(
     const location = publicFileLocation(file.path, config);
     if (!location) continue;
     const relative = location.relativePath;
+    if (
+      generatedOutputs.has(relative) ||
+      (file.link === undefined && isOwned(file.path, config))
+    )
+      continue;
     const target = path.join(root, relative);
     const content = await readPublicationFile(file, config.repoRoot);
     await fs.promises.mkdir(path.dirname(target), { recursive: true });
     await fs.promises.writeFile(target, content);
     copied.add(relative);
+  }
+  for (const [route, content] of generatedOutputs) {
+    if (route === MANIFEST_NAME) continue;
+    if (!publicPathLocation(path.join(config.mockupsDir, route), config))
+      throw resourceError(route);
+    const target = path.join(root, route);
+    await fs.promises.mkdir(path.dirname(target), { recursive: true });
+    await fs.promises.writeFile(target, content);
+    copied.add(route);
   }
   for (const route of catalogueDocuments(catalogue)) {
     if (!copied.has(route)) throw resourceError(route, "catalogue");

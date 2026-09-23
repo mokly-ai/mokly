@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
+import { prepareReviewRepository } from "../dist/review/prepare.js";
 import { RepositoryCatalogueChangeClassifier } from "../dist/server/component_changes.js";
 import { BackgroundCompilation } from "../dist/server/demand/background.js";
 import { BackgroundGeneration } from "../dist/server/demand/generation.js";
@@ -17,10 +18,11 @@ test(
     const fixture = await changedFixture(t);
     const runtime = await prepareLiveRuntime(fixture.config);
     const existing = await compileCatalogue(fixture.config);
+    const prepared = await prepareReviewRepository(fixture.config, "main");
     const blocked = await blockingGit(fixture);
     const background = new BackgroundCompilation(runtime, existing);
     fixture.beforeRemove(() => background.close());
-    const classification = background.classify("main");
+    const classification = background.classify("main", prepared);
     const pid = await blocked.started();
 
     await background.close();
@@ -44,7 +46,17 @@ test("classification retains unavailable evidence when asynchronous Git reads fa
     },
   });
   assert.equal(
-    await classifier.read(fixture.config, compilation.manifest, "main"),
+    await classifier.read(
+      fixture.config,
+      compilation.manifest,
+      "main",
+      undefined,
+      {
+        commit: "a".repeat(40),
+        selection: "blobs",
+        outputs: compilation.outputs,
+      },
+    ),
     undefined,
   );
   assert.ok(commands.includes("ls-tree"));

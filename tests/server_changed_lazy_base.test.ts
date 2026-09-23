@@ -56,18 +56,20 @@ for (const resource of ["image.svg", "unused.css", "shared.css"])
       [`mockups/${resource}`],
     );
     const documents = reads.filter((route) => route.endsWith(".html"));
+    assert.deepEqual(documents.sort(), [
+      "mockups/screens/details.desktop.dark.html",
+      "mockups/screens/details.desktop.html",
+      "mockups/screens/details.mobile.dark.html",
+      "mockups/screens/details.mobile.html",
+      "mockups/screens/home.desktop.dark.html",
+      "mockups/screens/home.desktop.html",
+      "mockups/screens/home.mobile.dark.html",
+      "mockups/screens/home.mobile.html",
+    ]);
     assert.deepEqual(
-      documents.sort(),
-      resource === "shared.css"
-        ? [
-            "mockups/screens/home.desktop.dark.html",
-            "mockups/screens/home.desktop.html",
-            "mockups/screens/home.mobile.dark.html",
-            "mockups/screens/home.mobile.html",
-          ]
-        : [],
+      [...new Set(reads.filter((route) => !route.endsWith(".html")))].sort(),
+      ["mockups/font.woff2", "mockups/image.svg", "mockups/shared.css"],
     );
-    if (resource !== "shared.css") assert.deepEqual(reads, []);
   });
 
 test("non-CSS evidence does not traverse a supplied base resource graph", async (t) => {

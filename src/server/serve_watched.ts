@@ -118,6 +118,7 @@ export async function serveWatched(
     running,
     runtime: () => runtime,
     shutdown,
+    writeOutput: options.build ?? false,
   });
   running.onForeground?.((active) => background.foreground(active));
   let debouncer: WatchDebouncer | undefined;

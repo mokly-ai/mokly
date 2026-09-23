@@ -22,6 +22,14 @@ test("composition selects committed reads without building and pins repository e
         calls.push(argv[0]!);
         if (argv[0] === "rev-parse") return fixture.root;
         if (argv[0] === "merge-base") return "a".repeat(40);
+        if (argv[0] === "ls-tree") return "100644\n";
+        if (argv[0] === "show")
+          return JSON.stringify({
+            entries: [],
+            schemaVersion: 5,
+            generatedBy: "mokly",
+            sourceFiles: [],
+          });
         return "notes.md\n.mokly-cache/private\n";
       },
     },
@@ -44,9 +52,7 @@ test("composition selects committed reads without building and pins repository e
 });
 
 test("derived composition forwards cancellation and progress to the injected builder", async (t) => {
-  const fixture = await createFixture(undefined, {
-    extraConfig: 'generatedOutput: "derived",',
-  });
+  const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const requests: BaselineBuildRequest[] = [];
@@ -58,7 +64,11 @@ test("derived composition forwards cancellation and progress to the injected bui
     filesystem: new MemoryBaselineFileSystem(),
     runner: {
       async run(argv) {
-        return argv[0] === "rev-parse" ? fixture.root : "b".repeat(40);
+        return argv[0] === "rev-parse"
+          ? fixture.root
+          : argv[0] === "ls-tree"
+            ? ""
+            : "b".repeat(40);
       },
     },
     builder: {
@@ -99,9 +109,7 @@ test("derived composition forwards cancellation and progress to the injected bui
 });
 
 test("unavailable derived history and cancellation keep typed outcomes before building", async (t) => {
-  const fixture = await createFixture(undefined, {
-    extraConfig: 'generatedOutput: "derived",',
-  });
+  const fixture = await createFixture(undefined, {});
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const runner = {

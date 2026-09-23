@@ -8,11 +8,7 @@ import { promisify } from "node:util";
 import type { TimingEvent } from "../dist/diagnostics/timings.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
-import {
-  createFixture,
-  removeFixture,
-  repositoryRoot,
-} from "./helpers/fixture.js";
+import { repositoryRoot } from "./helpers/fixture.js";
 
 const exec = promisify(execFile);
 const bin = path.join(repositoryRoot, "dist/cli/bin.js");
@@ -92,7 +88,7 @@ test(
   "watched timings reach the child and continue after a source rebuild",
   { timeout: 30000 },
   async (t) => {
-    const fixture = await createFixture();
+    const fixture = await changedFixture(t);
     const child = spawn(
       process.execPath,
       [
@@ -100,6 +96,8 @@ test(
         "serve",
         "--config",
         fixture.configPath,
+        "--base",
+        "main",
         "--port",
         "0",
         "--debug-timings",
@@ -114,7 +112,7 @@ test(
     child.stderr.on("data", (chunk: Buffer) => {
       stderr += chunk.toString();
     });
-    t.after(async () => {
+    fixture.beforeRemove(async () => {
       if (child.exitCode === null && child.signalCode === null) {
         const exited = new Promise<void>((resolve) =>
           child.once("exit", () => resolve()),
@@ -122,7 +120,6 @@ test(
         child.kill("SIGTERM");
         await exited;
       }
-      await removeFixture(fixture);
     });
     const wait = async (predicate: () => boolean) => {
       for (let attempt = 0; attempt < 300; attempt++) {

@@ -213,7 +213,7 @@ test("a removed resource beneath an escaping symlink is not a valid deletion", a
   );
 });
 
-test("Changes retains a legitimate deleted resource directory", async (t) => {
+test("Changes rejects deleted directories still referenced by a screen", async (t) => {
   const fixture = await changedFixture(
     t,
     validEntrySource({ body: '<img src="../images/logo.svg" alt="Logo" />' }),
@@ -230,7 +230,7 @@ test("Changes retains a legitimate deleted resource directory", async (t) => {
       "HEAD",
       committedReviewRepository(fixture.config),
     ),
-    ["screens/home.html", "user-flows/tour.html"],
+    undefined,
   );
 });
 
@@ -262,5 +262,10 @@ test("README edits are not public content changes and require no resource traver
     new ObservedReader(fixture.config),
   );
   assert.deepEqual(result, { changedPaths: [], screens: [] });
-  assert.deepEqual(reads, []);
+  assert.deepEqual(reads.sort(), [
+    "screens/details.desktop.html",
+    "screens/details.mobile.html",
+    "screens/home.desktop.html",
+    "screens/home.mobile.html",
+  ]);
 });

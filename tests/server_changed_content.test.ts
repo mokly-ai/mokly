@@ -89,6 +89,7 @@ test("dependency-only edits retain evidence without generating a review list", a
     watch: false,
   });
   fixture.beforeRemove(() => running.close());
+  await waitForClassifiedCount(running.url, 0);
   await assert.rejects(fs.access(fixture.config.review.outDir));
   const result = (await (
     await fetch(`${running.url}/__mokly/diffs/review.json`)
@@ -98,7 +99,7 @@ test("dependency-only edits retain evidence without generating a review list", a
   assert.ok(home?.sharedImpact.includes("notes.md"));
 });
 
-test("Changes includes a dark-only material edit", async (t) => {
+test("Changes ignores a stale generated dark view when the source is unchanged", async (t) => {
   const fixture = await changedFixture(t, validEntrySource(), {
     extraConfig: 'colorSchemes: ["light", "dark"],',
   });
@@ -111,7 +112,7 @@ test("Changes includes a dark-only material edit", async (t) => {
       "HEAD",
       committedReviewRepository(fixture.config),
     ),
-    ["screens/home.html", "user-flows/tour.html"],
+    [],
   );
 });
 
@@ -157,6 +158,7 @@ test("moving a source module preserves an unchanged review list", async (t) => {
     watch: false,
   });
   fixture.beforeRemove(() => running.close());
+  await waitForClassifiedCount(running.url, 0);
   const result = (await (
     await fetch(`${running.url}/__mokly/diffs/review.json`)
   ).json()) as ReviewResult;

@@ -1,6 +1,8 @@
 import { isSafeCatalogueRoute } from "@mokly/viewer/data";
 import type { ManifestV5 } from "@mokly/viewer/data";
 
+import type { BaselineSelection } from "../review/repository.js";
+
 import type { ComponentChangeSnapshot } from "./component_changes.js";
 import type {
   RuntimeMessage,
@@ -9,8 +11,8 @@ import type {
 /** Typed watched-server updates crossing the parent/child IPC boundary. */
 
 /**
- * Live comparison state. `preparing` precedes `pending` only while a derived
- * baseline is actually rebuilt; a cache hit and committed mode skip it.
+ * Live comparison state. `preparing` precedes `pending` only while the pinned
+ * baseline is actually rebuilt; a cache hit and a blob reader skip it.
  */
 export type ChangesStatus = "preparing" | "pending" | "ready" | "unavailable";
 
@@ -35,6 +37,7 @@ export interface CatalogueUpdate {
 export interface ChildUpdateMessage {
   /** Omit to retain the reader; null revokes it while the parent prepares. */
   baselineCommit?: string | null;
+  baselineSelection?: BaselineSelection;
   kind?: CatalogueUpdateKind;
   changesStatus?: ChangesStatus;
   changedRoutes: readonly string[] | null;
@@ -115,9 +118,11 @@ export function childUpdateMessage(
   changesStatus?: ChangesStatus,
   kind?: CatalogueUpdateKind,
   baselineCommit?: string | null,
+  baselineSelection?: BaselineSelection,
 ): ChildUpdateMessage {
   return {
     ...(baselineCommit !== undefined ? { baselineCommit } : {}),
+    ...(baselineSelection ? { baselineSelection } : {}),
     ...(kind ? { kind } : {}),
     ...(changesStatus ? { changesStatus } : {}),
     changedRoutes: changedRoutes ? [...changedRoutes] : null,
@@ -140,6 +145,7 @@ export function parseChildUpdateMessage(
   }
   const candidate = value as {
     baselineCommit?: unknown;
+    baselineSelection?: unknown;
     kind?: unknown;
     changesStatus?: unknown;
     changedRoutes?: unknown;
@@ -151,6 +157,11 @@ export function parseChildUpdateMessage(
       candidate.baselineCommit !== null &&
       (typeof candidate.baselineCommit !== "string" ||
         !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(candidate.baselineCommit))) ||
+    (typeof candidate.baselineCommit === "string" &&
+      candidate.baselineSelection !== "blobs" &&
+      candidate.baselineSelection !== "rebuild") ||
+    (typeof candidate.baselineCommit !== "string" &&
+      candidate.baselineSelection !== undefined) ||
     !Number.isSafeInteger(candidate.version) ||
     (candidate.version as number) <= 0 ||
     !isChangedRoutes(candidate.changedRoutes) ||
@@ -166,6 +177,9 @@ export function parseChildUpdateMessage(
   return {
     ...(candidate.baselineCommit !== undefined
       ? { baselineCommit: candidate.baselineCommit }
+      : {}),
+    ...(candidate.baselineSelection
+      ? { baselineSelection: candidate.baselineSelection as BaselineSelection }
       : {}),
     ...(candidate.kind ? { kind: candidate.kind } : {}),
     ...(candidate.changesStatus

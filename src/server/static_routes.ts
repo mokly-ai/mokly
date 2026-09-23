@@ -8,7 +8,10 @@ import type { Catalogue } from "@mokly/viewer/server";
 
 import { adaptBrowseDocument } from "../browse/document_adapter.js";
 import { isOwned } from "../build/ownership.js";
-import { publicFileLocation } from "../config/public_files.js";
+import {
+  publicFileLocation,
+  publicPathLocation,
+} from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { errorMessage } from "../errors.js";
 
@@ -21,6 +24,7 @@ export function serveStatic(
   config: ResolvedConfig,
   catalogue: Catalogue,
   method: string,
+  generatedOutputs?: ReadonlyMap<string, string>,
 ): void {
   const relative = safeDecodePath(encodedPath);
   if (!relative) {
@@ -28,17 +32,26 @@ export function serveStatic(
   }
   const candidate = path.resolve(config.mockupsDir, relative);
   if (
-    catalogue.manifest.schemaVersion === "live-index-1" &&
+    (catalogue.manifest.schemaVersion === "live-index-1" ||
+      generatedOutputs !== undefined) &&
+    !generatedOutputs?.has(relative) &&
     isOwned(candidate, config)
   )
     return send(response, 404, "text/plain", "Not found", method);
-  const location = publicFileLocation(candidate, config);
+  const generated = generatedOutputs?.get(relative);
+  const location =
+    generated === undefined
+      ? publicFileLocation(candidate, config)
+      : publicPathLocation(candidate, config);
   if (!location) {
     return send(response, 404, "text/plain", "Not found", method);
   }
   let content: Buffer;
   try {
-    content = fs.readFileSync(location.physicalPath);
+    content =
+      generated === undefined
+        ? fs.readFileSync(location.physicalPath)
+        : Buffer.from(generated);
   } catch {
     return send(response, 404, "text/plain", "Not found", method);
   }

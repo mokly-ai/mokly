@@ -18,11 +18,11 @@ async function main() {
   };
   let debug = mode === "benchmark";
   let config;
-  let generatedOutput = "committed";
+  let trackedOutput = false;
   while (args.length) {
     const flag = args.shift();
     if (flag === "--debug-timings") debug = true;
-    else if (flag === "--derived") generatedOutput = "derived";
+    else if (flag === "--tracked-output") trackedOutput = true;
     else if (flag === "--config") {
       const value = args.shift();
       if (!value || value.startsWith("--"))
@@ -48,10 +48,10 @@ async function main() {
   if (size.screens < 2)
     throw new Error("screens must be at least two per area");
   if (mode === "generate")
-    return prepareFixture(repository, size, debug, generatedOutput);
+    return prepareFixture(repository, size, debug, trackedOutput);
   const fixture = config
     ? { configPath: config, root: path.dirname(config), size }
-    : await preparedFixture(repository, size, generatedOutput);
+    : await preparedFixture(repository, size, trackedOutput);
   if (mode === "benchmark") {
     const { benchmark } = await import("./benchmark.mjs");
     return benchmark(repository, fixture);

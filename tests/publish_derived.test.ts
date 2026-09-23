@@ -54,7 +54,9 @@ test("publish bundles rebuilt derived comparisons and can replace them with curr
     token: "fixture-token",
     repository: "github.com/sample/catalogue",
   };
+  const localBefore = await directoryFiles(fixture.mockupsDir);
   await publishCatalogue(fixture.config, options, "1.2.3", {}, dependencies);
+  assert.deepEqual(await directoryFiles(fixture.mockupsDir), localBefore);
   const output = path.join(fixture.root, "site");
   const manifestPath = path.join(output, "mokly-upload.json");
   const manifest = JSON.parse(
@@ -97,6 +99,7 @@ test("publish bundles rebuilt derived comparisons and can replace them with curr
     {},
     dependencies,
   );
+  assert.deepEqual(await directoryFiles(fixture.mockupsDir), localBefore);
   const current = JSON.parse(
     await fs.readFile(manifestPath, "utf8"),
   ) as UploadManifest;

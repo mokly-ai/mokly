@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import type { BaselineBuilder, BaselineProgress } from "../baseline/types.js";
 import type { Compilation } from "../build/compile.js";
 import type { ComponentRuntime } from "../build/component_runtime.js";
@@ -22,6 +24,7 @@ interface WatchedBackgroundOptions {
   readonly running: ProcessSupervisor;
   readonly runtime: () => ComponentRuntime;
   readonly shutdown: Promise<void>;
+  readonly writeOutput: boolean;
 }
 
 /** Own background compilation, evidence reporting, and accepted output state. */
@@ -66,13 +69,14 @@ export class WatchedBackground {
         );
       },
       {
-        baselinePrepared: (commit) =>
+        baselinePrepared: (prepared) =>
           options.running.notifyUpdate(
             undefined,
             undefined,
             "pending",
             "evidence",
-            commit,
+            prepared?.commit ?? null,
+            prepared?.selection,
           ),
         baselineStatus: (changesStatus) =>
           options.running.notifyUpdate(
@@ -85,6 +89,16 @@ export class WatchedBackground {
         diagnostic: options.report,
         resources: options.resources,
         shutdown: options.shutdown,
+        writeOutput: options.writeOutput,
+        outputWritten: (compilation, duration) =>
+          options.reporter.outputWritten?.(
+            compilation.outputs.size,
+            path.relative(
+              options.config().repoRoot,
+              options.config().mockupsDir,
+            ),
+            duration,
+          ),
         ...(options.baselineBuilder
           ? { builder: options.baselineBuilder }
           : {}),

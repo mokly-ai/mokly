@@ -90,12 +90,12 @@ test("Changes cannot treat a historical authoring input as a deleted public reso
       '<script src="../helper.js"></script></head>',
     ),
   );
-  assert.equal(
+  assert.deepEqual(
     await computeChangedRoutes(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),
     ),
-    undefined,
+    [],
   );
 });

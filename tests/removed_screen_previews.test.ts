@@ -18,8 +18,8 @@ import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 const commit = "a".repeat(40);
 
-for (const mode of ["committed", "derived"] as const) {
-  test(`removed screen selected capture retains every historical view in ${mode} mode`, async (t) => {
+{
+  test("removed screen selected capture retains every historical view", async (t) => {
     const fixture = await screenFixture(t);
     const source = {
       after: fixture.current.manifest,
@@ -28,12 +28,10 @@ for (const mode of ["committed", "derived"] as const) {
       baseRef: "main",
       changedPaths: [],
       headDigests: {},
-      ...(mode === "derived"
-        ? { headOutputs: [...fixture.current.outputs] as const }
-        : {}),
+      headOutputs: [...fixture.current.outputs] as const,
     };
     const artifact = await new RepositorySelectedReview(
-      { ...fixture.config, generatedOutput: mode },
+      fixture.config,
       fixture.reader,
     ).generate(
       source,
@@ -59,19 +57,19 @@ for (const mode of ["committed", "derived"] as const) {
     );
   });
 
-  test(`component-aware removed screen stays before-only in ${mode} mode`, async (t) => {
+  test("component-aware removed screen stays before-only", async (t) => {
     const fixture = await componentReviewFixture(t, (source) =>
       source.replace(/ {2}defineScreen\([^\n]+\)\n/, ""),
     );
     const complete = await compareReview(
       fixture.after,
-      { ...fixture.config, generatedOutput: mode },
+      fixture.config,
       fixture.git,
       "main",
     );
     assert.equal(complete.result.schemaVersion, 3);
     const selected = await new RepositorySelectedReview(
-      { ...fixture.config, generatedOutput: mode },
+      fixture.config,
       fixture.git.reader,
     ).generate(
       {
@@ -81,9 +79,7 @@ for (const mode of ["committed", "derived"] as const) {
         baseRef: "main",
         changedPaths: fixture.changedPaths,
         headDigests: digestOutputs(fixture.after.outputs),
-        ...(mode === "derived"
-          ? { headOutputs: [...fixture.after.outputs] as const }
-          : {}),
+        headOutputs: [...fixture.after.outputs] as const,
         result: complete.result,
       },
       { route: "screens/home.html" },
@@ -236,6 +232,7 @@ function selectedSource(fixture: Awaited<ReturnType<typeof screenFixture>>) {
     baseRef: "main",
     changedPaths: [],
     headDigests: {},
+    headOutputs: [...fixture.current.outputs] as const,
   };
 }
 

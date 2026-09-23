@@ -89,26 +89,25 @@ test("Git root validation accepts a physical alias and retries unavailable histo
   );
 });
 
-test("nested roots fail before preparation, pinned reads, classification or derived tracking", async (t) => {
+test("nested roots fail before preparation, pinned reads, classification or tracking", async (t) => {
   const { config, compilation } = await nestedRepository(t);
   const expected = { code: "config-invalid" };
   const commit = "a".repeat(40);
-  for (const generatedOutput of ["committed", "derived"] as const)
-    await assert.rejects(
-      () =>
-        prepareReviewRepository({ ...config, generatedOutput }, "HEAD", {
-          commit,
-          builder: {
-            async build() {
-              assert.fail("must reject before building");
-            },
+  await assert.rejects(
+    () =>
+      prepareReviewRepository(config, "HEAD", {
+        commit,
+        builder: {
+          async build() {
+            assert.fail("must reject before building");
           },
-        }),
-      expected,
-    );
-  const pinned = readOnlyRepositoryForCommit(config, commit);
+        },
+      }),
+    expected,
+  );
+  const pinned = readOnlyRepositoryForCommit(config, commit, "blobs");
   await assert.rejects(() => pinned.evidence.changedPaths(commit), expected);
-  const reader = baselineReaderForCommit(config, commit);
+  const reader = baselineReaderForCommit(config, commit, "blobs");
   await assert.rejects(
     () => reader.readFile(commit, "mockups/mokly-manifest.json"),
     expected,
@@ -134,16 +133,12 @@ test("nested roots fail before preparation, pinned reads, classification or deri
     expected,
   );
   await assert.rejects(
-    async () =>
-      new FileSystemGeneratedOutputStore().check(compilation, {
-        ...config,
-        generatedOutput: "derived",
-      }),
+    async () => new FileSystemGeneratedOutputStore().check(compilation, config),
     expected,
   );
 });
 
-test("build in either mode and committed check work outside a Git repository", async (t) => {
+test("build and untracked check work outside a Git repository", async (t) => {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-no-git-"));
@@ -159,14 +154,7 @@ test("build in either mode and committed check work outside a Git repository", a
     /not a git repository/i,
   );
   const store = new FileSystemGeneratedOutputStore();
-  for (const generatedOutput of ["committed", "derived"] as const) {
-    const mode = { ...config, generatedOutput };
-    const compilation = await compileCatalogue(mode);
-    await store.write(compilation, mode);
-    if (generatedOutput === "committed") await store.check(compilation, mode);
-    else
-      await assert.rejects(async () => store.check(compilation, mode), {
-        code: "build-invalid",
-      });
-  }
+  const compilation = await compileCatalogue(config);
+  await store.write(compilation, config);
+  assert.equal(await store.check(compilation, config), "untracked");
 });

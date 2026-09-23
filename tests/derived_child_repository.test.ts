@@ -84,6 +84,11 @@ test("derived HTTP child rejects an unprepared unselected comparison without bui
           "pending",
           "evidence",
           commit,
+          commit === null
+            ? undefined
+            : commit === moved.commit
+              ? moved.selection
+              : "rebuild",
         ),
         undefined,
       );

@@ -5,6 +5,7 @@ import type { ManifestV5 } from "@mokly/viewer/data";
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import { bindTimings, timeSync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
+import type { BaselineSelection } from "../review/repository.js";
 
 import { ManagedChild, type ChildShutdownTimings } from "./child_lifecycle.js";
 import { NodeChildFactory, type ChildFactory } from "./child_process.js";
@@ -41,6 +42,7 @@ export interface ProcessSupervisor {
     changesStatus?: ChangesStatus,
     kind?: CatalogueUpdateKind,
     baselineCommit?: string | null,
+    baselineSelection?: BaselineSelection,
   ): void;
   /** Register the watched-runtime handler for a post-readiness child failure. */
   onUnexpectedExit(callback: (error: Error) => void): void;
@@ -209,6 +211,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
     changesStatus?: ChangesStatus,
     kind?: CatalogueUpdateKind,
     baselineCommit?: string | null,
+    baselineSelection?: BaselineSelection,
   ): void {
     const child = this.#child;
     if (!child || child.stopping || child.exited) return;
@@ -221,6 +224,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
         changesStatus,
         kind,
         baselineCommit,
+        baselineSelection,
       ),
     );
   }

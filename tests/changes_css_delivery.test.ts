@@ -5,6 +5,7 @@ import test from "node:test";
 
 import { exportCatalogue } from "../dist/export/run.js";
 import { readManifest } from "../dist/registry/manifest.js";
+import { prepareReviewRepository } from "../dist/review/prepare.js";
 import { committedReviewRepository } from "../dist/review/repository.js";
 import {
   ComponentChangeCache,
@@ -20,8 +21,19 @@ for (const components of [false, true])
   test(`v${components ? 3 : 2} CSS evidence survives selected HTTP, watched cache, and static export`, async (t) => {
     const fixture = await cssAttributionFixture(t, components);
     const manifest = readManifest(fixture.config);
+    const prepared = await prepareReviewRepository(fixture.config, "main");
     const cache = new ComponentChangeCache(
-      new RepositoryComponentChanges(fixture.config, manifest, "main"),
+      new RepositoryComponentChanges(
+        fixture.config,
+        manifest,
+        "main",
+        undefined,
+        undefined,
+        {
+          commit: prepared.commit,
+          selection: prepared.selection,
+        },
+      ),
     );
     await fixture.append(".guide { padding: 2px; }");
     const snapshot = await cache.read(1);

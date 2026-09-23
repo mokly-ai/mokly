@@ -94,7 +94,7 @@ test("unused public files and broad shared-impact globs do not fill Changes", as
   );
 });
 
-test("Changes includes a removed resource referenced by an unchanged screen", async (t) => {
+test("Changes is unavailable when a referenced resource fails compilation", async (t) => {
   const fixture = await changedFixture(
     t,
     validEntrySource({ body: '<img src="../image.svg" alt="Logo" />' }),
@@ -113,7 +113,7 @@ test("Changes includes a removed resource referenced by an unchanged screen", as
       "HEAD",
       committedReviewRepository(fixture.config),
     ),
-    ["screens/home.html", "user-flows/tour.html"],
+    undefined,
   );
 });
 

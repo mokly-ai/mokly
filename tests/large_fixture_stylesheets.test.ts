@@ -48,13 +48,23 @@ test(
       path.join(repository, "scripts/large"),
       { recursive: true },
     );
+    await fs.writeFile(
+      path.join(repository, "scripts/large/toolchain.mjs"),
+      `import fs from "node:fs/promises"; import path from "node:path";
+export async function prepareDerivedToolchain(_repository, root) {
+  await fs.symlink(${JSON.stringify(path.join(repositoryRoot, "node_modules"))}, path.join(root, "node_modules"));
+}\n`,
+    );
     for (const directory of ["dist", "tests"])
       await fs.symlink(
         path.join(repositoryRoot, directory),
         path.join(repository, directory),
         "junction",
       );
-    const record = path.join(repository, ".context/large-1-3-1-2-0.34.json");
+    const record = path.join(
+      repository,
+      ".context/large-1-3-1-2-0.34-tracked.json",
+    );
     const { stdout } = await exec(
       process.execPath,
       [
@@ -72,6 +82,7 @@ test(
         "2",
         "--stylesheet-share",
         "0.34",
+        "--tracked-output",
       ],
       { cwd: repository, timeout: 120000 },
     );

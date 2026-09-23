@@ -31,10 +31,7 @@ export function configuredServedReview(
   return {
     base,
     repository,
-    selected: new RepositorySelectedReview(
-      config,
-      "current" in git ? undefined : git.reader,
-    ),
+    selected: new RepositorySelectedReview(config, () => repository().reader),
     pagePreview: {
       generate: (source, selection, signal) =>
         new RepositoryRemovedPagePreview(config, repository().reader).generate(
@@ -49,7 +46,6 @@ export function configuredServedReview(
         base,
         config.review.outDir,
         repository(),
-        undefined,
         options.changedPathExclusions,
       );
     },

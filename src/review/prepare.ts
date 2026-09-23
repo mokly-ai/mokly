@@ -20,11 +20,19 @@ import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
+import {
+  FORMER_MANIFEST_NAME,
+  LEGACY_MANIFEST_NAME,
+  MANIFEST_NAME,
+  parseHistoricalManifest,
+} from "../registry/manifest.js";
 
+import { CommittedBaselineReader } from "./committed.js";
 import type { GitCommandRunner } from "./git.js";
 import { GitRepositoryEvidence } from "./git_evidence.js";
 import {
   readOnlyRepositoryForCommit,
+  type BaselineSelection,
   type ReadOnlyReviewRepository,
 } from "./repository.js";
 
@@ -45,6 +53,7 @@ export interface PreparedReviewRepository extends ReadOnlyReviewRepository {
   readonly [preparedRepository]: true;
   readonly marker: CompletionMarker | undefined;
   readonly commit: string;
+  readonly selection: BaselineSelection;
   /** Validate retained cache identity again before installing an export. */
   assertUnchanged(): Promise<void>;
 }
@@ -69,10 +78,7 @@ export async function prepareReviewRepository(
       return options.commit ?? (await evidence.mergeBase(base, "HEAD"));
     });
   } catch (error) {
-    if (
-      config.generatedOutput !== "derived" ||
-      (error instanceof MoklyError && error.code === "config-invalid")
-    )
+    if (error instanceof MoklyError && error.code === "config-invalid")
       throw error;
     assertBaselineActive(options.signal);
     throw new BaselineError(
@@ -88,17 +94,49 @@ export async function prepareReviewRepository(
   );
   const filesystem =
     options.filesystem ?? new NodeBaselineFileSystem(maintenance);
+  const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
+  const blobReader = new CommittedBaselineReader(runner);
+  let selection: BaselineSelection = "rebuild";
+  for (const filename of [
+    MANIFEST_NAME,
+    FORMER_MANIFEST_NAME,
+    ...(config.compatibility.readManifestV2 ? [LEGACY_MANIFEST_NAME] : []),
+  ]) {
+    const candidate = prefix ? `${prefix}/${filename}` : filename;
+    const kind = await blobReader.fileKind(commit, candidate);
+    if (kind === "missing") continue;
+    if (kind !== "regular")
+      throw new MoklyError(
+        "manifest-invalid",
+        `historical manifest is not a regular file: ${candidate}`,
+      );
+    try {
+      parseHistoricalManifest(
+        JSON.parse(await blobReader.readFile(commit, candidate)),
+        filename === LEGACY_MANIFEST_NAME,
+      );
+    } catch (error) {
+      if (error instanceof MoklyError) throw error;
+      throw new MoklyError(
+        "manifest-invalid",
+        `invalid historical manifest: ${candidate}`,
+        { cause: error },
+      );
+    }
+    selection = "blobs";
+    break;
+  }
   const request = {
     repoRoot: config.repoRoot,
     commit,
-    mockupsPath: toPosixPath(path.relative(config.repoRoot, config.mockupsDir)),
+    mockupsPath: prefix,
     commands: config.review.baselineBuild ?? [],
     allowManifestV2: config.compatibility.readManifestV2,
     ...(options.signal ? { signal: options.signal } : {}),
     ...(options.onProgress ? { onProgress: options.onProgress } : {}),
   };
   const rebuilt =
-    config.generatedOutput === "derived"
+    selection === "rebuild"
       ? await (
           options.builder ??
           new CachedBaselineBuilder(
@@ -112,11 +150,13 @@ export async function prepareReviewRepository(
       : undefined;
   return {
     commit,
+    selection,
     [preparedRepository]: true,
     marker: rebuilt?.marker,
     ...readOnlyRepositoryForCommit(
       config,
       commit,
+      selection,
       runner,
       options.signal,
       filesystem,

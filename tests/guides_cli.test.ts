@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
+import { parseArguments } from "../dist/cli/arguments.js";
+
 import { repositoryRoot } from "./helpers/fixture.js";
 import { GUIDES } from "./helpers/guides.js";
 
@@ -110,6 +112,22 @@ test("documented and parsed public options agree with CLI help", () => {
     for (const [id, source] of sources)
       assert.ok(!source.includes(option), `${id} names hidden ${option}`);
   }
+});
+
+test("watching and writing flags apply only to their documented commands", () => {
+  assert.equal(parseArguments(["build", "--watch"]).watch, true);
+  assert.equal(parseArguments(["serve", "--build"]).build, true);
+  for (const command of ["check", "export", "publish"])
+    for (const option of ["--watch", "--no-watch", "--build"])
+      assert.throws(() => parseArguments([command, option]), {
+        code: "cli-invalid",
+      });
+  assert.throws(() => parseArguments(["build", "--build"]), {
+    code: "cli-invalid",
+  });
+  assert.throws(() => parseArguments(["build", "--no-watch"]), {
+    code: "cli-invalid",
+  });
 });
 
 test("exit status and every public error category are documented", () => {

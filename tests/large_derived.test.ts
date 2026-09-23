@@ -17,11 +17,10 @@ test("the derived large fixture archives install/build inputs and ignores only g
   const fixture = await generateLargeFixture(
     root,
     { areas: 1, screens: 2, rows: 1 },
-    "derived",
+    false,
   );
   const config = await loadConfig(root);
-  assert.equal(fixture.generatedOutput, "derived");
-  assert.equal(config.generatedOutput, "derived");
+  assert.equal(fixture.trackedOutput, false);
   assert.deepEqual(config.review.baselineBuild, [
     ["npm", "ci"],
     ["npx", "--no-install", "mokly", "build", "--config", "mokly.config.ts"],

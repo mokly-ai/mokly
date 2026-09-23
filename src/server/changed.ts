@@ -8,7 +8,6 @@ import {
   removedManifestEntries,
   type CatalogueChangeSnapshot,
 } from "../registry/changes.js";
-import { readManifest } from "../registry/manifest.js";
 import type { ReadOnlyReviewRepository } from "../review/repository.js";
 
 import {
@@ -42,12 +41,10 @@ export async function computeCatalogueChanges(
   base: string,
   git: ReadOnlyReviewRepository,
   manifest?: ManifestV5,
+  headOutputs?: ReadonlyMap<string, string>,
 ): Promise<ResolvedCatalogueChanges> {
-  const compilation =
-    config.generatedOutput === "derived" && !manifest
-      ? await compileCatalogue(config)
-      : undefined;
-  manifest ??= compilation?.manifest ?? readManifest(config);
+  const compilation = manifest ? undefined : await compileCatalogue(config);
+  manifest ??= compilation!.manifest;
   const commit = await git.evidence.mergeBase(base, "HEAD");
   const componentChanges = await readCatalogueChanges(
     config,
@@ -55,7 +52,7 @@ export async function computeCatalogueChanges(
     base,
     git,
     commit,
-    compilation?.outputs,
+    headOutputs ?? compilation?.outputs,
   );
   const { baseline, changedRoutes } = componentChanges;
   const removedEntries = removedManifestEntries(manifest, baseline);

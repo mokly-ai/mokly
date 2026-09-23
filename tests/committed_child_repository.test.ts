@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { runServerChild } from "../dist/server/child.js";
+import { childUpdateMessage } from "../dist/server/update_messages.js";
 
 import { nestedRepository } from "./helpers/nested_repository.js";
 
@@ -32,6 +33,20 @@ test("committed child rejects a nested repoRoot on the unselected comparison rou
   void running.catch(rejectReady);
   try {
     const port = await ready;
+    const commit = "a".repeat(40);
+    process.emit(
+      "message",
+      childUpdateMessage(
+        2,
+        undefined,
+        undefined,
+        "pending",
+        "evidence",
+        commit,
+        "blobs",
+      ),
+      undefined,
+    );
     const response = await fetch(
       `http://127.0.0.1:${port}/__mokly/diffs/review.json`,
     );

@@ -135,9 +135,10 @@ changes. Disabled highlighting explains its specific reason, and outline labels
 use separate rounded chips with a gap above the highlighted region.
 
 Open `design/components/overview.html` in Browse, or open
-`.generated/design/components/overview.desktop.html` and
-`.generated/design/components/overview.mobile.html`
+`generated/design/components/overview.desktop.html` and
+`generated/design/components/overview.mobile.html`
 directly from disk after `npm run build && npm run example:build`.
+Milestone 3 moves these documents to `.generated/`.
 The catalogue hierarchy links all owning design pages;
 there is no navigation footer inside an artboard. Product links connect
 component pages, variants, and consuming screens. The `controls` collection
@@ -229,11 +230,15 @@ npm run example:check
 npm run preview:build
 ```
 
-This example uses `mockupsDir: "."`. Generated HTML and the schema-v6
-manifest under `.generated/` are ignored local artifacts, absent in a fresh clone.
-`example:build` replaces only that directory transactionally; `example:check`
-validates the current compilation without requiring output on disk. Tracked
-output checks and historical manifest compatibility use isolated fixtures.
+After Milestone 3 this example uses `mockupsDir: "."`. Until then it uses
+`mockupsDir: "generated"`: generated HTML and its v5 manifest share that
+directory with tracked authored stylesheets, while the generated files are
+ignored local artifacts. In the target layout the schema-v6 manifest and HTML
+under `.generated/` are ignored local artifacts, absent in a fresh clone.
+For now, `example:build` updates only Mokly-owned output inside the flat
+directory; in Milestone 3 it replaces `.generated/` transactionally.
+`example:check` validates the current compilation without requiring output on
+disk. Tracked output checks and historical manifest compatibility use isolated fixtures.
 Both `npm test` and `npm run test:browser` build the example before tests read its
 generated files. Baseline fixtures copy authored inputs and use the normal cached
 rebuild through the historical commit's own package source and lockfile. The

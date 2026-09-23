@@ -75,7 +75,6 @@ test(
     await fs.writeFile(
       fixture.configPath,
       `export default {
-  generatedOutput: "committed",
   entries: ["**/*.mockup.{ts,tsx}"],
   mockupsDir: "mockups",
   repoRoot: ".",

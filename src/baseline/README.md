@@ -63,9 +63,12 @@ Content invalidation cancels the classification wait without cancelling the
 commit's build. Ref changes reuse preparation when the merge base is unchanged;
 a changed commit or build settings and shutdown cancel and drain it.
 
-`cache_layout.ts` owns `.mokly-cache/baselines/<commit>`. The builder extracts
-to `source`, runs commands, validates the historical manifest and output tree,
-moves only `.generated/` and copies the manifest's authored asset closure to
+`cache_layout.ts` owns `.mokly-cache/baselines/<commit>`. In Milestone 2 the
+builder harvests the existing single-directory output after running commands;
+the parent chooses blob reads only for commits containing a valid historical
+manifest, otherwise it rebuilds. Milestone 3 changes the builder to extract
+to `source`, run commands, validate the historical manifest and output tree,
+move only `.generated/` and copy the manifest's authored asset closure to
 their repository-relative paths under `output/`; pre-v6 single-directory
 baselines move the whole historical catalogue. Readers resolve
 repository-relative paths beneath `output/` for v6 or strip the discovered

@@ -12,7 +12,6 @@ import type {
   ViewReview,
 } from "@mokly/viewer/data";
 
-import { ConfiguredGitCommandRunner } from "../config/git.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
@@ -23,7 +22,7 @@ import { ComponentMaterialReader } from "./component_resources.js";
 import { SelectedAssetReader } from "./evidence_assets.js";
 import type { BaselineReader } from "./git.js";
 import { CompiledReviewAssetReader } from "./head_assets.js";
-import { baselineReaderForCommit } from "./repository.js";
+import { comparisonNotPrepared } from "./repository.js";
 import { ResourceComparison } from "./resource_comparison.js";
 import { compareScreen } from "./screen_compare.js";
 import { aggregateIgnored, fragmentRoutes } from "./screen_views.js";
@@ -40,7 +39,7 @@ import type {
 export class RepositorySelectedReview implements SelectedReviewProvider {
   constructor(
     private readonly config: ResolvedConfig,
-    private readonly git?: BaselineReader,
+    private readonly git?: BaselineReader | (() => BaselineReader),
   ) {}
 
   async generate(
@@ -48,19 +47,13 @@ export class RepositorySelectedReview implements SelectedReviewProvider {
     selection: ReviewSelection,
     signal: AbortSignal,
   ): Promise<ReviewArtifact> {
-    if (this.config.generatedOutput === "derived" && !source.headOutputs)
+    if (!source.headOutputs)
       throw new MoklyError(
         "review-invalid",
         "Compiled comparison input is unavailable",
       );
-    const git =
-      this.git ??
-      baselineReaderForCommit(
-        this.config,
-        source.baseCommit,
-        new ConfiguredGitCommandRunner(this.config, signal),
-        signal,
-      );
+    if (!this.git) throw comparisonNotPrepared();
+    const git = typeof this.git === "function" ? this.git() : this.git;
     const before = new SelectedAssetReader(
       new GitReviewAssetReader(
         baselineResourceConfig(this.config, source.before),

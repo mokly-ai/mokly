@@ -15,9 +15,7 @@ export function renderServeReady(
   glyphs: TerminalGlyphs,
   line: (value: string) => void,
 ): void {
-  line(
-    `  mokly ${report.version}  ${report.generatedOutput} · comparing against ${report.base}`,
-  );
+  line(`  mokly ${report.version}  comparing against ${report.base}`);
   line(`  ${report.configPath}`);
   line("");
   const width = terminalWidth(environment.stdout, environment.env);

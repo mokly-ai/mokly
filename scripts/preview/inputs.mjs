@@ -1,15 +1,19 @@
 import crypto from "node:crypto";
 import path from "node:path";
 
+import { isOwned } from "../../dist/build/ownership.js";
 import {
   publicationFiles,
   publicationInput,
   readPublicationFile,
 } from "../../dist/publication/files.js";
-import { MANIFEST_NAME, parseManifest } from "../../dist/registry/manifest.js";
 
 /** Capture metadata and its exact input digest together, including private helpers. */
-export async function capturePublicationInputs(config, excludedRoots) {
+export async function capturePublicationInputs(
+  config,
+  excludedRoots,
+  compilation,
+) {
   const files = new Map();
   for (const [root, publicRoot] of [
     [config.repoRoot, false],
@@ -21,12 +25,18 @@ export async function capturePublicationInputs(config, excludedRoots) {
       excludedRoots,
       publicRoot,
     ))
-      files.set(file.path, file);
-  const manifestFile = path.join(config.mockupsDir, MANIFEST_NAME);
-  const input = await publicationInput(manifestFile, config.repoRoot);
-  const manifestBytes = await readPublicationFile(input, config.repoRoot);
-  const manifest = parseManifest(JSON.parse(manifestBytes.toString("utf8")));
-  files.set(manifestFile, input);
+      if (
+        !compilation.outputs.has(
+          path.relative(config.mockupsDir, file.path).split(path.sep).join("/"),
+        ) &&
+        !(
+          file.kind === "file" &&
+          file.link === undefined &&
+          isOwned(file.path, config)
+        )
+      )
+        files.set(file.path, file);
+  const manifest = compilation.manifest;
   for (const source of [
     ...manifest.sourceFiles,
     ...(config.configSourceFiles ?? []),
@@ -48,12 +58,13 @@ export async function capturePublicationInputs(config, excludedRoots) {
     if (file.link !== undefined) hash.update(file.link);
     hash.update("\0");
     if (file.kind === "file")
-      hash.update(
-        name === manifestFile
-          ? manifestBytes
-          : await readPublicationFile(file, config.repoRoot),
-      );
+      hash.update(await readPublicationFile(file, config.repoRoot));
     hash.update("\0");
+  }
+  for (const [route, content] of [...compilation.outputs].sort(
+    ([left], [right]) => left.localeCompare(right),
+  )) {
+    hash.update(`generated/${route}\0${content}\0`);
   }
   return { fingerprint: hash.digest("hex"), manifest };
 }

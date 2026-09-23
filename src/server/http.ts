@@ -208,6 +208,7 @@ export async function startCatalogueServer(
       options.liveChanges === false ? undefined : changesStatus,
       contentVersion,
       publicCatalogue,
+      options.generatedOutputs,
     ).catch(() => {
       if (!response.destroyed && !response.headersSent)
         send(

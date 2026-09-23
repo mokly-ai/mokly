@@ -1,7 +1,7 @@
 # Catalogue Compilation
 
 This internal module loads consumer definitions, renders every configured view,
-validates the complete catalogue and produces deterministic HTML and manifest v6.
+validates the complete catalogue and produces deterministic HTML and a manifest.
 The supported external interface is `mokly build` and `mokly check`; Serve,
 export and local prop controls reuse the same consumer graph and validators.
 
@@ -70,10 +70,11 @@ the public authoring API, including `resolveInstance`. Every repository-owned
 importer of `@mokly/mokly` receives the attributed facade; installed packages
 under `node_modules` and Mokly's own runtime receive the plain API. Registry
 validation accepts an attributed definition source only when it is a resolved
-entry module or an inventoried source file. Build replaces the entire
-`<mockupsDir>/.generated/` tree without owner headers or orphan scans. Check
-uses the Git index to decide whether to compare the tree and reports missing,
-stale or extra files when fully tracked.
+entry module or an inventoried source file. In Milestone 2, Build writes the
+existing single `mockupsDir` layout (manifest v5) and retains transactional
+ownership checks. Check uses the Git index to compare compiled routes only
+when tracked. Milestones 3 and 4 introduce the dedicated `.generated/` tree,
+manifest v6, and removal of the ownership machinery.
 Export and Review boundaries continue to use directories that hold resolved
 entry modules. Source locations do not enter instance keys, props keys, slot
 identities, or Changes projections.
@@ -88,11 +89,13 @@ npm run example:check
 cargo xtask check
 ```
 
-The example ignores `examples/basic/.generated/`; authored CSS remains tracked
-alongside it. Baseline selection checks each commit independently and reads
-complete Git blobs or rebuilds a missing/incomplete tree. Export and plain
-Serve compile in memory and never write that tree; `build --watch` and
-`serve --build` write only after successful complete compilations.
+The example ignores generated HTML and the manifest under
+`examples/basic/generated/`; authored CSS in that directory remains tracked.
+Milestone 2 selects Git blobs when the historical commit contains a valid
+manifest, and rebuilds otherwise. Manifest inventory checks and the dedicated
+`.generated/` tree arrive in Milestone 3. Export and plain Serve compile in
+memory without writing local output; `build --watch` and `serve --build` write
+only after successful complete compilations.
 
 - `compile.ts`, `render.ts`, `document_compiler.ts`: exhaustive and requested-view
   compilation using the same validation boundary.

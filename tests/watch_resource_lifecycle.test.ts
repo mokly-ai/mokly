@@ -5,7 +5,6 @@ import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { ResourceWatcher } from "../dist/server/resource_watcher.js";
-import { prepareWatchedOutput } from "../dist/server/serve_lifecycle.js";
 import { classifyWatchPath } from "../dist/server/watch_events.js";
 
 import {
@@ -39,7 +38,7 @@ test("unmatched stylesheet rules do not require unused resource files", async (c
   assert.ok(!resources.paths.has(path.join(config.mockupsDir, "missing.css")));
 });
 
-test("failed output discards resource candidates and successful adoption removes old inputs", async (context) => {
+test("discarded resource candidates preserve old inputs until adoption", async (context) => {
   const fixture = await resourceFixture(context);
   const factory = new ResourceWatcherFactory();
   const changes: string[] = [];
@@ -73,23 +72,13 @@ test("failed output discards resource candidates and successful adoption removes
     path.join(fixture.mockupsDir, "nested.css"),
     'main { background: url("b.svg"); }',
   );
-  const failure = new Error("candidate write failed");
-  await assert.rejects(
-    prepareWatchedOutput(
-      fixture.config,
-      fixture.compilation,
-      resources,
-      {
-        check: () => undefined,
-        write: async () => {
-          throw failure;
-        },
-      },
-      noShutdown,
-      () => false,
-    ),
-    (error) => error === failure,
+  const discarded = await resources.prepare(
+    fixture.config,
+    fixture.compilation,
+    noShutdown,
   );
+  assert.ok(discarded);
+  await discarded.close();
   assert.equal(factory.watchers[1]?.closeCount, 1);
   assert.equal(oldWatcher.closeCount, 0);
   assert.ok(resources.paths.has(old));

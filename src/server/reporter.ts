@@ -8,7 +8,6 @@ import type { RuntimeWatchAction } from "./watch_events.js";
 export interface ServeReadyReport {
   readonly base: string;
   readonly configPath: string;
-  readonly generatedOutput: "committed" | "derived";
   readonly url: string;
   readonly version: string;
   readonly watch: boolean;
@@ -24,6 +23,7 @@ export interface WatchReport {
 
 /** Presentation boundary for Serve lifecycle, watch, and runtime diagnostics. */
 export interface ServeReporter {
+  outputWritten?(count: number, directory: string, durationMs: number): void;
   baselinePreparing(base: string): void;
   baselineReady(commit: string, cacheHit: boolean, durationMs: number): void;
   catalogueReady(manifest: ManifestV5, durationMs: number): void;

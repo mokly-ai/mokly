@@ -51,6 +51,14 @@ export class RichReporter implements CliReporter {
     );
   }
 
+  outputWritten(count: number, directory: string, durationMs: number): void {
+    this.summary(
+      `Generated ${count} Mokly files.\n`,
+      `Generated ${count} files in ${directory}`,
+      durationMs,
+    );
+  }
+
   close(): void {
     this.#servePhase = undefined;
     this.clearPhase();

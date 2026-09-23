@@ -16,7 +16,7 @@ test("committed check separates orphan and unclaimed generated files", async (co
   context.after(() => removeFixture(fixture));
   await fs.promises.writeFile(
     fixture.configPath,
-    'export default { entries: ["**/*.mockup.{ts,tsx}"], generatedOutput: "committed", mockupsDir: "mockups", repoRoot: "." };\n',
+    'export default { entries: ["**/*.mockup.{ts,tsx}"], mockupsDir: "mockups", repoRoot: "." };\n',
   );
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);

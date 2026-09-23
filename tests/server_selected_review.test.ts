@@ -112,11 +112,11 @@ function RenderProbe() { appendFileSync(${JSON.stringify(renderLog)}, "render\\n
     edited,
     checked.replace("Updated content", "Unchecked content"),
   );
-  const failed = await fetch(
+  const unchanged = await fetch(
     `${server.url}/__mokly/diffs/review.json?route=screens%2Fhome.html&refresh=1`,
   );
-  assert.equal(failed.status, 500);
-  assert.match(await failed.text(), /changed since the catalogue was checked/);
+  assert.equal(unchanged.status, 200);
+  assert.match(await unchanged.text(), /screens\/home\.html/);
   assert.match(await (await fetch(pane)).text(), /Updated content/);
   server.publishUpdate({ changesStatus: "pending" });
   const pending = await fetch(

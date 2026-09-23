@@ -120,24 +120,30 @@ Replace the example `<main>` nodes with your product components, then list their
 source files or directories in `dependencies`. An entry file ends in
 `.mockup.ts` or `.mockup.tsx` and exports a `mockups` array.
 
-To keep generated output local, ignore its dedicated directory and cache:
+The target layout keeps generated output local by ignoring its dedicated
+directory and cache:
 
 ```gitignore
 .mokly-cache/
 /docs/mockups/.generated/
 ```
 
-`build` writes only under `docs/mockups/.generated/`; referenced authored
-assets stay under `docs/mockups/` and are served and exported in place. If you
-prefer committed output, commit every file in `.generated/` instead of ignoring
-it. `check` compares the entire tree only when Git indexes it; an incomplete
-index fails with both remedies. Comparison baselines use complete Git blobs or
-rebuild the historical commit independently of today's tracking policy.
+The planned layout writes only under `docs/mockups/.generated/`; referenced authored
+assets stay under `docs/mockups/` and are served and exported in place. Until
+Milestone 3, `build` writes into the single `mockupsDir` instead, so the
+`.generated/` ignore alone does not cover its output: ignore generated HTML
+routes and `mokly-manifest.json` there, keeping any authored HTML tracked. If
+you prefer committed output, commit every generated file instead. In Milestone 2,
+`check` compares compiled routes only when all are indexed; a partial index
+fails with both remedies. Comparison baselines read blobs if the base commit
+contains a valid manifest and rebuild otherwise; v6 inventory checking follows
+in Milestone 3.
 Build and Serve do not inspect head tracking: a new route builds successfully,
 and `check` then lists it under `untracked:` until staged. Only `check` rejects
 an indexed `.mokly-cache/` path.
-Current output requires manifest v6 (closure and blob-hash inventory); older
-formats are readable only as historical baselines.
+Milestone 2 still writes manifest v5 into the single `mockupsDir` directory;
+the `.generated/` layout and v6 closure and blob-hash inventory arrive in
+Milestone 3. Older formats remain readable as historical baselines.
 
 ### 4. Open the catalogue
 

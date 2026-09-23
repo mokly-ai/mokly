@@ -117,6 +117,7 @@ test("baseline handoffs preserve pinned commits and explicit revocation", () => 
       "pending",
       "evidence",
       commit,
+      commit === null ? undefined : "blobs",
     );
     assert.equal(message.baselineCommit, commit);
     assert.deepEqual(parseChildUpdateMessage(message), message);

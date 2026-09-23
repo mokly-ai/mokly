@@ -63,10 +63,7 @@ export async function assertInputsUnchanged(
   const freshConfig = await loadConfig(config.repoRoot, config.configPath);
   const fresh = await compileCatalogue(freshConfig);
   freshConfig.sourceFiles = fresh.manifest.sourceFiles;
-  const publicNow = await capturePublicFiles(
-    freshConfig,
-    freshConfig.generatedOutput === "derived" ? fresh.outputs : undefined,
-  );
+  const publicNow = await capturePublicFiles(freshConfig, fresh.outputs);
   const changedNow = prepared
     ? await reviewChangedPaths(
         prepared.evidence,

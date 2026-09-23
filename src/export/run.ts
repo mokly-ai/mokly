@@ -1,7 +1,6 @@
 import type { ReviewArtifact } from "@mokly/viewer/data";
 
 import { compileCatalogue } from "../build/compile.js";
-import { writeCompilation } from "../build/transaction.js";
 import { projectRealPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError, errorMessage } from "../errors.js";
@@ -70,11 +69,7 @@ async function generateExport(
     const compilation = await compileCatalogue(config);
     config = { ...config, sourceFiles: compilation.manifest.sourceFiles };
     assertExportActive(options.signal);
-    await writeCompilation(compilation, config);
-    const publicFiles = await capturePublicFiles(
-      config,
-      config.generatedOutput === "derived" ? compilation.outputs : undefined,
-    );
+    const publicFiles = await capturePublicFiles(config, compilation.outputs);
     const assetReader = capturedAssetReader(publicFiles, config);
     const exclusions = [output, transaction.reservationRoot];
     const changed = prepared

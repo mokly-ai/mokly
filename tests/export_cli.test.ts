@@ -86,6 +86,7 @@ test("discovered nested invocations build before exporting and honor configured 
   );
   assert.match(html, /Published home/);
   assert.match(html, /data-mokly-base="release"/);
+  await execute(process.execPath, [cli, "build"], { cwd: fixture.root });
   await execute(process.execPath, [cli, "check"], { cwd: fixture.root });
   await execute(
     process.execPath,

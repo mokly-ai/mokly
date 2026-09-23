@@ -23,7 +23,6 @@ import { repositoryRoot } from "./helpers/fixture.js";
 
 const sourceRelativePath = "tests/variant_validation.test.ts";
 const config: ResolvedConfig = {
-  generatedOutput: "committed",
   publicExclude: DEFAULT_PUBLIC_EXCLUDE,
   colorSchemes: ["light"],
   compatibility: { readManifestV2: false },

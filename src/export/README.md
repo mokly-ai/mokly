@@ -10,8 +10,9 @@ independent `BaselineReader`, compiles in memory without writing the catalogue,
 captures the referenced closure,
 compares them through the existing review engine, and verifies inputs again
 before installation. `site.ts` uses the existing shell and Browse adapter to
-assemble exact v6 pages under `.generated/`, referenced authored assets at
-catalogue-relative paths, real id aliases, package assets, and immutable comparisons.
+assemble real id aliases, package assets, and immutable comparisons. In Milestone 2
+static documents still use the flat layout; Milestone 3 moves v6 documents under
+`.generated/` and places referenced authored assets at catalogue-relative paths.
 Publish's `--no-changes` uses this same engine with baseline reads, removed
 entries and comparisons omitted. Current-only assembly retains the normal
 input consistency checks and a null delivery comparison URL. A capture callback
@@ -121,7 +122,7 @@ directory prefixes and the final ownership marker. Reference validation also
 proves local resource closure. `ignored.ts` keeps owned
 outputs and transactions out of broad Watch rules. The repository-only preview
 adapter supplies validated host aliases and legacy ownership explicitly. It
-captures already-built Browse output, retaining optional Changes and its
+captures an in-memory compilation, retaining optional Changes and its
 source/resource fingerprint contract. Its capture server disables live Changes
 states: ordinary publications omit the tabs, while opt-in Changes publications
 render their completed counts without a pending or unavailable state.
@@ -135,15 +136,17 @@ owned `.mokly-export-reservations` namespace, retaining only its metadata
 after cleanup. Case and symlink aliases cannot bypass an active lock. Legacy
 hashed reservations require explicit recovery before another export.
 `resource_policy.ts` applies the same package/source boundary to current and
-historical copies. Current export captures only the compiled `.generated/`
-documents and manifest v6 `assetClosure`; reference validation, Review and
-public content-change classification use the same confined closure. No
-directory-based public scan or consumer exclusion globs decide publication.
-Manifest/cache privacy is unconditional, and protected closure references
-fail with their referring route. Unreferenced HTTP paths return 404.
-Build and export share HTML anchor validation through
-`html_link_validation.ts`. Watch ignores `.generated/` by prefix while
-observing referenced authored assets in place.
+historical copies. Milestone 2 captures compiled documents under the flat
+layout while retaining the legacy public-file walk and configured exclusions.
+Milestone 3 captures only compiled `.generated/` documents and the manifest v6
+`assetClosure`; reference validation, Review and public content-change
+classification then use the same confined closure. Directory-based public
+scans and consumer exclusion globs no longer decide publication. Manifest/cache
+privacy is unconditional, and protected closure references fail with their
+referring route. Unreferenced HTTP paths return 404. Build and export share
+HTML anchor validation through `html_link_validation.ts`. After the migration,
+Watch ignores `.generated/` by prefix while observing referenced authored
+assets in place.
 
 `backup.ts` revalidates captured output and centralizes safe restoration and
 allowlisted, non-recursive cleanup. `operations.ts` is the injectable filesystem

@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import type { BaselineBuilder } from "../baseline/types.js";
 import { prepareLiveRuntime } from "../build/live_runtime.js";
 import {
@@ -32,6 +34,7 @@ import {
 /** Public Serve options after CLI validation. */
 export interface ServeOptions {
   base?: string;
+  build?: boolean;
   port: number;
   watch: boolean;
 }
@@ -47,7 +50,7 @@ export interface RunningServe {
 
 /** Injectable runtime collaborators for Serve orchestration. */
 export interface ServeDependencies {
-  /** Derived-mode rebuilds; Serve constructs the Node builder when absent. */
+  /** Historical rebuilds; Serve constructs the Node builder when absent. */
   baselineBuilder?: BaselineBuilder;
   changeClassifier?: CatalogueChangeClassifier;
   configLoader: ConfigLoader;
@@ -110,11 +113,15 @@ export async function serve(
         });
       },
       {
-        baselinePrepared: (commit) => {
-          repository.accept(commit);
+        baselinePrepared: (prepared) => {
+          repository.accept(
+            prepared?.commit ?? null,
+            undefined,
+            prepared?.selection,
+          );
           server.publishUpdate({
             kind: "evidence",
-            ...(commit === null ? { changesStatus: "pending" } : {}),
+            ...(prepared === null ? { changesStatus: "pending" } : {}),
           });
         },
         baselineStatus: (changesStatus) =>
@@ -132,6 +139,13 @@ export async function serve(
             );
         },
         diagnostic: (error) => reporter.runtimeDiagnostic(error),
+        writeOutput: options.build ?? false,
+        outputWritten: (compilation, duration) =>
+          reporter.outputWritten?.(
+            compilation.outputs.size,
+            path.relative(config.repoRoot, config.mockupsDir),
+            duration,
+          ),
         ...(dependencies.baselineBuilder
           ? { builder: dependencies.baselineBuilder }
           : {}),
