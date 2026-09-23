@@ -2,191 +2,128 @@
 
 ## Summary
 
-In the default `generatedOutput: "derived"` mode, Mokly still writes the
-current tree's generated routes and `mokly-manifest.json` into `mockupsDir` on
-every `build`, on Serve's background completion, and before every export. In
-derived mode nothing reads those files back: `check` ignores them, Serve
-renders on demand, and comparisons and exports take the head side from the
-in-memory compilation. The write is a leftover from committed mode. It also
-causes the stale-file ownership collisions users hit after moving entries.
+In the default `generatedOutput: "derived"` mode, Serve's background
+completion, watched Serve's candidate output, and every export write the
+current tree's generated routes and `mokly-manifest.json` into `mockupsDir` as
+a side effect. Nothing reads those files back in derived mode: `check` ignores
+them, Serve renders on demand, and comparisons and exports take the head side
+from the in-memory compilation. The writes are a leftover from committed mode,
+where the working-tree copy must stay current. They also cause the stale-file
+ownership collisions users hit after moving entries, because a background
+write refuses to replace a generated file whose recorded source no longer
+exists.
 
-This plan makes derived mode keep generated output in memory. `build` refuses
-to run in derived mode unless output is explicitly requested, Serve and export
-stop writing, and the historical baseline rebuild keeps working through an
-explicit environment variable that the baseline builder forces. Committed mode
-is unchanged.
+This plan makes Serve and export keep generated output in memory in derived
+mode. `mokly build` is unchanged in both modes: a user who runs it is asking
+for files, and the baseline builder relies on the historical commit's own
+`build` to harvest `<source>/<mockupsDir>`. Committed mode is unchanged.
 
 Motivation recorded by the user: derived mode should not create files the
-user did not ask for. The only load-bearing consumer of the write is the
-baseline rebuild, which harvests `<source>/<mockupsDir>` from the extracted
-merge-base commit; that path keeps an explicit opt-in.
+user did not ask for. An explicit `build` is the user asking; Serve and export
+are not.
 
 Decisions:
 
-- `mokly build` in derived mode fails with a typed `cli-invalid` error that
-  points to `mokly check`, `mokly` (Serve), and `mokly export`. It does not
-  silently validate, and it does not gain a new output flag.
-- The opt-in is the environment variable `MOKLY_WRITE_DERIVED_OUTPUT`. The
-  value `1` makes `build` write `mockupsDir` transactionally exactly as
-  committed mode does. Unset or empty means in-memory. Any other value is
-  `cli-invalid`. Serve, export, and publication ignore the variable.
-- The baseline builder forces `MOKLY_WRITE_DERIVED_OUTPUT=1` into the
-  historical command environment beside `CI=1` and `MOKLY_BASELINE_COMMIT`.
-  An environment variable, not a CLI flag, because the builder runs the
-  historical commit's own Mokly: older versions ignore the variable and write
-  as they always did, so existing merge bases keep rebuilding without changes
-  to `review.baselineBuild`.
-- Known limitation, acceptable because the project is not in production: a
-  running Mokly older than this change cannot rebuild a merge-base commit whose
-  Mokly includes this change, because that historical `build` refuses without
-  the variable. Downgrading across this change is unsupported.
-- This repository's verification suite and preview scripts read the example's
-  generated HTML and manifest from `examples/basic/generated/`. They keep
-  working by opting in explicitly through a cross-platform wrapper script for
-  `npm run example:build`. Moving those tests to in-memory compilation is a
-  separate follow-up.
+- `build` keeps its transactional write in both modes. In derived mode the
+  result is a local snapshot for the user; it stays untracked, `check` keeps
+  enforcing that, and no Mokly command reads it back.
+- Serve (watched and `--no-watch`) and export, including publication, never
+  write generated routes or the manifest into `mockupsDir` in derived mode.
+  In committed mode they keep writing so the working-tree copy stays current.
+- No new flag, environment variable, or config option. The baseline builder
+  and `review.baselineBuild` are unchanged.
+- Leftover generated files from earlier versions are harmless and are not
+  deleted automatically; the docs say they may be removed.
 - Backend and documentation only. No mockup or UI work.
 
 Protocol owner:
 [derived baselines](../docs/protocol/mokly-derived-baselines.md). Related
-contracts: [baseline storage](../docs/protocol/mokly-baseline-storage.md),
-[runtime](../docs/protocol/mokly-runtime.md),
-[on-demand](../docs/protocol/mokly-on-demand.md),
+contracts: [on-demand](../docs/protocol/mokly-on-demand.md),
 [export](../docs/protocol/mokly-export.md),
+[runtime](../docs/protocol/mokly-runtime.md),
 [terminal output](../docs/protocol/mokly-terminal-output.md).
 
 ## Milestone 1: Define the in-memory output contract
 
 Documentation only. Every later milestone implements this contract.
 
-- [ ] `docs/protocol/mokly-derived-baselines.md`: state in Purpose that derived
-      mode never writes generated routes or the manifest into `mockupsDir`;
-      update the Command Behavior table (`build` refuses without
-      `MOKLY_WRITE_DERIVED_OUTPUT=1`; `serve`, `export`, and publication retain
-      output in memory); define the variable's accepted values and error;
-      rewrite Derived check, Head side, and Serve And Watch wording that calls
-      local output a "local artifact" or says Serve "adopts complete generated
-      output"; add a migration note that leftover generated HTML and manifest
-      files may be deleted and that only `.mokly-cache/` needs an ignore rule.
-- [ ] `docs/protocol/mokly-baseline-storage.md`: Rebuild Procedure step 4 says
-      the builder forces `MOKLY_WRITE_DERIVED_OUTPUT=1` so the historical
-      `build` materializes `<source>/<mockupsDir>`; Command Environment lists
-      the variable; record the downgrade limitation.
-- [ ] `docs/protocol/mokly-runtime.md`: Source Of Truth and Build sections say
-      derived `build` writes nothing without the variable and that generated
-      documents exist only in memory for the duration of a command.
+- [ ] `docs/protocol/mokly-derived-baselines.md`: update the Command Behavior
+      table (`build` writes a local snapshot; `serve`, `export`, and
+      publication retain output in memory and write nothing under
+      `mockupsDir`); rewrite the Head side and Serve And Watch wording that says
+      Serve "adopts complete generated output exactly as in committed mode";
+      state that a derived `build` snapshot is not refreshed by Serve and may
+      go stale; add a migration note that leftover generated HTML and manifest
+      files may be deleted.
 - [ ] `docs/protocol/mokly-on-demand.md`: Background work completes the
-      generated tree in memory; the transactional output store finalizes files
-      only in committed mode or under the variable.
+      generated tree in memory in derived mode; the transactional output store
+      finalizes files only in committed mode.
 - [ ] `docs/protocol/mokly-export.md`: the transactional write of generated
       output before capture applies to committed mode only; derived capture
       reads authored public files from disk and generated bytes from memory,
-      and ignores leftover Mokly-owned HTML under `mockupsDir`.
-- [ ] `docs/protocol/mokly-terminal-output.md`: document the derived `build`
-      refusal line in both plain and rich output, in product language, and keep
-      the committed summary lines unchanged.
-- [ ] `docs/protocol/mokly-configuration.md` and
-      `docs/protocol/mokly-page-migration.md`: audit and adjust sentences that
-      describe derived `build` or local generated files.
-- [ ] Guides: `docs/guides/cli/build.md`, `docs/guides/start/build.md`,
-      `docs/guides/cli/check.md`, `docs/guides/cli/options-and-exit-status.md`
-      (`cli-invalid` also covers a command unavailable in the configured output
-      mode), `docs/guides/authoring/config.md`, and
-      `docs/guides/start/configure.md`: derived users validate with `check`,
-      browse with `mokly`, and publish with `export`; `build` is for committed
-      mode; mention the variable once as an advanced option.
-- [ ] `README.md`: quick start ignore block keeps only `.mokly-cache/`; the
-      command table row for `build` says it writes committed output; the
-      example section explains that `npm run example:build` opts in because the
-      test suite reads generated files.
-- [ ] `docs/architecture/build-pipeline.md`, `examples/basic/README.md`,
-      `src/build/README.md`, `src/baseline/README.md`, `src/export/README.md`,
-      `src/server/README.md`, and the example bullet in `AGENTS.md`: align with
-      the contract; keep the example's HTML and manifest ignore rules, because
-      the verification wrapper still materializes them.
+      tolerates an absent `mockupsDir`, and ignores leftover Mokly-owned HTML.
+- [ ] `docs/protocol/mokly-runtime.md`: Source Of Truth says derived Serve and
+      export do not write generated files; only `build` does.
+- [ ] `docs/protocol/mokly-terminal-output.md`: audit Serve phase and status
+      lines that mention writing or generating output and keep derived wording
+      truthful; `build` and `check` lines are unchanged.
+- [ ] Guides: `docs/guides/cli/build.md` (Committed and derived output section
+      says Serve and export never write in derived mode),
+      `docs/guides/start/build.md`, `docs/guides/cli/serve.md`,
+      `docs/guides/start/serve.md`, `docs/guides/cli/export.md`, and
+      `docs/guides/cli/publish.md`.
+- [ ] `README.md`, `docs/architecture/build-pipeline.md`,
+      `examples/basic/README.md`, `src/build/README.md`, `src/server/README.md`,
+      and `src/export/README.md`: align sentences that describe Serve or export
+      writing local output; the example's ignore rules and `example:build`
+      workflow stay as they are.
 - [ ] Add this plan to `plans/README.md` under Active; run
       `npm run format:check` on the changed Markdown; review the diff; commit
       and push.
 
-## Milestone 2: Build output policy and baseline builder
+## Milestone 2: Serve and export retain output in memory
 
-Backend. After this milestone derived `build` refuses without the variable,
-the builder and this repository's tooling opt in, and Serve and export are not
-yet changed.
+Backend. After this milestone no derived Serve or export writes generated
+output; `build` and committed mode are byte-identical to today.
 
-- [ ] Add a typed derived output policy (`"in-memory" | "write"`) parsed once
-      from the injected CLI environment: `MOKLY_WRITE_DERIVED_OUTPUT` unset or
-      empty is `in-memory`, `1` is `write`, anything else throws `cli-invalid`
-      naming the variable. Keep the parser a pure function with unit tests.
-- [ ] `src/build/output_store.ts`: `FileSystemGeneratedOutputStore` takes the
-      policy as a typed constructor option, default `in-memory`; `write`
-      returns without touching the filesystem in derived mode under
-      `in-memory` and writes transactionally otherwise; `check` is unchanged.
-      Document the behavior on the `GeneratedOutputStore` interface.
-- [ ] `src/cli/run.ts`: the `build` command in derived mode under `in-memory`
-      throws `cli-invalid` before compiling, with product copy: build writes
-      nothing in derived mode; run `mokly check` to validate, `mokly` to
-      browse, or `mokly export` to write a static site. Under `write` it
-      constructs the store with the policy and keeps the existing phases and
-      summary.
-- [ ] `src/cli/help.ts`: update the `build` description and the Configuration
-      block for `generatedOutput`.
-- [ ] `src/baseline/commands.ts`: `baselineEnvironment` adds
-      `MOKLY_WRITE_DERIVED_OUTPUT: "1"`; update `tests/baseline_rebuild.test.ts`
-      and `tests/baseline_archive.test.ts` environment expectations.
-- [ ] Repository tooling: add a Node wrapper (for example
-      `scripts/verification/example-build.mjs`) that sets the variable and runs
-      the example build, so it works on Windows too; point `example:build` at
-      it; audit `scripts/large/setup.mjs` and any test helper that spawns
-      `mokly build` against a derived fixture and make them opt in or compile
-      in process.
-- [ ] Tests: derived `build` refusal message and exit status in
-      `tests/cli_errors.test.ts`; `write` policy writes byte-identical output
-      to committed mode; `in-memory` leaves an absent `mockupsDir` absent and
-      authored files untouched; invalid variable values fail typed; committed
-      mode is byte-identical to today.
-- [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
-      `npm test`, `npm run example:check`, and `cargo xtask check`; commit and
-      push.
-
-## Milestone 3: Serve and export retain output in memory
-
-Backend. After this milestone no derived command writes generated output
-without the variable.
-
-- [ ] Confirm `prepareWatchedOutput` in `src/server/serve_lifecycle.ts` and
-      `BackgroundGeneration` in `src/server/demand/generation.ts` rely on the
-      store policy, so watched candidate output and background completion are
-      retained in memory in derived mode; rename phase and comment wording that
-      says "write" or "adopt" for derived mode.
-- [ ] `src/export/run.ts`: write generated output before capture in committed
-      mode only; derived capture keeps using compiled bytes and tolerates an
-      absent `mockupsDir`.
+- [ ] `src/build/output_store.ts`: add an explicit store method for keeping
+      the committed working-tree copy current (for example `synchronize`),
+      documented on `GeneratedOutputStore`: it writes transactionally in
+      committed mode and returns without touching the filesystem in derived
+      mode. `write` remains the explicit `build` path and `check` is
+      unchanged. Tests cover both modes and an absent `mockupsDir`.
+- [ ] `src/server/serve_lifecycle.ts` (`prepareWatchedOutput`) and
+      `src/server/demand/generation.ts` (`BackgroundGeneration`): call the
+      synchronizing method instead of `write`; keep the resource-watch
+      preparation and adoption order unchanged; fix phase, comment, and
+      reporter wording that says "write" or "adopt" for derived mode.
+- [ ] `src/export/run.ts`: replace the direct `writeCompilation` call with the
+      store's synchronizing method through the export composition root, so
+      derived exports and publications never write under `mockupsDir`.
 - [ ] Verify, and cover with a test, that a leftover Mokly-owned HTML file for a
       retired route under `mockupsDir` is not captured as an authored public
       file by a derived export; fix `src/export/public_files.ts` if it is.
-- [ ] Tests: derived Serve completes background generation and Changes with
-      `mockupsDir` absent and writes no HTML or manifest
-      (`tests/derived_serve.test.ts`, `tests/derived_generation.test.ts`,
-      `tests/derived_serve_status.test.ts`, browser `changes_*` fixtures);
-      derived export and publish write nothing under `mockupsDir`
-      (`tests/derived_export.test.ts`, `tests/export_current_derived.test.ts`,
-      `tests/publish_derived.test.ts`); committed Serve and export still write.
+- [ ] Tests: derived watched and `--no-watch` Serve complete background
+      generation and Changes with `mockupsDir` absent and write no HTML or
+      manifest (`tests/derived_serve.test.ts`,
+      `tests/derived_generation.test.ts`, `tests/derived_serve_status.test.ts`,
+      browser `changes_*` fixtures); derived export and publish write nothing
+      under `mockupsDir` (`tests/derived_export.test.ts`,
+      `tests/export_current_derived.test.ts`, `tests/publish_derived.test.ts`);
+      committed Serve and export still write; a derived `build` still writes.
 - [ ] Smoke test on the example: delete local generated HTML and the manifest,
       run `npm run dev`, browse screens, wait for Changes to become ready, and
       confirm no HTML or manifest was written; run `npm run example:check`; run
-      `node dist/cli/bin.js build --config examples/basic/mokly.config.ts` and
-      confirm the refusal; run `npm run example:build` and confirm files are
-      written.
+      `npm run example:build` and confirm files are written; move an entry and
+      confirm `npm run dev` no longer reports an ownership collision.
 - [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
       `npm test`, `npm run test:browser`, `npm run example:check`, and
       `cargo xtask check`; commit and push.
 
-## Milestone 4: Final verification and review
+## Milestone 3: Final verification and review
 
 - [ ] Re-read every document changed in Milestone 1 against the shipped
-      behavior and fix drift, including `AGENTS.md` and the README example
-      section.
+      behavior and fix drift.
 - [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
       `npm test`, `npm run test:browser`, `npm run example:check`, and
       `cargo xtask check`; `git add -A`; commit with Conventional Commits; push
@@ -197,11 +134,7 @@ without the variable.
 
 ## Post-merge follow-up (non-blocking)
 
-- Move repository tests and preview scripts that read
-  `examples/basic/generated/*.html` and the manifest to in-memory compilation
-  or export output, then retire the `example:build` wrapper and the example's
-  HTML and manifest ignore rules.
 - Smoke-test a fresh derived consumer with the next published package:
-  `npx mokly check`, `npx mokly`, and `npx mokly export` produce no generated
-  files under `mockupsDir`, and a comparison against `origin/main` rebuilds its
-  baseline through the forced variable.
+  `npx mokly` and `npx mokly export` produce no generated files under
+  `mockupsDir`, `npx mokly build` still does, and a comparison against
+  `origin/main` rebuilds its baseline unchanged.
