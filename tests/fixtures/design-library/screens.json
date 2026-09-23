@@ -414,13 +414,5 @@
       "desktop": "design/review/outcomes/removed.desktop.html",
       "mobile": "design/review/outcomes/removed.mobile.html"
     }
-  },
-  {
-    "id": "design-review-shared-impact",
-    "route": "design/review/impact/shared-impact.html",
-    "fragments": {
-      "desktop": "design/review/impact/shared-impact.desktop.html",
-      "mobile": "design/review/impact/shared-impact.mobile.html"
-    }
   }
 ]

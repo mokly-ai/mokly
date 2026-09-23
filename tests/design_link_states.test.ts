@@ -63,7 +63,6 @@ for (const viewport of ["mobile", "desktop"] as const) {
     }
     for (const source of [
       "design-browse-screen",
-      "design-review-shared-impact",
       "design-review-ignored-only",
       "design-review-empty",
       "design-browse-details-screen",

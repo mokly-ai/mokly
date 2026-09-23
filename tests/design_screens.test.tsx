@@ -4,6 +4,7 @@ import { test } from "node:test";
 import {
   attribute,
   byClass,
+  designCatalogue,
   designDocument,
   elements,
   textContent,
@@ -141,7 +142,49 @@ const comparedStyleScreens = [
   "design-review-style-unnamed",
 ] as const;
 
+test("review impact omits the path-only state and retains the rendered evidence states", async () => {
+  const { manifest, outputs } = await designCatalogue;
+  const impact = manifest.entries.find(
+    (entry) => entry.id === "design-review-impact",
+  );
+  assert.ok(impact?.kind === "collection");
+  assert.deepEqual(impact.childIds, [
+    "design-review-ignored-only",
+    "design-review-empty",
+    "design-review-stylesheets",
+  ]);
+  assert.equal(
+    manifest.entries.some(
+      (entry) => entry.id === "design-review-shared-impact",
+    ),
+    false,
+  );
+  for (const [route, html] of outputs) {
+    if (!route.startsWith("design/")) continue;
+    assert.doesNotMatch(
+      html,
+      /design-review-shared-impact|shared impact/i,
+      route,
+    );
+  }
+});
+
 for (const viewport of ["mobile", "desktop"] as const) {
+  test(`${viewport}: component inspector has no declared dependency row`, async () => {
+    for (const id of [
+      "design-component-overview",
+      "design-component-toolbar",
+      "design-component-unused",
+    ]) {
+      const { document } = await designDocument(id, viewport);
+      const details = byClass(document, "ce-slot-details")[0];
+      assert.ok(details, id);
+      const content = textContent(details);
+      assert.match(content, /Schemes|Related docs/, id);
+      assert.doesNotMatch(content, /Dependencies/, id);
+    }
+  });
+
   test(`${viewport}: stylesheet evidence states keep selectors out of headings`, async () => {
     for (const [id, route, copy] of stylesheetEvidence) {
       const { entry, document } = await designDocument(id, viewport);
@@ -200,7 +243,6 @@ for (const viewport of ["mobile", "desktop"] as const) {
 
 test("stylesheet evidence states are entered and left through the filter", async () => {
   for (const [source, filter, target] of [
-    ["design-review-shared-impact", "Changes0", "design-review-style-matched"],
     [
       "design-review-ignored-only",
       "Changes0",

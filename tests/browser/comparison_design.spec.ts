@@ -30,8 +30,8 @@ test("comparison designs use screen context instead of report chrome", async ({
     "outcomes/added",
     "outcomes/removed",
     "outcomes/difference",
-    "impact/shared-impact",
     "impact/ignored-only",
+    "impact/stylesheets/matched",
   ]) {
     for (const viewport of ["desktop", "mobile"]) {
       await page.goto(design(`review/${route}.${viewport}.html`));
@@ -53,11 +53,22 @@ test("comparison designs use screen context instead of report chrome", async ({
         ).toBeVisible();
       }
       await expect(comparisonDetails).toBeVisible();
-      if (route.startsWith("impact/") && viewport === "desktop") {
+      if (route === "impact/stylesheets/matched") {
+        await expect(
+          page.getByText("Changed styles that apply to this screen:"),
+        ).toBeVisible();
+        await expect(page.getByText("generated/styles.css")).toBeVisible();
+      }
+      if (route === "impact/ignored-only" && viewport === "desktop") {
         await expect(page.locator(".mbk-nav-filter-opt.active")).toHaveText(
           "All",
         );
         await expect(page.locator(".mbk-nav-filter-count")).toHaveText("0");
+      }
+      if (route === "impact/stylesheets/matched" && viewport === "desktop") {
+        await expect(page.locator(".mbk-nav-filter-opt.active")).toHaveText(
+          "Changes1",
+        );
       }
       await expect(page.locator(".mbk-nav .mbk-nav-resize")).toHaveCount(
         viewport === "desktop" ? 1 : 0,

@@ -6,7 +6,6 @@ interface ComponentMetadata {
   title: string;
   description: string;
   source: string;
-  dependencies: readonly string[];
 }
 
 /** Explicit consumer metadata for synthetic design fixtures. */
@@ -16,28 +15,24 @@ export const COMPONENTS = {
     title: "Action",
     description: "A clear next step, shared across screens.",
     source: "components/Action.tsx",
-    dependencies: ["components/Action.tsx"],
   },
   toolbar: {
     id: "toolbar",
     title: "Toolbar",
     description: "A shared prompt with a single next action.",
     source: "components/Toolbar.tsx",
-    dependencies: ["components/Toolbar.tsx"],
   },
   "help-hint": {
     id: "help-hint",
     title: "Help hint",
     description: "Contextual help that appears when a reader needs it.",
     source: "components/HelpHint.tsx",
-    dependencies: ["components/HelpHint.tsx"],
   },
   badge: {
     id: "badge",
     title: "Badge",
     description: "A short label that draws attention to something new.",
     source: "components/Badge.tsx",
-    dependencies: ["components/Badge.tsx"],
   },
 } as const satisfies Record<string, ComponentMetadata>;
 

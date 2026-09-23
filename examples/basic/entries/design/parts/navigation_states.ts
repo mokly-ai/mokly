@@ -137,7 +137,6 @@ export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
   [D.removedLoading]: { all: D.home },
   [D.removedUnavailable]: { all: D.home },
   [D.removedNoView]: { all: D.home },
-  [D.shared]: { all: D.welcome, changes: D.styleMatched },
   [D.ignored]: { all: D.welcome, changes: D.styleUnresolved },
   [D.empty]: { all: D.welcome },
   [D.styleMatched]: { all: D.styleExcluded, changes: D.styleMatched },

@@ -133,18 +133,6 @@ export function AvailabilityNav({
   return drawer ? <NavDrawer {...props} /> : <NavTree {...props} />;
 }
 
-/** File evidence belongs in the secondary comparison details. */
-export function SharedImpactCard() {
-  return (
-    <>
-      <p>Changes to these files may affect this screen:</p>
-      <ul>
-        <li>generated/styles.css</li>
-      </ul>
-    </>
-  );
-}
-
 /** Content exclusions belong in the secondary comparison details. */
 export function IgnoredImpactCard() {
   return <p>Excluded content: example-nav.</p>;

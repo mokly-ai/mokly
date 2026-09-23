@@ -50,7 +50,6 @@ export const DESTINATIONS = {
   removedUnavailable: "design-review-removed-unavailable",
   removedNoView: "design-review-removed-no-view",
   difference: "design-review-difference",
-  shared: "design-review-shared-impact",
   ignored: "design-review-ignored-only",
   empty: "design-review-empty",
   styleMatched: "design-review-style-matched",

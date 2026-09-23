@@ -2,8 +2,8 @@
 
 ## Status And Outcome
 
-Status: in progress; Milestone 1 documentation is complete and Milestones 2–8
-remain. The binding Decisions And Scope remove all three inputs and adopt
+Status: in progress; Milestones 1–2 are complete and Milestones 3–8 remain.
+The binding Decisions And Scope remove all three inputs and adopt
 component-declared stylesheets in place of the stylesheet role of
 `ownedDependencies`. The user approved both the removals and the component
 stylesheet design on 2026-09-23 (UTC). The pull request merge is the
@@ -244,19 +244,25 @@ Tags: mockup
 Delete the design states that show source-path evidence. Keep the depictions of
 rendered-resource evidence.
 
-- [ ] Delete the Shared impact design screen (`design-review-shared-impact`),
+- [x] Delete the Shared impact design screen (`design-review-shared-impact`),
       its destination, navigation state and `SharedImpactCard`, and the
       "shared impact" wording in `design.mockup.tsx`. Confirm every remaining
       review design screen stays reachable.
-- [ ] Remove the Dependencies row and its data from the component inspector
+- [x] Remove the Dependencies row and its data from the component inspector
       mockup (`component_info.tsx`, `components/parts/metadata.ts`).
-- [ ] Search the design entries for any other depiction of declared
+- [x] Search the design entries for any other depiction of declared
       dependencies or shared-impact evidence and remove it.
-- [ ] Update the design inventory and link tests:
+- [x] Update the design inventory and link tests:
       `tests/fixtures/design-library/screens.json`,
       `tests/design_screens.test.tsx`, `tests/design_link_states.test.ts` and
       `tests/browser/comparison_design.spec.ts`.
-- [ ] Run `npm run build`, `npm run example:build`, `npm run example:check`
+- [x] Update the shared-library inventory test's pinned screen count for this
+      approved deletion (`tests/design_library_inventory.test.ts`) and run it.
+- [x] Update the remaining design link, usage and CSS attribution tests' pinned
+      screen counts (`tests/design_links.test.ts`,
+      `tests/design_library_usage.test.ts`,
+      `tests/component_design_attribution.test.ts`) and run them.
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`
       and the design tests. Smoke-test the review impact and component
       inspector pages at mobile and desktop widths through `npm run dev`.
 

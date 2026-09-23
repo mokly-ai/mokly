@@ -27,15 +27,6 @@ export function ComponentInfo({ identity }: { identity: ComponentId }) {
           >
             Component guide
           </MetaRow>
-          <MetaRow
-            name="dependencies"
-            label="Dependencies"
-            presentation="props"
-          >
-            {component.dependencies.map((dependency) => (
-              <code key={dependency}>{dependency}</code>
-            ))}
-          </MetaRow>
         </dl>
       </details>
     </section>

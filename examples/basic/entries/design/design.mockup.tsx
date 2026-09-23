@@ -143,7 +143,7 @@ const designMockups = defineRoot({
             }),
           ],
           description:
-            "Aggregate review states: shared impact, ignored regions, empty.",
+            "Review states for ignored regions, stylesheet evidence, and an empty Changes filter.",
           id: "design-review-impact",
           segment: "impact",
           title: "Impact states",
