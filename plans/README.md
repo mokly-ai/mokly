@@ -2,6 +2,10 @@
 
 ## Active
 
+- [Markdown And MDX Docs](./markdown-docs.md) — discover Markdown and MDX
+  files from a `docs` glob, show each as a `doc` entry beside the screens it
+  describes, render through the consumer renderer in both schemes, and carry
+  docs through navigation, details, links, Changes, watch, export, and publish.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
   standalone Auto/Light/Dark control for interface and previews, and
   host-owned theme with independent previews when embedded. Dark neutrals align
