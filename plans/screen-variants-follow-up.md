@@ -1,8 +1,8 @@
 # Screen Variants Follow-up
 
 Status: the initial follow-up is implemented, verified, pushed, and reviewed in
-[PR #115](https://github.com/mokly-ai/mokly/pull/115). Active pending review
-fixes and merge. The user has approved fixing historical snapshot selection;
+[PR #115](https://github.com/mokly-ai/mokly/pull/115). Active pending delivery,
+review, and merge. The user has approved fixing historical snapshot selection;
 Milestones 9–12 carry that work without reopening completed milestones. Created 2026-09-22 to close
 [Screen Variants](./screen-variants.md) for
 [PR #101](https://github.com/mokly-ai/mokly/pull/101). The user's 2026-09-22
@@ -505,8 +505,20 @@ type checks and formatting passed before the final gate retry.
 
 ### Milestone 16: Verify and deliver the integrated snapshot fix
 
-- [ ] Run relevant tests and `cargo xtask check`, inspect the complete diff,
-      validate docs and record results with all authored files included.
+- [x] Integrate main's later CI runner and Serve shutdown changes through
+      `0216610` after the historical fix passed the complete gate against
+      `d665d06` (2,287 Node and 703 Chromium cases). The later merge applied
+      cleanly; retain its workflow, CLI, fixture, and regression-test updates.
+- [x] Smoke-test real Serve on the integrated mainline baseline: all six
+      same-ID historical screens load their exact previous versions with
+      snapshot-scoped, read-only frames; returning to current clears the
+      snapshot. Inspect desktop/mobile captures and verify no page errors.
+- [x] Run relevant tests and `cargo xtask check`, inspect the complete diff,
+      validate docs and record results with all authored files included. The
+      integrated check passed 2,288/2,288 Node and 703/703 Chromium cases,
+      repository/Rust checks, package smoke, build, typecheck, example check,
+      formatting and lint. All 293 changed-document links resolve; the
+      inventory preserves 137 original ids and exactly six approved moves.
 - [ ] After checks pass, run `git add -A`, commit using Conventional Commits
       and push this branch; update PR #115 for the delivered snapshot fix.
 - [ ] After the push, use
