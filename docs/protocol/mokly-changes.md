@@ -140,20 +140,29 @@ dropping views or disabling Git file validation.
 
 ## Screen controls
 
-The status beside the title and the comparison band describe the shown view,
-not the entry's route-wide result. With one viewport and one scheme selected,
-the view's review state maps `changed` to Changed, `added` to Added, `removed`
-to Removed, and `unchanged` or `ignored-only` to Unmodified. While Both is
-selected, the shown status is Changed when any shown view is Changed, else
-Added when any is Added, else Removed when any is Removed, else Unmodified.
-Comparison eligibility follows that shown status under the existing kind rule:
-Changed is eligible, and Removed is eligible only for a component saved
-variant. Thus a route with changes can show Unmodified with no comparison band
-while the marks on the view controls and the `Changed views` row point to the
-views that changed. Unknown or pending per-view evidence — no ready result and
-no screen-view evidence for the entry — preserves the route-level status and
-eligibility. Switching viewport, scheme, or saved variant recomputes both
-without a page load, as does a background evidence refresh.
+The status beside the title and the comparison band describe the view actually
+shown, not the entry's route-wide result or merely the requested axes. A Dark
+selection on a light-only screen therefore resolves to its Light view for
+status, control marks, and comparison presentation while retaining the Dark
+control state and the visible Light-only fallback label. With one viewport and
+one effective scheme selected, the view's review state maps `changed` to
+Changed, `added` to Added, `removed` to Removed, and `unchanged` or
+`ignored-only` to Unmodified. While Both is selected, the shown status is
+Changed when any shown view is Changed, else Added when any is Added, else
+Removed when any is Removed, else Unmodified. Comparison eligibility follows
+that shown status under the existing kind rule: Changed is eligible, and
+Removed is eligible only for a component saved variant. Thus a route with
+changes can show Unmodified with no comparison band while the marks on the view
+controls and the `Changed views` row point to the views that changed.
+
+Per-view evidence is authoritative only when it names every effective view in
+the current selection. Unknown, pending, or partial per-view evidence preserves
+the selected entry or saved variant's fallback status and comparison eligibility
+as two independent values. In particular, a Changed fallback status must not
+turn an explicitly ineligible public selection into an eligible comparison.
+Switching viewport, requested scheme, or saved variant recomputes the effective
+views, status, marks, and eligibility without a page load, as does a background
+evidence refresh.
 
 Eligible views offer Current / Side by side / Overlay / Difference in an opaque
 band beneath the heading. Added and Unmodified views retain their current

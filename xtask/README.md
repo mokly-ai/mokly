@@ -16,9 +16,10 @@ The crate provides the implementation behind `cargo xtask check` and
 `cargo xtask rust-file-length-lint`.
 The Node unit/integration suite runs at most two test files concurrently;
 individual concurrency tests retain their existing timeouts. The real preview
-build browser test has a 240-second deadline after its prior 180-second budget
-proved too tight under four-worker CPU contention; its real build and assertions
-remain mandatory.
+build uses its own separately bounded seven-minute setup fixture after a
+five-minute fixture expired under four-worker CPU contention; its real build
+and normally timed browser assertions remain mandatory. Other full-catalogue
+setups retain their five-minute budgets.
 The complete check starts with `npm run dependencies:check`, covering all
 workspace dependency categories. It requires registry access; an audit or network
 failure stops subsequent checks. Packed-consumer smokes separately audit the
@@ -41,8 +42,11 @@ The ignored `.context/verification-reports/local-check-*/` directories contain
 per-invocation timing and inventory evidence. A preflight isolation failure
 announces an unsharded sequential fallback; failed workers never silently fall
 back or report complete success.
-CI resolves Node 24 in its repository prerequisite and shares that exact version
-with dependent jobs, keeping shard evidence consistent across runner caches.
+Ordinary CI runs functional suites on the minimum Node 22.14 runtime. Release
+Please pull requests add Node 24; CI resolves the latest patch in its repository
+prerequisite and explicitly shares that exact result with dependent jobs,
+keeping shard evidence consistent across runner caches. The single release
+publishing job independently resolves the latest Node 24.
 
 Hydration coverage discovers a separate browser test for every example route
 across four independently discovered spec files,
@@ -65,7 +69,7 @@ cargo xtask rust-file-length-lint --all
 runs the full selected suite. Package, unit, and browser suites prepare their
 required output before invoking prepared npm scripts.
 The public `npm test` and `npm run test:browser` commands remain unsharded;
-CI keeps both Node runtimes and its existing shard identities.
+CI keeps its Node 22 and conditional Node 24 shard identities.
 
 ## Development
 

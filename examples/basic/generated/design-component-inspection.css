@@ -2,7 +2,7 @@
 .ce-button {
   align-items: center;
   background: white;
-  border: 1px solid var(--chrome-border-strong);
+  border: 1px solid var(--chrome-control-edge);
   border-radius: 6px;
   color: var(--chrome-ink-2);
   cursor: pointer;
@@ -13,13 +13,13 @@
   padding: 5px 10px;
 }
 .ce-button[aria-pressed="true"] {
-  background: #edf3ef;
+  background: var(--mbk-accent-surface);
   border-color: var(--mbk-sage);
   color: var(--mbk-sage-deep);
 }
 .ce-button:disabled {
   background: var(--chrome-bg);
-  color: #6b736e;
+  color: var(--chrome-disabled-ink);
   cursor: default;
 }
 .ce-welcome-example {

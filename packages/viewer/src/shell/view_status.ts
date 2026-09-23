@@ -16,28 +16,13 @@ export type ViewStatesBySelection = Readonly<
   Record<string, readonly ViewState[]>
 >;
 
-/**
- * Resolve the status for the shown view. Missing evidence preserves the
- * route-level fallback; Both aggregates Changed, Added, Removed, Unmodified.
- */
-export function shownStatus(
-  states: readonly ViewState[] | undefined,
-  viewport: "both" | Viewport,
-  scheme: ColorScheme,
-  fallback: EntryStatus | undefined,
+/** Aggregate a complete set of shown view states in product priority order. */
+export function aggregateViewStatus(
+  states: readonly ViewState[],
 ): EntryStatus | undefined {
-  if (states === undefined || states.length === 0) return fallback;
-  const selected = states.filter(
-    (view) =>
-      view.colorScheme === scheme &&
-      (viewport === "both" || view.viewport === viewport),
-  );
-  if (selected.length === 0) return fallback;
-  const statuses = selected.map(({ state }) => entryStatus(state));
-  return (
-    (["Changed", "Added", "Removed", "Unmodified"] as const).find((status) =>
-      statuses.includes(status),
-    ) ?? fallback
+  const statuses = states.map(({ state }) => entryStatus(state));
+  return (["Changed", "Added", "Removed", "Unmodified"] as const).find(
+    (status) => statuses.includes(status),
   );
 }
 

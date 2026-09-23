@@ -18,7 +18,9 @@ import { TopBar } from "../shell/top_bar.js";
 import { ShellMain, viewTitle } from "../shell/views.js";
 import type { ShellView } from "../shell/views.js";
 import type { WorkspaceData } from "../shell/workspace_data.js";
+import { normalizeTheme } from "../viewer/theme.js";
 
+import { useStandaloneAppearance } from "./appearance_bridge.js";
 import {
   serializeShellBootstrap,
   type ShellBootstrapState,
@@ -92,6 +94,7 @@ function StandaloneDocumentContents({
   const hydrated = store.interactive;
   const context = store.context;
   const view = store.state.route.view;
+  const appearance = useStandaloneAppearance(store);
   const shell = useRef<HTMLDivElement>(null);
   useNavigationBounds(shell);
   return (
@@ -101,6 +104,8 @@ function StandaloneDocumentContents({
       data-mokly-delivery={
         context.delivery ? JSON.stringify(context.delivery) : undefined
       }
+      data-mokly-appearance=""
+      data-mokly-theme={normalizeTheme(appearance.theme)}
       data-mokly-update-version={context.updateVersion}
       data-mokly-content-version={
         context.delivery ? undefined : context.contentVersion
@@ -114,13 +119,12 @@ function StandaloneDocumentContents({
         <meta content="width=device-width, initial-scale=1" name="viewport" />
         <title>{viewTitle(catalogue, view)}</title>
         {hydrated ? <link href="data:," rel="icon" /> : null}
+        <script src="/__mokly/client/appearance-startup.js" />
         <link href="/__mokly/shell.css" rel="stylesheet" />
       </head>
       <body
         className={`mbk-fs${store.state.expandedFrame ? " frame-expanded" : ""}`}
-        data-mokly-color-scheme={
-          hydrated ? store.state.selection.colorScheme : undefined
-        }
+        data-mokly-color-scheme={hydrated ? appearance.scheme : undefined}
         onClick={store.onShellClick}
         onKeyDown={store.onShellKeyDown}
       >
@@ -133,7 +137,7 @@ function StandaloneDocumentContents({
           <a className="mbk-skip-link" href="#mb-main">
             Skip to content
           </a>
-          <TopBar catalogue={catalogue} />
+          <TopBar appearance={appearance} catalogue={catalogue} />
           <div className="mbk-body">
             <CatalogueNav catalogue={catalogue} context={context} />
             <ShellMain catalogue={catalogue} context={context} view={view} />

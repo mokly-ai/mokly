@@ -1,6 +1,7 @@
 import { screen } from "@mokly/mokly";
 
 import { PreviewWorkspace } from "./components/parts/workspace.js";
+import { useDarkPreview } from "./parts/appearance.js";
 import { ComparisonStage } from "./parts/compare.js";
 import { DESTINATIONS } from "./parts/destinations.js";
 import { DetailsPanel } from "./parts/details.js";
@@ -21,6 +22,7 @@ function ChangesPreview({
   overlay: boolean;
   viewport: ArtboardViewport;
 }) {
+  const dark = useDarkPreview();
   const content = (
     <div style={{ position: "relative", isolation: "isolate" }}>
       <MiniWelcome compact={viewport === "mobile"} />
@@ -32,9 +34,15 @@ function ChangesPreview({
     </div>
   );
   return viewport === "mobile" ? (
-    <PhoneFrame small>{content}</PhoneFrame>
+    <PhoneFrame dark={dark} small>
+      {content}
+    </PhoneFrame>
   ) : (
-    <BrowserFrame address="example.test/welcome" expandable={!overlay}>
+    <BrowserFrame
+      address="example.test/welcome"
+      dark={dark}
+      expandable={!overlay}
+    >
       {content}
     </BrowserFrame>
   );
@@ -88,9 +96,8 @@ function ChangesScreen({
 /** On-demand comparison controls share the normal catalogue screen. */
 export const changesScreens = [
   screen({
-    colorSchemes: ["light"],
     description:
-      "Changes opens a screen in Current; comparison starts only after selecting a diff option.",
+      "Changes opens a screen in Current; comparison starts only after selecting a diff option, in either catalogue scheme.",
     desktop: <ChangesScreen overlay={false} viewport="desktop" />,
     id: "design-changes-current",
     mobile: <ChangesScreen overlay={false} viewport="mobile" />,
@@ -98,9 +105,8 @@ export const changesScreens = [
     title: "Current screen in Changes",
   }),
   screen({
-    colorSchemes: ["light"],
     description:
-      "Overlay compares the selected screen in place, with the same controls also available from All.",
+      "Overlay compares the selected screen in place, with the same controls also available from All, in either catalogue scheme.",
     desktop: <ChangesScreen overlay viewport="desktop" />,
     id: "design-changes-overlay",
     mobile: <ChangesScreen overlay viewport="mobile" />,

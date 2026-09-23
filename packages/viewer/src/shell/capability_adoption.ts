@@ -109,6 +109,7 @@ export function shellContextWithViewerEvidence(
     ...stable,
     ...projected,
     base: source.base,
+    embedded: context.embedded === true,
     ...(context.comparisons === undefined
       ? {}
       : { comparisons: context.comparisons }),

@@ -67,6 +67,11 @@ test("every served document loads the hydrated live host", async (context) => {
     (await fetch(`${server.url}/__mokly/client/react-shell.js`)).status,
     200,
   );
+  const appearance = await fetch(
+    `${server.url}/__mokly/client/appearance-startup.js`,
+  );
+  assert.equal(appearance.status, 200);
+  assert.match(await appearance.text(), /mokly:theme/);
   assert.equal(
     (await fetch(`${server.url}/__mokly/client/react-host.js`)).status,
     200,

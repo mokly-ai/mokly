@@ -40,8 +40,10 @@ the following contract:
 The resolved config has one repository root, one mockups root, one sorted
 resolved entry-module set, and normalized repo-relative POSIX paths. Config
 validation rejects path traversal, output outside the repository (including
-through symlinks), an entry module that overlaps generated or internal roots,
-duplicate rules, and a watch path that cannot be classified safely.
+through symlinks), entry modules inside internal or package-owned private roots,
+duplicate rules, and a watch path that cannot be classified safely. An entry
+module may be nested below `mockupsDir` as protected authored source; generated
+routes are checked separately and cannot collide with it.
 
 Before reading Git, `repoRoot` must resolve through symlinks to the same path
 as `git rev-parse --show-toplevel` run from that directory. A nested root fails
@@ -163,11 +165,17 @@ screen it describes, for example `entries: ["src/**/*.mockup.{ts,tsx}"]` with
 the same `mockupsDir` and renderer. The `.mockup.ts` and `.mockup.tsx` names are
 the recommended convention selected by that example glob, not an additional
 runtime suffix rule. Both layouts are examples, not runtime defaults.
-Authored source directories may sit below `mockupsDir` for a `docs/mockups/src`
-layout, but no entry module may be the output root or lie inside it; generated
-routes are collision-checked against every inventoried source before writing.
-Review output must not overlap an entry module's directory or the output root
-in either direction. That rule applies
+Authored source directories and entry modules may sit below `mockupsDir` for a
+`docs/mockups/src` layout. They remain inventoried protected inputs rather than
+public output. When `entriesDir` supplies the entry set, that shorthand root
+must not equal `mockupsDir`; glob-matched modules may sit directly below
+`mockupsDir`. Generated routes are collision-checked against every inventoried
+source before writing, including through aliases. Review output must not overlap an entry
+module's directory or `mockupsDir` in either direction. Those boundaries are
+covered by the nested discovery, output collision, and public alias tests in
+[`entry_discovery.test.ts`](../../tests/entry_discovery.test.ts),
+[`output_safety.test.ts`](../../tests/output_safety.test.ts), and
+[`server_safety.test.ts`](../../tests/server_safety.test.ts). The rule applies
 to configured comparison output and the transactional writer boundary. The
 [npm CLI](./mokly-package.md#cli) has no Review command or output override; the repository-only
 [preview builder](./mokly-publication.md#publication-option) separately accepts
@@ -222,21 +230,47 @@ the `entriesDir` shorthand preserves it through its generated glob.
 Below the deepest matching glob root, walks skip directories named `.git`,
 `node_modules`, `.mokly-cache`, `dist`, `coverage`, `target`, `test-results`,
 `playwright-report`, or `.context`, or prefixed with `.mokly-review-` or
-`.mokly-write-`. Regular file basenames are not denied.
-The rule is relative to the glob root: `src/dist/x.mockup.tsx` is denied under
-`src/**/*.mockup.{ts,tsx}`, while an explicit `dist/entries/**` root can discover
-`dist/entries/a.mockup.tsx`; discovery never inspects a denied tree.
-Repository, glob-root, and `review.outDir` identities are projected once per pass;
-Review projection alone falls back to its lexical path. Walks skip either Review
-identity and vanished or replaced directories (`ENOENT` or `ENOTDIR`).
-Other read or projection errors fail with `config-invalid`, naming the repository-relative path and error code (`unknown` if absent).
-A matched module that is deleted, or replaced by something other than a regular file, between the directory listing and validation is dropped and listed under `not searched` when its glob is then empty.
-A projection or lstat failure with any code other than `ENOENT` fails with `config-invalid`.
-Every glob must retain a module; otherwise `entries glob matches no module: <glob>`
-lists denied and vanished roots, including dropped modules, sorted under
-`; not searched: <repository-relative roots>`.
-The union is sorted and deduplicated by repository-relative path, independent
-of glob or filesystem order, preventing silent omissions from typos.
+`.mokly-write-`. Regular file basenames are not denied. The rule is relative
+to the glob root: `src/dist/x.mockup.tsx` is denied under
+`src/**/*.mockup.{ts,tsx}`, while an explicit `dist/entries/**` root can
+discover `dist/entries/a.mockup.tsx` because the package-owned directory rule
+only applies below that explicit root. Discovery never inspects a denied tree.
+
+Before any glob walk, discovery projects the repository identity and every
+distinct glob-root identity once for the pass. It also projects `review.outDir`
+once, with a lexical fallback only for that Review boundary. A non-benign
+repository or glob-root projection error therefore fails before per-glob module
+validation; an error projecting a later glob's root can precede a denial under
+an earlier glob. Walks then run in declared glob order and validate matched
+modules during each walk. The first denial or zero-match failure stops the pass,
+so an earlier glob's denied module precedes a later empty glob, while reversing
+those globs makes the empty-glob diagnostic precede the denial.
+
+Accepted and vanished candidates are each validated once per pass. An accepted
+candidate still counts as a match for every later overlapping glob; a vanished
+candidate does not. Walks skip either Review identity and directories that
+vanish or are replaced (`ENOENT` or `ENOTDIR`). Other read or projection errors
+fail with `config-invalid`, naming the repository-relative path and error code
+(`unknown` if absent). A matched module that is deleted, or replaced by
+something other than a regular file, between the directory listing and
+validation is dropped and listed under `not searched` when its glob is then
+empty. A projection or lstat failure with any code other than `ENOENT` fails
+with `config-invalid`.
+
+Normal configuration validation rejects a glob whose stable prefix is inside
+`.mokly-cache/` before discovery. The discovery boundary retains the same
+private-cache denial for direct callers. Module existence is checked before
+that denial, so a cache candidate that vanishes concurrently is dropped and,
+when it was the only match, listed under `not searched`; a surviving cache
+candidate is rejected. The race never makes a private cache path readable.
+
+Every glob must retain a module; otherwise
+`entries glob matches no module: <glob>` lists denied and vanished paths,
+including dropped modules, sorted under
+`; not searched: <repository-relative paths>`. Validation is per glob so one
+valid glob cannot hide a typo or silent omission in another. The union is
+sorted and deduplicated by repository-relative path, independent of glob or
+filesystem order.
 
 Every resolved entry module is classified before bundling. Discovery fails
 with `config-invalid` naming the module and the matched rule when the module
@@ -244,9 +278,10 @@ lies inside `review.outDir`, inside `.mokly-cache/`, below a denied directory
 relative to its deepest matching glob root, or resolves outside `repoRoot`
 through a symlink. An entry module may sit below `mockupsDir` in a nested
 `docs/mockups/src` layout; it is protected authored source under the
-[source-protection contract](./mokly-source-protection.md), never public
-output, and generated routes are collision-checked against it. The check runs
-once per resolved module instead of once per configured directory.
+[source-protection contract](./mokly-source-protection.md), cannot be served or
+exported as a public file, and remains protected through aliases. Generated
+routes are collision-checked against it. The check runs once per resolved
+module instead of once per configured directory.
 
 Discovery runs when the configuration is resolved, so every resolved config
 carries its sorted entry set beside `entryGlobs`, and again at the start of

@@ -26,10 +26,13 @@ themes from your repository, presents every screen at mobile and desktop
 sizes, and shows which screens changed from a Git baseline.
 
 Run Mokly locally while you build, export the same catalogue as static files,
-or embed its viewer in another React application. Local Serve, static exports,
-and embedded hosts share the same viewer presentation. Mokly owns the
-catalogue; your repository keeps ownership of its UI, data, styling, and
-rendering context.
+or embed its viewer in another React application. Local Serve and static exports
+share the standalone presentation, whose single Auto/Light/Dark Appearance
+selector changes the interface and previews together. Embedded hosts render the
+same shell but choose its interface appearance independently with `theme`.
+The Dark interface uses warm neutral surfaces aligned with Mokly Cloud.
+Mokly owns the catalogue; your repository keeps ownership of its UI, data,
+styling, and rendering context.
 
 > Mokly is pre-1.0. The package is [`@mokly/mokly`](https://www.npmjs.com/package/@mokly/mokly)
 > and the executable is `mokly`.
@@ -56,7 +59,9 @@ rendering context.
 
 ### 1. Install
 
-Mokly requires Node.js 22.14 or newer, npm 11, and React 19 or newer.
+Mokly requires Node.js 22.14 or newer, except Node 24.14 through 24.18.
+The supported range is `>=22.14.0 <24.14.0 || >=24.19.0`. You also need npm 11
+and React 19 or newer.
 
 ```bash
 npm install --save-dev @mokly/mokly react react-dom
@@ -233,7 +238,11 @@ self-hosted receivers.
 
 Use `@mokly/mokly` to create and deliver a catalogue. Use `@mokly/viewer` when
 another React application owns the surrounding navigation, branding,
-authentication, or discussion experience.
+authentication, or discussion experience. Embedded viewer roots accept
+`theme` independently from `selection.colorScheme`, so hosts can pair any
+interface appearance with any preview scheme. See the
+[viewer appearance contract](./docs/protocol/mokly-viewer-appearance.md) and
+[semantic palette](./docs/protocol/mokly-viewer-palette.md).
 
 ## Documentation
 
@@ -242,6 +251,7 @@ authentication, or discussion experience.
 - [Configuration reference](./docs/guides/authoring/config.md)
 - [Protocol and specification index](./docs/protocol/README.md)
 - [Removed content previews](./docs/protocol/mokly-removed-previews.md)
+- [Viewer appearance and preview schemes](./docs/protocol/mokly-viewer-appearance.md)
 - [Screen variants](./docs/protocol/mokly-screen-variants.md)
 - [Package ownership boundary](./docs/architecture/package-boundary.md)
 - [React-to-static-HTML pipeline](./docs/architecture/build-pipeline.md)
@@ -254,8 +264,9 @@ viewer, generated output, and tests aligned.
 
 ## Develop Mokly
 
-Repository development requires Node.js 22.14 or newer, npm 11.7, Rust 1.95,
-and Chromium for the browser suite.
+For repository development, use the tested Node.js version in
+[`.node-version`](./.node-version), npm 11.7, Rust 1.95, and Chromium for the
+browser suite.
 
 ```bash
 git clone https://github.com/mokly-ai/mokly.git
@@ -283,7 +294,10 @@ with a live dependency audit, runs up to four isolated workers with longer
 measured shards admitted early, and requires complete unit and browser evidence.
 See the [local verification contract](./docs/protocol/local-verification.md)
 for isolation, fallback, and repeatable timing guidance.
-See the [xtask README](./xtask/README.md) for focused suites.
+See the [xtask README](./xtask/README.md) for focused suites. Hosted CI runs the
+functional suites on the minimum Node 22.14 runtime for ordinary changes and
+adds Node 24 to the complete matrix before a Release Please pull request can
+merge.
 
 ### Key code
 

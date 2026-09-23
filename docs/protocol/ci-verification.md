@@ -2,23 +2,28 @@
 
 ## Delivery Status
 
-The suite CLI, inventory evidence, parallel workflow graph, and fixture reuse in
-this document are implemented. The
+The suite CLI, inventory evidence, event-specific parallel workflow graph, and
+fixture reuse in this document are implemented. The
 [hosted acceptance measurement](../reviews/ci-performance.md) records the
 delivered timing, capacity, cache, cost, and coverage evidence. The
-authoritative complete local and release gate remains `cargo xtask check`.
-The [local verification contract](./local-verification.md) specifies its
-snapshot, concurrent execution, and fallback behavior independently of CI.
-The public package forwarding and hierarchical cancellation additions below are
-implemented by the corresponding review-follow-up milestones.
+authoritative complete local and complete-mode release gate remains
+`cargo xtask check`; the full hosted aggregate is reusable evidence for its
+exact tree. The public package forwarding and hierarchical cancellation
+additions below are implemented by the corresponding review-follow-up
+milestones.
 
 ## Verification Boundary
 
-`cargo xtask check` is the complete local and release verification entrypoint.
-With no options it runs every gate, beginning with the live workspace dependency
-audit; independent work may run concurrently only under the
+`cargo xtask check` is the complete local verification entrypoint and the
+release workflow's complete-mode entrypoint. With no options it starts with
+the live workspace dependency audit and runs every remaining gate in isolated
+snapshots, with bounded concurrency defined by the
 [local verification contract](./local-verification.md). A selected suite is
-partial evidence and must never report that the complete gate passed.
+partial evidence and must never report that the complete gate passed. CI's
+validated aggregate of every required job and all sharded reports is complete
+verification of the exact tree named by those reports; the
+[release evidence contract](./npm-release-evidence.md) defines how a publish
+may reuse that proof.
 
 The CLI is:
 
@@ -47,13 +52,19 @@ fail before any subprocess starts.
 | Unit/integration | One ordinary package/example preparation followed by every discovered Node test file, with at most two files active. A shard runs its whole-file partition.                                                                                                                                                                                                                                |
 | Browser          | One ordinary package/example preparation followed by every discovered Playwright spec, with `fullyParallel: false`, one worker, finite per-test timeouts and zero retries. A shard runs its whole-file partition.                                                                                                                                                                          |
 | Native platforms | On macOS and Windows, build once and run export transaction and destination-race tests, CSS parser/diff tests, and baseline/process-tree tests.                                                                                                                                                                                                                                            |
-| Required CI      | Evaluate the result and evidence from the repository job, both package runtimes, all unit and browser runtime/shard combinations, and both native platforms.                                                                                                                                                                                                                               |
+| Required CI      | Evaluate the result and evidence from the repository job, every package runtime selected for this event, all selected unit and browser runtime/shard combinations, and both native platforms.                                                                                                                                                                                              |
 
 The complete command and selected suites must be generated from the same gate
 definitions. Adding a command to a suite therefore adds it to the complete
 gate. The Rust file-length auditor is a repository-gate operation implemented
 inside xtask rather than a subprocess in the command list; it has the same
 failure semantics as the listed commands.
+
+The ESLint configuration derives global ignores from the repository
+`.gitignore`, then layers its broader ESLint-only ignores. Git-ignored build,
+cache, report and tool scratch paths are therefore outside the repository gate
+even when an earlier suite leaves them in the checkout; in particular, Wrangler
+scratch from the browser suite cannot make a later complete gate fail.
 
 The public npm entrypoints `npm test`, `npm run typecheck`, and
 `npm run test:browser` remain clean-checkout entrypoints: each prepares its
@@ -84,32 +95,73 @@ example, fixture, report, and trace output. No live checkout or writable build
 directory is transferred between jobs. All jobs that resolve `origin/main` or
 create historical baselines receive complete Git history.
 
-After the repository job succeeds, the workflow fans out to:
+For ordinary pull requests and pushes to `main`, the workflow fans out to:
 
-- package jobs on Node 22.14.0 and Node 24;
-- four unit shards on each Node runtime;
-- four browser shards on each Node runtime; and
+- one package job on Node 22.14.0;
+- four unit shards on Node 22.14.0;
+- four browser shards on Node 22.14.0; and
 - native jobs on macOS and Windows at Node 22.14.0.
 
-The repository job resolves Node 24 once and exposes the installed exact version
-as a job output. Every dependent Node 24 package, unit, browser, and aggregate
-job requests that exact version. A new Node release or differing runner caches
-cannot give sibling shards different Node versions. Matrix labels and report
-runtime identities remain `node-24`; reports still record the exact installed
-version, and the aggregate continues to reject mixed versions within a group.
+For a same-repository Release Please pull request, the package job and every
+unit/browser shard also run on Node 24. A release pull request is recognized
+only when its head repository is this repository and either its head ref starts
+with `release-please--` or it has an `autorelease:` label. A fork cannot opt
+itself into the more expensive profile by choosing a matching branch name.
+
+The repository job resolves floating Node 24 once, then an explicit shell step
+reads `process.versions.node` and exposes that exact version plus the selected
+matrix and report-runtime identities as job outputs. Every package, unit, and
+browser job selected for Node 24, plus the Required CI aggregate, requests the
+captured version. CI therefore adopts new Node 24 patches without allowing
+differing runner caches to give sibling shards different versions. Matrix labels
+and report runtime identities remain `node-24`; reports still record the exact
+installed version, and the aggregate continues to reject mixed versions within
+a group. The setup action itself does not provide the installed version output.
+
+Node 22.14 is the ordinary functional runtime because it is the package's
+declared minimum. The Node 24 repository prerequisite still runs on every
+event. Deferring the second complete functional run means a Node 24-only
+regression can reach unreleased `main`, but the dual-runtime Release Please gate
+must catch it before versions, tags or npm artifacts can be published. Release
+Please normally updates its pull request after a releasable merge, keeping that
+feedback close to the originating change without paying for both full suites on
+every ordinary pull-request and `main` run.
 
 Matrix jobs use `fail-fast: false`, so one failing shard does not erase evidence
 from its peers. Chromium is installed only in browser jobs. Rust formatting,
 Clippy and tests run only in the repository job; selected suite jobs still
 compile xtask to dispatch their gate. Jobs that execute npm use npm 11.7.0. All
-jobs have read-only repository permissions and a 20-minute execution timeout.
-Superseded workflow runs remain cancellable.
+Linux and Windows jobs across the CI, preview, and release workflows use
+Blacksmith's 2-vCPU tiers. Native macOS verification uses the provider's
+smallest available tier, which is 6 vCPUs. CI jobs have read-only repository
+permissions and a 20-minute execution timeout. Superseded workflow runs remain
+cancellable.
+
+The supported range is Node.js `>=22.14.0 <24.14.0` or `>=24.19.0`. Node
+24.14.0 through 24.18.x can abort concurrent ESM-to-CommonJS loading before
+JavaScript can handle an error. The upstream
+[`cjs_lexer::Parse` empty-`MaybeLocal` fix](https://github.com/nodejs/node/pull/63885)
+shipped in Node 24.19.0. Lazy-loading individual dependencies reduces exposure
+but cannot remove this process-wide parser path, so the CLI rejects affected
+versions before loading its application modules.
+
+Local verification uses the supported floor at 22.14.0 and Node 24.21.0. Those
+are the tested representatives rather than the bounds of the supported range.
+The repository's `.node-version` and preview workflow remain pinned to
+24.21.0. CI resolves the latest Node 24 patch once per run, and publishing
+resolves its own latest patch. The dependency-free CLI bootstrap owns the
+support bounds and local tested-version list; tests keep that range aligned
+with the package engines, lockfile, README and `.node-version`, and separately
+validate the event-selected CI runtime profiles.
 
 The stable `Required CI` job uses `if: always()` and fails closed unless every
 required job result is exactly `success`. It also validates the evidence
-aggregate described below. A failed, skipped, cancelled, absent, duplicated,
-wrong-runtime, wrong-shard, or wrong-commit report fails the aggregate. The
-aggregate may not infer success from a matrix job's presence alone.
+aggregate described below against the runtime profile emitted by the repository
+job: eight unit/browser reports for ordinary events and sixteen for a Release
+Please pull request. A failed, skipped, cancelled, absent, duplicated,
+wrong-runtime, wrong-shard, wrong-commit, unsupported-profile, missing or extra
+report fails the aggregate. The aggregate may not infer success from a matrix
+job's presence alone.
 
 ## Inventory And Report Evidence
 
@@ -158,8 +210,15 @@ available; whole-workflow reruns replace all report artifacts. The aggregate
 downloads only the `verification-*` report namespace. Browser trace artifacts
 remain attempt-specific. Unit and browser jobs retain inventory, timing, and
 failure details; browser failures additionally retain traces and Playwright
-error context. Reports are diagnostic evidence, not a substitute for successful
-commands or assertions.
+error context. A successful `Required CI` job plus its revalidated complete
+report aggregate is reusable complete verification for the tree the reports
+name within that event's runtime profile; individual reports remain partial
+evidence. Release publication accepts only the dual-runtime Release Please
+profile, then applies the additional tree and live unit-inventory checks in the
+[release evidence contract](./npm-release-evidence.md). The ordinary
+eight-report profile cannot skip the complete publish gate. Reports are
+retained for 14 days, which bounds their release reuse; missing or expired
+evidence falls back to the complete gate.
 
 ## Dependency Cache And Security
 
@@ -171,9 +230,10 @@ A cache miss is an ordinary cold install and never permits a skipped command.
 
 The live workspace audit runs first in the repository prerequisite and does not
 depend on cache state. The complete local and release commands retain the same
-audit-first ordering. Both package-runtime jobs also preserve the separate
-production audit of the freshly resolved ESM consumer, which is outside the
-workspace lockfile and overrides. Intentionally isolated clean-cache consumer
+audit-first ordering. Every selected package-runtime job also preserves the
+separate production audit of the freshly resolved ESM consumer, which is
+outside the workspace lockfile and overrides; the release profile proves it on
+both runtimes. Intentionally isolated clean-cache consumer
 tests keep private empty npm caches. Release publishing retains its uncached,
 OIDC-scoped boundary and exact-artifact checks.
 
@@ -212,13 +272,21 @@ outer cancellation fallback rather than replacing the job boundary.
 
 A dedicated preview-preparation spec still runs the real cold
 `npm run preview:build`, verifies generated-output digest stability, and serves
-the fresh artifact. Its bounded 240-second test budget accounts for measured
-four-worker CPU contention after the previous 180-second deadline expired;
-no assertion, preparation, or retry is removed. Historical rebuilds, source mutation, missing-source
+the fresh artifact. Its separately bounded seven-minute setup fixture accounts
+for a 297-second build and another setup that exceeded the previous five-minute
+budget under four-worker CPU contention; its browser assertions retain their
+ordinary test deadline. No assertion, preparation, or retry is removed.
+Historical rebuilds, source mutation, missing-source
 export, clean-install and cache-invalidation behavior continue to create
 independent inputs because preparation is part of what those tests verify.
 Fixture phases emit `[mokly:fixture-timing]` JSON with the fixture, phase,
 duration, status, and whether the operation itself is under test.
+
+Other full-catalogue browser preparations share a five-minute setup budget in
+`tests/helpers/fixture_timing.ts`. Cold package/example builds, baseline exports,
+and ordinary publication fixtures use that budget independently of the default
+one-minute browser test timeout. Assertion deadlines, retries, and worker limits
+remain unchanged; server readiness retains its own bound.
 
 Wrangler Pages fixtures pass port zero and adopt the exact readiness URL
 Wrangler reports; they do not release a probe socket before server startup.

@@ -149,11 +149,14 @@ review findings.
       and record the measured result and any remaining bottleneck even if the
       15-minute goal is missed. Verify the existing CI shard inventory on both
       Node runtimes before declaring full CI compatibility.
-- [ ] Integrate the newer `origin/main` changes without losing its package,
+- [x] Stabilize the merged-tree preview fixture's measured five-minute setup
+      timeout without loosening other fixture or browser-assertion deadlines;
+      rerun its real build and both complete warm gates after the adjustment.
+- [x] Integrate the newer `origin/main` changes without losing its package,
       CLI, CI, or appearance features; verify the final merged test inventory,
       rerun all checks and two warm complete gates on the combined source, and
       record those results separately from the pre-integration measurements.
-- [ ] Update the protocol and READMEs for the actual implementation, review
+- [x] Update the protocol and READMEs for the actual implementation, review
       every touched doc and the complete diff against `origin/main`, and verify
       that no unrelated or generated files are staged.
 - [ ] After every check passes, run `git add -A`, commit all authored files

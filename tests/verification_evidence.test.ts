@@ -127,7 +127,7 @@ test("four shard reports require disjoint complete current evidence", () => {
   );
   validateShardReports(reports, {
     commit: "a".repeat(40),
-    runtime: "node-24",
+    runtime: "node-24.21.0",
     suite: "unit",
     total: 4,
   });
@@ -136,7 +136,7 @@ test("four shard reports require disjoint complete current evidence", () => {
     () =>
       validateShardReports(reports.slice(0, 3), {
         commit: "a".repeat(40),
-        runtime: "node-24",
+        runtime: "node-24.21.0",
         suite: "unit",
         total: 4,
       }),
@@ -152,7 +152,7 @@ test("four shard reports require disjoint complete current evidence", () => {
         ],
         {
           commit: "a".repeat(40),
-          runtime: "node-24",
+          runtime: "node-24.21.0",
           suite: "unit",
           total: 4,
         },
@@ -165,7 +165,7 @@ test("four shard reports require disjoint complete current evidence", () => {
         [{ ...reports[0]!, commit: "b".repeat(40) }, ...reports.slice(1)],
         {
           commit: "a".repeat(40),
-          runtime: "node-24",
+          runtime: "node-24.21.0",
           suite: "unit",
           total: 4,
         },
@@ -178,7 +178,7 @@ test("four shard reports require disjoint complete current evidence", () => {
         reports.map((report) => ({ ...report, nodeVersion: "22.14.0" })),
         {
           commit: "a".repeat(40),
-          runtime: "node-24",
+          runtime: "node-24.21.0",
           suite: "unit",
           total: 4,
         },
@@ -211,7 +211,7 @@ test("browser shard evidence requires every independently discovered test once",
     () =>
       validateShardReports(reports, {
         commit: "a".repeat(40),
-        runtime: "node-24",
+        runtime: "node-24.21.0",
         suite: "browser",
         total: 4,
       }),
@@ -233,7 +233,7 @@ test("browser shard evidence requires every independently discovered test once",
   }));
   validateShardReports(complete, {
     commit: "a".repeat(40),
-    runtime: "node-24",
+    runtime: "node-24.21.0",
     suite: "browser",
     total: 4,
   });
@@ -243,7 +243,7 @@ test("browser shard evidence requires every independently discovered test once",
         [{ ...complete[0]!, observedTests: [] }, ...complete.slice(1)],
         {
           commit: "a".repeat(40),
-          runtime: "node-24",
+          runtime: "node-24.21.0",
           suite: "browser",
           total: 4,
         },
@@ -253,10 +253,12 @@ test("browser shard evidence requires every independently discovered test once",
 });
 
 test("the CI aggregate requires every runtime, suite, shard, and commit", () => {
-  const reports = ciReports();
-  validateCiReports(reports, "a".repeat(40));
+  const ordinaryRuntimes = ["node-22.14.0"];
+  const releaseRuntimes = ["node-22.14.0", "node-24"];
+  const reports = ciReports(releaseRuntimes);
+  validateCiReports(reports, "a".repeat(40), releaseRuntimes);
   assert.throws(
-    () => validateCiReports(reports.slice(1), "a".repeat(40)),
+    () => validateCiReports(reports.slice(1), "a".repeat(40), releaseRuntimes),
     /expected 16|missing/i,
   );
   assert.throws(
@@ -264,8 +266,30 @@ test("the CI aggregate requires every runtime, suite, shard, and commit", () => 
       validateCiReports(
         [{ ...reports[0]!, runtime: "node-23" }, ...reports.slice(1)],
         "a".repeat(40),
+        releaseRuntimes,
       ),
     /unexpected|runtime/i,
   );
-  assert.throws(() => validateCiReports(reports, "b".repeat(40)), /commit/i);
+  assert.throws(
+    () => validateCiReports(reports, "b".repeat(40), releaseRuntimes),
+    /commit/i,
+  );
+
+  const ordinaryReports = ciReports(ordinaryRuntimes);
+  validateCiReports(ordinaryReports, "a".repeat(40), ordinaryRuntimes);
+  assert.throws(
+    () => validateCiReports(reports, "a".repeat(40), ordinaryRuntimes),
+    /expected 8|extra/i,
+  );
+  for (const unsupported of [
+    [],
+    ["node-24"],
+    ["node-22.14.0", "node-22.14.0"],
+    ["node-22.14.0", "node-23"],
+  ]) {
+    assert.throws(
+      () => validateCiReports(ordinaryReports, "a".repeat(40), unsupported),
+      /runtime profile/i,
+    );
+  }
 });

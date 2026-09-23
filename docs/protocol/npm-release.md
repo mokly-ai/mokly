@@ -20,8 +20,9 @@ as breaking; version numbers and `CHANGELOG.md` remain release-PR owned.
 
 `package.json` describes the published, scoped public ESM package `@mokly/mokly`,
 with a release-managed version, MIT licensing, Mokly authorship, exact
-repository/bugs/homepage metadata for `mokly-ai/mokly`, a Node engine floor,
-one `mokly` bin, explicit exports/types, and a restrictive `files` allowlist.
+repository/bugs/homepage metadata for `mokly-ai/mokly`, the Node engine range
+`>=22.14.0 <24.14.0 || >=24.19.0`, one `mokly` bin, explicit exports/types, and
+a restrictive `files` allowlist.
 
 Read the checkout's version from `package.json`; `.release-please-manifest.json`
 tracks release-please's version state, and `package-lock.json` mirrors package
@@ -107,6 +108,10 @@ The independent suite and shard commands, including their complete command
 mapping and fail-closed inventory evidence, are defined by the
 [CI verification contract](./ci-verification.md). Selected suites and shards
 are partial checks; the unqualified command remains the complete release gate.
+The release workflow's `complete` verification mode runs this command directly.
+Its default `evidence` mode may instead consume a validated aggregate that
+proves the same tree under the
+[release verification evidence contract](./npm-release-evidence.md).
 
 Browser assertions that depend on a navigated preview's layout wait for the
 expected frame URL and complete document state together, not only the outer
@@ -122,22 +127,28 @@ must continue to exercise pending states and command-to-preview timings.
 `.github/workflows/ci.yml` runs on pull requests and pushes to `main`, with
 read-only repository contents permission and concurrency cancellation for
 superseded validation. An audit-first repository job gates independent package
-jobs on Node 22.14.0 and Node 24, four unit shards per runtime, four browser
-shards per runtime, and focused macOS/Windows native jobs. Chromium is installed
-only by browser jobs. Every job that runs npm installs with npm 11.7.0 and
-`npm ci`; CI caches only npm downloads and includes the merge-base lockfile in
+jobs, four unit shards, four browser shards, and focused macOS/Windows native
+jobs. Ordinary pull requests and `main` pushes run the functional suites on the
+minimum supported Node 22.14 runtime. Same-repository Release Please pull
+requests add Node 24 to every functional suite, while the shared repository job
+resolves the latest Node 24 patch for every event. An explicit capture step
+passes that exact patch to every selected Node 24 job. Chromium is installed
+only by browser jobs. Every npm-running job installs npm 11.7.0 and runs
+`npm ci`. CI caches only npm downloads and includes the merge-base lockfile in
 cache keys for jobs that build historical baselines.
 
 The stable `Required CI` branch-rule status fails unless every prerequisite
-result is exactly successful and all 16 unit/browser reports prove the expected
-commit, runtimes, shards, and complete test inventories. Stable report artifact
+result is exactly successful and the event-selected eight or sixteen
+unit/browser reports prove the expected commit, runtimes, shards, and complete
+test inventories. Only a same-repository branch with the Release Please prefix
+or autorelease label can select the dual-runtime profile. Stable report artifact
 names support failed-job and whole-workflow reruns by replacing each shard's
 evidence; browser traces remain attempt-specific. Full Git history is available
-where baseline resolution requires `origin/main`. Action revisions are immutable
-commit hashes with reviewed version comments, runtime versions are explicit,
-and fork pull requests receive no release secrets or write permissions. The
-[CI verification contract](./ci-verification.md) defines the complete graph,
-evidence, caching, and failure semantics.
+where baseline resolution requires `origin/main`. Action revisions are
+immutable commit hashes with reviewed version comments, runtime versions are
+explicit, and fork pull requests receive no release secrets or write
+permissions. The [CI verification contract](./ci-verification.md) defines the
+complete graph, evidence, caching, and failure semantics.
 
 ## Preview Deployments
 
@@ -248,11 +259,16 @@ The release workflow then:
    output), or explicit manual `publish_ref` and `viewer_ref` inputs. An
    incomplete pair fails closed; ordinary pushes do nothing.
 2. Checks out the CLI tag with history on a GitHub-hosted runner.
-3. Installs Node 24, npm 11.7.0, Rust 1.95.0, and Chromium without a package
-   cache.
+3. Resolves the latest available Node 24 patch for the single publish job and
+   installs npm 11.7.0 without a package cache. Rust 1.95.0 and Chromium are
+   installed only when complete verification is selected.
 4. Verifies both local and remote tags identify `HEAD`, the source tree is clean
    including untracked files, and each tag matches its package version.
-5. Runs `npm ci` and the complete `cargo xtask check` gate.
+5. Runs `npm ci`, performs the live workspace dependency audit, then selects
+   applicable complete CI evidence for the tag's exact tree or falls back to
+   the complete `cargo xtask check` gate. The
+   [release verification evidence contract](./npm-release-evidence.md) defines
+   candidate selection, validation and failure semantics.
 6. Packs viewer then CLI, validates both packed manifests and inventories plus
    the runtime license closure, and smoke-tests those exact paths in clean
    consumers. Each archive has its own integrity, shasum, inventory and size
@@ -275,6 +291,8 @@ The release workflow then:
 Publishing occurs in the workflow invocation that creates both GitHub releases.
 A manual dispatch from workflow ref `main` retries an existing `publish_ref`
 (`vX.Y.Z`) and `viewer_ref` (`viewer-vX.Y.Z`) pair through the identical path.
+Its `verification` input defaults to `evidence`; selecting `complete` forces the
+full local gate without making GitHub evidence requests.
 A single concurrency group serializes automatic runs and manual retries without
 cancelling an in-progress publish. A completed viewer publication is verified
 and skipped on retry; the CLI cannot publish before that verification succeeds.
@@ -286,9 +304,10 @@ Starting a manual dispatch authorizes only a retry of the supplied immutable tag
 pair; the source, version and registry-content guards prevent it from selecting
 or rebuilding different release bytes.
 
-The publish job alone receives `id-token: write`, plus read-only contents, and
-runs in the protected GitHub environment named `npm`. Release-please receives
-only contents, pull-request, and issue write permissions. Prefer a
+The publish job alone receives `id-token: write`, plus read-only Actions and
+contents access, and runs in the protected GitHub environment named `npm`.
+Release-please receives only contents, pull-request, and issue write
+permissions. Prefer a
 repository-owned fine-grained token or GitHub App credential in the
 `RELEASE_PLEASE_TOKEN` secret so release PR events trigger normal checks. The
 workflow falls back to `GITHUB_TOKEN`; GitHub suppresses most follow-on workflow
@@ -359,12 +378,15 @@ read-back verification, merge-authorized publishing policy, and credential block
 Each pair records one checked commit, both immutable tags and versions, the
 CLI's exact viewer dependency, both uploaded tarballs and pack reports, both
 registry verification results, GitHub releases, npm URLs, provenance/signature
-results and the five clean-consumer smoke results. Retain the workflow run and
-protection read-backs. The first interactive viewer registration has source/hash
-and npm signature evidence, **not OIDC provenance**; later trusted publications
-generate provenance automatically. Do not claim a signature check proves an
-attestation exists. A failed publish never changes a tag or rebuilds from a
-branch; retries accept only the existing immutable pair.
+results and the five clean-consumer smoke results. The preserved verification
+record identifies whether the workflow ran the complete gate or reused CI, and
+in evidence mode names the selected CI run, evidence commit, matching tree and
+report count. Retain the workflow run and protection read-backs. The first
+interactive viewer registration has source/hash and npm signature evidence,
+**not OIDC provenance**; later trusted publications generate provenance
+automatically. Do not claim a signature check proves an attestation exists. A
+failed publish never changes a tag or rebuilds from a branch; retries accept
+only the existing immutable pair.
 
 ## Current External Requirements
 

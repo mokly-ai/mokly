@@ -160,6 +160,7 @@ export function viewerContext(
   ].find((entry) => entry.id === selection.screenId);
   return {
     base: "",
+    embedded: true,
     updateVersion: model.revision.evidence,
     comparisons: model.comparisonUrl !== null,
     ...(model.changesStatus === "disabled"

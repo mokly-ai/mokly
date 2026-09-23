@@ -7,9 +7,17 @@ import { promisify } from "node:util";
 
 import { parse } from "yaml";
 
+import {
+  SUPPORTED_NODE_RANGE,
+  TESTED_NODE_VERSIONS,
+  isSupportedNodeVersion,
+} from "../dist/cli/bootstrap.js";
+
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
+const testedNodeVersions: readonly string[] = TESTED_NODE_VERSIONS;
+const [minimumTestedNode, currentTestedNode] = TESTED_NODE_VERSIONS;
 const resultVariables = [
   "REPOSITORY_RESULT",
   "PACKAGE_RESULT",
@@ -34,13 +42,14 @@ interface WorkflowJob {
   steps: readonly WorkflowStep[];
   strategy?: {
     "fail-fast"?: boolean;
-    matrix: Readonly<Record<string, readonly (string | number)[]>>;
+    matrix: Readonly<Record<string, readonly (string | number)[] | string>>;
   };
   "timeout-minutes"?: number;
 }
 
 interface Workflow {
   concurrency: { "cancel-in-progress": boolean };
+  env: Readonly<Record<string, string>>;
   jobs: Readonly<Record<string, WorkflowJob>>;
   on: Readonly<Record<string, unknown>>;
   permissions: Readonly<Record<string, string>>;
@@ -85,16 +94,18 @@ test("CI shards complete verification behind one prerequisite", async () => {
   assert.equal(required.if, "always()");
   for (const job of [packageJob, unit, browser, native])
     assert.deepEqual(job.needs, ["repository"]);
-  assert.deepEqual(packageJob.strategy?.matrix.node, ["22.14.0", "24"]);
+  const selectedNodeMatrix =
+    "${{ fromJSON(needs.repository.outputs.node-matrix) }}";
+  assert.equal(packageJob.strategy?.matrix.node, selectedNodeMatrix);
   for (const job of [unit, browser]) {
     assert.equal(job.strategy?.["fail-fast"], false);
-    assert.deepEqual(job.strategy?.matrix.node, ["22.14.0", "24"]);
+    assert.equal(job.strategy?.matrix.node, selectedNodeMatrix);
     assert.deepEqual(job.strategy?.matrix.shard, [1, 2, 3, 4]);
   }
   assert.equal(native.strategy?.["fail-fast"], false);
   assert.deepEqual(native.strategy?.matrix.os, [
     "blacksmith-6vcpu-macos-15",
-    "blacksmith-4vcpu-windows-2025",
+    "blacksmith-2vcpu-windows-2025",
   ]);
   assert.ok(
     repository.steps.some((step) =>
@@ -154,22 +165,69 @@ test("CI shards complete verification behind one prerequisite", async () => {
     assert.equal(setupNode?.with?.cache, "npm");
     assert.ok(job.steps.some((step) => step.run === "npm ci"));
   }
+  assert.equal(setupNodeVersion(repository), 24);
+  assert.equal(setupNodeVersion(native), minimumTestedNode);
+  assert.equal(
+    setupNodeVersion(required),
+    "${{ needs.repository.outputs.node-24-version }}",
+  );
   assertPinnedActions(workflow);
 });
 
-test("CI resolves Node 24 once for every dependent job", async () => {
-  const workflow = parse(await workflowSource()) as Workflow;
+test("local, package and CI runtimes share the Node compatibility policy", async () => {
+  const [version, manifestSource, lockSource, readme] = await Promise.all([
+    fs.readFile(path.join(repositoryRoot, ".node-version"), "utf8"),
+    fs.readFile(path.join(repositoryRoot, "package.json"), "utf8"),
+    fs.readFile(path.join(repositoryRoot, "package-lock.json"), "utf8"),
+    fs.readFile(path.join(repositoryRoot, "README.md"), "utf8"),
+  ]);
+  const manifest = JSON.parse(manifestSource) as {
+    engines: { node: string };
+  };
+  const lock = JSON.parse(lockSource) as {
+    packages: { "": { engines: { node: string } } };
+  };
+  assert.equal(version.trim(), currentTestedNode);
+  assert.equal(manifest.engines.node, SUPPORTED_NODE_RANGE);
+  assert.equal(lock.packages[""].engines.node, manifest.engines.node);
+  assert.ok(
+    readme.includes(`\`${SUPPORTED_NODE_RANGE}\``),
+    "the README must document the supported Node range",
+  );
+  assert.ok(
+    readme.includes("[`.node-version`](./.node-version)"),
+    "development setup must follow the tested Node version",
+  );
+  assert.ok(TESTED_NODE_VERSIONS.every(isSupportedNodeVersion));
+  assert.ok(testedNodeVersions.includes(version.trim()));
+});
+
+test("CI resolves the latest Node 24 patch once for every dependent job", async () => {
+  const source = await workflowSource();
+  const workflow = parse(source) as Workflow;
+  assert.equal(workflow.env.NODE_24_VERSION, undefined);
   const repository = workflow.jobs.repository;
   assert.ok(repository);
-  const resolver = repository.steps.find((step) =>
+  const setupIndex = repository.steps.findIndex((step) =>
     step.uses?.startsWith("actions/setup-node@"),
   );
-  assert.ok(resolver?.id, "the prerequisite must expose its resolved runtime");
-  assert.equal(resolver.with?.["node-version"], 24);
+  const captureIndex = repository.steps.findIndex(
+    (step) => step.name === "Capture exact Node.js version",
+  );
+  assert.ok(setupIndex >= 0 && captureIndex > setupIndex);
+  const repositorySetup = repository.steps[setupIndex];
+  const capture = repository.steps[captureIndex];
+  assert.equal(repositorySetup?.with?.["node-version"], 24);
+  assert.equal(capture?.id, "node-version");
+  assert.equal(
+    capture?.run,
+    `echo "value=$(node --print 'process.versions.node')" >> "$GITHUB_OUTPUT"`,
+  );
   assert.equal(
     repository.outputs?.["node-24-version"],
-    `\${{ steps.${resolver.id}.outputs.node-version }}`,
+    "${{ steps.node-version.outputs.value }}",
   );
+  assert.doesNotMatch(source, /steps\.node\.outputs\.node-version/);
   for (const name of ["package", "unit", "browser", "required"]) {
     const job = workflow.jobs[name];
     assert.ok(job, name);
@@ -182,7 +240,7 @@ test("CI resolves Node 24 once for every dependent job", async () => {
       name === "required"
         ? "${{ needs.repository.outputs.node-24-version }}"
         : "${{ matrix.node == '24' && needs.repository.outputs.node-24-version || matrix.node }}",
-      `${name} must reuse the prerequisite's exact Node 24 version`,
+      `${name} must reuse the exact Node 24 version captured by the prerequisite`,
     );
   }
 });
@@ -248,4 +306,9 @@ function assertFullHistoryCheckout(job: WorkflowJob): void {
   );
   assert.ok(checkout);
   assert.equal(checkout.with?.["fetch-depth"], 0);
+}
+
+function setupNodeVersion(job: WorkflowJob): unknown {
+  return job.steps.find((step) => step.uses?.startsWith("actions/setup-node@"))
+    ?.with?.["node-version"];
 }

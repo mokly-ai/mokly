@@ -155,3 +155,39 @@ test("keyboard, middle-click, and named frame targets use exact static routes", 
     await opened.close();
   }
 });
+
+test("an exported catalogue restores a pinned then saved appearance", async ({
+  page,
+}) => {
+  const screen = `${site.url}/view/screens/home.html`;
+  await page.goto(`${screen}?scheme=dark`);
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-mokly-theme",
+    "dark",
+  );
+  await expectFrameSource(
+    page.locator(".mbk-frame-mobile iframe"),
+    /home\.mobile\.dark\.html$/,
+  );
+  // A pin dresses one document, so the export is still on Auto next visit.
+  await page.goto(screen);
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-mokly-theme",
+    "auto",
+  );
+
+  await chooseScheme(page, "dark");
+  await page.goto(screen);
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-mokly-theme",
+    "dark",
+  );
+  await expect(page.locator("body")).toHaveAttribute(
+    "data-mokly-color-scheme",
+    "dark",
+  );
+  await expectFrameSource(
+    page.locator(".mbk-frame-mobile iframe"),
+    /home\.mobile\.dark\.html$/,
+  );
+});

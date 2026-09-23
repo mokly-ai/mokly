@@ -168,8 +168,12 @@ are under `.context/verification-reports/local-check-3oXQup/` and
 `.context/verification-reports/local-check-JM66IS/`. These are warm, complete
 dirty-checkout samples, not clean provisioning or hosted CI measurements.
 After they finished, `origin/main` advanced from `8b7c5238` to `d4228f90`
-(eight commits). The combined tree must be rechecked and measured separately;
-these samples do not claim to verify the new mainline changes.
+(eight commits). The combined tree was checked and measured separately below;
+these older samples do not claim to verify the new mainline changes.
+The newer mainline also moved long browser catalogue preparation into a
+separately bounded five-minute fixture, leaving each browser assertion's
+ordinary timeout intact; the earlier 240-second whole-test adjustment above
+and its timings describe only the pre-integration source.
 
 For a clean-checkout smoke, an owned detached worktree containing this source
 was committed **only inside the temporary test checkout**. The current
@@ -228,3 +232,59 @@ shard 1 to shard 4 through the new sorted inventory. The 131.280s browser
 preview-preparation spec keeps its fresh build and digest assertions. Fixture
 setup, bundle preparation and teardown now emit phase timings to quantify
 their contribution during the complete runs.
+
+## Merged-Tree Verification (September 23, 2026)
+
+The candidate implementation was merged locally with `origin/main` at
+`d4228f90`. Node 24.21.0, npm 11.11.0, Rust 1.98.1 and eight CPUs were used;
+the original checkout remained dirty for all checks. `npm ci`, build,
+example build/check, formatting, lint, typechecks, Rust formatting/Clippy/tests,
+focused unit/browser tests and the Rust file-length audit passed. Both Node
+22.14.0 and 24.21.0 independently discovered identical **444 unit files**
+(111/111/111/111) and **761 browser tests** (191/194/189/187), with complete,
+non-overlapping shard unions; see `.context/integration-ci-inventory.log`.
+
+The first complete gate stopped at 2m10s on a test fixture's TypeScript
+undefined-array check; its typecheck and seven focused tests passed after the
+fixture was corrected. One subsequent complete merged-tree gate passed in
+**27m03.91s** on fingerprint `64d174c5`. A repeat on that same fingerprint
+**failed after 22m10.96s**: the real browser preview build exceeded the
+five-minute setup fixture deadline. Its 194-test shard reported failure despite
+observing every assigned case, and the runner removed its owned workers and
+servers. The successful run's preview build took **296.51s**, leaving under
+four seconds of setup margin. Only this preview fixture's finite setup budget
+was raised to seven minutes; other setup and browser assertion deadlines are
+unchanged. Its real-build focused test passed (build **190.37s**). These failed
+and pre-adjustment runs are excluded from the final warm pair.
+
+Two complete runs then passed on the **same final code fingerprint**
+`afdbbd9218217b8c798eb6665593ae16fdd9b7eaf17b0ba98d577b9f6e7e5a47`;
+no source changed between the runs. Documentation-only results were recorded
+afterward. Times are nested within each wall time, not additive:
+
+| Gate or shard      |         Run 1 |         Run 2 |
+| ------------------ | ------------: | ------------: |
+| Complete wall time | **30m42.48s** | **27m29.02s** |
+| Repository         |         42.9s |         46.9s |
+| Package            |        274.5s |        228.1s |
+| Unit 1             |        385.7s |        362.2s |
+| Unit 2             |        794.2s |        744.4s |
+| Unit 3             |        363.2s |        323.5s |
+| Unit 4             |        317.9s |        271.2s |
+| Browser 1          |        619.6s |        518.2s |
+| Browser 2          |      1,539.7s |      1,359.7s |
+| Browser 3          |      1,030.4s |        906.2s |
+| Browser 4          |        723.7s |        615.7s |
+
+Each run observed all **444 unit files**, **2,386 passing unit tests**, and
+**761 passing browser tests**, with no failures, skips, cancellations or duplicate
+identities. Against the 39m01.054s baseline, wall time fell **21.3%/29.6%**;
+the 15-minute target was missed by **15m42s/12m29s**. Browser shard 2 remains
+the critical path, including real preview builds of **319.65s/311.78s**.
+The time command measured **324%/320%** CPU use and **2,383,148/2,294,492
+KiB** maximum resident size; sampled peak one-minute load was **17.21/16.27**.
+Raw records are `.context/integration-gate-{4,5}.{log,time,load}` and the
+eight reports are under `.context/verification-reports/local-check-W00Eks/`
+and `.context/verification-reports/local-check-QryzH7/`. The separately
+measured fresh-checkout setup above used warm global caches and does not
+represent internet-cold provisioning or a hosted CI run.

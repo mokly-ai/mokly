@@ -8,6 +8,9 @@ import {
 
 const FIXTURE_TIMING_PREFIX = "[mokly:fixture-timing] ";
 
+/** Full catalogue builds and exports have a budget separate from UI assertions. */
+export const FULL_CATALOGUE_SETUP_TIMEOUT_MS = 300_000;
+
 /** One measured setup phase, including whether the test asserts that operation. */
 export interface FixturePhaseTiming {
   readonly schemaVersion: 1;

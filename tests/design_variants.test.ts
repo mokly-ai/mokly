@@ -94,31 +94,36 @@ for (const viewport of ["mobile", "desktop"] as const) {
       "design-browse-changed-views",
       viewport,
     );
-    const marks = byClass(document, "ce-view-changed");
-    assert.equal(marks.length, 2);
-    assert.deepEqual(
-      marks.map((mark) => attribute(mark, "aria-hidden")),
-      ["true", "true"],
-    );
-    for (const className of ["ce-viewport-control", "ce-theme-control"])
-      assert.equal(
-        byClass(byClass(document, className)[0]!, "ce-view-changed").length,
-        1,
-        className,
-      );
-    const theme = elements(
-      document,
-      (node) => attribute(node, "aria-label") === "Switch to dark mode",
-    );
-    assert.equal(theme.length, 1);
-    assert.equal(
-      attribute(theme[0]!, "data-mokly-link"),
-      "design-review-dark-scheme",
-    );
+    const viewportControl = byClass(document, "ce-viewport-control")[0];
+    const appearance = byClass(document, "mbk-appearance")[0];
+    assert.ok(viewportControl && appearance);
+    assert.equal(byClass(viewportControl, "ce-view-changed").length, 1);
+    const schemeMarks = byClass(appearance, "mbk-view-changed");
+    assert.equal(schemeMarks.length, 1);
+    assert.equal(attribute(schemeMarks[0]!, "aria-hidden"), "true");
+    const selector = elements(
+      appearance,
+      (node) => node.tagName === "select",
+    )[0];
+    assert.ok(selector);
+    const descriptionId = attribute(selector, "aria-describedby");
+    assert.ok(descriptionId);
+    const description = elements(
+      appearance,
+      (node) => attribute(node, "id") === descriptionId,
+    )[0];
+    assert.ok(description);
+    assert.equal(textContent(description), "Other theme changed");
+    assert.equal(byClass(document, "ce-theme-control").length, 0);
     const details = byClass(document, "mbk-details-body")[0];
     assert.ok(details);
     assert.match(textContent(details), /Changed views/);
     assert.match(textContent(details), /Mobile · Dark, Desktop · Dark/);
+    const changedLink = elements(
+      details,
+      (node) => attribute(node, "data-mokly-link") === "design-review-changed",
+    );
+    assert.equal(changedLink.length, 1);
     assert.equal(byClass(document, "mbk-cmp-toolbar").length, 0);
   });
 }

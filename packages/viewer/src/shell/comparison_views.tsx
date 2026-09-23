@@ -67,7 +67,7 @@ export function ComparisonViews({
             <h3>
               {viewport === "mobile" ? "Mobile" : "Desktop"} ·{" "}
               {wording.label(label)}
-              {presentation.colorScheme !== view.colorScheme
+              {presentation.requestedColorScheme !== view.colorScheme
                 ? " · Light only"
                 : ""}
             </h3>
@@ -118,6 +118,7 @@ function ComparisonPane({
           data-color-scheme-fallback={
             view.colorScheme === "light" ? "" : undefined
           }
+          data-preview-color-scheme={view.colorScheme}
         >
           <ComparisonFrame
             component={component}

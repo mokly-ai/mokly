@@ -7,6 +7,7 @@ import { exportCatalogue } from "../../dist/export/run.js";
 import { createExampleBaseline } from "../helpers/example_baseline.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 import {
+  FULL_CATALOGUE_SETUP_TIMEOUT_MS,
   timeExportPreparation,
   timeFixturePhase,
 } from "../helpers/fixture_timing.js";
@@ -19,7 +20,7 @@ let output: string;
 let root: string;
 let server: Awaited<ReturnType<typeof serveStaticFiles>>;
 test.beforeAll(async () => {
-  test.setTimeout(180_000);
+  test.setTimeout(FULL_CATALOGUE_SETUP_TIMEOUT_MS);
   root = await fs.promises.mkdtemp(
     path.join(repositoryRoot, ".context/mokly-example-export-"),
   );

@@ -1,5 +1,6 @@
 import { collection, defineCollection, defineRoot } from "@mokly/mokly";
 
+import { appearanceDesign } from "./browse/appearance/index.js";
 import { removedPageScreens } from "./browse/pages/previous-version/screens.js";
 import { formsFilterScreen } from "./browse/states/tags/forms.js";
 import { onboardingPickerScreen } from "./browse/states/tags/onboarding-picker.js";
@@ -7,7 +8,6 @@ import { onboardingFilterScreen } from "./browse/states/tags/onboarding.js";
 import { tagPickerScreen } from "./browse/states/tags/picker.js";
 import { variantScreens } from "./browse/variants/screens.js";
 import { detailsScreen } from "./browse/views/details-screen.js";
-import { browseSchemeScreens } from "./browse_scheme_screens.js";
 import { browseStateScreens, browseViewScreens } from "./browse_screens.js";
 import { browseTagScreens } from "./browse_tag_screens.js";
 import { changesScreens } from "./changes_screens.js";
@@ -42,7 +42,6 @@ const designMockups = defineRoot({
           children: [
             ...browseStateScreens,
             ...browseTagScreens,
-            ...browseSchemeScreens,
             collection({
               children: [
                 tagPickerScreen,
@@ -96,6 +95,7 @@ const designMockups = defineRoot({
           segment: "publication",
           title: "Published catalogue",
         }),
+        appearanceDesign,
       ],
       description:
         "The package-owned responsive Browse shell around consumer fragments.",

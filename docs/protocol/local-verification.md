@@ -62,16 +62,19 @@ the current Playwright inventory, including one independent, normally timed
 development hydration test per generated route; Playwright distributes complete
 specs across four shards. Keep at most two simultaneous unit files per runner,
 one Playwright worker per runner, zero browser retries, and all assertions. The
-real browser preview-build test has a finite 240-second budget, justified by a
-measured 171-second pass and a four-worker 180-second timeout; other test
-deadlines remain unchanged. No fixed file or test totals or filtered selections
+real browser preview-build preparation has its own seven-minute fixture budget:
+one combined-tree run completed its build in 297 seconds and another exceeded
+the former five-minute setup deadline under four-worker contention. Its browser
+assertions retain the default test deadline; other full-catalogue setups retain
+five-minute budgets. No fixed file or test totals or filtered selections
 represent a complete gate. The local aggregator reads only the eight reports from _this_
 invocation. Reuse the CI validators: all four shards per suite must have the
 same commit and Node runtime, complete independent discovery, nonempty disjoint
 assignments, no skipped/cancelled/failed tests, and observed unions exactly
 equal to the discovered unit files and browser test IDs. Missing, stale,
-duplicate, or unexpected reports fail closed. CI still requires its own two
-Node runtimes, four shards each, with unchanged report identities and aggregate.
+duplicate, or unexpected reports fail closed. CI retains four shards on its
+required Node 22 runtime; release pull requests add Node 24 with the same
+report identities and aggregate contract.
 
 ## Measurement
 

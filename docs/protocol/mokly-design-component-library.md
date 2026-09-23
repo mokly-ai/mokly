@@ -12,14 +12,22 @@ those implementations.
 
 Each row defines `design-ui-{slug}` at `design/library/{group}/{slug}.html`.
 The first listed variant is the default. Every variant has mobile and desktop
-light-only output; the existing shell selects one saved variant at a time.
+output; the existing shell selects one saved variant at a time.
 Group indexes are pure galleries, containing at most five component entries.
+Samples are light-only except the appearance selector and the top bar that
+composes it, whose own subject is the catalogue's appearance: those render in
+both schemes so the outer Appearance control switches them like the appearance
+screens. A dual-scheme sample derives the props whose own subject is the scheme
+from its render context rather than pinning them in its fixture, so the top
+bar's samples name the scheme they rendered for; a fixture sets such a prop only
+to depict a different setting, as the `auto-appearance` sample does.
 
 | Group / slug                  | Existing implementation                                             | Saved variant ids                                                                                          |
 | ----------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| chrome / top-bar              | `parts/top_bar.tsx`, `parts/tag_filter.tsx`                         | `default`, `search`, `tag-picker`, `drawer-open`                                                           |
+| chrome / top-bar              | `parts/top_bar.tsx`, `parts/tag_filter.tsx`                         | `default`, `search`, `tag-picker`, `drawer-open`, `auto-appearance`                                        |
 | chrome / catalogue-navigation | `parts/nav.tsx`, scenario data in `components/parts/navigation.tsx` | `all`, `changes`, `empty`, `drawer`, `loading`, `preparing`, `unavailable`, `variants`, `changed-variants` |
 | chrome / screen-header        | `parts/shell.tsx: ScreenHead`                                       | `screen`, `component`, `changed`, `removed`                                                                |
+| chrome / appearance-selector  | new for the appearance mockups                                      | `auto`, `light`, `dark`, `compact`                                                                         |
 | controls / comparison-toolbar | `parts/compare.tsx: CompareToolbar`                                 | `current`, `side-by-side`, `overlay`, `difference`                                                         |
 | controls / view-controls      | `components/parts/view_controls.tsx`, `parts/shell.tsx: ViewSwitch` | `default`, `both`, `highlighted`, `unavailable`, `changed-views`                                           |
 | controls / tag-picker         | `parts/tag_filter.tsx: TagPicker`                                   | `all`, `selected`, `empty`                                                                                 |
@@ -34,11 +42,12 @@ Group indexes are pure galleries, containing at most five component entries.
 | preview / flow-step           | `parts/stage_content.tsx: FlowStep`                                 | `first`, `second`                                                                                          |
 
 Fixtures for each variant come from the corresponding existing screen state,
-assembled into complete explicit props at declaration time. They may reuse the
+assembled into complete explicit props at declaration time, apart from the
+render-context fallback a dual-scheme sample uses above. They may reuse the
 same typed fixture values used by screen adapters. They never import/render the
-complete owning artboard. All selected-screen footers use the icon panel and all
-viewport/theme controls use the grouped icons. The legacy disclosure variant and
-segmented viewport/theme presentations are removed. Comparison-mode segments remain.
+complete owning artboard. All selected-screen footers use the icon panel and the
+viewport control uses the grouped icons. The legacy disclosure variant and
+segmented viewport presentations are removed. Comparison-mode segments remain.
 
 ## Data, Slots And Controls
 
@@ -51,9 +60,16 @@ Controls below use text, boolean, number and primitive enum selections only.
 
 1. **Top bar:** query and placeholder strings; menu state `none/open/close`;
    existing text/icon menu presentation; available tag records, optional active
-   tag and picker-open flag; explicit navigation destinations. Controls: query,
-   picker-open and menu state. Theme controls belong in the screen header. Brand/search structure belongs to this component;
-   it composes the registered picker and chip. Preserve compact mobile branding.
+   tag and picker-open flag; explicit navigation destinations; and an
+   `auto/light/dark` interface appearance that falls back to the render
+   context's scheme. Controls: query,
+   picker-open, menu state and appearance. The appearance setting is the
+   catalogue's own and is the only scheme control in the design catalogue. This
+   component owns it, so every artboard with a top bar draws it; screens do not
+   opt in. The value defaults to the scheme the file was rendered for and is
+   overridden only to depict a different setting, as the Auto artboard does.
+   Brand/search structure belongs to this component;
+   it composes the registered picker, chip and appearance selector. Preserve compact mobile branding.
 2. **Catalogue navigation:** row records with stable key, label, kind
    `collection/screen/component/flow/page/variant`, depth, optional
    count/open/destination, an optional changed mark, and an optional
@@ -85,19 +101,15 @@ Controls below use text, boolean, number and primitive enum selections only.
    Controls: mode and eligibility. Ineligible renders no band; stories depicting
    a band supply eligible fixture data. Preserve the opaque background, refresh
    depiction and current linked/native/inactive behavior for each screen family.
-5. **View controls:** selected preview `mobile/desktop/both`, depicted scheme,
-   optional highlight state and unavailable reason `empty/unavailable/comparison/removed`;
-   optional scheme-disabled state, optional changed views as
-   viewport/scheme records, and supported theme destinations. Controls:
-   selection, scheme, highlight and reason. A changed view marks the theme
-   control when its scheme differs from the depicted one and the viewport
-   dropdown when its viewport is not the selected one; `both` never marks the
-   dropdown. The mark is evidence about other views, so the details inspector
-   names them and the control keeps its own label. The single icon group lives in the
-   screen header: viewport dropdown, theme icon, and optional highlight toggle.
-   Authored theme pairs use canonical links; unsupported pairs stay disabled.
-   Component previews retain native local theme toggling. The dropdown controls
-   actual mobile/desktop previews inside the bounded scrolling workspace.
+5. **View controls:** selected preview `mobile/desktop/both`, optional
+   highlight state, unavailable reason `empty/unavailable/comparison/removed`,
+   and optional changed views as viewport/scheme records. Controls: selection,
+   highlight and reason. A changed view marks the viewport dropdown when its
+   viewport is not selected; `both` never marks the dropdown. The top-bar
+   Appearance selector marks changes in another scheme. Both marks describe
+   evidence about other views, and the details inspector names them. The single
+   header icon group contains the viewport dropdown and optional highlight
+   toggle; one Appearance control sets the catalogue scheme.
 6. **Tag picker:** tag records containing stable id, label and optional
    destination, plus optional active id. Controls: optional active tag using
    the existing forms/onboarding examples. Empty input follows the current hidden
@@ -127,7 +139,9 @@ Controls below use text, boolean, number and primitive enum selections only.
 11. **Prop field:** label, stable input id, optional description/error and
     optional-field/supplied flags; a `control` slot contains the native input or
     selection control. Controls: label and optional description/error. Typed
-    field values and disabled/read-only behavior remain with the caller's slot.
+    field values and disabled/read-only behavior remain with the caller's slot,
+    while the field frames that control's surface, border and invalid state so
+    a prop panel reads the same in every host.
     Preserve label/input/error associations and assign unique ids for repeated
     forms. This is reusable field framing, not a new forms or schema engine.
 12. **Device frame:** device `phone/browser`, optional caption, depicted dark
@@ -146,6 +160,11 @@ Controls below use text, boolean, number and primitive enum selections only.
     and `children` slot containing the reused screen preview. Controls: number,
     title and description. References still point to the standalone owning
     screen, and flows never become the original home of screen markup.
+16. **Appearance selector:** the catalogue's `auto/light/dark` setting and a
+    compact flag for narrow bars. Controls: setting and compact. It is a native
+    selection control named Appearance, holding one value; it is the catalogue's
+    single setting, so the value it holds is also the scheme the previews
+    around it follow, and it does not fabricate a native open list.
 
 Scenario adapters explicitly map current names to these semantic fields. Do not
 add uncontrolled catch-all objects, per-screen CSS strings or function props to
@@ -174,13 +193,14 @@ required semantic parents (such as a `dl` for prop rows), bounded panel dimensio
 and enough overflow space for popovers and frames.
 The host must not supply hidden scenario data or another full-screen component.
 
-| Existing design family                               | Required reuse                                                                                                           |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Browse, tag, scheme, missing-route and drawer states | Top bar, navigation, header, relevant tag/control/frame/inspector/empty components                                       |
-| Changes and review outcomes                          | Shared chrome, eligible comparison toolbar, device frames, comparison panes and inspector; empty states where applicable |
-| Component pages, states and inspection               | Shared chrome/status/view controls, inspector/metadata and comparison parts; existing fixture previews remain content    |
-| Component controls states                            | Shared chrome/inspector plus repeated prop-field framing; fixture values and validation outcomes remain explicit         |
-| Use-case depiction                                   | Shared chrome, flow steps and framed owning screen content                                                               |
+| Existing design family                               | Required reuse                                                                                                                     |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Browse, tag, scheme, missing-route and drawer states | Top bar, navigation, header, relevant tag/control/frame/inspector/empty components                                                 |
+| Changes and review outcomes                          | Shared chrome, eligible comparison toolbar, device frames, comparison panes and inspector; empty states where applicable           |
+| Component pages, states and inspection               | Shared chrome/status/view controls, inspector/metadata and comparison parts; existing fixture previews remain content              |
+| Component controls states                            | Shared chrome/inspector plus repeated prop-field framing; fixture values and validation outcomes remain explicit                   |
+| Use-case depiction                                   | Shared chrome, flow steps and framed owning screen content                                                                         |
+| Appearance states, panels and status                 | Shared chrome plus the appearance selector, and the existing navigation, header, frame, inspector, comparison and empty components |
 
 Adoption tests enumerate the actual owning screen inventory, assert the expected
 component ids per viewport, and verify there are no calls bypassing the registered

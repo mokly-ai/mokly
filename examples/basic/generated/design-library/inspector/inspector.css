@@ -1,7 +1,7 @@
 /* Exclusive shared-component styles. Global and layout rules stay shared. */
 
 .ce-inspector {
-background: white;
+background: var(--chrome-surface);
   border-top: 1px solid var(--chrome-border);
   display: grid;
   flex-shrink: 0;
@@ -41,13 +41,13 @@ display: none;
 }
 
 .ce-inspector > details > summary:hover {
-background: #f4f6f3;
+background: var(--chrome-hover);
   color: var(--chrome-ink);
 }
 
 .ce-inspector > details[open] > summary {
-background: #edf3ef;
-  border-color: #b9cfc2;
+background: var(--mbk-accent-surface);
+  border-color: var(--mbk-sage-deep);
   color: var(--mbk-sage-deep);
 }
 
@@ -96,7 +96,7 @@ max-height: none;
 .ce-design .mbk-shell--mobile .ce-inspector:has(> details[open]) {
   border: 1px solid var(--chrome-border);
   border-radius: 20px;
-  box-shadow: 0 6px 28px #24372b26;
+  box-shadow: var(--chrome-shadow-sheet);
   grid-template-rows: 28px 48px minmax(0, 1fr);
   overflow: hidden;
 }
@@ -130,7 +130,7 @@ appearance: none;
 }
 
 .ce-sheet-expand::before {
-background: #bdc5bf;
+background: var(--chrome-control-edge);
   border-radius: 999px;
   content: "";
   height: 5px;

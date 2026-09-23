@@ -211,7 +211,7 @@ test("local evidence rejects missing, duplicate, stale and failed shards", () =>
   }));
   const options = {
     commit: "a".repeat(40),
-    runtime: "node-24",
+    runtime: unit[0]!.runtime,
     unitFiles: files,
     browserTests,
   };

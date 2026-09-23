@@ -51,6 +51,7 @@ test("isolated comparisons stay lazy, immutable, sandboxed, and responsive", asy
             page.frameLocator("[data-diff-stage] iframe").last().locator("h1"),
           ).toHaveText("Current home");
           for (const frame of await frames.all()) {
+            await expect(frame).toHaveCSS("color-scheme", scheme);
             await expect(frame).toHaveAttribute("sandbox", "");
             await expect(frame).toHaveAttribute(
               "src",
@@ -107,8 +108,13 @@ test("added and removed screens stay current while light-only comparisons retain
   await page.goto(`${site.url}/view/screens/details.html`);
   await chooseScheme(page, "dark");
   await page.getByRole("button", { name: "Overlay", exact: true }).click();
-  for (const frame of await page.locator("[data-diff-stage] iframe").all())
+  await expect(page.locator("[data-diff-viewport] h3").first()).toContainText(
+    "Light only",
+  );
+  for (const frame of await page.locator("[data-diff-stage] iframe").all()) {
     await expect(frame).not.toHaveAttribute("src", /\.dark\.html$/);
+    await expect(frame).toHaveCSS("color-scheme", "light");
+  }
 });
 
 test("static failures retry the same generation and abandoned requests stay cancelled", async ({

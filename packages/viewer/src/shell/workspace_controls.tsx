@@ -1,52 +1,21 @@
 /** Grouped, compact viewport, theme and inspection controls. */
+import type { ColorScheme } from "../data/axes.js";
+
 import { useShellIdentifier } from "./identifier_context.js";
 import { useOptionalShellStore } from "./store_context.js";
-import {
-  VIEW_CHANGED_CLASS,
-  VIEW_CHANGED_IDS,
-  VIEW_CHANGED_TEXT,
-  VIEW_CHANGED_TEXT_CLASS,
-  viewMarks,
-  type ChangedView,
-} from "./view_marks.js";
+import { ViewChangedMark } from "./view_changed_mark.js";
+import { VIEW_CHANGED_IDS, viewMarks, type ChangedView } from "./view_marks.js";
 import { WorkspaceIcon } from "./workspace_icons.js";
-
-function ViewChangedMark({
-  id,
-  kind,
-  marked,
-}: {
-  id: string;
-  kind: "scheme" | "viewport";
-  marked: boolean;
-}) {
-  return (
-    <>
-      <span
-        aria-hidden="true"
-        className={VIEW_CHANGED_CLASS}
-        data-view-changed={kind}
-        hidden={!marked}
-      />
-      <span
-        className={VIEW_CHANGED_TEXT_CLASS}
-        data-view-changed-text={kind}
-        hidden={!marked}
-        id={id}
-      >
-        {VIEW_CHANGED_TEXT[kind]}
-      </span>
-    </>
-  );
-}
 
 export function WorkspaceControls({
   changedViews,
   dark,
+  effectiveColorScheme,
   highlight,
 }: {
   changedViews: readonly ChangedView[];
   dark: boolean;
+  effectiveColorScheme: ColorScheme;
   highlight?: {
     available: boolean;
     active: boolean;
@@ -57,7 +26,7 @@ export function WorkspaceControls({
   const store = useOptionalShellStore();
   const viewport = store?.state.selection.viewport ?? "both";
   const scheme = store?.state.selection.colorScheme ?? "light";
-  const marks = viewMarks(changedViews, viewport, scheme);
+  const marks = viewMarks(changedViews, viewport, effectiveColorScheme);
   const schemeChangedId = useShellIdentifier(VIEW_CHANGED_IDS.scheme);
   const viewportChangedId = useShellIdentifier(VIEW_CHANGED_IDS.viewport);
   return (
@@ -90,10 +59,10 @@ export function WorkspaceControls({
         <button
           type="button"
           className="mbk-icon-button"
-          aria-label="Dark mode"
+          aria-label="Dark preview"
           aria-describedby={marks.scheme ? schemeChangedId : undefined}
           aria-pressed={scheme === "dark"}
-          title="Dark mode"
+          title="Dark preview"
           data-workspace-scheme=""
           onClick={() =>
             store?.selectColorScheme(

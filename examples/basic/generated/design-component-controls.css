@@ -17,9 +17,9 @@
   font-size: 11px;
 }
 .ce-edited {
-  background: #fbf1da;
+  background: var(--mbk-status-changed-bg);
   border-radius: 4px;
-  color: #866c33;
+  color: var(--mbk-status-changed-ink);
   margin-left: 8px;
   padding: 2px 5px;
 }
@@ -39,58 +39,18 @@
   cursor: default;
   text-decoration: none;
 }
-.ce-control-row input:not([type="checkbox"]),
-.ce-control-row select {
-  background: white;
-  border: 1px solid #cbd2cc;
-  border-radius: 5px;
-  color: var(--chrome-ink);
-  font: inherit;
-  font-size: 12px;
-  height: 32px;
-  max-width: 100%;
-  padding: 5px 8px;
-  width: 100%;
-}
-.ce-control-row input[type="checkbox"] {
-  accent-color: var(--mbk-sage-deep);
-  height: 16px;
-  margin: 0;
-  width: 16px;
-}
-.ce-control-row .ce-check-value {
-  align-items: center;
-  display: flex;
-  font: inherit;
-  font-size: 11px;
-  gap: 8px;
-  min-height: 32px;
-  padding: 0;
-}
-.ce-control-row input[aria-invalid="true"] {
-  border-color: #b55646;
-}
-.ce-optional-control .ce-unset-value {
-  color: var(--chrome-muted);
-  font-size: 11px;
-  margin: 3px 0 0;
-}
-.ce-optional-control:has(input[type="checkbox"]:checked) .ce-unset-value,
-.ce-optional-control:has(input[type="checkbox"]:not(:checked)) .ce-hint-value {
-  display: none;
-}
 .ce-controls-notice {
-  background: #f4f6f3;
+  background: var(--chrome-hover);
   border-radius: 6px;
   color: var(--chrome-ink-2);
   font-size: 12px;
   padding: 10px 12px;
 }
 .ce-control-alert {
-  background: #fcf0ed;
-  border: 1px solid #edcdc5;
+  background: var(--mbk-danger-bg);
+  border: 1px solid var(--mbk-danger-edge);
   border-radius: 6px;
-  color: #873b2e;
+  color: var(--mbk-danger-ink);
   font-size: 12px;
   margin-bottom: 12px;
   padding: 10px 12px;
@@ -127,7 +87,7 @@
   width: 6px;
 }
 .ce-action--quiet {
-  background: #edf3ef;
-  border-color: #c4d6ca;
+  background: var(--mbk-accent-surface);
+  border-color: var(--mbk-sage-deep);
   color: var(--mbk-sage-deep);
 }
