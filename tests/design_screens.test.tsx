@@ -4,6 +4,7 @@ import { test } from "node:test";
 import {
   attribute,
   byClass,
+  designCatalogue,
   designDocument,
   elements,
   textContent,
@@ -11,14 +12,60 @@ import {
 
 const additions = [
   ["design-browse-details-screen", "design/browse/views/details-screen.html"],
-  ["design-browse-tag-picker", "design/browse/states/tags/picker.html"],
-  ["design-browse-tag-forms", "design/browse/states/tags/forms.html"],
-  ["design-browse-tag-onboarding", "design/browse/states/tags/onboarding.html"],
+  [
+    "design-browse-tag-picker",
+    "design/browse/views/screen.variants/picker.html",
+  ],
+  ["design-browse-tag-forms", "design/browse/views/screen.variants/forms.html"],
+  [
+    "design-browse-tag-onboarding",
+    "design/browse/views/screen.variants/onboarding.html",
+  ],
   [
     "design-browse-tag-onboarding-picker",
-    "design/browse/states/tags/onboarding-picker.html",
+    "design/browse/views/screen.variants/onboarding-picker.html",
   ],
 ] as const;
+
+const convertedVariants = [
+  ["design-browse-dark-scheme", "dark-scheme"],
+  ["design-browse-light-only", "light-only"],
+  ["design-browse-tag-picker", "picker"],
+  ["design-browse-tag-forms", "forms"],
+  ["design-browse-tag-onboarding", "onboarding"],
+  ["design-browse-tag-onboarding-picker", "onboarding-picker"],
+] as const;
+
+test("the Welcome conversion moves exactly the approved screens out of collections", async () => {
+  const { manifest } = await designCatalogue;
+  const collections = manifest.entries.filter(
+    (entry) => entry.kind === "collection",
+  );
+  for (const [id, slug] of convertedVariants) {
+    const entry = manifest.entries.find((candidate) => candidate.id === id);
+    assert.equal(entry?.kind, "screen", id);
+    if (entry?.kind !== "screen") continue;
+    assert.equal(
+      entry.route,
+      `design/browse/views/screen.variants/${slug}.html`,
+      id,
+    );
+    assert.equal(entry.variantOf, "design-browse-screen", id);
+    assert.deepEqual(
+      collections.filter((collection) => collection.childIds.includes(id)),
+      [],
+      id,
+    );
+  }
+  const tagStates = collections.find(
+    (entry) => entry.id === "design-browse-tags",
+  );
+  assert.deepEqual(tagStates?.childIds, []);
+  const shellStates = collections.find(
+    (entry) => entry.id === "design-browse-states",
+  );
+  assert.ok(shellStates?.childIds.includes("design-browse-tag-filter"));
+});
 
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: catalogue navigation separates pages and components`, async () => {

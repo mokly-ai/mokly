@@ -1,5 +1,6 @@
 /** Resolve and fetch one removed entry's previous version. */
 
+import { historicalSnapshotId } from "../catalogue/snapshot_identity.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import type { ColorScheme, Viewport } from "../data/axes.js";
 import { encodeUrlPath } from "../data/paths.js";
@@ -123,11 +124,16 @@ function unavailable(): never {
   throw new Error("The previous version is unavailable.");
 }
 
+interface ParsedPreview {
+  baseCommit: string;
+  content: PreviewContent;
+}
+
 function screenContent(
   data: RemovedPreviewData,
   payload: unknown,
   base: string,
-): PreviewContent {
+): ParsedPreview {
   const result = parseReviewResult(payload);
   const screen = result.screens.find(
     (candidate) => candidate.route === data.route,
@@ -145,20 +151,70 @@ function screenContent(
       : [],
   );
   if (!views.length) unavailable();
-  return { kind: "screen", views };
+  return {
+    baseCommit: result.baseCommit,
+    content: { kind: "screen", views },
+  };
 }
 
 function pageContent(
   data: RemovedPreviewData,
   payload: unknown,
   base: string,
-): PreviewContent {
+): ParsedPreview {
   const preview = parseRemovedPagePreview(payload);
   if (preview.route !== data.route) unavailable();
   return {
-    kind: "page",
-    url: new URL(encodeUrlPath(preview.documentPath), base).href,
+    baseCommit: preview.baseCommit,
+    content: {
+      kind: "page",
+      url: new URL(encodeUrlPath(preview.documentPath), base).href,
+    },
   };
+}
+
+function generationFromUrl(value: string | URL): string | undefined {
+  const path = new URL(value).pathname;
+  return /^\/__mokly\/diffs\/__generations\/([a-f0-9]{64})\//.exec(path)?.[1];
+}
+
+function snapshotMatches(
+  data: RemovedPreviewData,
+  request: PreviewRequest,
+  responseUrl: string,
+  baseCommit: string,
+): boolean {
+  if (data.snapshotId === undefined && data.catalogueIdentity === undefined)
+    return true;
+  if (!data.snapshotId || !data.catalogueIdentity) return false;
+  if (
+    historicalSnapshotId(
+      data.catalogueIdentity,
+      { kind: "baseline", identity: baseCommit },
+      data,
+    ) === data.snapshotId
+  )
+    return true;
+  const response = new URL(responseUrl);
+  if (response.origin !== request.endpoint.origin) return false;
+  const requestedGeneration = generationFromUrl(
+    request.generation ?? request.endpoint,
+  );
+  const responseGeneration = generationFromUrl(response);
+  if (
+    requestedGeneration !== undefined &&
+    responseGeneration !== requestedGeneration
+  )
+    return false;
+  const generation = requestedGeneration ?? responseGeneration;
+  return (
+    generation !== undefined &&
+    historicalSnapshotId(
+      data.catalogueIdentity,
+      { kind: "generation", identity: generation },
+      data,
+    ) === data.snapshotId
+  );
 }
 
 /** Request one preview and validate it against the entry that asked for it. */
@@ -175,11 +231,14 @@ export async function requestPreview(
   if (!response.ok) unavailable();
   const payload: unknown = await response.json();
   const base = request.generation?.href ?? response.url;
+  const parsed =
+    data.kind === "screen"
+      ? screenContent(data, payload, base)
+      : pageContent(data, payload, base);
+  if (!snapshotMatches(data, request, response.url, parsed.baseCommit))
+    unavailable();
   return {
-    content:
-      data.kind === "screen"
-        ? screenContent(data, payload, base)
-        : pageContent(data, payload, base),
+    content: parsed.content,
     generation: new URL(".", base).href,
     url: response.url,
   };

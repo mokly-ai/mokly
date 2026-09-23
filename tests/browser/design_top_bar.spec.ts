@@ -8,10 +8,10 @@ import { repositoryRoot } from "../helpers/fixture.js";
 const directory = path.join(repositoryRoot, "examples/basic/generated");
 
 const pickerDesigns = [
-  "design/browse/states/tags/picker",
+  "design/browse/views/screen.variants/picker",
   "design/browse/states/tag-filter",
-  "design/browse/states/tags/forms",
-  "design/browse/states/tags/onboarding-picker",
+  "design/browse/views/screen.variants/forms",
+  "design/browse/views/screen.variants/onboarding-picker",
 ];
 
 const barDesigns = [

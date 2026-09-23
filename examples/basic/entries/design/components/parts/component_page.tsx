@@ -38,9 +38,11 @@ export function ComponentPage({
           ? "removed"
           : state === "added"
             ? "added"
-            : evidence
+            : state === "disabled"
               ? "component"
-              : "all"
+              : evidence
+                ? "component"
+                : "all"
       }
       viewport={viewport}
       variants={<VariantPicker state={state} />}

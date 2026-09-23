@@ -54,6 +54,7 @@ interface CatalogueReadModel {
   removedEntries: readonly {
     entry: CatalogueRoutedEntry;
     ancestors: readonly { id: string; title: string }[];
+    snapshotId?: string;
     preview?: { kind: "screen" } | { kind: "page"; path: PublicPath };
   }[];
 }
@@ -166,11 +167,13 @@ Do not spread a manifest, entry, or internal evidence object into public JSON.
 - Components retain schemas, read-only control descriptions, declared slot
   names, saved variants in authored order, their validated wire props and views.
   The first variant is default; ready usage copies only instances/slots/ranges.
-- Collections retain authored `childIds`. Derive the Pages/Components tree and
+- Collections retain authored `childIds`, including an empty array. Derive the Pages/Components tree and
   breadcrumbs from that forest, not `navPath` or source directories. Project
   mixed collections independently into both sections; unclaimed entries stay
   at the root. Collections have no route or tags; emit `tags: []`.
-  Drop empty projections, except authored empty folders remain in Pages.
+  Drop empty projections, except authored empty folders remain in Pages so a
+  stable structural identity can survive temporary or deliberate membership
+  changes. Public readers accept and preserve that empty collection.
   Under the implemented [screen variants contract](./mokly-screen-variants.md),
   a variant screen's entry node is a child of its parent screen's entry node
   in the Pages tree rather than a sibling. Entry-node `children` is present
@@ -188,6 +191,8 @@ baseline manifest envelopes, content digests for source inputs, style offsets
 paths, credentials, render-capability tokens, or legacy manifests. No source
 bytes, HTML, runtime React values, or source maps belong in this JSON. This
 privacy rule applies recursively, including removed entries and extension fields.
+`snapshotId` is a one-way digest, never a public commit, manifest, or generation
+inventory.
 Reject private filesystem paths in path fields; display strings/props are data.
 
 Per-entry Changes comes from the existing route/component attribution, not a
@@ -196,7 +201,12 @@ consumers can have eligible comparisons while `included` is false. Collection
 inclusion aggregates descendants without extra counts. Unknown,
 preparing, pending and disabled states never imply unmodified or a zero count.
 Retain removed routed entries with baseline ancestor labels outside the current
-ownership forest; current ids/routes win on conflicts under existing rules.
+ownership forest. A current route still excludes historical content at that
+same route. For a retained removed record at a distinct route whose id is also
+current, id-only lookup chooses current while an explicit matching snapshot
+selects history. Each newly projected removed record carries an opaque
+`snapshotId` when real immutable identity is available, distinguishing it from
+current content and other catalogues.
 Removed variants can remain on a surviving component. The optional `preview`
 field is the additive descriptor defined by
 [removed previews](./mokly-removed-previews.md); readers tolerate its absence.
@@ -229,6 +239,29 @@ presentation sorting. Emit required empties, omit absent optionals, use
 two-space indentation and a final LF. Identical inputs produce identical bytes
 regardless of enumeration, time or output location.
 
+`snapshotId` is lowercase SHA-256 of UTF-8 JSON, without LF, for
+`["mokly-historical-snapshot-v1", catalogueIdentity, sourceKind,
+sourceIdentity, entryKind, entryId, entryRoute]`. `sourceKind` is `baseline`
+when accepted evidence names one unambiguous baseline commit; that commit is the
+`sourceIdentity`. Projection requires every available evidence/comparison
+baseline commit to agree. This baseline identity takes precedence even after a
+live immutable comparison becomes available, so an evidence-only refresh does
+not invalidate selection. When no baseline identity exists, an exact 64-hex
+generation from `comparisonUrl` may supply `sourceKind: "generation"`. With
+neither real source, projection omits the field instead of deriving it from
+revisions, `deploymentId`, metadata, time, or randomness.
+
+Readers validate supplied snapshot ids and require them to be unique. For an
+older catalogue that omits the field but advertises one immutable comparison
+generation, the reader derives a generation-backed per-record identity. An
+id-only selection of one uniquely identified removed record remains compatible
+and normalizes to its safe published identity; current content still wins when
+both current and removed records use that id. Identity-less legacy history also
+remains readable while its id is unique, but a current/removed id collision is
+unavailable. A baseline or generation change produces different ids, so an
+unknown, stale, or cross-catalogue selection fails closed rather than
+retargeting current content.
+
 `deploymentId` is the artifact's 64-hex identity. The
 [delivery hashing rule](./mokly-export-delivery.md#deployment-identity) additionally
 normalizes this owned JSON's top-level `deploymentId` to 64 zeroes before hashing
@@ -253,8 +286,9 @@ Revisions are nonnegative safe integers: content
 advances on accepted content, evidence on accepted usage/Changes updates. Each
 response is one atomic snapshot; failed candidates retain the last good content.
 Watched notifications refresh that snapshot. Evidence-only refresh preserves
-frames, focus, selection, scrolling and local edits; content changes follow the
-existing reload lifecycle. Serve hashes the canonical public snapshot with its
+frames, focus, valid snapshot selection, scrolling and local edits; a changed
+baseline invalidates the selected snapshot without falling back to current
+content. Content changes otherwise follow the existing reload lifecycle. Serve hashes the canonical public snapshot with its
 `deploymentId` zeroed; it is not a static artifact attestation.
 Live comparison URLs stay null until a matching immutable generation exists;
 Serve's existing explicit comparison integration prepares it and refreshes the

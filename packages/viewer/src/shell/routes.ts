@@ -1,10 +1,13 @@
 /** URL-derived route state for the standalone hydrated shell. */
 
+import { isHistoricalSnapshotId } from "../catalogue/snapshot_identity.js";
 import type { StaticDelivery } from "../navigation/delivery.js";
 import { isLogicalFragment } from "../navigation/logical.js";
+import { parseViewAxes } from "../navigation/view_axes.js";
+import type { ManifestEntry } from "../registry/types.js";
 
 import { catalogueRouteEntry, type Catalogue } from "./catalogue.js";
-import { toRouteTarget } from "./target.js";
+import { toRouteTarget, type RoutedEntry } from "./target.js";
 import type { ShellView } from "./views.js";
 
 /** Route state whose view identity always comes from the document URL. */
@@ -14,6 +17,7 @@ export interface ShellRoute {
   comparison?: "side";
   fragment?: string;
   instance?: string;
+  snapshot?: string;
   variant?: string;
   /** Every component variant query value, including invalid empty or duplicate values. */
   variantValues?: readonly string[];
@@ -27,16 +31,41 @@ export function routeFromUrl(
   delivery?: StaticDelivery,
 ): ShellRoute {
   const entry = routeEntry(catalogue, url.pathname, delivery);
-  const target = entry ? toRouteTarget(entry) : undefined;
+  const snapshots = url.searchParams.getAll("snapshot");
+  const historical = entry
+    ? catalogue.removedEntries.find(
+        ({ entry: candidate }) => candidate.route === entry.route,
+      )
+    : undefined;
+  const alias = /^\/id\//.test(url.pathname);
+  const requestedSnapshot =
+    snapshots.length === 1 && isHistoricalSnapshotId(snapshots[0])
+      ? snapshots[0]
+      : undefined;
+  const snapshot =
+    historical &&
+    (snapshots.length === 0 ||
+      (!alias && requestedSnapshot === historical.snapshotId))
+      ? (requestedSnapshot ?? historical.snapshotId)
+      : undefined;
+  const collidingLegacy =
+    historical !== undefined &&
+    historical.snapshotId === undefined &&
+    catalogue.manifest.entries.some(
+      (candidate) => candidate.id === historical.entry.id,
+    );
+  const validSnapshot = historical
+    ? snapshot !== undefined || (snapshots.length === 0 && !collidingLegacy)
+    : snapshots.length === 0;
+  const target = entry && validSnapshot ? toRouteTarget(entry) : undefined;
   const view = target
     ? { kind: "target" as const, target }
-    : url.pathname === "/"
+    : url.pathname === "/" && snapshots.length === 0
       ? { kind: "home" as const }
       : { kind: "missing" as const, requested: requestedPath(url.pathname) };
   const fragments = url.searchParams.getAll("fragment");
   const variants = url.searchParams.getAll("variant");
-  const viewports = url.searchParams.getAll("viewport");
-  const schemes = url.searchParams.getAll("scheme");
+  const axes = parseViewAxes(url.searchParams);
   const instances = url.searchParams.getAll("instance");
   const comparisons = url.searchParams.getAll("comparison");
   const variant =
@@ -47,13 +76,8 @@ export function routeFromUrl(
     entry?.kind === "component" && variants.length > 0 ? variants : undefined;
   return {
     view,
-    ...(viewports.length === 1 &&
-    ["both", "desktop", "mobile"].includes(viewports[0] ?? "")
-      ? { viewport: viewports[0] as "both" | "desktop" | "mobile" }
-      : {}),
-    ...(schemes.length === 1 && ["dark", "light"].includes(schemes[0] ?? "")
-      ? { colorScheme: schemes[0] as "dark" | "light" }
-      : {}),
+    ...axes,
+    ...(snapshot ? { snapshot } : {}),
     ...(instances.length === 1 && /^[a-f0-9]{64}$/.test(instances[0] ?? "")
       ? { instance: instances[0] }
       : {}),
@@ -75,7 +99,12 @@ export function routeHref(
   variant?: string,
   workspace: Pick<
     ShellRoute,
-    "colorScheme" | "comparison" | "instance" | "variantValues" | "viewport"
+    | "colorScheme"
+    | "comparison"
+    | "instance"
+    | "snapshot"
+    | "variantValues"
+    | "viewport"
   > = {},
 ): string {
   const url = new URL(
@@ -91,6 +120,7 @@ export function routeHref(
   if (workspace.colorScheme)
     url.searchParams.set("scheme", workspace.colorScheme);
   if (workspace.instance) url.searchParams.set("instance", workspace.instance);
+  if (workspace.snapshot) url.searchParams.set("snapshot", workspace.snapshot);
   if (workspace.comparison)
     url.searchParams.set("comparison", workspace.comparison);
   return `${url.pathname}${url.search}`;
@@ -110,21 +140,35 @@ function routeEntry(
   catalogue: Catalogue,
   pathname: string,
   delivery?: StaticDelivery,
-) {
+): RoutedEntry | undefined {
   if (pathname.startsWith("/view/")) {
     const route = decodePath(pathname.slice("/view/".length));
     if (route === undefined) return undefined;
-    const exact = catalogueRouteEntry(catalogue, route);
+    const exact = routedEntry(catalogueRouteEntry(catalogue, route));
     if (exact || !delivery || route.endsWith(".html")) return exact;
-    const canonicalPath = `/view/${route}.html`;
-    if (!Object.values(delivery.idRoutes).includes(canonicalPath))
-      return undefined;
-    return catalogueRouteEntry(catalogue, `${route}.html`);
+    const normalizedRoute = `${route}.html`;
+    const normalized = routedEntry(
+      catalogueRouteEntry(catalogue, normalizedRoute),
+    );
+    if (!normalized) return undefined;
+    const canonicalPath = `/view/${normalizedRoute}`;
+    const current = Object.values(delivery.idRoutes).includes(canonicalPath);
+    const historical = catalogue.removedEntries.some(
+      ({ entry }) => entry.route === normalizedRoute,
+    );
+    return current || historical ? normalized : undefined;
   }
   const match = /^\/id\/([^/]+)(?:\/(?:index\.html)?)?$/.exec(pathname);
   if (!match) return undefined;
   const id = decodeSegment(match[1] ?? "");
-  return id === undefined ? undefined : catalogue.byId.get(id);
+  const entry = id === undefined ? undefined : catalogue.byId.get(id);
+  return routedEntry(entry);
+}
+
+function routedEntry(
+  entry: ManifestEntry | undefined,
+): RoutedEntry | undefined {
+  return entry?.kind === "collection" ? undefined : entry;
 }
 
 function decodePath(value: string): string | undefined {

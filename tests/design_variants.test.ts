@@ -22,6 +22,10 @@ const variantScreens = [
   ["design-browse-variant-selected", "design/browse/variants/selected.html"],
   ["design-browse-variant-changes", "design/browse/variants/changes.html"],
   ["design-browse-variant-removed", "design/browse/variants/removed.html"],
+  [
+    "design-browse-variant-reparented",
+    "design/browse/variants/reparented.html",
+  ],
   ["design-browse-changed-views", "design/browse/variants/changed-views.html"],
 ] as const;
 
@@ -75,18 +79,20 @@ for (const viewport of ["mobile", "desktop"] as const) {
   });
 
   test(`${viewport}: a removed variant shows its previous version`, async () => {
-    const { document } = await designDocument(
+    for (const id of [
       "design-browse-variant-removed",
-      viewport,
-    );
-    assert.match(textContent(document), /Showing previous version/);
-    assert.match(textContent(document), /Couldn’t save this workspace/);
-    assert.doesNotMatch(textContent(document), /This screen was removed/);
-    assert.equal(byClass(document, "mbk-cmp-toolbar").length, 0);
-    const details = byClass(document, "mbk-details-body")[0];
-    assert.ok(details);
-    assert.match(textContent(details), /No current screen/);
-    assert.doesNotMatch(textContent(details), /screens\/welcome\.html/);
+      "design-browse-variant-reparented",
+    ]) {
+      const { document } = await designDocument(id, viewport);
+      assert.match(textContent(document), /Showing previous version/, id);
+      assert.match(textContent(document), /Couldn’t save this workspace/, id);
+      assert.doesNotMatch(textContent(document), /This screen was removed/, id);
+      assert.equal(byClass(document, "mbk-cmp-toolbar").length, 0, id);
+      const details = byClass(document, "mbk-details-body")[0];
+      assert.ok(details, id);
+      assert.match(textContent(details), /No current screen/, id);
+      assert.doesNotMatch(textContent(details), /screens\/welcome\.html/, id);
+    }
   });
 
   test(`${viewport}: changed views are marked on the view controls and listed in details`, async () => {
