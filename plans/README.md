@@ -2,10 +2,11 @@
 
 ## Active
 
-- [Derived Mode In-Memory Output And The Generated Directory](./derived-mode-in-memory-output.md)
-  — Serve and export stop writing generated output in derived mode, and all
-  generated content moves into a disposable `<mockupsDir>/.generated/`
-  directory with authored assets kept outside it and copied in by the build.
+- [Generated Output Simplification](./generated-output-simplification.md)
+  — Git state replaces the committed/derived modes, only `build` writes
+  (plus `build --watch` and `serve --build`), all generated content moves
+  into a disposable `<mockupsDir>/.generated/` directory referencing authored
+  assets in place, and the ownership machinery is removed.
 - [Release-Gated Node Compatibility](./release-gated-node-compatibility.md) —
   run the minimum supported runtime on ordinary changes and reserve the full
   Node 22.14/24 compatibility matrix for Release Please pull requests.
