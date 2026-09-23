@@ -20,9 +20,11 @@ export const SHELL_TOKENS_CSS = `
   --chrome-border: #e3e5e0;
   --chrome-border-strong: #c8ccc4;
   --chrome-accent: #2a4733;
+  --chrome-brand: #2f5945;
   --chrome-shadow: 0 30px 90px rgba(20, 28, 22, 0.14);
   --sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
+  --serif: Georgia, "Times New Roman", serif;
   --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   --mokly-accent: #4f7864;
   --mokly-accent-contrast: #ffffff;

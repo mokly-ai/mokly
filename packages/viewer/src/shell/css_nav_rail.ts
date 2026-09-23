@@ -82,8 +82,6 @@ export const CSS_NAV_RAIL = `
   display: flex;
   align-items: center;
   gap: 8px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
   color: inherit;
   text-decoration: none;
 }
@@ -94,9 +92,20 @@ export const CSS_NAV_RAIL = `
   width: 24px;
   height: 24px;
   flex-shrink: 0;
-  border-radius: 6px;
-  background: var(--mokly-accent);
-  color: var(--mokly-accent-contrast);
+  color: var(--chrome-brand);
+}
+
+.mbk-mark-rules {
+  stroke: var(--chrome-surface);
+}
+
+.mbk-name {
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .mbk-search {

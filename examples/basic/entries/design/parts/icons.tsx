@@ -22,16 +22,37 @@ function IconSvg({ children, size }: IconProps & { children: ReactNode }) {
   );
 }
 
-/** Overlapping mobile and desktop screens in Mokly's brand mark. */
+/**
+ * Mokly's brand mark: two overlapping rounded screens, the front one carrying
+ * two short rules. The screens fill with `currentColor`; the `mbk-mark-rules`
+ * class paints the rules in the surface color behind the mark.
+ */
 export function BrandIcon({ size }: IconProps) {
   return (
-    <IconSvg size={size ?? 17}>
-      <path
-        d="M6.5 5.5V5a2 2 0 0 1 2-2H20a2 2 0 0 1 2 2v10.5a2 2 0 0 1-2 2h-8"
-        strokeLinecap="butt"
+    <svg
+      aria-hidden="true"
+      height={size ?? 24}
+      viewBox="0 0 32 32"
+      width={size ?? 24}
+    >
+      <rect
+        fill="currentColor"
+        height={21}
+        opacity={0.3}
+        rx={4}
+        width={20}
+        x={3}
+        y={3}
       />
-      <rect height={13} rx={1.75} width={8.5} x={1.5} y={7} />
-    </IconSvg>
+      <rect fill="currentColor" height={21} rx={4} width={20} x={9} y={8} />
+      <path
+        className="mbk-mark-rules"
+        d="M14 15h10M14 20h7"
+        fill="none"
+        strokeLinecap="round"
+        strokeWidth={2}
+      />
+    </svg>
   );
 }
 
@@ -75,8 +96,7 @@ export function ScreenIcon({ size }: IconProps) {
 /**
  * A screen variant: one authored state of a screen, drawn as a screen sitting
  * in front of the screen it belongs to. The screen behind is a partial outline
- * with butt caps so both ends meet the front screen's edge cleanly, the way the
- * brand mark draws its own overlap.
+ * with butt caps so both ends meet the front screen's edge cleanly.
  */
 export function VariantIcon({ size }: IconProps) {
   return (

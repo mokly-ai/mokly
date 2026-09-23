@@ -49,7 +49,9 @@ export function TopBarView({
           <span className="mbk-mark" aria-hidden="true">
             <BrandIcon />
           </span>
-          {viewport === "mobile" ? null : "Mokly"}
+          {viewport === "mobile" ? null : (
+            <span className="mbk-name">mokly.</span>
+          )}
         </span>
       </DesignLink>
       <div className="mbk-search">

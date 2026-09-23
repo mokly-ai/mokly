@@ -44,7 +44,7 @@ export function TopBar(props: { catalogue: Catalogue }) {
         <span aria-hidden="true" className="mbk-mark">
           <BrandIcon />
         </span>
-        <span className="mbk-name">Mokly</span>
+        <span className="mbk-name">mokly.</span>
       </a>
       <button
         aria-controls={searchId}

@@ -818,7 +818,7 @@ test("the narrow search bar drops the name and fits its controls", async ({
   await expect(page.locator(".mbk-brand .mbk-mark")).toHaveCSS("width", "24px");
   await expect(page.locator(".mbk-brand .mbk-mark svg")).toHaveCSS(
     "width",
-    "17px",
+    "24px",
   );
   await expect(page.locator(".mbk-brand .mbk-name")).toBeHidden();
   await expect(page.getByRole("link", { name: "Mokly" })).toBeVisible();

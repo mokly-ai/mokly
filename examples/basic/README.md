@@ -149,9 +149,10 @@ two selected-instance screens in a nested gallery.
 All seventy-nine design screens use `colorSchemes: ["light"]`: they draw the
 Mokly shell, including the existing dark-selection examples. The two product
 screens inherit the catalogue's light/dark settings and prove dark generation.
-Design headers retain the approved screen-stack logo: 17px overlapping mobile
-and desktop outlines in a 24px sage square. Desktop keeps the navigation resize
-grip; mobile keeps its fixed drawer. The component designs reuse the existing shell, frames, controls,
+Design headers use the published Mokly logo: the 24px mark of two overlapping
+rounded screens in the deep sage brand color, followed on desktop by the serif
+`mokly.` wordmark. Desktop keeps the navigation resize grip; mobile keeps its
+fixed drawer. The component designs reuse the existing shell, frames, controls,
 and a shared icon inspector, with synthetic usage fixtures under
 `entries/design/components/parts`. The real examples use the public `defineComponent` API.
 

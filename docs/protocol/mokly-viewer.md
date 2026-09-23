@@ -294,8 +294,10 @@ uses compact search.
 
 Import `@mokly/viewer/styles.css` once. The supported overrides are
 `--mokly-accent`, `--mokly-accent-contrast` and `--mokly-accent-soft`, subject to
-the [shell contrast contract](./mokly-shell-design.md). Internal selectors,
-geometry, structure and `--chrome-*` tokens are not APIs. Scoped styles exclude
+the [shell contrast contract](./mokly-shell-design.md). They tune the shell's
+accent only; the Mokly logo in the top bar keeps its brand colors. Internal
+selectors, geometry, structure and `--chrome-*` tokens are not APIs. Scoped
+styles exclude
 the host page and slot content; do not inject host CSS into frames.
 The host must give the viewer's containing element a definite height. The viewer
 fills that height, clips its outer shell and owns scrolling within the stage and

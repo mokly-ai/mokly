@@ -324,8 +324,10 @@ properties on a containing element:
 }
 ```
 
-Maintain readable contrast between the accent and its contrast color. Viewer
-styles are scoped away from the surrounding application and host slot content.
+Maintain readable contrast between the accent and its contrast color. These
+properties tune the viewer's accent only; the Mokly logo in the top bar keeps
+its brand colors. Viewer styles are scoped away from the surrounding
+application and host slot content.
 Internal selectors, DOM structure, geometry and other custom properties are not
 extension APIs.
 

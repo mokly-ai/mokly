@@ -796,7 +796,7 @@ test("the search field carries a tag control over a closed picker", () => {
   );
 });
 
-test("the brand names itself and the search bar drops that name", () => {
+test("the brand names itself and the search bar drops the wordmark", () => {
   const browse = homePage(createCatalogue(manifest), context);
   assert.ok(
     browse.includes(
@@ -814,11 +814,10 @@ test("the brand names itself and the search bar drops that name", () => {
   assert.ok(brand);
   assert.match(
     brand,
-    /<span aria-hidden="true" class="mbk-mark"><svg aria-hidden="true"/,
+    /^<span aria-hidden="true" class="mbk-mark"><svg aria-hidden="true" height="24" viewBox="0 0 32 32" width="24">/,
   );
-  assert.match(brand, /height="17" stroke="currentColor"/);
-  assert.ok(brand.endsWith('<span class="mbk-name">Mokly</span>'));
-  assert.equal(brand.replace(/<[^>]*>/g, ""), "Mokly");
+  assert.ok(brand.endsWith('<span class="mbk-name">mokly.</span>'));
+  assert.equal(brand.replace(/<[^>]*>/g, ""), "mokly.");
 
   assert.ok(
     flatCss(SHELL_CSS).includes(
