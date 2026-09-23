@@ -45,6 +45,11 @@
   — publish consumes the release PR's validated CI evidence for the same
   tree instead of re-running the complete gate, with the complete gate as
   the fail-closed fallback.
+- [Remove Source-Path Evidence](./remove-source-path-evidence.md) — remove
+  entry `dependencies`, component `ownedDependencies` and
+  `review.sharedImpact`; Changes and comparison evidence use only rendered
+  output in every catalogue, and stylesheet ownership moves to the renderer.
+  Planned; no milestone has started.
 
 ## Completed
 

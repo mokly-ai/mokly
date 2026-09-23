@@ -1,0 +1,342 @@
+# Remove Source-Path Evidence
+
+## Status And Outcome
+
+Status: planned; no milestone has started. The user approved removing all three
+inputs on 2026-09-24. The pull request merge is the completion boundary; keep
+this plan active until then.
+
+Remove the three author-maintained inputs that link mockups to repository paths:
+
+- `dependencies` on every entry: `defineScreen`, `definePage`, `defineUseCase`,
+  `defineCollection`, `defineComponent`, nested `screen`/`page`/`collection`
+  markers, `defineRoot` collection metadata, and screen variants.
+- `ownedDependencies` on `defineComponent`.
+- `review.sharedImpact` in the configuration.
+
+Afterwards Changes and comparison evidence come only from generated output, the
+rendered resources a view references, reviewable metadata, collection ancestry
+and component usage attribution, in every catalogue.
+
+Today the same inputs follow two rules. In a catalogue without registered
+components they are comparison evidence only. In a catalogue with registered
+components a match adds screens, flows and components to Changes. Most docs
+describe only the first rule. Pull request #47 removed path-only matches from
+Changes (292 to 141 entries on the Accounting catalogue); #48 brought them back
+for catalogues with registered components.
+
+This is a breaking change to authoring, configuration, the private manifest and
+the public catalogue and comparison formats. The project is not in production,
+so no compatibility shims are kept.
+
+Contract owners:
+
+- [Authoring](../docs/protocol/mokly-authoring.md) and
+  [configuration](../docs/protocol/mokly-configuration.md).
+- [Changes](../docs/protocol/mokly-changes.md),
+  [component attribution](../docs/protocol/mokly-component-changes.md) and
+  [CSS attribution](../docs/protocol/mokly-css-attribution.md).
+- [Component manifest](../docs/protocol/mokly-component-manifest.md),
+  [rendering](../docs/protocol/mokly-rendering.md) and the
+  [catalogue read model](../docs/protocol/mokly-catalogue.md).
+
+## Decisions And Scope
+
+Raise any objection before Milestone 1 starts; these decisions shape every
+milestone.
+
+- One Changes rule for all catalogues. A source path never adds an entry to
+  Changes and never appears as comparison evidence. Rendered-resource evidence,
+  CSS rule analysis, Review-ignore, metadata, ancestry, flow propagation and
+  component usage attribution stay unchanged.
+- Component ownership of rendered material comes only from the renderer's
+  `styles` and `resources` records. `ownedDependencies` has a second role today:
+  it assigns rendered stylesheets to components, so an exclusive component
+  stylesheet edit lists the component in Changes and its consumers under
+  Affected screens. The example's design library and `example-components.css`
+  rely on it. Milestone 3 moves that ownership into the example renderer before
+  the field stops working, so the example keeps the same attribution.
+- Removed inputs fail loudly. `dependencies` on an entry, nested marker or
+  variant, and `ownedDependencies` on a component, produce the registry
+  violation `removed-field`. `review.sharedImpact` fails configuration loading
+  with `config-invalid`. Each message names the field and says to delete it.
+- Versions: private manifest v5 becomes v6. The public catalogue read model v1
+  becomes v2 without `details.dependencies`. Comparison results v2 (catalogues
+  without registered components) become v4, and v3 (with registered
+  components) become v5, without result `sharedImpact` or entry `dependencies`
+  and `sharedImpact`. Build and Review keep parsing historical v3 to v5
+  manifests and strip the removed fields before comparison. The viewer reads
+  only catalogue v2 and comparison v4/v5, so older exports must be regenerated.
+  The live index stays process-local and adopts the v6 entry shape.
+- Rendered-resource reasons keep the wire kind `dependency`, because they name
+  resources a view depends on. Renaming them is out of scope.
+- The Shared impact design screen is deleted because the state no longer
+  exists. Comparison details keep rendered-resource, ignored-region,
+  excluded-stylesheet and component evidence.
+- Nested trees and screen variants keep inheriting `address` and `relatedDocs`.
+- Out of scope: a future "code changed but the mockup did not" feature. Leave
+  historical plans, `docs/reviews/**` and `CHANGELOG.md` unchanged.
+
+## Current Implementation Boundaries
+
+Verified on 2026-09-24 with temporary fixtures:
+
+- Without registered components, a changed file under a screen dependency or a
+  `sharedImpact` glob adds nothing to Changes and is recorded as comparison
+  evidence (`tests/server_changed.test.ts`, `tests/review.test.ts`).
+- With registered components, the same change adds every matching screen, flow
+  and component to Changes, unless a component's `ownedDependencies` covers the
+  file (`ComponentDependencyPolicy` in `src/review/component_metadata.ts`,
+  `tests/component_asset_changes.test.ts`).
+- `ownedDependencies` also suppresses consumer resource evidence for owned
+  rendered stylesheets (`suppressResource`) and routes CSS evidence to owners
+  (`ownedCssReasons` in `src/review/component_resource_attribution.ts`).
+
+Where the inputs live:
+
+- Authoring: `src/authoring/{types,definitions,variants}.ts` and
+  `src/components/{types,definition,manifest_build,manifest_validation,dependency_validation}.ts`.
+- Registry and manifest:
+  `src/registry/{entry_validation,entry_metadata,manifest,manifest_entries,manifest_validation,catalogue_index,dependency_paths}.ts`,
+  plus the viewer data types in `packages/viewer/src/registry/types.ts` and
+  `packages/viewer/src/components/manifest_types.ts`.
+- Configuration: `src/config/{types,validate}.ts`.
+- Classification: `src/review/{compare,screen_compare,selected,artifact,materiality}.ts`
+  and
+  `src/review/{component_classification,component_metadata,component_resource_attribution,component_view,component_projection_resources}.ts`.
+- Public formats: `src/catalogue/{projection,serialization}.ts`,
+  `packages/viewer/src/catalogue/{types,entry_reader,privacy}.ts`,
+  `packages/viewer/src/viewer/projection.ts` and
+  `packages/viewer/src/review/{types,component_types,result_records,result_validation}.ts`.
+  About 40 source files branch on manifest v5 or comparison v2/v3.
+- Viewer UI: the Dependencies row in `packages/viewer/src/shell/details.tsx`
+  and legacy shared-impact paths in
+  `packages/viewer/src/shell/workspace_evidence{,_data}.ts(x)`.
+- Example: `examples/basic/mokly.config.ts`, `renderer.tsx`,
+  `entries/design/library/{metadata.ts,style_context.tsx}`,
+  `src/components/*/*.mokly.tsx` and every entry's `dependencies`. Design
+  mockups: `entries/design/review_impact_screens.tsx`,
+  `entries/design/parts/{review.tsx,destinations.ts,navigation_states.ts}`,
+  `entries/design/design.mockup.tsx` and
+  `entries/design/components/parts/{component_info.tsx,metadata.ts}`.
+- Tests and scripts: about 130 files, mostly fixture metadata, plus
+  `scripts/package/{catalogue,consumer_cases}.mjs`, consumer fixtures under
+  `tests/fixtures/consumers/` and `tests/fixtures/large/generate.ts`.
+
+## Execution Rules
+
+- Tests import `dist`; run `npm run build` before focused tests.
+- Add each behavior test before the change it covers. Preservation tests pass
+  before and after their change.
+- Never hand-edit generated example output; regenerate it with
+  `npm run example:build`.
+- Keep every milestone green with its focused tests, `npm run typecheck` and
+  `npm run lint`. Milestone 7 runs `cargo xtask check`.
+- Update each protocol doc's Delivery Status when its milestone lands.
+- Report review findings; do not fix them automatically.
+
+## Post-merge follow-up (non-blocking)
+
+- Upgrade `@mokly/viewer` in mokly-cloud to catalogue v2 and comparison v4/v5,
+  then re-export and re-publish stored catalogues.
+- Migrate consumer catalogues such as Accounting: delete the three inputs,
+  rebuild committed output once for manifest v6, and report stylesheet
+  ownership from the renderer where `ownedDependencies` assigned it.
+
+## Milestone 1: Define the removal contract
+
+Document the complete target before any code changes.
+
+- [ ] Authoring: remove `dependencies` from entry, root-collection, nested and
+      variant inputs and from inheritance, and define the `removed-field`
+      violation (`mokly-authoring`, `mokly-screen-variants`, `mokly-pages`,
+      `mokly-page-migration`).
+- [ ] Components: remove `ownedDependencies` and `declaredDependencies`, make
+      renderer `styles`/`resources` the only ownership, and describe how a
+      renderer reports stylesheet ownership (`mokly-components`,
+      `mokly-component-manifest`, `mokly-component-changes`,
+      `mokly-component-review`, `mokly-design-components`,
+      `mokly-design-component-library`, `mokly-component-design`,
+      `mokly-component-workspace-design`, `mokly-component-explorer`,
+      `mokly-component-inspector-design`, `mokly-rendering`).
+- [ ] Changes: state the single membership rule and remove shared-impact and
+      declared-dependency evidence, the exact-screen-dependency CSS rule, the
+      Shared impact state, and the impact counts and "Shared-impact paths" in
+      `summary.md` (`mokly-changes`, `mokly-catalogue-changes`,
+      `mokly-css-attribution`, `mokly-css-evidence-shell`,
+      `mokly-shell-design`, `mokly-runtime`, `mokly-timings`, `mokly-export`,
+      `mokly-export-delivery`, `mokly-baseline-storage`,
+      `mokly-derived-baselines`, `mokly-source-protection`).
+- [ ] Configuration: remove `review.sharedImpact` and define its
+      `config-invalid` error (`mokly-configuration`).
+- [ ] Formats: specify manifest v6 with historical v3 to v5 normalization,
+      catalogue read model v2 with its fixture, comparison v4/v5 schemas, and
+      reader rejection of older versions (`mokly-component-manifest`,
+      `mokly-catalogue`, `mokly-changes`, `mokly-upload`, `mokly-export`,
+      `docs/protocol/README.md`).
+- [ ] Guides and READMEs: `docs/guides/authoring/{screens,pages,collections-and-tags,components,config,use-case-flows}.md`,
+      `docs/guides/catalogue/{changes,details}.md`,
+      `docs/guides/start/your-first-screen.md`, `README.md`,
+      `examples/basic/{README,notes}.md`,
+      `examples/basic/entries/design/library/README.md`,
+      `src/components/README.md`, `src/review/README.md`,
+      `docs/architecture/build-pipeline.md` and
+      `tests/fixtures/consumers/esm/notes.md`.
+- [ ] Mark each contract change as planned in its doc's Delivery Status.
+- [ ] Validate the changed Markdown with `npx prettier --check`, review the
+      diff, and confirm no current doc describes the inputs except as removed.
+
+## Milestone 2: Remove the depictions from the design mockups
+
+Tags: mockup
+
+Delete the design states that show source-path evidence. Keep the depictions of
+rendered-resource evidence.
+
+- [ ] Delete the Shared impact design screen (`design-review-shared-impact`),
+      its destination, navigation state and `SharedImpactCard`, and the
+      "shared impact" wording in `design.mockup.tsx`. Confirm every remaining
+      review design screen stays reachable.
+- [ ] Remove the Dependencies row and its data from the component inspector
+      mockup (`component_info.tsx`, `components/parts/metadata.ts`).
+- [ ] Search the design entries for any other depiction of declared
+      dependencies or shared-impact evidence and remove it.
+- [ ] Update the design inventory and link tests:
+      `tests/fixtures/design-library/screens.json`,
+      `tests/design_screens.test.tsx`, `tests/design_link_states.test.ts` and
+      `tests/browser/comparison_design.spec.ts`.
+- [ ] Run `npm run build`, `npm run example:build`, `npm run example:check`
+      and the design tests. Smoke-test the review impact and component
+      inspector pages at mobile and desktop widths through `npm run dev`.
+
+## Milestone 3: Base Changes and evidence only on rendered output
+
+Remove source-path evidence from classification and configuration, and move
+stylesheet ownership into the example renderer.
+
+- [ ] Preservation test first: an edit to one exclusive design library
+      stylesheet and an edit to `examples/basic/generated/example-components.css`
+      each list only their owning components in Changes, with consumers under
+      Affected screens. It passes with `ownedDependencies` today.
+- [ ] Renderer ownership: one shared example collector records
+      `design-ui-<slug>` for each requested library style, and the
+      `example-action` and `example-toolbar` registrations record themselves
+      for `example-components.css`. The renderer returns `{ html, resources }`
+      with only components that rendered in the view. Prove with
+      `npm run example:build` that ownership validation accepts every route,
+      component page and variant. If a view requests a style without rendering
+      its registered component, render it through the component or leave the
+      style unowned, and record the difference in this plan.
+- [ ] Classification: delete declared-path reasons, shared-glob reasons and
+      the exact-screen CSS rule, and take ownership only from renderer usage
+      records (`component_metadata.ts`, `component_resource_attribution.ts`,
+      `component_classification.ts`, `component_view.ts`,
+      `component_projection_resources.ts`). Remove dependency and shared-glob
+      matching from `screen_compare.ts` and `compare.ts`, and delete
+      `src/registry/dependency_paths.ts`.
+- [ ] Failure-first tests: with and without registered components, a changed
+      repository file that no view renders adds nothing to Changes or
+      comparison evidence, even when an entry still declares it. The
+      preservation test still passes.
+- [ ] Configuration: remove `review.sharedImpact` from types and validation,
+      reject the key with `config-invalid`, and delete it from the example,
+      consumer fixture configs and test helpers.
+- [ ] Remove the impact counts and "Shared-impact paths" from `summary.md`
+      (`artifact.ts`, `materiality.ts`).
+- [ ] Update or delete the tests that asserted source-path behavior,
+      including `tests/{review,server_changed,component_asset_changes,changes_css_ownership,server_changed_assets,export_cases,review_artifact_ui,design_library_styles}.test.ts`
+      and `scripts/package/consumer_cases.mjs`.
+- [ ] Run the focused review, Changes, CSS, component and design tests,
+      `npm run typecheck` and `npm run lint`.
+
+Until Milestone 5, `dependencies` and `ownedDependencies` are accepted but have
+no effect on Changes or evidence. Until Milestone 6, comparison `sharedImpact`
+holds only rendered-resource paths.
+
+## Milestone 4: Remove the dependency displays from the viewer
+
+Tags: ui
+
+- [ ] Remove the Dependencies row from the details inspector
+      (`packages/viewer/src/shell/details.tsx`) for every entry kind.
+- [ ] Remove legacy shared-impact paths from comparison details
+      (`workspace_evidence_data.ts`, `workspace_evidence.tsx`), so the list
+      shows only rendered-resource reasons.
+- [ ] Update the viewer, client and browser tests, for example
+      `tests/client_workspace_evidence.test.ts` and
+      `tests/browser/evidence_workspace.spec.ts`.
+- [ ] Match the Milestone 2 mockups. Smoke-test the details and comparison
+      details of a changed and an unchanged screen at both widths through
+      `npm run dev`.
+- [ ] Run the focused viewer and browser tests, `npm run typecheck` and
+      `npm run lint`.
+
+## Milestone 5: Remove the authoring fields and move the manifest to v6
+
+- [ ] Failure-first `removed-field` tests: `dependencies` on each define
+      helper, nested marker, root collection and variant, and
+      `ownedDependencies` on a component.
+- [ ] Remove both fields and their inheritance from the authoring types and
+      helpers, component definitions and registry validation.
+- [ ] Manifest v6: stop writing `dependencies`, `declaredDependencies` and
+      `ownedDependencies`, make the current validator reject them, delete
+      `validateDependencyDeclarations`, rename `ManifestV5` to `ManifestV6` in
+      `@mokly/viewer/data` and its callers, and move the live index to the v6
+      entry shape.
+- [ ] Historical parsing accepts v3 to v5 and strips the removed fields before
+      comparison. Failure-first test: a v5 baseline that carries all three
+      fields, compared with the same catalogue built as v6, adds nothing to
+      Changes in committed and derived modes.
+- [ ] Until Milestone 6, the public writers emit an empty
+      `details.dependencies` and empty comparison entry `dependencies`.
+- [ ] Migrate the example (every entry, the design library metadata, the
+      component registrations and now-unused helpers such as
+      `componentStyleDependencies` and `DESIGN_DEPENDENCIES`), the test helpers
+      and fixtures, the large-fixture generator and README code samples, then
+      regenerate the example.
+- [ ] Smoke test: a consumer entry that still declares `dependencies` fails
+      `mokly build` with the documented message.
+- [ ] Run the focused authoring, manifest, baseline, build and example tests,
+      `npm run typecheck` and `npm run lint`.
+
+## Milestone 6: Version the public catalogue and comparison formats
+
+- [ ] Catalogue read model v2 without `details.dependencies`: projection,
+      serialization, viewer reader, types, display projection and privacy
+      guards. Replace `docs/protocol/fixtures/catalogue-v1.json` with
+      `catalogue-v2.json` and update its references in the viewer tests,
+      `scripts/package/{archive,viewer,catalogue}.mjs`, `.prettierignore` and
+      `src/catalogue/README.md`. The reader rejects v1 through the existing
+      unsupported-version path.
+- [ ] Comparison results v4 and v5 without result `sharedImpact` or entry
+      `dependencies` and `sharedImpact`: update the writers, `summary.md`,
+      viewer types, validation and records, and every server, export,
+      publication and reporter branch on versions 2 and 3. Readers reject v2
+      and v3.
+- [ ] Failure-first tests for the new schemas and the rejected old versions;
+      update the projection, export, publication and package-smoke
+      expectations.
+- [ ] Run the focused catalogue, export, publication, viewer and package
+      tests, `npm run typecheck` and `npm run lint`.
+
+## Milestone 7: Verify, deliver and review
+
+- [ ] Search the repository, excluding historical plans, `docs/reviews/**` and
+      `CHANGELOG.md`, for `ownedDependencies`, `declaredDependencies`,
+      `sharedImpact`, entry `dependencies` and "impact evidence". Each
+      remaining hit must describe the removal or be unrelated.
+- [ ] Mark every changed protocol doc's Delivery Status as implemented and
+      update this plan's status.
+- [ ] Smoke test through `npm run dev`: edit an exclusive component stylesheet
+      and an unreferenced source file, and confirm Changes, Affected screens
+      and comparison details match the contract. Run `npm run example:check`.
+- [ ] Run `cargo xtask check` and require a 100% pass rate.
+- [ ] Inspect `git diff --name-status origin/main` and its deletions, and
+      record every approved removal in the commit body.
+- [ ] Run `git add -A`, commit with a breaking-change Conventional Commit
+      (`feat!:` with a `BREAKING CHANGE:` footer that lists the migrations),
+      and push the branch.
+- [ ] After the push, review the complete diff against `origin/main` using
+      `docs/implementation-review-prompt.md`. Report numbered findings with
+      severity, impact, lettered options and a recommendation, without
+      changing the implementation.
