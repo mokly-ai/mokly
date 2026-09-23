@@ -30,7 +30,7 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    command: `node dist/cli/bin.js serve --config examples/basic/mokly.config.ts --port ${port} --no-watch`,
+    command: `node --import ./scripts/verification/register-web-server.mjs dist/cli/bin.js serve --config examples/basic/mokly.config.ts --port ${port} --no-watch`,
     reuseExistingServer: false,
     url: `http://127.0.0.1:${port}/`,
   },

@@ -70,6 +70,35 @@ export async function writeOwnerRecord(registry, ownerId, parentId) {
   }
 }
 
+/** Keep a verifier-spawned process group visible to ancestor cancellation. */
+export async function writeProcessRecord(registry, ownerId, processGroupId) {
+  assertOwnerId(ownerId);
+  if (!Number.isSafeInteger(processGroupId) || processGroupId <= 0)
+    throw new Error("Process ownership requires a positive process group ID");
+  await assertOwnerOpen(registry, ownerId);
+  const identity = randomUUID();
+  const target = path.join(registry, `process-${identity}.json`);
+  const temporary = path.join(
+    registry,
+    `.process-${identity}-${process.pid}.tmp`,
+  );
+  let committed = false;
+  try {
+    await fs.writeFile(
+      temporary,
+      `${JSON.stringify({ schemaVersion: 1, type: "process", ownerId, processGroupId })}\n`,
+      { flag: "wx", mode: 0o600 },
+    );
+    await fs.rename(temporary, target);
+    committed = true;
+    await assertOwnerOpen(registry, ownerId);
+  } catch (error) {
+    await fs.rm(temporary, { force: true });
+    if (committed) await fs.rm(target, { force: true });
+    throw error;
+  }
+}
+
 export async function terminateOwnedProcesses(registry, ownerId, signal) {
   const records = await ownedProcessRecords(registry, ownerId);
   const failures = [];

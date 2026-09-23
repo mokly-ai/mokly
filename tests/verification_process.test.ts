@@ -7,9 +7,58 @@ import { setTimeout as delay } from "node:timers/promises";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 
+import { runInherited } from "../scripts/verification/process.mjs";
+
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
+
+test(
+  "aborting a running verification command drains its detached process group",
+  { skip: process.platform === "win32", timeout: 15_000 },
+  async (context) => {
+    const root = await fs.mkdtemp(
+      path.join(repositoryRoot, ".context/verification-abort-"),
+    );
+    context.after(() => fs.rm(root, { recursive: true, force: true }));
+    const pidFile = path.join(root, "child.pid");
+    let childPid = 0;
+    context.after(() => {
+      if (processExists(childPid)) process.kill(-childPid, "SIGKILL");
+    });
+    const controller = new AbortController();
+    const child = `
+      require("node:fs").writeFileSync(${JSON.stringify(pidFile)}, String(process.pid));
+      process.on("SIGTERM", () => {});
+      setInterval(() => {}, 1000);
+    `;
+    const pending = runInherited(process.execPath, ["-e", child], {
+      cwd: repositoryRoot,
+      abortSignal: controller.signal,
+    });
+    await waitFor(async () => {
+      try {
+        childPid = Number(await fs.readFile(pidFile, "utf8"));
+        return Number.isSafeInteger(childPid) && childPid > 0;
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === "ENOENT") return false;
+        throw error;
+      }
+    });
+    controller.abort();
+    const outcome = await Promise.race([
+      pending,
+      delay(8_000, "hung", { ref: false }),
+    ]);
+    assert.notEqual(outcome, "hung");
+    assert.equal(
+      typeof outcome === "string" ? "" : outcome.interrupted,
+      "abort",
+    );
+    assert.equal(processExists(childPid), false);
+    childPid = 0;
+  },
+);
 
 test("the Node evidence reporter preserves failure diagnostics", async () => {
   const root = await fs.mkdtemp(

@@ -3,17 +3,25 @@ import path from "node:path";
 import { expect, type Page } from "@playwright/test";
 import { build } from "esbuild";
 
+import { timeFixturePhase } from "../helpers/fixture_timing.js";
+
 export async function buildDevelopmentBundle(): Promise<string> {
-  const result = await build({
-    bundle: true,
-    define: { "process.env.NODE_ENV": '"development"' },
-    entryPoints: [path.resolve("packages/viewer/src/browser.tsx")],
-    format: "esm",
-    logLevel: "silent",
-    platform: "browser",
-    target: "es2023",
-    write: false,
-  });
+  const result = await timeFixturePhase(
+    "hydration-routes",
+    "bundle",
+    false,
+    () =>
+      build({
+        bundle: true,
+        define: { "process.env.NODE_ENV": '"development"' },
+        entryPoints: [path.resolve("packages/viewer/src/browser.tsx")],
+        format: "esm",
+        logLevel: "silent",
+        platform: "browser",
+        target: "es2023",
+        write: false,
+      }),
+  );
   const bundle = result.outputFiles[0]?.text ?? "";
   expect(bundle).toContain("react-dom-client.development.js");
   return bundle;

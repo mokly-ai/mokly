@@ -7,15 +7,18 @@ this document are implemented. The
 [hosted acceptance measurement](../reviews/ci-performance.md) records the
 delivered timing, capacity, cache, cost, and coverage evidence. The
 authoritative complete local and release gate remains `cargo xtask check`.
+The [local verification contract](./local-verification.md) specifies its
+snapshot, concurrent execution, and fallback behavior independently of CI.
 The public package forwarding and hierarchical cancellation additions below are
 implemented by the corresponding review-follow-up milestones.
 
 ## Verification Boundary
 
 `cargo xtask check` is the complete local and release verification entrypoint.
-With no options it runs every gate sequentially in one checkout, beginning with
-the live workspace dependency audit. A selected suite is partial evidence and
-must never report that the complete gate passed.
+With no options it runs every gate, beginning with the live workspace dependency
+audit; independent work may run concurrently only under the
+[local verification contract](./local-verification.md). A selected suite is
+partial evidence and must never report that the complete gate passed.
 
 The CLI is:
 
@@ -42,7 +45,7 @@ fail before any subprocess starts.
 | Repository       | Live `npm run dependencies:check` first; Prettier check; ESLint; `cargo fmt --all -- --check`; workspace Clippy with warnings denied; workspace Rust tests; Rust file-length audit.                                                                                                                                                                                                        |
 | Package          | One ordinary package/example preparation; TypeScript declaration and no-emit checks; derived example check; both package manifests, script-free dry-run allowlists, licenses, browser graph, CLI shebang, inspector budget and exact version relationship; one real viewer/CLI archive pair; all five clean consumer smokes using that pair. Real `prepack` builds remain part of packing. |
 | Unit/integration | One ordinary package/example preparation followed by every discovered Node test file, with at most two files active. A shard runs its whole-file partition.                                                                                                                                                                                                                                |
-| Browser          | One ordinary package/example preparation followed by every discovered Playwright spec, with `fullyParallel: false`, one worker, existing timeouts and zero retries. A shard runs its whole-file partition.                                                                                                                                                                                 |
+| Browser          | One ordinary package/example preparation followed by every discovered Playwright spec, with `fullyParallel: false`, one worker, finite per-test timeouts and zero retries. A shard runs its whole-file partition.                                                                                                                                                                          |
 | Native platforms | On macOS and Windows, build once and run export transaction and destination-race tests, CSS parser/diff tests, and baseline/process-tree tests.                                                                                                                                                                                                                                            |
 | Required CI      | Evaluate the result and evidence from the repository job, both package runtimes, all unit and browser runtime/shard combinations, and both native platforms.                                                                                                                                                                                                                               |
 
@@ -117,7 +120,10 @@ browser runner independently asks Playwright for the current spec inventory.
 Discovery fails on an empty suite.
 
 Development hydration registers one browser test per unique generated catalogue
-route at discovery time, plus the home, missing-route and id-redirect cases.
+route at discovery time across four spec files, plus the home, missing-route
+and id-redirect cases in the first spec. Shared helpers provide route data and
+assertions, but tests are registered in their owning specs so native sharding
+retains distinct file identities.
 Each route keeps the normal test deadline and error assertions; catalogue growth
 cannot exhaust a shared route-loop deadline. Unit coverage checks that browser
 discovery includes every generated route exactly once.
@@ -206,7 +212,9 @@ outer cancellation fallback rather than replacing the job boundary.
 
 A dedicated preview-preparation spec still runs the real cold
 `npm run preview:build`, verifies generated-output digest stability, and serves
-the fresh artifact. Historical rebuilds, source mutation, missing-source
+the fresh artifact. Its bounded 240-second test budget accounts for measured
+four-worker CPU contention after the previous 180-second deadline expired;
+no assertion, preparation, or retry is removed. Historical rebuilds, source mutation, missing-source
 export, clean-install and cache-invalidation behavior continue to create
 independent inputs because preparation is part of what those tests verify.
 Fixture phases emit `[mokly:fixture-timing]` JSON with the fixture, phase,

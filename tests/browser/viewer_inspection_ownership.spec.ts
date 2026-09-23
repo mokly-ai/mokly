@@ -31,9 +31,11 @@ for (const cross of [false, true]) {
             await host.ref.current.startPick();
             const probe = window.inspectionProbe;
             probe.hold =
-              operation === "geometry" || operation === "labels"
+              operation === "geometry"
                 ? "list"
-                : operation;
+                : operation === "labels"
+                  ? "highlight"
+                  : operation;
             if (operation === "geometry") probe.emit({ type: "geometry" });
             else {
               const pending =
@@ -54,6 +56,18 @@ for (const cross of [false, true]) {
             }
           }, operation);
           await page.waitForFunction(() => window.inspectionProbe.waiting);
+          if (operation === "labels") {
+            await page.evaluate(() => {
+              const probe = window.inspectionProbe;
+              probe.hold = "list";
+              probe.emit({ type: "geometry" });
+            });
+            await expect
+              .poll(() =>
+                page.evaluate(() => window.inspectionProbe.waitingOperations),
+              )
+              .toEqual(expect.arrayContaining(["highlight", "list"]));
+          }
           await page.evaluate(async (replacement) => {
             const host = window.viewerHarness.get("one");
             if (replacement === "frame")

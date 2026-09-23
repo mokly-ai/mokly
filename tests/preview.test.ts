@@ -6,6 +6,7 @@ import test from "node:test";
 import { promisify } from "node:util";
 
 import { repositoryRoot } from "./helpers/fixture.js";
+import { timeFixturePhase } from "./helpers/fixture_timing.js";
 
 const execute = promisify(execFile);
 
@@ -18,16 +19,14 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
   await fs.promises.rm(output, { recursive: true });
   context.after(() => fs.promises.rm(output, { force: true, recursive: true }));
 
-  await execute(
-    process.execPath,
-    ["scripts/preview/build.mjs", "--include-changes", "--out", output],
-    { cwd: repositoryRoot },
-  );
-  await execute(
-    process.execPath,
-    ["scripts/preview/build.mjs", "--include-changes", "--out", output],
-    { cwd: repositoryRoot },
-  );
+  for (const phase of ["first-build", "repeat-build"])
+    await timeFixturePhase("preview-snapshot", phase, true, () =>
+      execute(
+        process.execPath,
+        ["scripts/preview/build.mjs", "--include-changes", "--out", output],
+        { cwd: repositoryRoot },
+      ),
+    );
 
   await assertClientGraphIsComplete(output);
   const index = await read(output, "index.html");

@@ -159,10 +159,22 @@ impl CheckRunner for DefaultCheckRunner {
         if let Some(suite) = request.suite {
             return self.run_suite(suite, request.shard);
         }
-        for suite in VerificationSuite::ALL {
-            self.run_suite(suite, None)?;
+        self.command_runner
+            .run(&npm(&["run", "dependencies:check"]))?;
+        match self
+            .command_runner
+            .run(&CommandSpec::new("node").args(["scripts/verification/local-check.mjs"]))
+        {
+            Ok(()) => Ok(()),
+            Err(Error::CommandFailed { status, .. }) if status == "75" => {
+                eprintln!("Local snapshots unavailable; running the full sequential gate");
+                for suite in VerificationSuite::ALL {
+                    self.run_suite(suite, None)?;
+                }
+                Ok(())
+            }
+            Err(error) => Err(error),
         }
-        Ok(())
     }
 }
 

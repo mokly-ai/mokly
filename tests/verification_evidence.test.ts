@@ -9,6 +9,7 @@ import {
   nodeShardFiles,
   parseShardArgument,
 } from "../scripts/verification/evidence.mjs";
+import { discoverBrowserTests } from "../scripts/verification/playwright.mjs";
 import {
   validateCompletedReport,
   validateShardReports,
@@ -37,6 +38,35 @@ test("verification discovers the live unit inventory without browser specs", asy
       (await fs.stat(path.join(repositoryRoot, file))).isFile(),
       true,
     );
+});
+
+test("the current unit inventory is partitioned exactly once across four shards", async () => {
+  const files = await discoverUnitFiles(repositoryRoot);
+  const assignments = [1, 2, 3, 4].map((index) =>
+    nodeShardFiles(files, { index, total: 4 }),
+  );
+  assert.ok(assignments.every((group) => group.length > 0));
+  assert.equal(new Set(assignments.flat()).size, files.length);
+  assert.deepEqual(assignments.flat().sort(), files);
+});
+
+test("the current Playwright inventory assigns every file and test once", async () => {
+  const full = await discoverBrowserTests(repositoryRoot);
+  const groups = await Promise.all(
+    [1, 2, 3, 4].map((index) =>
+      discoverBrowserTests(repositoryRoot, { index, total: 4 }),
+    ),
+  );
+  assert.ok(groups.every((group) => group.tests.length > 0));
+  assert.deepEqual(groups.flatMap((group) => group.files).sort(), full.files);
+  assert.deepEqual(
+    groups.flatMap((group) => group.tests.map((item) => item.id)).sort(),
+    full.tests.map((item) => item.id).sort(),
+  );
+  assert.equal(
+    new Set(groups.flatMap((group) => group.tests.map((item) => item.id))).size,
+    full.tests.length,
+  );
 });
 
 test("verification shard arguments are exact and one based", () => {

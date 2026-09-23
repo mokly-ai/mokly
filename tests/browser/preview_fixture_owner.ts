@@ -43,9 +43,17 @@ interface OwnedPreviewOptions {
   readonly serve: (artifact: string) => Promise<PreviewEndpoint>;
 }
 
-/** Use the current verification owner's resource root when one is inherited. */
-export function previewFixtureContextRoot(fallback: string): string {
-  return process.env[VERIFICATION_RESOURCE_ROOT_ENV] ?? fallback;
+/** Keep preview artifacts in the executing checkout, even with an outer owner. */
+export function previewFixtureContextRoot(
+  fallback: string,
+  environment: NodeJS.ProcessEnv = process.env,
+): string {
+  const inherited = environment[VERIFICATION_RESOURCE_ROOT_ENV];
+  if (!inherited) return fallback;
+  const relative = path.relative(fallback, inherited);
+  if (!relative || (!relative.startsWith("..") && !path.isAbsolute(relative)))
+    return inherited;
+  return fallback;
 }
 
 /** Prepare, validate and serve a unique artifact with failure-safe ownership. */

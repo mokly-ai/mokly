@@ -12,6 +12,9 @@
 - [React Browse Shell](./react-browse-shell.md)
 - [CI Performance](./ci-performance.md) — parallel verification, complete test
   sharding, reusable preparation and measured CI timing improvements.
+- [Local Verification Performance](./local-verification-performance.md) —
+  rebalance slow suites and shorten the complete local check without losing
+  audit-first, dirty-worktree, or test-coverage guarantees.
 - [CLI Terminal Experience](./cli-terminal-experience.md)
 - [Package Documentation](./package-documentation.md) — supersedes the
   unmerged public-site plan and pull request #79 by shipping versioned Markdown

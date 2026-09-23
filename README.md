@@ -278,6 +278,11 @@ cargo xtask check
 
 That command runs formatting, linting, type checks, unit and integration tests,
 packed-package smoke tests, browser tests, dependency checks, and Rust checks.
+It checks current staged, unstaged and non-ignored untracked sources, starts
+with a live dependency audit, runs up to four isolated workers with longer
+measured shards admitted early, and requires complete unit and browser evidence.
+See the [local verification contract](./docs/protocol/local-verification.md)
+for isolation, fallback, and repeatable timing guidance.
 See the [xtask README](./xtask/README.md) for focused suites.
 
 ### Key code

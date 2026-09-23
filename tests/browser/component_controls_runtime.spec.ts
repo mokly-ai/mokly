@@ -1,5 +1,4 @@
 import path from "node:path";
-import { setTimeout as delay } from "node:timers/promises";
 
 import { expect, test } from "@playwright/test";
 
@@ -270,21 +269,33 @@ test("changing context while the first edit is pending cannot apply an obsolete 
   await page.goto(`${server.url}/view/components/action.html`);
   await page.getByLabel("Viewport", { exact: true }).selectOption("desktop");
   await page.getByRole("tab", { name: "Props", exact: true }).click();
+  let release = (): void => undefined;
+  let requested = (): void => undefined;
+  let finished = (): void => undefined;
+  const held = new Promise<void>((resolve) => (release = resolve));
+  const firstRequest = new Promise<void>((resolve) => (requested = resolve));
+  const firstFinished = new Promise<void>((resolve) => (finished = resolve));
   await page.route("**/__mokly/components/render", async (route) => {
     const response = await route.fetch();
-    if (route.request().postDataJSON().colorScheme === "light")
-      await delay(250);
-    await route.fulfill({ response });
+    if (route.request().postDataJSON().colorScheme === "light") {
+      requested();
+      await held;
+      await route.fulfill({ response }).catch(() => undefined);
+      finished();
+    } else await route.fulfill({ response });
   });
-  const pending = page.waitForRequest((request) =>
-    request.url().endsWith("/components/render"),
-  );
-  await page.getByLabel("Label", { exact: true }).fill("Context edit");
-  await pending;
-  await page.getByRole("button", { name: "Dark mode", exact: true }).click();
-  await expect(
-    page
+  try {
+    await page.getByLabel("Label", { exact: true }).fill("Context edit");
+    await firstRequest;
+    await page.getByRole("button", { name: "Dark mode", exact: true }).click();
+    const current = page
       .frameLocator('[data-workspace-frame="desktop"]')
-      .getByRole("button", { name: "Context edit" }),
-  ).toHaveAttribute("data-scheme", "dark");
+      .getByRole("button", { name: "Context edit" });
+    await expect(current).toHaveAttribute("data-scheme", "dark");
+    release();
+    await firstFinished;
+    await expect(current).toHaveAttribute("data-scheme", "dark");
+  } finally {
+    release();
+  }
 });

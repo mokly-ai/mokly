@@ -11,6 +11,7 @@ import {
   removeOwnedOwnerRecords,
   terminateOwnedProcesses,
   writeOwnerRecord,
+  writeProcessRecord,
 } from "./process-owner-records.mjs";
 
 export const VERIFICATION_OWNER_ID_ENV = "MOKLY_VERIFICATION_OWNER_ID";
@@ -104,6 +105,12 @@ class VerificationProcessOwner {
     } catch (error) {
       return Promise.reject(error);
     }
+  }
+
+  registerProcessGroup(processGroupId) {
+    if (this.#closed)
+      throw new Error(`Verification process owner is closing: ${this.ownerId}`);
+    return writeProcessRecord(this.registry, this.ownerId, processGroupId);
   }
 
   dispose() {

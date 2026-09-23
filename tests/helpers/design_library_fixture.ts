@@ -13,6 +13,7 @@ import type { ReadOnlyReviewRepository } from "../../dist/review/repository.js";
 
 import { copyExampleSources } from "./example_sources.js";
 import { repositoryRoot } from "./fixture.js";
+import { timeFixturePhase } from "./fixture_timing.js";
 
 /** Copy the actual consumer so source-edit tests never mutate the working catalogue. */
 export async function designLibraryFixture(
@@ -23,12 +24,23 @@ export async function designLibraryFixture(
   const root = await fs.mkdtemp(
     path.join(repositoryRoot, ".context/design-library-test-"),
   );
-  t.after(() => fs.rm(root, { recursive: true, force: true }));
-  await copyExampleSources(root);
+  t.after(() =>
+    timeFixturePhase("design-library", "teardown", false, () =>
+      fs.rm(root, { recursive: true, force: true }),
+    ),
+  );
+  await timeFixturePhase("design-library", "copy", false, () =>
+    copyExampleSources(root),
+  );
   const config = await loadConfig(path.join(root, "examples/basic"));
   if (mode) config.generatedOutput = mode;
   if (mode === "committed") delete config.review.baselineBuild;
-  const before = await compileCatalogue(config);
+  const before = await timeFixturePhase(
+    "design-library",
+    "compile",
+    false,
+    () => compileCatalogue(config),
+  );
   const resources = new Map<string, string>();
   for (const file of await fs.readdir(config.mockupsDir, { recursive: true })) {
     if (file.endsWith(".css"))

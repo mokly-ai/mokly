@@ -12,6 +12,7 @@ type Operation = "list" | "highlight" | "scroll";
 interface InspectionProbe {
   hold?: Operation;
   waiting: boolean;
+  waitingOperations: Operation[];
   release: (fail: boolean) => void;
   emit: (event: FrameEvent) => void;
   calls: { viewport: string; operation: string }[];
@@ -50,6 +51,7 @@ export async function startInspection(
           if (view.viewport === "desktop") view.usage = { status: sibling };
       const probe: InspectionProbe = {
         waiting: false,
+        waitingOperations: [],
         release: () => {},
         emit: () => {},
         calls: [],
@@ -61,6 +63,10 @@ export async function startInspection(
             .key,
         },
       };
+      const releases: ((fail: boolean) => void)[] = [];
+      probe.release = (fail) => {
+        for (const release of releases.splice(0)) release(fail);
+      };
       window.inspectionProbe = probe;
       const original = host.props.frameAdapter!;
       host.props.catalogue = catalogue;
@@ -68,20 +74,21 @@ export async function startInspection(
         async mount(frame, options) {
           const mounted = await original.mount(frame, options);
           const viewport = frame.dataset["workspaceFrame"]!;
-          const hold = async () => {
+          const hold = async (operation?: Operation) => {
             probe.waiting = true;
+            if (operation) probe.waitingOperations.push(operation);
             await new Promise<void>((resolve, reject) => {
-              probe.release = (fail) => {
+              releases.push((fail) => {
                 if (fail) reject(new Error("Delayed old-frame failure"));
                 else resolve();
-              };
+              });
             });
           };
           if (viewport === "desktop" && sibling === "mounting") await hold();
           const after = async (operation: Operation) => {
             if (viewport === "mobile" && probe.hold === operation) {
               delete probe.hold;
-              await hold();
+              await hold(operation);
             }
           };
           return {

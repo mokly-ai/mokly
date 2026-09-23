@@ -3,7 +3,6 @@ import { test } from "@playwright/test";
 import { buildDevelopmentBundle } from "./react_shell_hydration_helpers.js";
 import {
   hydrateFixtureRoute,
-  hydrateShellRoute,
   routesForPartition,
 } from "./react_shell_hydration_route_inventory.js";
 
@@ -13,20 +12,10 @@ test.beforeAll(async () => {
   developmentBundle = await buildDevelopmentBundle();
 });
 
-for (const route of routesForPartition(0)) {
+for (const route of routesForPartition(3)) {
   test(`development React hydrates fixture route ${route}`, async ({
     page,
   }) => {
     await hydrateFixtureRoute(page, developmentBundle, route);
-  });
-}
-
-for (const route of [
-  "/",
-  "/view/not-in-catalogue.html",
-  "/id/example-welcome",
-]) {
-  test(`development React hydrates shell route ${route}`, async ({ page }) => {
-    await hydrateShellRoute(page, developmentBundle, route);
   });
 }

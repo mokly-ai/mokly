@@ -3,12 +3,17 @@ import { spawn, spawnSync } from "node:child_process";
 import { createVerificationProcessOwner } from "./process-owner.mjs";
 
 export async function runInherited(program, args, options = {}) {
-  const { child, owner } = await startOwned(program, args, options, "inherit");
-  return await completion(child, owner);
+  const { child, owner, settled } = await startOwned(
+    program,
+    args,
+    options,
+    "inherit",
+  );
+  return await completion(child, owner, settled, options.abortSignal);
 }
 
 export async function runCaptured(program, args, options = {}) {
-  const { child, owner } = await startOwned(program, args, options, [
+  const { child, owner, settled } = await startOwned(program, args, options, [
     "ignore",
     "pipe",
     "pipe",
@@ -19,20 +24,31 @@ export async function runCaptured(program, args, options = {}) {
   child.stderr.setEncoding("utf8");
   child.stdout.on("data", (chunk) => (stdout += chunk));
   child.stderr.on("data", (chunk) => (stderr += chunk));
-  return { ...(await completion(child, owner)), stderr, stdout };
+  return {
+    ...(await completion(child, owner, settled, options.abortSignal)),
+    stderr,
+    stdout,
+  };
 }
 
 async function startOwned(program, args, options, stdio) {
   const owner = await createVerificationProcessOwner(options);
+  let child;
+  let settled;
   try {
-    const child = spawn(program, args, {
+    child = spawn(program, args, {
       detached: process.platform !== "win32",
-      ...options,
+      cwd: options.cwd,
       env: owner.environment(options.env ?? process.env),
       stdio,
     });
-    return { child, owner };
+    settled = childOutcome(child);
+    if (child.pid) await owner.registerProcessGroup(child.pid);
+    else await settled;
+    return { child, owner, settled };
   } catch (error) {
+    if (child) terminateTree(child, "SIGKILL");
+    await settled?.catch(() => {});
     try {
       await owner.dispose();
     } catch (cleanupError) {
@@ -46,7 +62,7 @@ async function startOwned(program, args, options, stdio) {
   }
 }
 
-async function completion(child, owner) {
+async function completion(child, owner, settled, abortSignal) {
   const forwarded = new Map();
   let escalation;
   let interrupted = null;
@@ -73,10 +89,18 @@ async function completion(child, owner) {
     forwarded.set(signal, handler);
     process.once(signal, handler);
   }
+  const abort = () => {
+    if (interrupted) return;
+    interrupted = "abort";
+    terminate("SIGTERM");
+    escalation ??= setTimeout(() => terminate("SIGKILL"), 5_000);
+  };
+  abortSignal?.addEventListener("abort", abort, { once: true });
+  if (abortSignal?.aborted) abort();
   let outcome;
   let processFailure;
   try {
-    outcome = await childOutcome(child);
+    outcome = await settled;
   } catch (error) {
     processFailure = error;
   }
@@ -93,6 +117,7 @@ async function completion(child, owner) {
   }
   for (const [signal, handler] of forwarded)
     process.removeListener(signal, handler);
+  abortSignal?.removeEventListener("abort", abort);
   if (escalation) clearTimeout(escalation);
   if (processFailure && ownershipFailure)
     throw new AggregateError(
