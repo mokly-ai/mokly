@@ -6,9 +6,13 @@ Rule parsing, diffing, document matching, and classification are implemented in
 both result versions, live Serve, watched updates, and publication. The
 inspector receives retained and excluded stylesheet evidence for component
 catalogues and screen-only catalogues, including before a comparison is loaded.
-Screen-only delivery reuses the existing v2 classification; it does not run
+Current screen-only delivery reuses v2 classification; it does not run
 component classification or an additional resource analysis. See
 [CSS Change Attribution](../../plans/css-change-attribution.md).
+Removing source-path evidence and applying CSS rule analysis to linked
+component-declared stylesheets is planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
+implemented in Milestones 3 and 4. The target rules below are not yet live.
 
 ## Purpose
 
@@ -33,7 +37,9 @@ referenced by embedded documents. It examines the resource's branch-point
 bytes and working-tree bytes, and the view's branch-point and working-tree
 documents after the same paired ignore normalization the comparison engine
 uses. It never widens the set of examined files; unreferenced public files and
-broad `review.sharedImpact` globs continue to add nothing on their own.
+source paths add nothing on their own. Declared component CSS is eligible only
+when linked in a rendered document, under the
+[component stylesheet contract](./mokly-component-stylesheets.md).
 
 Resources that are not stylesheets, including fonts, images, and embedded
 documents, keep their existing file-level attribution unchanged.
@@ -42,12 +48,10 @@ documents, keep their existing file-level attribution unchanged.
 
 A stylesheet is in scope for rule analysis only when it is a public file
 inside `mockupsDir`; only such files can be reached from a view document. A
-stylesheet outside that scope, such as a source or token module matched by a
-`review.sharedImpact` glob or a declared dependency directory, is never
-analysed and keeps its file-level `sharedImpact` evidence in both result
-versions. One shared predicate answers "is this stylesheet in analysis scope"
-for every classification path; a path is stripped from `sharedImpact` only when
-that predicate is true.
+stylesheet outside that scope, such as a source or token module, is never
+analysed and creates no comparison evidence on its own. One shared predicate
+answers "is this stylesheet in analysis scope" for every classification path;
+only rendered public stylesheets can produce CSS analysis records.
 
 Per-view evidence records are emitted only for views with at least one reason
 or excluded resource. Views and screens with neither carry no record in the
@@ -251,32 +255,30 @@ interface ViewReview {
 }
 ```
 
-Both the schema-v2 `ReviewResult` and the schema-v3 `ReviewResultV3` carry
-these fields. Schema versions do not change. Results without them remain valid
+Both schema-v4 `ReviewResultV4` and schema-v5 `ReviewResultV5` carry
+these fields. Results without them remain valid
 and mean the analysis did not run.
 
 `reasons` holds the view's retained resource evidence in both versions; it is
-omitted when empty. This supplies the dependency-analysis location that v2 did
-not previously have. View evidence describes the complete retained render;
-v3 entry reasons still apply component ownership separately. Match selectors
+omitted when empty. View evidence describes the complete retained render;
+v5 entry reasons still apply component ownership separately. Match selectors
 against the actual paired-ignore-normalized documents, including component
 markup; ownership projections determine resource eligibility, not selector
 matchability. Embedded documents contribute their own normalized trees; pair
 their original bytes once before both reference discovery and matching. Never
 feed normalized ignore tokens back into the marker parser.
 
-Entry dependency reasons merge by path across views, unioning selectors and
-giving `unresolved` precedence. Keep a stylesheet in entry `sharedImpact`
-only when some eligible view retains it. Explicit or renderer-proven ownership
+Entry rendered-resource reasons merge by path across views, unioning selectors
+and giving `unresolved` precedence. Derived declared or renderer-proven ownership
 also attributes retained actual-invocation CSS evidence to its component owner,
 even when every saved variant excludes the stylesheet. Saved view states and
-exclusions remain unchanged; no synthetic variant is created. An exact screen
-dependency remains independent when its actual view keeps the stylesheet.
-A broad public stylesheet glob or declaration cannot bypass rule exclusion.
-Non-CSS and non-public implementation dependencies retain their existing
-ownership policy. Resource evidence makes a paired view
+exclusions remain unchanged; no synthetic variant is created. A screen can
+independently retain evidence only when its actual view keeps the stylesheet.
+A broad public stylesheet glob cannot bypass rule exclusion. Non-CSS rendered
+resources retain their existing file-level policy; non-public implementation
+source alone supplies no evidence. Resource evidence makes a paired view
 `changed`; exclusions alone do not. Diagnostic summary counts use those states
-and, for v3, the resulting `changes` membership.
+and, for v5, the resulting `changes` membership.
 
 Baseline CSS uses the bounded Git batch reader, including optional counterpart
 reads for added/removed files. The head uses compilation outputs or the confined
@@ -303,8 +305,8 @@ paths and sides. Parsing a shared stylesheet therefore does not repeat per view.
   and assert, before emitting a result, that every analysed reason path
   satisfies it, failing with `review-invalid` otherwise. The shared decoder
   validates stylesheet identity only, because scope needs the resolved
-  configuration. A path outside scope may appear in `sharedImpact` but never
-  as an analysed reason or an excluded resource.
+  configuration. A path outside scope cannot appear as an analysed reason or
+  an excluded resource; there is no fallback source-path evidence field.
 - `material` is absent or `true`; a view with `material` has state `changed`,
   `added`, or `removed`.
 - Optional fields are omitted when empty, matching the existing canonical

@@ -5,6 +5,11 @@ section: "catalogue"
 order: 4
 ---
 
+> Removing the Dependencies row and source-path evidence is planned for
+> Milestone 5 of
+> [remove-source-path-evidence](../../../plans/remove-source-path-evidence.md).
+> The current inspector still shows the old row.
+
 ## Open the inspector
 
 The details inspector sits beside the screen. It starts collapsed and keeps
@@ -15,7 +20,7 @@ it.
 
 - The screen's id, title, description and route.
 - The tags it carries, as chips you can search from.
-- The dependencies it declares and the related documents it names.
+- The related documents it names, without a source-path dependency list.
 - Its components, and for a component page the screens that use it.
 - The evidence behind its change status.
 

@@ -15,6 +15,11 @@ define the delivered behavior tracked by the [adoption plan](../../plans/mokaboo
 The existing [shell design](./mokly-shell-design.md),
 [design links](./mokly-design-links.md), and component design contracts retain
 their current screen behavior and navigation authority.
+Component stylesheet adoption and removal of the style collector are planned
+by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
+implemented in Milestone 3; source-path evidence is removed in Milestone 4 and
+authoring fields in Milestone 6. The guidance below is the target, not the
+current example implementation.
 
 ## Outcome And Scope
 
@@ -167,38 +172,26 @@ exclusive component selectors into the inventory's owned sheets; keep global
 tokens, resets, cross-component selectors and screen layout conservatively
 attributed until an actual exclusive owner exists.
 
-Use exact `ownedDependencies` for a component's exclusive implementation modules
-and stylesheet, with matching entries in its `dependencies`. Shared fixtures,
-navigation tables, icons and mixed helpers are not exclusively owned. Screens
-and ancestor collections must not explicitly depend on an extracted exclusive
-component file: the classifier intentionally treats an exact declared screen
-dependency as independent evidence. Keep their genuine layout/global dependencies.
+Declare each exclusive public CSS file in the owning component's `stylesheets`
+array. Different components can share one declared CSS file, with both owning
+its rendered link. Shared fixtures, navigation tables, icons and mixed helpers
+do not establish path-based ownership or evidence. Only rendered resources,
+CSS analysis, reviewable metadata and usage determine Changes.
 
-Registration, variant fixtures and controls metadata must not live in an owned
-render module or be declared implementation-impact dependencies. Their imports
-are already observed by the build graph, and their values are compared as entry
-metadata. Declaring their files as implementation dependencies would incorrectly
-create affected consumers for a variant-only edit. Keep render transformations in the view module; registration only forwards
+Registration, variant fixtures and controls metadata are compared as entry
+metadata, not exclusive implementation files. Their imports remain observed by
+the build graph. Keep render transformations in the view module; registration only forwards
 validated props and the actual viewport to that renderer. Test real source
 edits to saved variants and control labels as well as implementation source edits.
 
-Separate stylesheet loading from review dependency declaration. A typed consumer
-style map describes ordered candidate sheets for each design route and library
-entry, covering its variants and supported control states, descendants and slots.
-All design rules share the ordered exclusive candidate pool in
-`library/style_files.ts`; route rules select their required mixed sheets. The
-pool authorizes descendant and transient rendering without emitting unused CSS.
-Order the configured blocks as shared base styles, exclusive component candidates,
-then context/layout overrides. Equal-specificity mobile component rules must not
-override the workspace’s bounded scrolling.
-Feed it into existing first-matching `config.stylesheets` rules, with specific
-library rules before the broad design fallback. The example renderer uses a
-fresh per-render React style collector: rendered library implementations request
-their exclusive sheets, and the renderer emits only those requested candidates,
-in configured order, alongside the required shared/global sheets. There is no
-module-global collector or inspection of private Mokly markers. Reject an
-unconfigured request rather than emitting an invented URL; preserve the supplied
-validated relative hrefs. This also applies to transient prop renders.
+Each registered component declares its exclusive public sheet through
+`libraryMetadata`. Route rules select only required mixed/global stylesheets;
+place `componentStylesheets` between shared base CSS and context/layout
+overrides. Mokly inserts actual rendered component links in first-render,
+authored-file order; there is no per-render React style collector, candidate
+pool, `useDesignStyle` call, or renderer-side link synthesis. The renderer emits
+`input.stylesheets` directly. This applies equally to transient prop renders;
+see [component stylesheets](./mokly-component-stylesheets.md).
 
 An unused child's stylesheet must not be linked merely because another saved
 variant uses that child: an absent component cannot justify suppressing that

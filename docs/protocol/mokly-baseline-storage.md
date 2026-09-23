@@ -3,6 +3,13 @@
 This is the storage and command contract for [derived baselines](./mokly-derived-baselines.md).
 Historical commands execute trusted repository code; preparation is never an HTTP operation.
 
+## Delivery Status
+
+Removal of fallback path evidence from cached-baseline classification is
+planned by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md)
+and implemented in Milestone 4. The current code still checks shared-impact
+paths until then; the cache confinement target below does not.
+
 ## Rebuild Procedure
 
 The builder runs the following steps for one merge-base commit.
@@ -59,7 +66,7 @@ Git processes.
 
 The cache lives at `<repoRoot>/.mokly-cache/baselines/`. It is package
 owned: never served, never watched, never a comparison resource, excluded from
-changed-path evidence and shared-impact globs before those globs are evaluated,
+changed-path evidence and rendered-resource classification,
 and never a valid `mockupsDir`, entry glob root, resolved entry module,
 `review.outDir`, or export destination. Consumers add `.mokly-cache/` to their ignore file; derived
 `check` also fails when Git tracks anything under it.

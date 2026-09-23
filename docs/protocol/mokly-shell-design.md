@@ -23,6 +23,10 @@ remain binding on the hydrated React implementation, and no mockup changes
 are part of that plan. The separate
 [component explorer designs](./mokly-component-design.md) are implemented
 mockups whose runtime-backed states are identified in their own contract.
+Removal of the Shared impact screen and Dependencies row is planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
+implemented in Milestone 2 mockups and Milestone 5 UI. The design inventory
+below is the target; the current mockups still include the removed screen.
 
 Auto/Light/Dark interface appearance is designed in the
 `design/browse/appearance/` mockups and specified by the
@@ -85,7 +89,6 @@ contract until their standalone screens are implemented.
 | `design-review-removed-unavailable`   | `design/review/outcomes/previous-version/unavailable.html`      | Previous views unavailable, with Retry                     |
 | `design-review-removed-no-view`       | `design/review/outcomes/previous-version/no-captured-view.html` | A viewport with no captured previous view                  |
 | `design-review-difference`            | `design/review/outcomes/difference.html`                        | Blend-mode difference comparison                           |
-| `design-review-shared-impact`         | `design/review/impact/shared-impact.html`                       | Unchanged screen from All with evidence                    |
 | `design-review-ignored-only`          | `design/review/impact/ignored-only.html`                        | Ignored-only Current view with evidence                    |
 | `design-review-empty`                 | `design/review/impact/empty.html`                               | Empty Changes filter retaining Current                     |
 | `design-review-style-matched`         | `design/review/impact/stylesheets/matched.html`                 | Changed styles that apply to the screen                    |
@@ -152,7 +155,7 @@ Additional owning groups keep each new page at no more than five screens:
   [screen variants](./mokly-screen-variants.md).
 - `design/review/impact/stylesheets/matched.html`, `unresolved.html`,
   `unnamed.html`, and `excluded.html` specify rule-aware stylesheet evidence
-  beneath the impact states, so the impact page itself keeps its three screens.
+  beneath the impact states, so the impact page itself keeps its remaining two screens.
   Matched, unresolved, and unnamed stay in Changes and open the loaded
   side-by-side comparison with the "Styles this screen uses changed" stage
   heading; `unnamed.html` is the same reach with no style name, so its lead
@@ -162,7 +165,7 @@ Additional owning groups keep each new page at no more than five screens:
   [CSS evidence in the shell](./mokly-css-evidence-shell.md).
 - `design/review/availability/preparing.html` and `unavailable.html` specify the
   two Changes states that carry no comparison data yet, keeping the impact group
-  to its own three aggregate outcomes.
+  to its two remaining aggregate outcomes.
 - `design/browse/appearance/overview.html` is the canonical appearance screen;
   the `states/` group beneath it owns two screens and `workspaces/` and
   `status/` own five each. Their previews follow the artboard. They specify the
@@ -406,7 +409,7 @@ scrollable region scrolls internally:
   body (`1.35fr / 1fr`) with description and
   `Why this screen —` rationale on the left and uppercase-labelled metadata
   rows (Source, Generated, Schemes, Changed views, Tags, Related docs,
-  Dependencies, Used by) on the right. Paths render as monospace chips; use
+  Used by) on the right. Paths render as monospace chips; use
   cases render as pill chips with the flow icon; the Schemes row is plain text
   naming the schemes the screen renders in (`light, dark`). The Changed views
   row is plain text naming the views a ready classification marked changed
@@ -537,7 +540,7 @@ retry controls are available after an explicit comparison request. The target
 component shell makes the band conditional on a Changed shown view, a Removed
 component saved variant, or verified affected-consumer evidence. The updated
 mockups omit it on every Browse, Added or Unmodified shown view, Removed screen,
-shared-impact-only, ignored-only, excluded-stylesheet-only, and empty state.
+ignored-only, excluded-stylesheet-only, and empty state.
 Removed screens show a status badge over their previous version labelled “Showing previous
 version” under [removed previews](./mokly-removed-previews.md). A removed screen
 keeps the grouped viewport control. The catalogue-wide Appearance selector

@@ -2,6 +2,12 @@
 
 ## Delivery Status
 
+Component-declared stylesheet authoring is planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md) and
+implemented in Milestone 3. Removal of entry `dependencies` and
+`ownedDependencies` is implemented in Milestone 6. The target below is not yet
+the current runtime behavior.
+
 The public `defineComponent` API, saved variants, ownership attribution,
 explorer, inspection, and local controls are implemented. The
 [component explorer plan](../../plans/component-explorer.md) records delivery.
@@ -36,7 +42,7 @@ const action = defineComponent({
   title: "Action",
   description: "The primary action for a task.",
   route: "components/action.html",
-  dependencies: ["src/components/Action.tsx"],
+  stylesheets: ["components/action.css"],
   relatedDocs: [],
   propSchema: {
     kind: "object",
@@ -84,8 +90,10 @@ before output generation; helper branding alone is not validation.
 
 The input includes the common entry metadata, a stable relative `.html` route,
 `propSchema`, `render`, and a nonempty ordered `variants` list. `tags`,
-`colorSchemes`, `controls`, `slots`, and `ownedDependencies` are optional. Existing id, route,
-dependency, tag, and color-scheme validation applies. Variant ids are unique
+`colorSchemes`, `controls`, `slots`, and `stylesheets` are optional. Existing id,
+route, tag, and color-scheme validation applies. Declared stylesheets are
+validated and linked under the
+[component stylesheet contract](./mokly-component-stylesheets.md). Variant ids are unique
 kebab-case strings within their component; the first variant is the default.
 Each variant contains an id, title, complete typed props, and an optional
 description. There is no
@@ -117,7 +125,8 @@ inside its markup. Its rendered content and nested registered instances remain
 independently comparable. A component cannot absorb a screen's primary content
 by accepting it as a slot. Named data presets remain suitable for fixed icons
 or content examples. Changing a preset key is an input change; changing its
-consumer implementation belongs to its defining component/dependencies.
+consumer implementation is attributed through changed output or a linked
+owned resource, not its source path alone.
 
 ## Instances And Ownership
 
@@ -136,8 +145,8 @@ These relationships are distinct when a screen supplies another component in
 a container's slot. Repeated placement of one slot receives distinct range
 references while retaining the same input owner.
 
-Actual rendering supplies usage. Imports, unused branches, or declared
-dependencies do not invent instances. Mobile, desktop, light, dark, and saved
+Actual rendering supplies usage. Imports, unused branches or source locations
+do not invent instances. Mobile, desktop, light, dark, and saved
 variants have separate usage records. A registered component that renders null
 is still an invoked instance, but has no visible bounds. Collection and use-case
 membership never duplicates canonical usage records.
@@ -156,11 +165,12 @@ the default variant's mobile light file is
 existing suffix conventions. Every variant follows this same rule. Output
 collision, ownership, resource, orphan, and transactional-write checks apply.
 
-Catalogues with registered components emit manifest schema v5, including typed
+Catalogues with registered components emit manifest schema v6, including typed
 component entries, variant fragments, and per-view usage records for screens
 and components. The [manifest schema](./mokly-component-manifest.md) defines
-every record, reference, ordering rule, and validation boundary. All current catalogues use v5, including those without components. Historical
-Git readers accept v3, both disjoint v4 formats, and the explicit v2 fallback;
+every record, reference, ordering rule, and validation boundary. All current
+catalogues use v6, including those without components. Historical Git readers
+accept v3–v5 and the explicit v2 fallback, normalizing away removed path fields;
 unknown versions fail. Historical manifests without usage metadata do not imply an empty
 component tree or justify suppressing changes.
 
@@ -171,7 +181,7 @@ wrappers. Parsed validation rejects forged, duplicate, overlapping, unmatched,
 or moved records and verifies ownership again after compatibility transforms.
 The existing flat `ReviewIgnore` marker language remains separate and strict.
 
-Comparison metadata, dependencies, and props contain no timestamps, absolute
+Comparison metadata and props contain no timestamps, absolute
 checkout paths, function bodies, or transient controls values. Only data props
 are serialized as values; slots serialize ownership references and rendered
 material, never React elements or executable definitions. Values shown in
@@ -187,9 +197,10 @@ Implementations must not silently register an unreachable component page.
 ## Related Contracts
 
 - [Component change attribution](./mokly-component-changes.md)
+- [Component stylesheet declaration and linking](./mokly-component-stylesheets.md)
 - [Runtime prop schema and codec](./mokly-component-props.md)
-- [Manifest v5 schema](./mokly-component-manifest.md)
-- [Comparison v3 schema](./mokly-component-review.md)
+- [Manifest v6 schema](./mokly-component-manifest.md)
+- [Comparison v5 schema](./mokly-component-review.md)
 - [Component pages and screen inspection](./mokly-component-explorer.md)
 - [Component controls](./mokly-component-controls.md)
 - [Build pipeline](../architecture/build-pipeline.md)

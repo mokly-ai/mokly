@@ -7,6 +7,10 @@ This is the public contract for hosted and self-hosted receivers. Receivers need
 only the published `@mokly/mokly` package and these documented file artifacts;
 Mokly Cloud has no special protocol or access to package internals.
 `mokly export` remains local-only. `mokly publish` exports, then uploads once.
+Uploaded public resources and new manifest/comparison formats are planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
+implemented in Milestones 3, 6 and 7. The upload envelope stays at v1;
+existing packages still carry the older formats until those milestones land.
 
 ## CLI
 
@@ -137,7 +141,7 @@ interface MoklyUploadV1 {
 
 - `moklyVersion` is the installed package's exact SemVer (at most 255 bytes), including prerelease
   or build metadata when present. `schemaVersion` versions this envelope,
-  independently of catalogue manifest v5 and review v2/v3.
+  independently of catalogue manifest v6 and review v4/v5.
 - `repository` obeys the identity grammar above; it is an assertion to authorize,
   not proof of repository ownership. `host` is at most 253 bytes; owner and name
   are each at most 255 bytes.

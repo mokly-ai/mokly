@@ -87,30 +87,35 @@ retain that caller's ownership.
 
 ## Styles And Hosts
 
-`metadata.ts` declares exact ownership of a component's `.view.tsx` module and
-`generated/design-library/{group}/{slug}.css`. Keep registration, saved fixtures,
-controls metadata, shared helpers and navigation tables out of those dependencies.
-An example-only edit must not report implementation impact on every consumer.
+The component stylesheet target is planned by
+[remove-source-path-evidence](../../../../../plans/remove-source-path-evidence.md)
+for Milestone 3 and replaces the current style collector; source-path evidence
+disappears in Milestone 4 and declarations in Milestone 6.
+`metadata.ts` assigns each registered component its public
+`design-library/{group}/{slug}.css` relative to `mockupsDir` through
+`stylesheets`. Registered
+rendering and derived resource owners replace source-file ownership paths.
+Shared helpers and saved fixtures are metadata or rendered-output inputs, not
+independent comparison evidence.
 
-Each view calls `useDesignStyle(slug)` when it renders visible owned markup.
-`style_files.ts` supplies the ordered candidate pool to the example configuration.
+Actual rendered components link their declared files in first-render order.
+There is no `useDesignStyle` call or `style_files.ts` candidate pool.
 The shared preview layout reserves intrinsic mobile widths so full-size phones
 cannot overlap desktop frames when Both is selected.
 The phone notch and home pill are decorative and ignore pointer events, so
 they cannot intercept interactions with the caller-owned screen below them.
-The configuration orders shared base styles first, requested component sheets
-next, then context/layout overrides. Keep this explicit order: equal-specificity
+The configuration orders shared base styles first, the `componentStylesheets`
+marker next, then context/layout overrides. Keep this explicit order: equal-specificity
 mobile rules must not override bounded workspace scrolling.
-`style_context.tsx` creates a fresh collector for each normal or transient render,
-retains configured relative URLs and shared sheets, and emits only requested
-exclusive sheets. Missing configuration fails explicitly. A hidden picker does
+Mokly inserts the links after the renderer returns for normal and transient
+renders and validates any missing configured neighbour. A hidden picker does
 not link chip CSS merely because another variant uses chips.
 
 Only exclusive selectors belong in an owned stylesheet. Tokens, resets, mixed
 selectors and cross-component layout/state rules stay in the shared design CSS.
 Keep shared host resets at zero specificity so owned component styles render
 identically in standalone samples and in-screen compositions.
-Keep configured watch paths in sync when introducing an owned sheet.
+Declared sheets reload automatically in Serve, including after an edit.
 
 `host.tsx` supplies standalone layout and semantic parents without fixture data.
 Every inspector uses the ordinary preview workspace for its resizer and mobile
@@ -147,7 +152,7 @@ The tests retain the original 56 screen ids/routes from before the shared
 library existed, assert real consumers and
 owner chains, guard migrated composition points, and edit actual source files in
 isolated copies. They distinguish implementation changes, saved metadata changes,
-screen inputs/slots/order, exclusive CSS and conservative global dependencies.
+screen inputs/slots/order, exclusive CSS and conservative global rendered resources.
 Serve and comparison share the same classification and bounded baseline reads.
 Full-catalogue browser fixtures share a five-minute setup budget to build the
 packages and example or the historical baseline, export every generated view

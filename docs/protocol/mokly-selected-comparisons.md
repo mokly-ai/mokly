@@ -1,5 +1,11 @@
 # Selected live comparisons
 
+## Delivery Status
+
+The v4/v5 selected comparison output below is planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md) and
+implemented in Milestone 7; current responses still use v2/v3.
+
 Live comparison loading must scale with the selected screen or saved component
 variant and its referenced resources. It must not compile the consumer, check
 unrelated generated documents, classify the catalogue again, or snapshot other
@@ -93,7 +99,7 @@ view or mode switch renews or reacquires them before loading new panes.
 
 Regressions must prove that selection avoids unrelated output reads and renderer
 work, includes only the chosen variant, and keeps the existing before/after bytes.
-Cover schema v2 and v3, removed and added sides, themes/viewports, asset isolation,
+Cover schema v4 and v5, removed and added sides, themes/viewports, asset isolation,
 input mutation, malformed requests, coalescing, refresh, invalidation, cancellation,
 shutdown and retry. Advance the server clock to prove that idle screen and saved
 variant comparisons recover after snapshot collection, without failed pane

@@ -6,6 +6,10 @@ Implemented. This document owns how the inspector and the comparison stage
 present the evidence defined by
 [CSS change attribution](./mokly-css-attribution.md); that contract owns the
 analysis, membership rule, evidence schema, and validation.
+Removing legacy shared-impact details is planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
+implemented in Milestone 5; v4/v5 comparison decoding follows in Milestone 7.
+The existing UI still shows legacy paths until then.
 
 ## Shell Presentation
 
@@ -55,18 +59,19 @@ The live classification snapshot retains screen-only `screenEvidence` records
 with a route and per-view `viewport`, `colorScheme`, optional `reasons`, and
 optional `excludedResources`. Paths remain repository-relative. The workspace
 projects the selected screen's views as optional `resourceEvidence`; it does not
-invent v3 entry reasons, component results, or comparison states. Static exports
-project this same slice from the existing v2 comparison. Schema versions remain
-unchanged, and absent evidence remains valid. New classification generations
+invent component entry reasons, component results, or comparison states. Static
+exports project this same slice from the v4 screen-only or v5 component-aware
+comparison. Absent evidence remains valid. New classification generations
 replace the slice, clearing stale evidence while Changes is pending/unavailable.
 
 One inspector renderer merges classification evidence with the loaded selected
 comparison. Dependency reasons merge by path with sorted selector unions and
 unresolved precedence. Retained paths suppress exclusions across all selected
-views; loaded v2 shared-impact and ignored-content details remain available.
+views; loaded ignored-content details remain available, without any legacy
+shared-impact path list. Screen-only results use v4 and component results v5.
 Loaded evidence is selection-scoped and cleared on classification invalidation.
 Component ownership facts continue to come from entry reasons and the complete
-classification; a v2 resource change never implies a changed shared component.
+classification; a v4 resource change never implies a changed shared component.
 
 `ReviewState` has no resource-only variant, so the browser derives the style
 heading from the view's own evidence. A view reads "Styles this screen uses
@@ -78,7 +83,7 @@ Any other retained reason, such as a changed font or image, or a present
 never emit `analysis`-bearing reasons, so their absent `material` flag cannot
 select the style label.
 
-The Details inspector lists the entry's retained dependency paths under
+The Details inspector lists the entry's retained rendered-resource paths under
 "Changes to these files may affect this screen:", then groups analysed
 selectors by outcome, so one screen shows at most one matched list and one
 unresolved list however many stylesheets changed. Selectors are unioned,

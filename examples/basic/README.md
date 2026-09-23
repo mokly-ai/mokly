@@ -1,5 +1,10 @@
 # Basic Mokly Consumer
 
+The component stylesheet migration and removal of source-path evidence are
+planned by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md)
+for Milestones 3, 4 and 6. The target guidance below does not yet describe the
+current example code; its authored entries and renderer migrate later.
+
 This is a synthetic external-consumer fixture. It contains two distinct mobile
 and desktop product-style screens built with `@firna/ui` controls, nested
 collections, one use case, id-addressed links, a Firna renderer adapter, local
@@ -163,20 +168,19 @@ grip; mobile keeps its fixed drawer. The component designs reuse the existing sh
 and a shared icon inspector, with synthetic usage fixtures under
 `entries/design/components/parts`. The real examples use the public `defineComponent` API.
 
-Exclusive component styles live under `generated/design-library/`. Each component
-owns only its view module and stylesheet. A per-render collector emits exclusive
-sheets only when the component actually renders, including transient prop edits.
-Registration/variant/control metadata stays outside implementation dependencies.
-A shared implementation edit appears on its component page and lists consuming
+Exclusive component styles live under `generated/design-library/`. Each
+component declares its public CSS through `stylesheets`; Mokly links it only
+when that component actually renders, including transient prop edits. No
+per-render collector or source-path ownership assertion is needed. A changed
+rendered component resource appears on its component page and lists consuming
 screens as affected; independent screen inputs, slots or instance changes still
-appear in Changes. This is tested against fully registered baseline snapshots.
+appear in Changes. A source edit without a rendered effect adds nothing.
 
 The shared inspector/workspace sheets cover all 89 design screens and standalone
 library hosts. Other mixed component-design sheets remain scoped to the 32
 component-design routes and hosts; the controls sheet additionally remains
-scoped to its eleven owning screen routes. `review.sharedImpact` is fallback
-impact evidence for files the rendered resource graph cannot see, such as source
-or token modules. Linked stylesheets, including imported sheets, are attributed
+scoped to its eleven owning screen routes. Linked stylesheets, including
+imported sheets, are attributed
 by rule: a changed rule must potentially match a view or be unresolved to keep
 that dependency. A broad stylesheet glob cannot restore an excluded stylesheet
 or add an unreferenced public file to Changes. Actual rendered references,
@@ -205,8 +209,8 @@ empty.
 The Added outcome still shows its factual branch evidence in
 Details; evidence availability, comparison eligibility, and initial inspector
 disclosure are independent. The
-shared-impact and ignored-only examples open from All with zero Changes and one
-Current preview. Dependency evidence remains available in Details, while
+ignored-only examples open from All with zero Changes and one Current preview.
+Rendered-resource evidence remains available in Details, while
 unchanged output and paired ignored-only edits do not fill the review list.
 The nested `design/review/impact/stylesheets/` group adds the rule-aware
 stylesheet states: a changed stylesheet whose changed styles apply to the
@@ -238,7 +242,7 @@ npm run preview:build
 ```
 
 This example uses the default `generatedOutput: "derived"`. Generated HTML and
-the schema-v5 manifest under `generated/` are ignored local artifacts, absent in a fresh clone.
+the schema-v6 manifest under `generated/` are ignored local artifacts, absent in a fresh clone.
 `example:build` writes them transactionally; `example:check` validates the current
 compilation and rejects tracked generated output without requiring files on disk.
 Committed-mode stale and deterministic-output tests use isolated consumer fixtures.

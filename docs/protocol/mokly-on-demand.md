@@ -1,5 +1,12 @@
 # On-demand Serve
 
+## Delivery Status
+
+The internal v6 entry shape and declared-stylesheet on-demand linking are
+planned by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
+implemented in Milestones 6 and 3 respectively. Current Serve still uses v5
+and its existing renderer.
+
 ## Startup and completeness
 
 Serve loads one consumer graph and validates its catalogue metadata, routes,
@@ -7,8 +14,9 @@ hierarchy, schemas, source inventory and output confinement before listening.
 It does not render every document, write output, classify Git changes or transfer
 generated HTML as a prerequisite for Browse. This applies with and without watch.
 
-The live catalogue index is a distinct internal format, not a schema-v5 manifest.
-It describes available views, not completed rendering or usage evidence. A v5
+The live catalogue index is a distinct internal format, not a schema-v6 manifest.
+It adopts the v6 entry shape while describing available views, not completed
+rendering or usage evidence. A v6
 manifest still requires every view's validated records. Build, Check and Export
 remain exhaustive and produce the same portable artifacts, committed or
 [derived](./mokly-derived-baselines.md) according to `generatedOutput`.

@@ -5,6 +5,10 @@ section: "authoring"
 order: 2
 ---
 
+> The removal of entry path declarations is planned in
+> [remove-source-path-evidence](../../../plans/remove-source-path-evidence.md),
+> Milestone 6; the current package still accepts them.
+
 ## Define a screen
 
 `defineScreen` takes the screen's identity, its route and the two React nodes
@@ -20,7 +24,6 @@ export const accountHome = defineScreen({
   route: "account/home.html",
   mobile: <main>Account</main>,
   desktop: <main>Account</main>,
-  dependencies: ["src/account/home.tsx"],
   relatedDocs: ["docs/account.md"],
   useCaseIds: [],
 });
@@ -32,7 +35,6 @@ export const accountHome = defineScreen({
 | `title`, `description` | What the catalogue shows                                   |
 | `route`                | Where the documents are written under `mockupsDir`         |
 | `mobile`, `desktop`    | The React node each viewport renders                       |
-| `dependencies`         | Repository paths this screen is made from                  |
 | `relatedDocs`          | Documents a reader should open beside it                   |
 | `useCaseIds`           | Flows this screen appears in                               |
 | `tags`                 | Lowercase kebab-case classification, searched as `tag:`    |
@@ -57,7 +59,6 @@ export const accountHomeStates = defineScreen({
   route: "account/home.html",
   mobile: <main>Account</main>,
   desktop: <main>Account</main>,
-  dependencies: ["src/account/home.tsx"],
   relatedDocs: ["docs/account.md"],
   useCaseIds: [],
   variants: [
@@ -75,7 +76,7 @@ export const accountHomeStates = defineScreen({
 
 The variant's route is derived from the parent's, so this one is written to
 `account/home.variants/empty.html`. It inherits the parent's address, tags,
-color schemes, dependencies and related docs unless it sets its own, and it
+color schemes and related docs unless it sets its own, and it
 keeps its own global id, so a link to `account-home-empty` opens it like any
 screen. Its `useCaseIds` defaults to an empty list and never inherits; list a
 flow only when one of that flow's steps names the variant. A variant cannot
@@ -126,7 +127,7 @@ export const mockups = defineRoot({
 
 The route of that screen is `account/billing/invoice.html`: the root path, the
 collection segment and the slug, with the extension added for you. A nested
-child inherits `dependencies` and `relatedDocs` from its ancestors; tags are
+child inherits `relatedDocs` from its ancestors; tags are
 never inherited.
 
 ## Exported types

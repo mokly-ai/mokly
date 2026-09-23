@@ -5,6 +5,10 @@ section: "start"
 order: 3
 ---
 
+> Entry path declarations are removed in Milestone 6 of
+> [remove-source-path-evidence](../../../plans/remove-source-path-evidence.md);
+> the current package still accepts them.
+
 ## Add an entry module
 
 An entry module is any regular file matched by one of your `entries` globs and
@@ -25,7 +29,6 @@ export const mockups = [
     description: "Account product screens.",
     childIds: ["account-home"],
     relatedDocs: ["docs/account.md"],
-    dependencies: ["src/account"],
   }),
   defineScreen({
     id: "account-home",
@@ -35,7 +38,6 @@ export const mockups = [
     mobile: <main>Account</main>,
     desktop: <main>Account</main>,
     relatedDocs: ["docs/account.md"],
-    dependencies: ["src/account/home.tsx"],
     useCaseIds: [],
   }),
 ];

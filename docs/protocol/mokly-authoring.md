@@ -4,6 +4,13 @@ This implemented contract expands the [package API](./mokly-package.md).
 Configuration follows the [configuration contract](./mokly-configuration.md);
 consumer rendering follows the [rendering contract](./mokly-rendering.md).
 
+## Delivery Status
+
+The removal of entry `dependencies` is planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md) and
+implemented in Milestone 6; the `componentStylesheets` export is implemented in
+Milestone 3. Existing code still accepts the removed field until migration.
+
 ## Public Authoring API
 
 The root package export supplies typed, documented authoring helpers:
@@ -12,6 +19,7 @@ The root package export supplies typed, documented authoring helpers:
 - `defineScreen`, `definePage`, `defineCollection`, and `defineUseCase`;
 - `defineRoot`, `collection`, `screen`, and `page` for nested trees;
 - `defineComponent` and its schema-derived props, variants, and control types;
+- `componentStylesheets`, the shared configured-stylesheet position marker;
 - `mockLink` and `MockLink` for id-addressed links;
 - `ReviewIgnore`, `ReviewIgnoreScope`, and `reviewMaterialKey`.
 
@@ -21,7 +29,7 @@ renderer, and compatibility-transformer interfaces. `ColorScheme` is exactly
 `"dark" | "light"`; `Viewport` is `"desktop" | "mobile"`.
 
 The [registered component contract](./mokly-components.md) owns the complete
-`defineComponent` shape, slots, repeated-instance identity, dependencies, saved
+`defineComponent` shape, slots, repeated-instance identity, stylesheets, saved
 variants, and runtime prop schema. It returns a renderable `Component` facade
 and a registry `entry`; collections can reference that entry like a screen.
 Component pages and controls use the existing consumer renderer and providers.
@@ -38,20 +46,19 @@ screen entry with its own global id, a route derived beneath the parent's,
 and a `variantOf` relationship to the parent. The
 [screen variants contract](./mokly-screen-variants.md) defines that implemented
 field, validation, and public grouping. A variant inherits the parent's
-address, color schemes, dependencies, related docs, and tags when it omits
+address, color schemes, related docs, and tags when it omits
 them. Its use-case membership never inherits: `useCaseIds` defaults to an empty
 list because a variant must reciprocate only the flows whose steps name that
 variant. `defineScreen` returns one `ScreenDefinition` when `variants` is absent
 and a readonly parent-first array of screen definitions when it is present.
 Entry-module loading flattens that array one level.
 
-Each entry provides a title, description, related docs, and dependency paths.
-A dependency may identify an existing repository file or directory; Review
-matches the path itself and every descendant and reports the concrete changed
-path as impact evidence. Dependency declarations and source paths alone do not
-add entries to Browse Changes: that filter compares output, rendered resources,
-reviewable metadata, and collection ancestry, then propagates affected screens
-to their flows. See [the Changes contract](./mokly-changes.md).
+Each entry provides a title, description and related docs. Source paths alone
+do not add entries to Browse Changes or comparison evidence: classification
+uses output, rendered resources, reviewable metadata, collection ancestry and
+component usage. See [the Changes contract](./mokly-changes.md).
+Component-owned public CSS is declared through
+[component stylesheets](./mokly-component-stylesheets.md), not entry metadata.
 Screens, pages, and use cases provide a stable relative `.html` route; use cases live
 under `user-flows/`. Screens may
 provide an address-bar label and use-case membership. Nested definitions
@@ -71,7 +78,6 @@ The common and nested-root input boundary is:
 
 ```ts
 interface EntryInput {
-  dependencies: readonly string[];
   description: string;
   id: string;
   rationale?: string;
@@ -85,7 +91,6 @@ interface CollectionInput extends EntryInput {
 
 interface RootCollectionInput {
   address?: string;
-  dependencies?: readonly string[];
   description: string;
   id: string;
   rationale?: string;
@@ -99,6 +104,16 @@ interface RootInput {
   path: string;
 }
 ```
+
+`dependencies` on `defineScreen`, `definePage`, `defineUseCase`,
+`defineCollection`, `defineComponent`, nested `screen`/`page`/`collection`,
+`defineRoot` collection metadata, or a screen variant is removed. Detect the
+key even if its value is `undefined`; do not inherit or silently discard it.
+The registry reports violation code `removed-field` with the exact message
+`dependencies has been removed; delete this field.` (the ordinary entry source
+path/id context and `build-invalid` wrapper remain unchanged). Component
+`ownedDependencies` likewise reports `removed-field` with exact message
+`ownedDependencies has been removed; delete this field.`
 
 `defineRoot` always flattens nested children into ordinary definitions and
 preserves their real `childIds` relationships. With `collection` metadata it

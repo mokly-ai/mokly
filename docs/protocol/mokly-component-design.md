@@ -13,6 +13,10 @@ extend the [shell design](./mokly-shell-design.md) and depict the
 [component explorer contract](./mokly-component-explorer.md). The former
 consumer's previous-version state is implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md).
+Replacement of declared-path evidence and component CSS collection is planned
+by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
+implemented in Milestones 3 and 4; this verification guidance is the target
+and the current example still uses route rules and inherited paths.
 
 ## Owning Catalogue
 
@@ -157,11 +161,11 @@ small gap above an intact rounded outline, shared by all three region layouts.
 
 Use the real generator; never hand-edit generated HTML. Six shared component
 stylesheets are hand-authored public inputs, confined to `design/components/**`.
-Route-scoped stylesheet matching links them only from the thirty-two component design routes; Changes follows those rendered resource references. The collection also declares inherited dependencies for comparison evidence. The controls stylesheet is scoped
-further to its eleven owning routes, with a matching dependency and watch rule. Keep them out of the global
-`review.sharedImpact` list; watched stylesheet rules still reload their edits.
-Child collection dependency lists replace inherited lists; Controls explicitly
-spreads the shared stylesheet dependency set before adding its own stylesheet.
+Registered design components declare their exclusive public CSS through
+`stylesheets`; only documents rendering them link the files. Other shared
+layout styles remain configured. Changes follows rendered resource references
+and CSS analysis, not source or collection paths. Watched declared CSS reloads
+like configured CSS; no inherited path lists or manual ownership rules are needed.
 Shared fixtures and reusable screen parts live beside the owning screen modules.
 
 `tests/component_design_attribution.test.ts` exercises each component stylesheet

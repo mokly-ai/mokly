@@ -1,5 +1,12 @@
 # React To Static HTML Build Pipeline
 
+## Delivery Status
+
+Component CSS linking, manifest v6 and source-path-free classification are
+planned by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
+implemented in Milestones 3, 6 and 4 respectively. The pipeline below
+describes the target; current code still emits v5 and retains path inputs.
+
 ## Overview
 
 ```text
@@ -24,7 +31,7 @@ adapt explicit child controls -> resolve mock:id links -> compatibility bridge
 validate markers/links/resources
         |
         v
-mobile/desktop light and optional dark HTML for every screen and variant screen, saved component variants, whole documents + schema-v5 manifest in memory
+mobile/desktop light and optional dark HTML for every screen and variant screen, saved component variants, whole documents + schema-v6 manifest in memory
         |
         +---- check (committed): compare with disk, write nothing
         |
@@ -156,10 +163,15 @@ see the [component manifest](../protocol/mokly-component-manifest.md).
 Registered entries render each saved variant in every configured context through
 the same consumer graph. Wrappers record actual invocations, data, caller-owned
 slots, and layout-neutral ranges. The root saved variant is not its own instance.
-All catalogues emit manifest v5 with the complete source inventory. Registered
+After the renderer returns, Mokly inserts linked component-declared public CSS
+beside configured `<link>` elements and derives their per-view `resources`
+owners; `RenderInput` stays unchanged. See
+[component stylesheets](../protocol/mokly-component-stylesheets.md).
+All catalogues emit manifest v6 with the complete source inventory. Registered
 components add saved variants and complete per-view invocation/ownership records;
 explicit page callbacks still emit exactly one complete document. Both historical
-v4 envelopes remain readable only at the Git boundary. Current readers require v5.
+v4 envelopes remain readable only at the Git boundary; v3–v5 baselines strip
+removed path fields before comparison. Current primary readers require v6.
 
 The [child-control adapter](../protocol/mokly-link-controls.md) uses parsed
 source locations to patch only the marked control and its boundary templates.
@@ -237,10 +249,9 @@ inside its extraction and read the validated cached output. Head and baseline
 compilation use their respective source and package versions; see the
 [derived baseline contract](../protocol/mokly-derived-baselines.md).
 
-Declared dependency paths may be files or directories. The manifest preserves
-that declaration, and downstream Browse/Review impact matching treats a
-directory as a root containing every changed descendant rather than requiring
-an exact Git path match.
+Current entries have no source-path declarations. Browse and Review attribute
+only rendered output, linked public resources, reviewable metadata, ancestry
+and component usage; a changed directory alone is not evidence.
 
 Pending generated orphans are derived once from the same ownership rule used by
 Check and the output transaction. Link/resource validation and the temporary

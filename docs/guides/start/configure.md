@@ -5,6 +5,10 @@ section: "start"
 order: 2
 ---
 
+> The component stylesheet marker is planned for Milestone 3 of
+> [remove-source-path-evidence](../../../plans/remove-source-path-evidence.md).
+> The current package still needs the older stylesheet setup.
+
 ## Add the config file
 
 Create `mokly.config.ts` at the root of the repository and export the result
@@ -63,6 +67,11 @@ export default defineConfig({
 Keep public assets such as `app.css` inside `mockupsDir` so the catalogue can
 serve them. Entry modules and the helpers they import are never served, even
 when a glob reaches into a folder below `mockupsDir`.
+To place registered components' declared public CSS among configured links,
+import `componentStylesheets` from `@mokly/mokly` and put it once in the
+rule's shared `stylesheets` list. Without it, component CSS follows the shared
+list and precedes light/dark CSS. See
+[the component stylesheet contract](../../../docs/protocol/mokly-component-stylesheets.md).
 
 ## Where the config is found
 

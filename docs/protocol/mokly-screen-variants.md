@@ -9,6 +9,9 @@ fixes. The unimplemented design-catalogue conversion, open review findings and
 later product ideas belong to the separate
 [follow-up plan](../../plans/screen-variants-follow-up.md). The conversion's
 route retirements still require explicit approval.
+Removal of variant `dependencies` and its inheritance is planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md) and
+implemented in Milestone 6; the target input below is not yet implemented.
 
 ## Purpose And Boundary
 
@@ -42,7 +45,6 @@ element declares a screen with its own id, slug, title, and React nodes:
 interface ScreenVariantInput {
   address?: string;
   colorSchemes?: readonly ColorScheme[];
-  dependencies?: readonly string[];
   description: string;
   desktop: ReactNode;
   id: string;
@@ -81,7 +83,7 @@ mirrors the component variant folder and cannot collide with the parent's
 viewport fragments. The slug obeys the route-segment grammar, and an author
 never supplies `route` on a variant.
 
-A variant inherits the parent's `address`, `colorSchemes`, `dependencies`,
+A variant inherits the parent's `address`, `colorSchemes`,
 `relatedDocs`, and `tags` unless it declares its own value, which replaces
 rather than merges the inherited list. `useCaseIds` defaults to an empty list
 and is never inherited because membership is reciprocal with the flow's steps;
@@ -104,7 +106,7 @@ Validation rejects, with source attribution:
   remains the unrelated saved-component-view contract.
 
 Every other screen rule applies unchanged: id and tag grammar, color-scheme
-subsets, reciprocal use-case membership, dependency paths, and source
+subsets, reciprocal use-case membership, and source
 attribution to the defining module.
 
 ## Generated Output And Manifest
@@ -116,7 +118,7 @@ validation, compatibility transformation, collision and orphan checks, and
 transactional writes. The renderer input carries the variant's own
 `ScreenDefinition`; its `variantId` field is unused for screens.
 
-The manifest stays at schema v5. `ManifestScreen` gains one optional field:
+The manifest uses schema v6. `ManifestScreen` retains one optional field:
 
 ```ts
 interface ManifestScreen {
@@ -227,8 +229,7 @@ variant-specific rule.
 the public tree carries variants beneath their parent's entry node so hosts
 can render the same grouping. A `ViewerSelection.screenId` may name a variant
 like any screen; `variantId` remains reserved for component saved variants.
-Readers of catalogue v1 tolerate the added field under the existing
-additive-field rule.
+Readers of catalogue v2 validate the field; they reject v1 as unsupported.
 
 The Viewer rebuilds `variantOf` for current and removed screens so its rendered
 hierarchy, breadcrumbs, details rows, aggregate mark, and removed-variant
@@ -265,7 +266,7 @@ Coverage must prove:
 
 - [Public authoring API](./mokly-authoring.md)
 - [Rendering and generated output](./mokly-rendering.md)
-- [Current manifest v5 schema](./mokly-component-manifest.md)
+- [Target manifest v6 schema](./mokly-component-manifest.md)
 - [Catalogue navigation contract](./mokly-navigation.md)
 - [Changes and screen comparisons](./mokly-changes.md)
 - [Catalogue change metadata](./mokly-catalogue-changes.md)

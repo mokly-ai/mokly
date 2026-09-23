@@ -9,6 +9,11 @@ implementation verification. Changes-enabled previews package removed pages and
 screens as implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md). This
 does not change the npm CLI.
+Public-resource delivery for declared component CSS and the versioned
+catalogue/comparison outputs are planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
+implemented in Milestones 3 and 7. Existing publication retains its current
+versions until then; the upload envelope itself is unchanged.
 
 ## Publication Option
 
@@ -185,7 +190,11 @@ explicitly requested. Preserve source protection, snapshot isolation, resource
 confinement, and sandbox restrictions in both options.
 Both options apply the
 [shared source policy](./mokly-source-protection.md), including unimported
-reserved files and complete config/consumer input inventories.
+reserved files and complete config/consumer input inventories. Linked public
+CSS declared by rendered components and its transitive public imports use the
+same resource delivery graph; declaration never makes a protected authoring
+file publishable. See
+[component stylesheets](./mokly-component-stylesheets.md).
 
 ## Workflows And Presentation
 

@@ -5,6 +5,11 @@ section: "authoring"
 order: 3
 ---
 
+> Component CSS declarations are planned for Milestone 3 of
+> [remove-source-path-evidence](../../../plans/remove-source-path-evidence.md).
+> Source-path inputs are removed in Milestone 6; the current package still
+> uses the older authoring contract.
+
 ## Register a component
 
 `defineComponent` returns the component to render and the entry to export.
@@ -18,7 +23,7 @@ export const action = defineComponent({
   title: "Action",
   description: "A shared action.",
   route: "components/action.html",
-  dependencies: [],
+  stylesheets: ["components/action.css"],
   relatedDocs: [],
   propSchema: {
     kind: "object",
@@ -56,8 +61,7 @@ export const button = defineComponent({
   title: "Button",
   description: "The product button.",
   route: "components/button.html",
-  dependencies: ["src/components/button/button.tsx"],
-  ownedDependencies: ["src/components/button/button.tsx"],
+  stylesheets: ["components/button.css"],
   relatedDocs: [],
   propSchema: {
     kind: "object",
@@ -76,8 +80,11 @@ export const mockups = [button.entry];
 ```
 
 Screens anywhere in the repository import `button` from the registration and
-render `button.Component`; an edit to `button.tsx` is then attributed to the
-component, with those screens listed as affected.
+render `button.Component`. A source edit that changes rendered output is
+attributed through the actual render; a source-only edit that leaves output
+unchanged is not evidence. If `button.css` changes and its rules can apply,
+the declared stylesheet belongs to the component, with using screens listed
+as affected.
 
 ## Saved variants
 
@@ -112,10 +119,15 @@ propSchema: {
 
 ## Ownership
 
-`ownedDependencies` names material outside the component's own body that
-belongs to it. A renderer may also return exact style and resource ownership,
-so a change to a component's implementation is attributed to the component and
-its consumers are listed as affected.
+`stylesheets` names existing public CSS files relative to `mockupsDir`, in
+authored order. Mokly links them only where the component actually renders,
+including an empty render, and derives a resource owner record. HTTP(S),
+missing, duplicate or non-public CSS paths fail validation. Two components
+may share a file; each rendered declarer owns it. Transitive imports are
+unowned unless separately declared or reported by the renderer. A renderer
+may still return exact style or other resource ownership, but cannot report
+ownership of the same declared CSS file. For placement with configured CSS,
+see [component stylesheets](../../../docs/protocol/mokly-component-stylesheets.md).
 
 ## Resolve a saved instance
 

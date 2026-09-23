@@ -5,6 +5,11 @@ saved variants, controls, and recorded usage in screens or other components.
 Callers render the returned `Component` and export its `entry` in `mockups`.
 Mokly renders that wrapper in the consumer's existing React/provider graph.
 
+The `stylesheets` target is planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md) for
+Milestone 3. Source-path inputs and manifest v6 change in Milestone 6; current
+code still emits v5 and accepts old inputs.
+
 ```tsx
 import { defineComponent } from "@mokly/mokly";
 
@@ -13,7 +18,7 @@ export const action = defineComponent({
   title: "Action",
   description: "A shared action.",
   route: "components/action.html",
-  dependencies: [],
+  stylesheets: ["components/action.css"],
   relatedDocs: [],
   propSchema: {
     kind: "object",
@@ -50,7 +55,7 @@ values from the same view. It returns `missing` for an absent or different key,
 classify visual or material Changes.
 
 Compiled JSX invocations record optional `source: { path, line, column }` in
-manifest v5. The path identifies the caller inside the repository, with 1-based
+manifest v6. The path identifies the caller inside the repository, with 1-based
 coordinates. Programmatic or already-compiled calls can omit it. The internal
 `__moklySource` prop is reserved from data schemas and slots and stripped before
 validation, hashing and rendering. Source metadata never affects identity or
@@ -74,12 +79,14 @@ current preview. Complete Used by data appears without resetting controls;
 per-view inspection continues to use the records from the actual displayed
 on-demand document.
 
-Implementation changes belong to the component in Changes. Consuming pages are
+Material implementation or linked owned-resource changes belong to the component in Changes. Consuming screens are
 listed as affected; their own prop, slot, structure, layout, or explicit resource
-changes still count directly. Exact `ownedDependencies` and renderer style or
-resource ownership records handle material outside the component's body. Global
-or mixed resources remain conservatively attributed. Dependency declarations
-and adopting an unrelated component alone do not invent a visible screen change.
+changes still count directly. Validated `stylesheets` links create derived
+resource ownership records for rendered declarers; renderer style or other
+resource records still handle material outside the component's body. Imports
+remain unowned. Global or mixed rendered resources remain conservatively
+attributed. Unrendered source edits do not create Changes or comparison evidence.
+See [component stylesheets](../../docs/protocol/mokly-component-stylesheets.md).
 Historical Mokabook comparisons preserve the original document coordinates when
 applying recorded style ownership; internal marker renames alone do not create
 consumer changes or alter the retained snapshots.

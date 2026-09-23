@@ -9,6 +9,10 @@ The runtime inspector implements the same layout and interaction. Existing non-c
 artboards continue to document the currently implemented shell. Removed
 consumer stages retain this inspector around the previous version delivered by
 the [removed content previews plan](../../plans/removed-content-previews.md).
+The removal of dependency display is planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
+implemented in Milestone 2 mockups and Milestone 5 UI. The mockup and runtime
+still contain the old row until those milestones land.
 
 ## One Inspector
 
@@ -70,7 +74,7 @@ Selection within a component or tree can use non-page current-item semantics.
 
 Use stable fixture identities for catalogue selection. Display labels never
 identify the current destination or synthesize a filename. Component fixtures
-explicitly declare display name, id, source path, description, and dependencies;
+explicitly declare display name, id, source path, and description;
 render the same metadata in Details and source references.
 
 ## Owning Closed States

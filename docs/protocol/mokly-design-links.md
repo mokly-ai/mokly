@@ -16,6 +16,11 @@ the component designs; the legacy disclosure links and segmented view controls
 are removed. Catalogue-wide link and inventory checks cover
 both families; component keyboard-control checks live in the component suites.
 
+The Shared impact state and its links are removed by Milestone 2 of
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md);
+runtime comparison details follow in Milestone 5. The target links below are
+planned and have not yet replaced the current example pages.
+
 ## Scope And Ownership
 
 Make the catalogue under `examples/basic/entries/design/` a navigable prototype
@@ -221,17 +226,17 @@ its loading wait, its unavailable state with Retry, or the note naming the
 viewport that still opens, without comparison modes and with
 no live product destination; links inside a previous version do nothing.
 Unsupported dark-comparison modes remain non-link depictions.
-Shared-impact/ignored-only and empty Changes keep a Current preview
-without comparison modes; factual evidence lives in Details. Their existing
-routes and All escape remain available. A future interactive mode needs its
-own contract and owning screen first.
+Ignored-only and empty Changes keep a Current preview without comparison
+modes; factual evidence lives in Details. Their existing routes and All escape
+remain available. A future interactive mode needs its own contract and owning
+screen first.
 
 The three stylesheet-evidence states keep the same preview and inspector
 treatment and are entered through the existing filter controls:
 
 | Control/context                   | Destination                                                      |
 | --------------------------------- | ---------------------------------------------------------------- |
-| Shared impact: Changes filter     | Matched stylesheet evidence, `design-review-style-matched`       |
+| Changed styles: Changes filter    | Matched stylesheet evidence, `design-review-style-matched`       |
 | Ignored only: Changes filter      | Unresolved stylesheet evidence, `design-review-style-unresolved` |
 | Matched evidence: All filter      | Excluded stylesheet evidence, `design-review-style-excluded`     |
 | Unresolved evidence: All filter   | Canonical All Welcome, `design-browse-screen`                    |

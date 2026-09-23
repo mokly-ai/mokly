@@ -1,5 +1,12 @@
 # Changes and screen comparisons
 
+## Delivery Status
+
+One Changes rule, summary updates and comparison v4/v5 below are planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md).
+Milestone 4 implements membership and removes source-path evidence; Milestone 7
+implements the versioned result schemas. Until then, writers still use v2/v3.
+
 The implemented [component attribution extension](./mokly-component-changes.md)
 keeps component-only consumers out of Changes while linking them from the
 component's Affected screens list. Screen and manual Review-ignore behavior
@@ -27,10 +34,14 @@ comparisons, history, and removals; both options omit live updates.
 
 Changes is a review list of added/removed screens and pages, material document changes,
 reviewable route metadata changes, and user flows that embed those screens.
-A new or edited flow is included independently. Source edits, source moves,
-dependency declaration edits, and shared-impact matches alone do not add
-otherwise unchanged entries. Dependency and shared-impact evidence remains in
-comparison details, accessible for every screen from All.
+A new or edited flow is included independently. In every catalogue, including
+ones with registered components, a source edit, source move, or unreferenced
+public file alone neither adds an entry to Changes nor supplies comparison
+evidence. There are no declared-path or shared-glob reasons. Retained rendered
+resource/CSS evidence, Review-ignore normalization, metadata, ancestry, flow
+propagation and component usage attribution still apply. A changed component
+may list its unchanged consumers under Affected screens; those consumers do
+not become Changes rows solely because of component usage.
 
 Each screen variant is projected independently. Its metadata projection
 contains `variantOf`, its parent's `{ id, title }`, and the parent's collection
@@ -56,7 +67,7 @@ transitively using the snapshot resource resolver and public-file confinement.
 Only references outside paired ignored regions participate; speculative
 preload/prefetch hints alone do not establish rendered impact. A linked resource
 edit is conservative evidence of a rendering change, not a pixel measurement.
-Unreferenced public files never add entries through a broad shared-impact glob.
+Unreferenced public files never add entries or comparison reasons.
 Every reachable existing resource is validated, including images and fonts;
 finding a changed resource does not skip its CSS/HTML references or later graph
 edges. Added screens, newly available views, and existing material fragment
@@ -97,12 +108,12 @@ kept or excluded resource evidence.
 
 The shell receives this per-view resource evidence for screen-only catalogues
 as well as component catalogues, including in Current before snapshots exist.
-Live v2 classification retains its existing analysis as `screenEvidence`; the
+Live screen-only classification retains its analysis as `screenEvidence`; the
 workspace selects its `resourceEvidence` slice without a second analysis pass.
-Static exports select that slice from their existing v2 comparison. Both result
-schema versions remain unchanged. Details merge the loaded comparison's evidence
+Static exports select that slice from their v4 comparison. Both target result
+schemas v4/v5 carry it. Details merge the loaded comparison's evidence
 with classification evidence, preserving retained stylesheet selectors,
-exclusions, and legacy shared-impact/ignored-content details without duplicate
+exclusions, and ignored-content details without duplicate
 cards. See [CSS evidence in the shell](./mokly-css-evidence-shell.md#shell-derivation).
 
 This detection reads baseline files without writing snapshots or generating a
@@ -303,29 +314,39 @@ scheme, enumerated from the union of base and head manifest entries. Each side's
 view set is `["light", ...(screen.darkFragments ? ["dark"] : [])]`: a dark
 view present only in head is `added`, and one present only in base is
 `removed`. Mobile and desktop still classify separately from their fragments.
-Added, removed, changed, and unchanged states handle historical versions 2/3/4 and current version 5
-manifests during staged migrations; pre-dark bases simply have no
-`darkFragments`. Configured shared-impact globs and manifest dependencies
-identify changes that can affect many screens. A dependency is a repository file
-or directory root: its own change or any descendant change affects the entry,
-and Review records the matching changed path as evidence. The configured comparison
-directory, including its symlink-resolved in-repository target, is excluded before changed-path and shared-impact evidence
-is calculated.
+Added, removed, changed, and unchanged states handle historical manifest
+versions 3–5 and current version 6 during migrations; opt-in v2 fallback
+remains available only for a missing historical primary file. Pre-dark bases
+simply have no `darkFragments`. Historical repository-path declarations are
+stripped during normalization and cannot supply reasons. The configured
+comparison directory, including its symlink-resolved in-repository target, is
+excluded before changed paths are calculated.
 
 Complete comparison output contains `review.json`, `summary.md`, an ownership marker,
 and the isolated snapshots. No HTML report or navigation payload is written.
-The summary's `output changes` count includes only screens classified as added,
-removed, or changed, counting each screen once across all viewports and color
-schemes. Changed views include retained rendering-resource evidence as well as
-material document changes. Ignored-only screens remain a separate diagnostic count.
-`impact evidence` independently counts screens with shared-impact or dependency
-evidence, including screens with output changes; `impact-only` is the subset
-without output changes and can overlap ignored-only. Neither evidence nor
-ignored-only edits inflate output changes. These counts aggregate fragment
-comparisons per screen; the catalogue Changes total also considers reviewable
-metadata and flows. Complete JSON retains every screen and its
-evidence. Selected live responses contain only the requested screen or saved variant
-and retain its snapshots in memory.
+For v4, `summary.md` starts with `## Mokly Review`, a blank line,
+`Base: <baseRef> (<first 12 characters of baseCommit>)`, another blank line,
+then `Screens: <total>; output changes: <count>; changed: <count>; added: <count>; removed: <count>; ignored-only: <count>.`
+using the existing Markdown escaping for interpolated values. It then has a
+blank line and this explanatory sentence: "Output changes count screens with
+changed documents or retained resource evidence, once per screen across all
+viewports and color schemes; catalogue Changes also considers metadata and
+flows." The file ends with LF. `output changes` counts screens classified as
+added, removed, or changed, each once across all viewports and schemes.
+For v5, start with `## Mokly Review`, a blank line, the same escaped Base line,
+another blank line, then
+`Changes: <count>; screens: <count>; components: <count>; affected consumers: <count>.`
+Add a blank line and one `- <kind>: <title> (<comma-separated reason kinds>)`
+line per changed entry in result order, using the `after ?? before` title and
+the existing Markdown escaping. With no changed entries retain the blank line;
+end the file with LF. Neither version includes impact-evidence or
+impact-only counts or a "Shared-impact paths" section. Changed views include
+retained rendered-resource evidence as well as
+material document changes. Ignored-only screens do not inflate output changes.
+These counts aggregate fragment comparisons per screen; the catalogue Changes
+total also considers reviewable metadata and flows. Complete JSON retains
+every screen and its rendered-resource evidence. Selected live responses
+contain only the requested screen or saved variant and retain snapshots in memory.
 
 Base and head panes live under separate route-preserving snapshot roots. Local
 resources referenced by pane HTML or CSS are copied transitively, including
@@ -341,12 +362,11 @@ script-disabled sandboxes.
 `review.json` is the normative machine-readable result:
 
 ```ts
-interface ReviewResult {
-  schemaVersion: 2;
+interface ReviewResultV4 {
+  schemaVersion: 4;
   baseRef: string;
   baseCommit: string; // merge base shared by HEAD and baseRef
   changedPaths: readonly string[];
-  sharedImpact: readonly string[];
   ignoredImpact: readonly {
     id: string;
     viewport: "mobile" | "desktop";
@@ -358,8 +378,6 @@ interface ReviewResult {
     route: string;
     title: string;
     state: "added" | "removed" | "changed" | "ignored-only" | "unchanged";
-    dependencies: readonly string[];
-    sharedImpact: readonly string[];
     views: readonly {
       viewport: "mobile" | "desktop";
       colorScheme: "light" | "dark";
@@ -389,8 +407,12 @@ Optional view `material`, `reasons`, and `excludedResources` implement
 [CSS change attribution](./mokly-css-attribution.md). `material` is present
 exactly when the view's normalized documents differ. Empty optional lists are
 omitted; historical results without them remain valid. Retained resource reasons
-make paired views changed. Entry `sharedImpact` includes a stylesheet only if
-some view kept it, and summary counts follow these states.
+make paired views changed. Comparison readers reject v2 and v3 as unsupported;
+v4 is the screen-only successor to v2 and v5 is the component-aware successor
+to v3. Both omit top-level `sharedImpact` and per-entry `dependencies` and
+`sharedImpact`, with no compatibility shim for those public fields. The
+`kind: "dependency"` view reason remains the wire name for a referenced
+resource; it does not mean an authored repository-path declaration.
 
 Routes sort in deterministic catalogue order; views sort by viewport
 (`mobile`, then `desktop`) and then color scheme (`light`, then `dark`).

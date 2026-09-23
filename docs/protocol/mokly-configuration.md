@@ -5,9 +5,13 @@ This is the detailed configuration boundary of the
 
 ## Delivery Status
 
-Every setting in this document is implemented, including glob-based entry
+Existing settings in this document are implemented, including glob-based entry
 discovery through `entries` and the `entriesDir` shorthand delivered by the
 [co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
+The `componentStylesheets` marker is planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md) for
+Milestone 3; removal of `review.sharedImpact` is planned for Milestone 4.
+Those target settings are not yet implemented.
 
 ## Configuration Discovery
 
@@ -33,7 +37,6 @@ the following contract:
   loaders for app-owned module resolution;
 - default Git base ref used to find the `HEAD` branch point, and internal comparison
   directory;
-- shared-impact globs for comparisons;
 - additional authored inputs and static assets for watched Serve;
 - an optional temporary document transformer for an existing consumer cutover.
 
@@ -65,6 +68,8 @@ The normative configuration shape is:
 
 ```ts
 type ColorScheme = "dark" | "light";
+
+type SharedStylesheet = string | typeof componentStylesheets;
 
 type ModuleLoader =
   | "base64"
@@ -99,7 +104,7 @@ interface MoklyConfig {
   };
   stylesheets?: readonly {
     match: string;
-    stylesheets: readonly string[];
+    stylesheets: readonly SharedStylesheet[];
     lightStylesheets?: readonly string[];
     darkStylesheets?: readonly string[];
   }[];
@@ -107,7 +112,6 @@ interface MoklyConfig {
     base?: string; // origin/main; merge base with HEAD
     baselineBuild?: readonly (readonly string[])[]; // derived mode only
     outDir?: string; // .context/mokly-review
-    sharedImpact?: readonly string[];
   };
   watch?: {
     debounceMs?: number; // 75
@@ -126,7 +130,7 @@ interface MoklyConfig {
 Filesystem fields (`repoRoot`, `entriesDir`, `mockupsDir`, `renderer`,
 compatibility transformer, module-resolution package
 roots, and Review `outDir`) are config-relative. `entries` globs are
-repository-relative, like `review.sharedImpact` and `watch.rules[].paths`;
+repository-relative, like `watch.rules[].paths`;
 see [entry discovery](#entry-discovery). Stylesheet file paths are
 relative to `mockupsDir`; HTTP(S) stylesheet URLs are allowed.
 `colorSchemes` is a non-empty, duplicate-free subset of `"light" | "dark"`
@@ -134,6 +138,12 @@ that must include `"light"`; it defaults to `["light"]` and normalizes to
 light-first order. Shared `stylesheets` apply to every generated view, with a
 matching `lightStylesheets` or `darkStylesheets` list appended in declaration
 order.
+The shared list may contain the exported `componentStylesheets` symbol once;
+scheme-specific lists cannot contain it. It places validated component-declared
+CSS links in rendered screen/component documents at that point; by default
+they follow shared and precede scheme-specific links. Pages are unchanged.
+See [component stylesheets](./mokly-component-stylesheets.md) for the complete
+validation and placement contract.
 `generatedOutput` defaults to `"derived"`; the derived-only
 `review.baselineBuild` argv list and explicit `"committed"` alternative follow the
 [derived baselines contract](./mokly-derived-baselines.md).
@@ -145,10 +155,10 @@ the manifest and cache files, and prints their paths plus ignore guidance.
 Build writes transactionally in both modes. Serve and export await preparation
 before classification; Serve publishes `preparing` when a rebuild is needed,
 then `pending` while classification runs. Cache hits skip `preparing`.
-`watch.rules[].paths` and Review `sharedImpact` are repository-relative POSIX
-globs, while stylesheet `match` matches catalogue routes. `repoRoot` defaults to the config directory. Duplicate stylesheet
+`watch.rules[].paths` are repository-relative POSIX globs, while stylesheet
+`match` matches catalogue routes. `repoRoot` defaults to the config directory. Duplicate stylesheet
 matches and watch paths are invalid. Additional watch rules cannot override
-configured source/module rebuilds, reloads for configured stylesheets and
+configured source/module rebuilds, reloads for configured and declared stylesheets and
 referenced resources, or package-owned ignores for dependency, build, test, Review, header-proven
 generated, and transaction paths. An unowned public HTML file below
 `mockupsDir` remains consumer-authored and can match an explicit watch rule.
@@ -183,14 +193,16 @@ to configured comparison output and the transactional writer boundary. The
 required `--out` has the additional source/runtime/ownership confinement rules
 in the [export contract](./mokly-export.md).
 
-`review.sharedImpact` is fallback impact evidence for files the rendered resource
-graph cannot see, such as renderer, component-source, or token modules. Linked
-stylesheets, including transitive imports, are attributed by rule under
+`review.sharedImpact` is removed. Loading a configuration that has this key,
+even when its value is `undefined`, fails with `config-invalid` and the exact
+message `review.sharedImpact has been removed; delete this field.` Source
+modules without rendered output or references do not create comparison evidence.
+Linked stylesheets, including transitive imports, are attributed by rule under
 [CSS change attribution](./mokly-css-attribution.md). A changed stylesheet keeps
 a view's dependency evidence only when a changed rule could match its before or
 after document, or analysis is unresolved. Otherwise it is examined and excluded.
-Shared-impact globs cannot override this exclusion or add unreferenced public
-files to Changes; they retain the existing ownership and membership rules in
+Unreferenced public files cannot add entries to Changes; linked files retain
+the existing ownership and membership rules in
 [Changes](./mokly-changes.md) and [component attribution](./mokly-component-changes.md).
 
 `moduleResolution` has no defaults beyond esbuild's platform behavior. Package
@@ -210,7 +222,7 @@ compatibility does not restore source discovery or legacy configuration.
 
 `entries` is a non-empty ordered list of safe relative POSIX globs matched
 against repository-relative paths under `repoRoot`, using the same minimatch
-syntax and path rules as `review.sharedImpact`. `entriesDir` is validated
+syntax and path rules as `watch.rules[].paths`. `entriesDir` is validated
 exactly as before, must name an existing directory inside `repoRoot`, and is
 resolved to the single glob `<dir>/**/*.mockup.{ts,tsx}` relative to
 `repoRoot`. Exactly one of the two fields must be present; supplying both,

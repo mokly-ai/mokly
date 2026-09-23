@@ -5,6 +5,11 @@
 The classifier, Browse/watch cache, comparison artifacts, and static exporter
 share this attribution policy. The [component explorer plan](../../plans/component-explorer.md)
 records delivery. Unregistered catalogue and legacy behavior remains intact.
+Replacing source-path ownership with rendered stylesheet/resource attribution
+and applying one Changes rule to every catalogue is planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
+implemented in Milestones 3 and 4. The current code still uses source-path
+classification until Milestone 4.
 
 ## Changes Membership
 
@@ -13,18 +18,18 @@ entry. Variants, instances, and affected consumers do not increase that count.
 Existing collection ancestor disclosure and screen-to-use-case propagation
 remain; an affected-only screen does not make its use cases changed.
 
-| Edit                                                          | Direct Changes entries | Secondary impact                                              |
-| ------------------------------------------------------------- | ---------------------- | ------------------------------------------------------------- |
-| Component implementation or owned styling                     | Component              | Its consuming screens/components                              |
-| Screen supplies different component data props                | Screen                 | None solely from this input edit                              |
-| Screen changes rendered slot content                          | Screen                 | None solely from this content edit                            |
-| Screen adds/removes/replaces/reorders an instance             | Screen                 | Usage links update                                            |
-| Screen changes surrounding content or layout                  | Screen                 | Existing screen/use-case rules                                |
-| Parent component changes props passed to a child              | Parent component       | Parent's consuming screens                                    |
-| Child implementation changes with parent inputs unchanged     | Child component        | Parent components and consuming screens                       |
-| Component and a consuming screen both change directly         | Component and screen   | Screen is also a consumer                                     |
-| Component saved variant, controls schema, or metadata changes | Component              | Consumers only when their rendering/dependencies are affected |
-| Temporary controls edits                                      | None                   | None                                                          |
+| Edit                                                          | Direct Changes entries | Secondary impact                                           |
+| ------------------------------------------------------------- | ---------------------- | ---------------------------------------------------------- |
+| Component implementation or owned styling                     | Component              | Its consuming screens/components                           |
+| Screen supplies different component data props                | Screen                 | None solely from this input edit                           |
+| Screen changes rendered slot content                          | Screen                 | None solely from this content edit                         |
+| Screen adds/removes/replaces/reorders an instance             | Screen                 | Usage links update                                         |
+| Screen changes surrounding content or layout                  | Screen                 | Existing screen/use-case rules                             |
+| Parent component changes props passed to a child              | Parent component       | Parent's consuming screens                                 |
+| Child implementation changes with parent inputs unchanged     | Child component        | Parent components and consuming screens                    |
+| Component and a consuming screen both change directly         | Component and screen   | Screen is also a consumer                                  |
+| Component saved variant, controls schema, or metadata changes | Component              | Consumers only when their rendering/resources are affected |
+| Temporary controls edits                                      | None                   | None                                                       |
 
 A component page has Used by links for all known consumers. A changed component
 also has Affected screens, built from the union of baseline and current usage,
@@ -45,7 +50,8 @@ Browse, watched Changes updates, comparison JSON, and published catalogues use
 one materiality policy. A raw generated HTML path appearing in Git is candidate
 evidence, not sufficient reason to classify a registered consumer as changed.
 Component catalogues use the same ownership-aware classifier for Browse and
-detailed comparisons; unregistered catalogues retain `changedManifestRoutes`.
+detailed comparisons; screen-only catalogues retain `changedManifestRoutes`
+for output, rendered resources, metadata and ancestry, but not source paths.
 
 Lightweight Browse classification reads the current compiled manifest and usage
 metadata together with the baseline manifest and required fragment material.
@@ -60,8 +66,8 @@ validated startup snapshot, including ownership evidence and unavailable-history
 state, for the lifetime of that capture.
 
 The comparison artifact adds a versioned component/variant result and explicit
-affected-consumer evidence. New readers retain schema-v2 screen artifact support;
-component-aware results use schema v3. Screen entries retain their actual view
+affected-consumer evidence. Readers accept schema-v4 screen artifacts and
+schema-v5 component-aware results only. Screen entries retain their actual view
 results, with affected-only evidence separate from direct Changes membership.
 All comparisons keep full unmodified before/after documents and isolated assets.
 The [comparison schema](./mokly-component-review.md) defines the exact result,
@@ -197,47 +203,41 @@ historical marker dialect; added head documents use the current dialect. A
 malformed one-sided ownership tree fails closed with a `$document` validation
 error rather than being reported as an ordinary addition or removal.
 
-## Dependencies And Styles
+## Rendered Resources And Styles
 
-Component registration declares implementation dependency paths. Ownership must
-be explicit: ordinary shared registry/source-module attribution is not proof
-that the entire file belongs exclusively to one component. A component may
-declare `ownedDependencies` for files or directory roots whose effects are
-confined to the named registered component(s). These paths follow normal
-repository confinement and validation and are included in its dependencies.
-Shared ownership by several registered components is allowed and affects each.
+Ownership comes only from explicit renderer `styles`/`resources` records and
+the `resources` records Mokly derives for
+[linked component-declared stylesheets](./mokly-component-stylesheets.md).
+Each such record belongs to the rendered declaring component ids. A file
+listed by several components has several owners; a stylesheet import without
+its own record remains unowned. Registered source modules alone have no
+ownership, Changes membership or comparison evidence. A changed owned resource
+belongs to its owning component; actual consumers appear under Affected screens
+unless they also have an independent rendered or metadata change.
 
-A changed component-owned path is attributed to its component entries and
-their affected consumers. Its presence in a broad `review.sharedImpact` glob
-or containing screen dependency directory must not re-add those consumers to
-Changes. The v4 `declaredDependencies` record distinguishes explicit paths from automatic
-source attribution. An explicitly declared exact direct screen dependency, screen-owned
-material change, or additional unowned changed path remains independent
-evidence and keeps the screen in Changes.
-
-Renderer, theme, global stylesheet, or mixed source-file changes whose effects
-cannot be assigned exclusively retain the existing conservative shared-impact
-behavior. For linked stylesheets that behavior is narrowed by
+Theme/global CSS and unowned linked resources retain conservative
+rendered-resource attribution. A mixed source-file edit without a rendered
+effect does not. For linked stylesheets, attribution is narrowed by
 [CSS change attribution](./mokly-css-attribution.md): the stylesheet keeps a
 consuming view in Changes only when a changed rule could match that view's
 document or cannot be resolved, and otherwise is recorded as examined and
 excluded. Ownership and rule analysis compose; neither widens the other. Ownership is not inferred from a filename, one import, or the presence
-of a component marker somewhere in the document. Screen/component-owned
-dependency overlap must be validated and explained rather than silently dropped.
+of a component marker somewhere in the document. Configured/declared CSS
+overlap and duplicate renderer ownership fail validation.
 
 The rule analysis is implemented in Browse/watch classification, complete and
 selected comparison evidence, and publication. Actual normalized view documents
 supply matching trees; ownership projections supply eligible resources. A public
-stylesheet glob or dependency declaration cannot restore an excluded stylesheet.
+stylesheet glob cannot restore an excluded stylesheet.
 Entry reasons combine retained view selectors by path, with unresolved evidence
 taking precedence, while excluded resources stay on their own views. Formatting
 alone therefore leaves every consumer out of Changes for that stylesheet.
-Retained CSS evidence at an actual invocation also keeps its explicit or
+Retained CSS evidence at an actual invocation also keeps its declared or
 renderer-proven component owner in Changes when saved variants do not match.
 Their own view exclusions stay intact; affected-consumer links retain the actual
-invocation context. An exact screen dependency can independently retain the same
-stylesheet only when its actual view analysis keeps it. Non-CSS dependencies
-retain the existing file-level policy.
+invocation context. A screen can independently retain the same stylesheet
+only when its own rendered-resource analysis keeps it. Non-CSS rendered
+resources retain the existing file-level policy.
 
 Component-generated style material can live in the document head rather than
 inside a component boundary. Extend the renderer result with optional typed
@@ -249,7 +249,7 @@ screen projection; mixed or unclaimed head material remains material.
 
 Owned asset edits must flag component pages even when HTML is byte-identical.
 Retain actual styles, fonts, and images in screenshots and snapshot trees. Never
-strip all styles, drop a shared-impact glob globally, or ignore the whole
+strip all styles or ignore the whole
 consumer document to make a component-only example pass.
 
 ## Baselines And Migration
@@ -271,7 +271,7 @@ remain metadata changes. Screen route pairing retains the existing contract.
 New/removed components and variants retain explicit missing comparison sides.
 Union baseline/current usage so removing a component does not erase its former
 consumers. A component with no saved variant affected by an implementation edit
-can still be changed through declared implementation dependencies or a proven
+can still be changed through a linked owned resource or a proven
 implementation difference at a paired actual invocation with unchanged inputs.
 For that invocation, retain parent-owned child inputs and exclude caller-owned
 slots using the same ownership policy as saved variants. Metadata-only edits
@@ -291,11 +291,10 @@ Unit/integration and browser fixtures must establish agreement between Changes
 rows/count, on-demand results, watch updates, and published output. Cover all
 rows in the table, repeated/nested/empty instances, caller-owned slots, invalid
 markers, unchanged-render prop edits, both viewports/themes, owned external and
-head styles, shared-impact overlap, independent screen edits, historical
+head styles, independent screen edits, historical
 manifests, removed consumers, and concurrent watched updates. Component styling
 must remain visibly changed in an affected screen's comparison.
 
-Dependency declaration provenance is attribution input, not display metadata.
-Changing declarations without a matching changed resource, or registering an
-unrelated component in a previously component-free catalogue, must not add an
-otherwise unchanged screen or component to Changes.
+Historical dependency declaration provenance is ignored in attribution and
+display. Registering an unrelated component in a previously component-free
+catalogue must not add an otherwise unchanged screen or component to Changes.

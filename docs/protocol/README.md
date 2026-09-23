@@ -7,6 +7,14 @@ authoring, static build/check, responsive Browse, watched development, on-demand
 packed consumer verification, CI, and npm release automation are implemented.
 The first public release remains an external delivery step.
 
+## Delivery Status
+
+The current/target version split below is planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md):
+Milestone 6 changes the private manifest and Milestone 7 changes public
+catalogue/comparison formats. The stylesheet link contract is implemented in
+Milestone 3; no new format is emitted by this documentation milestone.
+
 ## Supported Formats
 
 | Catalogue                     | Generated manifest | Comparison result |
@@ -14,8 +22,8 @@ The first public release remains an external delivery step.
 | Without registered components | 5                  | 2                 |
 | With registered components    | 5                  | 3                 |
 
-All current catalogues emit manifest v5 with explicit pages, the complete
-source inventory and declared dependencies. Component catalogues also include
+All currently implemented catalogues emit manifest v5 with explicit pages and
+the complete source inventory. Component catalogues also include
 saved variants and complete per-view usage. Comparisons use v3 whenever either
 side contains registered components, including when the last component is removed;
 otherwise they use v2. Pages participate in Browse Changes without visual comparisons.
@@ -25,6 +33,14 @@ historical v4 formats: pages with `sourceFiles`, or components with `legacyPages
 These envelopes are disjoint; combining them is invalid. Explicit
 `compatibility.readManifestV2` permits the legacy v2-format fallback only
 when the historical primary file is absent, never when it is invalid.
+
+The approved target in
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md) is
+manifest v6 for all catalogues (Milestone 6), public catalogue v2 and
+comparison v4 without components / v5 with components (Milestone 7). Build
+and Review normalize historical manifest v3–v5 records by dropping removed
+source-path fields. Public catalogue v1 and comparison v2/v3 readers reject
+those old versions after Milestone 7; exported catalogues must be regenerated.
 
 ## Contracts
 
@@ -40,6 +56,8 @@ when the historical primary file is absent, never when it is invalid.
 - [Configuration contract](./mokly-configuration.md) — includes public-exclusion validation and defaults.
 - [Public authoring API](./mokly-authoring.md)
 - [Rendering and generated output](./mokly-rendering.md)
+- [Component-declared stylesheets](./mokly-component-stylesheets.md) — planned
+  Milestone 3 link placement, validation, ownership, watching and delivery.
 - [Build and Browse runtime](./mokly-runtime.md)
 - [Component instance identity](./mokly-instances.md) — existing key/boundary
   rules and approved resolution/source-location target.
@@ -78,8 +96,8 @@ when the historical primary file is absent, never when it is invalid.
     command environments, locking and crash cleanup.
 - [Registered components](./mokly-components.md)
 - [Component runtime prop schema](./mokly-component-props.md)
-- [Current manifest v5 schema](./mokly-component-manifest.md)
-- [Component comparison v3 schema](./mokly-component-review.md)
+- [Target manifest v6 schema](./mokly-component-manifest.md)
+- [Target component comparison v5 schema](./mokly-component-review.md)
 - [Component change attribution](./mokly-component-changes.md)
 - [CSS change attribution](./mokly-css-attribution.md) — approved
   target: rule-aware stylesheet evidence.

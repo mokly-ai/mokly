@@ -5,6 +5,11 @@ section: "authoring"
 order: 1
 ---
 
+> The component stylesheet marker is planned for Milestone 3 and removal of
+> `review.sharedImpact` for Milestone 4 of
+> [remove-source-path-evidence](../../../plans/remove-source-path-evidence.md).
+> The current package still uses the older configuration.
+
 ## The shape of a config
 
 `defineConfig` takes one object of type `MoklyConfig` and returns it typed.
@@ -12,7 +17,7 @@ order: 1
 everything else has a default.
 
 ```ts
-import { defineConfig } from "@mokly/mokly";
+import { componentStylesheets, defineConfig } from "@mokly/mokly";
 
 export default defineConfig({
   colorSchemes: ["light", "dark"],
@@ -20,11 +25,12 @@ export default defineConfig({
   mockupsDir: "docs/mockups/generated",
   renderer: "docs/mockups/renderer.tsx",
   repoRoot: ".",
-  stylesheets: [{ match: "app/**/*.html", stylesheets: ["app.css"] }],
+  stylesheets: [
+    { match: "app/**/*.html", stylesheets: ["app.css", componentStylesheets] },
+  ],
   review: {
     base: "origin/main",
     outDir: ".context/mokly-review",
-    sharedImpact: ["src/components/**", "src/tokens/**"],
   },
 });
 ```
@@ -46,7 +52,7 @@ Globs are relative to `repoRoot`.
 | `stylesheets`      | Ordered route-to-stylesheet rules                                                 |
 | `publicExclude`    | Extra globs under `mockupsDir` that stay private                                  |
 | `moduleResolution` | Aliases, conditions, fields, extensions and loaders for your sources              |
-| `review`           | The Git base, the artifact directory and shared-impact globs                      |
+| `review`           | The Git base, the artifact directory and derived-baseline build recipe            |
 | `watch`            | Extra inputs the watched server reacts to                                         |
 | `compatibility`    | Temporary bridges while a repository moves to the current output                  |
 
@@ -85,6 +91,13 @@ Rules are evaluated in declaration order. A rule matches a screen route with a
 POSIX glob and lists stylesheets relative to `mockupsDir`, or absolute HTTP(S)
 URLs. A rule may append `lightStylesheets` or `darkStylesheets` after its
 shared list for the matching output.
+Use the `componentStylesheets` symbol once in the shared list to place the
+public CSS declared by actually rendered components there; otherwise it goes
+after shared CSS and before the matching scheme list. It is not a URL and
+cannot appear in a scheme-specific list. Component declarations accept only
+existing public `mockupsDir`-relative CSS, not HTTP(S) links. The
+[stylesheet contract](../../../docs/protocol/mokly-component-stylesheets.md)
+defines insertion and error cases.
 
 ```ts
 stylesheets: [
@@ -101,9 +114,10 @@ stylesheets: [
 
 `review.base` names the Git ref whose merge base with `HEAD` is the branch
 point a comparison reads; it defaults to `origin/main`. `review.outDir` is the
-config-relative artifact directory. `review.sharedImpact` lists globs for
-files the rendered resource graph cannot see, such as token modules, so an
-edit to them still marks the screens that may depend on them.
+config-relative artifact directory. `review.sharedImpact` is removed: loading
+the key fails with `config-invalid` and directs you to delete it. Source
+files without a changed render or referenced public resource no longer create
+Changes or comparison evidence.
 `review.baselineBuild` is only for derived output: an ordered list of argv
 arrays run without a shell to rebuild the historical catalogue. It defaults to
 `npm ci` followed by `npx --no-install mokly build --config` and the config

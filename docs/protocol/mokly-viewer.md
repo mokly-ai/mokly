@@ -18,6 +18,9 @@ use the same tree with host-owned appearance and independent preview selection.
 Removed pages and screens load their advertised previous versions in local,
 static, and embedded hosts through the same tree, as implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md).
+Public catalogue v2 and comparison v4/v5 reader support are planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
+implemented in Milestone 7; until then the viewer still reads older formats.
 
 ## Package And Props
 
@@ -142,7 +145,8 @@ origin root. A URL/string source must be an absolute HTTP(S) catalogue URL;
 its validated final response URL establishes that root. A fetcher returns the
 same pair explicitly and must honor cancellation; `baseUrl` is invalid for URL
 or fetcher sources. Do not resolve artifact paths relative to the embedding app.
-Validate every source as [catalogue v1](./mokly-catalogue.md) before rendering.
+Validate every source as [catalogue v2](./mokly-catalogue.md) before rendering;
+v1 is unsupported and requires re-export.
 Fetchers are host-supplied source transports, not permission for viewer telemetry.
 Fetch failure renders an explicit error/retry state and emits `onError`.
 Missing data is never replaced by examples or invented counts.

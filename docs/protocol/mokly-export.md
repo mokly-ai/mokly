@@ -7,6 +7,11 @@ shares its artifact validation, static delivery, and output transaction. The
 [consumer static export plan](../../plans/consumer-static-export.md) tracks
 delivery of this contract and the [static delivery contract](./mokly-export-delivery.md).
 Normal build validation and the existing comparison schema remain authoritative.
+The component public CSS delivery, source-path-free Changes and new v6/v2/v4–v5
+formats below are planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
+implemented in Milestones 3, 4, 6 and 7 respectively. Current exports still
+use the older formats.
 
 The [viewer library plan](../../plans/mokly-viewer-library.md) tracks the
 implemented public catalogue, inert published inspector and separate viewer
@@ -81,13 +86,13 @@ Changes attribution and screen comparisons use that commit, the same current
 manifest/generated documents, and the same changed-path exclusions. Apply the
 shared Changes calculation to captured public bytes: normalize paired ignored
 regions, compare reviewable metadata, and follow rendered local resources.
-Ignored-only edits, source moves, and dependency/shared-impact evidence alone
-do not add entries. Retain that evidence in comparisons, and do not derive the
+Ignored-only edits, source moves, and unreferenced source/public files alone
+do not add entries or comparison evidence. Do not derive the
 navigation filter by counting materially changed comparison screens.
 
-Use Review schema v3 when either manifest contains registered components;
-otherwise retain schema v2. Both formats retain all existing states,
-shared/dependency impact, ignored regions, both viewports and all effective color
+Use Review schema v5 when either manifest contains registered components;
+otherwise use schema v4. Both formats retain rendered-resource reasons,
+ignored regions, both viewports and all effective color
 schemes; see the [supported format matrix](./README.md#supported-formats).
 Removed screens, pages and components retain their baseline context; current ids
 and routes win when reused. Pages have no visual comparisons. A route absent
@@ -99,8 +104,7 @@ build error; export does not weaken registry validation to create an empty site.
 Comparisons use private temporary storage, independent of `review.outDir` and
 any running development server. Exclude the final export directory, its
 temporary stage/backup/lock paths, and their resolved aliases from route and
-comparison change attribution before broad dependencies/shared-impact globs
-are evaluated. Exporting twice must not make the export affect its own Changes.
+comparison change attribution. Exporting twice must not make the export affect its own Changes.
 Watch also ignores owned export artifacts and export transaction paths before
 broad rules, without ignoring unrelated authored files with similar names.
 
@@ -206,6 +210,10 @@ export exclusions below. Retain relative resource and fallback document links
 and verify their transitive HTML/CSS dependencies, including fonts, images,
 `srcset`, nested local documents, and linked stylesheets. Referenced files that
 cannot be exported safely fail the operation instead of producing broken links.
+Component-declared CSS linked into generated screen/component documents is a
+normal public resource: export its validated file and reachable CSS imports
+and assets with this same graph, preserving the generated href/order and
+private derived owners. No separate stylesheet upload inventory is needed.
 Navigation fragments in shell/public HTML, including query-only links and host
 aliases, must identify an anchor in the resolved document. Build and export
 share fragment decoding and anchor checks. Resource fragments such as SVG/CSS
@@ -239,8 +247,8 @@ public-safe inventory is distinct from private comparison metadata.
 
 [`__mokly/catalogue.json`](./mokly-catalogue.md) is implemented in the same
 collision-checked ownership/upload inventories, alongside the implemented
-`__mokly/client/inspector.js`. The read model is a public allowlist projection of manifest v5;
-`mokly-manifest.json` remains excluded. Ownership v1, upload v1, review v2/v3
+`__mokly/client/inspector.js`. The read model v2 is a public allowlist projection of manifest v6;
+`mokly-manifest.json` remains excluded. Ownership v1, upload v1, review v4/v5
 and delivery descriptor v2 keep their schema versions. Deployment identity
 includes the catalogue under the [delivery hashing rule](./mokly-export-delivery.md#deployment-identity)
 and includes the inspector and its inert maps.
@@ -295,7 +303,7 @@ Cloudflare preview regression coverage and the existing build/check/serve gate.
 
 ## Registered Components
 
-Component catalogues retain manifest-v5 saved variants and comparison-schema-v3
+Component catalogues retain manifest-v6 saved variants and comparison-schema-v5
 evidence, including removed variants and actual affected consumers. The same
 inspector renders in served and exported shells. Export supplies no local render
 capability or token; controls are read-only and make no render requests. The

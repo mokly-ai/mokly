@@ -3,9 +3,13 @@
 ## Delivery Status
 
 The producer, source validator, artifact publisher, exporter, and browser decoder
-implement this component-aware Review schema v3 for [change attribution](./mokly-component-changes.md).
+currently implement the component-aware Review schema v3 for [change attribution](./mokly-component-changes.md).
+The schema v5 target below is planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md) and
+implemented in Milestone 7. The current writer still emits v3. The target
+reader accepts v4/v5 only and rejects v2/v3 as unsupported.
 `ReviewResult`, `ScreenReview`, `ViewReview`, and `ReviewState` refer to the
-existing [schema-v2 contract](./mokly-changes.md) and
+screen-only [schema-v4 contract](./mokly-changes.md) and
 [named result interfaces](../../packages/viewer/src/review/types.ts). Manifest/usage types come
 from the [component manifest](./mokly-component-manifest.md).
 
@@ -23,7 +27,7 @@ interface ReviewEntrySides {
   after?: ReviewEntryAddress;
 }
 
-interface ScreenReviewV3 extends ScreenReview, ReviewEntrySides {}
+interface ScreenReviewV5 extends ScreenReview, ReviewEntrySides {}
 
 type ReviewVariantAddress = Pick<
   ManifestComponentVariant,
@@ -95,12 +99,12 @@ interface AffectedConsumer {
   evidence: readonly AffectedUsageEvidence[];
 }
 
-interface ReviewResultV3 extends Omit<
-  ReviewResult,
+interface ReviewResultV5 extends Omit<
+  ReviewResultV4,
   "schemaVersion" | "screens"
 > {
-  schemaVersion: 3;
-  screens: readonly ScreenReviewV3[];
+  schemaVersion: 5;
+  screens: readonly ScreenReviewV5[];
   components: readonly ComponentReview[];
   changes: readonly ChangedEntry[];
   affectedConsumers: readonly AffectedConsumer[];
@@ -119,7 +123,7 @@ Component variants contain their own view unions. `ViewReview.beforePath` and
 `afterPath` are present exactly when that view exists on that side. Added/removed
 views have the existing explicit missing-side states. Aggregate states retain
 the current precedence: changed, added, removed, ignored-only, unchanged. A
-metadata/dependency-only entry can have unchanged rendered view states.
+metadata-only entry can have unchanged rendered view states.
 
 View states describe the complete retained render after the existing manual-ignore
 rules, including changed component-owned resources. Component ownership controls
@@ -151,7 +155,7 @@ stylesheet paths in analysis scope, a view carries `material: true` exactly
 when its normalized documents differ, and a view's `excludedResources` paths must be in
 `changedPaths` and never coincide with that view's dependency reasons. A screen reason is allowed only on a use case and
 must reference a directly changed screen actually used on at least one side.
-Use cases also retain their own metadata/dependency reasons. One screen with
+Use cases also retain their own metadata reasons. One screen with
 only affected component evidence cannot produce a use-case screen reason.
 An affected-only consumer has no ChangedEntry unless it has another direct
 reason. Its full comparison remains available through the other result arrays.
@@ -185,7 +189,7 @@ a view resource reason from direct membership; one view excluding a path does
 not conflict with another keeping it. A component's reasons also aggregate owned
 CSS retained at actual invocations, even if its saved variants all exclude that
 path. Their unchanged view states remain accurate. Public stylesheet globs alone
-add no reason, and an exact screen declaration cannot override rule exclusion.
+add no reason, and no source-path declaration can override rule exclusion.
 
 Each affected record groups one changed component and one canonical consumer.
 Its component id must appear in `changes` with kind component, and evidence
@@ -193,7 +197,7 @@ must be nonempty.
 Build its evidence from the union of baseline/current actual usage, deduplicating
 identical evidence. A consumer may also be directly changed. Self-impact is not
 listed. A component is listed as affected only through an actual usage path, not
-because it happens to share a directory or dependency declaration.
+because it happens to share a directory.
 
 Every `via` is a nonempty caller-ownership chain from the consumer to the changed
 component; its last component id equals `changedComponentId`. Each instance key
@@ -210,9 +214,10 @@ For removed consumers the before-side address and usage supply the link target.
 Repeated physical placements do not duplicate logical evidence or screen counts;
 the inspector can resolve that logical instance to its current ranges.
 
-`sharedImpact` on the result and entries retains the existing path-evidence
-meaning; it does not override `changes`. Entry dependencies are the sorted union
-of both sides. Existing `ignoredImpact` and view `ignoredIds` retain manual
+The v5 result has no `sharedImpact`, and its entries have no `dependencies` or
+`sharedImpact`. The inherited `kind: "dependency"` reason names a referenced
+resource, not a manually declared repository path. Existing `ignoredImpact`
+and view `ignoredIds` retain manual
 Review-ignore evidence for screens; component variant views retain their own
 manual ids. Component suppression is described through `affectedConsumers`,
 not by pretending instance keys are legacy ignore ids.
@@ -222,14 +227,14 @@ not by pretending instance keys are legacy ignore ids.
 Use one result schema and reason policy in Browse's lightweight classification,
 comparison generation, publishing, and client decoding. Validate against both
 source manifests while generating/publishing so evidence cannot name an unknown
-entry, view, instance, or dependency. Require every component/screen ChangedEntry
+entry, view, instance, or rendered resource. Require every component/screen ChangedEntry
 to match its result record's side addresses. Use-case addresses and screen
 reasons must match the source manifests' use-case steps. Unknown fields in new
 structures, inconsistent sides, duplicate records/reasons, missing view evidence,
 and invalid values fail rather than being silently dropped.
 
 Source validation also receives the implementation-impact set computed from
-the classifier's paired material, unchanged inputs and dependency policy. It
+the classifier's paired material, unchanged inputs and rendered-resource policy. It
 requires exact equality with the complete affected-consumer evidence derived
 from that set and both manifests. Neither a subset nor the set of every changed
 component is sufficient: saved-variant/control metadata edits can be direct
@@ -273,9 +278,10 @@ arrays remain explicit. Emit two-space JSON and a final LF, with no timestamp,
 absolute checkout path, or transient controls result. Serve no-store/nosniff
 headers and retain immutable snapshot generations and unmodified documents.
 
-Emit schema v3 when either source manifest has component metadata; otherwise
-retain schema-v2 output. Readers keep the existing v2 contract without inventing
-component usage or suppression. Unknown versions fail. Shared fixture tests must
+Emit schema v5 when either source manifest has component metadata; otherwise
+emit schema v4. Readers reject v2/v3 without inventing component usage or
+suppression. Unknown versions fail. Shared fixture tests must
 cover valid/invalid schemas, deterministic round trips, current and removed
 variants/consumers, metadata-only changes, zero Changes with affected screens,
-and identical served/published membership. These are Milestone 3 requirements.
+and identical served/published membership. Versioned output is implemented in
+Milestone 7 of the removal plan.

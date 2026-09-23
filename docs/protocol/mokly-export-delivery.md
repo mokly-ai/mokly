@@ -12,6 +12,9 @@ The public catalogue, cross-origin inspector and viewer package are implemented
 by the completed [viewer library plan](../../plans/mokly-viewer-library.md).
 Removed page and screen previous versions are packaged and rendered by the
 [removed content previews plan](../../plans/removed-content-previews.md).
+Serving exported component-declared public CSS and comparison v4/v5 is planned
+by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
+implemented in Milestones 3 and 7. Existing exports still use v2/v3 results.
 
 ## Hosting Contract
 
@@ -325,7 +328,8 @@ use cases, ordinary fallback links, all logical-link activation modes, fragments
 Back/Forward, and removed/renamed screens. Assert that every local request
 resolves and that Current makes no comparison or event-stream requests.
 
-Exercise all three diff modes, explicit missing sides, ignored/shared impacts,
+Exercise all three diff modes, explicit missing sides, ignored-region and
+rendered-resource evidence,
 refresh, errors, interrupted navigation, and resource isolation after the source
 tree changes or disappears. Retain browser coverage under the actual Cloudflare
 Pages local runtime for normalized URLs, stable redirects, headers, and the

@@ -5,6 +5,10 @@ section: "catalogue"
 order: 3
 ---
 
+> The source-path-free Changes rule is planned for Milestone 4 of
+> [remove-source-path-evidence](../../../plans/remove-source-path-evidence.md).
+> Current catalogues with registered components still use path evidence.
+
 ## What Changes compares
 
 Changes compares your working tree with the branch point shared by `HEAD` and
@@ -18,9 +22,9 @@ changes. Staged, unstaged and untracked edits in your working tree do.
 
 ## What does not count as a change
 
-A source edit that leaves a screen's output and reviewable metadata identical
-does not add the screen. Source locations and dependency declarations are
-evidence rather than content, so moving files around does not fill Changes.
+A source edit that leaves a screen's output, rendered-resource references and
+reviewable metadata identical does not add the screen or comparison evidence,
+with or without registered components. Moving files around does not fill Changes.
 Regions marked with Review-ignore are classified as ignored, and a stylesheet
 edit marks a screen only when a changed rule could apply to it or cannot be
 resolved; rules that reach nothing on the screen are recorded as examined and

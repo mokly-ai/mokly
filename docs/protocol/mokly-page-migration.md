@@ -9,6 +9,9 @@ remain supported. The [implementation plan](../../plans/unified-catalogue-pages.
 records verification and the isolated consumer rehearsal. Pages are attributed
 to any repository-owned defining module, as delivered by the
 [co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
+Removal of page `dependencies` and manifest v6 is planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md) and
+implemented in Milestone 6; current code still uses the older contract.
 
 ## Required Upgrade
 
@@ -26,7 +29,7 @@ ID, route or slug, render callback, and metadata.
 Collections own its membership. Existing `.source.ts`/`.source.tsx` modules may
 remain as ordinary imported render helpers; their filename has no discovery
 meaning. The compiler never scans them into a second inventory. Consumers with
-only structured entries need no screen API rewrite but must rebuild v5 output.
+only structured entries need no screen API rewrite but must rebuild v6 output.
 
 Consumers replace `.source.html` comment templates with ordinary TSX/function
 composition returning complete HTML. Preserve the rendered component content
@@ -45,7 +48,8 @@ Before changing the dependency or config, record the old manifest, generated
 page bytes, source/route inventory, anchors, and resources in a clean, recoverable
 checkout. Add a normal page definition for every retained document and claim
 its ID from the intended collection. Import its existing `source()` callback
-where possible, with the source in its declared dependencies. Remove `legacy`
+where possible; normal imports track source rebuilds without author-maintained
+path declarations. Remove `legacy`
 configuration and replace consumer rules that depend on its discovery model.
 
 New page ownership headers name the repository-owned defining module, which
@@ -80,18 +84,18 @@ unimported helpers a reserved source name or a public exclusion. Removing
 
 ## Manifest Readers And Git Baselines
 
-New successful builds emit only schema v5. In committed mode, `check` recomputes
+New successful builds emit only schema v6. In committed mode, `check` recomputes
 that output without rewriting files and reports an older manifest as stale. In
 derived mode, `check` validates the current compilation and rejects a tracked
 manifest without comparing local artifact bytes. A current Browse or publication
-reader requires v5; encountering v2/v3/v4 reports that the catalogue must be
+reader requires v6; encountering v2/v3/v4/v5 reports that the catalogue must be
 migrated and rebuilt before serving. Watched Serve retains its last-good child if
 a candidate migration fails validation.
 
 Historical v3 manifests remain valid Git baselines; v2 keeps its existing
 `compatibility.readManifestV2` opt-in and filename fallback. A present malformed
 canonical manifest never falls back to the older filename. Build a dedicated,
-typed historical reader so current-v5 validation cannot reject an otherwise
+typed historical reader so current-v6 validation cannot reject an otherwise
 valid screen comparison against a v2/v3 base or silently accept legacy current
 navigation. Parse and validate historical source/route/artifact fields before
 using them; never rewrite the Git baseline or synthesize a current legacy tree.
@@ -101,7 +105,7 @@ whose uniqueness has been validated. Use the historical document/source for
 artifact comparison and the current ID for attribution. This is a comparison
 adapter only: it cannot assign a current collection or change a current title.
 The typed page-baseline index maps each current ID to a validated historical
-document: v5 and page-v4 match by ID; legacy records in v2/v3 or component-v4
+document: v5/v6 and page-v4 match by ID; legacy records in v2/v3 or component-v4
 match only by route. It feeds
 the existing paired-ignore/material comparison and rendered-resource traversal.
 Historical source paths retain the baseline's own source-protection policy;

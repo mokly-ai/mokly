@@ -104,7 +104,6 @@ export const mockups = [
     title: "Account",
     description: "Account product screens.",
     childIds: ["account-home"],
-    dependencies: [],
     relatedDocs: [],
   }),
   defineScreen({
@@ -114,15 +113,16 @@ export const mockups = [
     route: "account/home.html",
     mobile: <main>Account on mobile</main>,
     desktop: <main>Account on desktop</main>,
-    dependencies: [],
     relatedDocs: [],
     useCaseIds: [],
   }),
 ];
 ```
 
-Replace the example `<main>` nodes with your product components, then list their
-source files or directories in `dependencies`. An entry file ends in
+Replace the example `<main>` nodes with your product components. Rendered
+resources and actual output, not declared source paths, determine Changes;
+registered components can declare their public CSS with `stylesheets`.
+An entry file ends in
 `.mockup.ts` or `.mockup.tsx` and exports a `mockups` array.
 
 Mokly derives generated output by default. Keep its HTML, manifest, and cache
@@ -134,8 +134,13 @@ docs/mockups/generated/**/*.html
 docs/mockups/generated/mokly-manifest.json
 ```
 
-Mokly's current output requires manifest v5; compatibility readers for older
-formats are limited to historical Git baselines.
+The approved [source-path removal plan](./plans/remove-source-path-evidence.md)
+introduces component-declared CSS in Milestone 3, source-path-free Changes in
+Milestone 4, and manifest v6 plus catalogue/comparison v2/v4–v5 in Milestones
+6–7. These examples describe the target; the current package still emits
+manifest v5 and accepts the removed fields. Historical Git baselines retain
+compatibility readers; exported public formats must be regenerated.
+See the [component stylesheet contract](./docs/protocol/mokly-component-stylesheets.md).
 
 ### 4. Open the catalogue
 

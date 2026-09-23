@@ -9,6 +9,10 @@ support. Verification is tracked in
 [Unified Catalogue Pages](../../plans/unified-catalogue-pages.md). The
 [removed content previews plan](../../plans/removed-content-previews.md)
 implements the page-only historical capture and delivery boundary.
+Removal of page `dependencies` and manifest-v6 output is planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
+implemented in Milestone 6. Display/read-model removal follows in Milestone 7;
+until then the current code still accepts the field.
 
 ## Purpose And Boundary
 
@@ -43,7 +47,7 @@ interface PageInput extends RoutedEntryInput {
 
 `PageDefinition` adds `kind: "page"` and the same private definition brand and
 module attribution as other definitions. Common metadata (`id`, `title`,
-`description`, `dependencies`, `relatedDocs`, optional `rationale`) follows
+`description`, `relatedDocs`, optional `rationale`) follows
 `EntryInput`. Routes and IDs use the existing validation grammars. Page tags
 use the existing optional, unique kebab-case tag contract.
 
@@ -58,7 +62,6 @@ export const mockups = [
     description: "Account documents.",
     childIds: ["account-statement"],
     relatedDocs: [],
-    dependencies: [],
   }),
   definePage({
     id: "account-statement",
@@ -67,14 +70,13 @@ export const mockups = [
     route: "documents/statement.html",
     render: source,
     relatedDocs: [],
-    dependencies: ["documents/statement.source.tsx"],
   }),
 ];
 ```
 
 The example assumes an existing `source(): string` export. A nested `page`
 accepts the same metadata and callback, replaces `route` with `slug`, and
-inherits only `dependencies` and `relatedDocs`. Its surrounding collections
+inherits only `relatedDocs`. Its surrounding collections
 contribute route segments and real membership, exactly as for nested screens.
 It does not inherit screen addresses, tags, viewports, or color schemes.
 
@@ -106,8 +108,7 @@ Pages are one light document regardless of the catalogue color-scheme setting.
 
 Registry imports, page callbacks, imported document modules, and screen rendering
 share the existing consumer bundle and React runtime.
-Imported sources participate in watched rebuilds. Declared dependencies retain
-their metadata and evidence role; an input edit alone does not add a page whose
+Imported sources participate in watched rebuilds; an input edit alone does not add a page whose
 document, rendered resources, and reviewable metadata remain unchanged.
 
 The complete output passes the shared child-control adapter, logical-link and
@@ -126,7 +127,7 @@ paths never imply collection ancestry.
 
 ## Manifest And Runtime Model
 
-New builds write schema v5 at the existing `mokly-manifest.json` filename:
+New builds write schema v6 at the existing `mokly-manifest.json` filename:
 
 ```ts
 interface ManifestPage extends ManifestEntryBase {
@@ -135,20 +136,21 @@ interface ManifestPage extends ManifestEntryBase {
   tags?: readonly string[];
 }
 
-interface ManifestV5 {
+interface ManifestV6 {
   entries: readonly ManifestEntry[];
   generatedBy: "mokly";
-  schemaVersion: 5;
+  schemaVersion: 6;
   sourceFiles: readonly string[];
 }
 ```
 
 `ManifestEntry` includes pages, screens, collections, use cases and components, and its
 base `kind` union includes `page`. All existing common fields remain,
-including derived `navPath` compatibility output and required `declaredDependencies`. Pages have no fragments,
+including derived `navPath` compatibility output. Pages have no fragments,
 viewport arrays, callbacks, or screen-only fields in the manifest. Schema v5
 rejects a top-level `legacyPages` field. Preserve existing deterministic
-entry sorting, dependency normalization, and serialization conventions.
+entry sorting and serialization conventions. The current v6 validator rejects
+the removed path-declaration fields on every entry.
 
 `sourceFiles` follows the [source-protection contract](./mokly-source-protection.md):
 the complete config/consumer authoring graph, validated against current inputs.
@@ -172,7 +174,7 @@ legacy groups without changing the existing independent-collection contract.
 A page appears once under its declared collection, using the existing page
 icon. The heading uses its title; breadcrumbs use its real collection ancestry;
 the ID chip, search by ID/title/route/tags, tag picker, details, and home counts
-include pages. Details show authored description, rationale, dependencies,
+include pages. Details show authored description, rationale,
 related docs, and the generated page path. No migration explanation or legacy
 badge appears in a product view.
 

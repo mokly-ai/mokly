@@ -53,7 +53,7 @@ workspace` and `Save failed`. Only `Empty workspace` has a design destination;
   `Empty workspace` state as `example-welcome-empty`; `Save failed` remains a
   design-only comparison scenario until its Changes milestone lands.
 - A variant's inspector shows the metadata it inherits from its parent, because
-  a variant inherits the parent's address, schemes, dependencies, tags, and
+  a variant inherits the parent's address, schemes, tags, and
   related docs. It supplies its own title, description, render, and any
   reciprocal flow membership; omitted `useCaseIds` defaults to an empty list.
   The removed variant has its own recorded details, like every removed screen.

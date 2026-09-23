@@ -8,6 +8,9 @@ publication options. Verification is tracked in
 [Unified Catalogue Pages](../../plans/unified-catalogue-pages.md); the
 resolved-entry-set rule was delivered by the
 [co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
+The public-file rules for declared component CSS and manifest v6 are planned
+by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
+implemented in Milestones 3 and 6. Until then the writer emits manifest v5.
 
 ## Protected Inputs
 
@@ -142,10 +145,15 @@ with the referring route in the error, just like a reserved source basename.
 A generated document referencing an excluded public resource also fails with its
 referring route. Ordinary `styles.css`, `image.png`, `page.html`, and `data.json`
 remain public unless another protection rule or consumer exclusion matches.
+Declaring a file in a component's `stylesheets` grants no exception: reject
+protected or non-public CSS before rendering, and validate transitive imports
+and assets with the same confinement policy during Serve, comparison, export
+and publication. Only linked declared files gain derived ownership; imports
+remain unowned.
 
 ## Complete Source Inventory
 
-Manifest v5 `sourceFiles` is a sorted, unique array of repository-relative POSIX
+Manifest v6 `sourceFiles` is a sorted, unique array of repository-relative POSIX
 paths. Derive it from the union of file inputs resolved by both the config
 bundle and the consumer bundle, including inputs eliminated by tree shaking:
 
@@ -202,14 +210,14 @@ the browser. A failed candidate keeps the last-good generation. Asset checks
 continue resolving the requested realpath at read time so changed symlinks
 cannot bypass the generation's protected paths.
 
-For v5 or historical page-v4 Review resources, use that baseline's structurally
+For v5/v6 or historical page-v4 Review resources, use that baseline's structurally
 validated inventory, entry source paths, and reserved-name rules. Never execute
 historical config with the current package or rebuild a Git baseline to refresh
 its inventory; a [derived baseline](./mokly-derived-baselines.md) is built once
 by its own commit's tooling and then read like any historical baseline.
 Historical v2/v3 and component-v4 readers retain their version-specific
 source/root safeguards and also deny reserved source basenames; they are the
-only readers allowed to lack v5's inventory. Internal manifest paths stay private
+only readers allowed to lack v5/v6's inventory. Internal manifest paths stay private
 for every historical schema.
 The active resolved config's public exclusions apply to every historical schema,
 matched relative to that baseline's mockups root; never execute historical config
@@ -235,7 +243,8 @@ current and historical Review reads, and both publication options. Verify that
 CSS, fonts, images, and public scripts still work. Test watcher reclassification
 after dependency changes and prove default publication validation uses no Git.
 Cover internal manifests, their symlink aliases, generated links/resources,
-ordinary public JSON, and continued internal current/v2/v3/both-v4 manifest reads.
+ordinary public JSON, and continued internal current-v6/historical-v3-to-v5
+manifest reads, with the opt-in v2 fallback.
 Cover every shipped exclusion at root and nested paths, mixed case, dot-directories,
 consumer extensions, alias matches in either direction, and excluded generated
 routes/references. Prove excluded README edits create no public content evidence,

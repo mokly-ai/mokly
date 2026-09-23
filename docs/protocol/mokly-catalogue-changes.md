@@ -10,6 +10,10 @@ removed-entry metadata are independent of the visual
 [Unified Catalogue Pages](../../plans/unified-catalogue-pages.md). Baseline
 documents, ancestry, and delivery descriptors for removed pages are implemented
 by the [removed content previews plan](../../plans/removed-content-previews.md).
+The single source-path-free membership rule and comparison format changes are
+planned by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
+implemented in Milestones 4 and 7 respectively. Current code still uses
+source-path evidence in registered-component catalogues.
 
 ## Shared Metadata Contract
 
@@ -61,15 +65,16 @@ it on schema-v5 baselines, while historical v3/v4 screens simply omit it.
 and the selected removed-entry routes. Current route attribution keeps the
 existing ID-based metadata, material generated-output, rendered-resource, and
 ancestry rules, extended with the page's single document. Apply the same paired
-ignore normalization to page documents. For pages and catalogues without registered components, source paths, dependency
-declarations and shared-impact matches alone do not add otherwise unchanged
-entries. Component catalogues use the [ownership-aware classification](./mokly-component-changes.md)
+ignore normalization to page documents. For all catalogues, source paths,
+unreferenced files and removed entry path declarations neither add otherwise
+unchanged entries nor appear as comparison evidence. Component catalogues use
+the [ownership-aware classification](./mokly-component-changes.md)
 for screens, components and flows, unioned with material/metadata page Changes. Screen impact
 continues to propagate to use cases through their screen steps. Current display
 metadata comes from the matching current catalogue; removed display metadata
 comes from `removedEntries`. No removed-use-case support is introduced here.
 
-Visual comparisons retain schema v2 for screen-only catalogues and schema v3
+Visual comparisons use schema v4 for screen-only catalogues and schema v5
 when either side contains registered components. Pages add no comparison records. Neither catalogue change detection nor page removal requires snapshot
 generation. The publisher must not discover removed pages by reading
 `ReviewResult.screens`; that array remains the source of screen comparisons.
@@ -128,7 +133,7 @@ current tag picker remain based on current entries.
 
 The removed page view shows the baseline document from the same snapshot, under
 the [removed previews](./mokly-removed-previews.md) contract. Its details show
-the baseline title, ID, description, tags, dependencies, related docs, and
+the baseline title, ID, description, tags, related docs, and
 root-to-parent breadcrumb labels. Historical ancestors are informational text,
 not collection nodes or links that pretend the old hierarchy still exists.
 Changing a surviving ancestor's title does not rewrite those baseline labels.

@@ -8,6 +8,9 @@ stays private; local Browse keeps its embedded data, appearance and behavior.
 The additive removed-page and removed-screen preview descriptors are
 implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md).
+The read model v2 target below is planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md) and
+implemented in Milestone 7; the current writer/reader still use v1.
 
 ## Location And Types
 
@@ -36,7 +39,7 @@ type ChangeKind = "added" | "changed" | "removed" | "unmodified";
 type PublicPath = string;
 
 interface CatalogueReadModel {
-  schemaVersion: 1;
+  schemaVersion: 2;
   identity: { id: string; title: string };
   deploymentId: string;
   revision: { content: number; evidence: number };
@@ -73,7 +76,6 @@ interface CatalogueDetails {
   rationale?: string;
   relatedDocs: readonly string[];
   sourcePath: string;
-  dependencies: readonly string[];
 }
 interface CatalogueEntry {
   id: string;
@@ -151,11 +153,13 @@ views/documents use null, never baseline HTML disguised as current output.
 
 `identity.id` is lowercase SHA-256 of UTF-8 JSON, without LF, for
 `["mokly-catalogue-v1", repoRelativeConfigPath]`, scoped to the source origin.
+The v1 domain string deliberately remains stable when the read model moves to
+v2 so a format migration does not change catalogue identity.
 `identity.title` is `Mokly`; host slots own branding. No account data is inferred.
 
 ## Projection And Privacy
 
-Construct an explicit allowlist projection from validated manifest v5, the
+Construct an explicit allowlist projection from validated manifest v6, the
 validated collection forest, and the accepted Changes/comparison snapshot.
 Do not spread a manifest, entry, or internal evidence object into public JSON.
 
@@ -175,14 +179,14 @@ Do not spread a manifest, entry, or internal evidence object into public JSON.
   a variant screen's entry node is a child of its parent screen's entry node
   in the Pages tree rather than a sibling. Entry-node `children` is present
   only for that screen-variant grouping, and `variantOf` is an additive field
-  that v1 readers tolerate.
+  that v2 readers validate.
 - Details retain authored display metadata already exposed by the inspector.
-  `details.dependencies` contains repository-relative display labels only.
+  `details.dependencies` is removed, including for historical/removed entries.
   `sourcePath`, optional invocation `source.path`, and local related-doc paths
   stay repository-relative metadata. They never become source-serving URLs.
 
-Never emit `sourceFiles`, `declaredDependencies`, `ownedDependencies`, resolved
-dependency evidence, changed-path inventories, source graphs, Git commands,
+Never emit the removed `declaredDependencies` or `ownedDependencies` fields,
+`sourceFiles`, source-path declarations, changed-path inventories, source graphs, Git commands,
 baseline manifest envelopes, content digests for source inputs, style offsets
 (`startOffset`/`endOffset`), style/resource ownership tables, absolute filesystem
 paths, credentials, render-capability tokens, or legacy manifests. No source
@@ -210,7 +214,7 @@ from a failed or incomplete render.
 `comparisonUrl` is null or `__mokly/diffs/__generations/<generation>/review.json`,
 pinned to this content's evidence. Resolve snapshots against that JSON response
 URL. Null forbids fallback requests to `/__mokly/diffs/review.json`.
-Review v2/v3 bytes stay unchanged; comparison files load only on selection.
+Review v4/v5 bytes stay unchanged; comparison files load only on selection.
 
 ## Serialization, Identity And Versions
 
@@ -235,15 +239,17 @@ normalizes this owned JSON's top-level `deploymentId` to 64 zeroes before hashin
 and stamps it afterward, alongside shell descriptors. Other catalogue bytes
 participate unchanged. Export revisions are `{ content: 0, evidence: 0 }`.
 
-Readers reject unsupported `schemaVersion`; compatible v1 readers tolerate
-unknown additive fields but validate all known fields/references. Writers remain
+Readers accept v2 only and reject v1 through the existing unsupported-version
+path; v2 readers tolerate unknown additive fields but validate all known
+fields/references. Writers remain
 allowlisted. Optional fields are additive; removals, required additions, changed
 meaning, new union discriminants or incompatible paths require a new version.
 This file and the inspector asset are additive inventory entries: ownership v1,
-upload v1, review v2/v3 and delivery descriptor v2 remain unchanged.
+upload v1, review v4/v5 and delivery descriptor v2 remain unchanged.
 
-The [public v1 fixture](./fixtures/catalogue-v1.json) ships in the npm package
-and is checked by the reader/projection conformance tests.
+The public v2 fixture `docs/protocol/fixtures/catalogue-v2.json` is created in Milestone 7,
+ships in the npm package, and is checked by reader/projection conformance tests;
+the v1 fixture is removed then, not in this documentation milestone.
 
 ## Serve And Fetch Rules
 

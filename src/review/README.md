@@ -4,6 +4,11 @@ This internal module compares current validated output with a historical
 baseline. The supported consumer interface remains the catalogue and CLI;
 these modules are not public package exports.
 
+The removal of source-path comparison evidence is planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md) for
+Milestone 4; historical v3–v5 normalization follows in Milestone 6 and v4/v5
+public comparison formats in Milestone 7. Current code still uses older inputs.
+
 `git.ts` defines separate `RepositoryEvidence` (merge base and changed paths)
 and `BaselineReader` (historical files) interfaces. Paths at the reader boundary
 are repository-relative and reads identify their commit. `ReadOnlyReviewRepository` in `repository.ts`
@@ -63,7 +68,7 @@ serializable `[route, content]` pairs, alongside its digests, so selected diffs
 use the accepted compilation across worker and child-process boundaries.
 Derived classification compares all generated documents and reachable resource
 bytes even without changed Git output paths. Cache paths and their physical
-aliases are excluded before dependency or shared-impact matching.
+aliases are excluded before rendered-resource classification.
 
 ```bash
 npm run build
@@ -83,7 +88,7 @@ exclude changed stylesheets whose changed rules cannot match a view. Public
 resource globs cannot bypass the graph or restore excluded stylesheets. These
 review interfaces are internal; the package authoring API is unchanged.
 `analysisOwnsStylesheet` owns the shared public-output boundary. Source/token
-stylesheets outside that boundary retain file-level shared impact in both schemas.
+stylesheets outside it are not evidence unless their rendered output changes.
 After comparing views, both producers call `assertViewAnalysisScope` to reject
 analysed reasons outside that boundary with `review-invalid`. The shared decoder
 checks stylesheet identity; only producers have the resolved scope configuration.

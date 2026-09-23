@@ -7,6 +7,10 @@ revise the existing component, controls, and consuming-screen artboards after
 design feedback. The package-owned runtime implements the same layout. The existing owning routes and mobile/desktop screen components
 remain the review entry points. The removed-consumer workspace is aligned with
 the [removed content previews plan](../../plans/removed-content-previews.md).
+Removal of the Shared impact depiction is planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
+implemented in Milestone 2 mockups and Milestone 5 UI. The target state list
+below is not yet reflected in the example.
 
 ## View Controls
 
@@ -90,7 +94,7 @@ tab, including the existing explicit empty and unavailable states.
 
 Across the complete design catalogue, comparison controls require an explicit
 change state; the shared header defaults to omitting them. Their band always has
-an opaque background. Browse/tag-picker, shared-impact-only, ignored-only, and
+an opaque background. Browse/tag-picker, ignored-only, and
 empty designs retain Current without comparison controls.
 
 All is a catalogue filter, not evidence that the selected example changed.

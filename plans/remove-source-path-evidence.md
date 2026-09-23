@@ -2,10 +2,11 @@
 
 ## Status And Outcome
 
-Status: planned; no milestone has started. The user approved removing all three
-inputs on 2026-09-24, and on the same day chose component-declared stylesheets
-to replace the stylesheet role of `ownedDependencies`. The pull request merge
-is the completion boundary; keep this plan active until then.
+Status: in progress; Milestone 1 documentation is complete and Milestones 2–8
+remain. The binding Decisions And Scope remove all three inputs and adopt
+component-declared stylesheets in place of the stylesheet role of
+`ownedDependencies`. The pull request merge is the completion boundary; keep
+this plan active until then.
 
 Remove the three author-maintained inputs that link mockups to repository paths:
 
@@ -183,7 +184,7 @@ Where the work lands:
 
 Document the complete target before any code changes.
 
-- [ ] Component stylesheets: define the `stylesheets` input, the
+- [x] Component stylesheets: define the `stylesheets` input, the
       `componentStylesheets` marker, link order and placement, the anchor
       failure, derived ownership records, the conflicts, watch reloads and
       public-resource handling. Replace the style-collector guidance
@@ -192,16 +193,16 @@ Document the complete target before any code changes.
       `mokly-source-protection`, `mokly-design-components`,
       `mokly-design-component-library`, and the root export list in
       `mokly-authoring`).
-- [ ] Authoring: remove `dependencies` from entry, root-collection, nested and
+- [x] Authoring: remove `dependencies` from entry, root-collection, nested and
       variant inputs and from inheritance, and define the `removed-field`
       violation (`mokly-authoring`, `mokly-screen-variants`, `mokly-pages`,
       `mokly-page-migration`).
-- [ ] Ownership: remove `ownedDependencies` and `declaredDependencies`;
+- [x] Ownership: remove `ownedDependencies` and `declaredDependencies`;
       ownership comes from declared stylesheets and renderer `styles` and
       `resources` (`mokly-component-review`, `mokly-component-design`,
       `mokly-component-workspace-design`, `mokly-component-explorer`,
       `mokly-component-inspector-design`).
-- [ ] Changes: state the single membership rule and remove shared-impact and
+- [x] Changes: state the single membership rule and remove shared-impact and
       declared-dependency evidence, the exact-screen-dependency CSS rule, the
       Shared impact state, and the impact counts and "Shared-impact paths" in
       `summary.md` (`mokly-changes`, `mokly-catalogue-changes`,
@@ -209,14 +210,14 @@ Document the complete target before any code changes.
       `mokly-shell-design`, `mokly-runtime`, `mokly-timings`, `mokly-export`,
       `mokly-export-delivery`, `mokly-baseline-storage`,
       `mokly-derived-baselines`).
-- [ ] Configuration: remove `review.sharedImpact` and define its
+- [x] Configuration: remove `review.sharedImpact` and define its
       `config-invalid` error (`mokly-configuration`).
-- [ ] Formats: specify manifest v6 with historical v3 to v5 normalization,
+- [x] Formats: specify manifest v6 with historical v3 to v5 normalization,
       catalogue read model v2 with its fixture, comparison v4/v5 schemas, and
       reader rejection of older versions (`mokly-component-manifest`,
       `mokly-catalogue`, `mokly-changes`, `mokly-upload`, `mokly-export`,
       `docs/protocol/README.md`).
-- [ ] Guides and READMEs: `docs/guides/authoring/{screens,pages,collections-and-tags,components,config,use-case-flows}.md`,
+- [x] Guides and READMEs: `docs/guides/authoring/{screens,pages,collections-and-tags,components,config,use-case-flows}.md`,
       `docs/guides/catalogue/{changes,details}.md`,
       `docs/guides/start/{configure,your-first-screen}.md`, `README.md`,
       `examples/basic/{README,notes}.md`,
@@ -224,8 +225,14 @@ Document the complete target before any code changes.
       `src/components/README.md`, `src/review/README.md`,
       `docs/architecture/build-pipeline.md` and
       `tests/fixtures/consumers/esm/notes.md`.
-- [ ] Mark each contract change as planned in its doc's Delivery Status.
-- [ ] Validate the changed Markdown with `npx prettier --check`, review the
+- [x] Align other current contracts and developer notes that describe old
+      format, fixture, style loading or evidence behavior (`mokly-publication`,
+      `mokly-on-demand`, `mokly-package`, `mokly-selected-comparisons`,
+      `mokly-viewer`, `mokly-design-links`, `mokly-removed-previews`,
+      `npm-release`, `docs/architecture/package-boundary.md` and
+      `src/catalogue/README.md`).
+- [x] Mark each contract change as planned in its doc's Delivery Status.
+- [x] Validate the changed Markdown with `npx prettier --check`, review the
       diff, and confirm no current doc describes the removed inputs except as
       removed.
 

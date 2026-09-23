@@ -25,6 +25,9 @@ screens and flows. Current manifests require v5. The
 discovery, and rendering adapters; consumers use ordinary page definitions.
 The co-located layout below, discovered through `entries` globs, was delivered
 by the [co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
+Manifest v6 and the public component stylesheet marker are planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
+implemented in Milestones 6 and 3. Until then current reads still require v5.
 
 ## Package Identity
 
@@ -143,7 +146,7 @@ defines the consumer cutover adapter and its ownership constraints.
 ## Generated Contract
 
 The [generated-output contract](./mokly-rendering.md#generated-contract) defines
-fragments, manifest v5, deterministic ordering, and generated-file ownership.
+fragments, manifest v6, deterministic ordering, and generated-file ownership.
 
 ## Page Migration And Historical Comparisons
 
@@ -153,15 +156,17 @@ comment components, source allowlists, and stage policy into consumer code.
 The [migration contract](./mokly-page-migration.md) specifies safe archival
 of verified old artifacts without weakening generated-file ownership.
 
-Current reads accept only canonical `mokly-manifest.json` schema v5 with a
+Current reads accept only canonical `mokly-manifest.json` schema v6 with a
 `mokly` generator identity and validate the
 [resolved source inventory](./mokly-source-protection.md). Git comparisons
 prefer that filename, then accept the former `mokabook-manifest.json` and
-normalize its `mokabook` generator identity. They accept v5, historical v3, and
+normalize its `mokabook` generator identity. They accept historical v5, v3, and
 both disjoint historical v4 formats. A v2 `mockbook-manifest.json` is considered
 only when both newer historical filenames are absent and
 `compatibility.readManifestV2` is enabled. Invalid higher-precedence history
 never falls back. Historical readers never execute consumer code.
+Before comparison, normalize historical v3–v5 entries by dropping removed
+source-path fields; only rendered output and resources provide file evidence.
 
 The [page contract](./mokly-pages.md) defines the public page inputs,
 rendering pipeline, exact routes, inheritance, and schema validation.

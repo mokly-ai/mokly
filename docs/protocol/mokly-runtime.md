@@ -41,6 +41,11 @@ Consumer frames and comparisons remain static HTML in script-disabled sandboxes.
 Selecting a removed page or screen captures and renders its pinned previous
 version in that shared tree through the lifecycle implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md).
+The single Changes rule, component stylesheet validation and removal of the
+Dependencies display are planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
+implemented in Milestones 3, 4 and 5 respectively; this text describes the
+target while current code still accepts old declarations.
 
 ## Component Workspaces
 
@@ -87,7 +92,7 @@ fails for:
   reciprocal memberships;
 - unresolved `mock:` links, raw document links, local HTML/CSS resources, or
   anchors;
-- missing stylesheets and declared dependencies;
+- missing configured or component-declared public stylesheets;
 - invalid `colorSchemes` config, per-screen `colorSchemes` declarations, or
   color-scheme subsets unsupported by the catalogue config;
 - missing `lightStylesheets` / `darkStylesheets` files, or a stylesheet path one
@@ -216,15 +221,16 @@ All remains available throughout; a completed empty result shows zero. See the
 [on-demand lifecycle](./mokly-on-demand.md).
 Route attribution compares each current manifest entry with its base entry and
 matches material fragment changes and changes to rendered local resources.
-Source modules, declared dependencies, and configured shared-impact globs alone
-must not mark unchanged screens or propagate unchanged screens into use cases.
+In every catalogue, source modules and unreferenced paths alone must not mark
+unchanged screens or propagate unchanged screens into use cases. They are not
+comparison evidence either.
 Entry comparison uses an explicit projection of route-affecting fields plus
 the ordered ancestor collection ids and titles derived from `childIds`.
 Serialized `navPath` labels are compatibility output and cannot independently
 mark a screen or use case as changed. Reparenting an entry or renaming one of
 its ancestor collections marks the routed entry as changed.
-The projection excludes source locations and dependency declarations; changes
-to those implementation details remain secondary comparison evidence. Fragment
+The projection excludes source locations and removed path declarations; changes
+to those implementation details supply no comparison evidence. Fragment
 comparison applies the same paired ignore rules and material keys as screen
 comparisons. Ignored-only edits stay out of Changes. Referenced CSS, images,
 fonts, and transitive local resources remain eligible even when HTML bytes are
@@ -240,7 +246,7 @@ device frames. A use case renders ordered steps that reference those same
 fragments and link back to their standalone screens. A page embeds its complete generated document without viewport or comparison
 controls. All ancestors are structural collection crumbs and stay text. The details inspector may show description, rationale,
 source and fragment paths including dark renders, the schemes a screen renders
-in, the tags the entry declares, related docs, dependencies, use cases, and
+in, the tags the entry declares, related docs, use cases, and
 comparison context.
 Default Browse fragments and document pages are sandboxed without script permission
 so they cannot alter the same-origin Browse shell. Package-owned same-origin
@@ -434,7 +440,7 @@ There is no Review section or standalone comparison CLI command.
 
 Unit, integration, packed-consumer, and browser checks cover build/check,
 route safety, navigation, history/focus, color schemes, watch recovery, shutdown,
-and on-demand comparison with shared impact and ignored-region classification.
+and on-demand comparison with rendered-resource and ignored-region classification.
 
 ## Related Docs
 

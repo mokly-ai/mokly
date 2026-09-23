@@ -14,26 +14,27 @@ and `Viewport` retain the [package contract](./mokly-package.md) and the named
 
 The optional instance `source` field below is implemented in
 [viewer library Milestone 2](../../plans/mokly-viewer-library.md).
-All existing v5 fields retain their contracts. Updated readers accept
-instances with or without `source`; the manifest version remains 5.
+Manifest v6 and component stylesheet ownership are planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
+implemented in Milestones 6 and 3 respectively. Until Milestone 6 the current
+writer still emits v5; historical parsing of v3–v5 is retained afterward.
 
 ## Entries And Variants
 
 ```ts
-interface ManifestV5 {
-  schemaVersion: 5;
+interface ManifestV6 {
+  schemaVersion: 6;
   generatedBy: "mokly";
-  entries: readonly ManifestEntryV5[];
+  entries: readonly ManifestEntryV6[];
   sourceFiles: readonly string[];
 }
 
-type ManifestEntryV5 = (
+type ManifestEntryV6 =
   | ManifestCollection
   | ManifestUseCase
   | ManifestPage
   | ManifestScreen
-  | ManifestComponent
-) & { declaredDependencies: readonly string[] };
+  | ManifestComponent;
 
 interface ComponentAwareScreen extends ManifestScreen {
   componentViews: readonly ComponentViewRecord[];
@@ -47,7 +48,6 @@ interface ManifestComponent extends Omit<ManifestEntryBase, "kind"> {
   propSchema: ObjectPropSchema;
   slots: readonly string[];
   controls: Readonly<Record<string, ComponentControl>>;
-  ownedDependencies: readonly string[];
   variants: readonly ManifestComponentVariant[];
 }
 
@@ -65,16 +65,16 @@ interface ManifestComponentVariant {
 
 `ManifestScreen` additionally has an optional `variantOf` parent-screen id
 under the implemented [screen variants contract](./mokly-screen-variants.md);
-the field is additive and the schema version stays 5.
+the field is part of the v6 shape without changing variant semantics.
 
 Common entry metadata keeps its meaning, including source attribution and
-hierarchy-derived `navPath`. Every v5 entry requires `declaredDependencies`,
-the sorted unique paths explicitly authored in its definition. `dependencies`
-remains exactly their union with `sourcePath`. Keeping both prevents automatically
-added source attribution from masquerading as an exact direct-screen dependency;
-an explicit declaration of that same source path is still represented. Both
-lists use normal path validation; `ownedDependencies` is a subset of the declared
-list. Historical v3 data has no inferred declaration provenance. Variant props contain only validated data; supplied
+hierarchy-derived `navPath`. Current v6 entries do not contain `dependencies`,
+`declaredDependencies` or `ownedDependencies`; validators reject these keys as
+unknown even when empty. Historical v3–v5 Git manifests remain readable but
+normalize by removing all three fields from every entry before comparison,
+including historical component ownership and nested variant data where present.
+Do not synthesize removed fields from `sourcePath` or treat old path declarations
+as Changes or comparison evidence. Variant props contain only validated data; supplied
 slot names reference declared slots and contain no React values. Every component
 has at least one variant, with unique kebab-case ids in authored order. The first
 is the default; all variants use the component's same effective scheme set.
@@ -214,22 +214,24 @@ Ranges must not overlap and sort by start offset. Resource paths are exact
 mockups-root-relative public files and sort lexically, with one record per path.
 Owner lists are nonempty, sorted, duplicate-free component ids that actually
 render in the view, including its component root when applicable. Ownership is
-an explicit renderer/author assertion, not CSS-selector inference.
+an explicit renderer assertion or the builder's derived record for a linked
+[component stylesheet](./mokly-component-stylesheets.md), not CSS-selector inference.
 
 Use one schema implementation for Build output, Browse, historical manifest
-parsing, and publishing. Reject unknown fields in current v5 structures, incorrect
+parsing, and publishing. Reject unknown fields in current v6 structures, incorrect
 types, invalid keys/ids/hashes, inconsistent props/schema, duplicate records,
 unsafe paths, and broken cross-references. Preserve current validation of the
 inherited v3 entry forms. The hash must match decoded/validated props.
 
-Ids, routes, dependency roots, source paths, collection/use-case relationships,
+Ids, routes, source paths, collection/use-case relationships,
 tags, resource confinement, and global output collisions retain existing rules.
 Variant fragment paths must exactly match the component route and suffix rule
-in the authoring contract, including every optional dark path. `ownedDependencies`
-is a subset of `dependencies`; validate and retain direct-screen overlap evidence.
+in the authoring contract, including every optional dark path. Derived
+stylesheet `resources` must match the actual render's declaring component ids;
+renderer records for the same file are rejected, not merged.
 
 Entries otherwise sort by route (empty for collections), then id; lexical
-ordering in v5 uses UTF-16 code units rather than a locale-sensitive collator.
+ordering in v6 uses UTF-16 code units rather than a locale-sensitive collator.
 The variant screens of one parent are the exception: emit them in authored
 order directly after their parent and before the next entry in route order.
 That sibling order is the order `variantsById`, the navigation list, the
@@ -239,21 +241,25 @@ screen parent stays in ordinary route-then-id position so relationship
 validation can reject it deterministically; invalid entries are never emitted.
 Component saved variants, collection children, use-case steps, and tags retain
 authored order. Legacy pages sort by route.
-Dependency arrays sort uniquely, as do owned paths, supplied slots, and the
-declared `slots` list. JSON object keys in new structures sort lexically;
+Supplied slots and the declared `slots` list sort uniquely. JSON object keys
+in new structures sort lexically;
 arrays follow their stated order. Omit absent optional fields; emit required
 empty arrays/objects. Serialize with two-space indentation and a final LF.
 
-Emit v5 for every current catalogue, including those without components. Its
+Emit v6 for every current catalogue, including those without components. Its
 sorted private `sourceFiles` inventory and explicit page entries replace legacy
-discovery; component records retain their complete usage and declaration proof.
-Historical Git readers retain v3, opt-in v2, and both earlier v4 shapes: main's
+discovery; component records retain their complete usage and derived ownership.
+Historical Git readers retain v3, v5, opt-in v2, and both earlier v4 shapes: main's
 component format has `legacyPages`, while the page migration format has
 `sourceFiles`. These v4 shapes are disjoint; mixed top-level fields are invalid.
-Current loading rejects every earlier version with a rebuild diagnostic.
+Current primary-file loading rejects every earlier version with a rebuild
+diagnostic; baseline parsing alone accepts them, strips removed fields and
+normalizes to the v6 comparison shape. The process-local live index also uses
+the v6 entry shape, not a second serialized manifest.
 Do not invent component usage for historical screen/page-only entries or revive
 legacy configuration. Registered document pages retain their material Changes
 and baseline context without screen/component visual comparisons or controls.
 Reject unknown versions.
 Implement shared positive/negative contract fixtures, schema round trips,
-deterministic-output checks, and ownership/path regressions in Milestone 2.
+deterministic-output checks, and ownership/path regressions in Milestones 3
+and 6 of the removal plan.

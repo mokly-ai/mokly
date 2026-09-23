@@ -6,6 +6,13 @@ for the [authoring API](./mokly-authoring.md) and
 [source protection](./mokly-source-protection.md), including configured
 public exclusions.
 
+## Delivery Status
+
+The component stylesheet injection and manifest-v6 shape below are planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md):
+Milestone 3 implements injection, and Milestone 6 implements manifest v6.
+Current generated output still uses manifest v5.
+
 ## Rendering Boundary
 
 Mokly provides a plain React static renderer. A consumer may configure one
@@ -124,6 +131,10 @@ screen-route rule applies to both viewports and every enabled scheme. Shared
 stylesheets come first, followed by the matching scheme-specific list.
 Generated fragment links are relative to the fragment route and URL-encoded by
 segment.
+Mokly inserts declared component stylesheets beside the renderer's configured
+links after rendering, without changing `RenderInput`; see the
+[component stylesheet contract](./mokly-component-stylesheets.md) for marker
+placement, missing-link errors, derived owners and style-offset rebasing.
 Shell and device-frame CSS is package-owned and self-contained; product CSS is
 never copied into the npm package.
 
@@ -138,7 +149,7 @@ never copied into the npm package.
 - `<screen>.mobile.dark.html` and `<screen>.desktop.dark.html` when that screen's
   effective schemes include dark;
 - one complete HTML document at each page route;
-- `mokly-manifest.json` using schema version 5.
+- `mokly-manifest.json` using schema version 6.
 
 Screen and use-case routes are durable identifiers and do not imply a composed
 HTML file. A screen's fragments are bare product renders with required head
@@ -149,7 +160,7 @@ previous dark documents proven generated orphans: `check` reports them and
 
 Manifest source and output paths are repository-relative; routes are relative
 to `mockupsDir`. The manifest includes every entry, fragment, source input,
-relationship, related doc, and dependency needed by Browse and Review. It is
+relationship and related doc needed by Browse and Review. It is
 stable across operating systems and independent of absolute checkout paths.
 Repository paths are canonical POSIX paths with no empty, dot, parent, drive,
 or backslash segments; generated manifests are self-validated before writing.
@@ -162,14 +173,15 @@ header's source must belong to the current entries root even when
 that source was just deleted. It never deletes an unknown or foreign-catalogue
 file.
 
-All catalogues emit [manifest v5](./mokly-component-manifest.md), including
+All catalogues emit [manifest v6](./mokly-component-manifest.md), including
 pages, source inventory, saved component variants and per-view invocation/ownership
-records. Historical readers accept v3, both disjoint v4 formats, and opt-in v2.
+records. Historical readers accept v3–v5, including both disjoint v4 formats,
+and opt-in v2 only for a missing primary manifest.
 The common current shape is:
 
 ```ts
-interface ManifestV5 {
-  schemaVersion: 5;
+interface ManifestV6 {
+  schemaVersion: 6;
   generatedBy: "mokly";
   entries: readonly ManifestEntry[];
   sourceFiles: readonly string[];
@@ -184,8 +196,6 @@ interface CommonEntry {
   navPath: readonly string[];
   sourcePath: string;
   relatedDocs: readonly string[];
-  dependencies: readonly string[];
-  declaredDependencies: readonly string[];
 }
 
 type ManifestEntry =
@@ -219,7 +229,7 @@ type ManifestEntry =
     });
 ```
 
-Entries sort by route then id; source inputs, dependencies, and generated files
+Entries sort by route then id; source inputs and generated files
 sort lexically. Optional properties are omitted, not emitted as `null`.
 `navPath` is derived output derived from collection ancestry;
 it contains the ordered ancestor collection titles and is empty for catalogue
@@ -232,6 +242,6 @@ Light-only manifests omit the field.
 sorted, and is written only for a page, screen, or use case that declares a non-empty
 one; an absent or empty declaration is omitted, so an untagged catalogue
 serializes exactly as it did before the field existed.
-`sourcePath`, related docs, and dependencies use repo-relative POSIX paths.
-Manifest dependencies retain the file-or-directory-root matching semantics of
-the authoring API.
+`sourcePath` and related docs use repo-relative POSIX paths. Current manifest
+entries do not carry authored repository-path declarations or inherited path
+matches; only actual rendered resources establish file-change evidence.

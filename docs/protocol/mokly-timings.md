@@ -1,5 +1,12 @@
 # Startup Diagnostics And Scale Fixtures
 
+## Delivery Status
+
+The scale fixture's source-path-free Changes expectation is planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md) and
+implemented in Milestone 4. Its existing timing and CSS-rule behavior remains;
+the target below is not yet implemented.
+
 ## Opt-in timings
 
 `--debug-timings` is a common boolean CLI option for `serve` (including the
@@ -142,7 +149,7 @@ or timings. It must provide a Git baseline so Changes performs real comparison.
 Additional shared stylesheets have configurable count and per-area screen share
 (defaults: four and 0.5, rounded up). After the baseline commit, setup adds an
 unrelated rule to the first sheet. Background Changes therefore exercises actual
-stylesheet dependency evidence; rule attribution excludes the unrelated rule
+rendered stylesheet evidence; rule attribution excludes the unrelated rule
 from every linked screen, so the benchmark expects zero Changes, including
 flows. The fixture guide documents
 zero-count/share cases and the separate complete-export measurement.

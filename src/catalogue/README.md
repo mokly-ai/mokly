@@ -1,12 +1,12 @@
 # Public catalogue data
 
 This module projects accepted catalogue and Changes evidence into the public
-`schemaVersion: 1` read model at `__mokly/catalogue.json`. Serve, consumer export,
+`schemaVersion: 2` read model at `__mokly/catalogue.json`. Serve, consumer export,
 and repository preview use the same projection. The local shell keeps its embedded private data; Serve
 evidence updates also adopt the validated public snapshot in place.
 
 `projection_input.ts` is the typed input boundary. It accepts validated manifest
-v5 or live-index metadata, the collection forest, and accepted comparison/usage
+v6 or live-index metadata, the collection forest, and accepted comparison/usage
 evidence; projection performs no filesystem reads, Git commands, or rendering.
 `projection.ts`, `views.ts`, and `changes.ts` select public fields explicitly.
 Changes membership comes from route/component attribution, independently of
@@ -48,9 +48,15 @@ depends only on the repository-relative config path. Export stamps the complete
 artifact identity; Serve hashes its canonical snapshot with the identity field
 zeroed and advances content/evidence revisions on accepted updates.
 
-The [public fixture](../../docs/protocol/fixtures/catalogue-v1.json) ships in the
+The public v2 fixture `docs/protocol/fixtures/catalogue-v2.json` will ship in the
 npm package. Consumers need the documented JSON artifact, not a CLI deep import.
 The viewer package consumes this projection without importing the CLI.
+
+This is the target planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md):
+Milestone 6 changes private input to v6, and Milestone 7 writes/reads public
+v2, removes `details.dependencies`, creates the fixture and rejects public v1.
+Current code still writes v1; the v2 fixture is not created in this milestone.
 
 ```sh
 npm run build

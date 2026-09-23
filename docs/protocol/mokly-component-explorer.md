@@ -9,6 +9,9 @@ icon inspector. Local Serve additionally provides editable controls. See the
 and [component design catalogue](./mokly-component-design.md). Removed
 consumers open their historical screen through the behavior implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md).
+The removal of the Details Dependencies row and source-path comparison evidence
+is planned by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
+implemented in Milestone 5. The current inspector has not yet been migrated.
 
 ## Catalogue And Component Pages
 
@@ -88,7 +91,7 @@ children and excluding themselves; leaves omit that tab. Screens retain the
 Components tab, including empty and unavailable states.
 Clicking an icon opens its panel or switches the open panel; clicking the active
 icon or Close collapses it. With no panel open, no icon is selected. Details contains
-source/docs/tags/dependencies and any comparison evidence. Comparison details
+source/docs/tags and any rendered-resource comparison evidence. Comparison details
 use validated reasons, paired prop values, and related changed components; they
 never infer visual explanations from pixels or add a banner above the canvas.
 Props contains the supplied values, and Usage

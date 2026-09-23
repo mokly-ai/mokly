@@ -1,5 +1,12 @@
 # Watched Catalogue Development
 
+## Delivery Status
+
+Watching declared component stylesheets is planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md) and
+implemented in Milestone 3. The target below is not yet implemented; existing
+configured stylesheet and referenced-resource watching remains in place.
+
 `mokly serve` watches by default; `--no-watch` serves one deterministic
 snapshot. Every development catalogue shell loads the package-owned browser client, which connects to
 the versioned event stream. Higher versions refresh background evidence in place
@@ -19,7 +26,7 @@ by generated output:
   entry shape, and the stable prefix of every entry glob is a watched root for
   this purpose;
 - an input shared with shell metadata rebuilds before restarting the child;
-- configured stylesheets and referenced local CSS, fonts, images, and other
+- configured or component-declared stylesheets and referenced local CSS, fonts, images, and other
   resources used only through public URLs reload the browser without rebuilding;
 - header-proven generated output plus `.git`, `.context`, `node_modules`,
   `dist`, `target`, coverage, browser-test output, comparison output, and Mokly
@@ -57,9 +64,13 @@ stats through startup gates; resource notifications coalesce by path and deliver
 the latest descriptor for that path.
 
 Exact required files, including the config and its imports, inventoried sources,
-the renderer, and configured stylesheets, retain both their ancestor path and the
+the renderer, and configured or component-declared stylesheets, retain both their ancestor path and the
 file itself even when intentionally nested beneath an ordinarily ignored
-directory. Configured stylesheet files remain reload inputs.
+directory. Configured and declared stylesheet files remain reload inputs.
+Changing a declaration or imported source rebuilds; editing the declared
+public file reloads/evidence-refreshes documents rendering its owner without
+an explicit watch rule. See
+[component stylesheets](./mokly-component-stylesheets.md).
 Those package-owned classifications take precedence over additional watch rules.
 A created path beneath a denied directory relative to its glob root, or beneath
 `review.outDir`, is ignored because discovery cannot accept it. A file created

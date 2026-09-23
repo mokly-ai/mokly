@@ -5,6 +5,10 @@ section: "authoring"
 order: 6
 ---
 
+> Entry path declarations are removed in Milestone 6 of
+> [remove-source-path-evidence](../../../plans/remove-source-path-evidence.md);
+> the current package still accepts them.
+
 ## Define a flow
 
 A use case is an ordered list of references to screens that already exist. It
@@ -22,7 +26,6 @@ export const accountTour = defineUseCase({
     { screenId: "account-home" },
     { screenId: "account-invoice", title: "Open an invoice" },
   ],
-  dependencies: ["src/account"],
   relatedDocs: ["docs/account.md"],
 });
 ```
