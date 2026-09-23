@@ -618,11 +618,16 @@ adopting mainline Appearance's shared screen layout. The retired
       appearances; inspect the resulting diff against main. The full gate
       passed 2,412/2,412 Node and 777/777 Chromium cases; real Serve passed
       all eight appearance and viewport checks without page errors.
-- [ ] After checks pass, run `git add -A`, commit the merge using a
-      Conventional Commit, and push the branch.
-- [ ] After the push, review the complete local diff against `origin/main`
+- [x] After checks pass, run `git add -A`, commit the merge using a
+      Conventional Commit, and push the branch (`4a109ec`).
+- [x] After the push, review the complete local diff against `origin/main`
       using [the implementation review prompt](../docs/implementation-review-prompt.md);
       report findings without changing the implementation.
+
+Post-push review of the integrated branch found no new concrete findings.
+The residual coverage risk is browser behavior outside the Chromium suite and
+the inspected mobile/desktop Serve captures. This review record is a
+non-functional documentation update after the reviewed implementation was pushed.
 
 ## Post-merge follow-up (non-blocking)
 

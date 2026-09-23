@@ -15,8 +15,8 @@
   fixes from PR #101; pushed and reviewed in
   [PR #115](https://github.com/mokly-ai/mokly/pull/115). The historical
   snapshot-selection and mockup parity fixes are verified, pushed and
-  reviewed. Mainline Appearance integration is underway before merge. The
-  plan stays Active until merge. Later navigation ideas
+  reviewed. Mainline Appearance integration is verified, pushed and reviewed.
+  The plan stays Active until merge. Later navigation ideas
   remain non-blocking follow-ups.
 - [Co-Located Entry Discovery Follow-up](./co-located-entry-discovery-follow-up.md)
   — all deferred seventh/eighth-round findings, the latest entry-layout
