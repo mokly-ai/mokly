@@ -76,7 +76,8 @@ user should reconsider):**
   Release Please records the schema and authoring break.
 
 **Out of scope:** ordering configuration, a nested `component` marker, folder
-metadata of any kind, mockups, and the design-catalogue variant conversion
+metadata of any kind, mockups, filesystem-derived paths (see the follow-up
+below), and the design-catalogue variant conversion
 owned by [Screen Variants Follow-up](./screen-variants-follow-up.md) (which
 will edit `navPath` values instead of collection memberships when it lands).
 
@@ -295,3 +296,8 @@ change: rows, icons, crumbs, and the details inspector look the same.
   design catalogue, its collection-membership edits become `navPath` edits.
 - Add an ordering configuration only if a real catalogue needs non-alphabetical
   folders.
+- Filesystem-derived `navPath` (Storybook's implicit mode) was considered on
+  2026-09-23 and deliberately left out. If real usage asks for it, plan it
+  separately with three rules settled up front: how directory names become
+  labels, a per-glob prefix for multiple entry roots, and precedence with
+  authored and tree-derived values. It is additive and needs no schema break.
