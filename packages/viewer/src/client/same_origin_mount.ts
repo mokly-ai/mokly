@@ -7,17 +7,14 @@ import type {
 } from "./frame_adapter.js";
 import { FrameError } from "./frame_error.js";
 import { ownFrame } from "./frame_mount.js";
-import {
-  localFrameAccess,
-  recordedFrameResource,
-} from "./same_origin_access.js";
+import { localFrameAccess } from "./same_origin_access.js";
 import {
   assignedFrameResource,
   createMountAuthentication,
-  sameFrameResource,
   type AuthenticatedDocument,
   type MountAuthentication,
 } from "./same_origin_identity.js";
+import { initialFrameLoad } from "./same_origin_load.js";
 import { listenForFrameActivations } from "./same_origin_navigation.js";
 import { localPointer } from "./same_origin_pointer.js";
 
@@ -266,31 +263,13 @@ export function mountLocalDocument(
     win.addEventListener("pagehide", dispose, { signal });
     try {
       const current = localFrameAccess(frame).document();
-      mountAuthentication = createMountAuthentication(frame, current);
+      mountAuthentication = createMountAuthentication(frame, current, url);
       if (mountAuthentication.transferredDocument)
         adoptActivationDocument(mountAuthentication.transferredDocument);
       watchReplacementDocument();
-      if (assignedFrameResource(frame, url)) {
-        if (
-          current?.defaultView?.frameElement === frame &&
-          current.readyState === "complete" &&
-          sameFrameResource(current.URL, url)
-        ) {
-          if (mountAuthentication.authenticateAssignedDocument(current, url))
-            adoptLoadedDocument();
-          else localFrameAccess(frame).replace(url);
-        } else if (
-          current?.defaultView?.frameElement === frame &&
-          current.readyState === "complete" &&
-          current.URL !== "about:blank" &&
-          (mountAuthentication.transferredDocument ||
-            !recordedFrameResource(frame, current.URL))
-        ) {
-          localFrameAccess(frame).replace(url);
-        }
-      } else {
-        localFrameAccess(frame).replace(url);
-      }
+      const action = initialFrameLoad(frame, current, url, mountAuthentication);
+      if (action === "adopt") adoptLoadedDocument();
+      else if (action === "replace") localFrameAccess(frame).replace(url);
     } catch {
       reject(new FrameError("origin"));
       dispose();

@@ -61,13 +61,16 @@ reached through native frame navigation keeps portable link behavior until a
 different replacement object authenticates.
 Once hydrated, adapters exclusively navigate live previews with history
 replacement. The server's initial `src` may therefore remain unchanged after a
-scheme swap. A transferred authenticated document at a different URL must be
-replaced even when that initial attribute names the requested URL; only the
-first mount may wait for a startup-assigned fragment already loading.
-Matching URLs do not authorize reuse: a ready document must pass the current
-mount's authentication. An unrecorded replacement at the assigned URL gets a
-fresh history-replacing load, while an authenticated document can reconnect
-without reloading.
+scheme swap. `same_origin_load.ts` decides reuse, waiting, or replacement from
+document ownership and the last assigned resource before considering readiness.
+A new resource assignment cancels any superseded navigation, even if the
+still-visible document already matches the latest choice. Rejected starting
+documents are replaced while loading or interactive as well as after completion;
+slow resources must not strand a scheme switch or reconnect. Only the first
+mount may wait for a startup-assigned recorded fragment already loading.
+An authenticated matching document can reconnect without reloading and waits
+for completion before inspection becomes ready. Matching URLs alone do not
+authorize reuse.
 
 Frames holding a previous version carry `data-mokly-preview-frame` and
 `data-mokly-preview-source`. They are owned directly by the

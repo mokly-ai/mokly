@@ -200,7 +200,8 @@ assigned resource loads. A document that no mount authenticated, including one
 the frame reached through its own native navigation, keeps portable native-link
 behavior until the replacement authenticates.
 
-The adapter records weak per-frame mount provenance. On the first same-origin
+The adapter records weak per-frame mount provenance and the last assigned
+resource, separately from the iframe's initial `src` attribute. On the first same-origin
 mount only, its immediate watcher may authenticate an already rendered
 document whose resource exactly matches the assignment; this is the explicit
 server-rendered hydration path. Every later mount captures the immediate
@@ -211,9 +212,18 @@ assignment. Only a different replacement `Document` may then pass the resource
 check. A rejected starting document must trigger a fresh history-replacing
 navigation even when both its URL and the iframe's `src` equal the assignment;
 URL equality alone cannot justify reuse or waiting for a load that is not in
-progress. Authenticated ready documents and the initial matching server-rendered
-document are reused without reloading. Frame and document provenance is weakly
-held and does not extend either object's lifetime.
+progress. This decision is independent of document readiness: rejected starting
+documents and different assigned resources are replaced while loading or
+interactive as well as after completion. Changing the assigned resource also
+cancels any earlier navigation, even when the still-visible authenticated
+document already matches the new choice. A delayed superseded response must
+never overwrite the latest preview selection.
+
+Authenticated matching documents and the initial matching server-rendered
+document are reused without reloading; incomplete accepted documents wait only
+for their own load completion. Only the first mount may wait for a
+startup-assigned recorded fragment that has not committed yet. Frame and
+document provenance is weakly held and does not extend either object's lifetime.
 
 As soon as the new immediate `Document` becomes same-origin-accessible, the
 adapter independently authenticates its exact origin, decoded resource path and
