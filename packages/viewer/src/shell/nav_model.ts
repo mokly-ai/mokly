@@ -12,20 +12,23 @@ import { queryConstrains, rowMatchesQuery } from "./search_query.js";
 export function catalogueNavSections(
   catalogue: Catalogue,
 ): readonly NavSectionNode[] {
-  const removed: NavLeafNode[] = catalogue.removedEntries.map(({ entry }) => {
-    const variantOf = entry.kind === "screen" ? entry.variantOf : undefined;
-    return {
-      kind: "leaf",
-      key: `removed:${entry.route}`,
-      entryId: entry.id,
-      entryKind: entry.kind,
-      label: `${entry.title} · Removed`,
-      route: entry.route,
-      tags: entry.tags ?? [],
-      removedPage: entry.kind === "page",
-      ...(variantOf === undefined ? {} : { variantOf }),
-    };
-  });
+  const removed: NavLeafNode[] = catalogue.removedEntries.map(
+    ({ entry, snapshotId }) => {
+      const variantOf = entry.kind === "screen" ? entry.variantOf : undefined;
+      return {
+        kind: "leaf",
+        key: `removed:${entry.route}`,
+        entryId: entry.id,
+        entryKind: entry.kind,
+        label: `${entry.title} · Removed`,
+        route: entry.route,
+        tags: entry.tags ?? [],
+        removedPage: entry.kind === "page",
+        ...(snapshotId ? { snapshotId } : {}),
+        ...(variantOf === undefined ? {} : { variantOf }),
+      };
+    },
+  );
   return buildNavSections(catalogue.hierarchy, removed);
 }
 

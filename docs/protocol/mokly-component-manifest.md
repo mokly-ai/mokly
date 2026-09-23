@@ -79,6 +79,11 @@ slot names reference declared slots and contain no React values. Every component
 has at least one variant, with unique kebab-case ids in authored order. The first
 is the default; all variants use the component's same effective scheme set.
 
+`ManifestCollection.childIds` is a required string array and may be empty. An
+empty collection remains in manifest v5 with its authored identity and metadata;
+relationship validation has no child edge to add and otherwise keeps the same
+duplicate, target, ownership, and cycle rules.
+
 When components are registered, every screen's `componentViews` contains exactly one record for each light and optional dark
 fragment, ordered mobile/light, mobile/dark, desktop/light, desktop/dark. It is
 required even for a view with no component instances. Missing metadata is never

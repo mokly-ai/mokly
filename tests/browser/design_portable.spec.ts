@@ -39,15 +39,15 @@ for (const viewport of ["mobile", "desktop"] as const) {
       .getByRole("link", { name: "onboarding", exact: true })
       .click();
     await expect(page).toHaveURL(
-      design("browse/states/tags/onboarding", viewport),
+      design("browse/views/screen.variants/onboarding", viewport),
     );
     await page.locator(".mbk-search-tag").click();
     await expect(page).toHaveURL(
-      design("browse/states/tags/onboarding-picker", viewport),
+      design("browse/views/screen.variants/onboarding-picker", viewport),
     );
     await page.getByRole("link", { name: "Close tag picker" }).click();
     await expect(page).toHaveURL(
-      design("browse/states/tags/onboarding", viewport),
+      design("browse/views/screen.variants/onboarding", viewport),
     );
     await page.goto(design("browse/views/use-case", viewport));
     await page.locator(".flow-step-link").nth(1).click();
