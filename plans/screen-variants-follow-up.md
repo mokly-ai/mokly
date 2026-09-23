@@ -1,8 +1,8 @@
 # Screen Variants Follow-up
 
 Status: the initial follow-up is implemented, verified, pushed, and reviewed in
-[PR #115](https://github.com/mokly-ai/mokly/pull/115). Active pending delivery,
-review, and merge. The user has approved fixing historical snapshot selection;
+[PR #115](https://github.com/mokly-ai/mokly/pull/115). Active pending PR merge.
+The user has approved fixing historical snapshot selection;
 Milestones 9–12 carry that work without reopening completed milestones. Created 2026-09-22 to close
 [Screen Variants](./screen-variants.md) for
 [PR #101](https://github.com/mokly-ai/mokly/pull/101). The user's 2026-09-22
@@ -519,12 +519,16 @@ type checks and formatting passed before the final gate retry.
       repository/Rust checks, package smoke, build, typecheck, example check,
       formatting and lint. All 293 changed-document links resolve; the
       inventory preserves 137 original ids and exactly six approved moves.
-- [ ] After checks pass, run `git add -A`, commit using Conventional Commits
+- [x] After checks pass, run `git add -A`, commit using Conventional Commits
       and push this branch; update PR #115 for the delivered snapshot fix.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       on the complete diff against `origin/main`; report numbered findings with
       severity, impact, lettered options and recommendations without fixing them.
+      The read-only review found one P3 parity issue in the reparented removed
+      variant mockup: with only that removed row in Changes, the runtime hides
+      the unmodified Workspace and Welcome rows that the mockup depicts. Leave
+      the finding for the user's decision; no other concrete findings surfaced.
 
 ## Post-merge follow-up (non-blocking)
 
