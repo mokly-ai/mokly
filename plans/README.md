@@ -2,10 +2,10 @@
 
 ## Active
 
-- [Derived Mode In-Memory Output](./derived-mode-in-memory-output.md) —
-  Serve and export stop writing generated routes and the manifest into
-  `mockupsDir` in derived mode; `build`, committed mode, and the baseline
-  builder are unchanged.
+- [Derived Mode In-Memory Output And The Generated Directory](./derived-mode-in-memory-output.md)
+  — Serve and export stop writing generated output in derived mode, and all
+  generated content moves into a disposable `<mockupsDir>/.generated/`
+  directory with authored assets kept outside it and copied in by the build.
 - [Release-Gated Node Compatibility](./release-gated-node-compatibility.md) —
   run the minimum supported runtime on ordinary changes and reserve the full
   Node 22.14/24 compatibility matrix for Release Please pull requests.
