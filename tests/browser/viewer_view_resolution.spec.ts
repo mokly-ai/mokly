@@ -88,7 +88,7 @@ test("Viewer resolves a light fallback before status, marks and eligibility", as
   await expect(root.locator('[data-view-changed="scheme"]')).toBeHidden();
   await expect(root.locator('[data-view-changed="viewport"]')).toBeVisible();
   await expect(
-    root.getByRole("button", { name: "Dark mode", exact: true }),
+    root.getByRole("button", { name: "Dark preview", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
   await expect(root.locator('[data-workspace-frame="mobile"]')).toHaveAttribute(
     "src",

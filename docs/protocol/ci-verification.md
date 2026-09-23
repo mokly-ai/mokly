@@ -58,6 +58,12 @@ gate. The Rust file-length auditor is a repository-gate operation implemented
 inside xtask rather than a subprocess in the command list; it has the same
 failure semantics as the listed commands.
 
+The ESLint configuration derives global ignores from the repository
+`.gitignore`, then layers its broader ESLint-only ignores. Git-ignored build,
+cache, report and tool scratch paths are therefore outside the repository gate
+even when an earlier suite leaves them in the checkout; in particular, Wrangler
+scratch from the browser suite cannot make a later complete gate fail.
+
 The public npm entrypoints `npm test`, `npm run typecheck`, and
 `npm run test:browser` remain clean-checkout entrypoints: each prepares its
 required package output, and both test commands also prepare the example. The
@@ -128,6 +134,23 @@ Blacksmith's 2-vCPU tiers. Native macOS verification uses the provider's
 smallest available tier, which is 6 vCPUs. CI jobs have read-only repository
 permissions and a 20-minute execution timeout. Superseded workflow runs remain
 cancellable.
+
+The supported range is Node.js `>=22.14.0 <24.14.0` or `>=24.19.0`. Node
+24.14.0 through 24.18.x can abort concurrent ESM-to-CommonJS loading before
+JavaScript can handle an error. The upstream
+[`cjs_lexer::Parse` empty-`MaybeLocal` fix](https://github.com/nodejs/node/pull/63885)
+shipped in Node 24.19.0. Lazy-loading individual dependencies reduces exposure
+but cannot remove this process-wide parser path, so the CLI rejects affected
+versions before loading its application modules.
+
+Local verification uses the supported floor at 22.14.0 and Node 24.21.0. Those
+are the tested representatives rather than the bounds of the supported range.
+The repository's `.node-version` and preview workflow remain pinned to
+24.21.0. CI resolves the latest Node 24 patch once per run, and publishing
+resolves its own latest patch. The dependency-free CLI bootstrap owns the
+support bounds and local tested-version list; tests keep that range aligned
+with the package engines, lockfile, README and `.node-version`, and separately
+validate the event-selected CI runtime profiles.
 
 The stable `Required CI` job uses `if: always()` and fails closed unless every
 required job result is exactly `success`. It also validates the evidence
@@ -249,9 +272,12 @@ export, clean-install and cache-invalidation behavior continue to create
 independent inputs because preparation is part of what those tests verify.
 Fixture phases emit `[mokly:fixture-timing]` JSON with the fixture, phase,
 duration, status, and whether the operation itself is under test.
-Fixtures that install, build, and export the complete example share a
-240-second setup budget. Assertion deadlines, retries, and worker limits remain
-unchanged.
+
+Full-catalogue browser preparations share a five-minute setup budget in
+`tests/helpers/fixture_timing.ts`. Cold package/example builds, baseline exports,
+and ordinary publication fixtures use that budget independently of the default
+one-minute browser test timeout. Assertion deadlines, retries, and worker limits
+remain unchanged; server readiness retains its own bound.
 
 Wrangler Pages fixtures pass port zero and adopt the exact readiness URL
 Wrangler reports; they do not release a probe socket before server startup.

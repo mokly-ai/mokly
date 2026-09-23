@@ -21,9 +21,6 @@ export const destination = {
   },
   optional: true,
 } as const;
-export const scheme = {
-  schema: { kind: "enum", values: ["light", "dark"] },
-} as const;
 export const comparisonMode = {
   schema: {
     kind: "enum",
@@ -48,12 +45,6 @@ export const comparisonDestinations = {
       overlay: destination,
       difference: destination,
     },
-  },
-} as const;
-export const schemeDestinations = {
-  schema: {
-    kind: "object",
-    properties: { light: destination, dark: destination },
   },
 } as const;
 export const tagRecords = {

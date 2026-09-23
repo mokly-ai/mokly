@@ -11,6 +11,7 @@ import {
   destination,
   flag,
   optionalText,
+  optionalFlag,
   tagRecords,
   text,
 } from "../schemas.js";
@@ -30,7 +31,12 @@ const propSchema = {
     menuPresentation: { schema: { kind: "enum", values: ["text", "icon"] } },
     tags: tagRecords,
     activeTag: optionalText,
+    appearance: {
+      schema: { kind: "enum", values: ["auto", "light", "dark"] },
+      optional: true,
+    },
     pickerOpen: flag,
+    appearanceChanged: optionalFlag,
     brandDestination: destination,
     menuDestination: destination,
     pickerDestination: destination,
@@ -52,12 +58,21 @@ export const topBar = defineComponent({
     "chrome",
     "top-bar",
     "Top bar",
-    "Branding, search, catalogue navigation and tag filtering.",
+    "Branding, search, catalogue navigation, tag filtering and appearance.",
   ),
   propSchema,
   controls: {
     query: { kind: "text", label: "Query" },
     pickerOpen: { kind: "boolean", label: "Tag picker open" },
+    appearance: {
+      kind: "select",
+      label: "Appearance selector",
+      options: [
+        { label: "auto", value: "auto" },
+        { label: "light", value: "light" },
+        { label: "dark", value: "dark" },
+      ],
+    },
     menu: {
       kind: "select",
       label: "Menu",
@@ -68,7 +83,11 @@ export const topBar = defineComponent({
     },
   },
   render: (props: TopBarProps, context: ComponentRenderContext) => (
-    <TopBarView {...props} viewport={props.viewport ?? context.viewport} />
+    <TopBarView
+      {...props}
+      appearance={props.appearance ?? context.colorScheme}
+      viewport={props.viewport ?? context.viewport}
+    />
   ),
   variants: [
     { id: "default", title: "Default", props: sample },
@@ -86,6 +105,11 @@ export const topBar = defineComponent({
       id: "drawer-open",
       title: "Drawer open",
       props: { ...sample, menu: "close", menuDestination: DESTINATIONS.home },
+    },
+    {
+      id: "auto-appearance",
+      title: "Auto appearance",
+      props: { ...sample, appearance: "auto" },
     },
   ],
 });

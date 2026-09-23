@@ -10,6 +10,7 @@ import { SHELL_CSS } from "../packages/viewer/dist/shell/css.js";
 import { BrandIcon } from "../packages/viewer/dist/shell/icons.js";
 
 import { designDocument } from "./helpers/design_catalogue.js";
+import { designPalette } from "./helpers/design_palette.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
 /** The mark of the published Mokly logo on its 32-unit grid, at 24px. */
@@ -19,6 +20,9 @@ const LOGO_MARK =
   '<rect fill="currentColor" height="21" rx="4" width="20" x="9" y="8"></rect>' +
   '<path class="mbk-mark-rules" d="M14 15h10M14 20h7" fill="none" ' +
   'stroke-linecap="round" stroke-width="2"></path></svg>';
+
+/** The explicit Dark half of the shell's semantic palette. */
+const DARK_SHELL = /:root\[data-mokly-theme="dark"\] \{([^}]*)\}/;
 
 const designCss = (file: string) =>
   readFile(path.join(repositoryRoot, "examples/basic/generated", file), "utf8");
@@ -66,19 +70,28 @@ for (const viewport of ["mobile", "desktop"] as const) {
   });
 }
 
-test("the shell and design catalogue share the logo colors and wordmark type", async () => {
+test("the logo takes Mokly Cloud's brand colors in both appearances", async () => {
+  const palette = await designPalette();
+  const dark = DARK_SHELL.exec(SHELL_CSS)?.[1];
+  assert.ok(dark, "the shell's Dark palette");
+  assert.equal(token(SHELL_CSS, "--chrome-brand"), "#2f5945");
+  assert.equal(token(dark, "--chrome-brand"), "#a3cdb4");
+  for (const role of ["--chrome-brand", "--chrome-surface"]) {
+    assert.equal(palette.light.get(role), token(SHELL_CSS, role), role);
+    assert.equal(palette.dark.get(role), token(dark, role), role);
+  }
+});
+
+test("the shell and design catalogue share the logo styles and wordmark type", async () => {
   const [tokens, topBar] = await Promise.all([
     designCss("design.css"),
     designCss("design-library/chrome/top-bar.css"),
   ]);
-  assert.equal(token(SHELL_CSS, "--chrome-brand"), "#2f5945");
-  assert.equal(token(SHELL_CSS, "--chrome-surface"), "#ffffff");
   assert.equal(
     token(SHELL_CSS, "--serif"),
     'Georgia, "Times New Roman", serif',
   );
-  for (const name of ["--chrome-brand", "--chrome-surface", "--serif"])
-    assert.equal(token(tokens, name), token(SHELL_CSS, name), name);
+  assert.equal(token(tokens, "--serif"), token(SHELL_CSS, "--serif"));
 
   for (const css of [SHELL_CSS, topBar]) {
     const mark = declarations(css, ".mbk-mark");

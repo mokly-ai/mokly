@@ -42,11 +42,10 @@ for (const viewport of ["mobile", "desktop"] as const) {
     assert.doesNotMatch(components, /Welcome|Example tour/);
   });
 
-  test(`${viewport}: all five owning destinations render as light-only designs`, async () => {
+  test(`${viewport}: all five owning destinations keep their route and frame`, async () => {
     for (const [id, route] of additions) {
       const { entry, document } = await designDocument(id, viewport);
       assert.equal(entry.route, route);
-      assert.equal(entry.darkFragments, undefined);
       assert.equal(byClass(document, "mbk-shell").length, 1);
       assert.equal(
         byClass(
@@ -87,24 +86,6 @@ for (const viewport of ["mobile", "desktop"] as const) {
         assert.equal(rows.includes("Details"), tag === "forms", id);
         assert.ok(!rows.includes("Example tour"), id);
       }
-    }
-  });
-
-  test(`${viewport}: light endpoints expose the paired scheme control`, async () => {
-    for (const id of [
-      "design-browse-screen",
-      "design-browse-details-screen",
-      "design-review-changed",
-    ]) {
-      const { document } = await designDocument(id, viewport);
-      assert.equal(
-        elements(
-          document,
-          (node) => attribute(node, "aria-label") === "Switch to dark mode",
-        ).length,
-        1,
-        id,
-      );
     }
   });
 }

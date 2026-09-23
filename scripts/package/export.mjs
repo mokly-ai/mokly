@@ -19,6 +19,7 @@ export async function inspectConsumerExport(
     "index.html",
     "404.html",
     "__mokly/catalogue.json",
+    "__mokly/client/appearance-startup.js",
     "__mokly/client/inspector.js",
     "__mokly/client/navigation-resize.js",
     "__mokly/client/react-shell.js",

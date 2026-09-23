@@ -9,19 +9,19 @@ import { exportCatalogue } from "../../dist/export/run.js";
 import { createExampleBaseline } from "../helpers/example_baseline.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 import {
+  FULL_CATALOGUE_SETUP_TIMEOUT_MS,
   timeExportPreparation,
   timeFixturePhase,
 } from "../helpers/fixture_timing.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 
 import { assertServedShellMarker } from "./export_shell.js";
-import { REAL_EXPORT_FIXTURE_TIMEOUT_MS } from "./fixture_timeouts.js";
 import { chooseViewport } from "./workspace_actions.js";
 
 let site: Awaited<ReturnType<typeof serveStaticFiles>>;
 let root: string;
 test.beforeAll(async () => {
-  test.setTimeout(REAL_EXPORT_FIXTURE_TIMEOUT_MS);
+  test.setTimeout(FULL_CATALOGUE_SETUP_TIMEOUT_MS);
   await fs.mkdir(path.join(repositoryRoot, ".context"), { recursive: true });
   root = await fs.mkdtemp(path.join(repositoryRoot, ".context/design-export-"));
   const config = await timeFixturePhase(
@@ -35,7 +35,7 @@ test.beforeAll(async () => {
   const tracked = (await git("ls-files", "examples/basic/generated")).stdout
     .trim()
     .split("\n");
-  expect(tracked).toHaveLength(28);
+  expect(tracked).toHaveLength(29);
   expect(tracked.every((file) => file.endsWith(".css"))).toBe(true);
   const file = path.join(
     root,

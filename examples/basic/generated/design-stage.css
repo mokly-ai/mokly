@@ -1,16 +1,54 @@
 /* The Mokly design stage: device chromes on the dotted stage, the mini
    screen sketches, the details inspector, and the use-case flow track. */
 
+/* Preview tokens describe what a device screen shows. They are deliberately
+   separate from the interface palette in design.css, so a light phone keeps its
+   light surfaces and ink inside a dark Mokly interface. */
 :root {
   --mbk-dark-screen-bg: #121514;
   --mbk-dark-screen-ink: #eef1ef;
+  --mbk-screen-bg: #ffffff;
+  --mbk-screen-ink: #1a1d1c;
+  --mbk-screen-ink-2: #4a4f4d;
+  --mbk-screen-muted: #7d8480;
+  --mbk-screen-border: #e3e5e0;
+  --mbk-screen-link: #4f7864;
+  --mbk-screen-link-strong: #2f5945;
+  --mbk-device-body: #171a18;
+  --mbk-device-notch: #0b0d0c;
+  --mbk-device-home: rgba(20, 24, 20, 0.4);
+  --mbk-device-light-close: #d9655b;
+  --mbk-device-light-minimise: #dba43d;
+  --mbk-device-light-expand: #50a86d;
+}
+
+.mbk-screen-dark {
+  --mbk-screen-bg: var(--mbk-dark-screen-bg);
+  --mbk-screen-ink: var(--mbk-dark-screen-ink);
+  --mbk-screen-ink-2: color-mix(
+    in srgb,
+    var(--mbk-dark-screen-ink) 78%,
+    var(--mbk-dark-screen-bg)
+  );
+  --mbk-screen-muted: color-mix(
+    in srgb,
+    var(--mbk-dark-screen-ink) 62%,
+    var(--mbk-dark-screen-bg)
+  );
+  --mbk-screen-border: color-mix(
+    in srgb,
+    var(--mbk-dark-screen-ink) 12%,
+    var(--mbk-dark-screen-bg)
+  );
+  --mbk-screen-link: #7fae95;
+  --mbk-screen-link-strong: #a4c9b3;
 }
 
 .mbk-stage {
   align-items: flex-start;
   background: radial-gradient(
       circle at center,
-      rgba(20, 28, 22, 0.05) 1px,
+      var(--mbk-dot) 1px,
       transparent 1px
     )
     0 0 / 22px 22px;
@@ -124,7 +162,8 @@
 }
 
 .mbk-shot {
-  background: var(--chrome-surface);
+  background: var(--mbk-screen-bg);
+  color: var(--mbk-screen-ink);
   height: 100%;
   overflow: hidden;
 }
@@ -140,8 +179,8 @@
 }
 
 .mbk-shot-nav {
-  border-bottom: 1px solid var(--chrome-border);
-  color: var(--chrome-muted);
+  border-bottom: 1px solid var(--mbk-screen-border);
+  color: var(--mbk-screen-muted);
   font-size: 11.5px;
   margin-bottom: 14px;
   padding-bottom: 10px;
@@ -154,14 +193,14 @@
 }
 
 .mbk-shot p {
-  color: var(--chrome-ink-2);
+  color: var(--mbk-screen-ink-2);
   font-size: 12.5px;
   line-height: 1.55;
   margin: 0 0 12px;
 }
 
 .mbk-shot-link {
-  color: var(--mbk-sage);
+  color: var(--mbk-screen-link);
   display: inline-block;
   font-size: 12.5px;
   font-weight: 600;
@@ -203,46 +242,21 @@
 }
 
 .mbk-shot--restyled .mbk-shot-nav {
-  border-bottom-color: var(--mbk-sage);
-  color: var(--chrome-ink);
+  border-bottom-color: var(--mbk-screen-link);
+  color: var(--mbk-screen-ink);
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 .mbk-shot--restyled .mbk-shot-link {
-  color: var(--mbk-sage-deep);
+  color: var(--mbk-screen-link-strong);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
 .mbk-screen-dark .mbk-shot {
   background: transparent;
-}
-
-.mbk-screen-dark .mbk-shot-nav {
-  border-bottom-color: color-mix(
-    in srgb,
-    var(--mbk-dark-screen-ink) 12%,
-    var(--mbk-dark-screen-bg)
-  );
-  color: color-mix(
-    in srgb,
-    var(--mbk-dark-screen-ink) 62%,
-    var(--mbk-dark-screen-bg)
-  );
-}
-
-.mbk-screen-dark .mbk-shot p {
-  color: color-mix(
-    in srgb,
-    var(--mbk-dark-screen-ink) 78%,
-    var(--mbk-dark-screen-bg)
-  );
-}
-
-.mbk-screen-dark .mbk-shot-link {
-  color: #7fae95;
 }
 
 .mbk-details-body {
@@ -316,6 +330,10 @@
   font-size: 11.5px;
   gap: 5px;
   padding: 3px 9px;
+}
+
+.mbk-chip:is(a) {
+  border-color: var(--chrome-control-edge);
 }
 
 .mbk-chip.flow svg {

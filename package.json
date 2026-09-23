@@ -15,7 +15,7 @@
   },
   "packageManager": "npm@11.7.0",
   "engines": {
-    "node": ">=22.14.0"
+    "node": ">=22.14.0 <24.14.0 || >=24.19.0"
   },
   "bin": {
     "mokly": "./dist/cli/bin.js"

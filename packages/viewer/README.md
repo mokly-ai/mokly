@@ -242,6 +242,7 @@ exposed as a host API.
 | `catalogue`                          | Catalogue object, absolute URL or fetcher                                                                         |
 | `baseUrl`                            | Required artifact origin for an object source only                                                                |
 | `frameAdapter`                       | Preview transport; defaults to `sameOriginAdapter()`                                                              |
+| `theme`                              | Interface appearance, independent of preview selection; defaults to `"auto"`                                      |
 | `defaultSelection`                   | Partial initial selection for uncontrolled mode                                                                   |
 | `selection`                          | Complete host-owned `ViewerSelection`                                                                             |
 | `onSelectionChange`                  | Receives viewer selection proposals                                                                               |
@@ -309,9 +310,36 @@ export function catalogueHtml(json: unknown, artifactOrigin: string) {
 
 Server rendering is synchronous and object-only. Hydrate with `MoklyViewer`
 using the same `viewerId`, catalogue, base URL, initial selection and slots so
-the first client render matches the server output.
+the first client render matches the server output. Pass the same `theme` as
+well. For first-party full-document rendering, an explicit `renderViewer`
+theme overrides the host context; omitting it preserves that context value.
+
+Standalone documents load `appearance-startup.js` before styles to apply stored,
+URL-pinned or automatic appearance for first paint. Hydration adopts that state,
+including a Dark interface around Light-only previews. A reader's choice wins
+over later URL pins during navigation and Back/Forward. Missing startup assets
+leave Appearance hidden; back/forward-cache restoration retains and refreshes
+the controller. Final disposal removes both system and selector listeners.
+Serve loads live capabilities separately; static navigation reads inert
+workspace evidence from the same finalized deployment.
 
 ## Theming
+
+`theme` accepts `"auto"`, `"light"` or `"dark"`. Auto is the default and follows
+system preference. It is independent of `selection.colorScheme`, so hosts can
+pair either interface appearance with either preview scheme. Theme updates
+preserve frame sessions, selection, temporary props, picking, highlights and
+markers, without changing the host document or sibling viewers.
+
+Standalone Serve/export instead expose one Appearance selector for interface
+and previews together. Its change indicator names changed views in another
+scheme; embedded viewers retain their independent preview control. See the
+[appearance contract](../../docs/protocol/mokly-viewer-appearance.md) and
+[semantic palette](../../docs/protocol/mokly-viewer-palette.md).
+
+Dark uses Mokly Cloud's warm Folio neutrals for backgrounds, panels, text and
+borders, with sage accents. The palette is packaged locally and preserves the
+colors authored inside each preview.
 
 Import the packaged stylesheet once, then override the supported custom
 properties on a containing element:
@@ -324,9 +352,10 @@ properties on a containing element:
 }
 ```
 
-Maintain readable contrast between the accent and its contrast color. These
-properties tune the viewer's accent only; the Mokly logo in the top bar keeps
-its brand colors. Viewer styles are scoped away from the surrounding
+Maintain readable contrast in both appearances. Unset overrides use the current
+semantic palette defaults; fonts are packaged locally. These properties tune
+the viewer's accent only; the Mokly logo in the top bar keeps its brand colors
+in each appearance. Viewer styles are scoped away from the surrounding
 application and host slot content.
 Internal selectors, DOM structure, geometry and other custom properties are not
 extension APIs.

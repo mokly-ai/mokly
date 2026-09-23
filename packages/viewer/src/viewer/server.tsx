@@ -19,7 +19,8 @@ import { viewerIdentifierPrefix } from "./identifiers.js";
 import { viewerCatalogue, viewerContext, viewerView } from "./projection.js";
 import { defaultSelection, normalizeSelection } from "./selection.js";
 import { readObjectSource } from "./source.js";
-import type { ViewerSelection, ViewerSlots } from "./types.js";
+import { normalizeTheme } from "./theme.js";
+import type { ViewerSelection, ViewerSlots, ViewerTheme } from "./types.js";
 
 export interface ServerViewerProps {
   /** Stable identifier unique among viewer roots in the host document. */
@@ -29,6 +30,8 @@ export interface ServerViewerProps {
   selection?: ViewerSelection;
   defaultSelection?: Partial<ViewerSelection>;
   slots?: ViewerSlots;
+  /** Interface appearance; omission means `auto`. */
+  theme?: ViewerTheme;
 }
 
 export interface ViewerServerContext {
@@ -42,7 +45,13 @@ export function renderViewer(
   props: ServerViewerProps,
   host?: ViewerServerContext,
 ): string {
-  if (host) return renderShellPage(host.catalogue, host.view, host.context);
+  if (host) {
+    const context =
+      props.theme === undefined
+        ? host.context
+        : { ...host.context, theme: normalizeTheme(props.theme) };
+    return renderShellPage(host.catalogue, host.view, context);
+  }
   const identifierPrefix = viewerIdentifierPrefix(props.viewerId);
   const loaded = readObjectSource(props.catalogue, props.baseUrl);
   if (!loaded) throw new Error("Server rendering requires a catalogue object.");
@@ -71,7 +80,10 @@ export function renderViewer(
         interactive={false}
         view={viewerView(catalogue, selection)}
       >
-        <EmbeddedViewerShell {...(props.slots ? { slots: props.slots } : {})} />
+        <EmbeddedViewerShell
+          {...(props.slots ? { slots: props.slots } : {})}
+          {...(props.theme ? { theme: props.theme } : {})}
+        />
       </ShellStoreProvider>
     </ShellIdentifierProvider>,
   );

@@ -29,20 +29,24 @@ test("initial hydration keeps logical frame navigation host-owned", async ({
   });
   await page.route("**/static/slow-navigation-desktop.svg", async (route) => {
     imageRequests++;
-    if (imageRequests === 1) {
+    if (imageRequests > 1) {
       await route.continue();
-      return;
+    } else {
+      reportRequest();
+      await requestReleased;
+      await route.continue();
     }
-    reportRequest();
-    await requestReleased;
-    await route.continue();
   });
 
+  const initialNavigation = page.goto(
+    `${navigation.url}/view/screens/home.html`,
+  );
   try {
-    await page.goto(`${navigation.url}/view/screens/home.html`, {
-      waitUntil: "domcontentloaded",
-    });
     await requestStarted;
+    await expect(page.locator("html")).toHaveAttribute(
+      "data-mokly-hydrated",
+      "",
+    );
     const frame = page.locator(".mbk-frame-desktop iframe");
     await expect(frame).toHaveAttribute("data-mokly-frame-state", "loading");
     await page
@@ -58,8 +62,10 @@ test("initial hydration keeps logical frame navigation host-owned", async ({
       /\/view\/screens\/details\.html\?fragment=section$/,
     );
     await expect(page.locator("#mb-main h2")).toHaveText("Details");
+    expect(imageRequests).toBe(1);
   } finally {
     releaseRequest();
+    await initialNavigation;
   }
 });
 
@@ -103,7 +109,7 @@ test("an unowned exact-resource document stays frame-owned during replacement", 
     .toBe(true);
 
   try {
-    await page.locator("[data-workspace-scheme]").click();
+    await page.getByLabel("Appearance", { exact: true }).selectOption("dark");
     await requestStarted;
     await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
       "data-mokly-frame-state",
