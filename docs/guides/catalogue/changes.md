@@ -5,10 +5,6 @@ section: "catalogue"
 order: 3
 ---
 
-> The source-path-free Changes rule is planned for Milestone 4 of
-> [remove-source-path-evidence](../../../plans/remove-source-path-evidence.md).
-> Current catalogues with registered components still use path evidence.
-
 ## What Changes compares
 
 Changes compares your working tree with the branch point shared by `HEAD` and

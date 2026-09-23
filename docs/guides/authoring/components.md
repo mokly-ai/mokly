@@ -5,11 +5,6 @@ section: "authoring"
 order: 3
 ---
 
-> Component CSS declarations are planned for Milestone 3 of
-> [remove-source-path-evidence](../../../plans/remove-source-path-evidence.md).
-> Source-path inputs are removed in Milestone 6; the current package still
-> uses the older authoring contract.
-
 ## Register a component
 
 `defineComponent` returns the component to render and the entry to export.
@@ -126,8 +121,8 @@ missing, duplicate or non-public CSS paths fail validation. Two components
 may share a file; each rendered declarer owns it. Transitive imports are
 unowned unless separately declared or reported by the renderer. A renderer
 may still return exact style or other resource ownership, but cannot report
-ownership of the same declared CSS file. For placement with configured CSS,
-see [component stylesheets](../../../docs/protocol/mokly-component-stylesheets.md).
+ownership of the same declared CSS file. Put `componentStylesheets` in a
+configured rule's shared list to choose where declared CSS is linked.
 
 ## Resolve a saved instance
 

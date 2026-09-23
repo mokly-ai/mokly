@@ -170,6 +170,9 @@ Where the work lands:
   `npm run example:build`.
 - Keep every milestone green with its focused tests, `npm run typecheck` and
   `npm run lint`. Milestone 8 runs `cargo xtask check`.
+- Before every subsequent milestone commit, run the complete unit suite with
+  `npx tsx --test --test-concurrency=2 "tests/**/*.test.ts" "tests/**/*.test.tsx" "packages/viewer/tests/*.test.ts" "packages/viewer/tests/*.test.tsx"`.
+  Require 100% passing tests and report the pass/fail counts.
 - Update each protocol doc's Delivery Status when its milestone lands.
 - Report review findings; do not fix them automatically.
 
@@ -373,6 +376,9 @@ Tags: ui
       `validateDependencyDeclarations`, rename `ManifestV5` to `ManifestV6` in
       `@mokly/viewer/data` and its callers, and move the live index to the v6
       entry shape.
+- [ ] Update `README.md` from "current output requires manifest v5" to v6
+      and update the assertion in `tests/component_protocol_docs.test.ts`
+      together when manifest v6 ships.
 - [ ] Historical parsing accepts v3 to v5 and strips the removed fields before
       comparison. Failure-first test: a v5 baseline that carries all three
       fields, compared with the same catalogue built as v6, adds nothing to

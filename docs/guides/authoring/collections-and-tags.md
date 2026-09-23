@@ -5,10 +5,6 @@ section: "authoring"
 order: 5
 ---
 
-> Entry path declarations are removed in Milestone 6 of
-> [remove-source-path-evidence](../../../plans/remove-source-path-evidence.md);
-> the current package still accepts them.
-
 ## Group entries with a collection
 
 A collection is structural: it owns child ids and no route.

@@ -5,11 +5,6 @@ section: "catalogue"
 order: 4
 ---
 
-> Removing the Dependencies row and source-path evidence is planned for
-> Milestone 5 of
-> [remove-source-path-evidence](../../../plans/remove-source-path-evidence.md).
-> The current inspector still shows the old row.
-
 ## Open the inspector
 
 The details inspector sits beside the screen. It starts collapsed and keeps

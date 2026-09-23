@@ -5,10 +5,6 @@ section: "authoring"
 order: 7
 ---
 
-> Entry path declarations are removed in Milestone 6 of
-> [remove-source-path-evidence](../../../plans/remove-source-path-evidence.md);
-> the current package still accepts them.
-
 ## When to use a page
 
 Use a page for a document that already exists as one complete HTML file, such

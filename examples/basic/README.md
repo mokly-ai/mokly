@@ -34,7 +34,7 @@ The [large fixture](../../tests/fixtures/large/README.md)
 uses the same Firna/React Native Web rendering stack with configurable volume,
 without expanding this example or slowing ordinary development startup.
 
-Mokly's 89 design screens now use 16 registered shared components, including
+Mokly's 88 design screens now use 16 registered shared components, including
 the footer tabs panel and the appearance selector. Open **Components → Design → Shared components** for Chrome, Controls,
 Inspector and Preview galleries with 66 saved variants, real mobile/desktop
 previews and editable local props. The outer Components and Usage tabs show actual
@@ -176,7 +176,7 @@ rendered component resource appears on its component page and lists consuming
 screens as affected; independent screen inputs, slots or instance changes still
 appear in Changes. A source edit without a rendered effect adds nothing.
 
-The shared inspector/workspace sheets cover all 89 design screens and standalone
+The shared inspector/workspace sheets cover all 88 design screens and standalone
 library hosts. Other mixed component-design sheets remain scoped to the 32
 component-design routes and hosts; the controls sheet additionally remains
 scoped to its eleven owning screen routes. Linked stylesheets, including

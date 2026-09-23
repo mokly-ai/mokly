@@ -5,11 +5,6 @@ section: "authoring"
 order: 1
 ---
 
-> The component stylesheet marker is planned for Milestone 3 and removal of
-> `review.sharedImpact` for Milestone 4 of
-> [remove-source-path-evidence](../../../plans/remove-source-path-evidence.md).
-> The current package still uses the older configuration.
-
 ## The shape of a config
 
 `defineConfig` takes one object of type `MoklyConfig` and returns it typed.
@@ -95,9 +90,8 @@ Use the `componentStylesheets` symbol once in the shared list to place the
 public CSS declared by actually rendered components there; otherwise it goes
 after shared CSS and before the matching scheme list. It is not a URL and
 cannot appear in a scheme-specific list. Component declarations accept only
-existing public `mockupsDir`-relative CSS, not HTTP(S) links. The
-[stylesheet contract](../../../docs/protocol/mokly-component-stylesheets.md)
-defines insertion and error cases.
+existing public `mockupsDir`-relative CSS, not HTTP(S) links. Mokly rejects a
+file that is both configured and component-declared.
 
 ```ts
 stylesheets: [

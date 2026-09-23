@@ -5,10 +5,6 @@ section: "authoring"
 order: 2
 ---
 
-> The removal of entry path declarations is planned in
-> [remove-source-path-evidence](../../../plans/remove-source-path-evidence.md),
-> Milestone 6; the current package still accepts them.
-
 ## Define a screen
 
 `defineScreen` takes the screen's identity, its route and the two React nodes
