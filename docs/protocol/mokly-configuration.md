@@ -53,8 +53,9 @@ Before reading Git, `repoRoot` must resolve through symlinks to the same path
 as `git rev-parse --show-toplevel` run from that directory. A nested root fails
 with `config-invalid`, naming both paths. This validation belongs to config's
 Git boundary, not unconditional config loading: Build, Check, Serve, and
-publication without comparisons work without Git and treat output as
-untracked. When Git exists, they inspect the index, never `.gitignore`.
+publication without comparisons work without Git. Only Check inspects the
+current index (never `.gitignore`), treating no Git as untracked; Build and
+Serve never decide their behavior from head tracking.
 Serve's parent, classifier and
 HTTP child, comparison export and preview all validate before their first Git
 read. All remains usable when history is unavailable; an explicit comparison
@@ -141,7 +142,7 @@ order.
 per-commit selection follow [baseline selection](./mokly-derived-baselines.md).
 The removed `generatedOutput` and `publicExclude` keys fail `config-invalid`
 with guidance to use Git tracking and a referenced asset closure instead.
-After compilation, index paths under `<mockupsDir>/.generated/` classify
+Only Check, after compilation, uses index paths under `<mockupsDir>/.generated/` to classify
 tracked, untracked or mixed output; mixed output fails `build-invalid` with
 both remedies as specified in [generated output](./mokly-generated-output.md).
 Tracked Check compares the entire tree with disk; untracked Check ignores

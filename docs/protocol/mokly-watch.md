@@ -80,9 +80,9 @@ including transitive imports and nested documents, with shared edges read once
 per discovery pass and cycles visited once. External URLs and resource hints
 are excluded. Live documents include ignored-region resources in this watch
 graph so their rendered chrome refreshes even when Changes remains empty.
-Only confined public files and their validated local alias targets are watched;
+Only confined regular files in the referenced closure are public watch inputs;
 resource watchers do not follow symlinks. Their lexical paths remain observable
-so an invalid or replaced alias can be repaired. Generated files and
+so an invalid or replaced symlink can be repaired as a regular file. Generated files and
 package-owned ignored paths remain excluded, preventing output feedback loops.
 
 The repository's `npm run dev` command builds the local CLI once, then runs
@@ -170,6 +170,9 @@ Rebuilds are debounced and accept metadata and the retained graph together. A fa
 index candidate keeps the last-good server and output; a background failure keeps
 the last-good disk output without claiming completeness. Errors are reported while
 the watcher waits for another authored change. A
+watched `serve --build` generation never consults the head Git index or passes
+tracked state to its child; only `check` inspects tracked output and the cache
+index. A newly added route therefore writes successfully before staging. A
 successful rebuild or healthy restart publishes a new update version. Browsers
 reload their current durable URL and restore search, changed-only selection,
 current collection disclosure, the disclosure baseline captured before active

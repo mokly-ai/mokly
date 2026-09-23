@@ -32,11 +32,11 @@ and is not converted to a baseline history error.
    `baseline-command-failed` with the
    zero-based command index, argv, exit code or signal, and the last 40 output
    lines.
-5. Locate the historical build's actual catalogue root; prefer its
-   `.generated/mokly-manifest.json` and accept historical single-directory
-   manifests for pre-v6 builds. If no valid manifest exists or multiple roots
-   are plausible, fail `baseline-output-invalid`, rather than guessing from
-   the current config. The base and head may use different `mockupsDir` paths.
+5. Locate the historical catalogue using the ordered current-root lookup,
+   then bounded extraction scan in
+   [baseline addressing](./mokly-baseline-addressing.md#discovery-after-a-rebuild).
+   Zero or several valid candidates fail `baseline-output-invalid` with
+   sorted candidates. The base and head may use different `mockupsDir` paths.
 6. For v6, move `<source>/<historical mockupsDir>/.generated/` into
    `output/<historical mockupsDir>/.generated/`, then copy exactly the
    manifest's `assetClosure` from the source to
@@ -47,7 +47,8 @@ and is not converted to a baseline history error.
    map validated repository-relative paths into the v6 cache directly, or
    strip the validated historical mockups prefix for legacy flat cache entries,
    never today's prefix. Delete the remaining extraction including
-   installed dependencies and write the completion marker. Successful
+   installed dependencies and write the completion marker with the discovered
+   historical root and layout. Successful
    completion of that write is the commit point:
    the result is adopted immediately and cannot be removed by this build's
    failure path. Retention cleanup and lock release are separate best-effort
@@ -70,7 +71,7 @@ owned: never served, never watched, never a comparison resource, excluded from
 changed-path evidence and shared-impact globs before those globs are evaluated,
 and never a valid `mockupsDir`, entry glob root, resolved entry module,
 `review.outDir`, or export destination. Consumers add `.mokly-cache/` to their
-ignore file; the index guard fails if Git tracks anything under it.
+ignore file; only `check` runs the index guard, failing if Git tracks anything under it.
 
 ```text
 .mokly-cache/baselines/<commit>/
@@ -78,18 +79,21 @@ ignore file; the index guard fails if Git tracks anything under it.
   source/         # extraction, removed after adoption
   output/         # v6: repo-relative .generated plus closure; legacy: flat catalogue contents
   complete.json   # completion marker
-  inputs.json     # JSON string containing repository-relative historical mockupsDir
+  inputs.json     # JSON string containing requested/current repository-relative mockupsDir
 ```
 
-`complete.json` is `{ schemaVersion: 1, commit, finishedAt, commands,
-manifestVersion }`, accepting historical versions 2–5 and current v6. An entry
+New `complete.json` markers are `{ schemaVersion: 1, commit, finishedAt,
+commands, manifestVersion, historicalCatalogueRoot, layout }`, accepting
+historical manifest versions 2–5 and current v6. The root and layout identify
+the harvest; they never replace the requested path in `inputs.json`. An entry
 is complete only when the marker parses, its `commit` matches the directory
-name, and the manifest exists either in the v6 repository-relative
-`output/<historical mockupsDir>/.generated/` or in the legacy flat `output/`
-tree. Anything else is a partial entry and is removed under the lock before the
-next attempt.
+name, and the manifest exists at that layout's validated location. Anything
+else is a partial entry and is removed under the lock before the next attempt.
+Pre-v6 complete markers without the new fields retain their flat legacy layout;
+their historical root is the requested root in `inputs.json` (and a changed
+request still fails intact). See [cache identity and readers](./mokly-baseline-addressing.md#cache-identity-and-readers).
 The historical manifest and its harvested closure are validated again on reuse.
-A complete entry with a different `inputs.json` historical path or
+A complete entry with a different `inputs.json` requested path or
 `complete.json` command list fails as
 `baseline-output-invalid` and remains intact. The commit-only cache holds one
 catalogue/build configuration; remove that entry before changing those settings.

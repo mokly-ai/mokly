@@ -23,8 +23,10 @@ Choose with Git, not a config option. To keep generated output local, add
 validates sources but ignores local generated files. To commit output, track
 every file under `.generated/` and commit them after Build. Check then
 compares the entire tree, reporting missing, stale or extra files. Partial
-tracking is an error; baseline comparisons independently read complete Git
-output or rebuild that historical commit.
+tracking is an error **to Check only**; Build succeeds when you add a new
+entry, then Check lists its new route under `untracked:` until staged. Baseline
+comparisons independently read complete Git output or rebuild that historical
+commit without inspecting head tracking.
 
 Use `npx mokly build --watch` to update the tree after every successful
 compilation while editing. Plain `serve` and `export` do not write it; use
@@ -37,8 +39,8 @@ npx mokly check
 ```
 
 Check calculates the same bytes without writing them. Untracked output need
-not exist or match; tracked output must match exactly. Cache paths must not
-be tracked in either case.
+not exist or match; tracked output must match exactly. Check alone rejects
+indexed cache paths; writers never check the index.
 
 ## Next
 

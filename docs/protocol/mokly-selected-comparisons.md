@@ -38,6 +38,8 @@ failures use the existing comparison failure state and explicit retry.
 
 The live server uses the accepted complete manifest and background Changes
 snapshot. Background classification retains the pinned branch-point commit,
+the [baseline catalogue descriptor](./mokly-baseline-addressing.md#comparison-namespaces)
+for route/resource addressing across layouts,
 changed paths, and SHA-256 digests of current generated views and resources it
 reads. Those digests are private IPC data, not published comparison fields.
 Every current selected document requires a digest. Capturing a known input with

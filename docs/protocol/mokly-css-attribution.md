@@ -29,8 +29,14 @@ separate future contract.
 The analysis runs only for a CSS resource that is already in `changedPaths`
 and already reachable from a view's document through the existing resource
 graph: linked stylesheets, transitive `@import` chains, and stylesheets
-referenced by embedded documents. It examines the resource's branch-point
-bytes and working-tree bytes, and the view's branch-point and working-tree
+referenced by embedded documents. For differing catalogue roots/layouts,
+[baseline addressing](./mokly-baseline-addressing.md#comparison-namespaces)
+pairs CSS by each side's catalogue-relative path, then reads its bytes from
+each side's real location. A changed-path trigger remains repository-relative
+and may name either side's path; it never translates roots. A resource-byte
+difference without such a path is still material comparison evidence, not an
+invented Git reason or grounds for rule-based exclusion. The analysis examines
+the resource's branch-point and working-tree bytes, and both sides' view
 documents after the same paired ignore normalization the comparison engine
 uses. It never widens the set of examined files; unreferenced public files and
 broad `review.sharedImpact` globs continue to add nothing on their own.

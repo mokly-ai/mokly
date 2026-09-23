@@ -34,7 +34,11 @@ not remove it from this list. Links can open the actual before/current screen
 comparison even when the screen has no row in Changes.
 
 Affected describes dependency/usage evidence, not proof of a visual regression.
-For any baseline source, a resource-byte difference without a changed Git path is a
+For any baseline source, pair generated views by route and authored assets by
+their side's catalogue-relative path, using the
+[baseline descriptor](./mokly-baseline-addressing.md#comparison-namespaces).
+Git changed-path evidence remains repository-relative; it does not translate
+historical roots. A resource-byte difference without a changed Git path is a
 material change. It does not invent a Git dependency reason or changed path.
 No pixel counts or layout-safety claims are inferred. A changed component can
 alter surrounding layout without changing any screen-owned markup.

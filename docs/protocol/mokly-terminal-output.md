@@ -191,6 +191,9 @@ use the same conditions. Missing, stale or extra tracked output is
 `Run mokly build and commit every file under <mockupsDir>/.generated/, or run git rm -r --cached -- <mockupsDir>/.generated/ and add /<mockupsDir>/.generated/ to .gitignore.`
 Mixed index state uses the exact groups and message in
 [generated output](./mokly-generated-output.md#tracked-state-and-commands).
+Only `check` computes that state and prints this error; a new route first
+builds successfully and appears in `check`'s `untracked:` group until staged.
+No Build, watched Serve, export, or publication command reads head tracking.
 
 `build --watch` prints the normal `Generated <n> Mokly files.` (or rich
 `✔ Generated <n> files in <mockupsDir>/.generated (<duration>)`) on the

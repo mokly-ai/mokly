@@ -89,6 +89,8 @@ Git blobs or the cache. The child receives the prepared reader; it neither
 builds baselines nor writes output. `serve --build` writes in the parent only
 after complete compilation and resource-watch readiness, including once with
 `--no-watch`; plain Serve never writes output.
+Only `check` consults the head Git index and guards `.mokly-cache/` tracking;
+neither the Serve parent nor child needs tracked state to render or write.
 That reader validates the configured Git top level on its first read, so the
 unselected route reports `config-invalid` for a nested `repoRoot` while All
 remains available. Parent preparation, classification and selected readers use

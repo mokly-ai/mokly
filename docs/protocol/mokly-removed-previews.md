@@ -120,6 +120,9 @@ epoch invalidation, and shutdown draining.
 
 Changes-enabled export, publish packaging, and repository preview capture every
 removed page preview from the single pinned baseline before installation and
+resolve its document and closure with that baseline's
+[catalogue descriptor](./mokly-baseline-addressing.md#comparison-namespaces),
+even when the base uses a legacy or moved root. They
 write it beside the comparison:
 
 ```text

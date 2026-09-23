@@ -29,8 +29,10 @@ missing, stale and extra local files. Run `mokly build` and commit the full
 tree, or untrack and ignore the directory. When none of it is in the index,
 Check ignores local output completely: it can be absent or stale. A mixture
 is a `build-invalid` error that lists tracked and missing-index paths and
-offers both ways out. The separate `.mokly-cache/` directory must never be
-indexed. Authored, referenced CSS stays in its original location and may
+offers both ways out. Build first if a new route is missing: Build succeeds
+without inspecting tracking, and Check lists the unstaged route under
+`untracked:` until staged. Check alone guards the index against tracked
+`.mokly-cache/` paths. Authored, referenced CSS stays in its original location and may
 remain tracked; unrelated files are not served or exported.
 
 ## In continuous integration

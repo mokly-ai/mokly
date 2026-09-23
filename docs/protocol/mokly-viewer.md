@@ -30,6 +30,12 @@ used by Serve. The `./browser` entry owns standalone hydration.
 `./data` owns shared pure value/validation contracts used by CLI producers.
 These are package entry points, not aliases for CLI modules. `./server` also
 exports typed standalone context and `viewerAssetUrl` for package assets.
+The independently published viewer reads the optional public
+`generatedPathPrefix` layout signal: `.generated` for new v6 sources and absent
+for existing published catalogues. Public paths already include `static/`;
+private manifest/live-index stages derive that prefix from their shell data.
+The same layout drives frame mounts, reverse route mapping, SSR and hydration;
+see [generated delivery](./mokly-generated-delivery.md).
 
 ```ts
 import type { CSSProperties, ReactNode, Ref } from "react";

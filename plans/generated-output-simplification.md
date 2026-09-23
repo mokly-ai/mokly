@@ -6,7 +6,8 @@ Three related changes to how Mokly handles generated output, all following
 the same principles recorded by the user: Mokly must not create files the
 user did not ask for, generated content must never be mixed with authored
 content, and behaviour should follow the repository rather than a declared
-mode.
+mode. Only `check` inspects the current Git index to decide whether to compare
+local output; comparison baselines inspect the pinned commit's tree instead.
 
 **Change A: Git state replaces the output modes.** The `generatedOutput`
 option (`"committed" | "derived"`) is removed. Everything it selected is
@@ -15,9 +16,9 @@ tracked in Git. The baseline for a comparison is read from Git blobs when the
 merge-base commit contains generated output, and rebuilt with
 `review.baselineBuild` when it does not. `check` always validates the sources,
 and compares compiled bytes with the tracked files only when the output is
-tracked. Only `build` writes generated output; Serve, export, and publication
-never do. `build --watch` and `serve --build` rewrite the output after each
-successful complete compilation for users who keep it tracked. The head side of
+tracked. Only `build`, `build --watch`, and `serve --build` write generated
+output; plain Serve, export, and publication never do. Watched writes follow each
+successful complete compilation regardless of tracking. The head side of
 every comparison is the in-memory compilation, so the requirement that the
 working tree equal the compilation goes away.
 
@@ -41,19 +42,20 @@ ownership grep in the tracked-output check have no job left.
 
 Decisions:
 
-- Tracked state is read from the Git index for `.generated/`, never from
-  `.gitignore`, because ignore rules can be bypassed. After compiling, Mokly
-  knows the exact output set: all of it tracked means tracked; none means
-  untracked; a mixture is a `build-invalid` error naming the paths and both
-  ways out, run `mokly build` and commit everything, or `git rm -r --cached`
-  the directory and ignore it. Without a Git repository, output is treated as
-  untracked.
+- Only `check` reads the Git index for `.generated/` and `.mokly-cache/`,
+  never `.gitignore`. It compares the complete compiled set: all expected
+  paths tracked means tracked, none means untracked, and a mixture is a
+  `build-invalid` error naming paths and both remedies. Without Git, `check`
+  treats output as untracked. Build and Serve (including their writing forms),
+  export and publication do not inspect current index tracking. Adding an
+  entry builds successfully; `check` reports the new route under `untracked:`
+  until the output is staged and committed.
 - The manifest records an inventory of every generated path with its Git
   blob hash, so the completeness of committed output can be judged at any
   commit from Git alone.
 - The baseline reader is chosen per merge-base commit from Git alone. No
   manifest blob at `<mockupsDir>/.generated/mokly-manifest.json` means
-  untracked, so the commit is rebuilt. A manifest whose inventory paths all
+  the commit is rebuilt. A manifest whose inventory paths all
   exist in `git ls-tree` with matching hashes means complete, so blobs are
   read. Missing or mismatched paths mean incomplete or stale output, so the
   commit is rebuilt and the reason is logged; regeneration is always the safe
@@ -195,11 +197,27 @@ Shared:
       `npm run format:check` on the changed Markdown; review the diff; commit
       and push.
 
+Milestone 1 review corrections (documentation only):
+
+- [x] Restrict Git-index tracking and the cache index guard to `check` alone;
+      document that a new entry builds before it can be staged and that other
+      commands, including watched Serve, do not inspect head tracking.
+- [x] Define deterministic discovery of the historical catalogue root after
+      a rebuild, record that root and layout in the completion marker, and
+      preserve compatibility with pre-v6 cache entries.
+- [x] Define a baseline catalogue descriptor and separate generated-route and
+      catalogue-relative resource comparison namespaces across moved roots and
+      both output layouts; name all consumers of the mapping.
+- [x] Define viewer and static-delivery generated URL construction, route
+      validation, and compatibility with existing prefixless publications;
+      align the viewer, publication, and upload protocols.
+
 ## Milestone 2: Git state replaces the output modes
 
 Backend for change A on the current single-directory layout. After this
-milestone there is no mode option, only `build` writes, and comparisons pick
-their baseline per commit. Tracked-state detection uses the existing
+milestone there is no mode option; only explicit `build`, `build --watch` and
+`serve --build` write, and comparisons pick their baseline per commit.
+Tracked-state detection uses the existing
 compiled-route intersection until Milestone 3 gives it a single directory.
 
 - [ ] Config: delete `generatedOutput` from `src/config/types.ts`,
@@ -207,16 +225,18 @@ compiled-route intersection until Milestone 3 gives it a single directory.
       `review.baselineBuild` and its defaults; reject the removed key with
       guidance.
 - [ ] Tracked state: a typed `GeneratedOutputTracking` (`tracked`,
-      `untracked`, or a mixed error) computed once per command from the index
-      by `src/build/tracked_output.ts`, treating a missing repository as
-      untracked. Tests for all three outcomes and the no-Git case.
+      `untracked`, or a mixed error) computed only by `check` from the index
+      through `src/build/tracked_output.ts`, treating a missing repository as
+      untracked. The `.mokly-cache/` index guard also runs only under `check`.
+      Test all three outcomes, no Git, a new entry built before Git staging,
+      and no tracking reads by other commands.
 - [ ] Baseline selection: `src/review/repository.ts` and
       `src/review/prepare.ts` choose `CommittedBaselineReader` when the
       merge-base commit contains the manifest and the rebuilt reader
       otherwise (inventory verification arrives with the schema bump in
       Milestone 3); remove every `generatedOutput` branch in `src/review`,
       `src/server`, `src/export`, and `src/cli`; the Serve child and export
-      keep the prepared-repository handoff.
+      keep the prepared-repository handoff without head tracking state.
 - [ ] `check`: `src/cli/run.ts` and `src/build/output_store.ts` validate,
       then compare with disk only when tracked; summary lines per the terminal
       contract; `review/run.ts` no longer calls the output-store check.
@@ -274,20 +294,32 @@ all of it lands together.
       prefix, serve closure files live from `<mockupsDir>/<path>`, return not
       found for everything else, and keep resource-edit invalidation working
       at the new locations.
+- [ ] Viewer and static delivery: update `packages/viewer` public catalogue
+      types/reader/reference validation, shell stages, frame mounting,
+      navigation/inspection and geometry to carry the optional literal
+      `.generated` prefix (absence means an older prefixless publication);
+      validate paths against the active source layout, include the signal in
+      Serve shell and SSR/hydration data, and produce prefixed read-model paths
+      for new v6 catalogues. Test both layouts, source swaps, independent
+      hosted viewer, and rejection of cross-layout mounts/navigation.
 - [ ] Export and publication (`src/export/public_files.ts`, `references.ts`,
       `paths.ts`, `src/publication/*`): ship `.generated/` from compiled bytes
       and the closure files from disk at catalogue-relative paths; drop the
-      directory walk; reject an output directory inside or containing
-      `.generated/`.
+      directory-based public walk (retain independent input fingerprinting
+      and its safe alias semantics); reject selected closure symlinks and an
+      output directory inside or containing `.generated/`.
 - [ ] Baseline (`src/baseline/rebuild.ts`, `reader.ts`, `manifest.ts`,
       `src/review/committed.ts`): harvest `.generated/` plus the closure files
       into the cache entry; harvest the legacy layout as today when
-      `.generated/` is absent; blob and rebuilt readers resolve
-      repository-relative paths for both layouts; tracked-state detection
-      becomes a prefix check on `.generated/`; baseline selection verifies
-      inventory completeness and hashes with one `git ls-tree` before reading
-      blobs and rebuilds with a logged reason when output is incomplete or
-      stale.
+      `.generated/` is absent; discover moved historical roots by the bounded,
+      deterministic manifest search; retain requested `inputs.json` and add
+      discovered root/layout to `complete.json`, accepting old flat markers;
+      blob and rebuilt readers use a per-commit descriptor to pair generated
+      routes and catalogue-relative closure paths across different roots.
+      Check's tracked-state detection becomes a prefix check on `.generated/`;
+      baseline selection verifies inventory completeness and hashes with one
+      `git ls-tree` before reading blobs and rebuilds with a logged reason
+      when output is incomplete or stale.
 - [ ] Example migration: `mockupsDir: "."` in `examples/basic/mokly.config.ts`;
       `git mv` the 28 stylesheets from `examples/basic/generated/` to
       `examples/basic/` and `examples/basic/design-library/`; update
@@ -302,8 +334,15 @@ all of it lands together.
       hrefs resolve from disk and over HTTP; Serve refuses unreferenced files;
       export layout; blob and rebuilt baselines read closure files for both
       layouts; per-commit selection for absent, complete, incomplete, and
-      stale committed output; the example baseline fixture rebuilds; a v5
+      stale committed output; current-root priority and unique moved-root
+      discovery (including zero/ambiguous candidates), cache warm reuse and
+      pre-v6 flat markers, cross-layout and cross-root route/resource pairs;
+      the example baseline fixture rebuilds; a v5
       manifest baseline still compares.
+- [ ] Update publication and Changes regression fixtures that currently
+      expect public file/directory symlinks or a directory-based public walk:
+      selected closure symlinks fail, unreferenced aliases remain private,
+      and safe input-fingerprint aliases retain their existing semantics.
 - [ ] Update `tests/component_protocol_docs.test.ts` to assert manifest v6
       format rows and README text once manifest-v6 generation and readers land.
 - [ ] Smoke test: `npm run example:build` produces `examples/basic/.generated/`

@@ -30,19 +30,20 @@ route. Never use `.gitignore` as evidence of tracked state.
 
 ## Tracked State And Commands
 
-After a successful, complete compilation, enumerate index paths with
+Only `check`, after a successful, complete compilation, enumerates index paths with
 `git ls-files --cached --full-name -z` under the literal repository-relative
 `.generated/` prefix (checking lexical and resolved aliases); exclude neither
 ignored nor staged-for-removal paths by consulting `.gitignore`. Let `E` be
 all compiled paths under `.generated/`, including the manifest, and `I` all
 indexed paths under that prefix. If `I` is empty, output is **untracked**;
 if `E` is a subset of `I`, it is **tracked** (extra indexed files are checked
-as extra output); otherwise it is **mixed**. In particular, a stray indexed
-path with no expected path indexed is mixed, not untracked. Run the existing
-independent `.mokly-cache/` index guard: indexed cache files are always invalid.
-If no Git repository exists, treat output as untracked. An existing repository
-whose configured `repoRoot` differs from Git's top-level root is still
-`config-invalid`; other Git failures remain errors, not an untracked fallback.
+as extra output); otherwise it is **mixed**. If no expected path is indexed
+but `E` has paths, an indexed stray path makes the state mixed. Only `check`
+runs the independent
+`.mokly-cache/` index guard; indexed cache files are invalid. Without Git,
+`check` treats output as untracked. A repository whose configured `repoRoot`
+differs from Git's top-level root remains `config-invalid` at any Git boundary;
+other Git failures remain errors, not an untracked fallback.
 
 The mixed error is `build-invalid` and has this exact text, with paths sorted
 lexicographically within groups, repository-relative POSIX names, and no
@@ -59,20 +60,16 @@ Run mokly build and commit every file under <mockupsDir>/.generated/, or run git
 
 `tracked` lists every indexed `.generated/` path (including extras); omit
 `tracked:` if empty. `untracked` lists `E - I`; it cannot be empty in mixed
-state. Keep `<mockupsDir>` rendered as its repository-relative POSIX path,
-without a leading `./`. Compute this state once per `build`, `check`, `serve`,
-`export`, and publication invocation, after compilation and before deciding
-to compare or write; watched recompilations refresh it on each accepted
-generation. The Serve **parent**, not the disposable child, owns the decision
-and hands the accepted state to the child. Git-dependent comparison still
-requires Git and a valid base ref even if the output itself is untracked.
-
-| Command                | Tracked                                 | Untracked                                 |
-| ---------------------- | --------------------------------------- | ----------------------------------------- |
-| `build`                | Replace `.generated/` transactionally   | Same                                      |
-| `check`                | Compare compiled tree with disk         | Validate compilation; ignore local output |
-| `serve`                | Serve in-memory output; no write        | Same                                      |
-| `export` / publication | Compile, capture, no write to catalogue | Same                                      |
+state. Render `<mockupsDir>` as a repository-relative POSIX path without `./`.
+`check` computes the state once, after compilation, and compares disk only in
+tracked state. `build`, `build --watch`, `serve`, `serve --build`, export and
+publication do **not** compute tracking or run the cache index guard; no
+watched generation refreshes it and no Serve child receives it. A comparison
+still needs Git and a valid base independently of head tracking. For example,
+adding an entry to a repository that commits `.generated/` must allow `build`
+to write the new route; `check` then lists that route under `untracked:` until
+it is staged (and then committed as part of the tracked-output workflow).
+`build` cannot be blocked by its own remedy.
 
 Only `build`, `build --watch`, and `serve --build` write generated output.
 `build --watch` compiles/writes once, then reuses the consumer watcher and its
@@ -150,11 +147,9 @@ canonical path is absent, historical `mokabook-manifest.json` and the opt-in
 v2 `mockbook-manifest.json` fallback remain at the legacy root; never override
 an existing but invalid canonical manifest with an older name. No manifest
 at those locations means **rebuild** using the base commit's own configured
-install/build recipe. This also covers a moved `mockupsDir`: if the current
-path has no manifest, rebuild and locate that commit's actual generated root
-from its built catalogue, rather than treating a move as unsupported. A
-historical build with multiple plausible roots or no valid manifest fails
-`baseline-output-invalid` instead of guessing.
+install/build recipe. A moved `mockupsDir` also rebuilds when the current root
+has no manifest. Deterministic discovery of the historical root and its cache
+descriptor is specified in [baseline addressing](./mokly-baseline-addressing.md).
 
 For v6, compare the tree's regular blob paths **exactly** with
 `generatedFiles` plus the manifest path, comparing each blob ID with its
@@ -220,7 +215,9 @@ and `/static/<catalogue-relative closure path>` to the live authored regular fil
 unreferenced paths return not found. No filesystem fallback for generated
 routes. Export ships those same compiled bytes under `.generated/` plus only
 the closure files at their catalogue-relative paths; static hosting mirrors
-the disk URL layout. The export destination may neither contain nor be
+the disk URL layout. The public viewer's optional prefix signal and old
+publication compatibility are in [generated delivery](./mokly-generated-delivery.md).
+The export destination may neither contain nor be
 contained by `.generated/`, including resolved aliases, and must preserve
 the existing source/cache/export transactional confinement rules.
 
@@ -237,15 +234,8 @@ single plain-text line `<!-- Generated by Mokly. Do not edit. -->`; nothing
 parses this marker or treats it as an authority. Git index tracking for the
 new layout is a prefix check, never a grep for markers.
 
-For a rebuilt v6 baseline, move only the historical
-`<source>/<historical mockupsDir>/.generated/` to the cache entry's
-`output/<historical mockupsDir>/.generated/` and copy each closure file to
-`output/<historical mockupsDir>/<assetClosure path>` before deleting source;
-validate regular files, confinement, and aliases. For a legacy layout, move
-the entire historical `mockupsDir` to flat `output/` as today, including
-existing legacy cache entries. Git-blob readers request repository-relative
-paths directly. For rebuilt v6 entries, resolve validated paths beneath
-`output/`; for legacy entries, strip the validated _historical_ `mockupsDir`
-prefix before resolving under flat `output/`, never the current config's prefix. Keep cache
-entries self-contained and their marker/lock validation, retention and
-extraction limits unchanged.
+For v6 baseline cache entries, harvest `.generated/` and the manifest closure
+under their repository-relative catalogue path; for legacy entries, keep the
+flat `output/` layout. The precise discovery, recorded root, reader mapping,
+and pre-v6 cache compatibility are in [baseline addressing](./mokly-baseline-addressing.md).
+Keep confinement, marker/lock validation, retention and extraction bounds.

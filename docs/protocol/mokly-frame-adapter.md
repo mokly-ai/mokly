@@ -31,6 +31,8 @@ interface InstanceBoundary {
 }
 interface FrameMount {
   url: URL;
+  route: string; // Logical document/fragment route, without static/ or .generated/.
+  generatedPathPrefix?: ".generated"; // Absent for an existing legacy catalogue.
   usage: CatalogueUsage;
   signal?: AbortSignal;
   onEvent?: (event: FrameEvent) => void;
@@ -81,8 +83,13 @@ declare function postMessageAdapter(options: {
 ```
 
 Each mount owns one immediate viewer-created frame and its current URL/usage.
-The host supplies the selected catalogue view URL; the adapter confines it to
-current `/static/.generated/` HTML paths, the configured origin and a valid logical hash.
+The host supplies the selected catalogue view URL and layout signal; the
+adapter confines it to the exact `/static/.generated/<route>` v6 or
+`/static/<route>` legacy HTML path and configured origin, with a valid logical
+hash. The prefix is taken from the active catalogue, never guessed from the
+URL. Loaded URLs are mapped back to the active logical route only after origin,
+prefix and membership validation; see
+[generated delivery](./mokly-generated-delivery.md#frames-and-reverse-mapping).
 Caller-approved query parameters are retained; no selectors or comparison paths
 are accepted. Mount replaces the document with iframe history
 replacement semantics while the React shell keeps the portable `src` attribute

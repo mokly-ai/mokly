@@ -45,9 +45,13 @@ publication and the Serve parent. `prepareReviewRepository(config, base,
 { signal, onProgress })` resolves one commit, checks for complete generated
 Git blobs and otherwise rebuilds it. It returns a branded
 `PreparedReviewRepository`: pinned `commit`, `evidence`, `reader`, completion
-`marker` (undefined for Git-blob baselines), and
-`assertUnchanged()` for the publication recheck. Only that factory constructs
-the prepared type.
+`marker` (undefined for Git-blob baselines), historical catalogue descriptor
+(layout, catalogue root and generated root), and `assertUnchanged()` for the
+publication recheck. All comparison readers use the descriptor to pair logical
+routes and catalogue-relative resources across different historical/current roots; Git
+changed paths remain repository-relative. See
+[baseline addressing](../../docs/protocol/mokly-baseline-addressing.md).
+Only that factory constructs the prepared type.
 
 `repository.ts` contains read-only factories and has no import path to the
 builder. `baselineReaderForCommit` and `readOnlyRepositoryForCommit` open an

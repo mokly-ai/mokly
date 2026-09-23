@@ -63,15 +63,15 @@ edges. Added screens, newly available views, and existing material fragment
 changes do not bypass resource validation. Whole-document pages use these same
 rules for their single generated document and its rendered resources; they do
 not gain screen comparison controls or viewport variants.
-For public file and directory aliases, compare changed Git paths against both
-the referenced route and its validated physical path relative to the real
-`mockupsDir`. Editing a target marks its consumers even when the alias itself
-is unchanged. Obtain both identities from the same confined reader used by
-resource watching; source, internal-metadata, and escape checks still apply.
-Historical snapshot reads continue to require regular Git files and reject
-symlink blobs; detecting current impact does not relax baseline validation.
+For a referenced regular closure file, use its repository-relative changed
+path as impact evidence; never map a historical resource through the current
+`mockupsDir`. Selected symlink files/directories are invalid closure assets,
+so neither an alias nor its target can grant public access or change impact.
+Source, internal-metadata, and escape checks still apply. Historical snapshot
+reads require regular Git files and reject symlink blobs.
 A deleted resource still marks its consumers only when its closest existing
-ancestor is a confined public directory and its baseline is a regular Git file.
+ancestor is a confined public directory and its side-specific baseline
+reader supplies a regular file.
 Live classification walks a changed or moved document's branch-point resource
 graph whenever the document changed or one of its current stylesheets changed,
 regardless of whether any stylesheet is in the diff, so verified deletions of
@@ -289,6 +289,11 @@ bytes. Comparisons retain compiled bytes through selected comparisons and
 compare all generated views even without changed Git output paths. Selected live
 diffs reuse the accepted manifest and pinned classification; checked-input digests
 reject changed snapshot inputs without repeating an exhaustive build.
+The [baseline catalogue descriptor](./mokly-baseline-addressing.md#comparison-namespaces)
+pairs each side's logical routes and catalogue-relative resources even when
+the historical `mockupsDir` or output layout differs; changed Git paths remain
+repository-relative evidence, not root-translation rules.
+
 Review inspects only the requested base paths, grouping exact literal pathspecs
 into count- and byte-bounded `ls-tree` operations, and reads regular-file blobs
 through output-byte- and object-count-bounded `cat-file` batches. A single blob

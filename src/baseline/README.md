@@ -68,8 +68,9 @@ to `source`, runs commands, validates the historical manifest and output tree,
 moves only `.generated/` and copies the manifest's authored asset closure to
 their repository-relative paths under `output/`; pre-v6 single-directory
 baselines move the whole historical catalogue. Readers resolve
-repository-relative paths against `output/`, regardless of the current
-`mockupsDir`. It deletes the extraction and writes
+repository-relative paths beneath `output/` for v6 or strip the discovered
+historical root for flat legacy entries; neither uses the current
+`mockupsDir` to translate base paths. It deletes the extraction and writes
 `complete.json`. Completion of the marker write commits the result immediately.
 Cancellation before that point removes partial output; cancellation afterward
 returns the completed result and skips remaining retention work. Cleanup and
@@ -80,8 +81,13 @@ maintenance failures and continues with other eligible entries. The maintenance
 reporter receives each entry and original error without adding failure events
 to a successful build. Its `report(failure)` method must not
 throw; the stderr implementation tolerates a closed diagnostic stream.
-`inputs.json` records the historical repository-relative catalogue path;
-the marker records the commands. A complete entry for different settings fails
+Rebuild discovery prefers the requested root, then searches the bounded
+extraction for exactly one valid manifest; details and reader path mapping
+are in [baseline addressing](../../docs/protocol/mokly-baseline-addressing.md).
+`inputs.json` records the requested current repository-relative catalogue
+path; new completion markers record the discovered historical root, its v6
+or legacy layout, and the commands. Pre-v6 markers retain the flat legacy
+layout with the requested root. A complete entry for different settings fails
 explicitly and remains intact. Remove that commit's cache entry before changing
 its catalogue/build settings. Partial entries are rebuilt under the entry lock.
 

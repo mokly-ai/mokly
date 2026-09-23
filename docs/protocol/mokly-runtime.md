@@ -81,7 +81,9 @@ diagnostics use repo-relative paths and deterministic ordering.
 tracks all expected output it compares the entire `.generated/` tree, including
 missing, stale, and extra files. When no output is indexed it ignores local
 output. A mixture fails `build-invalid` with both remedies; indexed cache
-contents fail independently. It
+contents fail independently, only under Check. Build and Serve never read
+head tracking or run the cache index guard; adding an entry builds before it
+can be staged. It
 fails for:
 
 - invalid config or registry metadata;

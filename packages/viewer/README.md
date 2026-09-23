@@ -336,6 +336,11 @@ search experience based on the viewer container—not the browser viewport.
 
 Mokly artifacts are static files. Deploy the exported directory at the root of
 an HTTP(S) origin with correct MIME types and without an SPA fallback.
+New catalogues advertise a `.generated` prefix in their public read model and
+serve current documents under `/static/.generated/<route>`. Older published
+catalogues without the field still resolve `/static/<route>`; the viewer
+validates the frame URL against the active catalogue's layout instead of
+guessing from the host. See the [generated delivery contract](../../docs/protocol/mokly-generated-delivery.md).
 
 - **Same origin:** no CORS configuration is needed. Omit `frameAdapter` or pass
   `sameOriginAdapter()` explicitly.
@@ -398,6 +403,7 @@ consumers.
 - [Viewer behavior contract](../../docs/protocol/mokly-viewer.md)
 - [Markers and multi-instance highlights](../../docs/protocol/mokly-viewer-markers.md)
 - [Catalogue read model](../../docs/protocol/mokly-catalogue.md)
+- [Generated document delivery](../../docs/protocol/mokly-generated-delivery.md)
 - [Frame adapter protocol](../../docs/protocol/mokly-frame-adapter.md)
 - [Component instance identity](../../docs/protocol/mokly-instances.md)
 - [Package ownership boundary](../../docs/architecture/package-boundary.md)

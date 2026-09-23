@@ -7,6 +7,11 @@ This is the public contract for hosted and self-hosted receivers. Receivers need
 only the published `@mokly/mokly` package and these documented file artifacts;
 Mokly Cloud has no special protocol or access to package internals.
 `mokly export` remains local-only. `mokly publish` exports, then uploads once.
+Uploaded v6 bundles preserve the public catalogue's `.generated` layout signal,
+`static/.generated/<route>` documents and `static/<catalogue-relative path>`
+closure; older bundles without that signal retain `static/<route>`. Receivers
+must not rewrite paths based on their own version; see
+[generated delivery](./mokly-generated-delivery.md#static-artifacts-and-compatibility).
 
 ## CLI
 
@@ -112,7 +117,8 @@ index.html
 404.html
 view/...
 id/...
-static/...
+static/.generated/...  # v6 current documents; legacy archives use static/<route>
+static/...             # v6 referenced authored resources
 __mokly/...
 __mokly/diffs/__generations/<content-id>/review.json  # comparisons only
 ```

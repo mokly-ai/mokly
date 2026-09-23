@@ -133,6 +133,9 @@ prefer committed output, commit every file in `.generated/` instead of ignoring
 it. `check` compares the entire tree only when Git indexes it; an incomplete
 index fails with both remedies. Comparison baselines use complete Git blobs or
 rebuild the historical commit independently of today's tracking policy.
+Build and Serve do not inspect head tracking: a new route builds successfully,
+and `check` then lists it under `untracked:` until staged. Only `check` rejects
+an indexed `.mokly-cache/` path.
 Current output requires manifest v6 (closure and blob-hash inventory); older
 formats are readable only as historical baselines.
 

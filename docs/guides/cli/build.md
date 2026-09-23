@@ -36,10 +36,12 @@ catalogue; only referenced assets are served and exported.
 
 ## Git tracking and watching
 
-Git index tracking, not a config option or `.gitignore` lookup, decides whether
-`check` compares generated files. Either commit the **entire** `.generated/`
-tree, or ignore that directory and `.mokly-cache/`. Partially tracked output
-is an error with instructions for both choices.
+Only `check` reads the Git index to decide whether to compare generated files;
+`build` never reads head tracking or refuses to write a new route. Either
+commit the **entire** `.generated/` tree, or ignore that directory and
+`.mokly-cache/`. After building a new entry in a tracked catalogue, `check`
+lists its route under `untracked:` until it is staged. Only `check` reports
+partial tracking, with instructions for both choices.
 
 `build --watch` performs an initial build and then uses Serve's debounce and
 source rules. Every successful complete compilation replaces `.generated/`;

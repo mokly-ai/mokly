@@ -37,17 +37,17 @@ output. Prefer a trusted base rather than relying on the current Git state.
 
 ## Command Behavior
 
-Tracked state is taken from the **index**, never `.gitignore`, once after
-each complete compilation; without Git it is untracked. The precise mixed
-state error, root validation, per-generation refresh, and prefix rules are in
+Only `check` reads head tracked state from the **index**, never `.gitignore`,
+once after its complete compilation; without Git, `check` treats it as
+untracked. The precise mixed-state error and prefix rules are in
 [generated output](./mokly-generated-output.md#tracked-state-and-commands).
 
-| Command                | Tracked head output                              | Untracked head output              |
-| ---------------------- | ------------------------------------------------ | ---------------------------------- |
-| `build`                | Transactionally replace `.generated/`            | Same                               |
-| `check`                | Validate, then compare entire `.generated/` tree | Validate only; ignore local output |
-| `serve`                | In-memory head; select base reader per commit    | Same                               |
-| `export` / publication | In-memory head; select base reader per commit    | Same                               |
+| Command                | Behavior                                                            |
+| ---------------------- | ------------------------------------------------------------------- |
+| `build`                | Transactionally replace `.generated/` without inspecting head index |
+| `check`                | Validate; compare disk only if all expected output is indexed       |
+| `serve`                | In-memory head; select base reader per commit, not head index       |
+| `export` / publication | In-memory head; select base reader per commit, not head index       |
 
 `check` reports `build-invalid` for sorted missing expected paths, stale
 expected bytes, and extra files under `.generated/`, including an absent
@@ -56,8 +56,11 @@ or `git rm -r --cached -- <mockupsDir>/.generated/` and ignore it. Empty
 directories are not files and do not count as extras. Untracked `check` only
 validates compilation and never reads local `.generated/` contents to judge
 freshness. Indexed `.mokly-cache/` files remain invalid regardless of head
-state. A partly tracked output fails before either check or write. The exact
-terminal summaries are in [terminal output](./mokly-terminal-output.md).
+state. Only `check` rejects partly tracked output; `build` writes regardless
+of tracking. Adding a new entry to a committed catalogue therefore builds
+successfully, then `check` lists its unstaged route under `untracked:` until
+it is staged. The exact terminal summaries are in
+[terminal output](./mokly-terminal-output.md).
 
 Only `build`, `build --watch`, and `serve --build` may write the generated
 tree. Watched writes occur only after each successful, complete compilation;
@@ -96,6 +99,12 @@ reads. Current resources still use confined live files; differing closure
 membership or bytes can make an otherwise unchanged view material even
 without changed Git paths. Resource attribution and the unchanged-view fast
 path remain governed by [component changes](./mokly-component-changes.md).
+Per-commit selection supplies the
+[baseline catalogue descriptor](./mokly-baseline-addressing.md#per-commit-descriptor):
+pair documents by layout-relative logical route and authored resources by
+catalogue-relative path on **each** side, never by repository-relative base
+filename or changed-path evidence. This includes moved historical roots,
+legacy blobs, flat cached rebuilds, and v6 rebuilt caches.
 
 ## Preparation And Serve
 

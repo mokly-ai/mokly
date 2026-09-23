@@ -9,6 +9,11 @@ implementation verification. Changes-enabled previews package removed pages and
 screens as implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md). This
 does not change the npm CLI.
+New publications advertise `.generated` in the public catalogue and capture
+v6 documents under `static/.generated/<route>` with referenced authored assets
+under `static/<catalogue-relative path>`. Existing prefixless publications
+remain readable by the viewer; the snapshot and upload rules are in
+[generated delivery](./mokly-generated-delivery.md).
 
 ## Publication Option
 
@@ -91,35 +96,35 @@ replacement is preserved, including one introduced during capture. Retain the
 writer reservation, OS-enforced non-replacing moves, and safe backup recovery
 defined by the [export recovery contract](./mokly-export-recovery.md).
 Only the repository adapter may migrate the prior preview ownership marker.
-Migration retains valid public routes beneath build-directory names such as
-`target` and `node_modules`, while private/source names remain disallowed.
+Migration retains valid generated routes beneath names such as `target` and
+`node_modules`, while private/source names remain disallowed. This does not
+make other files under those directories public.
 Its owned reservation namespace remains after cleanup, with no active locks.
 Static id aliases contain real shells; current-only shell metadata explicitly
 sets `comparisonUrl: null` and never requests a development comparison endpoint.
 
-Use the shared confined file enumeration for input fingerprints and public
+Use the shared confined file enumeration for input fingerprints, not public
 copying. Resolve each logical path inside the real repository before reading
 target bytes or traversing a linked directory. Hash symlink text; unrelated
 escaping, dangling, and cyclic links contribute only that metadata and do not
 abort publication. Explicit manifest and authoring inputs must resolve to
 confined regular files before their bytes are read. Directory walks terminate
-when a target repeats in the current ancestor chain, while independent aliases
-to the same directory retain their own logical routes.
+when a target repeats in the current ancestor chain; independent aliases to
+the same directory still contribute their own logical fingerprint paths.
 
-Copy eligible public file and directory aliases as regular files at their
-logical routes. Every copied target must also stay inside the real `mockupsDir`
-and pass the shared source/internal-metadata policy. Apply generated-artifact
-and staging/destination exclusions to both identities. After copying, validate
-the presence of every current page and light/dark screen fragment named by the
-manifest, independently of the enumerated file list. Validate every exported
-HTML/CSS resource reference against confined regular files in
-the staged static tree, including transitive references. An unavailable resource,
-including a reference through a skipped cycle or excluded alias, fails before
-installation and preserves the previous artifact.
-Repository discovery may skip dependency/build directories, but the public walk
-must retain valid catalogue routes under names such as `target` and
-`node_modules`. Git administrative directories, generated artifacts, protected
-inputs, and confined staging/destination paths remain excluded.
+Copy compiled current documents under `static/.generated/` and exactly the
+manifest's referenced authored closure under `static/` as regular files;
+never publish a directory merely because it is under `mockupsDir`. Each
+selected closure file must be a confined regular file outside `.generated/`,
+not a symlink or protected input; apply staging/destination exclusions to
+both logical and resolved identities. Validate the presence of every current
+page and light/dark screen fragment named by the manifest. Validate every
+exported HTML/CSS resource reference against confined regular files in the
+staged static tree, including transitive references. An unavailable resource
+fails before installation and preserves the previous artifact. Repository
+discovery can skip dependency/build directories for inputs; publication never
+uses a directory-based public walk. Git administrative directories, protected
+inputs, and confined staging/destination paths stay excluded.
 
 ## Consistent Publication Snapshot
 
@@ -219,12 +224,13 @@ no EventSource or polling request, and no events endpoint or redirect. Test
 home, current, not-found, and supported removed-entry routes while proving
 normal navigation and opted-in comparison loading still work.
 For both options, reject escaping context, parent, and output symlinks without
-changing the outside target. Prove valid in-repository symlinks and a symlinked
-repository root still support publication.
+changing the outside target. Prove valid in-repository symlinks in the
+fingerprinted source graph and a symlinked repository root still support
+publication; a selected closure symlink is invalid.
 Test a rebuild immediately before the first input scan and a manifest mutation
 after its initial read. Verify navigation, captured routes, ID redirects, and
 opted-in change metadata agree, and failed capture preserves the previous output.
-Cover safe file/directory aliases in both options, target-only edits, private
-aliases, unrelated outside/dangling/cyclic links, and an escaping manifest before
-any target read. Remove a copied resource during staging to prove validation
+Cover safe file/directory aliases in input fingerprints (not public copying),
+target-only edits, private aliases, unrelated outside/dangling/cyclic links,
+and an escaping manifest before any target read. Remove a copied resource during staging to prove validation
 checks exported bytes and preserves the previous artifact.

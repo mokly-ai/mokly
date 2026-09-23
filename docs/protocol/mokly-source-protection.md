@@ -165,8 +165,8 @@ Watch consumes the same discovered input set. Config-graph changes use the
 existing transactional config reload; consumer-module changes rebuild. Recompute
 and validate the inventory before replacing the current catalogue and notifying
 the browser. A failed candidate keeps the last-good generation. Asset checks
-continue resolving the requested realpath at read time so changed symlinks
-cannot bypass the generation's protected paths.
+recheck realpath confinement and regular-file identity at read time; a
+retargeted symlink is not an accepted closure file.
 
 For v6, v5 or historical page-v4 Review resources, use that baseline's structurally
 validated inventory, entry source paths, and reserved-name rules. Never execute
