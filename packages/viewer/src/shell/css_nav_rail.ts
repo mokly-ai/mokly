@@ -89,8 +89,8 @@ export const CSS_NAV_RAIL = `
 .mbk-mark {
   display: inline-grid;
   place-items: center;
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   flex-shrink: 0;
   color: var(--chrome-brand);
 }

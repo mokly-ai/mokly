@@ -33,7 +33,7 @@ export function IconSvg(props: { children: ReactNode; size: number }) {
  * class paints the rules in the surface color behind the mark.
  */
 export function BrandIcon(props: { size?: number }) {
-  const size = props.size ?? 24;
+  const size = props.size ?? 22;
   return (
     <svg aria-hidden="true" height={size} viewBox="0 0 32 32" width={size}>
       <rect

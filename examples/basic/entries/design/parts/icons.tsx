@@ -31,9 +31,9 @@ export function BrandIcon({ size }: IconProps) {
   return (
     <svg
       aria-hidden="true"
-      height={size ?? 24}
+      height={size ?? 22}
       viewBox="0 0 32 32"
-      width={size ?? 24}
+      width={size ?? 22}
     >
       <rect
         fill="currentColor"

@@ -30,9 +30,9 @@ color: inherit;
 color: var(--chrome-brand);
   display: inline-grid;
   flex-shrink: 0;
-  height: 24px;
+  height: 22px;
   place-items: center;
-  width: 24px;
+  width: 22px;
 }
 
 .mbk-mark-rules {

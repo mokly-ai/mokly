@@ -13,9 +13,12 @@ import { designDocument } from "./helpers/design_catalogue.js";
 import { designPalette } from "./helpers/design_palette.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
-/** The mark of the published Mokly logo on its 32-unit grid, at 24px. */
+/**
+ * The mark of the published Mokly logo on its 32-unit grid, at the 22px Mokly
+ * Cloud's product header draws it.
+ */
 const LOGO_MARK =
-  '<svg aria-hidden="true" height="24" viewBox="0 0 32 32" width="24">' +
+  '<svg aria-hidden="true" height="22" viewBox="0 0 32 32" width="22">' +
   '<rect fill="currentColor" height="21" opacity="0.3" rx="4" width="20" x="3" y="3"></rect>' +
   '<rect fill="currentColor" height="21" rx="4" width="20" x="9" y="8"></rect>' +
   '<path class="mbk-mark-rules" d="M14 15h10M14 20h7" fill="none" ' +
@@ -96,8 +99,8 @@ test("the shell and design catalogue share the logo styles and wordmark type", a
   for (const css of [SHELL_CSS, topBar]) {
     const mark = declarations(css, ".mbk-mark");
     assert.equal(mark.get("color"), "var(--chrome-brand)");
-    assert.equal(mark.get("width"), "24px");
-    assert.equal(mark.get("height"), "24px");
+    assert.equal(mark.get("width"), "22px");
+    assert.equal(mark.get("height"), "22px");
     assert.equal(mark.get("flex-shrink"), "0");
     assert.equal(mark.has("background"), false);
     assert.deepEqual(

@@ -272,7 +272,7 @@ The shell fills the viewport (`100vh`, document scrolling disabled); every
 scrollable region scrolls internally:
 
 - **Top bar** — 48px, surface background, hairline bottom border: the Mokly
-  logo (a non-shrinking 24px brand mark followed, 8px later, by the lowercase
+  logo (a non-shrinking 22px brand mark followed, 8px later, by the lowercase
   `mokly.` wordmark in its own `mbk-name` span), a centred search field
   (max-width 440px, led by a 15px stroked magnifier icon that holds its size
   while the field flexes)
@@ -281,8 +281,10 @@ scrollable region scrolls internally:
   retains space; the brand link keeps its `Mokly` accessible name. Search uses
   `Search catalogue` as its accessible name and `Search catalogue…` as its
   placeholder in both viewport sizes, covering screens, pages, and flows.
-  The decorative mark is a 24px SVG on a 32-unit viewBox matching the
-  published Mokly logo: two overlapping rounded screens (20×21 units with
+  The decorative mark is a 22px SVG on a 32-unit viewBox, the size Mokly
+  Cloud's product header draws it at, so a host showing its own header before
+  the viewer loads keeps the mark the same size. It matches the published
+  Mokly logo: two overlapping rounded screens (20×21 units with
   4-unit corners at 3,3 and 9,8), the back one at 30% opacity, both filled in
   `--chrome-brand`, and the front one carrying two short rules (`M14 15h10`
   and `M14 20h7`, two-unit round-capped strokes) in `--chrome-surface`. Both

@@ -172,7 +172,7 @@ settings: thirteen Appearance screens, four Changes designs, two product
 screens, and two retained Welcome appearance variants. `mokly build` writes a
 Light and a Dark file for each viewport, and the outer Appearance control moves
 between them.
-Design headers use the published Mokly logo: the 24px mark of two overlapping
+Design headers use the published Mokly logo: the 22px mark of two overlapping
 rounded screens in the brand green (lighter in Dark), followed on desktop by
 the serif `mokly.` wordmark. Desktop keeps the navigation resize grip; mobile
 keeps its fixed drawer. The component designs reuse the existing shell, frames, controls,

@@ -832,7 +832,7 @@ test("the brand names itself and the search bar drops the wordmark", () => {
   assert.ok(brand);
   assert.match(
     brand,
-    /^<span aria-hidden="true" class="mbk-mark"><svg aria-hidden="true" height="24" viewBox="0 0 32 32" width="24">/,
+    /^<span aria-hidden="true" class="mbk-mark"><svg aria-hidden="true" height="22" viewBox="0 0 32 32" width="22">/,
   );
   assert.ok(brand.endsWith('<span class="mbk-name">mokly.</span>'));
   assert.equal(brand.replace(/<[^>]*>/g, ""), "mokly.");
