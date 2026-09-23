@@ -42,11 +42,23 @@ ownership grep in the tracked-output check have no job left.
 Decisions:
 
 - Tracked state is read from the Git index for `.generated/`, never from
-  `.gitignore`, because ignore rules can be bypassed. All tracked means
-  tracked; none tracked means untracked; a mixture is a `build-invalid` error
-  naming the paths. Without a Git repository, output is treated as untracked.
-- The baseline reader is chosen per merge-base commit by whether
-  `<mockupsDir>/.generated/mokly-manifest.json` exists at that commit. A
+  `.gitignore`, because ignore rules can be bypassed. After compiling, Mokly
+  knows the exact output set: all of it tracked means tracked; none means
+  untracked; a mixture is a `build-invalid` error naming the paths and both
+  ways out, run `mokly build` and commit everything, or `git rm -r --cached`
+  the directory and ignore it. Without a Git repository, output is treated as
+  untracked.
+- The manifest records an inventory of every generated path with its Git
+  blob hash, so the completeness of committed output can be judged at any
+  commit from Git alone.
+- The baseline reader is chosen per merge-base commit from Git alone. No
+  manifest blob at `<mockupsDir>/.generated/mokly-manifest.json` means
+  untracked, so the commit is rebuilt. A manifest whose inventory paths all
+  exist in `git ls-tree` with matching hashes means complete, so blobs are
+  read. Missing or mismatched paths mean incomplete or stale output, so the
+  commit is rebuilt and the reason is logged; regeneration is always the safe
+  answer and history cannot be fixed. Manifests from before the inventory
+  keep today's assumption that a committed manifest means complete output. A
   repository that stops or starts committing output keeps comparing across
   the transition. The trust statement stays: a rebuild executes the base
   commit's own install and build.
@@ -105,9 +117,11 @@ Change A:
 - [ ] `docs/protocol/mokly-derived-baselines.md`: retitle the contract around
       per-commit baseline selection; replace the Command Behavior table with
       one keyed on tracked and untracked output; define `check` as validate
-      then compare-if-tracked; state that only `build`, `build --watch`, and
-      `serve --build` write; drop the head-side equality requirement and the
-      moving-`mockupsDir` restriction where per-commit selection lifts it.
+      then compare-if-tracked; define the per-commit selection rule (no
+      manifest, complete, incomplete or stale) and its logged diagnostics;
+      state that only `build`, `build --watch`, and `serve --build` write;
+      drop the head-side equality requirement and the moving-`mockupsDir`
+      restriction where per-commit selection lifts it.
 - [ ] `docs/protocol/mokly-changes.md`,
       `docs/protocol/mokly-component-changes.md`,
       `docs/protocol/mokly-export.md`, and `docs/protocol/mokly-on-demand.md`:
@@ -146,8 +160,9 @@ Change B:
       harvested as today; readers resolve repository-relative paths against
       the entry.
 - [ ] Manifest contract (`docs/protocol/mokly-runtime.md` or the manifest
-      section that owns the schema): add the closure list, bump the schema
-      version, and keep compatibility readers for historical manifests.
+      section that owns the schema): add the closure list and the
+      generated-path inventory with blob hashes, bump the schema version, and
+      keep compatibility readers for historical manifests.
 - [ ] `docs/protocol/mokly-export.md` and `docs/protocol/mokly-on-demand.md`:
       export ships `.generated/` plus the closure at catalogue-relative paths;
       Serve serves generated routes from memory under the `.generated/` prefix
@@ -198,7 +213,8 @@ compiled-route intersection until Milestone 3 gives it a single directory.
 - [ ] Baseline selection: `src/review/repository.ts` and
       `src/review/prepare.ts` choose `CommittedBaselineReader` when the
       merge-base commit contains the manifest and the rebuilt reader
-      otherwise; remove every `generatedOutput` branch in `src/review`,
+      otherwise (inventory verification arrives with the schema bump in
+      Milestone 3); remove every `generatedOutput` branch in `src/review`,
       `src/server`, `src/export`, and `src/cli`; the Serve child and export
       keep the prepared-repository handoff.
 - [ ] `check`: `src/cli/run.ts` and `src/build/output_store.ts` validate,
@@ -245,8 +261,9 @@ all of it lands together.
 - [ ] Closure (`src/build/html_links.ts`, resource validation, renderer
       resource records, stylesheet rules): collect the closure of referenced
       local files, validate each against the catalogue directory and source
-      protection, record it in the manifest with the bumped schema version,
-      and keep compatibility readers for v5 and earlier.
+      protection, record it and the generated-path inventory with blob hashes
+      in the manifest with the bumped schema version, and keep compatibility
+      readers for v5 and earlier.
 - [ ] Serve (`src/server/static_routes.ts`, `watch_paths.ts`,
       `watch_resources.ts`, `changed_content.ts`, the Browse shell's route
       mapping): serve generated routes from memory under the `.generated/`
@@ -263,7 +280,10 @@ all of it lands together.
       into the cache entry; harvest the legacy layout as today when
       `.generated/` is absent; blob and rebuilt readers resolve
       repository-relative paths for both layouts; tracked-state detection
-      becomes a prefix check on `.generated/`.
+      becomes a prefix check on `.generated/`; baseline selection verifies
+      inventory completeness and hashes with one `git ls-tree` before reading
+      blobs and rebuilds with a logged reason when output is incomplete or
+      stale.
 - [ ] Example migration: `mockupsDir: "."` in `examples/basic/mokly.config.ts`;
       `git mv` the 28 stylesheets from `examples/basic/generated/` to
       `examples/basic/` and `examples/basic/design-library/`; update
@@ -277,8 +297,9 @@ all of it lands together.
       renderer resources, `@import`, `url()`, `srcset`, and nested HTML;
       hrefs resolve from disk and over HTTP; Serve refuses unreferenced files;
       export layout; blob and rebuilt baselines read closure files for both
-      layouts; the example baseline fixture rebuilds; a v5 manifest baseline
-      still compares.
+      layouts; per-commit selection for absent, complete, incomplete, and
+      stale committed output; the example baseline fixture rebuilds; a v5
+      manifest baseline still compares.
 - [ ] Smoke test: `npm run example:build` produces `examples/basic/.generated/`
       only; open a generated document from disk and confirm it is styled;
       `npm run dev` styles screens from the authored files and reflects a CSS
