@@ -337,6 +337,10 @@ scheme; embedded viewers retain their independent preview control. See the
 [appearance contract](../../docs/protocol/mokly-viewer-appearance.md) and
 [semantic palette](../../docs/protocol/mokly-viewer-palette.md).
 
+Dark uses Mokly Cloud's warm Folio neutrals for backgrounds, panels, text and
+borders, with sage accents. The palette is packaged locally and preserves the
+colors authored inside each preview.
+
 Import the packaged stylesheet once, then override the supported custom
 properties on a containing element:
 

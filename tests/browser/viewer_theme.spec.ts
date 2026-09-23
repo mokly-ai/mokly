@@ -94,7 +94,7 @@ test("embedded Auto follows the host system without moving its preview", async (
   const root = page.locator("#auto .mokly-viewer");
   const frame = page.locator('#auto iframe[data-workspace-frame="mobile"]');
   await expect(root).toHaveAttribute("data-mokly-theme", "auto");
-  await expect(root).toHaveCSS("background-color", "rgb(20, 24, 22)");
+  await expect(root).toHaveCSS("background-color", "rgb(22, 21, 18)");
   await expect(frame).toHaveCSS("color-scheme", "light");
 
   await page.emulateMedia({ colorScheme: "light" });
@@ -113,7 +113,7 @@ test("an explicit theme paints the root and leaves the host page alone", async (
   await expect(page.locator(ROOT)).toHaveAttribute("data-mokly-theme", "dark");
   await expect(page.locator(ROOT)).toHaveCSS(
     "background-color",
-    "rgb(20, 24, 22)",
+    "rgb(22, 21, 18)",
   );
   expect(
     await page.evaluate(() => getComputedStyle(document.body).backgroundColor),
@@ -137,7 +137,7 @@ test("two roots hold independent appearances", async ({ page }) => {
   });
   await expect(page.locator(ROOT)).toHaveCSS(
     "background-color",
-    "rgb(20, 24, 22)",
+    "rgb(22, 21, 18)",
   );
   await expect(page.locator("#two .mokly-viewer")).toHaveCSS(
     "background-color",

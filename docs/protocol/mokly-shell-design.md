@@ -218,9 +218,10 @@ recompute contrast at runtime.
 
 ## Package-Owned Tokens
 
-The shell chrome is light-only (`color-scheme: light`); only the inside of a
-device screen follows the selected color scheme (see Color Scheme below). The
-chrome family is neutral and sage-tinted:
+The shell chrome supports Light and Dark independently of the preview's color
+scheme. Light retains its neutral/sage family; Dark uses Mokly Cloud's warm
+Folio neutrals with sage accents. The complete mapping and both palettes live in
+the [semantic palette](./mokly-viewer-palette.md). The Light values are:
 
 | Token                    | Value                            | Role                     |
 | ------------------------ | -------------------------------- | ------------------------ |

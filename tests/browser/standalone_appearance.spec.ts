@@ -414,7 +414,7 @@ test.describe("without JavaScript", () => {
     );
     await expect(page.locator("body")).toHaveCSS(
       "background-color",
-      "rgb(20, 24, 22)",
+      "rgb(22, 21, 18)",
     );
     // The frames keep the sources the server rendered.
     await expectFrameSource(

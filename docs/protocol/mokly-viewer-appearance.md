@@ -197,9 +197,11 @@ control with no change handler. Persisted overrides require the asset.
 ## Palette And Ownership
 
 One package-owned semantic palette supplies both `SHELL_CSS` and the scoped
-embedded stylesheet. Use the existing neutral/sage family, with a dark surface
-hierarchy; the cloud marketing site's separate Folio palette is not a runtime
-dependency. The approved swatches, their recorded contrast and the Light
+embedded stylesheet. Dark interface backgrounds, text and boundaries align with
+Mokly Cloud's warm neutral Folio palette, with sage reserved for accents and
+status. The [semantic palette](./mokly-viewer-palette.md#cloud-alignment) records
+the source revision and role mapping; the cloud repository is a design reference,
+not a runtime dependency. The approved swatches, their recorded contrast and the Light
 corrections they required are the
 [semantic palette](./mokly-viewer-palette.md), already implemented in the
 appearance mockups.

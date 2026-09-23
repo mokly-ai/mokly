@@ -115,6 +115,12 @@ shared resize grip on the catalogue navigation in Current and comparison views; 
 keep the drawer fixed. The recorded tokens and responsive rules live in
 [`docs/protocol/mokly-shell-design.md`](../../docs/protocol/mokly-shell-design.md).
 
+The shared `generated/design.css` is authored source for the design screens.
+Its Dark interface uses the same warm Folio neutrals as Mokly Cloud and the
+packaged viewer; the [palette contract](../../docs/protocol/mokly-viewer-palette.md)
+records the source mapping and contrast checks. Preview content owns its colors
+independently of that interface palette.
+
 A grouped icon toolbar switches Mobile/Desktop/Both previews, light/dark, and
 screen highlighting. The original Browse/Changes theme pairs retain their
 canonical links; component previews change locally. Leaf components omit Nested components;

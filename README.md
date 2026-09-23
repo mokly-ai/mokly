@@ -30,6 +30,7 @@ or embed its viewer in another React application. Local Serve and static exports
 share the standalone presentation, whose single Auto/Light/Dark Appearance
 selector changes the interface and previews together. Embedded hosts render the
 same shell but choose its interface appearance independently with `theme`.
+The Dark interface uses warm neutral surfaces aligned with Mokly Cloud.
 Mokly owns the catalogue; your repository keeps ownership of its UI, data,
 styling, and rendering context.
 

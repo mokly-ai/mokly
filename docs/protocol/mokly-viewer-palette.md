@@ -21,18 +21,44 @@ One palette serves both appearances; each artboard selects one on its own root
 through `data-mbk-appearance`, and every role keeps its meaning. Names below are
 the mockup token names.
 
+### Cloud Alignment
+
+Dark interface neutrals follow the Folio family used by Mokly Cloud's app,
+as defined in
+[`ts/tokens/src/tokens.ts` at `1b8c523`](https://github.com/mokly-ai/mokly-cloud/blob/1b8c523c7816cbd2e26d88438dbb29d106bdf12b/ts/tokens/src/tokens.ts).
+The cloud app selects that family through `paletteUiTheme(scheme, "folio")`;
+the base green and retained Paper families are not the product reference.
+
+| Viewer dark role                            | Cloud dark role   |
+| ------------------------------------------- | ----------------- |
+| Background                                  | `folio`           |
+| Panels                                      | `folioSurface`    |
+| Navigation, browser bars and disabled fills | `folioMuted`      |
+| Primary text                                | `folioInk`        |
+| Secondary, muted and disabled text          | `folioInkMuted`   |
+| Dividers, guides and disabled borders       | `folioLine`       |
+| Strong borders and control edges            | `folioLineStrong` |
+
+Hover uses 5% Folio ink over its panel surface, rounded to `#2c2925`.
+Dots and count fills use the same ink with their recorded alpha. Sage accents,
+status colors, Light appearance and authored preview colors keep their own
+roles. Mockups and runtime adopt these values locally; no cloud package or
+network request is needed to render the viewer.
+
+### Swatches
+
 | Role                     | Light                                    | Dark                                  |
 | ------------------------ | ---------------------------------------- | ------------------------------------- |
-| `--chrome-bg`            | `#f4f4f1`                                | `#141816`                             |
-| `--chrome-surface`       | `#ffffff`                                | `#1e2421`                             |
-| `--chrome-raised`        | `#fbfbfa`                                | `#191e1b`                             |
-| `--chrome-hover`         | `#f4f6f3`                                | `#28302c`                             |
-| `--chrome-ink`           | `#1a1d1c`                                | `#eef1ef`                             |
-| `--chrome-ink-2`         | `#4a4f4d`                                | `#c3ccc7`                             |
-| `--chrome-muted`         | `#676e6a`                                | `#98a29c`                             |
-| `--chrome-border`        | `#e3e5e0`                                | `#313a35`                             |
-| `--chrome-border-strong` | `#c8ccc4`                                | `#4b5650`                             |
-| `--chrome-control-edge`  | `#868e88`                                | `#6f7a74`                             |
+| `--chrome-bg`            | `#f4f4f1`                                | `#161512`                             |
+| `--chrome-surface`       | `#ffffff`                                | `#221f1b`                             |
+| `--chrome-raised`        | `#fbfbfa`                                | `#1c1b17`                             |
+| `--chrome-hover`         | `#f4f6f3`                                | `#2c2925`                             |
+| `--chrome-ink`           | `#1a1d1c`                                | `#f0ece4`                             |
+| `--chrome-ink-2`         | `#4a4f4d`                                | `#b2aba0`                             |
+| `--chrome-muted`         | `#676e6a`                                | `#b2aba0`                             |
+| `--chrome-border`        | `#e3e5e0`                                | `#302d28`                             |
+| `--chrome-border-strong` | `#c8ccc4`                                | `#8b8478`                             |
+| `--chrome-control-edge`  | `#868e88`                                | `#8b8478`                             |
 | `--chrome-accent`        | `#2a4733`                                | `#a5cdb6`                             |
 | `--mbk-sage`             | `#4f7864`                                | `#86b79b`                             |
 | `--mbk-sage-deep`        | `#2f5945`                                | `#b6d8c4`                             |
@@ -40,19 +66,19 @@ the mockup token names.
 | `--mbk-accent-soft`      | `rgba(79, 120, 100, 0.1)`                | `rgba(134, 183, 155, 0.16)`           |
 | `--mbk-accent-surface`   | `#edf3ef`                                | `#24312a`                             |
 | `--mbk-accent-edge`      | `#b9cfc2`                                | `#3c5648`                             |
-| `--mbk-guide`            | `#dbded8`                                | `#2b342f`                             |
-| `--mbk-dot`              | `rgba(20, 28, 22, 0.05)`                 | `rgba(238, 241, 239, 0.07)`           |
-| `--mbk-browser-bar`      | `#ecede9`                                | `#262d29`                             |
-| `--chrome-count-bg`      | `rgba(20, 28, 22, 0.08)`                 | `rgba(238, 241, 239, 0.1)`            |
+| `--mbk-guide`            | `#dbded8`                                | `#302d28`                             |
+| `--mbk-dot`              | `rgba(20, 28, 22, 0.05)`                 | `rgba(240, 236, 228, 0.07)`           |
+| `--mbk-browser-bar`      | `#ecede9`                                | `#1c1b17`                             |
+| `--chrome-count-bg`      | `rgba(20, 28, 22, 0.08)`                 | `rgba(240, 236, 228, 0.1)`            |
 | `--chrome-scrim`         | `rgba(20, 28, 22, 0.45)`                 | `rgba(0, 0, 0, 0.55)`                 |
 | `--chrome-shadow`        | `0 30px 90px rgba(20, 28, 22, 0.14)`     | `0 30px 90px rgba(0, 0, 0, 0.6)`      |
 | `--chrome-shadow-soft`   | `0 1px 2px rgba(20, 28, 22, 0.1)`        | `0 1px 2px rgba(0, 0, 0, 0.5)`        |
 | `--chrome-shadow-press`  | `inset 0 1px 2px rgba(20, 28, 22, 0.14)` | `inset 0 1px 2px rgba(0, 0, 0, 0.55)` |
 | `--chrome-shadow-drawer` | `0 18px 50px rgba(20, 28, 22, 0.3)`      | `0 18px 50px rgba(0, 0, 0, 0.6)`      |
 | `--chrome-shadow-sheet`  | `0 6px 28px rgba(36, 55, 43, 0.15)`      | `0 6px 28px rgba(0, 0, 0, 0.55)`      |
-| `--chrome-disabled-bg`   | `#e6ebe7`                                | `#262d29`                             |
-| `--chrome-disabled-edge` | `#d7dfd9`                                | `#3b443f`                             |
-| `--chrome-disabled-ink`  | `#5d6f63`                                | `#8b968f`                             |
+| `--chrome-disabled-bg`   | `#e6ebe7`                                | `#1c1b17`                             |
+| `--chrome-disabled-edge` | `#d7dfd9`                                | `#302d28`                             |
+| `--chrome-disabled-ink`  | `#5d6f63`                                | `#b2aba0`                             |
 
 Status and validation pairs. Added reuses the accent surface, edge and deep
 accent ink so one selected-state family covers both jobs. Unmodified and
@@ -74,29 +100,29 @@ Ignored use `--chrome-muted` on `--chrome-surface` inside `--chrome-border`.
 
 | Pair                                         | Light | Dark  | Requirement |
 | -------------------------------------------- | ----- | ----- | ----------- |
-| ink on surface                               | 16.98 | 13.88 | 4.5 text    |
-| ink on background                            | 15.41 | 15.75 | 4.5 text    |
-| secondary ink on surface                     | 8.34  | 9.61  | 4.5 text    |
-| muted on surface                             | 5.23  | 6.00  | 4.5 text    |
-| muted on background                          | 4.74  | 6.81  | 4.5 text    |
-| muted on raised (navigation)                 | 5.05  | 6.42  | 4.5 text    |
-| muted on hover surface                       | 4.81  | 5.15  | 4.5 text    |
-| accent link on surface                       | 10.25 | 9.03  | 4.5 text    |
-| sage on surface                              | 4.99  | 6.96  | 4.5 text    |
-| deep sage on surface                         | 7.96  | 10.23 | 4.5 text    |
+| ink on surface                               | 16.98 | 13.92 | 4.5 text    |
+| ink on background                            | 15.41 | 15.49 | 4.5 text    |
+| secondary ink on surface                     | 8.34  | 7.20  | 4.5 text    |
+| muted on surface                             | 5.23  | 7.20  | 4.5 text    |
+| muted on background                          | 4.74  | 8.02  | 4.5 text    |
+| muted on raised (navigation)                 | 5.05  | 7.57  | 4.5 text    |
+| muted on hover surface                       | 4.81  | 6.35  | 4.5 text    |
+| accent link on surface                       | 10.25 | 9.38  | 4.5 text    |
+| sage on surface                              | 4.99  | 7.23  | 4.5 text    |
+| deep sage on surface                         | 7.96  | 10.63 | 4.5 text    |
 | deep sage on accent surface                  | 7.08  | 8.79  | 4.5 text    |
 | accent contrast on sage (active row)         | 4.99  | 7.87  | 4.5 text    |
-| control edge on surface                      | 3.36  | 3.54  | 3 non-text  |
-| control edge on background                   | 3.05  | 4.02  | 3 non-text  |
-| control edge on raised (navigation)          | 3.25  | 3.79  | 3 non-text  |
-| focus outline (deep sage) on background      | 7.23  | 11.61 | 3 non-text  |
+| control edge on surface                      | 3.36  | 4.42  | 3 non-text  |
+| control edge on background                   | 3.05  | 4.92  | 3 non-text  |
+| control edge on raised (navigation)          | 3.25  | 4.65  | 3 non-text  |
+| focus outline (deep sage) on background      | 7.23  | 11.83 | 3 non-text  |
 | state boundary (deep sage) on accent surface | 7.08  | 8.79  | 3 non-text  |
 | validation ink on validation surface         | 5.97  | 8.04  | 4.5 text    |
-| disabled ink on disabled surface             | 4.43  | 4.60  | disabled    |
+| disabled ink on disabled surface             | 4.43  | 7.57  | disabled    |
 | changed status ink on its surface            | 5.62  | 8.27  | 4.5 text    |
 | removed status ink on its surface            | 5.73  | 8.04  | 4.5 text    |
 | added status ink on its surface              | 7.08  | 8.79  | 4.5 text    |
-| validation message on surface                | 6.66  | 8.19  | 4.5 text    |
+| validation message on surface                | 6.66  | 8.51  | 4.5 text    |
 
 `--chrome-border`, `--chrome-border-strong` and `--mbk-guide` are decorative
 hairlines separating adjacent surfaces, not control boundaries, so they are not
