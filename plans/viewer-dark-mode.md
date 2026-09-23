@@ -1,7 +1,7 @@
 # Viewer Dark Mode
 
 Status: implementation complete; the documentation and mockup milestones
-through 2M and delivery Milestones 3 through 6 are complete. The built-in
+through 2M and delivery Milestones 3 through 10 are complete. The built-in
 preview toggle switches every dual-scheme mockup, the standalone catalogue has
 one Auto/Light/Dark Appearance control, embedded viewers accept a host-owned
 theme, and the runtime, palette, startup asset and verification boundaries are
@@ -1015,16 +1015,16 @@ same-origin frames without weakening document authentication.
 - [x] Reload rejected starting documents while preserving authenticated reuse
       and the initial hydration handoff.
 
-## Milestone 10: Validate, commit, push and review the corrections
+## Milestone 10: Validate, commit, push and review the corrections (complete)
 
 Complete the focused browser checks and repository verification before delivery.
 
 - [x] Run focused tests and a live browser smoke test, then `cargo xtask check`.
       Passed 2,338 unit/integration tests, 755 Chromium tests, all five packed
       consumer scenarios, and the desktop/mobile live smoke checks.
-- [ ] After all checks pass, run `git add -A`, commit using Conventional Commits,
+- [x] After all checks pass, run `git add -A`, commit using Conventional Commits,
       push the current branch, and verify the remote ref and clean worktree.
-- [ ] Only after the push, use
+- [x] Only after the push, use
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`. Report findings
       without changing the implementation.
