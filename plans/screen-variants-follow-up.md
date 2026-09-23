@@ -579,12 +579,19 @@ through `bf9e3c9` is present with no deleted tracked files, and both Serve
 artboards retain the previous-version preview with no page errors. All 295
 relative links in 23 changed Markdown files resolve.
 
-- [ ] After checks pass, `git add -A`, commit with a Conventional Commit,
+- [x] After checks pass, `git add -A`, commit with a Conventional Commit,
       push the branch and update PR #115 for the completed parity fix.
-- [ ] After the push, review the complete local diff against `origin/main`
+- [x] After the push, review the complete local diff against `origin/main`
       with [the implementation review prompt](../docs/implementation-review-prompt.md)
       without changing the implementation; report numbered findings, severity,
       impact, lettered options and a recommended scope, if any.
+
+Post-push review of the full branch diff against `origin/main` found no new
+concrete findings. The earlier P3 Changes parity finding is resolved: the mockup
+and runtime filter both show one flat Removed row when only that route changed.
+The residual risk is behavior in browsers other than the Chromium runs covered
+by the gate and desktop/mobile Serve smoke. This review record is a
+documentation-only follow-up; it does not change the reviewed implementation.
 
 ## Post-merge follow-up (non-blocking)
 
