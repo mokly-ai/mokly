@@ -99,7 +99,7 @@ for (const mode of ["serve", "static"] as const) {
           "data-mokly-hydrated",
           "",
         );
-        await expect(page.locator("#mb-main h2")).toHaveText(
+        await expect(page.locator("#mb-main .mbk-screen-head h2")).toHaveText(
           entry.currentTitle,
         );
         await page.locator('[data-filter="changed"]').click();
@@ -112,7 +112,7 @@ for (const mode of ["serve", "static"] as const) {
           .locator(`a[data-nav-row][data-route="${entry.currentRoute}"]`)
           .click();
         await expect(page).toHaveURL(currentUrl);
-        await expect(page.locator("#mb-main h2")).toHaveText(
+        await expect(page.locator("#mb-main .mbk-screen-head h2")).toHaveText(
           entry.currentTitle,
         );
         await expect(page.locator("[data-mokly-preview]")).toHaveCount(0);
@@ -122,7 +122,7 @@ for (const mode of ["serve", "static"] as const) {
         await expectHistorical(page, entry);
         await page.goForward();
         await expect(page).toHaveURL(currentUrl);
-        await expect(page.locator("#mb-main h2")).toHaveText(
+        await expect(page.locator("#mb-main .mbk-screen-head h2")).toHaveText(
           entry.currentTitle,
         );
         await page.goBack();
@@ -150,7 +150,9 @@ async function expectHistorical(
   page: Page,
   entry: (typeof HISTORY_ENTRIES)[number],
 ): Promise<void> {
-  await expect(page.locator("#mb-main h2")).toHaveText(entry.previousTitle);
+  await expect(page.locator("#mb-main .mbk-screen-head h2")).toHaveText(
+    entry.previousTitle,
+  );
   await expect(page.locator(".mbk-previous")).toHaveText(
     "Showing previous version",
   );
@@ -174,4 +176,5 @@ async function expectHistorical(
       page.frameLocator("[data-mokly-preview] iframe").locator("h1"),
     ).toHaveText("Previous page content");
   }
+  await expect(page.locator("#mb-main .mbk-stage .mbk-empty")).toHaveCount(0);
 }

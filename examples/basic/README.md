@@ -81,6 +81,10 @@ picker/filter states. They keep their established ids under
 `design/browse/views/screen.variants/`. The retained `design-browse-tags`
 collection is intentionally empty and preserves its stable structural identity;
 the separate `design-browse-tag-filter` route remains a Shell states member.
+The reparented removed-variant design state depicts the Changes filter when
+only the historical child was removed: its rail shows a single flat Removed
+row, even though its former parent remains in the current catalogue as another
+screen's variant. This matches the served rail's route-based Changes filter.
 
 `tests/helpers/replaced_copy.ts` lists the shell sentences the protocols
 replaced, and `tests/design_replaced_copy.test.ts` fails when any generated

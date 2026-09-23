@@ -267,7 +267,7 @@ export const variantScreens = [
     id: "design-browse-variant-reparented",
     mobile: <ReparentedRemovedVariant viewport="mobile" />,
     rationale:
-      "A current variant cannot own its own variant list. When the former parent id is reused as a variant, the historical child remains exactly once in the flat Changes fallback rather than disappearing or nesting a second level.",
+      "A current variant cannot own its own variant list. When the former parent id is reused as a variant, only the historical child changes: Changes hides the unmodified parent and its variant and shows the child once as a flat Removed row.",
     slug: "reparented",
     title: "Removed variant after reparenting",
   }),

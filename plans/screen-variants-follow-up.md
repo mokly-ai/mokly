@@ -530,6 +530,62 @@ type checks and formatting passed before the final gate retry.
       the unmodified Workspace and Welcome rows that the mockup depicts. Leave
       the finding for the user's decision; no other concrete findings surfaced.
 
+### Milestone 17: Define the reviewed Changes parity
+
+The user approved fixing the remaining P3 mockup mismatch. The reparented
+scenario changes only the removed route, so the current parent and its variant
+do not appear in Changes. The historical breadcrumb still describes the
+removed screen, while All remains a separate navigation destination.
+
+- [x] Update the design links contract to specify the single flat Changes row,
+      and explain the example catalogue's depicted state in its README.
+- [x] Preserve the completed review's finding and update the plan index to
+      identify this final active task without reopening completed milestones.
+- [x] Check the changed Markdown and its relative links before mockup work.
+
+### Milestone 18: Match the reparented mockup to Changes
+
+Tags: mockup
+
+Keep the desktop and mobile artboards, historical preview, breadcrumb, and
+inspector, while correcting the desktop Changes rail.
+
+- [x] Add and run a regression that fails on the existing mockup, deriving the
+      Changes-visible rows from the runtime filter with only the removed route
+      changed. Keep assertions for the flat active row and All destination.
+- [x] Remove the unmodified ancestor rows from the reparented mockup's rail
+      and align its descriptive copy; verify both mobile and desktop outputs.
+
+Verification: the runtime-filter parity test failed before the change because
+the mockup rendered Example, Screens, Workspace and Welcome alongside the sole
+changed Removed row. After correction, all 17 focused design tests pass. The
+example build and check pass (312 generated files); real Serve screenshots for
+desktop and mobile show the previous-version preview, and the desktop rail
+shows exactly the one flat Removed row. No browser page errors surfaced.
+
+### Milestone 19: Verify, commit, push, and review parity
+
+- [x] Stabilize the historical-navigation browser assertion exposed by the
+      complete gate: target the page title rather than every stage heading,
+      still require the real previous-version iframe, and assert the interim
+      unavailable state has cleared. Verify the focused case and full gate.
+- [x] Run relevant tests and full `cargo xtask check`, visually smoke-test the
+      served desktop and mobile artboards, and inspect the final diff against
+      the freshly merged mainline without dropping its new release work.
+
+Verification: six focused historical browser cases and the final full gate
+passed (2,300/2,300 Node tests and 703/703 Chromium tests). The merged mainline
+through `bf9e3c9` is present with no deleted tracked files, and both Serve
+artboards retain the previous-version preview with no page errors. All 295
+relative links in 23 changed Markdown files resolve.
+
+- [ ] After checks pass, `git add -A`, commit with a Conventional Commit,
+      push the branch and update PR #115 for the completed parity fix.
+- [ ] After the push, review the complete local diff against `origin/main`
+      with [the implementation review prompt](../docs/implementation-review-prompt.md)
+      without changing the implementation; report numbered findings, severity,
+      impact, lettered options and a recommended scope, if any.
+
 ## Post-merge follow-up (non-blocking)
 
 These are the original plan's later product ideas, carried forward without

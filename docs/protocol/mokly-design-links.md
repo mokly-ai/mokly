@@ -180,9 +180,13 @@ removed state the parent row is a depiction too: the deletion is a later state
 of the same group, so it must not open the earlier changed-variant scenario.
 The removed variant has no live product destination and no comparison modes;
 its stage shows the variant's inert previous version.
-The reparented state draws the former parent as a variant beneath its new
-parent, while the removed child remains one flat screen row at the former
-parent's collection depth. It never draws a nested variant list.
+In the reparented state, only the removed child's route is changed. The Changes
+filter therefore hides the unmodified current parent and its variant (the
+former parent), and shows the removed child as one flat screen row outside
+their collection hierarchy. The historical breadcrumb remains visible on the
+screen itself, but the Changes rail contains no parent or nested variant list.
+The depicted All control links to the canonical catalogue home artboard; the
+reparented hierarchy is the context for this Changes-state example.
 The changed-views state shows no comparison band at all; the marks on the theme
 control and the viewport dropdown are evidence about other views, and only the
 theme control navigates.

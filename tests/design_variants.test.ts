@@ -260,36 +260,6 @@ test("a removed variant stays under its surviving parent", async () => {
   assert.deepEqual(filterTargets(document), [["All", "design-browse-screen"]]);
 });
 
-test("a removed variant stays flat when its former parent becomes a variant", async () => {
-  const { document } = await designDocument(
-    "design-browse-variant-reparented",
-    "desktop",
-  );
-  assert.deepEqual(rowLabels(document), [
-    "Example",
-    "Screens",
-    "Workspace",
-    "Welcome",
-    "Save failed · Removed",
-  ]);
-  const rows = byClass(document, "mbk-nav-row");
-  const formerParent = rows.find((row) => rowLabel(row) === "Welcome");
-  const removed = rows.find((row) => rowLabel(row) === "Save failed · Removed");
-  assert.equal(attribute(formerParent!, "class"), "mbk-nav-row");
-  assert.equal(attribute(removed!, "class"), "mbk-nav-row active");
-  assert.equal(rowIcon(document, "Welcome")[0], "mbk-nav-ico variant");
-  assert.equal(rowIcon(document, "Save failed · Removed")[0], "mbk-nav-ico");
-  assert.deepEqual(filterTargets(document), [["All", "design-browse-home"]]);
-  assert.match(
-    textContent(document),
-    /this removed state stays as one flat Changes row instead of nesting a second variant level/,
-  );
-  assert.doesNotMatch(
-    textContent(document),
-    /keeps its recorded details under the screen it belonged to/,
-  );
-});
-
 test("a change confined to other views keeps the parent row closed", async () => {
   const { document } = await designDocument(
     "design-browse-changed-views",
