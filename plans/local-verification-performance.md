@@ -1,9 +1,10 @@
 # Local Verification Performance
 
-Status: in progress. Created 2026-09-23 at the user's request. This
-plan improves the local complete gate; the existing [CI Performance](./ci-performance.md)
-plan owns the already-delivered hosted fan-out. Plan creation changes no test or
-verification behavior. Keep this plan active until its implementation PR merges.
+Status: implementation delivered and reviewed; active until PR merge. Created
+2026-09-23 at the user's request. This plan improves the local complete gate;
+the existing [CI Performance](./ci-performance.md) plan owns the
+already-delivered hosted fan-out. Plan creation changed no test or verification
+behavior.
 
 ## Outcome And Boundaries
 
@@ -159,9 +160,9 @@ review findings.
 - [x] Update the protocol and READMEs for the actual implementation, review
       every touched doc and the complete diff against `origin/main`, and verify
       that no unrelated or generated files are staged.
-- [ ] After every check passes, run `git add -A`, commit all authored files
+- [x] After every check passes, run `git add -A`, commit all authored files
       with a Conventional Commit, and push the current branch.
-- [ ] **After the push only**, use
+- [x] **After the push only**, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`. Report numbered
       findings with severity, plain-language context and impact of doing
