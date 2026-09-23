@@ -1,9 +1,30 @@
 # Shared Design Components
 
-These fifteen registered components render both Mokly's design artboards and
+These sixteen registered components render both Mokly's design artboards and
 the independent pages under **Components → Design → Shared components**. The
 footer tabs panel is `inspector/inspector`. This is the consumer's mockup
 library; the actual Mokly browser shell remains in the package source.
+
+`chrome/appearance-selector` is the standalone catalogue's Auto/Light/Dark
+setting, which changes the chrome and the screens it shows together. `chrome/top-bar`
+always composes it, so every artboard with a top bar draws it; a screen does not
+opt in. The value defaults to the scheme the file was rendered for and is
+overridden only to depict a different setting, as the Auto artboard does. It is
+the only scheme control the design catalogue draws. Its three pre-rendered faces
+and `data-*` hooks mirror the shipped shell control, with a regression test
+guarding that shared structural contract.
+
+Those two samples — the appearance selector and the top bar that composes it —
+are the only ones that render in both schemes, because their own subject is the
+catalogue's appearance; `metadata.ts` exports that set as
+`DUAL_SCHEME_SAMPLES`. A dual-scheme sample reads the props whose own subject is
+the scheme from its render context instead of pinning them in a fixture, so the
+top bar's samples name the scheme they rendered for and only `auto-appearance`
+sets the value explicitly. Every other sample stays light.
+`view-controls` has no scheme control at all, so every depicted screen header
+carries the viewport dropdown alone. `metadata.ts` owns that
+list, `LibraryHost` stamps the requested scheme on the sample root, and Browse's
+Appearance control switches between the two generated files.
 
 Catalogue navigation saves each Changes availability state: **Checking for
 changes**, **Preparing comparison** and **Changes unavailable**, in both
@@ -25,10 +46,12 @@ icon — a screen outline over a second, partially drawn screen — on a
 `mbk-nav-ico variant` wrapper, only while the list is open. The changed mark is
 a trailing dot and never an edge or rail. Row rendering lives in
 `catalogue-navigation-row.view.tsx`, which the component owns beside its main
-view.
+view. Selected rows use the same appearance-aware contrast token for their
+labels, variant disclosures and changed marks.
 
 View controls saves **Changed views**, where a change confined to other views
-marks the theme control and the viewport dropdown. The mark is evidence about
+marks the viewport dropdown; the owning screen also marks top-bar Appearance
+when another scheme changed. The mark is evidence about
 views other than the shown one, so the details inspector names them.
 
 ## Authoring
@@ -44,8 +67,8 @@ screens, stage/workspace layouts and fixture selection as ordinary composition.
 Pass actual screen data at the boundary: labels, destinations, query, selection,
 status and counts. Slots hold caller-owned JSX, including previews, inspector
 bodies and native inputs. Resolve scenario navigation in an adapter before
-calling a component; missing destinations stay non-links. Theme links belong in
-the header view controls. Use ordinary `MockLink` anchors for inspector-body
+calling a component; missing destinations stay non-links. Top-bar Appearance owns scheme selection;
+header view controls own the viewport. Use ordinary `MockLink` anchors for inspector-body
 links and tag chips so they can live inside native `details` panels.
 `parts/nav_data.ts` is the canonical catalogue-navigation fixture for both the
 saved All example and in-screen artboards, so those two views stay aligned.
@@ -54,7 +77,9 @@ Use explicit semantic `moklyInstance` names for repeated siblings. The
 `DesignInstances` context supplies a stable prefix for simultaneous viewport
 regions. Flow-step names must be independent of destinations or ordering.
 Input ids, label associations and description/error ids belong to the form caller;
-the prop-field component supplies framing and matching description/error nodes.
+the prop-field component supplies framing and matching description/error nodes,
+including the surface, border and invalid state of whatever native control the
+caller puts in its slot, so a prop panel reads the same in every host.
 
 Components may compose registered children. Top bar → Tag picker → Tag chip
 records the full nested ownership chain. Components supplied in a caller's slot
@@ -95,7 +120,7 @@ workspace width without a dock inset. Only icon tabs are supported; the legacy
 disclosure and saved variant have been removed. Inline samples retain
 intrinsic width. Compact phone samples fit both viewports; full-size controls
 use the scrollable frame host. Every variant has actual mobile and desktop
-render contexts and uses the design catalogue's light-only scheme policy.
+render contexts; every sample is light-only except the two named above.
 Mobile comparison controls share compact sizing across buttons, links and
 static labels, so standalone samples also fit with wider system fonts.
 
@@ -118,15 +143,17 @@ saved variants and local edit/unset/reset behavior in Serve, plus read-only
 inspection after export. Keep the generated HTML and manifest as ignored local
 artifacts; commit their authored source instead.
 
-The tests retain the original 56 screen ids/routes, assert real consumers and
+The tests retain the original 56 screen ids/routes from before the shared
+library existed, assert real consumers and
 owner chains, guard migrated composition points, and edit actual source files in
 isolated copies. They distinguish implementation changes, saved metadata changes,
 screen inputs/slots/order, exclusive CSS and conservative global dependencies.
 Serve and comparison share the same classification and bounded baseline reads.
-The full-consumer export browser suites give setup three minutes to prepare
-the baseline, export all 246 views and verify input stability.
-Individual browser interactions retain the default one-minute limit; this setup
-allowance does not change any server readiness deadline.
+Full-catalogue browser fixtures share a five-minute setup budget to build the
+packages and example or the historical baseline, export every generated view
+and verify input stability. The cold preview-preparation spec uses a dedicated
+fixture so its build has that budget too. Browser interactions use the default
+one-minute limit, and server readiness keeps its own deadline.
 
 See the [adoption contract](../../../../../docs/protocol/mokly-design-components.md)
 and [inventory](../../../../../docs/protocol/mokly-design-component-library.md).

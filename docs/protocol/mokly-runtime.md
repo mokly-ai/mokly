@@ -186,13 +186,18 @@ column with a `Collapse all` control, an All/Changes filter, nested disclosure
 groups with folder/screen/page/flow icons and indent guides; an accessible
 desktop split separator that resizes the navigation within the design bounds
 and remembers the served-origin preference; linked breadcrumbs with an id
-chip; viewport and color-scheme switching; realistic phone and browser device
+chip; viewport and appearance controls; realistic phone and browser device
 chrome; a per-frame expand-to-overlay toggle; and a collapsible details
 inspector. Current and comparison views share the same navigation and saved
-width. The resize behaviour is part of the hydrated shell; a small
-pre-hydration script still captures native disclosure choices made before
-hydration completes. Comparison snapshots carry no shell scripts. The mobile drawer does not expose
-the separator.
+width. The package build records every browser output in a generated manifest;
+Serve validates exact manifest/directory equality and export copies that same
+inventory. `navigation-resize.js` and `appearance-startup.js` are classic
+pre-hydration bundles under `/__mokly/client/`. They capture native disclosure
+and width choices and restore appearance before React hydrates; the React shell
+then adopts those values and owns ongoing navigation, selection and rendering.
+The appearance controller remains responsible for its stored preference and
+system-theme listener. Comparison snapshots carry no shell scripts. The mobile
+drawer does not expose the separator.
 Consumer brand chrome does not appear in the shell. A small set of documented
 CSS custom properties may tune the shell accent without replacing its
 structural styles. The shell serves its packaged Inter variable font from
@@ -325,18 +330,19 @@ direct URL, an All-filter activation, Back, Forward, and a reload all keep the
 sticky selection. A light-only catalogue clamps the requested scheme to light,
 so it never lands on dark.
 
-A catalogue with dark fragments offers a `Light | Dark` scheme switch; a
-light-only catalogue offers none. One switch renders in the top bar and one in
-the screen head band, and the shell reveals whichever suits the width: the top
-bar at and above the breakpoint, the head band below it. The catalogue home has
-no head band, so below the breakpoint it carries no scheme control. Choosing a
-scheme marks the document, keeps every switch in sync, and swaps each embedded
-frame — screen frames and use-case steps alike — between its light and dark
-fragment URLs; only the inside of a device screen follows the selection, which
-then survives in-shell navigation, Back, and Forward. A screen with no dark
-render keeps its light fragments and names the fallback in its frame label
-(`MOBILE — LIGHT ONLY`), while a use-case step, which has no label, simply
-stays light.
+Every standalone document carries one Appearance selector in the top bar —
+Auto, Light and Dark — at both widths and on every route, including home,
+unavailable routes and light-only catalogues. It sets the interface and preview
+selection together, survives React-owned navigation and follows the preference,
+URL pin and system rules in the
+[appearance contract](./mokly-viewer-appearance.md). The standalone head band
+and component workspace expose no second scheme control. An embedded root has
+no Appearance selector: its host owns interface `theme`, while top-bar,
+head-band and workspace controls continue to select preview color scheme when
+dark fragments exist. A screen without a dark render keeps its light fragments
+and names the fallback in its frame label (`MOBILE — LIGHT ONLY`); a use-case
+step, which has no label, simply stays light. A wholly light-only catalogue
+shows no fallback labels because no dark axis exists.
 
 Browse is server rendered first and hydrated. The server output is the
 complete shell with real anchors, so direct URLs, refresh, missing routes, and

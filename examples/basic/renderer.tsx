@@ -15,6 +15,7 @@ import {
   DesignStyleCollector,
   DesignStyles,
 } from "./entries/design/library/style_context.js";
+import { DesignRenderedScheme } from "./entries/design/parts/appearance.js";
 import { darkTokens, tokens } from "./theme.js";
 
 const themes = {
@@ -45,18 +46,20 @@ export default function render(input: RenderInput): string {
   const styles = new DesignStyleCollector(input.stylesheets);
   const body = renderToStaticMarkup(
     <DesignStyles value={styles}>
-      <SharedUiThemeProvider theme={theme}>
-        <ViewportContext.Provider value={input.viewport}>
-          <RenderBody>
-            {input.entry.kind === "component" &&
-            input.entry.id.startsWith("design-ui-") ? (
-              <LibraryHost input={input}>{input.node}</LibraryHost>
-            ) : (
-              input.node
-            )}
-          </RenderBody>
-        </ViewportContext.Provider>
-      </SharedUiThemeProvider>
+      <DesignRenderedScheme scheme={input.colorScheme}>
+        <SharedUiThemeProvider theme={theme}>
+          <ViewportContext.Provider value={input.viewport}>
+            <RenderBody>
+              {input.entry.kind === "component" &&
+              input.entry.id.startsWith("design-ui-") ? (
+                <LibraryHost input={input}>{input.node}</LibraryHost>
+              ) : (
+                input.node
+              )}
+            </RenderBody>
+          </ViewportContext.Provider>
+        </SharedUiThemeProvider>
+      </DesignRenderedScheme>
     </DesignStyles>,
   );
   const nativeStyles = collectNativeStyles();

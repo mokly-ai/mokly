@@ -12,7 +12,9 @@ This document now defines the hydrated shell contract delivered by the
 [React Browse shell plan](../../plans/react-browse-shell.md): one React
 component tree rendered on the server and hydrated in every delivery mode.
 Serve, export and application-owned hosts now use that tree directly. Local
-Serve/export presentation remains unchanged.
+Serve/export presentation includes the standalone Appearance control defined by
+the [viewer appearance contract](./mokly-viewer-appearance.md); embedded hosts
+use the same tree with host-owned appearance and independent preview selection.
 Removed pages and screens load their advertised previous versions in local,
 static, and embedded hosts through the same tree, as implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md).
@@ -91,6 +93,7 @@ interface ViewerMarker {
   instance: InstanceRef;
   content: ReactNode;
 }
+type ViewerTheme = "auto" | "light" | "dark";
 type MarkerStatus = "visible" | "hidden" | "unavailable";
 interface MarkerState {
   id: string;
@@ -119,6 +122,7 @@ interface MoklyViewerProps {
   frameAdapter?: FrameAdapter;
   defaultSelection?: Partial<ViewerSelection>;
   selection?: ViewerSelection;
+  theme?: ViewerTheme;
   onSelectionChange?: (selection: ViewerSelection) => void;
   markers?: readonly ViewerMarker[];
   onMarkerChange?: (states: readonly MarkerState[]) => void;
@@ -292,6 +296,15 @@ uses compact search.
 
 ## Theming And Ownership
 
+`theme` selects an embedded root's interface appearance as `"auto"`, `"light"`
+or `"dark"`; omission means Auto. `selection.colorScheme` independently selects
+preview documents, so either preview scheme can sit inside either interface
+appearance. Changing `theme` updates only the root and preserves frame sessions,
+selection, temporary props, inspection and host slots. Standalone Browse instead
+renders one Appearance selector that controls both values. Its preference,
+first-paint and URL-pin behavior is the
+[appearance contract](./mokly-viewer-appearance.md).
+
 Import `@mokly/viewer/styles.css` once. The supported overrides are
 `--mokly-accent`, `--mokly-accent-contrast` and `--mokly-accent-soft`, subject to
 the [shell contrast contract](./mokly-shell-design.md). Internal selectors,
@@ -312,7 +325,11 @@ in Serve and export. There are no runtime-owned islands, no string-rendered
 markup injected into the tree, and no second implementation of any shell
 interaction. Route content renders from the validated catalogue read model;
 navigation never fetches and swaps shell HTML. Controlled props and handle
-methods update shell state, and every rendered attribute is owned by React.
+methods update shell state. The only pre-hydration ownership handoffs are the
+document Appearance mark/control and early disclosure/width values: classic
+startup assets establish them before paint, and the shell adopts them before
+hydration. React owns the resulting shell state and render thereafter, while
+the appearance controller retains preference and system-theme listening.
 Frames remain static documents in sandboxed iframes. Hydration reaches inside
 only the viewer-owned, same-origin `srcdoc` used for a historical removed
 preview, where it installs and restores the read-only guard. Current and

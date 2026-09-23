@@ -14,6 +14,7 @@ import {
   type AuthenticatedDocument,
   type MountAuthentication,
 } from "./same_origin_identity.js";
+import { initialFrameLoad } from "./same_origin_load.js";
 import { listenForFrameActivations } from "./same_origin_navigation.js";
 import { localPointer } from "./same_origin_pointer.js";
 
@@ -49,6 +50,7 @@ export function mountLocalDocument(
     let activationController: AbortController | undefined;
     let activationDocument: AuthenticatedDocument | undefined;
     let operationsController: AbortController | undefined;
+    let operationsDocument: AuthenticatedDocument | undefined;
     let documentWatch: number | undefined;
     let mountAuthentication: MountAuthentication | undefined;
     let operations: LocalOperations | undefined;
@@ -81,6 +83,7 @@ export function mountLocalDocument(
       operationsController = undefined;
       operations?.dispose();
       operations = undefined;
+      operationsDocument = undefined;
       for (const cleanup of cleanups.splice(0)) cleanup();
     };
     const stopDocumentWatch = () => {
@@ -149,110 +152,107 @@ export function mountLocalDocument(
       reject(new FrameError("timeout"));
       dispose();
     }, 5000);
-    frame.addEventListener(
-      "load",
-      () => {
-        const doc = localFrameAccess(frame).document();
-        if (!doc || doc.defaultView?.frameElement !== frame) {
+    const adoptLoadedDocument = () => {
+      const doc = localFrameAccess(frame).document();
+      if (!doc || doc.defaultView?.frameElement !== frame) {
+        reject(new FrameError("origin"));
+        dispose();
+        return;
+      }
+      const authenticated = mountAuthentication?.authenticateAssignedDocument(
+        doc,
+        url,
+      );
+      if (!authenticated) {
+        if (assignedFrameResource(frame, url)) return;
+        reject(new FrameError("origin"));
+        dispose();
+        return;
+      }
+      if (operationsDocument === authenticated) return;
+      if (new URL(authenticated.URL).hash !== url.hash) {
+        try {
+          authenticated.defaultView.location.replace(url.href);
+        } catch {
           reject(new FrameError("origin"));
           dispose();
           return;
         }
-        const authenticated = mountAuthentication?.authenticateAssignedDocument(
-          doc,
-          url,
-        );
-        if (!authenticated) {
-          if (assignedFrameResource(frame, url)) return;
-          reject(new FrameError("origin"));
-          dispose();
-          return;
-        }
-        if (new URL(authenticated.URL).hash !== url.hash) {
-          try {
-            authenticated.defaultView.location.replace(url.href);
-          } catch {
-            reject(new FrameError("origin"));
-            dispose();
-            return;
-          }
-        }
-        stopDocumentWatch();
-        disposeOperations();
-        adoptActivationDocument(authenticated);
-        win.clearTimeout(timer);
-        operationsController = new AbortController();
-        const documentSignal = operationsController.signal;
-        operations = create(authenticated, emit);
-        const inspecting = () =>
-          listeners.size > 0 && operations!.inspectable();
-        localPointer(
-          authenticated,
-          () => operations!.list(),
-          emit,
-          inspecting,
-          () => operations!.selecting(),
-          documentSignal,
-        );
-        const changed = () => {
-          if (inspecting() && !pending)
-            pending = win.requestAnimationFrame(() => {
-              pending = 0;
-              if (inspecting()) emit({ type: "geometry" });
-            });
-        };
-        authenticated.addEventListener("scroll", changed, {
-          capture: true,
-          passive: true,
-          signal: documentSignal,
-        });
-        authenticated.addEventListener("load", changed, {
-          capture: true,
-          signal: documentSignal,
-        });
-        authenticated.fonts.addEventListener("loadingdone", changed, {
-          signal: documentSignal,
-        });
-        win.addEventListener("resize", changed, { signal: documentSignal });
-        const resize = new ResizeObserver(changed),
-          mutations = new MutationObserver(changed);
-        resize.observe(frame);
-        if (authenticated.body) resize.observe(authenticated.body);
-        mutations.observe(authenticated, {
-          attributes: true,
-          childList: true,
-          subtree: true,
-          characterData: true,
-        });
-        cleanups.push(() => {
-          resize.disconnect();
-          mutations.disconnect();
-        });
-        resolve({
-          updateUsage: (usage) => run(() => operations!.updateUsage(usage)),
-          listInstanceBoundaries: () => run(() => operations!.list()),
-          highlight: (keys, mode) =>
-            run(() => operations!.highlight(keys, mode)),
-          scrollTo: (key) => run(() => operations!.scroll(key)),
-          subscribe(listener) {
-            if (disposed) throw new FrameError("disposed");
-            if (initialSubscription === listener) {
-              initialSubscription = undefined;
-              return () => {
-                listeners.delete(listener);
-              };
-            }
-            const subscription = (event: FrameEvent) => listener(event);
-            listeners.add(subscription);
+      }
+      stopDocumentWatch();
+      disposeOperations();
+      adoptActivationDocument(authenticated);
+      win.clearTimeout(timer);
+      operationsController = new AbortController();
+      const documentSignal = operationsController.signal;
+      operations = create(authenticated, emit);
+      operationsDocument = authenticated;
+      const inspecting = () => listeners.size > 0 && operations!.inspectable();
+      localPointer(
+        authenticated,
+        () => operations!.list(),
+        emit,
+        inspecting,
+        () => operations!.selecting(),
+        documentSignal,
+      );
+      const changed = () => {
+        if (inspecting() && !pending)
+          pending = win.requestAnimationFrame(() => {
+            pending = 0;
+            if (inspecting()) emit({ type: "geometry" });
+          });
+      };
+      authenticated.addEventListener("scroll", changed, {
+        capture: true,
+        passive: true,
+        signal: documentSignal,
+      });
+      authenticated.addEventListener("load", changed, {
+        capture: true,
+        signal: documentSignal,
+      });
+      authenticated.fonts.addEventListener("loadingdone", changed, {
+        signal: documentSignal,
+      });
+      win.addEventListener("resize", changed, { signal: documentSignal });
+      const resize = new ResizeObserver(changed),
+        mutations = new MutationObserver(changed);
+      resize.observe(frame);
+      if (authenticated.body) resize.observe(authenticated.body);
+      mutations.observe(authenticated, {
+        attributes: true,
+        childList: true,
+        subtree: true,
+        characterData: true,
+      });
+      cleanups.push(() => {
+        resize.disconnect();
+        mutations.disconnect();
+      });
+      resolve({
+        updateUsage: (usage) => run(() => operations!.updateUsage(usage)),
+        listInstanceBoundaries: () => run(() => operations!.list()),
+        highlight: (keys, mode) => run(() => operations!.highlight(keys, mode)),
+        scrollTo: (key) => run(() => operations!.scroll(key)),
+        subscribe(listener) {
+          if (disposed) throw new FrameError("disposed");
+          if (initialSubscription === listener) {
+            initialSubscription = undefined;
             return () => {
-              listeners.delete(subscription);
+              listeners.delete(listener);
             };
-          },
-          dispose,
-        });
-      },
-      { signal },
-    );
+          }
+          const subscription = (event: FrameEvent) => listener(event);
+          listeners.add(subscription);
+          return () => {
+            listeners.delete(subscription);
+          };
+        },
+        dispose,
+      });
+    };
+    frame.addEventListener("load", adoptLoadedDocument, { signal });
     cancellation?.addEventListener("abort", dispose, { once: true });
     if (cancellation?.aborted) {
       dispose();
@@ -263,11 +263,13 @@ export function mountLocalDocument(
     win.addEventListener("pagehide", dispose, { signal });
     try {
       const current = localFrameAccess(frame).document();
-      mountAuthentication = createMountAuthentication(frame, current);
+      mountAuthentication = createMountAuthentication(frame, current, url);
       if (mountAuthentication.transferredDocument)
         adoptActivationDocument(mountAuthentication.transferredDocument);
       watchReplacementDocument();
-      localFrameAccess(frame).replace(url);
+      const action = initialFrameLoad(frame, current, url, mountAuthentication);
+      if (action === "adopt") adoptLoadedDocument();
+      else if (action === "replace") localFrameAccess(frame).replace(url);
     } catch {
       reject(new FrameError("origin"));
       dispose();

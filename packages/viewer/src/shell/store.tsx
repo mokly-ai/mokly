@@ -30,6 +30,7 @@ import type {
   ShellState,
 } from "./store_state.js";
 import type { ShellView } from "./views.js";
+import { WorkspaceProvider } from "./workspace_context.js";
 
 interface ShellStoreProviderProps {
   catalogue: Catalogue;
@@ -164,7 +165,9 @@ export function ShellStoreProvider({
           >
             <DisplaySelection.Provider value={state.selection}>
               <ShellFrameEventRouter />
-              {children}
+              <WorkspaceProvider initial={initialState?.workspace}>
+                {children}
+              </WorkspaceProvider>
             </DisplaySelection.Provider>
           </ShellFrameRegistryProvider>
         </ComparisonEnvironmentProvider>

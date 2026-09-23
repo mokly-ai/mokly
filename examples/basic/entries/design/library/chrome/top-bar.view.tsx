@@ -6,6 +6,7 @@ import { BrandIcon, SearchIcon, TagIcon } from "../../parts/icons.js";
 import { tagPicker } from "../controls/tag-picker.js";
 import { useDesignStyle } from "../style_context.js";
 
+import { appearanceSelector } from "./appearance-selector.js";
 import type { TopBarProps } from "./top-bar.js";
 
 export function TopBarView({
@@ -15,12 +16,17 @@ export function TopBarView({
   menuPresentation,
   tags,
   activeTag,
+  appearance,
+  appearanceChanged,
   pickerOpen,
   brandDestination,
   menuDestination,
   pickerDestination,
   viewport,
-}: TopBarProps & { viewport: Viewport }) {
+}: TopBarProps & {
+  appearance: NonNullable<TopBarProps["appearance"]>;
+  viewport: Viewport;
+}) {
   useDesignStyle("top-bar");
   return (
     <header className="mbk-topbar">
@@ -55,7 +61,7 @@ export function TopBarView({
       <div className="mbk-search">
         <SearchIcon />
         {query === undefined ? (
-          placeholder
+          <span className="mbk-search-placeholder">{placeholder}</span>
         ) : (
           <span className="mbk-search-value">{query}</span>
         )}
@@ -76,6 +82,13 @@ export function TopBarView({
           />
         ) : null}
       </div>
+      <appearanceSelector.Component
+        value={appearance}
+        {...(appearanceChanged === undefined
+          ? {}
+          : { otherSchemeChanged: appearanceChanged })}
+        compact={viewport === "mobile"}
+      />
     </header>
   );
 }

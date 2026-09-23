@@ -89,7 +89,7 @@ test("live evidence rebinds records while preserving interaction state", () => {
   assert.deepEqual(projected.changedRoutes, ["screens/home.html"]);
 });
 
-test("live evidence preserves host comparison availability", () => {
+test("live evidence preserves host shell mode and comparison availability", () => {
   assert.equal(model.comparisonUrl, null);
   const catalogue = viewerCatalogue(model);
   const route = routeFromUrl(
@@ -100,6 +100,7 @@ test("live evidence preserves host comparison availability", () => {
   const context = {
     ...viewerContext(model, defaultSelection),
     comparisons: true,
+    embedded: false,
   };
   const state = createInitialShellState(
     catalogue,
@@ -116,6 +117,7 @@ test("live evidence preserves host comparison availability", () => {
   );
 
   assert.equal(projected.comparisons, true);
+  assert.equal(projected.embedded, false);
 });
 
 test("newer evidence adopts when the server update version is unchanged", () => {

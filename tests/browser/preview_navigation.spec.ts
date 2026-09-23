@@ -2,7 +2,7 @@ import { expect, type Page } from "@playwright/test";
 
 import { test } from "./ordinary_preview_fixture.js";
 import type { OwnedPreviewFixture } from "./preview_fixture_owner.js";
-import { chooseScheme } from "./workspace_actions.js";
+import { chooseScheme, expectFrameSource } from "./workspace_actions.js";
 
 let preview: OwnedPreviewFixture;
 
@@ -49,13 +49,13 @@ for (const width of [390, 1280]) {
     await expect(page.locator("[data-filter], [data-diff-screen]")).toHaveCount(
       0,
     );
-    await expect(page.locator(".mbk-stage-embed iframe")).toHaveAttribute(
-      "src",
+    await expectFrameSource(
+      page.locator(".mbk-stage-embed iframe"),
       /#next-steps$/,
     );
     await page.reload();
-    await expect(page.locator(".mbk-stage-embed iframe")).toHaveAttribute(
-      "src",
+    await expectFrameSource(
+      page.locator(".mbk-stage-embed iframe"),
       /#next-steps$/,
     );
     await expect(page.locator("html")).toHaveAttribute(
@@ -242,7 +242,7 @@ function frameSources(
     frames.map((frame) => ({
       dark: frame.getAttribute("data-fragment-dark") ?? "",
       light: frame.getAttribute("data-fragment-light") ?? "",
-      src: frame.getAttribute("src") ?? "",
+      src: (frame as HTMLIFrameElement).contentDocument?.URL ?? "",
     })),
   );
 }

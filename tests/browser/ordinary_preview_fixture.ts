@@ -5,9 +5,11 @@ import { promisify } from "node:util";
 import { test as base } from "@playwright/test";
 
 import { repositoryRoot } from "../helpers/fixture.js";
-import { timeFixturePhase } from "../helpers/fixture_timing.js";
+import {
+  FULL_CATALOGUE_SETUP_TIMEOUT_MS,
+  timeFixturePhase,
+} from "../helpers/fixture_timing.js";
 
-import { REAL_EXPORT_FIXTURE_TIMEOUT_MS } from "./fixture_timeouts.js";
 import { servePreviewFixture } from "./preview_fixture.js";
 import {
   previewFixtureContextRoot,
@@ -56,6 +58,6 @@ export const test = base.extend<
         await preview.close();
       }
     },
-    { scope: "worker", timeout: REAL_EXPORT_FIXTURE_TIMEOUT_MS },
+    { scope: "worker", timeout: FULL_CATALOGUE_SETUP_TIMEOUT_MS },
   ],
 });

@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 
+import type { StandaloneAppearanceState } from "../standalone/appearance_bridge.js";
+
+import { AppearanceSelect } from "./appearance.js";
 import type { Catalogue } from "./catalogue.js";
 import { SchemeSwitch } from "./head.js";
 import { BrandIcon, IconSvg, SearchIcon } from "./icons.js";
@@ -8,7 +11,10 @@ import { useOptionalShellStore } from "./store_context.js";
 import { SearchTagPicker } from "./tags.js";
 
 /** The shared 48px catalogue header keeps search available at every width. */
-export function TopBar(props: { catalogue: Catalogue }) {
+export function TopBar(props: {
+  appearance?: StandaloneAppearanceState;
+  catalogue: Catalogue;
+}) {
   const store = useOptionalShellStore();
   const navigationId = useShellIdentifier("mb-nav");
   const searchId = useShellIdentifier("mb-search");
@@ -84,7 +90,16 @@ export function TopBar(props: { catalogue: Catalogue }) {
           <path d="m6 6 12 12M18 6 6 18" />
         </IconSvg>
       </button>
-      {props.catalogue.hasDarkFragments ? <SchemeSwitch /> : null}
+      {store?.context.embedded ? (
+        props.catalogue.hasDarkFragments ? (
+          <SchemeSwitch />
+        ) : null
+      ) : (
+        <AppearanceSelect
+          ready={props.appearance?.ready ?? false}
+          theme={props.appearance?.theme ?? "auto"}
+        />
+      )}
     </header>
   );
 }

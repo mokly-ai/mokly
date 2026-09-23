@@ -46,9 +46,14 @@ when the historical primary file is absent, never when it is invalid.
 - [Public catalogue read model](./mokly-catalogue.md) — implemented:
   public inventory v1 beside the private manifest.
 - [Embeddable viewer](./mokly-viewer.md) — approved `@mokly/viewer` API and
-  unchanged local shell extraction.
+  shared hydrated shell.
 - [Live viewer capabilities](./mokly-live-capabilities.md) — private Serve
   evidence, updates, recovery, previews and on-demand rendering for React.
+- [Viewer appearance](./mokly-viewer-appearance.md) — implemented
+  Auto/Light/Dark support: one standalone Appearance control and a host-supplied
+  embedded theme beside independent preview controls.
+- [Viewer semantic palette](./mokly-viewer-palette.md) — Light and Dark
+  swatches, recorded contrast and the Light corrections they required.
 - [Viewer markers and multi-instance highlights](./mokly-viewer-markers.md) —
   host-owned anchored content and exact atomic highlight behavior.
 - [Viewer frame adapter](./mokly-frame-adapter.md) — approved same-origin

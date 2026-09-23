@@ -65,7 +65,11 @@ test("the first mount authenticates a matching immediate document", () => {
   const expected = new URL("https://app.test/static/screen.html?revision=2");
   const mismatched = fakeDocument(other.frame, expected.href);
   const recorded = fakeDocument(owning.frame, expected.href);
-  const authentication = createMountAuthentication(owning.frame, recorded);
+  const authentication = createMountAuthentication(
+    owning.frame,
+    recorded,
+    expected,
+  );
 
   assert.equal(
     authentication.authenticateAssignedDocument(mismatched, expected),
@@ -89,18 +93,20 @@ test("only a recorded immediate document transfers to a later mount", () => {
   const other = fakeFrame();
   const expected = new URL("https://app.test/static/screen.html?revision=2");
   const recorded = fakeDocument(owning.frame, expected.href);
-  const first = createMountAuthentication(owning.frame, recorded);
+  const first = createMountAuthentication(owning.frame, recorded, expected);
 
   assert.equal(
     first.authenticateAssignedDocument(recorded, expected),
     recorded,
   );
   assert.equal(
-    createMountAuthentication(owning.frame, recorded).transferredDocument,
+    createMountAuthentication(owning.frame, recorded, expected)
+      .transferredDocument,
     recorded,
   );
   assert.equal(
-    createMountAuthentication(other.frame, recorded).transferredDocument,
+    createMountAuthentication(other.frame, recorded, expected)
+      .transferredDocument,
     undefined,
   );
 });
@@ -110,14 +116,18 @@ test("a later mount excludes its exact unrecorded starting document", () => {
   const firstUrl = new URL("https://app.test/static/first.html");
   const nextUrl = new URL("https://app.test/static/next.html?revision=2");
   const hydrated = fakeDocument(fixture.frame, firstUrl.href);
-  const first = createMountAuthentication(fixture.frame, hydrated);
+  const first = createMountAuthentication(fixture.frame, hydrated, firstUrl);
   assert.equal(
     first.authenticateAssignedDocument(hydrated, firstUrl),
     hydrated,
   );
 
   const unowned = fakeDocument(fixture.frame, nextUrl.href);
-  const replacement = createMountAuthentication(fixture.frame, unowned);
+  const replacement = createMountAuthentication(
+    fixture.frame,
+    unowned,
+    nextUrl,
+  );
   assert.equal(replacement.transferredDocument, undefined);
   assert.equal(
     replacement.authenticateAssignedDocument(unowned, nextUrl),

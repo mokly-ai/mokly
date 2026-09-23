@@ -97,7 +97,7 @@ test("four shard reports require disjoint complete current evidence", () => {
   );
   validateShardReports(reports, {
     commit: "a".repeat(40),
-    runtime: "node-24",
+    runtime: "node-24.21.0",
     suite: "unit",
     total: 4,
   });
@@ -106,7 +106,7 @@ test("four shard reports require disjoint complete current evidence", () => {
     () =>
       validateShardReports(reports.slice(0, 3), {
         commit: "a".repeat(40),
-        runtime: "node-24",
+        runtime: "node-24.21.0",
         suite: "unit",
         total: 4,
       }),
@@ -122,7 +122,7 @@ test("four shard reports require disjoint complete current evidence", () => {
         ],
         {
           commit: "a".repeat(40),
-          runtime: "node-24",
+          runtime: "node-24.21.0",
           suite: "unit",
           total: 4,
         },
@@ -135,7 +135,7 @@ test("four shard reports require disjoint complete current evidence", () => {
         [{ ...reports[0]!, commit: "b".repeat(40) }, ...reports.slice(1)],
         {
           commit: "a".repeat(40),
-          runtime: "node-24",
+          runtime: "node-24.21.0",
           suite: "unit",
           total: 4,
         },
@@ -148,7 +148,7 @@ test("four shard reports require disjoint complete current evidence", () => {
         reports.map((report) => ({ ...report, nodeVersion: "22.14.0" })),
         {
           commit: "a".repeat(40),
-          runtime: "node-24",
+          runtime: "node-24.21.0",
           suite: "unit",
           total: 4,
         },
@@ -181,7 +181,7 @@ test("browser shard evidence requires every independently discovered test once",
     () =>
       validateShardReports(reports, {
         commit: "a".repeat(40),
-        runtime: "node-24",
+        runtime: "node-24.21.0",
         suite: "browser",
         total: 4,
       }),
@@ -203,7 +203,7 @@ test("browser shard evidence requires every independently discovered test once",
   }));
   validateShardReports(complete, {
     commit: "a".repeat(40),
-    runtime: "node-24",
+    runtime: "node-24.21.0",
     suite: "browser",
     total: 4,
   });
@@ -213,7 +213,7 @@ test("browser shard evidence requires every independently discovered test once",
         [{ ...complete[0]!, observedTests: [] }, ...complete.slice(1)],
         {
           commit: "a".repeat(40),
-          runtime: "node-24",
+          runtime: "node-24.21.0",
           suite: "browser",
           total: 4,
         },

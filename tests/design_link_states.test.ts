@@ -20,30 +20,23 @@ function destinations(nodes: Element[]) {
 }
 
 for (const viewport of ["mobile", "desktop"] as const) {
-  test(`${viewport}: scheme pairs retain their subject and comparison mode`, async () => {
-    for (const [light, dark] of [
-      ["design-browse-screen", "design-browse-dark-scheme"],
-      ["design-browse-details-screen", "design-browse-light-only"],
-      ["design-review-changed", "design-review-dark-scheme"],
+  test(`${viewport}: the consolidated screens keep a navigation-free toolbar`, async () => {
+    for (const source of [
+      "design-browse-screen",
+      "design-browse-details-screen",
+      "design-review-changed",
     ]) {
-      for (const [source, target, label] of [
-        [light!, dark!, "Switch to dark mode"],
-        [dark!, light!, "Switch to light mode"],
-      ]) {
-        const { document } = await designDocument(source!, viewport);
-        const group = elements(
-          document,
-          (node) => attribute(node, "aria-label") === "Preview options",
-        )[0];
-        assert.ok(group);
-        assert.deepEqual(
-          elements(group, (node) => node.tagName === "a").map((node) => [
-            attribute(node, "aria-label"),
-            attribute(node, "data-mokly-link"),
-          ]),
-          [[label, target]],
-        );
-      }
+      const { document } = await designDocument(source, viewport);
+      const group = elements(
+        document,
+        (node) => attribute(node, "aria-label") === "Preview options",
+      )[0];
+      assert.ok(group, source);
+      assert.deepEqual(
+        elements(group, (node) => node.tagName === "a"),
+        [],
+        source,
+      );
     }
   });
 
@@ -76,8 +69,6 @@ for (const viewport of ["mobile", "desktop"] as const) {
       "design-browse-details-screen",
       "design-review-added",
       "design-review-removed",
-      "design-browse-dark-scheme",
-      "design-browse-light-only",
       "design-review-style-excluded",
     ]) {
       const { document } = await designDocument(source, viewport);
@@ -99,31 +90,6 @@ for (const viewport of ["mobile", "desktop"] as const) {
       assert.deepEqual(
         byClass(toolbar, "active").map((node) => textContent(node).trim()),
         ["Side by side"],
-        source,
-      );
-    }
-    for (const [source, expected] of [
-      ["design-review-dark-scheme", []],
-    ] as const) {
-      const { document } = await designDocument(source, viewport);
-      const toolbar = byClass(document, "mbk-cmp-toolbar")[0];
-      assert.ok(toolbar);
-      assert.deepEqual(
-        destinations(elements(toolbar, (node) => node.tagName === "a")),
-        expected,
-        source,
-      );
-      assert.equal(
-        attribute(byClass(document, "mbk-search-tag")[0]!, "href"),
-        undefined,
-        source,
-      );
-      assert.equal(
-        attribute(
-          elements(document, (node) => node.tagName === "summary")[0]!,
-          "href",
-        ),
-        undefined,
         source,
       );
     }

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { PreviewWorkspace } from "../components/parts/workspace.js";
 
+import type { AppearanceChoice } from "./appearance.js";
 import { ComparisonStage } from "./compare.js";
 import type { DesignDestination } from "./destinations.js";
 import { DetailsPanel } from "./details.js";
@@ -16,6 +17,8 @@ interface ComparePageProps {
   design: DesignDestination;
   subject: ScreenSubject;
   activeTitle?: string | undefined;
+  /** Draws the depicted Appearance selector holding this setting. */
+  appearanceChoice?: AppearanceChoice | undefined;
   /** Secondary comparison evidence; the branch-point line alone when omitted. */
   evidence?: ReactNode;
   /** Desktop navigation column; the Changes catalogue when omitted. */
@@ -31,6 +34,7 @@ interface ComparePageProps {
 export function ComparePage({
   design,
   activeTitle,
+  appearanceChoice,
   evidence,
   nav,
   subject,
@@ -44,6 +48,7 @@ export function ComparePage({
   return (
     <Shell
       design={design}
+      appearanceChoice={appearanceChoice}
       viewport={viewport}
       nav={
         viewport === "desktop"

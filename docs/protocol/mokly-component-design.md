@@ -52,8 +52,10 @@ mobile component and desktop component; there are no new user-flow pages.
 | `design-component-added`                    | `design/components/states/additions/added.html`       | Added Badge current preview without comparison controls   |
 
 Standalone files insert `.mobile` or `.desktop` before `.html`. All thirty-two component
-screens opt into light documents, matching the existing shell mockups. They
-start in the Light context and expose a native preview theme toggle. Links use
+screens opt into light documents, matching the existing shell mockups. Their
+depicted preview caption names the artboard's own scheme, and the toolbar has
+no scheme switch: the catalogue's one Appearance control, drawn in their top
+bar like every other artboard's, sets it. Links use
 the existing logical-id navigation contract so they work both directly from
 disk and in Browse. State links demonstrate navigation between mockups; static
 depictions of shell controls do not implement the separate runtime inspector.
@@ -61,7 +63,7 @@ depictions of shell controls do not implement the separate runtime inspector.
 The shared shell retains the [existing design navigation](./mokly-design-links.md)
 for brand, home breadcrumb, and the canonical mobile drawer. Component artboards
 select their own typed navigation state; they never inherit Welcome's tag,
-scheme, inspector, or comparison transitions. Their viewport dropdown and theme/highlight switches work through native form state and CSS. Comparison depictions retain native button focus and pressed states only in eligible change scenarios.
+scheme, inspector, or comparison transitions. Their viewport dropdown and highlight switch work through native form state and CSS. Comparison depictions retain native button focus and pressed states only in eligible change scenarios.
 The shared selection control preserves native anchor semantics when an authored
 transition exists. Existing Browse and Changes artboards retain their non-link
 spans for unsupported controls.
@@ -103,8 +105,9 @@ The removed-state scenario also retains the former Farewell consumer and links
 it to its Removed state, which
 [removed previews](./mokly-removed-previews.md) fill with its previous version:
 the “Showing previous version” label, the historical frame for the selected
-viewport, and no comparison band, with the theme control disabled because Light
-is the only scheme that view was rendered in. Its stage carries no escape link,
+viewport, and no comparison band. The catalogue-wide Appearance selector remains
+the only theme control, while the historical frame stays Light because that is
+the only scheme captured for the view. Its stage carries no escape link,
 because the catalogue navigation keeps Action's affected list one step away.
 Farewell is independently removed, so that
 scenario has two Changes rows: Action and Farewell. The Removed Action variant
@@ -133,7 +136,7 @@ has an inspection entry and component page, without an invented visible region.
 Toolbar and Help hint usage links lead to their own selected-instance artboards,
 with the correct prompt or visibility props and Open component destination.
 
-Highlight components is a native switch grouped with viewport and theme beside the title. It toggles the overlay without navigation. The enabled artboards show a light mask at 78% coverage with cutouts over the visible
+Highlight components is a native switch grouped with the viewport dropdown beside the title. It toggles the overlay without navigation. The enabled artboards show a light mask at 78% coverage with cutouts over the visible
 components. Sage outlines and named labels expose the selected regions; a
 nested selection cuts out only the Toolbar action and dims the parent again.
 The same consumer DOM is used with highlighting off and on. Welcome uses an SVG overlay; Details uses a clipped scrim around its single Action. Neither sets ancestor opacity. Each viewport uses its own overlay, with unique SVG mask ids when Both is selected.

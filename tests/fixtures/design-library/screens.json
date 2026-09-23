@@ -1,13 +1,5 @@
 [
   {
-    "id": "design-browse-dark-scheme",
-    "route": "design/browse/states/dark-scheme.html",
-    "fragments": {
-      "desktop": "design/browse/states/dark-scheme.desktop.html",
-      "mobile": "design/browse/states/dark-scheme.mobile.html"
-    }
-  },
-  {
     "id": "design-browse-details",
     "route": "design/browse/states/details.html",
     "fragments": {
@@ -29,14 +21,6 @@
     "fragments": {
       "desktop": "design/browse/views/home.desktop.html",
       "mobile": "design/browse/views/home.mobile.html"
-    }
-  },
-  {
-    "id": "design-browse-light-only",
-    "route": "design/browse/states/light-only.html",
-    "fragments": {
-      "desktop": "design/browse/states/light-only.desktop.html",
-      "mobile": "design/browse/states/light-only.mobile.html"
     }
   },
   {
@@ -397,14 +381,6 @@
     "fragments": {
       "desktop": "design/review/outcomes/changed.desktop.html",
       "mobile": "design/review/outcomes/changed.mobile.html"
-    }
-  },
-  {
-    "id": "design-review-dark-scheme",
-    "route": "design/review/outcomes/dark-scheme.html",
-    "fragments": {
-      "desktop": "design/review/outcomes/dark-scheme.desktop.html",
-      "mobile": "design/review/outcomes/dark-scheme.mobile.html"
     }
   },
   {

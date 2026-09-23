@@ -20,8 +20,9 @@ as breaking; version numbers and `CHANGELOG.md` remain release-PR owned.
 
 `package.json` describes the published, scoped public ESM package `@mokly/mokly`,
 with a release-managed version, MIT licensing, Mokly authorship, exact
-repository/bugs/homepage metadata for `mokly-ai/mokly`, a Node engine floor,
-one `mokly` bin, explicit exports/types, and a restrictive `files` allowlist.
+repository/bugs/homepage metadata for `mokly-ai/mokly`, the Node engine range
+`>=22.14.0 <24.14.0 || >=24.19.0`, one `mokly` bin, explicit exports/types, and
+a restrictive `files` allowlist.
 
 Read the checkout's version from `package.json`; `.release-please-manifest.json`
 tracks release-please's version state, and `package-lock.json` mirrors package

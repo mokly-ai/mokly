@@ -50,6 +50,11 @@ test("live Difference requests the active screen and keeps real before/current p
   await expect(
     page.frameLocator(".mb-pane--after iframe").locator("main"),
   ).toContainText("Updated screen");
+  for (const pane of ["before", "after"])
+    await expect(page.locator(`.mb-pane--${pane} iframe`)).toHaveAttribute(
+      "src",
+      /\.desktop\.dark\.html$/u,
+    );
   expect(requests).toHaveLength(1);
 });
 

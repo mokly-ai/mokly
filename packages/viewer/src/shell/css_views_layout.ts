@@ -83,7 +83,7 @@ export const CSS_VIEWS_LAYOUT = `
 .mbk-idchip:active {
   background: var(--chrome-border);
   border-color: var(--chrome-border-strong);
-  box-shadow: inset 0 1px 2px rgba(20, 28, 22, 0.14);
+  box-shadow: var(--chrome-shadow-press);
   color: var(--chrome-ink);
   transform: translateY(1px);
 }
@@ -118,7 +118,7 @@ export const CSS_VIEWS_LAYOUT = `
 .mbk-seg [aria-current="page"] {
   background: var(--chrome-surface);
   color: var(--chrome-ink);
-  box-shadow: 0 1px 2px rgba(20, 28, 22, 0.1);
+  box-shadow: var(--chrome-shadow-soft);
 }
 
 .mbk-stage {
@@ -132,7 +132,7 @@ export const CSS_VIEWS_LAYOUT = `
   overflow: auto;
   background: radial-gradient(
       circle at center,
-      rgba(20, 28, 22, 0.05) 1px,
+      var(--mbk-dot) 1px,
       transparent 1px
     )
     0 0 / 22px 22px;

@@ -26,6 +26,22 @@ test("development React hydrates a fresh desktop document cleanly", async ({
   await expectCleanHydration(page, errors);
 });
 
+test("development React hydrates a restored dark appearance cleanly", async ({
+  page,
+}) => {
+  const errors = captureBrowserErrors(page);
+  await page.addInitScript(() => {
+    localStorage.setItem("mokly:theme", "dark");
+  });
+  await installDevelopmentBundle(page);
+  await page.goto("/view/screens/welcome.html");
+  await expectCleanHydration(page, errors);
+  await expect(page.locator("body")).toHaveAttribute(
+    "data-mokly-color-scheme",
+    "dark",
+  );
+});
+
 test("development React hydrates navigation and filters as live state", async ({
   page,
 }) => {
@@ -73,7 +89,7 @@ test("development React hydrates controls and persisted details as live state", 
     "true",
   );
   await page.getByLabel("Viewport", { exact: true }).selectOption("mobile");
-  await page.locator("[data-workspace-scheme]").click();
+  await page.getByLabel("Appearance", { exact: true }).selectOption("dark");
   await expect(page.locator("[data-mokly-stage]")).toHaveAttribute(
     "data-viewport",
     "mobile",

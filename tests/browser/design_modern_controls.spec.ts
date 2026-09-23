@@ -42,7 +42,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
         await page.goto(fileUrl(screen.fragments[viewport]));
         await expect(page.locator(".mbk-details-bar")).toHaveCount(0);
         await expect(
-          page.getByRole("group", { name: /^(Viewport|Color scheme)$/ }),
+          page.getByRole("group", {
+            name: /^(Viewport|Preview color scheme)$/,
+          }),
         ).toHaveCount(0);
         if (withoutInspector.has(screen.id)) continue;
         await expect(page.locator(".ce-inspector"), screen.id).toHaveCount(1);

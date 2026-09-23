@@ -10,6 +10,7 @@ import { repositoryRoot } from "../helpers/fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 
 import { assertServedShellMarker } from "./export_shell.js";
+import { expectFrameSource } from "./workspace_actions.js";
 
 let fixture: Awaited<ReturnType<typeof createExportFixture>>;
 let server: Awaited<ReturnType<typeof serveStaticFiles>>;
@@ -264,10 +265,8 @@ async function expectStaticComponentQuery(
     variant,
   );
   for (const viewport of ["mobile", "desktop"])
-    await expect(
+    await expectFrameSource(
       page.locator(`iframe[data-workspace-frame="${viewport}"]`),
-    ).toHaveAttribute(
-      "src",
       new RegExp(
         `action\\.variants/${variant}\\.${viewport}\\.html#${fragment}$`,
       ),
