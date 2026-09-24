@@ -7,7 +7,7 @@ import { parseViewAxes } from "../navigation/view_axes.js";
 import type { ManifestEntry } from "../registry/types.js";
 
 import { catalogueRouteEntry, type Catalogue } from "./catalogue.js";
-import { toRouteTarget, type RoutedEntry } from "./target.js";
+import { toRouteTarget } from "./target.js";
 import type { ShellView } from "./views.js";
 
 /** Route state whose view identity always comes from the document URL. */
@@ -140,16 +140,14 @@ function routeEntry(
   catalogue: Catalogue,
   pathname: string,
   delivery?: StaticDelivery,
-): RoutedEntry | undefined {
+): ManifestEntry | undefined {
   if (pathname.startsWith("/view/")) {
     const route = decodePath(pathname.slice("/view/".length));
     if (route === undefined) return undefined;
-    const exact = routedEntry(catalogueRouteEntry(catalogue, route));
+    const exact = catalogueRouteEntry(catalogue, route);
     if (exact || !delivery || route.endsWith(".html")) return exact;
     const normalizedRoute = `${route}.html`;
-    const normalized = routedEntry(
-      catalogueRouteEntry(catalogue, normalizedRoute),
-    );
+    const normalized = catalogueRouteEntry(catalogue, normalizedRoute);
     if (!normalized) return undefined;
     const canonicalPath = `/view/${normalizedRoute}`;
     const current = Object.values(delivery.idRoutes).includes(canonicalPath);
@@ -161,14 +159,7 @@ function routeEntry(
   const match = /^\/id\/([^/]+)(?:\/(?:index\.html)?)?$/.exec(pathname);
   if (!match) return undefined;
   const id = decodeSegment(match[1] ?? "");
-  const entry = id === undefined ? undefined : catalogue.byId.get(id);
-  return routedEntry(entry);
-}
-
-function routedEntry(
-  entry: ManifestEntry | undefined,
-): RoutedEntry | undefined {
-  return entry;
+  return id === undefined ? undefined : catalogue.byId.get(id);
 }
 
 function decodePath(value: string): string | undefined {

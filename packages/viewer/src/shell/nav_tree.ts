@@ -175,16 +175,13 @@ function attachRemovedVariants(
   });
 }
 
-/** One routed entry, the only entry kind a navigation leaf can represent. */
-type RoutedManifestEntry = ManifestEntry;
-
 /**
  * One leaf row plus the variant rows it discloses. The hierarchy already keeps
  * variants out of folder nodes, so a variant reaches the tree
  * only through this list and never as a row of its own.
  */
 function leafNode(
-  entry: RoutedManifestEntry,
+  entry: ManifestEntry,
   variants: readonly NavLeafNode[],
 ): NavLeafNode {
   return {

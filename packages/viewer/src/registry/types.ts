@@ -93,7 +93,7 @@ export type ManifestEntryV4 = (
   ManifestScreenV4 | ManifestComponent | ManifestUseCase
 ) & { declaredDependencies: readonly string[] };
 
-/** Current catalogue combining pages, components, and complete source protection. */
+/** Historical v5 catalogue combining pages, components, and source protection. */
 export interface ManifestV5 {
   entries: readonly (ManifestEntry & {
     declaredDependencies: readonly string[];

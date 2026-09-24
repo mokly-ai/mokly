@@ -54,8 +54,7 @@ export async function stagePreviewArtifact(
     ...removed.filter((entry) => !currentIds.has(entry.id)),
   ];
   for (const entry of entries)
-    if (entry.kind !== "collection")
-      idRoutes[entry.id] = catalogueViewHref(entry.route);
+    idRoutes[entry.id] = catalogueViewHref(entry.route);
   const delivery = parseStaticDelivery({
     schemaVersion: 2,
     deploymentId: STAGED_DEPLOYMENT_ID,
@@ -92,8 +91,7 @@ export async function stagePreviewArtifact(
   addShell("index.html", "/");
   addShell("404.html", "/404.html");
   for (const entry of [...manifest.entries, ...removed])
-    if (entry.kind !== "collection")
-      addShell(`view/${entry.route}`, catalogueViewHref(entry.route));
+    addShell(`view/${entry.route}`, catalogueViewHref(entry.route));
   const aliases = new Map();
   for (const [name, bytes] of files) {
     if (/^(?:view|static)\/.+\.html$/.test(name))

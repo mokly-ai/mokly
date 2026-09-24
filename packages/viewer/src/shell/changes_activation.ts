@@ -1,17 +1,17 @@
 /** Changes-filter navigation shared by standalone and embedded shells. */
 
+import type { ManifestEntry } from "../registry/types.js";
 import type { ViewerSelection } from "../viewer/types.js";
 
 import { catalogueSelectionEntry, type Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import type { ShellRoute } from "./routes.js";
 import { rowMatchesQuery } from "./search_query.js";
-import type { RoutedEntry } from "./target.js";
 import { workspaceData } from "./workspace_data.js";
 import { selectedChangedViews } from "./workspace_views_data.js";
 
 interface ChangedDestination {
-  entry: RoutedEntry;
+  entry: ManifestEntry;
   snapshotId?: string;
 }
 

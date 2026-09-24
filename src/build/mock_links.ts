@@ -125,7 +125,10 @@ export function rewriteMockLinks(
       catalogueSchemes,
     );
     if (!targetRoute) {
-      throw invalid(sourceRoute, `links to collection id: ${destination.id}`);
+      throw invalid(
+        sourceRoute,
+        `use case ${destination.id} has no screen as its first step`,
+      );
     }
     const linked = portableTarget(sourceRoute, targetRoute, destination);
     const rewrittenAttributes = logicalAttributes.map(({ attribute }) => {

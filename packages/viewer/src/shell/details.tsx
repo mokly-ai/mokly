@@ -3,7 +3,7 @@
 // populated from the manifest entry for the selected route.
 
 import type { ColorScheme } from "../data/axes.js";
-import type { ManifestScreen } from "../registry/types.js";
+import type { ManifestEntry, ManifestScreen } from "../registry/types.js";
 
 import type { Catalogue } from "./catalogue.js";
 import {
@@ -17,7 +17,7 @@ import {
 } from "./details_rows.js";
 import { ChevronIcon } from "./icons.js";
 import { useOptionalShellStore } from "./store_context.js";
-import type { RoutedEntry, RouteTarget } from "./target.js";
+import type { RouteTarget } from "./target.js";
 import type { ChangedView } from "./view_marks.js";
 
 /** Generated fragment routes for a screen, dark renders after the light ones. */
@@ -40,7 +40,7 @@ function schemeNames(screen: ManifestScreen): string {
 export function EntryDetailsBody(props: {
   catalogue: Catalogue;
   changedViews?: readonly ChangedView[];
-  entry: RoutedEntry;
+  entry: ManifestEntry;
 }) {
   const entry = props.entry;
   return (

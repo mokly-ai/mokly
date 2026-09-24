@@ -24,6 +24,10 @@ section roots even when they reuse the same folder labels.
 `disclosure_keys.ts` derives section-scoped folder disclosure keys by matching
 fixed prefixes, never splitting on `:` inside a label. It rejects empty path
 segments and ignores obsolete collection and legacy keys on restore.
+`routes.ts` resolves URL paths to current or retained manifest entries;
+`target.ts` wraps a found entry as a route target without an extra routing
+filter. The [path contract](../../../../docs/protocol/mokly-nav-paths.md)
+owns the shared folder ordering and identity used by this shell.
 `nav_changed.ts` names the changed mark's class, attribute and wording, so the
 server row and each React store update use the same presentation contract;
 `css_nav_changed.ts` draws the mark from `data-changed` and

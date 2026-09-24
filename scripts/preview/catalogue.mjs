@@ -104,7 +104,6 @@ export async function buildPreview(config, output, options = {}) {
           await capturePage(server.url, "/", stage, "index.html");
           capturedShells.add("index.html");
           for (const entry of [...manifest.entries, ...removed]) {
-            if (entry.kind === "collection") continue;
             const name = `view/${entry.route}`;
             await capturePage(
               server.url,

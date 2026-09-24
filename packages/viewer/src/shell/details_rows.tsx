@@ -6,12 +6,11 @@
 import type { ReactNode } from "react";
 
 import { catalogueViewHref } from "../navigation/delivery.js";
-import type { ManifestUseCase } from "../registry/types.js";
+import type { ManifestEntry, ManifestUseCase } from "../registry/types.js";
 
 import type { Catalogue } from "./catalogue.js";
 import { FlowIcon, ScreenIcon, VariantIcon } from "./icons.js";
 import { TagChip } from "./tags.js";
-import type { RoutedEntry } from "./target.js";
 import { changedViewsLabel, type ChangedView } from "./view_marks.js";
 
 /** One label/value pair in the inspector's metadata column. */
@@ -113,7 +112,7 @@ export function UsedByChips(props: {
 /** The variants a screen declares, in manifest order. */
 export function VariantChips(props: {
   catalogue: Catalogue;
-  entry: RoutedEntry;
+  entry: ManifestEntry;
 }) {
   if (props.entry.kind !== "screen") {
     return null;
@@ -152,7 +151,7 @@ export function VariantChips(props: {
 /** The screen a variant belongs to, resolved for current and removed entries. */
 export function VariantOfChip(props: {
   catalogue: Catalogue;
-  entry: RoutedEntry;
+  entry: ManifestEntry;
 }) {
   if (props.entry.kind !== "screen" || props.entry.variantOf === undefined) {
     return null;
@@ -185,7 +184,7 @@ export function VariantOfChip(props: {
   );
 }
 
-function entryHref(catalogue: Catalogue, entry: RoutedEntry): string {
+function entryHref(catalogue: Catalogue, entry: ManifestEntry): string {
   const snapshotId = catalogue.removedEntries.find(
     ({ entry: candidate }) => candidate.route === entry.route,
   )?.snapshotId;

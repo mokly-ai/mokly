@@ -78,7 +78,9 @@ facade adds the source module; `load_graph.ts` reconstructs branded errors as
 CLI `MoklyError`s without double prefixes. Unrelated evaluation failures remain
 bundling errors. `src/registry/historical_collections.ts` validates legacy v3–v5
 collection edges before removing those records from comparison baselines; v6
-does not accept collection entries. Registry
+does not accept collection entries. `mock_links.ts` rewrites id links to the
+resolved target artifact; a use case without a screen as its first step is an
+invalid registry invariant, not a navigation folder. Registry
 validation and `ownership.ts` accept an attributed owner only when it is a
 resolved entry module or an inventoried source file. Ownership headers and
 tracked output additionally trust repository-relative owners that match an
