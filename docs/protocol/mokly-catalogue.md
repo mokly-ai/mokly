@@ -167,19 +167,10 @@ Do not spread a manifest, entry, or internal evidence object into public JSON.
 - Components retain schemas, read-only control descriptions, declared slot
   names, saved variants in authored order, their validated wire props and views.
   The first variant is default; ready usage copies only instances/slots/ranges.
-- Derive Pages (screens, pages, use cases) and Components (components) trees
-  independently from routed entries' authored `navPath`. Equal labels beneath
-  one parent merge across files; the same path in both sections creates two
-  separate folders. Empty paths produce top-level entries; no empty folders
-  appear. Both public section arrays are required and are `[]` when they have
-  no current entries. The rendered navigation omits a section only when it has
-  no matching current or retained removed entries.
-  Routes and source directories do not form folders.
-  Under the implemented [screen variants contract](./mokly-screen-variants.md),
-  a variant screen's entry node is a child of its parent screen's entry node
-  in the Pages tree rather than a sibling. Entry-node `children` is present
-  only for that screen-variant grouping, and `variantOf` is an additive field
-  that v2 readers validate.
+- Derive the [section trees](./mokly-nav-paths.md#sections-and-path-derivation)
+  from current routed entries.
+  Variant grouping follows the
+  [screen variants contract](./mokly-screen-variants.md).
 - Details retain authored display metadata already exposed by the inspector.
   `details.dependencies` contains repository-relative display labels only.
   `sourcePath`, optional invocation `source.path`, and local related-doc paths
@@ -199,11 +190,11 @@ Reject private filesystem paths in path fields; display strings/props are data.
 Per-entry Changes comes from the existing route/component attribution, not a
 count of visual comparisons. `included` is membership in Changes; affected
 consumers can have eligible comparisons while `included` is false. Folder
-visibility aggregates descendants without extra counts or folder-level status. Unknown,
+visibility aggregates descendants without extra counts. Unknown,
 preparing, pending and disabled states never imply unmodified or a zero count.
-Retain removed routed entries with baseline `navPath` labels outside the current
-folder trees. A current route still excludes historical content at that
-same route. For a retained removed record at a distinct route whose id is also
+The [path contract](./mokly-nav-paths.md#variants-and-historical-paths) owns
+removed-entry ancestry. A current route still excludes historical content at
+that route. For a retained removed record at a distinct route whose id is also
 current, id-only lookup chooses current while an explicit matching snapshot
 selects history. Each newly projected removed record carries an opaque
 `snapshotId` when real immutable identity is available, distinguishing it from
@@ -233,11 +224,9 @@ navigation list, the details `Variants` row, and the public tree's entry-node
 `children` present. Apply the exception independently to `removedEntries`;
 when a variant's parent is absent from that array, the variant stays in its
 ordinary route-then-id position. Sort all other removed entries by route/id,
-instances/slots by key, and ranges by DOM start order. At every tree level sort
-folders before entries, then `left.label.localeCompare(right.label, "en")`,
-then compare folder path keys or entry ids by UTF-16 code units as a total
-tie-break. An entry node's variant children remain in authored order. The
-shell uses this same comparator. Emit required empties, omit absent optionals, use
+instances/slots by key, and ranges by DOM start order. Tree siblings follow
+the [shared comparator](./mokly-nav-paths.md#order-and-keys); entry-node
+variant children retain authored order. Emit required empties, omit absent optionals, use
 two-space indentation and a final LF. Identical inputs produce identical bytes
 regardless of enumeration, time or output location.
 
@@ -271,9 +260,9 @@ and stamps it afterward, alongside shell descriptors. Other catalogue bytes
 participate unchanged. Export revisions are `{ content: 0, evidence: 0 }`.
 
 Readers require `schemaVersion: 2` and reject older and unknown versions; writers
-remain allowlisted. The move from v1's authored `childIds` order to the shared
-sorted tree order is intentional, as are the removal of collection records and
-the addition of `navPath`. Optional fields are additive; removals, required
+remain allowlisted. The [path contract](./mokly-nav-paths.md#order-and-keys)
+owns the intentional change from v1's authored tree order. Collection records
+are removed and `navPath` is added. Optional fields are additive; removals, required
 additions, changed meaning, new union discriminants or incompatible paths
 require a new version.
 This file and the inspector asset are additive inventory entries: ownership v1,
@@ -282,26 +271,15 @@ upload v1, review v2/v3 and delivery descriptor v2 remain unchanged.
 The [public v2 fixture](./fixtures/catalogue-v2.json) ships in the npm package
 and is checked by the reader/projection conformance tests.
 
-The reader requires both `tree.pages` and `tree.components` arrays. An empty
-array is valid for a section with no current routed entries, including when
-that section has only removed entries; a nonempty section must be a
-well-formed tree. It requires every current routed entry's `navPath` to be an
-array of valid folder labels under the
-[authoring rules](./mokly-authoring.md), and every routed non-variant id to
-appear exactly once in the correct section at precisely that path. Every
-folder has a valid label, at least one child, and a path represented by at
-least one routed descendant; folder labels under one parent are unique by
-bytes and cannot collide by the shared conflict key. No leaf label may
-conflict with a sibling folder; repeated leaf titles remain legal. Child
-arrays at each level follow the shared comparator (folders first, English
-locale label order, UTF-16 path-key/id tie-break); only variant children
-depart from this order. Entry-node `children` exists only on a parent screen
-with variants and contains exactly those variants in authored order, with
-`navPath` identical to the parent. Variants appear nowhere else in the tree;
-entry references must resolve and cannot be duplicated or missing. Removed
-entries never appear in the current tree: their `navPath` is validated only
-as an array of strings (historical labels need not satisfy current folder
-rules). Unknown fields follow the existing reader policy for public JSON.
+The reader requires both `tree.pages` and `tree.components` arrays; `[]` is
+valid when a section has no current entries, even if it has removed entries.
+Nonempty trees must follow the [path contract](./mokly-nav-paths.md): every
+current non-variant id appears exactly once at its path; no empty folders,
+missing or duplicate references, or removed entries occur. Entry-node
+`children` holds exactly a parent's variants in authored order, with paths
+equal to that parent, and exists only for such a screen. Historical paths
+follow the [historical rules](./mokly-nav-paths.md#variants-and-historical-paths).
+Unknown fields follow the existing reader policy for public JSON.
 
 ## Serve And Fetch Rules
 

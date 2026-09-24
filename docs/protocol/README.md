@@ -49,6 +49,8 @@ when the historical primary file is absent, never when it is invalid.
   rules and approved resolution/source-location target.
 - [Public catalogue read model v2](./mokly-catalogue.md) — public inventory
   beside the private manifest.
+- [Navigation paths and folders](./mokly-nav-paths.md) — section trees, path
+  diagnostics, sibling order, and folder keys.
 - [Embeddable viewer](./mokly-viewer.md) — approved `@mokly/viewer` API and
   shared hydrated shell.
 - [Live viewer capabilities](./mokly-live-capabilities.md) — private Serve

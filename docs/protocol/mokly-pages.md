@@ -68,18 +68,17 @@ export const mockups = [
 
 The example assumes an existing `source(): string` export. A nested `page`
 accepts the same metadata and callback, replaces `route` with `slug`, and
-inherits only `dependencies` and `relatedDocs`. Its root `navPath` and ancestor
-folder titles derive the leaf's `navPath`; folder `segment`s, not titles,
-contribute route segments.
+inherits only `dependencies` and `relatedDocs`. Path derivation and route
+independence follow the [navigation path contract](./mokly-nav-paths.md).
 It does not inherit screen addresses, tags, viewports, or color schemes.
 
 Pages reject `mobile`, `desktop`, `colorSchemes`, `address`, `useCaseIds`,
 `steps`, `variants`, and `variantOf`, including keys whose value
 is `undefined`. Untyped
 JavaScript receives the same validation as typed authoring. A use-case
-`screenId` cannot name a page. Duplicate IDs and invalid/conflicting path
-labels fail registry validation. Pages with `navPath: []` are top-level leaves;
-nested `page()` rejects any authored `navPath` key, even `undefined`.
+`screenId` cannot name a page. Duplicate IDs and path violations fail registry
+validation under the [navigation path contract](./mokly-nav-paths.md).
+Nested `page()` rejects any authored `navPath` key, even `undefined`.
 
 ## Build And Output
 
@@ -153,14 +152,14 @@ validation, Review, and publication share that policy without legacy roots.
 Only the historical comparison reader may handle earlier shapes. Catalogue lookup,
 the cached hierarchy, navigation, breadcrumbs, details, search, route targets,
 and static publication consume one validated current entry model. Page leaves
-use `entry:<id>`; folders use `folder:<path key>`. Remove runtime
+use `entry:<id>`; folder identities follow the
+[navigation path contract](./mokly-nav-paths.md#order-and-keys). Remove runtime
 directory-tree building, `legacy:` disclosure keys, route-derived Overview
 folding, and the parallel legacy route-target/detail variants. A real Overview
 page can be explicitly registered and named by its author.
 
-Sibling titles may still match when their IDs differ. Do not merge, reparent,
-rename, or hide entries merely because their labels match. This fixes invented
-legacy groups; only folders with byte-identical labels under one parent merge.
+The [path contract](./mokly-nav-paths.md#labels-and-diagnostics) governs
+sibling labels; matching entry titles never erase either entry.
 
 ## Browse And Navigation
 
@@ -221,9 +220,10 @@ in Changes. Baseline ancestry stays in details even when every ancestor is
 deleted; no historical folder tree is synthesized.
 
 Watch rebuilds imported sources, recomputes page impact before notification,
-and restores disclosures by section and folder path key. `navPath` changes update
-both navigation and breadcrumbs after reload. Obsolete `collection:` and
-`legacy:` keys are ignored, not migrated to folder keys.
+and restores disclosures by the keys defined in the
+[navigation path contract](./mokly-nav-paths.md#order-and-keys). Changes to
+`navPath` update navigation and breadcrumbs after reload; the
+[runtime](./mokly-runtime.md) owns obsolete-key handling.
 Active sections and ancestors open through the existing reveal logic.
 
 Static publishing includes each page route, generated document and resources,

@@ -86,7 +86,8 @@ mirrors the component variant folder and cannot collide with the parent's
 viewport fragments. The slug obeys the route-segment grammar, and an author
 never supplies `route` on a variant.
 
-A variant always copies the parent's `navPath`; it cannot author its own.
+Variant paths follow the
+[navigation path contract](./mokly-nav-paths.md#variants-and-historical-paths).
 It inherits the parent's `address`, `colorSchemes`, `dependencies`,
 `relatedDocs`, and `tags` unless it declares its own value, which replaces
 rather than merges the inherited list. `useCaseIds` defaults to an empty list
@@ -98,12 +99,10 @@ position, so `welcome-empty` is authored as `welcome-empty`.
 
 Validation rejects, with source attribution:
 
-- a variant that declares `variants`, `route`, or `navPath`, even when `undefined`;
+- a variant that declares `variants` or `route`, even when `undefined`;
 - two variants of one parent sharing a slug;
 - a `variantOf` that names an unknown entry, a non-screen, or a screen that
   is itself a variant, so nesting is exactly one level deep;
-- a flattened variant whose `navPath` differs from its parent's; variants
-  live under the parent entry node, not directly inside a folder;
 - a page or use case carrying `variants` or `variantOf`, including
   keys whose value is `undefined`;
 - a component carrying `variantOf`. A component's required `variants` field
@@ -138,17 +137,15 @@ interface ManifestScreen {
 
 `variantOf` is present exactly on variants. Manifest validation requires the
 named parent to be a current screen entry without `variantOf`, requires the
-variant's route to match the derived form for that parent, and requires its
-`navPath` to equal the parent's. Flattening copies the path. Canonical entry
+variant's route to match the derived form for that parent. Variant path
+validation follows the [path contract](./mokly-nav-paths.md#variants-and-historical-paths). Canonical entry
 sorting follows the manifest contract; `sourceFiles` ordering is unchanged. Historical
 readers accept manifests without the field; a baseline screen without
 `variantOf` is an ordinary screen.
 
 The hierarchy analysis exposes each screen's variants in authored order and
-each variant's parent. A variant's ancestor labels are its parent's `navPath`,
-so its breadcrumbs and its
-removed-entry ancestry read the same as the parent's, followed by the parent
-title. The parent title is a link when the parent is viewable.
+each variant's parent. The [path contract](./mokly-nav-paths.md#variants-and-historical-paths)
+owns their breadcrumbs; the parent title links when the parent is viewable.
 
 ## Links And Flows
 

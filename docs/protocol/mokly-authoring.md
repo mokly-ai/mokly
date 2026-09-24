@@ -41,8 +41,8 @@ field, validation, and public grouping. A variant inherits the parent's
 address, color schemes, dependencies, related docs, and tags when it omits
 them. Its use-case membership never inherits: `useCaseIds` defaults to an empty
 list because a variant must reciprocate only the flows whose steps name that
-variant. Its `navPath` is always copied from its parent, never authored on
-the variant. `defineScreen` returns one `ScreenDefinition` when `variants` is
+variant. Its path follows the [navigation path contract](./mokly-nav-paths.md).
+`defineScreen` returns one `ScreenDefinition` when `variants` is
 absent or definitely `undefined`, and a readonly parent-first array of screen
 definitions when it is definitely an array, including an empty array. An input
 whose type allows either form, such as an annotated `ScreenInput`, returns their
@@ -63,17 +63,8 @@ under `user-flows/`. Screens may
 provide an address-bar label and use-case membership. Nested definitions
 inherit declared metadata, but ids never derive from tree position.
 
-Every routed screen, page, use case, and component has `navPath: readonly
-string[]`: the ordered folder labels from its section root to its parent.
-Flat inputs may omit it or pass `undefined` (default `[]`, a top-level leaf); nested leaves derive
-it and must not author it. The Pages section holds screens, pages, and use
-cases; Components holds components. Each section builds its own folder tree
-from shared path prefixes. Identical labels under one parent merge across
-modules; the same path in different sections makes independent folders.
-The rendered navigation omits a section with no matching current or retained
-removed entries; the public tree retains both section arrays as `[]` when
-they have no current entries. No empty folder is emitted. Breadcrumbs
-are the `navPath` labels, followed by the parent screen title for a variant.
+The [navigation path contract](./mokly-nav-paths.md) defines section trees,
+path derivation, label diagnostics, ordering, and folder keys.
 
 The common and nested-root input boundary is:
 
@@ -110,11 +101,9 @@ interface RootInput {
 `defineRoot({ path, navPath?, children, address?, dependencies?, relatedDocs? })`
 flattens nested `screen()` and `page()` leaves into ordinary definitions;
 `folder({ title, segment, children, address?, dependencies?, relatedDocs? })`
-groups children without creating an entry or route. A leaf's `navPath` is
-`[...(root.navPath ?? []), ...ancestor folder titles]`, excluding its own title.
-An omitted or empty root `navPath` leaves direct children top-level. Root
-`path`, folder `segment`s, and leaf `slug` compose routes; changing navigation
-labels never moves routes. Folder `segment` must be a non-empty string; an
+groups children without creating an entry or route. Nested path and route
+derivation follow the [navigation path contract](./mokly-nav-paths.md).
+Folder `segment` must be a non-empty string; an
 empty or non-string value fails at `defineRoot` flattening with
 `MoklyError("build-invalid", "folder <parent route directory> segment must be a non-empty string")`.
 An explicit non-array root `navPath` fails at `defineRoot` with
@@ -140,42 +129,10 @@ The nested authored-path violation is
 `nested entry <id> cannot author navPath` under the `invalid-nested-nav-path`
 code, attributed to the source module.
 
-Each folder label (every root `navPath` segment and folder title) must be a
-string, nonempty, have no leading or trailing ECMAScript
-whitespace (`/^\s|\s$/u`), and contain no `/`. Invalid segments yield a
-per-entry `invalid-nav-path` registry issue naming the entry id, zero-based
-offending index, and offending label (including its value for non-strings).
-An explicit non-array path is `invalid-nav-path` with index `-1` and the raw
-path as its offending value; `undefined` is the omitted default.
-Its diagnostic text is
-`entry <id> navPath index <index> has invalid label <value>`: for an array
-segment `<value>` is `JSON.stringify(label)` (or `String(label)` if that
-returns `undefined`), while for a non-array path it is `String(path)`.
-The current hierarchy analysis owns label and conflict diagnostics; registry
-validation reports each invalid segment once, even for a screen with inherited
-variants. An invalid parent `navPath` is not repeated on those variants.
-For an empty folder, the authoring error above takes precedence. Conflict
-matching uses exactly
-`label.normalize("NFKC").replace(/\s/gu, "").toUpperCase().toLowerCase()`.
-Within the same section and parent, two folder labels with that key but
-different bytes yield `nav-path-conflict`, naming both labels and their parent
-path. Report one issue for each conflicting spelling **per source module**,
-on the lowest-id entry in that module using the spelling, regardless of entry
-or module order; name every conflicting spelling in each issue. At the root
-name the location "at the top of Pages" or "at the top of Components";
-below a folder use "under Pages › A › B" (or Components). Byte-identical
-labels merge. Folder conflicts use
-`labels <quoted spellings> conflict <location>`, with spellings in UTF-16
-code-unit order and each label JSON-quoted. A leaf's title is its display
-label: a leaf sharing a conflict key with a sibling folder is also
-`nav-path-conflict` on the leaf entry, with the text
-`leaf <id> label <quoted title> conflicts with folder label <quoted folder> <location>; append the folder label <quoted folder> to the leaf's navPath`.
-Leaf titles are otherwise
-free text; two leaves with identical titles in one folder are allowed. Order
-every sibling list by folders before leaves, then
-`left.label.localeCompare(right.label, "en")`, then UTF-16 code-unit comparison
-of the folder path key or leaf id. Variants stay under their parent in authored
-order and never join a folder as separate members. See the
+The [navigation path contract](./mokly-nav-paths.md#labels-and-diagnostics)
+owns the exact `invalid-nav-path` and `nav-path-conflict` texts and
+attribution; [ordering and keys](./mokly-nav-paths.md#order-and-keys)
+are shared by authoring validation, the shell, and the public tree. See the
 [read model](./mokly-catalogue.md) for tree validation and key construction.
 
 `defineScreen` and nested `screen` inputs may declare `colorSchemes`. When

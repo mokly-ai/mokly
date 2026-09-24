@@ -88,14 +88,9 @@ fails for:
 
 - invalid config or registry metadata;
 - duplicate ids/routes or route/fragment/page collisions;
-- forbidden authored `navPath` on a nested leaf (`invalid-nested-nav-path`
-  naming the entry id); invalid `navPath` labels (`invalid-nav-path` with
-  entry id, zero-based index and offending label); conflicting sibling folder
-  labels (`nav-path-conflict` once per spelling per source module, attributed
-  to its lowest-id entry, naming every spelling and its readable section
-  location) or folder-versus-leaf labels (`nav-path-conflict` on the leaf,
-  naming its id and suggesting appending the folder label to its `navPath`);
-  empty authored folders, missing use-case screens, or reciprocal memberships;
+- forbidden nested paths or empty folders, plus
+  [path violations](./mokly-nav-paths.md#labels-and-diagnostics), missing
+  use-case screens, or reciprocal memberships;
 - unresolved `mock:` links, raw document links, local HTML/CSS resources, or
   anchors;
 - missing stylesheets and declared dependencies;
@@ -171,15 +166,8 @@ malformed encoding, absolute and empty paths, dot segments, and forward or
 backslash separators introduced by decoding one original URL segment before
 any filesystem resolution.
 
-Browse builds and caches independent Pages (screens, pages, use cases) and
-Components folder trees from validated current manifest v6 `navPath` labels.
-Equal paths merge within a section, not across sections; the rendered navigation
-omits a section with no matching current or retained removed entries, while the
-public tree retains both required arrays.
-A routed entry with `navPath: []` renders at the section root without
-an invented group or breadcrumb. Variants stay below their parent screen;
-their path must equal the parent's. Historical paths are comparison and
-removed-entry context only; source and route directories never create groups.
+Browse caches [section trees](./mokly-nav-paths.md#sections-and-path-derivation)
+from validated manifest v6 paths.
 The serve-mode `live-index-1` retains that literal `schemaVersion` but carries
 the v6 four-kind routed entry shape and authored `navPath` (with unrendered
 usage metadata omitted), validated through the v6 metadata schema.
@@ -234,10 +222,8 @@ Route attribution compares each current manifest entry with its base entry and
 matches material fragment changes and changes to rendered local resources.
 Source modules, declared dependencies, and configured shared-impact globs alone
 must not mark unchanged screens or propagate unchanged screens into use cases.
-Entry comparison uses an explicit projection of route-affecting fields plus
-its authored `navPath` labels. A difference from the baseline `navPath`
-marks that routed entry changed, including a move or renamed folder. A
-folder itself never has change status.
+Entry comparison projects route-affecting fields and follows the
+[path contract](./mokly-nav-paths.md) for moves.
 The projection excludes source locations and dependency declarations; changes
 to those implementation details remain secondary comparison evidence. Fragment
 comparison applies the same paired ignore rules and material keys as screen
@@ -253,7 +239,7 @@ fragments is affected too and remains visible in the changed-only filter.
 A screen embeds its generated mobile and desktop fragments inside package-owned
 device frames. A use case renders ordered steps that reference those same
 fragments and link back to their standalone screens. A page embeds its complete generated document without viewport or comparison
-controls. All folder crumbs come from `navPath` and stay text. The details inspector may show description, rationale,
+controls. The details inspector may show description, rationale,
 source and fragment paths including dark renders, the schemes a screen renders
 in, the tags the entry declares, related docs, dependencies, use cases, and
 comparison context.
@@ -284,12 +270,9 @@ explicit cross-origin host exception is confined to the frame-adapter contract.
 Review panes retain their stricter sandbox and byte-unmodified documents.
 
 The top-level disclosures use `section:pages` and `section:components` as their
-rendered and persisted identities. A folder group's navigation key is
-`folder:<path key>`; its disclosure key is
-`folder:<section>:<path key>`, with `<section>` `pages` or `components` and
-`<path key>` the root-to-folder labels joined by `/`. These remain independent
-for the same path in both sections. Labels may contain `:`, so parsers must
-match the fixed prefixes, never split on `:`. Persist only `section:`,
+rendered and persisted identities. Folder identities and key parsing follow
+the [navigation path contract](./mokly-nav-paths.md#order-and-keys).
+Persist only `section:`,
 `folder:`, and `variants:` disclosures; ignore obsolete `collection:` and
 `legacy:` keys on restore, without attempting migration to new keys.
 A stored non-empty list containing only obsolete keys leaves the server's

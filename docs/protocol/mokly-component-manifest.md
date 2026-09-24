@@ -63,8 +63,8 @@ interface ManifestComponentVariant {
 under the implemented [screen variants contract](./mokly-screen-variants.md).
 
 Common entry metadata keeps its meaning, including source attribution and
-authored `navPath` (required on every v6 routed entry, copied from the parent
-for a variant). Every v6 entry requires `declaredDependencies`,
+authored `navPath` (following the [path contract](./mokly-nav-paths.md)).
+Every v6 entry requires `declaredDependencies`,
 the sorted unique paths explicitly authored in its definition. `dependencies`
 remains exactly their union with `sourcePath`. Keeping both prevents automatically
 added source attribution from masquerading as an exact direct-screen dependency;
@@ -77,9 +77,10 @@ is the default; all variants use the component's same effective scheme set.
 
 Only historical v3–v5 manifests admit `collection` entries. Their
 `ManifestCollection.childIds` is a required string array and may be empty;
-historical relationship validation still checks duplicates, targets,
-ownership, and cycles before dropping all collection records. Manifest v6 has
-no collection kind and derives folders only from routed entries' `navPath`.
+historical relationship validation checks duplicates, targets, ownership, and
+cycles before dropping them, as described in the
+[path contract](./mokly-nav-paths.md#variants-and-historical-paths).
+Manifest v6 has no collection kind.
 
 When components are registered, every screen's `componentViews` contains exactly one record for each light and optional dark
 fragment, ordered mobile/light, mobile/dark, desktop/light, desktop/dark. It is
@@ -252,9 +253,9 @@ discovery; component records retain their complete usage and declaration proof.
 Historical Git readers retain v3, opt-in v2, both earlier v4 shapes, v5, and v6: main's
 component format has `legacyPages`, while the page migration format has
 `sourceFiles`. These v4 shapes are disjoint; mixed top-level fields are invalid.
-After validating each historical shape, drop v3–v5 `collection` entries before
-comparison. Historical `navPath` is checked only as an array of strings, not
-for current label/conflict rules. Current loading rejects every earlier
+Historical path handling follows the
+[navigation path contract](./mokly-nav-paths.md#variants-and-historical-paths).
+Current loading rejects every earlier
 version with a rebuild diagnostic.
 Do not invent component usage for historical screen/page-only entries or revive
 legacy configuration. Registered document pages retain their material Changes

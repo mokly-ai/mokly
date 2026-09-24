@@ -164,7 +164,7 @@ file.
 
 All catalogues emit [manifest v6](./mokly-component-manifest.md), including
 pages, source inventory, saved component variants and per-view invocation/ownership
-records. Historical readers accept v3, both disjoint v4 formats, v5, and opt-in v2.
+records. Historical readers accept v3, both disjoint v4 formats, v5, v6, and opt-in v2.
 The common current shape is:
 
 ```ts
@@ -217,10 +217,8 @@ type ManifestEntry =
 
 Entries sort by route then id; source inputs, dependencies, and generated files
 sort lexically. Optional properties are omitted, not emitted as `null`.
-`navPath` is authored (or derived once while flattening a nested root), is
-required on every v6 entry, and contains the ordered folder labels from its
-section root to its parent. An absent flat input emits `[]`; variants copy
-their parent's path. It is the only navigation hierarchy source.
+`navPath` is required on every v6 entry; its derivation and meaning follow
+the [navigation path contract](./mokly-nav-paths.md).
 `darkFragments` is present exactly when the screen's effective schemes include
 dark. Its routes use the `.mobile.dark.html` and `.desktop.dark.html` names and
 participate in the same safe-route and collision validation as light fragments.

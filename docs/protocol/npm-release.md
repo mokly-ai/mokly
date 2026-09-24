@@ -58,8 +58,10 @@ mounting and Node-only SSR. The CLI declares an exact registry version dependenc
 Root build, clean, formatting, lint, typecheck and package gates cover both
 packages. Pack the viewer first; local smoke and release fixtures install both
 tarballs explicitly so an unpublished viewer is never resolved from the registry.
-Consumer fixtures exercise every public viewer entry, SSR of the public v1
-fixture, browser bundle boundaries and NodeNext declarations. Both manifests,
+Consumer fixtures exercise every public viewer entry, SSR of the
+[public v2 fixture](./fixtures/catalogue-v2.json) in
+`scripts/package/viewer.mjs` (`smokeViewer`), browser bundle boundaries and
+NodeNext declarations. Both manifests,
 packed metadata, export targets, allowlists, licenses, React peers and the exact
 viewer dependency are checked. Packed dependencies cannot use `workspace:` or
 `file:` links; local links exist only in the test consumer's install manifest.

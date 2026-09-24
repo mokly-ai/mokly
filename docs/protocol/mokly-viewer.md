@@ -393,9 +393,9 @@ Shell state is one store scoped to a mounted viewer:
 - **Selection** is the public `ViewerSelection`: screen, saved variant, All/Changes view,
   viewport, colour scheme, search phrase and tags. Standalone modes keep
   viewport, scheme and filters in memory across in-shell navigation.
-- **Disclosure** covers navigation groups (`section:*`,
-  `folder:<section>:<path key>`, and `variants:<section>:<parent id>`
-  identities), the details inspector, the navigation split width and the
+- **Disclosure** covers navigation groups (with folder keys defined by the
+  [path contract](./mokly-nav-paths.md#order-and-keys), alongside `section:*`
+  and `variants:<section>:<parent id>`), the details inspector, the navigation split width and the
   responsive drawer. Navigation, details and split-width choices persist per
   served origin in browser storage under the existing keys; the drawer and the
   tag picker panel do not persist and reset on reload.
