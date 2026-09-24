@@ -1,8 +1,8 @@
 # Path-Based Navigation Hierarchy
 
-Status: Milestones 1–5 are complete, verified, and pushed; Milestone 5's
-post-push review is pending. Findings 1 and 2 await the user's decision. The
-plan stays Active until its PR merges.
+Status: Milestones 1–5 are complete, verified, pushed, and reviewed.
+Findings 3 and 4 are fixed; findings 1, 2, and 5–10 await the user's
+decision. The plan stays Active until its PR merges.
 Created 2026-09-23 with the user's
 consent after the design discussion in this workspace. This plan supersedes the
 collection-forest contract delivered by
@@ -427,6 +427,29 @@ change: rows, icons, crumbs, and the details inspector look the same.
    passed 300 lines, and the label, conflict, and ordering rules are restated
    in three protocol docs. Fixed in Milestone 5.
 
+From the Milestone 5 review (against `c6b2595`):
+
+5. Low: stale version references: `src/server/README.md` calls the served
+   catalogue the public v1 read model, and `docs/protocol/mokly-changes.md`
+   calls manifest v5 current.
+6. Low: inaccuracies in `mokly-nav-paths.md` and its pointers: historical
+   `navPath` labels must be non-empty strings, not just strings; there is no
+   "moved" state (a `navPath` difference marks the entry changed); the runtime
+   spec's "for moves" link is vague; and `mokly-authoring.md` sends readers to
+   the read model for key construction, which `mokly-nav-paths.md` owns.
+7. Low: `mokly-shell-design.md` still restates the section-omission,
+   independent-folder, and empty-folder rules that `mokly-nav-paths.md` owns.
+8. Low: `tests/collection_model_guard.test.ts` misses the removed
+   `collection()` helper's imports and calls, old field names such as
+   `closedCollectionIds`, template-literal strings, and `.mts`, `.cts`,
+   `.cjs`, and `.jsx` files, and has no self-check against known leftovers.
+9. Low: `tests/browser/watch_folders.spec.ts` kills its watched server and
+   deletes the fixture without waiting for the process to exit; the original
+   file waited in its final test, so cleanup can race.
+10. Nit: six test titles or messages still use collection wording, and the
+    `browseState()` helper is duplicated in `tests/client.test.ts` and
+    `tests/client_disclosures.test.ts`.
+
 ## Milestone 5: Review follow-up for findings 3 and 4
 
 On 2026-09-24 the user chose to fix review findings 3 and 4 with the
@@ -479,11 +502,13 @@ mockup, or visual change.
       and 4 as fixed in the review-findings list above.
 - [x] Run `cargo xtask check`; fix anything it reports until it passes.
 - [x] Commit and push.
-- [ ] Review the complete local diff against `origin/main` using
+- [x] Review the complete local diff against `origin/main` using
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       after the push; report each finding with a number, severity, plain
       explanation, impact of doing nothing, lettered options, and a
-      recommendation, without changing the implementation.
+      recommendation, without changing the implementation. Two independent
+      reviewers ran against `c6b2595`; findings 5–10 in the list above await
+      the user's decision.
 
 ## Post-merge follow-up (non-blocking)
 
