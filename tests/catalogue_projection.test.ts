@@ -4,7 +4,7 @@ import test from "node:test";
 
 import { readCatalogueChanges } from "../dist/server/component_changes.js";
 import type { CatalogueNode } from "../packages/viewer/dist/catalogue/types.js";
-import type { ManifestV5 } from "../packages/viewer/dist/registry/types.js";
+import type { ManifestV6 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { readCatalogue } from "../packages/viewer/src/catalogue/reader.js";
 import { projectCatalogue } from "../src/catalogue/projection.js";
@@ -266,6 +266,6 @@ function findNode(
 }
 
 type CurrentManifestScreen = Extract<
-  ManifestV5["entries"][number],
+  ManifestV6["entries"][number],
   { kind: "screen" }
 >;

@@ -30,20 +30,6 @@ test("registering unrelated components does not add unchanged screens to Changes
   assert.equal(result.screens[0]?.state, "unchanged");
 });
 
-test("dependency declarations alone do not invent screen or component changes", async (t) => {
-  const fixture = await componentReviewFixture(t, (source) =>
-    source.replace('dependencies: ["notes.md"]', "dependencies: []"),
-  );
-  const { result } = await compareReview(
-    fixture.after,
-    fixture.config,
-    fixture.git,
-    "main",
-  );
-  if (result.schemaVersion !== 3) assert.fail("Expected component comparison");
-  assert.deepEqual(result.changes, []);
-});
-
 test("one-sided registration retains real screen content edits", async (t) => {
   const fixture = await componentReviewFixture(
     t,
@@ -53,7 +39,7 @@ test("one-sided registration retains real screen content edits", async (t) => {
       }),
     unregistered("<p>Before adoption</p>"),
   );
-  assert.equal(fixture.before.manifest.schemaVersion, 5);
+  assert.equal(fixture.before.manifest.schemaVersion, 6);
   const { result } = await compareReview(
     fixture.after,
     fixture.config,
@@ -75,7 +61,7 @@ test("removed components retain variants, missing sides, and baseline consuming 
   const fixture = await componentReviewFixture(t, () =>
     unregistered("<p>Now standalone</p>"),
   );
-  assert.equal(fixture.after.manifest.schemaVersion, 5);
+  assert.equal(fixture.after.manifest.schemaVersion, 6);
   const { result } = await compareReview(
     fixture.after,
     fixture.config,

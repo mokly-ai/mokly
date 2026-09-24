@@ -20,14 +20,14 @@ the completed
 [in-frame catalogue link navigation plan](../../plans/in-frame-catalogue-link-navigation.md).
 
 [Whole-document pages](./mokly-pages.md) use the same IDs and hierarchy as
-screens and flows. Current manifests require v5. The
+screens and flows. Current manifests require v6. The
 [breaking migration](./mokly-page-migration.md) removes legacy configuration,
 discovery, and rendering adapters; consumers use ordinary page definitions.
 The co-located layout below, discovered through `entries` globs, was delivered
 by the [co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
 Manifest v6 and the public component stylesheet marker are planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-implemented in Milestones 6 and 3. Until then current reads still require v5.
+implemented in Milestones 6 and 3. Historical v3–v5 baselines remain readable.
 
 ## Package Identity
 

@@ -44,8 +44,8 @@ version in that shared tree through the lifecycle implemented by the
 The single Changes rule, component stylesheet validation and removal of the
 Dependencies display are planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-implemented in Milestones 3, 4 and 5 respectively; this text describes the
-target while current code still accepts old declarations.
+implemented in Milestones 3, 4 and 5 respectively. Milestone 6 removes the
+old authoring declarations.
 
 ## Component Workspaces
 

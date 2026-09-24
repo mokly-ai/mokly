@@ -5,10 +5,9 @@ Historical commands execute trusted repository code; preparation is never an HTT
 
 ## Delivery Status
 
-Removal of fallback path evidence from cached-baseline classification is
-planned by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md)
-and implemented in Milestone 4. The current code still checks shared-impact
-paths until then; the cache confinement target below does not.
+Source-path-free classification and acceptance of current manifest-v6 cache
+markers are planned by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md)
+and implemented in Milestones 4 and 6 respectively.
 
 ## Rebuild Procedure
 
@@ -84,7 +83,9 @@ and never a valid `mockupsDir`, entry glob root, resolved entry module,
 manifestVersion }`. An entry is complete only when the marker parses, its
 `commit` matches the directory name, and `output/<manifest>` exists. Anything
 else is a partial entry and is removed under the lock before the next attempt.
-The historical manifest is validated again on reuse. A complete entry with a
+The marker retains the rebuilt manifest's original version: v2 with explicit
+compatibility, historical v3–v5, or current v6. The manifest is validated again
+on reuse without rewriting historical bytes. A complete entry with a
 different `inputs.json` output path or command list fails as
 `baseline-output-invalid` and remains intact. The commit-only cache holds one
 catalogue/build configuration; remove that entry before changing those settings.

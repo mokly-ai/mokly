@@ -67,6 +67,9 @@ a changed commit or build settings and shutdown cancel and drain it.
 to `source`, runs commands, validates the historical manifest and output tree,
 moves the generated directory to `output`, deletes the extraction, and writes
 `complete.json`. Completion of the marker write commits the result immediately.
+The marker retains the on-disk manifest version: historical v2–v5 remain
+readable at the baseline boundary, and current v6 output is reusable after
+the same validation on every cache hit.
 Cancellation before that point removes partial output; cancellation afterward
 returns the completed result and skips remaining retention work. Cleanup and
 lock release cannot reject or erase a completed build. No cleanup failure may

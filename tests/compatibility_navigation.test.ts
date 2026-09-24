@@ -223,7 +223,7 @@ export default function transform(input: CompatibilityTransformInput): string {
 function fragmentSource(): string {
   return `import { defineScreen } from "@mokly/mokly";
 import React from "react";
-const metadata = { dependencies: [], navPath: ["Fixture"], relatedDocs: [], useCaseIds: [] };
+const metadata = { navPath: ["Fixture"], relatedDocs: [], useCaseIds: [] };
 export const mockups = [
   defineScreen({ ...metadata, description: "Home", desktop: <main><a href="mock:details#section">Details</a></main>, id: "home", mobile: <main><a href="mock:details#section">Details</a></main>, route: "screens/home.html", title: "Home" }),
   defineScreen({ ...metadata, description: "Details", desktop: <main id="section">Details</main>, id: "details", mobile: <main id="section">Details</main>, route: "screens/details.html", title: "Details" })

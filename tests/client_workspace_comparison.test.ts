@@ -115,10 +115,10 @@ function comparison(): ReviewResultV2 {
     screens: [
       {
         id: "home",
+        dependencies: [],
         route: "screens/home.html",
         title: "Home",
         state: "changed",
-        dependencies: [],
         sharedImpact: ["mockups/logo.svg"],
         views: [
           {
@@ -149,7 +149,6 @@ function workspace(): WorkspaceData {
       route: "screens/home.html",
       title: "Home",
       description: "Home",
-      dependencies: [],
       relatedDocs: [],
       navPath: [],
       sourcePath: "entries/home.mockup.tsx",

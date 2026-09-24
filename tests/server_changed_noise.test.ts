@@ -29,7 +29,7 @@ test("shared source edits cannot turn the entire catalogue into Changes", async 
   );
 });
 
-test("dependency declarations and source moves alone do not need screen review", async (t) => {
+test("source moves alone do not need screen review", async (t) => {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
@@ -37,7 +37,6 @@ test("dependency declarations and source moves alone do not need screen review",
   const baseline = structuredClone(manifest);
   for (const entry of baseline.entries) {
     entry.sourcePath = "entries/old.mockup.tsx";
-    entry.dependencies = [entry.sourcePath, "src/old-settings.tsx"];
   }
   assert.deepEqual(changedManifestRoutes(manifest, baseline, config, []), []);
 });

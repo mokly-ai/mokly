@@ -17,7 +17,7 @@ for (const kind of ["screen", "page"]) {
         kind === "screen"
           ? validEntrySource({ body: `<img src="../${route}" alt="Logo" />` })
           : validEntrySource() +
-            `\nimport { definePage } from "@mokly/mokly"; mockups.push(definePage({ id: "handbook", title: "Handbook", description: "Document", route: "handbook.html", dependencies: [], relatedDocs: [], render: () => '<html><body><img src="${route}" alt="Logo"/></body></html>' }));`;
+            `\nimport { definePage } from "@mokly/mokly"; mockups.push(definePage({ id: "handbook", title: "Handbook", description: "Document", route: "handbook.html", relatedDocs: [], render: () => '<html><body><img src="${route}" alt="Logo"/></body></html>' }));`;
       const fixture = await changedFixture(
         context,
         source,

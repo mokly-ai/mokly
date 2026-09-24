@@ -12,7 +12,7 @@ function pageSource(route: string): string {
   return `${validEntrySource()}
 import { definePage } from "@mokly/mokly";
 mockups.push(definePage({ id: "handbook", title: "Handbook", route: ${JSON.stringify(route)},
-  description: "Catalogue guidance", dependencies: [], relatedDocs: [],
+  description: "Catalogue guidance", relatedDocs: [],
   render: () => "<!doctype html><html><body>Handbook</body></html>" }));`;
 }
 

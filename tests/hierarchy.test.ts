@@ -12,7 +12,7 @@ import {
   parseHistoricalManifest,
 } from "../dist/registry/manifest.js";
 import { analyzeHierarchy } from "../packages/viewer/dist/registry/hierarchy.js";
-import type { ManifestV5 } from "../packages/viewer/dist/registry/types.js";
+import type { ManifestV6 } from "../packages/viewer/dist/registry/types.js";
 
 interface TestEntry {
   childIds?: readonly string[];
@@ -193,7 +193,7 @@ function entry(
 }
 
 type MutableManifest = Omit<
-  ManifestV5,
+  ManifestV6,
   "entries" | "generatedBy" | "schemaVersion"
 > & {
   entries: Array<{
@@ -205,13 +205,12 @@ type MutableManifest = Omit<
   schemaVersion: number;
 };
 
-function hierarchyManifest(): ManifestV5 {
+function hierarchyManifest(): ManifestV6 {
   return createManifest(
     [
       resolved(
         defineCollection({
           childIds: ["nested"],
-          dependencies: [],
           description: "Root collection",
           id: "root",
           relatedDocs: [],
@@ -221,7 +220,6 @@ function hierarchyManifest(): ManifestV5 {
       resolved(
         defineCollection({
           childIds: ["screen"],
-          dependencies: [],
           description: "Nested collection",
           id: "nested",
           relatedDocs: [],
@@ -238,7 +236,6 @@ function hierarchyManifest(): ManifestV5 {
 
 function screenDefinition(id: string): RegistryDefinition {
   return defineScreen({
-    dependencies: [],
     description: `${id} screen`,
     desktop: id,
     id,

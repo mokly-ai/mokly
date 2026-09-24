@@ -4,7 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import type { ManifestScreen, ManifestV5 } from "@mokly/viewer/data";
+import type { ManifestScreen, ManifestV6 } from "@mokly/viewer/data";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
@@ -194,15 +194,10 @@ async function screenFixture(t: test.TestContext) {
     title: "Removed",
     useCaseIds: [],
   };
-  const baseline: ManifestV5 = {
-    entries: [
-      {
-        ...screen,
-        declaredDependencies: screen.declaredDependencies ?? [],
-      },
-    ],
+  const baseline: ManifestV6 = {
+    entries: [screen],
     generatedBy: "mokly",
-    schemaVersion: 5,
+    schemaVersion: 6,
     sourceFiles: current.manifest.sourceFiles,
   };
   const files = new Map<string, Uint8Array>([

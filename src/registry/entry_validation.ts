@@ -17,12 +17,23 @@ import {
 import type { RegistryViolation } from "./prepared_types.js";
 import { variantEntryViolations } from "./variant_validation.js";
 
-/** Validate metadata, routes, source attribution, and declared paths. */
+/** Validate metadata, routes, source attribution, and retired inputs. */
 export function validateEntry(
   entry: ResolvedRegistryEntry,
   config: ResolvedConfig,
 ): RegistryViolation[] {
   const violations: RegistryViolation[] = [];
+  for (const field of ["dependencies", "ownedDependencies"] as const) {
+    if (Object.hasOwn(entry, field)) {
+      violations.push(
+        problem(
+          entry,
+          "removed-field",
+          `${field} has been removed; delete this field.`,
+        ),
+      );
+    }
+  }
   for (const field of ["id", "title", "description"] as const) {
     if (!nonEmpty(entry[field])) {
       violations.push(
@@ -57,7 +68,6 @@ export function validateEntry(
     );
   }
   validatePaths(entry, "relatedDocs", entry.relatedDocs, config, violations);
-  validatePaths(entry, "dependencies", entry.dependencies, config, violations);
   if (entry.rationale !== undefined && !nonEmpty(entry.rationale)) {
     violations.push(
       problem(

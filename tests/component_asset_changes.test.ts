@@ -13,48 +13,33 @@ import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentGit } from "./helpers/component_review_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
-for (const exact of [false, true])
-  test(`unrendered owned dependency does not affect Changes; exact screen dependency=${exact}`, async (t) => {
-    const source = componentEntrySource()
-      .replace('dependencies: ["notes.md"]', 'dependencies: ["shared"]')
-      .replace(
-        'id: "action",',
-        'id: "action", ownedDependencies: ["shared/button.ts"], dependencies: ["shared/button.ts"],',
-      )
-      .replace(
-        'id: "home",',
-        `id: "home", ${exact ? 'dependencies: ["shared/button.ts"],' : ""}`,
-      );
-    const fixture = await createFixture(source);
-    t.after(() => removeFixture(fixture));
-    await fs.mkdir(path.join(fixture.root, "shared"));
-    await fs.writeFile(
-      path.join(fixture.root, "shared/button.ts"),
-      "export const size = 1;",
-    );
-    const config = await loadConfig(fixture.root);
-    const before = await compileCatalogue(config);
-    await writeCompilation(before, config);
-    const git = componentGit(before, ["shared/button.ts"]);
-    const { result } = await compareReview(before, config, git, "main");
-    assert.equal(result.schemaVersion, 3);
-    if (result.schemaVersion !== 3) return;
-    const expected: string[] = [];
-    assert.deepEqual(
-      result.changes.map((entry) => entry.after!.route),
-      expected,
-    );
-    assert.deepEqual(await computeChangedRoutes(config, "main", git), expected);
-    assert.deepEqual(result.affectedConsumers, []);
-    assert.deepEqual(result.sharedImpact, []);
-  });
+test("unrendered source files do not affect component Changes", async (t) => {
+  const source = componentEntrySource();
+  const fixture = await createFixture(source);
+  t.after(() => removeFixture(fixture));
+  await fs.mkdir(path.join(fixture.root, "shared"));
+  await fs.writeFile(
+    path.join(fixture.root, "shared/button.ts"),
+    "export const size = 1;",
+  );
+  const config = await loadConfig(fixture.root);
+  const before = await compileCatalogue(config);
+  await writeCompilation(before, config);
+  const git = componentGit(before, ["shared/button.ts"]);
+  const { result } = await compareReview(before, config, git, "main");
+  assert.equal(result.schemaVersion, 3);
+  if (result.schemaVersion !== 3) return;
+  const expected: string[] = [];
+  assert.deepEqual(
+    result.changes.map((entry) => entry.after!.route),
+    expected,
+  );
+  assert.deepEqual(await computeChangedRoutes(config, "main", git), expected);
+  assert.deepEqual(result.affectedConsumers, []);
+  assert.deepEqual(result.sharedImpact, []);
+});
 
-for (const ownership of [
-  "dependency",
-  "renderer",
-  "declared",
-  "unowned",
-] as const)
+for (const ownership of ["renderer", "declared", "unowned"] as const)
   test(`external styles retain real snapshots with ${ownership} attribution`, async (t) => {
     const source = componentEntrySource()
       .replace(
@@ -63,11 +48,9 @@ for (const ownership of [
       )
       .replace(
         'id: "action",',
-        ownership === "dependency"
-          ? 'id: "action", ownedDependencies: ["mockups/action.css"], dependencies: ["mockups/action.css"],'
-          : ownership === "declared"
-            ? 'id: "action", stylesheets: ["action.css"],'
-            : 'id: "action",',
+        ownership === "declared"
+          ? 'id: "action", stylesheets: ["action.css"],'
+          : 'id: "action",',
       );
     const fixture = await createFixture(source, {
       extraConfig:
@@ -107,7 +90,7 @@ for (const ownership of [
     assert.equal(artifact.result.schemaVersion, 3);
     if (artifact.result.schemaVersion !== 3) return;
     const expected =
-      ownership === "unowned" || ownership === "dependency"
+      ownership === "unowned"
         ? [
             "components/action.html",
             "components/pane.html",

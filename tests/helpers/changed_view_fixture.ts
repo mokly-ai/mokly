@@ -49,8 +49,8 @@ export function secondVariantDarkOnlyResult(): ReviewResultV3 {
     changes: [],
     components: [
       {
-        dependencies: [],
         id: "action",
+        dependencies: [],
         route: "components/action.html",
         sharedImpact: [],
         state: "changed",

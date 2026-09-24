@@ -21,8 +21,7 @@ import {
   type TestFixture,
 } from "./helpers/fixture.js";
 
-const metadata =
-  'const metadata = { dependencies: ["notes.md"], relatedDocs: ["notes.md"] };';
+const metadata = 'const metadata = { relatedDocs: ["notes.md"] };';
 
 async function write(
   fixture: TestFixture,
@@ -81,10 +80,7 @@ test("a component defined in a helper beside its implementation is attributed to
     (entry) => entry.id === "button",
   );
   assert.equal(button?.sourcePath, "src/components/button/button.mokly.tsx");
-  assert.deepEqual(button?.dependencies, [
-    "notes.md",
-    "src/components/button/button.mokly.tsx",
-  ]);
+  assert.equal(Object.hasOwn(button ?? {}, "dependencies"), false);
   const demo = compilation.manifest.entries.find(
     (entry) => entry.id === "button-demo",
   );
@@ -139,7 +135,7 @@ test("a definition created by an installed package is rejected as unattributed",
     fixture,
     "node_modules/@acme/mokups/index.js",
     `import { defineScreen } from "@mokly/mokly";
-export const packaged = defineScreen({ dependencies: [], relatedDocs: [], useCaseIds: [], id: "packaged", title: "Packaged", description: "Defined by a package", route: "screens/packaged.html", mobile: "Packaged", desktop: "Packaged" });
+export const packaged = defineScreen({ relatedDocs: [], useCaseIds: [], id: "packaged", title: "Packaged", description: "Defined by a package", route: "screens/packaged.html", mobile: "Packaged", desktop: "Packaged" });
 `,
   );
   await fs.promises.appendFile(
@@ -262,7 +258,7 @@ test("runtime startup rejects a message without entry globs", async () => {
       repoRoot: "/repo",
       publicExclude: resolvePublicExclude([]),
     },
-    manifest: { entries: [], schemaVersion: 5, sourceFiles: [] },
+    manifest: { entries: [], schemaVersion: 6, sourceFiles: [] },
   };
   process.emit("message", {
     ...valid,

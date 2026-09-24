@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-Manifest-v5 generation, validation, Serve, and static export are implemented
+Manifest-v6 generation, validation, Serve, and static export are implemented
 through the public `defineComponent` API. These are the normative interfaces
 for the [component contract](./mokly-components.md). `ManifestEntryBase`,
 `ManifestScreen`, `ManifestPage`, `ManifestCollection`, `ManifestUseCase`,
@@ -16,8 +16,8 @@ The optional instance `source` field below is implemented in
 [viewer library Milestone 2](../../plans/mokly-viewer-library.md).
 Manifest v6 and component stylesheet ownership are defined by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-planned for Milestone 6 and delivered in Milestone 3 respectively. Until Milestone 6 the current
-writer still emits v5; historical parsing of v3–v5 is retained afterward.
+implemented in Milestone 6 and delivered in Milestone 3 respectively.
+Historical parsing of v3–v5 is retained for Git baselines.
 
 ## Entries And Variants
 

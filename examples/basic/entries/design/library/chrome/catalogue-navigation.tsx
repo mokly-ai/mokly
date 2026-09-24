@@ -86,7 +86,6 @@ export const catalogueNavigation = defineComponent({
     "catalogue-navigation",
     "Catalogue navigation",
     "The catalogue tree and its All or Changes filter.",
-    ["catalogue-navigation-row.view.tsx"],
   ),
   propSchema,
   controls: {

@@ -18,8 +18,7 @@ their current screen behavior and navigation authority.
 Component stylesheet adoption and removal of the style collector are planned
 by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
 implemented in Milestone 3; source-path evidence is removed in Milestone 4 and
-authoring fields in Milestone 6. The guidance below is the target, not the
-current example implementation.
+authoring fields in Milestone 6. The example now follows this guidance.
 
 ## Outcome And Scope
 

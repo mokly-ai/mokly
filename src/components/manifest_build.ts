@@ -23,7 +23,6 @@ export function componentManifestEntry(
 ): ManifestComponent {
   return {
     ...common,
-    declaredDependencies: [...new Set(entry.dependencies)].sort(),
     kind: "component",
     route: entry.route,
     viewports: ["mobile", "desktop"],
@@ -31,7 +30,6 @@ export function componentManifestEntry(
     propSchema: entry.propSchema,
     controls: entry.controls,
     slots: entry.slots,
-    ownedDependencies: entry.ownedDependencies,
     variants: entry.variants.map((variant) => {
       const data = componentInputs(
         entry,

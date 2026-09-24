@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-Implemented for schema-v5 [pages](./mokly-pages.md), screens, and flows.
+Implemented for schema-v6 [pages](./mokly-pages.md), screens, and flows.
 The same resolved inventory protects build, runtime, comparisons, and both
 publication options. Verification is tracked in
 [Unified Catalogue Pages](../../plans/unified-catalogue-pages.md); the
@@ -10,8 +10,7 @@ resolved-entry-set rule was delivered by the
 [co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
 The public-file rules for declared component CSS and manifest v6 are defined
 by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-delivered in Milestone 3 and planned for Milestone 6 respectively. Until
-Milestone 6 the writer emits manifest v5.
+delivered in Milestone 3 and implemented in Milestone 6 respectively.
 
 ## Protected Inputs
 
@@ -195,7 +194,7 @@ inside `repoRoot` or explicitly configure a common root containing it.
 ## Freshness And Lifecycle
 
 Build/check derive the inventory from the same resolved graphs used for that
-compilation. Before serving or publishing a current v5 catalogue, independently
+compilation. Before serving or publishing a current v6 catalogue, independently
 resolve the config and consumer input graphs and require the persisted inventory
 to match. This scan may bundle modules but must not run page render callbacks,
 rewrite generated output, or read Git history. A missing, malformed, or stale

@@ -105,9 +105,6 @@ export function defineRoot(input: RootInput): RegistryDefinition[] {
   const definitions: RegistryDefinition[] = [];
   const inherited: NestedInherited = {
     ...(input.collection?.address ? { address: input.collection.address } : {}),
-    ...(input.collection?.dependencies
-      ? { dependencies: input.collection.dependencies }
-      : {}),
     ...(input.collection?.relatedDocs
       ? { relatedDocs: input.collection.relatedDocs }
       : {}),
@@ -116,7 +113,7 @@ export function defineRoot(input: RootInput): RegistryDefinition[] {
     definitions.push(
       defineCollection({
         childIds: input.children.map((child) => child.id),
-        dependencies: input.collection.dependencies ?? [],
+        ...removedDependencies(input.collection),
         description: input.collection.description,
         id: input.collection.id,
         ...(input.collection.rationale
@@ -144,7 +141,6 @@ function flattenChild(
     const { slug, __nested: _marker, ...input } = node;
     const definition = definePage({
       ...input,
-      dependencies: effective.dependencies ?? [],
       relatedDocs: effective.relatedDocs ?? [],
       route: `${directory}/${slug}.html`,
     });
@@ -155,7 +151,7 @@ function flattenChild(
     const flattened = defineScreen({
       ...(effective.address ? { address: effective.address } : {}),
       ...(node.colorSchemes ? { colorSchemes: node.colorSchemes } : {}),
-      dependencies: effective.dependencies ?? [],
+      ...removedDependencies(node),
       description: node.description,
       desktop: node.desktop,
       id: node.id,
@@ -179,7 +175,7 @@ function flattenChild(
   }
   const definition = defineCollection({
     childIds: node.children.map((child) => child.id),
-    dependencies: effective.dependencies ?? [],
+    ...removedDependencies(node),
     description: node.description,
     id: node.id,
     ...(node.rationale ? { rationale: node.rationale } : {}),
@@ -201,13 +197,16 @@ function mergeInherited(
     ...((child.address ?? parent.address)
       ? { address: child.address ?? parent.address }
       : {}),
-    ...((child.dependencies ?? parent.dependencies)
-      ? { dependencies: child.dependencies ?? parent.dependencies }
-      : {}),
     ...((child.relatedDocs ?? parent.relatedDocs)
       ? { relatedDocs: child.relatedDocs ?? parent.relatedDocs }
       : {}),
   };
+}
+
+function removedDependencies(input: object): { dependencies?: unknown } {
+  return Object.hasOwn(input, "dependencies")
+    ? { dependencies: (input as { dependencies?: unknown }).dependencies }
+    : {};
 }
 
 function branded<T extends object>(

@@ -55,19 +55,9 @@ export function metadata(
   const ancestors = hierarchy.ancestorsById
     .get(entry.id)
     ?.map(({ id, title }) => ({ id, title }));
-  const {
-    dependencies: _dependencies,
-    declaredDependencies: _declaredDependencies,
-    sourcePath: _source,
-    navPath: _navPath,
-    ...common
-  } = entry;
+  const { sourcePath: _source, navPath: _navPath, ...common } = entry;
   if (entry.kind === "component") {
-    const {
-      variants: _variants,
-      ownedDependencies: _ownedDependencies,
-      ...component
-    } = common as typeof entry;
+    const { variants: _variants, ...component } = common as typeof entry;
     return canonicalJson({
       ...component,
       ancestors,

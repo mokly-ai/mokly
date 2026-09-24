@@ -91,7 +91,7 @@ export function validateTags(
 
 export function validatePaths(
   entry: ResolvedRegistryEntry,
-  field: "dependencies" | "relatedDocs",
+  field: "relatedDocs",
   values: unknown,
   config: ResolvedConfig,
   violations: RegistryViolation[],

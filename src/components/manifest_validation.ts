@@ -19,16 +19,12 @@ import {
   validateComponentViews,
 } from "@mokly/viewer/data";
 
-import { validateDependencyDeclarations } from "./dependency_validation.js";
-
 const commonKeys = [
   "id",
   "title",
   "description",
   "rationale",
   "relatedDocs",
-  "dependencies",
-  "declaredDependencies",
   "sourcePath",
   "navPath",
   "kind",
@@ -37,19 +33,22 @@ const commonKeys = [
 /** Component-specific manifest fields; inherited metadata uses the existing validator. */
 export function validateManifestComponent(
   value: Record<string, unknown>,
+  historical = false,
 ): void {
   const at = `${String(value.id)} $component`;
   exactKeys(
     value,
     [
       ...commonKeys,
+      ...(historical
+        ? ["dependencies", "declaredDependencies", "ownedDependencies"]
+        : []),
       "route",
       "viewports",
       "tags",
       "propSchema",
       "slots",
       "controls",
-      "ownedDependencies",
       "variants",
     ],
     at,
@@ -60,7 +59,6 @@ export function validateManifestComponent(
   const schema = value.propSchema;
   sortedStrings(value.slots, `${at}.slots`);
   const declaredSlots = value.slots;
-  sortedStrings(value.ownedDependencies, `${at}.ownedDependencies`);
   for (const key of [...Object.keys(schema.properties), ...value.slots]) {
     if (
       [
@@ -77,9 +75,6 @@ export function validateManifestComponent(
     if (value.slots.includes(key) && Object.hasOwn(schema.properties, key))
       invalidData(at, "data and slots overlap");
   }
-  for (const dependency of value.ownedDependencies)
-    if (!(value.dependencies as string[]).includes(dependency))
-      invalidData(at, "owned dependencies must be declared dependencies");
   validateControls(schema, value.controls, at);
   if (
     value.tags !== undefined &&
@@ -106,6 +101,9 @@ export function validateManifestComponent(
         "fragments",
         "darkFragments",
         "componentViews",
+        ...(historical
+          ? ["dependencies", "declaredDependencies", "ownedDependencies"]
+          : []),
       ],
       at,
     );
@@ -157,6 +155,7 @@ export function validateManifestComponent(
 /** Validate every per-view record against the complete registered component set. */
 export function validateManifestComponentUsage(manifest: Manifest): void {
   if (
+    manifest.schemaVersion !== 6 &&
     manifest.schemaVersion !== 5 &&
     (manifest.schemaVersion !== 4 || "sourceFiles" in manifest)
   )
@@ -167,7 +166,9 @@ export function validateManifestComponentUsage(manifest: Manifest): void {
       "schemaVersion",
       "generatedBy",
       "entries",
-      manifest.schemaVersion === 5 ? "sourceFiles" : "legacyPages",
+      manifest.schemaVersion === 5 || manifest.schemaVersion === 6
+        ? "sourceFiles"
+        : "legacyPages",
     ],
     "$manifest",
   );
@@ -179,7 +180,6 @@ export function validateManifestComponentUsage(manifest: Manifest): void {
   if (!components.size && manifest.schemaVersion === 4)
     invalidData("$manifest", "v4 requires registered components");
   for (const entry of manifest.entries) {
-    validateDependencyDeclarations(entry);
     if (entry.kind === "screen") {
       if (components.size)
         validateComponentViews(

@@ -147,7 +147,7 @@ test("failed page builds and source collisions preserve the previous inventory a
   );
   await fs.promises.writeFile(
     fixture.entryPath,
-    'import { definePage } from "@mokly/mokly"; import html from "../mockups/document.html"; export const mockups = [definePage({ id: "page", title: "Page", description: "Page", dependencies: [], relatedDocs: [], route: "document.html", render: () => html })];',
+    'import { definePage } from "@mokly/mokly"; import html from "../mockups/document.html"; export const mockups = [definePage({ id: "page", title: "Page", description: "Page", relatedDocs: [], route: "document.html", render: () => html })];',
   );
   const next = await loadConfig(fixture.root);
   await assert.rejects(compileCatalogue(next), /authoring|source/);

@@ -11,7 +11,7 @@ import { loadConfig } from "../src/config/load.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 const metadata =
-  'dependencies: [], relatedDocs: [], description: "Document", title: "Handbook", id: "handbook"';
+  'relatedDocs: [], description: "Document", title: "Handbook", id: "handbook"';
 const document =
   '<!doctype html><html lang="en"><head><title>Handbook</title></head><body><main id="overview">Whole document</main></body></html>';
 const pageSource = (extra = "", render = `() => ${JSON.stringify(document)}`) =>
@@ -28,7 +28,7 @@ test("a page renders exactly one complete document even with dark screens enable
     "app/handbook.html",
     "mokly-manifest.json",
   ]);
-  assert.equal(result.manifest.schemaVersion, 5);
+  assert.equal(result.manifest.schemaVersion, 6);
   assert.equal("legacyPages" in result.manifest, false);
   assert.match(result.outputs.get("app/handbook.html") ?? "", /Whole document/);
   await writeCompilation(result, config);
@@ -131,7 +131,7 @@ test("pages share relationship and collision validation with screen entries", as
     ['mockups[0].childIds.push("handbook", "handbook");', /duplicate-child/],
     ['mockups[0].childIds.push("missing");', /missing|unknown/],
     [
-      'mockups.push(defineCollection({ id: "second", title: "Second", description: "Second", dependencies: [], relatedDocs: [], childIds: ["handbook"] })); mockups[0].childIds.push("handbook");',
+      'mockups.push(defineCollection({ id: "second", title: "Second", description: "Second", relatedDocs: [], childIds: ["handbook"] })); mockups[0].childIds.push("handbook");',
       /multiple|parent/,
     ],
     ['mockups[3].steps[0].screenId = "handbook";', /screen/],
@@ -150,7 +150,7 @@ test("pages share relationship and collision validation with screen entries", as
 
 test("page logical links validate final page anchors and preserve native child controls", async (context) => {
   const source = `import { definePage, defineScreen, MockLink } from "@mokly/mokly"; import { renderToStaticMarkup } from "react-dom/server";
-const meta = { title: "Example", description: "Example", dependencies: [], relatedDocs: [] };
+const meta = { title: "Example", description: "Example", relatedDocs: [] };
 export const mockups = [definePage({ ...meta, id: "page", route: "page.html", render: () => '<html><body><h1 id="section">Page</h1><a href="mock:screen#section">Screen</a></body></html>' }), defineScreen({ ...meta, id: "screen", route: "screen.html", useCaseIds: [], mobile: <main id="section"><MockLink to="page" fragment="section" asChild><button>Open page</button></MockLink></main>, desktop: <main id="section"><a href="mock:page#section">Page</a></main> })];`;
   const fixture = await createFixture(source);
   context.after(() => removeFixture(fixture));
@@ -188,7 +188,7 @@ test("complete documents retain the established post-screen render context", asy
   );
   await fs.promises.appendFile(
     fixture.entryPath,
-    '\nimport { definePage } from "@mokly/mokly"; import { document } from "../render-state.ts"; mockups.push(definePage({ id: "document", title: "Document", description: "Document", dependencies: [], relatedDocs: [], route: "aaa.html", render: document }));',
+    '\nimport { definePage } from "@mokly/mokly"; import { document } from "../render-state.ts"; mockups.push(definePage({ id: "document", title: "Document", description: "Document", relatedDocs: [], route: "aaa.html", render: document }));',
   );
   const result = await compileCatalogue(await loadConfig(fixture.root));
   assert.match(

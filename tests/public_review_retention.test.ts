@@ -17,13 +17,13 @@ test("complete alias captures do not renew unused generation retention", async (
     changedPaths: [],
     headDigests: {},
     before: {
-      schemaVersion: 5,
+      schemaVersion: 6,
       generatedBy: "mokly",
       sourceFiles: [],
       entries: [],
     },
     after: {
-      schemaVersion: 5,
+      schemaVersion: 6,
       generatedBy: "mokly",
       sourceFiles: [],
       entries: [],

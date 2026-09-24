@@ -65,7 +65,6 @@ export interface ManifestComponentVariant {
   componentViews: readonly ComponentViewRecord[];
 }
 export interface ManifestComponent extends Omit<ManifestEntryBase, "kind"> {
-  declaredDependencies: readonly string[];
   kind: "component";
   route: string;
   viewports: readonly ["mobile", "desktop"];
@@ -73,6 +72,5 @@ export interface ManifestComponent extends Omit<ManifestEntryBase, "kind"> {
   propSchema: ObjectPropSchema;
   slots: readonly string[];
   controls: Readonly<Record<string, ComponentControl>>;
-  ownedDependencies: readonly string[];
   variants: readonly ManifestComponentVariant[];
 }

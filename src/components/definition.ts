@@ -70,7 +70,6 @@ export function validateComponentDefinition(
   }
   const controls = value.controls ?? {};
   validateControls(value.propSchema, controls, at);
-  const owned = value.ownedDependencies ?? [];
   const stylesheets: unknown = value.stylesheets ?? [];
   if (!Array.isArray(stylesheets))
     invalidData(at, "stylesheets must be an array");
@@ -98,15 +97,6 @@ export function validateComponentDefinition(
       invalidData(at, `duplicate stylesheet: ${stylesheet}`);
     seenStylesheets.add(stylesheet);
   }
-  if (
-    !Array.isArray(owned) ||
-    !owned.every(
-      (dependency) =>
-        typeof dependency === "string" &&
-        value.dependencies?.includes(dependency),
-    )
-  )
-    invalidData(at, "ownedDependencies must be a subset of dependencies");
   const definition: ComponentDefinition = {
     ...value,
     __viaDefine: true,
@@ -114,7 +104,6 @@ export function validateComponentDefinition(
     propSchema: structuredClone(value.propSchema),
     controls: structuredClone(controls),
     slots: [...slots].sort(),
-    ownedDependencies: [...new Set(owned)].sort(),
     stylesheets: [...seenStylesheets],
   };
   if (!Array.isArray(value.variants) || !value.variants.length)

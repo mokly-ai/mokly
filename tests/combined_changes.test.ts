@@ -12,7 +12,7 @@ import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 
 const page = `import { definePage } from "@mokly/mokly";
-mockups.push(definePage({ id: "handbook", title: "Handbook", description: "Document", dependencies: [], relatedDocs: [], route: "handbook.html", render: () => "<html><body>Original handbook</body></html>" }));`;
+mockups.push(definePage({ id: "handbook", title: "Handbook", description: "Document", relatedDocs: [], route: "handbook.html", render: () => "<html><body>Original handbook</body></html>" }));`;
 
 for (const editComponent of [false, true]) {
   test(`page material Changes survive component classification and static export: component edit=${editComponent}`, async (t) => {

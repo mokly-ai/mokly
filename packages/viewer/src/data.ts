@@ -137,7 +137,7 @@ export type {
   ManifestScreen,
   ManifestPage,
   ManifestEntry,
-  ManifestV5,
+  ManifestV6,
   Manifest,
   HistoricalManifest,
 } from "./registry/types.js";

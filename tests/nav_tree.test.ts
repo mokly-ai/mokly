@@ -7,7 +7,7 @@ import type {
   ManifestPage,
   ManifestScreen,
   ManifestUseCase,
-  ManifestV5,
+  ManifestV6,
 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import {
@@ -266,7 +266,6 @@ function collection(
 ): ManifestCollection {
   return {
     childIds,
-    dependencies: [],
     description: `${title} collection`,
     id,
     kind: "collection",
@@ -284,7 +283,6 @@ function screen(
   tags?: readonly string[],
 ): ManifestScreen {
   return {
-    dependencies: [],
     description: `${title} screen`,
     fragments: {
       desktop: `${id}.desktop.html`,
@@ -313,7 +311,6 @@ function useCase(
   tags?: readonly string[],
 ): ManifestUseCase {
   return {
-    dependencies: [],
     description: `${title} use case`,
     id,
     kind: "use-case",
@@ -330,17 +327,14 @@ function useCase(
 function manifest(
   entries: readonly ManifestEntry[],
   pages: readonly ManifestPage[] = [],
-): ManifestV5 {
+): ManifestV6 {
   return {
-    entries: [...entries, ...pages].map((entry) => ({
-      ...entry,
-      declaredDependencies: entry.declaredDependencies ?? [],
-    })),
+    entries: [...entries, ...pages],
     generatedBy: "mokly",
     sourceFiles: [
       ...new Set([...entries, ...pages].map((entry) => entry.sourcePath)),
     ].sort(),
-    schemaVersion: 5,
+    schemaVersion: 6,
   };
 }
 
@@ -351,7 +345,6 @@ function page(id: string, title: string, route: string): ManifestPage {
     route,
     kind: "page",
     description: title,
-    dependencies: [],
     relatedDocs: [],
     navPath: [],
     sourcePath: `entries/${id}.tsx`,

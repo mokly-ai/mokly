@@ -20,11 +20,6 @@ import { reviewImpactScreens } from "./review_impact_screens.js";
 import { reviewOutcomeScreens } from "./review_outcome_screens.js";
 import { reviewStyleScreens } from "./review_style_screens.js";
 
-const DESIGN_DEPENDENCIES = [
-  "examples/basic/generated/design-stage.css",
-  "examples/basic/generated/design.css",
-];
-
 const designMockups = defineRoot({
   children: [
     componentDesign,
@@ -157,10 +152,6 @@ const designMockups = defineRoot({
           title: "Comparison availability",
         }),
       ],
-      dependencies: [
-        ...DESIGN_DEPENDENCIES,
-        "examples/basic/generated/design-review.css",
-      ],
       description:
         "Optional screen comparisons within the catalogue Changes filter.",
       id: "design-review",
@@ -169,7 +160,6 @@ const designMockups = defineRoot({
     }),
   ],
   collection: {
-    dependencies: DESIGN_DEPENDENCIES,
     description:
       "Neutral design mockups for the Mokly shell implemented in the UI milestone.",
     id: "design",
@@ -188,7 +178,6 @@ const designMockups = defineRoot({
 export const mockups = [
   defineCollection({
     childIds: ["design", "design-library"],
-    dependencies: DESIGN_DEPENDENCIES,
     description: "Neutral design references for the Mokly package.",
     id: "design-root",
     relatedDocs: ["docs/protocol/mokly-shell-design.md"],

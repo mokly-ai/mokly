@@ -12,8 +12,8 @@ import { documentText } from "./helpers/html.js";
 function pageSource(route = "handbook.html"): string {
   return `${validEntrySource()}
 import { definePage } from "@mokly/mokly";
-mockups.push(defineCollection({ id: "library", title: "Library", description: "Documents", dependencies: [], relatedDocs: [], childIds: ["handbook"] }),
-definePage({ id: "handbook", title: "Handbook", description: "Catalogue guidance", dependencies: [], relatedDocs: [], route: ${JSON.stringify(route)}, render: () => '<!doctype html><html><body><h1 id="start">Handbook</h1><a href="mock:home">Home</a></body></html>' }));`;
+mockups.push(defineCollection({ id: "library", title: "Library", description: "Documents", relatedDocs: [], childIds: ["handbook"] }),
+definePage({ id: "handbook", title: "Handbook", description: "Catalogue guidance", relatedDocs: [], route: ${JSON.stringify(route)}, render: () => '<!doctype html><html><body><h1 id="start">Handbook</h1><a href="mock:home">Home</a></body></html>' }));`;
 }
 
 test("consumer export builds unified pages and preserves a removed page's baseline context", async (context) => {

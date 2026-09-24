@@ -20,7 +20,7 @@ function source(
   path = "explicit/handbook.html",
 ) {
   return `import { defineCollection, definePage } from "@mokly/mokly";
-const meta = { dependencies: [], relatedDocs: [], description: "Example" };
+const meta = { relatedDocs: [], description: "Example" };
 export const mockups = [
  defineCollection({...meta, id: "app", title: "App", childIds: ["book"${parent === "app" ? ', "handbook"' : ""}]}),
  defineCollection({...meta, id: "book", title: "Book", childIds: ${parent === "book" ? '["handbook"]' : '["second"]'}}),
@@ -122,7 +122,7 @@ test("nested page slugs and ancestor path segments alone derive their URLs", asy
     title: string,
     segment: string,
   ) => `import { defineRoot, collection, page } from "@mokly/mokly";
-export const mockups = defineRoot({ path: "app", collection: { id: "app", title: "App", description: "App", dependencies: ["notes.md"], relatedDocs: ["notes.md"], address: "ignored" }, children: [collection({id: "book", title: ${JSON.stringify(title)}, description: "Book", segment: ${JSON.stringify(segment)}, children: [page({id: "handbook", title: "Handbook", description: "Notes", slug: "guide", render: () => "<html><body>Guide</body></html>"})]})]});`;
+export const mockups = defineRoot({ path: "app", collection: { id: "app", title: "App", description: "App", relatedDocs: ["notes.md"], address: "ignored" }, children: [collection({id: "book", title: ${JSON.stringify(title)}, description: "Book", segment: ${JSON.stringify(segment)}, children: [page({id: "handbook", title: "Handbook", description: "Notes", slug: "guide", render: () => "<html><body>Guide</body></html>"})]})]});`;
   for (const [title, segment] of [
     ["Book", "book"],
     ["Renamed", "book"],

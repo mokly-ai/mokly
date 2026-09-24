@@ -51,7 +51,6 @@ const validationConfig: ResolvedConfig = {
 };
 
 const screenBase: ScreenInput = {
-  dependencies: [],
   description: "Tagged screen",
   desktop: "Desktop",
   id: "tagged-screen",
@@ -63,7 +62,6 @@ const screenBase: ScreenInput = {
 
 const collectionBase: CollectionInput = {
   childIds: ["tagged-screen"],
-  dependencies: [],
   description: "Tagged collection",
   id: "tagged-collection",
   relatedDocs: [],
@@ -71,7 +69,6 @@ const collectionBase: CollectionInput = {
 };
 
 const useCaseBase: UseCaseInput = {
-  dependencies: [],
   description: "Tagged journey",
   id: "tagged-journey",
   relatedDocs: [],

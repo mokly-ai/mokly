@@ -238,7 +238,7 @@ test("dark fragments link within dark and fall back to light-only", async (conte
 function routeSource(route: string): string {
   return `import { defineScreen } from "@mokly/mokly";
 import React from "react";
-const metadata = { dependencies: ["notes.md"], relatedDocs: ["notes.md"], useCaseIds: [] };
+const metadata = { relatedDocs: ["notes.md"], useCaseIds: [] };
 export const mockups = [
   defineScreen({ ...metadata, description: "Home", desktop: <a href="mock:unsafe-target">Target</a>, id: "home", mobile: <a href="mock:unsafe-target">Target</a>, route: "screens/home.html", title: "Home" }),
   defineScreen({ ...metadata, description: "Ordinary target", desktop: <main>Ordinary</main>, id: "ordinary-target", mobile: <main>Ordinary</main>, route: "screens/details.html", title: "Ordinary" }),
@@ -253,7 +253,7 @@ function orphanLinkSource(includeTarget: boolean): string {
     : "";
   return `import { defineScreen } from "@mokly/mokly";
 import React from "react";
-const metadata = { dependencies: [], relatedDocs: [] };
+const metadata = { relatedDocs: [] };
 export const mockups = [
   defineScreen({ ...metadata, description: "Home", desktop: <a href="./details.desktop.html">Details</a>, id: "home", mobile: <a href="./details.mobile.html">Details</a>, route: "screens/home.html", title: "Home" }),
   ${target}
@@ -264,7 +264,7 @@ export const mockups = [
 function darkLinkSource(): string {
   return `import { defineScreen } from "@mokly/mokly";
 import React from "react";
-const metadata = { dependencies: [], relatedDocs: [], useCaseIds: [] };
+const metadata = { relatedDocs: [], useCaseIds: [] };
 export const mockups = [
   defineScreen({ ...metadata, description: "A", desktop: <main><a href="mock:b">B</a><a href="mock:c">C</a></main>, id: "a", mobile: <main><a href="mock:b">B</a><a href="mock:c">C</a></main>, route: "screens/a.html", title: "A" }),
   defineScreen({ ...metadata, description: "B", desktop: <main>B</main>, id: "b", mobile: <main>B</main>, route: "screens/b.html", title: "B" }),

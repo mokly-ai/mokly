@@ -1,4 +1,4 @@
-/** Shared styles and dependency identities for every component design collection. */
+/** Shared styles for every component design collection. */
 export const designBaseStyles = [
   "design.css",
   "design-stage.css",
@@ -17,7 +17,3 @@ export const componentLayoutStyles = [
 ];
 
 export const componentStyles = [...designBaseStyles, ...componentLayoutStyles];
-
-export const componentStyleDependencies = componentStyles.map(
-  (stylesheet) => `examples/basic/generated/${stylesheet}`,
-);

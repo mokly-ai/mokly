@@ -47,7 +47,6 @@ export interface ComponentInput<
   >[];
   colorSchemes?: readonly ColorScheme[];
   tags?: readonly string[];
-  ownedDependencies?: readonly string[];
   stylesheets?: readonly string[];
 }
 
@@ -66,7 +65,6 @@ export interface ComponentDefinition extends RoutedEntryInput {
   variants: readonly ComponentVariant<Readonly<Record<string, unknown>>>[];
   colorSchemes?: readonly ColorScheme[];
   tags?: readonly string[];
-  ownedDependencies: readonly string[];
   stylesheets: readonly string[];
 }
 

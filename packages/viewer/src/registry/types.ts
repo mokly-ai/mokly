@@ -6,9 +6,6 @@ import type { Viewport } from "../data/axes.js";
 
 /** Serializable common metadata for a manifest entry. */
 export interface ManifestEntryBase {
-  dependencies: readonly string[];
-  /** Explicit author declarations in component v4 and current v5 manifests. */
-  declaredDependencies?: readonly string[];
   description: string;
   id: string;
   kind: "collection" | "screen" | "page" | "use-case";
@@ -87,9 +84,8 @@ export interface ManifestPagesV4 {
   sourceFiles: readonly string[];
 }
 
-/** Component-aware manifests require complete usage on every screen view. */
+/** Component-aware historical manifests require complete screen usage. */
 export interface ManifestScreenV4 extends ManifestScreen {
-  declaredDependencies: readonly string[];
   componentViews: readonly ComponentViewRecord[];
 }
 export interface ManifestV4 {
@@ -99,22 +95,28 @@ export interface ManifestV4 {
   schemaVersion: 4;
 }
 
-export type ManifestEntryV4 = (
-  ManifestScreenV4 | ManifestComponent | ManifestCollection | ManifestUseCase
-) & { declaredDependencies: readonly string[] };
+export type ManifestEntryV4 =
+  ManifestScreenV4 | ManifestComponent | ManifestCollection | ManifestUseCase;
 
-/** Current catalogue combining pages, components, and complete source protection. */
-export interface ManifestV5 {
-  entries: readonly (ManifestEntry & {
-    declaredDependencies: readonly string[];
-  })[];
+/** Historical page-and-component format, normalized when read from Git. */
+interface HistoricalManifestV5 {
+  entries: readonly ManifestEntry[];
   generatedBy: "mokly";
   schemaVersion: 5;
   sourceFiles: readonly string[];
 }
 
+/** Current catalogue combining pages, components, and complete source protection. */
+export interface ManifestV6 {
+  entries: readonly ManifestEntry[];
+  generatedBy: "mokly";
+  schemaVersion: 6;
+  sourceFiles: readonly string[];
+}
+
 /** All validated formats accepted at the historical Git boundary. */
-export type Manifest = ManifestV3 | ManifestV4 | ManifestPagesV4 | ManifestV5;
+export type Manifest =
+  ManifestV3 | ManifestV4 | ManifestPagesV4 | HistoricalManifestV5 | ManifestV6;
 
 /** Historical comparisons accept older formats without weakening current loading. */
 export type HistoricalManifest = Manifest;

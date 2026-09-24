@@ -101,7 +101,6 @@ test(
       created,
       `import { defineScreen } from "@mokly/mokly";
 export const mockups = [defineScreen({
-  dependencies: [],
   description: "Newly discovered card",
   desktop: "Card",
   id: "new-card",

@@ -3,6 +3,7 @@ import path from "node:path";
 
 import { parseReviewResult } from "@mokly/viewer/data";
 import type {
+  ManifestEntry,
   ManifestScreen,
   ReviewArtifact,
   ReviewArtifactContent,
@@ -118,11 +119,13 @@ export class RepositorySelectedReview implements SelectedReviewProvider {
     afterReader: SelectedAssetReader,
   ): Promise<ReviewResult> {
     if (selection.variantId !== undefined) throw missingSelection();
-    const before = source.before.entries.find(
+    const beforeEntries: readonly ManifestEntry[] = source.before.entries;
+    const afterEntries: readonly ManifestEntry[] = source.after.entries;
+    const before = beforeEntries.find(
       (entry): entry is ManifestScreen =>
         entry.kind === "screen" && entry.route === selection.route,
     );
-    const after = source.after.entries.find(
+    const after = afterEntries.find(
       (entry): entry is ManifestScreen =>
         entry.kind === "screen" && entry.route === selection.route,
     );

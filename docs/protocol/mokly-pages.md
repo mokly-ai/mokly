@@ -3,7 +3,7 @@
 ## Delivery Status
 
 Implemented in this branch. All routed entries use one collection hierarchy,
-and current builds emit schema v5. [Page migration](./mokly-page-migration.md)
+and current builds emit schema v6. [Page migration](./mokly-page-migration.md)
 defines the required breaking consumer upgrade and historical comparison
 support. Verification is tracked in
 [Unified Catalogue Pages](../../plans/unified-catalogue-pages.md). The
@@ -12,7 +12,7 @@ implements the page-only historical capture and delivery boundary.
 Removal of page `dependencies` and manifest-v6 output is planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
 implemented in Milestone 6. Display/read-model removal follows in Milestone 7;
-until then the current code still accepts the field.
+the current public writer emits empty dependency lists until then.
 
 ## Purpose And Boundary
 

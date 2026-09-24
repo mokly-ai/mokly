@@ -1,7 +1,5 @@
 import { collection, screen } from "@mokly/mokly";
 
-import { componentStyleDependencies } from "../parts/styles.js";
-
 import { editingScreens } from "./editing/screens.js";
 import { ControlsPage } from "./parts/page.js";
 import { publishedScreens } from "./published/screens.js";
@@ -21,10 +19,6 @@ export const controlsDesign = collection({
   title: "Prop controls",
   description:
     "Edit scalar props, switch complete saved presets, and recover from invalid values or rendering failures. Native fields are interactive; linked artboards show the authored preview outcomes. Live preview rendering is a later implementation milestone.",
-  dependencies: [
-    ...componentStyleDependencies,
-    "examples/basic/generated/design-component-controls.css",
-  ],
   relatedDocs: [
     "docs/protocol/mokly-component-controls-design.md",
     "docs/protocol/mokly-component-controls.md",

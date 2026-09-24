@@ -90,7 +90,7 @@ for (const includeChanges of [false, true]) {
           rebuilt = true;
           await fs.promises.appendFile(
             fixture.entryPath,
-            '\nimport { definePage } from "@mokly/mokly"; mockups.push(definePage({ id: "publication-added", title: "Added during publication", route: "publication-added.html", description: "A new document", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><body>Added document</body></html>" }));\n',
+            '\nimport { definePage } from "@mokly/mokly"; mockups.push(definePage({ id: "publication-added", title: "Added during publication", route: "publication-added.html", description: "A new document", relatedDocs: [], render: () => "<!doctype html><html><body>Added document</body></html>" }));\n',
           );
           await writeCompilation(await compileCatalogue(config), config);
         }

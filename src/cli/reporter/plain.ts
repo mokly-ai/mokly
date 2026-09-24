@@ -1,4 +1,4 @@
-import type { ManifestV5 } from "@mokly/viewer/data";
+import type { ManifestV6 } from "@mokly/viewer/data";
 
 import { errorMessage } from "../../errors.js";
 import type { ServeReadyReport, WatchReport } from "../../server/reporter.js";
@@ -32,7 +32,7 @@ export class PlainReporter implements CliReporter {
     _durationMs: number,
   ): void {}
 
-  catalogueReady(_manifest: ManifestV5, _durationMs: number): void {}
+  catalogueReady(_manifest: ManifestV6, _durationMs: number): void {}
 
   changesReady(_changed: number, _durationMs: number): void {}
 

@@ -14,13 +14,13 @@ const source: SelectedReviewSource = {
   before: {
     entries: [],
     generatedBy: "mokly",
-    schemaVersion: 5,
+    schemaVersion: 6,
     sourceFiles: [],
   },
   after: {
     entries: [],
     generatedBy: "mokly",
-    schemaVersion: 5,
+    schemaVersion: 6,
     sourceFiles: [],
   },
   baseCommit: "a".repeat(40),

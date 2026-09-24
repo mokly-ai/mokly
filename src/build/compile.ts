@@ -4,7 +4,7 @@ import {
   effectiveColorSchemes,
   VIEWPORTS,
 } from "@mokly/viewer/data";
-import type { ManifestV5, ArtifactView } from "@mokly/viewer/data";
+import type { ManifestV6, ArtifactView } from "@mokly/viewer/data";
 
 import { transformCompatibilityDocuments } from "../compatibility/transform.js";
 import { validateComponentResources } from "../components/output_validation.js";
@@ -34,7 +34,7 @@ import { renderCooperatively } from "./render_cooperative.js";
 
 /** Complete in-memory static compilation result. */
 export interface Compilation {
-  manifest: ManifestV5;
+  manifest: ManifestV6;
   outputs: ReadonlyMap<string, string>;
 }
 

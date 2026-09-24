@@ -189,11 +189,12 @@ async function stylesheetFixture(
   if (owned)
     source = source.replace(
       'id: "action",',
-      'id: "action", ownedDependencies: ["mockups/action.css"], dependencies: ["mockups/action.css"],',
+      'id: "action", stylesheets: ["action.css"],',
     );
   const fixture = await createFixture(source, {
-    extraConfig:
-      'colorSchemes: ["light", "dark"], stylesheets: [{ match: "**/*.html", stylesheets: ["action.css"] }],',
+    extraConfig: owned
+      ? 'colorSchemes: ["light", "dark"], stylesheets: [],'
+      : 'colorSchemes: ["light", "dark"], stylesheets: [{ match: "**/*.html", stylesheets: ["action.css"] }],',
   });
   t.after(() => removeFixture(fixture));
   await fs.writeFile(path.join(fixture.mockupsDir, "action.css"), "");

@@ -7,7 +7,6 @@ import { inspectorScreens } from "./inspector/screens.js";
 import { pageScreens } from "./pages/screens.js";
 import { ComponentPage } from "./parts/component_page.js";
 import { componentDesignDocs } from "./parts/fixtures.js";
-import { componentStyleDependencies } from "./parts/styles.js";
 import { additionDesigns } from "./states/additions/screens.js";
 import { stateScreens } from "./states/screens.js";
 
@@ -25,7 +24,6 @@ export const componentDesign = collection({
   title: "Component explorer",
   description:
     "Component pages, saved examples, change attribution, and screen inspection.",
-  dependencies: componentStyleDependencies,
   relatedDocs: componentDesignDocs,
   children: [
     screen({

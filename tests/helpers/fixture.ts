@@ -106,7 +106,7 @@ export async function registerFixturePage(
     .join("/");
   await fs.promises.appendFile(
     fixture.entryPath,
-    `\nimport { definePage as definePage_${suffix} } from "@mokly/mokly";\nimport { ${exportName} as render_${suffix} } from ${JSON.stringify(imported.startsWith(".") ? imported : `./${imported}`)};\nmockups.push(definePage_${suffix}({ id: ${JSON.stringify(id)}, route: ${JSON.stringify(route)}, title: ${JSON.stringify(id)}, description: "Complete fixture document", dependencies: [], relatedDocs: [], render: render_${suffix} }));\n`,
+    `\nimport { definePage as definePage_${suffix} } from "@mokly/mokly";\nimport { ${exportName} as render_${suffix} } from ${JSON.stringify(imported.startsWith(".") ? imported : `./${imported}`)};\nmockups.push(definePage_${suffix}({ id: ${JSON.stringify(id)}, route: ${JSON.stringify(route)}, title: ${JSON.stringify(id)}, description: "Complete fixture document", relatedDocs: [], render: render_${suffix} }));\n`,
   );
 }
 
@@ -152,7 +152,7 @@ function fixtureEntrySource(
   const firstTitle = options.firstTitle ?? "Home";
   return `import { defineCollection, defineScreen, defineUseCase } from "@mokly/mokly";
 import React from "react";
-const metadata = { dependencies: ["notes.md"], relatedDocs: ["notes.md"] };
+const metadata = { relatedDocs: ["notes.md"] };
 export const mockups = [
   ${collections},
   defineScreen({ ...metadata, description: "Home screen", desktop: <main id="home">${body}</main>, id: "home", mobile: <main id="home-mobile">${body}</main>, route: "screens/home.html", title: ${JSON.stringify(firstTitle)}, useCaseIds: ["tour"] }),

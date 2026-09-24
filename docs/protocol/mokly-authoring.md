@@ -9,7 +9,7 @@ consumer rendering follows the [rendering contract](./mokly-rendering.md).
 The removal of entry `dependencies` is planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md) and
 implemented in Milestone 6; the `componentStylesheets` export is implemented in
-Milestone 3. Existing code still accepts the removed field until migration.
+Milestone 3. Removed inputs now fail with a registry violation.
 
 ## Public Authoring API
 

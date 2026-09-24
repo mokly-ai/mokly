@@ -12,7 +12,6 @@ test("registry attribution does not trust an uninventoried path under an entry r
   const fixture = await createFixture(`
 import { defineScreen } from "@mokly/mokly";
 const forged = defineScreen({
-  dependencies: [],
   description: "Forged source",
   desktop: "Forged",
   id: "forged",
@@ -41,7 +40,7 @@ test("matched barrels that re-export registries fail with duplicate ids", async 
   await fs.promises.writeFile(
     path.join(sourceDir, "a.ts"),
     `import { defineScreen } from "@mokly/mokly";
-const metadata = { dependencies: ["notes.md"], relatedDocs: ["notes.md"], useCaseIds: [] };
+const metadata = { relatedDocs: ["notes.md"], useCaseIds: [] };
 export const mockups = [defineScreen({ ...metadata, description: "A", desktop: "A", id: "a", mobile: "A", route: "a.html", title: "A" })];
 `,
   );

@@ -10,7 +10,7 @@ import type {
   ManifestComponentVariant,
 } from "../components/manifest_types.js";
 import { componentFragmentRoute } from "../components/paths.js";
-import type { ManifestEntry, ManifestV5 } from "../registry/types.js";
+import type { ManifestEntry, ManifestV6 } from "../registry/types.js";
 import { createCatalogue } from "../shell/catalogue.js";
 import type { ShellContext } from "../shell/context.js";
 import { toRouteTarget } from "../shell/target.js";
@@ -19,12 +19,12 @@ import type { ShellView } from "../shell/views.js";
 import type { ViewerSelection } from "./types.js";
 
 function metadata(entry: CatalogueEntry) {
+  const { dependencies: _dependencies, ...details } = entry.details;
   return {
     id: entry.id,
     title: entry.title,
     tags: entry.tags,
-    ...entry.details,
-    declaredDependencies: entry.details.dependencies,
+    ...details,
     navPath: [],
   };
 }
@@ -98,7 +98,6 @@ export function displayEntry(
         propSchema: entry.propSchema,
         slots: entry.slots,
         controls: entry.controls,
-        ownedDependencies: [],
         variants: entry.variants.map((variant): ManifestComponentVariant => ({
           id: variant.id,
           title: variant.title,
@@ -115,8 +114,8 @@ export function displayEntry(
   }
 }
 export function viewerCatalogue(model: CatalogueReadModel) {
-  const manifest: ManifestV5 = {
-    schemaVersion: 5,
+  const manifest: ManifestV6 = {
+    schemaVersion: 6,
     generatedBy: "mokly",
     sourceFiles: [],
     entries: [
@@ -130,10 +129,7 @@ export function viewerCatalogue(model: CatalogueReadModel) {
         ...model.pages,
         ...model.useCases,
         ...model.components,
-      ].map((entry) => ({
-        ...displayEntry(entry),
-        declaredDependencies: entry.details.dependencies,
-      })),
+      ].map((entry) => displayEntry(entry)),
     ],
   };
   return {

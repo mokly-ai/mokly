@@ -179,7 +179,7 @@ export function removedDeliverySource(
   const prefix = version === "baseline" ? "Previous" : "Branch edit";
   return `import React from "react";
 import { defineCollection, definePage, defineScreen } from "@mokly/mokly";
-const metadata = { description: "Fixture", dependencies: [], relatedDocs: [] };
+const metadata = { description: "Fixture", relatedDocs: [] };
 export const mockups = [
   defineCollection({ ...metadata, id: "fixture", title: "Fixture", childIds: ["current"${current ? "" : ', "removed-archive"'}] }),
   ${current ? "" : 'defineCollection({ ...metadata, id: "removed-archive", title: "Deleted archive", childIds: ["removed-section"] }),\n  defineCollection({ ...metadata, id: "removed-section", title: "Deleted section", childIds: ["removed-screen", "removed-page"] }),'}

@@ -1,7 +1,7 @@
 import path from "node:path";
 
 import { generatedViews } from "@mokly/viewer/data";
-import type { Manifest, ViewReview } from "@mokly/viewer/data";
+import type { Manifest, ManifestEntry, ViewReview } from "@mokly/viewer/data";
 
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -20,13 +20,15 @@ export function screenViewChanges(
 ): ScreenViewChanges[] {
   const changed = new Set(materialPaths);
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
+  const beforeEntries: readonly ManifestEntry[] = baseline.entries;
+  const afterEntries: readonly ManifestEntry[] = current.entries;
   const before = new Map(
-    baseline.entries
+    beforeEntries
       .filter((entry) => entry.kind === "screen")
       .map((entry) => [entry.route, entry]),
   );
   const after = new Map(
-    current.entries
+    afterEntries
       .filter((entry) => entry.kind === "screen")
       .map((entry) => [entry.route, entry]),
   );

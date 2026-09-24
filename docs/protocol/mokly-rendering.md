@@ -10,8 +10,8 @@ public exclusions.
 
 The component stylesheet injection and manifest-v6 shape below are defined by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md):
-Milestone 3 delivers injection, and Milestone 6 will implement manifest v6.
-Current generated output still uses manifest v5.
+Milestone 3 delivers injection, and Milestone 6 implements manifest v6.
+Current generated output uses manifest v6.
 
 ## Rendering Boundary
 

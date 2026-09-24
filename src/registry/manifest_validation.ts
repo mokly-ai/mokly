@@ -24,7 +24,31 @@ export function validateManifest(
 ): HistoricalManifest {
   const manifest = validateManifestMetadata(value, allowV2, historical);
   validateManifestComponentUsage(manifest);
-  return manifest;
+  if (!historical || manifest.schemaVersion === 6) return manifest;
+  return {
+    ...manifest,
+    entries: manifest.entries.map((entry) => {
+      const {
+        dependencies: _dependencies,
+        declaredDependencies: _declaredDependencies,
+        ownedDependencies: _ownedDependencies,
+        ...normalized
+      } = entry as typeof entry & Record<string, unknown>;
+      if (normalized.kind !== "component") return normalized;
+      return {
+        ...normalized,
+        variants: normalized.variants.map((variant) => {
+          const {
+            dependencies: _variantDependencies,
+            declaredDependencies: _variantDeclaredDependencies,
+            ownedDependencies: _variantOwnedDependencies,
+            ...cleanVariant
+          } = variant as typeof variant & Record<string, unknown>;
+          return cleanVariant;
+        }),
+      };
+    }),
+  } as HistoricalManifest;
 }
 
 /** Shared metadata validation; only the live index omits rendered-view validation. */
@@ -44,17 +68,21 @@ export function validateManifestMetadata(
   } else if (historical && value.generatedBy === "mokabook") {
     normalized = { ...value, generatedBy: "mokly" };
   }
-  const current = normalized.schemaVersion === 5;
+  const current = normalized.schemaVersion === 6;
   const pages =
-    current || (normalized.schemaVersion === 4 && "sourceFiles" in normalized);
+    current ||
+    normalized.schemaVersion === 5 ||
+    (normalized.schemaVersion === 4 && "sourceFiles" in normalized);
   if (
     (!current &&
-      !(historical && [3, 4].includes(normalized.schemaVersion as number))) ||
+      !(
+        historical && [3, 4, 5].includes(normalized.schemaVersion as number)
+      )) ||
     normalized.generatedBy !== "mokly"
   )
     throw new MoklyError(
       "manifest-invalid",
-      "expected Mokly manifest schema version 5; run mokly build",
+      "expected Mokly manifest schema version 6; run mokly build",
     );
   if (pages) {
     if (
@@ -102,7 +130,11 @@ export function validateManifestMetadata(
       throw new MoklyError("manifest-invalid", `invalid manifest id: ${id}`);
     }
     if (pages) {
-      validateCurrentFields(entry, current);
+      validateCurrentFields(
+        entry,
+        current || normalized.schemaVersion === 5,
+        historical && !current,
+      );
       if (
         !(normalized.sourceFiles as string[]).includes(
           entry.sourcePath as string,
@@ -117,7 +149,13 @@ export function validateManifestMetadata(
         "manifest-invalid",
         "pages require the registered-page manifest format",
       );
-    validateEntry(entry, current || (normalized.schemaVersion === 4 && !pages));
+    validateEntry(
+      entry,
+      current ||
+        normalized.schemaVersion === 5 ||
+        (normalized.schemaVersion === 4 && !pages),
+      historical && !current,
+    );
     if (byId.has(id)) {
       throw new MoklyError("manifest-invalid", `duplicate manifest id: ${id}`);
     }

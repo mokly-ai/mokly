@@ -6,8 +6,8 @@ This is the approved target planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md).
 Milestone 3 delivers declaration, validation, linking, ownership, Serve and
 public delivery. Milestone 4 removes legacy source-path attribution;
-Milestone 6 will remove the old authoring inputs. That authoring removal
-remains target behavior, not current behavior.
+Milestone 6 removes the old authoring inputs; the stylesheet contract is
+implemented.
 
 ## Declaration And Public Files
 
@@ -54,7 +54,7 @@ authoring and registry boundaries, including untyped inputs; check file
 existence, realpath aliasing and public eligibility after config resolves
 `mockupsDir`. Missing or invalid declarations fail Build/Check rather than
 being silently skipped. Never copy declarations into
-entry source-path dependency lists; these lists are removed by Milestone 6.
+entry source-path dependency lists or manifest entry metadata.
 
 ## Configured Placement Marker
 

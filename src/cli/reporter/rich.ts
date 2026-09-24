@@ -1,4 +1,4 @@
-import type { ManifestV5 } from "@mokly/viewer/data";
+import type { ManifestV6 } from "@mokly/viewer/data";
 
 import { errorMessage } from "../../errors.js";
 import type { ServeReadyReport, WatchReport } from "../../server/reporter.js";
@@ -78,7 +78,7 @@ export class RichReporter implements CliReporter {
     this.#servePhase = this.startPhase("Checking changes");
   }
 
-  catalogueReady(manifest: ManifestV5, durationMs: number): void {
+  catalogueReady(manifest: ManifestV6, durationMs: number): void {
     this.settleServePhase();
     const counts = catalogueCounts(manifest);
     this.line(

@@ -125,12 +125,7 @@ export async function classifyComponents(
       const common = {
         ...address(entry),
         ...sides,
-        dependencies: [
-          ...new Set([
-            ...(pair.before?.dependencies ?? []),
-            ...(pair.after?.dependencies ?? []),
-          ]),
-        ].sort(),
+        dependencies: [],
         sharedImpact: [] as string[],
       };
       const baseViews = pair.before ? generatedViews(pair.before) : [];

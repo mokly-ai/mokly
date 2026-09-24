@@ -137,7 +137,7 @@ async function previewInput(t: test.TestContext) {
 function source(): string {
   return `import React from "react";
 import { definePage, defineScreen } from "@mokly/mokly";
-const metadata = { dependencies: [], relatedDocs: [], description: "Fixture" };
+const metadata = { relatedDocs: [], description: "Fixture" };
 export const mockups = [
   defineScreen({ ...metadata, id: "current", title: "Current", route: "screens/current.html", mobile: <p>Current</p>, desktop: <p>Current</p>, useCaseIds: [] }),
   defineScreen({ ...metadata, id: "old", title: "Old", route: "screens/old.html", mobile: <p>Old</p>, desktop: <p>Old</p>, useCaseIds: [] }),

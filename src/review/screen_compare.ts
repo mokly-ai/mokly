@@ -137,11 +137,8 @@ export async function compareScreen(
     }
   }
   assertViewAnalysisScope(views, config);
-  const dependencies = [
-    ...new Set([...(base?.dependencies ?? []), ...(head?.dependencies ?? [])]),
-  ].sort();
   return {
-    dependencies,
+    dependencies: [],
     id: entry.id,
     route: entry.route,
     sharedImpact: [

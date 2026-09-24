@@ -6,7 +6,7 @@ import type {
   ManifestCollection,
   ManifestEntry,
   ManifestScreen,
-  ManifestV5,
+  ManifestV6,
 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import {
@@ -148,7 +148,6 @@ function collection(
 ): ManifestCollection {
   return {
     childIds,
-    dependencies: [],
     description: `${title} collection`,
     id,
     kind: "collection",
@@ -161,7 +160,6 @@ function collection(
 
 function screen(id: string, title: string): ManifestScreen {
   return {
-    dependencies: [],
     description: `${title} screen`,
     fragments: { desktop: `${id}.desktop.html`, mobile: `${id}.mobile.html` },
     id,
@@ -179,13 +177,10 @@ function screen(id: string, title: string): ManifestScreen {
 function component(id: string, title: string): ManifestComponent {
   return {
     controls: {},
-    declaredDependencies: [],
-    dependencies: [],
     description: `${title} component`,
     id,
     kind: "component",
     navPath: [],
-    ownedDependencies: [],
     propSchema: { kind: "object", properties: {} },
     relatedDocs: [],
     route: `components/${id}.html`,
@@ -209,14 +204,11 @@ function component(id: string, title: string): ManifestComponent {
   };
 }
 
-function manifest(entries: readonly ManifestEntry[]): ManifestV5 {
+function manifest(entries: readonly ManifestEntry[]): ManifestV6 {
   return {
-    entries: entries.map((entry) => ({
-      ...entry,
-      declaredDependencies: entry.declaredDependencies ?? [],
-    })),
+    entries,
     generatedBy: "mokly",
-    schemaVersion: 5,
+    schemaVersion: 6,
     sourceFiles: entries.map(({ sourcePath }) => sourcePath).sort(),
   };
 }

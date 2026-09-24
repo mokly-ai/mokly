@@ -26,7 +26,7 @@ export async function historicalPageFixture(
   } = {},
 ) {
   const source = `import { defineCollection, definePage } from "@mokly/mokly";
-const meta = { description: "Document", dependencies: [], relatedDocs: [] };
+const meta = { description: "Document", relatedDocs: [] };
 export const mockups = [
   defineCollection({ ...meta, id: "documents", title: "Documents", childIds: ["handbook"] }),
   definePage({ ...meta, id: "handbook", title: "Current handbook", route: "handbook.html", render: () => ${JSON.stringify(pageDocument)} })

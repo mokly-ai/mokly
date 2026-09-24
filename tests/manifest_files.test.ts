@@ -47,7 +47,7 @@ test("filesystem manifest loading never accepts v2 under the canonical filename"
     JSON.stringify(legacy),
   );
 
-  assert.throws(() => readManifest(config), /schema version 5/);
+  assert.throws(() => readManifest(config), /schema version 6/);
 });
 
 test("manifest loading rejects URL-sensitive catalogue routes", async (context) => {
@@ -123,8 +123,6 @@ test("light-only manifests remain deterministic without variant metadata", () =>
   const expected = serializeManifest({
     entries: [
       {
-        declaredDependencies: [],
-        dependencies: ["entries/a.mockup.tsx"],
         description: "A screen",
         id: "a",
         kind: "screen",
@@ -143,7 +141,7 @@ test("light-only manifests remain deterministic without variant metadata", () =>
     ],
     generatedBy: "mokly",
     sourceFiles: ["entries/a.mockup.tsx"],
-    schemaVersion: 5,
+    schemaVersion: 6,
   });
 
   const serialized = serializeManifest(createManifest([entry], [], ["light"]));
@@ -245,7 +243,6 @@ function resolvedUseCase(
 ): ResolvedRegistryEntry {
   return {
     __viaDefine: true,
-    dependencies: [],
     description: "A journey",
     id,
     kind: "use-case",
@@ -266,7 +263,6 @@ function resolvedScreen(
 ): ResolvedRegistryEntry {
   return {
     __viaDefine: true,
-    dependencies: [],
     description: "A screen",
     desktop: null,
     id,

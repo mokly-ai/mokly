@@ -30,7 +30,7 @@ const page = {
 const baseline = {
   entries: [page],
   generatedBy: "mokly" as const,
-  schemaVersion: 5 as const,
+  schemaVersion: 6 as const,
   sourceFiles: [],
 };
 const pageSource: RemovedPagePreviewSource = {

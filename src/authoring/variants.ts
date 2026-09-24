@@ -74,7 +74,9 @@ function variantDefinition(
     __viaDefine: true,
     ...(address !== undefined ? { address } : {}),
     ...(colorSchemes !== undefined ? { colorSchemes } : {}),
-    dependencies: variant.dependencies ?? parent.dependencies,
+    ...(Object.hasOwn(variant, "dependencies")
+      ? { dependencies: (input as { dependencies?: unknown }).dependencies }
+      : {}),
     description: variant.description,
     desktop: variant.desktop,
     id: variant.id,

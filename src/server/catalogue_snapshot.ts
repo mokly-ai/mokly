@@ -1,4 +1,4 @@
-import type { ManifestV5 } from "@mokly/viewer/data";
+import type { ManifestV6 } from "@mokly/viewer/data";
 import { createCatalogue, type Catalogue } from "@mokly/viewer/server";
 
 import { assertFreshSourceInventory } from "../build/source_freshness.js";
@@ -33,9 +33,9 @@ export interface CatalogueSnapshot {
 export async function loadCatalogueSnapshot(
   config: ResolvedConfig,
   resolveChanges?: (
-    manifest: ManifestV5,
+    manifest: ManifestV6,
   ) => Promise<ResolvedCatalogueChanges | undefined>,
-  manifest: ManifestV5 = readManifest(config),
+  manifest: ManifestV6 = readManifest(config),
 ): Promise<CatalogueSnapshot> {
   timeSync("catalogue.validate", () => parseManifest(manifest));
   await timeAsync("catalogue.source-freshness", () =>
@@ -70,7 +70,7 @@ export async function loadLiveCatalogueSnapshot(
 export function loadServedCatalogueSnapshot(
   config: ResolvedConfig,
   base?: string,
-  manifest?: ManifestV5,
+  manifest?: ManifestV6,
   repository?: () => ReadOnlyReviewRepository,
 ): Promise<CatalogueSnapshot> {
   return loadCatalogueSnapshot(

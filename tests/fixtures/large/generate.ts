@@ -125,7 +125,7 @@ export default defineConfig({
   await fs.writeFile(
     path.join(entries, "catalogue.mockup.tsx"),
     `import { defineCollection } from "@mokly/mokly";
-export const mockups = [defineCollection({ id: "large", title: "Large catalogue", description: "Synthetic product areas", dependencies: [], relatedDocs: ["notes.md"], childIds: ${JSON.stringify(areas)} })];\n`,
+export const mockups = [defineCollection({ id: "large", title: "Large catalogue", description: "Synthetic product areas", relatedDocs: ["notes.md"], childIds: ${JSON.stringify(areas)} })];\n`,
   );
   for (const id of areas) {
     const directory = path.join(entries, id);

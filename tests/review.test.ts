@@ -24,7 +24,7 @@ import { runReview } from "../dist/review/run.js";
 import { writeReviewArtifact } from "../dist/review/write.js";
 import type {
   ManifestScreen,
-  ManifestV5,
+  ManifestV6,
 } from "../packages/viewer/dist/registry/types.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
@@ -100,7 +100,7 @@ test("Review classifies added, removed, and unchanged routes independently", asy
     entries: [{ ...detail, useCaseIds: [] }, old],
     generatedBy: "mokly" as const,
     sourceFiles: compilation.manifest.sourceFiles,
-    schemaVersion: 5 as const,
+    schemaVersion: 6 as const,
   };
   const gitFiles = new Map<string, string>([
     ["mockups/mokly-manifest.json", `${JSON.stringify(baseManifest)}\n`],
@@ -389,13 +389,8 @@ test("Review compares Git base without checkout and writes deterministic artifac
   );
 });
 
-test("Review ignores descendants of unrendered directory dependencies", async (context) => {
-  const fixture = await createFixture(
-    validEntrySource().replace(
-      'dependencies: ["notes.md"]',
-      'dependencies: ["src/components"]',
-    ),
-  );
+test("Review ignores edits to unrendered source files", async (context) => {
+  const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const component = path.join(fixture.root, "src/components/Button.tsx");
   await fs.promises.mkdir(path.dirname(component), { recursive: true });
@@ -406,7 +401,7 @@ test("Review ignores descendants of unrendered directory dependencies", async (c
   await git(fixture.root, ["config", "user.name", "Mokly Test"]);
   await git(fixture.root, ["config", "user.email", "mokly@example.invalid"]);
   await git(fixture.root, ["add", "."]);
-  await git(fixture.root, ["commit", "-qm", "test: base directory dependency"]);
+  await git(fixture.root, ["commit", "-qm", "test: base unrendered source"]);
   await fs.promises.writeFile(component, "export const label = 'After';\n");
 
   const result = await runReview(
@@ -472,7 +467,7 @@ function fakeGit(files: ReadonlyMap<string, string>): ReadOnlyReviewRepository {
 }
 
 function filesForCompilation(
-  manifest: ManifestV5,
+  manifest: ManifestV6,
   compilation: Compilation,
 ): Map<string, string> {
   const files = new Map<string, string>([
@@ -485,7 +480,7 @@ function filesForCompilation(
   return files;
 }
 
-function withoutDarkFragments(manifest: ManifestV5): ManifestV5 {
+function withoutDarkFragments(manifest: ManifestV6): ManifestV6 {
   return {
     ...manifest,
     entries: manifest.entries.map((entry) => {

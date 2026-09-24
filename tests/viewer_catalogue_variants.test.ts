@@ -26,7 +26,7 @@ test("viewer rebuilds current and removed screen variant relationships", () => {
   const manifest = {
     entries: [parent, current],
     generatedBy: "mokly" as const,
-    schemaVersion: 5 as const,
+    schemaVersion: 6 as const,
     sourceFiles: [parent.sourcePath, current.sourcePath].sort(),
   };
   const model = projectCatalogue({
@@ -84,17 +84,9 @@ test("viewer rebuilds current and removed screen variant relationships", () => {
   );
 });
 
-function screen(
-  id: string,
-  route: string,
-  variantOf?: string,
-): ManifestScreen & {
-  declaredDependencies: readonly string[];
-} {
+function screen(id: string, route: string, variantOf?: string): ManifestScreen {
   const stem = route.slice(0, -".html".length);
   return {
-    declaredDependencies: [],
-    dependencies: [],
     description: `${id} screen`,
     fragments: {
       desktop: `${stem}.desktop.html`,

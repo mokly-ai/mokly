@@ -118,7 +118,6 @@ test("collections cannot claim variants", () => {
     attributed(
       defineCollection({
         childIds: [parent.id, child.id],
-        dependencies: [],
         description: "Screens",
         id: "screens",
         relatedDocs: [],
@@ -167,7 +166,6 @@ function screenDefinitions(
   variants: readonly ScreenVariantInput[],
 ): ResolvedRegistryEntry[] {
   const definitions = defineScreen({
-    dependencies: [],
     description: "Welcome",
     desktop: "Desktop",
     id: "welcome",
@@ -196,7 +194,6 @@ function flowWithVariant(
   variantUseCaseIds?: readonly string[],
 ): RegistryDefinition[] {
   const screens = defineScreen({
-    dependencies: [],
     description: "Welcome",
     desktop: "Desktop",
     id: "welcome",
@@ -215,7 +212,6 @@ function flowWithVariant(
     ],
   });
   const tour = defineUseCase({
-    dependencies: [],
     description: "Tour",
     id: "tour",
     relatedDocs: [],
@@ -268,7 +264,6 @@ function invalidNonScreen(
 ): ResolvedRegistryEntry {
   const common = {
     __viaDefine: true as const,
-    dependencies: [],
     description: `${kind} entry`,
     id: `${kind}-entry`,
     kind,

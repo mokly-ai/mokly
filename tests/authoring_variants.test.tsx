@@ -36,7 +36,6 @@ test("screen variants inherit, override, brand, route, and attribute", () => {
     defineScreen({
       address: "example.test/welcome",
       colorSchemes: ["light"],
-      dependencies: ["README.md"],
       description: "Welcome",
       desktop: "Desktop",
       id: "welcome",
@@ -59,7 +58,6 @@ test("screen variants inherit, override, brand, route, and attribute", () => {
         {
           address: "example.test/retry",
           colorSchemes: ["light"],
-          dependencies: ["package.json"],
           description: "Retry saving",
           desktop: "Retry desktop",
           id: "welcome-retry",
@@ -85,7 +83,6 @@ test("screen variants inherit, override, brand, route, and attribute", () => {
     address: "example.test/welcome",
     colorSchemes: ["light"],
     definedIn: sourceRelativePath,
-    dependencies: ["README.md"],
     description: "Empty workspace",
     desktop: "Empty desktop",
     id: "welcome-empty",
@@ -99,7 +96,7 @@ test("screen variants inherit, override, brand, route, and attribute", () => {
     variantOf: "welcome",
   });
   assert.equal(overridden?.address, "example.test/retry");
-  assert.deepEqual(overridden?.dependencies, ["package.json"]);
+  assert.equal(Object.hasOwn(overridden ?? {}, "dependencies"), false);
   assert.deepEqual(overridden?.relatedDocs, [
     "docs/protocol/mokly-screen-variants.md",
   ]);
@@ -125,7 +122,6 @@ test("nested screen variants flatten beside the parent", () => {
     ],
     collection: {
       address: "example.test/nested",
-      dependencies: ["README.md"],
       description: "Nested collection",
       id: "nested",
       relatedDocs: ["docs/protocol/mokly-authoring.md"],
@@ -142,7 +138,7 @@ test("nested screen variants flatten beside the parent", () => {
   assert.equal(flattened[1]?.route, "screens/parent.variants/empty.html");
   assert.equal(flattened[1]?.variantOf, "nested-parent");
   assert.deepEqual(flattened[1]?.tags, ["forms"]);
-  assert.deepEqual(flattened[1]?.dependencies, ["README.md"]);
+  assert.equal(Object.hasOwn(flattened[1] ?? {}, "dependencies"), false);
 });
 
 test("registry preparation flattens one exported definition-array level", () => {
@@ -155,7 +151,6 @@ test("registry preparation flattens one exported definition-array level", () => 
   const collection = attributed(
     defineCollection({
       childIds: ["welcome"],
-      dependencies: [],
       description: "Screens",
       id: "screens",
       relatedDocs: [],
@@ -184,7 +179,6 @@ test("registry preparation keeps authored sibling variant order", () => {
   const collection = attributed(
     defineCollection({
       childIds: ["welcome"],
-      dependencies: [],
       description: "Screens",
       id: "screens",
       relatedDocs: [],
@@ -210,7 +204,6 @@ test("registry preparation keeps authored sibling variant order", () => {
 
 function parentInput() {
   return {
-    dependencies: [] as readonly string[],
     description: "Welcome",
     desktop: "Desktop",
     id: "welcome",

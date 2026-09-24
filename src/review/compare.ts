@@ -2,6 +2,7 @@ import path from "node:path";
 
 import type {
   ManifestScreen,
+  ManifestEntry,
   Manifest,
   ReviewArtifact,
   ReviewArtifactContent,
@@ -147,8 +148,9 @@ export async function compareReview(
 }
 
 function screenMap(manifest: Manifest): Map<string, ManifestScreen> {
+  const entries: readonly ManifestEntry[] = manifest.entries;
   return new Map(
-    manifest.entries
+    entries
       .filter((entry): entry is ManifestScreen => entry.kind === "screen")
       .map((entry) => [entry.route, entry]),
   );

@@ -15,7 +15,7 @@ test("manifest emits variantOf only for screen variants", () => {
     variant?.kind === "screen" ? variant.variantOf : undefined,
     "welcome",
   );
-  assert.equal(parseManifest(manifest).schemaVersion, 5);
+  assert.equal(parseManifest(manifest).schemaVersion, 6);
 });
 
 test("manifest and hierarchy keep authored sibling variant order", () => {
@@ -126,7 +126,6 @@ function resolvedScreen(
 ): ResolvedRegistryEntry {
   return {
     __viaDefine: true,
-    dependencies: [],
     description: `${id} screen`,
     desktop: id,
     id,
@@ -148,7 +147,6 @@ function resolvedCollection(
   return {
     __viaDefine: true,
     childIds,
-    dependencies: [],
     description: "Screens",
     id: "screens",
     kind: "collection",

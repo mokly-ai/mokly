@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { projectCatalogue } from "../dist/catalogue/projection.js";
-import type { ManifestV5 } from "../packages/viewer/dist/registry/types.js";
+import type { ManifestV6 } from "../packages/viewer/dist/registry/types.js";
 import type { ReviewResultV3 } from "../packages/viewer/dist/review/component_types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { workspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
@@ -72,10 +72,10 @@ test("public workspace derives a screen's ready per-view states", () => {
     useCaseIds: [],
     viewports: ["mobile", "desktop"] as const,
   };
-  const manifest: ManifestV5 = {
+  const manifest: ManifestV6 = {
     entries: [screen],
     generatedBy: "mokly",
-    schemaVersion: 5,
+    schemaVersion: 6,
     sourceFiles: [screen.sourcePath],
   };
   const result: ReviewResultV3 = {

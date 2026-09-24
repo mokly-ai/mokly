@@ -93,8 +93,8 @@ function comparisonDocumentSource(changed: boolean): string {
 function documentEntries(current: boolean): string {
   return `
 import { definePage, defineCollection as documentCollection } from "@mokly/mokly";
-const documentMetadata = { description: "Document", dependencies: [], relatedDocs: [], tags: ["documents"] };
+const documentMetadata = { description: "Document", relatedDocs: [], tags: ["documents"] };
 mockups.push(definePage({ ...documentMetadata, id: "handbook", title: "Handbook", route: "handbook.html", render: () => '<html><body><main id="overview">Handbook</main><a href="mock:home">Home</a></body></html>' }));
-${current ? "" : 'mockups.push(documentCollection({ id: "documents", title: "Documents", description: "Documents", dependencies: [], relatedDocs: [], childIds: ["removed-document"] }), definePage({ ...documentMetadata, id: "removed-document", title: "Former handbook", route: "removed-document.html", render: () => "<html><body>Previous document</body></html>" }));'}
+${current ? "" : 'mockups.push(documentCollection({ id: "documents", title: "Documents", description: "Documents", relatedDocs: [], childIds: ["removed-document"] }), definePage({ ...documentMetadata, id: "removed-document", title: "Former handbook", route: "removed-document.html", render: () => "<html><body>Previous document</body></html>" }));'}
 `;
 }

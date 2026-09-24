@@ -6,7 +6,6 @@ import type { ComponentDefinition } from "../components/types.js";
 
 /** Metadata shared by all structured catalogue entries. */
 export interface EntryInput {
-  dependencies: readonly string[];
   description: string;
   id: string;
   rationale?: string;
@@ -23,7 +22,6 @@ export interface RoutedEntryInput extends EntryInput {
 export interface ScreenVariantInput {
   address?: string;
   colorSchemes?: readonly ColorScheme[];
-  dependencies?: readonly string[];
   description: string;
   desktop: ReactNode;
   id: string;
@@ -112,7 +110,6 @@ export type RegistryDefinition =
 /** Fields inherited by a nested child from its ancestors. */
 export interface NestedInherited {
   address?: string;
-  dependencies?: readonly string[];
   relatedDocs?: readonly string[];
 }
 
@@ -135,9 +132,8 @@ export interface NestedScreenInput extends NestedInherited {
 /** Whole document with a route derived from ancestor paths and this slug. */
 export interface NestedPageInput extends Omit<
   PageInput,
-  "route" | "dependencies" | "relatedDocs"
+  "route" | "relatedDocs"
 > {
-  dependencies?: readonly string[];
   relatedDocs?: readonly string[];
   slug: string;
 }

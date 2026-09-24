@@ -7,8 +7,7 @@ Mokly renders that wrapper in the consumer's existing React/provider graph.
 
 The `stylesheets` input was delivered by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md) for
-Milestone 3. Source-path inputs and manifest v6 change in Milestone 6; current
-code still emits v5 and accepts old inputs.
+Milestone 3. Milestone 6 removes source-path inputs and emits manifest v6.
 
 ```tsx
 import { defineComponent } from "@mokly/mokly";

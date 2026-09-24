@@ -11,8 +11,6 @@ import {
 import { advertisePublicationPreview } from "../dist/publication/shell_previews.js";
 
 const page: ManifestPage = {
-  declaredDependencies: [],
-  dependencies: [],
   description: "Removed page",
   id: "removed-page",
   kind: "page",

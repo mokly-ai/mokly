@@ -6,7 +6,6 @@ import { Card } from "./card.js";
 
 export const mockups = [
   defineScreen({
-    dependencies: ["notes.md"],
     relatedDocs: ["notes.md"],
     description: "A screen discovered beside its component.",
     desktop: <Card>Co-located desktop</Card>,

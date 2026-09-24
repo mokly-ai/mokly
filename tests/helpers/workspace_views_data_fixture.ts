@@ -2,7 +2,7 @@ import type {
   ManifestComponent,
   ManifestComponentVariant,
 } from "../../packages/viewer/dist/components/manifest_types.js";
-import type { ManifestV5 } from "../../packages/viewer/dist/registry/types.js";
+import type { ManifestV6 } from "../../packages/viewer/dist/registry/types.js";
 import type { ReviewResultV3 } from "../../packages/viewer/dist/review/component_types.js";
 import type { ViewReview } from "../../packages/viewer/dist/review/types.js";
 
@@ -31,13 +31,10 @@ export const REMOVED_VARIANT = variant("removed", "Removed");
 
 export const component: ManifestComponent = {
   controls: {},
-  declaredDependencies: [],
-  dependencies: [],
   description: "Badge component",
   id: "badge",
   kind: "component",
   navPath: [],
-  ownedDependencies: [],
   propSchema: { kind: "object", properties: {} },
   relatedDocs: [],
   route: "components/badge.html",
@@ -48,14 +45,14 @@ export const component: ManifestComponent = {
   viewports: ["mobile", "desktop"],
 };
 
-export const componentManifest: ManifestV5 = {
+export const componentManifest: ManifestV6 = {
   entries: [component],
   generatedBy: "mokly",
-  schemaVersion: 5,
+  schemaVersion: 6,
   sourceFiles: [component.sourcePath],
 };
 
-export const componentBaseline: ManifestV5 = {
+export const componentBaseline: ManifestV6 = {
   ...componentManifest,
   entries: [
     {
@@ -70,8 +67,6 @@ export const screen = {
     desktop: "screens/welcome.desktop.dark.html",
     mobile: "screens/welcome.mobile.dark.html",
   },
-  declaredDependencies: [],
-  dependencies: [],
   description: "Landing screen",
   fragments: {
     desktop: "screens/welcome.desktop.html",
@@ -88,10 +83,10 @@ export const screen = {
   viewports: ["mobile", "desktop"],
 } as const;
 
-export const screenManifest: ManifestV5 = {
+export const screenManifest: ManifestV6 = {
   entries: [screen],
   generatedBy: "mokly",
-  schemaVersion: 5,
+  schemaVersion: 6,
   sourceFiles: [screen.sourcePath],
 };
 
@@ -108,8 +103,8 @@ export function darkOnlyResult(state: "changed" | "unchanged"): ReviewResultV3 {
     schemaVersion: 3,
     screens: [
       {
-        dependencies: [],
         id: screen.id,
+        dependencies: [],
         route: screen.route,
         sharedImpact: [],
         state,
@@ -150,8 +145,8 @@ export function componentVariantResult(): ReviewResultV3 {
     changes: [],
     components: [
       {
-        dependencies: [],
         id: component.id,
+        dependencies: [],
         route: component.route,
         sharedImpact: [],
         state: "changed",

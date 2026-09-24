@@ -13,7 +13,7 @@ test("consumer module resolution supports package roots, aliases, and web condit
 import { defineScreen } from "@mokly/mokly";
 import React from "react";
 import { FixturePanel } from "fixture-ui";
-const metadata = { dependencies: [], relatedDocs: [], useCaseIds: [] };
+const metadata = { relatedDocs: [], useCaseIds: [] };
 export const mockups = [defineScreen({
   ...metadata,
   description: "Consumer resolution fixture",

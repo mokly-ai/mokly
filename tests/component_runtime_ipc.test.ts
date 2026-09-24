@@ -14,7 +14,7 @@ function startup(publicExclude?: unknown): object {
       repoRoot: "/repo",
       ...(publicExclude === undefined ? {} : { publicExclude }),
     },
-    manifest: { entries: [], schemaVersion: 5, sourceFiles: [] },
+    manifest: { entries: [], schemaVersion: 6, sourceFiles: [] },
   };
 }
 

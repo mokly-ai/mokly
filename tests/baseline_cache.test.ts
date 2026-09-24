@@ -34,6 +34,29 @@ test("a former Mokabook manifest remains valid rebuilt history", async () => {
   assert.equal(result.marker.manifestVersion, 5);
 });
 
+test("current v6 baselines remain reusable after marker validation", async () => {
+  const fixture = baselineFixture();
+  const run = fixture.runner.run;
+  fixture.runner.run = async (command) => {
+    const result = await run(command);
+    if (command.argv[0] !== "git") {
+      await fixture.fs.remove(
+        path.join(command.cwd, "mockups/mokly-manifest.json"),
+      );
+      await fixture.fs.write(
+        path.join(command.cwd, "mockups/mokly-manifest.json"),
+        Buffer.from(JSON.stringify({ ...baselineManifest, schemaVersion: 6 })),
+      );
+    }
+    return result;
+  };
+  const first = await fixture.builder.build(fixture.request);
+  assert.equal(first.marker.manifestVersion, 6);
+  const second = await fixture.builder.build(fixture.request);
+  assert.equal(second.cacheHit, true);
+  assert.deepEqual(second.marker, first.marker);
+});
+
 test("legacy rebuilt manifests retain version 2 and require explicit compatibility", async () => {
   const fixture = baselineFixture();
   const run = fixture.runner.run;

@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import path from "node:path";
 import { test } from "node:test";
 
 import type { ReviewResultV3 } from "../packages/viewer/dist/review/component_types.js";
@@ -15,18 +17,21 @@ test("Review fast and complete paths agree for matching shared CSS", async (t) =
 
 test("Review fast and complete paths agree for owned component CSS", async (t) => {
   const fixture = await cssAttributionFixture(t, true, {
+    prepare: async ({ mockupsDir }) => {
+      await fs.writeFile(
+        path.join(mockupsDir, "owned.css"),
+        ".owned-action {}",
+      );
+    },
     transformSource: (source) =>
       source
         .replace(
           "<button data-viewport=",
           '<button className="owned-action" data-viewport=',
         )
-        .replace(
-          'id: "action",',
-          'id: "action", dependencies: ["mockups/shared.css"], ownedDependencies: ["mockups/shared.css"],',
-        ),
+        .replace('id: "action",', 'id: "action", stylesheets: ["owned.css"],'),
   });
-  await fixture.append(".owned-action { padding: 2px; }");
+  await fixture.append(".owned-action { padding: 2px; }", "owned.css");
   const result = await equivalentReview(fixture);
 
   assert.ok(

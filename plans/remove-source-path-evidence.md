@@ -2,7 +2,7 @@
 
 ## Status And Outcome
 
-Status: in progress; Milestones 1–5 are complete and Milestones 6–8 remain.
+Status: in progress; Milestones 1–6 are complete and Milestones 7–8 remain.
 The binding Decisions And Scope remove all three inputs and adopt
 component-declared stylesheets in place of the stylesheet role of
 `ownedDependencies`. The user approved both the removals and the component
@@ -380,33 +380,37 @@ Tags: ui
 
 ## Milestone 6: Remove the authoring fields and move the manifest to v6
 
-- [ ] Failure-first `removed-field` tests: `dependencies` on each define
+- [x] Failure-first `removed-field` tests: `dependencies` on each define
       helper, nested marker, root collection and variant, and
       `ownedDependencies` on a component.
-- [ ] Remove both fields and their inheritance from the authoring types and
+- [x] Remove both fields and their inheritance from the authoring types and
       helpers, component definitions and registry validation.
-- [ ] Manifest v6: stop writing `dependencies`, `declaredDependencies` and
+- [x] Manifest v6: stop writing `dependencies`, `declaredDependencies` and
       `ownedDependencies`, make the current validator reject them, delete
       `validateDependencyDeclarations`, rename `ManifestV5` to `ManifestV6` in
       `@mokly/viewer/data` and its callers, and move the live index to the v6
       entry shape.
-- [ ] Update `README.md` from "current output requires manifest v5" to v6
+- [x] Update `README.md` from "current output requires manifest v5" to v6
       and update the assertion in `tests/component_protocol_docs.test.ts`
       together when manifest v6 ships.
-- [ ] Historical parsing accepts v3 to v5 and strips the removed fields before
+- [x] Historical parsing accepts v3 to v5 and strips the removed fields before
       comparison. Failure-first test: a v5 baseline that carries all three
       fields, compared with the same catalogue built as v6, adds nothing to
       Changes in committed and derived modes.
-- [ ] Until Milestone 7, the public writers emit an empty
+- [x] Accept manifest-v6 completion markers for derived baselines and reuse
+      the cached output; keep the original versions on historical markers.
+- [x] Until Milestone 7, the public writers emit an empty
       `details.dependencies` and empty comparison entry `dependencies`.
-- [ ] Migrate the example (every entry, the design library metadata, the
+- [x] Migrate the example (every entry, the design library metadata, the
       component registrations and now-unused helpers such as
       `componentStyleDependencies` and `DESIGN_DEPENDENCIES`), the test helpers
       and fixtures, the large-fixture generator and README code samples, then
       regenerate the example.
-- [ ] Smoke test: a consumer entry that still declares `dependencies` fails
+- [x] Migrate browser fixture entries and v5 assertions to manifest v6; run
+      the affected Playwright specs against the migrated fixtures.
+- [x] Smoke test: a consumer entry that still declares `dependencies` fails
       `mokly build` with the documented message.
-- [ ] Run the focused authoring, manifest, baseline, build and example tests,
+- [x] Run the focused authoring, manifest, baseline, build and example tests,
       `npm run typecheck` and `npm run lint`.
 
 ## Milestone 7: Version the public catalogue and comparison formats

@@ -220,7 +220,6 @@ function oneScreenSource(): string {
   return `import { defineScreen } from "@mokly/mokly";
 import React from "react";
 export const mockups = [defineScreen({
-  dependencies: [],
   description: "Home",
   desktop: <main>Home</main>,
   id: "home",

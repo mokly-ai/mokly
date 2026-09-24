@@ -9,7 +9,7 @@ Source-path comparison evidence is removed by Milestone 4 of
 unrendered source edits do not change catalogue membership or evidence.
 Rendered `styles` and `resources` ownership records, including
 component-declared stylesheet records, drive component attribution.
-Historical v3–v5 normalization follows in Milestone 6 and v4/v5 public
+Historical v3–v5 normalization is implemented in Milestone 6; v4/v5 public
 comparison formats in Milestone 7.
 
 `git.ts` defines separate `RepositoryEvidence` (merge base and changed paths)

@@ -95,7 +95,7 @@ test("source policy matches both aliases and projects missing children relative 
 for (const route of ["README.html", "internal/page.html"]) {
   test(`build rejects excluded generated route ${route} before writing`, async (t) => {
     const fixture = await createFixture(
-      `import { definePage } from "@mokly/mokly"; export const mockups = [definePage({ id: "page", title: "Page", description: "Page", dependencies: [], relatedDocs: [], route: "${route}", render: () => "<!doctype html><html><body><p>Page</p></body></html>" })];`,
+      `import { definePage } from "@mokly/mokly"; export const mockups = [definePage({ id: "page", title: "Page", description: "Page", relatedDocs: [], route: "${route}", render: () => "<!doctype html><html><body><p>Page</p></body></html>" })];`,
       { extraConfig: 'publicExclude: ["internal/**"],' },
     );
     t.after(() => removeFixture(fixture));

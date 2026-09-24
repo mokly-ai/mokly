@@ -18,7 +18,7 @@ test("v5 source metadata round-trips deterministically and readers still accept 
   const fixture = await createFixture(componentEntrySource());
   t.after(() => removeFixture(fixture));
   const { manifest } = await compileCatalogue(await loadConfig(fixture.root));
-  assert.equal(manifest.schemaVersion, 5);
+  assert.equal(manifest.schemaVersion, 6);
   const original = structuredClone(manifest);
   for (const view of componentViews(original))
     for (const instance of view.instances)
@@ -66,7 +66,6 @@ test("authored data schemas, slots and forged manifest components reserve __mokl
     title: "Action",
     description: "Action",
     route: "components/action.html",
-    dependencies: [],
     relatedDocs: [],
     propSchema: { kind: "object" as const, properties: {} },
     render: () => null,

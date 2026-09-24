@@ -15,6 +15,7 @@ import {
 export function validateEntry(
   entry: Record<string, unknown>,
   components = false,
+  historical = false,
 ): void {
   const kind = entry.kind;
   if (
@@ -47,7 +48,7 @@ export function validateEntry(
       `${String(entry.id)} has invalid rationale`,
     );
   }
-  for (const field of ["navPath", "relatedDocs", "dependencies"] as const) {
+  for (const field of ["navPath", "relatedDocs"] as const) {
     if (!stringArray(entry[field])) {
       throw new MoklyError(
         "manifest-invalid",
@@ -55,10 +56,19 @@ export function validateEntry(
       );
     }
   }
-  for (const field of ["relatedDocs", "dependencies"] as const) {
+  for (const field of ["relatedDocs"] as const) {
     for (const value of entry[field] as string[]) {
       validateRepoPath(value, `${String(entry.id)} ${field}`);
     }
+  }
+  if (historical && entry.dependencies !== undefined) {
+    if (!stringArray(entry.dependencies))
+      throw new MoklyError(
+        "manifest-invalid",
+        `${String(entry.id)} has invalid dependencies`,
+      );
+    for (const value of entry.dependencies)
+      validateRepoPath(value, `${String(entry.id)} dependencies`);
   }
   if (kind === "collection") {
     if (!stringArray(entry.childIds)) {
@@ -82,7 +92,7 @@ export function validateEntry(
       `${String(entry.id)} has invalid tags`,
     );
   }
-  if (kind === "component") validateManifestComponent(entry);
+  if (kind === "component") validateManifestComponent(entry, historical);
   else if (kind === "screen") validateScreen(entry);
   else if (kind === "use-case") validateUseCase(entry);
 }
@@ -185,9 +195,9 @@ function validateUseCase(entry: Record<string, unknown>): void {
 export function validateCurrentFields(
   entry: Record<string, unknown>,
   components = false,
+  historical = false,
 ): void {
   const common = [
-    "dependencies",
     "description",
     "id",
     "kind",
@@ -196,7 +206,7 @@ export function validateCurrentFields(
     "relatedDocs",
     "sourcePath",
     "title",
-    ...(components ? ["declaredDependencies"] : []),
+    ...(historical ? ["dependencies", "declaredDependencies"] : []),
   ];
   const specific =
     entry.kind === "collection"
@@ -211,7 +221,7 @@ export function validateCurrentFields(
               "propSchema",
               "slots",
               "controls",
-              "ownedDependencies",
+              ...(historical ? ["ownedDependencies"] : []),
               "variants",
             ]
           : entry.kind === "screen"

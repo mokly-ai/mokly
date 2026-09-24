@@ -3,7 +3,6 @@ import { Button } from "@firna/ui/button";
 import { defineComponent } from "@mokly/mokly";
 
 const metadata = {
-  dependencies: ["entries/components.tsx"],
   relatedDocs: ["notes.md"],
 };
 const noop = () => {};

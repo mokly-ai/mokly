@@ -35,7 +35,7 @@ test("consumer export keeps imported document templates private while publishing
   const source = `${validEntrySource()}
 import { definePage } from "@mokly/mokly";
 import template from "../mockups/private-template.html";
-mockups.push(definePage({ id: "handbook", title: "Handbook", description: "Guidance", dependencies: [], relatedDocs: [], route: "handbook.html", render: () => template }));`;
+mockups.push(definePage({ id: "handbook", title: "Handbook", description: "Guidance", relatedDocs: [], route: "handbook.html", render: () => template }));`;
   const fixture = await changedFixture(
     context,
     source,

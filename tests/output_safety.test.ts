@@ -33,10 +33,10 @@ test("generated ownership belongs only to configured source roots", async (conte
   assert.equal(isOwned(deleted, config), true);
 });
 
-test("build rejects non-canonical repository dependency paths", async (context) => {
+test("build rejects non-canonical related-document paths", async (context) => {
   const source = validEntrySource().replaceAll(
-    'dependencies: ["notes.md"]',
-    'dependencies: ["docs/../notes.md"]',
+    'relatedDocs: ["notes.md"]',
+    'relatedDocs: ["docs/../notes.md"]',
   );
   const fixture = await createFixture(source);
   context.after(() => removeFixture(fixture));
@@ -44,7 +44,7 @@ test("build rejects non-canonical repository dependency paths", async (context) 
 
   await assert.rejects(
     () => compileCatalogue(config),
-    /dependencies path must be a safe repository-relative path/,
+    /relatedDocs path must be a safe repository-relative path/,
   );
 });
 

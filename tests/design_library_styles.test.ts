@@ -48,36 +48,13 @@ test("standalone variants emit only the exclusive child styles they actually ren
     );
 });
 
-test("ownership includes implementation and CSS, while variants stay outside impact dependencies", async () => {
+test("declared CSS belongs to its component in each rendered variant", async () => {
   const { manifest } = await designCatalogue;
   for (const entry of manifest.entries) {
     if (entry.kind !== "component" || !entry.id.startsWith("design-ui-"))
       continue;
     const slug = entry.id.slice("design-ui-".length);
-    assert.ok(
-      entry.ownedDependencies.some((file) =>
-        file.endsWith("/" + slug + ".css"),
-      ),
-      entry.id,
-    );
-    assert.ok(
-      entry.ownedDependencies.some((file) =>
-        file.endsWith("/" + slug + ".view.tsx"),
-      ),
-      entry.id,
-    );
-    assert.ok(
-      !entry.declaredDependencies.some((file) =>
-        file.endsWith("/" + slug + ".tsx"),
-      ),
-      entry.id,
-    );
-    assert.ok(
-      entry.ownedDependencies.every((file) =>
-        entry.declaredDependencies.includes(file),
-      ),
-      entry.id,
-    );
+    assert.equal(Object.hasOwn(entry, "ownedDependencies"), false, entry.id);
     for (const variant of entry.variants)
       for (const view of variant.componentViews)
         assert.ok(

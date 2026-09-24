@@ -1,4 +1,4 @@
-import type { ManifestV5 } from "@mokly/viewer/data";
+import type { ManifestV6 } from "@mokly/viewer/data";
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
 
@@ -38,7 +38,7 @@ export interface ServerOptions {
 
 /** Running server lifecycle and update-stream boundary. */
 export interface RunningServer {
-  completeCatalogue?(manifest: ManifestV5, generation: string): boolean;
+  completeCatalogue?(manifest: ManifestV6, generation: string): boolean;
   close(): Promise<void>;
   publishUpdate(update?: CatalogueUpdate): void;
   replaceComponentRuntime(runtime: ComponentRuntime): void;

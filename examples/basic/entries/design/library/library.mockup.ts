@@ -56,7 +56,6 @@ const groups = [
   },
 ];
 const metadata = {
-  dependencies: [],
   relatedDocs: ["docs/protocol/mokly-design-component-library.md"],
 };
 export const mockups = [

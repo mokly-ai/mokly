@@ -3,20 +3,18 @@ import { test } from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
-import type { ManifestV5 } from "../src/registry/types.js";
+import type { ManifestV6 } from "../src/registry/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import { EntryDetailsBody } from "../src/shell/details.js";
 
 const common = {
-  declaredDependencies: [],
-  dependencies: ["legacy/source-only.ts"],
   description: "An entry",
   navPath: [],
   relatedDocs: ["notes.md"],
   sourcePath: "entries/fixture.mockup.tsx",
   title: "Example",
 };
-const manifest: ManifestV5 = {
+const manifest: ManifestV6 = {
   entries: [
     { ...common, id: "page", kind: "page", route: "page.html" },
     {
@@ -43,7 +41,6 @@ const manifest: ManifestV5 = {
       controls: {},
       id: "component",
       kind: "component",
-      ownedDependencies: ["legacy/owned.css"],
       propSchema: { kind: "object", properties: {} },
       route: "component.html",
       slots: [],
@@ -52,7 +49,7 @@ const manifest: ManifestV5 = {
     },
   ],
   generatedBy: "mokly",
-  schemaVersion: 5,
+  schemaVersion: 6,
   sourceFiles: [common.sourcePath],
 };
 

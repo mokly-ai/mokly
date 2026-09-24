@@ -9,7 +9,6 @@ import { createComponents } from "./components.js";
 import { DesktopScreen, MobileScreen } from "./screens.js";
 
 const metadata = {
-  dependencies: ["entries/screens.tsx"],
   relatedDocs: ["notes.md"],
 };
 

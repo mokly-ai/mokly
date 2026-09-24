@@ -27,7 +27,7 @@ async function compile(
 
 test("component registration emits deterministic variants and actual per-view ownership", async (t) => {
   const result = await compile(t);
-  assert.equal(result.manifest.schemaVersion, 5);
+  assert.equal(result.manifest.schemaVersion, 6);
   const action = result.manifest.entries.find((entry) => entry.id === "action");
   assert.ok(action?.kind === "component");
   assert.equal(
@@ -159,14 +159,17 @@ for (const [name, options, error] of [
     await assert.rejects(compile(t, options), error);
   });
 
-test("v4 retains explicit dependency declarations separately from source attribution", async (t) => {
+test("v6 retains source attribution but no author-maintained dependency fields", async (t) => {
   const result = await compile(t);
   const action = result.manifest.entries.find(
     (entry) => entry.id === "action",
   )!;
-  assert.deepEqual(Reflect.get(action, "declaredDependencies"), ["notes.md"]);
-  assert.deepEqual(action.dependencies, [
-    "entries/fixture.mockup.tsx",
-    "notes.md",
-  ]);
+  assert.equal(action.sourcePath, "entries/fixture.mockup.tsx");
+  for (const entry of result.manifest.entries)
+    for (const field of [
+      "dependencies",
+      "declaredDependencies",
+      "ownedDependencies",
+    ])
+      assert.equal(Object.hasOwn(entry, field), false, `${entry.id}: ${field}`);
 });

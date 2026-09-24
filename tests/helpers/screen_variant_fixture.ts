@@ -32,7 +32,7 @@ export function screenVariantEntrySource(
     : "";
   return `import React from "react";
 import { defineCollection, defineScreen${flowScreenId ? ", defineUseCase" : ""} } from "@mokly/mokly";
-const metadata = { dependencies: ["notes.md"], relatedDocs: ["notes.md"] };
+const metadata = { relatedDocs: ["notes.md"] };
 export const mockups = [
   defineCollection({ ...metadata, id: "fixture", title: "Fixture", description: "Fixture entries", childIds: ${JSON.stringify(childIds)} }),
   ${parent}

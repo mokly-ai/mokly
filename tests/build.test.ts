@@ -111,7 +111,7 @@ test("manifest readers accept version 2 only through explicit compatibility", as
     schemaVersion: 2,
     legacyPages: [],
   };
-  assert.throws(() => parseManifest(legacy), /schema version 5/);
+  assert.throws(() => parseManifest(legacy), /schema version 6/);
   assert.equal(parseHistoricalManifest(legacy, true).schemaVersion, 3);
 });
 
@@ -204,7 +204,6 @@ test("registry reports malformed relationship arrays without leaking a TypeError
 import { defineCollection } from "@mokly/mokly";
 export const mockups = [defineCollection({
   childIds: null as unknown as string[],
-  dependencies: [],
   description: "Malformed collection",
   id: "malformed",
   relatedDocs: [],
@@ -223,7 +222,7 @@ test("registry reports source-attributed collection forest violations", async (c
   const fixture = await createFixture(`
 import { defineCollection, defineScreen } from "@mokly/mokly";
 import React from "react";
-const metadata = { dependencies: [], relatedDocs: [] };
+const metadata = { relatedDocs: [] };
 export const mockups = [
   defineCollection({ ...metadata, childIds: ["shared", "shared", "missing"], description: "First parent", id: "a-parent", title: "First" }),
   defineCollection({ ...metadata, childIds: ["shared"], description: "Second parent", id: "z-parent", title: "Second" }),
@@ -423,7 +422,6 @@ function screenWithColorSchemes(colorSchemes: string): string {
 import React from "react";
 export const mockups = [defineScreen({
   colorSchemes: ${colorSchemes} as ("dark" | "light")[],
-  dependencies: [],
   description: "Scheme screen",
   desktop: <main>Desktop</main>,
   id: "scheme-screen",

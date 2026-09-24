@@ -23,7 +23,7 @@ const HOME_LABEL = "Sign in";
 function evidenceEntrySource(components: boolean, home: string): string {
   return `import React from "react";
 import { defineCollection, defineComponent, defineScreen } from "@mokly/mokly";
-const metadata = { dependencies: ["notes.md"], relatedDocs: [] };
+const metadata = { relatedDocs: [] };
 const badge = defineComponent({ ...metadata,
   id: "badge", title: "Badge", description: "A shared badge", route: "components/badge.html",
   propSchema: { kind: "object", properties: { label: { schema: { kind: "string" } } } },

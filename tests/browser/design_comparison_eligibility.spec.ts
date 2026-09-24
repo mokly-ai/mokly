@@ -6,7 +6,7 @@ import { expect, test, type Page, type TestInfo } from "@playwright/test";
 
 import type {
   ManifestScreen,
-  ManifestV5,
+  ManifestV6,
 } from "../../packages/viewer/dist/registry/types.js";
 import { paletteColor } from "../helpers/design_palette.js";
 import { repositoryRoot } from "../helpers/fixture.js";
@@ -14,7 +14,7 @@ import { repositoryRoot } from "../helpers/fixture.js";
 const directory = path.join(repositoryRoot, "examples/basic/generated");
 const manifest = JSON.parse(
   fs.readFileSync(path.join(directory, "mokly-manifest.json"), "utf8"),
-) as ManifestV5;
+) as ManifestV6;
 const changedDesigns = new Set([
   "design-browse-variant-changes",
   "design-changes-current",

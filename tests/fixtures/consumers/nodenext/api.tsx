@@ -77,7 +77,6 @@ const documentPage: PageInput = {
   id: "typed-page",
   title: "Page",
   description: "Page",
-  dependencies: [],
   relatedDocs: [],
   route: "page.html",
   render: () => "<html><body>Page</body></html>",
@@ -98,7 +97,6 @@ const typedVariant: ScreenVariantInput = {
   title: "Typed screen, empty",
 };
 const variantDefinitions: readonly ScreenDefinition[] = defineScreen({
-  dependencies: [],
   description: "Typed variant parent",
   desktop: node,
   id: "typed-variant-parent",
@@ -111,7 +109,6 @@ const variantDefinitions: readonly ScreenDefinition[] = defineScreen({
 const definitions: RegistryDefinition[] = [
   definePage(documentPage),
   defineScreen({
-    dependencies: [],
     description: "Type declaration fixture",
     desktop: node,
     id: "typed-screen",

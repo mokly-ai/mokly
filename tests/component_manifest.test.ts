@@ -3,10 +3,13 @@ import { test } from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
-import { parseManifest } from "../dist/registry/manifest.js";
+import {
+  parseHistoricalManifest,
+  parseManifest,
+} from "../dist/registry/manifest.js";
 import type { ManifestComponent } from "../packages/viewer/dist/components/manifest_types.js";
 import type {
-  ManifestV5,
+  ManifestV6,
   ManifestScreenV4,
 } from "../packages/viewer/dist/registry/types.js";
 
@@ -15,25 +18,38 @@ import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 async function example(t: {
   after: (fn: () => Promise<void>) => void;
-}): Promise<ManifestV5> {
+}): Promise<ManifestV6> {
   const fixture = await createFixture(componentEntrySource());
   t.after(() => removeFixture(fixture));
   const result = await compileCatalogue(await loadConfig(fixture.root));
-  assert.equal(result.manifest.schemaVersion, 5);
-  return result.manifest as ManifestV5;
+  assert.equal(result.manifest.schemaVersion, 6);
+  return result.manifest as ManifestV6;
 }
 
-test("manifest v5 rejects broken identities, ownership references and props before readers can suppress changes", async (t) => {
+test("manifest v6 rejects removed fields, broken identities, ownership references and props", async (t) => {
   const original = await example(t);
   const edits: readonly [
     string,
     (
-      value: ManifestV5,
+      value: ManifestV6,
       screen: ManifestScreenV4,
       component: ManifestComponent,
     ) => void,
   ][] = [
-    ["unknown schema", (value) => Object.assign(value, { schemaVersion: 6 })],
+    ["unknown schema", (value) => Object.assign(value, { schemaVersion: 7 })],
+    [
+      "removed dependency field",
+      (_v, screen) => Object.assign(screen, { dependencies: [] }),
+    ],
+    [
+      "removed declaration field",
+      (_v, screen) => Object.assign(screen, { declaredDependencies: [] }),
+    ],
+    [
+      "removed owner field",
+      (_v, _s, component) =>
+        Object.assign(component, { ownedDependencies: [] }),
+    ],
     [
       "unknown component field",
       (_v, _s, component) => Object.assign(component, { unexpected: true }),
@@ -165,5 +181,24 @@ test("manifest v5 rejects broken identities, ownership references and props befo
     )!;
     edit(value, screen, component);
     assert.throws(() => parseManifest(value), Error, name);
+  }
+});
+
+test("historical reader still rejects removed fields on v6 manifests", async (context) => {
+  const original = await example(context);
+  for (const field of [
+    "dependencies",
+    "declaredDependencies",
+    "ownedDependencies",
+  ] as const) {
+    const invalid = structuredClone(original);
+    const entry = invalid.entries.find((candidate) =>
+      field === "ownedDependencies"
+        ? candidate.kind === "component"
+        : candidate.kind === "screen",
+    );
+    assert.ok(entry);
+    Object.assign(entry, { [field]: [] });
+    assert.throws(() => parseHistoricalManifest(invalid), new RegExp(field));
   }
 });

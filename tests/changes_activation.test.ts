@@ -3,17 +3,13 @@ import test from "node:test";
 
 import type {
   ManifestScreen,
-  ManifestV5,
+  ManifestV6,
 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { changesActivation } from "../packages/viewer/dist/shell/changes_activation.js";
 import type { ShellContext } from "../packages/viewer/dist/shell/context.js";
 import type { ShellRoute } from "../packages/viewer/dist/shell/routes.js";
 import { defaultSelection } from "../packages/viewer/dist/viewer/selection.js";
-
-type CurrentManifestScreen = ManifestScreen & {
-  declaredDependencies: readonly string[];
-};
 
 const parent = screen("welcome", "Welcome", "screens/welcome.html");
 const empty = {
@@ -33,10 +29,10 @@ const failure = {
   tags: ["errors"],
   variantOf: parent.id,
 };
-const manifest: ManifestV5 = {
+const manifest: ManifestV6 = {
   entries: [parent, empty, failure],
   generatedBy: "mokly",
-  schemaVersion: 5,
+  schemaVersion: 6,
   sourceFiles: [parent.sourcePath],
 };
 const catalogue = createCatalogue(manifest);
@@ -171,15 +167,9 @@ function target(route: ShellRoute): ManifestScreen {
   return route.view.target.entry as ManifestScreen;
 }
 
-function screen(
-  id: string,
-  title: string,
-  route: string,
-): CurrentManifestScreen {
+function screen(id: string, title: string, route: string): ManifestScreen {
   const stem = route.replace(/\.html$/, "");
   return {
-    declaredDependencies: [],
-    dependencies: [],
     description: title,
     fragments: {
       desktop: `${stem}.desktop.html`,

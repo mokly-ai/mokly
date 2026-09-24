@@ -11,7 +11,7 @@ later product ideas belong to the separate
 route retirements still require explicit approval.
 Removal of variant `dependencies` and its inheritance is planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md) and
-implemented in Milestone 6; the target input below is not yet implemented.
+implemented in Milestone 6; the input below is now implemented.
 
 ## Purpose And Boundary
 

@@ -250,7 +250,7 @@ test("the former Mokabook manifest is accepted only from Git history", async (co
   };
   assert.throws(
     () => parseManifest(formerManifest),
-    /expected Mokly manifest schema version 5/,
+    /expected Mokly manifest schema version 6/,
   );
   await fs.promises.writeFile(
     path.join(fixture.mockupsDir, FORMER_MANIFEST_NAME),
@@ -293,14 +293,20 @@ for (const schemaVersion of [2, 3, 4, 5]) {
     const { sourceFiles: _sources, ...historical } = compilation.manifest;
     const manifest =
       schemaVersion === 5
-        ? compilation.manifest
+        ? {
+            ...compilation.manifest,
+            schemaVersion: 5,
+            entries: compilation.manifest.entries.map((entry) => ({
+              ...entry,
+              dependencies: [entry.sourcePath],
+              declaredDependencies: [],
+            })),
+          }
         : schemaVersion === 4
           ? {
               ...compilation.manifest,
               schemaVersion: 4,
-              entries: compilation.manifest.entries.map(
-                ({ declaredDependencies: _declared, ...entry }) => entry,
-              ),
+              entries: compilation.manifest.entries,
             }
           : {
               ...historical,

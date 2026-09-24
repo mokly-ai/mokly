@@ -54,7 +54,7 @@ The viewer package consumes this projection without importing the CLI.
 
 This is the target planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md):
-Milestone 6 changes private input to v6, and Milestone 7 writes/reads public
+Milestone 6 changes private input to v6; Milestone 7 writes/reads public
 v2, removes `details.dependencies`, creates the fixture and rejects public v1.
 Current code still writes v1; the v2 fixture is not created in this milestone.
 

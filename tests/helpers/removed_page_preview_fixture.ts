@@ -5,7 +5,7 @@ import type { TestContext } from "node:test";
 import type {
   HistoricalManifest,
   ManifestPage,
-  ManifestV5,
+  ManifestV6,
 } from "@mokly/viewer/data";
 
 import { loadConfig } from "../../dist/config/load.js";
@@ -32,9 +32,7 @@ export async function removedPagePreviewFixture(
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
-  const page: ManifestPage & { declaredDependencies: readonly string[] } = {
-    declaredDependencies: [],
-    dependencies: ["entries/guide.mockup.tsx"],
+  const page: ManifestPage = {
     description: "Historical guide",
     id: "guide",
     kind: "page",
@@ -122,7 +120,7 @@ export function baselineReader(
   };
 }
 
-export function v5Baseline(baseline: HistoricalManifest): ManifestV5 {
+export function v5Baseline(baseline: HistoricalManifest): ManifestV6 {
   if (!("sourceFiles" in baseline)) throw new Error("Expected source files");
-  return { ...baseline, schemaVersion: 5 } as ManifestV5;
+  return { ...baseline, schemaVersion: 6 } as ManifestV6;
 }

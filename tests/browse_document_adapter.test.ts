@@ -109,7 +109,7 @@ test("Browse strips reserved metadata from unowned HTML", () => {
     entries: [],
     generatedBy: "mokly",
     sourceFiles: [],
-    schemaVersion: 5,
+    schemaVersion: 6,
   });
   const original = `<!doctype html><html><body><a data-mokly-link="home" DATA-MOKLY-LINK="details" data-mokly-target="_top" DATA-MOKLY-TARGET="_blank" href="./home.html">Home</a></body></html>`;
   const adapted = adaptBrowseDocument(original, "unowned.html", catalogue);

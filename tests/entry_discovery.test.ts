@@ -17,7 +17,7 @@ import {
 
 const screen = (id: string, route: string) =>
   `import { defineScreen } from "@mokly/mokly";
-const metadata = { dependencies: ["notes.md"], relatedDocs: ["notes.md"], useCaseIds: [] };
+const metadata = { relatedDocs: ["notes.md"], useCaseIds: [] };
 export const mockups = [defineScreen({ ...metadata, description: ${JSON.stringify(id)}, desktop: ${JSON.stringify(id)}, id: ${JSON.stringify(id)}, mobile: ${JSON.stringify(id)}, route: ${JSON.stringify(route)}, title: ${JSON.stringify(id)} })];
 `;
 

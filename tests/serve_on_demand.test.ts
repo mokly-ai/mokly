@@ -21,7 +21,7 @@ for (const watch of [false, true]) {
         `
       import { definePage } from "@mokly/mokly";
       mockups.push(definePage({ id: "broken", title: "Broken", description: "Broken page",
-        route: "broken.html", dependencies: [], relatedDocs: [],
+        route: "broken.html", relatedDocs: [],
         render: () => { throw new Error("unrequested page rendered"); } }));
     `,
     );
@@ -86,7 +86,7 @@ test(
         `
     import { definePage } from "@mokly/mokly";
     mockups.push(definePage({ id: "broken", title: "Broken", description: "Broken page",
-      route: "broken.html", dependencies: [], relatedDocs: [],
+      route: "broken.html", relatedDocs: [],
       render: () => { throw new Error("background cannot complete"); } }));
   `,
     );

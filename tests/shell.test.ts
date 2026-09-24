@@ -6,7 +6,7 @@ import {
   notFoundPage as renderNotFoundPage,
   viewPage as renderViewPage,
 } from "../dist/server/pages.js";
-import type { ManifestV5 } from "../packages/viewer/dist/registry/types.js";
+import type { ManifestV6 } from "../packages/viewer/dist/registry/types.js";
 import type { Catalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import type { ShellContext } from "../packages/viewer/dist/shell/context.js";
@@ -23,7 +23,7 @@ import {
 } from "./helpers/html.js";
 import { publicShellContext } from "./helpers/public_shell.js";
 
-const manifest: ManifestV5 = {
+const manifest: ManifestV6 = {
   entries: [
     {
       kind: "page",
@@ -32,8 +32,6 @@ const manifest: ManifestV5 = {
       description: "Original complete document",
       route: "legacy/old.html",
       sourcePath: "entries/fixture.mockup.tsx",
-      declaredDependencies: [],
-      dependencies: [],
       relatedDocs: [],
       navPath: [],
     },
@@ -44,15 +42,11 @@ const manifest: ManifestV5 = {
       description: "Catalogue overview",
       route: "legacy/index.html",
       sourcePath: "entries/fixture.mockup.tsx",
-      declaredDependencies: [],
-      dependencies: [],
       relatedDocs: [],
       navPath: [],
     },
     {
       childIds: ["screens", "tour", "old", "overview"],
-      declaredDependencies: [],
-      dependencies: [],
       description: "Example catalogue",
       id: "example",
       kind: "collection",
@@ -63,8 +57,6 @@ const manifest: ManifestV5 = {
     },
     {
       childIds: ["welcome", "details"],
-      declaredDependencies: [],
-      dependencies: [],
       description: "Screens",
       id: "screens",
       kind: "collection",
@@ -75,8 +67,6 @@ const manifest: ManifestV5 = {
     },
     {
       address: "example.test/welcome",
-      declaredDependencies: [],
-      dependencies: ["styles.css"],
       description: "Landing screen",
       fragments: {
         desktop: "screens/welcome.desktop.html",
@@ -95,8 +85,6 @@ const manifest: ManifestV5 = {
       viewports: ["mobile", "desktop"],
     },
     {
-      declaredDependencies: [],
-      dependencies: [],
       description: "Second screen",
       fragments: {
         desktop: "screens/details.desktop.html",
@@ -114,8 +102,6 @@ const manifest: ManifestV5 = {
       viewports: ["mobile", "desktop"],
     },
     {
-      declaredDependencies: [],
-      dependencies: [],
       description: "Ordered journey",
       id: "tour",
       kind: "use-case",
@@ -129,10 +115,10 @@ const manifest: ManifestV5 = {
   ],
   generatedBy: "mokly",
   sourceFiles: ["entries/fixture.mockup.tsx"],
-  schemaVersion: 5,
+  schemaVersion: 6,
 };
 
-const darkManifest: ManifestV5 = {
+const darkManifest: ManifestV6 = {
   ...manifest,
   entries: manifest.entries.map((entry) =>
     entry.kind === "screen" && entry.id === "welcome"
@@ -147,7 +133,7 @@ const darkManifest: ManifestV5 = {
   ),
 };
 
-const taggedFlowManifest: ManifestV5 = {
+const taggedFlowManifest: ManifestV6 = {
   ...manifest,
   entries: manifest.entries.map((entry) =>
     entry.kind === "use-case"
@@ -156,7 +142,7 @@ const taggedFlowManifest: ManifestV5 = {
   ),
 };
 
-const untaggedManifest: ManifestV5 = {
+const untaggedManifest: ManifestV6 = {
   ...manifest,
   entries: manifest.entries.map((entry) => {
     if (entry.kind === "collection") return entry;

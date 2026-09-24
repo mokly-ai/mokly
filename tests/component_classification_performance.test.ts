@@ -22,7 +22,7 @@ import { validEntrySource } from "./helpers/fixture.js";
 test("component metadata reuses a precomputed catalogue hierarchy", async (t) => {
   const fixture = await componentReviewFixture(t, (source) => source);
   const manifest = fixture.after.manifest;
-  assert.equal(manifest.schemaVersion, 5);
+  assert.equal(manifest.schemaVersion, 6);
   let traversals = 0;
   const entries = new Proxy(manifest.entries, {
     get(target, property, receiver) {

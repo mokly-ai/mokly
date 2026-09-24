@@ -4,16 +4,11 @@ import { action } from "../action/action.mokly.js";
 
 import { Toolbar } from "./toolbar.js";
 
-const dependency = "examples/basic/generated/example-components.css";
-const implementation = "examples/basic/src/components/toolbar/toolbar.tsx";
-
 export const toolbar = defineComponent({
   id: "example-toolbar",
   title: "Toolbar",
   description: "A composed toolbar with caller-supplied content.",
   route: "components/toolbar.html",
-  dependencies: [dependency, implementation],
-  ownedDependencies: [dependency, implementation],
   stylesheets: ["example-components.css"],
   relatedDocs: ["examples/basic/README.md"],
   propSchema: {

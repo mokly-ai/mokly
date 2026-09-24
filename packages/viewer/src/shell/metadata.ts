@@ -1,4 +1,4 @@
-import type { Manifest, ManifestEntry, ManifestV5 } from "../registry/types.js";
+import type { Manifest, ManifestEntry, ManifestV6 } from "../registry/types.js";
 import type { ReviewResultV3 } from "../review/component_types.js";
 import type { ScreenResourceEvidence, ViewReview } from "../review/types.js";
 
@@ -6,7 +6,7 @@ export type CatalogueMetadata =
   | Manifest
   | {
       schemaVersion: "live-index-1";
-      entries: ManifestV5["entries"];
+      entries: ManifestV6["entries"];
       generatedBy: "mokly";
       sourceFiles: readonly string[];
     };

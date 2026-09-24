@@ -3,7 +3,7 @@ export function comparisonEntrySource(changed: boolean): string {
   const third = changed ? "added" : "removed";
   return `import { defineCollection, defineScreen } from "@mokly/mokly";
 import React from "react";
-const metadata = { dependencies: ["notes.md"], relatedDocs: ["notes.md"] };
+const metadata = { relatedDocs: ["notes.md"] };
 export const mockups = [
   defineCollection({ ...metadata, childIds: ["home", "details", "${third}"], description: "Fixture collection", id: "fixture", title: "Fixture" }),
   defineScreen({ ...metadata, id: "home", title: "Home", route: "screens/home.html", description: "Home screen", useCaseIds: [],
