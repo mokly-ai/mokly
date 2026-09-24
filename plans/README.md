@@ -49,6 +49,10 @@
   — publish consumes the release PR's validated CI evidence for the same
   tree instead of re-running the complete gate, with the complete gate as
   the fail-closed fallback.
+- [Route-Scoped Shell Bootstrap](./route-scoped-shell-bootstrap.md) — Serve
+  pages embed the catalogue index plus only their own route's component usage
+  (3.5 MB to about 0.4 MB per page) and serialise that state once, while the
+  public `catalogue.json` and static exports stay unchanged.
 
 ## Completed
 
