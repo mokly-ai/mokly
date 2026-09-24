@@ -19,12 +19,16 @@ loads. Rewrite `import.meta.url`, `import.meta.dirname`, and
 real file location, not the temporary bundle's; reload/evaluate and instantiate
 plugins exactly once per graph load through the PostCSS config loader. The
 PostCSS module must default-export a non-array object with `plugins`
-as either an ordered array of PostCSS plugin instances or an insertion-ordered
+as either an ordered array of PostCSS 8-compatible plugins (instances,
+uncalled creators with `postcss: true`, plain function plugins and objects
+with a `postcss` factory) or an insertion-ordered
 record mapping package names to plain option objects. Resolve object-form
 package names with the same Node ESM conditions from the PostCSS module's
 directory, instantiate with those options, and preserve declared order.
 `map` is accepted but ignored; Mokly emits no source maps. Reject any other
 keys, missing/invalid plugins, escaping paths and failed package resolution.
+Let PostCSS normalize array elements instead of requiring `postcssPlugin`;
+map normalization failures to the indexed `config-invalid` diagnostic.
 
 Run the consumer's plugins in order once for each distinct effective
 stylesheet input with `from` set to its physical source path, `map: false`,
@@ -74,6 +78,18 @@ current matching files. A reported directory may be an in-repository symlink
 to an in-repository directory; preserve the logical and physical source
 aliases of its matching files. Never follow symlinks encountered below the
 reported directory during the walk.
+Dependency walking, inventory, entry discovery and watch classification use
+one package-owned-path classification by both reported logical path and
+projected real path. It identifies generated fragments (owned HTML), the
+manifest and reserved tree separately from ignored Review output, cache,
+denied trees (relative to an explicit entry-glob stable root when classifying
+entry watch events) and physical escapes. Reject ignored directories before walking,
+ignored files before inventory and package-owned events before matching watch
+globs or required authored inputs. A symlink alias to generated output keeps
+the same explicit-dependency error and committed/derived directory precedence
+as its physical target; diagnostics name the reported logical path. In
+committed mode scan generated trees for matching files before reporting them;
+in derived mode skip those trees entirely.
 
 **Validation precedence:** Explicit `dependency` naming Mokly-owned output
 fails in both modes. For directory matches, committed mode fails when the

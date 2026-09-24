@@ -82,7 +82,7 @@ test("invalid PostCSS module shape, keys and plugin options retain exact diagnos
     ],
     [
       "export default { plugins: [null] }",
-      "postcss plugins[0] must be a PostCSS plugin instance",
+      "postcss plugins[0] is not a PostCSS 8 plugin: Cannot read properties of null (reading 'postcss'); use a plugin instance, creator, function or object with a postcss factory",
     ],
     [
       'export default { plugins: { "missing-plugin": null } }',
@@ -97,6 +97,24 @@ test("invalid PostCSS module shape, keys and plugin options retain exact diagnos
         error.message === `[mokly/config-invalid] ${message}`,
     );
   }
+});
+
+test("PostCSS accepts creator, plain function and wrapped object plugins", async (t) => {
+  const fixture = await styleFixture(".x{color:red}", {
+    extraConfig: 'postcss: "postcss.config.mjs",',
+  });
+  t.after(() => removeFixture(fixture));
+  await fs.writeFile(
+    path.join(fixture.root, "postcss.config.mjs"),
+    `function tailwindcss() { return { postcssPlugin: "tailwindcss", Once(root) { root.append({ selector: ".tailwind", nodes: [{ prop: "color", value: "blue" }] }); } }; }
+     function autoprefixer() { return { postcssPlugin: "autoprefixer", Once(root) { root.append({ selector: ".prefix", nodes: [{ prop: "display", value: "flex" }] }); } }; }
+     autoprefixer.postcss = true;
+     function plain(root) { root.append({ selector: ".plain", nodes: [{ prop: "color", value: "green" }] }); }
+     export default { plugins: [tailwindcss(), autoprefixer, plain, { postcss: (root) => root.append({ selector: ".wrapped", nodes: [{ prop: "opacity", value: "1" }] }) }] };`,
+  );
+  const css = (await compileFixture(fixture)).outputs.get(entryStyle) as string;
+  for (const selector of [".tailwind", ".prefix", ".plain", ".wrapped"])
+    assert.ok(css.includes(selector), selector);
 });
 
 test("plugin exceptions retain the plugin name and physical stylesheet", async (t) => {

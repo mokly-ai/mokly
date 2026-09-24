@@ -104,6 +104,54 @@ test("a symlink alias cannot hide a directory scan of generated output", async (
   );
 });
 
+test("a symlinked dependency scan root never inventories Review output", async (t) => {
+  const fixture = await styleFixture(".x{color:red}", {
+    extraConfig: 'postcss: "postcss.config.mjs",',
+  });
+  t.after(() => removeFixture(fixture));
+  const review = path.join(fixture.root, ".review");
+  await fs.mkdir(review);
+  await fs.writeFile(path.join(review, "private.txt"), "review artefact");
+  await fs.symlink(review, path.join(fixture.root, "alias"), "dir");
+  await fs.writeFile(
+    path.join(fixture.root, "postcss.config.mjs"),
+    `export default { plugins: [{ postcssPlugin: "review-scan", Once(root, { result }) {
+      result.messages.push({ type: "dir-dependency", plugin: "review-scan", dir: new URL("./alias", import.meta.url).pathname });
+    } }] };`,
+  );
+  const graph = await loadConsumerGraph(await loadConfig(fixture.root), false);
+  assert.ok(!graph.sourceFiles.includes("alias/private.txt"));
+  assert.ok(!graph.sourceFiles.includes(".review/private.txt"));
+  assert.deepEqual(graph.postcssWatchDirectories, []);
+});
+
+test("a derived scan through an alias skips generated output", async (t) => {
+  const fixture = await styleFixture(".x{color:red}", {
+    extraConfig: 'postcss: "postcss.config.mjs",',
+  });
+  t.after(() => removeFixture(fixture));
+  await fs.writeFile(
+    fixture.configPath,
+    (await fs.readFile(fixture.configPath, "utf8")).replace(
+      '"committed"',
+      '"derived"',
+    ),
+  );
+  const generated = path.join(fixture.mockupsDir, "mokly-generated/styles");
+  await fs.mkdir(generated, { recursive: true });
+  await fs.writeFile(path.join(generated, "stale.css"), ".stale{}");
+  await fs.symlink(generated, path.join(fixture.root, "alias"), "dir");
+  await fs.writeFile(
+    path.join(fixture.root, "postcss.config.mjs"),
+    `export default { plugins: [{ postcssPlugin: "derived-alias", Once(root, { result }) {
+      result.messages.push({ type: "dir-dependency", plugin: "derived-alias", dir: new URL("./alias", import.meta.url).pathname });
+    } }] };`,
+  );
+  const graph = await loadConsumerGraph(await loadConfig(fixture.root), false);
+  assert.ok(!graph.sourceFiles.includes("alias/stale.css"));
+  assert.deepEqual(graph.postcssWatchDirectories, []);
+});
+
 test("a symlink alias cannot make a public mockups file private", async (t) => {
   const fixture = await styleFixture(".x{color:red}", {
     extraConfig: 'postcss: "postcss.config.mjs",',

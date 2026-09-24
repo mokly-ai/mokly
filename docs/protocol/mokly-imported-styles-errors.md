@@ -14,22 +14,22 @@ in the parent contract.
 
 ## Configuration (`config-invalid`)
 
-| Failure                                                    | Exact message                                                                                                                     |
-| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Reserved `entries` glob static prefix                      | `entries must not select mokly-generated/: {glob}; narrow the entry glob to authored files`                                       |
-| Reserved `entriesDir`                                      | `entriesDir must not select mokly-generated/: {config-path}; choose a directory of authored entry modules`                        |
-| Reserved `stylesheets` path                                | `stylesheets[{index}].{field} must not reference mokly-generated/: {path}; link imported CSS through the renderer instead`        |
-| Reserved `publicExclude` first segment                     | `publicExclude must not start with mokly-generated/: {glob}; narrow the exclusion to consumer-owned paths`                        |
-| Reserved Review directory                                  | `review.outDir must not be at or inside mokly-generated/; choose a separate artifact directory`                                   |
-| Consumer `.css` or `.module.css` loader other than `empty` | `moduleResolution.loaders[{extension}] is package-owned; only "empty" is allowed to opt out of imported CSS delivery`             |
-| `postcss` empty/non-string/escaping path                   | `postcss must name a config-relative module inside repoRoot: {config-path}; choose an existing .ts, .mts, .js, .mjs or .cjs file` |
-| `postcss` missing, non-file or unsupported suffix          | `postcss module must be an existing regular .ts, .mts, .js, .mjs or .cjs file inside repoRoot: {config-path}`                     |
-| `postcss` module load/default export failure               | `could not load postcss module {config-path}: {detail}; default-export an object with plugins`                                    |
-| Unsupported module object key                              | `postcss configuration has unsupported key: {key}; only plugins and map are supported`                                            |
-| Invalid/missing `plugins`                                  | `postcss plugins must be an array of plugin instances or an object mapping package names to option objects`                       |
-| Invalid plugin array element                               | `postcss plugins[{index}] must be a PostCSS plugin instance`                                                                      |
-| Invalid plugin options                                     | `postcss plugins[{plugin}] must be a plain option object`                                                                         |
-| Plugin name resolution/factory failure                     | `could not load PostCSS plugin {plugin} from {config-path}: {detail}; install and configure it in the consumer repository`        |
+| Failure                                                    | Exact message                                                                                                                             |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Reserved `entries` glob static prefix                      | `entries must not select mokly-generated/: {glob}; narrow the entry glob to authored files`                                               |
+| Reserved `entriesDir`                                      | `entriesDir must not select mokly-generated/: {config-path}; choose a directory of authored entry modules`                                |
+| Reserved `stylesheets` path                                | `stylesheets[{index}].{field} must not reference mokly-generated/: {path}; link imported CSS through the renderer instead`                |
+| Reserved `publicExclude` first segment                     | `publicExclude must not start with mokly-generated/: {glob}; narrow the exclusion to consumer-owned paths`                                |
+| Reserved Review directory                                  | `review.outDir must not be at or inside mokly-generated/; choose a separate artifact directory`                                           |
+| Consumer `.css` or `.module.css` loader other than `empty` | `moduleResolution.loaders[{extension}] is package-owned; only "empty" is allowed to opt out of imported CSS delivery`                     |
+| `postcss` empty/non-string/escaping path                   | `postcss must name a config-relative module inside repoRoot: {config-path}; choose an existing .ts, .mts, .js, .mjs or .cjs file`         |
+| `postcss` missing, non-file or unsupported suffix          | `postcss module must be an existing regular .ts, .mts, .js, .mjs or .cjs file inside repoRoot: {config-path}`                             |
+| `postcss` module load/default export failure               | `could not load postcss module {config-path}: {detail}; default-export an object with plugins`                                            |
+| Unsupported module object key                              | `postcss configuration has unsupported key: {key}; only plugins and map are supported`                                                    |
+| Invalid/missing `plugins`                                  | `postcss plugins must be an array of plugin instances or an object mapping package names to option objects`                               |
+| Invalid plugin array element                               | `postcss plugins[{index}] is not a PostCSS 8 plugin: {detail}; use a plugin instance, creator, function or object with a postcss factory` |
+| Invalid plugin options                                     | `postcss plugins[{plugin}] must be a plain option object`                                                                                 |
+| Plugin name resolution/factory failure                     | `could not load PostCSS plugin {plugin} from {config-path}: {detail}; install and configure it in the consumer repository`                |
 
 The `stylesheets` `{field}` is `stylesheets`, `lightStylesheets` or
 `darkStylesheets`; `{index}` is zero-based. A public exclusion is rejected

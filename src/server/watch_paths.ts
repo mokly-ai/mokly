@@ -3,15 +3,13 @@ import path from "node:path";
 
 import { minimatch } from "minimatch";
 
-import { isOwned } from "../build/ownership.js";
-import { isGeneratedRoute } from "../build/styles/routes.js";
+import { packageOwnedPath } from "../build/package_owned_paths.js";
 import { isBaselineCachePath } from "../config/cache_paths.js";
 import { globStablePrefix } from "../config/entry_globs.js";
 import { isInside, projectRealPath, toPosixPath } from "../config/paths.js";
 import { isDeniedSourceSegment } from "../config/private_directories.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { isExportIgnoredPath } from "../export/ignored.js";
-import { MANIFEST_NAME } from "../registry/manifest.js";
 
 import type { WatchDirectoryStatus } from "./watch_events.js";
 
@@ -37,10 +35,25 @@ export function isEntryGlobCandidate(
   const matchingGlobs = config.entryGlobs.filter((glob) =>
     minimatch(relative, glob, { dot: true }),
   );
-  return (
-    matchingGlobs.length > 0 &&
-    !isDiscoveryDeniedEntryPath(absolute, matchingGlobs, config, directory)
+  if (
+    matchingGlobs.length === 0 ||
+    isDiscoveryDeniedEntryPath(absolute, matchingGlobs, config, directory)
+  )
+    return false;
+  const relativeRoot =
+    deepestContainingRoot(
+      absolute,
+      matchingGlobs.map((glob) =>
+        path.resolve(config.repoRoot, globStablePrefix(glob)),
+      ),
+    ) ?? config.repoRoot;
+  const owned = packageOwnedPath(
+    absolute,
+    config,
+    directory === "directory",
+    relativeRoot,
   );
+  return owned !== "generated" && owned !== "ignored" && owned !== "outside";
 }
 
 /** Return whether package-owned output should be pruned from a broad watch. */
@@ -54,10 +67,18 @@ export function isPackageOwnedIgnoredWatchPath(
   const absolute = path.resolve(candidate);
   if (isBaselineCachePath(absolute, config.repoRoot)) return true;
   if (!isInside(config.repoRoot, absolute)) return false;
-  if (isRequiredWatchPath(absolute, config)) return false;
   const globRoots = entryGlobRoots(config);
+  const packageRoot =
+    deepestContainingRoot(absolute, globRoots) ?? config.repoRoot;
+  const owned = packageOwnedPath(
+    absolute,
+    config,
+    stats?.isDirectory() ?? (directory === "directory" ? true : undefined),
+    packageRoot,
+  );
+  if (owned === "generated" || owned === "ignored") return true;
+  if (isRequiredWatchPath(absolute, config)) return false;
   if (globRoots.some((root) => isInside(absolute, root))) return false;
-  if (isGeneratedOutputPath(absolute, config)) return true;
   if (isExportIgnoredPath(absolute, config.repoRoot, mode)) return true;
   if (isInside(config.review.outDir, absolute)) return true;
   const relativeRoot = deepestContainingRoot(absolute, globRoots);
@@ -113,20 +134,6 @@ function globWatchRoot(repoRoot: string, glob: string): string {
   const firstGlob = parts.findIndex((part) => /[*?{[(]/.test(part));
   const stable = firstGlob === -1 ? parts : parts.slice(0, firstGlob);
   return path.resolve(repoRoot, stable.length === 0 ? "." : stable.join("/"));
-}
-
-/** Return whether a path is the manifest or header-proven generated output. */
-function isGeneratedOutputPath(
-  candidate: string,
-  config: ResolvedConfig,
-): boolean {
-  if (!isInside(config.mockupsDir, candidate)) return false;
-  const relative = toPosixPath(path.relative(config.mockupsDir, candidate));
-  return (
-    relative === MANIFEST_NAME ||
-    isGeneratedRoute(relative) ||
-    isOwned(candidate, config)
-  );
 }
 
 /** Preserve exact configured inputs and the ancestors needed to reach them. */

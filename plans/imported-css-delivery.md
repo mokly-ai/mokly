@@ -3,9 +3,9 @@
 ## Status
 
 Active. Created 2026-09-24 from the CSS-in-JS investigation on this branch.
-Milestones 1, 1A, 2, 3, 4, 4A, 5, 5A and 6 (contract, binary-safe output,
+Milestones 1, 1A, 2, 3, 4, 4A, 5, 5A, 6 and 6A (contract, binary-safe output,
 reserved generated directory, CSS/asset bundling and follow-ups, stylesheet
-links, on-demand validation caching and PostCSS) are complete; Milestones 7–9
+links, on-demand validation caching, PostCSS and package-owned aliases) are complete; Milestones 7–9
 remain. PostCSS lets Tailwind v4 and autoprefixer use the consumer's configuration.
 Esbuild remains the only bundler; the optional Vite compatibility package is a
 follow-up plan.
@@ -529,6 +529,24 @@ Tailwind v4 and autoprefixer work, with complete inventory and watch coverage.
       audit, lint, typecheck, and `cargo xtask check`.
 - [x] Commit and push Milestone 6 separately, then review the complete diff
       against `origin/main` using `docs/implementation-review-prompt.md`.
+
+## Milestone 6A: Package-owned aliases and PostCSS plugin forms (complete)
+
+Close the path-alias and plugin-normalization gaps before widening delivery.
+
+- [x] Specify one logical-and-physical package-owned path classification for
+      dependency walking, inventory, discovery and watch classification;
+      document PostCSS 8 plugin forms and their invalid-element diagnostic.
+- [x] Write failing regression tests for a symlinked scan root into Review
+      output, an alias to generated output in derived mode and a watch event
+      through the alias; verify the exact generated-output precedence.
+- [x] Let PostCSS normalize instance, uncalled creator, plain function and
+      `{ postcss: fn }` array plugins, including real Tailwind + autoprefixer;
+      test invalid plugin errors and preserve object-form package resolution.
+- [x] Update nearby READMEs and run the build, tests, example Build/Check,
+      lint, typecheck and `cargo xtask check`.
+- [x] Commit and push this milestone separately, then review the diff against
+      `origin/main` using `docs/implementation-review-prompt.md`.
 
 ## Milestone 7: Serve, watch, export, publication, and Changes
 

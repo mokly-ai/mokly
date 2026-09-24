@@ -4,15 +4,13 @@ import path from "node:path";
 import { isInside, projectRealPath, toPosixPath } from "../../config/paths.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { MoklyError } from "../../errors.js";
-import { MANIFEST_NAME } from "../../registry/manifest.js";
-import { isOwned } from "../ownership.js";
+import { packageOwnedPath } from "../package_owned_paths.js";
 
 import {
   walkDependencyDirectory,
   ignoredDependencyPath,
 } from "./dependency_walk.js";
 import type { StyleDependencyReport } from "./postcss.js";
-import { GENERATED_DIRECTORY } from "./routes.js";
 
 /** Package-owned directory root, including its reported glob for new files. */
 export interface PostcssWatchDirectory {
@@ -66,7 +64,8 @@ export function collectPostcssDependencies(
           `PostCSS plugin ${report.plugin} reported a missing directory dependency for ${relative(config, report.source)}: ${relative(config, file)}; create the directory or correct the plugin`,
         );
       const glob = report.glob ?? "**/*";
-      directories.set(`${file}\0${glob}`, { directory: file, glob });
+      if (packageOwnedPath(file, config) !== "generated")
+        directories.set(`${file}\0${glob}`, { directory: file, glob });
       for (const matched of walkDependencyDirectory(file, glob, config))
         expanded.push({ file: matched, report, directory: file });
     }
@@ -105,25 +104,7 @@ export function collectPostcssDependencies(
 }
 
 function isGenerated(file: string, config: ResolvedConfig): boolean {
-  const physicalMockups = projectRealPath(config.mockupsDir);
-  const physicalFile = projectRealPath(file);
-  return [
-    { candidate: file, root: config.mockupsDir, context: config },
-    {
-      candidate: physicalFile,
-      root: physicalMockups,
-      context: { ...config, mockupsDir: physicalMockups },
-    },
-  ].some(({ candidate, root, context }) => {
-    if (!isInside(root, candidate)) return false;
-    const relativePath = path.relative(root, candidate);
-    return (
-      relativePath === MANIFEST_NAME ||
-      relativePath === GENERATED_DIRECTORY ||
-      relativePath.startsWith(`${GENERATED_DIRECTORY}${path.sep}`) ||
-      isOwned(candidate, context)
-    );
-  });
+  return packageOwnedPath(file, config) === "generated";
 }
 
 function isPublicMockupsDependency(

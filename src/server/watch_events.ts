@@ -3,6 +3,7 @@ import path from "node:path";
 
 import { minimatch } from "minimatch";
 
+import { packageOwnedPath } from "../build/package_owned_paths.js";
 import { isBaselineCachePath } from "../config/cache_paths.js";
 import { isAuthoredEntryPath } from "../config/entry_membership.js";
 import { isInside, toPosixPath } from "../config/paths.js";
@@ -205,7 +206,13 @@ export function classifyWatchPath(
       (source) => path.resolve(config.repoRoot, source) === absolute,
     )
   )
-    return "rebuild";
+    return packageOwnedPath(
+      absolute,
+      config,
+      directory === "directory" ? true : false,
+    )
+      ? "ignore"
+      : "rebuild";
   if (isAuthoredEntryPath(absolute, config)) return "rebuild";
   if (isEntryGlobCandidate(absolute, config, directory)) return "rebuild";
   if (config.renderer === absolute) return "rebuild";

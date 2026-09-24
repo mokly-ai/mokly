@@ -4,19 +4,24 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { build, transform, type Metafile, type Plugin } from "esbuild";
-import type { Plugin as PostcssPlugin } from "postcss";
+import postcss, { type AcceptedPlugin } from "postcss";
 
 import { graphSourceFiles } from "../build/source_inventory.js";
 import { MoklyError, errorMessage } from "../errors.js";
 
 import type { ResolvedConfig } from "./types.js";
 
+/** Normalized elements accepted by PostCSS's processor. */
+export type NormalizedPostcssPlugin = ReturnType<
+  typeof postcss
+>["plugins"][number];
+
 /** Analyze and evaluate PostCSS modules without changing Mokly config loading. */
 export interface PostcssConfigLoader {
   /** Only local module inputs become private, watched configuration sources. */
   analyze(config: ResolvedConfig): Promise<readonly string[]>;
   /** Evaluate once per graph load, preserving package-native modules. */
-  load(config: ResolvedConfig): Promise<readonly PostcssPlugin[]>;
+  load(config: ResolvedConfig): Promise<readonly NormalizedPostcssPlugin[]>;
 }
 
 /** Filesystem-backed PostCSS module loader. */
@@ -34,7 +39,9 @@ export class FileSystemPostcssConfigLoader implements PostcssConfigLoader {
   }
 
   /** Import fresh local code and construct plugin instances in this process. */
-  async load(config: ResolvedConfig): Promise<readonly PostcssPlugin[]> {
+  async load(
+    config: ResolvedConfig,
+  ): Promise<readonly NormalizedPostcssPlugin[]> {
     if (!config.postcss) return [];
     const location = config.postcss;
     let exported: unknown;
@@ -187,7 +194,7 @@ async function normalizePlugins(
   value: unknown,
   modulePath: string,
   configPath: string,
-): Promise<readonly PostcssPlugin[]> {
+): Promise<readonly NormalizedPostcssPlugin[]> {
   const relative = path
     .relative(path.dirname(configPath), modulePath)
     .split(path.sep)
@@ -211,20 +218,23 @@ async function normalizePlugins(
       "postcss plugins must be an array of plugin instances or an object mapping package names to option objects",
     );
   if (Array.isArray(plugins))
-    return plugins.map((plugin: unknown, index: number) => {
-      if (!isPostcssPlugin(plugin))
+    return plugins.flatMap((plugin: unknown, index: number) => {
+      try {
+        return postcss([plugin as AcceptedPlugin]).plugins;
+      } catch (error) {
         throw new MoklyError(
           "config-invalid",
-          `postcss plugins[${index}] must be a PostCSS plugin instance`,
+          `postcss plugins[${index}] is not a PostCSS 8 plugin: ${errorMessage(error)}; use a plugin instance, creator, function or object with a postcss factory`,
+          { cause: error },
         );
-      return plugin;
+      }
     });
   if (!isPlainObject(plugins))
     throw new MoklyError(
       "config-invalid",
       "postcss plugins must be an array of plugin instances or an object mapping package names to option objects",
     );
-  const instances: PostcssPlugin[] = [];
+  const instances: NormalizedPostcssPlugin[] = [];
   for (const [name, options] of Object.entries(plugins)) {
     if (!isPlainObject(options))
       throw new MoklyError(
@@ -238,9 +248,7 @@ async function normalizePlugins(
       if (typeof imported.default !== "function")
         throw new Error("package must default-export a plugin factory");
       const plugin: unknown = imported.default(options);
-      if (!isPostcssPlugin(plugin))
-        throw new Error("plugin factory did not return a plugin instance");
-      instances.push(plugin);
+      instances.push(...postcss([plugin as AcceptedPlugin]).plugins);
     } catch (error) {
       throw new MoklyError(
         "config-invalid",
@@ -259,15 +267,5 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
     !Array.isArray(value) &&
     (Object.getPrototypeOf(value) === Object.prototype ||
       Object.getPrototypeOf(value) === null)
-  );
-}
-
-function isPostcssPlugin(value: unknown): value is PostcssPlugin {
-  return (
-    ((typeof value === "object" && value !== null) ||
-      typeof value === "function") &&
-    "postcssPlugin" in value &&
-    typeof value.postcssPlugin === "string" &&
-    !!value.postcssPlugin
   );
 }

@@ -1,9 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import postcss, { type Plugin } from "postcss";
+import postcss from "postcss";
 
 import { toPosixPath } from "../../config/paths.js";
+import type { NormalizedPostcssPlugin } from "../../config/postcss_loader.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { MoklyError, errorMessage } from "../../errors.js";
 
@@ -31,7 +32,7 @@ export type StyleDependencyReport =
 export class PostcssStyleProcessor implements StyleTextProcessor {
   constructor(
     private readonly config: ResolvedConfig,
-    private readonly plugins: readonly Plugin[],
+    private readonly plugins: readonly NormalizedPostcssPlugin[],
   ) {}
 
   /** Run one physical stylesheet with source maps disabled. */
@@ -46,15 +47,21 @@ export class PostcssStyleProcessor implements StyleTextProcessor {
       result = await pending;
     } catch (error) {
       const lastPlugin = (
-        pending as typeof pending & { result?: { lastPlugin?: Plugin } }
-      ).result?.lastPlugin?.postcssPlugin;
+        pending as typeof pending & {
+          result?: { lastPlugin?: NormalizedPostcssPlugin };
+        }
+      ).result?.lastPlugin;
+      const lastPluginName =
+        lastPlugin && "postcssPlugin" in lastPlugin
+          ? lastPlugin.postcssPlugin
+          : undefined;
       const plugin =
         error !== null &&
         typeof error === "object" &&
         "plugin" in error &&
         typeof error.plugin === "string"
           ? error.plugin
-          : (lastPlugin ?? "unknown");
+          : (lastPluginName ?? "unknown");
       throw new MoklyError(
         "build-invalid",
         `PostCSS plugin ${plugin} failed for ${relative}: ${errorMessage(error)}; fix the plugin configuration or stylesheet`,

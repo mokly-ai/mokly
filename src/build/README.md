@@ -26,6 +26,11 @@ cannot enter that inventory; nested imports that a plugin reads from disk
 cannot bypass renderer pruning silently. See the
 [PostCSS contract](../../docs/protocol/mokly-imported-styles-postcss.md) for
 validation precedence and deterministic Tailwind settings.
+PostCSS 8 normalizes plugin instances, uncalled creators, plain functions and
+objects with `postcss` factories; Mokly does not narrow accepted plugin shapes.
+`package_owned_paths.ts` classifies logical and projected physical paths
+together so symlinked dependency roots cannot inventory Review or generated
+output, and watch aliases cannot rebuild on package-owned files.
 Fragment render input now lists the
 matching authored stylesheet rule, then generated renderer CSS, then the
 exporting entry's CSS, relative to the fragment route. Pages still render

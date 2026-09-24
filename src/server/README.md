@@ -15,6 +15,10 @@ relevant glob root: traversal uses the deepest containing root, and entry-file
 classification uses the deepest matching root. The glob itself defines every
 entry-file shape that can trigger rediscovery. Traversal also skips
 `review.outDir`. A denied leaf's directory status comes from watcher stats,
+and a shared logical-and-physical package-owned check rejects alias events
+for generated files, Review output, cache and denied trees before any rebuild
+or directory-dependency glob classification. A symlink cannot re-enable a
+package-owned path through a watch rule.
 else from its event kind, else from one stat that treats any error as a file.
 `addDir` and `unlinkDir` identify directories; `add`, `change`, and `unlink`
 identify files. Supplied stats avoid that stat, but traversal still reads export
