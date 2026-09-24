@@ -61,20 +61,26 @@ test("loaded v2 details merge with classification, deduplicate selectors and sup
   for (const selector of [".auth", ".global", ".saved"])
     assert.equal(markup.split(`>${selector}</code>`).length - 1, 1);
   assert.equal(markup.split("<li>mockups/shared.css</li>").length - 1, 1);
-  assert.match(markup, /mockups\/logo.svg/);
+  assert.doesNotMatch(markup, /mockups\/logo\.svg/);
+  assert.match(markup, /mockups\/shared\.css/);
   assert.match(markup, /Excluded content: chrome/);
   assert.doesNotMatch(markup, /Examined and excluded|Shared component changes/);
   assert.equal(markup.split("<h3>Comparison details</h3>").length - 1, 1);
   assert.equal(renderEvidence(data, parsed), markup);
 });
 
-test("historical v2 loaded evidence remains available when classification has no view slice", () => {
+test("loaded v2 view reasons remain visible without classification, not legacy shared-impact paths", () => {
   const data = workspace();
   delete data.status;
   const loaded = comparison();
+  loaded.changedPaths = ["mockups/loaded.svg", ...loaded.changedPaths];
+  loaded.screens[0]!.views[0]!.reasons = [
+    { kind: "dependency", path: "mockups/loaded.svg" },
+  ];
   const markup = renderEvidence(data, parseReviewResult(loaded));
   assert.doesNotMatch(markup, / hidden=/);
-  assert.match(markup, /mockups\/logo.svg/);
+  assert.match(markup, /mockups\/loaded\.svg/);
+  assert.doesNotMatch(markup, /mockups\/logo\.svg/);
   assert.doesNotMatch(markup, /Shared component changes/);
 });
 

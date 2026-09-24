@@ -62,6 +62,11 @@ font delivery paths.
 `catalogue.ts` owns pure display indexing, including the shared route resolver
 that gives current entries precedence over removed history. Historical
 repository access remains in the CLI's `src/server/baseline_catalogue.ts`.
+`details.tsx` shows source, generated paths, related docs and usage for routed
+entries, but never shows their authoring dependency lists. Comparison details
+from `workspace_evidence_data.ts` and `workspace_evidence.tsx` name only
+rendered-resource reasons; legacy `sharedImpact` paths remain readable in the
+comparison format but do not enter the UI's changed-file list.
 `store.tsx` and the focused `store_*` modules own standalone route/history,
 selection, disclosure, drawer, details, recovery and scroll state. `routes.ts`,
 `nav_model.ts`, `search_query.ts` and `entry_wording.ts` are deterministic

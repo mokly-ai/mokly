@@ -11,8 +11,8 @@ consumer stages retain this inspector around the previous version delivered by
 the [removed content previews plan](../../plans/removed-content-previews.md).
 The removal of dependency display is planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-implemented in Milestone 2 mockups and Milestone 5 UI. The mockup and runtime
-still contain the old row until those milestones land.
+implemented in Milestone 2 mockups and Milestone 5 UI. Neither the mockup nor
+the runtime displays the old row.
 
 ## One Inspector
 

@@ -94,11 +94,6 @@ export function EntryDetailsBody(props: {
             <PathChips values={entry.relatedDocs} />
           </MetaRow>
         ) : null}
-        {entry.dependencies.length > 0 ? (
-          <MetaRow label="Dependencies">
-            <PathChips values={entry.dependencies} />
-          </MetaRow>
-        ) : null}
         {entry.kind === "screen" ? (
           <UsedByChips
             catalogue={props.catalogue}

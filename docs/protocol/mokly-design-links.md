@@ -18,8 +18,8 @@ both families; component keyboard-control checks live in the component suites.
 
 The Shared impact state and its links are removed by Milestone 2 of
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md);
-runtime comparison details follow in Milestone 5. The target links below are
-planned and have not yet replaced the current example pages.
+runtime comparison details follow in Milestone 5. The links below match the
+current example pages and inspector.
 
 ## Scope And Ownership
 

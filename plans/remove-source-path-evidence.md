@@ -2,7 +2,7 @@
 
 ## Status And Outcome
 
-Status: in progress; Milestones 1–4 are complete and Milestones 5–8 remain.
+Status: in progress; Milestones 1–5 are complete and Milestones 6–8 remain.
 The binding Decisions And Scope remove all three inputs and adopt
 component-declared stylesheets in place of the stylesheet role of
 `ownedDependencies`. The user approved both the removals and the component
@@ -360,19 +360,23 @@ holds only rendered-resource paths.
 
 Tags: ui
 
-- [ ] Remove the Dependencies row from the details inspector
+- [x] Remove the Dependencies row from the details inspector
       (`packages/viewer/src/shell/details.tsx`) for every entry kind.
-- [ ] Remove legacy shared-impact paths from comparison details
+- [x] Remove legacy shared-impact paths from comparison details
       (`workspace_evidence_data.ts`, `workspace_evidence.tsx`), so the list
       shows only rendered-resource reasons.
-- [ ] Update the viewer, client and browser tests, for example
+- [x] Update the viewer, client and browser tests, for example
       `tests/client_workspace_evidence.test.ts` and
       `tests/browser/evidence_workspace.spec.ts`.
-- [ ] Match the Milestone 2 mockups. Smoke-test the details and comparison
+- [x] Update the viewer shell README and protocol Delivery Status sections that
+      still describe this inspector migration as pending.
+- [x] Match the Milestone 2 mockups. Smoke-test the details and comparison
       details of a changed and an unchanged screen at both widths through
       `npm run dev`.
-- [ ] Run the focused viewer and browser tests, `npm run typecheck` and
+- [x] Run the focused viewer and browser tests, `npm run typecheck` and
       `npm run lint`.
+- [x] Run the complete unit suite and `cargo xtask check` with a 100% pass
+      rate before committing; confirm changed-file formatting and the diff.
 
 ## Milestone 6: Remove the authoring fields and move the manifest to v6
 

@@ -11,7 +11,8 @@ consumers open their historical screen through the behavior implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md).
 The removal of the Details Dependencies row and source-path comparison evidence
 is planned by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-implemented in Milestone 5. The current inspector has not yet been migrated.
+implemented in Milestones 4 and 5. The current inspector no longer displays
+authoring dependencies or legacy shared-impact paths.
 
 ## Catalogue And Component Pages
 

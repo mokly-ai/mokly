@@ -19,7 +19,6 @@ export interface WorkspaceComparisonEvidence {
   views: readonly ViewReview[];
   resourceViews: readonly ViewResourceEvidence[];
   reasons: readonly EntryChangeReason[];
-  legacyPaths: readonly string[];
 }
 
 /** Keep catalogue facts while adding only the loaded selection's details. */
@@ -59,8 +58,6 @@ export function workspaceComparisonEvidence(
           )
         : []),
     ]),
-    legacyPaths:
-      loaded?.schemaVersion === 2 ? (selected?.sharedImpact ?? []) : [],
   };
 }
 

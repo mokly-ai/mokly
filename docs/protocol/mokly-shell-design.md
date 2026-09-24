@@ -26,7 +26,7 @@ mockups whose runtime-backed states are identified in their own contract.
 Removal of the Shared impact screen and Dependencies row is planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
 implemented in Milestone 2 mockups and Milestone 5 UI. The design inventory
-below is the target; the current mockups still include the removed screen.
+below now matches the example mockups and runtime inspector.
 
 Auto/Light/Dark interface appearance is designed in the
 `design/browse/appearance/` mockups and specified by the

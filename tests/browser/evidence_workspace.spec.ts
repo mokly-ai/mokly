@@ -6,6 +6,25 @@ import { startEvidenceFixture } from "../helpers/evidence_fixture.js";
 
 import { chooseScheme, expectFrameLoaded } from "./workspace_actions.js";
 
+test("authored dependencies are absent from every kind of entry details", async ({
+  page,
+}) => {
+  for (const route of [
+    "screens/welcome.html",
+    "handbook.html",
+    "user-flows/example-tour.html",
+    "components/action.html",
+  ]) {
+    await page.goto(`/view/${route}`);
+    await expect(
+      page.locator(".mbk-meta-k", { hasText: "Source" }),
+    ).toHaveCount(1);
+    await expect(
+      page.locator(".mbk-meta-k", { hasText: "Dependencies" }),
+    ).toHaveCount(0);
+  }
+});
+
 test("Usage and Changes completion preserve edited props and their live preview", async ({
   page,
 }) => {

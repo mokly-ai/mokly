@@ -8,8 +8,8 @@ present the evidence defined by
 analysis, membership rule, evidence schema, and validation.
 Removing legacy shared-impact details is planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-implemented in Milestone 5; v4/v5 comparison decoding follows in Milestone 7.
-The existing UI still shows legacy paths until then.
+implemented in Milestone 5; the inspector now lists only rendered-resource
+reasons. v4/v5 comparison decoding follows in Milestone 7.
 
 ## Shell Presentation
 

@@ -29,9 +29,7 @@ export function WorkspaceEvidence({
 }) {
   const evidence = workspaceComparisonEvidence(data, variantId, loaded);
   const hidden = data.status === undefined && !evidence.comparison;
-  const retained = [
-    ...new Set([...retainedPaths(evidence.reasons), ...evidence.legacyPaths]),
-  ].sort();
+  const retained = [...retainedPaths(evidence.reasons)].sort();
   const excluded = excludedStylesheets(evidence.resourceViews, retained);
   const ignored = evidence.comparison
     ? [...new Set(evidence.views.flatMap((view) => view.ignoredIds))]

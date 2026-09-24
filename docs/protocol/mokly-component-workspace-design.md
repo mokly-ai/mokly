@@ -9,8 +9,8 @@ remain the review entry points. The removed-consumer workspace is aligned with
 the [removed content previews plan](../../plans/removed-content-previews.md).
 Removal of the Shared impact depiction is planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-implemented in Milestone 2 mockups and Milestone 5 UI. The target state list
-below is not yet reflected in the example.
+implemented in Milestone 2 mockups and Milestone 5 UI. The example and runtime
+now use the state list below.
 
 ## View Controls
 
