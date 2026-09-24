@@ -5,7 +5,6 @@ import path from "node:path";
 import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
 import type { Compilation } from "../build/compile.js";
-import { isOwned } from "../build/ownership.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 import { referencedRoutes } from "../review/asset_references.js";
@@ -98,10 +97,7 @@ export async function discoverWatchResources(
   for (const route of reachable) {
     if (compilation.outputs.has(route) || configured.has(route)) continue;
     for (const candidate of locations.get(route) ?? []) {
-      if (
-        !isPackageOwnedIgnoredWatchPath(candidate, config) &&
-        !isOwned(candidate, config)
-      )
+      if (!isPackageOwnedIgnoredWatchPath(candidate, config))
         paths.add(candidate);
     }
   }

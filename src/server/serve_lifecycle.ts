@@ -12,6 +12,7 @@ import type {
   ProcessSupervisorFactory,
 } from "./supervisor.js";
 import type { WatchActionQueue } from "./watch_events.js";
+import type { WatchedBackground } from "./watched_background.js";
 import type { ConsumerWatcher } from "./watcher.js";
 
 /** Keep CLI child configuration, including diagnostic opt-in, stable across restarts. */
@@ -85,5 +86,24 @@ export async function restartWithRecovery(
       throw restartError;
     }
     throw restartError;
+  }
+}
+
+/** Reattach current evidence and resume background work after child recovery. */
+export async function restartWatchedGeneration(
+  supervisor: ProcessSupervisor,
+  background: WatchedBackground,
+  closed: () => boolean,
+): Promise<void> {
+  try {
+    await restartWithRecovery(supervisor);
+    supervisor.notifyUpdate(
+      undefined,
+      undefined,
+      background.changesStatus,
+      "evidence",
+    );
+  } finally {
+    if (!closed()) background.schedule(background.compilation);
   }
 }

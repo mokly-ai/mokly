@@ -14,7 +14,7 @@ import {
 import type { LinkIdentity } from "@mokly/viewer/runtime";
 import type { Catalogue } from "@mokly/viewer/server";
 
-import { hasGeneratedOwnershipHeader } from "../build/ownership.js";
+import { stripGeneratedFirstLine } from "../build/generated_marker.js";
 import { validateComponentRanges } from "../components/ranges.js";
 import { MoklyError } from "../errors.js";
 
@@ -55,13 +55,8 @@ export function adaptBrowseDocument(
   const document = parse(content, {
     sourceCodeLocationInfo: true,
   }) as unknown as HtmlNode;
-  if (!trusted) return stripUntrustedMetadata(content, document);
-  if (!hasGeneratedOwnershipHeader(content, trusted.sourcePath)) {
-    throw invalid(
-      route,
-      "trusted Browse document has a missing or mismatched ownership header",
-    );
-  }
+  if (!trusted)
+    return stripGeneratedFirstLine(stripUntrustedMetadata(content, document));
   if (trusted.componentView)
     validateComponentRanges(content, trusted.componentView.ranges);
   const replacements: Replacement[] = [];
@@ -179,7 +174,7 @@ export function adaptBrowseDocument(
       inspectorMarkup(trusted.componentView, links),
     ),
   );
-  return applyReplacements(content, replacements);
+  return stripGeneratedFirstLine(applyReplacements(content, replacements));
 }
 
 function stripUntrustedMetadata(content: string, document: HtmlNode): string {

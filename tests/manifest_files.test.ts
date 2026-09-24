@@ -6,7 +6,6 @@ import test from "node:test";
 import type { ResolvedRegistryEntry } from "../dist/authoring/types.js";
 import { checkCompilation } from "../dist/build/check.js";
 import { compileCatalogue } from "../dist/build/compile.js";
-import { pendingGeneratedOrphanRoutes } from "../dist/build/ownership.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
 import type { ResolvedConfig } from "../dist/config/types.js";
@@ -200,7 +199,7 @@ test("manifest serializes declared tags and omits absent ones", () => {
   }
 });
 
-test("disabling dark orphans committed dark fragments", async (context) => {
+test("disabling dark removes obsolete generated fragments on rebuild", async (context) => {
   const fixture = await createFixture(undefined, {
     extraConfig: 'colorSchemes: ["light", "dark"],',
   });
@@ -214,24 +213,23 @@ test("disabling dark orphans committed dark fragments", async (context) => {
   );
   const lightConfig = await loadConfig(fixture.root);
   const lightCompilation = await compileCatalogue(lightConfig);
-  const orphans = pendingGeneratedOrphanRoutes(
-    lightConfig,
-    lightCompilation.outputs.keys(),
-  );
-  assert.deepEqual(orphans, [
+  const extra = [
     "screens/details.desktop.dark.html",
     "screens/details.mobile.dark.html",
     "screens/home.desktop.dark.html",
     "screens/home.mobile.dark.html",
-  ]);
+  ];
   assert.throws(
     () => checkCompilation(lightCompilation, lightConfig),
-    /orphan generated files[\s\S]*\.dark\.html/,
+    /extra generated files[\s\S]*\.dark\.html/,
   );
 
   await writeCompilation(lightCompilation, lightConfig);
-  for (const route of orphans) {
-    assert.equal(fs.existsSync(path.join(fixture.mockupsDir, route)), false);
+  for (const route of extra) {
+    assert.equal(
+      fs.existsSync(path.join(lightConfig.generatedDir, route)),
+      false,
+    );
   }
 });
 

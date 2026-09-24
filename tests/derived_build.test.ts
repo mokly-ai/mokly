@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import fileSystem from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
@@ -138,19 +139,28 @@ test("derived build creates an absent nested directory transactionally and prese
     await fs.readFile(path.join(config.generatedDir, MANIFEST_NAME), "utf8"),
     compilation.outputs.get(MANIFEST_NAME),
   );
-  const rename = fs.rename;
+  const rename = fileSystem.promises.rename.bind(fileSystem.promises);
   let failed = false;
-  t.mock.method(fs, "rename", async (from: string, to: string) => {
-    if (!failed && from.includes(`${path.sep}stage${path.sep}`)) {
-      failed = true;
-      throw new Error("injected install failure");
-    }
-    return rename(from, to);
-  });
+  t.mock.method(
+    fileSystem.promises,
+    "rename",
+    async (from: string, to: string) => {
+      if (
+        !failed &&
+        from.endsWith(`${path.sep}stage`) &&
+        to === config.generatedDir
+      ) {
+        failed = true;
+        throw new Error("injected install failure");
+      }
+      return rename(from, to);
+    },
+  );
   await assert.rejects(
     () => store.write(compilation, config),
     /injected install failure/,
   );
+  assert.equal(failed, true);
   for (const [route, bytes] of compilation.outputs)
     assert.equal(
       await fs.readFile(path.join(config.generatedDir, route), "utf8"),

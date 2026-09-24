@@ -187,7 +187,7 @@ export default function transform(input: CompatibilityTransformInput): string {
   );
 });
 
-test("compatibility routes exclude generated files pending orphan removal", async (context) => {
+test("compatibility routes exclude retired generated files", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   await fs.promises.writeFile(
@@ -195,7 +195,7 @@ test("compatibility routes exclude generated files pending orphan removal", asyn
     `import type { CompatibilityTransformInput } from "@mokly/mokly";
 export default function transform(input: CompatibilityTransformInput): string {
   if (input.availableRoutes.some((route) => route.includes("details."))) {
-    throw new Error("pending orphan was exposed");
+    throw new Error("retired route was exposed");
   }
   return input.content;
 }

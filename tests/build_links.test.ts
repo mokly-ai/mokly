@@ -138,12 +138,12 @@ test("link validation fails closed for non-portable targets", async (context) =>
   await assert.rejects(() => compileCatalogue(config), /root-absolute link/);
 });
 
-test("link validation rejects generated targets pending orphan removal", async (context) => {
-  const fixture = await createFixture(orphanLinkSource(true));
+test("link validation rejects references to removed generated routes", async (context) => {
+  const fixture = await createFixture(removedLinkSource(true));
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   await writeCompilation(await compileCatalogue(config), config);
-  await fs.promises.writeFile(fixture.entryPath, orphanLinkSource(false));
+  await fs.promises.writeFile(fixture.entryPath, removedLinkSource(false));
 
   await assert.rejects(() => compileCatalogue(config), /missing target/);
 });
@@ -247,7 +247,7 @@ export const mockups = [
 `;
 }
 
-function orphanLinkSource(includeTarget: boolean): string {
+function removedLinkSource(includeTarget: boolean): string {
   const target = includeTarget
     ? `defineScreen({ ...metadata, description: "Details", desktop: <main>Details</main>, id: "details", mobile: <main>Details</main>, route: "screens/details.html", title: "Details" })`
     : "";

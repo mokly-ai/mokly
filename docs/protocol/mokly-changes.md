@@ -51,8 +51,10 @@ Paired normalization resolves local document URLs on each side against that
 side's catalogue root, so the legacy `styles.css` and v6 `../styles.css`
 hrefs compare equal; resource membership and bytes remain separate material
 evidence. See [baseline addressing](./mokly-baseline-addressing.md#comparison-namespaces).
-The plain generated marker is not material comparison evidence, so a source
-move alone stays unchanged. Stored snapshots retain the document bytes.
+Neither the plain generated marker nor historical generated ownership first
+lines are material comparison evidence: paired, standalone and fast-path
+normalization strip them without validating an owner. A source move alone
+stays unchanged. Stored snapshots retain the document bytes.
 
 Changes to local resources referenced by a fragment also keep that screen in
 Changes. Follow CSS imports, CSS URLs, and embedded-document resources

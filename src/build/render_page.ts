@@ -2,7 +2,7 @@ import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import { MoklyError, errorMessage } from "../errors.js";
 import { serializeReviewSentinels } from "../renderer/sentinels.js";
 
-import { generatedHeader } from "./ownership.js";
+import { GENERATED_MARKER } from "./generated_marker.js";
 
 /** Capture a complete document once, outside viewport/component rendering. */
 export function renderPage(
@@ -29,5 +29,5 @@ export function renderPage(
       `page render must return a complete HTML document synchronously for ${entry.id} (${entry.sourceRelativePath})`,
     );
   }
-  return `${generatedHeader(entry.sourceRelativePath)}${serializeReviewSentinels(rendered)}`;
+  return `${GENERATED_MARKER}${serializeReviewSentinels(rendered)}`;
 }

@@ -43,6 +43,7 @@ export default defineConfig({
     ],
     outDir: ".context/basic-review",
     sharedImpact: [
+      "examples/basic/src/components/**",
       "examples/basic/design-review.css",
       "examples/basic/design-stage.css",
       "examples/basic/design.css",

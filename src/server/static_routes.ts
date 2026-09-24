@@ -7,7 +7,6 @@ import path from "node:path";
 import type { Catalogue } from "@mokly/viewer/server";
 
 import { adaptBrowseDocument } from "../browse/document_adapter.js";
-import { isOwned } from "../build/ownership.js";
 import { GENERATED_DIRECTORY } from "../config/paths.js";
 import { publicFileLocation } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -54,13 +53,6 @@ export function serveStatic(
   )
     return send(response, 404, "text/plain", "Not found", method);
   const candidate = path.resolve(config.mockupsDir, relative);
-  if (
-    (catalogue.manifest.schemaVersion === "live-index-1" ||
-      generatedOutputs !== undefined) &&
-    generatedRoute === undefined &&
-    isOwned(candidate, config)
-  )
-    return send(response, 404, "text/plain", "Not found", method);
   const location =
     generated === undefined
       ? publicFileLocation(candidate, config)

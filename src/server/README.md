@@ -7,6 +7,9 @@ owns watchers, background work and the supervised HTTP child. `http.ts` and
 `http_shutdown.ts` stops HTTP admission, ends live-update streams, and disconnects
 open clients before draining every owned service. Incomplete request headers or
 unfinished responses cannot keep shutdown waiting for the browser.
+`http_snapshot.ts` selects startup metadata before listening; `http_request.ts`
+applies local-control admission and routes HTTP errors. `serve_lifecycle.ts`
+keeps child restart, recovery and queued background work together.
 `watch_events.ts` owns classification and serialized event handling;
 `watch_paths.ts` owns watch roots and pruning, including entry-glob traversal
 boundaries that retain each stable prefix without exempting its ignored

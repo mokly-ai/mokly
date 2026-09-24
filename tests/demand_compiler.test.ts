@@ -7,8 +7,8 @@ import { compileCatalogue } from "../dist/build/compile.js";
 import { compileRuntime } from "../dist/build/compile_runtime.js";
 import { evaluateBundle } from "../dist/build/consumer_bundle.js";
 import { DocumentCompiler } from "../dist/build/document_compiler.js";
+import { GENERATED_MARKER } from "../dist/build/generated_marker.js";
 import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
-import { generatedHeader } from "../dist/build/ownership.js";
 import { loadConfig } from "../dist/config/load.js";
 import { parseCatalogueIndex } from "../dist/registry/catalogue_index.js";
 import { parseManifest, MANIFEST_NAME } from "../dist/registry/manifest.js";
@@ -44,15 +44,17 @@ for (const source of [validEntrySource(), componentEntrySource()]) {
   });
 }
 
-test("demand links reject a generated orphan even while its old file exists", async (t) => {
+test("demand links reject an unknown generated route even when a local file exists", async (t) => {
   const fixture = await createFixture(
     validEntrySource({ body: '<a href="../old.html">Old</a>' }),
   );
   t.after(() => removeFixture(fixture));
+  await fs.mkdir(path.join(fixture.mockupsDir, ".generated"), {
+    recursive: true,
+  });
   await fs.writeFile(
-    path.join(fixture.mockupsDir, "old.html"),
-    generatedHeader("entries/fixture.mockup.tsx") +
-      "<html><body>Old</body></html>\n",
+    path.join(fixture.mockupsDir, ".generated/old.html"),
+    GENERATED_MARKER + "<html><body>Old</body></html>\n",
   );
   const runtime = await prepareLiveRuntime(await loadConfig(fixture.root));
   const compiler = new DocumentCompiler(runtime, {

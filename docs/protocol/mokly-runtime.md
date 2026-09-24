@@ -248,12 +248,13 @@ inspection permits parent-owned outer navigation after explicit user
 activation. Browse does not grant either
 top-navigation sandbox token, so direct and nested consumer contexts retain the
 active restriction that prevents them from replacing the shell. The
-served/preview adapter authenticates markers only for current-manifest
+served/preview adapter authenticates logical markers only for current-manifest
 screen fragments and generated document pages present in the accepted
-in-memory compilation and validated manifest. No textual header provides
-authentication. Any other HTML loses package-reserved metadata in the adapted
-copy; a trusted route with invalid markers or a marker/portable-href
-mismatch fails closed. One strict typed
+in-memory compilation and validated manifest. A generated first-line notice,
+including the historical source-path header, is stripped from adapted copies
+without granting access or validating its owner. Other HTML loses package-reserved
+metadata in the adapted copy; a trusted route with invalid logical markers or a
+marker/portable-href mismatch fails closed. One strict typed
 target parser supplies inert metadata only to trusted parent enhancement. A
 trusted document that carries an activatable marker and `<base href>` also
 fails closed, including if post-build tampering introduced the base URL;

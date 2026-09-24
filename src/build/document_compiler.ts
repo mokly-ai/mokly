@@ -26,7 +26,6 @@ import type { LoadedGraph } from "./load_graph.js";
 import type { LogicalReferenceRecord } from "./logical_record_types.js";
 import { validateLogicalFragments } from "./logical_records.js";
 import { validateGeneratedOutputPaths } from "./output_paths.js";
-import { validateGeneratedOwnershipHeaders } from "./ownership.js";
 import { renderFragments } from "./render.js";
 
 export interface CompiledDocument {
@@ -87,7 +86,6 @@ export class DocumentCompiler {
     }
     this.links = {
       generatedRoutes: new Set(this.routes.keys()),
-      pendingOrphans: new Set(),
       parsed: new Map(),
       readGenerated: (route) => this.prepare(route).html,
     };
@@ -175,10 +173,6 @@ export class DocumentCompiler {
     );
     const html = outputs.get(route)!;
     const entry = this.compatibility.byId.get(target.entryId)!;
-    validateGeneratedOwnershipHeaders(
-      outputs,
-      new Map([[route, entry.sourceRelativePath]]),
-    );
     normalizeSingleDocument(html, route);
     const captured = componentViews.get(route);
     const view = captured

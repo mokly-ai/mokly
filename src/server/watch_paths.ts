@@ -3,14 +3,12 @@ import path from "node:path";
 
 import { minimatch } from "minimatch";
 
-import { isOwned } from "../build/ownership.js";
 import { isBaselineCachePath } from "../config/cache_paths.js";
 import { globStablePrefix } from "../config/entry_globs.js";
 import { isInside, projectRealPath, toPosixPath } from "../config/paths.js";
 import { isDeniedSourceSegment } from "../config/private_directories.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { isExportIgnoredPath } from "../export/ignored.js";
-import { MANIFEST_NAME } from "../registry/manifest.js";
 
 import type { WatchDirectoryStatus } from "./watch_events.js";
 
@@ -57,7 +55,6 @@ export function isPackageOwnedIgnoredWatchPath(
   if (isRequiredWatchPath(absolute, config)) return false;
   const globRoots = entryGlobRoots(config);
   if (globRoots.some((root) => isInside(absolute, root))) return false;
-  if (isGeneratedOutputPath(absolute, config)) return true;
   if (isExportIgnoredPath(absolute, config.repoRoot, mode)) return true;
   if (isInside(config.review.outDir, absolute)) return true;
   const relativeRoot = deepestContainingRoot(absolute, globRoots);
@@ -112,16 +109,6 @@ function globWatchRoot(repoRoot: string, glob: string): string {
   const firstGlob = parts.findIndex((part) => /[*?{[(]/.test(part));
   const stable = firstGlob === -1 ? parts : parts.slice(0, firstGlob);
   return path.resolve(repoRoot, stable.length === 0 ? "." : stable.join("/"));
-}
-
-/** Return whether a path is the manifest or header-proven generated output. */
-function isGeneratedOutputPath(
-  candidate: string,
-  config: ResolvedConfig,
-): boolean {
-  if (!isInside(config.generatedDir, candidate)) return false;
-  const relative = toPosixPath(path.relative(config.generatedDir, candidate));
-  return relative === MANIFEST_NAME || isOwned(candidate, config);
 }
 
 /** Preserve exact configured inputs and the ancestors needed to reach them. */

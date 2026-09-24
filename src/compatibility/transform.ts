@@ -11,7 +11,6 @@ import type { LogicalReferenceRecord } from "../build/logical_record_types.js";
 import { validateCompatibilityRecords } from "../build/logical_records.js";
 import { logicalArtifactRoutes } from "../build/logical_routes.js";
 import { rewriteMockLinks } from "../build/mock_links.js";
-import { pendingGeneratedOrphanRoutes } from "../build/ownership.js";
 import { toPosixPath } from "../config/paths.js";
 import { isPublicStaticFile } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -121,14 +120,10 @@ function availablePublicRoutes(
   config: ResolvedConfig,
 ): string[] {
   const nextRoutes = [...outputRoutes, MANIFEST_NAME];
-  const pendingOrphans = new Set(
-    pendingGeneratedOrphanRoutes(config, nextRoutes),
-  );
   const publicRoutes = walkFiles(config.mockupsDir)
     .filter((candidate) => isPublicStaticFile(candidate, config))
     .map((candidate) =>
       toPosixPath(path.relative(config.mockupsDir, candidate)),
-    )
-    .filter((route) => !pendingOrphans.has(route));
+    );
   return [...new Set([...nextRoutes, ...publicRoutes])].sort();
 }

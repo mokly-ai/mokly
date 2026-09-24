@@ -1,7 +1,6 @@
 import crypto from "node:crypto";
 import path from "node:path";
 
-import { isOwned } from "../../dist/build/ownership.js";
 import {
   publicationFiles,
   publicationInput,
@@ -31,11 +30,6 @@ export async function capturePublicationInputs(
             .relative(config.generatedDir, file.path)
             .split(path.sep)
             .join("/"),
-        ) &&
-        !(
-          file.kind === "file" &&
-          file.link === undefined &&
-          isOwned(file.path, config)
         )
       )
         files.set(file.path, file);

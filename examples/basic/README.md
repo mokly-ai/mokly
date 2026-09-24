@@ -231,8 +231,8 @@ npm run preview:build
 
 This example uses `mockupsDir: "."`; its schema-v6 manifest and HTML under
 `.generated/` are ignored local artifacts, absent in a fresh clone.
-`example:build` updates only Mokly-owned output inside `.generated/` with the
-per-file transactional ownership checks retained for now.
+`example:build` replaces the entire disposable `.generated/` tree as one
+transaction; unexpected files inside it are removed without touching authored CSS.
 `example:check` validates the current compilation without requiring output on
 disk. Tracked output checks and historical manifest compatibility use isolated fixtures.
 Both `npm test` and `npm run test:browser` build the example before tests read its

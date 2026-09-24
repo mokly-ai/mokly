@@ -7,6 +7,7 @@ export default tseslint.config(
   {
     ignores: [
       "**/.context/**",
+      "**/.wrangler/**",
       "**/dist/**",
       "examples/basic/.generated/**",
       "node_modules/**",

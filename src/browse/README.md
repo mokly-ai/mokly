@@ -6,9 +6,11 @@ comparison snapshots. `trusted_document.ts` derives trusted routes and
 expected portable hrefs from the accepted manifest and in-memory compilation;
 authored resources receive no inspector.
 
-The adapter checks route membership and bytes, complete component marker forest,
+The adapter checks route membership, complete component marker forest,
 native logical links, duplicate reserved attributes and portable destinations
-before adding package metadata. It preserves live hrefs and targets, deriving
+before adding package metadata. It strips the plain generated notice or a
+historical generated first line after range validation, without using its
+source text for authentication. It preserves live hrefs and targets, deriving
 only the trusted target metadata that parent navigation consumes. Authored HTML
 has existing reserved navigation attributes stripped from the published copy.
 

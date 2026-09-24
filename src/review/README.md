@@ -241,7 +241,10 @@ Key code:
 
 - `compare.ts`, `screen_compare.ts`: screen comparisons and retained artifacts.
 - `page_preview.ts`: typed before-only page capture from accepted removal state.
-- `component_classification.ts`, `component_view.ts`: component ownership policy.
+- `component_classification.ts`, `component_classification_context.ts`,
+  `component_view.ts`: component membership policy and side-specific reader
+  prefetch. Historical source-encoded headers and the plain generated notice
+  are stripped as non-material text, never used to authenticate output.
   `compareComponentView` has two paths: an unchanged decision that settles a
   paired view only when marker-retaining documents, routes, and usage topology
   agree, followed by independent resource discovery for both sides,
@@ -252,7 +255,7 @@ Key code:
   ownership-topology difference falls through. One-sided views
   validate current or historical ranges before normalization. Both paths
   produce identical records for valid builder output. Identical handcrafted
-  malformed ownership markers are outside that equivalence guarantee because
+  malformed component markers are outside that equivalence guarantee because
   views without ownership text edits do not repeat range validation. Views with
   instances, styles, or entry-owned slots validate ranges while preparing their resource projection. The
   internal `useFastPath` classification input and trailing `compareReview`

@@ -21,8 +21,6 @@ import {
   resolveLocalReferencePath,
 } from "../html_references.js";
 
-import { isOwned, pendingGeneratedOrphanRoutes } from "./ownership.js";
-
 interface ReferenceResult {
   target?: string;
   violation?: string;
@@ -33,7 +31,6 @@ export interface HtmlValidationContext {
   generatedRoutes: ReadonlySet<string>;
   readGenerated(route: string): string;
   parsed: Map<string, ParsedResource>;
-  pendingOrphans: ReadonlySet<string>;
 }
 
 /** Validate navigation links and transitive local resources in generated HTML. */
@@ -43,9 +40,6 @@ export function validateHtmlLinks(
   context?: HtmlValidationContext,
   resourceSeeds: readonly string[] = [],
 ): string[] {
-  const pendingOrphans =
-    context?.pendingOrphans ??
-    new Set(pendingGeneratedOrphanRoutes(config, outputs.keys()));
   const parsed = context?.parsed ?? new Map<string, ParsedResource>();
   const resourceDenial = exportResourceDenial(config);
   for (const [route, content] of outputs) {
@@ -67,8 +61,7 @@ export function validateHtmlLinks(
     if (!route || visited.has(route)) continue;
     visited.add(route);
     const resource =
-      parsed.get(route) ??
-      loadResource(route, outputs, config, pendingOrphans, context);
+      parsed.get(route) ?? loadResource(route, outputs, config, context);
     if (!resource) continue;
     parsed.set(route, resource);
     for (const reference of resource.references) {
@@ -78,7 +71,6 @@ export function validateHtmlLinks(
         resource,
         parsed,
         config,
-        pendingOrphans,
         context,
         resourceDenial,
       );
@@ -90,7 +82,7 @@ export function validateHtmlLinks(
       ) {
         const targetResource =
           parsed.get(result.target) ??
-          loadResource(result.target, outputs, config, pendingOrphans, context);
+          loadResource(result.target, outputs, config, context);
         if (targetResource) {
           parsed.set(result.target, targetResource);
           pending.push(result.target);
@@ -123,7 +115,6 @@ function validateReference(
   source: ParsedResource,
   parsed: Map<string, ParsedResource>,
   config: ResolvedConfig,
-  pendingOrphans: ReadonlySet<string>,
   context?: HtmlValidationContext,
   resourceDenial?: (route: string) => string | undefined,
 ): ReferenceResult {
@@ -187,13 +178,7 @@ function validateReference(
     }
   }
   if (!targetResource) {
-    targetResource = loadResource(
-      target,
-      new Map(),
-      config,
-      pendingOrphans,
-      context,
-    );
+    targetResource = loadResource(target, new Map(), config, context);
     if (!targetResource) return { violation: `missing target ${reference}` };
     parsed.set(target, targetResource);
   }
@@ -208,7 +193,6 @@ function loadResource(
   route: string,
   outputs: ReadonlyMap<string, string>,
   config: ResolvedConfig,
-  pendingOrphans: ReadonlySet<string>,
   context?: HtmlValidationContext,
 ): ParsedResource | undefined {
   if (route.startsWith(`${GENERATED_DIRECTORY}/`)) {
@@ -228,8 +212,6 @@ function loadResource(
       : htmlResource(extractHtmlReferences(generated));
   }
   const candidate = path.resolve(config.mockupsDir, route);
-  if (context && isOwned(candidate, config)) return undefined;
-  if (pendingOrphans.has(route)) return undefined;
   if (!isPublicStaticFile(candidate, config)) return undefined;
   if (
     fs.lstatSync(candidate).isSymbolicLink() ||

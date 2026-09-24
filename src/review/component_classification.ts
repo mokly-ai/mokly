@@ -1,5 +1,3 @@
-import path from "node:path";
-
 import { minimatch } from "minimatch";
 
 import {
@@ -17,20 +15,18 @@ import type {
   ScreenReviewV3,
 } from "@mokly/viewer/data";
 
-import { toPosixPath } from "../config/paths.js";
 import { timeAsync, timingCounts } from "../diagnostics/timings.js";
-import { generatedManifestRoutes } from "../registry/generated_routes.js";
 
 import { affectedConsumers } from "./component_affected.js";
 import {
   propagateImplementations,
   propagateUseCases,
 } from "./component_change_propagation.js";
+import { prepareComponentComparison } from "./component_classification_context.js";
 import type { ComponentClassificationInput } from "./component_classification_input.js";
 import { ComponentComparisonCounts } from "./component_comparison_counts.js";
 import {
   address,
-  ComponentDependencyPolicy,
   entryPairs,
   lexical,
   metadata,
@@ -43,18 +39,12 @@ import {
   resourceImpact,
   type OwnedCssReason,
 } from "./component_resource_attribution.js";
-import { ComponentMaterialReader } from "./component_resources.js";
 import { validateComponentReviewSources } from "./component_result_sources.js";
-import {
-  compareComponentView,
-  type ComponentViewContext,
-} from "./component_view.js";
+import { compareComponentView } from "./component_view.js";
 import {
   analysisOwnsStylesheet,
   assertViewAnalysisScope,
 } from "./css/paths.js";
-import { CssResourceAnalysis } from "./css/resource_analysis.js";
-import { ResourceComparison } from "./resource_comparison.js";
 import { aggregateIgnored, aggregateState } from "./screen_views.js";
 
 /** The sole component-aware membership policy, shared by Browse, Review, and publishing. */
@@ -62,55 +52,7 @@ export async function classifyComponents(
   input: ComponentClassificationInput,
 ): Promise<ReviewResultV3> {
   const { before, after, changedPaths, config } = input;
-  const dependencies = new ComponentDependencyPolicy(
-    before,
-    after,
-    config.review.sharedImpact,
-  );
-  const beforeReader = new ComponentMaterialReader(input.beforeReader, {
-    prefix: before.schemaVersion === 6 ? ".generated" : "",
-    routes: generatedManifestRoutes(before),
-  });
-  const afterReader = new ComponentMaterialReader(input.afterReader, {
-    prefix: after.schemaVersion === 6 ? ".generated" : "",
-    routes: generatedManifestRoutes(after),
-  });
-  const changed = new Set(changedPaths);
-  const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
-  const context: ComponentViewContext = {
-    beforeReader,
-    afterReader,
-    dependencies,
-    changed,
-    prefix,
-    resources: new ResourceComparison(
-      beforeReader,
-      afterReader,
-      changed,
-      prefix,
-      new CssResourceAnalysis(input.cssParser),
-    ),
-    compareResourceBytes: true,
-    ...(input.useFastPath === undefined
-      ? {}
-      : { useFastPath: input.useFastPath }),
-  };
-  const prefetchBefore = () =>
-    context.beforeReader.prefetch(
-      before.entries.flatMap((entry) =>
-        generatedViews(entry).map((view) => view.path),
-      ),
-    );
-  await Promise.all([
-    input.beforeReader.readMany
-      ? timeAsync("review.base-documents", prefetchBefore)
-      : prefetchBefore(),
-    context.afterReader.prefetch(
-      after.entries.flatMap((entry) =>
-        generatedViews(entry).map((view) => view.path),
-      ),
-    ),
-  ]);
+  const { context, dependencies } = await prepareComponentComparison(input);
   const sharedImpact = changedPaths.filter((path) =>
     config.review.sharedImpact.some((glob) =>
       minimatch(path, glob, { dot: true }),

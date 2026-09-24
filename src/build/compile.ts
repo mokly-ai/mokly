@@ -32,7 +32,6 @@ import { validateHtmlLinks } from "./html_links.js";
 import { loadConsumerGraph, type LoadedGraph } from "./load_graph.js";
 import { validateLogicalFragments } from "./logical_records.js";
 import { validateGeneratedOutputPaths } from "./output_paths.js";
-import { validateGeneratedOwnershipHeaders } from "./ownership.js";
 import { renderFragments } from "./render.js";
 import { renderCooperatively } from "./render_cooperative.js";
 
@@ -169,9 +168,6 @@ async function compileMeasured(
       });
     }
   });
-  timeSync("html.ownership", () =>
-    validateGeneratedOwnershipHeaders(outputs, generatedOwners),
-  );
   timeSync("html.logical-links", () =>
     validateLogicalFragments(outputs, logicalRecords, registry.entries, config),
   );

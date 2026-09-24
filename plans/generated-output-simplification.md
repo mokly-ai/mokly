@@ -407,25 +407,40 @@ all of it lands together.
 
 Backend for change C.
 
-- [ ] `src/build/transaction.ts`: stage the complete `.generated/` tree, swap
+- [x] Milestone 3 review carry-over: restore
+      `"examples/basic/src/components/**"` to the example's
+      `review.sharedImpact`; report Changes counts against `origin/main`.
+- [x] Milestone 3 review carry-over: split `src/server/http.ts`,
+      `scripts/preview/catalogue.mjs`, and
+      `packages/viewer/src/shell/frame_mount_hook.ts` by responsibility;
+      check `src/review/component_classification.ts` and
+      `src/server/serve_watched.ts` for appropriate splits too.
+- [x] Milestone 3 review carry-over: remove the ignored
+      `examples/basic/.context/m3-static-export` smoke artefact and keep
+      subsequent smoke output under repository-root `.context/`.
+- [x] `src/build/transaction.ts`: stage the complete `.generated/` tree, swap
       it into place, and remove the previous tree; drop per-file backup and
       restore, orphan discovery, and the unowned-file refusal.
-- [ ] `src/build/check.ts`: tracked-output comparison reports missing, stale,
+- [x] `src/build/check.ts`: tracked-output comparison reports missing, stale,
       and extra paths against the whole tree; remove unclaimed detection.
-- [ ] `src/build/tracked_output.ts` and `tracked_ownership.ts`: the tracked
+- [x] `src/build/tracked_output.ts` and `tracked_ownership.ts`: the tracked
       check lists paths under `.generated/` and `.mokly-cache/`; delete the
       ownership grep.
-- [ ] Delete `src/build/ownership.ts` and the ownership reads in
+- [x] Delete `src/build/ownership.ts` and the ownership reads in
       `html_links.ts`, `render.ts`, `render_page.ts`,
       `src/server/static_routes.ts`, `src/server/watch_paths.ts`,
       `src/export/ownership.ts`, and `src/export/references.ts`; keep a
       one-line generated marker as plain text with no parsing.
-- [ ] Update `docs/protocol/mokly-timings.md` for removed phases such as
+- [x] Update `docs/protocol/mokly-timings.md` for removed phases such as
       `output.find-orphans`, and the affected READMEs.
-- [ ] Tests: replace ownership, orphan, and unclaimed cases with tree-swap,
+- [x] Treat unexpected empty directories inside tracked `.generated/` as extra
+      paths without following symlinks; cover the whole-tree check in tests.
+- [x] Ignore browser-generated `.wrangler/` cache files in ESLint so the
+      required post-browser `cargo xtask check` remains repeatable.
+- [x] Tests: replace ownership, orphan, and unclaimed cases with tree-swap,
       extra-path, and tracked-path cases; keep the collision and confinement
       cases that still apply.
-- [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
+- [x] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
       `npm test`, `npm run test:browser`, `npm run example:check`, and
       `cargo xtask check`; commit and push.
 

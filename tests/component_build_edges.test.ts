@@ -51,7 +51,7 @@ test("a repeated slot rejects conflicting logical inputs from an impure child", 
   );
 });
 
-test("saved variants share transactional collision and orphan protection", async (t) => {
+test("saved variants share tree replacement and collision protection", async (t) => {
   const source = componentEntrySource();
   const fixture = await createFixture(source, {
     extraConfig: 'colorSchemes: ["light", "dark"],',
@@ -70,9 +70,12 @@ test("saved variants share transactional collision and orphan protection", async
     ),
   );
   const next = await compileCatalogue(config);
-  assert.throws(() => checkCompilation(next, config), /orphan/);
+  assert.throws(
+    () => checkCompilation(next, config),
+    /extra generated files:[\s\S]*components\/action\.variants\/disabled\.desktop\.dark\.html/,
+  );
   await writeCompilation(next, config);
-  await assert.rejects(fs.stat(path.join(fixture.mockupsDir, oldRoute)), {
+  await assert.rejects(fs.stat(path.join(config.generatedDir, oldRoute)), {
     code: "ENOENT",
   });
   checkCompilation(next, config);

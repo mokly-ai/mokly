@@ -67,6 +67,8 @@ helpers shared by SSR and the live tree; `delivery.ts` validates static
 deployment continuity before a read-model route transition. Frame documents
 remain static while `frame_event_router.tsx` routes authenticated logical-link
 events from visible sessions in the owning `frame_registry.tsx`.
+`frame_mount_hook.ts` owns React mount lifecycles; `frame_mount_session.ts`
+adopts usage revisions and disposes frame sessions without replacing their DOM.
 
 `workspace_data.ts` describes shell data; the public viewer projects it only
 from validated catalogue records. Embedded bootstrap and workspace JSON use

@@ -5,7 +5,6 @@ import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { validateGeneratedOutputPaths } from "../dist/build/output_paths.js";
-import { isOwned } from "../dist/build/ownership.js";
 import { isAuthoringSource } from "../dist/build/source_inventory.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
@@ -145,10 +144,6 @@ test("canonical builder metadata remains writable but private", async (context) 
   const config = await loadConfig(fixture.root);
   assert.doesNotThrow(() =>
     validateGeneratedOutputPaths(["mokly-manifest.json"], config),
-  );
-  assert.equal(
-    isOwned(path.join(config.generatedDir, "mokly-manifest.json"), config),
-    true,
   );
   assert.ok(
     isAuthoringSource(

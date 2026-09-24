@@ -25,7 +25,7 @@ import { fragmentRoute } from "../registry/manifest.js";
 import { serializeReviewSentinels } from "../renderer/sentinels.js";
 import type { Renderer } from "../renderer/types.js";
 
-import { generatedHeader } from "./ownership.js";
+import { GENERATED_MARKER } from "./generated_marker.js";
 import { renderPage } from "./render_page.js";
 
 /** Render every screen view to owned, linked static documents. */
@@ -106,7 +106,7 @@ export function renderFragments(
                 ...output.view,
                 styles: rebaseStyleOwnership(
                   rendered,
-                  generatedHeader(entry.sourceRelativePath) + rendered,
+                  GENERATED_MARKER + rendered,
                   output.view.styles,
                 ),
               });
@@ -137,7 +137,7 @@ export function renderFragments(
           addOutput(
             outputs,
             route,
-            `${generatedHeader(entry.sourceRelativePath)}${serializeReviewSentinels(rendered)}`,
+            `${GENERATED_MARKER}${serializeReviewSentinels(rendered)}`,
           );
           fragmentViews.set(route, { colorScheme, viewport });
         }

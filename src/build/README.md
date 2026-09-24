@@ -73,8 +73,9 @@ validation accepts an attributed definition source only when it is a resolved
 entry module or an inventoried source file. Build writes manifest v6 and
 generated documents under the dedicated `.generated/` tree; authored assets
 remain in place. Check uses the Git index to compare compiled output only
-when tracked. The per-file ownership transaction remains until its separate
-removal milestone.
+when tracked. Builds replace the entire `.generated/` tree through a staged
+sibling transaction; an install failure restores the old tree. Generated
+documents use a source-independent first-line notice, never an ownership proof.
 Export and Review boundaries continue to use directories that hold resolved
 entry modules. Source locations do not enter instance keys, props keys, slot
 identities, or Changes projections.
@@ -105,7 +106,8 @@ only after successful complete compilations.
   or input-identity changes.
 - `source_inventory.ts`: complete private authoring inventory, separate from
   individual invocation metadata.
-- `transaction.ts`, `check.ts`: safe output installation and verification.
+- `transaction.ts`, `transaction_tree.ts`, `check.ts`: confined whole-tree
+  installation with rollback, and exact tracked-output verification.
 
 See the [build pipeline](../../docs/architecture/build-pipeline.md),
 [instance contract](../../docs/protocol/mokly-instances.md),

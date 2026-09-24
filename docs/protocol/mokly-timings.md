@@ -43,7 +43,12 @@ links, ignore rules, manifest construction/validation, resource validation,
 HTML links, output-path checks and runtime retention. Watcher attachment,
 resource discovery, transactional output, and Changes have separate spans.
 Graph work for watcher inventory and source-freshness validation is deliberately
-visible even when it repeats compilation's graph work.
+visible even when it repeats compilation's graph work. Output spans are
+`output.write` (parent), `output.validate-targets` (routes and inventory),
+`output.stage` (complete sibling tree), `output.install` (old-tree rename and
+new-tree rename), `output.rollback` (only after failed installation), and
+`output.cleanup` (only after success or rollback). There are no per-file
+backup, orphan-discovery, or generated-header validation phases.
 
 Review phases use the same session, role and parent context as their caller:
 

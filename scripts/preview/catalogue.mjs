@@ -19,14 +19,15 @@ import { copyPublicFiles } from "../../dist/publication/resources.js";
 import { prepareReviewRepository } from "../../dist/review/prepare.js";
 import { loadCatalogueSnapshot } from "../../dist/server/catalogue_snapshot.js";
 import { computeCatalogueChanges } from "../../dist/server/changed.js";
-import {
-  loadBrowserClientModules,
-  loadBrowserNavigationModules,
-  loadShellFontAssets,
-} from "../../dist/server/client_modules.js";
 import { startCatalogueServer } from "../../dist/server/http.js";
 
 import { previewOwnership, stagePreviewArtifact } from "./artifact.mjs";
+import {
+  captureAssets,
+  capturePage,
+  encodePath,
+  writeText,
+} from "./capture.mjs";
 import {
   captureComparison,
   capturePublicationPagePreviews,
@@ -34,11 +35,6 @@ import {
   publishComparison,
 } from "./comparisons.mjs";
 import { capturePublicationInputs } from "./inputs.mjs";
-
-const liveHostScript =
-  '<script src="/__mokly/client/react-host.js" type="module"></script>';
-const staticHydrationScript =
-  '<script src="/__mokly/client/react-shell.js" type="module"></script>';
 
 /** Capture one compiled generation without writing to the consumer catalogue. */
 export async function buildPreview(config, output, options = {}) {
@@ -224,77 +220,6 @@ export async function buildPreview(config, output, options = {}) {
   }
 }
 
-async function captureAssets(serverUrl, stage) {
-  for (const asset of shellAssets()) {
-    const response = await fetch(`${serverUrl}${asset}`);
-    if (!response.ok)
-      throw new Error(`preview asset ${asset} returned ${response.status}`);
-    await writeFile(
-      stage,
-      asset.slice(1),
-      Buffer.from(await response.arrayBuffer()),
-    );
-  }
-}
-
-function shellAssets() {
-  return [
-    "/__mokly/shell.css",
-    ...[...loadBrowserClientModules().keys()]
-      .filter(
-        (name) =>
-          name !== "host_capabilities.js" &&
-          name !== "host_capability_descriptor.js" &&
-          name !== "react_capabilities.js" &&
-          name !== "react_capability_updates.js" &&
-          name !== "react_transports.js" &&
-          name !== "react_update_controller.js" &&
-          name !== "react-host.js",
-      )
-      .map((name) => `/__mokly/client/${name}`),
-    ...[...loadBrowserNavigationModules().keys()].map(
-      (name) => `/__mokly/navigation/${name}`,
-    ),
-    ...[...loadShellFontAssets().keys()].map(
-      (name) => `/__mokly/fonts/${name}`,
-    ),
-  ];
-}
-
-async function capturePage(
-  serverUrl,
-  route,
-  stage,
-  relativePath,
-  expectedStatus = 200,
-) {
-  const response = await fetch(`${serverUrl}${route}`);
-  if (response.status !== expectedStatus) {
-    throw new Error(
-      `preview page ${route} returned ${response.status}, expected ${expectedStatus}`,
-    );
-  }
-  const html = await response.text();
-  if (!html.includes(liveHostScript)) {
-    throw new Error(`preview page ${route} is missing its live host script`);
-  }
-  await writeText(stage, relativePath, staticPage(html));
-}
-
-function staticPage(html) {
-  return html
-    .replace(' data-mokly-host-capabilities=""', "")
-    .replace(
-      /<script data-mokly-host-capability-state="" type="application\/json">[^<]*<\/script>/,
-      "",
-    )
-    .replace(liveHostScript, staticHydrationScript)
-    .replace(
-      /(href|src|data-fragment-light|data-fragment-dark)="\/(static|view)\/([^"]+)\.html"/g,
-      '$1="/$2/$3"',
-    );
-}
-
 function assertSafeOutput(output, repoRoot) {
   const contextRoot = path.join(repoRoot, ".context");
   const realRepoRoot = fs.realpathSync(repoRoot);
@@ -309,18 +234,4 @@ function assertSafeOutput(output, repoRoot) {
   ) {
     throw new Error(`preview output must be inside ${contextRoot}`);
   }
-}
-
-function encodePath(value) {
-  return value.split("/").map(encodeURIComponent).join("/");
-}
-
-async function writeText(root, relative, content) {
-  await writeFile(root, relative, Buffer.from(content));
-}
-
-async function writeFile(root, relative, content) {
-  const target = path.join(root, relative);
-  await fs.promises.mkdir(path.dirname(target), { recursive: true });
-  await fs.promises.writeFile(target, content);
 }

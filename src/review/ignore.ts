@@ -1,4 +1,4 @@
-import { generatedSource } from "../build/ownership.js";
+import { stripGeneratedFirstLine } from "../build/generated_marker.js";
 
 import { normalizeDocumentUrls } from "./normalize_urls.js";
 
@@ -122,8 +122,7 @@ export function normalizeSingleDocument(html: string, route: string): string {
 }
 
 function parseDocument(content: string, route: string): ParsedDocument {
-  if (generatedSource(content))
-    content = content.slice(content.indexOf("\n") + 1);
+  content = stripGeneratedFirstLine(content);
   const materials = parseMaterials(content, route);
   const matches = [...content.matchAll(MARKER_SCAN)];
   if (content.replace(MARKER_SCAN, "").includes("<!--mokly-review-ignore:")) {
