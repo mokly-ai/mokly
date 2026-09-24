@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { startWatchedServe } from "./watched_serve.js";
+import { startWatchedServe } from "./browser/watched_serve.js";
 
 test("watched serve startup failures include captured stderr", async () => {
   await assert.rejects(

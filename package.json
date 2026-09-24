@@ -60,7 +60,7 @@
     "prepare:verification": "npm run build && npm run example:build",
     "prepack": "npm run build",
     "preview:build": "npm run build && npm run example:build && node scripts/preview/build.mjs",
-    "test": "npm run prepare:verification && tsx --test --test-concurrency=2 tests/**/*.test.ts tests/**/*.test.tsx packages/viewer/tests/*.test.ts packages/viewer/tests/*.test.tsx",
+    "test": "npm run prepare:verification && npm run -s test:prepared",
     "test:browser": "npm run prepare:verification && playwright test",
     "test:browser:prepared": "node scripts/verification/run-browser.mjs",
     "test:prepared": "node scripts/verification/run-unit.mjs",

@@ -24,6 +24,7 @@ export default defineConfig({
   reporter: [["list"]],
   retries: 0,
   testDir: "tests/browser",
+  testMatch: "**/*.spec.ts",
   timeout: 60_000,
   use: {
     baseURL: `http://127.0.0.1:${port}`,

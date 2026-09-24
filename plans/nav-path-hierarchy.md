@@ -1,8 +1,8 @@
 # Path-Based Navigation Hierarchy
 
-Status: Milestones 1–8 are implemented; Milestone 9 fixes the unit test
-runner found during Milestone 8, then runs the final gate, push, and review.
-The plan stays Active until its PR merges.
+Status: Milestones 1–9 are complete, verified, and pushed, and every earlier
+review finding is fixed; Milestone 9's post-push review is pending. The plan
+stays Active until its PR merges.
 Created 2026-09-23 with the user's
 consent after the design discussion in this workspace. This plan supersedes the
 collection-forest contract delivered by
@@ -632,18 +632,18 @@ discovers files itself. `tests/browser/` is also Playwright's `testDir`,
 whose default matcher includes `*.test.ts`. Test infrastructure only; no
 product change.
 
-- [ ] `npm test` delegates to `test:prepared`, so developer runs and the gate
+- [x] `npm test` delegates to `test:prepared`, so developer runs and the gate
       share one discovery implementation.
-- [ ] Move `tests/browser/watched_serve.test.ts` to `tests/`.
-- [ ] Set Playwright `testMatch` to `**/*.spec.ts`; the discovered browser
+- [x] Move `tests/browser/watched_serve.test.ts` to `tests/`.
+- [x] Set Playwright `testMatch` to `**/*.spec.ts`; the discovered browser
       test set is unchanged.
-- [ ] Guard test: no unit test file under Playwright's `testDir`, and the
+- [x] Guard test: no unit test file under Playwright's `testDir`, and the
       `test` script keeps delegating to `test:prepared`.
-- [ ] Use a non-global regular expression for the collection-model guard's
+- [x] Use a non-global regular expression for the collection-model guard's
       recovery-field stale check.
-- [ ] Update any documentation that describes how `npm test` selects files.
-- [ ] Run `cargo xtask check`; fix anything it reports until it passes.
-- [ ] Commit and push.
+- [x] Update any documentation that describes how `npm test` selects files.
+- [x] Run `cargo xtask check`; fix anything it reports until it passes.
+- [x] Commit and push.
 - [ ] Review the complete local diff against `origin/main` using
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       after the push; report each finding with a number, severity, plain

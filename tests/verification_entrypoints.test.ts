@@ -6,27 +6,50 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
+import browserConfig from "../playwright.config.js";
+import { discoverUnitFiles } from "../scripts/verification/evidence.mjs";
+
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
 
-test("public test commands retain native runner entrypoints", async () => {
+test("public browser test command retains the Playwright entrypoint", async () => {
   const packageJson = JSON.parse(
     await fs.readFile(path.join(repositoryRoot, "package.json"), "utf8"),
   );
   const scripts = packageJson.scripts as Readonly<Record<string, string>>;
-  const unit = scripts.test;
   const browser = scripts["test:browser"];
-  assert.ok(unit);
   assert.ok(browser);
-
-  assert.match(
-    unit,
-    /&& tsx --test --test-concurrency=2 tests\/\*\*\/\*\.test\.ts /,
-  );
-  assert.equal(unit.includes("test:prepared"), false);
   assert.match(browser, /&& playwright test$/);
   assert.equal(browser.includes("test:browser:prepared"), false);
+});
+
+test("npm test delegates to the gate's recursive unit discovery", async () => {
+  const packageJson = JSON.parse(
+    await fs.readFile(path.join(repositoryRoot, "package.json"), "utf8"),
+  );
+  assert.equal(
+    packageJson.scripts.test,
+    "npm run prepare:verification && npm run -s test:prepared",
+    "npm test must delegate to test:prepared: shell expansion of unquoted ** globs silently skips root-level unit files",
+  );
+});
+
+test("unit discovery never loads a file from Playwright's testDir", async () => {
+  assert.ok(browserConfig.testDir);
+  const browserDirectory = path
+    .relative(
+      repositoryRoot,
+      path.resolve(repositoryRoot, browserConfig.testDir),
+    )
+    .split(path.sep)
+    .join("/");
+  const files = await discoverUnitFiles(repositoryRoot);
+  assert.deepEqual(
+    files.filter((file) => file.startsWith(`${browserDirectory}/`)),
+    [],
+    "Node tests inside Playwright's testDir can be loaded by Playwright's matcher as browser tests",
+  );
 });
 
 test("prepared verification commands remain shard-only wrappers", async () => {

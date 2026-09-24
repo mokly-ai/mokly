@@ -68,8 +68,12 @@ The public npm entrypoints `npm test`, `npm run typecheck`, and
 `npm run test:browser` remain clean-checkout entrypoints: each prepares its
 required package output, and both test commands also prepare the example. The
 browser command supports Playwright listing, filtering, and selected spec paths;
-any filtered selection is partial verification. The public unit command retains
-its complete explicit file inventory and concurrency limit. Public
+any filtered selection is partial verification. `npm test` prepares the package
+and example, then delegates to `test:prepared`, the same recursively discovered
+unit inventory used by the gate. It runs all `.test.ts` and `.test.tsx` files
+under `tests/` and `packages/viewer/tests/` at a two-file concurrency limit;
+Node unit tests stay outside Playwright's `tests/browser/` test directory.
+Playwright discovers only `**/*.spec.ts` files there. Public
 `package:check` and `package:smoke` wrappers preserve every caller argument
 across their nested npm boundary; in particular, `--artifacts DIR` reaches the
 prepared consumer as the same two arguments. Internal prepared test entrypoints

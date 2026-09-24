@@ -16,7 +16,11 @@ const historicalBoundary = new Set([
   "src/registry/manifest_validation.ts",
 ]);
 const obsoleteRecoveryBoundary = "packages/viewer/src/standalone/recovery.ts";
-const obsoleteRecoveryFields = /\b(?:closedFolderKeys|closedCollectionIds)\b/gu;
+const obsoleteRecoveryFields = /\b(?:closedFolderKeys|closedCollectionIds)\b/u;
+const obsoleteRecoveryFieldOccurrences = new RegExp(
+  obsoleteRecoveryFields,
+  "gu",
+);
 const collectionModel =
   /["'`]collection(?:["'`]|:)|\bimport\s*\{[^}]*\bcollection\b[^}]*\}\s*from\s*["']@mokly\/mokly["']|\bcollection\s*\(|\b(?:childIds|defineCollection|ManifestCollection|CatalogueCollection|NestedCollection\w*|RootCollection\w*|closedCollectionIds|filterBaselineClosedCollectionIds|ancestorCollections|readCollection|collectionKey|collectionDisclosureKey)\b|data-nav-collection|links to collection id/u;
 
@@ -65,7 +69,7 @@ test("collection-model constructs stay within historical manifest validation", (
       const text = readFileSync(file, "utf8");
       const currentText =
         file === obsoleteRecoveryBoundary
-          ? text.replace(obsoleteRecoveryFields, "")
+          ? text.replace(obsoleteRecoveryFieldOccurrences, "")
           : text;
       if (!collectionModel.test(currentText)) continue;
       if (!historicalBoundary.has(file)) matches.push(file);
