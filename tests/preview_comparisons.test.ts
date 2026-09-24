@@ -133,7 +133,7 @@ test("published comparisons retain real baseline bytes, removed routes, and isol
   );
   assert.doesNotMatch(
     await read("view/removed-document.html"),
-    /data-diff-screen|data-nav-collection="collection:documents"/,
+    /data-diff-screen|data-nav-folder="folder:documents"/,
   );
   for (const file of [
     "index.html",

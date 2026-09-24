@@ -1,8 +1,8 @@
 // Shared Mokly shell glyphs: the disclosure chevron, the closed / open
-// folder icons for collapsible collections, the screen / page / use-case leaf
+// folder icons for collapsible folders, the screen / page / use-case leaf
 // icons, the top bar's brand, search and tag controls, and the device chrome's
 // copy and expand / collapse controls. All icons are stroke-based on a 24-unit
-// viewBox and inherit `currentColor`. Authored collection groups swap closed
+// viewBox and inherit `currentColor`. Authored folder groups swap closed
 // and open folder icons; top-level catalogue sections and the details inspector
 // use the chevron.
 
@@ -48,7 +48,7 @@ export function ChevronIcon(props: { size?: number }) {
   );
 }
 
-/** A collapsed collection: a closed folder that groups child screens/pages. */
+/** A collapsed folder that groups child screens/pages. */
 export function FolderIcon(props: { size?: number }) {
   return (
     <IconSvg size={props.size ?? 13}>
@@ -57,7 +57,7 @@ export function FolderIcon(props: { size?: number }) {
   );
 }
 
-/** An expanded collection: an open folder revealing its contents. */
+/** An expanded folder revealing its contents. */
 export function FolderOpenIcon(props: { size?: number }) {
   return (
     <IconSvg size={props.size ?? 13}>

@@ -187,17 +187,22 @@ test("recovery matches stable disclosure keys and ignores label paths", () => {
     href: "https://example.test/",
     initial: {
       recovery: recovery({
-        closedCollectionIds: ["/Same title", "collection:Product"],
-        filterBaselineClosedCollectionIds: [
+        closedFolderKeys: [
           "/Same title",
           "collection:Product",
+          "folder:pages:Product",
+        ],
+        filterBaselineClosedFolderKeys: [
+          "/Same title",
+          "collection:Product",
+          "folder:pages:Product",
         ],
       }),
     },
   });
-  assert.equal(state.disclosures["collection:pages:Product"], false);
-  assert.equal(state.disclosures["collection:components:Product"], false);
-  assert.equal(state.filterBaseline?.["collection:pages:Product"], false);
+  assert.equal(state.disclosures["folder:pages:Product"], false);
+  assert.equal(state.disclosures["folder:components:Product"], true);
+  assert.equal(state.filterBaseline?.["folder:pages:Product"], false);
   assert.equal(Object.hasOwn(state.disclosures, "/Same title"), false);
 });
 
@@ -225,11 +230,11 @@ function recovery(
   overrides: Partial<ShellRecoverySnapshot> = {},
 ): ShellRecoverySnapshot {
   return {
-    closedCollectionIds: [],
+    closedFolderKeys: [],
     colorScheme: "light",
     detailsOpen: false,
     drawerOpen: false,
-    filterBaselineClosedCollectionIds: null,
+    filterBaselineClosedFolderKeys: null,
     navScroll: 0,
     query: "",
     regionScrolls: {},

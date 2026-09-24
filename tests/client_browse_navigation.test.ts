@@ -41,15 +41,15 @@ const details = leaf(
 );
 const glossary = leaf("glossary", "docs/glossary.html", "Glossary");
 
-test("stable collection keys preserve independent disclosure values", () => {
+test("stable folder keys preserve independent disclosure values", () => {
   const disclosures = {
-    "collection:pages:alpha": false,
-    "collection:pages:beta": true,
+    "folder:pages:alpha": false,
+    "folder:pages:beta": true,
   };
-  assert.deepEqual(closedDisclosures(disclosures), ["collection:pages:alpha"]);
-  assert.deepEqual(openDisclosures(disclosures, ["collection:pages:alpha"]), {
-    "collection:pages:alpha": true,
-    "collection:pages:beta": true,
+  assert.deepEqual(closedDisclosures(disclosures), ["folder:pages:alpha"]);
+  assert.deepEqual(openDisclosures(disclosures, ["folder:pages:alpha"]), {
+    "folder:pages:alpha": true,
+    "folder:pages:beta": true,
   });
 });
 
@@ -58,18 +58,22 @@ test("legacy label paths cannot match current disclosure keys", () => {
     href: "https://example.test/",
     initial: { recovery: recovery(["/Example/Screens"]) },
   });
-  assert.equal(state.disclosures["collection:pages:Product"], true);
+  assert.equal(state.disclosures["folder:pages:Product"], true);
 });
 
-test("obsolete keys do not discard a valid transitional folder preference", () => {
+test("obsolete keys do not discard a current folder preference", () => {
   const state = fixtureShellState({
     href: "https://example.test/",
     initial: {
-      recovery: recovery(["legacy:example", "collection:Product"]),
+      recovery: recovery([
+        "legacy:example",
+        "collection:Product",
+        "folder:pages:Product",
+      ]),
     },
   });
-  assert.equal(state.disclosures["collection:pages:Product"], false);
-  assert.equal(state.disclosures["collection:components:Product"], false);
+  assert.equal(state.disclosures["folder:pages:Product"], false);
+  assert.equal(state.disclosures["folder:components:Product"], true);
 });
 
 test("removed pages appear only in Changes while removed screens remain in All", () => {
@@ -241,19 +245,19 @@ function leaf(
 function group(label: string, children: NavLeafNode[]): NavGroupNode {
   return {
     children,
-    key: `collection:${label.toLowerCase()}`,
+    key: `folder:${label.toLowerCase()}`,
     kind: "group",
     label,
   };
 }
 
-function recovery(closedCollectionIds: readonly string[]) {
+function recovery(closedFolderKeys: readonly string[]) {
   return {
-    closedCollectionIds,
+    closedFolderKeys,
     colorScheme: "light" as const,
     detailsOpen: false,
     drawerOpen: false,
-    filterBaselineClosedCollectionIds: null,
+    filterBaselineClosedFolderKeys: null,
     navScroll: 0,
     query: "",
     regionScrolls: {},

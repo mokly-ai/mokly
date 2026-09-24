@@ -5,6 +5,7 @@ import { defaultSelection } from "../viewer/selection.js";
 
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
+import { isDisclosureKey } from "./disclosure_keys.js";
 import {
   catalogueNavSections,
   defaultDisclosures,
@@ -43,14 +44,11 @@ export function createInitialShellState(
   if (initial?.disclosures)
     disclosures = { ...disclosures, ...initial.disclosures };
   if (recovery)
-    disclosures = disclosuresFromClosed(
-      disclosures,
-      recovery.closedCollectionIds,
-    );
-  let filterBaseline = recovery?.filterBaselineClosedCollectionIds
+    disclosures = disclosuresFromClosed(disclosures, recovery.closedFolderKeys);
+  let filterBaseline = recovery?.filterBaselineClosedFolderKeys
     ? disclosuresFromClosed(
         defaultDisclosures(sections, context.activeRoute),
-        recovery.filterBaselineClosedCollectionIds,
+        recovery.filterBaselineClosedFolderKeys,
       )
     : undefined;
   if (route.view.kind === "target") {
@@ -108,17 +106,12 @@ function disclosuresFromClosed(
   defaults: Readonly<Record<string, boolean>>,
   closed: readonly string[],
 ): Record<string, boolean> {
+  if (closed.length > 0 && !closed.some(isDisclosureKey))
+    return { ...defaults };
   const values = { ...defaults };
   const keys = new Set(closed);
   for (const key of Object.keys(values)) {
-    const legacy = legacyDisclosureKey(key);
-    values[key] = !keys.has(key) && !(legacy && keys.has(legacy));
+    values[key] = !keys.has(key);
   }
   return values;
-}
-
-function legacyDisclosureKey(key: string): string | undefined {
-  for (const prefix of ["collection:pages:", "collection:components:"])
-    if (key.startsWith(prefix)) return `collection:${key.slice(prefix.length)}`;
-  return undefined;
 }

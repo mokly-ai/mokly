@@ -9,12 +9,19 @@ import type {
 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import {
+  defaultDisclosures,
+  disclosurePath,
+} from "../packages/viewer/dist/shell/nav_model.js";
+import {
   buildNavSections,
   type NavGroupNode,
   type NavLeafNode,
   type NavNode,
 } from "../packages/viewer/dist/shell/nav_tree.js";
-import type { ShellRecoverySnapshot } from "../packages/viewer/dist/shell/store_state.js";
+import {
+  closedDisclosures,
+  type ShellRecoverySnapshot,
+} from "../packages/viewer/dist/shell/store_state.js";
 
 import { fixtureShellState } from "./helpers/viewer_catalogue.js";
 
@@ -35,29 +42,24 @@ test("page and component sections preserve only their relevant hierarchy", () =>
       ["components", "section:components", "Components"],
     ],
   );
-  const pageRoot = group(sections[0]?.children ?? [], "collection:Product");
+  const pageRoot = group(sections[0]?.children ?? [], "folder:Product");
   assert.deepEqual(
     pageRoot.children.map(({ label }) => label),
     ["Screens"],
   );
   assert.equal(
-    leaf(
-      group(pageRoot.children, "collection:Product/Screens").children,
-      "Welcome",
-    ).entryKind,
+    leaf(group(pageRoot.children, "folder:Product/Screens").children, "Welcome")
+      .entryKind,
     "screen",
   );
-  const componentRoot = group(
-    sections[1]?.children ?? [],
-    "collection:Product",
-  );
+  const componentRoot = group(sections[1]?.children ?? [], "folder:Product");
   assert.deepEqual(
     componentRoot.children.map(({ label }) => label),
     ["Library"],
   );
   assert.equal(
     leaf(
-      group(componentRoot.children, "collection:Product/Library").children,
+      group(componentRoot.children, "folder:Product/Library").children,
       "Action",
     ).entryKind,
     "component",
@@ -83,7 +85,7 @@ test("screen variant leaves follow manifest order", () => {
   );
   assert.ok(pages);
   const parentLeaf = leaf(
-    group(pages.children, "collection:Screens").children,
+    group(pages.children, "folder:Screens").children,
     parent.title,
   );
   assert.deepEqual(
@@ -108,15 +110,73 @@ test("page and component section disclosures persist independently", () => {
   assert.equal(componentsClosed.disclosures["section:components"], false);
 });
 
-test("legacy collection keys reach both projections without creating unknown keys", () => {
+test("folder identities preserve colons and remain section-local", () => {
+  const catalogue = createCatalogue(
+    manifest([
+      screen("a", "A", ["Design: System", "Browse"]),
+      component("b", "B", ["Design: System", "Browse"]),
+    ]),
+  );
+  const sections = buildNavSections(catalogue.hierarchy);
+  for (const section of sections) {
+    const parent = group(section.children, "folder:Design: System");
+    assert.equal(
+      group(parent.children, "folder:Design: System/Browse").label,
+      "Browse",
+    );
+  }
+  const defaults = defaultDisclosures(sections, undefined);
+  assert.deepEqual(disclosurePath(sections, "a.html"), [
+    "section:pages",
+    "folder:pages:Design: System",
+    "folder:pages:Design: System/Browse",
+  ]);
+  assert.equal(defaults["folder:pages:Design: System/Browse"], false);
+  assert.equal(defaults["folder:components:Design: System/Browse"], false);
+  assert.deepEqual(
+    closedDisclosures({
+      ...defaults,
+      "folder:pages:Design: System": false,
+    }).filter((key) => key.includes("Design: System")),
+    [
+      "folder:pages:Design: System",
+      "folder:pages:Design: System/Browse",
+      "folder:components:Design: System/Browse",
+    ],
+  );
+  const pagesClosed = fixtureShellState({
+    href: "https://example.test/",
+    initial: { recovery: recovery(["folder:pages:Product"]) },
+  });
+  assert.equal(pagesClosed.disclosures["folder:pages:Product"], false);
+  assert.equal(pagesClosed.disclosures["folder:components:Product"], true);
+});
+
+test("obsolete sectioned and pre-section collection keys never close folders", () => {
   const state = fixtureShellState({
     href: "https://example.test/",
     initial: {
-      recovery: recovery(["/Product", "collection:Product", "section:other"]),
+      recovery: recovery([
+        "collection:pages:Product",
+        "collection:components:Product",
+        "collection:Product",
+        "legacy:Product",
+      ]),
     },
   });
-  assert.equal(state.disclosures["collection:pages:Product"], false);
-  assert.equal(state.disclosures["collection:components:Product"], false);
+  assert.equal(state.disclosures["folder:pages:Product"], true);
+  assert.equal(state.disclosures["folder:components:Product"], true);
+});
+
+test("unknown disclosure keys never create unknown disclosure state", () => {
+  const state = fixtureShellState({
+    href: "https://example.test/",
+    initial: {
+      recovery: recovery(["/Product", "section:other"]),
+    },
+  });
+  assert.equal(state.disclosures["folder:pages:Product"], true);
+  assert.equal(state.disclosures["folder:components:Product"], true);
   assert.equal(Object.hasOwn(state.disclosures, "section:other"), false);
 });
 
@@ -208,15 +268,13 @@ function manifest(entries: readonly ManifestEntry[]): ManifestV6 {
   };
 }
 
-function recovery(
-  closedCollectionIds: readonly string[],
-): ShellRecoverySnapshot {
+function recovery(closedFolderKeys: readonly string[]): ShellRecoverySnapshot {
   return {
-    closedCollectionIds,
+    closedFolderKeys,
     colorScheme: "light",
     detailsOpen: false,
     drawerOpen: false,
-    filterBaselineClosedCollectionIds: null,
+    filterBaselineClosedFolderKeys: null,
     navScroll: 0,
     query: "",
     regionScrolls: {},

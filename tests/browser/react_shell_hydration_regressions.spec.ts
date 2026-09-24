@@ -57,11 +57,11 @@ test("an early navigation disclosure beats reload recovery", async ({
         version: 1,
         browse: {
           changedOnly: false,
-          closedCollectionIds: [],
+          closedFolderKeys: [],
           colorScheme: "light",
           detailsOpen: false,
           drawerOpen: false,
-          filterBaselineClosedCollectionIds: null,
+          filterBaselineClosedFolderKeys: null,
           navScroll: 0,
           query: "welcome",
           regionScrolls: {},
@@ -127,8 +127,8 @@ test("stored closed active ancestry is open for the first React render", async (
       "mokly:nav-disclosure:v2",
       JSON.stringify([
         "section:pages",
-        "collection:pages:Example",
-        "collection:pages:Example/Screens",
+        "folder:pages:Example",
+        "folder:pages:Example/Screens",
       ]),
     );
   });
@@ -137,10 +137,10 @@ test("stored closed active ancestry is open for the first React render", async (
   await gate.requested;
   const pages = page.locator('details[data-nav-disclosure="section:pages"]');
   const example = page.locator(
-    'details[data-nav-disclosure="collection:pages:Example"]',
+    'details[data-nav-disclosure="folder:pages:Example"]',
   );
   const screens = page.locator(
-    'details[data-nav-disclosure="collection:pages:Example/Screens"]',
+    'details[data-nav-disclosure="folder:pages:Example/Screens"]',
   );
   await expect(pages).not.toHaveAttribute("open", "");
   await expect(example).not.toHaveAttribute("open", "");

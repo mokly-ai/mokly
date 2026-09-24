@@ -195,6 +195,11 @@ When an authored rebuild changes an entry's `navPath`, the new folder paths
 move its navigation row and ancestor crumbs in the same reload. Disclosure
 recovery still applies to every unchanged stable folder path key; removed
 keys and obsolete `collection:` keys have no target and are ignored.
+An older reload snapshot containing only `closedCollectionIds` rather than
+`closedFolderKeys` is invalid and is discarded in full, without migrating
+disclosures or recovering other fields. A missing
+`filterBaselineClosedFolderKeys` on an otherwise current snapshot still means
+no filter baseline.
 
 When a successful rebuild leaves the manifest structure unchanged, or a
 resource edit or explicit watch rule requests a reload, the parent keeps the

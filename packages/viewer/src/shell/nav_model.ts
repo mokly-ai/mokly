@@ -4,6 +4,7 @@ import type { ViewerSelection } from "../viewer/types.js";
 
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
+import { folderDisclosureKey } from "./disclosure_keys.js";
 import { buildNavSections } from "./nav_tree.js";
 import type { NavLeafNode, NavNode, NavSectionNode } from "./nav_tree.js";
 import { queryConstrains, rowMatchesQuery } from "./search_query.js";
@@ -125,7 +126,7 @@ function collectDefaults(
         );
       continue;
     }
-    result[collectionKey(section, node.key)] =
+    result[folderDisclosureKey(section, node.key)] =
       depth === 0 || containsRoute(node, route);
     collectDefaults(node.children, section, route, depth + 1, result);
   }
@@ -150,7 +151,7 @@ function nodePath(
       continue;
     }
     const child = nodePath(node.children, section, route);
-    if (child) return [collectionKey(section, node.key), ...child];
+    if (child) return [folderDisclosureKey(section, node.key), ...child];
   }
   return undefined;
 }
@@ -163,13 +164,6 @@ function containsRoute(node: NavNode, route: string | undefined): boolean {
         (node.variants ?? []).some((variant) => variant.route === route)
       : node.children.some((child) => containsRoute(child, route)))
   );
-}
-
-function collectionKey(section: NavSectionNode["id"], key: string): string {
-  const id = key.startsWith("collection:")
-    ? key.slice("collection:".length)
-    : key;
-  return `collection:${section}:${id}`;
 }
 
 /** Persisted disclosure identity for one screen's variant list. */

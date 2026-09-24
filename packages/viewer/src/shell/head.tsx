@@ -1,5 +1,5 @@
 // The heading for a catalogue view uses the title, stable ID, and text-only
-// collection ancestors from the shared hierarchy or removed entry baseline.
+// folder ancestors from the shared hierarchy or removed entry baseline.
 
 import type { ReactNode } from "react";
 
@@ -136,7 +136,7 @@ export function ScreenHead(props: {
 
 /**
  * The parent screen a variant belongs to. A variant's own ancestors are the
- * parent's collection ancestors, so the parent itself closes the trail; a
+ * parent's folder ancestors, so the parent itself closes the trail; a
  * removed variant resolves through its retained `variantOf` instead of the
  * hierarchy, which holds current entries only.
  */

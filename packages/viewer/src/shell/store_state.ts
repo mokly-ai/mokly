@@ -2,6 +2,7 @@
 
 import type { ViewerSelection } from "../viewer/types.js";
 
+import { isDisclosureKey } from "./disclosure_keys.js";
 import type { LiveChangesStatus } from "./metadata.js";
 import type { ShellRoute } from "./routes.js";
 import type { ViewMarks } from "./view_marks.js";
@@ -17,11 +18,11 @@ export interface WorkspaceHydrationState {
 /** Browser state captured for one automatic watched reload. */
 export interface ShellRecoverySnapshot {
   changesStatus?: LiveChangesStatus;
-  closedCollectionIds: readonly string[];
+  closedFolderKeys: readonly string[];
   colorScheme: ViewerSelection["colorScheme"];
   detailsOpen: boolean;
   drawerOpen: boolean;
-  filterBaselineClosedCollectionIds: readonly string[] | null;
+  filterBaselineClosedFolderKeys: readonly string[] | null;
   navScroll: number;
   query: string;
   regionScrolls: Readonly<Record<string, number>>;
@@ -68,7 +69,7 @@ export function closedDisclosures(
   disclosures: Readonly<Record<string, boolean>>,
 ): readonly string[] {
   return Object.entries(disclosures).flatMap(([key, open]) =>
-    open ? [] : [key],
+    open || !isDisclosureKey(key) ? [] : [key],
   );
 }
 

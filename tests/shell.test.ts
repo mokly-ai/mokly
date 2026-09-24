@@ -374,8 +374,8 @@ test("catalogue nav marks active, changed, and iconed rows", () => {
     /data-nav-disclosure="section:pages" data-nav-section="pages"/,
   );
   assert.doesNotMatch(html, /data-nav-section="components"/);
-  assert.match(html, /data-nav-collection="collection:Example\/Screens"/);
-  assert.match(html, /data-nav-disclosure="collection:pages:Example\/Screens"/);
+  assert.match(html, /data-nav-folder="folder:Example\/Screens"/);
+  assert.match(html, /data-nav-disclosure="folder:pages:Example\/Screens"/);
   assert.match(html, /data-entry-kind="screen"/);
   assert.match(html, /class="mbk-nav-ico folder"><svg/);
   assert.match(html, /class="mbk-nav-count">2</);

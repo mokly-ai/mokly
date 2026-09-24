@@ -72,11 +72,11 @@ test("early native disclosures survive delayed hydration and recovery", async ({
         version: 1,
         browse: {
           changedOnly: false,
-          closedCollectionIds: ["collection:pages:Fixture/Archive"],
+          closedFolderKeys: ["folder:pages:Fixture/Archive"],
           colorScheme: "light",
           detailsOpen: false,
           drawerOpen: false,
-          filterBaselineClosedCollectionIds: null,
+          filterBaselineClosedFolderKeys: null,
           navScroll: 0,
           query: "",
           regionScrolls: {},
@@ -90,12 +90,8 @@ test("early native disclosures survive delayed hydration and recovery", async ({
       waitUntil: "commit",
     });
     await requested;
-    const screens = page.locator(
-      '[data-nav-collection="collection:Fixture/Screens"]',
-    );
-    const archive = page.locator(
-      '[data-nav-collection="collection:Fixture/Archive"]',
-    );
+    const screens = page.locator('[data-nav-folder="folder:Fixture/Screens"]');
+    const archive = page.locator('[data-nav-folder="folder:Fixture/Archive"]');
     await screens.locator("summary").click();
     await archive.locator("summary").click();
     await expect(screens).not.toHaveAttribute("open", "");
@@ -109,7 +105,7 @@ test("early native disclosures survive delayed hydration and recovery", async ({
       .poll(() =>
         page.evaluate(() => localStorage.getItem("mokly:nav-disclosure:v2")),
       )
-      .toContain("collection:pages:Fixture/Screens");
+      .toContain("folder:pages:Fixture/Screens");
     await archive.locator("summary").click();
     await expect(archive).not.toHaveAttribute("open", "");
     await expect(page.locator("[data-mokly-early-disclosure]")).toHaveCount(0);

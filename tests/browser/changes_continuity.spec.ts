@@ -47,10 +47,10 @@ for (const mobile of [false, true]) {
         .evaluate((body) => body.setAttribute("data-test-retained", "true"));
       if (mobile) await page.locator("[data-mokly-menu]").click();
       await page
-        .locator('[data-nav-collection="collection:Fixture/Archive"] > summary')
+        .locator('[data-nav-folder="folder:Fixture/Archive"] > summary')
         .click();
       await page
-        .locator('[data-nav-collection="collection:Fixture/Screens"] > summary')
+        .locator('[data-nav-folder="folder:Fixture/Screens"] > summary')
         .click();
       await page.locator('[data-nav-section="pages"] > summary').click();
       await page.locator("[data-mokly-nav-scroll]").evaluate((tree) => {

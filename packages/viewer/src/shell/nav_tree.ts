@@ -1,5 +1,4 @@
-// Builds section folders from authored navigation paths. The collection prefix
-// remains transitional until disclosure keys migrate in Milestone 3.
+// Builds section folders from authored navigation paths.
 
 import type {
   CatalogueHierarchy,
@@ -217,7 +216,7 @@ function structuredNode(
     children: sortNodes(
       node.children.map((child) => structuredNode(child, hierarchy)),
     ),
-    key: `collection:${node.key}`,
+    key: `folder:${node.key}`,
     kind: "group",
     label: node.label,
   };
@@ -231,7 +230,7 @@ function sortNodes(nodes: readonly NavNode[]): NavNode[] {
         label: left.label,
         key:
           left.kind === "group"
-            ? left.key.slice("collection:".length)
+            ? left.key.slice("folder:".length)
             : (left.entryId ?? left.route),
       },
       {
@@ -239,7 +238,7 @@ function sortNodes(nodes: readonly NavNode[]): NavNode[] {
         label: right.label,
         key:
           right.kind === "group"
-            ? right.key.slice("collection:".length)
+            ? right.key.slice("folder:".length)
             : (right.entryId ?? right.route),
       },
     ),

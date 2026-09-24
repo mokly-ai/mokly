@@ -170,11 +170,11 @@ export function shellRecoverySnapshot(
       : state.regionScrolls;
   return {
     ...(state.changesStatus ? { changesStatus: state.changesStatus } : {}),
-    closedCollectionIds: closedDisclosures(state.disclosures),
+    closedFolderKeys: closedDisclosures(state.disclosures),
     colorScheme: state.selection.colorScheme,
     detailsOpen: state.detailsOpen,
     drawerOpen: state.drawerOpen,
-    filterBaselineClosedCollectionIds: state.filterBaseline
+    filterBaselineClosedFolderKeys: state.filterBaseline
       ? closedDisclosures(state.filterBaseline)
       : null,
     navScroll: state.navScroll,

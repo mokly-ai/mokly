@@ -336,11 +336,11 @@ function actions() {
 
 function shellRecovery() {
   return {
-    closedCollectionIds: ["collection:fixture"],
+    closedFolderKeys: ["folder:pages:fixture"],
     colorScheme: "dark" as const,
     detailsOpen: true,
     drawerOpen: true,
-    filterBaselineClosedCollectionIds: ["collection:fixture"],
+    filterBaselineClosedFolderKeys: ["folder:pages:fixture"],
     navScroll: 18,
     query: "home",
     regionScrolls: { stage: 42 },

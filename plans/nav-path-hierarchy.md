@@ -1,7 +1,7 @@
 # Path-Based Navigation Hierarchy
 
-Status: Milestones 1 and 2 are complete and committed. Milestones 3–4 have
-not started. Created 2026-09-23 with the user's
+Status: Milestones 1–3 are complete and committed. Milestone 4 has not
+started. Created 2026-09-23 with the user's
 consent after the design discussion in this workspace. This plan supersedes the
 collection-forest contract delivered by
 [Hierarchy-Inferred Breadcrumbs](./hierarchy-inferred-breadcrumbs.md); that
@@ -340,31 +340,41 @@ Rename the shell's navigation identity from collection ids to folder path keys,
 migrate persisted disclosure state, and update the browser coverage. No visual
 change: rows, icons, crumbs, and the details inspector look the same.
 
-- [ ] `packages/viewer/src/shell/nav_tree.ts` emits `folder:<path key>` group
+- [x] `packages/viewer/src/shell/nav_tree.ts` emits `folder:<path key>` group
       keys; `nav_model.ts` derives `folder:<section>:<path key>` disclosure
       keys; `nav_rows.tsx` renders `data-nav-folder`; update the module and
       icon comments in `nav_tree.ts`, `nav_rows.tsx`, `icons.tsx`, and
       `head.tsx`.
-- [ ] Persistence: rename `closedCollectionIds` and
+- [x] Persistence: rename `closedCollectionIds` and
       `filterBaselineClosedCollectionIds` to `closedFolderKeys` and
       `filterBaselineClosedFolderKeys` across `store_state.ts`,
       `store_actions.ts`, `store_initial.ts`, `standalone/recovery.ts`, and
       `standalone/early_disclosures.ts`; accept only `section:`, `folder:`,
       and `variants:` keys and ignore obsolete `collection:` keys on restore.
-- [ ] Confirm `docs/protocol/mokly-runtime.md` and
+- [x] Restore a non-empty storage list containing only obsolete disclosure keys
+      with the server's defaults, rather than treating it as an explicit empty
+      current list that opens all folders; cover the early-hydration path.
+- [x] Confirm `docs/protocol/mokly-runtime.md` and
       `docs/protocol/mokly-viewer.md` already describe these keys exactly as
       implemented; correct the docs if Milestone 1 left a gap.
-- [ ] Browser coverage: update `tests/browser/browse.spec.ts`,
+- [x] Browser coverage: update `tests/browser/browse.spec.ts`,
       `browse_navigation.spec.ts`, `changes_continuity.spec.ts`, and
       `watch.spec.ts` (reparent by editing a `navPath`, wait for reload,
       verify navigation and crumbs move together while unrelated disclosures
       survive) plus any `packages/viewer/tests/shell_state*.test.ts` that
       names disclosure keys.
-- [ ] Smoke test through `npm run dev`: a deeply nested screen, a variant, a
+- [x] Smoke test through `npm run dev`: a deeply nested screen, a variant, a
       use case, a page, and a top-level entry at desktop and mobile widths;
       Collapse all; reload persistence of open folders; the Changes filter;
       search inside a folder.
-- [ ] Commit `refactor(viewer): key navigation folders by path` and push.
+- [x] Capture and compare baseline and migrated desktop/mobile screenshots of
+      the six specified views. Sixteen of eighteen pairs are byte-identical.
+      Supervisor sign-off (2026-09-24): the two remaining desktop pairs differ
+      only in antialiased edge pixels outside the navigation (7 pixels with a
+      maximum channel delta of 1, and 16 pixels on the Appearance pill border
+      and one window-control dot); no row, label, icon, count, or crumb
+      changed, so the milestone has no visual change.
+- [x] Commit `refactor(viewer): key navigation folders by path` and push.
 
 ## Milestone 4: Verification, close-out, and review
 

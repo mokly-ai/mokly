@@ -102,7 +102,7 @@ function leaf(
 function group(label: string, children: NavLeafNode[]): NavGroupNode {
   return {
     children,
-    key: `collection:${label.toLowerCase()}`,
+    key: `folder:${label.toLowerCase()}`,
     kind: "group",
     label,
   };

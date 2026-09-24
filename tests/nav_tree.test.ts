@@ -88,16 +88,16 @@ test("identical path labels merge and keep path-based transitional keys", () => 
   ]);
   assert.deepEqual(
     nodes.map(({ key }) => key),
-    ["collection:Design"],
+    ["folder:Design"],
   );
   assert.deepEqual(
-    group(nodes, "collection:Design").children.map(({ key }) => key),
-    ["collection:Design/Browse"],
+    group(nodes, "folder:Design").children.map(({ key }) => key),
+    ["folder:Design/Browse"],
   );
   assert.deepEqual(
     group(
-      group(nodes, "collection:Design").children,
-      "collection:Design/Browse",
+      group(nodes, "folder:Design").children,
+      "folder:Design/Browse",
     ).children.map(({ label }) => label),
     ["First", "Second"],
   );
@@ -113,13 +113,10 @@ test("changing only navPath reparents navigation and breadcrumb labels", () => {
     { label: "Beta" },
   ]);
   assert.equal(
-    group(before.nodes, "collection:Alpha").children[0]?.label,
+    group(before.nodes, "folder:Alpha").children[0]?.label,
     "Target",
   );
-  assert.equal(
-    group(after.nodes, "collection:Beta").children[0]?.label,
-    "Target",
-  );
+  assert.equal(group(after.nodes, "folder:Beta").children[0]?.label, "Target");
 });
 
 test("top-level entries do not gain a folder or breadcrumb", () => {
@@ -138,8 +135,8 @@ test("screen variants stay under their parent in authored order", () => {
     screen("welcome-alpha", "Alpha", ["Example", "Screens"], "welcome"),
   ]);
   const children = group(
-    group(nodes, "collection:Example").children,
-    "collection:Example/Screens",
+    group(nodes, "folder:Example").children,
+    "folder:Example/Screens",
   ).children;
   assert.deepEqual(
     children.map(({ label }) => label),
@@ -188,7 +185,7 @@ test("removed rows follow the complete current hierarchy in route and id order",
   assert.deepEqual(
     sections.find(({ id }) => id === "pages")?.children.map(({ key }) => key),
     [
-      "collection:Folders",
+      "folder:Folders",
       "entry:current",
       "removed:a.html:first",
       "removed:a.html:second",
@@ -222,7 +219,7 @@ test("declared entry tags reach navigation leaves and variant rows never enter f
     { ...screen("parent", "Parent", ["Screens"]), tags: ["review"] },
     screen("variant", "Variant", ["Screens"], "parent"),
   ]);
-  const children = group(nodes, "collection:Screens").children;
+  const children = group(nodes, "folder:Screens").children;
   assert.deepEqual(
     children.map(({ key }) => key),
     ["entry:parent"],
@@ -236,7 +233,7 @@ test("declared entry tags reach navigation leaves and variant rows never enter f
   );
   assert.deepEqual(
     nodes.map(({ key }) => key),
-    ["collection:Screens"],
+    ["folder:Screens"],
   );
 });
 
@@ -268,7 +265,7 @@ test("declared screen and use-case tags reach their leaves without inventing pag
     },
     page("notes", "Notes", "legacy/notes.html"),
   ]);
-  const children = group(nodes, "collection:Screens").children;
+  const children = group(nodes, "folder:Screens").children;
   assert.deepEqual(
     children.map((node) =>
       node.kind === "leaf" ? [node.label, node.tags] : [],
@@ -292,10 +289,10 @@ test("variants never become section roots or folder members", () => {
   ]);
   assert.deepEqual(
     nodes.map(({ key }) => key),
-    ["collection:Screens", "entry:loose"],
+    ["folder:Screens", "entry:loose"],
   );
   assert.deepEqual(
-    group(nodes, "collection:Screens").children.map(({ key }) => key),
+    group(nodes, "folder:Screens").children.map(({ key }) => key),
     ["entry:welcome"],
   );
   const loose = nodes.find(({ key }) => key === "entry:loose");

@@ -46,7 +46,7 @@ test("consumer export builds unified pages and preserves a removed page's baseli
   assert.match(await read("index.html"), /data-removed-page=""/);
   assert.doesNotMatch(
     await read("index.html"),
-    /data-nav-collection="collection:library"/,
+    /data-nav-folder="folder:library"/,
   );
 });
 

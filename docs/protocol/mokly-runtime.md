@@ -292,6 +292,10 @@ for the same path in both sections. Labels may contain `:`, so parsers must
 match the fixed prefixes, never split on `:`. Persist only `section:`,
 `folder:`, and `variants:` disclosures; ignore obsolete `collection:` and
 `legacy:` keys on restore, without attempting migration to new keys.
+A stored non-empty list containing only obsolete keys leaves the server's
+default disclosures unchanged; an explicit empty list retains the existing
+"all open" meaning.
+
 The [screen variants contract](./mokly-screen-variants.md) adds
 `variants:<section>:<parent id>` for the variant list a screen row discloses,
 persisted, restored, and collapsed beside the folder keys. That list is a

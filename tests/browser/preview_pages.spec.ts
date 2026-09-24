@@ -54,11 +54,11 @@ for (const width of [390, 1280]) {
     await page.locator('[data-filter="changed"]').click();
     await expect(removed).toBeVisible();
     await expect(
-      page.locator('[data-nav-collection="collection:Documents"]'),
+      page.locator('[data-nav-folder="folder:Documents"]'),
     ).toHaveCount(0);
     expect(
       await removed.evaluate(
-        (element) => element.closest("details[data-nav-collection]") === null,
+        (element) => element.closest("details[data-nav-folder]") === null,
       ),
     ).toBe(true);
     await page.locator('[data-filter="all"]').click();

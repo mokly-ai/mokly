@@ -90,10 +90,10 @@ test("watched serve rebuilds and reloads after an authored change", async ({
   await page.goto(`${url}/view/screens/home.html`);
   await expect(page.locator("#mb-main h2")).toHaveText("Home");
   const screens = page.locator(
-    'details[data-nav-collection="collection:Fixture/Screens"]',
+    'details[data-nav-folder="folder:Fixture/Screens"]',
   );
   const archive = page.locator(
-    'details[data-nav-collection="collection:Fixture/Archive"]',
+    'details[data-nav-folder="folder:Fixture/Archive"]',
   );
   await expect(screens).toHaveAttribute("open", "");
   await toggleDisclosure(screens);
@@ -176,7 +176,7 @@ test("watched reload reopens collapsed active route ancestry", async ({
 }) => {
   await page.goto(`${url}/view/screens/home.html`);
   const screens = page.locator(
-    'details[data-nav-collection="collection:Fixture/Screens"]',
+    'details[data-nav-folder="folder:Fixture/Screens"]',
   );
   await expect(screens).toHaveAttribute("open", "");
   await toggleDisclosure(screens);
@@ -210,10 +210,10 @@ test("watched reparenting moves navigation and crumbs together", async ({
   await page.goto(`${url}/view/screens/home.html`);
   await expect(page.locator(".mbk-crumbs")).toHaveText("Fixture›Screens");
   const screens = page.locator(
-    'details[data-nav-collection="collection:Fixture/Screens"]',
+    'details[data-nav-folder="folder:Fixture/Screens"]',
   );
   const archive = page.locator(
-    'details[data-nav-collection="collection:Fixture/Archive"]',
+    'details[data-nav-folder="folder:Fixture/Archive"]',
   );
   await toggleDisclosure(screens);
   await expect(screens).not.toHaveAttribute("open", "");
@@ -248,10 +248,10 @@ test("duplicate folder titles under different parents retain independent disclos
     }),
   );
   const screens = page.locator(
-    'details[data-nav-collection="collection:Fixture/Screens/Same title"]',
+    'details[data-nav-folder="folder:Fixture/Screens/Same title"]',
   );
   const archive = page.locator(
-    'details[data-nav-collection="collection:Fixture/Archive/Same title"]',
+    'details[data-nav-folder="folder:Fixture/Archive/Same title"]',
   );
   await expect(screens.locator("summary .mbk-nav-label")).toHaveText(
     "Same title",
@@ -266,7 +266,7 @@ test("duplicate folder titles under different parents retain independent disclos
   });
   await page.goto(`${url}/view/screens/home.html`);
   const screensParent = page.locator(
-    'details[data-nav-collection="collection:Fixture/Screens"]',
+    'details[data-nav-folder="folder:Fixture/Screens"]',
   );
   await expect(screensParent).not.toHaveAttribute("open", "");
   await expect(screens).not.toHaveAttribute("open", "");
@@ -282,7 +282,7 @@ test("duplicate folder titles under different parents retain independent disclos
     .poll(() =>
       page.evaluate(() => localStorage.getItem("mokly:nav-disclosure:v2")),
     )
-    .toContain("collection:pages:Fixture/Screens/Same title");
+    .toContain("folder:pages:Fixture/Screens/Same title");
 
   await page.reload();
   await expect(screens).not.toHaveAttribute("open", "");

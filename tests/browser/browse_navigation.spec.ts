@@ -53,7 +53,7 @@ test("MockLink navigation reveals the destination and preserves shell state", as
   if ((await detailsPanel.getAttribute("data-open")) === "true") {
     await page.getByRole("tab", { name: "Details", exact: true }).click();
   }
-  const other = page.locator('details[data-nav-collection="collection:Other"]');
+  const other = page.locator('details[data-nav-folder="folder:Other"]');
   await other.evaluate((element: HTMLDetailsElement) => {
     element.open = true;
   });
@@ -133,7 +133,7 @@ test("Changed navigation preserves collapsed unrelated groups", async ({
 }) => {
   await page.goto(`${navigation.url}/view/screens/home.html`);
   await page.click('[data-filter="changed"]');
-  const other = page.locator('details[data-nav-collection="collection:Other"]');
+  const other = page.locator('details[data-nav-folder="folder:Other"]');
   await expect(other).toHaveAttribute("open", "");
   await other.locator("summary").click();
   await expect(other).not.toHaveAttribute("open", "");
@@ -153,7 +153,7 @@ test("editing an active filter reveals newly matching groups", async ({
 }) => {
   await page.goto(`${navigation.url}/view/screens/home.html`);
   await page.click('[data-filter="changed"]');
-  const other = page.locator('details[data-nav-collection="collection:Other"]');
+  const other = page.locator('details[data-nav-folder="folder:Other"]');
   await other.locator("summary").click();
   await expect(other).not.toHaveAttribute("open", "");
 
@@ -169,7 +169,7 @@ test("clearing filtering keeps the destination collection open", async ({
   page,
 }) => {
   await page.goto(`${navigation.url}/view/screens/home.html`);
-  const other = page.locator('details[data-nav-collection="collection:Other"]');
+  const other = page.locator('details[data-nav-folder="folder:Other"]');
   await other.locator("summary").click();
   await expect(other).not.toHaveAttribute("open", "");
   await page.click('[data-filter="changed"]');

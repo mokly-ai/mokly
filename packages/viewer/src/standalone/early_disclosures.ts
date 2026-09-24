@@ -1,5 +1,7 @@
 /** Native disclosure choices captured before a shell runtime can adopt them. */
 
+import { isDisclosureKey } from "../shell/disclosure_keys.js";
+
 import { HYDRATED_EVENT } from "./hydration_event.js";
 
 const stateKey = "__moklyEarlyDisclosuresV1";
@@ -103,9 +105,7 @@ export function readStoredDisclosures(
     [...doc.querySelectorAll<HTMLElement>("[data-nav-disclosure]")].flatMap(
       (group) => {
         const key = group.getAttribute("data-nav-disclosure");
-        return key && isDisclosureKey(key)
-          ? [[key, !isDisclosureClosed(closed, key)]]
-          : [];
+        return key && isDisclosureKey(key) ? [[key, !closed.has(key)]] : [];
       },
     ),
   );
@@ -187,7 +187,7 @@ function applyStoredDisclosures(
   )) {
     const key = group.getAttribute("data-nav-disclosure");
     if (!key || !isDisclosureKey(key)) continue;
-    setDisclosureOpen(group, !isDisclosureClosed(closed, key));
+    setDisclosureOpen(group, !closed.has(key));
   }
 }
 
@@ -203,28 +203,12 @@ function storedClosedDisclosures(
       !value.every((item) => typeof item === "string")
     )
       return;
-    return new Set(value.filter(isDisclosureKey));
+    const current = value.filter(isDisclosureKey);
+    if (value.length > 0 && current.length === 0) return;
+    return new Set(current);
   } catch {
     return;
   }
-}
-
-function isDisclosureClosed(closed: ReadonlySet<string>, key: string): boolean {
-  if (closed.has(key)) return true;
-  for (const prefix of ["collection:pages:", "collection:components:"]) {
-    if (key.startsWith(prefix))
-      return closed.has(`collection:${key.slice(prefix.length)}`);
-  }
-  return false;
-}
-
-function isDisclosureKey(value: string): boolean {
-  return (
-    value.startsWith("collection:") ||
-    /^variants:(?:components|pages):[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value) ||
-    value === "section:pages" ||
-    value === "section:components"
-  );
 }
 
 /** Read either a native group or a screen-variant list disclosure. */

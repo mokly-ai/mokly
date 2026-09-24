@@ -6,11 +6,11 @@ import type { LiveChangesStatus } from "../shell/metadata.js";
 export interface BrowseRecoveryState {
   changesStatus?: LiveChangesStatus;
   changedOnly: boolean;
-  closedCollectionIds: readonly string[];
+  closedFolderKeys: readonly string[];
   colorScheme: "dark" | "light";
   detailsOpen: boolean;
   drawerOpen: boolean;
-  filterBaselineClosedCollectionIds: readonly string[] | null;
+  filterBaselineClosedFolderKeys: readonly string[] | null;
   navScroll: number;
   query: string;
   regionScrolls: Readonly<Record<string, number>>;
@@ -25,14 +25,14 @@ export function parseBrowseRecoveryState(
   const changedOnly = value["changedOnly"];
   const changesStatus = value["changesStatus"];
   const colorScheme = value["colorScheme"];
-  const storedBaseline = value["filterBaselineClosedCollectionIds"];
+  const storedBaseline = value["filterBaselineClosedFolderKeys"];
   const baseline = storedBaseline === undefined ? null : storedBaseline;
   const query = value["query"];
   const viewport = value["viewport"];
   if (
     typeof changedOnly !== "boolean" ||
     !validChangesStatus(changesStatus) ||
-    !stringArray(value["closedCollectionIds"]) ||
+    !stringArray(value["closedFolderKeys"]) ||
     (colorScheme !== "dark" && colorScheme !== "light") ||
     typeof value["detailsOpen"] !== "boolean" ||
     typeof value["drawerOpen"] !== "boolean" ||
@@ -50,11 +50,11 @@ export function parseBrowseRecoveryState(
   return {
     changedOnly,
     ...(changesStatus ? { changesStatus } : {}),
-    closedCollectionIds: [...new Set(value["closedCollectionIds"])],
+    closedFolderKeys: [...new Set(value["closedFolderKeys"])],
     colorScheme,
     detailsOpen: value["detailsOpen"],
     drawerOpen: value["drawerOpen"],
-    filterBaselineClosedCollectionIds:
+    filterBaselineClosedFolderKeys:
       baseline === null ? null : [...new Set(baseline)],
     navScroll: value["navScroll"],
     query,

@@ -58,7 +58,7 @@ for (const width of [390, 1280]) {
         .click();
     await expect(
       page.locator(
-        '[data-nav-section="pages"] [data-nav-collection="collection:Example"]',
+        '[data-nav-section="pages"] [data-nav-folder="folder:Example"]',
       ),
     ).toHaveCount(1);
     await expect(
@@ -78,7 +78,7 @@ for (const width of [390, 1280]) {
     }
     await search.fill("");
     await page
-      .locator('[data-nav-collection="collection:Example/Screens"] > summary')
+      .locator('[data-nav-folder="folder:Example/Screens"] > summary')
       .click();
     await page.locator('[data-entry-id="example-welcome"]').click();
     await expect(page.locator("#mb-main h2")).toHaveText("Welcome");

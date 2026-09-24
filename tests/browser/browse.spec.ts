@@ -37,7 +37,7 @@ function hasMarker(page: Page): Promise<boolean> {
  */
 async function openScreensGroup(page: Page): Promise<void> {
   const group = page.locator(
-    'details[data-nav-collection="collection:Example/Screens"]',
+    'details[data-nav-folder="folder:Example/Screens"]',
   );
   if ((await group.getAttribute("open")) === null) {
     await group.locator("summary").click();
@@ -131,6 +131,54 @@ test("catalogue separates pages and components into collapsible sections", async
   await page.getByRole("button", { name: "Collapse all" }).click();
   await expect(pages).not.toHaveAttribute("open", "");
   await expect(components).not.toHaveAttribute("open", "");
+});
+
+test("stored obsolete collection keys do not close current folders", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "mokly:nav-disclosure:v2",
+      JSON.stringify([
+        "collection:Example",
+        "collection:pages:Example",
+        "collection:components:Example",
+        "legacy:Example",
+      ]),
+    );
+  });
+  await page.goto("/view/user-flows/example-tour.html");
+  const pages = page.locator('[data-nav-section="pages"]');
+  await expect(
+    pages.locator('[data-nav-folder="folder:Example"]'),
+  ).toHaveAttribute("open", "");
+  await expect(
+    pages.locator('[data-nav-folder="folder:Example/Screens"]'),
+  ).not.toHaveAttribute("open", "");
+});
+
+test("folder disclosures persist across reload without closing the same path in another section", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const pagesFolder = page.locator(
+    '[data-nav-section="pages"] [data-nav-folder="folder:Example"]',
+  );
+  const componentsFolder = page.locator(
+    '[data-nav-section="components"] [data-nav-folder="folder:Example"]',
+  );
+  await expect(pagesFolder).toHaveAttribute("open", "");
+  await expect(componentsFolder).toHaveAttribute("open", "");
+  await pagesFolder.locator(":scope > summary").click();
+  await expect(pagesFolder).not.toHaveAttribute("open", "");
+  await expect
+    .poll(() =>
+      page.evaluate(() => localStorage.getItem("mokly:nav-disclosure:v2")),
+    )
+    .toContain("folder:pages:Example");
+  await page.reload();
+  await expect(pagesFolder).not.toHaveAttribute("open", "");
+  await expect(componentsFolder).toHaveAttribute("open", "");
 });
 
 test("progressive navigation swaps the main view without reloads", async ({
@@ -268,8 +316,7 @@ test("searching opens groups and clearing restores their disclosure", async ({
   page,
 }) => {
   await page.goto("/");
-  const screensGroup =
-    'details[data-nav-collection="collection:Example/Screens"]';
+  const screensGroup = 'details[data-nav-folder="folder:Example/Screens"]';
   await page.evaluate((selector) => {
     document.querySelector<HTMLDetailsElement>(selector)!.open = false;
   }, screensGroup);
@@ -883,9 +930,7 @@ test("the shell works without JavaScript", async ({ baseURL, browser }) => {
   const page = await context.newPage();
   await page.goto("/");
   await page
-    .locator(
-      'details[data-nav-collection="collection:Example/Screens"] summary',
-    )
+    .locator('details[data-nav-folder="folder:Example/Screens"] summary')
     .click();
   await page.click(welcomeRow);
   await expect(page).toHaveURL(/welcome\.html$/);
