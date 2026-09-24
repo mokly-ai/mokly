@@ -3,6 +3,10 @@ import { exactKeys, invalidData } from "../components/data.js";
 import { CHANGE_STATUSES, readCollection, readEntry } from "./entry_reader.js";
 import { assertPublicCatalogue } from "./privacy.js";
 import { validateCatalogueReferences } from "./references.js";
+import {
+  comparisonGeneration,
+  historicalSnapshotId,
+} from "./snapshot_identity.js";
 import type {
   CatalogueNode,
   CatalogueReadModel,
@@ -29,6 +33,9 @@ export function readCatalogue(value: unknown): CatalogueReadModel {
   const identity = object(input.identity),
     revision = object(input.revision),
     tree = object(input.tree);
+  const catalogueIdentity = hash(identity.id);
+  const comparisonUrl = comparisonPath(input.comparisonUrl);
+  const legacyGeneration = comparisonGeneration(comparisonUrl);
   const entries = (field: string, kind: string) =>
     array(input[field]).map((raw) => {
       const entry = readEntry(raw);
@@ -38,14 +45,14 @@ export function readCatalogue(value: unknown): CatalogueReadModel {
     });
   const model: CatalogueReadModel = {
     schemaVersion: 2,
-    identity: { id: hash(identity.id), title: text(identity.title) },
+    identity: { id: catalogueIdentity, title: text(identity.title) },
     deploymentId: hash(input.deploymentId),
     revision: {
       content: counter(revision.content),
       evidence: counter(revision.evidence),
     },
     changesStatus: choice(input.changesStatus, CHANGE_STATUSES),
-    comparisonUrl: comparisonPath(input.comparisonUrl),
+    comparisonUrl,
     collections: array(input.collections).map(readCollection),
     tree: {
       pages: array(tree.pages).map(readNode),
@@ -63,12 +70,24 @@ export function readCatalogue(value: unknown): CatalogueReadModel {
     ),
     removedEntries: array(input.removedEntries).map((raw) => {
       const removed = object(raw);
+      const entry = readEntry(removed.entry);
+      const snapshotId =
+        removed.snapshotId === undefined
+          ? legacyGeneration
+            ? historicalSnapshotId(
+                catalogueIdentity,
+                { kind: "generation", identity: legacyGeneration },
+                entry,
+              )
+            : undefined
+          : hash(removed.snapshotId);
       return {
-        entry: readEntry(removed.entry),
+        entry,
         ancestors: array(removed.ancestors).map((raw) => {
           const ancestor = object(raw);
           return { id: id(ancestor.id), title: text(ancestor.title) };
         }),
+        ...(snapshotId ? { snapshotId } : {}),
         ...(removed.preview === undefined
           ? {}
           : { preview: readPreview(removed.preview) }),

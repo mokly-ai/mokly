@@ -148,9 +148,16 @@ Catalogue v1 gains one optional, additive field on each removed entry:
 interface RemovedEntry {
   entry: CatalogueRoutedEntry;
   ancestors: readonly { id: string; title: string }[];
+  snapshotId?: string;
   preview?: { kind: "screen" } | { kind: "page"; path: PublicPath };
 }
 ```
+
+`snapshotId` is the opaque baseline/generation identity defined by the
+[catalogue contract](./mokly-catalogue.md#serialization-identity-and-versions).
+It selects this exact removed record even when current content has the same
+stable entry id. It is a selection key, not an authorization capability, and
+does not name or grant access to preview bytes.
 
 `preview.kind: "screen"` states that the removed screen's comparison `before`
 views are its preview; the viewer resolves them from `comparisonUrl`.
@@ -162,14 +169,20 @@ catalogue-wide pointer, and the local shell keeps its private data. Removed
 entries keep null `fragmentPath` and `documentPath`; historical HTML is never
 disguised as current output. The descriptor contains no baseline metadata,
 source paths, or commit identifiers beyond those already public in review JSON.
-Readers validate `kind`, require a confined `__mokly/diffs/__generations/**`
-path for pages whose generation matches `comparisonUrl` and whose suffix is the
-exact removed page route plus `.json`, tolerate the field's absence, and reject
-it on current entries or when `comparisonUrl` is null.
-The v2 fixture `docs/protocol/fixtures/catalogue-v2.json` exercises both preview
+Readers validate each published `snapshotId` as a unique lowercase 64-hex
+identity. They tolerate its absence for older inputs and may derive it from an
+immutable `comparisonUrl` generation; an explicitly published baseline-backed
+identity remains valid before a generation exists or while `comparisonUrl` is
+null. Preview validation is separate: readers validate `preview.kind`, require
+a confined `__mokly/diffs/__generations/**` page path whose generation matches
+`comparisonUrl` and whose suffix is the exact removed page route plus `.json`,
+tolerate `preview` being absent, and reject a preview on current entries or when
+`comparisonUrl` is null.
+The shipped [v2 fixture](./fixtures/catalogue-v2.json) exercises both preview
 variants; the v1 fixture is no longer shipped.
 
-The embedded viewer loads preview metadata only from advertised paths:
+The embedded viewer first resolves the selected snapshot and historical route,
+then loads preview metadata only from advertised paths:
 `comparisonUrl` for screens and `preview.path` for pages, resolved against the
 source origin root for object and URL sources. Validated metadata may then name
 a historical document only on that source origin beneath the advertised
@@ -254,7 +267,7 @@ truthful and the package keeps its external-module execution model.
 Navigation, evidence or source replacement, unmount, and viewport or scheme
 changes fence late responses exactly as comparisons do: a preview response can
 never replace another entry's stage. Back/Forward, direct old routes, reused
-ids or routes, idle generation expiry, embedded controlled selection, and
+ids or routes, stale or unknown snapshot ids, idle generation expiry, embedded controlled selection, and
 several viewers on one page follow the selected-comparison rules. Saved
 viewport and scheme choices are revalidated against the historical views
 without inventing views.
@@ -262,7 +275,7 @@ without inventing views.
 ## Acceptance
 
 Regressions cover removed screens through the selected and complete comparison
-paths in both output modes, removed pages with deleted assets and changed
+paths in both output modes, same-id current/history pairs, removed pages with deleted assets and changed
 historical CSS, historical page-v4 manifests, path traversal and symlinks,
 current same-path files, malformed and mixed selections, coalescing, refresh,
 invalidation, cancellation, shutdown, idle recovery, both frame adapters,

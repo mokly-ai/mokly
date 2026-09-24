@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 import type { MoklyViewerHandle, ViewerSelection } from "@mokly/viewer";
 
@@ -7,7 +7,7 @@ import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 import type {} from "./viewer_harness.js";
 let fixture: Awaited<ReturnType<typeof viewerFixture>>;
 test.beforeAll(async () => {
-  fixture = await viewerFixture();
+  fixture = await viewerFixture('colorSchemes: ["light", "dark"],');
 });
 test.afterAll(async () => {
   await fixture.close();
@@ -93,6 +93,79 @@ test("controlled search keeps raw spacing through normalized prop echoes", async
   expect(
     await page.evaluate(() => window.viewerHarness.get("one").props.selection),
   ).toEqual(expect.objectContaining({ search: "alpha beta", tags: [] }));
+});
+
+test("uncontrolled shell links apply valid axes independently on the same destination", async ({
+  page,
+}) => {
+  await page.evaluate(() => window.viewerHarness.start("one"));
+  const viewport = page.locator("#one [data-workspace-viewport]");
+  const scheme = page.locator("#one [data-workspace-scheme]");
+
+  await clickRouteProbe(
+    page,
+    "/view/screens/home.html?viewport=desktop&scheme=invalid",
+  );
+  await expect(viewport).toHaveValue("desktop");
+  await expect(scheme).toHaveAttribute("aria-pressed", "false");
+
+  await clickRouteProbe(
+    page,
+    "/view/screens/home.html?viewport=mobile&viewport=desktop&scheme=dark",
+  );
+  await expect(viewport).toHaveValue("desktop");
+  await expect(scheme).toHaveAttribute("aria-pressed", "true");
+
+  await clickRouteProbe(
+    page,
+    "/view/screens/home.html?viewport=invalid&scheme=invalid",
+  );
+  expect(
+    await page.evaluate(() =>
+      window.viewerHarness
+        .get("one")
+        .events.filter((event) => event.name === "selection"),
+    ),
+  ).toHaveLength(2);
+});
+
+test("controlled shell-axis proposals stay inert until the host accepts them", async ({
+  page,
+}) => {
+  await page.evaluate(() =>
+    window.viewerHarness.start("one", { controlled: true }),
+  );
+  await clickRouteProbe(
+    page,
+    "/view/screens/home.html?viewport=desktop&scheme=dark",
+    true,
+  );
+  const viewport = page.locator("#one [data-workspace-viewport]");
+  const scheme = page.locator("#one [data-workspace-scheme]");
+  await expect(viewport).toHaveValue("mobile");
+  await expect(scheme).toHaveAttribute("aria-pressed", "false");
+
+  const proposal = await page.evaluate(() =>
+    window.viewerHarness
+      .get("one")
+      .events.find((event) => event.name === "selection"),
+  );
+  expect(proposal?.value).toEqual(
+    expect.objectContaining({
+      screenId: "home",
+      viewport: "desktop",
+      colorScheme: "dark",
+    }),
+  );
+  await page.evaluate(() => {
+    const host = window.viewerHarness.get("one");
+    host.setSelection(
+      host.events.find((event) => event.name === "selection")!
+        .value as ViewerSelection,
+    );
+  });
+  await expect(viewport).toHaveValue("desktop");
+  await expect(scheme).toHaveAttribute("aria-pressed", "true");
 });
 
 test("StrictMode replay and independent roots", async ({ page }) => {
@@ -192,3 +265,25 @@ test("postMessage frames emit pick/hover/click and support imperative rejection"
     ]),
   );
 });
+
+async function clickRouteProbe(
+  page: Page,
+  href: string,
+  keyboard = false,
+): Promise<void> {
+  await page.evaluate((destination) => {
+    document
+      .querySelectorAll("#one [data-route-probe]")
+      .forEach((element) => element.remove());
+    const link = document.createElement("a");
+    link.dataset.routeProbe = "";
+    link.href = destination;
+    link.textContent = "Route probe";
+    document.querySelector("#one [data-mokly-shell]")?.append(link);
+  }, href);
+  const link = page.locator("#one [data-route-probe]");
+  if (keyboard) {
+    await link.focus();
+    await page.keyboard.press("Enter");
+  } else await link.click();
+}

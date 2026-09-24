@@ -14,6 +14,8 @@ import {
   readSchema,
   projectTree,
   comparisonPath,
+  comparisonGeneration,
+  historicalSnapshotId,
   publicPath,
   pagePreviewPath,
   relatedDoc,
@@ -33,6 +35,8 @@ export function projectCatalogue(
 ): CatalogueReadModel {
   const { catalogue } = input;
   const comparisonUrl = comparisonPath(input.comparisonUrl);
+  const identity = catalogueIdentity(input.configPath);
+  const snapshotSource = historicalSource(input, comparisonUrl);
   const retainedComponents = new Set(
     [
       ...catalogue.manifest.entries,
@@ -189,7 +193,7 @@ export function projectCatalogue(
       invalidData("$catalogue", "preview route is not a removed entry");
   return {
     schemaVersion: 2,
-    identity: catalogueIdentity(input.configPath),
+    identity,
     deploymentId: ZERO_DEPLOYMENT_ID,
     revision: {
       content: input.revision.content,
@@ -209,6 +213,15 @@ export function projectCatalogue(
         id: ancestor.id,
         title: ancestor.title,
       })),
+      ...(snapshotSource
+        ? {
+            snapshotId: historicalSnapshotId(
+              identity.id,
+              snapshotSource,
+              entry,
+            ),
+          }
+        : {}),
       ...projectPreview(
         entry,
         input.removedPreviews?.get(entry.route),
@@ -216,6 +229,27 @@ export function projectCatalogue(
       ),
     })),
   };
+}
+
+function historicalSource(
+  input: CatalogueProjectionInput,
+  comparisonUrl: string | null,
+) {
+  const commits = new Set(
+    [
+      input.evidence?.comparison?.baseCommit,
+      input.evidence?.result?.baseCommit,
+      input.comparison?.baseCommit,
+    ].filter((value): value is string => value !== undefined),
+  );
+  if (commits.size > 1)
+    invalidData("$catalogue", "conflicting historical baseline identities");
+  const [commit] = commits;
+  if (commit) return { kind: "baseline" as const, identity: commit };
+  const generation = comparisonGeneration(comparisonUrl);
+  return generation
+    ? { kind: "generation" as const, identity: generation }
+    : undefined;
 }
 
 function projectPreview(

@@ -79,7 +79,7 @@ export function validateEntry(
   }
   validateTags(entry, violations);
   if (entry.kind === "collection") {
-    validateTextList(entry, "childIds", entry.childIds, false, violations);
+    validateTextList(entry, "childIds", entry.childIds, true, violations);
   } else {
     validateRoute(entry, violations);
   }

@@ -13,8 +13,9 @@ The page release intentionally removes `legacy` configuration and its exported
 types, automatic `.source` discovery, comment-component expansion, legacy lint
 options, and route aliases. Consumers must register complete documents with
 `definePage` or nested `page`, import existing render helpers, preserve explicit
-routes, and regenerate manifest v5 with `sourceFiles`. Current v2/v3 output is
-rejected; historical readers remain available only for Git comparisons. Follow
+routes, and regenerate the then-current manifest v5 with `sourceFiles`. Earlier
+v2/v3 output was rejected; historical readers remain available only for Git
+comparisons. Current builds emit manifest v6. Follow
 [the migration procedure](./mokly-page-migration.md) before replacing old
 owned artifacts. Screen and use-case authoring remains supported.
 

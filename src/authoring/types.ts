@@ -43,7 +43,7 @@ export interface ScreenInput extends RoutedEntryInput {
   /** Lowercase kebab-case classification tags, e.g. ["forms"]. */
   tags?: readonly string[];
   useCaseIds?: readonly string[];
-  variants?: readonly ScreenVariantInput[];
+  variants?: readonly ScreenVariantInput[] | undefined;
 }
 
 /** One complete HTML document rendered without device variants. */
@@ -126,7 +126,7 @@ export interface NestedScreenInput extends NestedInherited {
   tags?: readonly string[];
   title: string;
   useCaseIds?: readonly string[];
-  variants?: readonly ScreenVariantInput[];
+  variants?: readonly ScreenVariantInput[] | undefined;
 }
 
 /** Whole document with a route derived from ancestor paths and this slug. */

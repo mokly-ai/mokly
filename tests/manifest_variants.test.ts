@@ -44,6 +44,22 @@ test("manifest and hierarchy keep authored sibling variant order", () => {
   );
 });
 
+test("manifest round trips empty structural collections", () => {
+  const manifest = createManifest([resolvedCollection([])], [], ["light"]);
+
+  const parsed = parseManifest(manifest);
+  const collection = parsed.entries.find(({ id }) => id === "screens");
+  assert.equal(collection?.kind, "collection");
+  assert.deepEqual(
+    collection?.kind === "collection" ? collection.childIds : undefined,
+    [],
+  );
+  assert.deepEqual(
+    analyzeHierarchy(parsed.entries).hierarchy.childrenById.get("screens"),
+    [],
+  );
+});
+
 test("manifest validation rejects broken variant parents and routes", () => {
   const unknown = mutableManifest(variantManifest());
   screenEntry(unknown, "welcome-empty").variantOf = "missing";

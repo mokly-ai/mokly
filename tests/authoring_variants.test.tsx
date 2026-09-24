@@ -6,6 +6,7 @@ import {
   __attributeDefinition,
   defineScreen,
 } from "../dist/authoring/definitions.js";
+import type { ScreenInput } from "../dist/authoring/types.js";
 import { DEFAULT_PUBLIC_EXCLUDE } from "../dist/config/public_exclusions.js";
 import type { ResolvedConfig } from "../dist/config/types.js";
 import { defineCollection, defineRoot, screen } from "../dist/index.js";
@@ -199,6 +200,32 @@ test("registry preparation keeps authored sibling variant order", () => {
       ({ id }) => id,
     ),
     ["screens", "welcome", "welcome-zeta", "welcome-alpha", "workspace"],
+  );
+});
+
+test("defineScreen runtime shape follows absent, undefined, empty, and broad variants", () => {
+  const absent = defineScreen(parentInput());
+  const explicitlyUndefined = defineScreen({
+    ...parentInput(),
+    variants: undefined,
+  });
+  const empty = defineScreen({ ...parentInput(), variants: [] });
+  const broadWithVariant: ScreenInput = {
+    ...parentInput(),
+    variants: [variant("welcome-empty", "empty")],
+  };
+  const broadResult = defineScreen(broadWithVariant);
+
+  assert.equal(Array.isArray(absent), false);
+  assert.equal(Array.isArray(explicitlyUndefined), false);
+  assert.deepEqual(
+    empty.map(({ id }) => id),
+    ["welcome"],
+  );
+  assert.ok(Array.isArray(broadResult));
+  assert.deepEqual(
+    Array.isArray(broadResult) ? broadResult.map(({ id }) => id) : [],
+    ["welcome", "welcome-empty"],
   );
 });
 

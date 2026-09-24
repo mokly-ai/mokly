@@ -1,4 +1,5 @@
 /** Convert validated public data to the existing shell's display records. */
+import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
 import type {
   CatalogueEntry,
   CatalogueReadModel,
@@ -11,7 +12,7 @@ import type {
 } from "../components/manifest_types.js";
 import { componentFragmentRoute } from "../components/paths.js";
 import type { ManifestEntry, ManifestV6 } from "../registry/types.js";
-import { createCatalogue } from "../shell/catalogue.js";
+import { catalogueRouteEntry, createCatalogue } from "../shell/catalogue.js";
 import type { ShellContext } from "../shell/context.js";
 import { toRouteTarget } from "../shell/target.js";
 import type { ShellView } from "../shell/views.js";
@@ -135,9 +136,10 @@ export function viewerCatalogue(model: CatalogueReadModel) {
   return {
     ...createCatalogue(
       manifest,
-      model.removedEntries.map(({ entry, ancestors }) => ({
+      model.removedEntries.map(({ entry, ancestors, snapshotId }) => ({
         entry: displayEntry(entry),
         ancestors,
+        ...(snapshotId ? { snapshotId } : {}),
       })),
     ),
     publicModel: model,
@@ -147,13 +149,15 @@ export function viewerContext(
   model: CatalogueReadModel,
   selection: ViewerSelection,
 ): ShellContext {
-  const selected = [
-    ...model.screens,
-    ...model.pages,
-    ...model.useCases,
-    ...model.components,
-    ...model.removedEntries.map(({ entry }) => entry),
-  ].find((entry) => entry.id === selection.screenId);
+  const resolved =
+    typeof selection.screenId === "string"
+      ? resolveCatalogueSelection(
+          model,
+          selection.screenId,
+          selection.snapshotId,
+        )
+      : undefined;
+  const selected = resolved?.entry;
   return {
     base: "",
     embedded: true,
@@ -163,6 +167,7 @@ export function viewerContext(
       ? {}
       : { changesStatus: model.changesStatus }),
     ...(selected ? { activeRoute: selected.route } : {}),
+    ...(resolved?.snapshotId ? { snapshotId: resolved.snapshotId } : {}),
     ...(model.changesStatus === "ready"
       ? {
           changedRoutes: [
@@ -186,7 +191,20 @@ export function viewerView(
   selection: ViewerSelection,
 ): ShellView {
   if (selection.screenId === null) return { kind: "home" };
-  const entry = catalogue.byId.get(selection.screenId);
+  const selected = catalogue.publicModel
+    ? resolveCatalogueSelection(
+        catalogue.publicModel,
+        selection.screenId,
+        selection.snapshotId,
+      )
+    : undefined;
+  const entry = catalogue.publicModel
+    ? selected
+      ? catalogueRouteEntry(catalogue, selected.entry.route)
+      : undefined
+    : selection.snapshotId === undefined
+      ? catalogue.byId.get(selection.screenId)
+      : undefined;
   const target = entry && toRouteTarget(entry);
   return target
     ? { kind: "target", target }

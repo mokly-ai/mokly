@@ -149,6 +149,13 @@ retain the same route identity and existing scroll/disclosure behavior. Unknown
 ids are unavailable; the shell renders only routes present in its catalogue
 read model and never invents a catch-all route.
 
+Provider-normalized extensionless `/view/<route>` URLs resolve against exact
+accepted catalogue routes. Current routes remain constrained by `idRoutes`;
+retained historical routes resolve from `removedEntries` because a reused id's
+alias intentionally names current content. Historical links keep their exact
+published `snapshot` query while the preview adapter removes `.html`. Unknown,
+stale, current-route, and route/snapshot mismatches remain unavailable.
+
 An exported page embeds a compact shell bootstrap containing its route, shell
 context, catalogue identity, and content/evidence revisions. It references the
 single owned `/__mokly/catalogue.json`; it does not repeat the catalogue read

@@ -176,6 +176,10 @@ Switching viewport, requested scheme, or saved variant recomputes the effective
 views, status, marks, and eligibility without a page load, as does a background
 evidence refresh.
 
+Server rendering, controlled selection, and comparison deep links use the same
+decision; a deep link is honored only after it confirms eligibility. Nonmatching
+evidence retains the existing fallback decision.
+
 Eligible views offer Current / Side by side / Overlay / Difference in an opaque
 band beneath the heading. Added and Unmodified views retain their current
 preview without that band; removed screens show their

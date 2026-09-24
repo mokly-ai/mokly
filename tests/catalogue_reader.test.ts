@@ -158,6 +158,38 @@ test("reader retains variant relationships and entry-node children", async () =>
   assert.deepEqual(model.tree.pages, fixture.tree.pages);
 });
 
+test("reader retains an empty collection in the Pages projection", async () => {
+  const fixture = JSON.parse(
+    await fs.readFile("docs/protocol/fixtures/catalogue-v2.json", "utf8"),
+  );
+  const empty = structuredClone(fixture.collections[0]);
+  empty.childIds = [];
+  empty.details.description = "Retained empty folder";
+  empty.id = "empty";
+  empty.title = "Empty";
+  fixture.collections.push(empty);
+  fixture.tree.pages.unshift({
+    children: [],
+    id: empty.id,
+    kind: "collection",
+  });
+
+  const model = readCatalogue(fixture);
+  assert.deepEqual(
+    model.collections.find(({ id }) => id === empty.id)?.childIds,
+    [],
+  );
+  assert.deepEqual(model.tree.pages[0], {
+    children: [],
+    id: empty.id,
+    kind: "collection",
+  });
+  assert.equal(
+    model.tree.components.some(({ id }) => id === empty.id),
+    false,
+  );
+});
+
 interface FixtureNode {
   children?: FixtureNode[];
   id: string;

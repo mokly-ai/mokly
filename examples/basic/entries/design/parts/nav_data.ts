@@ -217,6 +217,16 @@ export const REMOVED_VARIANT_ROWS: NavigationRows = [
   },
 ];
 
+/** Changes shows only the removed route when its former parent is unmodified. */
+export const REPARENTED_REMOVED_VARIANT_ROWS: NavigationRows = [
+  {
+    key: "welcome-error-removed",
+    depth: 0,
+    kind: "screen",
+    label: "Save failed · Removed",
+  },
+];
+
 /** Changes holding Welcome alone, because only one of its views changed. */
 export const CHANGED_VIEW_ROWS: NavigationRows = [
   ...WELCOME_BRANCH,

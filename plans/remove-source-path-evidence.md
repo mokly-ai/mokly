@@ -2,8 +2,8 @@
 
 ## Status And Outcome
 
-Status: in progress; Milestones 1–7 are complete and Milestone 8 verification
-passed. The local milestone commit awaits reviewer push and post-push review.
+Status: in progress; Milestones 1–7 and Milestone 8 verification are complete.
+Mainline integration awaits reviewer push and post-push review.
 The binding Decisions And Scope remove all three inputs and adopt
 component-declared stylesheets in place of the stylesheet role of
 `ownedDependencies`. The user approved both the removals and the component
@@ -465,11 +465,11 @@ Tags: ui
 - [x] Run `git add -A`, commit with a breaking-change Conventional Commit
       (`feat!:` with a `BREAKING CHANGE:` footer that lists the migrations),
       and push the branch.
-- [ ] Merge `origin/main` (#115, screen variants and history) into the
+- [x] Merge `origin/main` (#115, screen variants and history) into the
       branch. Audit main's additions first, resolve each conflict path by
       path, migrate main's new fixtures, tests and docs to this plan's
-      contracts without dropping main's features, rerun `cargo xtask check`,
-      and push.
+      contracts without dropping main's features, and rerun `cargo xtask check`.
+      The reviewer pushes this merge after checking it.
 - [ ] After the push, review the complete diff against `origin/main` using
       `docs/implementation-review-prompt.md`. Report numbered findings with
       severity, impact, lettered options and a recommendation, without

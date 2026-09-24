@@ -118,12 +118,19 @@ export function VariantChips(props: {
   if (props.entry.kind !== "screen") {
     return null;
   }
-  const variants = (
-    props.catalogue.hierarchy.variantsById.get(props.entry.id) ?? []
-  ).filter(
-    (variant): variant is Exclude<ManifestEntry, { kind: "collection" }> =>
-      variant.kind !== "collection",
+  const historical = props.catalogue.removedEntries.some(
+    ({ entry }) => entry.route === props.entry.route,
   );
+  const variants = historical
+    ? props.catalogue.removedEntries.flatMap(({ entry }) =>
+        entry.kind === "screen" && entry.variantOf === props.entry.id
+          ? [entry]
+          : [],
+      )
+    : (props.catalogue.hierarchy.variantsById.get(props.entry.id) ?? []).filter(
+        (variant): variant is Exclude<ManifestEntry, { kind: "collection" }> =>
+          variant.kind !== "collection",
+      );
   if (variants.length === 0) {
     return null;
   }
@@ -133,7 +140,7 @@ export function VariantChips(props: {
         {variants.map((variant) => (
           <a
             className="mbk-chip screen"
-            href={catalogueViewHref(variant.route)}
+            href={entryHref(props.catalogue, variant)}
             key={variant.id}
           >
             <VariantIcon size={11} />
@@ -153,20 +160,39 @@ export function VariantOfChip(props: {
   if (props.entry.kind !== "screen" || props.entry.variantOf === undefined) {
     return null;
   }
-  const parent =
-    props.catalogue.hierarchy.variantParentById.get(props.entry.id) ??
-    props.catalogue.byId.get(props.entry.variantOf);
+  const variantOf = props.entry.variantOf;
+  const historical = props.catalogue.removedEntries.some(
+    ({ entry }) => entry.route === props.entry.route,
+  );
+  const parent = historical
+    ? (props.catalogue.removedEntries.find(
+        ({ entry }) => entry.id === variantOf,
+      )?.entry ?? props.catalogue.byId.get(variantOf))
+    : (props.catalogue.hierarchy.variantParentById.get(props.entry.id) ??
+      props.catalogue.byId.get(variantOf));
   if (parent === undefined || parent.kind === "collection") {
     return null;
   }
   return (
     <MetaRow label="Variant of">
       <span className="mbk-chips">
-        <a className="mbk-chip screen" href={catalogueViewHref(parent.route)}>
+        <a
+          className="mbk-chip screen"
+          href={entryHref(props.catalogue, parent)}
+        >
           <ScreenIcon size={11} />
           {parent.title}
         </a>
       </span>
     </MetaRow>
   );
+}
+
+function entryHref(catalogue: Catalogue, entry: RoutedEntry): string {
+  const snapshotId = catalogue.removedEntries.find(
+    ({ entry: candidate }) => candidate.route === entry.route,
+  )?.snapshotId;
+  return `${catalogueViewHref(entry.route)}${
+    snapshotId ? `?snapshot=${snapshotId}` : ""
+  }`;
 }

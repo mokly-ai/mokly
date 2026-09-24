@@ -121,7 +121,7 @@ comparisons are defined by [Static export delivery](./mokly-export-delivery.md).
 No server or watcher is started for export; served behavior below is unchanged.
 
 Serve validates its distinct live catalogue index and independently resolves both
-source graphs before binding. Full-manifest consumers still require validated v5
+source graphs before binding. Full-manifest consumers still require validated v6
 output and a current source inventory. These scans never render pages or rewrite
 output. The [on-demand contract](./mokly-on-demand.md) defines completeness,
 worker isolation and generation-local caches. Browse exposes:

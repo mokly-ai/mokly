@@ -3,12 +3,7 @@
 import type { GeneratedComponentView } from "../components/views.js";
 import type { ColorScheme, Viewport } from "../data/axes.js";
 
-import {
-  aggregateViewStatus,
-  shownComparisonEligible,
-  type EntryStatus,
-  type ViewState,
-} from "./view_status.js";
+import { resolveViewPresentation, type EntryStatus } from "./view_status.js";
 import type { WorkspaceData } from "./workspace_data.js";
 import type { WorkspaceVariantSelection } from "./workspace_selection.js";
 
@@ -21,6 +16,43 @@ export interface ResolvedWorkspaceView {
   views: readonly GeneratedComponentView[];
 }
 
+/** Visible saved views plus the scheme their rendered documents actually use. */
+export interface ResolvedWorkspaceViews {
+  colorScheme: "dark" | "light";
+  views: readonly GeneratedComponentView[];
+}
+
+/** Resolve light fallback without changing the catalogue-wide scheme preference. */
+export function resolveWorkspaceViews(
+  data: WorkspaceData,
+  variantId: string | undefined,
+  viewport: "both" | "desktop" | "mobile",
+  requestedScheme: "dark" | "light",
+): ResolvedWorkspaceViews {
+  const variants = data.views.filter((view) => view.variantId === variantId);
+  const views = (["mobile", "desktop"] as const)
+    .filter((size) => viewport === "both" || viewport === size)
+    .flatMap((size) => {
+      const view =
+        variants.find(
+          (item) =>
+            item.viewport === size && item.colorScheme === requestedScheme,
+        ) ??
+        variants.find(
+          (item) => item.viewport === size && item.colorScheme === "light",
+        );
+      return view ? [view] : [];
+    });
+  return {
+    colorScheme: views.some(
+      ({ colorScheme }) => colorScheme === requestedScheme,
+    )
+      ? requestedScheme
+      : (views[0]?.colorScheme ?? requestedScheme),
+    views,
+  };
+}
+
 /** Select the actual visible viewport and scheme contexts for a variant. */
 export function visibleWorkspaceViews(
   data: WorkspaceData,
@@ -28,19 +60,7 @@ export function visibleWorkspaceViews(
   viewport: "both" | "desktop" | "mobile",
   colorScheme: ColorScheme,
 ): readonly GeneratedComponentView[] {
-  const views = data.views.filter((view) => view.variantId === variantId);
-  return (["mobile", "desktop"] as const)
-    .filter((size) => viewport === "both" || viewport === size)
-    .flatMap((size) => {
-      const view =
-        views.find(
-          (item) => item.viewport === size && item.colorScheme === colorScheme,
-        ) ??
-        views.find(
-          (item) => item.viewport === size && item.colorScheme === "light",
-        );
-      return view ? [view] : [];
-    });
+  return resolveWorkspaceViews(data, variantId, viewport, colorScheme).views;
 }
 
 /**
@@ -54,50 +74,25 @@ export function resolveWorkspaceView(
   colorScheme: ColorScheme,
 ): ResolvedWorkspaceView {
   const variantId = selection.variant?.value.id;
-  const views = visibleWorkspaceViews(data, variantId, viewport, colorScheme);
-  const effectiveColorScheme =
-    views.length > 0 && views.every((view) => view.colorScheme === "light")
-      ? "light"
-      : colorScheme;
+  const resolved = resolveWorkspaceViews(
+    data,
+    variantId,
+    viewport,
+    colorScheme,
+  );
   const evidenceKey =
     data.entry.kind === "component" ? variantId : data.entry.id;
-  const states = evidenceKey ? data.viewStates[evidenceKey] : undefined;
-  const matched = matchingStates(states, views);
-  const fallbackStatus = selection.variant?.status ?? data.status;
-  const fallbackEligibility = selection.error
-    ? false
-    : selection.comparisonEligible;
-  if (!matched)
-    return {
-      colorScheme: effectiveColorScheme,
-      comparisonEligible: fallbackEligibility,
-      evidence: "selection",
-      status: fallbackStatus,
-      views,
-    };
-  const status = aggregateViewStatus(matched) ?? fallbackStatus;
-  return {
-    colorScheme: effectiveColorScheme,
-    comparisonEligible:
-      !selection.error && shownComparisonEligible(status, data.entry.kind),
-    evidence: "view",
-    status,
-    views,
-  };
-}
-
-function matchingStates(
-  states: readonly ViewState[] | undefined,
-  views: readonly GeneratedComponentView[],
-): readonly ViewState[] | undefined {
-  if (states === undefined || views.length === 0) return;
-  const matched = views.flatMap((view) => {
-    const state = states.find(
-      (candidate) =>
-        candidate.viewport === view.viewport &&
-        candidate.colorScheme === view.colorScheme,
-    );
-    return state ? [state] : [];
+  const presentation = resolveViewPresentation({
+    displayedViews: resolved.views,
+    fallbackComparisonEligible: selection.comparisonEligible,
+    fallbackStatus: selection.variant?.status ?? data.status,
+    kind: data.entry.kind,
+    states: evidenceKey ? data.viewStates[evidenceKey] : undefined,
   });
-  return matched.length === views.length ? matched : undefined;
+  return {
+    ...resolved,
+    comparisonEligible: !selection.error && presentation.comparisonEligible,
+    evidence: presentation.evidence === "matching" ? "view" : "selection",
+    status: presentation.status,
+  };
 }

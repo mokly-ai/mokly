@@ -290,18 +290,31 @@ test("no design artboard depicts a scheme control", async () => {
   }
 });
 
-test("the consolidated head-band scheme screens are gone", async () => {
-  const { manifest } = await designCatalogue;
-  for (const id of [
-    "design-browse-dark-scheme",
-    "design-browse-light-only",
-    "design-review-dark-scheme",
-  ])
-    assert.equal(
-      manifest.entries.find((entry) => entry.id === id),
-      undefined,
-      id,
-    );
+test("retained Welcome variants follow the single Appearance setting", async () => {
+  const { manifest, outputs } = await designCatalogue;
+  for (const [id, darkDevice] of [
+    ["design-browse-dark-scheme", true],
+    ["design-browse-light-only", false],
+  ] as const) {
+    const entry = manifest.entries.find((candidate) => candidate.id === id);
+    assert.ok(entry?.kind === "screen", id);
+    assert.equal(entry.variantOf, "design-browse-screen", id);
+    assert.ok(entry.darkFragments, `${id}: dark artboard missing`);
+    for (const viewport of ["mobile", "desktop"] as const) {
+      const light = outputs.get(entry.fragments[viewport]);
+      const dark = outputs.get(entry.darkFragments[viewport]!);
+      assert.ok(light && dark, `${id}/${viewport}: both schemes generated`);
+      assert.equal(appearanceOf(light), "light", `${id}/${viewport}`);
+      assert.equal(appearanceOf(dark), "dark", `${id}/${viewport}`);
+      assert.equal(countClass(light, "mbk-screen-dark"), 0);
+      assert.equal(countClass(dark, "mbk-screen-dark") > 0, darkDevice);
+      assert.equal(countClass(dark, "mbk-frame-scheme-note") > 0, !darkDevice);
+    }
+  }
+  assert.equal(
+    manifest.entries.find((entry) => entry.id === "design-review-dark-scheme"),
+    undefined,
+  );
 });
 
 test("every artboard with a top bar draws one Appearance control", async () => {

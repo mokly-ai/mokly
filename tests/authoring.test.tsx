@@ -9,6 +9,7 @@ import type {
   CollectionInput,
   RegistryDefinition,
   ResolvedRegistryEntry,
+  ScreenDefinition,
   ScreenInput,
   UseCaseInput,
 } from "../dist/authoring/types.js";
@@ -50,7 +51,7 @@ const validationConfig: ResolvedConfig = {
   watch: { debounceMs: 100, rules: [] },
 };
 
-const screenBase: ScreenInput = {
+const screenBase = {
   description: "Tagged screen",
   desktop: "Desktop",
   id: "tagged-screen",
@@ -58,7 +59,7 @@ const screenBase: ScreenInput = {
   relatedDocs: [],
   route: "screens/tagged.html",
   title: "Tagged screen",
-};
+} satisfies ScreenInput;
 
 const collectionBase: CollectionInput = {
   childIds: ["tagged-screen"],
@@ -273,9 +274,19 @@ test("collections reject a declared tags field", () => {
   );
 });
 
+test("empty structural collections are valid", () => {
+  const empty = defineCollection({ ...collectionBase, childIds: [] });
+
+  assert.deepEqual(empty.childIds, []);
+  assert.deepEqual(validateEntry(resolved(empty), validationConfig), []);
+});
+
 function tagViolations(tags: unknown): RegistryViolation[] {
   const input = { ...screenBase, tags } as ScreenInput;
-  return validateEntry(resolved(defineScreen(input)), validationConfig);
+  return validateEntry(
+    resolved(singleDefinition(defineScreen(input))),
+    validationConfig,
+  );
 }
 
 function useCaseTagViolations(tags: unknown): RegistryViolation[] {
@@ -293,4 +304,11 @@ function resolved(definition: RegistryDefinition): ResolvedRegistryEntry {
     sourcePath: path.join(repositoryRoot, sourceRelativePath),
     sourceRelativePath,
   };
+}
+
+function singleDefinition(
+  definition: ScreenDefinition | readonly ScreenDefinition[],
+): ScreenDefinition {
+  if (!("kind" in definition)) throw new Error("expected one screen");
+  return definition;
 }

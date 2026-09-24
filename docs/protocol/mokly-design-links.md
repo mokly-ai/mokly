@@ -2,13 +2,13 @@
 
 ## Delivery Status
 
-Implemented in the 57 Browse/Changes design screens and two real example
+Implemented in the 59 Browse/Changes design screens and two real example
 screens using `MockLink` and `MockLink asChild`. Verification and delivery are tracked by the
 [implementation plan](../../plans/mokabook-design-mocklinks.md).
 
 The [component design inventory](./mokly-component-design.md) extend the
 catalogue with their own state contract and native component/control depictions.
-Those 57 Browse/Changes designs retain the canonical links below, including the
+Those 59 Browse/Changes designs retain the canonical links below, including the
 removed previous-version family added by
 [removed previews](./mokly-removed-previews.md).
 They now share native icon inspector tabs and working viewport dropdowns with
@@ -36,15 +36,16 @@ outer Browse shell preserves its viewport selection and handles history and
 active-row visibility normally. The destination artboard depicts its own
 canonical state; prior inspector, query, drawer, and depicted viewport state
 are not transported implicitly. Only the explicitly paired states below
-promise to retain their named subject, comparison mode, or color selection.
+promise to retain their named subject or comparison mode. The actual Appearance
+setting stays with the outer viewer.
 
 Every design screen has mobile and desktop variants. They are light-only
 generated documents, including artboards depicting a dark product screen, except
 the appearance screens under `design/browse/appearance/`, the canonical
-`design-browse-screen` and `design-browse-details-screen`, and the Welcome
-comparison family, which render in both schemes so the outer Appearance control
-switches the depicted catalogue. Link
-targets use design entry ids independently of the example ids printed in the
+`design-browse-screen` and `design-browse-details-screen`, their two retained
+Welcome appearance variants, and the Welcome comparison family. These render
+in both schemes so the outer Appearance control switches the depicted
+catalogue. Link targets use design entry ids independently of the example ids printed in the
 depicted shell's metadata. Existing ids, routes, screens, and text links remain
 available. `example-farewell` remains an intentionally absent product entry.
 This depicted dark set is representative; the runtime's single Appearance
@@ -87,21 +88,25 @@ The five additions below now render independently in both viewport variants
 and are included in the canonical inventory. Their owning components were
 completed before link adoption.
 
-| Added entry id                        | Route                                              | Depicted state                                                    |
-| ------------------------------------- | -------------------------------------------------- | ----------------------------------------------------------------- |
-| `design-browse-details-screen`        | `design/browse/views/details-screen.html`          | Normal Details screen, light selected, inspector closed           |
-| `design-browse-tag-picker`            | `design/browse/states/tags/picker.html`            | Welcome, empty query, unfiltered catalogue, picker open           |
-| `design-browse-tag-forms`             | `design/browse/states/tags/forms.html`             | Welcome, `tag:forms`, Welcome and Details retained, picker closed |
-| `design-browse-tag-onboarding`        | `design/browse/states/tags/onboarding.html`        | Welcome, `tag:onboarding`, Welcome retained, picker closed        |
-| `design-browse-tag-onboarding-picker` | `design/browse/states/tags/onboarding-picker.html` | The same onboarding filter with the picker open                   |
+| Added entry id                        | Route                                                        | Depicted state                                                    |
+| ------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------- |
+| `design-browse-details-screen`        | `design/browse/views/details-screen.html`                    | Normal Details screen, light selected, inspector closed           |
+| `design-browse-tag-picker`            | `design/browse/views/screen.variants/picker.html`            | Welcome, empty query, unfiltered catalogue, picker open           |
+| `design-browse-tag-forms`             | `design/browse/views/screen.variants/forms.html`             | Welcome, `tag:forms`, Welcome and Details retained, picker closed |
+| `design-browse-tag-onboarding`        | `design/browse/views/screen.variants/onboarding.html`        | Welcome, `tag:onboarding`, Welcome retained, picker closed        |
+| `design-browse-tag-onboarding-picker` | `design/browse/views/screen.variants/onboarding-picker.html` | The same onboarding filter with the picker open                   |
 
 `design-browse-details` continues to mean Welcome's expanded inspector and remains
 reachable from its catalogue entry. Opening/closing the Details icon stays on
 the current screen and retains its query. It does not substitute for the
 normal Details view.
 `design-browse-tag-filter` retains its existing route and depicts the forms
-filter with the picker open. New tag pages live in a matching nested source
-directory and catalogue group without moving the existing page.
+filter with the picker open. The four listed tag states plus
+`design-browse-dark-scheme` and `design-browse-light-only` retain their ids but
+move beneath `design-browse-screen` as variants, at
+`design/browse/views/screen.variants/<slug>.html`. Those six entries leave all
+collection `childIds`. The now-empty `design-browse-tags` collection retains its
+stable id and points readers to Welcome; no unrelated route or membership moves.
 
 ## Navigation Controls
 
@@ -161,7 +166,7 @@ none borrows another subject's inspector or drawer identity.
 
 ## Screen Variants
 
-The four variant states under `design/browse/variants/` depict a screen's
+The five variant states under `design/browse/variants/` depict a screen's
 variants as ordinary catalogue entries grouped under their parent. The
 disclosure beside a parent row is a depiction with no destination, because the
 served shell toggles the list in place; the parent row itself keeps its own
@@ -176,6 +181,7 @@ destination. A variant row without an authored destination stays a depiction.
 | Changed variant: All filter                  | `design-browse-variant-selected`                                    |
 | Changed variant: Welcome parent row          | `design-browse-variant-changes`, the parent's first changed variant |
 | Removed variant: All filter                  | `design-browse-screen`, because the parent screen still exists      |
+| Reparented removed variant: All filter       | `design-browse-home`, because its former parent is now a variant    |
 | Changed views: All filter                    | `design-browse-screen`                                              |
 | Changed views: Details view list             | `design-review-changed`, the canonical comparison with both schemes |
 
@@ -185,6 +191,13 @@ removed state the parent row is a depiction too: the deletion is a later state
 of the same group, so it must not open the earlier changed-variant scenario.
 The removed variant has no live product destination and no comparison modes;
 its stage shows the variant's inert previous version.
+In the reparented state, only the removed child's route is changed. The Changes
+filter therefore hides the unmodified current parent and its variant (the
+former parent), and shows the removed child as one flat screen row outside
+their collection hierarchy. The historical breadcrumb remains visible on the
+screen itself, but the Changes rail contains no parent or nested variant list.
+The depicted All control links to the canonical catalogue home artboard; the
+reparented hierarchy is the context for this Changes-state example.
 The changed-views state shows no comparison band. Its marks on Appearance
 and the viewport dropdown identify evidence about other views. The Details
 view list opens the canonical comparison; the outer Appearance control chooses
@@ -203,9 +216,12 @@ render in Light and in Dark instead, and the outer Appearance control moves
 between those two generated files at the same route. A link out of a dark
 fragment resolves to the target's dark fragment wherever one exists, and every
 member of a comparison family publishes the same schemes, so no comparison
-control strands a reader in a light document. The removed `design-browse-dark-scheme`,
-`design-browse-light-only` and `design-review-dark-scheme` screens were the
-head-band depictions those dual-scheme renders replace. Appearance comparison controls map Side by side
+control strands a reader in a light document. The existing
+`design-browse-dark-scheme` and `design-browse-light-only` ids remain Welcome
+variants for stable catalogue links. Their artboards now render in both schemes
+and follow the single Appearance selector in the top bar; they have no scheme
+control in the header. The old `design-review-dark-scheme` depiction is removed
+in favor of the dual-scheme `design-review-changed` entry. Appearance comparison controls map Side by side
 to `design-appearance-side-by-side` and Difference to
 `design-appearance-difference`, with Current returning to
 `design-appearance-overview`; Overlay stays a depiction. Their All filter opens

@@ -12,6 +12,7 @@ import {
   setTagTerm,
 } from "../src/shell/search_query.js";
 import { shellStore } from "../src/shell/store_actions.js";
+import { canonicalHistoricalUrl } from "../src/shell/store_browser.js";
 import { withFilterSelection, withRoute } from "../src/shell/store_filters.js";
 import { createInitialShellState } from "../src/shell/store_initial.js";
 import { viewerCatalogue, viewerContext } from "../src/viewer/projection.js";
@@ -60,6 +61,28 @@ test("shell routes derive targets, variants, fragments, aliases, and misses from
       new URL("https://example.test/view/not-present.html"),
     ).view.kind,
     "missing",
+  );
+});
+
+test("an inferred historical route is pinned in the installed browser URL", () => {
+  const historical = model.removedEntries[0]!;
+  assert.ok(historical.snapshotId);
+  const bare = new URL(`https://example.test/view/${historical.entry.route}`);
+  const route = routeFromUrl(catalogue, bare);
+  assert.equal(route.snapshot, historical.snapshotId);
+  assert.equal(
+    canonicalHistoricalUrl(bare, route, false).href,
+    `${bare.href}?snapshot=${historical.snapshotId}`,
+  );
+
+  const mismatched = new URL(`${bare.href}?snapshot=${"f".repeat(64)}`);
+  assert.equal(
+    canonicalHistoricalUrl(
+      mismatched,
+      routeFromUrl(catalogue, mismatched),
+      false,
+    ).href,
+    mismatched.href,
   );
 });
 
@@ -118,6 +141,35 @@ test("shell routes retain invalid component variant requests", () => {
     routeHref("components/action.html", undefined, undefined, empty),
     "/view/components/action.html?variant=",
   );
+});
+
+test("shell routes parse explicit view axes independently", () => {
+  const valid = routeFromUrl(
+    catalogue,
+    new URL(
+      "https://example.test/view/screens/home.html?viewport=desktop&scheme=dark",
+    ),
+  );
+  assert.equal(valid.viewport, "desktop");
+  assert.equal(valid.colorScheme, "dark");
+
+  const partial = routeFromUrl(
+    catalogue,
+    new URL(
+      "https://example.test/view/screens/home.html?viewport=invalid&scheme=dark",
+    ),
+  );
+  assert.equal(partial.viewport, undefined);
+  assert.equal(partial.colorScheme, "dark");
+
+  const repeated = routeFromUrl(
+    catalogue,
+    new URL(
+      "https://example.test/view/screens/home.html?viewport=mobile&scheme=light&scheme=dark",
+    ),
+  );
+  assert.equal(repeated.viewport, "mobile");
+  assert.equal(repeated.colorScheme, undefined);
 });
 
 test("filter transitions restore their disclosure baseline and route activation reveals its row", () => {

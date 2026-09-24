@@ -34,7 +34,7 @@ The [large fixture](../../tests/fixtures/large/README.md)
 uses the same Firna/React Native Web rendering stack with configurable volume,
 without expanding this example or slowing ordinary development startup.
 
-Mokly's 88 design screens now use 16 registered shared components, including
+Mokly's 91 design screens now use 16 registered shared components, including
 the footer tabs panel and the appearance selector. Open **Components → Design → Shared components** for Chrome, Controls,
 Inspector and Preview galleries with 66 saved variants, real mobile/desktop
 previews and editable local props. The outer Components and Usage tabs show actual
@@ -69,9 +69,9 @@ The design screens use the same API for their brand, screen rows, miniature
 content, flow references, and supported scheme, comparison, and tag
 transitions. These links open canonical design states. Every selected screen uses the icon
 footer, native viewport dropdown, desktop inspector resizing and mobile sheet.
-Theme pairs use the icon in the same header group; component designs also
-support native local theme/highlight toggles. Copy, refresh, collapse-all and
-unsupported combinations remain visual depictions.
+The catalogue-wide Appearance selector sits in the top bar while the header
+keeps its viewport control; component designs also show the local highlight
+control. Copy, refresh, collapse-all and unsupported combinations remain visual depictions.
 The actual outer shell provides its normal runtime controls. See the
 [design mockup links contract](../../docs/protocol/mokly-design-links.md)
 and the [complete design inventory](../../docs/protocol/mokly-shell-design.md#design-mockups).
@@ -79,6 +79,19 @@ Shared destinations live in [destinations.ts](./entries/design/parts/destination
 [navigation_states.ts](./entries/design/parts/navigation_states.ts) explicitly
 selects which transitions each artboard supports. Add an owning screen and its
 contract before enabling a new transition.
+
+Six established Welcome design states remain real variants of
+`design-browse-screen`: two appearance examples and four tag picker/filter
+states. Both appearance variants render in Light and Dark using the single
+catalogue-wide Appearance selector; the Details example keeps its light device
+preview under Dark. They retain their ids under
+`design/browse/views/screen.variants/`. The retained `design-browse-tags`
+collection is intentionally empty and preserves its stable structural identity;
+the separate `design-browse-tag-filter` route remains a Shell states member.
+The reparented removed-variant design state depicts the Changes filter when
+only the historical child was removed: its rail shows a single flat Removed
+row, even though its former parent remains in the current catalogue as another
+screen's variant. This matches the served rail's route-based Changes filter.
 
 `tests/helpers/replaced_copy.ts` lists the shell sentences the protocols
 replaced, and `tests/design_replaced_copy.test.ts` fails when any generated
@@ -104,7 +117,7 @@ render plain React DOM need none of this and can keep a plain
 `renderToStaticMarkup` adapter.
 
 The `Design` navigation group is the owning design catalogue for Mokly's
-Browse and Changes views. Its fifty-seven Browse, page, publication, appearance and Changes
+Browse and Changes views. Its sixty Browse, page, publication, appearance and Changes
 screens cover navigation, Details, tags, color schemes, comparison outcomes,
 stylesheet evidence, the preparing and unavailable comparison states, and the
 previous-version states of removed documents and screens. Thirty-two component
@@ -126,9 +139,10 @@ packaged viewer; the [palette contract](../../docs/protocol/mokly-viewer-palette
 records the source mapping and contrast checks. Preview content owns its colors
 independently of that interface palette.
 
-A grouped icon toolbar switches Mobile/Desktop/Both previews, light/dark, and
-screen highlighting. The original Browse/Changes theme pairs retain their
-canonical links; component previews change locally. Leaf components omit Nested components;
+The header toolbar selects Mobile/Desktop/Both previews and offers highlighting
+where relevant; the top-bar Appearance selector changes the standalone scheme.
+Retained Welcome appearance variants publish both schemes under their stable
+ids, and embedded component previews follow their host's controls. Leaf components omit Nested components;
 Toolbar demonstrates composition. Unchanged fixtures show Unmodified and omit
 comparison modes. The fixed desktop shell contains separate preview and inspector
 panes; drag the centered grip on the divider line to resize the inspector. Mobile uses a
@@ -157,11 +171,12 @@ galleries; `inspector` shows both closed-panel layouts.
 Each child gallery lists at most five owning screens; inspection also links
 two selected-instance screens in a nested gallery.
 
-Seventy design screens use `colorSchemes: ["light"]` and draw only the light
-Mokly shell. Nineteen screens instead inherit the catalogue's light/dark
-settings: the thirteen Appearance screens, four Changes designs, and two
-product screens. `mokly build` writes a Light and a Dark file for each of their
-viewports, and the outer Appearance control moves between them.
+Seventy-one design screens use `colorSchemes: ["light"]` and draw only the light
+Mokly shell. Twenty-one screens instead inherit the catalogue's light/dark
+settings: thirteen Appearance screens, four Changes designs, two product
+screens, and two retained Welcome appearance variants. `mokly build` writes a
+Light and a Dark file for each viewport, and the outer Appearance control moves
+between them.
 Design headers retain the approved screen-stack logo: 17px overlapping mobile
 and desktop outlines in a 24px sage square. Desktop keeps the navigation resize
 grip; mobile keeps its fixed drawer. The component designs reuse the existing shell, frames, controls,
@@ -174,10 +189,10 @@ when that component actually renders, including transient prop edits. No
 per-render collector or source-path ownership assertion is needed. A changed
 rendered component resource appears on its component page and lists consuming
 screens as affected; independent screen inputs, slots or instance changes still
-appear in Changes. Milestone 4 removes remaining source-path-only Changes;
-until then an authored dependency can still add a source-only match.
+appear in Changes. Unreferenced source paths do not add Changes or comparison
+evidence.
 
-The shared inspector/workspace sheets cover all 88 design screens and standalone
+The shared inspector/workspace sheets cover all 91 design screens and standalone
 library hosts. Other mixed component-design sheets remain scoped to the 32
 component-design routes and hosts; the controls sheet additionally remains
 scoped to its eleven owning screen routes. Linked stylesheets, including

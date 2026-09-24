@@ -85,14 +85,14 @@ for (const viewport of ["mobile", "desktop"] as const) {
     await expect(page).toHaveURL(/\/design\/browse\/views\/screen\.html$/);
     await frame.locator(".mbk-search-tag").click();
     await expect(page).toHaveURL(
-      /\/design\/browse\/states\/tags\/picker\.html$/,
+      /\/design\/browse\/views\/screen\.variants\/picker\.html$/,
     );
     await frame
       .getByRole("group", { name: "Tags", exact: true })
       .getByRole("link", { name: "forms", exact: true })
       .click();
     await expect(page).toHaveURL(
-      /\/design\/browse\/states\/tags\/forms\.html$/,
+      /\/design\/browse\/views\/screen\.variants\/forms\.html$/,
     );
     await expect(frame.locator(".mbk-search-value")).toHaveText("tag:forms");
     await frame.locator(".mbk-search-tag").click();

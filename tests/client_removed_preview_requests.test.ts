@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import test from "node:test";
 
 import {
@@ -27,11 +28,14 @@ const removedScreen: RemovedPreviewData = {
 
 const pagePath = `__mokly/diffs/__generations/${GENERATION}/pages/archive/removed.html.json`;
 
-function review(views: ReviewResultV4["screens"][number]["views"]) {
+function review(
+  views: ReviewResultV4["screens"][number]["views"],
+  baseCommit = "a".repeat(40),
+) {
   return {
     schemaVersion: 4,
     baseRef: "origin/main",
-    baseCommit: "a".repeat(40),
+    baseCommit,
     changedPaths: [],
     ignoredImpact: [],
     screens: [
@@ -44,6 +48,26 @@ function review(views: ReviewResultV4["screens"][number]["views"]) {
       },
     ],
   } satisfies ReviewResultV4;
+}
+
+function snapshotId(
+  sourceKind: "baseline" | "generation",
+  sourceIdentity: string,
+  data: RemovedPreviewData,
+): string {
+  return createHash("sha256")
+    .update(
+      JSON.stringify([
+        "mokly-historical-snapshot-v1",
+        "c".repeat(64),
+        sourceKind,
+        sourceIdentity,
+        data.kind,
+        data.id,
+        data.route,
+      ]),
+    )
+    .digest("hex");
 }
 
 function respond(payload: unknown, url: string, ok = true) {
@@ -151,6 +175,117 @@ test("a reused or stale generation is treated as unavailable", async () => {
       { ...removedScreen, route: "screens/other.html" },
       { endpoint: new URL(generation) },
       missing.win,
+      AbortSignal.timeout(5_000),
+    ),
+    /previous version is unavailable/,
+  );
+});
+
+test("a historical response must belong to the selected baseline", async () => {
+  const generation = `https://catalogue.test${COMPARISON}`;
+  const selected = {
+    ...removedScreen,
+    catalogueIdentity: "c".repeat(64),
+    snapshotId: snapshotId("baseline", "a".repeat(40), removedScreen),
+  };
+  const views: ReviewResultV4["screens"][number]["views"] = [
+    {
+      viewport: "mobile",
+      colorScheme: "light",
+      state: "removed",
+      ignoredIds: [],
+      beforePath: "snapshots/before/screens/removed.mobile.html",
+    },
+  ];
+
+  const exact = respond(review(views), generation);
+  await requestPreview(
+    selected,
+    { endpoint: new URL(generation) },
+    exact.win,
+    AbortSignal.timeout(5_000),
+  );
+
+  const laterBaseline = respond(review(views, "d".repeat(40)), generation);
+  await assert.rejects(
+    requestPreview(
+      selected,
+      { endpoint: new URL(generation) },
+      laterBaseline.win,
+      AbortSignal.timeout(5_000),
+    ),
+    /previous version is unavailable/,
+  );
+});
+
+test("a generation-backed selection accepts only its immutable generation", async () => {
+  const selected = {
+    ...removedScreen,
+    catalogueIdentity: "c".repeat(64),
+    snapshotId: snapshotId("generation", GENERATION, removedScreen),
+  };
+  const views: ReviewResultV4["screens"][number]["views"] = [
+    {
+      viewport: "mobile",
+      colorScheme: "light",
+      state: "removed",
+      ignoredIds: [],
+      beforePath: "snapshots/before/screens/removed.mobile.html",
+    },
+  ];
+  const wrongGeneration = "d".repeat(64);
+  const endpoint = `https://catalogue.test/__mokly/diffs/__generations/${wrongGeneration}/review.json`;
+  const response = respond(review(views), endpoint);
+
+  await assert.rejects(
+    requestPreview(
+      selected,
+      { endpoint: new URL(endpoint) },
+      response.win,
+      AbortSignal.timeout(5_000),
+    ),
+    /previous version is unavailable/,
+  );
+});
+
+test("a page response cannot replace its selected baseline or generation", async () => {
+  const selectedBaseline = {
+    ...removedPage,
+    catalogueIdentity: "c".repeat(64),
+    snapshotId: snapshotId("baseline", "a".repeat(40), removedPage),
+  };
+  const payload = {
+    schemaVersion: 1,
+    baseRef: "origin/main",
+    baseCommit: "d".repeat(40),
+    route: removedPage.route,
+    documentPath: `snapshots/before/${removedPage.route}`,
+  };
+  const endpoint = new URL(`https://catalogue.test/${pagePath}`);
+  const generation = new URL(`https://catalogue.test${COMPARISON}`);
+  const stale = respond(payload, endpoint.href);
+  await assert.rejects(
+    requestPreview(
+      selectedBaseline,
+      { endpoint, generation },
+      stale.win,
+      AbortSignal.timeout(5_000),
+    ),
+    /previous version is unavailable/,
+  );
+
+  const selectedGeneration = {
+    ...removedPage,
+    catalogueIdentity: "c".repeat(64),
+    snapshotId: snapshotId("generation", GENERATION, removedPage),
+  };
+  const redirectedUrl = endpoint.href.replace(GENERATION, "e".repeat(64));
+  const redirected = respond(payload, redirectedUrl);
+  await assert.rejects(
+    requestPreview(
+      selectedGeneration,
+      { endpoint, generation },
+      redirected.win,
       AbortSignal.timeout(5_000),
     ),
     /previous version is unavailable/,

@@ -17,7 +17,12 @@ delivery uses `comparisonUrl` for a screen and the catalogue's advertised
 comparison's generation and to this exact route. A page's documents resolve
 against the generation root, not the descriptor's own directory. Screen views
 render only where the comparison says `removed`; any `afterPath` for that route
-means a reused generation and is treated as unavailable. `renewPreview`
+means a reused generation and is treated as unavailable. Before accepting
+either kind, the request recomputes the selected historical identity from the
+metadata's baseline commit. Legacy generation-backed selections must resolve
+from the same immutable generation named by both the request and final response.
+This keeps a late response or Retry from replacing an open historical record
+after the baseline changes. `renewPreview`
 extends a live generation's retention before reusing it, exactly as comparisons
 do. `advertisedPreviewPaths` returns accepted metadata in `files` and the
 historical document directory in `prefixes` so an embedded viewer can enforce
