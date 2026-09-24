@@ -1,8 +1,8 @@
 # Path-Based Navigation Hierarchy
 
-Status: Milestones 1–5 are complete, verified, pushed, and reviewed;
-Milestones 6–7 are complete and Milestone 8 remains. Milestones 6–8 fix the remaining review findings (1, 2, and 5–10). The plan
-stays Active until its PR merges.
+Status: Milestones 1–8 are implemented; Milestone 9 fixes the unit test
+runner found during Milestone 8, then runs the final gate, push, and review.
+The plan stays Active until its PR merges.
 Created 2026-09-23 with the user's
 consent after the design discussion in this workspace. This plan supersedes the
 collection-forest contract delivered by
@@ -411,11 +411,11 @@ change: rows, icons, crumbs, and the details inspector look the same.
    opens folders that should be closed, and the expanded state is saved back.
    Recommended: persist explicit per-key state under a new storage version,
    use the same representation in watched-reload recovery, and require a
-   storage version bump whenever the persisted key format changes.
+   storage version bump whenever the persisted key format changes. Fixed in Milestone 8.
 2. Low: missing failing-case tests for the historical v3–v5 collection
    validator, the read model v2 reader rules, nested `page()` and
    `navPath: undefined` rejection, and a watch test whose storage-clearing
-   script also runs on reload, so it cannot detect a persistence regression.
+   script also runs on reload, so it cannot detect a persistence regression. Fixed in Milestones 7–8.
 3. Low: collection-era leftovers: the unreachable "links to collection id"
    error in `src/build/mock_links.ts` (its plan item is ticked), dead
    collection guards in `scripts/preview/`, a no-op `routedEntry` wrapper and
@@ -431,24 +431,24 @@ From the Milestone 5 review (against `c6b2595`):
 
 5. Low: stale version references: `src/server/README.md` calls the served
    catalogue the public v1 read model, and `docs/protocol/mokly-changes.md`
-   calls manifest v5 current.
+   calls manifest v5 current. Fixed in Milestone 6.
 6. Low: inaccuracies in `mokly-nav-paths.md` and its pointers: historical
    `navPath` labels must be non-empty strings, not just strings; there is no
    "moved" state (a `navPath` difference marks the entry changed); the runtime
    spec's "for moves" link is vague; and `mokly-authoring.md` sends readers to
-   the read model for key construction, which `mokly-nav-paths.md` owns.
+   the read model for key construction, which `mokly-nav-paths.md` owns. Fixed in Milestones 6–7.
 7. Low: `mokly-shell-design.md` still restates the section-omission,
-   independent-folder, and empty-folder rules that `mokly-nav-paths.md` owns.
+   independent-folder, and empty-folder rules that `mokly-nav-paths.md` owns. Fixed in Milestone 6.
 8. Low: `tests/collection_model_guard.test.ts` misses the removed
    `collection()` helper's imports and calls, old field names such as
    `closedCollectionIds`, template-literal strings, and `.mts`, `.cts`,
-   `.cjs`, and `.jsx` files, and has no self-check against known leftovers.
+   `.cjs`, and `.jsx` files, and has no self-check against known leftovers. Fixed in Milestone 7.
 9. Low: `tests/browser/watch_folders.spec.ts` kills its watched server and
    deletes the fixture without waiting for the process to exit; the original
-   file waited in its final test, so cleanup can race.
+   file waited in its final test, so cleanup can race. Fixed in Milestone 7.
 10. Nit: six test titles or messages still use collection wording, and the
     `browseState()` helper is duplicated in `tests/client.test.ts` and
-    `tests/client_disclosures.test.ts`.
+    `tests/client_disclosures.test.ts`. Fixed in Milestone 7.
 
 ## Milestone 5: Review follow-up for findings 3 and 4
 
@@ -597,25 +597,51 @@ Tags: ui
 Implement the Milestone 6 disclosure contract (finding 1) and strengthen the
 watch persistence test (finding 2). No visual change.
 
-- [ ] One module owns the v3 storage key and its encoding; the shell store,
+- [x] One module owns the v3 storage key and its encoding; the shell store,
       early disclosure capture, hydration persistence, and recovery use it
       (the v2 key constant is currently duplicated in two files).
-- [ ] Readers apply stored values only to current keys and use server
+- [x] Readers apply stored values only to current keys and use server
       defaults otherwise; writers store every current disclosure and delete
       the v2 key.
-- [ ] Recovery snapshots use `disclosures` and `filterBaselineDisclosures`;
+- [x] Recovery snapshots use `disclosures` and `filterBaselineDisclosures`;
       older shapes are discarded in full.
-- [ ] Failure-first unit tests: a `main`-style mixed v2 list, a renamed
+- [x] Failure-first unit tests: a `main`-style mixed v2 list, a renamed
       folder and its descendants, malformed stored values, and old and new
       recovery shapes.
-- [ ] Browser coverage: an upgrade from a seeded v2 list shows the server
+- [x] Browser coverage: an upgrade from a seeded v2 list shows the server
       defaults and writes v3; a watched folder rename leaves the renamed
       subtree at its defaults; the watch persistence test clears storage
       once, not on reload, and asserts that a non-default state survives the
       reload (finding 2).
-- [ ] Remove the Milestone 6 approved-target note and smoke-test through
+- [x] Remove the Milestone 6 approved-target note and smoke-test through
       `npm run dev`.
-- [ ] Mark findings 1, 2, and 5–10 as fixed in the review-findings list.
+- [x] Permit only the recovery parser's obsolete field names in the
+      collection-model guard so old snapshots can be rejected without
+      allowing collection-era fields in current code.
+- [x] Mark findings 1, 2, and 5–10 as fixed in the review-findings list.
+- [x] Commit. The final gate, push, and review move to Milestone 9.
+
+## Milestone 9: Unit test runner integrity
+
+While verifying Milestone 8, `npm test` was found to skip every root-level
+unit test file. Its script passed unquoted globs that `sh` expands with `**`
+matching one directory level; Milestone 7 added the first `*.test.ts` file in
+a subdirectory (`tests/browser/`), so the pattern stopped falling through to
+Node's recursive matching. `cargo xtask check` was unaffected because it
+discovers files itself. `tests/browser/` is also Playwright's `testDir`,
+whose default matcher includes `*.test.ts`. Test infrastructure only; no
+product change.
+
+- [ ] `npm test` delegates to `test:prepared`, so developer runs and the gate
+      share one discovery implementation.
+- [ ] Move `tests/browser/watched_serve.test.ts` to `tests/`.
+- [ ] Set Playwright `testMatch` to `**/*.spec.ts`; the discovered browser
+      test set is unchanged.
+- [ ] Guard test: no unit test file under Playwright's `testDir`, and the
+      `test` script keeps delegating to `test:prepared`.
+- [ ] Use a non-global regular expression for the collection-model guard's
+      recovery-field stale check.
+- [ ] Update any documentation that describes how `npm test` selects files.
 - [ ] Run `cargo xtask check`; fix anything it reports until it passes.
 - [ ] Commit and push.
 - [ ] Review the complete local diff against `origin/main` using

@@ -1,16 +1,20 @@
 /** Strict validation for one-shot watched-shell recovery state. */
 
+import {
+  decodeDisclosureMap,
+  isDisclosureMap,
+} from "../shell/disclosure_storage.js";
 import type { LiveChangesStatus } from "../shell/metadata.js";
 
 /** Stored shell state consumed once after an automatic watched reload. */
 export interface BrowseRecoveryState {
   changesStatus?: LiveChangesStatus;
   changedOnly: boolean;
-  closedFolderKeys: readonly string[];
+  disclosures: Readonly<Record<string, boolean>> | null;
   colorScheme: "dark" | "light";
   detailsOpen: boolean;
   drawerOpen: boolean;
-  filterBaselineClosedFolderKeys: readonly string[] | null;
+  filterBaselineDisclosures: Readonly<Record<string, boolean>> | null;
   navScroll: number;
   query: string;
   regionScrolls: Readonly<Record<string, number>>;
@@ -22,17 +26,23 @@ export function parseBrowseRecoveryState(
   value: unknown,
 ): BrowseRecoveryState | undefined {
   if (!record(value)) return undefined;
+  if (
+    "closedFolderKeys" in value ||
+    "closedCollectionIds" in value ||
+    "filterBaselineClosedFolderKeys" in value
+  )
+    return undefined;
   const changedOnly = value["changedOnly"];
   const changesStatus = value["changesStatus"];
   const colorScheme = value["colorScheme"];
-  const storedBaseline = value["filterBaselineClosedFolderKeys"];
+  const storedBaseline = value["filterBaselineDisclosures"];
   const baseline = storedBaseline === undefined ? null : storedBaseline;
   const query = value["query"];
   const viewport = value["viewport"];
   if (
     typeof changedOnly !== "boolean" ||
     !validChangesStatus(changesStatus) ||
-    !stringArray(value["closedFolderKeys"]) ||
+    (value["disclosures"] !== null && !isDisclosureMap(value["disclosures"])) ||
     (colorScheme !== "dark" && colorScheme !== "light") ||
     typeof value["detailsOpen"] !== "boolean" ||
     typeof value["drawerOpen"] !== "boolean" ||
@@ -44,18 +54,21 @@ export function parseBrowseRecoveryState(
     return undefined;
   if (
     baseline !== null &&
-    (!stringArray(baseline) || (!changedOnly && query.trim() === ""))
+    (!isDisclosureMap(baseline) || (!changedOnly && query.trim() === ""))
   )
     return undefined;
   return {
     changedOnly,
     ...(changesStatus ? { changesStatus } : {}),
-    closedFolderKeys: [...new Set(value["closedFolderKeys"])],
+    disclosures:
+      value["disclosures"] === null
+        ? null
+        : decodeDisclosureMap(value["disclosures"]),
     colorScheme,
     detailsOpen: value["detailsOpen"],
     drawerOpen: value["drawerOpen"],
-    filterBaselineClosedFolderKeys:
-      baseline === null ? null : [...new Set(baseline)],
+    filterBaselineDisclosures:
+      baseline === null ? null : decodeDisclosureMap(baseline),
     navScroll: value["navScroll"],
     query,
     regionScrolls: { ...value["regionScrolls"] },
@@ -89,12 +102,5 @@ function scrollRecord(
   return (
     record(value) &&
     Object.values(value).every((entry) => nonNegativeNumber(entry))
-  );
-}
-
-function stringArray(value: unknown): value is string[] {
-  return (
-    Array.isArray(value) &&
-    value.every((item) => typeof item === "string" && item.length > 0)
   );
 }

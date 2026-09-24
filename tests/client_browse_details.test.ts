@@ -41,11 +41,11 @@ test("a native activation captured before hydration wins over older state", () =
 
 function recovery(detailsOpen: boolean): ShellRecoverySnapshot {
   return {
-    closedFolderKeys: [],
+    disclosures: {},
     colorScheme: "light",
     detailsOpen,
     drawerOpen: false,
-    filterBaselineClosedFolderKeys: null,
+    filterBaselineDisclosures: null,
     navScroll: 0,
     query: "",
     regionScrolls: {},

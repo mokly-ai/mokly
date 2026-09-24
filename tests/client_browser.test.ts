@@ -99,11 +99,11 @@ function shellState(): ShellRecoverySnapshot {
 function browseState(): BrowseRecoveryState {
   return {
     changedOnly: false,
-    closedFolderKeys: ["folder:pages:fixture"],
+    disclosures: { "folder:pages:fixture": false },
     colorScheme: "dark",
     detailsOpen: true,
     drawerOpen: true,
-    filterBaselineClosedFolderKeys: ["folder:pages:fixture"],
+    filterBaselineDisclosures: { "folder:pages:fixture": false },
     navScroll: 12,
     query: "home",
     regionScrolls: { stage: 24 },

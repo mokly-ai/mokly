@@ -187,16 +187,16 @@ test("recovery matches stable disclosure keys and ignores label paths", () => {
     href: "https://example.test/",
     initial: {
       recovery: recovery({
-        closedFolderKeys: [
-          "/Same title",
-          "collection:Product",
-          "folder:pages:Product",
-        ],
-        filterBaselineClosedFolderKeys: [
-          "/Same title",
-          "collection:Product",
-          "folder:pages:Product",
-        ],
+        disclosures: {
+          "/Same title": false,
+          "collection:Product": false,
+          "folder:pages:Product": false,
+        },
+        filterBaselineDisclosures: {
+          "/Same title": false,
+          "collection:Product": false,
+          "folder:pages:Product": false,
+        },
       }),
     },
   });
@@ -230,11 +230,11 @@ function recovery(
   overrides: Partial<ShellRecoverySnapshot> = {},
 ): ShellRecoverySnapshot {
   return {
-    closedFolderKeys: [],
+    disclosures: {},
     colorScheme: "light",
     detailsOpen: false,
     drawerOpen: false,
-    filterBaselineClosedFolderKeys: null,
+    filterBaselineDisclosures: null,
     navScroll: 0,
     query: "",
     regionScrolls: {},

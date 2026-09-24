@@ -15,6 +15,8 @@ const historicalBoundary = new Set([
   "src/registry/manifest_entries.ts",
   "src/registry/manifest_validation.ts",
 ]);
+const obsoleteRecoveryBoundary = "packages/viewer/src/standalone/recovery.ts";
+const obsoleteRecoveryFields = /\b(?:closedFolderKeys|closedCollectionIds)\b/gu;
 const collectionModel =
   /["'`]collection(?:["'`]|:)|\bimport\s*\{[^}]*\bcollection\b[^}]*\}\s*from\s*["']@mokly\/mokly["']|\bcollection\s*\(|\b(?:childIds|defineCollection|ManifestCollection|CatalogueCollection|NestedCollection\w*|RootCollection\w*|closedCollectionIds|filterBaselineClosedCollectionIds|ancestorCollections|readCollection|collectionKey|collectionDisclosureKey)\b|data-nav-collection|links to collection id/u;
 
@@ -61,7 +63,11 @@ test("collection-model constructs stay within historical manifest validation", (
         continue;
       const file = path.join(root, name);
       const text = readFileSync(file, "utf8");
-      if (!collectionModel.test(text)) continue;
+      const currentText =
+        file === obsoleteRecoveryBoundary
+          ? text.replace(obsoleteRecoveryFields, "")
+          : text;
+      if (!collectionModel.test(currentText)) continue;
       if (!historicalBoundary.has(file)) matches.push(file);
     }
   assert.deepEqual(
@@ -75,4 +81,9 @@ test("collection-model constructs stay within historical manifest validation", (
       collectionModel,
       `${file}: remove stale allowlist entries when the historical boundary changes`,
     );
+  assert.match(
+    readFileSync(obsoleteRecoveryBoundary, "utf8"),
+    obsoleteRecoveryFields,
+    "Recovery must reject pre-v3 snapshot fields; remove this exception if those fields disappear.",
+  );
 });

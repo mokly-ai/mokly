@@ -56,11 +56,11 @@ test("live evidence rebinds records while preserving interaction state", () => {
   };
   const initial = createInitialShellState(current, context, route.view, {
     recovery: {
-      closedFolderKeys: [],
+      disclosures: {},
       colorScheme: "light",
       detailsOpen: true,
       drawerOpen: true,
-      filterBaselineClosedFolderKeys: null,
+      filterBaselineDisclosures: null,
       navScroll: 73,
       query: "home",
       regionScrolls: { stage: 29 },

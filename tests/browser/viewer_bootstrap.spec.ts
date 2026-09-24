@@ -72,11 +72,11 @@ test("early native disclosures survive delayed hydration and recovery", async ({
         version: 1,
         browse: {
           changedOnly: false,
-          closedFolderKeys: ["folder:pages:Fixture/Archive"],
+          disclosures: { "folder:pages:Fixture/Archive": false },
           colorScheme: "light",
           detailsOpen: false,
           drawerOpen: false,
-          filterBaselineClosedFolderKeys: null,
+          filterBaselineDisclosures: null,
           navScroll: 0,
           query: "",
           regionScrolls: {},
@@ -103,7 +103,7 @@ test("early native disclosures survive delayed hydration and recovery", async ({
     await expect(page.locator("[data-mokly-early-disclosure]")).toHaveCount(0);
     await expect
       .poll(() =>
-        page.evaluate(() => localStorage.getItem("mokly:nav-disclosure:v2")),
+        page.evaluate(() => localStorage.getItem("mokly:nav-disclosure:v3")),
       )
       .toContain("folder:pages:Fixture/Screens");
     await archive.locator("summary").click();

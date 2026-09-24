@@ -1,13 +1,19 @@
 /** Native disclosure choices captured before a shell runtime can adopt them. */
 
 import { isDisclosureKey } from "../shell/disclosure_keys.js";
+import {
+  disclosureStorageKey,
+  encodeDisclosureMap,
+  obsoleteDisclosureStorageKey,
+  parseDisclosureMap,
+} from "../shell/disclosure_storage.js";
+import { queryConstrains, parseSearchQuery } from "../shell/search_query.js";
 
 import { HYDRATED_EVENT } from "./hydration_event.js";
 
 const stateKey = "__moklyEarlyDisclosuresV1";
 const detailsStateKey = "__moklyEarlyDetailsV1";
 const detailsStorageKey = "mokly:details-disclosure";
-const storageKey = "mokly:nav-disclosure:v2";
 
 type EarlyDisclosureState = Map<string, boolean>;
 type StateWindow = Window &
@@ -93,19 +99,18 @@ export function readEarlyDetailsOpen(doc: Document): boolean | undefined {
   return (doc.defaultView as StateWindow | null)?.[detailsStateKey];
 }
 
-/** Expand stored closed keys into the disclosure map used by initial state. */
+/** Read only values for disclosures present in this document. */
 export function readStoredDisclosures(
   doc: Document,
 ): Readonly<Record<string, boolean>> {
   const win = doc.defaultView;
   if (!win) return {};
-  const closed = storedClosedDisclosures(win);
-  if (!closed) return {};
+  const stored = storedDisclosures(win);
   return Object.fromEntries(
     [...doc.querySelectorAll<HTMLElement>("[data-nav-disclosure]")].flatMap(
       (group) => {
         const key = group.getAttribute("data-nav-disclosure");
-        return key && isDisclosureKey(key) ? [[key, !closed.has(key)]] : [];
+        return key && Object.hasOwn(stored, key) ? [[key, stored[key]!]] : [];
       },
     ),
   );
@@ -163,14 +168,31 @@ function rememberDisclosures(
   doc: Document,
   win: Window & typeof globalThis,
 ): void {
-  const closed = [
-    ...doc.querySelectorAll<HTMLElement>("[data-nav-disclosure]"),
-  ].flatMap((group) => {
-    const key = group.getAttribute("data-nav-disclosure");
-    return !disclosureOpen(group) && key && isDisclosureKey(key) ? [key] : [];
-  });
+  const search = doc.querySelector<HTMLInputElement>("[data-mokly-search]");
+  if (
+    queryConstrains(parseSearchQuery(search?.value ?? "")) ||
+    doc.querySelector(
+      '[data-mokly-filter] [data-filter="changed"][aria-pressed="true"]',
+    ) ||
+    doc.querySelector("[data-nav-disclosure][data-filter-open]")
+  )
+    return;
+  const disclosures = Object.fromEntries(
+    [...doc.querySelectorAll<HTMLElement>("[data-nav-disclosure]")].flatMap(
+      (group) => {
+        const key = group.getAttribute("data-nav-disclosure");
+        return key && isDisclosureKey(key)
+          ? [[key, disclosureOpen(group)]]
+          : [];
+      },
+    ),
+  );
   try {
-    win.localStorage.setItem(storageKey, JSON.stringify(closed));
+    win.localStorage.setItem(
+      disclosureStorageKey,
+      encodeDisclosureMap(disclosures),
+    );
+    win.localStorage.removeItem(obsoleteDisclosureStorageKey);
   } catch {
     return;
   }
@@ -180,34 +202,23 @@ function applyStoredDisclosures(
   doc: Document,
   win: Window & typeof globalThis,
 ): void {
-  const closed = storedClosedDisclosures(win);
-  if (!closed) return;
+  const stored = storedDisclosures(win);
   for (const group of doc.querySelectorAll<HTMLElement>(
     "[data-nav-disclosure]",
   )) {
     const key = group.getAttribute("data-nav-disclosure");
-    if (!key || !isDisclosureKey(key)) continue;
-    setDisclosureOpen(group, !closed.has(key));
+    if (!key || !Object.hasOwn(stored, key)) continue;
+    setDisclosureOpen(group, stored[key]!);
   }
 }
 
-function storedClosedDisclosures(
+function storedDisclosures(
   win: Window & typeof globalThis,
-): ReadonlySet<string> | undefined {
+): Readonly<Record<string, boolean>> {
   try {
-    const raw = win.localStorage.getItem(storageKey);
-    if (raw === null) return;
-    const value: unknown = JSON.parse(raw);
-    if (
-      !Array.isArray(value) ||
-      !value.every((item) => typeof item === "string")
-    )
-      return;
-    const current = value.filter(isDisclosureKey);
-    if (value.length > 0 && current.length === 0) return;
-    return new Set(current);
+    return parseDisclosureMap(win.localStorage.getItem(disclosureStorageKey));
   } catch {
-    return;
+    return {};
   }
 }
 

@@ -6,6 +6,12 @@ import type { ViewerSelection } from "../viewer/types.js";
 
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
+import {
+  decodeDisclosureMap,
+  disclosureStorageKey,
+  encodeDisclosureMap,
+  obsoleteDisclosureStorageKey,
+} from "./disclosure_storage.js";
 import { navigationFiltering } from "./nav_model.js";
 import type { NavSectionNode } from "./nav_tree.js";
 import { clearTagTerm, parseSearchQuery, setTagTerm } from "./search_query.js";
@@ -13,9 +19,8 @@ import type { ShellBrowserActions } from "./store_browser.js";
 import type { ShellStore } from "./store_context.js";
 import { withFilterSelection } from "./store_filters.js";
 import { captureScrolls } from "./store_scroll.js";
-import { closedDisclosures, type ShellState } from "./store_state.js";
+import type { ShellState } from "./store_state.js";
 
-const navStorageKey = "mokly:nav-disclosure:v2";
 const detailsStorageKey = "mokly:details-disclosure";
 const widthStorageKey = "mokly:navigation-width:v1";
 
@@ -170,12 +175,12 @@ export function shellRecoverySnapshot(
       : state.regionScrolls;
   return {
     ...(state.changesStatus ? { changesStatus: state.changesStatus } : {}),
-    closedFolderKeys: closedDisclosures(state.disclosures),
+    disclosures: decodeDisclosureMap(state.disclosures),
     colorScheme: state.selection.colorScheme,
     detailsOpen: state.detailsOpen,
     drawerOpen: state.drawerOpen,
-    filterBaselineClosedFolderKeys: state.filterBaseline
-      ? closedDisclosures(state.filterBaseline)
+    filterBaselineDisclosures: state.filterBaseline
+      ? decodeDisclosureMap(state.filterBaseline)
       : null,
     navScroll: state.navScroll,
     query: state.query,
@@ -190,8 +195,17 @@ function persistDisclosures(
   disclosures: Readonly<Record<string, boolean>>,
   standalone: boolean,
 ): void {
-  if (standalone && !navigationFiltering(selection))
-    persist(navStorageKey, JSON.stringify(closedDisclosures(disclosures)));
+  if (standalone && !navigationFiltering(selection)) {
+    try {
+      localStorage.setItem(
+        disclosureStorageKey,
+        encodeDisclosureMap(disclosures),
+      );
+      localStorage.removeItem(obsoleteDisclosureStorageKey);
+    } catch {
+      return;
+    }
+  }
 }
 
 function copyText(text: string): void {

@@ -4,11 +4,11 @@ import type { BrowseRecoveryState } from "../../packages/viewer/dist/runtime.js"
 export function browseState(): BrowseRecoveryState {
   return {
     changedOnly: true,
-    closedFolderKeys: ["folder:pages:fixture"],
+    disclosures: { "folder:pages:fixture": false },
     colorScheme: "dark",
     detailsOpen: true,
     drawerOpen: true,
-    filterBaselineClosedFolderKeys: ["folder:pages:fixture"],
+    filterBaselineDisclosures: { "folder:pages:fixture": false },
     navScroll: 18,
     query: "home",
     regionScrolls: { flow: 8, stage: 42 },

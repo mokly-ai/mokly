@@ -224,10 +224,10 @@ test("an early native disclosure wins hydration before reload promotes active an
   await expect
     .poll(() =>
       page.evaluate(() =>
-        JSON.parse(localStorage.getItem("mokly:nav-disclosure:v2") ?? "[]"),
+        JSON.parse(localStorage.getItem("mokly:nav-disclosure:v3") ?? "{}"),
       ),
     )
-    .toContain("section:pages");
+    .toMatchObject({ "section:pages": false });
   await page.reload();
   await expectCleanHydration(page, errors);
   await expect(disclosure).toHaveAttribute("open", "");

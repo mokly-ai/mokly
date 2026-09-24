@@ -171,11 +171,15 @@ test("runtime context projects only the route's active snapshot", () => {
 
 function recoveredState(initial: Omit<ShellInitialState, "recovery"> = {}) {
   const recovery: ShellRecoverySnapshot = {
-    closedFolderKeys: [...activePath, unrelated],
+    disclosures: Object.fromEntries(
+      [...activePath, unrelated].map((key) => [key, false]),
+    ),
     colorScheme: "light",
     detailsOpen: false,
     drawerOpen: true,
-    filterBaselineClosedFolderKeys: [...activePath, unrelated],
+    filterBaselineDisclosures: Object.fromEntries(
+      [...activePath, unrelated].map((key) => [key, false]),
+    ),
     navScroll: 87,
     query: "home",
     regionScrolls: { stage: 41 },

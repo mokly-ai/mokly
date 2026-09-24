@@ -5,7 +5,7 @@ import { defaultSelection } from "../viewer/selection.js";
 
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
-import { isDisclosureKey } from "./disclosure_keys.js";
+import { restoreDisclosureMap } from "./disclosure_storage.js";
 import {
   catalogueNavSections,
   defaultDisclosures,
@@ -42,13 +42,13 @@ export function createInitialShellState(
   const sections = catalogueNavSections(catalogue);
   let disclosures = defaultDisclosures(sections, context.activeRoute);
   if (initial?.disclosures)
-    disclosures = { ...disclosures, ...initial.disclosures };
+    disclosures = restoreDisclosureMap(disclosures, initial.disclosures);
   if (recovery)
-    disclosures = disclosuresFromClosed(disclosures, recovery.closedFolderKeys);
-  let filterBaseline = recovery?.filterBaselineClosedFolderKeys
-    ? disclosuresFromClosed(
+    disclosures = restoreDisclosureMap(disclosures, recovery.disclosures);
+  let filterBaseline = recovery?.filterBaselineDisclosures
+    ? restoreDisclosureMap(
         defaultDisclosures(sections, context.activeRoute),
-        recovery.filterBaselineClosedFolderKeys,
+        recovery.filterBaselineDisclosures,
       )
     : undefined;
   if (route.view.kind === "target") {
@@ -58,7 +58,7 @@ export function createInitialShellState(
       filterBaseline = openDisclosures(filterBaseline, activePath);
   }
   if (initial?.earlyDisclosures)
-    disclosures = { ...disclosures, ...initial.earlyDisclosures };
+    disclosures = restoreDisclosureMap(disclosures, initial.earlyDisclosures);
   const parsed = parseSearchQuery(recovery?.query ?? "");
   const componentDefault =
     route.view.kind === "target" &&
@@ -100,18 +100,4 @@ export function createInitialShellState(
     tagPickerIndex: 0,
     tagPickerOpen: false,
   };
-}
-
-function disclosuresFromClosed(
-  defaults: Readonly<Record<string, boolean>>,
-  closed: readonly string[],
-): Record<string, boolean> {
-  if (closed.length > 0 && !closed.some(isDisclosureKey))
-    return { ...defaults };
-  const values = { ...defaults };
-  const keys = new Set(closed);
-  for (const key of Object.keys(values)) {
-    values[key] = !keys.has(key);
-  }
-  return values;
 }

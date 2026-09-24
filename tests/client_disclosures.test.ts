@@ -3,6 +3,12 @@ import test from "node:test";
 
 import { parseBrowseRecoveryState } from "../packages/viewer/dist/runtime.js";
 import { isDisclosureKey } from "../packages/viewer/dist/shell/disclosure_keys.js";
+import {
+  decodeDisclosureMap,
+  encodeDisclosureMap,
+  parseDisclosureMap,
+  restoreDisclosureMap,
+} from "../packages/viewer/dist/shell/disclosure_storage.js";
 
 import { browseState } from "./helpers/browse_recovery_state.js";
 
@@ -48,10 +54,10 @@ test("Browse recovery parsing rejects malformed session state", () => {
   );
   assert.deepEqual(parseBrowseRecoveryState(browseState()), browseState());
   const legacyState: Record<string, unknown> = { ...browseState() };
-  delete legacyState["filterBaselineClosedFolderKeys"];
+  delete legacyState["filterBaselineDisclosures"];
   assert.deepEqual(parseBrowseRecoveryState(legacyState), {
     ...browseState(),
-    filterBaselineClosedFolderKeys: null,
+    filterBaselineDisclosures: null,
   });
   assert.equal(
     parseBrowseRecoveryState({ ...browseState(), viewport: "tablet" }),
@@ -72,7 +78,7 @@ test("Browse recovery parsing rejects malformed session state", () => {
     parseBrowseRecoveryState({
       ...browseState(),
       changedOnly: false,
-      filterBaselineClosedFolderKeys: [],
+      filterBaselineDisclosures: {},
       query: "",
     }),
     undefined,
@@ -82,17 +88,91 @@ test("Browse recovery parsing rejects malformed session state", () => {
 test("pre-upgrade watched recovery payloads are discarded, not migrated", () => {
   const old = { ...browseState() } as Record<string, unknown>;
   old["closedCollectionIds"] = ["collection:pages:Product"];
-  delete old["closedFolderKeys"];
   assert.equal(parseBrowseRecoveryState(old), undefined);
+  assert.equal(
+    parseBrowseRecoveryState({ ...browseState(), closedFolderKeys: [] }),
+    undefined,
+  );
 });
 
-test("a current recovery snapshot keeps unknown strings for default-aware restore", () => {
+test("a current recovery snapshot filters invalid disclosure entries", () => {
   const state = {
     ...browseState(),
-    closedFolderKeys: ["collection:pages:Product"],
+    disclosures: {
+      "collection:pages:Product": true,
+      "folder:pages:fixture": false,
+      "section:pages": "closed",
+    },
   };
   assert.deepEqual(parseBrowseRecoveryState(state), {
-    ...state,
-    filterBaselineClosedFolderKeys: ["folder:pages:fixture"],
+    ...browseState(),
+    disclosures: { "folder:pages:fixture": false },
   });
+  assert.equal(
+    parseBrowseRecoveryState({ ...browseState(), disclosures: [] }),
+    undefined,
+  );
+  assert.equal(
+    parseBrowseRecoveryState({
+      ...browseState(),
+      disclosures: ["section:pages"],
+    }),
+    undefined,
+  );
+  assert.equal(
+    parseBrowseRecoveryState({
+      ...browseState(),
+      filterBaselineDisclosures: [],
+    }),
+    undefined,
+  );
+});
+
+test("disclosure v3 codec round-trips explicit values and rejects malformed storage", () => {
+  const values = {
+    "section:pages": false,
+    "folder:pages:Design: System/Browse": true,
+    "variants:pages:my-screen": false,
+  };
+  assert.deepEqual(parseDisclosureMap(encodeDisclosureMap(values)), values);
+  for (const value of [null, false, 42, [], ["section:pages"]])
+    assert.deepEqual(decodeDisclosureMap(value), {});
+  assert.deepEqual(parseDisclosureMap("not json"), {});
+  assert.deepEqual(
+    parseDisclosureMap(
+      JSON.stringify([
+        "collection:pages:Product",
+        "section:pages",
+        "variants:pages:home",
+      ]),
+    ),
+    {},
+  );
+  assert.deepEqual(
+    parseDisclosureMap(
+      JSON.stringify({
+        ...values,
+        "folder:pages:Bad//Path": true,
+        "collection:pages:Design": false,
+        "section:components": "closed",
+      }),
+    ),
+    values,
+  );
+});
+
+test("a renamed folder and descendants use defaults while unrelated keys retain stored values", () => {
+  const defaults = {
+    "folder:pages:Renamed": true,
+    "folder:pages:Renamed/Child": false,
+    "folder:pages:Unrelated": true,
+  };
+  assert.deepEqual(
+    restoreDisclosureMap(defaults, {
+      "folder:pages:Old": false,
+      "folder:pages:Old/Child": true,
+      "folder:pages:Unrelated": false,
+    }),
+    { ...defaults, "folder:pages:Unrelated": false },
+  );
 });

@@ -8,6 +8,7 @@ import type {
   ManifestV6,
 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
+import { restoreDisclosureMap } from "../packages/viewer/dist/shell/disclosure_storage.js";
 import {
   defaultDisclosures,
   disclosurePath,
@@ -18,10 +19,7 @@ import {
   type NavLeafNode,
   type NavNode,
 } from "../packages/viewer/dist/shell/nav_tree.js";
-import {
-  closedDisclosures,
-  type ShellRecoverySnapshot,
-} from "../packages/viewer/dist/shell/store_state.js";
+import type { ShellRecoverySnapshot } from "../packages/viewer/dist/shell/store_state.js";
 
 import { fixtureShellState } from "./helpers/viewer_catalogue.js";
 
@@ -97,14 +95,14 @@ test("screen variant leaves follow manifest order", () => {
 test("page and component section disclosures persist independently", () => {
   const pagesClosed = fixtureShellState({
     href: "https://example.test/",
-    initial: { recovery: recovery(["section:pages"]) },
+    initial: { recovery: recovery({ "section:pages": false }) },
   });
   assert.equal(pagesClosed.disclosures["section:pages"], false);
   assert.equal(pagesClosed.disclosures["section:components"], true);
 
   const componentsClosed = fixtureShellState({
     href: "https://example.test/",
-    initial: { recovery: recovery(["section:components"]) },
+    initial: { recovery: recovery({ "section:components": false }) },
   });
   assert.equal(componentsClosed.disclosures["section:pages"], true);
   assert.equal(componentsClosed.disclosures["section:components"], false);
@@ -134,19 +132,12 @@ test("folder identities preserve colons and remain section-local", () => {
   assert.equal(defaults["folder:pages:Design: System/Browse"], false);
   assert.equal(defaults["folder:components:Design: System/Browse"], false);
   assert.deepEqual(
-    closedDisclosures({
-      ...defaults,
-      "folder:pages:Design: System": false,
-    }).filter((key) => key.includes("Design: System")),
-    [
-      "folder:pages:Design: System",
-      "folder:pages:Design: System/Browse",
-      "folder:components:Design: System/Browse",
-    ],
+    restoreDisclosureMap(defaults, { "folder:pages:Design: System": false }),
+    { ...defaults, "folder:pages:Design: System": false },
   );
   const pagesClosed = fixtureShellState({
     href: "https://example.test/",
-    initial: { recovery: recovery(["folder:pages:Product"]) },
+    initial: { recovery: recovery({ "folder:pages:Product": false }) },
   });
   assert.equal(pagesClosed.disclosures["folder:pages:Product"], false);
   assert.equal(pagesClosed.disclosures["folder:components:Product"], true);
@@ -156,12 +147,12 @@ test("obsolete sectioned and pre-section collection keys never close folders", (
   const state = fixtureShellState({
     href: "https://example.test/",
     initial: {
-      recovery: recovery([
-        "collection:pages:Product",
-        "collection:components:Product",
-        "collection:Product",
-        "legacy:Product",
-      ]),
+      recovery: recovery({
+        "collection:pages:Product": false,
+        "collection:components:Product": false,
+        "collection:Product": false,
+        "legacy:Product": false,
+      }),
     },
   });
   assert.equal(state.disclosures["folder:pages:Product"], true);
@@ -172,7 +163,7 @@ test("unknown disclosure keys never create unknown disclosure state", () => {
   const state = fixtureShellState({
     href: "https://example.test/",
     initial: {
-      recovery: recovery(["/Product", "section:other"]),
+      recovery: recovery({ "/Product": false, "section:other": false }),
     },
   });
   assert.equal(state.disclosures["folder:pages:Product"], true);
@@ -268,13 +259,15 @@ function manifest(entries: readonly ManifestEntry[]): ManifestV6 {
   };
 }
 
-function recovery(closedFolderKeys: readonly string[]): ShellRecoverySnapshot {
+function recovery(
+  disclosures: Readonly<Record<string, boolean>>,
+): ShellRecoverySnapshot {
   return {
-    closedFolderKeys,
+    disclosures,
     colorScheme: "light",
     detailsOpen: false,
     drawerOpen: false,
-    filterBaselineClosedFolderKeys: null,
+    filterBaselineDisclosures: null,
     navScroll: 0,
     query: "",
     regionScrolls: {},

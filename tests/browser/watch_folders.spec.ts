@@ -90,8 +90,8 @@ test("duplicate folder titles under different parents retain independent disclos
     "Same title",
   );
 
-  await page.addInitScript(() => {
-    localStorage.removeItem("mokly:nav-disclosure:v2");
+  await page.evaluate(() => {
+    localStorage.removeItem("mokly:nav-disclosure:v3");
   });
   await page.goto(`${server.url}/view/screens/home.html`);
   const screensParent = page.locator(
@@ -104,16 +104,87 @@ test("duplicate folder titles under different parents retain independent disclos
   await expect(screensParent).toHaveAttribute("open", "");
   await toggleDisclosure(screens);
   await expect(screens).toHaveAttribute("open", "");
-  await toggleDisclosure(screens);
-  await expect(screens).not.toHaveAttribute("open", "");
   await expect(archive).toHaveAttribute("open", "");
   await expect
     .poll(() =>
-      page.evaluate(() => localStorage.getItem("mokly:nav-disclosure:v2")),
+      page.evaluate(() =>
+        JSON.parse(localStorage.getItem("mokly:nav-disclosure:v3") ?? "{}"),
+      ),
     )
-    .toContain("folder:pages:Fixture/Screens/Same title");
+    .toMatchObject({ "folder:pages:Fixture/Screens/Same title": true });
 
   await page.reload();
-  await expect(screens).not.toHaveAttribute("open", "");
+  await expect(screens).toHaveAttribute("open", "");
   await expect(archive).toHaveAttribute("open", "");
+});
+
+test("a watched folder rename resets its subtree without changing unrelated preferences", async ({
+  page,
+}) => {
+  const watched = await startWatchedServe(
+    reparentedEntrySource("screens", { sharedChildTitle: "States" }),
+  );
+  try {
+    await page.goto(`${watched.url}/`);
+    const oldChild = page.locator(
+      '[data-nav-folder="folder:Fixture/Screens/States"]',
+    );
+    const oldParent = page.locator(
+      '[data-nav-folder="folder:Fixture/Screens"]',
+    );
+    const unrelated = page.locator(
+      '[data-nav-folder="folder:Fixture/Archive"]',
+    );
+    await expect(oldChild).not.toHaveAttribute("open", "");
+    await expect(unrelated).not.toHaveAttribute("open", "");
+    await toggleDisclosure(oldParent);
+    await toggleDisclosure(oldChild);
+    await toggleDisclosure(unrelated);
+    await expect(oldChild).toHaveAttribute("open", "");
+    await expect(unrelated).toHaveAttribute("open", "");
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          JSON.parse(localStorage.getItem("mokly:nav-disclosure:v3") ?? "{}"),
+        ),
+      )
+      .toMatchObject({
+        "folder:pages:Fixture/Screens/States": true,
+        "folder:pages:Fixture/Archive": true,
+      });
+
+    await fs.promises.writeFile(
+      watched.fixture.entryPath,
+      reparentedEntrySource("screens", {
+        screensTitle: "Panels",
+        sharedChildTitle: "States",
+      }),
+    );
+    const renamedChild = page.locator(
+      '[data-nav-folder="folder:Fixture/Panels/States"]',
+    );
+    await expect(
+      page.locator('[data-nav-folder="folder:Fixture/Panels"]'),
+    ).not.toHaveAttribute("open", "", { timeout: 45_000 });
+    await expect(renamedChild).not.toHaveAttribute("open", "", {
+      timeout: 45_000,
+    });
+    await expect(page.locator("html")).toHaveAttribute(
+      "data-mokly-react-shell",
+      "",
+    );
+    await expect(renamedChild).not.toHaveAttribute("open", "");
+    await expect(oldChild).toHaveCount(0);
+    await expect(unrelated).toHaveAttribute("open", "");
+    const stored = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem("mokly:nav-disclosure:v3") ?? "{}"),
+    );
+    expect(stored).toMatchObject({
+      "folder:pages:Fixture/Panels/States": false,
+      "folder:pages:Fixture/Archive": true,
+    });
+    expect(stored).not.toHaveProperty("folder:pages:Fixture/Screens/States");
+  } finally {
+    await watched.stop();
+  }
 });

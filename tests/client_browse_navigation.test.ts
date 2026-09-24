@@ -15,10 +15,7 @@ import type {
   NavSectionNode,
 } from "../packages/viewer/dist/shell/nav_tree.js";
 import { parseSearchQuery } from "../packages/viewer/dist/shell/search_query.js";
-import {
-  closedDisclosures,
-  openDisclosures,
-} from "../packages/viewer/dist/shell/store_state.js";
+import { openDisclosures } from "../packages/viewer/dist/shell/store_state.js";
 import {
   defaultSelection,
   revealSelection,
@@ -46,7 +43,10 @@ test("stable folder keys preserve independent disclosure values", () => {
     "folder:pages:alpha": false,
     "folder:pages:beta": true,
   };
-  assert.deepEqual(closedDisclosures(disclosures), ["folder:pages:alpha"]);
+  assert.deepEqual(disclosures, {
+    "folder:pages:alpha": false,
+    "folder:pages:beta": true,
+  });
   assert.deepEqual(openDisclosures(disclosures, ["folder:pages:alpha"]), {
     "folder:pages:alpha": true,
     "folder:pages:beta": true,
@@ -56,7 +56,7 @@ test("stable folder keys preserve independent disclosure values", () => {
 test("legacy label paths cannot match current disclosure keys", () => {
   const state = fixtureShellState({
     href: "https://example.test/",
-    initial: { recovery: recovery(["/Example/Screens"]) },
+    initial: { recovery: recovery({ "/Example/Screens": false }) },
   });
   assert.equal(state.disclosures["folder:pages:Product"], true);
 });
@@ -65,11 +65,11 @@ test("obsolete keys do not discard a current folder preference", () => {
   const state = fixtureShellState({
     href: "https://example.test/",
     initial: {
-      recovery: recovery([
-        "legacy:example",
-        "collection:Product",
-        "folder:pages:Product",
-      ]),
+      recovery: recovery({
+        "legacy:example": false,
+        "collection:Product": false,
+        "folder:pages:Product": false,
+      }),
     },
   });
   assert.equal(state.disclosures["folder:pages:Product"], false);
@@ -251,13 +251,13 @@ function group(label: string, children: NavLeafNode[]): NavGroupNode {
   };
 }
 
-function recovery(closedFolderKeys: readonly string[]) {
+function recovery(disclosures: Readonly<Record<string, boolean>>) {
   return {
-    closedFolderKeys,
+    disclosures,
     colorScheme: "light" as const,
     detailsOpen: false,
     drawerOpen: false,
-    filterBaselineClosedFolderKeys: null,
+    filterBaselineDisclosures: null,
     navScroll: 0,
     query: "",
     regionScrolls: {},

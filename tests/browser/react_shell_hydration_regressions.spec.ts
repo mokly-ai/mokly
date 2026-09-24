@@ -57,11 +57,11 @@ test("an early navigation disclosure beats reload recovery", async ({
         version: 1,
         browse: {
           changedOnly: false,
-          closedFolderKeys: [],
+          disclosures: {},
           colorScheme: "light",
           detailsOpen: false,
           drawerOpen: false,
-          filterBaselineClosedFolderKeys: null,
+          filterBaselineDisclosures: null,
           navScroll: 0,
           query: "welcome",
           regionScrolls: {},
@@ -124,12 +124,12 @@ test("stored closed active ancestry is open for the first React render", async (
   await page.addInitScript(() => {
     if (window !== window.top) return;
     localStorage.setItem(
-      "mokly:nav-disclosure:v2",
-      JSON.stringify([
-        "section:pages",
-        "folder:pages:Example",
-        "folder:pages:Example/Screens",
-      ]),
+      "mokly:nav-disclosure:v3",
+      JSON.stringify({
+        "section:pages": false,
+        "folder:pages:Example": false,
+        "folder:pages:Example/Screens": false,
+      }),
     );
   });
   const gate = await delayHydration(page, developmentBundle);

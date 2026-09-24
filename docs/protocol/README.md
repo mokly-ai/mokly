@@ -9,8 +9,6 @@ The first public release remains an external delivery step. Path-based
 navigation, manifest v6, public read model v2, and folder disclosure keys are
 implemented; their verification and review remain in the active
 [plan](../../plans/nav-path-hierarchy.md).
-The v3 disclosure storage in the [runtime contract](./mokly-runtime.md#disclosure-persistence)
-is the approved target for Milestone 8; Browse still stores the v2 closed list.
 
 ## Supported Formats
 
