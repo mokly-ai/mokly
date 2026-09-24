@@ -45,9 +45,8 @@ function artifact(route: string): ReviewArtifact {
       baseRef: source.baseRef,
       changedPaths: [],
       ignoredImpact: [],
-      schemaVersion: 2,
+      schemaVersion: 4,
       screens: [],
-      sharedImpact: [],
     },
   };
 }

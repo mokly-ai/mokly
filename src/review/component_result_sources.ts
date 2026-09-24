@@ -4,7 +4,7 @@ import {
   reviewInvalid,
   parseReviewResult,
 } from "@mokly/viewer/data";
-import type { Manifest, ReviewResultV3, ViewReview } from "@mokly/viewer/data";
+import type { Manifest, ReviewResultV5, ViewReview } from "@mokly/viewer/data";
 
 import { affectedConsumers } from "./component_affected.js";
 import { address, entryPairs, metadata } from "./component_metadata.js";
@@ -13,7 +13,7 @@ import { snapshotPath } from "./paths.js";
 
 /** Validate result coverage, addresses, data, dependency and usage references against both manifests. */
 export function validateComponentReviewSources(
-  result: ReviewResultV3,
+  result: ReviewResultV5,
   before: Manifest,
   after: Manifest,
   implementationImpact: ReadonlySet<string>,

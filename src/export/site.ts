@@ -81,12 +81,12 @@ export function assembleExport(
     idRoutes[entry.id] = catalogueViewHref(entry.route);
   }
   const comparisonFiles = new Map(comparison?.files);
-  if (comparison?.result.schemaVersion === 3)
+  if (comparison?.result.schemaVersion === 5)
     parseReviewResult(comparison.result);
   if (comparison)
     comparisonFiles.set(
       "review.json",
-      `${comparison.result.schemaVersion === 3 ? canonicalJson(comparison.result, 2) : JSON.stringify(comparison.result, null, 2)}\n`,
+      `${comparison.result.schemaVersion === 5 ? canonicalJson(comparison.result, 2) : JSON.stringify(comparison.result, null, 2)}\n`,
     );
   const generation = comparisonContentId(comparisonFiles);
   const prefix = `__mokly/diffs/__generations/${generation}`;
@@ -134,7 +134,7 @@ export function assembleExport(
     ),
   );
   const changes =
-    comparison?.result.schemaVersion === 3
+    comparison?.result.schemaVersion === 5
       ? [
           ...comparison.result.changes.map(
             (item) => (item.after ?? item.before)!.route,
@@ -152,7 +152,7 @@ export function assembleExport(
           comparisons: true,
           componentChanges: {
             baseline,
-            ...(comparison.result.schemaVersion === 3
+            ...(comparison.result.schemaVersion === 5
               ? { result: comparison.result }
               : {
                   screenEvidence: comparison.result.screens

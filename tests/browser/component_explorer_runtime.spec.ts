@@ -37,7 +37,7 @@ test.beforeAll(async () => {
     fixture.git,
     "main",
   );
-  if (compared.result.schemaVersion !== 3)
+  if (compared.result.schemaVersion !== 5)
     throw new Error("Expected component result");
   const result = compared.result;
   server = await startCatalogueServer(fixture.config, {

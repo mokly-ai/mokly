@@ -72,7 +72,7 @@ for (const components of [false, true]) {
       );
       const result = parseReviewResult(selected.result);
       const views =
-        components && result.schemaVersion === 3
+        components && result.schemaVersion === 5
           ? result.components[0]!.variants[0]!.views
           : result.screens.find((screen) => screen.route === route)!.views;
       assert.ok(views.length > 0);

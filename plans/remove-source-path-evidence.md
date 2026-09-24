@@ -2,7 +2,7 @@
 
 ## Status And Outcome
 
-Status: in progress; Milestones 1–6 are complete and Milestones 7–8 remain.
+Status: in progress; Milestones 1–7 are complete and Milestone 8 remains.
 The binding Decisions And Scope remove all three inputs and adopt
 component-declared stylesheets in place of the stylesheet role of
 `ownedDependencies`. The user approved both the removals and the component
@@ -415,22 +415,27 @@ Tags: ui
 
 ## Milestone 7: Version the public catalogue and comparison formats
 
-- [ ] Catalogue read model v2 without `details.dependencies`: projection,
+- [x] Catalogue read model v2 without `details.dependencies`: projection,
       serialization, viewer reader, types, display projection and privacy
       guards. Replace `docs/protocol/fixtures/catalogue-v1.json` with
       `catalogue-v2.json` and update its references in the viewer tests,
       `scripts/package/{archive,viewer,catalogue}.mjs`, `.prettierignore` and
       `src/catalogue/README.md`. The reader rejects v1 through the existing
       unsupported-version path.
-- [ ] Comparison results v4 and v5 without result `sharedImpact` or entry
+- [x] Comparison results v4 and v5 without result `sharedImpact` or entry
       `dependencies` and `sharedImpact`: update the writers, `summary.md`,
       viewer types, validation and records, and every server, export,
       publication and reporter branch on versions 2 and 3. Readers reject v2
       and v3.
-- [ ] Failure-first tests for the new schemas and the rejected old versions;
+- [x] Failure-first tests for the new schemas and the rejected old versions;
       update the projection, export, publication and package-smoke
       expectations.
-- [ ] Run the focused catalogue, export, publication, viewer and package
+- [x] Align public-format Delivery Status notes and current server, review,
+      export and viewer READMEs with shipped v2/v4/v5; update versioned CSS
+      test names and remove obsolete impact assertions.
+- [x] Migrate the browser's cross-origin catalogue and selected screen-only
+      comparison version assertions to v2 and v4.
+- [x] Run the focused catalogue, export, publication, viewer and package
       tests, `npm run typecheck` and `npm run lint`.
 
 ## Milestone 8: Verify, deliver and review

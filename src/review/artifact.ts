@@ -17,7 +17,7 @@ export function renderReviewArtifact(
   artifact: ReviewArtifact,
 ): ReadonlyMap<string, ReviewArtifactContent> {
   if (
-    artifact.result.schemaVersion === 3 ||
+    artifact.result.schemaVersion === 5 ||
     artifact.result.screens.some((screen) =>
       screen.views.some(
         (view) =>
@@ -44,7 +44,7 @@ export function renderReviewArtifact(
 
 /** Create a concise deterministic CI summary. */
 export function summaryMarkdown(result: ReviewResult): string {
-  if (result.schemaVersion === 3)
+  if (result.schemaVersion === 5)
     return `## Mokly Review
 
 Base: ${markdownCode(result.baseRef)} (${markdownCode(result.baseCommit.slice(0, 12))})

@@ -138,16 +138,8 @@ export async function compareScreen(
   }
   assertViewAnalysisScope(views, config);
   return {
-    dependencies: [],
     id: entry.id,
     route: entry.route,
-    sharedImpact: [
-      ...new Set(
-        views.flatMap(
-          (view) => view.reasons?.map((reason) => reason.path) ?? [],
-        ),
-      ),
-    ].sort(),
     state: aggregateState(views.map((view) => view.state)),
     title: entry.title,
     views,

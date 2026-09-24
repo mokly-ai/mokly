@@ -11,8 +11,8 @@ support. Verification is tracked in
 implements the page-only historical capture and delivery boundary.
 Removal of page `dependencies` and manifest-v6 output is planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-implemented in Milestone 6. Display/read-model removal follows in Milestone 7;
-the current public writer emits empty dependency lists until then.
+implemented in Milestone 6. Milestone 7 removed the public details field;
+the current public writer omits dependency lists.
 
 ## Purpose And Boundary
 

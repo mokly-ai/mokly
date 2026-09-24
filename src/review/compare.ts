@@ -138,11 +138,8 @@ export async function compareReview(
     baseRef,
     changedPaths,
     ignoredImpact: aggregateIgnored(screens),
-    schemaVersion: 2,
+    schemaVersion: 4,
     screens,
-    sharedImpact: [
-      ...new Set(screens.flatMap((screen) => screen.sharedImpact)),
-    ].sort(),
   };
   return { files, result };
 }

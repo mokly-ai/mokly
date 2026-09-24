@@ -15,7 +15,7 @@ for (const components of [false, true]) {
     ["custom property", ".guide { --tone: red; }", true, "unresolved"],
     ["formatting only", "\n", false, undefined],
   ] as const) {
-    test(`CSS attribution v${components ? 3 : 2}: ${name} agrees across all views and live membership`, async (t) => {
+    test(`CSS attribution v${components ? 5 : 4}: ${name} agrees across all views and live membership`, async (t) => {
       const fixture = await cssAttributionFixture(t, components);
       await fixture.append(css);
       const live = await computeCatalogueChanges(
@@ -51,10 +51,12 @@ for (const components of [false, true]) {
         }
       }
       assert.equal(
-        screen.sharedImpact.includes("mockups/shared.css"),
+        screen.views.some((view) =>
+          view.reasons?.some((reason) => reason.path === "mockups/shared.css"),
+        ),
         included,
       );
-      if (artifact.result.schemaVersion === 3) {
+      if (artifact.result.schemaVersion === 5) {
         assert.deepEqual(live.componentChanges?.result, artifact.result);
         assert.equal(
           artifact.result.changes.some((entry) => entry.after?.id === "home"),
@@ -63,7 +65,7 @@ for (const components of [false, true]) {
       }
       if (status === "unresolved") {
         const views = artifact.result.screens.flatMap((entry) => entry.views);
-        if (artifact.result.schemaVersion === 3)
+        if (artifact.result.schemaVersion === 5)
           views.push(
             ...artifact.result.components.flatMap((entry) =>
               entry.variants.flatMap((variant) => variant.views),
@@ -83,7 +85,7 @@ for (const components of [false, true]) {
       assert.ok(files.has("snapshots/after/shared.css"));
       assert.match(
         String(files.get("summary.md")),
-        artifact.result.schemaVersion === 3
+        artifact.result.schemaVersion === 5
           ? new RegExp(`Changes: ${artifact.result.changes.length};`)
           : new RegExp(
               `output changes: ${artifact.result.screens.filter((screen) => screen.state === "changed").length};`,
@@ -93,7 +95,7 @@ for (const components of [false, true]) {
   }
 
   for (const resource of ["image.svg", "font.woff2"]) {
-    test(`CSS attribution v${components ? 3 : 2} preserves ${resource} impact`, async (t) => {
+    test(`CSS attribution v${components ? 5 : 4} preserves ${resource} impact`, async (t) => {
       const fixture = await cssAttributionFixture(t, components);
       await fixture.append("\n", resource);
       const live = await computeCatalogueChanges(

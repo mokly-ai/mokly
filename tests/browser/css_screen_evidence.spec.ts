@@ -251,7 +251,7 @@ test.describe("screen-only evidence and its loaded comparison", () => {
       .getByRole("button", { name: "Side by side", exact: true })
       .click();
     expect(parseReviewResult(await (await response).json()).schemaVersion).toBe(
-      2,
+      4,
     );
     await expect(page.locator(".mbk-diff-view").first()).toBeVisible();
     await expect(evidence.locator("code.mbk-code")).toHaveText([".auth"]);

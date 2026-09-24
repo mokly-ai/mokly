@@ -21,8 +21,8 @@ test("Browse responds before separately computed component evidence arrives", as
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
+  assert.equal(result.schemaVersion, 5);
+  if (result.schemaVersion !== 5) return;
   const server = await startCatalogueServer(fixture.config, {
     base: "main",
     port: 0,
@@ -58,8 +58,8 @@ test("ordinary Browse serves cached component evidence without generating or wri
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
+  assert.equal(result.schemaVersion, 5);
+  if (result.schemaVersion !== 5) return;
   let comparisons = 0;
   const server = await startCatalogueServer(fixture.config, {
     base: "main",

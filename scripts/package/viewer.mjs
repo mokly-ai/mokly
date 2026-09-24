@@ -16,7 +16,7 @@ import { hydrateMoklyShell } from "@mokly/viewer/browser";
 import { resolveInstance } from "@mokly/viewer/data";
 assert.equal(typeof hydrateMoklyShell, "function");
 assert.equal(typeof resolveInstance, "function");
-const fixture = readCatalogue(JSON.parse(fs.readFileSync("node_modules/@mokly/mokly/docs/protocol/fixtures/catalogue-v1.json", "utf8")));
+const fixture = readCatalogue(JSON.parse(fs.readFileSync("node_modules/@mokly/mokly/docs/protocol/fixtures/catalogue-v2.json", "utf8")));
 assert.ok(renderViewer({viewerId: "fixture", catalogue: fixture, baseUrl: "https://fixture.example", defaultSelection: {screenId: fixture.screens[0].id}}).includes(fixture.screens[0].title));
 const catalogue = readCatalogue(JSON.parse(fs.readFileSync("published/__mokly/catalogue.json", "utf8")));
 const props = {viewerId: "catalogue", catalogue, baseUrl: "https://artifact.example", defaultSelection: {screenId: catalogue.screens[0].id}};

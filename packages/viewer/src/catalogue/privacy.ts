@@ -3,6 +3,7 @@ import { denseArray, invalidData, plainKeys } from "../components/data.js";
 import { repositoryPath } from "./values.js";
 
 const PRIVATE_KEYS = new Set([
+  "dependencies",
   "sourceFiles",
   "declaredDependencies",
   "ownedDependencies",

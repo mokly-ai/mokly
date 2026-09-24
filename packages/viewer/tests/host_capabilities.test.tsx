@@ -30,7 +30,7 @@ const catalogue = readCatalogue(
   JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v1.json",
+        "../../../docs/protocol/fixtures/catalogue-v2.json",
         import.meta.url,
       ),
       "utf8",

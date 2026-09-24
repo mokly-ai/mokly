@@ -3,7 +3,7 @@ import type {
   HistoricalManifest,
   RemovedPagePreviewArtifact,
   Manifest,
-  ReviewResultV3,
+  ReviewResultV5,
   ReviewArtifact,
 } from "@mokly/viewer/data";
 
@@ -33,7 +33,7 @@ export interface ReviewEvidence {
 export interface SelectedReviewSource extends ReviewEvidence {
   readonly before: Manifest;
   readonly after: Manifest;
-  readonly result?: ReviewResultV3;
+  readonly result?: ReviewResultV5;
 }
 
 /** Pinned removal metadata and its already-validated historical manifest. */

@@ -20,7 +20,7 @@ test("affected usage keeps complete serialized identity and evidence order with 
     fixture.git,
     "main",
   );
-  if (result.schemaVersion !== 3) assert.fail("Expected component result");
+  if (result.schemaVersion !== 5) assert.fail("Expected component result");
   const catalogue = createCatalogue(fixture.after.manifest);
   const entry = catalogue.byId.get("action");
   if (entry?.kind !== "component") assert.fail("Expected component");

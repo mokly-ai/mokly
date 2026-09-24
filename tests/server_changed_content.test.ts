@@ -95,7 +95,7 @@ test("unrendered dependency-only edits produce neither Changes nor evidence", as
   ).json()) as ReviewResult;
   const home = result.screens.find((s) => s.id === "home");
   assert.equal(home?.state, "unchanged");
-  assert.deepEqual(home?.sharedImpact, []);
+  assert.equal(Object.hasOwn(home!, "sharedImpact"), false);
 });
 
 test("Changes includes a dark-only material edit", async (t) => {

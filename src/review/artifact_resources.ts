@@ -9,7 +9,7 @@ export function validateArtifactResources(artifact: ReviewArtifact): void {
   const views: ViewReview[] = artifact.result.screens.flatMap(
     (screen) => screen.views,
   );
-  if (artifact.result.schemaVersion === 3)
+  if (artifact.result.schemaVersion === 5)
     views.push(
       ...artifact.result.components.flatMap((entry) =>
         entry.variants.flatMap((variant) => variant.views),

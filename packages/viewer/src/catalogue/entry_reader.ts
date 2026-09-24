@@ -104,7 +104,6 @@ function common(input: Record<string, unknown>): CatalogueEntry {
       description: string(details.description),
       relatedDocs: array(details.relatedDocs).map(relatedDoc),
       sourcePath: repositoryPath(details.sourcePath),
-      dependencies: array(details.dependencies).map(repositoryPath),
     },
   };
   if (details.rationale !== undefined)

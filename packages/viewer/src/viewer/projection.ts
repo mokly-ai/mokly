@@ -19,7 +19,7 @@ import type { ShellView } from "../shell/views.js";
 import type { ViewerSelection } from "./types.js";
 
 function metadata(entry: CatalogueEntry) {
-  const { dependencies: _dependencies, ...details } = entry.details;
+  const details = entry.details;
   return {
     id: entry.id,
     title: entry.title,

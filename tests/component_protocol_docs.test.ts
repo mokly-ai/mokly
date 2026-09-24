@@ -31,12 +31,12 @@ test("documented catalogue formats match compilation and both comparison sides",
     );
     const componentComparison = before === components || after === components;
     assert.equal(fixture.after.manifest.schemaVersion, 6);
-    assert.equal(result.schemaVersion, componentComparison ? 3 : 2);
+    assert.equal(result.schemaVersion, componentComparison ? 5 : 4);
     assert.match(
       index,
       after === components
-        ? /With registered components\s*\|\s*6\s*\|\s*3/
-        : /Without registered components\s*\|\s*6\s*\|\s*2/,
+        ? /With registered components\s*\|\s*6\s*\|\s*5/
+        : /Without registered components\s*\|\s*6\s*\|\s*4/,
     );
   }
 });

@@ -59,7 +59,6 @@ export function projectCatalogue(
       description: entry.description,
       sourcePath: repositoryPath(entry.sourcePath),
       relatedDocs: entry.relatedDocs.map(relatedDoc),
-      dependencies: [],
       ...(entry.rationale !== undefined ? { rationale: entry.rationale } : {}),
     },
     changes: entryChanges(entry, input, removed),
@@ -121,7 +120,7 @@ export function projectCatalogue(
     ].map((variant) => {
       const missing = removed || oldVariants.includes(variant);
       const review = (
-        input.comparison?.schemaVersion === 3
+        input.comparison?.schemaVersion === 5
           ? input.comparison
           : input.evidence?.result
       )?.components
@@ -189,7 +188,7 @@ export function projectCatalogue(
     if (!removedRoutes.has(route))
       invalidData("$catalogue", "preview route is not a removed entry");
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     identity: catalogueIdentity(input.configPath),
     deploymentId: ZERO_DEPLOYMENT_ID,
     revision: {

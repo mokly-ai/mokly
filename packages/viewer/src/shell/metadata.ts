@@ -1,5 +1,5 @@
 import type { Manifest, ManifestEntry, ManifestV6 } from "../registry/types.js";
-import type { ReviewResultV3 } from "../review/component_types.js";
+import type { ReviewResultV5 } from "../review/component_types.js";
 import type { ScreenResourceEvidence, ViewReview } from "../review/types.js";
 
 export type CatalogueMetadata =
@@ -25,7 +25,7 @@ export interface ScreenViewChanges {
 }
 export interface ShellEvidence {
   baseline: Manifest;
-  result?: ReviewResultV3;
+  result?: ReviewResultV5;
   screenEvidence?: readonly ScreenResourceEvidence[];
   screenViews?: readonly ScreenViewChanges[];
 }

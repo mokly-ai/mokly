@@ -9,24 +9,23 @@ The first public release remains an external delivery step.
 
 ## Delivery Status
 
-The current/target version split below is planned by
+The versioned formats below were planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md):
-Milestone 6 changed the private manifest and Milestone 7 changes public
-catalogue/comparison formats. The stylesheet link contract is implemented in
-Milestone 3; no new format is emitted by this documentation milestone.
+Milestone 6 changed the private manifest, Milestone 7 changed public
+catalogue/comparison formats, and Milestone 3 implemented stylesheet links.
 
 ## Supported Formats
 
 | Catalogue                     | Generated manifest | Comparison result |
 | ----------------------------- | ------------------ | ----------------- |
-| Without registered components | 6                  | 2                 |
-| With registered components    | 6                  | 3                 |
+| Without registered components | 6                  | 4                 |
+| With registered components    | 6                  | 5                 |
 
 All currently implemented catalogues emit manifest v6 with explicit pages and
 the complete source inventory. Component catalogues also include
-saved variants and complete per-view usage. Comparisons use v3 whenever either
+saved variants and complete per-view usage. Comparisons use v5 whenever either
 side contains registered components, including when the last component is removed;
-otherwise they use v2. Pages participate in Browse Changes without visual comparisons.
+otherwise they use v4. Pages participate in Browse Changes without visual comparisons.
 
 The current primary file requires v6. Git baseline readers accept v3, v5, and both
 historical v4 formats: pages with `sourceFiles`, or components with `legacyPages`.
@@ -34,13 +33,9 @@ These envelopes are disjoint; combining them is invalid. Explicit
 `compatibility.readManifestV2` permits the legacy v2-format fallback only
 when the historical primary file is absent, never when it is invalid.
 
-The approved target in
-[remove-source-path-evidence](../../plans/remove-source-path-evidence.md) is
-manifest v6 for all catalogues (implemented in Milestone 6), public catalogue v2 and
-comparison v4 without components / v5 with components (Milestone 7). Build
-and Review normalize historical manifest v3–v5 records by dropping removed
+Build and Review normalize historical manifest v3–v5 records by dropping removed
 source-path fields. Public catalogue v1 and comparison v2/v3 readers reject
-those old versions after Milestone 7; exported catalogues must be regenerated.
+those old versions; exported catalogues must be regenerated.
 
 ## Contracts
 

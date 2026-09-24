@@ -28,11 +28,11 @@ export function workspaceComparisonEvidence(
   loaded?: ReviewResult,
 ): WorkspaceComparisonEvidence {
   const selected =
-    data.entry.kind === "component" && loaded?.schemaVersion === 3
+    data.entry.kind === "component" && loaded?.schemaVersion === 5
       ? loaded.components.find((item) => item.id === data.entry.id)
       : loaded?.screens.find((item) => item.route === data.entry.route);
   const change =
-    loaded?.schemaVersion === 3
+    loaded?.schemaVersion === 5
       ? loaded.changes.find(
           (item) =>
             item.kind === data.entry.kind &&
@@ -52,7 +52,7 @@ export function workspaceComparisonEvidence(
       ...(data.change?.reasons ?? []),
       ...(change?.reasons ?? []),
       ...resources.flatMap((view) => view.reasons ?? []),
-      ...(loaded?.schemaVersion === 2
+      ...(loaded?.schemaVersion === 4
         ? comparisonViews(selected, variantId).flatMap(
             (view) => view.reasons ?? [],
           )

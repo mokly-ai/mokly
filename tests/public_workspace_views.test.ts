@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { projectCatalogue } from "../dist/catalogue/projection.js";
 import type { ManifestV6 } from "../packages/viewer/dist/registry/types.js";
-import type { ReviewResultV3 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV5 } from "../packages/viewer/dist/review/component_types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { workspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 import { viewerCatalogue } from "../packages/viewer/dist/viewer/projection.js";
@@ -78,7 +78,7 @@ test("public workspace derives a screen's ready per-view states", () => {
     schemaVersion: 6,
     sourceFiles: [screen.sourcePath],
   };
-  const result: ReviewResultV3 = {
+  const result: ReviewResultV5 = {
     affectedConsumers: [],
     baseCommit: "a".repeat(40),
     baseRef: "main",
@@ -86,13 +86,11 @@ test("public workspace derives a screen's ready per-view states", () => {
     changes: [],
     components: [],
     ignoredImpact: [],
-    schemaVersion: 3,
+    schemaVersion: 5,
     screens: [
       {
-        dependencies: [],
         id: screen.id,
         route: screen.route,
-        sharedImpact: [],
         state: "changed",
         title: screen.title,
         views: [
@@ -111,7 +109,6 @@ test("public workspace derives a screen's ready per-view states", () => {
         ],
       },
     ],
-    sharedImpact: [],
   };
   const model = projectCatalogue({
     catalogue: createCatalogue(manifest),

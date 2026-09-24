@@ -12,8 +12,8 @@ does not change the npm CLI.
 Public-resource delivery for declared component CSS and the versioned
 catalogue/comparison outputs are planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-delivered in Milestone 3 and planned for Milestone 7. Existing publication retains its current
-versions until then; the upload envelope itself is unchanged.
+delivered in Milestones 3 and 7. Publication now uses the new formats;
+the upload envelope itself is unchanged.
 
 ## Publication Option
 

@@ -10,7 +10,7 @@ Mokly Cloud has no special protocol or access to package internals.
 Uploaded public resources and new manifest/comparison formats are planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
 implemented in Milestones 3, 6 and 7. The upload envelope stays at v1;
-existing packages still carry the older formats until those milestones land.
+packages carry the current public formats.
 
 ## CLI
 

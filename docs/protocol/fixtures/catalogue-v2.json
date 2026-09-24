@@ -14,9 +14,6 @@
         "tour"
       ],
       "details": {
-        "dependencies": [
-          "entries/fixture.mockup.tsx"
-        ],
         "description": "Product",
         "relatedDocs": [],
         "sourcePath": "entries/fixture.mockup.tsx"
@@ -44,9 +41,6 @@
         }
       },
       "details": {
-        "dependencies": [
-          "entries/fixture.mockup.tsx"
-        ],
         "description": "Action",
         "relatedDocs": [],
         "sourcePath": "entries/fixture.mockup.tsx"
@@ -132,9 +126,6 @@
         "status": "ready"
       },
       "details": {
-        "dependencies": [
-          "entries/fixture.mockup.tsx"
-        ],
         "description": "Guide",
         "relatedDocs": [],
         "sourcePath": "entries/fixture.mockup.tsx"
@@ -162,9 +153,6 @@
           "status": "ready"
         },
         "details": {
-          "dependencies": [
-            "entries/fixture.mockup.tsx"
-          ],
           "description": "Guide",
           "relatedDocs": [],
           "sourcePath": "entries/fixture.mockup.tsx"
@@ -198,9 +186,6 @@
           "light"
         ],
         "details": {
-          "dependencies": [
-            "entries/fixture.mockup.tsx"
-          ],
           "description": "Home",
           "relatedDocs": [],
           "sourcePath": "entries/fixture.mockup.tsx"
@@ -259,7 +244,7 @@
     "content": 0,
     "evidence": 0
   },
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "screens": [
     {
       "changes": {
@@ -271,9 +256,6 @@
         "light"
       ],
       "details": {
-        "dependencies": [
-          "entries/fixture.mockup.tsx"
-        ],
         "description": "Home",
         "relatedDocs": [],
         "sourcePath": "entries/fixture.mockup.tsx"
@@ -364,9 +346,6 @@
         "status": "ready"
       },
       "details": {
-        "dependencies": [
-          "entries/fixture.mockup.tsx"
-        ],
         "description": "Tour",
         "relatedDocs": [],
         "sourcePath": "entries/fixture.mockup.tsx"

@@ -5,7 +5,7 @@ import type { ResolvedConfig } from "../../dist/config/types.js";
 import { classifyComponents } from "../../dist/review/component_classification.js";
 import type { ComponentClassificationInput } from "../../dist/review/component_classification_input.js";
 import type { Manifest } from "../../packages/viewer/dist/registry/types.js";
-import type { ReviewResultV3 } from "../../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV5 } from "../../packages/viewer/dist/review/component_types.js";
 
 type FixtureFile = string | Uint8Array;
 
@@ -27,7 +27,7 @@ export function compilationFiles(
 
 export async function assertFastPathEquivalent(
   fixture: FastPathFixture,
-): Promise<ReviewResultV3> {
+): Promise<ReviewResultV5> {
   const input = {
     before: fixture.before,
     after: fixture.after,

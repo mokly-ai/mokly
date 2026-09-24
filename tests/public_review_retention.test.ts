@@ -42,13 +42,12 @@ test("complete alias captures do not renew unused generation retention", async (
       await fs.writeFile(
         path.join(outDir, "review.json"),
         JSON.stringify({
-          schemaVersion: 2,
+          schemaVersion: 4,
           baseCommit: source.baseCommit,
           baseRef: source.baseRef,
           changedPaths: [`capture-${generation++}.txt`],
           ignoredImpact: [],
           screens: [],
-          sharedImpact: [],
         }),
       );
     },

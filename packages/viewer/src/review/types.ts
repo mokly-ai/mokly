@@ -1,6 +1,6 @@
 import type { ColorScheme, Viewport } from "../data/axes.js";
 
-import type { ReviewResultV3 } from "./component_types.js";
+import type { ReviewResultV5 } from "./component_types.js";
 
 /** Text or binary bytes retained in one static Review artifact. */
 export type ReviewArtifactContent = string | Uint8Array;
@@ -56,17 +56,15 @@ export interface ScreenResourceEvidence {
 
 /** One stable screen route comparison. */
 export interface ScreenReview {
-  dependencies: readonly string[];
   id: string;
   route: string;
-  sharedImpact: readonly string[];
   state: ReviewState;
   title: string;
   views: readonly ViewReview[];
 }
 
 /** Deterministic machine-readable Review result. */
-export interface ReviewResultV2 {
+export interface ReviewResultV4 {
   /** Common ancestor shared by HEAD and the configured base ref. */
   baseCommit: string;
   /** Configured ref used to resolve the comparison branch point. */
@@ -79,8 +77,7 @@ export interface ReviewResultV2 {
     viewport: Viewport;
   }[];
   screens: readonly ScreenReview[];
-  schemaVersion: 2;
-  sharedImpact: readonly string[];
+  schemaVersion: 4;
 }
 
 /** Complete artifact file map plus summary model. */
@@ -89,5 +86,5 @@ export interface ReviewArtifact {
   result: ReviewResult;
 }
 
-/** Versioned comparison payload; legacy consumers retain schema v2. */
-export type ReviewResult = ReviewResultV2 | ReviewResultV3;
+/** Versioned comparison payload; only v4 and v5 are supported. */
+export type ReviewResult = ReviewResultV4 | ReviewResultV5;

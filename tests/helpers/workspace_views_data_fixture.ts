@@ -3,7 +3,7 @@ import type {
   ManifestComponentVariant,
 } from "../../packages/viewer/dist/components/manifest_types.js";
 import type { ManifestV6 } from "../../packages/viewer/dist/registry/types.js";
-import type { ReviewResultV3 } from "../../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV5 } from "../../packages/viewer/dist/review/component_types.js";
 import type { ViewReview } from "../../packages/viewer/dist/review/types.js";
 
 function variant(id: string, title: string): ManifestComponentVariant {
@@ -91,7 +91,7 @@ export const screenManifest: ManifestV6 = {
 };
 
 /** A v3 comparison whose only material difference is in dark renders. */
-export function darkOnlyResult(state: "changed" | "unchanged"): ReviewResultV3 {
+export function darkOnlyResult(state: "changed" | "unchanged"): ReviewResultV5 {
   return {
     affectedConsumers: [],
     baseCommit: "a".repeat(40),
@@ -100,19 +100,16 @@ export function darkOnlyResult(state: "changed" | "unchanged"): ReviewResultV3 {
     changes: [],
     components: [],
     ignoredImpact: [],
-    schemaVersion: 3,
+    schemaVersion: 5,
     screens: [
       {
         id: screen.id,
-        dependencies: [],
         route: screen.route,
-        sharedImpact: [],
         state,
         title: screen.title,
         views: views("changed"),
       },
     ],
-    sharedImpact: [],
   };
 }
 
@@ -136,7 +133,7 @@ function views(
   ]);
 }
 
-export function componentVariantResult(): ReviewResultV3 {
+export function componentVariantResult(): ReviewResultV5 {
   return {
     affectedConsumers: [],
     baseCommit: "a".repeat(40),
@@ -146,9 +143,7 @@ export function componentVariantResult(): ReviewResultV3 {
     components: [
       {
         id: component.id,
-        dependencies: [],
         route: component.route,
-        sharedImpact: [],
         state: "changed",
         title: component.title,
         variants: [
@@ -174,8 +169,7 @@ export function componentVariantResult(): ReviewResultV3 {
       },
     ],
     ignoredImpact: [],
-    schemaVersion: 3,
+    schemaVersion: 5,
     screens: [],
-    sharedImpact: [],
   };
 }

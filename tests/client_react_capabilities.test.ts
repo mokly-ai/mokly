@@ -17,7 +17,7 @@ import {
 
 const catalogue = readCatalogue(
   JSON.parse(
-    fs.readFileSync("docs/protocol/fixtures/catalogue-v1.json", "utf8"),
+    fs.readFileSync("docs/protocol/fixtures/catalogue-v2.json", "utf8"),
   ),
 );
 const descriptor: ViewerCapabilityDescriptor = {

@@ -3,10 +3,10 @@
 ## Delivery Status
 
 The producer, source validator, artifact publisher, exporter, and browser decoder
-currently implement the component-aware Review schema v3 for [change attribution](./mokly-component-changes.md).
-The schema v5 target below is planned by
+implement the component-aware Review schema v5 for [change attribution](./mokly-component-changes.md).
+The schema v5 below was planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md) and
-implemented in Milestone 7. The current writer still emits v3. The target
+implemented in Milestone 7. The
 reader accepts v4/v5 only and rejects v2/v3 as unsupported.
 `ReviewResult`, `ScreenReview`, `ViewReview`, and `ReviewState` refer to the
 screen-only [schema-v4 contract](./mokly-changes.md) and

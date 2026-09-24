@@ -17,9 +17,9 @@ export type PublicPath = string;
 export type RemovedEntryPreview =
   { kind: "screen" } | { kind: "page"; path: PublicPath };
 
-/** Public v1 contract, independent of private build and comparison inventories. */
+/** Public v2 contract, independent of private build and comparison inventories. */
 export interface CatalogueReadModel {
-  schemaVersion: 1;
+  schemaVersion: 2;
   identity: { id: string; title: string };
   deploymentId: string;
   revision: { content: number; evidence: number };
@@ -56,7 +56,6 @@ export interface CatalogueDetails {
   rationale?: string;
   relatedDocs: readonly string[];
   sourcePath: string;
-  dependencies: readonly string[];
 }
 export interface CatalogueEntry {
   id: string;

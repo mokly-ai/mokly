@@ -10,8 +10,7 @@ Normal build validation and the existing comparison schema remain authoritative.
 The component public CSS delivery, source-path-free Changes and new v6/v2/v4–v5
 formats below are planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-delivered in Milestone 3 and planned for Milestones 4, 6 and 7 respectively.
-Current exports still use the older formats.
+delivered in Milestones 3, 4, 6 and 7 respectively. Exports now use the new formats.
 
 The [viewer library plan](../../plans/mokly-viewer-library.md) tracks the
 implemented public catalogue, inert published inspector and separate viewer

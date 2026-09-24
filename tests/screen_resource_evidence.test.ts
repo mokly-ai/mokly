@@ -45,7 +45,7 @@ for (const [name, edit, resource] of [
     assert.ok(snapshot);
     assert.equal(snapshot.result, undefined);
     const artifact = await fixture.compare();
-    assert.equal(artifact.result.schemaVersion, 2);
+    assert.equal(artifact.result.schemaVersion, 4);
     assert.deepEqual(
       snapshot.screenEvidence,
       artifact.result.screens.map((screen) => ({

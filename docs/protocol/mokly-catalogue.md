@@ -8,9 +8,9 @@ stays private; local Browse keeps its embedded data, appearance and behavior.
 The additive removed-page and removed-screen preview descriptors are
 implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md).
-The read model v2 target below is planned by
+The read model v2 below was planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md) and
-implemented in Milestone 7; the current writer/reader still use v1.
+implemented in Milestone 7; writers and readers now use v2.
 
 ## Location And Types
 
@@ -247,9 +247,9 @@ meaning, new union discriminants or incompatible paths require a new version.
 This file and the inspector asset are additive inventory entries: ownership v1,
 upload v1, review v4/v5 and delivery descriptor v2 remain unchanged.
 
-The public v2 fixture `docs/protocol/fixtures/catalogue-v2.json` is created in Milestone 7,
-ships in the npm package, and is checked by reader/projection conformance tests;
-the v1 fixture is removed then, not in this documentation milestone.
+The public v2 fixture `docs/protocol/fixtures/catalogue-v2.json` ships in the
+npm package and is checked by reader/projection conformance tests. The v1
+fixture is no longer shipped.
 
 ## Serve And Fetch Rules
 

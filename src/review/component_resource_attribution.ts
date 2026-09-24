@@ -2,7 +2,6 @@ import type { ComponentViewRecord } from "@mokly/viewer";
 import type {
   ChangedEntry,
   ComponentReview,
-  EntryChangeReason,
   DependencyReason,
 } from "@mokly/viewer/data";
 import { isStylesheetPath } from "@mokly/viewer/data";
@@ -49,19 +48,6 @@ export function ownedResourceReasons(
   });
 }
 
-/** Derive impact only from retained rendered-resource reasons. */
-export function resourceImpact(
-  reasons: readonly EntryChangeReason[],
-): string[] {
-  return [
-    ...new Set(
-      reasons.flatMap((reason) =>
-        reason.kind === "dependency" ? [reason.path] : [],
-      ),
-    ),
-  ].sort();
-}
-
 export function propagateOwnedResources(
   evidence: readonly OwnedResourceReason[],
   impacting: Set<string>,
@@ -87,8 +73,5 @@ export function propagateOwnedResources(
         ...(component.after ? { after: component.after } : {}),
         reasons: [reason],
       });
-    component.sharedImpact = [
-      ...new Set([...component.sharedImpact, reason.path]),
-    ].sort();
   }
 }

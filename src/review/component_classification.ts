@@ -11,8 +11,8 @@ import type {
   ComponentReview,
   ComponentVariantReview,
   EntryChangeReason,
-  ReviewResultV3,
-  ScreenReviewV3,
+  ReviewResultV5,
+  ScreenReviewV5,
 } from "@mokly/viewer/data";
 
 import { toPosixPath } from "../config/paths.js";
@@ -35,7 +35,6 @@ import {
 import { variantAddress, viewPairs } from "./component_pairing.js";
 import {
   propagateOwnedResources,
-  resourceImpact,
   type OwnedResourceReason,
 } from "./component_resource_attribution.js";
 import { ComponentMaterialReader } from "./component_resources.js";
@@ -52,7 +51,7 @@ import { aggregateIgnored, aggregateState } from "./screen_views.js";
 /** The sole component-aware membership policy, shared by Browse, Review, and publishing. */
 export async function classifyComponents(
   input: ComponentClassificationInput,
-): Promise<ReviewResultV3> {
+): Promise<ReviewResultV5> {
   const { before, after, changedPaths, config } = input;
   const beforeReader = new ComponentMaterialReader(input.beforeReader);
   const afterReader = new ComponentMaterialReader(input.afterReader);
@@ -91,7 +90,7 @@ export async function classifyComponents(
       ),
     ),
   ]);
-  const screens: ScreenReviewV3[] = [];
+  const screens: ScreenReviewV5[] = [];
   const components: ComponentReview[] = [];
   const changes: ChangedEntry[] = [];
   const impacting = new Set<string>();
@@ -125,8 +124,6 @@ export async function classifyComponents(
       const common = {
         ...address(entry),
         ...sides,
-        dependencies: [],
-        sharedImpact: [] as string[],
       };
       const baseViews = pair.before ? generatedViews(pair.before) : [];
       const headViews = pair.after ? generatedViews(pair.after) : [];
@@ -147,7 +144,6 @@ export async function classifyComponents(
         config,
       );
       reasons.push(...compared.flatMap((result) => result.reasons));
-      common.sharedImpact = resourceImpact(reasons);
       ownedResources.push(
         ...compared.flatMap((result) => result.ownedResources),
       );
@@ -240,16 +236,11 @@ export async function classifyComponents(
       lexical(a.kind, b.kind) ||
       lexical((a.after ?? a.before)!.id, (b.after ?? b.before)!.id),
   );
-  const result: ReviewResultV3 = {
-    schemaVersion: 3,
+  const result: ReviewResultV5 = {
+    schemaVersion: 5,
     baseCommit: input.baseCommit,
     baseRef: input.baseRef,
     changedPaths: [...changedPaths].sort(),
-    sharedImpact: [
-      ...new Set(
-        [...screens, ...components].flatMap((entry) => entry.sharedImpact),
-      ),
-    ].sort(),
     screens,
     components,
     changes,

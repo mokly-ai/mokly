@@ -118,12 +118,12 @@ test("readers validate known fields while additive schema, control and usage fie
 
 test("public fixture rejects incomplete view axes and private nested extension paths", async () => {
   const fixture = JSON.parse(
-    await fs.readFile("docs/protocol/fixtures/catalogue-v1.json", "utf8"),
+    await fs.readFile("docs/protocol/fixtures/catalogue-v2.json", "utf8"),
   );
   fixture.screens[0].views.pop();
   assert.throws(() => readCatalogue(fixture));
   const extended = JSON.parse(
-    await fs.readFile("docs/protocol/fixtures/catalogue-v1.json", "utf8"),
+    await fs.readFile("docs/protocol/fixtures/catalogue-v2.json", "utf8"),
   );
   extended.extension = { absolutePath: "/private/file.tsx" };
   assert.throws(() => readCatalogue(extended));
@@ -131,7 +131,7 @@ test("public fixture rejects incomplete view axes and private nested extension p
 
 test("reader retains variant relationships and entry-node children", async () => {
   const fixture = JSON.parse(
-    await fs.readFile("docs/protocol/fixtures/catalogue-v1.json", "utf8"),
+    await fs.readFile("docs/protocol/fixtures/catalogue-v2.json", "utf8"),
   );
   const parent = fixture.screens[0];
   const stem = parent.route.slice(0, -5);

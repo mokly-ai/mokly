@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import type { ReviewResultV3 } from "../../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV5 } from "../../packages/viewer/dist/review/component_types.js";
 import { controlsEntrySource } from "../helpers/component_controls_fixture.js";
 import { startEvidenceFixture } from "../helpers/evidence_fixture.js";
 
@@ -175,14 +175,13 @@ test("Changes completion preserves keyboard focus on an unchanged Usage link", a
   }
 });
 
-function affectedUsageResult(): ReviewResultV3 {
+function affectedUsageResult(): ReviewResultV5 {
   return {
     baseCommit: "a".repeat(40),
     baseRef: "main",
     changedPaths: ["entries/fixture.mockup.tsx"],
     ignoredImpact: [],
-    schemaVersion: 3,
-    sharedImpact: [],
+    schemaVersion: 5,
     screens: [],
     components: [],
     changes: [

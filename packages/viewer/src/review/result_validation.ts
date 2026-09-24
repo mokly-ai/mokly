@@ -1,6 +1,6 @@
 import { canonicalJson } from "../components/data.js";
 
-import type { ReviewResultV3 } from "./component_types.js";
+import type { ReviewResultV5 } from "./component_types.js";
 import {
   requireEqual,
   requireOrdered,
@@ -34,7 +34,7 @@ function validateResult(value: unknown): ReviewResult {
     !value ||
     typeof value !== "object" ||
     !("schemaVersion" in value) ||
-    (value.schemaVersion !== 2 && value.schemaVersion !== 3)
+    (value.schemaVersion !== 4 && value.schemaVersion !== 5)
   )
     reviewInvalid("unsupported result version");
   const version = value.schemaVersion;
@@ -45,14 +45,12 @@ function validateResult(value: unknown): ReviewResult {
     "changedPaths",
     "ignoredImpact",
     "screens",
-    "sharedImpact",
-    ...(version === 3 ? ["components", "changes", "affectedConsumers"] : []),
+    ...(version === 5 ? ["components", "changes", "affectedConsumers"] : []),
   ]);
   if (!/^[a-f0-9]{40,64}$/.test(reviewString(result.baseCommit)))
     reviewInvalid("invalid base commit");
   reviewString(result.baseRef);
   const changed = reviewStrings(result.changedPaths, reviewPath);
-  reviewStrings(result.sharedImpact, reviewPath);
   const screens = reviewArray(result.screens).map((screen) =>
     validateReviewScreen(screen, version, false, changed),
   );
@@ -78,9 +76,9 @@ function validateResult(value: unknown): ReviewResult {
     );
   }
   requireOrdered(ignoredKeys, (key) => key);
-  if (version === 3) {
+  if (version === 5) {
     const components = reviewArray(result.components).map((component) =>
-      validateReviewScreen(component, 3, true, changed),
+      validateReviewScreen(component, 5, true, changed),
     );
     requireOrdered(components, (component) => String(component.id));
     const changes = reviewArray(result.changes).map((entry) =>
@@ -120,11 +118,11 @@ function validateResult(value: unknown): ReviewResult {
       const consumer = item.consumer as Record<string, unknown>;
       return `${item.changedComponentId}:${consumer.kind}:${consumer.route ?? consumer.id}`;
     });
-    validateResultReferences(value as ReviewResultV3);
+    validateResultReferences(value as ReviewResultV5);
   }
   return value as ReviewResult;
 }
-function validateResultReferences(result: ReviewResultV3): void {
+function validateResultReferences(result: ReviewResultV5): void {
   const changed = new Set(
     result.changes
       .filter((entry) => entry.kind === "component")

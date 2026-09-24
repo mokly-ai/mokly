@@ -17,7 +17,7 @@ for (const [name, change, routes] of componentChangeCases)
       fixture.git,
       "main",
     );
-    assert.equal(artifact.result.schemaVersion, 3);
+    assert.equal(artifact.result.schemaVersion, 5);
     assert.ok("changes" in artifact.result);
     const result = artifact.result as unknown as {
       changes: { after?: { route: string }; before?: { route: string } }[];
@@ -74,8 +74,8 @@ test("metadata-only component titles do not invent affected consumers", async (t
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
+  assert.equal(result.schemaVersion, 5);
+  if (result.schemaVersion !== 5) return;
   assert.equal(result.changes.length, 1);
   assert.equal(result.affectedConsumers.length, 0);
 });
@@ -93,8 +93,8 @@ test("an implementation edit visible only at real consumer props still identifie
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
+  assert.equal(result.schemaVersion, 5);
+  if (result.schemaVersion !== 5) return;
   assert.deepEqual(
     result.changes.map((entry) => entry.after!.route),
     ["components/action.html"],
@@ -129,8 +129,8 @@ for (const adopted of [false, true])
       fixture.git,
       "main",
     );
-    assert.equal(result.schemaVersion, 3);
-    if (result.schemaVersion !== 3) return;
+    assert.equal(result.schemaVersion, 5);
+    if (result.schemaVersion !== 5) return;
     assert.deepEqual(
       result.changes.map((entry) => entry.after!.route),
       adopted ? ["components/action.html"] : [],
@@ -150,8 +150,8 @@ test("affected-only views retain their real comparison state without entering Ch
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
+  assert.equal(result.schemaVersion, 5);
+  if (result.schemaVersion !== 5) return;
   assert.deepEqual(
     result.changes.map((entry) => entry.after!.route),
     ["components/action.html"],

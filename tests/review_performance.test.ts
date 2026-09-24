@@ -277,10 +277,8 @@ test("Git bounds zero-byte blob batches by object count", async () => {
 
 test("Comparison metadata has no per-screen HTML or navigation copies", () => {
   const screens = Array.from({ length: 40 }, (_, index) => ({
-    dependencies: [],
     id: `screen-${index}`,
     route: `screens/screen-${index}.html`,
-    sharedImpact: [],
     state: "changed" as const,
     title: `Screen ${index}`,
     views: [
@@ -297,9 +295,8 @@ test("Comparison metadata has no per-screen HTML or navigation copies", () => {
     baseRef: "origin/main",
     changedPaths: [],
     ignoredImpact: [],
-    schemaVersion: 2,
+    schemaVersion: 4,
     screens,
-    sharedImpact: [],
   };
 
   const files = renderReviewArtifact({ files: new Map(), result });

@@ -109,7 +109,7 @@ async function generateExport(
         prepared.commit,
         changed,
         assetReader,
-        comparison.result.schemaVersion === 3 ? "pages" : "all",
+        comparison.result.schemaVersion === 5 ? "pages" : "all",
       );
       const removedEntries = removedManifestEntries(
         compilation.manifest,

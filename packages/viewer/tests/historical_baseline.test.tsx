@@ -36,7 +36,7 @@ function renderedBaselineHash(details: CatalogueDetails): string {
     pages: [],
     removedEntries: [{ ancestors: [], entry }],
     revision: { content: 1, evidence: 1 },
-    schemaVersion: 1,
+    schemaVersion: 2,
     screens: [],
     tree: { components: [], pages: [] },
     useCases: [],
@@ -58,7 +58,6 @@ function renderedBaselineHash(details: CatalogueDetails): string {
 
 test("historical baseline hashes ignore logical object key order", () => {
   const first: CatalogueDetails = {
-    dependencies: ["notes.md"],
     description: "Historical guidance",
     rationale: "Preserve context",
     relatedDocs: ["notes.md"],
@@ -69,7 +68,6 @@ test("historical baseline hashes ignore logical object key order", () => {
     relatedDocs: ["notes.md"],
     rationale: "Preserve context",
     description: "Historical guidance",
-    dependencies: ["notes.md"],
   };
   assert.equal(renderedBaselineHash(first), renderedBaselineHash(reordered));
 });

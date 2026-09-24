@@ -26,7 +26,7 @@ export function projectViews(
       ? (result?.screens.find((item) => item.route === entry.route)?.views ??
         input.evidence?.screenViews?.find((item) => item.route === entry.route)
           ?.views)
-      : result?.schemaVersion === 3
+      : result?.schemaVersion === 5
         ? result.components
             .find((item) => item.id === entry.id)
             ?.variants.find((item) => item.id === variantId)?.views

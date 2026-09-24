@@ -20,8 +20,8 @@ test("component comparison schemas reject invalid membership, sides, references 
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
+  assert.equal(result.schemaVersion, 5);
+  if (result.schemaVersion !== 5) return;
   assert.deepEqual(
     parseReviewResult(JSON.parse(JSON.stringify(result))),
     result,
@@ -106,8 +106,8 @@ for (const [name, change] of [
       fixture.git,
       "main",
     );
-    assert.equal(result.schemaVersion, 3);
-    if (result.schemaVersion !== 3) return;
+    assert.equal(result.schemaVersion, 5);
+    if (result.schemaVersion !== 5) return;
     assert.equal(result.changes.length, 1);
     assert.deepEqual(result.affectedConsumers, []);
     validateComponentReviewSources(

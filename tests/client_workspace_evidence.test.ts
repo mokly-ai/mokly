@@ -27,10 +27,8 @@ test("the inspector lists changed files, applying styles, then exclusions", () =
       ],
     },
     comparison: {
-      dependencies: [],
       id: "home",
       route: "screens/home.html",
-      sharedImpact: [SHARED],
       state: "changed",
       title: "Home",
       views: [

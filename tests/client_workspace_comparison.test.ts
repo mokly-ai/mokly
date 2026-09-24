@@ -5,7 +5,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
-import type { ReviewResultV2 } from "../packages/viewer/dist/review/types.js";
+import type { ReviewResultV4 } from "../packages/viewer/dist/review/types.js";
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 import { WorkspaceEvidence } from "../packages/viewer/dist/shell/workspace_evidence.js";
 
@@ -100,9 +100,9 @@ function renderEvidence(
   );
 }
 
-function comparison(): ReviewResultV2 {
+function comparison(): ReviewResultV4 {
   return {
-    schemaVersion: 2,
+    schemaVersion: 4,
     baseRef: "main",
     baseCommit: "a".repeat(40),
     changedPaths: [
@@ -110,16 +110,13 @@ function comparison(): ReviewResultV2 {
       "mockups/shared.css",
       "mockups/unused.css",
     ],
-    sharedImpact: ["mockups/logo.svg"],
     ignoredImpact: [],
     screens: [
       {
         id: "home",
-        dependencies: [],
         route: "screens/home.html",
         title: "Home",
         state: "changed",
-        sharedImpact: ["mockups/logo.svg"],
         views: [
           {
             viewport: "mobile",

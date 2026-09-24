@@ -43,8 +43,8 @@ export default (input) => {
     git,
     "main",
   );
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
+  assert.equal(result.schemaVersion, 5);
+  if (result.schemaVersion !== 5) return;
   assert.deepEqual(
     result.changes.map((change) => (change.after ?? change.before)!.id),
     ["action"],

@@ -20,10 +20,10 @@ import {
   text,
 } from "./values.js";
 
-/** Parse known v1 fields; ignore compatible additions without exposing private data. */
+/** Parse known v2 fields; ignore compatible additions without exposing private data. */
 export function readCatalogue(value: unknown): CatalogueReadModel {
   const input = object(value);
-  if (input.schemaVersion !== 1)
+  if (input.schemaVersion !== 2)
     invalidData("$catalogue", "unsupported schemaVersion");
   assertPublicCatalogue(input);
   const identity = object(input.identity),
@@ -37,7 +37,7 @@ export function readCatalogue(value: unknown): CatalogueReadModel {
       return entry;
     });
   const model: CatalogueReadModel = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     identity: { id: hash(identity.id), title: text(identity.title) },
     deploymentId: hash(input.deploymentId),
     revision: {

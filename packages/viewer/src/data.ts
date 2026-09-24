@@ -94,7 +94,7 @@ export type { InstanceResolution } from "./components/resolve_instance.js";
 export { componentFragmentRoute } from "./components/paths.js";
 export type {
   ReviewEntryAddress,
-  ScreenReviewV3,
+  ScreenReviewV5,
   ReviewVariantAddress,
   ComponentVariantReview,
   ComponentReview,
@@ -103,7 +103,7 @@ export type {
   ComponentUsageContext,
   AffectedUsageEvidence,
   AffectedConsumer,
-  ReviewResultV3,
+  ReviewResultV5,
 } from "./review/component_types.js";
 export type {
   ReviewArtifactContent,

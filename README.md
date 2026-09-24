@@ -138,7 +138,7 @@ The approved [source-path removal plan](./plans/remove-source-path-evidence.md)
 delivers component-declared CSS in Milestone 3, source-path-free Changes in
 Milestone 4, and manifest v6 plus catalogue/comparison v2/v4–v5 in Milestones
 6–7. Source-path authoring fields are removed and current output requires manifest v6;
-the public catalogue/comparison format migration remains planned for Milestone 7.
+the public catalogue/comparison formats now use v2/v4–v5 (Milestone 7).
 Historical Git baselines retain compatibility readers; exported public formats
 must be regenerated.
 See the [component stylesheet contract](./docs/protocol/mokly-component-stylesheets.md).

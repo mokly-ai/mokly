@@ -277,8 +277,10 @@ export async function smokeThemedConsumer(context) {
     assert.equal(response.status, 200);
     review = await response.json();
   });
-  assert.deepEqual(review.sharedImpact, []);
-  assert.ok(review.screens.every((screen) => screen.sharedImpact.length === 0));
+  assert.equal(Object.hasOwn(review, "sharedImpact"), false);
+  assert.ok(
+    review.screens.every((screen) => !Object.hasOwn(screen, "sharedImpact")),
+  );
   await runBin(root, ["export", "--out", "published"]);
   await inspectConsumerExport(root, "published", "HEAD", [
     "view/archive/legacy-notice.html",

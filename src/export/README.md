@@ -9,7 +9,7 @@ The separate `mokly publish` command uploads through the
 independent `BaselineReader`, runs the normal build, captures public inputs,
 compares them through the existing review engine, and verifies inputs again
 before installation. `site.ts` uses the existing shell and Browse adapter to
-assemble exact v5 pages, real id aliases, package assets, and immutable comparisons.
+assemble current catalogue pages, real id aliases, package assets, and immutable comparisons.
 Publish's `--no-changes` uses this same engine with baseline reads, removed
 entries and comparisons omitted. Current-only assembly retains the normal
 input consistency checks and a null delivery comparison URL. A capture callback
@@ -40,7 +40,7 @@ The shared `server/changed_content.ts` calculation receives the same captured
 asset reader as comparisons, preserving Serve's material-output/resource Changes
 membership without reading a different current-file snapshot.
 For screen-only catalogues, `site.ts` projects per-view resource evidence from
-the existing v2 comparison into shell workspace data. Details can show matched,
+the v4/v5 comparison into shell workspace data. Details can show matched,
 unresolved, and excluded stylesheets in Current without fetching comparison
 JSON, and no extra classification pass is needed for this projection.
 The projection omits views without retained or excluded resources and drops

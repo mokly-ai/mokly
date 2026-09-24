@@ -9,7 +9,7 @@ export async function inspectConsumerExport(
   relative,
   base,
   expected = [],
-  schemaVersion = 2,
+  schemaVersion = 4,
 ) {
   const output = path.join(root, relative);
   const read = (name) => fs.promises.readFile(path.join(output, name), "utf8");

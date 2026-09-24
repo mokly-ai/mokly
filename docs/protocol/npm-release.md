@@ -56,7 +56,7 @@ Root build, clean, formatting, lint, typecheck and package gates cover both
 packages. Pack the viewer first; local smoke and release fixtures install both
 tarballs explicitly so an unpublished viewer is never resolved from the registry.
 Consumer fixtures exercise every public viewer entry, SSR of the public v2
-fixture (v1 until Milestone 7), browser bundle boundaries and NodeNext
+fixture, browser bundle boundaries and NodeNext
 declarations. Both manifests,
 packed metadata, export targets, allowlists, licenses, React peers and the exact
 viewer dependency are checked. Packed dependencies cannot use `workspace:` or

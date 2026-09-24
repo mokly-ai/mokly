@@ -176,7 +176,7 @@ function comparisonEntry(
   variantId: string | undefined,
 ): { views: readonly ViewReview[] } | undefined {
   const component =
-    loaded.result.schemaVersion === 3
+    loaded.result.schemaVersion === 5
       ? loaded.result.components.find((candidate) => candidate.route === route)
       : undefined;
   const variant = component?.variants.find(

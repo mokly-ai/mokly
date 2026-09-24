@@ -120,7 +120,7 @@ export async function smokeRegisteredComponents(
     "published",
     "HEAD",
     ["view/components/action.html", "view/components/panel.html"],
-    3,
+    5,
   );
   assert.equal(review.components.length, 2);
   const published = await fs.readFile(

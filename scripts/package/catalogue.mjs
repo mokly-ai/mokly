@@ -9,7 +9,7 @@ export async function inspectPublicCatalogue(root, comparisonPath) {
     "utf8",
   );
   const model = JSON.parse(json);
-  assert.equal(model.schemaVersion, 1);
+  assert.equal(model.schemaVersion, 2);
   assert.match(model.identity.id, /^[a-f0-9]{64}$/);
   assert.match(model.deploymentId, /^[a-f0-9]{64}$/);
   assert.equal(model.comparisonUrl, comparisonPath);
@@ -32,6 +32,7 @@ export async function inspectPublicCatalogue(root, comparisonPath) {
   ];
   assert.ok(entries.length > 0);
   for (const entry of entries) {
+    assert.equal(Object.hasOwn(entry.details, "dependencies"), false);
     const paths =
       entry.kind === "page"
         ? [entry.documentPath]

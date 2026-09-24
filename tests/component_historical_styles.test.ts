@@ -68,8 +68,8 @@ for (const edit of [
     );
     const git = componentGit(before, changedPaths);
     const artifact = await compareReview(after, config, git, "main");
-    assert.equal(artifact.result.schemaVersion, 3);
-    if (artifact.result.schemaVersion !== 3) return;
+    assert.equal(artifact.result.schemaVersion, 5);
+    if (artifact.result.schemaVersion !== 5) return;
     const expected =
       edit === "owned-css" || edit === "implementation"
         ? ["components/action.html"]

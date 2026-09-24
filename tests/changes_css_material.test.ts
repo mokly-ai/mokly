@@ -5,7 +5,7 @@ import test from "node:test";
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 
 for (const components of [false, true]) {
-  test(`v${components ? 3 : 2} omits material for paired ignored edits alongside matched CSS`, async (t) => {
+  test(`v${components ? 5 : 4} omits material for paired ignored edits alongside matched CSS`, async (t) => {
     const fixture = await cssAttributionFixture(t, components, {
       body: '<ReviewIgnore id="notice"><p>Before notice</p></ReviewIgnore><button className="auth">Sign in</button>',
       prepare: async ({ entryPath }) => {
@@ -35,7 +35,7 @@ for (const components of [false, true]) {
       assert.deepEqual(view.ignoredIds, ["notice"]);
     }
   });
-  test(`v${components ? 3 : 2} distinguishes material changes from stylesheet evidence`, async (t) => {
+  test(`v${components ? 5 : 4} distinguishes material changes from stylesheet evidence`, async (t) => {
     const fixture = await cssAttributionFixture(t, components);
     await fs.writeFile(
       fixture.entryPath,
@@ -54,7 +54,7 @@ for (const components of [false, true]) {
       }
   });
 
-  test(`v${components ? 3 : 2} marks added and removed views as material`, async (t) => {
+  test(`v${components ? 5 : 4} marks added and removed views as material`, async (t) => {
     const fixture = await cssAttributionFixture(t, components);
     await fs.writeFile(
       fixture.entryPath,

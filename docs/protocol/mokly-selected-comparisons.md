@@ -2,9 +2,9 @@
 
 ## Delivery Status
 
-The v4/v5 selected comparison output below is planned by
+The v4/v5 selected comparison output below was planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md) and
-implemented in Milestone 7; current responses still use v2/v3.
+implemented in Milestone 7; current responses use v4/v5.
 
 Live comparison loading must scale with the selected screen or saved component
 variant and its referenced resources. It must not compile the consumer, check

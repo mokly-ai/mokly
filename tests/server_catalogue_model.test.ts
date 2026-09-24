@@ -6,7 +6,7 @@ import { readPublicCatalogue } from "../src/server/public_catalogue_model.js";
 
 test("shell requests reuse only an unchanged validated public revision", () => {
   let bytes = fs.readFileSync(
-    "docs/protocol/fixtures/catalogue-v1.json",
+    "docs/protocol/fixtures/catalogue-v2.json",
     "utf8",
   );
   const source = { read: () => bytes };
@@ -18,7 +18,7 @@ test("shell requests reuse only an unchanged validated public revision", () => {
   const updated = readPublicCatalogue(source);
   assert.notEqual(updated, first);
   assert.equal(updated.revision.evidence, first.revision.evidence + 1);
-  bytes = JSON.stringify({ ...next, schemaVersion: 2 });
+  bytes = JSON.stringify({ ...next, schemaVersion: 1 });
   assert.throws(() => readPublicCatalogue(source));
   bytes = JSON.stringify(next);
   assert.equal(readPublicCatalogue(source), updated);

@@ -9,9 +9,9 @@ repository preview, upload packaging, and the shared shell and viewer. The
 defines the host-independent presentation below. Nothing here changes ordinary
 browsing, Added entries, changed-screen comparisons, or removed component
 variants.
-The public catalogue fixture migration described below is planned by
+The public catalogue fixture migration described below was planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-implemented in Milestone 7. The current fixture and reader remain v1 until then.
+implemented in Milestone 7. The current fixture and reader use v2.
 
 The note for a selected viewport with no captured historical view is fixed
 here and depicted by the design catalogue's
@@ -166,8 +166,8 @@ Readers validate `kind`, require a confined `__mokly/diffs/__generations/**`
 path for pages whose generation matches `comparisonUrl` and whose suffix is the
 exact removed page route plus `.json`, tolerate the field's absence, and reject
 it on current entries or when `comparisonUrl` is null.
-The v2 fixture `docs/protocol/fixtures/catalogue-v2.json`, created in Milestone 7,
-exercises both preview variants. The v1 fixture is replaced at that point.
+The v2 fixture `docs/protocol/fixtures/catalogue-v2.json` exercises both preview
+variants; the v1 fixture is no longer shipped.
 
 The embedded viewer loads preview metadata only from advertised paths:
 `comparisonUrl` for screens and `preview.path` for pages, resolved against the

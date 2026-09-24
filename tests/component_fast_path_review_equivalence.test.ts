@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { test } from "node:test";
 
-import type { ReviewResultV3 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV5 } from "../packages/viewer/dist/review/component_types.js";
 
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 
@@ -71,15 +71,15 @@ test("Review fast and complete paths agree for a Git asset-byte change", async (
 
 async function equivalentReview(
   fixture: Awaited<ReturnType<typeof cssAttributionFixture>>,
-): Promise<ReviewResultV3> {
+): Promise<ReviewResultV5> {
   const fast = await fixture.compare(true);
   const complete = await fixture.compare(false);
   assert.deepEqual(fast.result, complete.result);
-  assert.equal(fast.result.schemaVersion, 3);
+  assert.equal(fast.result.schemaVersion, 5);
   return fast.result;
 }
 
-function reasonPaths(result: ReviewResultV3) {
+function reasonPaths(result: ReviewResultV5) {
   return [
     ...new Set(
       result.changes.flatMap((entry) =>

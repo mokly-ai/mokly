@@ -48,15 +48,13 @@ depends only on the repository-relative config path. Export stamps the complete
 artifact identity; Serve hashes its canonical snapshot with the identity field
 zeroed and advances content/evidence revisions on accepted updates.
 
-The public v2 fixture `docs/protocol/fixtures/catalogue-v2.json` will ship in the
+The public v2 fixture `docs/protocol/fixtures/catalogue-v2.json` ships in the
 npm package. Consumers need the documented JSON artifact, not a CLI deep import.
 The viewer package consumes this projection without importing the CLI.
 
-This is the target planned by
-[remove-source-path-evidence](../../plans/remove-source-path-evidence.md):
-Milestone 6 changes private input to v6; Milestone 7 writes/reads public
-v2, removes `details.dependencies`, creates the fixture and rejects public v1.
-Current code still writes v1; the v2 fixture is not created in this milestone.
+The [source-path removal plan](../../plans/remove-source-path-evidence.md)
+delivered private input v6 in Milestone 6 and public v2 in Milestone 7.
+`details.dependencies` is absent, and the public reader rejects v1.
 
 ```sh
 npm run build

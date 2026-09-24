@@ -14,7 +14,7 @@ import { createReactUpdateCapability } from "../dist/client/react_capability_upd
 
 const catalogue = readCatalogue(
   JSON.parse(
-    fs.readFileSync("docs/protocol/fixtures/catalogue-v1.json", "utf8"),
+    fs.readFileSync("docs/protocol/fixtures/catalogue-v2.json", "utf8"),
   ),
 );
 

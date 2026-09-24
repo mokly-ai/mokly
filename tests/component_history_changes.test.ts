@@ -25,7 +25,7 @@ test("registering unrelated components does not add unchanged screens to Changes
     fixture.git,
     "main",
   );
-  if (result.schemaVersion !== 3) assert.fail("Expected component comparison");
+  if (result.schemaVersion !== 5) assert.fail("Expected component comparison");
   assert.ok(result.changes.every((entry) => entry.kind === "component"));
   assert.equal(result.screens[0]?.state, "unchanged");
 });
@@ -46,8 +46,8 @@ test("one-sided registration retains real screen content edits", async (t) => {
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
+  assert.equal(result.schemaVersion, 5);
+  if (result.schemaVersion !== 5) return;
   assert.ok(
     result.changes.some(
       (entry) =>
@@ -68,8 +68,8 @@ test("removed components retain variants, missing sides, and baseline consuming 
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
+  assert.equal(result.schemaVersion, 5);
+  if (result.schemaVersion !== 5) return;
   assert.equal(result.components.length, 2);
   assert.ok(
     result.components.every(
@@ -111,8 +111,8 @@ test("variant removal retains authored current order followed by explicit remove
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
+  assert.equal(result.schemaVersion, 5);
+  if (result.schemaVersion !== 5) return;
   const action = result.components.find((entry) => entry.id === "action")!;
   assert.deepEqual(
     action.variants.map((variant) => variant.id),
@@ -138,8 +138,8 @@ test("removed consumers retain their previous usage when a component changes", a
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
+  assert.equal(result.schemaVersion, 5);
+  if (result.schemaVersion !== 5) return;
   const removed = result.screens.find((screen) => screen.id === "home")!;
   assert.equal(removed.state, "removed");
   assert.ok(
@@ -181,8 +181,8 @@ for (const edit of ["component", "screen"] as const)
       fixture.git,
       "main",
     );
-    assert.equal(result.schemaVersion, 3);
-    if (result.schemaVersion !== 3) return;
+    assert.equal(result.schemaVersion, 5);
+    if (result.schemaVersion !== 5) return;
     const flow = result.changes.find((entry) => entry.kind === "use-case");
     if (edit === "component") assert.equal(flow, undefined);
     else

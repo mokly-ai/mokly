@@ -42,8 +42,8 @@ test("Review artifact paths are collision-free for distinct valid routes", async
   const baseManifest = JSON.stringify({
     entries: [],
     generatedBy: "mokly",
-    legacyPages: [],
-    schemaVersion: 3,
+    sourceFiles: [],
+    schemaVersion: 6,
   });
   const artifact = await compareReview(
     compilation,
@@ -111,13 +111,11 @@ test("Comparison artifacts retain snapshots without standalone UI", () => {
       baseRef: "HEAD",
       changedPaths: [],
       ignoredImpact: [],
-      schemaVersion: 2,
+      schemaVersion: 4,
       screens: [
         {
-          dependencies: [],
           id: "home",
           route: "screens/home.html",
-          sharedImpact: [],
           state: "changed",
           title: "Home",
           views: [
@@ -132,7 +130,6 @@ test("Comparison artifacts retain snapshots without standalone UI", () => {
           ],
         },
       ],
-      sharedImpact: [],
     },
   };
   const files = renderReviewArtifact(artifact);
@@ -152,8 +149,8 @@ test("Review retains marker-bearing pane bytes as portable output", async (conte
   const baseManifest = JSON.stringify({
     entries: [],
     generatedBy: "mokly",
-    legacyPages: [],
-    schemaVersion: 3,
+    sourceFiles: [],
+    schemaVersion: 6,
   });
   const artifact = await compareReview(
     compilation,

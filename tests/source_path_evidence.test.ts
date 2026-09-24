@@ -22,22 +22,22 @@ for (const components of [false, true])
     await writeCompilation(compilation, config);
     const git = componentGit(compilation, ["notes.md"]);
     const { result } = await compareReview(compilation, config, git, "main");
-    assert.equal(result.schemaVersion, components ? 3 : 2);
-    assert.deepEqual(result.sharedImpact, []);
-    assert.deepEqual(
-      result.screens.map((screen) => screen.sharedImpact),
-      result.screens.map(() => []),
+    assert.equal(result.schemaVersion, components ? 5 : 4);
+    assert.equal(Object.hasOwn(result, "sharedImpact"), false);
+    assert.ok(
+      result.screens.every((screen) => !Object.hasOwn(screen, "sharedImpact")),
     );
     assert.ok(
       result.screens.every((screen) =>
         screen.views.every((view) => !view.reasons && !view.excludedResources),
       ),
     );
-    if (result.schemaVersion === 3) {
+    if (result.schemaVersion === 5) {
       assert.deepEqual(result.changes, []);
-      assert.deepEqual(
-        result.components.map((component) => component.sharedImpact),
-        result.components.map(() => []),
+      assert.ok(
+        result.components.every(
+          (component) => !Object.hasOwn(component, "sharedImpact"),
+        ),
       );
     }
     assert.deepEqual(await computeChangedRoutes(config, "main", git), []);

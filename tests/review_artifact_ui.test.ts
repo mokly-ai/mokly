@@ -15,16 +15,13 @@ const result: ReviewResult = {
   baseRef: "origin/main",
   changedPaths: [],
   ignoredImpact: [],
-  schemaVersion: 2,
-  sharedImpact: ["styles.css"],
+  schemaVersion: 4,
   screens: [
     {
-      dependencies: [],
       id: "home",
       route: "screens/home.html",
       title: "Home",
       state: "unchanged",
-      sharedImpact: ["styles.css"],
       views: [
         {
           colorScheme: "light",
@@ -42,7 +39,7 @@ const result: ReviewResult = {
 test("component summary titles are literal single-line Markdown", () => {
   const summary = summaryMarkdown({
     ...result,
-    schemaVersion: 3,
+    schemaVersion: 5,
     screens: [],
     components: [],
     affectedConsumers: [],
@@ -100,7 +97,7 @@ test("comparison artifacts contain data and snapshots without a separate UI", ()
 });
 
 test("empty comparisons still return a valid result", () => {
-  const empty = { ...result, screens: [], sharedImpact: [] };
+  const empty = { ...result, screens: [] };
   const files = renderReviewArtifact({ files: new Map(), result: empty });
   assert.deepEqual(JSON.parse(String(files.get("review.json"))), empty);
   assert.match(String(files.get("summary.md")), /Screens: 0/);
@@ -131,11 +128,9 @@ for (const [state, outputChanges] of [
 test("ignored-only output does not create impact counts", () => {
   const summary = summaryMarkdown({
     ...result,
-    sharedImpact: [],
     screens: result.screens.map((screen) => ({
       ...screen,
       state: "ignored-only",
-      sharedImpact: [],
     })),
   });
   assert.match(summary, /output changes: 0;/);

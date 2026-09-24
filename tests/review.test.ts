@@ -196,7 +196,7 @@ test("dark views compare and classify against a pre-dark base", async (context) 
   const reviewJson = JSON.parse(
     renderReviewArtifact(artifact).get("review.json") as string,
   ) as ReviewResult;
-  assert.equal(reviewJson.schemaVersion, 2);
+  assert.equal(reviewJson.schemaVersion, 4);
   const jsonHome = reviewJson.screens.find((screen) => screen.id === "home");
   assert.ok(jsonHome);
   assert.deepEqual(
@@ -369,15 +369,17 @@ test("Review compares Git base without checkout and writes deterministic artifac
       ?.state,
     "changed",
   );
-  assert.deepEqual(result.sharedImpact, []);
-  assert.ok(result.screens.every((screen) => screen.sharedImpact.length === 0));
+  assert.equal(Object.hasOwn(result, "sharedImpact"), false);
+  assert.ok(
+    result.screens.every((screen) => !Object.hasOwn(screen, "sharedImpact")),
+  );
   const reviewJson = JSON.parse(
     await fs.promises.readFile(
       path.join(config.review.outDir, "review.json"),
       "utf8",
     ),
   ) as { baseCommit: string; schemaVersion: number };
-  assert.equal(reviewJson.schemaVersion, 2);
+  assert.equal(reviewJson.schemaVersion, 4);
   assert.match(reviewJson.baseCommit, /^[a-f0-9]{40}$/);
   assert.equal(
     fs.existsSync(path.join(config.review.outDir, "index.html")),
@@ -411,7 +413,9 @@ test("Review ignores edits to unrendered source files", async (context) => {
     new CommittedRepository(new NodeGitCommandRunner(fixture.root)),
   );
 
-  assert.ok(result.screens.every((screen) => screen.sharedImpact.length === 0));
+  assert.ok(
+    result.screens.every((screen) => !Object.hasOwn(screen, "sharedImpact")),
+  );
 });
 
 test("Review writer will not replace an unowned directory or repository root", async (context) => {

@@ -26,9 +26,8 @@ const result: ReviewResult = {
   baseRef: "main",
   changedPaths: [],
   ignoredImpact: [],
-  schemaVersion: 2,
+  schemaVersion: 4,
   screens: [],
-  sharedImpact: [],
 };
 
 test("publication preview boundaries report typed MoklyError failures", () => {

@@ -18,9 +18,9 @@ use the same tree with host-owned appearance and independent preview selection.
 Removed pages and screens load their advertised previous versions in local,
 static, and embedded hosts through the same tree, as implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md).
-Public catalogue v2 and comparison v4/v5 reader support are planned by
+Public catalogue v2 and comparison v4/v5 reader support were planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-implemented in Milestone 7; until then the viewer still reads older formats.
+implemented in Milestone 7; the viewer rejects earlier public formats.
 
 ## Package And Props
 

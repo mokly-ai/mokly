@@ -10,7 +10,7 @@ import { compareScreen } from "../dist/review/screen_compare.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 
-for (const version of [2, 3])
+for (const version of [4, 5])
   test(`v${version} asserts analysed reason scope at the producer boundary`, async (t) => {
     const fixture = await componentReviewFixture(t, (source) => source);
     const config = {
@@ -67,7 +67,7 @@ for (const version of [2, 3])
           async () => evidence,
         );
         const compare = () =>
-          version === 2
+          version === 4
             ? compareScreen(
                 screen,
                 screen,

@@ -224,10 +224,10 @@ independent evidence, even for CSS.
 The screen-only live classifier retains a `ScreenResourceEvidence` slice from
 the same traversal that determines membership. The shell receives its selected
 `ViewResourceEvidence` records without requesting snapshots or component
-classification. Export projects the same slice from its existing v2 result;
+classification. Export projects the same slice from its v4 result;
 both producers omit empty views and screens left without evidence. The inspector
-merges it with loaded comparison details. Result schemas and
-classification policy stay unchanged.
+merges it with loaded comparison details. The public result schemas are v4/v5;
+classification uses the same rendered-resource policy in both versions.
 
 With `--debug-timings`, `review.css-analysis` measures each stylesheet/view's
 parse-cache lookup or parse, rule diff, selector matching and reduction. It

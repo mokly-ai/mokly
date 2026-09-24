@@ -23,8 +23,8 @@ export function cssSchemaFiles(): Map<string, string> {
   );
 }
 
-/** Shared server/browser schema fixtures retain both historical versions. */
-export function cssSchemaFixture(version: 2 | 3): ReviewResult {
+/** Shared server/browser fixtures cover both current comparison versions. */
+export function cssSchemaFixture(version: 4 | 5): ReviewResult {
   const address = { id: "auth", route: "screens/auth.html", title: "Sign in" };
   const views: ViewReview[] = [
     {
@@ -60,20 +60,17 @@ export function cssSchemaFixture(version: 2 | 3): ReviewResult {
     baseRef: "main",
     changedPaths: ["mockups/shared.css"],
     ignoredImpact: [],
-    sharedImpact: ["mockups/shared.css"],
   };
   const screen = {
     ...address,
-    dependencies: [],
-    sharedImpact: ["mockups/shared.css"],
     state: "changed" as const,
     views,
   };
-  return version === 2
-    ? { ...common, schemaVersion: 2, screens: [screen] }
+  return version === 4
+    ? { ...common, schemaVersion: 4, screens: [screen] }
     : {
         ...common,
-        schemaVersion: 3,
+        schemaVersion: 5,
         screens: [{ ...screen, before: address, after: address }],
         components: [],
         affectedConsumers: [],

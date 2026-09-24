@@ -87,8 +87,15 @@ test("mixed component design styles retain their actual rendered resource scope"
         );
       else
         assert.ok(
-          result.sharedImpact.includes("examples/basic/generated/design.css"),
-          "the glob remains diagnostic evidence without adding unrelated entries",
+          result.screens.some((screen) =>
+            screen.views.some((view) =>
+              view.reasons?.some(
+                (reason) =>
+                  reason.path === "examples/basic/generated/design.css",
+              ),
+            ),
+          ),
+          "rendered design CSS retains resource evidence",
         );
     });
 });

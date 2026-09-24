@@ -55,8 +55,8 @@ for (const mode of ["committed", "derived"] as const) {
       git,
       "main",
     );
-    assert.equal(result.schemaVersion, 3);
-    if (result.schemaVersion !== 3)
+    assert.equal(result.schemaVersion, 5);
+    if (result.schemaVersion !== 5)
       assert.fail("expected component comparison");
     assert.deepEqual(result.changes, []);
   });

@@ -9,7 +9,7 @@ import { loadConfig } from "../../dist/config/load.js";
 import type { ServedReview } from "../../dist/server/configured_review.js";
 import { startCatalogueServer } from "../../dist/server/http.js";
 import type { RunningServer } from "../../dist/server/http_types.js";
-import type { ReviewResultV2 } from "../../packages/viewer/dist/review/types.js";
+import type { ReviewResultV4 } from "../../packages/viewer/dist/review/types.js";
 import {
   createFixture,
   removeFixture,
@@ -33,14 +33,13 @@ test.beforeAll(async () => {
       await fs.promises.writeFile(
         path.join(outDir, "review.json"),
         JSON.stringify({
-          schemaVersion: 2,
+          schemaVersion: 4,
           baseCommit: "a".repeat(40),
           baseRef: "origin/main",
           changedPaths: [],
           ignoredImpact: [],
           screens: [],
-          sharedImpact: [],
-        } satisfies ReviewResultV2),
+        } satisfies ReviewResultV4),
       );
       await fs.promises.writeFile(
         path.join(outDir, ".mokly-review-artifact"),

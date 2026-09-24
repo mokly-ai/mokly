@@ -5,7 +5,7 @@ import {
   renewPreview,
   requestPreview,
 } from "../packages/viewer/dist/previews/request.js";
-import type { ReviewResultV2 } from "../packages/viewer/dist/review/types.js";
+import type { ReviewResultV4 } from "../packages/viewer/dist/review/types.js";
 import type { RemovedPreviewData } from "../packages/viewer/dist/shell/previews.js";
 
 const GENERATION = "b".repeat(64);
@@ -27,13 +27,12 @@ const removedScreen: RemovedPreviewData = {
 
 const pagePath = `__mokly/diffs/__generations/${GENERATION}/pages/archive/removed.html.json`;
 
-function review(views: ReviewResultV2["screens"][number]["views"]) {
+function review(views: ReviewResultV4["screens"][number]["views"]) {
   return {
-    schemaVersion: 2,
+    schemaVersion: 4,
     baseRef: "origin/main",
     baseCommit: "a".repeat(40),
     changedPaths: [],
-    sharedImpact: [],
     ignoredImpact: [],
     screens: [
       {
@@ -41,12 +40,10 @@ function review(views: ReviewResultV2["screens"][number]["views"]) {
         route: "screens/removed.html",
         title: "Removed screen",
         state: "removed",
-        dependencies: [],
-        sharedImpact: [],
         views,
       },
     ],
-  } satisfies ReviewResultV2;
+  } satisfies ReviewResultV4;
 }
 
 function respond(payload: unknown, url: string, ok = true) {

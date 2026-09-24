@@ -16,7 +16,6 @@ import type { ReviewArtifact } from "../packages/viewer/dist/review/types.js";
 
 const page = {
   declaredDependencies: [],
-  dependencies: [],
   description: "Removed page",
   id: "removed-page",
   kind: "page" as const,
@@ -81,9 +80,8 @@ function reviewArtifact(): ReviewArtifact {
       baseRef: reviewSource.baseRef,
       changedPaths: [],
       ignoredImpact: [],
-      schemaVersion: 2,
+      schemaVersion: 4,
       screens: [],
-      sharedImpact: [],
     },
   };
 }

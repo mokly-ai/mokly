@@ -68,8 +68,8 @@ export default (input) => ({ html: '<html><head><link rel="stylesheet" href="' +
         "main",
       );
       const { result } = artifact;
-      assert.equal(result.schemaVersion, 3);
-      if (result.schemaVersion !== 3) return;
+      assert.equal(result.schemaVersion, 5);
+      if (result.schemaVersion !== 5) return;
       assert.deepEqual(live.componentChanges?.result, result);
       const reason = {
         kind: "dependency",
@@ -91,10 +91,7 @@ export default (input) => ({ html: '<html><head><link rel="stylesheet" href="' +
         );
       }
       for (const component of result.components) {
-        assert.deepEqual(
-          component.sharedImpact,
-          matches && component.id === "action" ? ["mockups/action.css"] : [],
-        );
+        assert.equal(Object.hasOwn(component, "sharedImpact"), false);
         for (const variant of component.variants) {
           assert.equal(variant.views.length, 4);
           for (const view of variant.views) {
@@ -130,8 +127,8 @@ test("unreferenced public assets do not create file-level evidence", async (t) =
   );
   assert.deepEqual(live.changedRoutes, []);
   const result = live.componentChanges?.result;
-  assert.equal(result?.schemaVersion, 3);
-  if (result?.schemaVersion !== 3) return;
+  assert.equal(result?.schemaVersion, 5);
+  if (result?.schemaVersion !== 5) return;
   assert.deepEqual(result.changes, []);
-  assert.deepEqual(result.sharedImpact, []);
+  assert.equal(Object.hasOwn(result, "sharedImpact"), false);
 });

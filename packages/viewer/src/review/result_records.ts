@@ -9,7 +9,6 @@ import {
   reviewId,
   reviewInvalid,
   reviewObject,
-  reviewPath,
   reviewRoute,
   reviewSides,
   reviewState,
@@ -21,32 +20,23 @@ import {
   validateResourceEvidence,
 } from "./result_resources.js";
 
-const screenKeys = [
-  "dependencies",
-  "id",
-  "route",
-  "sharedImpact",
-  "state",
-  "title",
-];
+const screenKeys = ["id", "route", "state", "title"];
 export function validateReviewScreen(
   value: unknown,
-  version: 2 | 3,
+  version: 4 | 5,
   component = false,
   changedPaths: readonly string[] = [],
 ): Record<string, unknown> {
   const record = reviewObject(
     value,
     [...screenKeys, component ? "variants" : "views"],
-    version === 3 ? ["before", "after"] : [],
+    version === 5 ? ["before", "after"] : [],
   );
   reviewId(record.id);
   reviewRoute(record.route);
   reviewString(record.title);
-  reviewStrings(record.dependencies, reviewPath);
-  reviewStrings(record.sharedImpact, reviewPath);
   reviewState(record.state);
-  if (version === 3) {
+  if (version === 5) {
     reviewSides(record);
     requireEqual(record.after ?? record.before, {
       id: record.id,
@@ -57,7 +47,7 @@ export function validateReviewScreen(
   if (!component)
     validateReviewViews(
       record.views,
-      version === 3 ? record : undefined,
+      version === 5 ? record : undefined,
       changedPaths,
     );
   else {

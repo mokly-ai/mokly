@@ -54,7 +54,7 @@ for (const scenario of [
       committedReviewRepository(fixture.config),
     );
     const { result } = await fixture.compare();
-    assert.equal(result.schemaVersion, 2);
+    assert.equal(result.schemaVersion, 4);
     assert.ok(live.changedRoutes?.includes("screens/home.html"));
     assert.ok(!live.changedRoutes?.includes("screens/details.html"));
     assert.deepEqual(

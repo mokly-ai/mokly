@@ -3,7 +3,7 @@ import type { ColorScheme, Viewport } from "../data/axes.js";
 
 import type {
   DependencyReason,
-  ReviewResultV2,
+  ReviewResultV4,
   ReviewState,
   ScreenReview,
   ViewReview,
@@ -18,7 +18,7 @@ export interface ReviewEntrySides {
   before?: ReviewEntryAddress;
   after?: ReviewEntryAddress;
 }
-export interface ScreenReviewV3 extends ScreenReview, ReviewEntrySides {}
+export interface ScreenReviewV5 extends ScreenReview, ReviewEntrySides {}
 export type ReviewVariantAddress = Pick<
   ManifestComponentVariant,
   "id" | "title" | "description" | "props" | "suppliedSlots"
@@ -71,12 +71,12 @@ export interface AffectedConsumer {
     { kind: "screen"; route: string } | { kind: "component"; id: string };
   evidence: readonly AffectedUsageEvidence[];
 }
-export interface ReviewResultV3 extends Omit<
-  ReviewResultV2,
+export interface ReviewResultV5 extends Omit<
+  ReviewResultV4,
   "schemaVersion" | "screens"
 > {
-  schemaVersion: 3;
-  screens: readonly ScreenReviewV3[];
+  schemaVersion: 5;
+  screens: readonly ScreenReviewV5[];
   components: readonly ComponentReview[];
   changes: readonly ChangedEntry[];
   affectedConsumers: readonly AffectedConsumer[];

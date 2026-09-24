@@ -71,8 +71,8 @@ test("line and column shifts alone preserve bytes, keys and all Changes results"
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
+  assert.equal(result.schemaVersion, 5);
+  if (result.schemaVersion !== 5) return;
   assert.deepEqual(result.changes, []);
   assert.deepEqual(result.affectedConsumers, []);
   assert.deepEqual(
@@ -113,8 +113,8 @@ test("moving an invocation source file alone does not create material Changes", 
     "entries/nested/content.tsx",
   ]);
   const { result } = await compareReview(after, config, git, "main");
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
+  assert.equal(result.schemaVersion, 5);
+  if (result.schemaVersion !== 5) return;
   assert.deepEqual(result.changes, []);
   assert.deepEqual(result.affectedConsumers, []);
   assert.deepEqual(await computeChangedRoutes(config, "main", git), []);

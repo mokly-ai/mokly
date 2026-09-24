@@ -86,7 +86,7 @@ test("ignored-only and unrendered source edits do not fill exported Changes", as
     review.screens.find((screen) => screen.id === "details")?.state,
     "unchanged",
   );
-  assert.deepEqual(review.sharedImpact, []);
+  assert.equal(Object.hasOwn(review, "sharedImpact"), false);
   const html = await fs.promises.readFile(
     path.join(fixture.output, "index.html"),
     "utf8",

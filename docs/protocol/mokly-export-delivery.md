@@ -12,9 +12,9 @@ The public catalogue, cross-origin inspector and viewer package are implemented
 by the completed [viewer library plan](../../plans/mokly-viewer-library.md).
 Removed page and screen previous versions are packaged and rendered by the
 [removed content previews plan](../../plans/removed-content-previews.md).
-Serving exported component-declared public CSS and comparison v4/v5 is planned
+Serving exported component-declared public CSS and comparison v4/v5 was planned
 by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-implemented in Milestones 3 and 7. Existing exports still use v2/v3 results.
+implemented in Milestones 3 and 7. Exports now use v4/v5 results.
 
 ## Hosting Contract
 
@@ -73,7 +73,7 @@ existing validated route grammar and are encoded once when written into URLs.
 | `id/<id>/index.html`          | Static alias showing the same shell as the canonical route            |
 | `static/<public-path>`        | Adapted current fragments and public consumer resources               |
 | `__mokly/`                    | Required shell CSS, fonts, browser modules, and comparison generation |
-| `__mokly/catalogue.json`      | Public catalogue read model v1                                        |
+| `__mokly/catalogue.json`      | Public catalogue read model v2                                        |
 | `__mokly/client/inspector.js` | Inert cross-origin frame inspector                                    |
 | `404.html`                    | Existing catalogue not-found view                                     |
 | `.mokly-export-artifact`      | Public-safe versioned ownership inventory                             |

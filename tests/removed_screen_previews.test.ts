@@ -41,7 +41,7 @@ for (const mode of ["committed", "derived"] as const) {
       new AbortController().signal,
     );
 
-    assert.equal(artifact.result.schemaVersion, 2);
+    assert.equal(artifact.result.schemaVersion, 4);
     const screen = artifact.result.screens[0]!;
     assert.equal(screen.state, "removed");
     assert.equal(screen.views.length, 4);
@@ -69,7 +69,7 @@ for (const mode of ["committed", "derived"] as const) {
       fixture.git,
       "main",
     );
-    assert.equal(complete.result.schemaVersion, 3);
+    assert.equal(complete.result.schemaVersion, 5);
     const selected = await new RepositorySelectedReview(
       { ...fixture.config, generatedOutput: mode },
       fixture.git.reader,
@@ -90,7 +90,7 @@ for (const mode of ["committed", "derived"] as const) {
       new AbortController().signal,
     );
 
-    assert.equal(selected.result.schemaVersion, 3);
+    assert.equal(selected.result.schemaVersion, 5);
     const screen = selected.result.screens[0]!;
     assert.equal(screen.state, "removed");
     assert.ok(screen.views.length > 0);

@@ -84,7 +84,7 @@ export class RepositorySelectedReview implements SelectedReviewProvider {
       : await this.screenResult(source, selection, before, after);
     parseReviewResult(result);
     const views =
-      result.schemaVersion === 3 && result.components.length
+      result.schemaVersion === 5 && result.components.length
         ? result.components.flatMap((entry) =>
             entry.variants.flatMap((variant) => variant.views),
           )
@@ -165,9 +165,8 @@ export class RepositorySelectedReview implements SelectedReviewProvider {
       baseRef: source.baseRef,
       changedPaths: source.changedPaths,
       ignoredImpact: aggregateIgnored([screen]),
-      schemaVersion: 2,
+      schemaVersion: 4,
       screens: [screen],
-      sharedImpact: screen.sharedImpact,
     };
   }
 }

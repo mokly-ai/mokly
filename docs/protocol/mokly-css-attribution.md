@@ -6,14 +6,14 @@ Rule parsing, diffing, document matching, and classification are implemented in
 both result versions, live Serve, watched updates, and publication. The
 inspector receives retained and excluded stylesheet evidence for component
 catalogues and screen-only catalogues, including before a comparison is loaded.
-Current screen-only delivery reuses v2 classification; it does not run
+Current screen-only delivery reuses v4 classification; it does not run
 component classification or an additional resource analysis. See
 [CSS Change Attribution](../../plans/css-change-attribution.md).
 Removing source-path evidence and applying CSS rule analysis to linked
 component-declared stylesheets is planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
 implemented in Milestones 3 and 4. Those attribution rules are now live;
-comparison-format changes remain planned for Milestone 7.
+comparison-format changes were implemented in Milestone 7.
 
 ## Purpose
 

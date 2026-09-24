@@ -3,7 +3,7 @@ import path from "node:path";
 import { generatedViews } from "@mokly/viewer/data";
 import type {
   Manifest,
-  ReviewResultV3,
+  ReviewResultV5,
   ScreenResourceEvidence,
 } from "@mokly/viewer/data";
 
@@ -38,7 +38,7 @@ import {
 export interface ComponentChangeSnapshot {
   baseline: Manifest;
   changedRoutes?: readonly string[];
-  result?: ReviewResultV3;
+  result?: ReviewResultV5;
   comparison?: ReviewEvidence;
   screenEvidence?: readonly ScreenResourceEvidence[];
   screenViews?: readonly ScreenViewChanges[];
