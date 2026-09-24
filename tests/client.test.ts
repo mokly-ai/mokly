@@ -8,33 +8,7 @@ import {
   type ReloadLocation,
   type UpdateEventStream,
 } from "../dist/client/react_update_controller.js";
-import {
-  parseBrowseRecoveryState,
-  type BrowseRecoveryState,
-} from "../packages/viewer/dist/runtime.js";
-import { isDisclosureKey } from "../packages/viewer/dist/shell/disclosure_keys.js";
-
-test("stored disclosures accept valid folder paths, including colons, but not empty segments", () => {
-  for (const key of [
-    "section:pages",
-    "section:components",
-    "variants:pages:my-screen",
-    "folder:pages:Design: System/Browse",
-    "folder:components:Design: System/Browse",
-  ])
-    assert.equal(isDisclosureKey(key), true, key);
-  for (const key of [
-    "folder:pages:",
-    "folder:pages:Design/",
-    "folder:pages:/Design",
-    "folder:pages:Design//Browse",
-    "folder:other:Design",
-    "collection:Design",
-    "collection:pages:Design",
-    "legacy:Design",
-  ])
-    assert.equal(isDisclosureKey(key), false, key);
-});
+import type { BrowseRecoveryState } from "../packages/viewer/dist/runtime.js";
 
 test("live updates are latest-wins and recovery is consumed once", () => {
   const stream = new FakeStream();
@@ -82,75 +56,6 @@ test("a ready version newer than the served page reloads immediately", () => {
   assert.deepEqual(controller.consumeRecovery(), {
     url: location.href,
     version: 5,
-  });
-});
-
-test("Browse recovery parsing rejects malformed session state", () => {
-  for (const changesStatus of [
-    "preparing",
-    "pending",
-    "ready",
-    "unavailable",
-  ] as const) {
-    const state = { ...browseState(), changesStatus };
-    assert.deepEqual(parseBrowseRecoveryState(state), state);
-  }
-  assert.equal(
-    parseBrowseRecoveryState({ ...browseState(), changesStatus: "unknown" }),
-    undefined,
-  );
-  assert.equal(
-    parseBrowseRecoveryState({ ...browseState(), changesStatus: null }),
-    undefined,
-  );
-  assert.deepEqual(parseBrowseRecoveryState(browseState()), browseState());
-  const legacyState: Record<string, unknown> = { ...browseState() };
-  delete legacyState["filterBaselineClosedFolderKeys"];
-  assert.deepEqual(parseBrowseRecoveryState(legacyState), {
-    ...browseState(),
-    filterBaselineClosedFolderKeys: null,
-  });
-  assert.equal(
-    parseBrowseRecoveryState({ ...browseState(), viewport: "tablet" }),
-    undefined,
-  );
-  assert.equal(
-    parseBrowseRecoveryState({
-      ...browseState(),
-      regionScrolls: { stage: -1 },
-    }),
-    undefined,
-  );
-  assert.equal(
-    parseBrowseRecoveryState({ ...browseState(), regionScrolls: [4] }),
-    undefined,
-  );
-  assert.equal(
-    parseBrowseRecoveryState({
-      ...browseState(),
-      changedOnly: false,
-      filterBaselineClosedFolderKeys: [],
-      query: "",
-    }),
-    undefined,
-  );
-});
-
-test("pre-upgrade watched recovery payloads are discarded, not migrated", () => {
-  const old = { ...browseState() } as Record<string, unknown>;
-  old["closedCollectionIds"] = ["collection:pages:Product"];
-  delete old["closedFolderKeys"];
-  assert.equal(parseBrowseRecoveryState(old), undefined);
-});
-
-test("a current recovery snapshot keeps unknown strings for default-aware restore", () => {
-  const state = {
-    ...browseState(),
-    closedFolderKeys: ["collection:pages:Product"],
-  };
-  assert.deepEqual(parseBrowseRecoveryState(state), {
-    ...state,
-    filterBaselineClosedFolderKeys: ["folder:pages:fixture"],
   });
 });
 

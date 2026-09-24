@@ -1,8 +1,8 @@
 # Path-Based Navigation Hierarchy
 
-Status: Milestones 1–4 are complete, verified, pushed, and reviewed. Four
-review findings await the user's decision; the plan stays Active until its PR
-merges.
+Status: Milestones 1–5 are complete, verified, and pushed; Milestone 5's
+post-push review is pending. Findings 1 and 2 await the user's decision. The
+plan stays Active until its PR merges.
 Created 2026-09-23 with the user's
 consent after the design discussion in this workspace. This plan supersedes the
 collection-forest contract delivered by
@@ -403,7 +403,7 @@ change: rows, icons, crumbs, and the details inspector look the same.
       reviewers ran against `77df3ec`; the four verified findings below await
       the user's decision.
 
-### Review findings (awaiting the user's decision)
+### Review findings
 
 1. Medium: saved folder disclosures treat every unlisted key as open, so an
    upgrade from `main` (whose saved lists mix obsolete `collection:` keys with
@@ -421,11 +421,69 @@ change: rows, icons, crumbs, and the details inspector look the same.
    collection guards in `scripts/preview/`, a no-op `routedEntry` wrapper and
    `RoutedManifestEntry` alias, a stale "Current catalogue" comment on
    `ManifestV5`, v6 missing from the historical list in `mokly-rendering.md`,
-   and "public v1 fixture" in `npm-release.md`.
+   and "public v1 fixture" in `npm-release.md`. Fixed in Milestone 5.
 4. Low: `mokly-authoring.md` grew past the ~250-line protocol-doc guideline
    (and three other protocol docs grew further past it), two test files
    passed 300 lines, and the label, conflict, and ordering rules are restated
-   in three protocol docs.
+   in three protocol docs. Fixed in Milestone 5.
+
+## Milestone 5: Review follow-up for findings 3 and 4
+
+On 2026-09-24 the user chose to fix review findings 3 and 4 with the
+recommended options. Findings 1 and 2 stay open for the user's decision and
+are out of scope. Code changes are behavior-preserving cleanups with no UI,
+mockup, or visual change.
+
+- [x] Finding 4 (docs): create `docs/protocol/mokly-nav-paths.md`, at most
+      about 250 lines, as the single owner of the navigation-path rules:
+      section folder trees, flat and nested path derivation, label rules and
+      the `invalid-nav-path` text, the conflict key and `nav-path-conflict`
+      texts, the sibling ordering comparator, path, group, and disclosure key
+      formats with prefix-only parsing, variant path inheritance, and how
+      historical paths are treated. Replace every restatement in other
+      protocol docs (at least `mokly-authoring.md`, `mokly-runtime.md`, and
+      `mokly-catalogue.md`) with a short link, and list the new spec in
+      `docs/protocol/README.md`. Every rule is stated in exactly one place.
+- [x] Finding 4 (doc sizes): `mokly-authoring.md` is at most 250 lines;
+      `mokly-catalogue.md`, `mokly-runtime.md`, and `mokly-watch.md` are no
+      longer than on `origin/main`, or the report explains what unrelated
+      content prevents it. Relative links and heading anchors resolve.
+- [x] Finding 4 (tests): split `tests/client.test.ts` and
+      `tests/browser/watch.spec.ts` by responsibility so each is at most 300
+      lines, and move the two folder-disclosure tests this branch added to
+      `tests/browser/browse.spec.ts` into their own spec so that file is no
+      longer than on `origin/main`. Moves preserve behavior exactly.
+- [x] Finding 3: replace the unreachable "links to collection id" error in
+      `src/build/mock_links.ts` with the real invariant (a use case whose
+      first step is not a screen), with a failure-first test through
+      `rewriteMockLinks`. Milestone 2 ticked this item without making the
+      change; the failure-first test and replacement land in Milestone 5.
+- [x] Finding 3: remove the dead collection guards in
+      `scripts/preview/artifact.mjs` and `scripts/preview/catalogue.mjs`, the
+      no-op `routedEntry` wrapper in `packages/viewer/src/shell/routes.ts`,
+      the `RoutedManifestEntry` alias in `nav_tree.ts`, and the impossible
+      `undefined` result of `toRouteTarget` with its callers' dead checks;
+      mark `ManifestV5` as historical in
+      `packages/viewer/src/registry/types.ts`; list v6 among the historical
+      readers in `mokly-rendering.md`; and name the v2 fixture and its actual
+      SSR check in `npm-release.md`.
+- [x] Finding 3 (guard): add a test that fails when collection-model code
+      reappears (the `"collection"` kind literal, `"collection:` keys,
+      `childIds`, `defineCollection`, `ManifestCollection`,
+      `CatalogueCollection`, `NestedCollection*`, or `RootCollection*`) in
+      `src/`, `packages/viewer/src/`, `scripts/`, or
+      `examples/basic/{entries,src}/`, outside an explicit allowlist of the
+      historical manifest boundary files, each of which must still match so
+      the allowlist cannot go stale.
+- [x] Update the READMEs that describe touched modules, and mark findings 3
+      and 4 as fixed in the review-findings list above.
+- [x] Run `cargo xtask check`; fix anything it reports until it passes.
+- [x] Commit and push.
+- [ ] Review the complete local diff against `origin/main` using
+      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      after the push; report each finding with a number, severity, plain
+      explanation, impact of doing nothing, lettered options, and a
+      recommendation, without changing the implementation.
 
 ## Post-merge follow-up (non-blocking)
 
