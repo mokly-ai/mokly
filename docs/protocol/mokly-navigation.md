@@ -32,7 +32,7 @@ Folders derive from routed entries' `navPath` within each section. They have no
 link or destination; a folder with no routed descendants is not emitted.
 `design-browse-tags` (Tag states) has no routed descendants after its six
 screens became variants of `design-browse-screen`, so its former folder row
-disappears when the example migrates to paths. The Components section forms
+is absent from the path-based example. The Components section forms
 its own independent folders, and an empty section is omitted only from the
 rendered navigation, not from the public tree's required arrays.
 

@@ -101,8 +101,8 @@ filter with the picker open. The four listed tag states plus
 move beneath `design-browse-screen` as variants, at
 `design/browse/views/screen.variants/<slug>.html`. Those six entries leave all
 their former folder membership. The `design-browse-tags` (Tag states) folder
-has no routed descendants and disappears from navigation after the path
-migration; the variants remain under Welcome. No unrelated routed entry moves.
+has no routed descendants and is absent from the path-based navigation; the
+variants remain under Welcome. No unrelated routed entry moves.
 
 ## Navigation Controls
 

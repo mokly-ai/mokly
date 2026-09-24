@@ -132,6 +132,13 @@ where `<route directory>` is root `path` followed by ancestor and current
 per-entry issue and would silently discard a folder: `defineRoot` rejects it
 with `MoklyError("build-invalid", "root <path> has no children")`. A root with
 omitted or empty `navPath` and no children returns no definitions.
+When these errors occur in an entry module, the module-bound facade prefixes
+their detail with `<source module>: `; the user sees exactly one
+`[mokly/build-invalid]` prefix, for example
+`[mokly/build-invalid] entries/example.mockup.tsx: folder design/empty has no children`.
+The nested authored-path violation is
+`nested entry <id> cannot author navPath` under the `invalid-nested-nav-path`
+code, attributed to the source module.
 
 Each folder label (every root `navPath` segment and folder title) must be a
 string, nonempty, have no leading or trailing ECMAScript
@@ -140,6 +147,10 @@ per-entry `invalid-nav-path` registry issue naming the entry id, zero-based
 offending index, and offending label (including its value for non-strings).
 An explicit non-array path is `invalid-nav-path` with index `-1` and the raw
 path as its offending value; `undefined` is the omitted default.
+Its diagnostic text is
+`entry <id> navPath index <index> has invalid label <value>`: for an array
+segment `<value>` is `JSON.stringify(label)` (or `String(label)` if that
+returns `undefined`), while for a non-array path it is `String(path)`.
 The current hierarchy analysis owns label and conflict diagnostics; registry
 validation reports each invalid segment once, even for a screen with inherited
 variants. An invalid parent `navPath` is not repeated on those variants.
@@ -153,10 +164,13 @@ on the lowest-id entry in that module using the spelling, regardless of entry
 or module order; name every conflicting spelling in each issue. At the root
 name the location "at the top of Pages" or "at the top of Components";
 below a folder use "under Pages › A › B" (or Components). Byte-identical
-labels merge. A leaf's title is its display label: a leaf sharing a conflict key with a
-sibling folder is also `nav-path-conflict` on the leaf entry, naming its id,
-both labels, and suggesting appending that folder label to the leaf's
-`navPath`. Leaf titles are otherwise
+labels merge. Folder conflicts use
+`labels <quoted spellings> conflict <location>`, with spellings in UTF-16
+code-unit order and each label JSON-quoted. A leaf's title is its display
+label: a leaf sharing a conflict key with a sibling folder is also
+`nav-path-conflict` on the leaf entry, with the text
+`leaf <id> label <quoted title> conflicts with folder label <quoted folder> <location>; append the folder label <quoted folder> to the leaf's navPath`.
+Leaf titles are otherwise
 free text; two leaves with identical titles in one folder are allowed. Order
 every sibling list by folders before leaves, then
 `left.label.localeCompare(right.label, "en")`, then UTF-16 code-unit comparison

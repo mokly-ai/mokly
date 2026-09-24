@@ -133,12 +133,12 @@ never copied into the npm package.
 
 - `<screen>.mobile.html` and `<screen>.desktop.html` fragments for each screen,
   including each variant screen at its derived
-  `<parent>.variants/<slug>.html` route (approved target in the
+  `<parent>.variants/<slug>.html` route (specified by the
   [screen variants contract](./mokly-screen-variants.md));
 - `<screen>.mobile.dark.html` and `<screen>.desktop.dark.html` when that screen's
   effective schemes include dark;
 - one complete HTML document at each page route;
-- `mokly-manifest.json` using schema version 5.
+- `mokly-manifest.json` using schema version 6.
 
 Screen and use-case routes are durable identifiers and do not imply a composed
 HTML file. A screen's fragments are bare product renders with required head
@@ -199,7 +199,7 @@ type ManifestEntry =
       componentViews?: readonly ComponentViewRecord[];
       darkFragments?: { mobile: string; desktop: string };
       fragments: { mobile: string; desktop: string };
-      variantOf?: string; // Approved target: present exactly on variant screens.
+      variantOf?: string; // Present exactly on variant screens.
       viewports: readonly ["mobile", "desktop"];
       useCaseIds: readonly string[];
     })

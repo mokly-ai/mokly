@@ -123,7 +123,7 @@ contract until their standalone screens are implemented.
 The six entries under `screen.variants/` are variants of
 `design-browse-screen` and remain under that entry in authored order rather
 than becoming folder members. The formerly empty `design-browse-tags` (Tag
-states) folder disappears from navigation after the path migration; Welcome
+states) folder is absent from navigation; Welcome
 still presents its variants. The other Shell states entries, including
 `design-browse-tag-filter`, keep their `navPath` labels and routes.
 

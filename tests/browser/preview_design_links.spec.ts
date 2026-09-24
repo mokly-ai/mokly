@@ -115,7 +115,19 @@ for (const viewport of ["mobile", "desktop"] as const) {
       .click();
     await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen$/);
     await page.goto(`${preview.url}/view/screens/welcome`);
+    await expect(page.locator("html")).toHaveAttribute(
+      "data-mokly-hydrated",
+      "",
+    );
     await chooseScheme(page, "dark");
+    await expect(page.locator("html")).toHaveAttribute(
+      "data-mokly-theme",
+      "dark",
+    );
+    await expectFrameSource(
+      page.locator(`.mbk-frame-${viewport} iframe`),
+      new RegExp(`welcome\\.${viewport}\\.dark$`),
+    );
     await expect(page.locator(`.mbk-frame-${viewport} iframe`)).toHaveAttribute(
       "data-mokly-frame-state",
       "ready",

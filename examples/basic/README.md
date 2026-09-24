@@ -81,8 +81,8 @@ states. Both appearance variants render in Light and Dark using the single
 catalogue-wide Appearance selector; the Details example keeps its light device
 preview under Dark. They retain their ids under
 `design/browse/views/screen.variants/`. The former `design-browse-tags` (Tag
-states) collection is now empty; it disappears as a folder after the path
-migration because no routed entry uses that `navPath`. The separate
+states) collection was empty; it has no folder row because no routed entry
+uses that `navPath`. The separate
 `design-browse-tag-filter` route remains in Shell states.
 The reparented removed-variant design state depicts the Changes filter when
 only the historical child was removed: its rail shows a single flat Removed
@@ -254,7 +254,7 @@ npm run preview:build
 ```
 
 This example uses the default `generatedOutput: "derived"`. Generated HTML and
-the schema-v5 manifest under `generated/` are ignored local artifacts, absent in a fresh clone.
+the schema-v6 manifest under `generated/` are ignored local artifacts, absent in a fresh clone.
 `example:build` writes them transactionally; `example:check` validates the current
 compilation and rejects tracked generated output without requiring files on disk.
 Committed-mode stale and deterministic-output tests use isolated consumer fixtures.

@@ -431,6 +431,7 @@ consumers.
 - [`src/viewer`](./src/viewer) — React lifecycle, selection, host integration
   and instance operations
 - [`src/shell`](./src/shell) — shared catalogue shell and scoped styles
+- [`src/registry/nav_paths.ts`](./src/registry/nav_paths.ts) and [`src/registry/hierarchy_conflicts.ts`](./src/registry/hierarchy_conflicts.ts) — shared folder keys, labels, sibling order and source-attributed path conflicts
 - [`src/client`](./src/client) — frame adapters, transport and geometry
 - [`src/catalogue`](./src/catalogue) — public catalogue types and validation
 - [`src/inspector`](./src/inspector) — bounded in-frame inspection runtime

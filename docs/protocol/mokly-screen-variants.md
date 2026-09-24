@@ -109,6 +109,11 @@ Validation rejects, with source attribution:
 - a component carrying `variantOf`. A component's required `variants` field
   remains the unrelated saved-component-view contract.
 
+Each forbidden variant field produces an `invalid-variants` registry violation
+with text `a screen variant cannot declare <field>`, attributed to the variant's
+source module; the authored-field marker survives the consumer bundle through
+`Symbol.for` even if flattening discards that field's value.
+
 Every other screen rule applies unchanged: id and tag grammar, color-scheme
 subsets, reciprocal use-case membership, dependency paths, and source
 attribution to the defining module.

@@ -70,10 +70,15 @@ the public authoring API, including `resolveInstance`. Every repository-owned
 importer of `@mokly/mokly` receives the attributed facade; installed packages
 under `node_modules` and Mokly's own runtime receive the plain API. Registry
 checks run outside the consumer bundle, so CLI-read authoring markers use
-shared registry symbols instead of private symbols or class identity. Typed
-authoring errors carry a cross-copy brand: the facade adds the source module,
-and `load_graph.ts` reconstructs them as CLI `MoklyError`s without double
-prefixes. Unrelated evaluation failures remain bundling errors. Registry
+`Symbol.for` in `src/authoring/markers.ts` instead of private `Symbol()` or class
+identity; both variant forbidden-field metadata and nested authored-path facts
+must survive the boundary. `MoklyError` carries a `Symbol.for` brand and
+`isMoklyError` checks that brand, a known code, and the unprefixed detail. The
+facade adds the source module; `load_graph.ts` reconstructs branded errors as
+CLI `MoklyError`s without double prefixes. Unrelated evaluation failures remain
+bundling errors. `src/registry/historical_collections.ts` validates legacy v3–v5
+collection edges before removing those records from comparison baselines; v6
+does not accept collection entries. Registry
 validation and `ownership.ts` accept an attributed owner only when it is a
 resolved entry module or an inventoried source file. Ownership headers and
 tracked output additionally trust repository-relative owners that match an

@@ -1,7 +1,8 @@
 # Path-Based Navigation Hierarchy
 
-Status: Milestones 1–3 are complete and committed. Milestone 4 has not
-started. Created 2026-09-23 with the user's
+Status: Milestones 1–3 are complete and committed. Milestone 4 verification is
+complete and pushed; the implementation review is the remaining step.
+Created 2026-09-23 with the user's
 consent after the design discussion in this workspace. This plan supersedes the
 collection-forest contract delivered by
 [Hierarchy-Inferred Breadcrumbs](./hierarchy-inferred-breadcrumbs.md); that
@@ -378,15 +379,21 @@ change: rows, icons, crumbs, and the details inspector look the same.
 
 ## Milestone 4: Verification, close-out, and review
 
-- [ ] Run `cargo xtask check`; fix anything it reports until it passes.
-- [ ] Re-read every document touched in Milestone 1 against the shipped
+- [x] Run `cargo xtask check`; fix anything it reports until it passes.
+- [x] Stabilize the published design-link browser test after the first full
+      gate exposed a race between choosing Dark and following a frame link:
+      wait for hydration, the selected theme and its actual dark fragment
+      before navigating; rerun the focused case and the complete gate.
+- [x] Re-read every document touched in Milestone 1 against the shipped
       behavior and correct drift; confirm `plans/README.md` describes this
       plan's state.
-- [ ] Run `git diff --name-status origin/main` and
-      `git diff --diff-filter=D --name-status origin/main`; the only deletion
-      is `docs/protocol/fixtures/catalogue-v1.json`, replaced by the v2
-      fixture, and it is recorded in the commit and PR description.
-- [ ] Commit and push.
+- [x] Run `git diff --name-status origin/main` and
+      `git diff --diff-filter=D --name-status origin/main`; rename detection
+      reports `docs/protocol/fixtures/catalogue-v1.json` as replaced by the
+      v2 fixture, with no other deletions. The replacement is recorded in the
+      implementation commit.
+- [x] Commit and push. The v1-to-v2 fixture replacement is recorded in the
+      commit messages; copy it into the PR description when the PR is opened.
 - [ ] Review the complete local diff against `origin/main` using
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       after the push; report each finding with a number, severity, plain

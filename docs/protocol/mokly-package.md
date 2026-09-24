@@ -20,7 +20,7 @@ the completed
 [in-frame catalogue link navigation plan](../../plans/in-frame-catalogue-link-navigation.md).
 
 [Whole-document pages](./mokly-pages.md) use the same IDs and hierarchy as
-screens and flows. Current manifests require v5. The
+screens and flows. Current manifests require v6. The
 [breaking migration](./mokly-page-migration.md) removes legacy configuration,
 discovery, and rendering adapters; consumers use ordinary page definitions.
 The co-located layout below, discovered through `entries` globs, was delivered

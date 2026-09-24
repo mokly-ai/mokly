@@ -21,6 +21,9 @@ Current section nodes use the shared folder-first comparator; flat removed
 rows follow the complete current hierarchy in route/id order rather than
 interleaving with its top-level leaves. Components and Pages keep independent
 section roots even when they reuse the same folder labels.
+`disclosure_keys.ts` derives section-scoped folder disclosure keys by matching
+fixed prefixes, never splitting on `:` inside a label. It rejects empty path
+segments and ignores obsolete collection and legacy keys on restore.
 `nav_changed.ts` names the changed mark's class, attribute and wording, so the
 server row and each React store update use the same presentation contract;
 `css_nav_changed.ts` draws the mark from `data-changed` and

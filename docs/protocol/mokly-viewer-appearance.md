@@ -319,8 +319,9 @@ fallback caption in the Dark render, because that is a fact about the screen.
 Device-screen tokens stay independent of the interface palette.
 
 A linked Appearance section sits under Browse, with matching source directories
-under `examples/basic/entries/design/browse/appearance/`. Each page's canonical
-route is the folder's canonical owning screen; its other screens share that `navPath`.
+under `examples/basic/entries/design/browse/appearance/`. Each design page
+names a canonical routed screen; other screens can share its `navPath`. The
+folder itself has no route or owning screen.
 
 | Page                         | Owning screens                                                                             |
 | ---------------------------- | ------------------------------------------------------------------------------------------ |
@@ -329,7 +330,7 @@ route is the folder's canonical owning screen; its other screens share that `nav
 | `.../appearance/workspaces/` | Props validation, selected-instance inspector, navigation drawer, Side by side, Difference |
 | `.../appearance/status/`     | Home/empty, catalogue loading, error/retry, Changes unavailable, use-case flow             |
 
-The catalogue hierarchy links the overview to its three child pages; artboards
+The catalogue groups the overview and its three nested families; artboards
 carry no navigation footer. Each screen has its own mobile and desktop
 component and reuses the registered shared components. Do not inline duplicate
 screen markup. Keep no more than five owning screen definitions per page. The

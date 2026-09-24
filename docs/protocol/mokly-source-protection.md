@@ -2,7 +2,8 @@
 
 ## Delivery Status
 
-Implemented for schema-v5 [pages](./mokly-pages.md), screens, and flows.
+Implemented for current schema-v6 [pages](./mokly-pages.md), screens, flows,
+and components; historical v5 baselines retain their validated source inventory.
 The same resolved inventory protects build, runtime, comparisons, and both
 publication options. Verification is tracked in
 [Unified Catalogue Pages](../../plans/unified-catalogue-pages.md); the

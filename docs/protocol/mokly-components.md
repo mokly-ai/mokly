@@ -161,7 +161,7 @@ Catalogues with registered components emit manifest schema v6, including typed
 component entries, variant fragments, and per-view usage records for screens
 and components. The [manifest schema](./mokly-component-manifest.md) defines
 every record, reference, ordering rule, and validation boundary. All current catalogues use v6, including those without components. Historical
-Git readers accept v3, both disjoint v4 formats, v5, and the explicit v2 fallback;
+Git readers accept v3, both disjoint v4 formats, v5/v6, and the explicit v2 fallback;
 unknown versions fail. Historical manifests without usage metadata do not imply an empty
 component tree or justify suppressing changes.
 

@@ -6,9 +6,9 @@ labels an approved target that is still tracked by an active plan. Package,
 authoring, static build/check, responsive Browse, watched development, on-demand comparisons,
 packed consumer verification, CI, and npm release automation are implemented.
 The first public release remains an external delivery step. Path-based
-navigation, manifest v6, and read model v2 below are the approved target
-contract in the active [plan](../../plans/nav-path-hierarchy.md); the viewer
-shell's folder disclosure keys follow in a later milestone.
+navigation, manifest v6, public read model v2, and folder disclosure keys are
+implemented; their verification and review remain in the active
+[plan](../../plans/nav-path-hierarchy.md).
 
 ## Supported Formats
 

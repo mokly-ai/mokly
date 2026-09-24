@@ -40,8 +40,8 @@ Use `navPath: []` (or omit it) to show the page at the top of Pages.
 ## Pages inside a tree
 
 The nested `page` marker derives its route from the root path, ancestor folder
-segments and its own slug. Root and folder titles derive its `navPath`; do not
-author `navPath` on the nested marker.
+segments and its own slug. The root's `navPath` and ancestor folder titles derive
+the leaf's `navPath`; do not author `navPath` on the nested marker.
 
 ## What a page shares with a screen
 
