@@ -38,12 +38,11 @@ export function hostRoute(
         selection.snapshotId,
       )
     : undefined;
-  const view =
-    entry && entry.kind !== "collection"
-      ? { kind: "target" as const, target: { kind: "entry" as const, entry } }
-      : selection.screenId === null
-        ? { kind: "home" as const }
-        : { kind: "missing" as const, requested: selection.screenId };
+  const view = entry
+    ? { kind: "target" as const, target: { kind: "entry" as const, entry } }
+    : selection.screenId === null
+      ? { kind: "home" as const }
+      : { kind: "missing" as const, requested: selection.screenId };
   return {
     view,
     ...(selection.snapshotId ? { snapshot: selection.snapshotId } : {}),

@@ -1,7 +1,5 @@
 import type { ManifestComponent } from "@mokly/viewer";
-import { analyzeHierarchy } from "@mokly/viewer/data";
 import type {
-  ManifestEntry,
   HistoricalManifest,
   ManifestPage,
   ManifestScreen,
@@ -9,11 +7,10 @@ import type {
 
 import type { CatalogueMetadata } from "./catalogue_index.js";
 
-/** Baseline context retained independently of current collection membership. */
+/** Baseline context retained independently of current folder placement. */
 export interface RemovedEntrySnapshot {
   /** Complete baseline DTO, including `variantOf` when the screen was a variant. */
   entry: ManifestPage | ManifestScreen | ManifestComponent;
-  ancestors: readonly { id: string; title: string }[];
 }
 
 /** One pinned generation shared by Browse, watched updates and publication. */
@@ -30,13 +27,8 @@ export function removedManifestEntries(
   manifest: CatalogueMetadata,
   baseline: HistoricalManifest,
 ): RemovedEntrySnapshot[] {
-  const routes = new Set(
-    manifest.entries.flatMap((entry) =>
-      entry.kind === "collection" ? [] : [entry.route],
-    ),
-  );
+  const routes = new Set(manifest.entries.map((entry) => entry.route));
   const ids = new Set(manifest.entries.map((entry) => entry.id));
-  const hierarchy = analyzeHierarchy<ManifestEntry>(baseline.entries).hierarchy;
   return baseline.entries
     .flatMap((entry): RemovedEntrySnapshot[] =>
       (entry.kind === "page" ||
@@ -46,9 +38,6 @@ export function removedManifestEntries(
         ? [
             {
               entry,
-              ancestors: (hierarchy.ancestorsById.get(entry.id) ?? []).map(
-                ({ id, title }) => ({ id, title }),
-              ),
             },
           ]
         : [],

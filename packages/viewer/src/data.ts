@@ -141,9 +141,17 @@ export { isStylesheetPath } from "./review/css/stylesheet_path.js";
 export { VIEWPORTS, effectiveColorSchemes } from "./registry/views.js";
 export type { ArtifactView } from "./registry/views.js";
 export { analyzeHierarchy } from "./registry/hierarchy.js";
+export {
+  compareNavigationNodes,
+  navPathKey,
+  navConflictKey,
+  validNavLabel,
+} from "./registry/nav_paths.js";
 export type {
   HierarchyEntry,
   CatalogueHierarchy,
+  HierarchyNode,
+  HierarchyFolder,
 } from "./registry/hierarchy.js";
 export type {
   ManifestEntryBase,
@@ -151,6 +159,7 @@ export type {
   ManifestPage,
   ManifestEntry,
   ManifestV5,
+  ManifestV6,
   Manifest,
   HistoricalManifest,
 } from "./registry/types.js";

@@ -54,15 +54,6 @@ export function variantEntryViolations(
     );
   }
   if (typeof entry.variantOf !== "string") return violations;
-  if ("childIds" in entry) {
-    violations.push(
-      problem(
-        entry,
-        "invalid-variants",
-        "a screen variant cannot declare childIds",
-      ),
-    );
-  }
   const authoring = screenVariantAuthoring(entry);
   for (const field of authoring?.forbiddenFields ?? []) {
     violations.push(
@@ -76,7 +67,7 @@ export function variantEntryViolations(
   return violations;
 }
 
-/** Validate variant parents, routes, authored slugs, and collection claims. */
+/** Validate variant parents, routes, authored slugs, and inherited paths. */
 export function crossReferenceVariantViolations(
   entries: readonly ResolvedRegistryEntry[],
   byId: ReadonlyMap<string, ResolvedRegistryEntry>,
@@ -118,6 +109,15 @@ export function crossReferenceVariantViolations(
       );
       continue;
     }
+    if (JSON.stringify(entry.navPath) !== JSON.stringify(parent.navPath)) {
+      violations.push(
+        problem(
+          entry,
+          "invalid-variants",
+          `variant ${entry.id} navPath must equal parent ${parent.id} navPath`,
+        ),
+      );
+    }
     const authoring = screenVariantAuthoring(entry);
     let validRoute: boolean;
     if (authoring) {
@@ -156,26 +156,6 @@ export function crossReferenceVariantViolations(
       );
     }
     seenVariantRoutes.add(routeKey);
-  }
-  for (const collection of entries) {
-    if (
-      collection.kind !== "collection" ||
-      !Array.isArray(collection.childIds)
-    ) {
-      continue;
-    }
-    for (const childId of collection.childIds) {
-      const child = byId.get(childId);
-      if (child?.kind === "screen" && typeof child.variantOf === "string") {
-        violations.push(
-          problem(
-            collection,
-            "variant-claimed",
-            `collection claims variant ${childId}; claim its parent instead`,
-          ),
-        );
-      }
-    }
   }
   return violations;
 }

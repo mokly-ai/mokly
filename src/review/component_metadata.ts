@@ -1,11 +1,7 @@
 import { minimatch } from "minimatch";
 
 import type { ComponentViewRecord } from "@mokly/viewer";
-import {
-  canonicalJson,
-  analyzeHierarchy,
-  type CatalogueHierarchy,
-} from "@mokly/viewer/data";
+import { canonicalJson } from "@mokly/viewer/data";
 import type {
   Manifest,
   ManifestEntry,
@@ -15,10 +11,7 @@ import type {
 
 import { dependencyContainsChangedPath } from "../registry/dependency_paths.js";
 
-export type RoutedEntry = Exclude<
-  ManifestEntry,
-  { kind: "collection" | "page" }
->;
+export type RoutedEntry = Exclude<ManifestEntry, { kind: "page" }>;
 export const address = (entry: RoutedEntry): ReviewEntryAddress => ({
   id: entry.id,
   route: entry.route,
@@ -34,32 +27,20 @@ export function entryPairs(
     `${entry.kind}:${entry.kind === "component" ? entry.id : entry.route}`;
   const bases = new Map(
     before.entries.flatMap((entry) =>
-      entry.kind === "collection" || entry.kind === "page"
-        ? []
-        : [[key(entry), entry] as const],
+      entry.kind === "page" ? [] : [[key(entry), entry] as const],
     ),
   );
   const heads = new Map(
     after.entries.flatMap((entry) =>
-      entry.kind === "collection" || entry.kind === "page"
-        ? []
-        : [[key(entry), entry] as const],
+      entry.kind === "page" ? [] : [[key(entry), entry] as const],
     ),
   );
   return [...new Set([...bases.keys(), ...heads.keys()])]
     .sort()
     .map((id) => ({ before: bases.get(id), after: heads.get(id) }));
 }
-export function metadata(
-  entry: RoutedEntry,
-  manifest: Manifest,
-  hierarchy: CatalogueHierarchy<ManifestEntry> = analyzeHierarchy<ManifestEntry>(
-    manifest.entries,
-  ).hierarchy,
-): string {
-  const ancestors = hierarchy.ancestorsById
-    .get(entry.id)
-    ?.map(({ id, title }) => ({ id, title }));
+export function metadata(entry: RoutedEntry): string {
+  const navPath = entry.navPath;
   const {
     dependencies: _dependencies,
     declaredDependencies: _declaredDependencies,
@@ -71,7 +52,7 @@ export function metadata(
     const { variants: _variants, ...component } = common as typeof entry;
     return canonicalJson({
       ...component,
-      ancestors,
+      navPath,
       variants: entry.variants.map(
         ({ componentViews: _views, ...variant }) => variant,
       ),
@@ -79,9 +60,9 @@ export function metadata(
   }
   if (entry.kind === "screen") {
     const { componentViews: _views, ...screen } = common as typeof entry;
-    return canonicalJson({ ...screen, ancestors });
+    return canonicalJson({ ...screen, navPath });
   }
-  return canonicalJson({ ...common, ancestors });
+  return canonicalJson({ ...common, navPath });
 }
 
 /** Explicit owners override broad consumer declarations, retaining exact screen evidence. */

@@ -68,8 +68,9 @@ export const mockups = [
 
 The example assumes an existing `source(): string` export. A nested `page`
 accepts the same metadata and callback, replaces `route` with `slug`, and
-inherits only `dependencies` and `relatedDocs`. Its root and ancestor folder
-titles derive `navPath`; folder `segment`s, not titles, contribute route segments.
+inherits only `dependencies` and `relatedDocs`. Its root `navPath` and ancestor
+folder titles derive the leaf's `navPath`; folder `segment`s, not titles,
+contribute route segments.
 It does not inherit screen addresses, tags, viewports, or color schemes.
 
 Pages reject `mobile`, `desktop`, `colorSchemes`, `address`, `useCaseIds`,

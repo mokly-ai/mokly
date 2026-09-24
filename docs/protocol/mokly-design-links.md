@@ -100,8 +100,9 @@ filter with the picker open. The four listed tag states plus
 `design-browse-dark-scheme` and `design-browse-light-only` retain their ids but
 move beneath `design-browse-screen` as variants, at
 `design/browse/views/screen.variants/<slug>.html`. Those six entries leave all
-collection `childIds`. The now-empty `design-browse-tags` collection retains its
-stable id and points readers to Welcome; no unrelated route or membership moves.
+their former folder membership. The `design-browse-tags` (Tag states) folder
+has no routed descendants and disappears from navigation after the path
+migration; the variants remain under Welcome. No unrelated routed entry moves.
 
 ## Navigation Controls
 
@@ -189,7 +190,7 @@ its stage shows the variant's inert previous version.
 In the reparented state, only the removed child's route is changed. The Changes
 filter therefore hides the unmodified current parent and its variant (the
 former parent), and shows the removed child as one flat screen row outside
-their collection hierarchy. The historical breadcrumb remains visible on the
+their former folder hierarchy. The historical breadcrumb remains visible on the
 screen itself, but the Changes rail contains no parent or nested variant list.
 The depicted All control links to the canonical catalogue home artboard; the
 reparented hierarchy is the context for this Changes-state example.

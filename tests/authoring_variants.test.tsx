@@ -9,7 +9,7 @@ import {
 import type { ScreenInput } from "../dist/authoring/types.js";
 import { DEFAULT_PUBLIC_EXCLUDE } from "../dist/config/public_exclusions.js";
 import type { ResolvedConfig } from "../dist/config/types.js";
-import { defineCollection, defineRoot, screen } from "../dist/index.js";
+import { defineRoot, screen } from "../dist/index.js";
 import { prepareRegistry } from "../dist/registry/prepare.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
@@ -92,6 +92,7 @@ test("screen variants inherit, override, brand, route, and attribute", () => {
     id: "welcome-empty",
     kind: "screen",
     mobile: "Empty mobile",
+    navPath: [],
     relatedDocs: ["docs/protocol/mokly-authoring.md"],
     route: "screens/welcome.variants/empty.html",
     tags: ["onboarding"],
@@ -124,14 +125,10 @@ test("nested screen variants flatten beside the parent", () => {
         variants: [variant("nested-empty", "empty")],
       }),
     ],
-    collection: {
-      address: "example.test/nested",
-      dependencies: ["README.md"],
-      description: "Nested collection",
-      id: "nested",
-      relatedDocs: ["docs/protocol/mokly-authoring.md"],
-      title: "Nested",
-    },
+    address: "example.test/nested",
+    dependencies: ["README.md"],
+    navPath: ["Nested"],
+    relatedDocs: ["docs/protocol/mokly-authoring.md"],
     path: "screens",
   });
   const flattened = definitions.filter((entry) => entry.kind === "screen");
@@ -144,6 +141,7 @@ test("nested screen variants flatten beside the parent", () => {
   assert.equal(flattened[1]?.variantOf, "nested-parent");
   assert.deepEqual(flattened[1]?.tags, ["forms"]);
   assert.deepEqual(flattened[1]?.dependencies, ["README.md"]);
+  assert.deepEqual(flattened[1]?.navPath, ["Nested"]);
 });
 
 test("registry preparation flattens one exported definition-array level", () => {
@@ -153,22 +151,10 @@ test("registry preparation flattens one exported definition-array level", () => 
       variants: [variant("welcome-empty", "empty")],
     }),
   );
-  const collection = attributed(
-    defineCollection({
-      childIds: ["welcome"],
-      dependencies: [],
-      description: "Screens",
-      id: "screens",
-      relatedDocs: [],
-      title: "Screens",
-    }),
-  );
 
   assert.deepEqual(
-    prepareRegistry([definitions, collection], config).entries.map(
-      ({ id }) => id,
-    ),
-    ["screens", "welcome", "welcome-empty"],
+    prepareRegistry([definitions], config).entries.map(({ id }) => id),
+    ["welcome", "welcome-empty"],
   );
 });
 
@@ -182,16 +168,6 @@ test("registry preparation keeps authored sibling variant order", () => {
       ],
     }),
   );
-  const collection = attributed(
-    defineCollection({
-      childIds: ["welcome"],
-      dependencies: [],
-      description: "Screens",
-      id: "screens",
-      relatedDocs: [],
-      title: "Screens",
-    }),
-  );
   const next = attributed(
     defineScreen({
       ...parentInput(),
@@ -202,10 +178,8 @@ test("registry preparation keeps authored sibling variant order", () => {
   );
 
   assert.deepEqual(
-    prepareRegistry([next, definitions, collection], config).entries.map(
-      ({ id }) => id,
-    ),
-    ["screens", "welcome", "welcome-zeta", "welcome-alpha", "workspace"],
+    prepareRegistry([next, definitions], config).entries.map(({ id }) => id),
+    ["welcome", "welcome-zeta", "welcome-alpha", "workspace"],
   );
 });
 

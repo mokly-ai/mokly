@@ -212,13 +212,12 @@ test("review export retains a removed variant route, id redirect, and parent con
     ),
   ) as {
     removedEntries: {
-      ancestors: readonly { id: string; title: string }[];
-      entry: { id: string; variantOf?: string };
+      entry: { id: string; navPath: readonly string[]; variantOf?: string };
     }[];
   };
   const snapshot = catalogue.removedEntries.find(
     ({ entry }) => entry.id === "home-empty",
   );
   assert.equal(snapshot?.entry.variantOf, "home");
-  assert.deepEqual(snapshot?.ancestors, [{ id: "fixture", title: "Fixture" }]);
+  assert.deepEqual(snapshot?.entry.navPath, ["Fixture"]);
 });

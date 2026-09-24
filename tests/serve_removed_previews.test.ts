@@ -27,10 +27,11 @@ for (const watch of [false, true]) {
           await (await fetch(`${running.url}/__mokly/catalogue.json`)).json(),
         );
         for (const removed of model.removedEntries)
-          assert.deepEqual(
-            removed.ancestors.map(({ title }) => title),
-            ["Fixture", "Deleted archive", "Deleted section"],
-          );
+          assert.deepEqual(removed.entry.navPath, [
+            "Fixture",
+            "Deleted archive",
+            "Deleted section",
+          ]);
         assert.notEqual(fixture.baseCommit, fixture.branchEditCommit);
         assert.equal(
           (await fetch(`${running.url}/view/screens/current.html`)).status,

@@ -101,7 +101,6 @@ function isDefinition(value: unknown): value is RegistryDefinition {
   return (
     kind === "page" ||
     kind === "screen" ||
-    kind === "collection" ||
     kind === "use-case" ||
     kind === "component"
   );

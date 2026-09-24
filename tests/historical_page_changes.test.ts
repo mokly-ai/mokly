@@ -86,12 +86,9 @@ for (const version of [2, 3] as const) {
     assert.deepEqual(changes.removedEntries, []);
     const catalogue = createCatalogue(fixture.manifest, changes.removedEntries);
     assert.equal(catalogue.byId.get("handbook")?.title, "Current handbook");
-    assert.deepEqual(
-      catalogue.hierarchy.ancestorsById
-        .get("handbook")
-        ?.map((entry) => entry.id),
-      ["documents"],
-    );
+    assert.deepEqual(catalogue.hierarchy.ancestorsById.get("handbook"), [
+      "Documents",
+    ]);
   });
 }
 

@@ -37,7 +37,7 @@ const currentScreen = screen(
   "screens/current.html",
 );
 const baseline = manifest([oldScreen]);
-const current = manifest([currentScreen]);
+const current = { ...manifest([currentScreen]), schemaVersion: 6 as const };
 
 test("projection publishes stable per-record identity before comparison generation", () => {
   const live = project(BASELINE_A);
@@ -114,7 +114,7 @@ test("reader rejects malformed and duplicate published identities", () => {
 
 test("exact selection resolves every routed kind independently of stable id", () => {
   const fixture = readCatalogue(
-    JSON.parse(requireFixture("../docs/protocol/fixtures/catalogue-v1.json")),
+    JSON.parse(requireFixture("../docs/protocol/fixtures/catalogue-v2.json")),
   );
   const current = [
     fixture.screens[0]!,
@@ -123,7 +123,6 @@ test("exact selection resolves every routed kind independently of stable id", ()
     fixture.components[0]!,
   ];
   const removedEntries = current.map((entry, index) => ({
-    ancestors: [],
     entry: {
       ...structuredClone(entry),
       route: `history/${entry.kind}-${index}.html`,
@@ -156,7 +155,7 @@ test("historical workspace resolution owns the old route and Removed status", ()
   const workspace = publicWorkspace(model, displayed);
 
   const selected = catalogue.byId.get(currentScreen.id);
-  assert.ok(selected && selected.kind !== "collection");
+  assert.ok(selected);
   assert.equal(selected.route, currentScreen.route);
   assert.equal(workspace.entry.route, oldScreen.route);
   assert.equal(workspace.entry.title, oldScreen.title);

@@ -1,5 +1,4 @@
 import type {
-  CatalogueCollection,
   CatalogueEntry,
   CatalogueReadModel,
   CatalogueRoutedEntry,
@@ -48,17 +47,17 @@ export function projectCatalogue(
       .map((entry) => entry.id),
   );
   if (
-    catalogue.manifest.schemaVersion !== 5 &&
+    catalogue.manifest.schemaVersion !== 6 &&
     catalogue.manifest.schemaVersion !== "live-index-1"
   )
     invalidData(
       "$catalogue",
-      "current projection requires manifest v5 or live metadata",
+      "current projection requires manifest v6 or live metadata",
     );
   const common = (entry: ManifestEntry, removed: boolean): CatalogueEntry => ({
     id: entry.id,
     title: entry.title,
-    tags: entry.kind === "collection" ? [] : [...(entry.tags ?? [])],
+    tags: [...(entry.tags ?? [])],
     details: {
       description: entry.description,
       sourcePath: repositoryPath(entry.sourcePath),
@@ -69,7 +68,7 @@ export function projectCatalogue(
     changes: entryChanges(entry, input, removed),
   });
   const routed = (
-    entry: Exclude<ManifestEntry, { kind: "collection" }>,
+    entry: ManifestEntry,
     removed: boolean,
   ): CatalogueRoutedEntry => {
     const base = common(entry, removed);
@@ -77,6 +76,7 @@ export function projectCatalogue(
       return {
         ...base,
         kind: "page",
+        navPath: entry.navPath,
         route: entry.route,
         documentPath: removed ? null : publicPath(`static/${entry.route}`),
       };
@@ -84,6 +84,7 @@ export function projectCatalogue(
       return {
         ...base,
         kind: "use-case",
+        navPath: entry.navPath,
         route: entry.route,
         steps: entry.steps.map((step) => ({
           screenId: step.screenId,
@@ -97,6 +98,7 @@ export function projectCatalogue(
       return {
         ...base,
         kind: "screen",
+        navPath: entry.navPath,
         route: entry.route,
         viewports: [...entry.viewports],
         colorSchemes: entry.darkFragments ? ["light", "dark"] : ["light"],
@@ -157,6 +159,7 @@ export function projectCatalogue(
     return {
       ...base,
       kind: "component",
+      navPath: entry.navPath,
       route: entry.route,
       viewports: [...entry.viewports],
       colorSchemes: entry.variants[0]?.darkFragments
@@ -168,20 +171,10 @@ export function projectCatalogue(
       variants,
     };
   };
-  const collections: CatalogueCollection[] = [];
-  const entries: CatalogueRoutedEntry[] = [];
-  for (const entry of orderEntriesWithVariants(
+  const entries: CatalogueRoutedEntry[] = orderEntriesWithVariants(
     catalogue.manifest.entries,
     (value) => value,
-  )) {
-    if (entry.kind === "collection")
-      collections.push({
-        ...common(entry, false),
-        kind: "collection",
-        childIds: [...entry.childIds],
-      });
-    else entries.push(routed(entry, false));
-  }
+  ).map((entry) => routed(entry, false));
   const removedSnapshots =
     input.changesStatus === "ready"
       ? orderEntriesWithVariants(catalogue.removedEntries, ({ entry }) => entry)
@@ -193,7 +186,7 @@ export function projectCatalogue(
     if (!removedRoutes.has(route))
       invalidData("$catalogue", "preview route is not a removed entry");
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     identity,
     deploymentId: ZERO_DEPLOYMENT_ID,
     revision: {
@@ -202,18 +195,13 @@ export function projectCatalogue(
     },
     changesStatus: input.changesStatus,
     comparisonUrl,
-    collections,
     tree: projectTree(catalogue.hierarchy),
     screens: entries.filter((entry) => entry.kind === "screen"),
     pages: entries.filter((entry) => entry.kind === "page"),
     useCases: entries.filter((entry) => entry.kind === "use-case"),
     components: entries.filter((entry) => entry.kind === "component"),
-    removedEntries: removedSnapshots.map(({ entry, ancestors }) => ({
+    removedEntries: removedSnapshots.map(({ entry }) => ({
       entry: routed(entry, true),
-      ancestors: ancestors.map((ancestor) => ({
-        id: ancestor.id,
-        title: ancestor.title,
-      })),
       ...(snapshotSource
         ? {
             snapshotId: historicalSnapshotId(
@@ -254,7 +242,7 @@ function historicalSource(
 }
 
 function projectPreview(
-  entry: Exclude<ManifestEntry, { kind: "collection" }>,
+  entry: ManifestEntry,
   preview: RemovedEntryPreview | undefined,
   comparisonUrl: string | null,
 ): { preview?: RemovedEntryPreview } {

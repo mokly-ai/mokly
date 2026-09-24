@@ -25,7 +25,7 @@ function nodes(
       {
         key: "components",
         depth: 0,
-        kind: "collection",
+        kind: "folder",
         label: "Components",
         count: 1,
         open: true,
@@ -50,7 +50,7 @@ function nodes(
           {
             key: "screens",
             depth: 0,
-            kind: "collection",
+            kind: "folder",
             label: "Screens",
             count:
               scenario === "screen" || scenario === "removed"
@@ -102,7 +102,7 @@ function nodes(
     {
       key: "components",
       depth: 0,
-      kind: "collection",
+      kind: "folder",
       label: "Components",
       count: scenario === "all" ? 4 : 1,
       open: true,

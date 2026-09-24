@@ -86,7 +86,7 @@ export async function removedPagePreviewFixture(
     baseCommit: PAGE_COMMIT,
     baseRef: "main",
     changedRoutes: [PAGE_ROUTE],
-    removedEntries: [{ entry: page, ancestors: [] }],
+    removedEntries: [{ entry: page }],
     schemaVersion: 1 as const,
   };
   return { ...fixture, batches, baseline, config, files, page, reader, source };

@@ -51,8 +51,8 @@ export function orderEntriesWithVariants<T>(
 }
 
 function compareEntries(left: EntryOrderFields, right: EntryOrderFields) {
-  const leftRoute = left.kind === "collection" ? "" : (left.route ?? "");
-  const rightRoute = right.kind === "collection" ? "" : (right.route ?? "");
+  const leftRoute = left.route ?? "";
+  const rightRoute = right.route ?? "";
   return lexical(leftRoute, rightRoute) || lexical(left.id, right.id);
 }
 

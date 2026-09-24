@@ -142,9 +142,7 @@ test("removed page capture denies traversal, symlinks, metadata, and authored so
       ...fixture.baseline,
       entries: [{ ...fixture.page, route: "../guide.html" }],
     } as HistoricalManifest,
-    removedEntries: [
-      { entry: { ...fixture.page, route: "../guide.html" }, ancestors: [] },
-    ],
+    removedEntries: [{ entry: { ...fixture.page, route: "../guide.html" } }],
   };
   await assert.rejects(
     new RepositoryRemovedPagePreview(fixture.config, fixture.reader).generate(

@@ -32,7 +32,7 @@ async function toggleDisclosure(disclosure: Locator): Promise<void> {
         );
       }),
   );
-  await disclosure.locator("summary").click();
+  await disclosure.locator(":scope > summary").click();
   await toggled;
 }
 
@@ -90,10 +90,10 @@ test("watched serve rebuilds and reloads after an authored change", async ({
   await page.goto(`${url}/view/screens/home.html`);
   await expect(page.locator("#mb-main h2")).toHaveText("Home");
   const screens = page.locator(
-    'details[data-nav-collection="collection:screens"]',
+    'details[data-nav-collection="collection:Fixture/Screens"]',
   );
   const archive = page.locator(
-    'details[data-nav-collection="collection:archive"]',
+    'details[data-nav-collection="collection:Fixture/Archive"]',
   );
   await expect(screens).toHaveAttribute("open", "");
   await toggleDisclosure(screens);
@@ -176,7 +176,7 @@ test("watched reload reopens collapsed active route ancestry", async ({
 }) => {
   await page.goto(`${url}/view/screens/home.html`);
   const screens = page.locator(
-    'details[data-nav-collection="collection:screens"]',
+    'details[data-nav-collection="collection:Fixture/Screens"]',
   );
   await expect(screens).toHaveAttribute("open", "");
   await toggleDisclosure(screens);
@@ -210,10 +210,10 @@ test("watched reparenting moves navigation and crumbs together", async ({
   await page.goto(`${url}/view/screens/home.html`);
   await expect(page.locator(".mbk-crumbs")).toHaveText("Fixture›Screens");
   const screens = page.locator(
-    'details[data-nav-collection="collection:screens"]',
+    'details[data-nav-collection="collection:Fixture/Screens"]',
   );
   const archive = page.locator(
-    'details[data-nav-collection="collection:archive"]',
+    'details[data-nav-collection="collection:Fixture/Archive"]',
   );
   await toggleDisclosure(screens);
   await expect(screens).not.toHaveAttribute("open", "");
@@ -236,23 +236,22 @@ test("watched reparenting moves navigation and crumbs together", async ({
   await expect(screens).not.toHaveAttribute("open", "");
 });
 
-test("duplicate titles retain independent disclosure across reloads", async ({
+test("duplicate folder titles under different parents retain independent disclosure", async ({
   page,
 }) => {
   await page.goto(`${url}/view/screens/home.html`);
   await fs.promises.writeFile(
     fixture.entryPath,
     reparentedEntrySource("archive", {
-      archiveTitle: "Same title",
       firstTitle: "Home Reloaded",
-      screensTitle: "Same title",
+      sharedChildTitle: "Same title",
     }),
   );
   const screens = page.locator(
-    'details[data-nav-collection="collection:screens"]',
+    'details[data-nav-collection="collection:Fixture/Screens/Same title"]',
   );
   const archive = page.locator(
-    'details[data-nav-collection="collection:archive"]',
+    'details[data-nav-collection="collection:Fixture/Archive/Same title"]',
   );
   await expect(screens.locator("summary .mbk-nav-label")).toHaveText(
     "Same title",
@@ -262,6 +261,18 @@ test("duplicate titles retain independent disclosure across reloads", async ({
     "Same title",
   );
 
+  await page.addInitScript(() => {
+    localStorage.removeItem("mokly:nav-disclosure:v2");
+  });
+  await page.goto(`${url}/view/screens/home.html`);
+  const screensParent = page.locator(
+    'details[data-nav-collection="collection:Fixture/Screens"]',
+  );
+  await expect(screensParent).not.toHaveAttribute("open", "");
+  await expect(screens).not.toHaveAttribute("open", "");
+  await expect(archive).toHaveAttribute("open", "");
+  await toggleDisclosure(screensParent);
+  await expect(screensParent).toHaveAttribute("open", "");
   await toggleDisclosure(screens);
   await expect(screens).toHaveAttribute("open", "");
   await toggleDisclosure(screens);
@@ -271,7 +282,7 @@ test("duplicate titles retain independent disclosure across reloads", async ({
     .poll(() =>
       page.evaluate(() => localStorage.getItem("mokly:nav-disclosure:v2")),
     )
-    .toContain("collection:pages:screens");
+    .toContain("collection:pages:Fixture/Screens/Same title");
 
   await page.reload();
   await expect(screens).not.toHaveAttribute("open", "");

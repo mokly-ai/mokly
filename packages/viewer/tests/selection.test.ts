@@ -15,7 +15,7 @@ const fixture = readCatalogue(
   JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v1.json",
+        "../../../docs/protocol/fixtures/catalogue-v2.json",
         import.meta.url,
       ),
       "utf8",
@@ -104,7 +104,7 @@ test("same-id current and historical components reset record-specific variants",
     ...fixture,
     removedEntries: [
       ...fixture.removedEntries,
-      { ancestors: [], entry: historical, snapshotId },
+      { entry: historical, snapshotId },
     ],
   };
   const currentSelection = normalizeSelection(model, {

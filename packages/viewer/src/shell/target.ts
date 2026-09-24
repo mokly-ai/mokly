@@ -8,7 +8,7 @@ import type {
   ManifestUseCase,
 } from "../registry/types.js";
 
-/** A routed structured entry: a screen or a use case, never a collection. */
+/** A routed structured entry in the public catalogue. */
 export type RoutedEntry =
   ManifestScreen | ManifestPage | ManifestUseCase | ManifestComponent;
 
@@ -17,8 +17,5 @@ export type RouteTarget = { kind: "entry"; entry: RoutedEntry };
 
 /** Classify a catalogue lookup result into a renderable route target. */
 export function toRouteTarget(value: ManifestEntry): RouteTarget | undefined {
-  if (value.kind !== "collection") {
-    return { kind: "entry", entry: value };
-  }
-  return undefined;
+  return { kind: "entry", entry: value };
 }

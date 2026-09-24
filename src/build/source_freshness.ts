@@ -31,14 +31,12 @@ export async function assertFreshSourceInventory(
   config.configSourceFiles = current.configSourceFiles ?? [];
   validateGeneratedOutputPaths(
     manifest.entries.flatMap((entry) =>
-      entry.kind === "collection"
-        ? []
-        : entry.kind === "screen"
-          ? [
-              ...Object.values(entry.fragments),
-              ...Object.values(entry.darkFragments ?? {}),
-            ]
-          : [entry.route],
+      entry.kind === "screen"
+        ? [
+            ...Object.values(entry.fragments),
+            ...Object.values(entry.darkFragments ?? {}),
+          ]
+        : [entry.route],
     ),
     config,
   );

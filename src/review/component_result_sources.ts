@@ -59,7 +59,7 @@ export function validateComponentReviewSources(
           reason.kind === "metadata" &&
           (!pair.before ||
             !pair.after ||
-            metadata(pair.before, before) === metadata(pair.after, after))
+            metadata(pair.before) === metadata(pair.after))
         )
           reviewInvalid("metadata reason has no source difference");
         if (

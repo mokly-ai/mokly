@@ -25,11 +25,10 @@ export async function historicalPageFixture(
     symlink?: boolean;
   } = {},
 ) {
-  const source = `import { defineCollection, definePage } from "@mokly/mokly";
+  const source = `import { definePage } from "@mokly/mokly";
 const meta = { description: "Document", dependencies: [], relatedDocs: [] };
 export const mockups = [
-  defineCollection({ ...meta, id: "documents", title: "Documents", childIds: ["handbook"] }),
-  definePage({ ...meta, id: "handbook", title: "Current handbook", route: "handbook.html", render: () => ${JSON.stringify(pageDocument)} })
+  definePage({ ...meta, id: "handbook", title: "Current handbook", navPath: ["Documents"], route: "handbook.html", render: () => ${JSON.stringify(pageDocument)} })
 ];`;
   const fixture = await changedFixture(
     context,

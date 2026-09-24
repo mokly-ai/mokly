@@ -19,8 +19,8 @@ interface RemovedDocument {
 }
 
 /**
- * The deleted Handbook collection. Changes lists its documents flat, because
- * the collection that held them is no longer in the catalogue.
+ * The deleted Handbook folder. Changes lists its documents flat, because
+ * the folder that held them is no longer in the catalogue.
  */
 export const REMOVED_DOCUMENTS = {
   handbook: {
@@ -93,7 +93,7 @@ function RemovedDetails({ entry }: { entry: RemovedDocument }) {
 
 /**
  * A removed document keeps its flat Changes row, its Removed badge, and the
- * baseline ancestry of the collection that was deleted with it. `document`
+ * baseline path of the folder that was deleted with it. `document`
  * holds the previous version; a state stage replaces it while the previous
  * version is unavailable.
  */

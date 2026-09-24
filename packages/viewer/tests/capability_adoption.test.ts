@@ -23,7 +23,7 @@ const fixtureModel = readCatalogue(
   JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v1.json",
+        "../../../docs/protocol/fixtures/catalogue-v2.json",
         import.meta.url,
       ),
       "utf8",
@@ -167,7 +167,7 @@ test("live evidence retains unchanged identity-less historical metadata", () => 
   const historical: CatalogueReadModel = {
     ...model,
     screens: model.screens.slice(1),
-    removedEntries: [{ entry: screen, ancestors: [] }],
+    removedEntries: [{ entry: screen }],
   };
   const current = viewerCatalogue(historical);
   const route = routeFromUrl(
@@ -211,7 +211,7 @@ test("live evidence rejects changed or removed identity-less history", () => {
   const historical: CatalogueReadModel = {
     ...model,
     screens: model.screens.slice(1),
-    removedEntries: [{ entry: screen, ancestors: [] }],
+    removedEntries: [{ entry: screen }],
   };
   const current = viewerCatalogue(historical);
   const route = routeFromUrl(
@@ -225,9 +225,7 @@ test("live evidence rejects changed or removed identity-less history", () => {
       ...historical.revision,
       evidence: historical.revision.evidence + 1,
     },
-    removedEntries: [
-      { entry: { ...screen, title: "Earlier home" }, ancestors: [] },
-    ],
+    removedEntries: [{ entry: { ...screen, title: "Earlier home" } }],
   };
   const removed: CatalogueReadModel = {
     ...changed,

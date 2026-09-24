@@ -40,7 +40,7 @@ export interface RemovedPreviewData {
 export function removedPreviewData(
   catalogue: Catalogue,
   context: ShellContext,
-  entry: Exclude<ManifestEntry, { kind: "collection" }>,
+  entry: ManifestEntry,
 ): RemovedPreviewData | undefined {
   if (entry.kind !== "page" && entry.kind !== "screen") return undefined;
   const model = catalogue.publicModel ?? context.readModel;

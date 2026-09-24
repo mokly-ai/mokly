@@ -1,7 +1,6 @@
 /** Convert validated public data to the existing shell's display records. */
 import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
 import type {
-  CatalogueEntry,
   CatalogueReadModel,
   CatalogueRoutedEntry,
   CatalogueView,
@@ -11,7 +10,7 @@ import type {
   ManifestComponentVariant,
 } from "../components/manifest_types.js";
 import { componentFragmentRoute } from "../components/paths.js";
-import type { ManifestEntry, ManifestV5 } from "../registry/types.js";
+import type { ManifestEntry, ManifestV6 } from "../registry/types.js";
 import { catalogueRouteEntry, createCatalogue } from "../shell/catalogue.js";
 import type { ShellContext } from "../shell/context.js";
 import { toRouteTarget } from "../shell/target.js";
@@ -19,14 +18,14 @@ import type { ShellView } from "../shell/views.js";
 
 import type { ViewerSelection } from "./types.js";
 
-function metadata(entry: CatalogueEntry) {
+function metadata(entry: CatalogueRoutedEntry) {
   return {
     id: entry.id,
     title: entry.title,
     tags: entry.tags,
     ...entry.details,
     declaredDependencies: entry.details.dependencies,
-    navPath: [],
+    navPath: entry.navPath,
   };
 }
 export function usageView(
@@ -65,9 +64,7 @@ function fragments(
     componentViews: views.flatMap((view) => usageView(view) ?? []),
   };
 }
-export function displayEntry(
-  entry: CatalogueRoutedEntry,
-): Exclude<ManifestEntry, { kind: "collection" }> {
+export function displayEntry(entry: CatalogueRoutedEntry): ManifestEntry {
   const base = { ...metadata(entry), route: entry.route };
   switch (entry.kind) {
     case "page":
@@ -116,16 +113,11 @@ export function displayEntry(
   }
 }
 export function viewerCatalogue(model: CatalogueReadModel) {
-  const manifest: ManifestV5 = {
-    schemaVersion: 5,
+  const manifest: ManifestV6 = {
+    schemaVersion: 6,
     generatedBy: "mokly",
     sourceFiles: [],
     entries: [
-      ...model.collections.map((entry) => ({
-        ...metadata(entry),
-        kind: "collection" as const,
-        childIds: entry.childIds,
-      })),
       ...[
         ...model.screens,
         ...model.pages,
@@ -140,9 +132,8 @@ export function viewerCatalogue(model: CatalogueReadModel) {
   return {
     ...createCatalogue(
       manifest,
-      model.removedEntries.map(({ entry, ancestors, snapshotId }) => ({
+      model.removedEntries.map(({ entry, snapshotId }) => ({
         entry: displayEntry(entry),
-        ancestors,
         ...(snapshotId ? { snapshotId } : {}),
       })),
     ),

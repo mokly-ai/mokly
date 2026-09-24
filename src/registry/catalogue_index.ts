@@ -1,6 +1,6 @@
 /** Live routing metadata is deliberately not a publishable manifest. */
 import type { ColorScheme } from "@mokly/viewer";
-import type { Manifest, ManifestV5 } from "@mokly/viewer/data";
+import type { Manifest, ManifestV6 } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import { validateDependencyDeclarations } from "../components/dependency_validation.js";
@@ -13,7 +13,7 @@ export interface CatalogueIndex {
   schemaVersion: "live-index-1";
   generatedBy: "mokly";
   sourceFiles: readonly string[];
-  entries: ManifestV5["entries"];
+  entries: ManifestV6["entries"];
 }
 
 export type CatalogueMetadata = Manifest | CatalogueIndex;
@@ -40,8 +40,8 @@ export function parseCatalogueIndex(value: unknown): CatalogueIndex {
     throw new MoklyError("manifest-invalid", "expected a live catalogue index");
   const metadata = validateManifestMetadata({
     ...value,
-    schemaVersion: 5,
-  }) as ManifestV5;
+    schemaVersion: 6,
+  }) as ManifestV6;
   for (const entry of metadata.entries) {
     validateDependencyDeclarations(entry);
     if (

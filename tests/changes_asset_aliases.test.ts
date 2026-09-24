@@ -55,10 +55,7 @@ for (const kind of ["screen", "page"]) {
 test("ignored alias resources remain outside Changes after target edits", async (context) => {
   const source = validEntrySource({
     body: '<ReviewIgnore id="nav"><img src="../image.svg" alt="Logo" /></ReviewIgnore><p>Content</p>',
-  }).replace(
-    "import { defineCollection",
-    "import { ReviewIgnore, defineCollection",
-  );
+  }).replace("import { defineScreen", "import { ReviewIgnore, defineScreen");
   const fixture = await changedFixture(
     context,
     source,

@@ -72,9 +72,10 @@ test("all sixteen shared components have connected pages, controls and saved exa
     (entry) => entry.kind === "component" && entry.id.startsWith("design-ui-"),
   );
   assert.equal(components.length, 16);
-  const root = manifest.entries.find((entry) => entry.id === "design-root");
-  assert.ok(root?.kind === "collection");
-  assert.ok(root.childIds.includes("design-library"));
+  assert.equal(
+    manifest.entries.some((entry) => entry.id === "design-root"),
+    false,
+  );
   for (const [group, slug, variants] of designLibrary) {
     const id = `design-ui-${slug}`;
     const entry = components.find((entry) => entry.id === id);
@@ -85,12 +86,16 @@ test("all sixteen shared components have connected pages, controls and saved exa
       variants,
     );
     assert.ok(Object.keys(entry.controls).length > 0, id);
-    const collection = manifest.entries.find(
-      (entry) => entry.id === `design-library-${group}`,
+    const groupTitle = group[0]!.toUpperCase() + group.slice(1);
+    assert.deepEqual(entry.navPath, [
+      "Design",
+      "Shared components",
+      groupTitle,
+    ]);
+    assert.ok(
+      components.filter((component) => component.navPath.at(-1) === groupTitle)
+        .length <= 5,
     );
-    assert.ok(collection?.kind === "collection");
-    assert.ok(collection.childIds.includes(id));
-    assert.ok(collection.childIds.length <= 5);
     for (const variant of entry.variants) {
       // Only the samples whose own subject is appearance render in both schemes.
       assert.equal(

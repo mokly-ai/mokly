@@ -18,7 +18,7 @@ export async function baselineManifestVersion(
   directory: string,
   allowV2 = false,
   signal?: AbortSignal,
-): Promise<2 | 3 | 4 | 5> {
+): Promise<2 | 3 | 4 | 5 | 6> {
   const prefix = path.relative(root, directory).split(path.sep).join("/");
   const canonical = await confinedBaselineStat(
     fs,
@@ -47,5 +47,5 @@ export async function baselineManifestVersion(
     ).toString("utf8"),
   );
   parseHistoricalManifest(value, selection.allowV2);
-  return (value as { schemaVersion: 2 | 3 | 4 | 5 }).schemaVersion;
+  return (value as { schemaVersion: 2 | 3 | 4 | 5 | 6 }).schemaVersion;
 }

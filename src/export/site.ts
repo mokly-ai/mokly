@@ -72,7 +72,6 @@ export function assembleExport(
     string
   >;
   for (const entry of [...compilation.manifest.entries, ...removed]) {
-    if (entry.kind === "collection") continue;
     if (
       removed.some((candidate) => candidate === entry) &&
       current.byId.has(entry.id)

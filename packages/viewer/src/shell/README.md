@@ -17,6 +17,10 @@ deleted variant whose non-variant parent survives joins that container as a
 Removed row. `nav_tree.ts` records actual attachment before removing the row
 from flat fallback, so a former parent that is now a variant cannot make its
 historical child disappear and every removed route remains represented once.
+Current section nodes use the shared folder-first comparator; flat removed
+rows follow the complete current hierarchy in route/id order rather than
+interleaving with its top-level leaves. Components and Pages keep independent
+section roots even when they reuse the same folder labels.
 `nav_changed.ts` names the changed mark's class, attribute and wording, so the
 server row and each React store update use the same presentation contract;
 `css_nav_changed.ts` draws the mark from `data-changed` and

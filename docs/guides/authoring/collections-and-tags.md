@@ -38,7 +38,7 @@ Breadcrumbs use the path labels in order. Moving a path changes navigation
 and breadcrumbs without changing the entry's route. Variants copy their
 parent's path and appear beneath its row.
 
-Inside a `defineRoot` tree, optional root `title` and ancestor `folder()`
+Inside a `defineRoot` tree, optional root `navPath` and ancestor `folder()`
 titles derive each leaf's path; `segment` builds routes and never moves a
 folder in navigation. Nested leaves must not author their own `navPath`.
 

@@ -54,7 +54,7 @@ for (const width of [390, 1280]) {
     await page.locator('[data-filter="changed"]').click();
     await expect(removed).toBeVisible();
     await expect(
-      page.locator('[data-nav-collection="collection:documents"]'),
+      page.locator('[data-nav-collection="collection:Documents"]'),
     ).toHaveCount(0);
     expect(
       await removed.evaluate(

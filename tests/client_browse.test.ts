@@ -187,17 +187,17 @@ test("recovery matches stable disclosure keys and ignores label paths", () => {
     href: "https://example.test/",
     initial: {
       recovery: recovery({
-        closedCollectionIds: ["/Same title", "collection:product"],
+        closedCollectionIds: ["/Same title", "collection:Product"],
         filterBaselineClosedCollectionIds: [
           "/Same title",
-          "collection:product",
+          "collection:Product",
         ],
       }),
     },
   });
-  assert.equal(state.disclosures["collection:pages:product"], false);
-  assert.equal(state.disclosures["collection:components:product"], false);
-  assert.equal(state.filterBaseline?.["collection:pages:product"], false);
+  assert.equal(state.disclosures["collection:pages:Product"], false);
+  assert.equal(state.disclosures["collection:components:Product"], false);
+  assert.equal(state.filterBaseline?.["collection:pages:Product"], false);
   assert.equal(Object.hasOwn(state.disclosures, "/Same title"), false);
 });
 

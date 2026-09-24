@@ -26,11 +26,11 @@ test("viewer rebuilds current and removed screen variant relationships", () => {
   const manifest = {
     entries: [parent, current],
     generatedBy: "mokly" as const,
-    schemaVersion: 5 as const,
+    schemaVersion: 6 as const,
     sourceFiles: [parent.sourcePath, current.sourcePath].sort(),
   };
   const model = projectCatalogue({
-    catalogue: createCatalogue(manifest, [{ entry: removed, ancestors: [] }]),
+    catalogue: createCatalogue(manifest, [{ entry: removed }]),
     changesStatus: "ready",
     changedRoutes: [current.route],
     comparisonUrl: null,

@@ -1,9 +1,9 @@
 import { isPortableUrlPath } from "@mokly/viewer/data";
 
+import { VARIANT_AUTHORING } from "./markers.js";
 import type { ScreenDefinition, ScreenVariantInput } from "./types.js";
 
-const VARIANT_AUTHORING = Symbol("mokly.screen-variant-authoring");
-const FORBIDDEN_VARIANT_FIELDS = ["variants", "route", "childIds"] as const;
+const FORBIDDEN_VARIANT_FIELDS = ["variants", "route", "navPath"] as const;
 
 interface VariantAuthoringMetadata {
   forbiddenFields: readonly (typeof FORBIDDEN_VARIANT_FIELDS)[number][];
@@ -80,6 +80,9 @@ function variantDefinition(
     id: variant.id,
     kind: "screen",
     mobile: variant.mobile,
+    navPath: Array.isArray(parent.navPath)
+      ? [...parent.navPath]
+      : parent.navPath,
     ...(variant.rationale !== undefined
       ? { rationale: variant.rationale }
       : {}),

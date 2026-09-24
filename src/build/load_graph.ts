@@ -8,7 +8,7 @@ import type { ComponentGraphRenderer } from "../components/render.js";
 import { discoverEntryModules } from "../config/entry_discovery.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timeSync, timingCounts } from "../diagnostics/timings.js";
-import { MoklyError, errorMessage } from "../errors.js";
+import { MoklyError, errorMessage, isMoklyError } from "../errors.js";
 import type { Renderer } from "../renderer/types.js";
 
 import { evaluateBundle, rememberBundle } from "./consumer_bundle.js";
@@ -163,6 +163,8 @@ async function loadGraph(
     return graph;
   } catch (error) {
     if (error instanceof MoklyError) throw error;
+    if (isMoklyError(error))
+      throw new MoklyError(error.code, error.detail, { cause: error });
     throw new MoklyError(
       "build-invalid",
       `could not bundle consumer modules: ${errorMessage(error)}`,

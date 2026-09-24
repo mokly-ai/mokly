@@ -118,9 +118,7 @@
       "documentPath": "static/guide.html",
       "id": "guide",
       "kind": "page",
-      "navPath": [
-        "Product"
-      ],
+      "navPath": [],
       "route": "guide.html",
       "tags": [],
       "title": "Guide"
@@ -256,7 +254,8 @@
       "id": "home",
       "kind": "screen",
       "navPath": [
-        "Product"
+        "Product",
+        "Browse"
       ],
       "route": "screens/home.html",
       "tags": [],
@@ -298,6 +297,69 @@
           "viewport": "desktop"
         }
       ]
+    },
+    {
+      "changes": {
+        "included": false,
+        "kind": "unmodified",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "details": {
+        "dependencies": [
+          "entries/fixture.mockup.tsx"
+        ],
+        "description": "Home",
+        "relatedDocs": [],
+        "sourcePath": "entries/fixture.mockup.tsx"
+      },
+      "id": "home-empty",
+      "kind": "screen",
+      "navPath": [
+        "Product",
+        "Browse"
+      ],
+      "route": "screens/home.variants/empty.html",
+      "tags": [],
+      "title": "Home, empty",
+      "useCaseIds": [],
+      "variantOf": "home",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "fragmentPath": "static/screens/home.variants/empty.mobile.html",
+          "usage": {
+            "instances": [],
+            "ranges": [],
+            "slots": [],
+            "status": "ready"
+          },
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "fragmentPath": "static/screens/home.variants/empty.desktop.html",
+          "usage": {
+            "instances": [],
+            "ranges": [],
+            "slots": [],
+            "status": "ready"
+          },
+          "viewport": "desktop"
+        }
+      ]
     }
   ],
   "tree": {
@@ -317,12 +379,20 @@
       {
         "children": [
           {
-            "id": "guide",
-            "kind": "entry"
-          },
-          {
-            "id": "home",
-            "kind": "entry"
+            "children": [
+              {
+                "children": [
+                  {
+                    "id": "home-empty",
+                    "kind": "entry"
+                  }
+                ],
+                "id": "home",
+                "kind": "entry"
+              }
+            ],
+            "kind": "folder",
+            "label": "Browse"
           },
           {
             "id": "tour",
@@ -331,6 +401,10 @@
         ],
         "kind": "folder",
         "label": "Product"
+      },
+      {
+        "id": "guide",
+        "kind": "entry"
       }
     ]
   },

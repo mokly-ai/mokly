@@ -39,13 +39,13 @@ See the [library authoring guide](./entries/design/library/README.md),
 [library inventory](../../docs/protocol/mokly-design-component-library.md)
 and [plans index](../../plans/README.md).
 
-The approved target for the entry definitions uses `navPath` as their only
-navigation hierarchy; the example entry migration follows in Milestone 2.
+The entry definitions use `navPath` as their only navigation hierarchy.
 `Example` groups Screens, the example tour, and Getting started; `Design`
 groups the Mokly design tree. Matching path labels merge within Pages or
 Components independently and produce the same breadcrumb labels. The flat
 component definitions author paths; nested screen and page definitions derive
-them from root and folder titles. Routes are independent of those labels.
+them from the root's navigation prefix and folder titles. Routes are independent
+of those labels.
 
 The Welcome screen uses
 `<MockLink to="example-details" fragment="details">` to prove that generated
@@ -80,9 +80,10 @@ Six established Welcome design states remain real variants of
 states. Both appearance variants render in Light and Dark using the single
 catalogue-wide Appearance selector; the Details example keeps its light device
 preview under Dark. They retain their ids under
-`design/browse/views/screen.variants/`. The retained `design-browse-tags`
-collection is intentionally empty and preserves its stable structural identity;
-the separate `design-browse-tag-filter` route remains a Shell states member.
+`design/browse/views/screen.variants/`. The former `design-browse-tags` (Tag
+states) collection is now empty; it disappears as a folder after the path
+migration because no routed entry uses that `navPath`. The separate
+`design-browse-tag-filter` route remains in Shell states.
 The reparented removed-variant design state depicts the Changes filter when
 only the historical child was removed: its rail shows a single flat Removed
 row, even though its former parent remains in the current catalogue as another

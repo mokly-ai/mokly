@@ -37,7 +37,7 @@ export async function cssAttributionFixture(
         "defineUseCase, defineComponent, MockLink, ReviewIgnore }",
       ) +
       library +
-      "\nmockups.push(...library.slice(0, 3));"
+      "\nmockups.push(...library.slice(0, 2));"
     : source;
   const fixture = await changedFixture(
     t,

@@ -37,7 +37,7 @@ function hasMarker(page: Page): Promise<boolean> {
  */
 async function openScreensGroup(page: Page): Promise<void> {
   const group = page.locator(
-    'details[data-nav-collection="collection:example-screens"]',
+    'details[data-nav-collection="collection:Example/Screens"]',
   );
   if ((await group.getAttribute("open")) === null) {
     await group.locator("summary").click();
@@ -269,7 +269,7 @@ test("searching opens groups and clearing restores their disclosure", async ({
 }) => {
   await page.goto("/");
   const screensGroup =
-    'details[data-nav-collection="collection:example-screens"]';
+    'details[data-nav-collection="collection:Example/Screens"]';
   await page.evaluate((selector) => {
     document.querySelector<HTMLDetailsElement>(selector)!.open = false;
   }, screensGroup);
@@ -884,7 +884,7 @@ test("the shell works without JavaScript", async ({ baseURL, browser }) => {
   await page.goto("/");
   await page
     .locator(
-      'details[data-nav-collection="collection:example-screens"] summary',
+      'details[data-nav-collection="collection:Example/Screens"] summary',
     )
     .click();
   await page.click(welcomeRow);

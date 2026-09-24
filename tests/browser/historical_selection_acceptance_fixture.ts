@@ -53,10 +53,6 @@ export async function historicalSelectionFixture() {
       ...source,
       changesStatus: "ready",
       comparisonUrl: `${GENERATION_ROOT}/review.json`,
-      collections: source.collections.map((entry) => ({
-        ...entry,
-        changes: ready,
-      })),
       components: source.components.map((entry) => ({
         ...entry,
         changes: ready,
@@ -71,7 +67,6 @@ export async function historicalSelectionFixture() {
       removedEntries: [
         {
           entry: historical,
-          ancestors: [],
           preview: { kind: "screen" },
           snapshotId,
         },

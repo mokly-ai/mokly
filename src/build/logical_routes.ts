@@ -54,7 +54,6 @@ export function logicalArtifactRoutes(
   const byId = new Map(entries.map((entry) => [entry.id, entry]));
   return Object.fromEntries(
     entries.flatMap((entry) => {
-      if (entry.kind === "collection") return [];
       const artifact = artifactRouteForEntry(
         entry,
         viewport,

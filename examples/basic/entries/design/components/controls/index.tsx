@@ -1,4 +1,4 @@
-import { collection, screen } from "@mokly/mokly";
+import { folder, screen } from "@mokly/mokly";
 
 import { componentStyleDependencies } from "../parts/styles.js";
 
@@ -15,12 +15,9 @@ export function ControlsOverviewMobile() {
 }
 
 /** Canonical controls design followed by bounded galleries of authored outcomes. */
-export const controlsDesign = collection({
-  id: "design-component-controls-design",
+export const controlsDesign = folder({
   segment: "controls",
   title: "Prop controls",
-  description:
-    "Edit scalar props, switch complete saved presets, and recover from invalid values or rendering failures. Native fields are interactive; linked artboards show the authored preview outcomes. Live preview rendering is a later implementation milestone.",
   dependencies: [
     ...componentStyleDependencies,
     "examples/basic/generated/design-component-controls.css",
@@ -40,28 +37,19 @@ export const controlsDesign = collection({
       desktop: <ControlsOverviewDesktop />,
       mobile: <ControlsOverviewMobile />,
     }),
-    collection({
-      id: "design-component-controls-editing",
+    folder({
       segment: "editing",
       title: "Editing and saved variants",
-      description:
-        "Edited props, an unset optional value, switching variants, and resetting edits.",
       children: editingScreens,
     }),
-    collection({
-      id: "design-component-controls-states",
+    folder({
       segment: "states",
       title: "Rendering and comparison",
-      description:
-        "Loading, validation, failure and retry, and comparison boundaries.",
       children: statesScreens,
     }),
-    collection({
-      id: "design-component-controls-published",
+    folder({
       segment: "published",
       title: "Published catalogue",
-      description:
-        "Saved variants remain selectable while their props stay read-only.",
       children: publishedScreens,
     }),
   ],

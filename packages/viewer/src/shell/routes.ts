@@ -168,7 +168,7 @@ function routeEntry(
 function routedEntry(
   entry: ManifestEntry | undefined,
 ): RoutedEntry | undefined {
-  return entry?.kind === "collection" ? undefined : entry;
+  return entry;
 }
 
 function decodePath(value: string): string | undefined {

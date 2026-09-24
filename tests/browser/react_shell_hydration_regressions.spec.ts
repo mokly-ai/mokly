@@ -127,8 +127,8 @@ test("stored closed active ancestry is open for the first React render", async (
       "mokly:nav-disclosure:v2",
       JSON.stringify([
         "section:pages",
-        "collection:pages:example",
-        "collection:pages:example-screens",
+        "collection:pages:Example",
+        "collection:pages:Example/Screens",
       ]),
     );
   });
@@ -137,10 +137,10 @@ test("stored closed active ancestry is open for the first React render", async (
   await gate.requested;
   const pages = page.locator('details[data-nav-disclosure="section:pages"]');
   const example = page.locator(
-    'details[data-nav-disclosure="collection:pages:example"]',
+    'details[data-nav-disclosure="collection:pages:Example"]',
   );
   const screens = page.locator(
-    'details[data-nav-disclosure="collection:pages:example-screens"]',
+    'details[data-nav-disclosure="collection:pages:Example/Screens"]',
   );
   await expect(pages).not.toHaveAttribute("open", "");
   await expect(example).not.toHaveAttribute("open", "");

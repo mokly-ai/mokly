@@ -28,7 +28,7 @@ test("a page renders exactly one complete document even with dark screens enable
     "app/handbook.html",
     "mokly-manifest.json",
   ]);
-  assert.equal(result.manifest.schemaVersion, 5);
+  assert.equal(result.manifest.schemaVersion, 6);
   assert.equal("legacyPages" in result.manifest, false);
   assert.match(result.outputs.get("app/handbook.html") ?? "", /Whole document/);
   await writeCompilation(result, config);
@@ -46,7 +46,6 @@ test("pages reject screen fields, asynchronous callbacks and incomplete document
     "address",
     "useCaseIds",
     "steps",
-    "childIds",
     "viewports",
     "fragments",
   ]) {
@@ -128,13 +127,7 @@ test("pages share relationship and collision validation with screen entries", as
   const config = await loadConfig(fixture.root);
   const declaration = `definePage({ ${metadata}, route: "handbook.html", render: () => ${JSON.stringify(document)} })`;
   for (const [mutation, pattern] of [
-    ['mockups[0].childIds.push("handbook", "handbook");', /duplicate-child/],
-    ['mockups[0].childIds.push("missing");', /missing|unknown/],
-    [
-      'mockups.push(defineCollection({ id: "second", title: "Second", description: "Second", dependencies: [], relatedDocs: [], childIds: ["handbook"] })); mockups[0].childIds.push("handbook");',
-      /multiple|parent/,
-    ],
-    ['mockups[3].steps[0].screenId = "handbook";', /screen/],
+    ['mockups[2].steps[0].screenId = "handbook";', /screen/],
     ['mockups.at(-1).route = "screens/home.desktop.html";', /colli/],
     ['mockups.at(-1).route = "../outside.html";', /route|unsafe/],
     ['mockups.at(-1).route = "private.source.html";', /source/],

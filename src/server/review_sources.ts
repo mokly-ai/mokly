@@ -19,7 +19,7 @@ export function selectedReviewSource(
   manifest: CatalogueMetadata,
   changes: ComponentChangeSnapshot | undefined,
 ): SelectedReviewSource | undefined {
-  if (manifest.schemaVersion !== 5 || !changes?.comparison) return;
+  if (manifest.schemaVersion !== 6 || !changes?.comparison) return;
   return {
     ...changes.comparison,
     before: changes.baseline,
@@ -35,8 +35,8 @@ export function removedPagePreviewSource(
 ): RemovedPagePreviewSource | undefined {
   if (status !== "ready" || !changes?.comparison) return;
   const removedEntries = catalogue.removedEntries.flatMap(
-    ({ entry, ancestors }): RemovedEntrySnapshot[] =>
-      entry.kind === "use-case" ? [] : [{ entry, ancestors }],
+    ({ entry }): RemovedEntrySnapshot[] =>
+      entry.kind === "use-case" ? [] : [{ entry }],
   );
   return {
     schemaVersion: 1,

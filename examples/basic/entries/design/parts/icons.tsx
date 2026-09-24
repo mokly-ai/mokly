@@ -53,7 +53,7 @@ export function ChevronDownIcon({ size }: IconProps) {
   );
 }
 
-/** A collapsed collection: a closed folder grouping child screens. */
+/** A collapsed folder grouping child screens. */
 export function FolderIcon({ size }: IconProps) {
   return (
     <IconSvg size={size ?? 13}>
@@ -62,7 +62,7 @@ export function FolderIcon({ size }: IconProps) {
   );
 }
 
-/** An expanded collection: an open folder revealing its contents. */
+/** An expanded folder revealing its contents. */
 export function FolderOpenIcon({ size }: IconProps) {
   return (
     <IconSvg size={size ?? 13}>

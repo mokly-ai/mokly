@@ -16,8 +16,8 @@ test("removed screens and saved variants retain baseline context with null curre
   const source = componentEntrySource({
     body: '<action.Component label="Child" />',
   }).replace(
-    'childIds: ["action", "pane"]',
-    'childIds: ["home", "action", "pane"]',
+    'id: "home", title: "Home",',
+    'id: "home", navPath: ["Components"], title: "Home",',
   );
   const fixture = await componentReviewFixture(
     t,
@@ -25,10 +25,6 @@ test("removed screens and saved variants retain baseline context with null curre
       value
         .slice(0, value.indexOf("  defineScreen("))
         .concat("];")
-        .replace(
-          'childIds: ["home", "action", "pane"]',
-          'childIds: ["action", "pane"]',
-        )
         .replace(
           ', { id: "disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
           "",
@@ -56,9 +52,7 @@ test("removed screens and saved variants retain baseline context with null curre
     ]),
     revision: { content: 0, evidence: 0 },
   });
-  assert.deepEqual(model.removedEntries[0]?.ancestors, [
-    { id: "components", title: "Components" },
-  ]);
+  assert.deepEqual(model.removedEntries[0]?.entry.navPath, ["Components"]);
   const removed = model.removedEntries[0]!.entry;
   assert.deepEqual(model.removedEntries[0]!.preview, { kind: "screen" });
   assert.equal(removed.kind, "screen");
@@ -90,10 +84,7 @@ test("removed screens and saved variants retain baseline context with null curre
     generatedBy: "mokly" as const,
     legacyPages: [],
     entries: historical.entries.filter(
-      (entry) =>
-        entry.kind !== "component" &&
-        entry.kind !== "page" &&
-        entry.kind !== "collection",
+      (entry) => entry.kind !== "component" && entry.kind !== "page",
     ),
   };
   const unavailable = projectCatalogue({

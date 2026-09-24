@@ -57,8 +57,8 @@ test("custom renderer shares consumer React context and injects collected styles
 test("dark schemes render dark fragments per view", async (context) => {
   const fixture = await createFixture(
     validEntrySource().replace(
-      'defineScreen({ ...metadata, description: "Detail screen"',
-      'defineScreen({ ...metadata, colorSchemes: ["light"], description: "Detail screen"',
+      'description: "Detail screen"',
+      'colorSchemes: ["light"], description: "Detail screen"',
     ),
     { extraConfig: 'colorSchemes: ["light", "dark"],' },
   );
@@ -73,9 +73,9 @@ test("dark schemes render dark fragments per view", async (context) => {
   ]) {
     assert.ok(compilation.outputs.has(route), `missing ${route}`);
   }
-  assert.equal(
-    compilation.outputs.get("screens/home.mobile.dark.html"),
-    compilation.outputs.get("screens/home.mobile.html"),
+  assert.match(
+    compilation.outputs.get("screens/home.mobile.dark.html") ?? "",
+    /details\.mobile\.html/,
   );
   const home = compilation.manifest.entries.find(
     (entry) => entry.id === "home",
@@ -111,7 +111,7 @@ test("manifest readers accept version 2 only through explicit compatibility", as
     schemaVersion: 2,
     legacyPages: [],
   };
-  assert.throws(() => parseManifest(legacy), /schema version 5/);
+  assert.throws(() => parseManifest(legacy), /schema version 6/);
   assert.equal(parseHistoricalManifest(legacy, true).schemaVersion, 3);
 });
 
@@ -199,63 +199,14 @@ test("registry rejects duplicate ids, broken relationships, and fragment collisi
   await assert.rejects(() => compileCatalogue(config), /invalid-route/);
 });
 
-test("registry reports malformed relationship arrays without leaking a TypeError", async (context) => {
+test("registry reports source-attributed navigation path conflicts", async (context) => {
   const fixture = await createFixture(`
-import { defineCollection } from "@mokly/mokly";
-export const mockups = [defineCollection({
-  childIds: null as unknown as string[],
-  dependencies: [],
-  description: "Malformed collection",
-  id: "malformed",
-  relatedDocs: [],
-  title: "Malformed"
-})];
-`);
-  context.after(() => removeFixture(fixture));
-  const config = await loadConfig(fixture.root);
-  await assert.rejects(
-    () => compileCatalogue(config),
-    /childIds must be an array of strings/,
-  );
-});
-
-test("registry builds an empty structural collection", async (context) => {
-  const fixture = await createFixture(`
-import { defineCollection } from "@mokly/mokly";
-export const mockups = [defineCollection({
-  childIds: [],
-  dependencies: [],
-  description: "Retained navigation identity",
-  id: "retained-empty",
-  relatedDocs: [],
-  title: "Retained empty"
-})];
-`);
-  context.after(() => removeFixture(fixture));
-
-  const compilation = await compileCatalogue(await loadConfig(fixture.root));
-  const collection = compilation.manifest.entries.find(
-    (entry) => entry.id === "retained-empty",
-  );
-  assert.equal(collection?.kind, "collection");
-  assert.deepEqual(
-    collection?.kind === "collection" ? collection.childIds : undefined,
-    [],
-  );
-});
-
-test("registry reports source-attributed collection forest violations", async (context) => {
-  const fixture = await createFixture(`
-import { defineCollection, defineScreen } from "@mokly/mokly";
+import { defineScreen } from "@mokly/mokly";
 import React from "react";
 const metadata = { dependencies: [], relatedDocs: [] };
 export const mockups = [
-  defineCollection({ ...metadata, childIds: ["shared", "shared", "missing"], description: "First parent", id: "a-parent", title: "First" }),
-  defineCollection({ ...metadata, childIds: ["shared"], description: "Second parent", id: "z-parent", title: "Second" }),
-  defineCollection({ ...metadata, childIds: ["cycle-b"], description: "Cycle A", id: "cycle-a", title: "Cycle A" }),
-  defineCollection({ ...metadata, childIds: ["cycle-a"], description: "Cycle B", id: "cycle-b", title: "Cycle B" }),
-  defineCollection({ ...metadata, childIds: ["self"], description: "Self cycle", id: "self", title: "Self" }),
-  defineScreen({ ...metadata, description: "Shared screen", desktop: <main>Shared</main>, id: "shared", mobile: <main>Shared</main>, route: "shared.html", title: "Shared" })
+  defineScreen({ ...metadata, navPath: ["Browse"], description: "First screen", desktop: <main>First</main>, id: "first", mobile: <main>First</main>, route: "first.html", title: "First" }),
+  defineScreen({ ...metadata, navPath: ["browse"], description: "Second screen", desktop: <main>Second</main>, id: "second", mobile: <main>Second</main>, route: "second.html", title: "Second" })
 ];
 `);
   context.after(() => removeFixture(fixture));
@@ -266,18 +217,9 @@ export const mockups = [
     (error: Error) => {
       assert.match(
         error.message,
-        /\[duplicate-child\] entries\/fixture\.mockup\.tsx \(a-parent\)/,
+        /\[nav-path-conflict\].*entries\/fixture\.mockup\.tsx/s,
       );
-      assert.match(
-        error.message,
-        /\[missing-child\].*unknown child id: missing/,
-      );
-      assert.match(error.message, /\[multiple-parents\].*\(z-parent\)/);
-      assert.match(
-        error.message,
-        /collection cycle: cycle-a -> cycle-b -> cycle-a/,
-      );
-      assert.match(error.message, /collection cycle: self -> self/);
+      assert.match(error.message, /Browse.*browse/s);
       return true;
     },
   );

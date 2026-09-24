@@ -1,13 +1,13 @@
 import path from "node:path";
 
-import type { ManifestV5 } from "@mokly/viewer/data";
+import type { ManifestV6 } from "@mokly/viewer/data";
 
 import type { WatchReport } from "../../server/reporter.js";
 
 import { truncateTerminalLine, type TerminalGlyphs } from "./terminal.js";
 
 /** Render nonzero user-facing kinds from one accepted manifest. */
-export function catalogueCounts(manifest: ManifestV5): string[] {
+export function catalogueCounts(manifest: ManifestV6): string[] {
   return [
     ["screen", "screen"],
     ["page", "page"],

@@ -66,5 +66,5 @@ test("saved component variants render through standalone portable links in every
         path: testInfo.outputPath(`action-${viewport}-${scheme}.png`),
       });
     }
-  expect(compilation.manifest.schemaVersion).toBe(5);
+  expect(compilation.manifest.schemaVersion).toBe(6);
 });

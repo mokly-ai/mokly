@@ -106,7 +106,7 @@ export function workspaceData(
   const baseline = snapshot?.baseline.entries.find((item) =>
     entry.kind === "component"
       ? item.id === entry.id
-      : item.kind !== "collection" && item.route === entry.route,
+      : item.route === entry.route,
   );
   const removed = !catalogue.byRoute.has(entry.route);
   const change = result?.changes.find((item) =>
@@ -257,25 +257,23 @@ export function workspaceData(
     usedBy: (catalogue.manifest.schemaVersion === "live-index-1"
       ? []
       : catalogue.manifest.entries
-    )
-      .filter((owner) => owner.kind !== "collection")
-      .flatMap((owner) =>
-        generatedViews(owner).flatMap((view) =>
-          orderedInstances(view.usage)
-            .filter((instance) => instance.componentId === entry.id)
-            .map((instance) => ({
-              title: owner.title,
-              route: owner.route!,
-              viewport: view.viewport,
-              colorScheme: view.colorScheme,
-              ...(view.variantId ? { variantId: view.variantId } : {}),
-              instanceKey: instance.key,
-              direct: instance.owner.kind === "entry",
-              removed: false,
-              comparisonEligible: false,
-            })),
-        ),
+    ).flatMap((owner) =>
+      generatedViews(owner).flatMap((view) =>
+        orderedInstances(view.usage)
+          .filter((instance) => instance.componentId === entry.id)
+          .map((instance) => ({
+            title: owner.title,
+            route: owner.route!,
+            viewport: view.viewport,
+            colorScheme: view.colorScheme,
+            ...(view.variantId ? { variantId: view.variantId } : {}),
+            instanceKey: instance.key,
+            direct: instance.owner.kind === "entry",
+            removed: false,
+            comparisonEligible: false,
+          })),
       ),
+    ),
     affected: dedupeUsageLinks(affected),
     ...(status ? { status } : {}),
     ...(change ? { change } : {}),

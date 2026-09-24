@@ -109,19 +109,18 @@ test("tag-only manifest changes mark their route as changed", async (context) =>
   );
 });
 
-test("compatibility nav paths do not mark routes as changed", async (context) => {
+test("a changed navigation path marks each moved route", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const manifest = (await compileCatalogue(config)).manifest;
   const baseManifest = structuredClone(manifest);
-  for (const entry of baseManifest.entries) {
-    if (entry.kind !== "collection") entry.navPath = ["Historical label"];
-  }
+  for (const entry of baseManifest.entries)
+    entry.navPath = ["Historical label"];
 
   assert.deepEqual(
     changedManifestRoutes(manifest, baseManifest, config, []),
-    [],
+    manifest.entries.map((entry) => entry.route).sort(),
   );
 });
 

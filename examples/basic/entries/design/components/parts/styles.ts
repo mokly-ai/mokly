@@ -1,4 +1,4 @@
-/** Shared styles and dependency identities for every component design collection. */
+/** Shared styles and dependency identities for every component design folder. */
 export const designBaseStyles = [
   "design.css",
   "design-stage.css",

@@ -25,7 +25,6 @@ function readyCatalogue(): CatalogueReadModel {
     ...source,
     changesStatus: "ready",
     comparisonUrl,
-    collections: source.collections.map((entry) => ({ ...entry, changes })),
     screens: source.screens.map((entry) => ({ ...entry, changes })),
     pages: source.pages.map((entry) => ({ ...entry, changes })),
     useCases: source.useCases.map((entry) => ({ ...entry, changes })),

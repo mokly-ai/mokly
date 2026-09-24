@@ -82,8 +82,7 @@ export function EntryDetailsBody(props: {
           <MetaRow label="Location">
             {props.catalogue.removedEntries
               .find((removed) => removed.entry.route === entry.route)
-              ?.ancestors.map(({ title }) => title)
-              .join(" › ")}
+              ?.entry.navPath.join(" › ")}
           </MetaRow>
         ) : null}
         <VariantOfChip catalogue={props.catalogue} entry={entry} />

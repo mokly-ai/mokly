@@ -2,11 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import type {
-  ManifestCollection,
   ManifestEntry,
   ManifestPage,
   ManifestScreen,
-  ManifestV5,
+  ManifestV6,
 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import {
@@ -29,24 +28,20 @@ test("removed variants remain represented exactly once across parent transitions
   const cases = [
     {
       label: "surviving parent",
-      entries: [
-        collection("screens", "Screens", ["welcome"]),
-        screen("welcome", "Welcome"),
-      ],
+      entries: [screen("welcome", "Welcome", ["Screens"])],
       nested: true,
     },
     {
       label: "former parent became a variant",
       entries: [
-        collection("screens", "Screens", ["workspace"]),
-        screen("workspace", "Workspace"),
-        variant("welcome", "Welcome", "workspace"),
+        screen("workspace", "Workspace", ["Screens"]),
+        variant("welcome", "Welcome", "workspace", ["Screens"]),
       ],
       nested: false,
     },
     {
       label: "parent was deleted",
-      entries: [collection("screens", "Screens", [])],
+      entries: [],
       nested: false,
     },
     {
@@ -102,25 +97,11 @@ function occurrences(nodes: readonly NavNode[], route: string): number {
   }, 0);
 }
 
-function collection(
+function screen(
   id: string,
   title: string,
-  childIds: readonly string[],
-): ManifestCollection {
-  return {
-    childIds,
-    dependencies: [],
-    description: title,
-    id,
-    kind: "collection",
-    navPath: [],
-    relatedDocs: [],
-    sourcePath: `entries/${id}.tsx`,
-    title,
-  };
-}
-
-function screen(id: string, title: string): ManifestScreen {
+  navPath: readonly string[] = [],
+): ManifestScreen {
   return {
     dependencies: [],
     description: title,
@@ -130,7 +111,7 @@ function screen(id: string, title: string): ManifestScreen {
     },
     id,
     kind: "screen",
-    navPath: [],
+    navPath,
     relatedDocs: [],
     route: `${id}.html`,
     sourcePath: `entries/${id}.tsx`,
@@ -140,8 +121,13 @@ function screen(id: string, title: string): ManifestScreen {
   };
 }
 
-function variant(id: string, title: string, variantOf: string): ManifestScreen {
-  return { ...screen(id, title), variantOf };
+function variant(
+  id: string,
+  title: string,
+  variantOf: string,
+  navPath: readonly string[],
+): ManifestScreen {
+  return { ...screen(id, title, navPath), variantOf };
 }
 
 function page(id: string, title: string, route: string): ManifestPage {
@@ -161,7 +147,7 @@ function page(id: string, title: string, route: string): ManifestPage {
 function manifest(
   entries: readonly ManifestEntry[],
   pages: readonly ManifestPage[] = [],
-): ManifestV5 {
+): ManifestV6 {
   const all = [...entries, ...pages];
   return {
     entries: all.map((entry) => ({
@@ -169,7 +155,7 @@ function manifest(
       declaredDependencies: entry.declaredDependencies ?? [],
     })),
     generatedBy: "mokly",
-    schemaVersion: 5,
+    schemaVersion: 6,
     sourceFiles: [...new Set(all.map(({ sourcePath }) => sourcePath))].sort(),
   };
 }

@@ -14,7 +14,7 @@ import { DocumentPane, Stage } from "./parts/stage.js";
 const nodes: readonly NavNode[] = [
   {
     key: "example",
-    kind: "collection",
+    kind: "folder",
     label: "Example",
     count: 3,
     depth: 0,
@@ -175,7 +175,7 @@ export const pageScreens = [
     id: "design-page-navigation",
     title: "Document navigation",
     description:
-      "A document in its declared collection, with the narrow catalogue drawer.",
+      "A document in its declared folder, with the narrow catalogue drawer.",
     slug: "navigation",
     colorSchemes: ["light"],
     desktop: <PageNavigationDesktop />,

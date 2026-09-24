@@ -22,27 +22,26 @@ const HOME_LABEL = "Sign in";
  */
 function evidenceEntrySource(components: boolean, home: string): string {
   return `import React from "react";
-import { defineCollection, defineComponent, defineScreen } from "@mokly/mokly";
+import { defineComponent, defineScreen } from "@mokly/mokly";
 const metadata = { dependencies: ["notes.md"], relatedDocs: [] };
 const badge = defineComponent({ ...metadata,
-  id: "badge", title: "Badge", description: "A shared badge", route: "components/badge.html",
+  id: "badge", title: "Badge", description: "A shared badge", route: "components/badge.html", navPath: ["Fixture"],
   propSchema: { kind: "object", properties: { label: { schema: { kind: "string" } } } },
   render: (props) => <span className="badge">{props.label}</span>,
   variants: [{ id: "default", title: "Default", props: { label: "New" } }]
 });
 export const mockups = [
-  defineCollection({ ...metadata, id: "fixture", title: "Fixture", description: "Fixture collection", childIds: [${components ? '"badge", ' : '"compact", '}"home", "details"] }),
   ${components ? "badge.entry," : ""}
-  defineScreen({ ...metadata, id: "home", title: "Home", description: "Home screen", route: "screens/home.html",
+  defineScreen({ ...metadata, navPath: ["Fixture"], id: "home", title: "Home", description: "Home screen", route: "screens/home.html",
     mobile: <main id="home"><button className="auth">${home}</button></main>,
     desktop: <main id="home"><button className="auth">${home}</button></main> }),
-  defineScreen({ ...metadata, id: "details", title: "Details", description: "Detail screen", route: "screens/details.html",
+  defineScreen({ ...metadata, navPath: ["Fixture"], id: "details", title: "Details", description: "Detail screen", route: "screens/details.html",
     mobile: <main id="details"><p className="guide">Guide</p></main>,
     desktop: <main id="details"><p className="guide">Guide</p></main> })${
       components
         ? ""
         : `,
-  defineScreen({ ...metadata, id: "compact", title: "Compact", description: "Compact screen", route: "screens/compact.html",
+  defineScreen({ ...metadata, navPath: ["Fixture"], id: "compact", title: "Compact", description: "Compact screen", route: "screens/compact.html",
     mobile: <main id="compact"><button className="auth">Sign in</button></main>,
     desktop: <main id="compact"><p className="note">Sign in on mobile</p></main> })`
     }

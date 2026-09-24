@@ -6,7 +6,7 @@ import { loadConfig } from "../dist/config/load.js";
 import { parseManifest } from "../dist/registry/manifest.js";
 import type { ManifestComponent } from "../packages/viewer/dist/components/manifest_types.js";
 import type {
-  ManifestV5,
+  ManifestV6,
   ManifestScreenV4,
 } from "../packages/viewer/dist/registry/types.js";
 
@@ -15,25 +15,25 @@ import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 async function example(t: {
   after: (fn: () => Promise<void>) => void;
-}): Promise<ManifestV5> {
+}): Promise<ManifestV6> {
   const fixture = await createFixture(componentEntrySource());
   t.after(() => removeFixture(fixture));
   const result = await compileCatalogue(await loadConfig(fixture.root));
-  assert.equal(result.manifest.schemaVersion, 5);
-  return result.manifest as ManifestV5;
+  assert.equal(result.manifest.schemaVersion, 6);
+  return result.manifest;
 }
 
-test("manifest v5 rejects broken identities, ownership references and props before readers can suppress changes", async (t) => {
+test("manifest v6 rejects broken identities, ownership references and props before readers can suppress changes", async (t) => {
   const original = await example(t);
   const edits: readonly [
     string,
     (
-      value: ManifestV5,
+      value: ManifestV6,
       screen: ManifestScreenV4,
       component: ManifestComponent,
     ) => void,
   ][] = [
-    ["unknown schema", (value) => Object.assign(value, { schemaVersion: 6 })],
+    ["unknown schema", (value) => Object.assign(value, { schemaVersion: 7 })],
     [
       "unknown component field",
       (_v, _s, component) => Object.assign(component, { unexpected: true }),

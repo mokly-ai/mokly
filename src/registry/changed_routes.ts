@@ -24,11 +24,16 @@ export function changedManifestRoutes(
     baseManifest.entries.map((entry) => [entry.id, entry]),
   );
   const hierarchy = analyzeHierarchy<ManifestEntry>(manifest.entries).hierarchy;
-  const baseHierarchy = analyzeHierarchy<ManifestEntry>(
-    baseManifest.entries,
-  ).hierarchy;
+  const baseHierarchy = {
+    variantParentById: new Map(
+      baseManifest.entries.flatMap((entry) => {
+        if (entry.kind !== "screen" || !entry.variantOf) return [];
+        const parent = baseEntries.get(entry.variantOf);
+        return parent ? [[entry.id, parent] as const] : [];
+      }),
+    ),
+  };
   for (const entry of manifest.entries) {
-    if (entry.kind === "collection") continue;
     const baseEntry = baseEntries.get(entry.id);
     const candidates = changedPathCandidates(entry, baseEntry, mockupsPrefix);
     if (
@@ -59,24 +64,19 @@ export function changedManifestRoutes(
 /** Select manifest metadata whose changes can affect a routed Browse entry. */
 function routeChangeProjection(
   entry: ManifestEntry | undefined,
-  hierarchy: CatalogueHierarchy<ManifestEntry>,
+  hierarchy: Pick<CatalogueHierarchy<ManifestEntry>, "variantParentById">,
 ): unknown {
   if (!entry) return undefined;
   const common = {
-    ancestorCollections: (hierarchy.ancestorsById.get(entry.id) ?? []).map(
-      ({ id, title }) => ({ id, title }),
-    ),
+    navPath: entry.navPath,
     description: entry.description,
     id: entry.id,
     kind: entry.kind,
     rationale: entry.rationale,
     relatedDocs: entry.relatedDocs,
-    tags: entry.kind === "collection" ? undefined : entry.tags,
+    tags: entry.tags,
     title: entry.title,
   };
-  if (entry.kind === "collection") {
-    return { ...common, childIds: entry.childIds };
-  }
   if (entry.kind === "page") return { ...common, route: entry.route };
   if (entry.kind === "use-case") {
     return { ...common, route: entry.route, steps: entry.steps };
@@ -107,7 +107,7 @@ function routeChangeProjection(
 
 function projectedVariantParent(
   entry: ManifestEntry,
-  hierarchy: CatalogueHierarchy<ManifestEntry>,
+  hierarchy: Pick<CatalogueHierarchy<ManifestEntry>, "variantParentById">,
 ): { id: string; title: string } | undefined {
   const parent = hierarchy.variantParentById.get(entry.id);
   return parent ? { id: parent.id, title: parent.title } : undefined;

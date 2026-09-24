@@ -1,8 +1,7 @@
 import type { ReactNode } from "react";
 
 import {
-  collection,
-  defineCollection,
+  folder,
   defineConfig,
   defineRoot,
   definePage,
@@ -15,8 +14,8 @@ import {
   ReviewIgnoreScope,
   reviewMaterialKey,
   screen,
-  type CollectionDefinition,
-  type CollectionInput,
+  type NestedFolderMarker,
+  type NestedFolderInput,
   type CompatibilityConfig,
   type CompatibilityTransformer,
   type CompatibilityTransformInput,
@@ -207,8 +206,7 @@ const definitions: RegistryDefinition[] = [
 
 void [
   page(nestedPage),
-  collection,
-  defineCollection,
+  folder,
   defineRoot,
   defineUseCase,
   mockLink,
@@ -245,8 +243,8 @@ void [
 ];
 
 type PublicTypes =
-  | CollectionDefinition
-  | CollectionInput
+  | NestedFolderMarker
+  | NestedFolderInput
   | CompatibilityConfig
   | CompatibilityTransformInput
   | EntryInput

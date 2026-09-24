@@ -45,10 +45,11 @@ test("the npm preview entrypoint advertises a removed page's packaged bytes", as
   );
   assert.ok(page?.preview?.kind === "page");
   await assertPublishedPagePreview(output, page.preview);
-  assert.deepEqual(
-    page.ancestors.map(({ title }) => title),
-    ["Fixture", "Deleted archive", "Deleted section"],
-  );
+  assert.deepEqual(page.entry.navPath, [
+    "Fixture",
+    "Deleted archive",
+    "Deleted section",
+  ]);
   const preview = parseRemovedPagePreview(
     JSON.parse(await fs.readFile(path.join(output, page.preview.path), "utf8")),
   );

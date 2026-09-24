@@ -158,6 +158,7 @@ export function validateManifestComponent(
 export function validateManifestComponentUsage(manifest: Manifest): void {
   if (
     manifest.schemaVersion !== 5 &&
+    manifest.schemaVersion !== 6 &&
     (manifest.schemaVersion !== 4 || "sourceFiles" in manifest)
   )
     return;
@@ -167,7 +168,9 @@ export function validateManifestComponentUsage(manifest: Manifest): void {
       "schemaVersion",
       "generatedBy",
       "entries",
-      manifest.schemaVersion === 5 ? "sourceFiles" : "legacyPages",
+      manifest.schemaVersion === 5 || manifest.schemaVersion === 6
+        ? "sourceFiles"
+        : "legacyPages",
     ],
     "$manifest",
   );

@@ -94,6 +94,7 @@ test("flow events preserve the screen key and identify the owning step", async (
       {
         kind: "use-case",
         id: "tour",
+        navPath: [],
         title: "Tour",
         route: "flows/tour.html",
         tags: [],
@@ -162,11 +163,7 @@ test("comparison is lazy, confined, and reports safe failures", async ({
     ) as CatalogueReadModel;
     catalogue.changesStatus = "ready";
     catalogue.comparisonUrl = `__mokly/diffs/__generations/${"a".repeat(64)}/review.json`;
-    for (const entry of [
-      ...catalogue.collections,
-      ...catalogue.screens,
-      ...catalogue.components,
-    ])
+    for (const entry of [...catalogue.screens, ...catalogue.components])
       entry.changes = { status: "ready", kind: "changed", included: true };
     for (const view of catalogue.screens[0]!.views)
       view.comparison = { status: "ready", kind: "changed", eligible: true };

@@ -1,7 +1,7 @@
 # Path-Based Navigation Hierarchy
 
-Status: Milestone 1 contract documentation is complete and committed.
-Milestones 2–4 have not started. Created 2026-09-23 with the user's
+Status: Milestones 1 and 2 are complete and committed. Milestones 3–4 have
+not started. Created 2026-09-23 with the user's
 consent after the design discussion in this workspace. This plan supersedes the
 collection-forest contract delivered by
 [Hierarchy-Inferred Breadcrumbs](./hierarchy-inferred-breadcrumbs.md); that
@@ -19,7 +19,7 @@ screen, and a forgotten collection edit silently leaves the screen at the root.
 **Architecture:** Every routed entry (screen, page, use case, component)
 carries `navPath: readonly string[]`, the ordered folder labels from the top of
 its section down to its parent folder. Flat authoring writes `navPath` on the
-leaf. Nested `defineRoot` trees derive it from the root title and the ancestor
+leaf. Nested `defineRoot` trees derive it from the root `navPath` and the ancestor
 `folder` titles, so nested leaves never write it and there is exactly one
 source per authoring style. The manifest stores `navPath` as authored data
 (schema v6). The hierarchy analysis builds one folder tree per section from
@@ -45,15 +45,20 @@ user should reconsider):**
   whose message suggests moving the leaf inside the folder. Labels are
   non-empty, carry no leading or trailing whitespace, and never contain `/`,
   which is the reserved key separator.
-- Nested folders keep an explicit `segment` for routes; titles never move
-  routes. The root gains an optional `title`. Without it, direct children are
-  top-level, matching today's optional root collection.
+- Nested folders keep a required, non-empty `segment` for routes; titles never
+  move routes. Refined during Milestone 2 (supervisor): the root takes
+  `navPath?: readonly string[]` instead of `title?: string`, because the example
+  design tree needs a two-label prefix (Design → Mokly design) with unchanged
+  routes; one label is `navPath: ["X"]`. Without it, direct children are
+  top-level.
 - One clean schema break: manifest v6 and catalogue read model v2, removing
   `collections`, `childIds`, `ManifestCollection`, and `CatalogueCollection`
   with no compatibility shim in the current readers. Historical baselines from
   v3 to v5 remain readable at the comparison boundary because every entry
   since v3 already carries a derived `navPath`.
-- Empty folders are unsupported. None are authored anywhere today.
+- Empty folders are unsupported. #115 retained one intentionally empty v5
+  collection, `design-browse-tags` (Tag states); its folder row disappears
+  after migration because none of its former screens remains a folder member.
 - No mockup milestone. Folder rows render exactly as collection rows do now,
   and no inspector surface changes.
 - The guide slug `authoring/collections-and-tags` is kept because it is a
@@ -77,10 +82,9 @@ user should reconsider):**
   Release Please records the schema and authoring break.
 
 **Out of scope:** ordering configuration, a nested `component` marker, folder
-metadata of any kind, mockups, filesystem-derived paths (see the follow-up
-below), and the design-catalogue variant conversion
-owned by [Screen Variants Follow-up](./screen-variants-follow-up.md) (which
-will edit `navPath` values instead of collection memberships when it lands).
+metadata of any kind, mockups, and filesystem-derived paths (see the follow-up
+below). [Screen Variants Follow-up](./screen-variants-follow-up.md) delivered
+the design-catalogue variant conversion in #115 before this milestone.
 
 ## Milestone 1: Contract documentation
 
@@ -158,39 +162,73 @@ only where the removed collection kind no longer compiles; group keys keep the
 `collection:` prefix with the path key inside until Milestone 3 renames them,
 so persisted disclosures keep working across this milestone.
 
-- [ ] Authoring: in `src/authoring/types.ts` and `src/authoring/definitions.ts`
+- [x] Align the #115 documentation additions with `navPath`; document the deliberate
+      disappearance of the empty `design-browse-tags` folder and that the
+      Screen Variants Follow-up conversion has landed.
+- [x] Authoring: in `src/authoring/types.ts` and `src/authoring/definitions.ts`
       add `navPath` to `EntryInput`, remove `defineCollection`, `collection`,
       `CollectionInput`, `CollectionDefinition`, `NestedCollectionInput`,
       `NestedCollectionMarker`, and `RootCollectionInput`, add `folder`,
       `NestedFolderInput`, and `NestedFolderMarker`, give `RootInput` an
-      optional `title`, derive `navPath` during flattening, and reject an
+      optional `navPath`, derive `navPath` during flattening, and reject an
       authored `navPath` on nested screens and pages. Update `src/index.ts`
       exports and the generated consumer API in
       `src/build/consumer_entry.ts`.
-- [ ] Reject a titled `defineRoot` with no children at authoring time (there
-      is no entry on which to report a path-label issue), while an untitled
+- [x] Reject a `defineRoot` with a non-empty `navPath` and no children at authoring time (there
+      is no entry on which to report a path-label issue), while an empty-path
       empty root emits no definitions. Cover the exact error alongside empty
       nested folders and nested authored-path violations.
-- [ ] Variants: in `src/authoring/variants.ts` replace `childIds` with
+- [x] Variants: in `src/authoring/variants.ts` replace `childIds` with
       `navPath` in the forbidden fields and copy the parent's `navPath` onto
       each flattened variant.
-- [ ] Components: make `ComponentInput` in `src/components/types.ts` and its
+- [x] Components: make `ComponentInput` in `src/components/types.ts` and its
       validation in `src/components/definition.ts` carry `navPath` like the
       other entry inputs.
-- [ ] Registry validation: `src/registry/entry_validation.ts` (label rules as
-      `invalid-nav-path`, no collection branch, updated page field list),
+- [x] Registry validation: `src/registry/entry_validation.ts` (nested authored-path
+      rule, no collection branch, updated page field list),
       `entry_metadata.ts`, `relationships.ts` and `variant_validation.ts`
       (variant `navPath` must equal the parent's, replacing
       `variant-claimed`), `manifest_relationships.ts`, `manifest_entries.ts`,
       `manifest_validation.ts`, `entry_order.ts`, and `prepare.ts`.
-- [ ] Hierarchy: rewrite `packages/viewer/src/registry/hierarchy.ts` to build
+- [x] Hierarchy: rewrite `packages/viewer/src/registry/hierarchy.ts` to build
       one folder tree per section from `navPath`, exposing folder nodes
       (`key`, `label`, `path`, child folders, entries), `ancestorsById` as
       labels, `byId`, `variantsById`, and `variantParentById`, with
       `invalid-nav-path` and `nav-path-conflict` issues. Delete the cycle,
       duplicate-child, missing-child, and multiple-parents code; cycles are
       impossible by construction.
-- [ ] Manifest v6: `packages/viewer/src/registry/types.ts` (`ManifestV6`,
+- [x] Review fixes: keep flat removed rows after current hierarchy in route/id
+      order; centralize label diagnostics in hierarchy analysis and attach
+      folder/leaf conflicts to the leaf independent of input order. Cover
+      regressions and restore the previous nav-tree leaf/variant/tag assertions.
+- [x] Review fixes: reject explicit null/non-array `navPath` on every routed
+      authoring helper, including a screen with variants, without a raw TypeError
+      or duplicate validation issue; keep `defineRoot` authoring failures typed
+      through the source-attributed consumer facade.
+- [x] Bundle-boundary regressions: reject forbidden variant-authored `route`,
+      `variants`, and `navPath` (including explicit `undefined`) in real builds;
+      share CLI-read markers through registry symbols and guard the authoring
+      facade against private symbols.
+- [x] Preserve typed, source-attributed authoring errors across bundled runtime
+      copies without duplicated prefixes; keep ordinary evaluation errors
+      wrapped as bundling failures.
+- [x] Attribute folder-spelling conflicts once per spelling and source module
+      to its lowest-id entry, independent of discovery order, and name every
+      spelling and the readable section/parent. Cover reversed orders and
+      multi-entry modules in tests; align the protocol and build README.
+- [x] Verify the bundle-boundary and conflict fixes with build, typecheck,
+      lint, format, the full unit suite, example build/check, parity script,
+      and the relevant browser specs before supervisor review.
+- [x] Review fixes: remove production-dead cross-section `buildNavTree` and
+      migrate its remaining tests to independent `buildNavSections`; author
+      example component paths through `libraryMetadata`/`defineComponent`
+      rather than re-spreading registered entries; reset browser disclosure
+      state to a known starting route before asserting it.
+- [x] Repair browser assertions discovered by the full verification gate:
+      catalogue fetch expects v2, saved component fragments expect v6, the
+      light-only fixture targets the current authored source, and the watch
+      disclosure reset runs after navigation's unload persistence.
+- [x] Manifest v6: `packages/viewer/src/registry/types.ts` (`ManifestV6`,
       unions, `HistoricalManifest`), `src/registry/manifest.ts` (emit authored
       `navPath`, no derivation), `manifest_validation.ts` (primary requires
       v6, historical accepts v2 to v6, historical collection entries dropped),
@@ -198,12 +236,12 @@ so persisted disclosures keep working across this milestone.
       `src/components/manifest_validation.ts`, `src/registry/changes.ts`, and
       `src/registry/changed_routes.ts` (`navPath` replaces
       `ancestorCollections` in the change projection).
-- [ ] Remaining consumers: `src/build/logical_routes.ts`, `compile.ts`,
+- [x] Remaining consumers: `src/build/logical_routes.ts`, `compile.ts`,
       `mock_links.ts` (drop the collection-link error), `source_freshness.ts`,
       `src/export/site.ts`, `src/server/view_routes.ts`,
       `src/catalogue/changes.ts`, `src/review/component_metadata.ts`, and
       `src/review/component_classification.ts`.
-- [ ] Read model v2: `packages/viewer/src/catalogue/types.ts`,
+- [x] Read model v2: `packages/viewer/src/catalogue/types.ts`,
       `entry_reader.ts` (no `readCollection`, `navPath` on entries),
       `reader.ts`, `references.ts` (folder validation replaces the collection
       forest checks), `tree.ts` (folder nodes), and
@@ -211,19 +249,19 @@ so persisted disclosures keep working across this milestone.
       `navPath` on routed and removed entries). Replace
       `docs/protocol/fixtures/catalogue-v1.json` with `catalogue-v2.json` and
       update any package file list that names it.
-- [ ] Repoint every v1 fixture reference (including `tests/`,
+- [x] Repoint every v1 fixture reference (including `tests/`,
       `packages/viewer/tests/`, `scripts/package/archive.mjs`,
       `tests/helpers/release_fixture.ts`, `tests/helpers/bootstrap_fixture.ts`,
       and `src/catalogue/README.md`) to the v2 fixture; delete v1 only after
       all readers and fixtures have migrated. Re-run the guide export-coverage
       test after removing old public collection exports; this test cannot pass
       against the new guide while Milestone 1 leaves `src/index.ts` unchanged.
-- [ ] Remove the Milestone 1 transitional target-contract notes once the
+- [x] Remove the Milestone 1 transitional target-contract notes once the
       implementation lands: both the note above the authoring example and
       “The target output requires manifest v6” in `README.md`, the target
       contract note in `docs/protocol/README.md`, and “follows in Milestone 2”
       in `examples/basic/README.md`.
-- [ ] Align the design mock's navigation row kinds with the folder contract,
+- [x] Align the design mock's navigation row kinds with the folder contract,
       without visual changes: rename `collection` to `folder` in the prop schema
       enum, view, section helper, and saved variants under
       `examples/basic/entries/design/library/chrome/catalogue-navigation*.ts(x)`,
@@ -231,21 +269,24 @@ so persisted disclosures keep working across this milestone.
       other design mock data. Update descriptions and comments that still call
       folders “collections,” including `page_screens.tsx` and
       `parts/removed_page.tsx`, to match `mokly-shell-design.md`.
-- [ ] Extend `docs/protocol/fixtures/catalogue-v2.json` so the v2 reader and
+- [x] Extend `docs/protocol/fixtures/catalogue-v2.json` so the v2 reader and
       byte-equality round-trip exercise nested folders, a top-level entry
       with `navPath: []`, and a screen with a variant nested in its entry-node
       `children` and carrying its parent's `navPath`. Keep removed-entry
       previews and canonical sorted-key/two-space/LF formatting.
-- [ ] Verify the change DTO and public `removedEntries` retain each baseline
+- [x] Transfer the canonical-fixture Prettier exception from the deleted v1
+      JSON fixture to v2; match `serializeCatalogue` byte-for-byte rather than
+      compressing nonempty arrays into Prettier's preferred JSON layout.
+- [x] Verify the change DTO and public `removedEntries` retain each baseline
       entry's own `navPath` labels without a separate `ancestors` field;
       cover removed screens, pages, components, and variants in tests.
-- [ ] Shell compile-only updates with no behavior change: remove the
+- [x] Shell compile-only updates with no behavior change: remove the
       impossible collection guards in `packages/viewer/src/shell/*` and
       `packages/viewer/src/standalone/*`, build group nodes from folder nodes
       in `nav_tree.ts` with `collection:<path key>` keys, and keep crumbs,
       details rows, target resolution, Changes activation, and previews
       working from labels.
-- [ ] Migrate the catalogues that must build for the checks to pass:
+- [x] Migrate the catalogues that must build for the checks to pass:
       `examples/basic/entries/catalogue.mockup.tsx`,
       `examples/basic/entries/design/design.mockup.tsx`,
       `examples/basic/entries/design/library/library.mockup.ts`, the consumer
@@ -253,13 +294,16 @@ so persisted disclosures keep working across this milestone.
       every helper under `tests/helpers/*` that defines collections, and
       `tests/browser/css_evidence_fixture.ts` and `navigation_fixture.ts`,
       keeping screen ids and routes unchanged.
-- [ ] Failure-first tests: rewrite `tests/hierarchy.test.ts` (folders per
+- [x] Compare the v6 example against the saved v5 manifest: all 115 routed
+      entries keep id, kind, route, variantOf, and navPath; section-scoped
+      non-empty folder paths match and only `design-browse-tags` disappears.
+- [x] Failure-first tests: rewrite `tests/hierarchy.test.ts` (folders per
       section, byte-identical merge across modules, case and whitespace
       conflicts, folder-versus-leaf conflict, slash and empty labels, variant
       inheritance, deterministic order) and `tests/nav_tree.test.ts` (path
       keys, identical labels merge, reparenting through `navPath`, top-level
       entries gain no invented group); extend `tests/authoring.test.tsx` and
-      `tests/authoring_variants.test.tsx` (folder marker, root title, derived
+      `tests/authoring_variants.test.tsx` (folder marker, root path, derived
       `navPath`, nested leaf and variant rejecting `navPath`);
       `tests/manifest_files.test.ts` and `tests/manifest_variants.test.ts`
       (v6 round trip, v5 rejected as primary, historical v5 with collections
@@ -268,16 +312,24 @@ so persisted disclosures keep working across this milestone.
       test for the v2 fixture; `tests/server_changed_hierarchy.test.ts`
       (`navPath` change marks the entry changed; v5 baseline against v6
       current); `tests/build_navigation_links.test.ts` (no collection target).
-- [ ] Update the remaining affected tests listed by
+- [x] Update the remaining affected tests listed by
       `grep -rl "childIds\|defineCollection\|navPath" tests packages/viewer/tests`
       so every suite passes, including `catalogue_history`,
       `variant_validation`, `pages`, `page_model`, `export_*`, `package`,
       `design_library_inventory`, `nav_sections`, `shell`,
       `server_navigation`, `compatibility_navigation`, `changes_activation`,
       and the removed-preview suites (`ancestors` to `navPath`).
-- [ ] `npm run build`, `npm test`, `npm run example:build`, and
+- [x] Migrate browser selectors and recovery fixtures to the transitional
+      `collection:<path key>` identity without renaming persisted disclosure
+      fields before Milestone 3; run navigation-related browser coverage.
+- [x] Update packed-consumer smoke expectations: the ESM public export list
+      includes `folder` in sorted order, its catalogue reader requires v2,
+      and component/themed example manifests require v6.
+- [x] `npm run build`, `npm test`, `npm run example:build`, and
       `npm run example:check` pass.
-- [ ] Commit `feat!: replace collections with navigation paths` with a
+- [x] After the review fixes, complete a fresh `cargo xtask check` (all suites)
+      without editing during the gate, then report the result for supervisor review.
+- [x] Commit `feat!: replace collections with navigation paths` with a
       `BREAKING CHANGE:` footer and push.
 
 ## Milestone 3: Viewer shell folders
@@ -335,8 +387,6 @@ change: rows, icons, crumbs, and the details inspector look the same.
 
 - Smoke the published package from a consumer that authors `navPath` in flat
   files and derives it in a nested tree.
-- When [Screen Variants Follow-up](./screen-variants-follow-up.md) converts the
-  design catalogue, its collection-membership edits become `navPath` edits.
 - Add an ordering configuration only if a real catalogue needs non-alphabetical
   folders.
 - Filesystem-derived `navPath` (Storybook's implicit mode) was considered on

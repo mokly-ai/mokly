@@ -3,7 +3,7 @@ import fs from "node:fs";
 import test from "node:test";
 
 import { createCatalogue } from "../packages/viewer/src/shell/catalogue.js";
-import { buildNavTree } from "../packages/viewer/src/shell/nav_tree.js";
+import { buildNavSections } from "../packages/viewer/src/shell/nav_tree.js";
 import { compileCatalogue } from "../src/build/compile.js";
 import { loadConfig } from "../src/config/load.js";
 import { changedManifestRoutes } from "../src/registry/changed_routes.js";
@@ -19,13 +19,11 @@ function source(
   title = "Handbook",
   path = "explicit/handbook.html",
 ) {
-  return `import { defineCollection, definePage } from "@mokly/mokly";
+  return `import { definePage } from "@mokly/mokly";
 const meta = { dependencies: [], relatedDocs: [], description: "Example" };
 export const mockups = [
- defineCollection({...meta, id: "app", title: "App", childIds: ["book"${parent === "app" ? ', "handbook"' : ""}]}),
- defineCollection({...meta, id: "book", title: "Book", childIds: ${parent === "book" ? '["handbook"]' : '["second"]'}}),
- definePage({...meta, id: "handbook", title: ${JSON.stringify(title)}, route: ${JSON.stringify(path)}, tags: ["documents"], render: () => "<!doctype html><html><body>Handbook</body></html>"}),
- ${parent === "app" ? 'definePage({...meta, id: "second", title: "Second", route: "second.html", render: () => "<html><body>Second</body></html>"}),' : ""}
+ definePage({...meta, id: "handbook", title: ${JSON.stringify(title)}, route: ${JSON.stringify(path)}, navPath: ${JSON.stringify(parent === "app" ? ["App"] : ["App", "Book"])}, tags: ["documents"], render: () => "<!doctype html><html><body>Handbook</body></html>"}),
+ ${parent === "app" ? 'definePage({...meta, id: "second", title: "Second", route: "second.html", navPath: ["App", "Book"], render: () => "<html><body>Second</body></html>"}),' : ""}
 ];`;
 }
 
@@ -51,17 +49,12 @@ test("flat page titles and memberships affect Changes without rewriting explicit
   );
   const catalogue = createCatalogue(after);
   assert.deepEqual(
-    buildNavTree(catalogue.hierarchy)
-      .filter((entry) => entry.kind === "group")
+    buildNavSections(catalogue.hierarchy)[0]!
+      .children.filter((entry) => entry.kind === "group")
       .map((entry) => entry.label),
     ["App"],
   );
-  assert.deepEqual(
-    catalogue.hierarchy.ancestorsById
-      .get("handbook")
-      ?.map((entry) => entry.title),
-    ["App"],
-  );
+  assert.deepEqual(catalogue.hierarchy.ancestorsById.get("handbook"), ["App"]);
 });
 
 test("removed page metadata keeps deleted ancestry and current route/id precedence", async (context) => {
@@ -73,10 +66,7 @@ test("removed page metadata keeps deleted ancestry and current route/id preceden
     { ...baseline, entries: [] },
     baseline,
   );
-  assert.deepEqual(removed[0]?.ancestors, [
-    { id: "app", title: "App" },
-    { id: "book", title: "Book" },
-  ]);
+  assert.deepEqual(removed[0]?.entry.navPath, ["App", "Book"]);
   const catalogue = createCatalogue({ ...baseline, entries: [] }, removed);
   const entry = removed[0]!.entry;
   const html = viewPage(entry, catalogue, {
@@ -121,8 +111,8 @@ test("nested page slugs and ancestor path segments alone derive their URLs", asy
   const nested = (
     title: string,
     segment: string,
-  ) => `import { defineRoot, collection, page } from "@mokly/mokly";
-export const mockups = defineRoot({ path: "app", collection: { id: "app", title: "App", description: "App", dependencies: ["notes.md"], relatedDocs: ["notes.md"], address: "ignored" }, children: [collection({id: "book", title: ${JSON.stringify(title)}, description: "Book", segment: ${JSON.stringify(segment)}, children: [page({id: "handbook", title: "Handbook", description: "Notes", slug: "guide", render: () => "<html><body>Guide</body></html>"})]})]});`;
+  ) => `import { defineRoot, folder, page } from "@mokly/mokly";
+export const mockups = defineRoot({ path: "app", navPath: ["App"], dependencies: ["notes.md"], relatedDocs: ["notes.md"], address: "ignored", children: [folder({title: ${JSON.stringify(title)}, segment: ${JSON.stringify(segment)}, children: [page({id: "handbook", title: "Handbook", description: "Notes", slug: "guide", render: () => "<html><body>Guide</body></html>"})]})]});`;
   for (const [title, segment] of [
     ["Book", "book"],
     ["Renamed", "book"],

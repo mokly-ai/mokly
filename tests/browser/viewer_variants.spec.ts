@@ -64,10 +64,6 @@ function screenVariantCatalogue(): CatalogueReadModel {
   };
   const model: CatalogueReadModel = {
     ...source,
-    collections: source.collections.map((entry) => ({
-      ...entry,
-      changes: unmodified,
-    })),
     screens: source.screens.map((entry) => ({
       ...entry,
       changes: unmodified,

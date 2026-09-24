@@ -7,11 +7,11 @@ import type { Viewport } from "../data/axes.js";
 /** Serializable common metadata for a manifest entry. */
 export interface ManifestEntryBase {
   dependencies: readonly string[];
-  /** Explicit author declarations in component v4 and current v5 manifests. */
+  /** Explicit author declarations in component v4 and current v6 manifests. */
   declaredDependencies?: readonly string[];
   description: string;
   id: string;
-  kind: "collection" | "screen" | "page" | "use-case";
+  kind: "screen" | "page" | "use-case";
   navPath: readonly string[];
   rationale?: string;
   relatedDocs: readonly string[];
@@ -42,12 +42,6 @@ export interface ManifestPage extends ManifestEntryBase {
   tags?: readonly string[];
 }
 
-/** Serializable collection manifest entry. */
-export interface ManifestCollection extends ManifestEntryBase {
-  childIds: readonly string[];
-  kind: "collection";
-}
-
 /** Serializable use-case manifest entry. */
 export interface ManifestUseCase extends ManifestEntryBase {
   kind: "use-case";
@@ -59,11 +53,7 @@ export interface ManifestUseCase extends ManifestEntryBase {
 
 /** Any supported registry entry, including current whole-document pages. */
 export type ManifestEntry =
-  | ManifestScreen
-  | ManifestPage
-  | ManifestCollection
-  | ManifestUseCase
-  | ManifestComponent;
+  ManifestScreen | ManifestPage | ManifestUseCase | ManifestComponent;
 
 /** One generated legacy page. */
 export interface ManifestLegacyPage {
@@ -100,7 +90,7 @@ export interface ManifestV4 {
 }
 
 export type ManifestEntryV4 = (
-  ManifestScreenV4 | ManifestComponent | ManifestCollection | ManifestUseCase
+  ManifestScreenV4 | ManifestComponent | ManifestUseCase
 ) & { declaredDependencies: readonly string[] };
 
 /** Current catalogue combining pages, components, and complete source protection. */
@@ -113,8 +103,19 @@ export interface ManifestV5 {
   sourceFiles: readonly string[];
 }
 
+/** Current canonical manifest with only routed entries and authored paths. */
+export interface ManifestV6 {
+  entries: readonly (ManifestEntry & {
+    declaredDependencies: readonly string[];
+  })[];
+  generatedBy: "mokly";
+  schemaVersion: 6;
+  sourceFiles: readonly string[];
+}
+
 /** All validated formats accepted at the historical Git boundary. */
-export type Manifest = ManifestV3 | ManifestV4 | ManifestPagesV4 | ManifestV5;
+export type Manifest =
+  ManifestV3 | ManifestV4 | ManifestPagesV4 | ManifestV5 | ManifestV6;
 
 /** Historical comparisons accept older formats without weakening current loading. */
 export type HistoricalManifest = Manifest;

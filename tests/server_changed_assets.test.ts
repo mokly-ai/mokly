@@ -120,10 +120,7 @@ test("Changes includes a removed resource referenced by an unchanged screen", as
 test("assets used only inside paired ignored regions stay out of Changes", async (t) => {
   const source = validEntrySource({
     body: '<ReviewIgnore id="nav"><img src="../image.svg" alt="Logo" /></ReviewIgnore><p>Content</p>',
-  }).replace(
-    "import { defineCollection",
-    "import { ReviewIgnore, defineCollection",
-  );
+  }).replace("import { defineScreen", "import { ReviewIgnore, defineScreen");
   const fixture = await changedFixture(
     t,
     source,

@@ -1,6 +1,13 @@
 import { libraryStyleFiles, type LibraryStyle } from "./style_files.js";
 export type LibraryGroup = "chrome" | "controls" | "inspector" | "preview";
 
+const groupTitles: Record<LibraryGroup, string> = {
+  chrome: "Chrome",
+  controls: "Controls",
+  inspector: "Inspector",
+  preview: "Preview",
+};
+
 /**
  * Samples whose own subject is the catalogue's appearance. They render in both
  * schemes so Browse's preview control switches them like the appearance
@@ -28,6 +35,7 @@ export function libraryMetadata(
   const stylesheet = `examples/basic/generated/${libraryStyleFiles[slug]}`;
   return {
     id: `design-ui-${slug}`,
+    navPath: ["Design", "Shared components", groupTitles[group]],
     route: `design/library/${group}/${slug}.html`,
     title,
     description,

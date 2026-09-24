@@ -90,11 +90,7 @@ test("scaled consumer exercises the same render, hierarchy, resource and compone
   assert.equal(fixture.routes, 16);
   assert.equal(fixture.documents, 82);
   assert.equal(compilation.outputs.size, fixture.documents + 1);
-  assert.equal(
-    compilation.manifest.entries.filter((entry) => entry.kind !== "collection")
-      .length,
-    fixture.routes,
-  );
+  assert.equal(compilation.manifest.entries.length, fixture.routes);
   assert.ok(
     compilation.manifest.entries.some((entry) => entry.kind === "page"),
   );

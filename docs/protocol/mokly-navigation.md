@@ -28,10 +28,13 @@ Mokly owns navigation between catalogue entries. Consumers continue to own
 their product's application routes and the behavior of ordinary document,
 asset, external, download, and same-document links.
 
-Collections remain viewless navigation folders. An authored collection with no
-children keeps its stable folder row in the Pages projection and has no link or
-destination; its empty Components projection is omitted. Empty membership adds
-no ancestry edge and does not weaken the normal collection-forest checks.
+Folders derive from routed entries' `navPath` within each section. They have no
+link or destination; a folder with no routed descendants is not emitted.
+`design-browse-tags` (Tag states) has no routed descendants after its six
+screens became variants of `design-browse-screen`, so its former folder row
+disappears when the example migrates to paths. The Components section forms
+its own independent folders, and an empty section is omitted only from the
+rendered navigation, not from the public tree's required arrays.
 
 ## Component Navigation
 

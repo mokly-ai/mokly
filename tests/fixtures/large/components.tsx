@@ -11,6 +11,7 @@ const noop = () => {};
 export function createComponents(area: string) {
   const action = defineComponent({
     ...metadata,
+    navPath: [area.replaceAll("-", " "), "Components"],
     id: `${area}-action`,
     title: "Action",
     description: "A reusable action.",
@@ -53,6 +54,7 @@ export function createComponents(area: string) {
   });
   const panel = defineComponent({
     ...metadata,
+    navPath: [area.replaceAll("-", " "), "Components"],
     id: `${area}-panel`,
     title: "Panel",
     description: "A summary with caller-owned content.",

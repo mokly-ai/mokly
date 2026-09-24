@@ -76,26 +76,18 @@ function visibleRows(
 test("reparented mockup shows the runtime's Changes-visible rows", async () => {
   const entries: ManifestEntry[] = [
     {
-      ...common,
-      id: "example",
-      title: "Example",
-      kind: "collection",
-      childIds: ["screens"],
+      ...screen("workspace", "Workspace", "screens/workspace.html"),
+      navPath: ["Example", "Screens"],
     },
     {
-      ...common,
-      id: "screens",
-      title: "Screens",
-      kind: "collection",
-      childIds: ["workspace"],
+      ...screen(
+        "welcome",
+        "Welcome",
+        "screens/workspace.variants/welcome.html",
+        "workspace",
+      ),
+      navPath: ["Example", "Screens"],
     },
-    screen("workspace", "Workspace", "screens/workspace.html"),
-    screen(
-      "welcome",
-      "Welcome",
-      "screens/workspace.variants/welcome.html",
-      "workspace",
-    ),
   ];
   const { hierarchy, issues } = analyzeHierarchy(entries);
   assert.deepEqual(issues, []);

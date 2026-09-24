@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
-import type { ManifestScreen, ManifestV5 } from "../src/registry/types.js";
+import type { ManifestScreen, ManifestV6 } from "../src/registry/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import type { ShellInitialState } from "../src/shell/store_state.js";
 import { StandaloneShellDocument } from "../src/standalone/document.js";
@@ -30,10 +30,10 @@ const screen = {
   useCaseIds: [],
   viewports: ["mobile", "desktop"],
 } satisfies ManifestScreen;
-const manifest: ManifestV5 = {
+const manifest: ManifestV6 = {
   entries: [screen],
   generatedBy: "mokly",
-  schemaVersion: 5,
+  schemaVersion: 6,
   sourceFiles: [screen.sourcePath],
 };
 

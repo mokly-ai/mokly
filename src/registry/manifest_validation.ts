@@ -44,17 +44,23 @@ export function validateManifestMetadata(
   } else if (historical && value.generatedBy === "mokabook") {
     normalized = { ...value, generatedBy: "mokly" };
   }
-  const current = normalized.schemaVersion === 5;
+  const current = normalized.schemaVersion === 6;
+  const historicalCollection =
+    historical && [3, 4, 5].includes(normalized.schemaVersion as number);
   const pages =
-    current || (normalized.schemaVersion === 4 && "sourceFiles" in normalized);
+    current ||
+    normalized.schemaVersion === 5 ||
+    (normalized.schemaVersion === 4 && "sourceFiles" in normalized);
   if (
     (!current &&
-      !(historical && [3, 4].includes(normalized.schemaVersion as number))) ||
+      !(
+        historical && [3, 4, 5, 6].includes(normalized.schemaVersion as number)
+      )) ||
     normalized.generatedBy !== "mokly"
   )
     throw new MoklyError(
       "manifest-invalid",
-      "expected Mokly manifest schema version 5; run mokly build",
+      "expected Mokly manifest schema version 6; run mokly build",
     );
   if (pages) {
     if (
@@ -102,7 +108,11 @@ export function validateManifestMetadata(
       throw new MoklyError("manifest-invalid", `invalid manifest id: ${id}`);
     }
     if (pages) {
-      validateCurrentFields(entry, current);
+      validateCurrentFields(
+        entry,
+        current || normalized.schemaVersion === 5,
+        historicalCollection,
+      );
       if (
         !(normalized.sourceFiles as string[]).includes(
           entry.sourcePath as string,
@@ -117,7 +127,13 @@ export function validateManifestMetadata(
         "manifest-invalid",
         "pages require the registered-page manifest format",
       );
-    validateEntry(entry, current || (normalized.schemaVersion === 4 && !pages));
+    validateEntry(
+      entry,
+      current ||
+        normalized.schemaVersion === 5 ||
+        (normalized.schemaVersion === 4 && !pages),
+      historicalCollection,
+    );
     if (byId.has(id)) {
       throw new MoklyError("manifest-invalid", `duplicate manifest id: ${id}`);
     }
@@ -136,8 +152,21 @@ export function validateManifestMetadata(
   const outputRoutes = validateFragmentRoutes(entries, routes);
   if (!pages)
     validateLegacyPages(normalized.legacyPages as unknown[], outputRoutes);
-  validateManifestRelationships(entries, byId);
-  const manifest = normalized as unknown as HistoricalManifest;
+  validateManifestRelationships(
+    entries,
+    byId,
+    historicalCollection
+      ? "historical-collections"
+      : historical
+        ? "historical"
+        : "current",
+  );
+  const manifest = {
+    ...normalized,
+    entries: historicalCollection
+      ? entries.filter((entry) => entry.kind !== "collection")
+      : entries,
+  } as unknown as HistoricalManifest;
   return manifest;
 }
 

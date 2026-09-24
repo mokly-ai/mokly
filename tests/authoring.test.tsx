@@ -6,7 +6,6 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import type {
-  CollectionInput,
   RegistryDefinition,
   ResolvedRegistryEntry,
   ScreenDefinition,
@@ -16,7 +15,6 @@ import type {
 import { DEFAULT_PUBLIC_EXCLUDE } from "../dist/config/public_exclusions.js";
 import type { ResolvedConfig } from "../dist/config/types.js";
 import {
-  defineCollection,
   defineRoot,
   defineScreen,
   defineUseCase,
@@ -61,15 +59,6 @@ const screenBase = {
   route: "screens/tagged.html",
   title: "Tagged screen",
 } satisfies ScreenInput;
-
-const collectionBase: CollectionInput = {
-  childIds: ["tagged-screen"],
-  dependencies: [],
-  description: "Tagged collection",
-  id: "tagged-collection",
-  relatedDocs: [],
-  title: "Tagged collection",
-};
 
 const useCaseBase: UseCaseInput = {
   dependencies: [],
@@ -259,29 +248,10 @@ test("empty tags are valid and equivalent to absent tags", () => {
   );
 });
 
-test("collections reject a declared tags field", () => {
-  const taggedInput = { ...collectionBase, tags: ["forms"] };
-  const undefinedInput = { ...collectionBase, tags: undefined };
-
-  assert.deepEqual(
-    validateEntry(resolved(defineCollection(taggedInput)), validationConfig),
-    [tagProblem("tags are not supported on collections", "tagged-collection")],
-  );
-  assert.deepEqual(
-    validateEntry(resolved(defineCollection(undefinedInput)), validationConfig),
-    [tagProblem("tags are not supported on collections", "tagged-collection")],
-  );
-  assert.deepEqual(
-    validateEntry(resolved(defineCollection(collectionBase)), validationConfig),
-    [],
-  );
-});
-
-test("empty structural collections are valid", () => {
-  const empty = defineCollection({ ...collectionBase, childIds: [] });
-
-  assert.deepEqual(empty.childIds, []);
-  assert.deepEqual(validateEntry(resolved(empty), validationConfig), []);
+test("top-level entries default to an empty navigation path", () => {
+  const entry = defineScreen(screenBase);
+  assert.deepEqual(entry.navPath, []);
+  assert.deepEqual(validateEntry(resolved(entry), validationConfig), []);
 });
 
 function tagViolations(tags: unknown): RegistryViolation[] {

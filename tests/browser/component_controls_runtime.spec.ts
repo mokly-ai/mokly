@@ -28,15 +28,10 @@ function withSecondControlledComponent(source: string): string {
       'route: "components/action.html"',
       'route: "components/alternate.html"',
     );
-  return `${source.slice(0, paneStart)}${alternate}${source.slice(paneStart)}`
-    .replace(
-      'childIds: ["action", "pane"]',
-      'childIds: ["action", "alternate", "pane"]',
-    )
-    .replace(
-      "action.entry, pane.entry,",
-      "action.entry, alternate.entry, pane.entry,",
-    );
+  return `${source.slice(0, paneStart)}${alternate}${source.slice(paneStart)}`.replace(
+    "action.entry, pane.entry,",
+    "action.entry, alternate.entry, pane.entry,",
+  );
 }
 
 let server: RunningServer;

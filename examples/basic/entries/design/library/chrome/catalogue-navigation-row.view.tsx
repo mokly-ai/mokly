@@ -101,7 +101,7 @@ export function NavRow({
   node: NavigationRow;
 }) {
   const isActive =
-    node.kind !== "collection" &&
+    node.kind !== "folder" &&
     (activeDestination !== undefined
       ? node.to === activeDestination
       : activeLabel !== undefined && node.label === activeLabel);
@@ -112,7 +112,7 @@ export function NavRow({
       <span className="mbk-nav-changed-text">Changed</span>
     </>
   ) : null;
-  if (node.kind === "collection") {
+  if (node.kind === "folder") {
     return (
       <span className={className} style={navRowStyle(node.depth)}>
         <span className="mbk-nav-ico folder" aria-hidden="true">

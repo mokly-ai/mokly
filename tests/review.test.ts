@@ -24,7 +24,7 @@ import { runReview } from "../dist/review/run.js";
 import { writeReviewArtifact } from "../dist/review/write.js";
 import type {
   ManifestScreen,
-  ManifestV5,
+  ManifestV6,
 } from "../packages/viewer/dist/registry/types.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
@@ -478,7 +478,7 @@ function fakeGit(files: ReadonlyMap<string, string>): ReadOnlyReviewRepository {
 }
 
 function filesForCompilation(
-  manifest: ManifestV5,
+  manifest: ManifestV6,
   compilation: Compilation,
 ): Map<string, string> {
   const files = new Map<string, string>([
@@ -491,7 +491,7 @@ function filesForCompilation(
   return files;
 }
 
-function withoutDarkFragments(manifest: ManifestV5): ManifestV5 {
+function withoutDarkFragments(manifest: ManifestV6): ManifestV6 {
   return {
     ...manifest,
     entries: manifest.entries.map((entry) => {

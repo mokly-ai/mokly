@@ -10,6 +10,7 @@ export const action = defineComponent({
   title: "Action",
   description: "A shared action with an optional destination and hint.",
   route: "components/action.html",
+  navPath: ["Example", "Components"],
   dependencies: [dependency, implementation],
   ownedDependencies: [dependency, implementation],
   relatedDocs: ["examples/basic/README.md"],

@@ -6,7 +6,7 @@ import test from "node:test";
 import { exportCatalogue } from "../dist/export/run.js";
 import { viewPage } from "../dist/server/pages.js";
 import { readPreviewDescriptor } from "../packages/viewer/dist/previews/descriptor.js";
-import type { ManifestV5 } from "../packages/viewer/dist/registry/types.js";
+import type { ManifestV6 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import type { RemovedEntrySnapshot } from "../packages/viewer/dist/shell/metadata.js";
 
@@ -84,14 +84,14 @@ const flow: RemovedEntry = {
 };
 
 function removedShell(entry: RemovedEntry): string {
-  const manifest: ManifestV5 = {
-    schemaVersion: 5,
+  const manifest: ManifestV6 = {
+    schemaVersion: 6,
     generatedBy: "mokly",
     sourceFiles: [],
     entries: [],
   };
   const removed: RemovedEntrySnapshot[] = [
-    { entry, ancestors: [{ id: "example", title: "Example" }] },
+    { entry: { ...entry, navPath: ["Example"] } },
   ];
   const catalogue = createCatalogue(manifest, removed);
   return viewPage(

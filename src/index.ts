@@ -11,8 +11,7 @@ export type {
   WatchRule,
 } from "./config/types.js";
 export {
-  collection,
-  defineCollection,
+  folder,
   defineRoot,
   definePage,
   page,
@@ -27,10 +26,9 @@ export type {
   PageInput,
   PageDefinition,
   NestedPageInput,
-  CollectionDefinition,
-  CollectionInput,
   EntryInput,
-  NestedCollectionInput,
+  NestedFolderInput,
+  NestedFolderMarker,
   NestedScreenInput,
   RegistryDefinition,
   RootInput,

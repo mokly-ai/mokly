@@ -14,10 +14,7 @@ import { waitForClassifiedCount } from "./helpers/watched_catalogue.js";
 
 const ignoredSource = validEntrySource({
   body: '<ReviewIgnore id="nav"><nav>Old navigation</nav></ReviewIgnore><p>Screen content</p>',
-}).replace(
-  "import { defineCollection",
-  "import { ReviewIgnore, defineCollection",
-);
+}).replace("import { defineScreen", "import { ReviewIgnore, defineScreen");
 
 test("Changes excludes ignored-only edits while comparisons retain their evidence", async (t) => {
   const fixture = await changedFixture(t, ignoredSource);

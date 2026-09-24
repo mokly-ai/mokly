@@ -2,7 +2,6 @@ import { Badge } from "@firna/ui/badge";
 import { Input } from "@firna/ui/input";
 
 import {
-  defineCollection,
   defineScreen,
   definePage,
   defineUseCase,
@@ -123,34 +122,9 @@ function Details({ compact }: { compact: boolean }) {
 }
 
 export const mockups = [
-  defineCollection({
-    ...metadata,
-    id: "example-components",
-    title: "Components",
-    description: "Shared actions and composition.",
-    childIds: ["example-action", "example-toolbar"],
-  }),
-  defineCollection({
-    ...metadata,
-    childIds: [
-      "example-screens",
-      "example-tour",
-      "example-components",
-      "example-handbook",
-    ],
-    description: "Synthetic examples for the reusable Mokly package.",
-    id: "example",
-    title: "Example",
-  }),
-  defineCollection({
-    ...metadata,
-    childIds: ["example-welcome", "example-details"],
-    description: "Synthetic screens used to exercise the reusable framework.",
-    id: "example-screens",
-    title: "Screens",
-  }),
   defineScreen({
     ...metadata,
+    navPath: ["Example", "Screens"],
     address: "example.test/welcome",
     description: "A linked landing screen for the neutral fixture.",
     desktop: <Welcome compact={false} />,
@@ -173,6 +147,7 @@ export const mockups = [
   }),
   defineScreen({
     ...metadata,
+    navPath: ["Example", "Screens"],
     address: "example.test/details",
     description: "A second synthetic screen proving cross-screen links.",
     desktop: <Details compact={false} />,
@@ -185,6 +160,7 @@ export const mockups = [
   }),
   definePage({
     ...metadata,
+    navPath: ["Example"],
     id: "example-handbook",
     title: "Getting started",
     description: "A handbook to accompany the example screens.",
@@ -194,6 +170,7 @@ export const mockups = [
   }),
   defineUseCase({
     ...metadata,
+    navPath: ["Example"],
     description: "An ordered journey that reuses both canonical screens.",
     id: "example-tour",
     route: "user-flows/example-tour.html",

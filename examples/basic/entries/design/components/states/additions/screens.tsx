@@ -1,4 +1,4 @@
-import { collection, screen } from "@mokly/mokly";
+import { folder, screen } from "@mokly/mokly";
 
 import { ComponentPage } from "../../parts/component_page.js";
 
@@ -10,11 +10,9 @@ export function AddedComponentMobile() {
   return <ComponentPage state="added" viewport="mobile" />;
 }
 
-export const additionDesigns = collection({
-  id: "design-component-additions",
+export const additionDesigns = folder({
   segment: "additions",
   title: "Additions",
-  description: "New components shown in their current saved state.",
   children: [
     screen({
       id: "design-component-added",

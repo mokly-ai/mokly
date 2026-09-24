@@ -15,10 +15,11 @@ import {
 export function validateEntry(
   entry: Record<string, unknown>,
   components = false,
+  historicalCollection = false,
 ): void {
   const kind = entry.kind;
   if (
-    kind !== "collection" &&
+    !(historicalCollection && kind === "collection") &&
     kind !== "screen" &&
     kind !== "page" &&
     kind !== "use-case" &&
@@ -185,6 +186,7 @@ function validateUseCase(entry: Record<string, unknown>): void {
 export function validateCurrentFields(
   entry: Record<string, unknown>,
   components = false,
+  historicalCollection = false,
 ): void {
   const common = [
     "dependencies",
@@ -199,7 +201,7 @@ export function validateCurrentFields(
     ...(components ? ["declaredDependencies"] : []),
   ];
   const specific =
-    entry.kind === "collection"
+    entry.kind === "collection" && historicalCollection
       ? ["childIds"]
       : entry.kind === "page"
         ? ["route", "tags"]

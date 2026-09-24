@@ -101,20 +101,25 @@ interface RootInput {
   address?: string;
   children: readonly NestedChild[];
   dependencies?: readonly string[];
+  navPath?: readonly string[];
   path: string;
   relatedDocs?: readonly string[];
-  title?: string;
 }
 ```
 
-`defineRoot({ path, title?, children, address?, dependencies?, relatedDocs? })`
+`defineRoot({ path, navPath?, children, address?, dependencies?, relatedDocs? })`
 flattens nested `screen()` and `page()` leaves into ordinary definitions;
 `folder({ title, segment, children, address?, dependencies?, relatedDocs? })`
 groups children without creating an entry or route. A leaf's `navPath` is
-`[root.title?, ...ancestor folder titles]`, excluding its own title. An
-omitted root title leaves direct children top-level. Root `path`, folder
-`segment`s, and leaf `slug` compose routes; changing titles only moves
-navigation, not routes. Ancestor dependencies and related docs inherit with
+`[...(root.navPath ?? []), ...ancestor folder titles]`, excluding its own title.
+An omitted or empty root `navPath` leaves direct children top-level. Root
+`path`, folder `segment`s, and leaf `slug` compose routes; changing navigation
+labels never moves routes. Folder `segment` must be a non-empty string; an
+empty or non-string value fails at `defineRoot` flattening with
+`MoklyError("build-invalid", "folder <parent route directory> segment must be a non-empty string")`.
+An explicit non-array root `navPath` fails at `defineRoot` with
+`MoklyError("build-invalid", "root <path> navPath must be an array")`.
+Ancestor dependencies and related docs inherit with
 existing override behavior; address inheritance applies to screens only.
 Folders have no id, description, rationale, or entry status. An authored
 `navPath` key on a nested `screen()` or `page()` is an `invalid-nested-nav-path`
@@ -123,27 +128,35 @@ flattening retains the fact that it was authored rather than overwriting it.
 An empty `folder().children` fails at `defineRoot` flattening with
 `MoklyError("build-invalid", "folder <route directory> has no children")`,
 where `<route directory>` is root `path` followed by ancestor and current
-`segment`s joined by `/`. An empty titled root has no leaf to report a
+`segment`s joined by `/`. A root with non-empty `navPath` and no children has no leaf to report a
 per-entry issue and would silently discard a folder: `defineRoot` rejects it
-with `MoklyError("build-invalid", "root <path> has no children")`. An untitled
-empty root returns no definitions.
+with `MoklyError("build-invalid", "root <path> has no children")`. A root with
+omitted or empty `navPath` and no children returns no definitions.
 
-Each folder label (every path segment, root title if supplied, and folder
-title) must be a string, nonempty, have no leading or trailing ECMAScript
+Each folder label (every root `navPath` segment and folder title) must be a
+string, nonempty, have no leading or trailing ECMAScript
 whitespace (`/^\s|\s$/u`), and contain no `/`. Invalid segments yield a
 per-entry `invalid-nav-path` registry issue naming the entry id, zero-based
 offending index, and offending label (including its value for non-strings).
 An explicit non-array path is `invalid-nav-path` with index `-1` and the raw
 path as its offending value; `undefined` is the omitted default.
+The current hierarchy analysis owns label and conflict diagnostics; registry
+validation reports each invalid segment once, even for a screen with inherited
+variants. An invalid parent `navPath` is not repeated on those variants.
 For an empty folder, the authoring error above takes precedence. Conflict
 matching uses exactly
 `label.normalize("NFKC").replace(/\s/gu, "").toUpperCase().toLowerCase()`.
 Within the same section and parent, two folder labels with that key but
 different bytes yield `nav-path-conflict`, naming both labels and their parent
-path; byte-identical labels merge. A
-leaf's title is its display label: a leaf sharing a conflict key with a
-sibling folder is also `nav-path-conflict`, naming both labels and suggesting
-appending that folder label to the leaf's `navPath`. Leaf titles are otherwise
+path. Report one issue for each conflicting spelling **per source module**,
+on the lowest-id entry in that module using the spelling, regardless of entry
+or module order; name every conflicting spelling in each issue. At the root
+name the location "at the top of Pages" or "at the top of Components";
+below a folder use "under Pages › A › B" (or Components). Byte-identical
+labels merge. A leaf's title is its display label: a leaf sharing a conflict key with a
+sibling folder is also `nav-path-conflict` on the leaf entry, naming its id,
+both labels, and suggesting appending that folder label to the leaf's
+`navPath`. Leaf titles are otherwise
 free text; two leaves with identical titles in one folder are allowed. Order
 every sibling list by folders before leaves, then
 `left.label.localeCompare(right.label, "en")`, then UTF-16 code-unit comparison

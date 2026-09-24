@@ -10,7 +10,6 @@ import {
 } from "./component_values.js";
 import type {
   CatalogueChanges,
-  CatalogueCollection,
   CatalogueEntry,
   CatalogueRoutedEntry,
   CatalogueUsage,
@@ -111,18 +110,11 @@ function common(input: Record<string, unknown>): CatalogueEntry {
     result.details.rationale = string(details.rationale);
   return result;
 }
-export function readCollection(value: unknown): CatalogueCollection {
-  const input = object(value);
-  return {
-    ...common(input),
-    kind: choice(input.kind, ["collection"] as const),
-    childIds: array(input.childIds).map(id),
-  };
-}
 export function readEntry(value: unknown): CatalogueRoutedEntry {
   const input = object(value),
     base = common(input),
-    path = route(input.route);
+    path = route(input.route),
+    navPath = array(input.navPath).map(string);
   if (Object.hasOwn(input, "preview"))
     invalidData("$catalogue", "preview is only valid on a removed entry");
   const kind = choice(input.kind, [
@@ -135,6 +127,7 @@ export function readEntry(value: unknown): CatalogueRoutedEntry {
     return {
       ...base,
       kind,
+      navPath,
       route: path,
       documentPath: publicPath(input.documentPath),
     };
@@ -142,6 +135,7 @@ export function readEntry(value: unknown): CatalogueRoutedEntry {
     return {
       ...base,
       kind,
+      navPath,
       route: path,
       steps: array(input.steps).map((raw) => {
         const step = object(raw);
@@ -166,6 +160,7 @@ export function readEntry(value: unknown): CatalogueRoutedEntry {
     return {
       ...base,
       kind,
+      navPath,
       route: path,
       ...axes,
       views: array(input.views).map(readView),
@@ -183,6 +178,7 @@ export function readEntry(value: unknown): CatalogueRoutedEntry {
   return {
     ...base,
     kind,
+    navPath,
     route: path,
     ...axes,
     propSchema: schema,

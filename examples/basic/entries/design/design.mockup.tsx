@@ -1,4 +1,4 @@
-import { collection, defineCollection, defineRoot } from "@mokly/mokly";
+import { folder, defineRoot } from "@mokly/mokly";
 
 import { appearanceDesign } from "./browse/appearance/index.js";
 import { removedPageScreens } from "./browse/pages/previous-version/screens.js";
@@ -22,129 +22,81 @@ const DESIGN_DEPENDENCIES = [
 ];
 
 const designMockups = defineRoot({
+  navPath: ["Design", "Mokly design"],
   children: [
     componentDesign,
-    collection({
+    folder({
       children: [
-        collection({
+        folder({
           children: [...browseViewScreens, detailsScreen],
-          description:
-            "Canonical Browse destinations: home, a screen, and a use case.",
-          id: "design-browse-views",
           segment: "views",
           title: "Catalogue views",
         }),
-        collection({
-          children: [
-            ...browseStateScreens,
-            ...browseTagScreens,
-            collection({
-              children: [],
-              description:
-                "Welcome owns the canonical tag selection and picker states as screen variants.",
-              id: "design-browse-tags",
-              segment: "tags",
-              title: "Tag states",
-            }),
-          ],
-          description:
-            "Browse states for details, missing routes, narrow layouts, and the standalone tag-filter picker.",
-          id: "design-browse-states",
+        folder({
+          children: [...browseStateScreens, ...browseTagScreens],
           segment: "states",
           title: "Shell states",
         }),
-        collection({
+        folder({
           children: variantScreens,
-          description:
-            "A screen's variants: selected, changed, removed under a surviving parent, removed after reparenting, and a change confined to other views.",
-          id: "design-browse-variants",
           segment: "variants",
           title: "Screen variants",
         }),
-        collection({
+        folder({
           children: [
             ...pageScreens,
-            collection({
+            folder({
               children: removedPageScreens,
-              description:
-                "Previous-version states a removed document reaches before it can be read: a long document, the wait while it is retrieved, and a failure with Retry.",
-              id: "design-browse-pages-previous",
               segment: "previous-version",
               title: "Previous document versions",
             }),
           ],
-          description:
-            "Complete documents, their details, and removed documents.",
-          id: "design-browse-pages",
           segment: "pages",
           title: "Document pages",
         }),
-        collection({
+        folder({
           children: publicationScreens,
-          description:
-            "Catalogue browsing with optional Changes and comparisons.",
-          id: "design-browse-publication",
           segment: "publication",
           title: "Published catalogue",
         }),
         appearanceDesign,
       ],
-      description:
-        "The package-owned responsive Browse shell around consumer fragments.",
-      id: "design-browse",
       segment: "browse",
       title: "Browse shell",
     }),
-    collection({
+    folder({
       children: [
-        collection({
+        folder({
           children: changesScreens,
-          description: "Current and on-demand Overlay within the catalogue.",
-          id: "design-changes-controls",
           segment: "controls",
           title: "Diff controls",
         }),
-        collection({
+        folder({
           children: [
             ...reviewOutcomeScreens,
-            collection({
+            folder({
               children: removedOutcomeScreens,
-              description:
-                "Previous-version states a removed screen reaches before it can be read: a long screen, the wait while it is retrieved, a failure with Retry, and a viewport with no previous view.",
-              id: "design-review-outcomes-previous",
               segment: "previous-version",
               title: "Previous screen versions",
             }),
           ],
-          description:
-            "Per-screen comparison pages for each classification outcome, mode, and color scheme.",
-          id: "design-review-outcomes",
           segment: "outcomes",
           title: "Comparison outcomes",
         }),
-        collection({
+        folder({
           children: [
             ...reviewImpactScreens,
-            collection({
+            folder({
               children: reviewStyleScreens,
-              description:
-                "Rule-aware stylesheet evidence: styles that apply, styles that could apply anywhere with and without names to list, and a stylesheet examined and excluded.",
-              id: "design-review-stylesheets",
               segment: "stylesheets",
               title: "Stylesheet evidence",
             }),
           ],
-          description:
-            "Aggregate review states: shared impact, ignored regions, empty.",
-          id: "design-review-impact",
           segment: "impact",
           title: "Impact states",
         }),
-        collection({
+        folder({
           children: reviewAvailabilityScreens,
-          description:
-            "Changes while the comparison is being prepared and after preparing it fails.",
-          id: "design-review-availability",
           segment: "availability",
           title: "Comparison availability",
         }),
@@ -153,38 +105,17 @@ const designMockups = defineRoot({
         ...DESIGN_DEPENDENCIES,
         "examples/basic/generated/design-review.css",
       ],
-      description:
-        "Optional screen comparisons within the catalogue Changes filter.",
-      id: "design-review",
       segment: "review",
       title: "Changes",
     }),
   ],
-  collection: {
-    dependencies: DESIGN_DEPENDENCIES,
-    description:
-      "Neutral design mockups for the Mokly shell implemented in the UI milestone.",
-    id: "design",
-    rationale:
-      "Reviewers approve the complete catalogue and Changes design from synthetic data before any shell UI is implemented.",
-    relatedDocs: [
-      "docs/protocol/mokly-shell-design.md",
-      "examples/basic/notes.md",
-    ],
-    title: "Mokly design",
-  },
+  dependencies: DESIGN_DEPENDENCIES,
+  relatedDocs: [
+    "docs/protocol/mokly-shell-design.md",
+    "examples/basic/notes.md",
+  ],
   path: "design",
 });
 
 /** The neutral Mokly catalogue and Changes design catalogue. */
-export const mockups = [
-  defineCollection({
-    childIds: ["design", "design-library"],
-    dependencies: DESIGN_DEPENDENCIES,
-    description: "Neutral design references for the Mokly package.",
-    id: "design-root",
-    relatedDocs: ["docs/protocol/mokly-shell-design.md"],
-    title: "Design",
-  }),
-  ...designMockups,
-];
+export const mockups = designMockups;

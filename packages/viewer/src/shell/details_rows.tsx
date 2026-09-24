@@ -6,7 +6,7 @@
 import type { ReactNode } from "react";
 
 import { catalogueViewHref } from "../navigation/delivery.js";
-import type { ManifestEntry, ManifestUseCase } from "../registry/types.js";
+import type { ManifestUseCase } from "../registry/types.js";
 
 import type { Catalogue } from "./catalogue.js";
 import { FlowIcon, ScreenIcon, VariantIcon } from "./icons.js";
@@ -127,10 +127,7 @@ export function VariantChips(props: {
           ? [entry]
           : [],
       )
-    : (props.catalogue.hierarchy.variantsById.get(props.entry.id) ?? []).filter(
-        (variant): variant is Exclude<ManifestEntry, { kind: "collection" }> =>
-          variant.kind !== "collection",
-      );
+    : (props.catalogue.hierarchy.variantsById.get(props.entry.id) ?? []);
   if (variants.length === 0) {
     return null;
   }
@@ -170,7 +167,7 @@ export function VariantOfChip(props: {
       )?.entry ?? props.catalogue.byId.get(variantOf))
     : (props.catalogue.hierarchy.variantParentById.get(props.entry.id) ??
       props.catalogue.byId.get(variantOf));
-  if (parent === undefined || parent.kind === "collection") {
+  if (parent === undefined) {
     return null;
   }
   return (

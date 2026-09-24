@@ -16,27 +16,21 @@ export function screenVariantEntrySource(
   const includeParent = options.includeParent ?? true;
   const includeVariant = includeParent && (options.includeVariant ?? true);
   const flowScreenId = options.flowScreenId;
-  const childIds = [
-    ...(includeParent ? ["home"] : []),
-    "details",
-    ...(flowScreenId ? ["variant-flow"] : []),
-  ];
   const variant = includeVariant
     ? `, variants: [{ id: "home-empty", slug: "empty", title: "Home empty", description: "An empty home screen", mobile: <main>{${JSON.stringify(options.variantText ?? "Empty home")}}</main>, desktop: <main>{${JSON.stringify(options.variantText ?? "Empty home")}}</main>, useCaseIds: ${JSON.stringify(flowScreenId === "home-empty" ? ["variant-flow"] : [])} }]`
     : "";
   const parent = includeParent
-    ? `defineScreen({ ...metadata, id: "home", title: ${JSON.stringify(options.parentTitle ?? "Home")}, description: "The home screen", route: "screens/home.html", mobile: <main>{${JSON.stringify(options.parentText ?? "Home")}}</main>, desktop: <main>{${JSON.stringify(options.parentText ?? "Home")}}</main>, useCaseIds: ${JSON.stringify(flowScreenId === "home" ? ["variant-flow"] : [])}${variant} }),`
+    ? `defineScreen({ ...metadata, navPath: ["Fixture"], id: "home", title: ${JSON.stringify(options.parentTitle ?? "Home")}, description: "The home screen", route: "screens/home.html", mobile: <main>{${JSON.stringify(options.parentText ?? "Home")}}</main>, desktop: <main>{${JSON.stringify(options.parentText ?? "Home")}}</main>, useCaseIds: ${JSON.stringify(flowScreenId === "home" ? ["variant-flow"] : [])}${variant} }),`
     : "";
   const flow = flowScreenId
-    ? `defineUseCase({ ...metadata, id: "variant-flow", title: "Variant flow", description: "A variant journey", route: "user-flows/variant.html", steps: [{ screenId: ${JSON.stringify(flowScreenId)} }] }),`
+    ? `defineUseCase({ ...metadata, navPath: ["Fixture"], id: "variant-flow", title: "Variant flow", description: "A variant journey", route: "user-flows/variant.html", steps: [{ screenId: ${JSON.stringify(flowScreenId)} }] }),`
     : "";
   return `import React from "react";
-import { defineCollection, defineScreen${flowScreenId ? ", defineUseCase" : ""} } from "@mokly/mokly";
+import { defineScreen${flowScreenId ? ", defineUseCase" : ""} } from "@mokly/mokly";
 const metadata = { dependencies: ["notes.md"], relatedDocs: ["notes.md"] };
 export const mockups = [
-  defineCollection({ ...metadata, id: "fixture", title: "Fixture", description: "Fixture entries", childIds: ${JSON.stringify(childIds)} }),
   ${parent}
-  defineScreen({ ...metadata, id: "details", title: "Details", description: "A detail screen", route: "screens/details.html", mobile: <main>Details</main>, desktop: <main>Details</main>, useCaseIds: [] }),
+  defineScreen({ ...metadata, navPath: ["Fixture"], id: "details", title: "Details", description: "A detail screen", route: "screens/details.html", mobile: <main>Details</main>, desktop: <main>Details</main>, useCaseIds: [] }),
   ${flow}
 ];
 `;
@@ -61,12 +55,12 @@ export function componentScreenVariantEntrySource(
   if (!flow) return source;
   source = source
     .replace(
-      "defineComponent, defineCollection, defineScreen,",
-      "defineComponent, defineCollection, defineScreen, defineUseCase,",
+      "defineComponent, defineScreen,",
+      "defineComponent, defineScreen, defineUseCase,",
     )
     .replace(
       "\n];",
-      ',\n  defineUseCase({ ...metadata, id: "variant-flow", title: "Variant flow", description: "A variant journey", route: "user-flows/variant.html", steps: [{ screenId: "home-empty" }] })\n];',
+      ',\n  defineUseCase({ ...metadata, navPath: ["Fixture"], id: "variant-flow", title: "Variant flow", description: "A variant journey", route: "user-flows/variant.html", steps: [{ screenId: "home-empty" }] })\n];',
     );
   return source;
 }

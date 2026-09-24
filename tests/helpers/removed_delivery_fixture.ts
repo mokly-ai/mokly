@@ -178,17 +178,15 @@ export function removedDeliverySource(
 ): string {
   const prefix = version === "baseline" ? "Previous" : "Branch edit";
   return `import React from "react";
-import { defineCollection, definePage, defineScreen } from "@mokly/mokly";
+import { definePage, defineScreen } from "@mokly/mokly";
 const metadata = { description: "Fixture", dependencies: [], relatedDocs: [] };
 export const mockups = [
-  defineCollection({ ...metadata, id: "fixture", title: "Fixture", childIds: ["current"${current ? "" : ', "removed-archive"'}] }),
-  ${current ? "" : 'defineCollection({ ...metadata, id: "removed-archive", title: "Deleted archive", childIds: ["removed-section"] }),\n  defineCollection({ ...metadata, id: "removed-section", title: "Deleted section", childIds: ["removed-screen", "removed-page"] }),'}
-  defineScreen({ ...metadata, id: "current", title: "Current", route: "screens/current.html", mobile: <main>Current mobile</main>, desktop: <main>Current desktop</main>, useCaseIds: [] }),
+  defineScreen({ ...metadata, navPath: ["Fixture"], id: "current", title: "Current", route: "screens/current.html", mobile: <main>Current mobile</main>, desktop: <main>Current desktop</main>, useCaseIds: [] }),
   ${
     current
       ? ""
-      : `defineScreen({ ...metadata, id: "removed-screen", title: "Removed screen", route: "screens/removed.html", mobile: <main>${prefix} mobile screen</main>, desktop: <main>${prefix} desktop screen</main>, useCaseIds: [] }),
-  definePage({ ...metadata, id: "removed-page", title: "Removed page", route: "archive/removed.html", render: () => '<!doctype html><html><head><link rel="stylesheet" href="../assets/page.css"></head><body><main>${prefix} page</main><img src="../assets/past.png"></body></html>' }),`
+      : `defineScreen({ ...metadata, navPath: ["Fixture", "Deleted archive", "Deleted section"], id: "removed-screen", title: "Removed screen", route: "screens/removed.html", mobile: <main>${prefix} mobile screen</main>, desktop: <main>${prefix} desktop screen</main>, useCaseIds: [] }),
+  definePage({ ...metadata, navPath: ["Fixture", "Deleted archive", "Deleted section"], id: "removed-page", title: "Removed page", route: "archive/removed.html", render: () => '<!doctype html><html><head><link rel="stylesheet" href="../assets/page.css"></head><body><main>${prefix} page</main><img src="../assets/past.png"></body></html>' }),`
   }
 ];`;
 }

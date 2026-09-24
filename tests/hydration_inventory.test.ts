@@ -25,9 +25,7 @@ test("every catalogue route has an independently timed hydration test", async ()
       ),
     ),
   );
-  const routes = manifest.entries.flatMap((entry) =>
-    entry.kind === "collection" ? [] : [entry.route],
-  );
+  const routes = manifest.entries.map((entry) => entry.route);
   assert.ok(routes.length > 80);
   const { stdout } = await execute(
     process.execPath,

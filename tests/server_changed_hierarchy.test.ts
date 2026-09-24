@@ -5,7 +5,8 @@ import test from "node:test";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
 import { changedManifestRoutes } from "../dist/registry/changed_routes.js";
-import type { ManifestV5 } from "../packages/viewer/dist/registry/types.js";
+import { parseHistoricalManifest } from "../dist/registry/manifest.js";
+import type { ManifestV6 } from "../packages/viewer/dist/registry/types.js";
 
 import {
   createFixture,
@@ -13,7 +14,7 @@ import {
   reparentedEntrySource,
 } from "./helpers/fixture.js";
 
-test("collection reparenting marks the moved screen and use case", async (context) => {
+test("changing a navPath marks its screen and referencing use case", async (context) => {
   const fixture = await createFixture(reparentedEntrySource("screens"));
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
@@ -23,7 +24,6 @@ test("collection reparenting marks the moved screen and use case", async (contex
     reparentedEntrySource("archive"),
   );
   const manifest = await compileManifest(config);
-  makeNavPathsIdentical(manifest, baseManifest);
 
   assert.deepEqual(changedManifestRoutes(manifest, baseManifest, config, []), [
     "screens/home.html",
@@ -31,7 +31,7 @@ test("collection reparenting marks the moved screen and use case", async (contex
   ]);
 });
 
-test("an ancestor title change marks its routed descendants", async (context) => {
+test("changing a folder label marks its routed descendants", async (context) => {
   const fixture = await createFixture(reparentedEntrySource("screens"));
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
@@ -41,7 +41,6 @@ test("an ancestor title change marks its routed descendants", async (context) =>
     reparentedEntrySource("screens", { screensTitle: "Product screens" }),
   );
   const manifest = await compileManifest(config);
-  makeNavPathsIdentical(manifest, baseManifest);
 
   assert.deepEqual(changedManifestRoutes(manifest, baseManifest, config, []), [
     "screens/details.html",
@@ -50,17 +49,41 @@ test("an ancestor title change marks its routed descendants", async (context) =>
   ]);
 });
 
+test("a validated v5 baseline with collections does not invent moves in unchanged v6 entries", async (context) => {
+  const fixture = await createFixture(reparentedEntrySource("screens"));
+  context.after(() => removeFixture(fixture));
+  const config = await loadConfig(fixture.root);
+  const current = await compileManifest(config);
+  const historical = parseHistoricalManifest({
+    ...current,
+    schemaVersion: 5,
+    entries: [
+      ...current.entries,
+      {
+        id: "fixture",
+        kind: "collection",
+        title: "Fixture",
+        description: "Former navigation folder",
+        childIds: current.entries
+          .filter(
+            ({ navPath }) => navPath[0] === "Fixture" && navPath.length === 1,
+          )
+          .map(({ id }) => id),
+        navPath: [],
+        dependencies: [],
+        declaredDependencies: [],
+        relatedDocs: [],
+        sourcePath: current.entries[0]!.sourcePath,
+      },
+    ],
+  });
+  assert.equal(historical.schemaVersion, 5);
+  assert.equal(historical.entries.length, current.entries.length);
+  assert.deepEqual(changedManifestRoutes(current, historical, config, []), []);
+});
+
 async function compileManifest(
   config: Awaited<ReturnType<typeof loadConfig>>,
-): Promise<ManifestV5> {
+): Promise<ManifestV6> {
   return (await compileCatalogue(config)).manifest;
-}
-
-function makeNavPathsIdentical(
-  manifest: ManifestV5,
-  baseManifest: ManifestV5,
-): void {
-  for (const entry of [...manifest.entries, ...baseManifest.entries]) {
-    entry.navPath = ["Historical label"];
-  }
 }

@@ -13,7 +13,7 @@ import type {
 } from "../dist/authoring/types.js";
 import { DEFAULT_PUBLIC_EXCLUDE } from "../dist/config/public_exclusions.js";
 import type { ResolvedConfig } from "../dist/config/types.js";
-import { defineCollection, defineUseCase } from "../dist/index.js";
+import { defineUseCase } from "../dist/index.js";
 import { validateEntry } from "../dist/registry/entry_validation.js";
 import { prepareRegistry } from "../dist/registry/prepare.js";
 import type { RegistryViolation } from "../dist/registry/prepared_types.js";
@@ -53,7 +53,7 @@ test("variant authoring rejects invalid slugs and forbidden fields", () => {
     "welcome",
   );
 
-  for (const field of ["variants", "route", "childIds"] as const) {
+  for (const field of ["variants", "route", "navPath"] as const) {
     const input = {
       ...variant(`welcome-${field}`, field),
       [field]: field === "route" ? "screens/custom.html" : [],
@@ -109,33 +109,17 @@ test("variant relationships reject unknown, nested, non-screen, and re-routed pa
   );
 });
 
-test("collections cannot claim variants", () => {
+test("variants must retain their parent's navigation path", () => {
   const [parent, child] = screenDefinitions([
     variant("welcome-empty", "empty"),
   ]);
   assert.ok(parent && child);
-  const collection = resolved(
-    attributed(
-      defineCollection({
-        childIds: [parent.id, child.id],
-        dependencies: [],
-        description: "Screens",
-        id: "screens",
-        relatedDocs: [],
-        title: "Screens",
-      }),
-    ),
-  );
-
-  assertViolation(
-    allViolations([parent, child, collection]),
-    "variant-claimed",
-    collection.id,
-  );
+  const moved = { ...child, navPath: ["Elsewhere"] };
+  assertViolation(allViolations([parent, moved]), "invalid-variants", child.id);
 });
 
 test("non-screen entries reject variant fields even when undefined", () => {
-  for (const kind of ["collection", "page", "use-case", "component"] as const) {
+  for (const kind of ["page", "use-case", "component"] as const) {
     const violations = validateEntry(invalidNonScreen(kind), config);
     assert.equal(
       violations.filter(({ code }) => code === "invalid-variants").length,
@@ -264,7 +248,7 @@ function resolved(definition: RegistryDefinition): ResolvedRegistryEntry {
 }
 
 function invalidNonScreen(
-  kind: "collection" | "page" | "use-case" | "component",
+  kind: "page" | "use-case" | "component",
 ): ResolvedRegistryEntry {
   const common = {
     __viaDefine: true as const,
@@ -272,6 +256,7 @@ function invalidNonScreen(
     description: `${kind} entry`,
     id: `${kind}-entry`,
     kind,
+    navPath: [],
     relatedDocs: [],
     sourcePath: path.join(repositoryRoot, sourceRelativePath),
     sourceRelativePath,
@@ -280,12 +265,10 @@ function invalidNonScreen(
     variants: undefined,
   };
   const specific =
-    kind === "collection"
-      ? { childIds: ["welcome"] }
-      : kind === "page"
-        ? { render: () => "<html></html>", route: "page.html" }
-        : kind === "use-case"
-          ? { route: "flow.html", steps: [{ screenId: "welcome" }] }
-          : { route: "component.html" };
+    kind === "page"
+      ? { render: () => "<html></html>", route: "page.html" }
+      : kind === "use-case"
+        ? { route: "flow.html", steps: [{ screenId: "welcome" }] }
+        : { route: "component.html" };
   return { ...common, ...specific } as unknown as ResolvedRegistryEntry;
 }

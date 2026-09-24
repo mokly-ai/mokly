@@ -36,11 +36,12 @@ const convertedVariants = [
   ["design-browse-tag-onboarding-picker", "onboarding-picker"],
 ] as const;
 
-test("the Welcome conversion moves exactly the approved screens out of collections", async () => {
+test("the Welcome conversion keeps the approved screens as variants, not folder members", async () => {
   const { manifest } = await designCatalogue;
-  const collections = manifest.entries.filter(
-    (entry) => entry.kind === "collection",
+  const parent = manifest.entries.find(
+    (entry) => entry.id === "design-browse-screen",
   );
+  assert.ok(parent?.kind === "screen");
   for (const [id, slug] of convertedVariants) {
     const entry = manifest.entries.find((candidate) => candidate.id === id);
     assert.equal(entry?.kind, "screen", id);
@@ -51,20 +52,21 @@ test("the Welcome conversion moves exactly the approved screens out of collectio
       id,
     );
     assert.equal(entry.variantOf, "design-browse-screen", id);
-    assert.deepEqual(
-      collections.filter((collection) => collection.childIds.includes(id)),
-      [],
-      id,
-    );
+    assert.deepEqual(entry.navPath, parent.navPath, id);
   }
-  const tagStates = collections.find(
-    (entry) => entry.id === "design-browse-tags",
+  assert.equal(
+    manifest.entries.some((entry) => entry.id === "design-browse-tags"),
+    false,
   );
-  assert.deepEqual(tagStates?.childIds, []);
-  const shellStates = collections.find(
-    (entry) => entry.id === "design-browse-states",
+  const filter = manifest.entries.find(
+    (entry) => entry.id === "design-browse-tag-filter",
   );
-  assert.ok(shellStates?.childIds.includes("design-browse-tag-filter"));
+  assert.deepEqual(filter?.navPath, [
+    "Design",
+    "Mokly design",
+    "Browse shell",
+    "Shell states",
+  ]);
 });
 
 for (const viewport of ["mobile", "desktop"] as const) {

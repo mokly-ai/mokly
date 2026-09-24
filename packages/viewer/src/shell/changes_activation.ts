@@ -81,7 +81,7 @@ function selectionHasChangedRoute(
         selection.snapshotId,
       )
     : undefined;
-  return current !== undefined && current.kind !== "collection"
+  return current !== undefined
     ? context.changedRoutes?.includes(current.route) === true
     : false;
 }
@@ -99,9 +99,9 @@ function firstVisibleChangedVariant(
     !catalogue.byRoute.has(parent.route)
   )
     return;
-  const current = (
-    catalogue.hierarchy.variantsById.get(parentId) ?? []
-  ).flatMap((entry) => (entry.kind === "collection" ? [] : [{ entry }]));
+  const current = (catalogue.hierarchy.variantsById.get(parentId) ?? []).map(
+    (entry) => ({ entry }),
+  );
   const removed = catalogue.removedEntries.flatMap(({ entry, snapshotId }) =>
     entry.kind === "screen" &&
     entry.variantOf === parentId &&

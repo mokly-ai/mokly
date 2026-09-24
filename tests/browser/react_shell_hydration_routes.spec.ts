@@ -21,11 +21,7 @@ const manifest = parseManifest(
   ),
 );
 const fixtureRoutes = [
-  ...new Set(
-    manifest.entries.flatMap((entry) =>
-      entry.kind === "collection" ? [] : [entry.route],
-    ),
-  ),
+  ...new Set(manifest.entries.map((entry) => entry.route)),
 ];
 expect(fixtureRoutes.length).toBeGreaterThan(80);
 

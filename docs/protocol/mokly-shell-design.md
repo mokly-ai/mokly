@@ -121,11 +121,11 @@ contract until their standalone screens are implemented.
 | `design-appearance-flow`              | `design/browse/appearance/status/flow.html`                     | Use-case steps around light screens                        |
 
 The six entries under `screen.variants/` are variants of
-`design-browse-screen` and are absent from every collection's `childIds`. The
-stable `design-browse-tags` collection remains present with no children and
-directs readers to Welcome's variants. `design-browse-states` retains all other
-memberships, including `design-browse-tag-filter`; no other id or route changes
-in this conversion.
+`design-browse-screen` and remain under that entry in authored order rather
+than becoming folder members. The formerly empty `design-browse-tags` (Tag
+states) folder disappears from navigation after the path migration; Welcome
+still presents its variants. The other Shell states entries, including
+`design-browse-tag-filter`, keep their `navPath` labels and routes.
 
 Additional owning groups keep each new page at no more than five screens:
 

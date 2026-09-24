@@ -9,9 +9,9 @@ interface NavigationBranch {
 }
 
 /**
- * Build the depicted tree. Collections nest by depth; a variant row belongs to
- * the leaf it follows rather than to that leaf's collection, so a parent keeps
- * its variants and a collection never counts them as children.
+ * Build the depicted tree. Folders nest by depth; a variant row belongs to
+ * the leaf it follows rather than to that leaf's folder, so a parent keeps
+ * its variants and a folder never counts them as children.
  */
 function navigationForest(rows: readonly NavigationRow[]): NavigationBranch[] {
   const roots: NavigationBranch[] = [];
@@ -26,7 +26,7 @@ function navigationForest(rows: readonly NavigationRow[]): NavigationBranch[] {
     while ((parents.at(-1)?.depth ?? -1) >= row.depth) parents.pop();
     const parent = parents.at(-1)?.branch;
     (parent?.children ?? roots).push(branch);
-    if (row.kind === "collection") {
+    if (row.kind === "folder") {
       parents.push({ branch, depth: row.depth });
       leaf = undefined;
     } else {
@@ -40,7 +40,7 @@ function projectBranch(
   branch: NavigationBranch,
   section: NavigationSectionId,
 ): NavigationBranch | undefined {
-  if (branch.row.kind !== "collection") {
+  if (branch.row.kind !== "folder") {
     const component = branch.row.kind === "component";
     if (component !== (section === "components")) return undefined;
     return branch.row.variants === "open"

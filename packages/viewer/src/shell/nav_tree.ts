@@ -1,7 +1,11 @@
-// Builds one navigation model from explicit collection membership. Stable ids own disclosure identity;
-// display labels never act as structural keys.
+// Builds section folders from authored navigation paths. The collection prefix
+// remains transitional until disclosure keys migrate in Milestone 3.
 
-import type { CatalogueHierarchy } from "../registry/hierarchy.js";
+import type {
+  CatalogueHierarchy,
+  HierarchyNode,
+} from "../registry/hierarchy.js";
+import { compareNavigationNodes } from "../registry/nav_paths.js";
 import type { ManifestEntry } from "../registry/types.js";
 
 /** A leaf navigation row linking to one viewable route. */
@@ -49,21 +53,11 @@ export interface NavSectionNode {
   label: "Components" | "Pages";
 }
 
-/** One breadcrumb segment, representing an authored collection ancestor. */
+/** One breadcrumb segment, representing an authored folder label. */
 export interface CatalogueCrumb {
   /** A viewable route this crumb links to; plain text when absent. */
   href?: string;
   label: string;
-}
-
-/** Build the nested navigation tree over the explicit catalogue hierarchy. */
-export function buildNavTree(
-  hierarchy: CatalogueHierarchy<ManifestEntry>,
-): NavNode[] {
-  const structured = hierarchy.roots.map((entry) =>
-    structuredNode(entry, hierarchy, new Set()),
-  );
-  return sortNodes(structured);
 }
 
 /** Project the authored hierarchy into separate page and component sections. */
@@ -73,20 +67,40 @@ export function buildNavSections(
 ): NavSectionNode[] {
   const adopted = adoptedVariants(hierarchy, additionalLeaves);
   const attached = new Set<NavLeafNode>();
-  const tree = attachRemovedVariants(
-    buildNavTree(hierarchy),
-    adopted,
-    attached,
-  );
+  const tree = {
+    pages: attachRemovedVariants(
+      hierarchy.roots.pages.map((node) => structuredNode(node, hierarchy)),
+      adopted,
+      attached,
+    ),
+    components: attachRemovedVariants(
+      hierarchy.roots.components.map((node) => structuredNode(node, hierarchy)),
+      adopted,
+      attached,
+    ),
+  };
   const flat = additionalLeaves.filter((leaf) => !attached.has(leaf));
   return (["pages", "components"] as const).flatMap((id) => {
-    const current = projectNodes(tree, id);
+    const current = tree[id];
     const additional = flat.filter((leaf) =>
       id === "components"
         ? leaf.entryKind === "component"
         : leaf.entryKind !== "component",
     );
-    const children = [...current, ...additional];
+    const children = [
+      ...current,
+      ...additional.sort((left, right) =>
+        left.route < right.route
+          ? -1
+          : left.route > right.route
+            ? 1
+            : (left.entryId ?? "") < (right.entryId ?? "")
+              ? -1
+              : (left.entryId ?? "") > (right.entryId ?? "")
+                ? 1
+                : 0,
+      ),
+    ];
     if (children.length === 0) return [];
     return [
       id === "pages"
@@ -106,8 +120,8 @@ export function structuredCrumbTrail(
   hierarchy: CatalogueHierarchy<ManifestEntry>,
   entryId: string,
 ): CatalogueCrumb[] {
-  return (hierarchy.ancestorsById.get(entryId) ?? []).map((ancestor) => ({
-    label: ancestor.title,
+  return (hierarchy.ancestorsById.get(entryId) ?? []).map((label) => ({
+    label,
   }));
 }
 
@@ -163,11 +177,11 @@ function attachRemovedVariants(
 }
 
 /** One routed entry, the only entry kind a navigation leaf can represent. */
-type RoutedManifestEntry = Exclude<ManifestEntry, { kind: "collection" }>;
+type RoutedManifestEntry = ManifestEntry;
 
 /**
  * One leaf row plus the variant rows it discloses. The hierarchy already keeps
- * variants out of `roots` and `childrenById`, so a variant reaches the tree
+ * variants out of folder nodes, so a variant reaches the tree
  * only through this list and never as a row of its own.
  */
 function leafNode(
@@ -187,57 +201,47 @@ function leafNode(
 }
 
 function structuredNode(
-  entry: ManifestEntry,
+  node: HierarchyNode<ManifestEntry>,
   hierarchy: CatalogueHierarchy<ManifestEntry>,
-  ancestors: ReadonlySet<string>,
 ): NavNode {
-  if (entry.kind !== "collection") {
+  if (node.kind === "entry") {
+    const entry = node.entry;
     return leafNode(
       entry,
-      (hierarchy.variantsById.get(entry.id) ?? []).flatMap((variant) =>
-        variant.kind === "collection" ? [] : [leafNode(variant, [])],
+      (hierarchy.variantsById.get(entry.id) ?? []).map((variant) =>
+        leafNode(variant, []),
       ),
     );
   }
-  const visited = new Set(ancestors);
-  visited.add(entry.id);
-  const children = (hierarchy.childrenById.get(entry.id) ?? [])
-    .filter((child) => !visited.has(child.id))
-    .map((child) => structuredNode(child, hierarchy, visited));
   return {
-    children: sortNodes(children),
-    key: `collection:${entry.id}`,
+    children: sortNodes(
+      node.children.map((child) => structuredNode(child, hierarchy)),
+    ),
+    key: `collection:${node.key}`,
     kind: "group",
-    label: entry.title,
+    label: node.label,
   };
 }
 
-function projectNodes(
-  nodes: readonly NavNode[],
-  section: NavSectionNode["id"],
-): NavNode[] {
-  return nodes.flatMap((node): NavNode[] => {
-    if (node.kind === "leaf") {
-      const component = node.entryKind === "component";
-      return component === (section === "components") ? [node] : [];
-    }
-    const children = projectNodes(node.children, section);
-    const emptyPageFolder = section === "pages" && node.children.length === 0;
-    return children.length > 0 || emptyPageFolder
-      ? [{ ...node, children }]
-      : [];
-  });
-}
-
 function sortNodes(nodes: readonly NavNode[]): NavNode[] {
-  return [...nodes].sort(
-    (left, right) =>
-      nodeRank(left) - nodeRank(right) ||
-      left.label.localeCompare(right.label) ||
-      left.key.localeCompare(right.key),
+  return [...nodes].sort((left, right) =>
+    compareNavigationNodes(
+      {
+        kind: left.kind === "group" ? "folder" : "entry",
+        label: left.label,
+        key:
+          left.kind === "group"
+            ? left.key.slice("collection:".length)
+            : (left.entryId ?? left.route),
+      },
+      {
+        kind: right.kind === "group" ? "folder" : "entry",
+        label: right.label,
+        key:
+          right.kind === "group"
+            ? right.key.slice("collection:".length)
+            : (right.entryId ?? right.route),
+      },
+    ),
   );
-}
-
-function nodeRank(node: NavNode): number {
-  return node.kind === "group" ? 1 : 2;
 }

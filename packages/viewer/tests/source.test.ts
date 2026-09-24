@@ -9,7 +9,7 @@ const catalogue = readCatalogue(
   JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v1.json",
+        "../../../docs/protocol/fixtures/catalogue-v2.json",
         import.meta.url,
       ),
       "utf8",
@@ -74,7 +74,7 @@ test("every fetched payload goes through the catalogue reader", async () => {
   await assert.rejects(
     loadSource(
       async () => ({
-        catalogue: { ...catalogue, schemaVersion: 2 } as never,
+        catalogue: { ...catalogue, schemaVersion: 1 } as never,
         url: new URL("https://screens.test/catalogue.json"),
       }),
       undefined,

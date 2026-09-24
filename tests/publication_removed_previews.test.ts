@@ -37,7 +37,7 @@ test("publication preview boundaries report typed MoklyError failures", () => {
   for (const operation of [
     () =>
       staticRemovedPreviews(
-        [{ entry: page, ancestors: [] }],
+        [{ entry: page }],
         { result },
         new Map(),
         `__mokly/diffs/__generations/${"b".repeat(64)}`,

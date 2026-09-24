@@ -34,7 +34,7 @@ export async function redirectId(
       method,
     );
   const entry = catalogue.byId.get(safeDecode(encodedId));
-  if (!entry || entry.kind === "collection")
+  if (!entry)
     return send(
       response,
       404,

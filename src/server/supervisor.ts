@@ -1,6 +1,6 @@
 /** Restart supervision retains ownership until each child's cleanup completes. */
 
-import type { ManifestV5 } from "@mokly/viewer/data";
+import type { ManifestV6 } from "@mokly/viewer/data";
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import { bindTimings, timeSync } from "../diagnostics/timings.js";
@@ -23,7 +23,7 @@ import {
 
 /** Restartable child interface used by watched Serve. */
 export interface ProcessSupervisor {
-  completeCatalogue?(manifest: ManifestV5, generation: string): void;
+  completeCatalogue?(manifest: ManifestV6, generation: string): void;
   onForeground?(callback: (active: boolean) => void): void;
   onDiagnostic?(callback: (message: string) => void): void;
   onPreviewResources?(
@@ -225,7 +225,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
     );
   }
 
-  completeCatalogue(manifest: ManifestV5, generation: string): void {
+  completeCatalogue(manifest: ManifestV6, generation: string): void {
     if (
       this.#runtime?.generation !== generation ||
       !this.#child ||

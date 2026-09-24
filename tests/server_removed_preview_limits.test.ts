@@ -33,7 +33,7 @@ const source: RemovedPagePreviewSource = {
   baseCommit: "a".repeat(40),
   baseRef: "main",
   changedRoutes: [route],
-  removedEntries: [{ entry: page, ancestors: [] }],
+  removedEntries: [{ entry: page }],
   schemaVersion: 1,
 };
 

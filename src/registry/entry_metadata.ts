@@ -62,14 +62,6 @@ export function validateTags(
   entry: ResolvedRegistryEntry,
   violations: RegistryViolation[],
 ): void {
-  if (entry.kind === "collection") {
-    if ("tags" in entry) {
-      violations.push(
-        problem(entry, "invalid-tags", "tags are not supported on collections"),
-      );
-    }
-    return;
-  }
   const tags = entry.tags;
   if (tags === undefined) return;
   if (!Array.isArray(tags) || !tags.every(isCatalogueId)) {

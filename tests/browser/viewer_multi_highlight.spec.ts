@@ -122,6 +122,7 @@ for (const cross of [false, true]) {
         {
           kind: "use-case",
           id: "tour",
+          navPath: [],
           title: "Tour",
           route: "flows/tour.html",
           tags: [],

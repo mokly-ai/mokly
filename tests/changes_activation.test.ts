@@ -3,7 +3,7 @@ import test from "node:test";
 
 import type {
   ManifestScreen,
-  ManifestV5,
+  ManifestV6,
 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { changesActivation } from "../packages/viewer/dist/shell/changes_activation.js";
@@ -34,10 +34,10 @@ const failure = {
   tags: ["errors"],
   variantOf: parent.id,
 };
-const manifest: ManifestV5 = {
+const manifest: ManifestV6 = {
   entries: [parent, empty, failure],
   generatedBy: "mokly",
-  schemaVersion: 5,
+  schemaVersion: 6,
   sourceFiles: [parent.sourcePath],
 };
 const catalogue = createCatalogue(manifest);
@@ -151,7 +151,7 @@ test("a removed variant redirect retains its exact snapshot despite an id collis
   };
   const snapshotId = "a".repeat(64);
   const collisionCatalogue = createCatalogue(collisionManifest, [
-    { ancestors: [], entry: empty, snapshotId },
+    { entry: empty, snapshotId },
   ]);
   const collisionContext = {
     ...context,
@@ -181,7 +181,7 @@ test("a removed variant redirect retains its exact snapshot despite an id collis
   assert.equal(sticky.colorScheme, undefined);
 
   const legacyCatalogue = createCatalogue(collisionManifest, [
-    { ancestors: [], entry: empty },
+    { entry: empty },
   ]);
   const rejected = changesActivation(
     legacyCatalogue,

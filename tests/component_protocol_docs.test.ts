@@ -30,13 +30,13 @@ test("documented catalogue formats match compilation and both comparison sides",
       "main",
     );
     const componentComparison = before === components || after === components;
-    assert.equal(fixture.after.manifest.schemaVersion, 5);
+    assert.equal(fixture.after.manifest.schemaVersion, 6);
     assert.equal(result.schemaVersion, componentComparison ? 3 : 2);
     assert.match(
       index,
       after === components
-        ? /With registered components\s*\|\s*5\s*\|\s*3/
-        : /Without registered components\s*\|\s*5\s*\|\s*2/,
+        ? /With registered components\s*\|\s*6\s*\|\s*3/
+        : /Without registered components\s*\|\s*6\s*\|\s*2/,
     );
   }
 });
@@ -59,5 +59,5 @@ test("delivered component contracts do not retain superseded status or version i
     await read("docs/protocol/mokly-export.md"),
     /Keep `ReviewResult\.schemaVersion` at 2/,
   );
-  assert.match(await read("README.md"), /current output requires manifest v5/);
+  assert.match(await read("README.md"), /Current output uses manifest v6/);
 });

@@ -3,10 +3,9 @@ import test from "node:test";
 
 import type { ManifestComponent } from "../packages/viewer/dist/components/manifest_types.js";
 import type {
-  ManifestCollection,
   ManifestEntry,
   ManifestScreen,
-  ManifestV5,
+  ManifestV6,
 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import {
@@ -22,12 +21,8 @@ import { fixtureShellState } from "./helpers/viewer_catalogue.js";
 test("page and component sections preserve only their relevant hierarchy", () => {
   const catalogue = createCatalogue(
     manifest([
-      collection("root", "Product", ["screens", "library", "empty"]),
-      collection("screens", "Screens", ["welcome"]),
-      collection("library", "Library", ["action"]),
-      collection("empty", "Future pages", []),
-      screen("welcome", "Welcome"),
-      component("action", "Action"),
+      screen("welcome", "Welcome", ["Product", "Screens"]),
+      component("action", "Action", ["Product", "Library"]),
     ]),
   );
 
@@ -40,55 +35,55 @@ test("page and component sections preserve only their relevant hierarchy", () =>
       ["components", "section:components", "Components"],
     ],
   );
-  const pageRoot = group(sections[0]?.children ?? [], "collection:root");
+  const pageRoot = group(sections[0]?.children ?? [], "collection:Product");
   assert.deepEqual(
     pageRoot.children.map(({ label }) => label),
-    ["Future pages", "Screens"],
+    ["Screens"],
   );
   assert.equal(
-    leaf(group(pageRoot.children, "collection:screens").children, "Welcome")
-      .entryKind,
+    leaf(
+      group(pageRoot.children, "collection:Product/Screens").children,
+      "Welcome",
+    ).entryKind,
     "screen",
   );
-  const componentRoot = group(sections[1]?.children ?? [], "collection:root");
+  const componentRoot = group(
+    sections[1]?.children ?? [],
+    "collection:Product",
+  );
   assert.deepEqual(
     componentRoot.children.map(({ label }) => label),
     ["Library"],
   );
   assert.equal(
-    leaf(group(componentRoot.children, "collection:library").children, "Action")
-      .entryKind,
+    leaf(
+      group(componentRoot.children, "collection:Product/Library").children,
+      "Action",
+    ).entryKind,
     "component",
   );
 });
 
 test("screen variant leaves follow manifest order", () => {
-  const parent = screen("welcome", "Welcome");
+  const parent = screen("welcome", "Welcome", ["Screens"]);
   const zeta = {
-    ...screen("welcome-zeta", "Welcome zeta"),
+    ...screen("welcome-zeta", "Welcome zeta", ["Screens"]),
     route: "welcome.variants/zeta.html",
     variantOf: parent.id,
   };
   const alpha = {
-    ...screen("welcome-alpha", "Welcome alpha"),
+    ...screen("welcome-alpha", "Welcome alpha", ["Screens"]),
     route: "welcome.variants/alpha.html",
     variantOf: parent.id,
   };
-  const catalogue = createCatalogue(
-    manifest([
-      collection("screens", "Screens", [parent.id]),
-      parent,
-      zeta,
-      alpha,
-    ]),
-  );
+  const catalogue = createCatalogue(manifest([parent, zeta, alpha]));
 
   const pages = buildNavSections(catalogue.hierarchy).find(
     ({ id }) => id === "pages",
   );
   assert.ok(pages);
   const parentLeaf = leaf(
-    group(pages.children, "collection:screens").children,
+    group(pages.children, "collection:Screens").children,
     parent.title,
   );
   assert.deepEqual(
@@ -117,11 +112,11 @@ test("legacy collection keys reach both projections without creating unknown key
   const state = fixtureShellState({
     href: "https://example.test/",
     initial: {
-      recovery: recovery(["/Product", "collection:product", "section:other"]),
+      recovery: recovery(["/Product", "collection:Product", "section:other"]),
     },
   });
-  assert.equal(state.disclosures["collection:pages:product"], false);
-  assert.equal(state.disclosures["collection:components:product"], false);
+  assert.equal(state.disclosures["collection:pages:Product"], false);
+  assert.equal(state.disclosures["collection:components:Product"], false);
   assert.equal(Object.hasOwn(state.disclosures, "section:other"), false);
 });
 
@@ -141,32 +136,18 @@ function leaf(nodes: readonly NavNode[], label: string): NavLeafNode {
   return match;
 }
 
-function collection(
+function screen(
   id: string,
   title: string,
-  childIds: readonly string[],
-): ManifestCollection {
-  return {
-    childIds,
-    dependencies: [],
-    description: `${title} collection`,
-    id,
-    kind: "collection",
-    navPath: [],
-    relatedDocs: [],
-    sourcePath: `entries/${id}.tsx`,
-    title,
-  };
-}
-
-function screen(id: string, title: string): ManifestScreen {
+  navPath: readonly string[] = [],
+): ManifestScreen {
   return {
     dependencies: [],
     description: `${title} screen`,
     fragments: { desktop: `${id}.desktop.html`, mobile: `${id}.mobile.html` },
     id,
     kind: "screen",
-    navPath: [],
+    navPath,
     relatedDocs: [],
     route: `${id}.html`,
     sourcePath: `entries/${id}.tsx`,
@@ -176,7 +157,11 @@ function screen(id: string, title: string): ManifestScreen {
   };
 }
 
-function component(id: string, title: string): ManifestComponent {
+function component(
+  id: string,
+  title: string,
+  navPath: readonly string[] = [],
+): ManifestComponent {
   return {
     controls: {},
     declaredDependencies: [],
@@ -184,7 +169,7 @@ function component(id: string, title: string): ManifestComponent {
     description: `${title} component`,
     id,
     kind: "component",
-    navPath: [],
+    navPath,
     ownedDependencies: [],
     propSchema: { kind: "object", properties: {} },
     relatedDocs: [],
@@ -209,15 +194,17 @@ function component(id: string, title: string): ManifestComponent {
   };
 }
 
-function manifest(entries: readonly ManifestEntry[]): ManifestV5 {
+function manifest(entries: readonly ManifestEntry[]): ManifestV6 {
   return {
     entries: entries.map((entry) => ({
       ...entry,
       declaredDependencies: entry.declaredDependencies ?? [],
     })),
     generatedBy: "mokly",
-    schemaVersion: 5,
-    sourceFiles: entries.map(({ sourcePath }) => sourcePath).sort(),
+    schemaVersion: 6,
+    sourceFiles: [
+      ...new Set(entries.map(({ sourcePath }) => sourcePath)),
+    ].sort(),
   };
 }
 

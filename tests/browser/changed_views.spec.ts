@@ -152,9 +152,12 @@ test("a dark-only change marks the views it hides and opens on one", async ({
 test("a light fallback rejects an ineligible comparison deep link", async ({
   page,
 }) => {
-  const source = reparentedEntrySource("screens").replace(
-    'defineScreen({ ...metadata, description: "Home screen"',
-    'defineScreen({ ...metadata, colorSchemes: ["light"], description: "Home screen"',
+  const original = reparentedEntrySource("screens");
+  const marker = 'description: "Home screen", desktop:';
+  expect(original.split(marker)).toHaveLength(2);
+  const source = original.replace(
+    marker,
+    'colorSchemes: ["light"], description: "Home screen", desktop:',
   );
   const fixture = await startEvidenceFixture(source);
   const { compilation, server } = fixture;

@@ -1,295 +1,29 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type {
-  ManifestCollection,
-  ManifestEntry,
-  ManifestPage,
-  ManifestScreen,
-  ManifestUseCase,
-  ManifestV5,
-} from "../packages/viewer/dist/registry/types.js";
+import type { ManifestV6 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
+import { targetHead } from "../packages/viewer/dist/shell/head.js";
 import {
-  buildNavTree,
+  buildNavSections,
   structuredCrumbTrail,
   type NavGroupNode,
   type NavLeafNode,
   type NavNode,
 } from "../packages/viewer/dist/shell/nav_tree.js";
-
-test("duplicate collection titles retain independent stable identities", () => {
-  const catalogue = createCatalogue(
-    manifest([
-      collection("alpha", "Same title", ["alpha-screen"]),
-      collection("beta", "Same title", ["beta-screen"]),
-      screen("alpha-screen", "Alpha screen"),
-      screen("beta-screen", "Beta screen"),
-    ]),
-  );
-  const groups = buildNavTree(catalogue.hierarchy);
-
-  assert.deepEqual(
-    groups.map((node) => [node.kind, node.key, node.label]),
-    [
-      ["group", "collection:alpha", "Same title"],
-      ["group", "collection:beta", "Same title"],
-    ],
-  );
-  assert.deepEqual(
-    group(groups, "collection:alpha").children[0]?.label,
-    "Alpha screen",
-  );
-  assert.deepEqual(
-    group(groups, "collection:beta").children[0]?.label,
-    "Beta screen",
-  );
-});
-
-test("reparenting moves navigation and crumbs despite stale manifest navPath", () => {
-  const before = createCatalogue(
-    manifest([
-      collection("alpha", "Alpha", ["target"]),
-      collection("beta", "Beta", []),
-      screen("target", "Target", ["Stored", "Wrong"]),
-    ]),
-  );
-  const after = createCatalogue(
-    manifest([
-      collection("alpha", "Alpha", []),
-      collection("beta", "Beta", ["target"]),
-      screen("target", "Target", ["Stored", "Wrong"]),
-    ]),
-  );
-
-  assert.deepEqual(structuredCrumbTrail(before.hierarchy, "target"), [
-    { label: "Alpha" },
-  ]);
-  assert.deepEqual(structuredCrumbTrail(after.hierarchy, "target"), [
-    { label: "Beta" },
-  ]);
-  assert.deepEqual(
-    group(buildNavTree(before.hierarchy), "collection:alpha").children.map(
-      ({ label }) => label,
-    ),
-    ["Target"],
-  );
-  assert.deepEqual(
-    group(buildNavTree(after.hierarchy), "collection:beta").children.map(
-      ({ label }) => label,
-    ),
-    ["Target"],
-  );
-});
-
-test("root entries gain no invented group or breadcrumb", () => {
-  const catalogue = createCatalogue(manifest([screen("root", "Root screen")]));
-  const tree = buildNavTree(catalogue.hierarchy);
-
-  assert.deepEqual(
-    tree.map(({ kind, label }) => [kind, label]),
-    [["leaf", "Root screen"]],
-  );
-  assert.deepEqual(structuredCrumbTrail(catalogue.hierarchy, "root"), []);
-});
-
-test("page ids stay unique and routes never create directory groups", () => {
-  const pages: ManifestPage[] = [
-    page("first", "Same Name", "same-name/index.html"),
-    page("second", "Same Name", "same_name/index.html"),
-  ];
-  const catalogue = createCatalogue(manifest([], pages));
-  const tree = buildNavTree(catalogue.hierarchy);
-
-  assert.deepEqual(
-    tree.map(({ label }) => label),
-    ["Same Name", "Same Name"],
-  );
-  assert.deepEqual(
-    new Set(tree.map(({ key }) => key)),
-    new Set(["entry:first", "entry:second"]),
-  );
-});
-
-test("declared entry tags reach their navigation leaves", () => {
-  const pages: ManifestPage[] = [page("notes", "Notes", "legacy/notes.html")];
-  const catalogue = createCatalogue(
-    manifest(
-      [
-        collection("screens", "Screens", ["welcome", "details", "tour"]),
-        screen("welcome", "Welcome", ["Screens"], ["forms", "onboarding"]),
-        screen("details", "Details", ["Screens"]),
-        useCase("tour", "Tour", ["onboarding"]),
-      ],
-      pages,
-    ),
-  );
-  const children = group(
-    buildNavTree(catalogue.hierarchy),
-    "collection:screens",
-  ).children;
-
-  assert.deepEqual(leaf(children, "Welcome").tags, ["forms", "onboarding"]);
-  assert.deepEqual(leaf(children, "Tour").tags, ["onboarding"]);
-  assert.equal(leaf(children, "Details").tags, undefined);
-  assert.equal(
-    leaf(buildNavTree(catalogue.hierarchy), "Notes").tags,
-    undefined,
-  );
-});
-
-test("malformed cyclic hierarchy cannot recurse during nav construction", () => {
-  const catalogue = createCatalogue(
-    manifest([
-      collection("alpha", "Alpha", ["beta"]),
-      collection("beta", "Beta", ["alpha"]),
-    ]),
-  );
-  assert.deepEqual(buildNavTree(catalogue.hierarchy), []);
-});
-
-test("screen variants nest under their parent leaf in manifest order", () => {
-  const catalogue = createCatalogue(
-    manifest([
-      collection("screens", "Screens", ["welcome"]),
-      screen("welcome", "Welcome"),
-      variant("welcome-error", "Save failed", "welcome"),
-      variant("welcome-empty", "Empty workspace", "welcome"),
-    ]),
-  );
-  const children = group(
-    buildNavTree(catalogue.hierarchy),
-    "collection:screens",
-  ).children;
-
-  assert.deepEqual(
-    children.map(({ label }) => label),
-    ["Welcome"],
-  );
-  assert.deepEqual(
-    (leaf(children, "Welcome").variants ?? []).map(
-      ({ entryKind, key, label, route }) => [entryKind, key, label, route],
-    ),
-    [
-      ["screen", "entry:welcome-error", "Save failed", "welcome-error.html"],
-      [
-        "screen",
-        "entry:welcome-empty",
-        "Empty workspace",
-        "welcome-empty.html",
-      ],
-    ],
-  );
-  assert.equal(leaf(children, "Welcome").variants?.[0]?.variants, undefined);
-});
-
-test("a screen without variants carries no variant list", () => {
-  const catalogue = createCatalogue(
-    manifest([
-      collection("screens", "Screens", ["welcome"]),
-      screen("welcome", "Welcome"),
-    ]),
-  );
-  const children = group(
-    buildNavTree(catalogue.hierarchy),
-    "collection:screens",
-  ).children;
-
-  assert.equal(leaf(children, "Welcome").variants, undefined);
-});
-
-test("variants never render as roots or as collection children", () => {
-  const catalogue = createCatalogue(
-    manifest([
-      collection("screens", "Screens", ["welcome"]),
-      screen("welcome", "Welcome"),
-      variant("welcome-empty", "Empty workspace", "welcome"),
-      variant("loose-empty", "Loose variant", "loose"),
-      screen("loose", "Loose"),
-    ]),
-  );
-  const tree = buildNavTree(catalogue.hierarchy);
-
-  assert.deepEqual(
-    tree.map(({ key }) => key),
-    ["collection:screens", "entry:loose"],
-  );
-  assert.deepEqual(
-    group(tree, "collection:screens").children.map(({ key }) => key),
-    ["entry:welcome"],
-  );
-  assert.deepEqual(
-    (leaf(tree, "Loose").variants ?? []).map(({ key }) => key),
-    ["entry:loose-empty"],
-  );
-});
-
-test("a variant inherits its parent's collection crumbs without the parent", () => {
-  const catalogue = createCatalogue(
-    manifest([
-      collection("example", "Example", ["screens"]),
-      collection("screens", "Screens", ["welcome"]),
-      screen("welcome", "Welcome"),
-      variant("welcome-empty", "Empty workspace", "welcome"),
-    ]),
-  );
-
-  assert.deepEqual(structuredCrumbTrail(catalogue.hierarchy, "welcome-empty"), [
-    { label: "Example" },
-    { label: "Screens" },
-  ]);
-});
-
-function group(
-  nodes: readonly (NavGroupNode | { kind: "leaf" })[],
-  key: string,
-): NavGroupNode {
-  const match = nodes.find(
-    (node): node is NavGroupNode => node.kind === "group" && node.key === key,
-  );
-  assert.ok(match);
-  return match;
-}
-
-function leaf(nodes: readonly NavNode[], label: string): NavLeafNode {
-  const match = nodes.find(
-    (node): node is NavLeafNode => node.kind === "leaf" && node.label === label,
-  );
-  assert.ok(match);
-  return match;
-}
-
-function collection(
-  id: string,
-  title: string,
-  childIds: readonly string[],
-): ManifestCollection {
-  return {
-    childIds,
-    dependencies: [],
-    description: `${title} collection`,
-    id,
-    kind: "collection",
-    navPath: ["Historical"],
-    relatedDocs: [],
-    sourcePath: `entries/${id}.tsx`,
-    title,
-  };
-}
+import { toRouteTarget } from "../packages/viewer/dist/shell/target.js";
 
 function screen(
   id: string,
   title: string,
-  navPath: readonly string[] = ["Historical"],
-  tags?: readonly string[],
-): ManifestScreen {
+  navPath: readonly string[] = [],
+  variantOf?: string,
+): ManifestV6["entries"][number] {
   return {
+    declaredDependencies: [],
     dependencies: [],
-    description: `${title} screen`,
-    fragments: {
-      desktop: `${id}.desktop.html`,
-      mobile: `${id}.mobile.html`,
-    },
+    description: title,
+    fragments: { mobile: `${id}.mobile.html`, desktop: `${id}.desktop.html` },
     id,
     kind: "screen",
     navPath,
@@ -299,61 +33,276 @@ function screen(
     title,
     useCaseIds: [],
     viewports: ["mobile", "desktop"],
-    ...(tags ? { tags } : {}),
+    ...(variantOf ? { variantOf } : {}),
   };
 }
 
-function variant(id: string, title: string, variantOf: string): ManifestScreen {
-  return { ...screen(id, title), variantOf };
-}
-
-function useCase(
+function page(
   id: string,
   title: string,
-  tags?: readonly string[],
-): ManifestUseCase {
+  route: string,
+): ManifestV6["entries"][number] {
   return {
+    declaredDependencies: [],
     dependencies: [],
-    description: `${title} use case`,
-    id,
-    kind: "use-case",
-    navPath: ["Screens"],
-    relatedDocs: [],
-    route: `${id}.html`,
-    sourcePath: `entries/${id}.tsx`,
-    steps: [],
-    title,
-    ...(tags ? { tags } : {}),
-  };
-}
-
-function manifest(
-  entries: readonly ManifestEntry[],
-  pages: readonly ManifestPage[] = [],
-): ManifestV5 {
-  return {
-    entries: [...entries, ...pages].map((entry) => ({
-      ...entry,
-      declaredDependencies: entry.declaredDependencies ?? [],
-    })),
-    generatedBy: "mokly",
-    sourceFiles: [
-      ...new Set([...entries, ...pages].map((entry) => entry.sourcePath)),
-    ].sort(),
-    schemaVersion: 5,
-  };
-}
-
-function page(id: string, title: string, route: string): ManifestPage {
-  return {
-    id,
-    title,
-    route,
-    kind: "page",
     description: title,
-    dependencies: [],
-    relatedDocs: [],
+    id,
+    kind: "page",
     navPath: [],
+    relatedDocs: [],
+    route,
     sourcePath: `entries/${id}.tsx`,
+    title,
   };
 }
+
+function tree(entries: ManifestV6["entries"]) {
+  const manifest: ManifestV6 = {
+    entries,
+    generatedBy: "mokly",
+    schemaVersion: 6,
+    sourceFiles: [
+      ...new Set(entries.map(({ sourcePath }) => sourcePath)),
+    ].sort(),
+  };
+  const catalogue = createCatalogue(manifest);
+  const sections = buildNavSections(catalogue.hierarchy);
+  return {
+    catalogue,
+    hierarchy: catalogue.hierarchy,
+    nodes: sections.find(({ id }) => id === "pages")?.children ?? [],
+    sections,
+  };
+}
+
+function group(nodes: readonly NavNode[], key: string): NavGroupNode {
+  const found = nodes.find((node) => node.kind === "group" && node.key === key);
+  assert.ok(found?.kind === "group");
+  return found;
+}
+
+test("identical path labels merge and keep path-based transitional keys", () => {
+  const { nodes } = tree([
+    screen("second", "Second", ["Design", "Browse"]),
+    screen("first", "First", ["Design", "Browse"]),
+  ]);
+  assert.deepEqual(
+    nodes.map(({ key }) => key),
+    ["collection:Design"],
+  );
+  assert.deepEqual(
+    group(nodes, "collection:Design").children.map(({ key }) => key),
+    ["collection:Design/Browse"],
+  );
+  assert.deepEqual(
+    group(
+      group(nodes, "collection:Design").children,
+      "collection:Design/Browse",
+    ).children.map(({ label }) => label),
+    ["First", "Second"],
+  );
+});
+
+test("changing only navPath reparents navigation and breadcrumb labels", () => {
+  const before = tree([screen("target", "Target", ["Alpha"])]);
+  const after = tree([screen("target", "Target", ["Beta"])]);
+  assert.deepEqual(structuredCrumbTrail(before.hierarchy, "target"), [
+    { label: "Alpha" },
+  ]);
+  assert.deepEqual(structuredCrumbTrail(after.hierarchy, "target"), [
+    { label: "Beta" },
+  ]);
+  assert.equal(
+    group(before.nodes, "collection:Alpha").children[0]?.label,
+    "Target",
+  );
+  assert.equal(
+    group(after.nodes, "collection:Beta").children[0]?.label,
+    "Target",
+  );
+});
+
+test("top-level entries do not gain a folder or breadcrumb", () => {
+  const { hierarchy, nodes } = tree([screen("root", "Root screen")]);
+  assert.deepEqual(
+    nodes.map(({ kind, label }) => [kind, label]),
+    [["leaf", "Root screen"]],
+  );
+  assert.deepEqual(structuredCrumbTrail(hierarchy, "root"), []);
+});
+
+test("screen variants stay under their parent in authored order", () => {
+  const { catalogue, hierarchy, nodes } = tree([
+    screen("welcome", "Welcome", ["Example", "Screens"]),
+    screen("welcome-zeta", "Zeta", ["Example", "Screens"], "welcome"),
+    screen("welcome-alpha", "Alpha", ["Example", "Screens"], "welcome"),
+  ]);
+  const children = group(
+    group(nodes, "collection:Example").children,
+    "collection:Example/Screens",
+  ).children;
+  assert.deepEqual(
+    children.map(({ label }) => label),
+    ["Welcome"],
+  );
+  const parent = children[0];
+  assert.equal(parent?.kind, "leaf");
+  if (parent?.kind === "leaf")
+    assert.deepEqual(
+      parent.variants?.map(({ entryId }) => entryId),
+      ["welcome-zeta", "welcome-alpha"],
+    );
+  assert.deepEqual(structuredCrumbTrail(hierarchy, "welcome-zeta"), [
+    { label: "Example" },
+    { label: "Screens" },
+  ]);
+  const variant = catalogue.byId.get("welcome-zeta");
+  assert.ok(variant);
+  const target = toRouteTarget(variant);
+  assert.ok(target);
+  assert.deepEqual(
+    targetHead(catalogue, target).crumbs.map(({ label }) => label),
+    ["Example", "Screens", "Welcome"],
+  );
+});
+
+test("removed rows follow the complete current hierarchy in route and id order", () => {
+  const { hierarchy } = tree([
+    screen("current", "Zed current"),
+    screen("nested", "Nested", ["Folders"]),
+  ]);
+  const removed = (id: string, route: string): NavLeafNode => ({
+    entryId: id,
+    entryKind: "page",
+    key: `removed:${route}:${id}`,
+    kind: "leaf",
+    label: `A ${id} · Removed`,
+    removedPage: true,
+    route,
+  });
+  const sections = buildNavSections(hierarchy, [
+    removed("last", "z.html"),
+    removed("second", "a.html"),
+    removed("first", "a.html"),
+  ]);
+  assert.deepEqual(
+    sections.find(({ id }) => id === "pages")?.children.map(({ key }) => key),
+    [
+      "collection:Folders",
+      "entry:current",
+      "removed:a.html:first",
+      "removed:a.html:second",
+      "removed:z.html:last",
+    ],
+  );
+});
+
+test("page ids stay unique and routes never create directory groups", () => {
+  const { nodes, sections } = tree([
+    page("first", "Same Name", "same-name/index.html"),
+    page("second", "Same Name", "same_name/index.html"),
+  ]);
+  assert.deepEqual(
+    nodes.map(({ key }) => key),
+    ["entry:first", "entry:second"],
+  );
+  assert.equal(sections.length, 1);
+  assert.deepEqual(
+    nodes.map(({ kind }) => kind),
+    ["leaf", "leaf"],
+  );
+  assert.deepEqual(
+    nodes.map(({ label }) => label),
+    ["Same Name", "Same Name"],
+  );
+});
+
+test("declared entry tags reach navigation leaves and variant rows never enter folders", () => {
+  const { nodes } = tree([
+    { ...screen("parent", "Parent", ["Screens"]), tags: ["review"] },
+    screen("variant", "Variant", ["Screens"], "parent"),
+  ]);
+  const children = group(nodes, "collection:Screens").children;
+  assert.deepEqual(
+    children.map(({ key }) => key),
+    ["entry:parent"],
+  );
+  assert.equal(children[0]?.kind, "leaf");
+  if (children[0]?.kind !== "leaf") return;
+  assert.deepEqual(children[0].tags, ["review"]);
+  assert.deepEqual(
+    children[0].variants?.map(({ key }) => key),
+    ["entry:variant"],
+  );
+  assert.deepEqual(
+    nodes.map(({ key }) => key),
+    ["collection:Screens"],
+  );
+});
+
+test("a screen without variants carries no variant list", () => {
+  const { nodes } = tree([screen("standalone", "Standalone")]);
+  assert.equal(nodes[0]?.kind, "leaf");
+  assert.equal((nodes[0] as NavLeafNode).variants, undefined);
+});
+
+test("declared screen and use-case tags reach their leaves without inventing page tags", () => {
+  const { nodes } = tree([
+    {
+      ...screen("welcome", "Welcome", ["Screens"]),
+      tags: ["forms", "onboarding"],
+    },
+    {
+      declaredDependencies: [],
+      dependencies: [],
+      description: "Tour",
+      id: "tour",
+      kind: "use-case",
+      navPath: ["Screens"],
+      relatedDocs: [],
+      route: "tour.html",
+      sourcePath: "entries/tour.tsx",
+      steps: [{ screenId: "welcome" }],
+      tags: ["onboarding"],
+      title: "Tour",
+    },
+    page("notes", "Notes", "legacy/notes.html"),
+  ]);
+  const children = group(nodes, "collection:Screens").children;
+  assert.deepEqual(
+    children.map((node) =>
+      node.kind === "leaf" ? [node.label, node.tags] : [],
+    ),
+    [
+      ["Tour", ["onboarding"]],
+      ["Welcome", ["forms", "onboarding"]],
+    ],
+  );
+  const notes = nodes.find(({ key }) => key === "entry:notes");
+  assert.equal(notes?.kind, "leaf");
+  if (notes?.kind === "leaf") assert.equal(notes.tags, undefined);
+});
+
+test("variants never become section roots or folder members", () => {
+  const { nodes } = tree([
+    screen("welcome", "Welcome", ["Screens"]),
+    screen("welcome-empty", "Empty", ["Screens"], "welcome"),
+    screen("loose-empty", "Loose variant", [], "loose"),
+    screen("loose", "Loose"),
+  ]);
+  assert.deepEqual(
+    nodes.map(({ key }) => key),
+    ["collection:Screens", "entry:loose"],
+  );
+  assert.deepEqual(
+    group(nodes, "collection:Screens").children.map(({ key }) => key),
+    ["entry:welcome"],
+  );
+  const loose = nodes.find(({ key }) => key === "entry:loose");
+  assert.equal(loose?.kind, "leaf");
+  if (loose?.kind === "leaf")
+    assert.deepEqual(
+      loose.variants?.map(({ key }) => key),
+      ["entry:loose-empty"],
+    );
+});

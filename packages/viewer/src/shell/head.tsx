@@ -173,18 +173,16 @@ export function targetHead(
   const ancestors =
     catalogue.removedEntries
       .find(({ entry }) => entry.route === target.entry.route)
-      ?.ancestors.map(({ title }) => ({ label: title })) ??
+      ?.entry.navPath.map((label) => ({ label })) ??
     structuredCrumbTrail(catalogue.hierarchy, target.entry.id);
   const parent = variantParent(catalogue, target);
-  const parentSnapshot =
-    parent && parent.kind !== "collection"
-      ? catalogue.removedEntries.find(
-          ({ entry }) => entry.route === parent.route,
-        )?.snapshotId
-      : undefined;
+  const parentSnapshot = parent
+    ? catalogue.removedEntries.find(({ entry }) => entry.route === parent.route)
+        ?.snapshotId
+    : undefined;
   return {
     crumbs:
-      parent === undefined || parent.kind === "collection"
+      parent === undefined
         ? ancestors
         : [
             ...ancestors,

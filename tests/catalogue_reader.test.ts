@@ -118,12 +118,12 @@ test("readers validate known fields while additive schema, control and usage fie
 
 test("public fixture rejects incomplete view axes and private nested extension paths", async () => {
   const fixture = JSON.parse(
-    await fs.readFile("docs/protocol/fixtures/catalogue-v1.json", "utf8"),
+    await fs.readFile("docs/protocol/fixtures/catalogue-v2.json", "utf8"),
   );
   fixture.screens[0].views.pop();
   assert.throws(() => readCatalogue(fixture));
   const extended = JSON.parse(
-    await fs.readFile("docs/protocol/fixtures/catalogue-v1.json", "utf8"),
+    await fs.readFile("docs/protocol/fixtures/catalogue-v2.json", "utf8"),
   );
   extended.extension = { absolutePath: "/private/file.tsx" };
   assert.throws(() => readCatalogue(extended));
@@ -131,24 +131,19 @@ test("public fixture rejects incomplete view axes and private nested extension p
 
 test("reader retains variant relationships and entry-node children", async () => {
   const fixture = JSON.parse(
-    await fs.readFile("docs/protocol/fixtures/catalogue-v1.json", "utf8"),
+    await fs.readFile("docs/protocol/fixtures/catalogue-v2.json", "utf8"),
   );
-  const parent = fixture.screens[0];
-  const stem = parent.route.slice(0, -5);
-  const variant = structuredClone(parent);
-  variant.id = `${parent.id}-empty`;
-  variant.title = `${parent.title}, empty`;
-  variant.route = `${stem}.variants/empty.html`;
-  variant.variantOf = parent.id;
-  variant.useCaseIds = [];
-  for (const view of variant.views) {
-    const dark = view.colorScheme === "dark" ? ".dark" : "";
-    view.fragmentPath = `static/${stem}.variants/empty.${view.viewport}${dark}.html`;
-  }
-  fixture.screens.push(variant);
+  const parent = fixture.screens.find(
+    ({ id }: { id: string }) => id === "home",
+  );
+  const variant = fixture.screens.find(
+    ({ id }: { id: string }) => id === "home-empty",
+  );
+  assert.ok(parent);
+  assert.ok(variant);
   const parentNode = findFixtureNode(fixture.tree.pages, parent.id);
   assert.ok(parentNode);
-  parentNode.children = [{ id: variant.id, kind: "entry" }];
+  assert.deepEqual(parentNode.children, [{ id: variant.id, kind: "entry" }]);
 
   const model = readCatalogue(fixture);
   assert.equal(
@@ -158,41 +153,20 @@ test("reader retains variant relationships and entry-node children", async () =>
   assert.deepEqual(model.tree.pages, fixture.tree.pages);
 });
 
-test("reader retains an empty collection in the Pages projection", async () => {
+test("reader accepts empty sections but rejects empty folders", async () => {
   const fixture = JSON.parse(
-    await fs.readFile("docs/protocol/fixtures/catalogue-v1.json", "utf8"),
+    await fs.readFile("docs/protocol/fixtures/catalogue-v2.json", "utf8"),
   );
-  const empty = structuredClone(fixture.collections[0]);
-  empty.childIds = [];
-  empty.details.description = "Retained empty folder";
-  empty.id = "empty";
-  empty.title = "Empty";
-  fixture.collections.push(empty);
-  fixture.tree.pages.unshift({
-    children: [],
-    id: empty.id,
-    kind: "collection",
-  });
-
-  const model = readCatalogue(fixture);
-  assert.deepEqual(
-    model.collections.find(({ id }) => id === empty.id)?.childIds,
-    [],
-  );
-  assert.deepEqual(model.tree.pages[0], {
-    children: [],
-    id: empty.id,
-    kind: "collection",
-  });
-  assert.equal(
-    model.tree.components.some(({ id }) => id === empty.id),
-    false,
-  );
+  fixture.components = [];
+  fixture.tree.components = [];
+  assert.deepEqual(readCatalogue(fixture).tree.components, []);
+  fixture.tree.pages.unshift({ kind: "folder", label: "Empty", children: [] });
+  assert.throws(() => readCatalogue(fixture), /tree must project/);
 });
 
 interface FixtureNode {
   children?: FixtureNode[];
-  id: string;
+  id?: string;
   kind: string;
 }
 

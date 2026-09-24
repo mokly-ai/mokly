@@ -26,7 +26,7 @@ const propSchema = {
               schema: {
                 kind: "enum",
                 values: [
-                  "collection",
+                  "folder",
                   "screen",
                   "component",
                   "flow",

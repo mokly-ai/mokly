@@ -57,10 +57,11 @@ test("Changes export packages removed previews into every delivery boundary", as
   assert.deepEqual(screen?.preview, { kind: "screen" });
   assert.ok(page?.preview?.kind === "page");
   for (const removed of [page, screen])
-    assert.deepEqual(
-      removed?.ancestors.map(({ title }) => title),
-      ["Fixture", "Deleted archive", "Deleted section"],
-    );
+    assert.deepEqual(removed?.entry.navPath, [
+      "Fixture",
+      "Deleted archive",
+      "Deleted section",
+    ]);
   assert.notEqual(fixture.baseCommit, fixture.branchEditCommit);
   const pagePath = page.preview.path;
   const generationRoot = path.posix.dirname(

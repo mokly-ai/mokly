@@ -8,10 +8,7 @@ import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 
 const unregistered = (body: string) =>
-  componentEntrySource({ body, exports: "" }).replace(
-    / {2}defineCollection\([^\n]+\),\n/,
-    "",
-  );
+  componentEntrySource({ body, exports: "" });
 
 test("registering unrelated components does not add unchanged screens to Changes", async (t) => {
   const fixture = await componentReviewFixture(
@@ -53,7 +50,7 @@ test("one-sided registration retains real screen content edits", async (t) => {
       }),
     unregistered("<p>Before adoption</p>"),
   );
-  assert.equal(fixture.before.manifest.schemaVersion, 5);
+  assert.equal(fixture.before.manifest.schemaVersion, 6);
   const { result } = await compareReview(
     fixture.after,
     fixture.config,
@@ -75,7 +72,7 @@ test("removed components retain variants, missing sides, and baseline consuming 
   const fixture = await componentReviewFixture(t, () =>
     unregistered("<p>Now standalone</p>"),
   );
-  assert.equal(fixture.after.manifest.schemaVersion, 5);
+  assert.equal(fixture.after.manifest.schemaVersion, 6);
   const { result } = await compareReview(
     fixture.after,
     fixture.config,

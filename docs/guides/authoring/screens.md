@@ -99,7 +99,7 @@ import { defineRoot, folder, screen } from "@mokly/mokly";
 
 export const mockups = defineRoot({
   path: "account",
-  title: "Account",
+  navPath: ["Account"],
   children: [
     folder({
       segment: "billing",

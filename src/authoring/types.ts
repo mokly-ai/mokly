@@ -9,6 +9,7 @@ export interface EntryInput {
   dependencies: readonly string[];
   description: string;
   id: string;
+  navPath?: readonly string[];
   rationale?: string;
   relatedDocs: readonly string[];
   title: string;
@@ -54,11 +55,6 @@ export interface PageInput extends RoutedEntryInput {
   tags?: readonly string[];
 }
 
-/** A structural navigation collection. */
-export interface CollectionInput extends EntryInput {
-  childIds: readonly string[];
-}
-
 /** One canonical screen reference in an ordered use case. */
 export interface UseCaseStep {
   description?: string;
@@ -81,6 +77,7 @@ interface DefinitionBrand {
 /** Validated screen definition created by `defineScreen`. */
 export interface ScreenDefinition extends ScreenInput, DefinitionBrand {
   kind: "screen";
+  navPath: readonly string[];
   useCaseIds: readonly string[];
   /** Parent screen id when this definition is a flattened screen variant. */
   variantOf?: string;
@@ -89,25 +86,18 @@ export interface ScreenDefinition extends ScreenInput, DefinitionBrand {
 /** Source-attributed whole-document definition. */
 export interface PageDefinition extends PageInput, DefinitionBrand {
   kind: "page";
-}
-
-/** Validated collection definition created by `defineCollection`. */
-export interface CollectionDefinition extends CollectionInput, DefinitionBrand {
-  kind: "collection";
+  navPath: readonly string[];
 }
 
 /** Validated use-case definition created by `defineUseCase`. */
 export interface UseCaseDefinition extends UseCaseInput, DefinitionBrand {
   kind: "use-case";
+  navPath: readonly string[];
 }
 
 /** Any structured catalogue definition. */
 export type RegistryDefinition =
-  | ScreenDefinition
-  | PageDefinition
-  | CollectionDefinition
-  | UseCaseDefinition
-  | ComponentDefinition;
+  ScreenDefinition | PageDefinition | UseCaseDefinition | ComponentDefinition;
 
 /** Fields inherited by a nested child from its ancestors. */
 export interface NestedInherited {
@@ -135,7 +125,7 @@ export interface NestedScreenInput extends NestedInherited {
 /** Whole document with a route derived from ancestor paths and this slug. */
 export interface NestedPageInput extends Omit<
   PageInput,
-  "route" | "dependencies" | "relatedDocs"
+  "route" | "dependencies" | "relatedDocs" | "navPath"
 > {
   dependencies?: readonly string[];
   relatedDocs?: readonly string[];
@@ -148,28 +138,17 @@ export interface NestedPageMarker extends NestedPageInput {
   definedIn?: string;
 }
 
-/** A collection in a nested definition tree. */
-export interface NestedCollectionInput extends NestedInherited {
+/** A folder in a nested definition tree, without an independent entry. */
+export interface NestedFolderInput extends NestedInherited {
   children: readonly NestedChild[];
-  description: string;
-  id: string;
-  rationale?: string;
   segment: string;
   title: string;
 }
 
-/** Root collection metadata for a nested definition tree. */
-export interface RootCollectionInput extends NestedInherited {
-  description: string;
-  id: string;
-  rationale?: string;
-  title: string;
-}
-
 /** Root position and children for a nested definition tree. */
-export interface RootInput {
+export interface RootInput extends NestedInherited {
   children: readonly NestedChild[];
-  collection?: RootCollectionInput;
+  navPath?: readonly string[];
   path: string;
 }
 
@@ -179,15 +158,15 @@ export interface NestedScreenMarker extends NestedScreenInput {
   definedIn?: string;
 }
 
-/** Marker returned by `collection` for nested composition. */
-export interface NestedCollectionMarker extends NestedCollectionInput {
-  __nested: "collection";
+/** Marker returned by `folder` for nested composition. */
+export interface NestedFolderMarker extends NestedFolderInput {
+  __nested: "folder";
   definedIn?: string;
 }
 
-/** A nested screen, page, or collection. */
+/** A nested screen, page, or folder. */
 export type NestedChild =
-  NestedScreenMarker | NestedPageMarker | NestedCollectionMarker;
+  NestedScreenMarker | NestedPageMarker | NestedFolderMarker;
 
 /** A definition annotated with its authored source module. */
 export type ResolvedRegistryEntry = RegistryDefinition & {

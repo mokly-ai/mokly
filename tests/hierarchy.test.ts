@@ -1,258 +1,251 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type {
-  RegistryDefinition,
-  ResolvedRegistryEntry,
-} from "../dist/authoring/types.js";
-import { defineCollection, defineScreen } from "../dist/index.js";
+import { analyzeHierarchy, navPathKey } from "@mokly/viewer/data";
+
+import { defineScreen } from "../dist/index.js";
 import {
   createManifest,
-  parseManifest,
   parseHistoricalManifest,
+  parseManifest,
 } from "../dist/registry/manifest.js";
-import { analyzeHierarchy } from "../packages/viewer/dist/registry/hierarchy.js";
-import type { ManifestV5 } from "../packages/viewer/dist/registry/types.js";
 
-interface TestEntry {
-  childIds?: readonly string[];
-  id: string;
-  kind: "collection" | "screen" | "use-case";
-  title: string;
-  variantOf?: string;
-}
+const entry = (
+  id: string,
+  kind: string,
+  title: string,
+  navPath: unknown,
+  variantOf?: string,
+) => ({ id, kind, title, navPath, ...(variantOf ? { variantOf } : {}) });
 
-test("hierarchy derives roots, children, parents, and ordered ancestors", () => {
-  const account = entry("account", "collection", "Account", ["security"]);
-  const security = entry("security", "collection", "Security", ["password"]);
-  const password = entry("password", "screen", "Password");
-  const tour = entry("tour", "use-case", "Tour");
-  const home = entry("home", "screen", "Home");
-
-  const { hierarchy, issues } = analyzeHierarchy([
-    password,
-    home,
-    security,
-    tour,
-    account,
-  ]);
-
-  assert.deepEqual(issues, []);
-  assert.deepEqual(
-    hierarchy.roots.map(({ id }) => id),
-    ["account", "home", "tour"],
-  );
-  assert.equal(hierarchy.parentById.get("password")?.id, "security");
-  assert.deepEqual(
-    hierarchy.childrenById.get("account")?.map(({ id }) => id),
-    ["security"],
-  );
-  assert.deepEqual(
-    hierarchy.ancestorsById.get("password")?.map(({ title }) => title),
-    ["Account", "Security"],
-  );
-  assert.deepEqual(hierarchy.ancestorsById.get("home"), []);
-  assert.deepEqual(hierarchy.ancestorsById.get("tour"), []);
-});
-
-test("hierarchy groups variants without treating their parent as an ancestor", () => {
-  const root = entry("root", "collection", "Root", ["welcome"]);
-  const welcome = entry("welcome", "screen", "Welcome");
-  const retry = {
-    ...entry("welcome-retry", "screen", "Retry"),
-    variantOf: "welcome",
-  };
-  const empty = {
-    ...entry("welcome-empty", "screen", "Empty"),
-    variantOf: "welcome",
-  };
-
-  const { hierarchy, issues } = analyzeHierarchy([root, welcome, retry, empty]);
-
-  assert.deepEqual(issues, []);
-  assert.deepEqual(
-    hierarchy.variantsById.get("welcome")?.map(({ id }) => id),
-    ["welcome-retry", "welcome-empty"],
-  );
-  assert.equal(hierarchy.variantParentById.get("welcome-empty"), welcome);
-  assert.deepEqual(
-    hierarchy.ancestorsById.get("welcome-empty")?.map(({ id }) => id),
-    ["root"],
-  );
-  assert.deepEqual(
-    hierarchy.roots.map(({ id }) => id),
-    ["root"],
-  );
-});
-
-test("hierarchy reports forest violations deterministically", () => {
+test("section folders merge identical labels, order folders first, and retain authored variants", () => {
   const entries = [
-    entry("z-parent", "collection", "Z", ["shared"]),
-    entry("shared", "screen", "Shared"),
-    entry("cycle-b", "collection", "B", ["cycle-a"]),
-    entry("a-parent", "collection", "A", ["shared", "shared", "missing"]),
-    entry("cycle-a", "collection", "A", ["cycle-b"]),
-    entry("self", "collection", "Self", ["self"]),
+    entry("a", "screen", "Alpha", ["Design", "Browse"]),
+    entry("z", "screen", "Zed", ["Design"]),
+    entry("component", "component", "Button", ["Design"]),
+    entry("b", "page", "Beta", ["Design", "Browse"]),
+    entry("variant-b", "screen", "Second", ["Design", "Browse"], "a"),
+    entry("variant-a", "screen", "First", ["Design", "Browse"], "a"),
   ];
-
-  const first = analyzeHierarchy(entries);
-  const second = analyzeHierarchy([...entries].reverse());
-  const summaries = first.issues.map(({ code, entry: owner, message }) => ({
-    code,
-    message,
-    ownerId: owner.id,
-  }));
-
+  const { hierarchy, issues } = analyzeHierarchy(entries);
+  assert.deepEqual(issues, []);
+  assert.equal(navPathKey(["Design", "Browse"]), "Design/Browse");
+  assert.deepEqual(hierarchy.ancestorsById.get("a"), ["Design", "Browse"]);
+  assert.deepEqual(hierarchy.ancestorsById.get("component"), ["Design"]);
   assert.deepEqual(
-    summaries,
-    second.issues.map(({ code, entry: owner, message }) => ({
+    hierarchy.variantsById.get("a")?.map(({ id }) => id),
+    ["variant-b", "variant-a"],
+  );
+  assert.equal(hierarchy.variantParentById.get("variant-a"), entries[0]);
+  assert.deepEqual(
+    hierarchy.roots.pages.map(({ label }) => label),
+    ["Design"],
+  );
+  assert.deepEqual(
+    hierarchy.roots.components.map(({ label }) => label),
+    ["Design"],
+  );
+  const design = hierarchy.roots.pages[0];
+  assert.equal(design?.kind, "folder");
+  if (design?.kind !== "folder") return;
+  assert.deepEqual(
+    design.children.map(({ label }) => label),
+    ["Browse", "Zed"],
+  );
+  const browse = design.children[0];
+  assert.equal(browse?.kind, "folder");
+  if (browse?.kind === "folder")
+    assert.deepEqual(
+      browse.children.map(({ label }) => label),
+      ["Alpha", "Beta"],
+    );
+});
+
+test("case, whitespace, and leaf/folder conflicts are scoped to one section", () => {
+  const caseConflict = analyzeHierarchy([
+    entry("a", "screen", "A", ["Design"]),
+    entry("b", "screen", "B", ["design"]),
+  ]);
+  assert.equal(caseConflict.issues[0]?.code, "nav-path-conflict");
+  const whitespace = analyzeHierarchy([
+    entry("a", "screen", "A", ["Two Words"]),
+    entry("b", "screen", "B", ["TwoWords"]),
+  ]);
+  assert.equal(whitespace.issues[0]?.code, "nav-path-conflict");
+  const leaf = analyzeHierarchy([
+    entry("a", "screen", "Settings", []),
+    entry("b", "screen", "B", ["settings"]),
+  ]);
+  assert.match(
+    leaf.issues[0]?.message ?? "",
+    /append the folder label.*navPath/,
+  );
+  assert.deepEqual(
+    analyzeHierarchy([
+      entry("a", "screen", "A", ["Design"]),
+      entry("b", "component", "B", ["design"]),
+    ]).issues,
+    [],
+  );
+});
+
+test("folder-versus-leaf conflicts always name and attach to the leaf regardless of order", () => {
+  const leaf = entry("leaf", "screen", "Settings", []);
+  const folderMember = entry("member", "page", "Nested", ["settings"]);
+  const issues = [
+    analyzeHierarchy([leaf, folderMember]).issues,
+    analyzeHierarchy([folderMember, leaf]).issues,
+  ].map((found) =>
+    found.map(({ code, entry: owner, message }) => ({
       code,
+      id: owner.id,
       message,
-      ownerId: owner.id,
     })),
   );
-  assert.deepEqual(summaries, [
-    {
-      code: "duplicate-child",
-      message: 'child id "shared" is listed more than once',
-      ownerId: "a-parent",
-    },
-    {
-      code: "missing-child",
-      message: "unknown child id: missing",
-      ownerId: "a-parent",
-    },
-    {
-      code: "multiple-parents",
-      message: "child shared is already claimed by collection a-parent",
-      ownerId: "z-parent",
-    },
-    {
-      code: "collection-cycle",
-      message: "collection cycle: cycle-a -> cycle-b -> cycle-a",
-      ownerId: "cycle-b",
-    },
-    {
-      code: "collection-cycle",
-      message: "collection cycle: self -> self",
-      ownerId: "self",
-    },
-  ]);
-});
-
-test("manifest paths are derived from collection ancestry", () => {
-  const manifest = hierarchyManifest();
-  const paths = Object.fromEntries(
-    manifest.entries.map(({ id, navPath }) => [id, navPath]),
+  assert.deepEqual(issues[0], issues[1]);
+  const conflicts = issues[0]!;
+  assert.deepEqual(
+    conflicts.map(({ id }) => id),
+    ["leaf"],
   );
-
-  assert.deepEqual(paths, {
-    loose: [],
-    nested: ["Root"],
-    root: [],
-    screen: ["Root", "Nested"],
-  });
+  assert.match(conflicts[0]!.message, /leaf.*Settings.*settings.*navPath/);
 });
 
-test("manifest validation guards cycles while retaining historical paths", () => {
-  const manifest = hierarchyManifest();
-  const historical = structuredClone(manifest) as unknown as MutableManifest;
-  const screen = historical.entries.find(({ id }) => id === "screen");
-  assert.ok(screen);
-  screen.navPath = ["Historical", "Labels"];
-
-  const parsed = parseManifest(historical);
-  assert.deepEqual(parsed.entries.find(({ id }) => id === "screen")?.navPath, [
-    "Historical",
-    "Labels",
-  ]);
-
-  const malformed = structuredClone(manifest) as unknown as MutableManifest;
-  const nested = malformed.entries.find(({ id }) => id === "nested");
-  assert.ok(nested);
-  nested.childIds = ["root"];
-  assert.throws(
-    () => parseManifest(malformed),
-    /collection cycle: nested -> root -> nested/,
+test("folder spelling conflicts report once per spelling and source in either input order", () => {
+  const established = ["first", "second", "third", "fourth"].map((id) => ({
+    ...entry(id, "screen", id, ["A", "Packed ESM"]),
+    sourceRelativePath: "entries/established.mockup.tsx",
+  }));
+  const culprit = {
+    ...entry("culprit", "screen", "Culprit", ["A", "packed  esm"]),
+    sourceRelativePath: "entries/culprit.mockup.tsx",
+  };
+  const reports = [
+    analyzeHierarchy([...established, culprit]).issues,
+    analyzeHierarchy([culprit, ...established.toReversed()]).issues,
+  ].map((issues) =>
+    issues.map(({ code, entry: owner, message }) => ({
+      code,
+      id: owner.id,
+      source: owner.sourceRelativePath,
+      message,
+    })),
   );
-
-  const versionTwo = structuredClone(manifest) as unknown as MutableManifest;
-  versionTwo.schemaVersion = 2;
-  Object.assign(versionTwo, { legacyPages: [] });
-  delete versionTwo.generatedBy;
-  assert.equal(parseHistoricalManifest(versionTwo, true).schemaVersion, 3);
-});
-
-function entry(
-  id: string,
-  kind: TestEntry["kind"],
-  title: string,
-  childIds?: readonly string[],
-): TestEntry {
-  return { ...(childIds ? { childIds } : {}), id, kind, title };
-}
-
-type MutableManifest = Omit<
-  ManifestV5,
-  "entries" | "generatedBy" | "schemaVersion"
-> & {
-  entries: Array<{
-    childIds?: string[];
-    id: string;
-    navPath: string[];
-  }>;
-  generatedBy?: "mokly";
-  schemaVersion: number;
-};
-
-function hierarchyManifest(): ManifestV5 {
-  return createManifest(
+  assert.deepEqual(reports[0], reports[1]);
+  assert.deepEqual(
+    reports[0]?.map(({ id, source }) => [id, source]),
     [
-      resolved(
-        defineCollection({
-          childIds: ["nested"],
-          dependencies: [],
-          description: "Root collection",
-          id: "root",
-          relatedDocs: [],
-          title: "Root",
-        }),
-      ),
-      resolved(
-        defineCollection({
-          childIds: ["screen"],
-          dependencies: [],
-          description: "Nested collection",
-          id: "nested",
-          relatedDocs: [],
-          title: "Nested",
-        }),
-      ),
-      resolved(screenDefinition("screen")),
-      resolved(screenDefinition("loose")),
+      ["first", "entries/established.mockup.tsx"],
+      ["culprit", "entries/culprit.mockup.tsx"],
+    ],
+  );
+  for (const issue of reports[0] ?? []) {
+    assert.equal(issue.code, "nav-path-conflict");
+    assert.match(issue.message, /Packed ESM.*packed {2}esm.*under Pages › A/);
+  }
+});
+
+test("top-level folder conflicts name the Pages section rather than an empty path", () => {
+  const issues = analyzeHierarchy([
+    entry("first", "screen", "First", ["Design"]),
+    entry("second", "screen", "Second", ["design"]),
+  ]).issues;
+  assert.equal(issues.length, 2);
+  for (const issue of issues)
+    assert.match(issue.message, /Design.*design.*at the top of Pages/);
+});
+
+test("each spelling and source is named when several spellings collide", () => {
+  const entries = [
+    {
+      ...entry("first", "screen", "First", ["Packed ESM"]),
+      sourceRelativePath: "entries/first.mockup.tsx",
+    },
+    {
+      ...entry("second", "screen", "Second", ["packed  esm"]),
+      sourceRelativePath: "entries/second.mockup.tsx",
+    },
+    {
+      ...entry("third", "screen", "Third", ["PACKED ESM"]),
+      sourceRelativePath: "entries/third.mockup.tsx",
+    },
+  ];
+  const issues = analyzeHierarchy(entries).issues;
+  assert.deepEqual(
+    issues.map(({ entry: owner }) => owner.id),
+    ["third", "first", "second"],
+  );
+  for (const issue of issues)
+    assert.match(
+      issue.message,
+      /"PACKED ESM".*"Packed ESM".*"packed {2}esm".*at the top of Pages/,
+    );
+});
+
+test("current labels report every invalid segment, and duplicates remain separate leaves", () => {
+  const result = analyzeHierarchy([
+    entry("invalid", "screen", "Invalid", ["", " A", "A/ B", 23]),
+    entry("first", "screen", "Shared", []),
+    entry("second", "screen", "Shared", []),
+  ]);
+  assert.deepEqual(
+    result.issues.map(({ code }) => code),
+    Array(4).fill("invalid-nav-path"),
+  );
+  for (let index = 0; index < 4; index++)
+    assert.match(result.issues[index]!.message, new RegExp(`index ${index}`));
+  assert.deepEqual(
+    result.hierarchy.roots.pages.map(({ kind }) => kind),
+    ["entry", "entry"],
+  );
+});
+
+test("manifest v6 preserves authored paths; v5 baselines validate then discard collection records", () => {
+  const screen = defineScreen({
+    id: "home",
+    title: "Home",
+    description: "Home",
+    route: "screens/home.html",
+    mobile: "Mobile",
+    desktop: "Desktop",
+    dependencies: [],
+    relatedDocs: [],
+    navPath: ["Design"],
+  });
+  const manifest = createManifest(
+    [
+      {
+        ...screen,
+        sourceRelativePath: "entries/home.mockup.tsx",
+        sourcePath: "/repo/entries/home.mockup.tsx",
+      },
     ],
     [],
     ["light"],
   );
-}
-
-function screenDefinition(id: string): RegistryDefinition {
-  return defineScreen({
+  assert.equal(parseManifest(manifest).schemaVersion, 6);
+  const old = structuredClone(manifest) as unknown as Record<
+    string,
+    unknown
+  > & { entries: Array<Record<string, unknown>> };
+  old.schemaVersion = 5;
+  old.entries.unshift({
+    id: "design",
+    kind: "collection",
+    title: "Design",
+    description: "Design",
+    navPath: [],
+    childIds: ["home"],
     dependencies: [],
-    description: `${id} screen`,
-    desktop: id,
-    id,
-    mobile: id,
+    declaredDependencies: [],
     relatedDocs: [],
-    route: `${id}.html`,
-    title: id === "screen" ? "Screen" : "Loose",
+    sourcePath: "entries/home.mockup.tsx",
   });
-}
-
-function resolved(definition: RegistryDefinition): ResolvedRegistryEntry {
-  return {
-    ...definition,
-    sourcePath: `/repo/entries/${definition.id}.mockup.tsx`,
-    sourceRelativePath: `entries/${definition.id}.mockup.tsx`,
-  };
-}
+  assert.throws(() => parseManifest(old), /schema version 6/);
+  assert.deepEqual(
+    parseHistoricalManifest(old).entries.map(({ id }) => id),
+    ["home"],
+  );
+  old.entries[0]!.childIds = ["missing"];
+  assert.throws(() => parseHistoricalManifest(old), /unknown child id/);
+});

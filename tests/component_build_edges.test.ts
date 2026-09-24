@@ -121,11 +121,8 @@ for (const [name, transform, error] of [
     );
   });
 
-test("an actually invoked wrapper must be exported even when collections do not name it", async (t) => {
-  const source = componentEntrySource({ exports: "pane.entry," }).replace(
-    / {2}defineCollection\([^\n]+\),\n/,
-    "",
-  );
+test("an actually invoked wrapper must be exported", async (t) => {
+  const source = componentEntrySource({ exports: "pane.entry," });
   const fixture = await createFixture(source);
   t.after(() => removeFixture(fixture));
   await assert.rejects(

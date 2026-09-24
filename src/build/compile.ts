@@ -4,7 +4,7 @@ import {
   effectiveColorSchemes,
   VIEWPORTS,
 } from "@mokly/viewer/data";
-import type { ManifestV5, ArtifactView } from "@mokly/viewer/data";
+import type { ManifestV6, ArtifactView } from "@mokly/viewer/data";
 
 import { transformCompatibilityDocuments } from "../compatibility/transform.js";
 import { validateComponentResources } from "../components/output_validation.js";
@@ -34,7 +34,7 @@ import { renderCooperatively } from "./render_cooperative.js";
 
 /** Complete in-memory static compilation result. */
 export interface Compilation {
-  manifest: ManifestV5;
+  manifest: ManifestV6;
   outputs: ReadonlyMap<string, string>;
 }
 
@@ -62,7 +62,7 @@ async function compileMeasured(
   timingCounts("catalogue", () => ({
     entries: registry.entries.length,
     ...Object.fromEntries(
-      ["collection", "screen", "component", "use-case", "page"].map((kind) => [
+      ["screen", "component", "use-case", "page"].map((kind) => [
         kind,
         registry.entries.filter((entry) => entry.kind === kind).length,
       ]),
@@ -91,11 +91,7 @@ async function compileMeasured(
           componentViews,
         ),
       );
-  const routedEntries = new Set(
-    registry.entries.flatMap((entry) =>
-      entry.kind === "collection" ? [] : [entry.route],
-    ),
-  );
+  const routedEntries = new Set(registry.entries.map((entry) => entry.route));
   const generatedOwners = new Map<string, string>();
   for (const entry of registry.entries) {
     if (entry.kind === "page")

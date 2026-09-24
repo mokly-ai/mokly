@@ -66,7 +66,6 @@ test("projection exposes real usage and attribution without private evidence", a
     "legacyPages",
     "headDigests",
     "changedPaths",
-    "navPath",
   ])
     assert.equal(json.includes(`"${privateField}":`), false, privateField);
   assert.equal(json.includes(fixture.root), false);
@@ -173,14 +172,14 @@ test("projection exposes screen variants beneath their parent entry", async (t) 
   );
 });
 
-test("public v1 fixture conforms and compatible readers ignore additive fields", async () => {
+test("public v2 fixture conforms and compatible readers ignore additive fields", async () => {
   const json = await fs.readFile(
-    "docs/protocol/fixtures/catalogue-v1.json",
+    "docs/protocol/fixtures/catalogue-v2.json",
     "utf8",
   );
   const fixture = JSON.parse(json);
   const model = readCatalogue(fixture);
-  assert.equal(model.schemaVersion, 1);
+  assert.equal(model.schemaVersion, 2);
   assert.deepEqual(
     model.removedEntries.map(({ entry, preview }) => [entry.kind, preview]),
     [
@@ -199,7 +198,7 @@ test("public v1 fixture conforms and compatible readers ignore additive fields",
   fixture.screens[0].future = true;
   fixture.screens[0].views[0].usage.future = true;
   assert.deepEqual(readCatalogue(fixture), model);
-  assert.throws(() => readCatalogue({ ...fixture, schemaVersion: 2 }));
+  assert.throws(() => readCatalogue({ ...fixture, schemaVersion: 1 }));
   assert.throws(() =>
     readCatalogue({ schemaVersion: 5, generatedBy: "mokly", entries: [] }),
   );
@@ -207,7 +206,7 @@ test("public v1 fixture conforms and compatible readers ignore additive fields",
 
 test("reader rejects unsafe paths, private extensions and broken known references", async () => {
   const fixture = JSON.parse(
-    await fs.readFile("docs/protocol/fixtures/catalogue-v1.json", "utf8"),
+    await fs.readFile("docs/protocol/fixtures/catalogue-v2.json", "utf8"),
   );
   const mutations = [
     (value: typeof fixture) => {
@@ -235,7 +234,7 @@ test("reader rejects unsafe paths, private extensions and broken known reference
       value.extension = { styles: [{ startOffset: 2 }] };
     },
     (value: typeof fixture) => {
-      value.tree.pages[0].id = "missing";
+      value.tree.pages[0].children[0].children[0].id = "missing";
     },
     (value: typeof fixture) => {
       value.screens[0].useCaseIds = ["missing"];
@@ -256,8 +255,8 @@ function findNode(
   id: string,
 ): CatalogueNode | undefined {
   for (const node of nodes) {
-    if (node.id === id) return node;
-    if (node.kind === "collection") {
+    if (node.kind === "entry" && node.id === id) return node;
+    if (node.children) {
       const nested = findNode(node.children, id);
       if (nested) return nested;
     }

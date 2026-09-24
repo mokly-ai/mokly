@@ -94,9 +94,6 @@ React Native Web style collection. See the
 
 ### 3. Add a screen
 
-The path-based authoring example below describes the approved target contract;
-its implementation is tracked in the [plans index](./plans/README.md).
-
 Create `docs/mockups/entries/account.mockup.tsx`:
 
 ```tsx
@@ -131,8 +128,8 @@ docs/mockups/generated/**/*.html
 docs/mockups/generated/mokly-manifest.json
 ```
 
-The target output requires manifest v6; compatibility readers for older
-formats are limited to historical Git baselines.
+Current output uses manifest v6; compatibility readers for older formats are
+limited to historical Git baselines.
 
 ### 4. Open the catalogue
 

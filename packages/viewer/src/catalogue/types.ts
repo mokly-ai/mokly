@@ -17,15 +17,14 @@ export type PublicPath = string;
 export type RemovedEntryPreview =
   { kind: "screen" } | { kind: "page"; path: PublicPath };
 
-/** Public v1 contract, independent of private build and comparison inventories. */
+/** Public v2 contract, independent of private build and comparison inventories. */
 export interface CatalogueReadModel {
-  schemaVersion: 1;
+  schemaVersion: 2;
   identity: { id: string; title: string };
   deploymentId: string;
   revision: { content: number; evidence: number };
   changesStatus: ChangesStatus;
   comparisonUrl: PublicPath | null;
-  collections: readonly CatalogueCollection[];
   tree: {
     pages: readonly CatalogueNode[];
     components: readonly CatalogueNode[];
@@ -36,7 +35,6 @@ export interface CatalogueReadModel {
   components: readonly CatalogueComponent[];
   removedEntries: readonly {
     entry: CatalogueRoutedEntry;
-    ancestors: readonly { id: string; title: string }[];
     snapshotId?: string;
     preview?: RemovedEntryPreview;
   }[];
@@ -44,7 +42,7 @@ export interface CatalogueReadModel {
 export type CatalogueRoutedEntry =
   CatalogueScreen | CataloguePage | CatalogueUseCase | CatalogueComponent;
 export type CatalogueNode =
-  | { kind: "collection"; id: string; children: readonly CatalogueNode[] }
+  | { kind: "folder"; label: string; children: readonly CatalogueNode[] }
   | { kind: "entry"; id: string; children?: readonly CatalogueNode[] };
 export type CatalogueChanges =
   | { status: "ready"; kind: ChangeKind; included: boolean }
@@ -66,10 +64,6 @@ export interface CatalogueEntry {
   details: CatalogueDetails;
   changes: CatalogueChanges;
 }
-export interface CatalogueCollection extends CatalogueEntry {
-  kind: "collection";
-  childIds: readonly string[];
-}
 export type CatalogueUsage =
   | {
       status: "ready";
@@ -87,6 +81,7 @@ export interface CatalogueView {
 }
 export interface CatalogueScreen extends CatalogueEntry {
   kind: "screen";
+  navPath: readonly string[];
   route: string;
   address?: string;
   viewports: readonly Viewport[];
@@ -98,16 +93,19 @@ export interface CatalogueScreen extends CatalogueEntry {
 }
 export interface CataloguePage extends CatalogueEntry {
   kind: "page";
+  navPath: readonly string[];
   route: string;
   documentPath: PublicPath | null;
 }
 export interface CatalogueUseCase extends CatalogueEntry {
   kind: "use-case";
+  navPath: readonly string[];
   route: string;
   steps: readonly { screenId: string; title?: string; description?: string }[];
 }
 export interface CatalogueComponent extends CatalogueEntry {
   kind: "component";
+  navPath: readonly string[];
   route: string;
   viewports: readonly Viewport[];
   colorSchemes: readonly ColorScheme[];

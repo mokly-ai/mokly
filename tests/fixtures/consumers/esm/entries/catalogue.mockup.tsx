@@ -1,7 +1,6 @@
 import React from "react";
 
 import {
-  defineCollection,
   definePage,
   defineScreen,
   defineUseCase,
@@ -17,6 +16,7 @@ const metadata = {
 export const mockups = [
   definePage({
     ...metadata,
+    navPath: ["Packed ESM"],
     id: "packed-handbook",
     title: "Handbook",
     description: "Whole document in the packed API",
@@ -24,22 +24,9 @@ export const mockups = [
     render: () =>
       '<html><body><main id="handbook">Handbook</main><a href="mock:packed-home">Home</a></body></html>',
   }),
-  defineCollection({
-    ...metadata,
-    childIds: ["packed-pages", "packed-tour", "packed-handbook"],
-    description: "Packed ESM consumer catalogue.",
-    id: "packed-esm",
-    title: "Packed ESM",
-  }),
-  defineCollection({
-    ...metadata,
-    childIds: ["packed-home", "packed-detail", "packed-card"],
-    description: "Screens loaded from an installed tarball.",
-    id: "packed-pages",
-    title: "Packed pages",
-  }),
   defineScreen({
     ...metadata,
+    navPath: ["Packed ESM", "Packed pages"],
     description: "A clean ESM consumer screen.",
     desktop: (
       <main data-fixture="esm-desktop">
@@ -75,6 +62,7 @@ export const mockups = [
   }),
   defineScreen({
     ...metadata,
+    navPath: ["Packed ESM", "Packed pages"],
     description: "The destination in the clean ESM consumer.",
     desktop: (
       <main data-fixture="esm-detail-desktop" id="packed-section">
@@ -93,6 +81,7 @@ export const mockups = [
   }),
   defineUseCase({
     ...metadata,
+    navPath: ["Packed ESM"],
     description: "A two-step packed package journey.",
     id: "packed-tour",
     route: "user-flows/packed-tour.html",

@@ -82,6 +82,7 @@ export function validateComponentDefinition(
     invalidData(at, "ownedDependencies must be a subset of dependencies");
   const definition: ComponentDefinition = {
     ...value,
+    navPath: value.navPath === undefined ? [] : value.navPath,
     __viaDefine: true,
     kind: "component",
     propSchema: structuredClone(value.propSchema),

@@ -2,12 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 
 import type { ColorScheme, Viewport, ComponentViewRecord } from "@mokly/viewer";
-import type { ManifestV5, HistoricalManifest } from "@mokly/viewer/data";
-import {
-  canonicalJson,
-  analyzeHierarchy,
-  effectiveColorSchemes,
-} from "@mokly/viewer/data";
+import type { ManifestV6, HistoricalManifest } from "@mokly/viewer/data";
+import { canonicalJson, effectiveColorSchemes } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import { componentManifestEntry } from "../components/manifest_build.js";
@@ -41,17 +37,14 @@ export function createManifest(
   sourceFiles: readonly string[],
   catalogueSchemes: readonly ColorScheme[],
   componentViews: ReadonlyMap<string, ComponentViewRecord> = new Map(),
-): ManifestV5 {
-  const hierarchy = analyzeHierarchy(entries).hierarchy;
+): ManifestV6 {
   return {
     entries: entries.map((entry) =>
       toManifestEntry(
         entry,
         catalogueSchemes,
         componentViews,
-        hierarchy.ancestorsById
-          .get(entry.id)
-          ?.map((ancestor) => ancestor.title) ?? [],
+        entry.navPath ?? [],
       ),
     ),
     generatedBy: "mokly",
@@ -61,17 +54,17 @@ export function createManifest(
         ...entries.map((entry) => entry.sourceRelativePath),
       ]),
     ].sort(),
-    schemaVersion: 5,
+    schemaVersion: 6,
   };
 }
 
 /** Serialize the current manifest with canonical object-key ordering. */
-export function serializeManifest(manifest: ManifestV5): string {
+export function serializeManifest(manifest: ManifestV6): string {
   return `${canonicalJson(manifest, 2)}\n`;
 }
 
-/** Read strictly current schema-v5 canonical output. */
-export function readManifest(config: ResolvedConfig): ManifestV5 {
+/** Read strictly current schema-v6 canonical output. */
+export function readManifest(config: ResolvedConfig): ManifestV6 {
   const canonicalPath = path.join(config.mockupsDir, MANIFEST_NAME);
   const manifest = readManifestFile(canonicalPath);
   config.sourceFiles = manifest.sourceFiles;
@@ -94,7 +87,7 @@ export function selectManifestInput(
   return { allowV2: true, filename: LEGACY_MANIFEST_NAME };
 }
 
-function readManifestFile(candidate: string): ManifestV5 {
+function readManifestFile(candidate: string): ManifestV6 {
   let value: unknown;
   try {
     value = JSON.parse(fs.readFileSync(candidate, "utf8"));
@@ -111,8 +104,8 @@ function readManifestFile(candidate: string): ManifestV5 {
 }
 
 /** Validate manifest-shaped JSON and normalize temporary version 2 input. */
-export function parseManifest(value: unknown): ManifestV5 {
-  return validateManifest(value, false, false) as ManifestV5;
+export function parseManifest(value: unknown): ManifestV6 {
+  return validateManifest(value, false, false) as ManifestV6;
 }
 
 /** Read old schemas only at the historical comparison boundary. */
@@ -128,7 +121,7 @@ function toManifestEntry(
   catalogueSchemes: readonly ColorScheme[],
   componentViews: ReadonlyMap<string, ComponentViewRecord>,
   navPath: readonly string[],
-): ManifestV5["entries"][number] {
+): ManifestV6["entries"][number] {
   const common = {
     declaredDependencies: [...new Set(entry.dependencies)].sort(),
     dependencies: [
@@ -153,8 +146,6 @@ function toManifestEntry(
       ),
       declaredDependencies: common.declaredDependencies,
     };
-  if (entry.kind === "collection")
-    return { ...common, childIds: [...entry.childIds], kind: "collection" };
   if (entry.kind === "page")
     return {
       ...common,

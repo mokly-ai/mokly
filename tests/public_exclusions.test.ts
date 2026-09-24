@@ -142,7 +142,7 @@ test("build rejects an excluded public resource with its referring route", async
 
 test("an excluded imported JSON file remains an authoring input and rebuilds", async (t) => {
   const fixture = await createFixture(
-    `${validEntrySource()}\nimport settings from "../mockups/tsconfig.fixture.json"; mockups[1].title = settings.title;`,
+    `${validEntrySource()}\nimport settings from "../mockups/tsconfig.fixture.json"; mockups[0].title = settings.title;`,
   );
   t.after(() => removeFixture(fixture));
   const settings = path.join(fixture.mockupsDir, "tsconfig.fixture.json");

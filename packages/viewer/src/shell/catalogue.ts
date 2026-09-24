@@ -65,7 +65,7 @@ export function catalogueSelectionEntry(
 function collectTags(entries: readonly ManifestEntry[]): readonly string[] {
   const declared: string[] = [];
   for (const entry of entries) {
-    if (entry.kind !== "collection") declared.push(...(entry.tags ?? []));
+    declared.push(...(entry.tags ?? []));
   }
   return [...new Set(declared)].sort();
 }
@@ -84,7 +84,7 @@ export function createCatalogue(
   const byId = new Map(manifest.entries.map((entry) => [entry.id, entry]));
   const byRoute = new Map<string, ManifestEntry>();
   for (const entry of manifest.entries) {
-    if (entry.kind !== "collection") byRoute.set(entry.route, entry);
+    byRoute.set(entry.route, entry);
   }
   for (const { entry } of removedEntries)
     if (!byId.has(entry.id)) byId.set(entry.id, entry);

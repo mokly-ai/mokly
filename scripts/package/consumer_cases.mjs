@@ -251,7 +251,7 @@ export async function smokeThemedConsumer(context) {
       "utf8",
     ),
   );
-  assert.equal(pageManifest.schemaVersion, 5);
+  assert.equal(pageManifest.schemaVersion, 6);
   assert.equal("legacyPages" in pageManifest, false);
   assert.ok(
     pageManifest.entries.some(

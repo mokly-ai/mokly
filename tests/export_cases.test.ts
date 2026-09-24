@@ -62,7 +62,7 @@ test("ignored-only and shared-impact evidence does not fill exported Changes", a
   const source = (value: string) =>
     validEntrySource({
       body: `<ReviewIgnore id="counter"><span>${value}</span></ReviewIgnore>`,
-    }).replace("defineCollection,", "ReviewIgnore, defineCollection,");
+    }).replace("defineScreen,", "ReviewIgnore, defineScreen,");
   const fixture = await createExportFixture(source("before"));
   context.after(() => fixture.close());
   await fs.promises.writeFile(fixture.entryPath, source("after"));

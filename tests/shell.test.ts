@@ -6,12 +6,12 @@ import {
   notFoundPage as renderNotFoundPage,
   viewPage as renderViewPage,
 } from "../dist/server/pages.js";
-import type { ManifestV5 } from "../packages/viewer/dist/registry/types.js";
+import type { ManifestV6 } from "../packages/viewer/dist/registry/types.js";
 import type { Catalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import type { ShellContext } from "../packages/viewer/dist/shell/context.js";
 import { SHELL_CSS } from "../packages/viewer/dist/shell/css.js";
-import { buildNavTree } from "../packages/viewer/dist/shell/nav_tree.js";
+import { buildNavSections } from "../packages/viewer/dist/shell/nav_tree.js";
 import { renderViewer } from "../packages/viewer/dist/viewer/server.js";
 
 import {
@@ -23,7 +23,7 @@ import {
 } from "./helpers/html.js";
 import { publicShellContext } from "./helpers/public_shell.js";
 
-const manifest: ManifestV5 = {
+const manifest: ManifestV6 = {
   entries: [
     {
       kind: "page",
@@ -35,7 +35,7 @@ const manifest: ManifestV5 = {
       declaredDependencies: [],
       dependencies: [],
       relatedDocs: [],
-      navPath: [],
+      navPath: ["Example"],
     },
     {
       kind: "page",
@@ -47,31 +47,7 @@ const manifest: ManifestV5 = {
       declaredDependencies: [],
       dependencies: [],
       relatedDocs: [],
-      navPath: [],
-    },
-    {
-      childIds: ["screens", "tour", "old", "overview"],
-      declaredDependencies: [],
-      dependencies: [],
-      description: "Example catalogue",
-      id: "example",
-      kind: "collection",
-      navPath: [],
-      relatedDocs: [],
-      sourcePath: "entries/fixture.mockup.tsx",
-      title: "Example",
-    },
-    {
-      childIds: ["welcome", "details"],
-      declaredDependencies: [],
-      dependencies: [],
-      description: "Screens",
-      id: "screens",
-      kind: "collection",
       navPath: ["Example"],
-      relatedDocs: [],
-      sourcePath: "entries/fixture.mockup.tsx",
-      title: "Screens",
     },
     {
       address: "example.test/welcome",
@@ -129,10 +105,10 @@ const manifest: ManifestV5 = {
   ],
   generatedBy: "mokly",
   sourceFiles: ["entries/fixture.mockup.tsx"],
-  schemaVersion: 5,
+  schemaVersion: 6,
 };
 
-const darkManifest: ManifestV5 = {
+const darkManifest: ManifestV6 = {
   ...manifest,
   entries: manifest.entries.map((entry) =>
     entry.kind === "screen" && entry.id === "welcome"
@@ -147,7 +123,7 @@ const darkManifest: ManifestV5 = {
   ),
 };
 
-const taggedFlowManifest: ManifestV5 = {
+const taggedFlowManifest: ManifestV6 = {
   ...manifest,
   entries: manifest.entries.map((entry) =>
     entry.kind === "use-case"
@@ -156,10 +132,9 @@ const taggedFlowManifest: ManifestV5 = {
   ),
 };
 
-const untaggedManifest: ManifestV5 = {
+const untaggedManifest: ManifestV6 = {
   ...manifest,
   entries: manifest.entries.map((entry) => {
-    if (entry.kind === "collection") return entry;
     const { tags: _tags, ...untagged } = entry;
     return untagged;
   }),
@@ -332,7 +307,7 @@ function assertLightSrcMatchesAttribute(html: string, frames: number): void {
 
 test("nav tree nests pages and screens in one declared hierarchy", () => {
   const catalogue = createCatalogue(manifest);
-  const tree = buildNavTree(catalogue.hierarchy);
+  const tree = buildNavSections(catalogue.hierarchy)[0]!.children;
   const labels = tree.map((node) => node.label);
   assert.deepEqual(labels, ["Example"]);
   const example = tree[0];
@@ -353,7 +328,7 @@ test("nav tree nests pages and screens in one declared hierarchy", () => {
   );
 });
 
-test("page breadcrumbs use real collections without invented Overview links", () => {
+test("page breadcrumbs use path folders without invented Overview links", () => {
   const catalogue = createCatalogue(manifest);
   const entry = catalogue.byRoute.get("legacy/old.html");
   assert.ok(entry);
@@ -399,8 +374,8 @@ test("catalogue nav marks active, changed, and iconed rows", () => {
     /data-nav-disclosure="section:pages" data-nav-section="pages"/,
   );
   assert.doesNotMatch(html, /data-nav-section="components"/);
-  assert.match(html, /data-nav-collection="collection:screens"/);
-  assert.match(html, /data-nav-disclosure="collection:pages:screens"/);
+  assert.match(html, /data-nav-collection="collection:Example\/Screens"/);
+  assert.match(html, /data-nav-disclosure="collection:pages:Example\/Screens"/);
   assert.match(html, /data-entry-kind="screen"/);
   assert.match(html, /class="mbk-nav-ico folder"><svg/);
   assert.match(html, /class="mbk-nav-count">2</);

@@ -34,6 +34,7 @@ async function start(page: Page, cross: boolean, screenId = "home") {
         {
           kind: "use-case",
           id: "tour",
+          navPath: [],
           title: "Tour",
           route: "flows/tour.html",
           tags: [],

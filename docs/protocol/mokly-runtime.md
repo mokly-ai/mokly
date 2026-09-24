@@ -66,12 +66,18 @@ Changes. Screen-owned prop and slot changes still count as screen changes.
 3. Validate registry metadata, routes, relationships, and output collisions.
 4. Render screen fragments and registered whole-document pages in deterministic order.
 5. Resolve id links and validate document links and anchors.
-6. Build the version 5 manifest and resolved source inventory.
+6. Build the version 6 manifest and resolved source inventory.
 7. Stage every generated file before changing the last-good output.
 8. Atomically replace generated files and remove proven generated orphans.
 
 An error leaves the last-good generated tree unchanged. Build output and
 diagnostics use repo-relative paths and deterministic ordering.
+Source-attributed authoring failures thrown inside the consumer bundle retain
+their typed code across the bundle boundary and appear with one
+`[mokly/<code>]` prefix and their source module; unexpected module evaluation
+failures remain bundling errors. Forbidden authored fields on flattened
+variants must be retained for registry validation even when their values are
+`undefined`.
 
 ## Check
 
@@ -83,11 +89,13 @@ fails for:
 - invalid config or registry metadata;
 - duplicate ids/routes or route/fragment/page collisions;
 - forbidden authored `navPath` on a nested leaf (`invalid-nested-nav-path`
-  naming the entry id); invalid `navPath` labels (`invalid-nav-path` with entry id, zero-based
-  index and offending label), conflicting sibling folder labels or
-  folder-versus-leaf labels (`nav-path-conflict` with both labels and a
-  suggestion to append the folder label to the leaf's `navPath`), empty
-  authored folders, missing use-case screens, or reciprocal memberships;
+  naming the entry id); invalid `navPath` labels (`invalid-nav-path` with
+  entry id, zero-based index and offending label); conflicting sibling folder
+  labels (`nav-path-conflict` once per spelling per source module, attributed
+  to its lowest-id entry, naming every spelling and its readable section
+  location) or folder-versus-leaf labels (`nav-path-conflict` on the leaf,
+  naming its id and suggesting appending the folder label to its `navPath`);
+  empty authored folders, missing use-case screens, or reciprocal memberships;
 - unresolved `mock:` links, raw document links, local HTML/CSS resources, or
   anchors;
 - missing stylesheets and declared dependencies;

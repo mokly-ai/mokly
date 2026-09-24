@@ -58,18 +58,18 @@ test("legacy label paths cannot match current disclosure keys", () => {
     href: "https://example.test/",
     initial: { recovery: recovery(["/Example/Screens"]) },
   });
-  assert.equal(state.disclosures["collection:pages:product"], true);
+  assert.equal(state.disclosures["collection:pages:Product"], true);
 });
 
-test("obsolete keys do not discard a valid collection preference", () => {
+test("obsolete keys do not discard a valid transitional folder preference", () => {
   const state = fixtureShellState({
     href: "https://example.test/",
     initial: {
-      recovery: recovery(["legacy:example", "collection:product"]),
+      recovery: recovery(["legacy:example", "collection:Product"]),
     },
   });
-  assert.equal(state.disclosures["collection:pages:product"], false);
-  assert.equal(state.disclosures["collection:components:product"], false);
+  assert.equal(state.disclosures["collection:pages:Product"], false);
+  assert.equal(state.disclosures["collection:components:Product"], false);
 });
 
 test("removed pages appear only in Changes while removed screens remain in All", () => {

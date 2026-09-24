@@ -5,7 +5,6 @@ import { classifyComponents } from "../dist/review/component_classification.js";
 import {
   ComponentDependencyPolicy,
   metadata,
-  type RoutedEntry,
 } from "../dist/review/component_metadata.js";
 import { ComponentMaterialReader } from "../dist/review/component_resources.js";
 import { compareComponentView } from "../dist/review/component_view.js";
@@ -13,48 +12,24 @@ import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
 import { ResourceComparison } from "../dist/review/resource_comparison.js";
 import { computeChangedRoutes } from "../dist/server/changed.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
-import { analyzeHierarchy } from "../packages/viewer/dist/registry/hierarchy.js";
-import type { Manifest } from "../packages/viewer/dist/registry/types.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
 
-test("component metadata reuses a precomputed catalogue hierarchy", async (t) => {
+test("component metadata reflects authored paths without a hierarchy projection", async (t) => {
   const fixture = await componentReviewFixture(t, (source) => source);
   const manifest = fixture.after.manifest;
-  assert.equal(manifest.schemaVersion, 5);
-  let traversals = 0;
-  const entries = new Proxy(manifest.entries, {
-    get(target, property, receiver) {
-      if (property !== Symbol.iterator)
-        return Reflect.get(target, property, receiver);
-      return function* () {
-        traversals += 1;
-        yield* target;
-      };
-    },
-  });
-  const tracked = { ...manifest, entries };
-  const hierarchy = analyzeHierarchy(manifest.entries).hierarchy;
-  const project = metadata as unknown as (
-    entry: RoutedEntry,
-    manifest: Manifest,
-    hierarchy: ReturnType<typeof analyzeHierarchy>["hierarchy"],
-  ) => string;
-
-  for (const entry of manifest.entries) {
-    if (entry.kind !== "collection" && entry.kind !== "page")
-      project(entry, tracked, hierarchy);
-  }
-
-  assert.equal(traversals, 0);
+  assert.equal(manifest.schemaVersion, 6);
+  const entry = manifest.entries.find((item) => item.kind === "screen");
+  assert.ok(entry);
+  assert.notEqual(metadata(entry), metadata({ ...entry, navPath: ["Moved"] }));
 });
 
 test("component dependency ownership is indexed once per changed path", async (t) => {
   const fixture = await componentReviewFixture(t, (source) => source);
   const sourceManifest = fixture.after.manifest;
-  assert.equal(sourceManifest.schemaVersion, 5);
+  assert.equal(sourceManifest.schemaVersion, 6);
   let ownershipReads = 0;
   const entries = sourceManifest.entries.map((entry) =>
     entry.kind === "component"

@@ -73,7 +73,7 @@ test("removing a variant retains its parent relationship and collection ancestry
   assert.ok(removed?.entry.kind === "screen");
   assert.equal(removed.entry.id, "home-empty");
   assert.equal(removed.entry.variantOf, "home");
-  assert.deepEqual(removed.ancestors, [{ id: "fixture", title: "Fixture" }]);
+  assert.deepEqual(removed.entry.navPath, ["Fixture"]);
   assert.ok(changes.changedRoutes.includes(removed.entry.route));
   assert.equal(changes.changedRoutes.includes("screens/home.html"), false);
 });

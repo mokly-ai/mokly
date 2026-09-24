@@ -2,13 +2,8 @@ import path from "node:path";
 
 import { minimatch } from "minimatch";
 
-import {
-  canonicalJson,
-  generatedViews,
-  analyzeHierarchy,
-} from "@mokly/viewer/data";
+import { canonicalJson, generatedViews } from "@mokly/viewer/data";
 import type {
-  ManifestEntry,
   ChangedEntry,
   ComponentReview,
   ComponentVariantReview,
@@ -116,12 +111,6 @@ export async function classifyComponents(
   const actualImplementations = new Set<string>();
   const ownedResources: OwnedCssReason[] = [];
   const pairs = entryPairs(before, after);
-  const beforeHierarchy = analyzeHierarchy<ManifestEntry>(
-    before.entries as readonly ManifestEntry[],
-  ).hierarchy;
-  const afterHierarchy = analyzeHierarchy<ManifestEntry>(
-    after.entries as readonly ManifestEntry[],
-  ).hierarchy;
   const comparisonCounts = new ComponentComparisonCounts();
   await timeAsync("review.compare-screens", async () => {
     for (const pair of pairs) {
@@ -136,8 +125,7 @@ export async function classifyComponents(
       if (
         pair.before &&
         pair.after &&
-        metadata(pair.before, before, beforeHierarchy) !==
-          metadata(pair.after, after, afterHierarchy)
+        metadata(pair.before) !== metadata(pair.after)
       )
         reasons.push({ kind: "metadata" });
       reasons.push(

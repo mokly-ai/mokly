@@ -8,7 +8,6 @@ import { analyzeHierarchy } from "../registry/hierarchy.js";
 
 import { projectTree } from "./tree.js";
 import type {
-  CatalogueCollection,
   CatalogueComponent,
   CatalogueReadModel,
   CatalogueRoutedEntry,
@@ -19,25 +18,20 @@ import { unique } from "./values.js";
 /** Validate relationships after parsing all known fields, including both ownership sections. */
 export function validateCatalogueReferences(model: CatalogueReadModel): void {
   require(model.identity.title === "Mokly", "catalogue title must be Mokly");
-  const current: (CatalogueCollection | CatalogueRoutedEntry)[] = [
-    ...model.collections,
+  const current: CatalogueRoutedEntry[] = [
     ...model.screens,
     ...model.pages,
     ...model.useCases,
     ...model.components,
   ];
   unique(current.map((entry) => entry.id));
-  unique(
-    current.flatMap((entry) =>
-      entry.kind === "collection" ? [] : [entry.route],
-    ),
-  );
+  unique(current.map((entry) => entry.route));
   const { hierarchy, issues } = analyzeHierarchy(current);
-  require(issues.length === 0, "invalid collection forest");
+  require(issues.length === 0, "invalid navigation paths");
   require(canonicalJson(model.tree) ===
     canonicalJson(
       projectTree(hierarchy),
-    ), "tree must project the collection forest");
+    ), "tree must project the navigation paths");
   const all = [...current, ...model.removedEntries.map(({ entry }) => entry)];
   unique(model.removedEntries.map(({ entry }) => entry.route));
   unique(
@@ -60,14 +54,9 @@ export function validateCatalogueReferences(model: CatalogueReadModel): void {
         entry.changes.kind === "removed" &&
         entry.changes.included, "removed entry needs removed Changes");
       require(!current.some(
-        (item) =>
-          item.kind !== "collection" &&
-          entry.kind !== "collection" &&
-          item.route === entry.route,
+        (item) => item.route === entry.route,
       ), "current routes take precedence");
     }
-    if (entry.kind === "collection")
-      require(entry.tags.length === 0, "collections have no tags");
     if (entry.kind === "page")
       require(removed
         ? entry.documentPath === null
@@ -98,10 +87,8 @@ export function validateCatalogueReferences(model: CatalogueReadModel): void {
         const routeMatchesParent =
           parent !== undefined && variantRoute(parent.route, entry.route);
         require(routeMatchesParent, "variant route must match its parent");
-        const isUnclaimedByCollections = !model.collections.some((collection) =>
-          collection.childIds.includes(entry.id),
-        );
-        require(isUnclaimedByCollections, "collections cannot claim variants");
+        require(canonicalJson(entry.navPath) ===
+          canonicalJson(parent?.navPath), "variant path must match parent");
       }
       if (!removed)
         for (const id of entry.useCaseIds)
@@ -141,8 +128,7 @@ export function validateCatalogueReferences(model: CatalogueReadModel): void {
       }
     }
   }
-  for (const { ancestors, entry, preview } of model.removedEntries) {
-    unique(ancestors.map((ancestor) => ancestor.id));
+  for (const { entry, preview } of model.removedEntries) {
     if (preview) {
       require(Boolean(model.comparisonUrl), "preview requires comparison URL");
       require((preview.kind === "screen" && entry.kind === "screen") ||
