@@ -223,6 +223,8 @@ function transferredRuntime(runtime: ComponentRuntime) {
     bundle: runtime.bundle,
     generation: runtime.generation,
     outputs: runtime.outputs,
+    stylesheetRoutes: runtime.stylesheetRoutes,
+    styleOutputs: runtime.styleOutputs,
   };
 }
 

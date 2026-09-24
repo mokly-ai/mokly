@@ -122,7 +122,10 @@ owns child shutdown. HTTP readiness precedes exhaustive compilation and baseline
 preparation, so All remains usable while Changes is pending or preparing.
 `controls/runtime_ipc.ts` encodes generated binary files as tagged base64 over
 the watched child's JSON IPC channel and decodes them before a controls preview
-serves raw bytes; text documents remain strings. The classification worker uses
+serves raw bytes; text documents remain strings. It also carries the accepted
+per-root stylesheet routes and CSS/asset outputs so child and background
+recompilation reuse the original bytes instead of silently dropping them.
+The classification worker uses
 structured-clone byte transfer instead of JSON.
 The CLI injects the terminal reporter's server-facing subset into both Serve
 compositions. Plain mode emits only the historical readiness and diagnostic

@@ -3,17 +3,16 @@ import { parentPort, workerData } from "node:worker_threads";
 
 import type { ComponentRenderRequest } from "@mokly/viewer/data";
 
-import type { ComponentRuntime } from "../../build/component_runtime.js";
-import { evaluateBundle } from "../../build/consumer_bundle.js";
+import {
+  runtimeGraph,
+  type ComponentRuntime,
+} from "../../build/component_runtime.js";
 import { errorMessage } from "../../errors.js";
 
 import { renderTransient } from "./transient.js";
 
 const runtime = workerData as ComponentRuntime;
-const graph = {
-  ...evaluateBundle(runtime.bundle),
-  entrySources: runtime.bundle.entrySources,
-};
+const graph = runtimeGraph(runtime);
 parentPort?.on("message", (request: ComponentRenderRequest) => {
   try {
     parentPort?.postMessage({

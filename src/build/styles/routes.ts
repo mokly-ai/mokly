@@ -1,5 +1,7 @@
 import path from "node:path";
 
+import { isPortableUrlPath } from "@mokly/viewer/data";
+
 import { toPosixPath } from "../../config/paths.js";
 import { MoklyError } from "../../errors.js";
 
@@ -33,23 +35,17 @@ export function isGeneratedRoute(route: string): boolean {
 
 /** Is a path portable, with npm scopes allowed only immediately after node_modules? */
 export function isPortableGeneratedPath(value: string, asset = false): boolean {
-  if (
-    !value ||
-    value.includes("\\") ||
-    value.includes(":") ||
-    value.startsWith("/")
-  )
-    return false;
+  if (!asset || !value.split("/").some((part) => part.startsWith("@")))
+    return isPortableUrlPath(value);
   const parts = value.split("/");
-  return parts.every((part, index) => {
-    const scope = asset && index > 0 && parts[index - 1] === "node_modules";
-    return (
-      ((scope && /^@[A-Za-z0-9][A-Za-z0-9._~-]*$/.test(part)) ||
-        /^[A-Za-z0-9][A-Za-z0-9._~-]*$/.test(part)) &&
-      !part.endsWith(".") &&
-      !/^(?:aux|con|nul|prn|com[1-9]|lpt[1-9])(?:\.|$)/i.test(part)
-    );
-  });
+  return parts.every((part, index) =>
+    part.startsWith("@")
+      ? index > 0 &&
+        parts[index - 1] === "node_modules" &&
+        isPortableUrlPath(part.slice(1)) &&
+        /^@[A-Za-z0-9][A-Za-z0-9._~-]*$/.test(part)
+      : isPortableUrlPath(part),
+  );
 }
 
 /** Map a repository-relative root module to its deterministic stylesheet route. */

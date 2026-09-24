@@ -12,7 +12,7 @@ import { classifyWatchPath } from "../dist/server/watch_events.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
-for (const loader of ["dataurl", "base64", "binary", "file", "text"]) {
+for (const loader of ["dataurl", "base64", "binary", "text"]) {
   test(`imported ${loader} asset bytes are protected rebuild inputs`, async (context) => {
     const fixture = await createFixture(undefined, {
       extraConfig: `moduleResolution: { loaders: { ".svg": "${loader}" } },`,
@@ -51,6 +51,28 @@ for (const loader of ["dataurl", "base64", "binary", "file", "text"]) {
     );
   });
 }
+
+test("JavaScript file loader rejects undelivered asset output", async (context) => {
+  const fixture = await createFixture(undefined, {
+    extraConfig: 'moduleResolution: { loaders: { ".svg": "file" } },',
+  });
+  context.after(() => removeFixture(fixture));
+  await fs.writeFile(path.join(fixture.mockupsDir, "image.svg"), "<svg/>");
+  await fs.appendFile(
+    fixture.entryPath,
+    '\nimport image from "../mockups/image.svg"; mockups[1].title = String(image);',
+  );
+  await assert.rejects(
+    async () => compileCatalogue(await loadConfig(fixture.root)),
+    (error: Error) => {
+      assert.match(
+        error.message,
+        /^\[mokly\/build-invalid\] consumer graph emitted an undelivered file: image-[A-Z0-9]+\.svg; use a dataurl or binary loader for JavaScript assets instead of file$/,
+      );
+      return true;
+    },
+  );
+});
 
 test("an imported asset alias outside repoRoot is rejected before rendering", async (context) => {
   const fixture = await createFixture(undefined, {

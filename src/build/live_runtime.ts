@@ -43,6 +43,8 @@ export async function prepareLiveRuntime(
       generation: randomBytes(16).toString("hex"),
       manifest,
       outputs: [],
+      stylesheetRoutes: [...graph.stylesheetRoutes],
+      styleOutputs: [...graph.styleOutputs],
     };
   });
 }

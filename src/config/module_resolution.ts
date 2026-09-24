@@ -96,6 +96,13 @@ function validateLoaders(
   return Object.fromEntries(
     Object.entries(loaders).map(([extension, loader]) => {
       if (
+        (extension === ".css" || extension === ".module.css") &&
+        loader !== "empty"
+      )
+        throw invalid(
+          `moduleResolution.loaders[${extension}] is package-owned; only "empty" is allowed to opt out of imported CSS delivery`,
+        );
+      if (
         !EXTENSION_PATTERN.test(extension) ||
         !LOADERS.has(loader as ModuleLoader)
       ) {

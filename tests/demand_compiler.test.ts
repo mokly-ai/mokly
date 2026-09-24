@@ -5,7 +5,7 @@ import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { compileRuntime } from "../dist/build/compile_runtime.js";
-import { evaluateBundle } from "../dist/build/consumer_bundle.js";
+import { runtimeGraph } from "../dist/build/component_runtime.js";
 import { DocumentCompiler } from "../dist/build/document_compiler.js";
 import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
 import { generatedHeader } from "../dist/build/ownership.js";
@@ -31,10 +31,7 @@ for (const source of [validEntrySource(), componentEntrySource()]) {
     assert.throws(() => parseManifest(runtime.manifest), {
       code: "manifest-invalid",
     });
-    const compiler = new DocumentCompiler(runtime, {
-      ...evaluateBundle(runtime.bundle),
-      entrySources: runtime.bundle.entrySources,
-    });
+    const compiler = new DocumentCompiler(runtime, runtimeGraph(runtime));
     const complete = await compileCatalogue(config);
     for (const [route, expected] of complete.outputs) {
       if (route === MANIFEST_NAME) continue;
@@ -55,10 +52,7 @@ test("demand links reject a generated orphan even while its old file exists", as
       "<html><body>Old</body></html>\n",
   );
   const runtime = await prepareLiveRuntime(await loadConfig(fixture.root));
-  const compiler = new DocumentCompiler(runtime, {
-    ...evaluateBundle(runtime.bundle),
-    entrySources: runtime.bundle.entrySources,
-  });
+  const compiler = new DocumentCompiler(runtime, runtimeGraph(runtime));
   assert.throws(
     () => compiler.render("screens/home.desktop.html"),
     /missing target/,

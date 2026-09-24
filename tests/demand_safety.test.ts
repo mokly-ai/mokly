@@ -4,7 +4,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
-import { evaluateBundle } from "../dist/build/consumer_bundle.js";
+import { runtimeGraph } from "../dist/build/component_runtime.js";
 import { DocumentCompiler } from "../dist/build/document_compiler.js";
 import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
 import { loadConfig } from "../dist/config/load.js";
@@ -39,10 +39,7 @@ for (const reference of [
     );
     const config = await loadConfig(fixture.root);
     const runtime = await prepareLiveRuntime(config);
-    const compiler = new DocumentCompiler(runtime, {
-      ...evaluateBundle(runtime.bundle),
-      entrySources: runtime.bundle.entrySources,
-    });
+    const compiler = new DocumentCompiler(runtime, runtimeGraph(runtime));
     assert.throws(
       () => compiler.render("screens/home.desktop.html"),
       /invalid/,

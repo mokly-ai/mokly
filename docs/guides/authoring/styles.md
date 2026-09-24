@@ -7,10 +7,11 @@ order: 10
 
 ## Availability
 
-The imported-CSS workflow below is the approved delivery contract, **not yet
-implemented** in this package version. Today, put separately authored public
-CSS under `mockupsDir` and link it using `stylesheets` in your config. Importing
-a CSS file from a component currently does not put its rules into the view.
+Per-root imported stylesheets and binary assets now compile into
+`mokly-generated/`. Automatic links and PostCSS processing are **not yet
+implemented**; importing CSS alone still does not put its rules into a view.
+For visible styles, put authored public CSS under `mockupsDir` and link it
+using `stylesheets` in your config until the linking milestone lands.
 
 ## Import CSS beside a screen
 
@@ -41,9 +42,12 @@ Name scoped styles `*.module.css` and import the default class map or a
 valid-identifier named class. Class names are derived from the file path,
 not the CSS content or unrelated entries. Same-file and global `composes`
 work; composing from another file or a local composition cycle fails Build.
-Classes, IDs and keyframes are scoped; global tokens such as `var(--brand)`
-remain global, as do grid-area and container names. Only classes, IDs and
-keyframes appear in the exported map.
+Classes, IDs, keyframes and their animation references are scoped together.
+Counter-style names and their list-style references, and view-transition
+names, are also local and exported. Global tokens such as `var(--brand)`
+remain global, as do grid-area and container names. Lightning CSS can
+reorder equivalent declaration values (for example `animation: pulse 1s`
+becomes `animation: 1s <scoped-name>`).
 
 ```tsx
 import styles from "./card.module.css";
@@ -71,6 +75,9 @@ that is already a public file under `mockupsDir` fails rather than silently
 hiding its original route; keep it separate or move its source outside
 `mockupsDir`. Remote CSS `@import`s stay external and are not fetched or
 inventoried; valid prelude imports appear before local rules in the bundle.
+CSS `@import`s of packages select the `style` export condition or `style`
+main field ahead of your JavaScript conditions and main fields, so
+`@import "tailwindcss"` resolves to CSS even with custom module resolution.
 
 ## Add Tailwind v4 and autoprefixer
 

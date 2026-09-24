@@ -2,9 +2,11 @@
 
 ## Delivery Status
 
-Approved target; reserved-directory safety is implemented, while CSS delivery
-is pending. [The plan](../../plans/imported-css-delivery.md) tracks the stages.
-Until then, link authored CSS via `stylesheets`. This contract extends
+Approved target; per-root CSS/asset compilation is implemented, but automatic
+stylesheet links and PostCSS processing are pending.
+[The plan](../../plans/imported-css-delivery.md) tracks the stages. Until
+links land, use authored public CSS via `stylesheets` to style views. This
+contract extends
 [configuration](./mokly-configuration.md),
 [rendering](./mokly-rendering.md), and [source protection](./mokly-source-protection.md)
 without changing manifest v5. [Exact diagnostics](./mokly-imported-styles-errors.md)
@@ -14,7 +16,9 @@ are normative.
 
 `<mockupsDir>/mokly-generated/` is wholly Mokly-owned. Generated routes are
 `mokly-generated/styles/<repository-relative root module path>.css` and
-`mokly-generated/assets/<repository-relative asset path>`. Preserve the module
+`mokly-generated/assets/<repository-relative asset path>`. Identical asset routes
+from multiple roots must carry identical bytes; disagreeing bytes fail Build.
+Preserve the module
 extension before `.css`: `src/home.mockup.tsx` becomes
 `mokly-generated/styles/src/home.mockup.tsx.css`. Shared assets have one route
 and identical bytes. Sources stay private. Every file in the reserved tree is
@@ -48,7 +52,9 @@ renderer has no stylesheet), followed by each resolved entry module sorted by
 repository-relative POSIX path. A compatibility transformer still participates
 in the JavaScript graph: CSS it imports is inventoried, including its local
 `@import` closure and local `url()` assets, but transformer-only CSS has no
-stylesheet route or link. A CSS-only entry still has an entry root even if it
+stylesheet route or link. Analyze transformer-only CSS imports and URLs without
+running a stylesheet bundle; when no renderer or entry reaches CSS, skip the
+stylesheet pass entirely. A CSS-only entry still has an entry root even if it
 registers no view. Two entries sharing CSS each emit it in their own bundle.
 
 Collect CSS in first-reachability depth-first traversal of each root's
@@ -80,17 +86,32 @@ bundles each nonempty root from a synthetic CSS entry with ordered `@import`s,
 allowing ordinary nested imports after the exclusion above. The CSS pass uses
 the same aliases, conditions, main fields, package roots, extension and
 symlink policy as the graph pass; it does not evaluate consumer JavaScript.
+The CLI does not eagerly load Lightning CSS: its native CommonJS module is
+loaded only when CSS Modules or transformer-only CSS require a transform.
+For CSS `@import` resolution in both the prelude scan and the CSS pass,
+prepend `style` to the consumer's conditions and main fields (or esbuild's
+Node defaults `main,module` when unset): neither the `style` export condition
+nor the `style` main field is selected by esbuild by default. Keep all other
+consumer resolution settings unchanged. Esbuild's metafile input imports
+retain source order, including JavaScript re-exports and dynamic imports.
+When CSS is both JavaScript-imported and imported by an earlier CSS file,
+esbuild places it last within that root; it hoists remote prelude imports.
 
 ## CSS Modules And Import Loaders
 
 For `*.module.css`, call Lightning CSS `transform` with
 `filename` equal to the **repository-relative POSIX** file path,
 `cssModules: { pattern: "mokly_[hash]_[local]", dashedIdents: false,
-animation: true, grid: false, container: false, customIdents: false,
+animation: true, grid: false, container: false, customIdents: true,
 pure: false }`, `minify: false`, and no browser targets. Lightning's
-filename-derived `[hash]` (not a content hash) scopes only classes, IDs and
-keyframes. Global `var(--brand)` tokens, grid-area and container names, and
-custom identifiers stay unchanged and are not exported. A collision between
+filename-derived `[hash]` (not a content hash) scopes classes, IDs,
+`@keyframes` names and **all** their `animation`/`animation-name` references.
+It also scopes `@counter-style` and its `list-style`/`list-style-type`
+references, and `view-transition-name` values; these local names appear in
+the exported map. References to undefined keyframe names are also localized.
+Global `var(--brand)` tokens, grid-area and container names stay unchanged.
+Lightning may normalize declarations (e.g. `animation: pulse 1s` to
+`animation: 1s <scoped-name>`), preserving their meaning. A collision between
 distinct local identities fails rather than appending a suffix.
 PostCSS runs first. Feed the identical transformed CSS to the stylesheet
 pass and use Lightning's exports for JavaScript: a default plain object
@@ -242,7 +263,11 @@ Git-tracked reserved-directory file with `git rm --cached` and one
 `/<mockupsDir-relative-from-repoRoot>/mokly-generated/` `.gitignore` rule.
 Serve `/static/<encoded-route>` and transient previews prefer this generation's
 compiled stylesheet/asset bytes over old disk files (correct content types,
-GET/HEAD, confined paths). An imported CSS, nested import, asset, config or
+GET/HEAD, confined paths). Retained Serve runtimes carry per-root stylesheet
+routes and the CSS/asset outputs as raw bytes through the worker and watched
+child IPC boundaries. Recompiling an accepted JavaScript graph reuses those
+outputs without rescanning CSS; runtime transfer may not lose the route map
+or decode assets as UTF-8. An imported CSS, nested import, asset, config or
 plugin-dependency edit rebuilds; new matching files in watched dependency
 directories also rebuild. Ordinary linked authored public CSS changes still
 reload. Committed export/publication capture checked disk bytes; derived

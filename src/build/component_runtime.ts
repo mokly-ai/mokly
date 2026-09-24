@@ -8,7 +8,11 @@ import type { CatalogueIndex } from "../registry/catalogue_index.js";
 import { MANIFEST_NAME } from "../registry/manifest.js";
 
 import type { Compilation } from "./compile.js";
-import { consumerBundle, type ConsumerBundle } from "./consumer_bundle.js";
+import {
+  consumerBundle,
+  evaluateBundle,
+  type ConsumerBundle,
+} from "./consumer_bundle.js";
 import type { GeneratedFile } from "./generated_file.js";
 import type { LoadedGraph } from "./load_graph.js";
 
@@ -18,6 +22,8 @@ export interface ComponentRuntime {
   generation: string;
   manifest: ManifestV5 | CatalogueIndex;
   outputs: readonly (readonly [string, GeneratedFile])[];
+  stylesheetRoutes: readonly (readonly [string, string])[];
+  styleOutputs: readonly (readonly [string, GeneratedFile])[];
 }
 const runtimes = new WeakMap<Compilation, ComponentRuntime>();
 export function rememberRuntime(
@@ -33,7 +39,20 @@ export function rememberRuntime(
     outputs: [...compilation.outputs].filter(
       ([route]) => route !== MANIFEST_NAME,
     ),
+    stylesheetRoutes: [...graph.stylesheetRoutes],
+    styleOutputs: [...graph.styleOutputs],
   });
+}
+
+/** Reconstruct the accepted graph with its retained, binary-safe CSS outputs. */
+export function runtimeGraph(runtime: ComponentRuntime): LoadedGraph {
+  return {
+    ...evaluateBundle(runtime.bundle),
+    entrySources: runtime.bundle.entrySources,
+    sourceFiles: runtime.config.sourceFiles ?? [],
+    stylesheetRoutes: new Map(runtime.stylesheetRoutes),
+    styleOutputs: new Map(runtime.styleOutputs),
+  };
 }
 export function componentRuntime(compilation: Compilation): ComponentRuntime {
   const runtime = runtimes.get(compilation);

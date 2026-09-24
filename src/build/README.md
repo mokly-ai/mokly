@@ -5,12 +5,17 @@ validates the complete catalogue and produces deterministic HTML and manifest v5
 The supported external interface is `mokly build` and `mokly check`; Serve,
 export and local prop controls reuse the same consumer graph and validators.
 
-Imported CSS delivery is a [partially implemented target](../../docs/protocol/mokly-imported-styles.md).
-Its remaining milestones add a per-root stylesheet pass, private PostCSS
-dependency inventory, and binary-safe generated assets beneath the reserved
-`mokly-generated/` directory. Currently an imported stylesheet enters the
-graph's source inventory but esbuild's sibling CSS output is discarded; use
-authored public CSS with `stylesheets` until the target is implemented.
+Imported CSS is a [partially implemented delivery](../../docs/protocol/mokly-imported-styles.md).
+`load_graph.ts` now collects each configured renderer and entry root's CSS
+imports in JavaScript import order, traverses prelude `@import`s, and emits
+one deterministic stylesheet per nonempty root. The renderer's complete CSS
+closure is pruned before processing entry CSS; separate entries still share
+sources independently. CSS Modules use path-stable Lightning CSS names and
+expose default and named bindings to JavaScript. CSS `url()` assets become
+byte-preserving files under `mokly-generated/assets/`, and CSS/asset inputs
+join the private source inventory in both full and inventory-only graph loads.
+PostCSS processing and automatic links are still pending; use authored public
+CSS with `stylesheets` for styles that must reach views today.
 The reserved directory is already package-owned: Build removes unexpected
 regular files there as orphans, and committed Check reports them. The root
 and descendants cannot be symlinks or special files; Build and committed Check
@@ -59,18 +64,35 @@ protected inventoried source; public reads and generated route collisions use
 the same lexical and alias-aware source boundaries.
 `load_graph.ts` then bundles those modules, imported helpers,
 the renderer and any compatibility transformer together and refreshes the
-resolved set on the config as `entryModules`. React
+resolved set on the config as `entryModules`. `styles/collect.ts` replaces
+esbuild's discarded sibling CSS output with class bindings and records graph
+imports. `styles/order.ts` walks metafile imports. `styles/prelude.ts` scans
+valid CSS import preludes, `styles/preprocess.ts` owns the memoized post-pruning
+transform seam, `styles/modules.ts` scopes local identities, `styles/bundle.ts`
+orchestrates each stylesheet pass, and `styles/resolution.ts` validates URLs,
+imports, and confined assets. `styles/outputs.ts` strips esbuild path comments
+and deduplicates shared assets by raw bytes.
+`styles/transformer_inventory.ts` inventories CSS reachable only from the
+compatibility transformer, including nested imports and local URL assets,
+without bundling a stylesheet or evaluating consumer JavaScript. React
 and React DOM resolve from consumer package roots, including when Mokly runs
 from an npx installation. The bundle stays in memory and retains the
 consumer's existing rendering/provider graph.
+`styles/lightning.ts` loads Lightning CSS's native CommonJS binding only on
+the first CSS transformation, not during CLI module import.
+
+The retained Serve runtime also carries the compiled CSS and binary assets
+and the root-to-stylesheet route map. Accepted-graph recompilation reuses
+these outputs without rerunning the stylesheet pass; watched-child IPC
+transfers the binary bytes without treating them as UTF-8 text.
 
 `Compilation.outputs` keeps rendered HTML and the manifest as strings while
 also accepting opaque `Uint8Array` generated files. `generated_file.ts` is the
 shared boundary for raw bytes, byte counts, disk comparison, guarded text
 reads, and JSON-safe process transfer. The writer stages raw bytes and Check
 compares raw bytes; Review, derived export, and Serve's controls previews
-preserve them without UTF-8 round trips. The current compiler still produces
-only text; the binary type prepares it for imported CSS assets.
+preserve them without UTF-8 round trips. The compiler now emits CSS as text
+and generated image/font assets as opaque bytes, alongside textual documents.
 
 Automatic JSX uses esbuild's `jsxDev` location arguments. `consumer_resolution.ts`
 resolves `react/jsx-dev-runtime` to a private shim exporting the consumer's

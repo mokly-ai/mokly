@@ -20,13 +20,14 @@ export interface RuntimeStartupMessage {
 /** Heavy retained fields not already supplied in the startup message. */
 export type TransferredComponentRuntime = Pick<
   ComponentRuntime,
-  "bundle" | "generation" | "outputs"
+  "bundle" | "generation" | "outputs" | "stylesheetRoutes" | "styleOutputs"
 >;
 
 export interface RuntimeMessage {
   type: "component-runtime";
-  runtime: Omit<TransferredComponentRuntime, "outputs"> & {
+  runtime: Omit<TransferredComponentRuntime, "outputs" | "styleOutputs"> & {
     outputs: readonly (readonly [string, TransferredGeneratedFile])[];
+    styleOutputs: readonly (readonly [string, TransferredGeneratedFile])[];
   };
   /** Reserved update version published only after the runtime is attached. */
   version?: number;
@@ -49,6 +50,10 @@ export function componentRuntimeMessage(
       bundle: runtime.bundle,
       generation: runtime.generation,
       outputs: runtime.outputs.map(
+        ([route, content]) => [route, transferGeneratedFile(content)] as const,
+      ),
+      stylesheetRoutes: runtime.stylesheetRoutes,
+      styleOutputs: runtime.styleOutputs.map(
         ([route, content]) => [route, transferGeneratedFile(content)] as const,
       ),
     },
@@ -182,12 +187,43 @@ export function parseRuntimeMessage(
     typeof runtime.generation !== "string" ||
     typeof runtime.bundle?.code !== "string" ||
     !Array.isArray(runtime.outputs) ||
+    !Array.isArray(runtime.stylesheetRoutes) ||
+    !Array.isArray(runtime.styleOutputs) ||
     (version !== undefined &&
       (!Number.isSafeInteger(version) || (version as number) <= 0))
   )
     return;
+  const outputs = receiveOutputPairs(runtime.outputs);
+  const styleOutputs = receiveOutputPairs(runtime.styleOutputs);
+  if (!outputs || !styleOutputs) return;
+  if (
+    !runtime.stylesheetRoutes.every(
+      (item) =>
+        Array.isArray(item) &&
+        item.length === 2 &&
+        typeof item[0] === "string" &&
+        typeof item[1] === "string",
+    )
+  )
+    return;
+  return {
+    type: "component-runtime",
+    runtime: {
+      bundle: runtime.bundle,
+      generation: runtime.generation,
+      outputs,
+      stylesheetRoutes: runtime.stylesheetRoutes,
+      styleOutputs,
+    },
+    ...(version === undefined ? {} : { version: version as number }),
+  };
+}
+
+function receiveOutputPairs(
+  pairs: readonly (readonly [string, TransferredGeneratedFile])[],
+): Array<readonly [string, GeneratedFile]> | undefined {
   const outputs: Array<readonly [string, GeneratedFile]> = [];
-  for (const item of runtime.outputs) {
+  for (const item of pairs) {
     if (
       !Array.isArray(item) ||
       item.length !== 2 ||
@@ -198,13 +234,5 @@ export function parseRuntimeMessage(
     if (content === undefined) return;
     outputs.push([item[0], content]);
   }
-  return {
-    type: "component-runtime",
-    runtime: {
-      bundle: runtime.bundle,
-      generation: runtime.generation,
-      outputs,
-    },
-    ...(version === undefined ? {} : { version: version as number }),
-  };
+  return outputs;
 }

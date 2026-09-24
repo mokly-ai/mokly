@@ -197,20 +197,23 @@ async function compileMeasured(
   timeSync("html.links-and-resources", () =>
     validateHtmlLinks(outputs, config),
   );
+  const compilationOutputs = new Map<string, GeneratedFile>(outputs);
+  for (const [route, content] of graph.styleOutputs)
+    compilationOutputs.set(route, content);
   timeSync("output.paths", () =>
-    validateGeneratedOutputPaths(outputs.keys(), config),
+    validateGeneratedOutputPaths(compilationOutputs.keys(), config),
   );
-  const compilation = { manifest, outputs };
+  const compilation = { manifest, outputs: compilationOutputs };
   timeSync("runtime.retain", () => rememberRuntime(compilation, graph, config));
   timingCounts("output", () => ({
-    files: outputs.size,
+    files: compilationOutputs.size,
     views: fragmentViews.size,
     componentViews: componentViews.size,
-    bytes: [...outputs.values()].reduce(
+    bytes: [...compilationOutputs.values()].reduce(
       (total, content) => total + generatedByteLength(content),
       0,
     ),
-    manifestBytes: Buffer.byteLength(outputs.get(MANIFEST_NAME)!),
+    manifestBytes: generatedByteLength(outputs.get(MANIFEST_NAME)!),
     instances: [...componentViews.values()].reduce(
       (total, view) => total + view.instances.length,
       0,

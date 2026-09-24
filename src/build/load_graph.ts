@@ -21,8 +21,14 @@ import {
   consumerReactPlugin,
   packageNodePaths,
 } from "./consumer_resolution.js";
+import type { GeneratedFile } from "./generated_file.js";
 import { assertSafeGeneratedTree } from "./reserved_tree.js";
 import { graphSourceFiles, normalizeSourceFiles } from "./source_inventory.js";
+import { bundleStyles } from "./styles/bundle.js";
+import { GraphStyles } from "./styles/collect.js";
+import { orderedStyles } from "./styles/order.js";
+import { StylePreprocessor } from "./styles/preprocess.js";
+import { inventoryTransformerStyles } from "./styles/transformer_inventory.js";
 
 /** Consumer modules loaded in one React-safe esbuild graph. */
 export interface LoadedGraph {
@@ -32,6 +38,10 @@ export interface LoadedGraph {
   sourceFiles: readonly string[];
   renderer: Renderer;
   renderWithComponents: ComponentGraphRenderer;
+  /** Per-root generated CSS routes (renderer and entries only). */
+  stylesheetRoutes: ReadonlyMap<string, string>;
+  /** CSS text and opaque assets for this compilation. */
+  styleOutputs: ReadonlyMap<string, GeneratedFile>;
 }
 
 /** Bundle and import all React-bearing consumer modules as one graph. */
@@ -58,6 +68,7 @@ async function loadGraph(
     path.dirname(config.configPath),
     ".mokly-consumer.cjs",
   );
+  const styles = new GraphStyles(config, new StylePreprocessor(config));
   try {
     const built = await timeAsync("graph.bundle", () =>
       build({
@@ -74,7 +85,12 @@ async function loadGraph(
         format: "cjs",
         jsx: "automatic",
         jsxDev: true,
-        loader: config.moduleResolution.loaders,
+        loader: {
+          ...config.moduleResolution.loaders,
+          ...(config.moduleResolution.loaders[".css"] === "empty"
+            ? { ".module.css": "empty" as const }
+            : {}),
+        },
         logLevel: "silent",
         ...(config.moduleResolution.mainFields
           ? { mainFields: [...config.moduleResolution.mainFields] }
@@ -86,6 +102,7 @@ async function loadGraph(
           consumerEntryPlugin(config, entrySources),
           packageApiPlugin(config),
           consumerReactPlugin(config),
+          styles.plugin,
         ],
         ...(config.moduleResolution.resolveExtensions
           ? {
@@ -95,14 +112,68 @@ async function loadGraph(
         target: "node22",
       }),
     );
+    const extraOutputs = built.outputFiles!.filter(
+      (file) => file.path !== outputPath,
+    );
+    if (extraOutputs.length)
+      throw new MoklyError(
+        "build-invalid",
+        `consumer graph emitted an undelivered file: ${path.relative(config.repoRoot, extraOutputs[0]!.path).split(path.sep).join("/")}; use a dataurl or binary loader for JavaScript assets instead of file`,
+      );
+    const graphFiles = graphSourceFiles(
+      built.metafile,
+      path.dirname(config.configPath),
+      config.repoRoot,
+      config.mockupsDir,
+    );
+    const roots = [
+      ...(config.renderer ? [{ path: config.renderer, emit: true }] : []),
+      ...entrySources.map((entry) => ({ path: entry, emit: true })),
+      ...(config.compatibility.transformer
+        ? [{ path: config.compatibility.transformer, emit: false }]
+        : []),
+    ].map((root) => ({
+      ...root,
+      styles: orderedStyles(
+        built.metafile,
+        root.path,
+        path.dirname(config.configPath),
+      ).filter(
+        (file) =>
+          config.moduleResolution.loaders[".css"] !== "empty" &&
+          (!file.endsWith(".module.css") ||
+            config.moduleResolution.loaders[".module.css"] !== "empty"),
+      ),
+    }));
+    const deliveryRoots = roots.filter((root) => root.emit);
+    const transformerStyles = roots.find((root) => !root.emit)?.styles ?? [];
+    const graphInputs = new Set(
+      graphFiles.map((file) => path.resolve(config.repoRoot, file)),
+    );
+    const bundled = deliveryRoots.some((root) => root.styles.length)
+      ? await bundleStyles(
+          config,
+          deliveryRoots,
+          graphInputs,
+          styles.preprocessor,
+        )
+      : {
+          outputs: new Map<string, GeneratedFile>(),
+          routes: new Map<string, string>(),
+          sourceFiles: new Set<string>(),
+        };
+    const transformerFiles = await inventoryTransformerStyles(
+      config,
+      transformerStyles,
+      graphInputs,
+      styles.preprocessor,
+    );
     const sourceFiles = normalizeSourceFiles(
       [
-        ...graphSourceFiles(
-          built.metafile,
-          path.dirname(config.configPath),
-          config.repoRoot,
-          config.mockupsDir,
-        ),
+        ...graphFiles,
+        ...bundled.sourceFiles,
+        ...transformerFiles,
+        ...styles.preprocessor.sourceFiles,
         ...(config.configSourceFiles ?? [config.configPath]),
         ...entrySources,
         ...(config.renderer ? [config.renderer] : []),
@@ -118,6 +189,8 @@ async function loadGraph(
         definitions: [],
         entrySources,
         sourceFiles,
+        stylesheetRoutes: bundled.routes,
+        styleOutputs: bundled.outputs,
         renderWithComponents: () => {
           throw new Error("inventory-only graph cannot render");
         },
@@ -160,12 +233,15 @@ async function loadGraph(
       definitions: imported.definitions,
       entrySources,
       sourceFiles,
+      stylesheetRoutes: bundled.routes,
+      styleOutputs: bundled.outputs,
       renderer: imported.renderer as Renderer,
       renderWithComponents: imported.renderWithComponents,
     };
     rememberBundle(graph, bundle);
     return graph;
   } catch (error) {
+    if (styles.failure) throw styles.failure;
     if (error instanceof MoklyError) throw error;
     throw new MoklyError(
       "build-invalid",

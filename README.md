@@ -199,10 +199,11 @@ A custom renderer is the integration boundary for product providers, themes,
 stylesheets, fonts, and full-document markup. Mokly resolves React from the
 consumer repository and bundles all authoring inputs into one build-time graph,
 so component trees use one React runtime.
-Today, use separately authored public CSS with `stylesheets` for stylesheets
-that must reach views. [Imported CSS delivery](./docs/protocol/mokly-imported-styles.md)
-is an approved, not-yet-implemented target; the new Styles guide documents
-the intended plain CSS, CSS Modules, asset, and PostCSS workflow.
+Use separately authored public CSS with `stylesheets` for stylesheets that
+must reach views. [Imported CSS delivery](./docs/protocol/mokly-imported-styles.md)
+now compiles CSS Modules, per-root stylesheets and assets, but automatic
+links and PostCSS processing are pending. The Styles guide documents the
+full intended workflow and what works today.
 
 ## Review and share
 
@@ -305,7 +306,7 @@ merge.
 - [`src/config`](./src/config) — config discovery, loading, and path policy.
 - [`src/build`](./src/build) — bundling, rendering, validation, and generated
   output transactions; see the [imported CSS contract](./docs/protocol/mokly-imported-styles.md)
-  for the planned second pass and binary output boundary.
+  for the stylesheet pass and binary output boundary.
 - [`src/cli`](./src/cli/README.md) — command parsing, reporting, and composition.
 - [`src/server`](./src/server/README.md) — local HTTP server and watched runtime.
 - [`src/review`](./src/review/README.md) — Git baselines, comparison, and change

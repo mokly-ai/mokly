@@ -3,8 +3,8 @@
 ## Status
 
 Active. Created 2026-09-24 from the CSS-in-JS investigation on this branch.
-Milestones 1, 1A, 2, and 3 (contract, binary-safe output, and reserved generated
-directory groundwork) are complete; Milestones 4–9 have not started. PostCSS
+Milestones 1, 1A, 2, 3, and 4 (contract, binary-safe output, reserved generated
+directory, and CSS/asset bundling) are complete; Milestones 5–9 remain. PostCSS
 will let Tailwind v4 and autoprefixer
 use the consumer's configuration. Esbuild remains the only bundler; the optional
 Vite compatibility package is a follow-up plan.
@@ -104,8 +104,10 @@ the same inventory.
    from content or bundle-wide clash order. The plugin returns the class map as
    JavaScript to the graph pass and the transformed CSS to the stylesheet pass,
    so both agree by construction. Scope only classes, IDs and keyframes;
-   preserve global custom properties, grid areas and container names. Provide
-   a default class map and valid-identifier named exports. Cross-file `composes` is rejected;
+   preserve global custom properties, grid areas and container names. Use
+   `customIdents: true` so keyframe declarations and animation references
+   scope together; this also scopes counter-style and view-transition names.
+   Provide a default class map and valid-identifier named exports. Cross-file `composes` is rejected;
    same-file and `global` composition work.
 6. **Assets referenced by CSS are copied.** `url()` targets that resolve to
    repository files are emitted to `mokly-generated/assets/<repository-relative
@@ -337,32 +339,32 @@ it.
       `mockupsDir` remaining untouched.
 - [x] Run the build, relevant tests, and `cargo xtask check`.
 
-## Milestone 4: Collect and bundle imported CSS
+## Milestone 4: Collect and bundle imported CSS (complete)
 
 Produce deterministic per-root stylesheets and assets inside the compilation.
 
-- [ ] Add `src/build/styles/collect.ts`: an esbuild plugin for the graph pass
+- [x] Add `src/build/styles/collect.ts`: an esbuild plugin for the graph pass
       that loads plain `.css` as an empty side-effect module, transforms
       `*.module.css` with Lightning CSS into a class map plus retained CSS,
       records every stylesheet input, rejects cross-file `composes`, and fails
       on `file` loader outputs with the documented guidance. Honor a consumer
       `.css` `empty` loader as the opt-out.
-- [ ] Add `src/build/styles/order.ts`: derive each root's first-reachability
+- [x] Add `src/build/styles/order.ts`: derive each root's first-reachability
       depth-first stylesheet order from the graph metafile in
       `src/build/load_graph.ts`, keyed by the renderer path and each entry
       module; resolve the full renderer `@import` closure and prune its files
       at every depth of entry imports before PostCSS can inline them.
-- [ ] Add `src/build/styles/bundle.ts`: the second esbuild pass over synthetic
+- [x] Add `src/build/styles/bundle.ts`: the second esbuild pass over synthetic
       per-root entries with the same resolution settings and Mokly plugins,
       `write: false`, `metafile: true`, the `file` loader for asset extensions
       with path-mirroring asset names under the reserved directory, relative
       URL rewriting, and source-path comment stripping. Inventory transformer-only
       CSS closures without emitting a route; skip bundling when no delivery
       root reaches CSS.
-- [ ] Union the stylesheet pass inputs into `sourceFiles` through
+- [x] Union the stylesheet pass inputs into `sourceFiles` through
       `src/build/source_inventory.ts` and expose the per-root stylesheet and
       asset outputs on `LoadedGraph` for `compileCatalogue`.
-- [ ] Add `tests/build_imported_styles.test.ts` covering: a plain import
+- [x] Add `tests/build_imported_styles.test.ts` covering: a plain import
       produces the root stylesheet; two entries importing different CSS get
       separate files; shared CSS appears in both; the renderer's CSS gets its
       own file; the documented order rules including a repeated `@import`;
@@ -372,14 +374,28 @@ Produce deterministic per-root stylesheets and assets inside the compilation.
       renderer/entry duplicates including nested `@import` and two entries
       sharing CSS; transformer-only CSS inventoried but undelivered; and
       unchanged behavior for a catalogue without CSS.
-- [ ] Add `tests/build_imported_styles_assets.test.ts` covering font and image
+- [x] Add `tests/build_imported_styles_assets.test.ts` covering font and image
       `url()` copies, one copy for a shared asset, relative URL rewriting, a
       missing asset error, a non-portable route error, unchanged URL classes,
       root-absolute/unsupported-extension errors, `node_modules` assets
       including `@fontsource` scopes and remote CSS `@import`s,
       query/hash suffixes, public mockups asset rejection, and inventory of
       `@import`ed files and assets.
-- [ ] Run the build, relevant tests, and `cargo xtask check`.
+- [x] Cover the `style` export condition/main field under default and custom
+      consumer resolution, prelude tokenization, transformer-only inventory,
+      byte-safe Build/Check, deterministic CSS across processes, and precise
+      failures in focused tests. Split the generated-directory test below 300
+      lines and reuse the viewer's portable path rule for ordinary segments.
+- [x] Add an analysis-only stylesheet resolver for transformer-only CSS so
+      it joins the inventory without running the CSS bundler, and type the
+      preprocessing result for future PostCSS dependency reporting.
+- [x] Preserve CSS/asset outputs and stylesheet routes in retained Serve
+      runtimes, accepted-graph recompilation, and watched-child IPC; test
+      binary-safe transfer and derived Serve's background rebuild.
+- [x] Load native Lightning CSS only for stylesheet processing so importing
+      the CLI does not eagerly resolve a CommonJS dependency; align the older
+      JavaScript `file` loader inventory test with the documented Build error.
+- [x] Run the build, relevant tests, and `cargo xtask check`.
 
 ## Milestone 5: Link generated stylesheets into every view
 
