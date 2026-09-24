@@ -1,7 +1,8 @@
 # Path-Based Navigation Hierarchy
 
-Status: Milestones 1–3 are complete and committed. Milestone 4 verification is
-complete and pushed; the implementation review is the remaining step.
+Status: Milestones 1–4 are complete, verified, pushed, and reviewed. Four
+review findings await the user's decision; the plan stays Active until its PR
+merges.
 Created 2026-09-23 with the user's
 consent after the design discussion in this workspace. This plan supersedes the
 collection-forest contract delivered by
@@ -394,11 +395,37 @@ change: rows, icons, crumbs, and the details inspector look the same.
       implementation commit.
 - [x] Commit and push. The v1-to-v2 fixture replacement is recorded in the
       commit messages; copy it into the PR description when the PR is opened.
-- [ ] Review the complete local diff against `origin/main` using
+- [x] Review the complete local diff against `origin/main` using
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       after the push; report each finding with a number, severity, plain
       explanation, impact of doing nothing, lettered options, and a
-      recommendation, without changing the implementation.
+      recommendation, without changing the implementation. Two independent
+      reviewers ran against `77df3ec`; the four verified findings below await
+      the user's decision.
+
+### Review findings (awaiting the user's decision)
+
+1. Medium: saved folder disclosures treat every unlisted key as open, so an
+   upgrade from `main` (whose saved lists mix obsolete `collection:` keys with
+   still-valid `variants:` or `section:` keys) or a folder rename or removal
+   opens folders that should be closed, and the expanded state is saved back.
+   Recommended: persist explicit per-key state under a new storage version,
+   use the same representation in watched-reload recovery, and require a
+   storage version bump whenever the persisted key format changes.
+2. Low: missing failing-case tests for the historical v3–v5 collection
+   validator, the read model v2 reader rules, nested `page()` and
+   `navPath: undefined` rejection, and a watch test whose storage-clearing
+   script also runs on reload, so it cannot detect a persistence regression.
+3. Low: collection-era leftovers: the unreachable "links to collection id"
+   error in `src/build/mock_links.ts` (its plan item is ticked), dead
+   collection guards in `scripts/preview/`, a no-op `routedEntry` wrapper and
+   `RoutedManifestEntry` alias, a stale "Current catalogue" comment on
+   `ManifestV5`, v6 missing from the historical list in `mokly-rendering.md`,
+   and "public v1 fixture" in `npm-release.md`.
+4. Low: `mokly-authoring.md` grew past the ~250-line protocol-doc guideline
+   (and three other protocol docs grew further past it), two test files
+   passed 300 lines, and the label, conflict, and ordering rules are restated
+   in three protocol docs.
 
 ## Post-merge follow-up (non-blocking)
 
