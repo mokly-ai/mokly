@@ -211,11 +211,14 @@ consumer-peer plugin so these options cannot introduce a second React runtime.
 `postcss` is optional. When absent, do not run PostCSS or discover configuration.
 When supplied, resolve it relative to the config file and require an existing
 regular `.ts`, `.mts`, `.js`, `.mjs` or `.cjs` module inside `repoRoot`, also
-through symlinks. Load it with esbuild and include it and its local imports in
-private, watched `configSourceFiles`. Require a default object with `plugins`
+through symlinks. Bundle local imports with esbuild and include them in private,
+watched `configSourceFiles`. Resolve bare package imports from their importer
+with Node ESM `import` conditions, externalizing them as absolute `file:` URLs
+so consumer plugins execute unbundled; do not change how `mokly.config` loads.
+Require a default object with `plugins`
 as an array of PostCSS plugin instances or an insertion-ordered object mapping
-package names to plain option objects; resolve package names from the module's
-directory. Accept `map` but ignore it (no source maps); reject `parser`,
+package names to plain option objects; resolve those names from the module's
+directory with Node ESM `import` conditions. Accept `map` but ignore it (no source maps); reject `parser`,
 `syntax`, `stringifier` or any other key. Exact errors are in
 [the diagnostics catalogue](./mokly-imported-styles-errors.md).
 
@@ -223,11 +226,14 @@ Mokly owns `.css` and `.module.css` handling. At those keys,
 `moduleResolution.loaders` accepts only `"empty"`: `.css` skips both plain and
 module CSS, `.module.css` skips only module CSS and its class map. Opted-out
 CSS is still inventoried. A `file` loader on another JavaScript-imported
-asset fails Build. Never configure entry globs/`entriesDir`, local
-`stylesheets` paths, `publicExclude` globs, or `review.outDir` inside
-`<mockupsDir>/mokly-generated/`, including their symlink aliases. Authored
-inputs also cannot live there. Consumer public files may live elsewhere below
-`mockupsDir`.
+asset fails Build. An `entries` glob cannot have a static prefix inside
+`<mockupsDir>/mokly-generated/`; `entriesDir` and `review.outDir` cannot be
+equal to or inside it, and entry discovery skips it for broader globs. Local
+`stylesheets` paths and authored inputs cannot live there, including symlink
+aliases. Consumer `publicExclude` globs cannot start with literal
+`mokly-generated` after brace expansion. Broad globs are allowed, but Build
+rejects any generated stylesheet or asset matched by a consumer or default
+public exclusion. Consumer public files may live elsewhere below `mockupsDir`.
 
 The `legacy` config key is rejected, including `legacy: undefined`. Register
 complete documents explicitly with `definePage` or nested `page`, following the

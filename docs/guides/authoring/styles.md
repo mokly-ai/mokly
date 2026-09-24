@@ -41,6 +41,9 @@ Name scoped styles `*.module.css` and import the default class map or a
 valid-identifier named class. Class names are derived from the file path,
 not the CSS content or unrelated entries. Same-file and global `composes`
 work; composing from another file or a local composition cycle fails Build.
+Classes, IDs and keyframes are scoped; global tokens such as `var(--brand)`
+remain global, as do grid-area and container names. Only classes, IDs and
+keyframes appear in the exported map.
 
 ```tsx
 import styles from "./card.module.css";
@@ -59,12 +62,15 @@ export function Card() {
 Mokly copies local font/image URLs to generated assets, mirrors their paths
 under `mokly-generated/assets/`, and preserves query/hash suffixes. Keep
 asset filenames and directories URL-safe: no spaces, trailing dots or Windows
-device names. Use a stylesheet-relative `url()`, never `/root/asset.png`.
+device names. An npm scope following `node_modules` may begin with `@`;
+`encodeUrlPath` writes it as `%40` in links. Use a stylesheet-relative
+`url()`, never `/root/asset.png`.
 Remote HTTP(S), `//`, `data:` and `#fragment` URLs are unchanged. Link your
 own separately authored public assets normally. An imported `url()` asset
 that is already a public file under `mockupsDir` fails rather than silently
 hiding its original route; keep it separate or move its source outside
-`mockupsDir`.
+`mockupsDir`. Remote CSS `@import`s stay external and are not fetched or
+inventoried; valid prelude imports appear before local rules in the bundle.
 
 ## Add Tailwind v4 and autoprefixer
 
@@ -93,6 +99,10 @@ import autoprefixer from "autoprefixer";
 
 export default { plugins: [tailwindcss(), autoprefixer()] };
 ```
+
+Mokly bundles local PostCSS config imports for reloading, but loads package
+plugins unbundled from your repository so their native bindings and
+package-relative files continue to work.
 
 For `styles/catalogue.css` beneath the repository root, opt into exactly
 the sources whose class names belong in this catalogue. Import the CSS from

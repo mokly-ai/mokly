@@ -16,20 +16,24 @@ are normative.
 `mokly-generated/styles/<repository-relative root module path>.css` and
 `mokly-generated/assets/<repository-relative asset path>`. Preserve the module
 extension before `.css`: `src/home.mockup.tsx` becomes
-`mokly-generated/styles/src/home.mockup.tsx.css`. No CSS reached means no
-stylesheet route. An asset used by several roots has one route and identical
-bytes. Source paths are private, not additional public copies. Every regular
+`mokly-generated/styles/src/home.mockup.tsx.css`. A shared asset has one route
+and identical bytes. Sources are private, not additional public copies. Every
 file beneath the reserved directory is generated output for ownership,
 orphan cleanup, Check and historical/current public-file classification;
 unrecognized files there are not consumer-authored public files.
 
-Configuration rejects entry-glob stable prefixes and matches, `entriesDir`,
-`stylesheets` (shared/light/dark) local paths, consumer `publicExclude` globs
-(including broad globs capable of matching the reserved directory),
-`review.outDir`, and
-authored inputs under the reserved directory, checking logical and realpath
-aliases. A generated route cannot collide with an inventoried source. Ordinary
-public files elsewhere beneath `mockupsDir` stay consumer-owned.
+Reject `entries` whose static prefix is the reserved directory or inside it,
+`entriesDir` equal to or inside it, `stylesheets` (shared/light/dark) local
+paths inside it, and `review.outDir` equal to or inside it. Entry discovery
+skips the reserved directory like `review.outDir`; broad entry globs remain
+valid, even when `entriesDir` equals `mockupsDir`. Reject consumer
+`publicExclude` globs only when **after brace expansion** the first path
+segment is literally `mokly-generated`; broad globs stay valid. Instead,
+Build rejects each generated stylesheet/asset route matching **any** public
+exclusion, including defaults, naming the route and glob. Reject authored
+inputs below the reserved directory through logical or realpath aliases.
+A generated route cannot collide with an inventoried source. Ordinary public
+files elsewhere beneath `mockupsDir` stay consumer-owned.
 
 ## Roots, Collection And Deduplication
 
@@ -57,7 +61,11 @@ importing `tokens.css` then `dark-theme.css` cannot have `tokens.css` reappear
 later through an entry's component CSS. The first linked root wins across
 renderer/entry; within one root JavaScript first reachability wins, while
 remaining repeated CSS `@import`s retain CSS's last-position semantics.
-Do not suppress a shared file between two entry roots.
+Do not suppress a shared file between two entry roots. Remote HTTP(S)
+`@import "https://..."` and `@import url("https://...")` stay external:
+never fetch or inventory them. For valid prelude imports, esbuild puts them
+at the start of the bundled root stylesheet before local rules, preserving
+their order; late imports after a rule stay there and follow CSS validity rules.
 
 Graph pass: one in-memory JavaScript output; Mokly captures plain `.css` as
 an empty side-effect module and `.module.css` as a transformed class map,
@@ -66,20 +74,18 @@ bundles each nonempty root from a synthetic CSS entry with ordered `@import`s,
 allowing ordinary nested imports after the exclusion above. The CSS pass uses
 the same aliases, conditions, main fields, package roots, extension and
 symlink policy as the graph pass; it does not evaluate consumer JavaScript.
-CSS reachable only through a transformer is analyzed for inventory, not emitted.
-No global bundle joins unrelated entries.
 
 ## CSS Modules And Import Loaders
 
 For `*.module.css`, call Lightning CSS `transform` with
 `filename` equal to the **repository-relative POSIX** file path,
-`cssModules: { pattern: "mokly_[hash]_[local]", dashedIdents: true,
-animation: true, grid: true, container: true, customIdents: true,
+`cssModules: { pattern: "mokly_[hash]_[local]", dashedIdents: false,
+animation: true, grid: false, container: false, customIdents: false,
 pure: false }`, `minify: false`, and no browser targets. Lightning's
-filename-derived `[hash]` (not a content hash) scopes classes, IDs,
-keyframes, grid names, container names, custom identifiers and dashed
-identifiers including custom properties. A collision between two distinct
-local identities fails rather than appending a traversal-dependent suffix.
+filename-derived `[hash]` (not a content hash) scopes only classes, IDs and
+keyframes. Global `var(--brand)` tokens, grid-area and container names, and
+custom identifiers stay unchanged and are not exported. A collision between
+distinct local identities fails rather than appending a suffix.
 PostCSS runs first. Feed the identical transformed CSS to the stylesheet
 pass and use Lightning's exports for JavaScript: a default plain object
 whose original local names map to space-joined scoped names; recursively
@@ -103,12 +109,17 @@ Mokly never exposes the extra JavaScript graph outputs as public URLs.
 
 Optional top-level `postcss` is a config-relative path to a regular `.ts`,
 `.mts`, `.js`, `.mjs`, or `.cjs` module inside `repoRoot`; no discovery. Bundle
-it with the config loader's esbuild resolver and retain it and its local imports
-in `configSourceFiles` (private, watched config-reload inputs). It must
+local imports with esbuild and retain them in `configSourceFiles` (private,
+watched config-reload inputs). Resolve **every bare package import** from its
+importer with Node ESM `import` conditions and externalize it as an absolute
+`file:` URL in the temporary bundle; plugin packages and native bindings run
+unbundled from the consumer's `node_modules`. Do not change how `mokly.config`
+loads. The PostCSS module must
 default-export a non-array object with `plugins` as either an ordered array
 of PostCSS plugin instances or an insertion-ordered record mapping package
-names to plain option objects. Resolve named plugins from that module's
-directory, instantiate with those options, and preserve declared order.
+names to plain option objects. Resolve object-form package names with the
+same Node ESM conditions from the PostCSS module's directory, instantiate
+with those options, and preserve declared order.
 `map` is accepted but ignored; Mokly emits no source maps. Reject any other
 keys, missing/invalid plugins, escaping paths and failed package resolution.
 
@@ -120,9 +131,8 @@ so preprocessing must prune the entire local import tree before it can see
 excluded content. Cache by `(source path, effective pruned-import set)`
 within a compilation and share that result between graph and CSS passes;
 the same file with different root-specific pruning is a distinct input and
-must be processed again. Mokly depends on the PostCSS processor for this
-optional pass, but does not supply or pin consumer plugins; the consumer
-supplies its own PostCSS module, plugins and their versions.
+must be processed again. Mokly supplies PostCSS, not consumer plugins or
+their versions.
 
 Inventory is the sorted, unique, repo-relative union of config/graph inputs,
 entry roots, CSS-pass inputs including nested imports and `url()` assets,
@@ -187,7 +197,12 @@ Every other extension fails.
 rule segment by segment: `/^[A-Za-z0-9][A-Za-z0-9._~-]*$/`, no trailing
 dot, and no Windows device-name stem (`aux`, `con`, `nul`, `prn`, `com1`–`9`,
 `lpt1`–`9`, ignoring case). No empty, `.`, `..`, backslash, drive or colon
-segments. The complete stylesheet route obeys the same rule.
+segments. **Only** the segment immediately after `node_modules` may instead
+match `/^@[A-Za-z0-9][A-Za-z0-9._~-]*$/` (npm scope, e.g. `@fontsource`);
+all other constraints remain. Esbuild emits the literal `@` in relative CSS
+`url()` references; `encodeUrlPath` converts it to
+`%40` for links, Serve decodes it, and export resource discovery accepts and
+decodes both forms. The complete stylesheet route obeys the usual rule.
 
 `RenderInput.stylesheets` is: first matching rule's shared paths, then its
 scheme-specific paths, then configured renderer stylesheet if present, then

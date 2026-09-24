@@ -16,11 +16,11 @@ in the parent contract.
 
 | Failure                                                    | Exact message                                                                                                                     |
 | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Reserved `entries` glob                                    | `entries must not select mokly-generated/: {glob}; narrow the entry glob to authored files`                                       |
+| Reserved `entries` glob static prefix                      | `entries must not select mokly-generated/: {glob}; narrow the entry glob to authored files`                                       |
 | Reserved `entriesDir`                                      | `entriesDir must not select mokly-generated/: {config-path}; choose a directory of authored entry modules`                        |
 | Reserved `stylesheets` path                                | `stylesheets[{index}].{field} must not reference mokly-generated/: {path}; link imported CSS through the renderer instead`        |
-| Reserved `publicExclude` glob                              | `publicExclude must not match mokly-generated/: {glob}; Mokly owns every file there`                                              |
-| Reserved Review directory                                  | `review.outDir must not be inside mokly-generated/; choose a separate artifact directory`                                         |
+| Reserved `publicExclude` first segment                     | `publicExclude must not start with mokly-generated/: {glob}; narrow the exclusion to consumer-owned paths`                        |
+| Reserved Review directory                                  | `review.outDir must not be at or inside mokly-generated/; choose a separate artifact directory`                                   |
 | Consumer `.css` or `.module.css` loader other than `empty` | `moduleResolution.loaders[{extension}] is package-owned; only "empty" is allowed to opt out of imported CSS delivery`             |
 | `postcss` empty/non-string/escaping path                   | `postcss must name a config-relative module inside repoRoot: {config-path}; choose an existing .ts, .mts, .js, .mjs or .cjs file` |
 | `postcss` missing, non-file or unsupported suffix          | `postcss module must be an existing regular .ts, .mts, .js, .mjs or .cjs file inside repoRoot: {config-path}`                     |
@@ -33,8 +33,8 @@ in the parent contract.
 
 The `stylesheets` `{field}` is `stylesheets`, `lightStylesheets` or
 `darkStylesheets`; `{index}` is zero-based. A public exclusion is rejected
-when its matcher could match any path under the reserved directory, even if
-the directory does not exist yet. Other existing configuration errors retain
+only when a brace-expanded alternative begins with a literal
+`mokly-generated` path segment. Other existing configuration errors retain
 their existing messages. Module suffix/path aliases are checked before load.
 
 ## Build (`build-invalid`)
@@ -44,6 +44,7 @@ their existing messages. Module suffix/path aliases are checked before load.
 | Inventoried authoring file below reserved directory       | `authoring input is inside mokly-generated/: {file}; move authored sources outside Mokly's output directory`                                                                                                                                        |
 | Generated stylesheet path not portable                    | `generated stylesheet route is not portable: {route}; rename the root module so every path segment is URL-safe`                                                                                                                                     |
 | Root path collision                                       | `generated route collision: {route}; give each entry root a distinct repository path`                                                                                                                                                               |
+| Generated stylesheet or asset excluded                    | `generated route matches public exclusion {glob}: {route}; narrow the exclusion so Mokly-generated files stay public`                                                                                                                               |
 | CSS transform failure                                     | `could not transform CSS {stylesheet}: {detail}; fix the stylesheet and rebuild`                                                                                                                                                                    |
 | CSS Modules identity collision                            | `CSS Modules generated name collision: {name} in {first} and {second}; rename one local name or file`                                                                                                                                               |
 | Cross-file CSS Modules composition                        | `CSS Modules cross-file composes is unsupported in {stylesheet}: {specifier}; compose within this file or use a global name`                                                                                                                        |
@@ -52,7 +53,7 @@ their existing messages. Module suffix/path aliases are checked before load.
 | Root-absolute CSS URL                                     | `root-absolute CSS url() is not portable in {stylesheet}: {url}; use a path relative to the stylesheet`                                                                                                                                             |
 | Relative CSS URL missing, non-file or escaping `repoRoot` | `CSS asset is not a regular file inside repoRoot in {stylesheet}: {url}; move it inside the repository or fix the relative path`                                                                                                                    |
 | Relative CSS URL unsupported extension                    | `unsupported CSS asset extension in {stylesheet}: {url}; use .avif, .bmp, .gif, .ico, .jpeg, .jpg, .png, .svg, .webp, .eot, .otf, .ttf, .woff or .woff2`                                                                                            |
-| Non-portable asset route                                  | `CSS asset route is not portable: {file}; rename every path segment to be URL-safe (letters, digits, dot, underscore, tilde or hyphen; no spaces or device names)`                                                                                  |
+| Non-portable asset route                                  | `CSS asset route is not portable: {file}; rename every path segment to be URL-safe (letters, digits, dot, underscore, tilde or hyphen; @scope only after node_modules; no spaces or device names)`                                                  |
 | Missing/invalid local CSS `@import`                       | `could not resolve CSS @import in {stylesheet}: {specifier}; use an existing stylesheet inside repoRoot`                                                                                                                                            |
 | PostCSS plugin throws                                     | `PostCSS plugin {plugin} failed for {stylesheet}: {detail}; fix the plugin configuration or stylesheet`                                                                                                                                             |
 | Malformed plugin dependency message                       | `PostCSS plugin {plugin} reported an invalid dependency for {stylesheet}; report a file or directory path and optional glob`                                                                                                                        |

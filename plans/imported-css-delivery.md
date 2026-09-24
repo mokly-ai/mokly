@@ -3,8 +3,8 @@
 ## Status
 
 Active. Created 2026-09-24 from the CSS-in-JS investigation on this branch.
-Milestone 1 (documentation and protocol contract) is complete; Milestones
-2–9 have not started. PostCSS will let Tailwind v4 and autoprefixer use the
+Milestones 1 and 1A (documentation and contract review) are complete;
+Milestones 2–9 have not started. PostCSS will let Tailwind v4 and autoprefixer use the
 consumer's configuration. Esbuild remains the only bundler; the optional Vite
 compatibility package is a follow-up plan.
 
@@ -48,9 +48,12 @@ the same inventory.
 1. **Reserved generated directory.** All output from this feature lives under
    `<mockupsDir>/mokly-generated/`. Mokly owns every file below it. The
    directory is package-owned in the same way the manifest file is: configured
-   entry globs, `stylesheets` paths, `publicExclude` rules, `review.outDir`,
-   inventoried sources, and consumer-authored public files must not be inside
-   it, and validation rejects them by name. Build replaces its contents
+   entry-glob static prefixes, `entriesDir`, `stylesheets` paths,
+   `review.outDir`, inventoried sources, and consumer-authored public files
+   must not be inside it; discovery skips it for broad entry globs. Reject
+   `publicExclude` only when a brace-expanded alternative starts with literal
+   `mokly-generated`; Build rejects generated routes matched by any exclusion
+   (including defaults), naming the glob. Build replaces its contents
    transactionally and removes files that the compilation no longer produces.
    Committed Check reports any unexpected file there as an orphan; derived
    Check rejects Git-tracked files there with the existing `.gitignore`
@@ -79,7 +82,9 @@ the same inventory.
    first import, while a stylesheet repeated through `@import` inside CSS keeps
    CSS semantics and moves to its last position. The bundle is produced by a
    second esbuild pass over a synthetic per-root stylesheet that `@import`s the
-   collected files in that order; nested `@import` chains resolve there. The
+   collected files in that order; nested `@import` chains resolve there. Remote
+   HTTP(S) `@import`s stay external, un-fetched and un-inventoried; valid
+   prelude imports precede bundled local rules. The
    renderer's complete CSS closure (direct and nested imports) is excluded at
    every depth of the entry's CSS tree before PostCSS can inline it. Separate
    entries do not exclude each other's CSS. Strip only esbuild's source-path
@@ -91,9 +96,9 @@ the same inventory.
    derived from the repository-relative file path and the local name, never
    from content or bundle-wide clash order. The plugin returns the class map as
    JavaScript to the graph pass and the transformed CSS to the stylesheet pass,
-   so both agree by construction. Scope classes, IDs, keyframes, grid and
-   container names, custom and dashed identifiers; provide a default class
-   map and valid-identifier named exports. Cross-file `composes` is rejected;
+   so both agree by construction. Scope only classes, IDs and keyframes;
+   preserve global custom properties, grid areas and container names. Provide
+   a default class map and valid-identifier named exports. Cross-file `composes` is rejected;
    same-file and `global` composition work.
 6. **Assets referenced by CSS are copied.** `url()` targets that resolve to
    repository files are emitted to `mokly-generated/assets/<repository-relative
@@ -102,7 +107,9 @@ path>` through esbuild's `file` loader with a path-mirroring asset name, and
    stylesheets is emitted once. The originals stay private inventoried inputs.
    Leave `data:`, remote, protocol-relative and fragment URLs unchanged;
    reject root-absolute URLs and unknown local asset extensions. Preserve
-   query/fragment suffixes, including for in-repository `node_modules` assets.
+   query/fragment suffixes, including for in-repository `node_modules` assets;
+   accept scoped npm package segments (`@scope`) immediately after
+   `node_modules`, encoded as `%40scope` in links.
    Reject an asset inside `mockupsDir` unless it is already a graph source,
    rather than silently privatizing an existing public route.
    A route whose segments are not portable, for example a path with a space,
@@ -135,9 +142,11 @@ path>` through esbuild's `file` loader with a path-mirroring asset name, and
 12. **PostCSS is explicit and runs before Mokly's own transforms.** A new
     top-level `postcss` config key names a config-relative PostCSS
     configuration module inside `repoRoot`; absent means PostCSS never runs.
-    Mokly loads that module through the same esbuild-based loader used for
-    `mokly.config`, so the module and its imports join `configSourceFiles`, are
-    watched, and stay private. The module must default-export an object whose
+    Mokly bundles local imports using esbuild so they join `configSourceFiles`,
+    are watched, and stay private. Bare package imports resolve from each
+    importer using Node ESM `import` conditions and stay external as absolute
+    `file:` URLs; plugins run unbundled from consumer `node_modules`. Leave
+    `mokly.config` loading unchanged. The module must default-export an object whose
     `plugins` is an array of plugin instances or an object mapping package
     names to options; package names resolve from the PostCSS module's
     directory, which keeps Tailwind, autoprefixer, and every other plugin a
@@ -225,6 +234,29 @@ no guesswork.
 - [x] Run `npx prettier --check` on every changed Markdown file and review the
       diff for internal consistency across the protocol set.
 
+## Milestone 1A: Contract review refinements (complete)
+
+Resolve review findings without reopening Milestone 1 or changing product code.
+
+- [x] Limit Lightning CSS Modules to classes, IDs and keyframes; verify every
+      option and exported name with the workspace version, and clarify global
+      tokens/grid/container values in the protocol, plan and Styles guide.
+- [x] Define the literal-first-segment, brace-expanded `publicExclude` check
+      and Build-time exclusion collision against all generated routes (including
+      defaults); give both cases exact diagnostics.
+- [x] Make entry-glob prefix, broad discovery skip, co-located `entriesDir`,
+      and equal-to/inside `review.outDir` rules unambiguous.
+- [x] Allow an npm `@scope` asset segment after `node_modules`; confirm
+      esbuild's CSS URL, URL encoding, Serve decode and export resolution.
+- [x] Keep bare PostCSS package imports external as absolute ESM file URLs
+      after importer-relative resolution; verify real Tailwind/autoprefixer
+      instance and object configurations without altering `mokly.config`.
+- [x] Define external remote CSS `@import` ordering and inventory behavior;
+      verify esbuild's placement in the root stylesheet.
+- [x] Validate changed Markdown, run documentation/guide tests, review the
+      diff, then commit with a heredoc/file message body and push without
+      rewriting the Milestone 1 commit.
+
 ## Milestone 2: Binary-safe generated outputs
 
 A refactor with no behavior change that lets later milestones emit fonts and
@@ -233,6 +265,9 @@ images as generated files.
 - [ ] Change `Compilation.outputs` in `src/build/compile.ts` to map routes to
       `string | Uint8Array` behind one typed `GeneratedFile` helper for reads,
       byte comparison, and byte length.
+- [ ] Write a failing synthetic binary corruption test first; audit every
+      `Compilation.outputs` and `compileCatalogue` consumer, not only the
+      initial file list, while retaining text semantics for HTML/manifest.
 - [ ] Update `src/build/transaction.ts`, `src/build/check.ts`,
       `src/build/tracked_output.ts`, `src/build/component_runtime.ts`,
       `src/cli/run.ts`, `src/export/run.ts`, `src/export/inputs.ts`,
@@ -242,7 +277,10 @@ images as generated files.
 - [ ] Add `tests/build_binary_outputs.test.ts` proving a synthetic binary
       output is written, checked, staged, rolled back, captured for derived
       export, and served without corruption.
-- [ ] Run the build, relevant tests, and `cargo xtask check`.
+- [ ] Run `npm run build`, focused tests, `npm run example:build`,
+      `npm run example:check`, `npm run lint`, `npm run typecheck`, and
+      `cargo xtask check` with 100% pass rate; commit with a file/heredoc body
+      and push the branch.
 
 ## Milestone 3: Reserved generated directory
 
@@ -251,10 +289,14 @@ it.
 
 - [ ] Add `src/build/styles/routes.ts` with the reserved directory constant,
       the stylesheet and asset route derivations, and portable-segment
-      validation with the documented error text.
-- [ ] Reject the reserved directory in `src/config/rules.ts` for `stylesheets`
-      paths, in entry glob, `publicExclude`, and `review.outDir` validation,
-      and in `src/build/output_paths.ts` for inventoried sources inside it.
+      validation with the documented npm-scope exception and error text.
+- [ ] Reject reserved `stylesheets` paths in `src/config/rules.ts`, static
+      `entries` prefixes in `src/config/entry_globs.ts`, an equal-or-inside
+      `entriesDir`/`review.outDir`, and brace-expanded first-segment
+      `publicExclude` in `src/config/public_exclusions.ts`. Skip the reserved
+      directory during broad entry discovery; check generated stylesheet/asset
+      routes against **all** public exclusions (including defaults) in
+      `src/build/output_paths.ts`, and reject inventoried sources inside it.
 - [ ] Extend `src/build/ownership.ts` so `generatedOwnershipDenial`,
       `pendingGeneratedOrphanRoutes`, and `unclaimedGeneratedRoutes` treat every
       regular file inside the reserved directory as owned generated output.
@@ -262,7 +304,8 @@ it.
       directory rule to its `.gitignore` guidance when a tracked file is inside
       the reserved directory.
 - [ ] Add `tests/build_generated_directory.test.ts` covering each validation
-      rejection, orphan cleanup on Build, committed Check orphan reporting,
+      rejection, including broad entry globs and `publicExclude` route
+      collisions; orphan cleanup on Build, committed Check orphan reporting,
       derived Check rejection with the directory rule, and that consumer public
       files elsewhere under `mockupsDir` are untouched.
 - [ ] Run the build, relevant tests, and `cargo xtask check`.
@@ -305,7 +348,8 @@ Produce deterministic per-root stylesheets and assets inside the compilation.
 - [ ] Add `tests/build_imported_styles_assets.test.ts` covering font and image
       `url()` copies, one copy for a shared asset, relative URL rewriting, a
       missing asset error, a non-portable route error, unchanged URL classes,
-      root-absolute/unsupported-extension errors, `node_modules` assets,
+      root-absolute/unsupported-extension errors, `node_modules` assets
+      including `@fontsource` scopes and remote CSS `@import`s,
       query/hash suffixes, public mockups asset rejection, and inventory of
       `@import`ed files and assets.
 - [ ] Run the build, relevant tests, and `cargo xtask check`.
@@ -338,7 +382,9 @@ Tailwind v4 and autoprefixer work, with complete inventory and watch coverage.
 - [ ] Add the `postcss` config key to `src/config/types.ts` and a new
       `src/config/postcss.ts` that validates the config-relative path, requires
       a regular file inside `repoRoot`, loads the module through the shared
-      esbuild config loader in `src/config/load.ts`, adds its metafile inputs
+      esbuild config loader in `src/config/load.ts` with bare imports resolved
+      via Node ESM `import` conditions from each importer and externalized as
+      absolute `file:` URLs (without changing `mokly.config` loading), adds its metafile inputs
       to `configSourceFiles`, and normalizes the exported shape with the
       documented errors for missing `plugins`, unknown keys, and unresolvable
       package names.
