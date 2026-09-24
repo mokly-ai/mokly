@@ -48,6 +48,30 @@ export default defineConfig({ repoRoot: ".", entriesDir: "entries", mockupsDir: 
   await assert.rejects(loadConfig(fixture.root), /Could not resolve "mokly"/);
 });
 
+test("review.sharedImpact rejects even undefined with the removed-field message", async (context) => {
+  const fixture = await createFixture();
+  context.after(() => removeFixture(fixture));
+  for (const value of ['["notes.md"]', "undefined"]) {
+    const source = await fs.promises.readFile(fixture.configPath, "utf8");
+    await fs.promises.writeFile(
+      fixture.configPath,
+      source.replace(
+        'outDir: ".review"',
+        `outDir: ".review", sharedImpact: ${value}`,
+      ),
+    );
+    await assert.rejects(
+      loadConfig(fixture.root),
+      (error: Error & { code?: string }) =>
+        error.code === "config-invalid" &&
+        error.message.endsWith(
+          "review.sharedImpact has been removed; delete this field.",
+        ),
+    );
+    await fs.promises.writeFile(fixture.configPath, source);
+  }
+});
+
 test("explicit config loading is independent of the executing package directory", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));

@@ -58,7 +58,7 @@ test("an empty registry retains normal build validation and the previous site", 
   );
 });
 
-test("ignored-only and shared-impact evidence does not fill exported Changes", async (context) => {
+test("ignored-only and unrendered source edits do not fill exported Changes", async (context) => {
   const source = (value: string) =>
     validEntrySource({
       body: `<ReviewIgnore id="counter"><span>${value}</span></ReviewIgnore>`,
@@ -86,7 +86,7 @@ test("ignored-only and shared-impact evidence does not fill exported Changes", a
     review.screens.find((screen) => screen.id === "details")?.state,
     "unchanged",
   );
-  assert.deepEqual(review.sharedImpact, ["notes.md"]);
+  assert.deepEqual(review.sharedImpact, []);
   const html = await fs.promises.readFile(
     path.join(fixture.output, "index.html"),
     "utf8",

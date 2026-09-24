@@ -59,7 +59,7 @@ export async function compareUnchangedComponentView(
         usage.slots.some((slot) => slot.owner.kind === "entry")),
   );
   const prepared = hasOwnershipEdits
-    ? prepareComponentProjection(context, before, after, base, head, root)
+    ? prepareComponentProjection(before, after, base, head, root)
     : undefined;
   const projected = prepared?.projected;
   const excluded = prepared?.excluded;

@@ -1,6 +1,3 @@
-import { minimatch } from "minimatch";
-
-import type { ComponentViewRecord } from "@mokly/viewer";
 import {
   canonicalJson,
   analyzeHierarchy,
@@ -12,8 +9,6 @@ import type {
   EntryChangeReason,
   ReviewEntryAddress,
 } from "@mokly/viewer/data";
-
-import { dependencyContainsChangedPath } from "../registry/dependency_paths.js";
 
 export type RoutedEntry = Exclude<
   ManifestEntry,
@@ -68,7 +63,11 @@ export function metadata(
     ...common
   } = entry;
   if (entry.kind === "component") {
-    const { variants: _variants, ...component } = common as typeof entry;
+    const {
+      variants: _variants,
+      ownedDependencies: _ownedDependencies,
+      ...component
+    } = common as typeof entry;
     return canonicalJson({
       ...component,
       ancestors,
@@ -84,94 +83,6 @@ export function metadata(
   return canonicalJson({ ...common, ancestors });
 }
 
-/** Explicit owners override broad consumer declarations, retaining exact screen evidence. */
-export class ComponentDependencyPolicy {
-  private readonly components: readonly Extract<
-    ManifestEntry,
-    { kind: "component" }
-  >[];
-  private readonly ownersByPath = new Map<string, ReadonlySet<string>>();
-  private readonly sharedByPath = new Map<string, boolean>();
-  constructor(
-    before: Manifest,
-    after: Manifest,
-    private readonly shared: readonly string[],
-  ) {
-    this.components = [...before.entries, ...after.entries].filter(
-      (entry): entry is Extract<ManifestEntry, { kind: "component" }> =>
-        entry.kind === "component",
-    );
-  }
-  owners(changed: string): ReadonlySet<string> {
-    let owners = this.ownersByPath.get(changed);
-    if (!owners) {
-      owners = new Set(
-        this.components.flatMap((entry) =>
-          entry.ownedDependencies.some((root) =>
-            dependencyContainsChangedPath(root, changed),
-          )
-            ? [entry.id]
-            : [],
-        ),
-      );
-      this.ownersByPath.set(changed, owners);
-    }
-    return owners;
-  }
-  independent(entry: RoutedEntry, changed: string): boolean {
-    const owners = this.owners(changed);
-    if (owners.has(entry.id) && entry.kind === "component") return true;
-    const declared = entry.declaredDependencies ?? [];
-    if (entry.kind === "screen" && declared.includes(changed)) return true;
-    if (owners.size) return false;
-    return (
-      declared.some((root) => dependencyContainsChangedPath(root, changed)) ||
-      this.sharedPath(changed)
-    );
-  }
-  reasons(
-    before: RoutedEntry | undefined,
-    after: RoutedEntry | undefined,
-    changed: readonly string[],
-  ): EntryChangeReason[] {
-    return changed
-      .filter((item) =>
-        [before, after].some((entry) => entry && this.independent(entry, item)),
-      )
-      .map((path) => ({ kind: "dependency", path }));
-  }
-  private sharedPath(changed: string): boolean {
-    let matches = this.sharedByPath.get(changed);
-    if (matches === undefined) {
-      matches = this.shared.some((glob) =>
-        minimatch(changed, glob, { dot: true }),
-      );
-      this.sharedByPath.set(changed, matches);
-    }
-    return matches;
-  }
-  suppressResource(
-    repoPath: string,
-    publicPath: string,
-    paired: ReadonlySet<string>,
-    before?: ComponentViewRecord,
-    after?: ComponentViewRecord,
-    root?: string,
-  ): boolean {
-    if (!before || !after) return false;
-    const owners = this.owners(repoPath);
-    if (owners.size && [...owners].every((id) => id !== root && paired.has(id)))
-      return true;
-    const left = before.resources.find((item) => item.path === publicPath);
-    const right = after.resources.find((item) => item.path === publicPath);
-    return Boolean(
-      left &&
-      right &&
-      canonicalJson(left.componentIds) === canonicalJson(right.componentIds) &&
-      left.componentIds.every((id) => id !== root && paired.has(id)),
-    );
-  }
-}
 export function uniqueReasons(
   reasons: readonly EntryChangeReason[],
 ): EntryChangeReason[] {

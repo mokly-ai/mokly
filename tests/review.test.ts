@@ -272,7 +272,7 @@ export default defineConfig({
   entriesDir: "entries",
   mockupsDir: "mockups",
   repoRoot: ".",
-  review: { outDir: ".review", sharedImpact: ["notes.md"] }
+  review: { outDir: ".review" }
 });
 `,
   );
@@ -369,10 +369,8 @@ test("Review compares Git base without checkout and writes deterministic artifac
       ?.state,
     "changed",
   );
-  assert.deepEqual(result.sharedImpact, ["notes.md"]);
-  assert.ok(
-    result.screens.every((screen) => screen.sharedImpact.includes("notes.md")),
-  );
+  assert.deepEqual(result.sharedImpact, []);
+  assert.ok(result.screens.every((screen) => screen.sharedImpact.length === 0));
   const reviewJson = JSON.parse(
     await fs.promises.readFile(
       path.join(config.review.outDir, "review.json"),
@@ -391,7 +389,7 @@ test("Review compares Git base without checkout and writes deterministic artifac
   );
 });
 
-test("Review reports descendants of directory dependencies", async (context) => {
+test("Review ignores descendants of unrendered directory dependencies", async (context) => {
   const fixture = await createFixture(
     validEntrySource().replace(
       'dependencies: ["notes.md"]',
@@ -418,11 +416,7 @@ test("Review reports descendants of directory dependencies", async (context) => 
     new CommittedRepository(new NodeGitCommandRunner(fixture.root)),
   );
 
-  assert.ok(
-    result.screens.every((screen) =>
-      screen.sharedImpact.includes("src/components/Button.tsx"),
-    ),
-  );
+  assert.ok(result.screens.every((screen) => screen.sharedImpact.length === 0));
 });
 
 test("Review writer will not replace an unowned directory or repository root", async (context) => {

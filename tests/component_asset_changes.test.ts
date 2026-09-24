@@ -14,7 +14,7 @@ import { componentGit } from "./helpers/component_review_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 for (const exact of [false, true])
-  test(`owned dependency beats broad shared impact; exact screen dependency=${exact}`, async (t) => {
+  test(`unrendered owned dependency does not affect Changes; exact screen dependency=${exact}`, async (t) => {
     const source = componentEntrySource()
       .replace('dependencies: ["notes.md"]', 'dependencies: ["shared"]')
       .replace(
@@ -32,13 +32,6 @@ for (const exact of [false, true])
       path.join(fixture.root, "shared/button.ts"),
       "export const size = 1;",
     );
-    await fs.writeFile(
-      fixture.configPath,
-      (await fs.readFile(fixture.configPath, "utf8")).replace(
-        '["notes.md"]',
-        '["shared/**"]',
-      ),
-    );
     const config = await loadConfig(fixture.root);
     const before = await compileCatalogue(config);
     await writeCompilation(before, config);
@@ -46,17 +39,14 @@ for (const exact of [false, true])
     const { result } = await compareReview(before, config, git, "main");
     assert.equal(result.schemaVersion, 3);
     if (result.schemaVersion !== 3) return;
-    const expected = exact
-      ? ["components/action.html", "screens/home.html"]
-      : ["components/action.html"];
+    const expected: string[] = [];
     assert.deepEqual(
       result.changes.map((entry) => entry.after!.route),
       expected,
     );
     assert.deepEqual(await computeChangedRoutes(config, "main", git), expected);
-    assert.ok(
-      result.affectedConsumers.some((item) => item.consumer.kind === "screen"),
-    );
+    assert.deepEqual(result.affectedConsumers, []);
+    assert.deepEqual(result.sharedImpact, []);
   });
 
 for (const ownership of [
@@ -117,7 +107,7 @@ for (const ownership of [
     assert.equal(artifact.result.schemaVersion, 3);
     if (artifact.result.schemaVersion !== 3) return;
     const expected =
-      ownership === "unowned"
+      ownership === "unowned" || ownership === "dependency"
         ? [
             "components/action.html",
             "components/pane.html",

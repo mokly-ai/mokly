@@ -12,14 +12,13 @@ import { changedComponentImplementations } from "../components/comparison_projec
 import { validateComponentRanges } from "../components/ranges.js";
 import { MoklyError } from "../errors.js";
 
-import type { ComponentDependencyPolicy } from "./component_metadata.js";
 import {
   prepareComponentProjection,
   type PreparedComponentComparison,
 } from "./component_projection_resources.js";
 import {
-  ownedCssReasons,
-  type OwnedCssReason,
+  ownedResourceReasons,
+  type OwnedResourceReason,
 } from "./component_resource_attribution.js";
 import { changedResourceBytes } from "./component_resource_changes.js";
 import type { ComponentMaterialReader } from "./component_resources.js";
@@ -33,12 +32,11 @@ export interface ComparedComponentView {
   view: ViewReview;
   reasons: readonly EntryChangeReason[];
   changedImplementations: ReadonlySet<string>;
-  ownedResources: readonly OwnedCssReason[];
+  ownedResources: readonly OwnedResourceReason[];
 }
 export interface ComponentViewContext {
   beforeReader: ComponentMaterialReader;
   afterReader: ComponentMaterialReader;
-  dependencies: ComponentDependencyPolicy;
   changed: ReadonlySet<string>;
   prefix: string;
   resources: ResourceComparison;
@@ -84,9 +82,8 @@ export async function compareComponentView(
       view: { ...view, ...evidence, material: true },
       reasons: [{ kind: "material" }, ...(evidence.reasons ?? [])],
       changedImplementations: new Set(),
-      ownedResources: ownedCssReasons(
+      ownedResources: ownedResourceReasons(
         evidence.reasons ?? [],
-        context.dependencies,
         context.prefix,
         before?.usage,
         after?.usage,
@@ -108,14 +105,7 @@ export async function compareComponentView(
     if (attempt.comparison) return attempt.comparison;
     prepared = attempt.prepared;
   }
-  prepared ??= prepareComponentProjection(
-    context,
-    before!,
-    after!,
-    base,
-    head,
-    root,
-  );
+  prepared ??= prepareComponentProjection(before!, after!, base, head, root);
   const { baseRanges, headRanges, projected, excluded } = prepared;
   const reasons: EntryChangeReason[] = [];
   if (projected.before !== projected.after) reasons.push({ kind: "material" });
@@ -172,9 +162,8 @@ export async function compareComponentView(
     );
   return {
     comparisonPath: "complete",
-    ownedResources: ownedCssReasons(
+    ownedResources: ownedResourceReasons(
       actualEvidence.reasons ?? [],
-      context.dependencies,
       context.prefix,
       before?.usage,
       after?.usage,

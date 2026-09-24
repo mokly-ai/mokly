@@ -13,12 +13,8 @@ import { VIEWPORTS } from "@mokly/viewer/data";
 import type { Compilation } from "../build/compile.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
-import { dependencyContainsChangedPath } from "../registry/dependency_paths.js";
 
-import {
-  analysisOwnsStylesheet,
-  assertViewAnalysisScope,
-} from "./css/paths.js";
+import { assertViewAnalysisScope } from "./css/paths.js";
 import {
   normalizeHistoricalDocument,
   normalizeReviewPair,
@@ -38,8 +34,6 @@ export async function compareScreen(
   head: ManifestScreen | undefined,
   baseDocuments: ReadonlyMap<string, Uint8Array>,
   compilation: Pick<Compilation, "outputs">,
-  changedPaths: readonly string[],
-  sharedImpact: readonly string[],
   files: Map<string, ReviewArtifactContent>,
   baseSeeds: Set<string>,
   headSeeds: Set<string>,
@@ -146,24 +140,16 @@ export async function compareScreen(
   const dependencies = [
     ...new Set([...(base?.dependencies ?? []), ...(head?.dependencies ?? [])]),
   ].sort();
-  const dependencyImpact = changedPaths.filter((changedPath) =>
-    dependencies.some((dependency) =>
-      dependencyContainsChangedPath(dependency, changedPath),
-    ),
-  );
   return {
     dependencies,
     id: entry.id,
     route: entry.route,
     sharedImpact: [
-      ...new Set([
-        ...[...sharedImpact, ...dependencyImpact].filter(
-          (path) => !analysisOwnsStylesheet(path, config),
-        ),
-        ...views.flatMap(
+      ...new Set(
+        views.flatMap(
           (view) => view.reasons?.map((reason) => reason.path) ?? [],
         ),
-      ]),
+      ),
     ].sort(),
     state: aggregateState(views.map((view) => view.state)),
     title: entry.title,

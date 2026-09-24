@@ -110,7 +110,7 @@ export default defineConfig({
   entriesDir: "../../entries",
   mockupsDir: "../../mockups",
   repoRoot: "../..",
-  review: { outDir: ".review", sharedImpact: [] }
+  review: { outDir: ".review" }
 });
 `,
   );

@@ -1,8 +1,6 @@
 /** Capture one selection from the accepted catalogue without another exhaustive build. */
 import path from "node:path";
 
-import { minimatch } from "minimatch";
-
 import { parseReviewResult } from "@mokly/viewer/data";
 import type {
   ManifestScreen,
@@ -129,11 +127,6 @@ export class RepositorySelectedReview implements SelectedReviewProvider {
         entry.kind === "screen" && entry.route === selection.route,
     );
     if (!before && !after) throw missingSelection();
-    const sharedImpact = source.changedPaths.filter((changed) =>
-      this.config.review.sharedImpact.some((glob) =>
-        minimatch(changed, glob, { dot: true }),
-      ),
-    );
     const baseDocuments = await beforeReader.readMany(
       before ? fragmentRoutes(before) : [],
     );
@@ -151,8 +144,6 @@ export class RepositorySelectedReview implements SelectedReviewProvider {
       after,
       baseDocuments,
       { outputs },
-      source.changedPaths,
-      sharedImpact,
       new Map(),
       new Set(),
       new Set(),
@@ -173,7 +164,7 @@ export class RepositorySelectedReview implements SelectedReviewProvider {
       ignoredImpact: aggregateIgnored([screen]),
       schemaVersion: 2,
       screens: [screen],
-      sharedImpact,
+      sharedImpact: screen.sharedImpact,
     };
   }
 }

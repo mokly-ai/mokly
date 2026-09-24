@@ -4,8 +4,9 @@
 
 One Changes rule, summary updates and comparison v4/v5 below are planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md).
-Milestone 4 implements membership and removes source-path evidence; Milestone 7
-implements the versioned result schemas. Until then, writers still use v2/v3.
+Milestone 4 has implemented membership, summary updates and removal of
+source-path evidence. Milestone 7 will implement the versioned result schemas;
+until then, writers still use v2/v3 with rendered-resource-only impact paths.
 
 The implemented [component attribution extension](./mokly-component-changes.md)
 keeps component-only consumers out of Changes while linking them from the

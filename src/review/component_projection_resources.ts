@@ -1,6 +1,6 @@
 /** Shared ownership-projected resource policy for fast and complete comparisons. */
 
-import type { GeneratedComponentView } from "@mokly/viewer/data";
+import { canonicalJson, type GeneratedComponentView } from "@mokly/viewer/data";
 
 import {
   projectComponentPair,
@@ -10,8 +10,6 @@ import {
   validateComponentRanges,
   type RenderedRange,
 } from "../components/ranges.js";
-
-import type { ComponentViewContext } from "./component_view.js";
 
 /** Projection material prepared once and shared by fast and complete comparison. */
 export interface PreparedComponentComparison {
@@ -23,7 +21,6 @@ export interface PreparedComponentComparison {
 
 /** Validate ranges, project ownership, and bind the matching resource policy. */
 export function prepareComponentProjection(
-  context: ComponentViewContext,
   before: GeneratedComponentView,
   after: GeneratedComponentView,
   base: string,
@@ -51,7 +48,6 @@ export function prepareComponentProjection(
     ...(headRanges ? { headRanges } : {}),
     projected,
     excluded: projectedResourceExclusion(
-      context,
       before,
       after,
       projected.pairedComponentIds,
@@ -62,21 +58,29 @@ export function prepareComponentProjection(
 
 /** Build the exact projected-resource exclusion used by complete comparison. */
 export function projectedResourceExclusion(
-  context: ComponentViewContext,
   before: GeneratedComponentView,
   after: GeneratedComponentView,
   pairedComponentIds: ReadonlySet<string>,
   root: string | undefined,
 ): (path: string) => boolean {
-  const repoPath = (path: string) =>
-    context.prefix ? `${context.prefix}/${path}` : path;
   return (path: string) =>
-    context.dependencies.suppressResource(
-      repoPath(path),
-      path,
-      pairedComponentIds,
-      before.usage,
-      after.usage,
-      root,
-    );
+    suppressOwnedResource(path, pairedComponentIds, before, after, root);
+}
+
+function suppressOwnedResource(
+  path: string,
+  paired: ReadonlySet<string>,
+  before: GeneratedComponentView,
+  after: GeneratedComponentView,
+  root?: string,
+): boolean {
+  if (!before.usage || !after.usage) return false;
+  const left = before.usage.resources.find((item) => item.path === path);
+  const right = after.usage.resources.find((item) => item.path === path);
+  return Boolean(
+    left &&
+    right &&
+    canonicalJson(left.componentIds) === canonicalJson(right.componentIds) &&
+    left.componentIds.every((id) => id !== root && paired.has(id)),
+  );
 }

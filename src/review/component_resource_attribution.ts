@@ -4,32 +4,26 @@ import type {
   ComponentReview,
   EntryChangeReason,
   DependencyReason,
-  ViewReview,
 } from "@mokly/viewer/data";
 import { isStylesheetPath } from "@mokly/viewer/data";
 
 import { MoklyError } from "../errors.js";
 
-import {
-  uniqueReasons,
-  type ComponentDependencyPolicy,
-  type RoutedEntry,
-} from "./component_metadata.js";
+import { uniqueReasons } from "./component_metadata.js";
 
 /** Retained actual-invocation evidence can affect an owner without a saved variant. */
-export interface OwnedCssReason {
+export interface OwnedResourceReason {
   componentId: string;
   reason: DependencyReason;
 }
 
-export function ownedCssReasons(
+export function ownedResourceReasons(
   reasons: readonly DependencyReason[],
-  policy: ComponentDependencyPolicy,
   prefix: string,
   before?: ComponentViewRecord,
   after?: ComponentViewRecord,
   root?: string,
-): OwnedCssReason[] {
+): OwnedResourceReason[] {
   const usages = [before, after].filter((usage) => usage !== undefined);
   const present = new Set([
     ...(root ? [root] : []),
@@ -38,12 +32,11 @@ export function ownedCssReasons(
     ),
   ]);
   return reasons.flatMap((reason) => {
-    if (!reason.analysis) return [];
+    if (isStylesheetPath(reason.path) && !reason.analysis) return [];
     const publicPath = prefix
       ? reason.path.slice(prefix.length + 1)
       : reason.path;
     const owners = new Set([
-      ...policy.owners(reason.path),
       ...usages.flatMap((usage) =>
         usage.resources.flatMap((resource) =>
           resource.path === publicPath ? resource.componentIds : [],
@@ -56,42 +49,21 @@ export function ownedCssReasons(
   });
 }
 
-/** Exact caller declarations remain independent, but cannot bypass CSS exclusion. */
-export function exactScreenCssReasons(
-  before: RoutedEntry | undefined,
-  after: RoutedEntry | undefined,
-  views: readonly ViewReview[],
-): DependencyReason[] {
-  return views.flatMap((view) =>
-    (view.reasons ?? []).filter(
-      (reason) =>
-        reason.analysis &&
-        [before, after].some(
-          (entry) =>
-            entry?.kind === "screen" &&
-            entry.declaredDependencies?.includes(reason.path),
-        ),
-    ),
-  );
-}
-
-/** Preserve non-CSS diagnostics and derive stylesheet impact from retained evidence. */
+/** Derive impact only from retained rendered-resource reasons. */
 export function resourceImpact(
-  shared: readonly string[],
   reasons: readonly EntryChangeReason[],
 ): string[] {
   return [
-    ...new Set([
-      ...shared.filter((path) => !isStylesheetPath(path)),
-      ...reasons.flatMap((reason) =>
+    ...new Set(
+      reasons.flatMap((reason) =>
         reason.kind === "dependency" ? [reason.path] : [],
       ),
-    ]),
+    ),
   ].sort();
 }
 
-export function propagateOwnedCss(
-  evidence: readonly OwnedCssReason[],
+export function propagateOwnedResources(
+  evidence: readonly OwnedResourceReason[],
   impacting: Set<string>,
   components: readonly ComponentReview[],
   changes: ChangedEntry[],
@@ -99,7 +71,7 @@ export function propagateOwnedCss(
   for (const { componentId, reason } of evidence) {
     const component = components.find((entry) => entry.id === componentId);
     if (!component)
-      throw new MoklyError("review-invalid", "CSS owner has no component");
+      throw new MoklyError("review-invalid", "resource owner has no component");
     impacting.add(componentId);
     const existing = changes.find(
       (entry) =>

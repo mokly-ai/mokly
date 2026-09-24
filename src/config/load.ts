@@ -8,6 +8,7 @@ import { build, type Plugin, type PluginBuild } from "esbuild";
 import { graphSourceFiles } from "../build/source_inventory.js";
 import { MoklyError, errorMessage } from "../errors.js";
 
+import { componentStylesheetsKey } from "./component_stylesheets.js";
 import type { ResolvedConfig } from "./types.js";
 import { resolveConfig } from "./validate.js";
 
@@ -126,8 +127,7 @@ function configApiPlugin(): Plugin {
       pluginBuild.onLoad(
         { filter: /.*/, namespace: "mokly-config-api" },
         () => ({
-          contents:
-            'export const defineConfig = (value) => value; export const componentStylesheets = Symbol.for("@mokly/mokly/componentStylesheets");',
+          contents: `export const defineConfig = (value) => value; export const componentStylesheets = Symbol.for(${JSON.stringify(componentStylesheetsKey)});`,
           loader: "js",
         }),
       );

@@ -4,10 +4,13 @@ This internal module compares current validated output with a historical
 baseline. The supported consumer interface remains the catalogue and CLI;
 these modules are not public package exports.
 
-The removal of source-path comparison evidence is planned by
-[remove-source-path-evidence](../../plans/remove-source-path-evidence.md) for
-Milestone 4; historical v3–v5 normalization follows in Milestone 6 and v4/v5
-public comparison formats in Milestone 7. Current code still uses older inputs.
+Source-path comparison evidence is removed by Milestone 4 of
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md):
+unrendered source edits do not change catalogue membership or evidence.
+Rendered `styles` and `resources` ownership records, including
+component-declared stylesheet records, drive component attribution.
+Historical v3–v5 normalization follows in Milestone 6 and v4/v5 public
+comparison formats in Milestone 7.
 
 `git.ts` defines separate `RepositoryEvidence` (merge base and changed paths)
 and `BaselineReader` (historical files) interfaces. Paths at the reader boundary
@@ -214,9 +217,10 @@ optional view `reasons` (with stylesheet `analysis`) and `excludedResources`.
 Entry reasons merge by path and union selectors, with
 unresolved evidence taking precedence. The shared browser/server decoder rejects
 invalid or contradictory evidence; canonical artifact serialization preserves it.
-Owned CSS retained at an actual invocation also keeps its component in Changes
-when saved variants exclude it. Exact screen declarations remain independent
-only for retained CSS; non-CSS declarations keep their existing file-level policy.
+Owned rendered resources retained at an actual invocation keep their component
+in Changes even when saved variants exclude them; CSS additionally requires
+retained rule-analysis evidence. Unrendered entry declarations never provide
+independent evidence, even for CSS.
 The screen-only live classifier retains a `ScreenResourceEvidence` slice from
 the same traversal that determines membership. The shell receives its selected
 `ViewResourceEvidence` records without requesting snapshots or component

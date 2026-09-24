@@ -38,14 +38,6 @@ export default defineConfig({
       ["npm", "run", "example:build"],
     ],
     outDir: ".context/basic-review",
-    sharedImpact: [
-      "examples/basic/generated/design-review.css",
-      "examples/basic/generated/design-stage.css",
-      "examples/basic/generated/design.css",
-      "examples/basic/renderer.tsx",
-      "examples/basic/generated/styles.css",
-      "examples/basic/src/components/**",
-    ],
   },
   stylesheets: [
     {

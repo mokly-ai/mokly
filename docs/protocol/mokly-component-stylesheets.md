@@ -5,9 +5,9 @@
 This is the approved target planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md).
 Milestone 3 delivers declaration, validation, linking, ownership, Serve and
-public delivery. Milestone 4 will remove legacy source-path attribution;
-Milestone 6 will remove the old authoring inputs. Those removals remain target
-behavior, not current behavior.
+public delivery. Milestone 4 removes legacy source-path attribution;
+Milestone 6 will remove the old authoring inputs. That authoring removal
+remains target behavior, not current behavior.
 
 ## Declaration And Public Files
 
@@ -135,13 +135,15 @@ in the returned document and inserts component links next to them:
 4. If this route has no configured stylesheets at all, insert at the end of
    `<head>` (before `</head>`), even if it contains unrelated link elements.
 
-Match neighbouring renderer-emitted links by `rel="stylesheet"` and their
-resolved href, in document order; do not anchor on unrelated links or text.
-If insertion is needed and an expected neighbouring configured link is
-missing, duplicated so the position is ambiguous, or out of configured order,
-fail Build/Check with `build-invalid`, naming the route and missing/ambiguous
-href. Never silently append instead. A missing `<head>` also fails rather than
-creating one. Preserve the renderer's other head content. Rebase all recorded
+When inserting component links, require **every** configured link to appear
+exactly once in the renderer's `<head>` as a `rel="stylesheet"` link with its
+resolved href, and in configured order, even if the link is not adjacent to
+the insertion position. Locate the neighbouring configured links from this
+complete ordered set; do not anchor on unrelated links or text. If any
+configured link is missing, duplicated, or out of configured order, fail
+Build/Check with `build-invalid`, naming the route and offending href. Never
+silently append instead. A missing `<head>` also fails rather than creating
+one. Preserve the renderer's other head content. Rebase all recorded
 UTF-16 style-ownership offsets after insertion and validate the final output
 through the normal ownership and source-protection pipeline. A compatibility
 transform must retain the links or fail normal output/resource validation.

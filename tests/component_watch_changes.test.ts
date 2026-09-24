@@ -17,19 +17,18 @@ import {
 } from "./helpers/watched_catalogue.js";
 
 test(
-  "watched component source and owned CSS stay out of consumer Changes until screen props change",
+  "watched component source and declared CSS stay out of consumer Changes until screen props change",
   { timeout: 60_000 },
   async (t) => {
     const source = componentEntrySource().replace(
       'id: "action",',
-      'id: "action", dependencies: ["mockups/action.css"], ownedDependencies: ["mockups/action.css"],',
+      'id: "action", stylesheets: ["action.css"],',
     );
     const fixture = await changedFixture(
       t,
       source,
       {
-        extraConfig:
-          'colorSchemes: ["light", "dark"], stylesheets: [{ match: "**", stylesheets: ["action.css"] }],',
+        extraConfig: 'colorSchemes: ["light", "dark"],',
       },
       async ({ mockupsDir }) => {
         await fs.writeFile(

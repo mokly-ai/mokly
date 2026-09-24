@@ -9,7 +9,6 @@ import {
   runWithTimings,
   type TimingEvent,
 } from "../dist/diagnostics/timings.js";
-import { ComponentDependencyPolicy } from "../dist/review/component_metadata.js";
 import { prepareComponentProjection } from "../dist/review/component_projection_resources.js";
 import { ComponentMaterialReader } from "../dist/review/component_resources.js";
 import { compareComponentView } from "../dist/review/component_view.js";
@@ -173,11 +172,6 @@ test("fall-through views reuse actual discovery in derived mode", async (t) => {
           {
             beforeReader,
             afterReader,
-            dependencies: new ComponentDependencyPolicy(
-              fixture.before.manifest,
-              fixture.after.manifest,
-              [],
-            ),
             changed: new Set(["mockups/image.svg"]),
             prefix: "mockups",
             resources: new ResourceComparison(
@@ -204,7 +198,7 @@ test("fall-through views reuse actual discovery in derived mode", async (t) => {
   assert.equal(await discoveryCount(true), 4);
 });
 
-test("projected discovery applies root-specific ownership before reading", async (t) => {
+test("projected discovery applies root-specific rendered resource ownership before reading", async (t) => {
   const image = '<img loading="lazy" src="../image.svg" />';
   const source = componentEntrySource({
     paneRender:
@@ -214,10 +208,7 @@ test("projected discovery applies root-specific ownership before reading", async
     extra:
       'const pane2 = defineComponent({ ...metadata, id: "pane2", title: "Pane2", description: "Nested receiver", route: "components/pane2.html", propSchema: { kind: "object", properties: {} }, slots: ["children"], render: (props) => <section>{props.children}</section>, variants: [{ id: "default", title: "Default", props: { children: <b>Saved</b> } }] });',
     exports: "action.entry, pane.entry, pane2.entry,",
-  }).replace(
-    'id: "pane", title:',
-    'id: "pane", dependencies: ["mockups/image.svg", "mockups/components/image.svg"], ownedDependencies: ["mockups/image.svg", "mockups/components/image.svg"], title:',
-  );
+  });
   const fixture = await createFixture(source);
   t.after(() => removeFixture(fixture));
   await fs.writeFile(path.join(fixture.mockupsDir, "image.svg"), "image");
@@ -231,9 +222,24 @@ test("projected discovery applies root-specific ownership before reading", async
   for (const id of ["home", "pane"] as const) {
     const entry = compilation.manifest.entries.find((item) => item.id === id);
     assert.ok(entry);
-    const view = generatedViews(entry)[0];
-    assert.ok(view);
-    assert.ok(view.usage?.slots.some((slot) => slot.owner.kind === "entry"));
+    const generated = generatedViews(entry)[0];
+    assert.ok(generated?.usage);
+    assert.ok(
+      generated.usage.slots.some((slot) => slot.owner.kind === "entry"),
+    );
+    const view = {
+      ...generated,
+      usage: {
+        ...generated.usage,
+        resources: [
+          ...generated.usage.resources,
+          {
+            path: id === "pane" ? "components/image.svg" : "image.svg",
+            componentIds: ["pane"],
+          },
+        ],
+      },
+    };
     const reads: string[] = [];
     const materialReader = () =>
       new ComponentMaterialReader({
@@ -255,11 +261,6 @@ test("projected discovery applies root-specific ownership before reading", async
     const context = {
       beforeReader,
       afterReader,
-      dependencies: new ComponentDependencyPolicy(
-        compilation.manifest,
-        compilation.manifest,
-        [],
-      ),
       changed,
       prefix: "mockups",
       resources: new ResourceComparison(
@@ -271,7 +272,6 @@ test("projected discovery applies root-specific ownership before reading", async
     };
     const html = await beforeReader.text(view.path);
     const prepared = prepareComponentProjection(
-      context,
       view,
       view,
       html,

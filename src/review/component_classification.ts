@@ -1,7 +1,5 @@
 import path from "node:path";
 
-import { minimatch } from "minimatch";
-
 import {
   canonicalJson,
   generatedViews,
@@ -29,7 +27,6 @@ import type { ComponentClassificationInput } from "./component_classification_in
 import { ComponentComparisonCounts } from "./component_comparison_counts.js";
 import {
   address,
-  ComponentDependencyPolicy,
   entryPairs,
   lexical,
   metadata,
@@ -37,10 +34,9 @@ import {
 } from "./component_metadata.js";
 import { variantAddress, viewPairs } from "./component_pairing.js";
 import {
-  exactScreenCssReasons,
-  propagateOwnedCss,
+  propagateOwnedResources,
   resourceImpact,
-  type OwnedCssReason,
+  type OwnedResourceReason,
 } from "./component_resource_attribution.js";
 import { ComponentMaterialReader } from "./component_resources.js";
 import { validateComponentReviewSources } from "./component_result_sources.js";
@@ -48,10 +44,7 @@ import {
   compareComponentView,
   type ComponentViewContext,
 } from "./component_view.js";
-import {
-  analysisOwnsStylesheet,
-  assertViewAnalysisScope,
-} from "./css/paths.js";
+import { assertViewAnalysisScope } from "./css/paths.js";
 import { CssResourceAnalysis } from "./css/resource_analysis.js";
 import { ResourceComparison } from "./resource_comparison.js";
 import { aggregateIgnored, aggregateState } from "./screen_views.js";
@@ -61,11 +54,6 @@ export async function classifyComponents(
   input: ComponentClassificationInput,
 ): Promise<ReviewResultV3> {
   const { before, after, changedPaths, config } = input;
-  const dependencies = new ComponentDependencyPolicy(
-    before,
-    after,
-    config.review.sharedImpact,
-  );
   const beforeReader = new ComponentMaterialReader(input.beforeReader);
   const afterReader = new ComponentMaterialReader(input.afterReader);
   const changed = new Set(changedPaths);
@@ -73,7 +61,6 @@ export async function classifyComponents(
   const context: ComponentViewContext = {
     beforeReader,
     afterReader,
-    dependencies,
     changed,
     prefix,
     resources: new ResourceComparison(
@@ -104,17 +91,12 @@ export async function classifyComponents(
       ),
     ),
   ]);
-  const sharedImpact = changedPaths.filter((path) =>
-    config.review.sharedImpact.some((glob) =>
-      minimatch(path, glob, { dot: true }),
-    ),
-  );
   const screens: ScreenReviewV3[] = [];
   const components: ComponentReview[] = [];
   const changes: ChangedEntry[] = [];
   const impacting = new Set<string>();
   const actualImplementations = new Set<string>();
-  const ownedResources: OwnedCssReason[] = [];
+  const ownedResources: OwnedResourceReason[] = [];
   const pairs = entryPairs(before, after);
   const beforeHierarchy = analyzeHierarchy<ManifestEntry>(
     before.entries as readonly ManifestEntry[],
@@ -140,15 +122,6 @@ export async function classifyComponents(
           metadata(pair.after, after, afterHierarchy)
       )
         reasons.push({ kind: "metadata" });
-      reasons.push(
-        ...dependencies
-          .reasons(pair.before, pair.after, changedPaths)
-          .filter(
-            (reason) =>
-              reason.kind !== "dependency" ||
-              !analysisOwnsStylesheet(reason.path, config),
-          ),
-      );
       const common = {
         ...address(entry),
         ...sides,
@@ -179,14 +152,7 @@ export async function classifyComponents(
         config,
       );
       reasons.push(...compared.flatMap((result) => result.reasons));
-      reasons.push(
-        ...exactScreenCssReasons(
-          pair.before,
-          pair.after,
-          compared.map((result) => result.view),
-        ),
-      );
-      common.sharedImpact = resourceImpact(sharedImpact, reasons);
+      common.sharedImpact = resourceImpact(reasons);
       ownedResources.push(
         ...compared.flatMap((result) => result.ownedResources),
       );
@@ -263,7 +229,7 @@ export async function classifyComponents(
     }
     timingCounts("review.compare-screens", () => comparisonCounts.record());
   });
-  propagateOwnedCss(ownedResources, impacting, components, changes);
+  propagateOwnedResources(ownedResources, impacting, components, changes);
   propagateImplementations(
     actualImplementations,
     impacting,
@@ -284,7 +250,11 @@ export async function classifyComponents(
     baseCommit: input.baseCommit,
     baseRef: input.baseRef,
     changedPaths: [...changedPaths].sort(),
-    sharedImpact,
+    sharedImpact: [
+      ...new Set(
+        [...screens, ...components].flatMap((entry) => entry.sharedImpact),
+      ),
+    ].sort(),
     screens,
     components,
     changes,

@@ -7,7 +7,6 @@ export default defineConfig({
   review: {
     base: "HEAD",
     outDir: ".review",
-    sharedImpact: ["notes.md"],
   },
   stylesheets: [
     {

@@ -23,12 +23,8 @@ test("shared source edits cannot turn the entire catalogue into Changes", async 
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const { manifest } = await compileCatalogue(config);
-  const shared = {
-    ...config,
-    review: { ...config.review, sharedImpact: ["src/**"] },
-  };
   assert.deepEqual(
-    changedManifestRoutes(manifest, manifest, shared, ["src/settings.tsx"]),
+    changedManifestRoutes(manifest, manifest, config, ["src/settings.tsx"]),
     [],
   );
 });

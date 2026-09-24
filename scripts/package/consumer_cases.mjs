@@ -277,8 +277,8 @@ export async function smokeThemedConsumer(context) {
     assert.equal(response.status, 200);
     review = await response.json();
   });
-  assert.deepEqual(review.sharedImpact, ["shared/tokens.ts"]);
-  assert.ok(review.screens.every((screen) => screen.sharedImpact.length === 1));
+  assert.deepEqual(review.sharedImpact, []);
+  assert.ok(review.screens.every((screen) => screen.sharedImpact.length === 0));
   await runBin(root, ["export", "--out", "published"]);
   await inspectConsumerExport(root, "published", "HEAD", [
     "view/archive/legacy-notice.html",

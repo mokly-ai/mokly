@@ -47,14 +47,7 @@ export async function cssAttributionFixture(
         'colorSchemes: ["light", "dark"], stylesheets: [{ match: "**/*.html", stylesheets: ["shared.css"] }],',
     },
     async (fixture) => {
-      const { mockupsDir, configPath } = fixture;
-      await fs.writeFile(
-        configPath,
-        (await fs.readFile(configPath, "utf8")).replace(
-          'sharedImpact: ["notes.md"]',
-          'sharedImpact: ["mockups/**"]',
-        ),
-      );
+      const { mockupsDir } = fixture;
       await fs.writeFile(
         path.join(mockupsDir, "shared.css"),
         '.auth { color: black; } .guide { color: black; } @font-face { font-family: Fixture; src: url("font.woff2"); } .asset { background: url("image.svg"); }',

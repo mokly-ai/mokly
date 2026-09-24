@@ -25,7 +25,6 @@ export default defineConfig({
   review: {
     base: "HEAD",
     outDir: ".context/mokly-review",
-    sharedImpact: ["packages/firna-ui/**", "shared/**"],
   },
   stylesheets: [
     { match: "app/**/*.html", stylesheets: ["app.css"] },

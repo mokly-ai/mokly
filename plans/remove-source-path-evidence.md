@@ -2,7 +2,7 @@
 
 ## Status And Outcome
 
-Status: in progress; Milestones 1–3 are complete and Milestones 4–8 remain.
+Status: in progress; Milestones 1–4 are complete and Milestones 5–8 remain.
 The binding Decisions And Scope remove all three inputs and adopt
 component-declared stylesheets in place of the stylesheet role of
 `ownedDependencies`. The user approved both the removals and the component
@@ -318,11 +318,11 @@ how CSS loads, not the design.
 Remove source-path evidence and `ownedDependencies` ownership from
 classification, and remove `review.sharedImpact`.
 
-- [ ] Preservation test first on the example: an edit to one exclusive design
+- [x] Preservation test first on the example: an edit to one exclusive design
       library stylesheet and an edit to `example-components.css` each list
       only their owning components in Changes, with consumers under Affected
       screens. It passes after Milestone 3 and must keep passing.
-- [ ] Classification: delete declared-path reasons, shared-glob reasons, the
+- [x] Classification: delete declared-path reasons, shared-glob reasons, the
       exact-screen CSS rule and `ownedDependencies` ownership, so ownership
       comes only from view usage `styles` and `resources` records
       (`component_metadata.ts`, `component_resource_attribution.ts`,
@@ -330,19 +330,27 @@ classification, and remove `review.sharedImpact`.
       `component_projection_resources.ts`). Remove dependency and shared-glob
       matching from `screen_compare.ts` and `compare.ts`, and delete
       `src/registry/dependency_paths.ts`.
-- [ ] Failure-first tests: with and without registered components, a changed
+- [x] Failure-first tests: with and without registered components, a changed
       repository file that no view renders adds nothing to Changes or
       comparison evidence, even when an entry still declares it.
-- [ ] Configuration: remove `review.sharedImpact` from types and validation,
+- [x] Configuration: remove `review.sharedImpact` from types and validation,
       reject the key with `config-invalid`, and delete it from the example,
       consumer fixture configs and test helpers.
-- [ ] Remove the impact counts and "Shared-impact paths" from `summary.md`
+- [x] Remove the impact counts and "Shared-impact paths" from `summary.md`
       (`artifact.ts`, `materiality.ts`).
-- [ ] Update or delete the tests that asserted source-path behavior,
+- [x] Update or delete the tests that asserted source-path behavior,
       including `tests/{review,server_changed,component_asset_changes,changes_css_ownership,server_changed_assets,export_cases,review_artifact_ui}.test.ts`
       and `scripts/package/consumer_cases.mjs`.
-- [ ] Run the focused review, Changes, CSS, component and design tests,
-      `npm run typecheck` and `npm run lint`.
+- [x] Align the component stylesheet contract and anchor test names with
+      validation of every configured link, not only its neighbours; define the
+      bundled marker's global key once and reuse it in the inline module.
+- [x] Preserve non-CSS renderer-resource ownership even when the only edited
+      resource is used at an actual invocation outside saved variants; add a
+      failure-first test for component Changes and affected consumers.
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
+      focused review, Changes, CSS, component, design, export and Serve tests,
+      `npm run typecheck`, `npm run lint`, the complete unit suite, and
+      `cargo xtask check`.
 
 Until Milestone 6, `dependencies` and `ownedDependencies` are accepted but have
 no effect on Changes or evidence. Until Milestone 7, comparison `sharedImpact`

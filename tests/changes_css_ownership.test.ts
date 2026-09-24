@@ -70,7 +70,9 @@ export default (input) => ({ html: '<html><head><link rel="stylesheet" href="' +
           committedReviewRepository(fixture.config),
         );
         const expected = matches
-          ? ["components/action.html", ...(exact ? ["screens/home.html"] : [])]
+          ? ownership === "dependency"
+            ? ["screens/home.html"]
+            : ["components/action.html"]
           : [];
         assert.deepEqual(live.changedRoutes, expected);
         const artifact = await compareReview(
@@ -105,7 +107,9 @@ export default (input) => ({ html: '<html><head><link rel="stylesheet" href="' +
         for (const component of result.components) {
           assert.deepEqual(
             component.sharedImpact,
-            matches && component.id === "action" ? ["mockups/action.css"] : [],
+            matches && ownership !== "dependency" && component.id === "action"
+              ? ["mockups/action.css"]
+              : [],
           );
           for (const variant of component.variants) {
             assert.equal(variant.views.length, 4);
@@ -118,7 +122,10 @@ export default (input) => ({ html: '<html><head><link rel="stylesheet" href="' +
             }
           }
         }
-        assert.equal(Boolean(result.affectedConsumers.length), matches);
+        assert.equal(
+          Boolean(result.affectedConsumers.length),
+          matches && ownership !== "dependency",
+        );
         const files = renderReviewArtifact(artifact);
         assert.deepEqual(
           parseReviewResult(JSON.parse(String(files.get("review.json")))),
@@ -126,7 +133,7 @@ export default (input) => ({ html: '<html><head><link rel="stylesheet" href="' +
         );
       });
 
-test("non-CSS declared public dependencies retain their existing file-level policy", async (t) => {
+test("non-CSS declared public dependencies do not create file-level evidence", async (t) => {
   const fixture = await changedFixture(
     t,
     componentEntrySource().replace(
@@ -143,11 +150,10 @@ test("non-CSS declared public dependencies retain their existing file-level poli
     "main",
     committedReviewRepository(fixture.config),
   );
-  assert.deepEqual(live.changedRoutes, ["components/action.html"]);
+  assert.deepEqual(live.changedRoutes, []);
   const result = live.componentChanges?.result;
   assert.equal(result?.schemaVersion, 3);
   if (result?.schemaVersion !== 3) return;
-  assert.deepEqual(result.changes[0]?.reasons, [
-    { kind: "dependency", path: "mockups/asset.svg" },
-  ]);
+  assert.deepEqual(result.changes, []);
+  assert.deepEqual(result.sharedImpact, []);
 });

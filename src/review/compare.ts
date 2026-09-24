@@ -1,7 +1,5 @@
 import path from "node:path";
 
-import { minimatch } from "minimatch";
-
 import type {
   ManifestScreen,
   Manifest,
@@ -95,11 +93,6 @@ export async function compareReview(
   const routes = [
     ...new Set([...baseByRoute.keys(), ...headByRoute.keys()]),
   ].sort();
-  const sharedImpact = changedPaths.filter((changed) =>
-    config.review.sharedImpact.some((glob) =>
-      minimatch(changed, glob, { dot: true }),
-    ),
-  );
   const screens: ScreenReview[] = [];
   const resources = new ResourceComparison(
     new ComponentMaterialReader(baseAssetReader),
@@ -119,8 +112,6 @@ export async function compareReview(
           head,
           baseDocuments,
           compilation,
-          changedPaths,
-          sharedImpact,
           files,
           baseSeeds,
           headSeeds,
@@ -148,7 +139,9 @@ export async function compareReview(
     ignoredImpact: aggregateIgnored(screens),
     schemaVersion: 2,
     screens,
-    sharedImpact,
+    sharedImpact: [
+      ...new Set(screens.flatMap((screen) => screen.sharedImpact)),
+    ].sort(),
   };
   return { files, result };
 }

@@ -17,13 +17,12 @@ import {
   validateReviewOut,
   validateSourceRoots,
 } from "./path_validation.js";
-import { resolveInside, validateRelativeRoute } from "./paths.js";
+import { resolveInside } from "./paths.js";
 import { resolvePublicExclude } from "./public_exclusions.js";
 import {
   requireString,
   validateColorSchemes,
   validateDebounce,
-  validateStringArray,
   validateStylesheets,
   validateWatchRules,
 } from "./rules.js";
@@ -44,6 +43,11 @@ export function resolveConfig(
     throw new MoklyError(
       "config-invalid",
       "legacy configuration was removed; register whole documents with definePage",
+    );
+  if (isRecord(value.review) && Object.hasOwn(value.review, "sharedImpact"))
+    throw new MoklyError(
+      "config-invalid",
+      "review.sharedImpact has been removed; delete this field.",
     );
   const input = value as unknown as MoklyConfig;
   const publicExclude = resolvePublicExclude(input.publicExclude);
@@ -144,10 +148,6 @@ export function resolveConfig(
       ...(baselineBuild ? { baselineBuild } : {}),
       base: input.review?.base ?? "origin/main",
       outDir: reviewOut,
-      sharedImpact: validateStringArray(
-        input.review?.sharedImpact ?? [],
-        "review.sharedImpact",
-      ).map((glob) => validateRelativeRoute(glob, "review.sharedImpact")),
     },
     stylesheets,
     watch: {

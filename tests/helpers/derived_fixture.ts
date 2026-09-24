@@ -24,7 +24,7 @@ export async function derivedFixture(
     `import { defineConfig } from "@mokly/mokly";
 export default defineConfig({
   generatedOutput: "derived", entriesDir: "entries", mockupsDir: "mockups",
-  review: { outDir: ".review", sharedImpact: ["**"], baselineBuild: [["node", "baseline.mjs"]] }
+  review: { outDir: ".review", baselineBuild: [["node", "baseline.mjs"]] }
 });\n`,
   );
   for (const [route, content] of Object.entries(publicFiles)) {

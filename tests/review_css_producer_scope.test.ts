@@ -73,8 +73,6 @@ for (const version of [2, 3])
                 screen,
                 documents,
                 fixture.after,
-                [resource],
-                [],
                 new Map(),
                 new Set(),
                 new Set(),

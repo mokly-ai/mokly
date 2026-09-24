@@ -5,6 +5,7 @@ import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { componentRuntime } from "../dist/build/component_runtime.js";
+import { insertComponentStylesheets } from "../dist/components/stylesheet_links.js";
 import { loadConfig } from "../dist/config/load.js";
 import { classifyWatchPath } from "../dist/server/watch_events.js";
 import { watchTargets } from "../dist/server/watch_paths.js";
@@ -209,7 +210,7 @@ for (const value of [
     );
   });
 
-test("missing configured anchor fails instead of silently appending component links", async (t) => {
+test("missing configured link fails instead of silently appending component links", async (t) => {
   const fixture = await fixtureWithSheets(
     declared(),
     'renderer: "renderer.tsx", stylesheets: [{ match: "**", stylesheets: ["base.css"] }],',
@@ -222,6 +223,21 @@ test("missing configured anchor fails instead of silently appending component li
   await assert.rejects(
     compileCatalogue(await loadConfig(fixture.root)),
     /base\.css/,
+  );
+});
+
+test("a configured link away from the insertion position must still be present", () => {
+  assert.throws(
+    () =>
+      insertComponentStylesheets(
+        '<html><head><link rel="stylesheet" href="b.css"><link rel="stylesheet" href="c.css"></head><body></body></html>',
+        "screens/home.html",
+        ["a.css", "b.css", "c.css"],
+        2,
+        ["action.css"],
+      ),
+    (error: Error & { code?: string }) =>
+      error.code === "build-invalid" && error.message.includes("a.css"),
   );
 });
 
@@ -242,7 +258,7 @@ for (const [name, head, pattern] of [
     /missing.*base\.css/,
   ],
 ] as const)
-  test(`rejects ${name} configured neighbours`, async (t) => {
+  test(`rejects ${name} configured links when inserting component links`, async (t) => {
     const fixture = await fixtureWithSheets(
       declared(),
       'renderer: "renderer.tsx", stylesheets: [{ match: "**", stylesheets: ["base.css", "extra.css"] }],',

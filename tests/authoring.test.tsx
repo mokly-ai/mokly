@@ -44,7 +44,7 @@ const validationConfig: ResolvedConfig = {
   mockupsDir: path.join(repositoryRoot, "mockups"),
   moduleResolution: { aliases: {}, loaders: {}, packageRoots: [] },
   repoRoot: repositoryRoot,
-  review: { base: "main", outDir: ".review", sharedImpact: [] },
+  review: { base: "main", outDir: ".review" },
   sourceFiles: [sourceRelativePath],
   stylesheets: [],
   watch: { debounceMs: 100, rules: [] },

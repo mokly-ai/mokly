@@ -8,8 +8,8 @@ records delivery. Unregistered catalogue and legacy behavior remains intact.
 Replacing source-path ownership with rendered stylesheet/resource attribution
 and applying one Changes rule to every catalogue is planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-delivered in Milestone 3 and planned for Milestone 4. The current code still uses source-path
-classification until Milestone 4.
+delivered across Milestones 3 and 4. Source paths no longer classify changes;
+Milestone 6 removes the legacy authoring fields.
 
 ## Changes Membership
 

@@ -3,7 +3,6 @@ import { test } from "node:test";
 
 import { classifyComponents } from "../dist/review/component_classification.js";
 import {
-  ComponentDependencyPolicy,
   metadata,
   type RoutedEntry,
 } from "../dist/review/component_metadata.js";
@@ -51,38 +50,6 @@ test("component metadata reuses a precomputed catalogue hierarchy", async (t) =>
   assert.equal(traversals, 0);
 });
 
-test("component dependency ownership is indexed once per changed path", async (t) => {
-  const fixture = await componentReviewFixture(t, (source) => source);
-  const sourceManifest = fixture.after.manifest;
-  assert.equal(sourceManifest.schemaVersion, 5);
-  let ownershipReads = 0;
-  const entries = sourceManifest.entries.map((entry) =>
-    entry.kind === "component"
-      ? new Proxy(entry, {
-          get(target, property, receiver) {
-            if (property === "ownedDependencies") ownershipReads += 1;
-            return Reflect.get(target, property, receiver);
-          },
-        })
-      : entry,
-  );
-  const manifest = { ...sourceManifest, entries };
-  const policy = new ComponentDependencyPolicy(manifest, manifest, []);
-  const screen = entries.find((entry) => entry.kind === "screen");
-  assert.ok(screen);
-  const changedPaths = Array.from(
-    { length: 24 },
-    (_, index) => `src/component-${index}.tsx`,
-  );
-
-  policy.reasons(screen, screen, changedPaths);
-  const firstPassReads = ownershipReads;
-  policy.reasons(screen, screen, changedPaths);
-
-  assert.ok(firstPassReads > 0);
-  assert.equal(ownershipReads, firstPassReads);
-});
-
 test("component views validate each retained document range index once", async (t) => {
   const fixture = await componentReviewFixture(t, (source) => source);
   const screen = fixture.after.manifest.entries.find(
@@ -107,11 +74,6 @@ test("component views validate each retained document range index once", async (
     {
       beforeReader: reader,
       afterReader: reader,
-      dependencies: new ComponentDependencyPolicy(
-        fixture.after.manifest,
-        fixture.after.manifest,
-        [],
-      ),
       changed: new Set(),
       prefix: "mockups",
       resources: new ResourceComparison(reader, reader, new Set(), "mockups"),

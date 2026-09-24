@@ -79,7 +79,7 @@ test(
   entries: ["**/*.mockup.{ts,tsx}"],
   mockupsDir: "mockups",
   repoRoot: ".",
-  review: { outDir: ".review", sharedImpact: ["notes.md"] },
+  review: { outDir: ".review" },
   watch: { debounceMs: 0 }
 };\n`,
     );

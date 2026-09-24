@@ -89,7 +89,14 @@ test("comparison artifacts contain data and snapshots without a separate UI", ()
     "snapshots/head/home.html",
     "summary.md",
   ]);
-  assert.match(String(files.get("summary.md")), /impact-only: 1/);
+  assert.match(
+    String(files.get("summary.md")),
+    /Screens: 1; output changes: 0;/,
+  );
+  assert.doesNotMatch(
+    String(files.get("summary.md")),
+    /Shared-impact paths|impact-only/,
+  );
 });
 
 test("empty comparisons still return a valid result", () => {
@@ -99,27 +106,29 @@ test("empty comparisons still return a valid result", () => {
   assert.match(String(files.get("summary.md")), /Screens: 0/);
 });
 
-for (const [state, outputChanges, impactOnly] of [
-  ["unchanged", 0, 1],
-  ["ignored-only", 0, 1],
-  ["changed", 1, 0],
-  ["added", 1, 0],
-  ["removed", 1, 0],
-] satisfies [ReviewState, number, number][]) {
-  test(`summary separates ${state} output from impact evidence`, () => {
+for (const [state, outputChanges] of [
+  ["unchanged", 0],
+  ["ignored-only", 0],
+  ["changed", 1],
+  ["added", 1],
+  ["removed", 1],
+] satisfies [ReviewState, number][]) {
+  test(`summary counts ${state} output without source-path impact`, () => {
     const summary = summaryMarkdown({
       ...result,
       screens: result.screens.map((screen) => ({ ...screen, state })),
     });
     assert.match(summary, new RegExp(`output changes: ${outputChanges};`));
-    assert.match(summary, /impact evidence: 1;/);
-    assert.match(summary, new RegExp(`impact-only: ${impactOnly}\\.`));
+    assert.doesNotMatch(
+      summary,
+      /impact evidence|impact-only|Shared-impact paths/,
+    );
     assert.doesNotMatch(summary, /material:/);
-    assert.match(summary, /`styles.css`/);
+    assert.doesNotMatch(summary, /`styles.css`/);
   });
 }
 
-test("ignored-only output without dependencies is not impact evidence", () => {
+test("ignored-only output does not create impact counts", () => {
   const summary = summaryMarkdown({
     ...result,
     sharedImpact: [],
@@ -130,8 +139,8 @@ test("ignored-only output without dependencies is not impact evidence", () => {
     })),
   });
   assert.match(summary, /output changes: 0;/);
-  assert.match(summary, /ignored-only: 1;/);
-  assert.match(summary, /impact evidence: 0; impact-only: 0\./);
+  assert.match(summary, /ignored-only: 1\./);
+  assert.doesNotMatch(summary, /impact evidence|impact-only/);
 });
 
 test("summary counts a screen once when several viewport and scheme views change", () => {

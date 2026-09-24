@@ -49,8 +49,6 @@ export interface ReviewConfig {
   base?: string;
   /** Config-relative artifact directory. */
   outDir?: string;
-  /** Repository-relative POSIX globs whose changes can affect many screens. */
-  sharedImpact?: readonly string[];
 }
 
 /** Temporary compatibility accepted during a consumer cutover. */

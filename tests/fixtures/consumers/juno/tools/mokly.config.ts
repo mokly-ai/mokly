@@ -6,7 +6,6 @@ export default defineConfig({
   repoRoot: "..",
   review: {
     outDir: "../.context/review",
-    sharedImpact: ["spec/ui/**"],
   },
   stylesheets: [{ match: "workspace/**/*.html", stylesheets: ["juno.css"] }],
 });

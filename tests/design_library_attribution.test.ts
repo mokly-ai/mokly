@@ -73,6 +73,53 @@ test("each exclusive library stylesheet changes its component and only affects r
     });
 });
 
+test("example declared CSS changes only its owners and reports consuming screens", async (t) => {
+  const fixture = await designLibraryFixture(t);
+  for (const [file, owners] of [
+    ["design-library/controls/tag-chip.css", ["design-ui-tag-chip"]],
+    ["example-components.css", ["example-action", "example-toolbar"]],
+  ] as const)
+    await t.test(file, async () => {
+      await fixture.reset();
+      await fixture.edit(
+        `examples/basic/generated/${file}`,
+        (source) => source + "\nbody { outline-width: 3px; }\n",
+      );
+      const result = await fixture.compare();
+      assert.deepEqual(
+        result.changes
+          .map((change) => (change.after ?? change.before)!.id)
+          .sort(),
+        [...owners].sort(),
+      );
+      const consumers = fixture.before.manifest.entries
+        .flatMap((entry) =>
+          entry.kind === "screen" &&
+          generatedViews(entry).some((view) =>
+            view.usage?.instances.some((instance) =>
+              (owners as readonly string[]).includes(instance.componentId),
+            ),
+          )
+            ? [entry.route]
+            : [],
+        )
+        .sort();
+      assert.ok(consumers.length > 0);
+      assert.deepEqual(
+        [
+          ...new Set(
+            result.affectedConsumers.flatMap((affected) =>
+              affected.consumer.kind === "screen"
+                ? [affected.consumer.route]
+                : [],
+            ),
+          ),
+        ].sort(),
+        consumers,
+      );
+    });
+});
+
 test("real implementation and saved metadata edits have distinct impact", async (t) => {
   const fixture = await designLibraryFixture(t);
   for (const [file, from, to, id, affects] of [

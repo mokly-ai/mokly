@@ -12,7 +12,8 @@ component classification or an additional resource analysis. See
 Removing source-path evidence and applying CSS rule analysis to linked
 component-declared stylesheets is planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-implemented in Milestones 3 and 4. The target rules below are not yet live.
+implemented in Milestones 3 and 4. Those attribution rules are now live;
+comparison-format changes remain planned for Milestone 7.
 
 ## Purpose
 

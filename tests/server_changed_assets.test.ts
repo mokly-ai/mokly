@@ -74,21 +74,17 @@ test("a newline-only stylesheet edit leaves every consumer out of Changes", asyn
   );
 });
 
-test("unused public files and broad shared-impact globs do not fill Changes", async (t) => {
+test("unused public files do not fill Changes", async (t) => {
   const fixture = await changedFixture(t);
   await fs.writeFile(
     path.join(fixture.mockupsDir, "unused.css"),
     "body { color: red; }",
   );
-  const config = {
-    ...fixture.config,
-    review: { ...fixture.config.review, sharedImpact: ["mockups/**"] },
-  };
   assert.deepEqual(
     await computeChangedRoutes(
-      config,
+      fixture.config,
       "HEAD",
-      committedReviewRepository(config),
+      committedReviewRepository(fixture.config),
     ),
     [],
   );
