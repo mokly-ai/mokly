@@ -19,7 +19,11 @@ export async function assertFreshSourceInventory(
   if (
     !isDeepStrictEqual(graph.sourceFiles, manifest.sourceFiles) ||
     !isDeepStrictEqual(
-      normalizeSourceFiles(manifest.sourceFiles, config.repoRoot),
+      normalizeSourceFiles(
+        manifest.sourceFiles,
+        config.repoRoot,
+        config.mockupsDir,
+      ),
       manifest.sourceFiles,
     )
   )

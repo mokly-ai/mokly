@@ -12,6 +12,10 @@ import {
   generatedOwnershipDenial,
   pendingGeneratedOrphanRoutes,
 } from "./ownership.js";
+import {
+  assertSafeGeneratedTree,
+  pruneEmptyGeneratedDirectories,
+} from "./reserved_tree.js";
 
 /** Atomically replace owned generated files with rollback on any failure. */
 export async function writeCompilation(
@@ -27,6 +31,7 @@ async function writeMeasured(
 ): Promise<void> {
   const destinationConfig = config;
   config = { ...config, sourceFiles: compilation.manifest.sourceFiles };
+  assertSafeGeneratedTree(config);
   timeSync("output.validate-targets", () =>
     rejectUnsafeTargets(compilation, config),
   );
@@ -88,6 +93,7 @@ async function writeMeasured(
       fs.promises.rm(temporaryRoot, { force: true, recursive: true }),
     );
   }
+  await pruneEmptyGeneratedDirectories(config);
   destinationConfig.sourceFiles = compilation.manifest.sourceFiles;
 }
 

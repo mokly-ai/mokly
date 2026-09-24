@@ -21,6 +21,7 @@ import {
   consumerReactPlugin,
   packageNodePaths,
 } from "./consumer_resolution.js";
+import { assertSafeGeneratedTree } from "./reserved_tree.js";
 import { graphSourceFiles, normalizeSourceFiles } from "./source_inventory.js";
 
 /** Consumer modules loaded in one React-safe esbuild graph. */
@@ -47,6 +48,7 @@ async function loadGraph(
   config: ResolvedConfig,
   evaluate: boolean,
 ): Promise<LoadedGraph> {
+  assertSafeGeneratedTree(config);
   const entrySources = timeSync("graph.discover", () =>
     discoverEntryModules(config),
   );
@@ -99,6 +101,7 @@ async function loadGraph(
           built.metafile,
           path.dirname(config.configPath),
           config.repoRoot,
+          config.mockupsDir,
         ),
         ...(config.configSourceFiles ?? [config.configPath]),
         ...entrySources,
@@ -108,6 +111,7 @@ async function loadGraph(
           : []),
       ],
       config.repoRoot,
+      config.mockupsDir,
     );
     if (!evaluate)
       return {

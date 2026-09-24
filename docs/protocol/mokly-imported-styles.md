@@ -2,10 +2,10 @@
 
 ## Delivery Status
 
-Approved target, not yet implemented. [The implementation plan](../../plans/imported-css-delivery.md)
-tracks the staged change. Current Build discards esbuild's CSS sibling output;
-until delivery lands, link separately authored public stylesheets using
-`stylesheets`. This contract extends [configuration](./mokly-configuration.md),
+Approved target; reserved-directory safety is implemented, while CSS delivery
+is pending. [The plan](../../plans/imported-css-delivery.md) tracks the stages.
+Until then, link authored CSS via `stylesheets`. This contract extends
+[configuration](./mokly-configuration.md),
 [rendering](./mokly-rendering.md), and [source protection](./mokly-source-protection.md)
 without changing manifest v5. [Exact diagnostics](./mokly-imported-styles-errors.md)
 are normative.
@@ -16,24 +16,30 @@ are normative.
 `mokly-generated/styles/<repository-relative root module path>.css` and
 `mokly-generated/assets/<repository-relative asset path>`. Preserve the module
 extension before `.css`: `src/home.mockup.tsx` becomes
-`mokly-generated/styles/src/home.mockup.tsx.css`. A shared asset has one route
-and identical bytes. Sources are private, not additional public copies. Every
-file beneath the reserved directory is generated output for ownership,
-orphan cleanup, Check and historical/current public-file classification;
-unrecognized files there are not consumer-authored public files.
+`mokly-generated/styles/src/home.mockup.tsx.css`. Shared assets have one route
+and identical bytes. Sources stay private. Every file in the reserved tree is
+owned output, including unknown orphans, for Check and public classification.
+Graph loading checks the tree before inventory (including the graph load that
+precedes derived Check); committed Check checks again before output comparison:
+the root must be a real directory, descendants real directories/files; reject the first
+sorted repo-relative symlink (even dangling), FIFO, socket or device without
+following it. Derived Check uses Git tracking for output ownership after its
+graph load. Successful Build prunes empty
+directories beneath the root (including it), never during rollback. Catalogue
+routes cannot begin with `mokly-generated/`; only portable `styles/**.css` and
+supported `assets/**` can be generated inside it, never HTML.
 
-Reject `entries` whose static prefix is the reserved directory or inside it,
-`entriesDir` equal to or inside it, `stylesheets` (shared/light/dark) local
-paths inside it, and `review.outDir` equal to or inside it. Entry discovery
-skips the reserved directory like `review.outDir`; broad entry globs remain
-valid, even when `entriesDir` equals `mockupsDir`. Reject consumer
-`publicExclude` globs only when **after brace expansion** the first path
-segment is literally `mokly-generated`; broad globs stay valid. Instead,
-Build rejects each generated stylesheet/asset route matching **any** public
-exclusion, including defaults, naming the route and glob. Reject authored
-inputs below the reserved directory through logical or realpath aliases.
-A generated route cannot collide with an inventoried source. Ordinary public
-files elsewhere beneath `mockupsDir` stay consumer-owned.
+Reject `entries` static prefixes, `entriesDir` and `review.outDir` at or inside
+the reserved tree, and local `stylesheets` (shared/light/dark) paths inside it.
+Resolve existing symlink aliases for these configured path boundaries as well.
+Discovery skips it like Review output; broad co-located `entries` globs remain
+valid. The existing `entriesDir === mockupsDir` ban remains: otherwise every
+public file becomes authored source. Reject a consumer `publicExclude` only if
+a brace-expanded alternative's first segment is literally `mokly-generated`.
+Build rejects generated stylesheet/asset routes matching **any** exclusion,
+defaults included, naming the route and glob. Reject authored inputs through
+logical/physical reserved aliases and generated routes colliding with sources;
+public files elsewhere under `mockupsDir` remain consumer-owned.
 
 ## Roots, Collection And Deduplication
 

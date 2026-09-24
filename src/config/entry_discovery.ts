@@ -20,7 +20,8 @@ import type { ResolvedConfig } from "./types.js";
  * The cache denial remains here for direct callers that bypass config validation.
  */
 export function discoverEntryModules(
-  config: Pick<ResolvedConfig, "entryGlobs" | "repoRoot" | "review">,
+  config: Pick<ResolvedConfig, "entryGlobs" | "repoRoot" | "review"> &
+    Partial<Pick<ResolvedConfig, "mockupsDir">>,
 ): string[] {
   const paths = discoveryPaths(config);
   const discovered = new Set<string>();
@@ -110,6 +111,8 @@ function entryModuleDenial(
   }
   if (isBaselineCachePath(module, repoRoot))
     return `is inside the private ${MOKLY_CACHE} directory`;
+  if (paths.generatedOutput && isInside(paths.generatedOutput.lexical, module))
+    return "is inside mokly-generated/";
   let real: string;
   try {
     real = projectRealPath(module);
@@ -119,6 +122,8 @@ function entryModuleDenial(
   }
   if (!isInside(repoRoot, module) || !isInside(realRepoRoot, real))
     return "resolves outside repoRoot through a symlink";
+  if (paths.generatedOutput && isInside(paths.generatedOutput.projected, real))
+    return "is inside mokly-generated/";
   if (
     isInside(reviewOutput.lexical, module) ||
     isInside(reviewOutput.projected, real)
@@ -142,9 +147,21 @@ function isSkippedEntryDirectory(
   paths: DiscoveryPaths,
   skippedRoots: string[],
 ): boolean {
-  if (path.resolve(candidate) === paths.reviewOutput.lexical) return true;
+  if (
+    path.resolve(candidate) === paths.reviewOutput.lexical ||
+    (paths.generatedOutput &&
+      isInside(paths.generatedOutput.lexical, candidate))
+  )
+    return true;
   try {
-    return projectRealPath(candidate) === paths.reviewOutput.projected;
+    const physical = projectRealPath(candidate);
+    return (
+      physical === paths.reviewOutput.projected ||
+      !!(
+        paths.generatedOutput &&
+        isInside(paths.generatedOutput.projected, physical)
+      )
+    );
   } catch (cause) {
     if (!isVanishedDirectory(cause))
       throw discoveryPathError(candidate, paths.repoRoot, cause);

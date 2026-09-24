@@ -8,6 +8,7 @@ import {
 } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
+import { isGeneratedRoute } from "../build/styles/routes.js";
 import { isInside } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 
@@ -32,6 +33,16 @@ export function validateRoute(
   violations: RegistryViolation[],
 ): void {
   const route = "route" in entry ? entry.route : "";
+  if (typeof route === "string" && isGeneratedRoute(route)) {
+    violations.push(
+      problem(
+        entry,
+        "invalid-route",
+        `route must not start with mokly-generated/: ${route}; choose a consumer-owned HTML route`,
+      ),
+    );
+    return;
+  }
   const invalid = !nonEmpty(route) || !isSafeCatalogueRoute(route);
   if (invalid) {
     violations.push(

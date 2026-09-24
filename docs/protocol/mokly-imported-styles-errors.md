@@ -45,6 +45,9 @@ their existing messages. Module suffix/path aliases are checked before load.
 | Generated stylesheet path not portable                    | `generated stylesheet route is not portable: {route}; rename the root module so every path segment is URL-safe`                                                                                                                                     |
 | Root path collision                                       | `generated route collision: {route}; give each entry root a distinct repository path`                                                                                                                                                               |
 | Generated stylesheet or asset excluded                    | `generated route matches public exclusion {glob}: {route}; narrow the exclusion so Mokly-generated files stay public`                                                                                                                               |
+| Symlink or non-regular entry in reserved directory        | `mokly-generated/ contains a symlink or non-regular entry: {file}; delete it before building or checking`                                                                                                                                           |
+| Invalid reserved output shape                             | `generated route is unsafe: {route}; use mokly-generated/styles/<root path>.css or mokly-generated/assets/<asset path> with supported extensions`                                                                                                   |
+| Catalogue route inside reserved directory                 | `route must not start with mokly-generated/: {route}; choose a consumer-owned HTML route`                                                                                                                                                           |
 | CSS transform failure                                     | `could not transform CSS {stylesheet}: {detail}; fix the stylesheet and rebuild`                                                                                                                                                                    |
 | CSS Modules identity collision                            | `CSS Modules generated name collision: {name} in {first} and {second}; rename one local name or file`                                                                                                                                               |
 | Cross-file CSS Modules composition                        | `CSS Modules cross-file composes is unsupported in {stylesheet}: {specifier}; compose within this file or use a global name`                                                                                                                        |
@@ -78,3 +81,14 @@ public-file check; in committed mode a matching generated file precedes any
 public-file failure in the same directory report. Ignored outside-root and
 `node_modules` paths are not errors. Existing `manifest-invalid` stale-source
 guidance remains `source inventory is stale; run mokly build before serving or publishing`.
+The catalogue-route text is the registry `invalid-route` violation message;
+historical manifest route validation uses `manifest-invalid` with that same
+message. For generated output, invalid route shape precedes exclusion matching;
+an exclusion match precedes generic authoring-source protection. The reserved
+filesystem entry check precedes consumer graph inventory, ownership walks,
+comparison and installation.
+The root itself must be a directory when it exists; every descendant must be
+a directory or regular file. The invalid-entry message names the first entry
+in sorted repository-relative path order, including the root if invalid.
+The authoring-input message names the logical path when that identity is inside
+the reserved tree, otherwise the physical path when a symlink points inside it.

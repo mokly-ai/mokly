@@ -8,6 +8,7 @@ import { MoklyError, errorMessage } from "../errors.js";
 import type { GitCommandRunner } from "../review/git.js";
 
 import type { Compilation } from "./compile.js";
+import { GENERATED_DIRECTORY } from "./styles/routes.js";
 import { trackedOwnedOutput } from "./tracked_ownership.js";
 
 /** Git index boundary for derived output validation; it never writes generated files. */
@@ -63,14 +64,30 @@ export class GitTrackedGeneratedOutput implements TrackedGeneratedOutput {
         .filter(
           (name) =>
             generated.has(name) ||
+            prefixes.some((prefix) =>
+              name.startsWith(
+                `${prefix ? `${prefix}/` : ""}${GENERATED_DIRECTORY}/`,
+              ),
+            ) ||
             name === MOKLY_CACHE ||
             name.startsWith(`${MOKLY_CACHE}/`),
         )
         .sort();
       if (!invalid.length) return;
+      const reservedIgnoreRules = prefixes
+        .filter((prefix) =>
+          invalid.some((name) =>
+            name.startsWith(
+              `${prefix ? `${prefix}/` : ""}${GENERATED_DIRECTORY}/`,
+            ),
+          ),
+        )
+        .map(
+          (prefix) => `/${prefix ? `${prefix}/` : ""}${GENERATED_DIRECTORY}/`,
+        );
       throw new MoklyError(
         "build-invalid",
-        `derived output must not be tracked by Git:\n${invalid.map((name) => `  - ${name}`).join("\n")}\nRemove these paths from the index with git rm --cached and add these rules to .gitignore:\n${invalid.map((name) => `/${name}`).join("\n")}\n/${MOKLY_CACHE}/`,
+        `derived output must not be tracked by Git:\n${invalid.map((name) => `  - ${name}`).join("\n")}\nRemove these paths from the index with git rm --cached and add these rules to .gitignore:\n${[...new Set([...invalid.map((name) => `/${name}`), ...reservedIgnoreRules]), `/${MOKLY_CACHE}/`].join("\n")}`,
       );
     } catch (error) {
       if (

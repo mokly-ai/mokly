@@ -10,12 +10,14 @@ import {
   pendingGeneratedOrphanRoutes,
   unclaimedGeneratedRoutes,
 } from "./ownership.js";
+import { assertSafeGeneratedTree } from "./reserved_tree.js";
 
 /** Compare expected bytes with committed output without writing anything. */
 export function checkCompilation(
   compilation: Compilation,
   config: ResolvedConfig,
 ): void {
+  assertSafeGeneratedTree(config);
   config = { ...config, sourceFiles: compilation.manifest.sourceFiles };
   const missing: string[] = [];
   const stale: string[] = [];

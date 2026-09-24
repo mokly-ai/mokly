@@ -3,8 +3,9 @@
 ## Status
 
 Active. Created 2026-09-24 from the CSS-in-JS investigation on this branch.
-Milestones 1, 1A, and 2 (contract and binary-safe output groundwork) are complete;
-Milestones 3–9 have not started. PostCSS will let Tailwind v4 and autoprefixer
+Milestones 1, 1A, 2, and 3 (contract, binary-safe output, and reserved generated
+directory groundwork) are complete; Milestones 4–9 have not started. PostCSS
+will let Tailwind v4 and autoprefixer
 use the consumer's configuration. Esbuild remains the only bundler; the optional
 Vite compatibility package is a follow-up plan.
 
@@ -55,6 +56,12 @@ the same inventory.
    `mokly-generated`; Build rejects generated routes matched by any exclusion
    (including defaults), naming the glob. Build replaces its contents
    transactionally and removes files that the compilation no longer produces.
+   Graph loading (including derived Check's prerequisite graph) and committed
+   Check reject any symlink or non-regular entry in the reserved tree before
+   walking it, without following the entry. Successful
+   Builds prune only empty directories below the reserved root. Catalogue HTML
+   routes may not begin with `mokly-generated/`; only portable generated CSS
+   and asset routes with supported extensions are admitted there.
    Committed Check reports any unexpected file there as an orphan; derived
    Check rejects Git-tracked files there with the existing `.gitignore`
    guidance plus one directory rule.
@@ -285,33 +292,50 @@ images as generated files.
       `cargo xtask check` with 100% pass rate; commit with a file/heredoc body
       and push the branch.
 
-## Milestone 3: Reserved generated directory
+## Milestone 3: Reserved generated directory (complete)
 
 Establish `mokly-generated/` as package-owned output before anything writes to
 it.
 
-- [ ] Add `src/build/styles/routes.ts` with the reserved directory constant,
+- [x] Add `src/build/styles/routes.ts` with the reserved directory constant,
       the stylesheet and asset route derivations, and portable-segment
       validation with the documented npm-scope exception and error text.
-- [ ] Reject reserved `stylesheets` paths in `src/config/rules.ts`, static
+- [x] Define and reject reserved-directory symlinks and non-regular entries
+      before Build/committed Check ownership walks, without following them;
+      test root symlinks, nested symlinks, and non-regular entries.
+- [x] Report the first invalid reserved entry in full path sort order, even
+      when a sibling file sorts before a nested entry in an earlier directory.
+- [x] Reject catalogue routes starting with `mokly-generated/`, and admit only
+      portable stylesheet/asset routes of the documented shapes and extensions
+      within it; test rejected shapes and valid synthetic outputs.
+- [x] Prune empty directories below the reserved root only on successful
+      Build, without changing failed-write rollback; test nested cleanup.
+- [x] Enforce literal-first-segment brace-expanded consumer public exclusions
+      and Build-time collisions against all exclusions, including defaults,
+      with the catalogued diagnostic and tests.
+- [x] Clarify co-located `entries` globs versus the existing rejection of
+      `entriesDir === mockupsDir`; keep other protocol and README references
+      consistent with the implemented boundary.
+- [x] Reject reserved `stylesheets` paths in `src/config/rules.ts`, static
       `entries` prefixes in `src/config/entry_globs.ts`, an equal-or-inside
       `entriesDir`/`review.outDir`, and brace-expanded first-segment
       `publicExclude` in `src/config/public_exclusions.ts`. Skip the reserved
       directory during broad entry discovery; check generated stylesheet/asset
       routes against **all** public exclusions (including defaults) in
       `src/build/output_paths.ts`, and reject inventoried sources inside it.
-- [ ] Extend `src/build/ownership.ts` so `generatedOwnershipDenial`,
+- [x] Extend `src/build/ownership.ts` so `generatedOwnershipDenial`,
       `pendingGeneratedOrphanRoutes`, and `unclaimedGeneratedRoutes` treat every
       regular file inside the reserved directory as owned generated output.
-- [ ] Extend derived Check in `src/build/tracked_output.ts` to add the
+- [x] Extend derived Check in `src/build/tracked_output.ts` to add the
       directory rule to its `.gitignore` guidance when a tracked file is inside
       the reserved directory.
-- [ ] Add `tests/build_generated_directory.test.ts` covering each validation
-      rejection, including broad entry globs and `publicExclude` route
-      collisions; orphan cleanup on Build, committed Check orphan reporting,
-      derived Check rejection with the directory rule, and that consumer public
-      files elsewhere under `mockupsDir` are untouched.
-- [ ] Run the build, relevant tests, and `cargo xtask check`.
+- [x] Add `tests/build_generated_directory.test.ts` and
+      `tests/config_generated_directory.test.ts` covering validation rejections,
+      including broad entry globs and `publicExclude` route collisions; orphan
+      cleanup on Build, committed Check orphan reporting, derived Check rejection
+      with the directory rule, and consumer public files elsewhere under
+      `mockupsDir` remaining untouched.
+- [x] Run the build, relevant tests, and `cargo xtask check`.
 
 ## Milestone 4: Collect and bundle imported CSS
 

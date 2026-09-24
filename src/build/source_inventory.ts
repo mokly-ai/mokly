@@ -14,6 +14,7 @@ import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 
 import type { SourceDenial } from "./source_denial.js";
+import { GENERATED_DIRECTORY } from "./styles/routes.js";
 
 /** Names reserved for authoring, including stale helpers no longer imported. */
 function isReservedSource(candidate: string): boolean {
@@ -123,7 +124,8 @@ function isListedSource(candidate: string, config: ResolvedConfig): boolean {
   return files.has(toPosixPath(path.relative(config.repoRoot, candidate)));
 }
 
-function matchingPublicExclusion(
+/** Identify the first exclusion matching a mockups-relative path, including defaults. */
+export function matchingPublicExclusion(
   candidate: string,
   root: string,
   globs: readonly string[],
@@ -145,6 +147,7 @@ export function graphSourceFiles(
   metafile: Metafile,
   workingDir: string,
   repoRoot: string,
+  mockupsDir: string,
 ): string[] {
   const runtime = path.resolve(fileURLToPath(new URL("../", import.meta.url)));
   const viewerRuntime = fs.realpathSync(
@@ -158,15 +161,18 @@ export function graphSourceFiles(
     if (real.split(path.sep).includes("node_modules")) return [];
     return [absolute];
   });
-  return normalizeSourceFiles(candidates, repoRoot);
+  return normalizeSourceFiles(candidates, repoRoot, mockupsDir);
 }
 
 /** Prove regular in-repository inputs and retain logical and physical identities. */
 export function normalizeSourceFiles(
   files: readonly string[],
   repoRoot: string,
+  mockupsDir: string,
 ): string[] {
   const inventory = new Set<string>();
+  const reservedRoot = path.join(mockupsDir, GENERATED_DIRECTORY);
+  const realReservedRoot = projectRealPath(reservedRoot);
   for (const file of files) {
     const absolute = path.resolve(repoRoot, file);
     const location = locatePath(absolute, repoRoot);
@@ -179,6 +185,12 @@ export function normalizeSourceFiles(
       location.relativePath,
       location.physicalRelativePath,
     ]) {
+      const logicalReserved = isInside(reservedRoot, absolute);
+      if (logicalReserved || isInside(realReservedRoot, location.physicalPath))
+        throw new MoklyError(
+          "build-invalid",
+          `authoring input is inside mokly-generated/: ${logicalReserved ? location.relativePath : location.physicalRelativePath}; move authored sources outside Mokly's output directory`,
+        );
       if (!isSafeRepositoryPath(relative))
         throw new MoklyError(
           "build-invalid",

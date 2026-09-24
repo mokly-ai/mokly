@@ -101,6 +101,7 @@ export async function loadConfig(
       result.metafile,
       path.dirname(configPath),
       config.repoRoot,
+      config.mockupsDir,
     );
     return config;
   } catch (error) {

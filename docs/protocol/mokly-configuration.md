@@ -9,8 +9,10 @@ behavior; imported-CSS additions below describe an approved target.
 Existing settings are implemented, including glob-based entry
 discovery through `entries` and the `entriesDir` shorthand delivered by the
 [co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
-The `postcss` key and reserved CSS output rules are targets of
-[imported stylesheet delivery](./mokly-imported-styles.md).
+The reserved CSS output directory and its configuration guardrails are
+implemented. The `postcss` key and CSS delivery remain targets of
+[imported stylesheet delivery](./mokly-imported-styles.md); see its
+[diagnostics](./mokly-imported-styles-errors.md) for exact reserved-path errors.
 
 ## Configuration Discovery
 

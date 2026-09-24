@@ -5,12 +5,21 @@ validates the complete catalogue and produces deterministic HTML and manifest v5
 The supported external interface is `mokly build` and `mokly check`; Serve,
 export and local prop controls reuse the same consumer graph and validators.
 
-Imported CSS delivery is an [approved target](../../docs/protocol/mokly-imported-styles.md),
-not yet implemented. It adds a per-root stylesheet pass, private PostCSS
+Imported CSS delivery is a [partially implemented target](../../docs/protocol/mokly-imported-styles.md).
+Its remaining milestones add a per-root stylesheet pass, private PostCSS
 dependency inventory, and binary-safe generated assets beneath the reserved
 `mokly-generated/` directory. Currently an imported stylesheet enters the
 graph's source inventory but esbuild's sibling CSS output is discarded; use
 authored public CSS with `stylesheets` until the target is implemented.
+The reserved directory is already package-owned: Build removes unexpected
+regular files there as orphans, and committed Check reports them. The root
+and descendants cannot be symlinks or special files; Build and committed Check
+reject them before graph inventory or output writes. Build prunes empty reserved
+directories after successful writes, without touching ordinary public files.
+Derived Check rejects every indexed file there and suggests the directory
+`.gitignore` rule. Only portable stylesheet and supported asset routes may be
+written beneath it. The exact diagnostics and precedence are in the
+[imported-styles error contract](../../docs/protocol/mokly-imported-styles-errors.md).
 
 ## Consumer Graph
 
@@ -30,7 +39,7 @@ under an earlier glob precedes a later zero-match failure; reversing those globs
 reverses that diagnostic precedence. Each glob must retain a module so another
 valid glob cannot hide a typo or omission.
 
-Walks skip `review.outDir` and denied directory trees. Directories that vanish
+Walks skip `review.outDir`, `mockupsDir/mokly-generated/`, and denied directory trees. Directories that vanish
 or are replaced mid-walk (`ENOENT` or `ENOTDIR`) are skipped and listed with
 denied paths in zero-match diagnostics. Other read or projection errors fail
 with `config-invalid`, naming the repository-relative path and error code

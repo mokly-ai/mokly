@@ -1,9 +1,15 @@
 import { isSafeCatalogueRoute, isSafeRepositoryPath } from "@mokly/viewer/data";
 
+import { isGeneratedRoute } from "../build/styles/routes.js";
 import { MoklyError } from "../errors.js";
 
 /** Validate a portable routed catalogue URL. */
 export function validateRoute(route: string, label: string): void {
+  if (isGeneratedRoute(route))
+    throw new MoklyError(
+      "manifest-invalid",
+      `route must not start with mokly-generated/: ${route}; choose a consumer-owned HTML route`,
+    );
   if (!isSafeCatalogueRoute(route)) {
     throw new MoklyError("manifest-invalid", `${label} has an unsafe route`);
   }
