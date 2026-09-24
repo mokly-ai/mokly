@@ -1,0 +1,79 @@
+# Imported Stylesheet Diagnostics
+
+## Delivery Status
+
+Approved target of [imported stylesheet delivery](./mokly-imported-styles.md).
+Each message below is the complete `MoklyError` message body; the CLI adds
+its normal `[mokly/<code>]` prefix. Placeholders are unquoted POSIX paths
+relative to `repoRoot` unless named `config-path` (config-relative), `url`
+(the authored URL), `glob` (authored pattern) or `detail` (underlying error).
+`stylesheet` means the repo-relative physical CSS file that ran PostCSS;
+`plugin` is its PostCSS plugin name. List multiple failures in stable
+repo-relative path order and report the first according to the precedence
+in the parent contract.
+
+## Configuration (`config-invalid`)
+
+| Failure                                                    | Exact message                                                                                                                     |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Reserved `entries` glob                                    | `entries must not select mokly-generated/: {glob}; narrow the entry glob to authored files`                                       |
+| Reserved `entriesDir`                                      | `entriesDir must not select mokly-generated/: {config-path}; choose a directory of authored entry modules`                        |
+| Reserved `stylesheets` path                                | `stylesheets[{index}].{field} must not reference mokly-generated/: {path}; link imported CSS through the renderer instead`        |
+| Reserved `publicExclude` glob                              | `publicExclude must not match mokly-generated/: {glob}; Mokly owns every file there`                                              |
+| Reserved Review directory                                  | `review.outDir must not be inside mokly-generated/; choose a separate artifact directory`                                         |
+| Consumer `.css` or `.module.css` loader other than `empty` | `moduleResolution.loaders[{extension}] is package-owned; only "empty" is allowed to opt out of imported CSS delivery`             |
+| `postcss` empty/non-string/escaping path                   | `postcss must name a config-relative module inside repoRoot: {config-path}; choose an existing .ts, .mts, .js, .mjs or .cjs file` |
+| `postcss` missing, non-file or unsupported suffix          | `postcss module must be an existing regular .ts, .mts, .js, .mjs or .cjs file inside repoRoot: {config-path}`                     |
+| `postcss` module load/default export failure               | `could not load postcss module {config-path}: {detail}; default-export an object with plugins`                                    |
+| Unsupported module object key                              | `postcss configuration has unsupported key: {key}; only plugins and map are supported`                                            |
+| Invalid/missing `plugins`                                  | `postcss plugins must be an array of plugin instances or an object mapping package names to option objects`                       |
+| Invalid plugin array element                               | `postcss plugins[{index}] must be a PostCSS plugin instance`                                                                      |
+| Invalid plugin options                                     | `postcss plugins[{plugin}] must be a plain option object`                                                                         |
+| Plugin name resolution/factory failure                     | `could not load PostCSS plugin {plugin} from {config-path}: {detail}; install and configure it in the consumer repository`        |
+
+The `stylesheets` `{field}` is `stylesheets`, `lightStylesheets` or
+`darkStylesheets`; `{index}` is zero-based. A public exclusion is rejected
+when its matcher could match any path under the reserved directory, even if
+the directory does not exist yet. Other existing configuration errors retain
+their existing messages. Module suffix/path aliases are checked before load.
+
+## Build (`build-invalid`)
+
+| Failure                                                   | Exact message                                                                                                                                                                                                                                       |
+| --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Inventoried authoring file below reserved directory       | `authoring input is inside mokly-generated/: {file}; move authored sources outside Mokly's output directory`                                                                                                                                        |
+| Generated stylesheet path not portable                    | `generated stylesheet route is not portable: {route}; rename the root module so every path segment is URL-safe`                                                                                                                                     |
+| Root path collision                                       | `generated route collision: {route}; give each entry root a distinct repository path`                                                                                                                                                               |
+| CSS transform failure                                     | `could not transform CSS {stylesheet}: {detail}; fix the stylesheet and rebuild`                                                                                                                                                                    |
+| CSS Modules identity collision                            | `CSS Modules generated name collision: {name} in {first} and {second}; rename one local name or file`                                                                                                                                               |
+| Cross-file CSS Modules composition                        | `CSS Modules cross-file composes is unsupported in {stylesheet}: {specifier}; compose within this file or use a global name`                                                                                                                        |
+| Cyclic CSS Modules composition                            | `CSS Modules composition cycle in {stylesheet}: {local}; remove the cycle`                                                                                                                                                                          |
+| Non-JS output from graph (including JS `file` loader)     | `consumer graph emitted an undelivered file: {file}; use a dataurl or binary loader for JavaScript assets instead of file`                                                                                                                          |
+| Root-absolute CSS URL                                     | `root-absolute CSS url() is not portable in {stylesheet}: {url}; use a path relative to the stylesheet`                                                                                                                                             |
+| Relative CSS URL missing, non-file or escaping `repoRoot` | `CSS asset is not a regular file inside repoRoot in {stylesheet}: {url}; move it inside the repository or fix the relative path`                                                                                                                    |
+| Relative CSS URL unsupported extension                    | `unsupported CSS asset extension in {stylesheet}: {url}; use .avif, .bmp, .gif, .ico, .jpeg, .jpg, .png, .svg, .webp, .eot, .otf, .ttf, .woff or .woff2`                                                                                            |
+| Non-portable asset route                                  | `CSS asset route is not portable: {file}; rename every path segment to be URL-safe (letters, digits, dot, underscore, tilde or hyphen; no spaces or device names)`                                                                                  |
+| Missing/invalid local CSS `@import`                       | `could not resolve CSS @import in {stylesheet}: {specifier}; use an existing stylesheet inside repoRoot`                                                                                                                                            |
+| PostCSS plugin throws                                     | `PostCSS plugin {plugin} failed for {stylesheet}: {detail}; fix the plugin configuration or stylesheet`                                                                                                                                             |
+| Malformed plugin dependency message                       | `PostCSS plugin {plugin} reported an invalid dependency for {stylesheet}; report a file or directory path and optional glob`                                                                                                                        |
+| Missing/non-file explicit plugin dependency               | `PostCSS plugin {plugin} reported a missing dependency for {stylesheet}: {file}; make it a regular file or correct the plugin`                                                                                                                      |
+| Missing/non-directory plugin directory dependency         | `PostCSS plugin {plugin} reported a missing directory dependency for {stylesheet}: {directory}; create the directory or correct the plugin`                                                                                                         |
+| Explicit Mokly output dependency (either mode)            | `PostCSS plugin {plugin} scanned Mokly-generated output in {stylesheet}: {file}; exclude mockupsDir from the plugin's sources (Tailwind: @source not "{relative-mockups-dir}")`                                                                     |
+| Committed directory glob reaches Mokly output             | `PostCSS plugin {plugin} directory dependency scans Mokly-generated output in {stylesheet}: {file}; exclude mockupsDir by excluding the matching scan root (Tailwind: @source not "{relative-reported-dir}" or source(none) with explicit @source)` |
+| Explicit public file below `mockupsDir`                   | `PostCSS plugin {plugin} scanned a public mockups file in {stylesheet}: {file}; exclude mockupsDir from the plugin's sources (Tailwind: @source not "{relative-mockups-dir}")`                                                                      |
+| Directory glob reaches a public mockups file              | `PostCSS plugin {plugin} directory dependency scans a public mockups file in {stylesheet}: {file}; exclude mockupsDir by excluding the matching scan root (Tailwind: @source not "{relative-reported-dir}" or source(none) with explicit @source)`  |
+
+An imported CSS asset that is a public file inside `mockupsDir` and is not
+already a graph source fails with `build-invalid` and the exact message:
+`CSS asset is already public in {stylesheet}: {file}; move the imported asset outside mockupsDir or keep it as a separately linked public file`.
+
+`{relative-mockups-dir}` is the path from the offending stylesheet's
+directory to `mockupsDir`, prefixed with `./` if neither `.` nor `..` starts
+it, with POSIX separators. `{relative-reported-dir}` is the same relative
+form for the matching `dir-dependency.dir`; it can be an ancestor of
+`mockupsDir`. Directory errors name the first matching existing
+file, sorted by path. The explicit-generated check precedes the
+public-file check; in committed mode a matching generated file precedes any
+public-file failure in the same directory report. Ignored outside-root and
+`node_modules` paths are not errors. Existing `manifest-invalid` stale-source
+guidance remains `source inventory is stale; run mokly build before serving or publishing`.

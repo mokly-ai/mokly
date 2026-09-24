@@ -152,10 +152,16 @@ from different package versions.
 
 ## Writing And Verification Rules
 
-- Document only commands, flags, fields, exports, and behavior verified against
-  the current implementation.
-- Use present tense. Do not use "coming soon", invent customers or figures, or
-  tell readers what Mokly does not do.
+- Document shipped commands, flags, fields, exports, and behavior only after
+  verification against the current implementation. A guide about an approved
+  **unshipped target** is permitted when its opening section explicitly marks
+  the target as unimplemented, explains the current working alternative, and
+  labels target-only field table entries; do not present target examples as
+  runnable in the installed version. The imported-CSS guide is this exception
+  until its implementation ships.
+- Use present tense for current behavior and conditional language for a
+  target. Do not use "coming soon", invent customers or figures, or list
+  unrelated absent features in place of actionable guidance.
 - Prefer one concept per page and keep a guide around 200 lines or fewer.
 - Use product nouns in headings. Put exact code identifiers in code spans,
   tables, or examples.

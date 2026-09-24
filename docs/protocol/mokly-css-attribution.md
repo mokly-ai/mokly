@@ -49,6 +49,17 @@ versions. One shared predicate answers "is this stylesheet in analysis scope"
 for every classification path; a path is stripped from `sharedImpact` only when
 that predicate is true.
 
+Under the [approved imported-CSS target](./mokly-imported-styles.md),
+generated linked stylesheets inside `mokly-generated/styles/` meet this
+public-file predicate. Rule-level analysis compares their emitted bytes and
+matches changed rules against each before/after view, including CSS Modules
+selectors. Their original `.css`/`.module.css` files and plugin dependencies
+remain private inputs in `sourceFiles`: they trigger rebuilds but are not
+additional public CSS analyzed as if linked. One imported source can
+contribute to multiple emitted root bundles; analyze each reachable generated
+route, not its source path. A baseline built by older Mokly without generated
+links produces a one-time Changes jump for the linked views.
+
 Per-view evidence records are emitted only for views with at least one reason
 or excluded resource. Views and screens with neither carry no record in the
 live classification snapshot or in static exports.

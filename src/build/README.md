@@ -5,6 +5,13 @@ validates the complete catalogue and produces deterministic HTML and manifest v5
 The supported external interface is `mokly build` and `mokly check`; Serve,
 export and local prop controls reuse the same consumer graph and validators.
 
+Imported CSS delivery is an [approved target](../../docs/protocol/mokly-imported-styles.md),
+not yet implemented. It adds a per-root stylesheet pass, private PostCSS
+dependency inventory, and binary-safe generated assets beneath the reserved
+`mokly-generated/` directory. Currently an imported stylesheet enters the
+graph's source inventory but esbuild's sibling CSS output is discarded; use
+authored public CSS with `stylesheets` until the target is implemented.
+
 ## Consumer Graph
 
 `config/entry_discovery.ts` resolves the configured `entries` globs, or the

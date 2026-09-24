@@ -124,6 +124,12 @@ screen-route rule applies to both viewports and every enabled scheme. Shared
 stylesheets come first, followed by the matching scheme-specific list.
 Generated fragment links are relative to the fragment route and URL-encoded by
 segment.
+In the [approved imported-CSS target](./mokly-imported-styles.md), the
+configured renderer stylesheet follows these links, then the entry
+stylesheet, even when no configured rule matches. The built-in renderer adds
+none; the custom renderer emits any `<link>` tags. Complete page callbacks
+receive no `RenderInput` or injected links; their entry CSS is still generated
+for explicit relative linking.
 Shell and device-frame CSS is package-owned and self-contained; product CSS is
 never copied into the npm package.
 
@@ -139,6 +145,15 @@ never copied into the npm package.
   effective schemes include dark;
 - one complete HTML document at each page route;
 - `mokly-manifest.json` using schema version 5.
+
+The imported-CSS target additionally owns
+`mokly-generated/styles/<repository-relative root module path>.css` for each
+root with CSS and `mokly-generated/assets/<repository-relative asset path>`
+for referenced local assets. Every regular file below `mokly-generated/`
+is owned output and removed as an orphan when absent from the next
+compilation. There is no manifest schema bump. Stylesheets are generated for
+pages, but never automatically linked into callback output. See the
+[route and error contract](./mokly-imported-styles.md).
 
 Screen and use-case routes are durable identifiers and do not imply a composed
 HTML file. A screen's fragments are bare product renders with required head

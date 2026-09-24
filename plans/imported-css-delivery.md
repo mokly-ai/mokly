@@ -2,11 +2,11 @@
 
 ## Status
 
-Active. Created 2026-09-24 from the CSS-in-JS investigation on this branch. No
-milestone has started. Updated the same day to include PostCSS, so Tailwind v4
-and autoprefixer work through the consumer's own PostCSS configuration. The plan
-keeps esbuild as the only bundler; the optional Vite compatibility package is
-recorded as a follow-up plan.
+Active. Created 2026-09-24 from the CSS-in-JS investigation on this branch.
+Milestone 1 (documentation and protocol contract) is complete; Milestones
+2–9 have not started. PostCSS will let Tailwind v4 and autoprefixer use the
+consumer's configuration. Esbuild remains the only bundler; the optional Vite
+compatibility package is a follow-up plan.
 
 ## Problem
 
@@ -56,8 +56,10 @@ the same inventory.
    Check rejects Git-tracked files there with the existing `.gitignore`
    guidance plus one directory rule.
 2. **One stylesheet per root module, never one global bundle.** The roots are
-   the configured renderer module and every resolved entry module. Each root
-   whose import graph reaches at least one stylesheet gets
+   the configured renderer module first (not the built-in renderer), followed
+   by every resolved entry module sorted by repository-relative path.
+   Transformer-only CSS is inventoried, including nested imports and assets,
+   but never delivered. Each root whose import graph reaches at least one stylesheet gets
    `mokly-generated/styles/<repository-relative module path>.css`, for example
    `mokly-generated/styles/src/screens/home.mockup.tsx.css`. Keeping the full
    module path including its extension avoids collisions between `x.ts` and
@@ -77,8 +79,11 @@ the same inventory.
    first import, while a stylesheet repeated through `@import` inside CSS keeps
    CSS semantics and moves to its last position. The bundle is produced by a
    second esbuild pass over a synthetic per-root stylesheet that `@import`s the
-   collected files in that order; nested `@import` chains resolve there.
-   esbuild's source-path comments are stripped; no other rewriting happens.
+   collected files in that order; nested `@import` chains resolve there. The
+   renderer's complete CSS closure (direct and nested imports) is excluded at
+   every depth of the entry's CSS tree before PostCSS can inline it. Separate
+   entries do not exclude each other's CSS. Strip only esbuild's source-path
+   comments after configured transforms and URL rewriting.
 5. **CSS Modules are named by Mokly, not by esbuild.** esbuild names classes
    `<file>_<class>` and appends suffixes on clashes, so adding an unrelated file
    can rename classes and create false Changes. Instead, a Mokly esbuild plugin
@@ -86,28 +91,38 @@ the same inventory.
    derived from the repository-relative file path and the local name, never
    from content or bundle-wide clash order. The plugin returns the class map as
    JavaScript to the graph pass and the transformed CSS to the stylesheet pass,
-   so both agree by construction. `composes` between files is rejected with a
-   build error in this change; same-file and `global` composition work.
+   so both agree by construction. Scope classes, IDs, keyframes, grid and
+   container names, custom and dashed identifiers; provide a default class
+   map and valid-identifier named exports. Cross-file `composes` is rejected;
+   same-file and `global` composition work.
 6. **Assets referenced by CSS are copied.** `url()` targets that resolve to
    repository files are emitted to `mokly-generated/assets/<repository-relative
 path>` through esbuild's `file` loader with a path-mirroring asset name, and
    the stylesheet references them relatively. One asset referenced by several
    stylesheets is emitted once. The originals stay private inventoried inputs.
+   Leave `data:`, remote, protocol-relative and fragment URLs unchanged;
+   reject root-absolute URLs and unknown local asset extensions. Preserve
+   query/fragment suffixes, including for in-repository `node_modules` assets.
+   Reject an asset inside `mockupsDir` unless it is already a graph source,
+   rather than silently privatizing an existing public route.
    A route whose segments are not portable, for example a path with a space,
    fails the build naming the file and the rule.
 7. **Generated outputs may be binary.** `Compilation.outputs` currently maps
    routes to strings. It becomes a map of routes to text or bytes, and every
    consumer of that map compares, writes, serves, captures, and exports bytes.
    This is a prerequisite refactor with no behavior change.
-8. **Inventory is the union of both passes.** The stylesheet pass metafile adds
-   `@import`ed stylesheets and `url()` assets to `sourceFiles`, so they are
-   private, watched, and part of freshness checks.
+8. **Inventory is the union of both passes.** The stylesheet pass and
+   transformer-only CSS traversal add `@import`ed stylesheets and `url()`
+   assets to `sourceFiles`, so they are private, watched, and part of freshness
+   checks. Serve/publish's inventory-only load must also collect CSS and
+   report PostCSS dependencies.
 9. **Loud failure for undelivered graph outputs.** After this change the graph
    pass must produce exactly one JavaScript output. A consumer `file` loader on
    a JavaScript-imported asset fails the build with guidance to use `dataurl`
    or `binary`, because such imports have no stable relative URL across views.
-   `moduleResolution.loaders` may still map `.css` to `empty` to opt out of
-   delivery for a whole catalogue.
+   `moduleResolution.loaders` may only map `.css` and `.module.css` to `empty`:
+   `.css` opts out of plain and module CSS for the catalogue, while
+   `.module.css` opts out only of modules. Other values fail config validation.
 10. **No manifest schema change.** Ownership comes from the reserved directory,
     and per-view linkage is visible in the documents themselves, so manifest v5
     is unchanged. Changes attribution already follows linked stylesheets from
@@ -128,23 +143,22 @@ path>` through esbuild's `file` loader with a path-mirroring asset name, and
     directory, which keeps Tailwind, autoprefixer, and every other plugin a
     consumer dependency. `map` is accepted and ignored because Mokly emits no
     source maps; `parser`, `syntax`, `stringifier`, and any other key fail
-    validation. Mokly runs the plugins once per stylesheet with `from` set to
-    the source path, before CSS Modules naming and before the bundle pass, and
-    memoizes per compilation so both passes share one result. Tailwind v4
+    validation. Mokly runs the plugins on the renderer-pruned tree with `from`
+    set to the source path, before CSS Modules naming and bundling. Cache by
+    source path plus effective pruned-import set per compilation so both passes
+    share a result; a different root-specific set requires reprocessing. Tailwind v4
     through `@tailwindcss/postcss` and autoprefixer are the tested plugins.
 13. **Plugin-reported dependencies join the inventory.** A `dependency`
     message adds its repository file to `sourceFiles`. A `dir-dependency`
-    message is expanded with the discovery walker, skipping denied
-    directories, and its directory joins the watch inputs so added files
-    trigger rebuilds. Paths outside `repoRoot` or under `node_modules` are
-    ignored for inventory. In committed mode a directory dependency whose glob
-    reaches Mokly-owned generated output fails the build with guidance to add
-    `@source not "<mockupsDir>"`, because Tailwind would otherwise scan the
-    previous build's fragments and make output order-dependent; in derived
-    mode Tailwind's own `.gitignore` handling already skips them. A plugin
-    exception fails the build naming the plugin and the stylesheet. PostCSS
-    output is as deterministic as the plugins; Mokly documents that and pins
-    nothing.
+    message is expanded with the discovery walker and reported glob (default
+    `**/*`), skipping denied paths and watching its allowed directory for
+    additions. Never inventory generated output, paths outside `repoRoot`, or
+    `node_modules`. An explicit generated-output dependency fails in both
+    modes; a matching directory dependency fails in committed mode and skips
+    generated files in derived mode. A reported file under `mockupsDir` that
+    is not already a graph-inventoried source fails in either mode, avoiding
+    silent privatization of public files. Errors name the plugin, stylesheet,
+    file and Tailwind `@source not` guidance. Mokly pins no plugin versions.
 
 ## Non-goals
 
@@ -156,13 +170,16 @@ path>` through esbuild's `file` loader with a path-mirroring asset name, and
 - Vite configuration reuse or Vite plugin compatibility.
 - A `define` setting for `import.meta.env`.
 - Rebuilding only the stylesheet pass when nothing but CSS changed.
+- Generating CSS from compatibility-transformer-only imports, or automatically
+  injecting stylesheet links into complete page callbacks.
 
-## Milestone 1: Documentation and protocol contract
+## Milestone 1: Documentation and protocol contract (complete)
 
 Define the complete contract before any code changes so later milestones need
 no guesswork.
 
-- [ ] Add `docs/protocol/mokly-imported-styles.md` (under 250 lines) covering:
+- [x] Add `docs/protocol/mokly-imported-styles.md` (under 250 lines) and a linked
+      `docs/protocol/mokly-imported-styles-errors.md` for exact diagnostics, covering:
       scope, the reserved directory and its validation rules, root modules and
       stylesheet routes, collection order and duplicate semantics, CSS Modules
       naming and the `composes` limitation, asset routes and URL rewriting,
@@ -174,36 +191,38 @@ no guesswork.
       run order and memoization, dependency and directory-dependency inventory,
       the committed-mode generated-output rule, the determinism caveat, and
       every error message class with its guidance.
-- [ ] Register the new contract in `docs/protocol/README.md`.
-- [ ] Update `docs/protocol/mokly-configuration.md`: package-owned `.css`
+- [x] Register the new contract in `docs/protocol/README.md`.
+- [x] Align `docs/protocol/mokly-guides.md` with the explicitly labeled
+      unimplemented Styles guide and current field-table validation.
+- [x] Update `docs/protocol/mokly-configuration.md`: package-owned `.css`
       handling in `moduleResolution.loaders`, the reserved directory rejection
       for entry globs, `stylesheets` paths, `publicExclude`, and `review.outDir`,
       and the new `postcss` key with its validation rules.
-- [ ] Update `docs/protocol/mokly-rendering.md`: stylesheet link order and the
+- [x] Update `docs/protocol/mokly-rendering.md`: stylesheet link order and the
       reserved directory entries in the Generated Contract list.
-- [ ] Update `docs/protocol/mokly-source-protection.md` for the reserved
+- [x] Update `docs/protocol/mokly-source-protection.md` for the reserved
       directory, the union inventory, and plugin-reported dependencies, and
       `docs/protocol/mokly-watch.md` for stylesheet-pass inputs and PostCSS
       directory dependencies as rebuild inputs.
-- [ ] Update `docs/protocol/mokly-on-demand.md`, `mokly-export.md`,
+- [x] Update `docs/protocol/mokly-on-demand.md`, `mokly-export.md`,
       `mokly-publication.md`, and `mokly-derived-baselines.md` for reserved
       routes served from the live compilation, binary generated bytes in
       derived captures, and the directory `.gitignore` rule.
-- [ ] Update `docs/protocol/mokly-css-attribution.md` to state that generated
+- [x] Update `docs/protocol/mokly-css-attribution.md` to state that generated
       stylesheets are in analysis scope and how their source files relate.
-- [ ] Update `docs/architecture/build-pipeline.md` and
+- [x] Update `docs/architecture/build-pipeline.md` and
       `docs/architecture/package-boundary.md` for the second pass, binary
       outputs, and the new ownership row.
-- [ ] Add `docs/guides/authoring/styles.md` (section `authoring`, order 10)
+- [x] Add `docs/guides/authoring/styles.md` (section `authoring`, order 10)
       covering plain CSS imports, CSS Modules, assets, runtime CSS-in-JS through
       the renderer including the `mainFields` note for styled-components in
       `"type": "module"` repositories, a Tailwind v4 and autoprefixer
       walkthrough with `@source` scoping, and the unsupported list. Update
       `docs/guides/authoring/config.md` where it describes `stylesheets` and
       add the `postcss` key to its field table.
-- [ ] Update `src/build/README.md` and the README's Authoring and Key code
+- [x] Update `src/build/README.md` and the README's Authoring and Key code
       sections.
-- [ ] Run `npx prettier --check` on every changed Markdown file and review the
+- [x] Run `npx prettier --check` on every changed Markdown file and review the
       diff for internal consistency across the protocol set.
 
 ## Milestone 2: Binary-safe generated outputs
@@ -261,13 +280,15 @@ Produce deterministic per-root stylesheets and assets inside the compilation.
 - [ ] Add `src/build/styles/order.ts`: derive each root's first-reachability
       depth-first stylesheet order from the graph metafile in
       `src/build/load_graph.ts`, keyed by the renderer path and each entry
-      module.
+      module; resolve the full renderer `@import` closure and prune its files
+      at every depth of entry imports before PostCSS can inline them.
 - [ ] Add `src/build/styles/bundle.ts`: the second esbuild pass over synthetic
       per-root entries with the same resolution settings and Mokly plugins,
       `write: false`, `metafile: true`, the `file` loader for asset extensions
       with path-mirroring asset names under the reserved directory, relative
-      URL rewriting, and source-path comment stripping. Skip the pass entirely
-      when no root reaches CSS.
+      URL rewriting, and source-path comment stripping. Inventory transformer-only
+      CSS closures without emitting a route; skip bundling when no delivery
+      root reaches CSS.
 - [ ] Union the stylesheet pass inputs into `sourceFiles` through
       `src/build/source_inventory.ts` and expose the per-root stylesheet and
       asset outputs on `LoadedGraph` for `compileCatalogue`.
@@ -278,11 +299,15 @@ Produce deterministic per-root stylesheets and assets inside the compilation.
       CSS Modules names are stable when an unrelated module with the same
       basename is added and identical across two compilations; the class map
       matches the emitted rule; the opt-out loader; the `file` loader error;
-      and unchanged behavior for a catalogue without CSS.
+      renderer/entry duplicates including nested `@import` and two entries
+      sharing CSS; transformer-only CSS inventoried but undelivered; and
+      unchanged behavior for a catalogue without CSS.
 - [ ] Add `tests/build_imported_styles_assets.test.ts` covering font and image
       `url()` copies, one copy for a shared asset, relative URL rewriting, a
-      missing asset error, a non-portable route error, and inventory membership
-      of `@import`ed files and assets.
+      missing asset error, a non-portable route error, unchanged URL classes,
+      root-absolute/unsupported-extension errors, `node_modules` assets,
+      query/hash suffixes, public mockups asset rejection, and inventory of
+      `@import`ed files and assets.
 - [ ] Run the build, relevant tests, and `cargo xtask check`.
 
 ## Milestone 5: Link generated stylesheets into every view
@@ -298,7 +323,7 @@ Make the delivered CSS reach rendered documents and pass validation.
 - [ ] Extend `tests/build_imported_styles.test.ts` with the link order, link
       resolution from nested fragment routes and dark fragments, saved variant
       and component views receiving the same links, and page callbacks
-      receiving none.
+      receiving none while their entry stylesheet is still emitted.
 - [ ] Run `npm run example:build` and `npm run example:check` to confirm the
       example catalogue, which imports no CSS yet, is byte-identical.
 - [ ] Run the build, relevant tests, and `cargo xtask check`.
@@ -319,20 +344,24 @@ Tailwind v4 and autoprefixer work, with complete inventory and watch coverage.
       package names.
 - [ ] Add `src/build/styles/postcss.ts`: run the plugins per stylesheet with
       `from` set to the source path and `map: false`, collect `dependency` and
-      `dir-dependency` messages, expand directory dependencies through the
-      discovery walker, apply the committed-mode generated-output rule, and
-      memoize results per compilation.
+      `dir-dependency` messages, expand directories through the discovery
+      walker using the reported glob (default `**/*`), apply explicit and
+      directory generated-output plus public-file rules for both modes,
+      and memoize by source and effective import-pruning set per compilation.
 - [ ] Wire the runner into the load hook in `src/build/styles/collect.ts`
       ahead of CSS Modules naming for both passes, union dependency files into
       `sourceFiles`, and register directory dependencies as package-owned watch
       inputs.
 - [ ] Add `tests/build_postcss.test.ts` using synthetic plugins with no new
       dev dependencies: a transform applies to imported and `@import`ed
-      stylesheets; a transform inside a CSS Module runs before naming; each
-      stylesheet is processed once per compilation; `dependency` files join
-      the inventory and are private through `/static`; `dir-dependency`
-      expansion joins the inventory and skips denied directories; the
-      committed-mode generated-output error and its guidance; a plugin error
+      stylesheets; a transform inside a CSS Module runs before naming; an
+      identical stylesheet/pruning input is processed once per compilation;
+      `dependency` files join inventory and are private through `/static`;
+      `dir-dependency` expansion honors the glob and skips denied directories;
+      committed/derived generated-output and otherwise-public mockups-file
+      errors and their guidance; a parent `docs/` glob still reaching mockups
+      after `@source not "docs/mockups"` but `source(none)` avoiding that scan;
+      inventory-only freshness; a plugin error
       names the plugin and file; package-name resolution from the PostCSS
       module's directory; `map` ignored and other keys rejected; a missing or
       escaping path rejected; and byte-identical output across two
@@ -347,7 +376,8 @@ Tailwind v4 and autoprefixer work, with complete inventory and watch coverage.
 Carry the new outputs through every delivery path.
 
 - [ ] Serve reserved-directory routes from the live compilation in
-      `src/server/fragments.ts` and the controls preview path in
+      `src/server/static_routes.ts` and on-demand route dispatch, and the
+      controls preview path in
       `src/server/controls/transient_assets.ts`, never from a stale disk copy.
 - [ ] Confirm watched edits to imported CSS, `@import`ed CSS, and referenced
       assets rebuild the graph and reload the browser; add cases to

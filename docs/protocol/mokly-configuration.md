@@ -1,13 +1,16 @@
 # Mokly Configuration Contract
 
 This is the detailed configuration boundary of the
-[package contract](./mokly-package.md). These settings describe current behavior.
+[package contract](./mokly-package.md). Existing settings describe current
+behavior; imported-CSS additions below describe an approved target.
 
 ## Delivery Status
 
-Every setting in this document is implemented, including glob-based entry
+Existing settings are implemented, including glob-based entry
 discovery through `entries` and the `entriesDir` shorthand delivered by the
 [co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
+The `postcss` key and reserved CSS output rules are targets of
+[imported stylesheet delivery](./mokly-imported-styles.md).
 
 ## Configuration Discovery
 
@@ -89,6 +92,7 @@ interface MoklyConfig {
   publicExclude?: readonly string[]; // extends shipped public exclusions
   repoRoot?: string; // config directory
   renderer?: string;
+  postcss?: string; // Approved target: config-relative PostCSS module
   moduleResolution?: {
     aliases?: Readonly<Record<string, string>>;
     conditions?: readonly string[];
@@ -133,7 +137,8 @@ relative to `mockupsDir`; HTTP(S) stylesheet URLs are allowed.
 that must include `"light"`; it defaults to `["light"]` and normalizes to
 light-first order. Shared `stylesheets` apply to every generated view, with a
 matching `lightStylesheets` or `darkStylesheets` list appended in declaration
-order.
+order. In the imported-CSS target, generated renderer and entry links follow
+those configured links; the built-in renderer has no stylesheet.
 `generatedOutput` defaults to `"derived"`; the derived-only
 `review.baselineBuild` argv list and explicit `"committed"` alternative follow the
 [derived baselines contract](./mokly-derived-baselines.md).
@@ -200,6 +205,29 @@ package specifiers only. Conditions, package fields, and extensions are ordered,
 deduplicated lists, while loader keys are extensions and values are supported
 esbuild loader names. React and React DOM still resolve through Mokly's
 consumer-peer plugin so these options cannot introduce a second React runtime.
+
+### Imported CSS configuration (approved target)
+
+`postcss` is optional. When absent, do not run PostCSS or discover configuration.
+When supplied, resolve it relative to the config file and require an existing
+regular `.ts`, `.mts`, `.js`, `.mjs` or `.cjs` module inside `repoRoot`, also
+through symlinks. Load it with esbuild and include it and its local imports in
+private, watched `configSourceFiles`. Require a default object with `plugins`
+as an array of PostCSS plugin instances or an insertion-ordered object mapping
+package names to plain option objects; resolve package names from the module's
+directory. Accept `map` but ignore it (no source maps); reject `parser`,
+`syntax`, `stringifier` or any other key. Exact errors are in
+[the diagnostics catalogue](./mokly-imported-styles-errors.md).
+
+Mokly owns `.css` and `.module.css` handling. At those keys,
+`moduleResolution.loaders` accepts only `"empty"`: `.css` skips both plain and
+module CSS, `.module.css` skips only module CSS and its class map. Opted-out
+CSS is still inventoried. A `file` loader on another JavaScript-imported
+asset fails Build. Never configure entry globs/`entriesDir`, local
+`stylesheets` paths, `publicExclude` globs, or `review.outDir` inside
+`<mockupsDir>/mokly-generated/`, including their symlink aliases. Authored
+inputs also cannot live there. Consumer public files may live elsewhere below
+`mockupsDir`.
 
 The `legacy` config key is rejected, including `legacy: undefined`. Register
 complete documents explicitly with `definePage` or nested `page`, following the

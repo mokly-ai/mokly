@@ -27,6 +27,14 @@ the HTTP event loop in a bounded, terminable worker. Concurrent requests for the
 same view share work. Only validated results enter the generation-local bounded
 cache. A renderer failure cannot make unrelated routes or shutdown unavailable.
 
+In the [imported-CSS target](./mokly-imported-styles.md), reserved stylesheet
+and asset routes use the accepted generation's compilation bytes for GET/HEAD
+with CSS/image/font content types, never a stale disk file. Resource validation
+accepts pending generated routes; transient Props previews use the same
+generation's byte-safe closure. Ordinary authored assets retain confined
+static delivery. Inventory-only startup freshness runs the CSS/PostCSS
+dependency pass without rendering every view.
+
 The foreground service admits one active document and 32 queued distinct routes,
 with a ten-second deadline, a 256 MiB worker heap limit and a 64 MiB result cache.
 Its worker has a separate 32 MiB prepared-document cache. Failed workers terminate

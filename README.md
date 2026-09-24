@@ -192,12 +192,17 @@ catalogue; your React tree still owns what each screen looks like.
 | Components           | Typed props, saved variants, controls, and usage inspection | [Components](./docs/guides/authoring/components.md)                     |
 | Use-case flows       | Ordered journeys composed from existing screens             | [Use-case flows](./docs/guides/authoring/use-case-flows.md)             |
 | Pages                | Existing complete HTML documents without device variants    | [Pages](./docs/guides/authoring/pages.md)                               |
+| Styles (target)      | Imported CSS, modules, assets and optional PostCSS          | [Styles](./docs/guides/authoring/styles.md)                             |
 | `MockLink`           | Portable links between catalogue entries                    | [Links](./docs/guides/authoring/links.md)                               |
 
 A custom renderer is the integration boundary for product providers, themes,
 stylesheets, fonts, and full-document markup. Mokly resolves React from the
 consumer repository and bundles all authoring inputs into one build-time graph,
 so component trees use one React runtime.
+Today, use separately authored public CSS with `stylesheets` for stylesheets
+that must reach views. [Imported CSS delivery](./docs/protocol/mokly-imported-styles.md)
+is an approved, not-yet-implemented target; the new Styles guide documents
+the intended plain CSS, CSS Modules, asset, and PostCSS workflow.
 
 ## Review and share
 
@@ -299,7 +304,8 @@ merge.
 - [`src/index.ts`](./src/index.ts) — supported public authoring exports.
 - [`src/config`](./src/config) — config discovery, loading, and path policy.
 - [`src/build`](./src/build) — bundling, rendering, validation, and generated
-  output transactions.
+  output transactions; see the [imported CSS contract](./docs/protocol/mokly-imported-styles.md)
+  for the planned second pass and binary output boundary.
 - [`src/cli`](./src/cli/README.md) — command parsing, reporting, and composition.
 - [`src/server`](./src/server/README.md) — local HTTP server and watched runtime.
 - [`src/review`](./src/review/README.md) — Git baselines, comparison, and change

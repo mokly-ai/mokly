@@ -66,6 +66,9 @@ when the historical primary file is absent, never when it is invalid.
 - [Screen variants](./mokly-screen-variants.md) — implemented: variant
   screens grouped under their parent screen with their own ids and routes.
 - [Source protection](./mokly-source-protection.md)
+- [Imported stylesheets](./mokly-imported-styles.md) — approved target:
+  renderer/entry CSS, CSS Modules, assets, PostCSS, inventory, and
+  [exact diagnostics](./mokly-imported-styles-errors.md).
 - [Catalogue change metadata](./mokly-catalogue-changes.md)
 - [Breaking page migration](./mokly-page-migration.md)
 - [Optional changes in publication](./mokly-publication.md)

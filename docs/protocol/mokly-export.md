@@ -206,6 +206,12 @@ export exclusions below. Retain relative resource and fallback document links
 and verify their transitive HTML/CSS dependencies, including fonts, images,
 `srcset`, nested local documents, and linked stylesheets. Referenced files that
 cannot be exported safely fail the operation instead of producing broken links.
+In the [imported-CSS target](./mokly-imported-styles.md), this also includes
+every owned route under `mokly-generated/styles/` and
+`mokly-generated/assets/`, not their private source files. Committed export
+checks and copies disk bytes; derived export captures validated compilation
+output as text or binary bytes. Inventory, route links and resource validation
+use the same capture; no manifest schema change is needed.
 Navigation fragments in shell/public HTML, including query-only links and host
 aliases, must identify an anchor in the resolved document. Build and export
 share fragment decoding and anchor checks. Resource fragments such as SVG/CSS

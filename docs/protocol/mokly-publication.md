@@ -116,6 +116,13 @@ HTML/CSS resource reference against confined regular files in
 the staged static tree, including transitive references. An unavailable resource,
 including a reference through a skipped cycle or excluded alias, fails before
 installation and preserves the previous artifact.
+For the [imported-CSS target](./mokly-imported-styles.md), include owned
+`mokly-generated/styles/` and `mokly-generated/assets/` routes in preview and
+publish capture. Committed mode takes checked disk bytes; derived mode takes
+validated compilation bytes, including binary fonts/images. Private CSS
+inputs and PostCSS-scanned sources are never published. Inventory freshness
+runs the CSS/PostCSS pass before publication; links to generated routes are
+validated against captured bytes.
 Repository discovery may skip dependency/build directories, but the public walk
 must retain valid catalogue routes under names such as `target` and
 `node_modules`. Git administrative directories, generated artifacts, protected

@@ -169,6 +169,20 @@ they must participate in source watching and repository confinement. CSS, fonts,
 images, and other assets referenced only by public resource URLs remain public
 unless another protection rule applies. If a file serves both roles, source
 protection wins; consumers must emit a separate public artifact instead of exposing the input.
+In the [imported CSS target](./mokly-imported-styles.md), extend this union
+with the stylesheet pass's nested `@import`s and `url()` assets,
+transformer-only CSS inputs, and PostCSS-reported file/directory dependencies.
+Inventory-only freshness loads run the same CSS/PostCSS inventory pass;
+otherwise Serve and publication would reject the current manifest. Ignore
+plugin paths outside `repoRoot` and under `node_modules` before normalization,
+honor directory globs, and never inventory Mokly-generated output. An explicit
+generated-output report fails both modes; directory matches fail committed
+mode and skip generated output in derived mode. A reported file under
+`mockupsDir` that is not already a graph-inventoried source fails both modes,
+preserving public links; a graph-imported entry there remains valid. Every
+file below `<mockupsDir>/mokly-generated/` is package-owned public output,
+not authored input, even without an HTML ownership header. See
+[exact guidance](./mokly-imported-styles-errors.md).
 Runtime file reads that the bundler cannot enumerate must use protected source
 locations or reserved names; a dependency string alone is not a public-asset
 permission or a substitute for complete static import discovery.

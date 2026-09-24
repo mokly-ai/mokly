@@ -13,6 +13,11 @@ by generated output:
 - resolved entry modules, page/renderer/transformer imports, and every other
   inventoried source rebuild generated output, including imported bytes handled
   by asset loaders;
+- in the [imported-CSS target](./mokly-imported-styles.md), changed plain/module
+  CSS, nested imports, referenced assets, and PostCSS-reported files rebuild;
+  PostCSS directory dependencies watch additions matching the reported glob
+  (or `**/*`), while the PostCSS module and its imports reload config before
+  rebuilding; generated output and denied paths cannot re-enter the inventory;
 - a created, renamed, or deleted regular file whose repository-relative path
   matches an `entries` glob re-runs discovery before that rebuild, so the
   resolved entry set follows the filesystem; the glob defines the complete
