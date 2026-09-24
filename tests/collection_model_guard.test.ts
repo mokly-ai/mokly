@@ -16,13 +16,48 @@ const historicalBoundary = new Set([
   "src/registry/manifest_validation.ts",
 ]);
 const collectionModel =
-  /["']collection["']|["']collection:|\b(?:childIds|defineCollection|ManifestCollection|CatalogueCollection|NestedCollection\w*|RootCollection\w*)\b/u;
+  /["'`]collection(?:["'`]|:)|\bimport\s*\{[^}]*\bcollection\b[^}]*\}\s*from\s*["']@mokly\/mokly["']|\bcollection\s*\(|\b(?:childIds|defineCollection|ManifestCollection|CatalogueCollection|NestedCollection\w*|RootCollection\w*|closedCollectionIds|filterBaselineClosedCollectionIds|ancestorCollections|readCollection|collectionKey|collectionDisclosureKey)\b|data-nav-collection|links to collection id/u;
+
+test("collection-model matcher distinguishes removed constructs from ordinary words", () => {
+  for (const snippet of [
+    'entry.kind === "collection"',
+    "`collection:${section}:${id}`",
+    'import { collection, screen } from "@mokly/mokly";',
+    "collection({ title: 'Old' })",
+    "closedCollectionIds",
+    "filterBaselineClosedCollectionIds",
+    "ancestorCollections",
+    "readCollection",
+    "collectionKey",
+    "collectionDisclosureKey",
+    "childIds",
+    "defineCollection",
+    "ManifestCollection",
+    "CatalogueCollection",
+    "NestedCollectionNode",
+    "RootCollectionNode",
+    "data-nav-collection",
+    "throw invalid(route, `links to collection id: ${id}`)",
+  ])
+    assert.match(snippet, collectionModel, snippet);
+  for (const snippet of [
+    "// React Native Web style collection",
+    "garbage collection",
+    '"folder:pages:A"',
+    '"collections-and-tags"',
+  ])
+    assert.doesNotMatch(snippet, collectionModel, snippet);
+});
 
 test("collection-model constructs stay within historical manifest validation", () => {
   const matches: string[] = [];
   for (const root of roots)
     for (const name of readdirSync(root, { recursive: true })) {
-      if (typeof name !== "string" || !/\.(?:ts|tsx|js|mjs)$/u.test(name))
+      if (
+        typeof name !== "string" ||
+        !/\.(?:ts|tsx|mts|cts|js|jsx|mjs|cjs)$/u.test(name) ||
+        /(?:^|\/)(?:dist|generated|node_modules)(?:\/|$)/u.test(name)
+      )
         continue;
       const file = path.join(root, name);
       const text = readFileSync(file, "utf8");

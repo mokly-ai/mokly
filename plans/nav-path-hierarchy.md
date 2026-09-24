@@ -1,8 +1,8 @@
 # Path-Based Navigation Hierarchy
 
-Status: Milestones 1–5 are complete, verified, pushed, and reviewed.
-Findings 3 and 4 are fixed; findings 1, 2, and 5–10 await the user's
-decision. The plan stays Active until its PR merges.
+Status: Milestones 1–5 are complete, verified, pushed, and reviewed;
+Milestones 6–7 are complete and Milestone 8 remains. Milestones 6–8 fix the remaining review findings (1, 2, and 5–10). The plan
+stays Active until its PR merges.
 Created 2026-09-23 with the user's
 consent after the design discussion in this workspace. This plan supersedes the
 collection-forest contract delivered by
@@ -509,6 +509,120 @@ mockup, or visual change.
       recommendation, without changing the implementation. Two independent
       reviewers ran against `c6b2595`; findings 5–10 in the list above await
       the user's decision.
+
+## Milestone 6: Review follow-up contract documentation
+
+On 2026-09-24 the user asked to fix every open review finding (1, 2, and
+5–10) with the recommended options. This milestone updates the contracts
+first; Milestones 7 and 8 implement them. Documentation only.
+
+- [x] Finding 5: correct stale current-version statements, including
+      `src/server/README.md` (Serve returns read model v2),
+      `docs/protocol/mokly-changes.md` (historical v2–v5, current v6), and
+      `docs/protocol/mokly-on-demand.md` (the live index is not a v6
+      manifest), after a sweep of docs, READMEs, and code comments. Historical
+      mentions and unrelated `schemaVersion` formats stay.
+- [x] Finding 6: in `mokly-nav-paths.md`, historical `navPath` values
+      (baseline manifests and removed entries in the public read model) are
+      arrays of non-empty strings without current label or conflict rules; a
+      `navPath` difference, including a renamed ancestor folder, marks the
+      routed entry changed (no "moved" state), linking to `mokly-changes.md`;
+      point `mokly-runtime.md`'s comparison sentence at that rule; point
+      `mokly-authoring.md`'s key-construction reference at
+      `mokly-nav-paths.md#order-and-keys`.
+- [x] Finding 7: replace the section-omission, independent-folder, and
+      empty-folder rules in `mokly-shell-design.md` with a link to
+      `mokly-nav-paths.md`, keeping only visual and interaction requirements.
+- [x] Finding 1 (contract): `mokly-runtime.md` owns explicit disclosure
+      persistence, and `mokly-viewer.md`, `mokly-watch.md`, and
+      `packages/viewer/src/shell/README.md` reference it:
+  - [x] `localStorage` key `mokly:nav-disclosure:v3` holds a JSON object that
+        maps disclosure keys to `true` (open) or `false` (closed). Writers
+        store every disclosure in the current navigation, so removed or
+        renamed folders drop out at the next save. Readers apply a stored
+        value only to a current, valid key; every other key uses the server
+        default. Malformed values and entries are ignored.
+  - [x] The v2 closed list is ignored, never migrated, and deleted on the
+        first v3 write.
+  - [x] Watched-reload recovery stores `disclosures` and
+        `filterBaselineDisclosures` maps with the same semantics. Snapshots
+        with `closedFolderKeys` or `closedCollectionIds` are discarded in
+        full; a missing `filterBaselineDisclosures` means no filter baseline.
+  - [x] Any change to the persisted disclosure key format or value shape
+        requires a new storage version; older versions are ignored rather
+        than partially interpreted.
+  - [x] Until Milestone 8 lands, `docs/protocol/README.md` marks the v3
+        storage as the approved target.
+- [x] Validate with Prettier, relative links and heading anchors, the guide
+      tests, and the unit tests that read protocol docs.
+- [x] Commit.
+
+## Milestone 7: Review follow-up tests, guards, and reader alignment
+
+Backend and test work for findings 2 (except the watch persistence test,
+which moves with Milestone 8), 6 (reader alignment), 8, 9, and 10. No UI
+change.
+
+- [x] Finding 2: table-driven failing-case tests for the historical v3–v5
+      collection validator (duplicate, unknown, and multiply claimed
+      children, self and longer cycles, a claimed variant, non-array
+      `childIds`, and valid records dropped) across v3, both v4 envelopes,
+      and v5.
+- [x] Finding 2: a table-driven public reader test with one mutation per
+      reader rule in `mokly-catalogue.md` and `mokly-nav-paths.md`, each
+      rejected or accepted exactly as the contract says, including accepted
+      historical removed-entry labels that break current label rules.
+- [x] Finding 2: build tests for an authored `navPath` on a nested `page()`
+      and for `navPath: undefined` on nested `screen()` and `page()`.
+- [x] Finding 6: the public reader requires non-empty removed-entry
+      `navPath` labels, matching the manifest boundary (failure-first).
+- [x] Finding 8: widen `tests/collection_model_guard.test.ts` to the removed
+      `collection()` helper's imports and calls, old field names such as
+      `closedCollectionIds`, template-literal strings, and `.mts`, `.cts`,
+      `.cjs`, and `.jsx` files, with a self-check over known-bad and
+      known-good snippets so the pattern cannot silently weaken.
+- [x] Finding 9: a shared watched-server helper for browser specs awaits
+      process exit before removing its fixture; `watch.spec.ts` and
+      `watch_folders.spec.ts` use it.
+- [x] Finding 10: rename stale collection wording in test titles and
+      messages, and move the duplicated `browseState()` helper into
+      `tests/helpers/`.
+- [x] Run the unit suite and every browser spec this milestone touches.
+- [x] Commit.
+
+## Milestone 8: Explicit disclosure persistence
+
+Tags: ui
+
+Implement the Milestone 6 disclosure contract (finding 1) and strengthen the
+watch persistence test (finding 2). No visual change.
+
+- [ ] One module owns the v3 storage key and its encoding; the shell store,
+      early disclosure capture, hydration persistence, and recovery use it
+      (the v2 key constant is currently duplicated in two files).
+- [ ] Readers apply stored values only to current keys and use server
+      defaults otherwise; writers store every current disclosure and delete
+      the v2 key.
+- [ ] Recovery snapshots use `disclosures` and `filterBaselineDisclosures`;
+      older shapes are discarded in full.
+- [ ] Failure-first unit tests: a `main`-style mixed v2 list, a renamed
+      folder and its descendants, malformed stored values, and old and new
+      recovery shapes.
+- [ ] Browser coverage: an upgrade from a seeded v2 list shows the server
+      defaults and writes v3; a watched folder rename leaves the renamed
+      subtree at its defaults; the watch persistence test clears storage
+      once, not on reload, and asserts that a non-default state survives the
+      reload (finding 2).
+- [ ] Remove the Milestone 6 approved-target note and smoke-test through
+      `npm run dev`.
+- [ ] Mark findings 1, 2, and 5–10 as fixed in the review-findings list.
+- [ ] Run `cargo xtask check`; fix anything it reports until it passes.
+- [ ] Commit and push.
+- [ ] Review the complete local diff against `origin/main` using
+      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      after the push; report each finding with a number, severity, plain
+      explanation, impact of doing nothing, lettered options, and a
+      recommendation, without changing the implementation.
 
 ## Post-merge follow-up (non-blocking)
 

@@ -81,7 +81,7 @@ function group(nodes: readonly NavNode[], key: string): NavGroupNode {
   return found;
 }
 
-test("identical path labels merge and keep path-based transitional keys", () => {
+test("identical path labels merge and keep path-based folder keys", () => {
   const { nodes } = tree([
     screen("second", "Second", ["Design", "Browse"]),
     screen("first", "First", ["Design", "Browse"]),

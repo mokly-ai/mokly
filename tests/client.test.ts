@@ -8,7 +8,8 @@ import {
   type ReloadLocation,
   type UpdateEventStream,
 } from "../dist/client/react_update_controller.js";
-import type { BrowseRecoveryState } from "../packages/viewer/dist/runtime.js";
+
+import { browseState } from "./helpers/browse_recovery_state.js";
 
 test("live updates are latest-wins and recovery is consumed once", () => {
   const stream = new FakeStream();
@@ -146,21 +147,6 @@ test("shutdown cancels refreshes and ignores late failures and newer events", as
   await setImmediate();
   assert.equal(location.reloads, 0);
 });
-
-function browseState(): BrowseRecoveryState {
-  return {
-    changedOnly: true,
-    closedFolderKeys: ["folder:pages:fixture"],
-    colorScheme: "dark",
-    detailsOpen: true,
-    drawerOpen: true,
-    filterBaselineClosedFolderKeys: ["folder:pages:fixture"],
-    navScroll: 18,
-    query: "home",
-    regionScrolls: { flow: 8, stage: 42 },
-    viewport: "mobile",
-  };
-}
 
 class FakeStream implements UpdateEventStream {
   closed = false;

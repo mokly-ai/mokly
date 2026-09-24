@@ -42,7 +42,7 @@ test("large fixture validates dimensions and defaults to high-scale routes", () 
 });
 
 for (const screens of [10, 11, 20, 21]) {
-  test(`large fixture keeps collection ownership unique at ${screens} screens`, async (t) => {
+  test(`large fixture keeps folder membership unique at ${screens} screens`, async (t) => {
     const root = await fs.mkdtemp(
       path.join(repositoryRoot, ".context/large-test-"),
     );

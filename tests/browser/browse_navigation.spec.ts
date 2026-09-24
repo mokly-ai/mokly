@@ -165,7 +165,7 @@ test("editing an active filter reveals newly matching groups", async ({
   ).toBeVisible();
 });
 
-test("clearing filtering keeps the destination collection open", async ({
+test("clearing filtering keeps the destination folder open", async ({
   page,
 }) => {
   await page.goto(`${navigation.url}/view/screens/home.html`);

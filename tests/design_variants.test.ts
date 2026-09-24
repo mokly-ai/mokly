@@ -184,7 +184,7 @@ test("a selected variant discloses its parent's variant rows", async () => {
   assert.equal(
     textContent(byClass(screens!, "mbk-nav-count")[0]!).trim(),
     "2",
-    "variants are not collection children",
+    "variants are not folder members",
   );
 });
 

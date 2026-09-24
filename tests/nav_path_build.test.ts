@@ -12,6 +12,34 @@ import { createFixture, removeFixture } from "./helpers/fixture.js";
 const nested =
   'screen({ id: "home", title: "Home", description: "Home", slug: "home", mobile: "Mobile", desktop: "Desktop" })';
 
+for (const [kind, authored] of [
+  ["screen", "[]"],
+  ["screen", "undefined"],
+  ["page", "[]"],
+  ["page", "undefined"],
+] as const) {
+  test(`build rejects nested ${kind} with authored navPath: ${authored}`, async (context) => {
+    const leaf =
+      kind === "screen"
+        ? `screen({ id: "home", title: "Home", description: "Home", slug: "home", mobile: "Mobile", desktop: "Desktop", navPath: ${authored} })`
+        : `page({ id: "home", title: "Home", description: "Home", slug: "home", render: () => "<main>Home</main>", navPath: ${authored} })`;
+    const fixture = await createFixture(
+      `import { defineRoot, screen, page } from "@mokly/mokly";\nexport const mockups = defineRoot({ path: "design", children: [${leaf}] });`,
+    );
+    context.after(() => removeFixture(fixture));
+    await assert.rejects(
+      async () => compileCatalogue(await loadConfig(fixture.root)),
+      (error: Error) => {
+        assert.match(
+          error.message,
+          /\[invalid-nested-nav-path\] entries\/fixture\.mockup\.tsx \(home\): nested entry home cannot author navPath/,
+        );
+        return true;
+      },
+    );
+  });
+}
+
 for (const [name, definition, expected] of [
   [
     "authored leaf path",

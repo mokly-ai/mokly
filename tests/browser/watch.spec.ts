@@ -1,25 +1,14 @@
-import { spawn, type ChildProcess } from "node:child_process";
 import fs from "node:fs";
-import path from "node:path";
 
 import { expect, test, type Locator } from "@playwright/test";
 
-import {
-  createFixture,
-  removeFixture,
-  reparentedEntrySource,
-  repositoryRoot,
-  type TestFixture,
-} from "../helpers/fixture.js";
+import { reparentedEntrySource } from "../helpers/fixture.js";
 
+import { startWatchedServe, type WatchedServe } from "./watched_serve.js";
 import { chooseScheme, chooseViewport } from "./workspace_actions.js";
 import { expectFrameSource } from "./workspace_actions.js";
 
-const cli = path.join(repositoryRoot, "dist/cli/bin.js");
-
-let fixture: TestFixture;
-let child: ChildProcess;
-let url: string;
+let server: WatchedServe;
 
 async function toggleDisclosure(disclosure: Locator): Promise<void> {
   const toggled = disclosure.evaluate(
@@ -37,39 +26,13 @@ async function toggleDisclosure(disclosure: Locator): Promise<void> {
 }
 
 test.beforeAll(async () => {
-  fixture = await createFixture(reparentedEntrySource("screens"), {
+  server = await startWatchedServe(reparentedEntrySource("screens"), {
     extraConfig: `colorSchemes: ["light", "dark"],`,
-  });
-  child = spawn(
-    "node",
-    [cli, "serve", "--config", fixture.configPath, "--port", "0"],
-    {
-      stdio: ["ignore", "pipe", "pipe"],
-    },
-  );
-  url = await new Promise<string>((resolve, reject) => {
-    let buffered = "";
-    const timer = setTimeout(
-      () => reject(new Error(`serve did not start: ${buffered}`)),
-      30_000,
-    );
-    child.stdout?.on("data", (chunk: Buffer) => {
-      buffered += chunk.toString();
-      const match = buffered.match(/Mokly listening at (http:\/\/[^\s]+)/);
-      if (match?.[1]) {
-        clearTimeout(timer);
-        resolve(match[1]);
-      }
-    });
-    child.on("exit", (code) =>
-      reject(new Error(`serve exited early with ${code}: ${buffered}`)),
-    );
   });
 });
 
 test.afterAll(async () => {
-  if (child && child.exitCode === null) child.kill("SIGTERM");
-  if (fixture) await removeFixture(fixture);
+  if (server) await server.stop();
 });
 
 test("watched serve rebuilds and reloads after an authored change", async ({
@@ -80,14 +43,14 @@ test("watched serve rebuilds and reloads after an authored change", async ({
     releaseFirstEventRequest = resolve;
   });
   let blockFirstEventRequest = true;
-  await page.route(`${url}/__mokly/events`, async (route) => {
+  await page.route(`${server.url}/__mokly/events`, async (route) => {
     if (blockFirstEventRequest) {
       blockFirstEventRequest = false;
       await firstEventRequestBlocked;
     }
     await route.continue();
   });
-  await page.goto(`${url}/view/screens/home.html`);
+  await page.goto(`${server.url}/view/screens/home.html`);
   await expect(page.locator("#mb-main h2")).toHaveText("Home");
   const screens = page.locator(
     'details[data-nav-folder="folder:Fixture/Screens"]',
@@ -117,7 +80,7 @@ test("watched serve rebuilds and reloads after an authored change", async ({
   await page.setViewportSize({ height: 900, width: 420 });
   await page.click("[data-mokly-menu]");
   await fs.promises.writeFile(
-    fixture.entryPath,
+    server.fixture.entryPath,
     reparentedEntrySource("screens", {
       body: '<a href="mock:details">Details</a><p data-watch-version="2">Reloaded</p>',
     }),
@@ -126,7 +89,9 @@ test("watched serve rebuilds and reloads after an authored change", async ({
     .poll(async () => {
       try {
         return (
-          await (await fetch(`${url}/static/screens/home.mobile.html`)).text()
+          await (
+            await fetch(`${server.url}/static/screens/home.mobile.html`)
+          ).text()
         ).includes('data-watch-version="2"');
       } catch {
         return false;
@@ -174,7 +139,7 @@ test("watched serve rebuilds and reloads after an authored change", async ({
 test("watched reload reopens collapsed active route ancestry", async ({
   page,
 }) => {
-  await page.goto(`${url}/view/screens/home.html`);
+  await page.goto(`${server.url}/view/screens/home.html`);
   const screens = page.locator(
     'details[data-nav-folder="folder:Fixture/Screens"]',
   );
@@ -187,7 +152,7 @@ test("watched reload reopens collapsed active route ancestry", async ({
   await expect(screens).not.toHaveAttribute("open", "");
 
   await fs.promises.writeFile(
-    fixture.entryPath,
+    server.fixture.entryPath,
     reparentedEntrySource("screens", {
       body: '<a href="mock:details">Details</a><p data-watch-version="3">Active route</p>',
     }),
@@ -205,12 +170,8 @@ test("watched reload reopens collapsed active route ancestry", async ({
 });
 
 test("watched serve shuts down cleanly", async () => {
-  const exited = new Promise<number | null>((resolve) => {
-    child.on("exit", (code) => resolve(code));
-  });
-  child.kill("SIGTERM");
-  expect(await exited).toBe(0);
+  expect(await server.stop()).toBe(0);
   await expect(async () => {
-    await fetch(`${url}/`);
+    await fetch(`${server.url}/`);
   }).rejects.toThrow();
 });

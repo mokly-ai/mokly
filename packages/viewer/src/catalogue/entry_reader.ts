@@ -114,7 +114,12 @@ export function readEntry(value: unknown): CatalogueRoutedEntry {
   const input = object(value),
     base = common(input),
     path = route(input.route),
-    navPath = array(input.navPath).map(string);
+    navPath = array(input.navPath).map((value) => {
+      const label = string(value);
+      if (label.length === 0)
+        invalidData("$catalogue", "expected a nonempty navPath label");
+      return label;
+    });
   if (Object.hasOwn(input, "preview"))
     invalidData("$catalogue", "preview is only valid on a removed entry");
   const kind = choice(input.kind, [

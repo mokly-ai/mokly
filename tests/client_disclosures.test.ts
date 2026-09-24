@@ -1,11 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import {
-  parseBrowseRecoveryState,
-  type BrowseRecoveryState,
-} from "../packages/viewer/dist/runtime.js";
+import { parseBrowseRecoveryState } from "../packages/viewer/dist/runtime.js";
 import { isDisclosureKey } from "../packages/viewer/dist/shell/disclosure_keys.js";
+
+import { browseState } from "./helpers/browse_recovery_state.js";
 
 test("stored disclosures accept valid folder paths, including colons, but not empty segments", () => {
   for (const key of [
@@ -97,18 +96,3 @@ test("a current recovery snapshot keeps unknown strings for default-aware restor
     filterBaselineClosedFolderKeys: ["folder:pages:fixture"],
   });
 });
-
-function browseState(): BrowseRecoveryState {
-  return {
-    changedOnly: true,
-    closedFolderKeys: ["folder:pages:fixture"],
-    colorScheme: "dark",
-    detailsOpen: true,
-    drawerOpen: true,
-    filterBaselineClosedFolderKeys: ["folder:pages:fixture"],
-    navScroll: 18,
-    query: "home",
-    regionScrolls: { flow: 8, stage: 42 },
-    viewport: "mobile",
-  };
-}

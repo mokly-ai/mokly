@@ -198,7 +198,7 @@ test("no design route doubles as a directory holding another design route", asyn
   for (const route of routes)
     assert.ok(
       !directories.has(route.replace(/\.html$/, "")),
-      `${route} collides with a collection segment of the same name`,
+      `${route} collides with a route directory segment of the same name`,
     );
 });
 

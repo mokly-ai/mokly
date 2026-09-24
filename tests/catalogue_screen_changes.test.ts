@@ -55,7 +55,7 @@ test("screen-only live view states use real material attribution without snapsho
   assert.equal(model.comparisonUrl, null);
 });
 
-test("removing a variant retains its parent relationship and collection ancestry", async (t) => {
+test("removing a variant retains its parent relationship and folder path", async (t) => {
   const fixture = await componentReviewFixture(
     t,
     () => screenVariantEntrySource({ includeVariant: false }),
