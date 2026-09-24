@@ -25,7 +25,7 @@ screens and flows. Current manifests require v6. The
 discovery, and rendering adapters; consumers use ordinary page definitions.
 The co-located layout below, discovered through `entries` globs, was delivered
 by the [co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
-Manifest v6 and the public component stylesheet marker are planned by
+Manifest v6 and the public component stylesheet marker were planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
 implemented in Milestones 6 and 3. Historical v3–v5 baselines remain readable.
 

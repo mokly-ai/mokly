@@ -7,7 +7,7 @@ This is the public contract for hosted and self-hosted receivers. Receivers need
 only the published `@mokly/mokly` package and these documented file artifacts;
 Mokly Cloud has no special protocol or access to package internals.
 `mokly export` remains local-only. `mokly publish` exports, then uploads once.
-Uploaded public resources and new manifest/comparison formats are planned by
+Uploaded public resources and new manifest/comparison formats were planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
 implemented in Milestones 3, 6 and 7. The upload envelope stays at v1;
 packages carry the current public formats.

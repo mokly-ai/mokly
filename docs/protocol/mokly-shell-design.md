@@ -23,7 +23,7 @@ remain binding on the hydrated React implementation, and no mockup changes
 are part of that plan. The separate
 [component explorer designs](./mokly-component-design.md) are implemented
 mockups whose runtime-backed states are identified in their own contract.
-Removal of the Shared impact screen and Dependencies row is planned by
+Removal of the Shared impact screen and Dependencies row was planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
 implemented in Milestone 2 mockups and Milestone 5 UI. The design inventory
 below now matches the example mockups and runtime inspector.

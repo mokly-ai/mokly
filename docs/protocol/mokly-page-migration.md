@@ -9,7 +9,7 @@ remain supported. The [implementation plan](../../plans/unified-catalogue-pages.
 records verification and the isolated consumer rehearsal. Pages are attributed
 to any repository-owned defining module, as delivered by the
 [co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
-Removal of page `dependencies` and manifest v6 is planned by
+Removal of page `dependencies` and manifest v6 was planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md) and
 implemented in Milestone 6; current code rejects the removed field.
 

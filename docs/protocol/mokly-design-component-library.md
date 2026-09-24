@@ -7,11 +7,11 @@ Source paths below are relative to `examples/basic/entries/design/` and identify
 the original composition points, which now delegate to registered implementations
 in `library/{group}/{slug}.view.tsx`. Saved pages and consuming artboards share
 those implementations.
-The stylesheet migration is planned by
+The stylesheet migration was planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md) and
-implemented in Milestone 3; removal of source-path evidence and authoring
-fields follows in Milestones 4 and 6. The declaration guidance below is the
-target, not yet the generated example.
+implemented in Milestone 3; source-path evidence and authoring fields were
+removed in Milestones 4 and 6. The generated example follows the declaration
+guidance below.
 
 ## Components And Saved Examples
 

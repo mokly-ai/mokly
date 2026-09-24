@@ -2,10 +2,10 @@
 
 ## Delivery Status
 
-The scale fixture's source-path-free Changes expectation is planned by
+The scale fixture's source-path-free Changes expectation was planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md) and
 implemented in Milestone 4. Its existing timing and CSS-rule behavior remains;
-the target below is not yet implemented.
+the separate diagnostics target below is not yet implemented.
 
 ## Opt-in timings
 

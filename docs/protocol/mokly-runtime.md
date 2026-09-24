@@ -42,9 +42,9 @@ Selecting a removed page or screen captures and renders its pinned previous
 version in that shared tree through the lifecycle implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md).
 The single Changes rule, component stylesheet validation and removal of the
-Dependencies display are planned by
+Dependencies display were planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-implemented in Milestones 3, 4 and 5 respectively. Milestone 6 removes the
+implemented in Milestones 4, 3 and 5 respectively. Milestone 6 removed the
 old authoring declarations.
 
 ## Component Workspaces

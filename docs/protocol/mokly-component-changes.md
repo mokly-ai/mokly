@@ -4,12 +4,12 @@
 
 The classifier, Browse/watch cache, comparison artifacts, and static exporter
 share this attribution policy. The [component explorer plan](../../plans/component-explorer.md)
-records delivery. Unregistered catalogue and legacy behavior remains intact.
+records delivery. All catalogues use the same rendered-output evidence rule.
 Replacing source-path ownership with rendered stylesheet/resource attribution
-and applying one Changes rule to every catalogue is planned by
+and applying one Changes rule to every catalogue was planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
 delivered across Milestones 3 and 4. Source paths no longer classify changes;
-Milestone 6 removes the legacy authoring fields; the current writer emits v6.
+Milestone 6 removed the legacy authoring fields; the current writer emits v6.
 
 ## Changes Membership
 

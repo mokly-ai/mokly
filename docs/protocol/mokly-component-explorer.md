@@ -10,7 +10,7 @@ and [component design catalogue](./mokly-component-design.md). Removed
 consumers open their historical screen through the behavior implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md).
 The removal of the Details Dependencies row and source-path comparison evidence
-is planned by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
+was planned by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
 implemented in Milestones 4 and 5. The current inspector no longer displays
 authoring dependencies or legacy shared-impact paths.
 

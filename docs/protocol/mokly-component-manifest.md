@@ -260,6 +260,6 @@ Do not invent component usage for historical screen/page-only entries or revive
 legacy configuration. Registered document pages retain their material Changes
 and baseline context without screen/component visual comparisons or controls.
 Reject unknown versions.
-Implement shared positive/negative contract fixtures, schema round trips,
-deterministic-output checks, and ownership/path regressions in Milestones 3
-and 6 of the removal plan.
+Shared positive/negative contract fixtures, schema round trips,
+deterministic-output checks, and ownership/path regressions cover this
+contract.

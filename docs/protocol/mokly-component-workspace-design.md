@@ -7,7 +7,7 @@ revise the existing component, controls, and consuming-screen artboards after
 design feedback. The package-owned runtime implements the same layout. The existing owning routes and mobile/desktop screen components
 remain the review entry points. The removed-consumer workspace is aligned with
 the [removed content previews plan](../../plans/removed-content-previews.md).
-Removal of the Shared impact depiction is planned by
+Removal of the Shared impact depiction was planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
 implemented in Milestone 2 mockups and Milestone 5 UI. The example and runtime
 now use the state list below.

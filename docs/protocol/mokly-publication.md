@@ -10,7 +10,7 @@ screens as implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md). This
 does not change the npm CLI.
 Public-resource delivery for declared component CSS and the versioned
-catalogue/comparison outputs are planned by
+catalogue/comparison outputs were planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
 delivered in Milestones 3 and 7. Publication now uses the new formats;
 the upload envelope itself is unchanged.

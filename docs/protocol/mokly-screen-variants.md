@@ -9,7 +9,7 @@ fixes. The unimplemented design-catalogue conversion, open review findings and
 later product ideas belong to the separate
 [follow-up plan](../../plans/screen-variants-follow-up.md). The conversion's
 route retirements still require explicit approval.
-Removal of variant `dependencies` and its inheritance is planned by
+Removal of variant `dependencies` and its inheritance was planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md) and
 implemented in Milestone 6; the input below is now implemented.
 

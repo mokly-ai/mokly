@@ -215,8 +215,8 @@ Snapshot bytes and historical marker compatibility retain their existing rules.
 
 ## Acceptance
 
-Milestone 2 needs key-stability fixtures, record-resolution truth-table tests,
+Verification covers key-stability fixtures, record-resolution truth-table tests,
 source normalization/stripping and source-only Changes regressions, and marker
 conformance for every view, including null, nested, multi-root and replayed
-instances. Later viewer/adapter tests must preserve scoped lookup and treat
+instances. Viewer/adapter tests must preserve scoped lookup and treat
 unavailable geometry separately from a missing logical instance.

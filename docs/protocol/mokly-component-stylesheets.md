@@ -2,12 +2,11 @@
 
 ## Delivery Status
 
-This is the approved target planned by
+This implemented contract was planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md).
-Milestone 3 delivers declaration, validation, linking, ownership, Serve and
-public delivery. Milestone 4 removes legacy source-path attribution;
-Milestone 6 removes the old authoring inputs; the stylesheet contract is
-implemented.
+Milestone 3 delivered declaration, validation, linking, ownership, Serve and
+public delivery. Milestone 4 removed legacy source-path attribution and
+Milestone 6 removed the old authoring inputs.
 
 ## Declaration And Public Files
 

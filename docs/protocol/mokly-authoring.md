@@ -6,7 +6,7 @@ consumer rendering follows the [rendering contract](./mokly-rendering.md).
 
 ## Delivery Status
 
-The removal of entry `dependencies` is planned by
+The removal of entry `dependencies` was planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md) and
 implemented in Milestone 6; the `componentStylesheets` export is implemented in
 Milestone 3. Removed inputs now fail with a registry violation.

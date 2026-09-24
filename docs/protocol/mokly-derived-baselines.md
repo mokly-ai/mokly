@@ -7,7 +7,7 @@ Implemented by the completed
 the cached builder, configuration, build/check modes, Serve/export preparation,
 the `preparing` presentation, the commit-scoped watch lifecycle, detailed
 rebuild timings, and the derived scale fixture are shipped.
-Source-path-free classification with historical v3–v5 normalization is planned
+Source-path-free classification with historical v3–v5 normalization was planned
 by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md)
 and implemented in Milestones 4 and 6; rebuilt current v6 baselines are cached
 without downgrading their manifests.

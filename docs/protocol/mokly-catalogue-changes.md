@@ -10,10 +10,10 @@ removed-entry metadata are independent of the visual
 [Unified Catalogue Pages](../../plans/unified-catalogue-pages.md). Baseline
 documents, ancestry, and delivery descriptors for removed pages are implemented
 by the [removed content previews plan](../../plans/removed-content-previews.md).
-The single source-path-free membership rule and comparison format changes are
-planned by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-implemented in Milestones 4 and 7 respectively. Current code still uses
-source-path evidence in registered-component catalogues.
+The single source-path-free membership rule and comparison format changes were
+planned by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md)
+and implemented in Milestones 4 and 7 respectively. Registered-component
+catalogues no longer use source-path evidence.
 
 ## Shared Metadata Contract
 

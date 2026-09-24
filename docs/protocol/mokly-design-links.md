@@ -16,9 +16,9 @@ the component designs; the legacy disclosure links and segmented view controls
 are removed. Catalogue-wide link and inventory checks cover
 both families; component keyboard-control checks live in the component suites.
 
-The Shared impact state and its links are removed by Milestone 2 of
+The Shared impact state and its links were removed by Milestone 2 of
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md);
-runtime comparison details follow in Milestone 5. The links below match the
+Milestone 5 removed legacy runtime comparison details. The links below match the
 current example pages and inspector.
 
 ## Scope And Ownership

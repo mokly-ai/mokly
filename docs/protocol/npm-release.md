@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-The later manifest-v6 and public-format migration is planned by
+The manifest-v6 and public-format migration was planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
 implemented in Milestones 6 and 7. The breaking page upgrade note below is
 historical (v5); it does not authorize emitting v5 after that migration.

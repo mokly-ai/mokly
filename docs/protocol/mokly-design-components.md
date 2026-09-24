@@ -15,9 +15,9 @@ define the delivered behavior tracked by the [adoption plan](../../plans/mokaboo
 The existing [shell design](./mokly-shell-design.md),
 [design links](./mokly-design-links.md), and component design contracts retain
 their current screen behavior and navigation authority.
-Component stylesheet adoption and removal of the style collector are planned
+Component stylesheet adoption and removal of the style collector were planned
 by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-implemented in Milestone 3; source-path evidence is removed in Milestone 4 and
+implemented in Milestone 3; source-path evidence was removed in Milestone 4 and
 authoring fields in Milestone 6. The example now follows this guidance.
 
 ## Outcome And Scope

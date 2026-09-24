@@ -9,7 +9,7 @@ support. Verification is tracked in
 [Unified Catalogue Pages](../../plans/unified-catalogue-pages.md). The
 [removed content previews plan](../../plans/removed-content-previews.md)
 implements the page-only historical capture and delivery boundary.
-Removal of page `dependencies` and manifest-v6 output is planned by
+Removal of page `dependencies` and manifest-v6 output was planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
 implemented in Milestone 6. Milestone 7 removed the public details field;
 the current public writer omits dependency lists.

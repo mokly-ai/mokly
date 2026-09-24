@@ -6,7 +6,7 @@ Historical commands execute trusted repository code; preparation is never an HTT
 ## Delivery Status
 
 Source-path-free classification and acceptance of current manifest-v6 cache
-markers are planned by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md)
+markers were planned by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md)
 and implemented in Milestones 4 and 6 respectively.
 
 ## Rebuild Procedure

@@ -52,7 +52,7 @@ those old versions; exported catalogues must be regenerated.
 - [Public authoring API](./mokly-authoring.md)
 - [Rendering and generated output](./mokly-rendering.md)
 - [Component-declared stylesheets](./mokly-component-stylesheets.md) — implemented
-  Milestone 3 link placement, validation, ownership, watching and delivery.
+  link placement, validation, ownership, watching and delivery.
 - [Build and Browse runtime](./mokly-runtime.md)
 - [Component instance identity](./mokly-instances.md) — existing key/boundary
   rules and approved resolution/source-location target.
@@ -91,8 +91,8 @@ those old versions; exported catalogues must be regenerated.
     command environments, locking and crash cleanup.
 - [Registered components](./mokly-components.md)
 - [Component runtime prop schema](./mokly-component-props.md)
-- [Target manifest v6 schema](./mokly-component-manifest.md)
-- [Target component comparison v5 schema](./mokly-component-review.md)
+- [Manifest v6 schema](./mokly-component-manifest.md)
+- [Component comparison v5 schema](./mokly-component-review.md)
 - [Component change attribution](./mokly-component-changes.md)
 - [CSS change attribution](./mokly-css-attribution.md) — approved
   target: rule-aware stylesheet evidence.

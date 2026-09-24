@@ -2,7 +2,8 @@
 
 ## Status And Outcome
 
-Status: in progress; Milestones 1–7 are complete and Milestone 8 remains.
+Status: in progress; Milestones 1–7 are complete and Milestone 8 verification
+passed. The local milestone commit awaits reviewer push and post-push review.
 The binding Decisions And Scope remove all three inputs and adopt
 component-declared stylesheets in place of the stylesheet role of
 `ownedDependencies`. The user approved both the removals and the component
@@ -440,21 +441,26 @@ Tags: ui
 
 ## Milestone 8: Verify, deliver and review
 
-- [ ] Search the repository, excluding historical plans, `docs/reviews/**` and
+- [x] Search the repository, excluding historical plans, `docs/reviews/**` and
       `CHANGELOG.md`, for `ownedDependencies`, `declaredDependencies`,
       `sharedImpact`, entry `dependencies`, `useDesignStyle` and "impact
       evidence". Each remaining hit must describe the removal or be unrelated.
-- [ ] Mark every changed protocol doc's Delivery Status as implemented and
+      Remaining hits are removal contracts and tests, historical manifest
+      normalization, privacy guards, and unrelated package/runtime dependencies
+      or implementation-impact evidence. The dated `docs/superpowers/specs/`
+      design snapshot retains historical v2 `sharedImpact` shapes; it is not a
+      current contract and is left unchanged.
+- [x] Mark every changed protocol doc's Delivery Status as implemented and
       update this plan's status.
-- [ ] Remove plan-milestone references from normative protocol text; keep
+- [x] Remove plan-milestone references from normative protocol text; keep
       them only in Delivery Status sections.
-- [ ] Smoke test through `npm run dev`: design library pages and example
+- [x] Smoke test through `npm run dev`: design library pages and example
       component screens load their declared stylesheets; an edit to an
       exclusive component stylesheet lists only its component in Changes with
       consumers under Affected screens; an edit to an unreferenced source file
       adds nothing. Run `npm run example:check`.
-- [ ] Run `cargo xtask check` and require a 100% pass rate.
-- [ ] Inspect `git diff --name-status origin/main` and its deletions, and
+- [x] Run `cargo xtask check` and require a 100% pass rate.
+- [x] Inspect `git diff --name-status origin/main` and its deletions, and
       record every approved removal in the commit body.
 - [ ] Run `git add -A`, commit with a breaking-change Conventional Commit
       (`feat!:` with a `BREAKING CHANGE:` footer that lists the migrations),

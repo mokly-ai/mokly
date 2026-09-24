@@ -6,7 +6,7 @@ Implemented. This document owns how the inspector and the comparison stage
 present the evidence defined by
 [CSS change attribution](./mokly-css-attribution.md); that contract owns the
 analysis, membership rule, evidence schema, and validation.
-Removing legacy shared-impact details is planned by
+Removing legacy shared-impact details was planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
 implemented in Milestone 5; the inspector now lists only rendered-resource
 reasons. v4/v5 comparison decoding was implemented in Milestone 7.

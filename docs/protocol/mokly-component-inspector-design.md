@@ -9,7 +9,7 @@ The runtime inspector implements the same layout and interaction. Existing non-c
 artboards continue to document the currently implemented shell. Removed
 consumer stages retain this inspector around the previous version delivered by
 the [removed content previews plan](../../plans/removed-content-previews.md).
-The removal of dependency display is planned by
+The removal of dependency display was planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
 implemented in Milestone 2 mockups and Milestone 5 UI. Neither the mockup nor
 the runtime displays the old row.

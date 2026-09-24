@@ -8,7 +8,7 @@ shares its artifact validation, static delivery, and output transaction. The
 delivery of this contract and the [static delivery contract](./mokly-export-delivery.md).
 Normal build validation and the existing comparison schema remain authoritative.
 The component public CSS delivery, source-path-free Changes and new v6/v2/v4–v5
-formats below are planned by
+formats below were planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
 delivered in Milestones 3, 4, 6 and 7 respectively. Exports now use the new formats.
 

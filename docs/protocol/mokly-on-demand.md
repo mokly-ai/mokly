@@ -2,10 +2,10 @@
 
 ## Delivery Status
 
-The internal v6 entry shape and declared-stylesheet on-demand linking are
-planned by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-implemented in Milestones 6 and 3 respectively. Current Serve still uses v5
-and its existing renderer.
+The internal v6 entry shape and declared-stylesheet on-demand linking were
+planned by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md)
+and implemented in Milestones 6 and 3 respectively. Serve now uses the v6
+entry shape and links declared stylesheets.
 
 ## Startup and completeness
 

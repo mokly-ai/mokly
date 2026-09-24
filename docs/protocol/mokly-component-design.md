@@ -13,10 +13,10 @@ extend the [shell design](./mokly-shell-design.md) and depict the
 [component explorer contract](./mokly-component-explorer.md). The former
 consumer's previous-version state is implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md).
-Replacement of declared-path evidence and component CSS collection is planned
-by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-implemented in Milestones 3 and 4; this verification guidance is the target
-and the current example still uses route rules and inherited paths.
+Replacement of declared-path evidence and component CSS collection was planned
+by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md)
+and implemented in Milestones 3 and 4. The example now uses declared
+component stylesheets and rendered-resource evidence.
 
 ## Owning Catalogue
 
