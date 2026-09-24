@@ -81,7 +81,8 @@ applies when `@mokly/viewer` is hosted independently by a cloud product.
 Serve delivers in-memory v6 documents under `/static/.generated/<route>`;
 export and publication place those compiled documents under
 `static/.generated/<route>` and copy only manifest `assetClosure` resources
-under `static/<catalogue-relative path>`. Relative HTML/CSS references resolve
+under `static/<catalogue-relative path>`. The private manifest is never served
+(404) or shipped as `static/.generated/mokly-manifest.json`. Relative HTML/CSS references resolve
 as they do on disk. No unreferenced file under `static/` becomes public by
 directory scan. Export's optional comparison snapshots are separate from the
 current tree and may retain their historical layout. The upload archive

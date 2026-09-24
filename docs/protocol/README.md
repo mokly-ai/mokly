@@ -40,7 +40,7 @@ when the historical primary file is absent, never when it is invalid.
   cloud documentation site.
 - [Configuration contract](./mokly-configuration.md) — catalogue paths and settings.
 - [Generated output, Git state and asset closure](./mokly-generated-output.md)
-  — approved layout, manifest v6, tracked-state, closure and writer contracts.
+  — implemented layout, manifest v6, tracked-state, closure and writer contracts.
 - [Historical catalogue discovery and addressing](./mokly-baseline-addressing.md)
   — deterministic rebuild discovery, cache descriptors and cross-layout comparisons.
 - [Generated document delivery](./mokly-generated-delivery.md)

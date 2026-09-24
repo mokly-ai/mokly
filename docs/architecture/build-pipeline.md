@@ -83,11 +83,13 @@ association retains the exact bundle, configuration and accepted artifacts for
 local controls. Serve prepares a distinct validated live index and transfers that
 index and bundle over private IPC before readiness, without rendering the catalogue.
 Failed index candidates preserve the last-good graph. `DocumentCompiler` reuses
-Build's rendering, compatibility, ownership, links, ranges and resource validators
+Build's rendering, compatibility, links, ranges and resource validators
 for a requested view. Foreground and Props workers retain only bounded
 generation-local documents/resources. Background compilation runs the ordinary
 exhaustive Build pipeline with cooperative checkpoints in the original render order,
-then uses the existing transactional writer. Build/Check/Export stay exhaustive.
+then retains the validated output in memory. Only `serve --build` invokes the
+transactional writer from the parent after an accepted complete compilation;
+Build/Check/Export stay exhaustive, and only Build writes by default.
 Background Git I/O is parent-owned over a private worker channel. Cancellation
 drains the actual subprocesses before worker termination, even if the worker cannot
 yield; CPU-intensive classification stays in the worker.
@@ -126,7 +128,7 @@ names remain private even when no longer imported.
 
 Each page calls its synchronous `render()` exactly once for one complete HTML
 document. It bypasses the screen renderer and variant loop, then uses the same
-ownership, link, resource, and transactional validation.
+link and resource validation before any requested output transaction.
 
 Each screen owns a mobile and desktop React node. Mokly selects the first
 stylesheet rule matching the screen's catalogue route, applies it to each

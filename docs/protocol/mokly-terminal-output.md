@@ -196,13 +196,17 @@ builds successfully and appears in `check`'s `untracked:` group until staged.
 No Build, watched Serve, export, or publication command reads head tracking.
 
 `build --watch` prints the normal `Generated <n> Mokly files.` (or rich
-`✔ Generated <n> files in <mockupsDir>/.generated (<duration>)`) on the
+`✔ Generated <n> files in <directory> (<duration>)`) on the
 initial success and on each subsequent successful compilation/write; rich
-subsequent writes also use the watch timestamp. `serve --build` keeps the
+write summaries have no watch timestamp. The build's `<directory>` is
+`mockupsDir` relative to the command's working directory (or `.`).
+`serve --build` keeps the
 mode-free Serve header and reports
-`✔ Generated <n> files in <mockupsDir>/.generated (<duration>)` in rich mode,
+`✔ Generated <n> files in <directory> (<duration>)` in rich mode,
 or `Generated <n> Mokly files.` in plain mode, after each successful complete
-write. With `--no-watch` that line occurs once after initial compilation.
+write. Serve's `<directory>` is `mockupsDir` relative to `repoRoot`; it is
+currently empty for a repository-root catalogue. With `--no-watch` that line
+occurs once after initial compilation.
 Failure prints the normal typed error, leaves the last good generated tree
 intact, and never prints a success line for that generation; watched commands
 remain active for subsequent input changes. Plain watch-event suppression

@@ -2,10 +2,10 @@
 
 ## Delivery Status
 
-Approved target in [Generated Output Simplification](../../plans/generated-output-simplification.md).
-The cached rebuild infrastructure and `preparing` state are shipped. Reader
-selection is per commit, with v6 inventory verification and a dedicated
-`.generated/` layout. Only `check` inspects head Git index tracking.
+Implemented by [Generated Output Simplification](../../plans/generated-output-simplification.md).
+The cached rebuild infrastructure, `preparing` state, per-commit reader
+selection, v6 inventory verification and dedicated `.generated/` layout are
+shipped. Only `check` inspects head Git index tracking.
 
 ## Purpose And Configuration
 
@@ -52,8 +52,8 @@ untracked. The precise mixed-state error and prefix rules are in
 `check` reports `build-invalid` for sorted missing expected paths, stale
 expected bytes, and extra files under `.generated/`, including an absent
 directory, with both remedies: `mokly build` and commit the complete directory,
-or `git rm -r --cached -- <mockupsDir>/.generated/` and ignore it. Empty
-directories are not files and do not count as extras. Untracked `check` only
+or `git rm -r --cached -- <mockupsDir>/.generated/` and ignore it. Unexpected
+empty directories count as extra paths. Untracked `check` only
 validates compilation and never reads local `.generated/` contents to judge
 freshness. Indexed `.mokly-cache/` files remain invalid regardless of head
 state. Only `check` rejects partly tracked output; `build` writes regardless

@@ -285,9 +285,10 @@ Live background classification, complete comparison generation, and publishing
 with `--include-changes` compare the workspace with a configured base ref, defaulting
 to `origin/main`. It resolves the merge base shared by `HEAD` and that ref, then
 reads the manifest and generated tree at that branch point without checking
-it out. Complete tracked output uses Git blobs; otherwise
-[per-commit baseline selection](./mokly-derived-baselines.md) uses the cached
-rebuild of that commit produced with its own code. The baseline is
+it out. A manifest with a complete inventory at that pinned commit uses Git
+blobs (pre-v6 manifests retain the historical completeness assumption);
+otherwise [per-commit baseline selection](./mokly-derived-baselines.md) uses
+a cached rebuild of that commit produced with its own code. The baseline is
 never rendered with the current tree's code. Commits reachable only from the
 configured base do not enter the comparison. Head generated artifacts come from
 the validated in-memory compilation. It never requires matching working-tree

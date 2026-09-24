@@ -59,7 +59,8 @@ Run mokly build and commit every file under <mockupsDir>/.generated/, or run git
 
 `tracked` lists every indexed `.generated/` path (including extras); omit
 `tracked:` if empty. `untracked` lists `E - I`; it cannot be empty in mixed
-state. Render `<mockupsDir>` as a repository-relative POSIX path without `./`.
+state. Render the whole generated root repository-relative without `./`:
+`mockupsDir: "."` gives `.generated/`, not `./.generated/`.
 `check` computes the state once, after compilation, and compares disk only in
 tracked state. `build`, `build --watch`, `serve`, `serve --build`, export and
 publication do **not** compute tracking or run the cache index guard; no
@@ -209,8 +210,9 @@ generated document. A generated-to-generated link resolves inside
 `.generated/`; no root-absolute catalogue hrefs. Disk-opened HTML and HTTP
 URLs must resolve identically.
 
-Serve maps `/static/.generated/<route>` to the accepted in-memory compilation,
-and `/static/<catalogue-relative closure path>` to the live authored regular file;
+Serve maps `/static/.generated/<route>` to the accepted in-memory compilation
+except the private manifest (404), and `/static/<catalogue-relative closure path>`
+to the live authored regular file;
 unreferenced paths return not found. No filesystem fallback for generated
 routes. Export ships those same compiled bytes under `.generated/` plus only
 the closure files at their catalogue-relative paths; static hosting mirrors
@@ -225,12 +227,12 @@ the existing source/cache/export transactional confinement rules.
 Stage the **entire** `.generated/` tree in an ignored sibling
 `.mokly-write-.generated-<random>/stage` directory on the same filesystem;
 validate before moving the old tree to that transaction's `backup`, install
-by renaming `stage`, and restore `backup` on an install failure. Never follow
-symlinks at or inside the old or staged tree; reject them without disturbing
-the old tree. Clean the transaction after install or rollback; a failed
+by renaming `stage`, and restore `backup` on an install failure. Reject
+symlinks at or inside the old tree before moving it, and inside the stage;
+never follow them or disturb the old tree on validation failure. Clean the transaction after install or rollback; a failed
 rollback preserves its backup and reports the recovery path. If a crash leaves
 no live tree but a sibling transaction with `backup`, the next build fails
-`build-invalid`, names that backup, and requires manual restoration or removal;
+`build-invalid` with `previous generated tree may be in <backup>; restore the backup or remove the leftover transaction before building`;
 stage-only leftovers are ignored. If a live tree exists, old transaction
 leftovers are ignored and left for manual cleanup, not adopted or removed.
 Builds replace nothing outside `.generated/` except their own sibling

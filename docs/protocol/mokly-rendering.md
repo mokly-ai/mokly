@@ -127,7 +127,7 @@ never copied into the npm package.
 
 - `<screen>.mobile.html` and `<screen>.desktop.html` fragments for each screen,
   including each variant screen at its derived
-  `<parent>.variants/<slug>.html` route (approved target in the
+  `<parent>.variants/<slug>.html` route (see the implemented
   [screen variants contract](./mokly-screen-variants.md));
 - `<screen>.mobile.dark.html` and `<screen>.desktop.dark.html` when that screen's
   effective schemes include dark;

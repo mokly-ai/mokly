@@ -1,8 +1,8 @@
 # Mokly Configuration Contract
 
 This is the detailed configuration boundary of the
-[package contract](./mokly-package.md). The generated-output updates are an
-approved target tracked by [the active plan](../../plans/generated-output-simplification.md).
+[package contract](./mokly-package.md). The generated-output changes in
+[the implementation plan](../../plans/generated-output-simplification.md) are implemented.
 
 ## Delivery Status
 
@@ -140,8 +140,9 @@ matching `lightStylesheets` or `darkStylesheets` list appended in declaration
 order.
 `review.baselineBuild` is valid in every repository; its argv contract and
 per-commit selection follow [baseline selection](./mokly-derived-baselines.md).
-The removed `generatedOutput` and `publicExclude` keys fail `config-invalid`
-with guidance to use Git tracking and a referenced asset closure instead.
+The removed keys fail `config-invalid` with their exact guidance:
+`generatedOutput was removed; use Git tracking for check and run mokly build to write output`
+and `publicExclude was removed; remove it; only referenced authored assets are public`.
 Only Check, after compilation, uses index paths under `<mockupsDir>/.generated/` to classify
 tracked, untracked or mixed output; mixed output fails `build-invalid` with
 both remedies as specified in [generated output](./mokly-generated-output.md).

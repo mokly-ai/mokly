@@ -54,8 +54,9 @@ Review phases use the same session, role and parent context as their caller:
 
 - `review.base-commit` measures Git merge-base resolution and commit validation.
   Pinned readers reuse the resolved commit without another Git span.
-- `review.changed-paths` covers output exclusions, tracked/untracked discovery,
-  deduplication and sorting, including later input-freshness checks.
+- `review.changed-paths` covers changed-path Git evidence, output exclusions,
+  deduplication and sorting, including later input-freshness checks. It never
+  checks whether head generated output is indexed.
 - `review.base-manifest` covers historical manifest selection, reading, parsing
   and validation, including compatibility fallback.
 - `review.base-documents` covers each bulk baseline-document read, including

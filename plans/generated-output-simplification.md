@@ -446,9 +446,9 @@ Backend for change C.
 
 ## Milestone 5: Final verification and review
 
-- [ ] Re-read every document changed in Milestone 1 against the shipped
+- [x] Re-read every document changed on this branch against the shipped
       behaviour and fix drift, including `AGENTS.md` and the README.
-- [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
+- [x] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
       `npm test`, `npm run test:browser`, `npm run example:check`, and
       `cargo xtask check`; `git add -A`; commit with Conventional Commits; push
       the branch.

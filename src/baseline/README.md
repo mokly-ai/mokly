@@ -67,7 +67,7 @@ a changed commit or build settings and shutdown cancel and drain it.
 blob reads only for commits with a complete matching manifest inventory;
 other commits rebuild. The builder extracts to `source`, runs commands,
 discovers the historical catalogue root, validates its manifest and output tree,
-move only `.generated/` and copy the manifest's authored asset closure to
+moves only `.generated/` and copies the manifest's authored asset closure to
 their repository-relative paths under `output/`; pre-v6 single-directory
 baselines move the whole historical catalogue. Readers resolve
 repository-relative paths beneath `output/` for v6 or strip the discovered

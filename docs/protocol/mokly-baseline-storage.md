@@ -79,7 +79,7 @@ ignore file; only `check` runs the index guard, failing if Git tracks anything u
   source/         # extraction, removed after adoption
   output/         # v6: repo-relative .generated plus closure; legacy: flat catalogue contents
   complete.json   # completion marker
-  inputs.json     # JSON string containing requested/current repository-relative mockupsDir
+  inputs.json     # JSON string containing requested/current repo-relative mockupsDir ("." at repo root)
 ```
 
 New `complete.json` markers are `{ schemaVersion: 1, commit, finishedAt,

@@ -34,15 +34,16 @@ interface RemovedEntrySnapshot {
 }
 ```
 
-No-watch Serve validates the successfully written compilation's manifest and
-resolves its optional Changes exactly once before handing that catalogue
-snapshot to HTTP. HTTP consumes the supplied snapshot without rereading the
-manifest or retrying Git. Child startup uses the same validation and optional
-history loader when no snapshot was supplied. A failed optional calculation
-omits the entire Changes result, including removed entries; there is no separate
-startup route-list fallback. Invalid current manifests or stale source inventories
-still prevent listening. This startup guarantee does not pin a later, explicitly
-requested on-demand screen comparison to the startup Git state.
+No-watch Serve validates an in-memory live index before listening. Its
+background generation compiles the full catalogue without writing the output
+tree unless `--build` was requested; the parent prepares any Git baseline and
+publishes the optional Changes snapshot when classification finishes. HTTP uses
+the accepted manifest and snapshot without selecting a baseline or building
+historical output. Watched children likewise receive prepared baseline
+selection from their parent rather than running a history loader. A failed
+optional calculation omits the entire Changes result, including removed
+entries; invalid current manifests or stale source inventories still prevent
+listening. On-demand comparisons use the accepted generation and pinned base.
 
 The entry types are the validated manifest DTOs, including their common metadata
 and tags. Historical screen readers normalize older supported shapes first;

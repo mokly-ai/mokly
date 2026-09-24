@@ -168,13 +168,13 @@ stable `pr-<number>` branch alias and receive one updated sticky comment with
 the deployment result, URL, commit, and workflow run. Fork pull requests never
 receive Cloudflare credentials or write-capable execution.
 
-`npm run preview:build` first rebuilds Mokly and its derived basic consumer.
+`npm run preview:build` first builds Mokly and regenerates the basic catalogue.
 The repository-only preview builder starts the real Browse server on
 an ephemeral loopback port and snapshots the home, not-found, current catalogue
 routes, plus removed-entry routes only when Changes is included. It copies the shell stylesheet, browser and
 shared navigation modules, fonts, id redirects, and every validated public
 consumer asset into `.context/mokly-preview`. HTML copies pass through the
-same manifest/header-aware logical-link adapter as served Browse; unowned
+same manifest-bound logical-link adapter as served Browse; untrusted
 reserved metadata is removed and invalid trusted output fails the build.
 Preview shell links use Cloudflare
 Pages' canonical extensionless HTML routes, and static shell HTML omits the

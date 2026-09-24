@@ -79,7 +79,8 @@ root has no manifest. The recipe's historical code remains trusted input.
 ## Cache Identity And Readers
 
 Keep `inputs.json` as the JSON string of the **requested/current**
-repository-relative `mockupsDir`, not the discovered root. A mismatch with
+repository-relative `mockupsDir` (`"."` for a repository-root catalogue),
+not the discovered root. A mismatch with
 the request, or a different command list in the completion marker, fails
 intact with the existing remove-the-entry guidance. New `complete.json`
 schema-version-1 markers retain `commit`, `finishedAt`, `commands`, and
