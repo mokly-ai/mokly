@@ -1,8 +1,8 @@
 # Path-Based Navigation Hierarchy
 
-Status: Milestones 1–9 are complete, verified, and pushed, and every earlier
-review finding is fixed; Milestone 9's post-push review is pending. The plan
-stays Active until its PR merges.
+Status: Milestones 1–9 are complete, verified, pushed, and reviewed; findings
+1–10 are fixed and findings 11–16 await the user's decision. The plan stays
+Active until its PR merges.
 Created 2026-09-23 with the user's
 consent after the design discussion in this workspace. This plan supersedes the
 collection-forest contract delivered by
@@ -450,6 +450,32 @@ From the Milestone 5 review (against `c6b2595`):
     `browseState()` helper is duplicated in `tests/client.test.ts` and
     `tests/client_disclosures.test.ts`. Fixed in Milestone 7.
 
+From the Milestones 6–9 review (against `a90503b`), awaiting the user's
+decision:
+
+11. Low: a watched reload while search or the Changes filter is active
+    restores folders missing from the snapshot (new or renamed folders) to
+    their server default, usually closed, so matching rows stay hidden. The
+    old closed list treated them as open, so this regressed in Milestone 8;
+    `mokly-runtime.md` also disagrees with itself on it.
+12. Low: adopting live comparison evidence keeps the old disclosure map, so a
+    screen that gains a Removed variant has no `variants:` key: Collapse all
+    cannot close that list, and the v3 save and reload snapshot omit it.
+13. Low: `npm test` now applies the gate's evidence rules, which reject
+    skipped tests, and 12 tests skip on Windows; the collection guard also
+    compares `/` paths with `path.join` results. `npm test` therefore always
+    fails on Windows, and Windows CI runs only six named files.
+14. Low: two migrated assertions can no longer fail:
+    `viewer_bootstrap.spec.ts` searches the raw v3 JSON for a key that is
+    always present, and `client_browse_navigation.test.ts` compares a literal
+    with an identical literal.
+15. Nit: `mokly-runtime.md` (468 lines, 443 on `origin/main`),
+    `mokly-viewer.md`, and `ci-verification.md` grew again.
+16. Nit: the runtime spec's variant-list default omits that a screen's own
+    list opens on its page and that sections open; `mokly-viewer.md` still
+    says "the existing keys"; and `plans/README.md` said the gate and push
+    were pending after they were done.
+
 ## Milestone 5: Review follow-up for findings 3 and 4
 
 On 2026-09-24 the user chose to fix review findings 3 and 4 with the
@@ -644,11 +670,13 @@ product change.
 - [x] Update any documentation that describes how `npm test` selects files.
 - [x] Run `cargo xtask check`; fix anything it reports until it passes.
 - [x] Commit and push.
-- [ ] Review the complete local diff against `origin/main` using
+- [x] Review the complete local diff against `origin/main` using
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       after the push; report each finding with a number, severity, plain
       explanation, impact of doing nothing, lettered options, and a
-      recommendation, without changing the implementation.
+      recommendation, without changing the implementation. Two independent
+      reviewers ran against `a90503b`; findings 11–16 await the user's
+      decision.
 
 ## Post-merge follow-up (non-blocking)
 
