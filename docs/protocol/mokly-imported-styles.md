@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-Approved target; per-root CSS/asset compilation is implemented, but automatic
+Approved target; grouped CSS/asset compilation is implemented, but automatic
 stylesheet links and PostCSS processing are pending.
 [The plan](../../plans/imported-css-delivery.md) tracks the stages. Until
 links land, use authored public CSS via `stylesheets` to style views. This
@@ -81,9 +81,13 @@ their order; late imports after a rule stay there and follow CSS validity rules.
 
 Graph pass: one in-memory JavaScript output; Mokly captures plain `.css` as
 an empty side-effect module and `.module.css` as a transformed class map,
-instead of retaining esbuild's CSS sibling output. A second esbuild pass
-bundles each nonempty root from a synthetic CSS entry with ordered `@import`s,
-allowing ordinary nested imports after the exclusion above. The CSS pass uses
+instead of retaining esbuild's CSS sibling output. A CSS pass bundles the
+renderer alone and all nonempty entry roots together in a multi-entry esbuild
+build, each from a distinct synthetic path with ordered `@import`s. Each
+root's prelude walk and its metafile output inputs determine its inventory;
+shared assets must have identical bytes across both builds. Select failures
+by root order, never plugin callback order. Nested imports retain their CSS
+ordering. The CSS pass uses
 the same aliases, conditions, main fields, package roots, extension and
 symlink policy as the graph pass; it does not evaluate consumer JavaScript.
 The CLI does not eagerly load Lightning CSS: its native CommonJS module is
@@ -157,6 +161,8 @@ esbuild CSS bundling. PostCSS may inline local `@import`s (Tailwind v4 does),
 so preprocessing must prune the entire local import tree before it can see
 excluded content. Cache by `(source path, effective pruned-import set)`
 within a compilation and share that result between graph and CSS passes;
+the effective set consists only of resolved local prelude imports excluded
+from that file, not every file in the renderer's closure;
 the same file with different root-specific pruning is a distinct input and
 must be processed again. Mokly supplies PostCSS, not consumer plugins or
 their versions.

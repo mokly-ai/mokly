@@ -27,11 +27,12 @@ export function stripSourcePathComments(
   metafile: Metafile,
 ): string {
   const inputs = new Set(Object.keys(metafile.inputs));
-  return css
-    .split("\n")
-    .filter((line) => {
-      const match = /^\/\* (.*?) \*\/$/.exec(line);
-      return !match || !inputs.has(match[1]!);
-    })
-    .join("\n");
+  const lines: string[] = [];
+  for (const line of css.split("\n")) {
+    const match = /^\/\* (.*?) \*\/$/.exec(line);
+    if (match && inputs.has(match[1]!)) {
+      if (lines.at(-1) === "") lines.pop();
+    } else lines.push(line);
+  }
+  return `${lines.join("\n").replace(/\n+$/, "")}\n`;
 }

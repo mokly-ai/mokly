@@ -23,6 +23,11 @@ export class StyleResolution {
     )[0]?.[1];
   }
 
+  /** Resolution failures by source, for deterministic root-first selection. */
+  get failures(): ReadonlyMap<string, MoklyError> {
+    return this.errors;
+  }
+
   constructor(
     private readonly config: ResolvedConfig,
     private readonly graphInputs: ReadonlySet<string>,

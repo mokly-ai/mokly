@@ -4,7 +4,8 @@
 
 Active. Created 2026-09-24 from the CSS-in-JS investigation on this branch.
 Milestones 1, 1A, 2, 3, and 4 (contract, binary-safe output, reserved generated
-directory, and CSS/asset bundling) are complete; Milestones 5–9 remain. PostCSS
+directory, and CSS/asset bundling) and stylesheet-pass follow-ups (4A) are
+complete; Milestones 5–9 remain. PostCSS
 will let Tailwind v4 and autoprefixer
 use the consumer's configuration. Esbuild remains the only bundler; the optional
 Vite compatibility package is a follow-up plan.
@@ -396,6 +397,24 @@ Produce deterministic per-root stylesheets and assets inside the compilation.
       the CLI does not eagerly resolve a CommonJS dependency; align the older
       JavaScript `file` loader inventory test with the documented Build error.
 - [x] Run the build, relevant tests, and `cargo xtask check`.
+
+## Milestone 4A: Stylesheet pass follow-ups (complete)
+
+Resolve stylesheet pass performance and deterministic-byte findings before linking.
+
+- [x] Bundle the renderer alone and all entry roots in one multi-entry esbuild
+      pass, preserving per-root prelude closure, metafile inventories, output
+      routes, deterministic first-root errors, and shared-asset byte checks.
+      Benchmark the same 60-entry catalogue before and after.
+- [x] Memoize stylesheet preprocessing by the _effective_ pruned-import set;
+      prove graph and stylesheet passes reuse unaffected text with a counting
+      processor test.
+- [x] Strip separator blank lines from esbuild input comments and finish CSS
+      with exactly one newline; cover the resulting bytes.
+- [x] Update the build README and protocol; run build, focused tests,
+      example Build/Check, lint, typecheck, then `cargo xtask check`.
+- [x] Commit and push independently; run post-push review using
+      `docs/implementation-review-prompt.md` against `origin/main`.
 
 ## Milestone 5: Link generated stylesheets into every view
 

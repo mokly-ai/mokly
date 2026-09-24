@@ -69,7 +69,9 @@ esbuild's discarded sibling CSS output with class bindings and records graph
 imports. `styles/order.ts` walks metafile imports. `styles/prelude.ts` scans
 valid CSS import preludes, `styles/preprocess.ts` owns the memoized post-pruning
 transform seam, `styles/modules.ts` scopes local identities, `styles/bundle.ts`
-orchestrates each stylesheet pass, and `styles/resolution.ts` validates URLs,
+orchestrates the renderer pass and one multi-entry pass for all entries;
+`styles/bundle_pass.ts` owns esbuild and per-root input attribution, and
+`styles/resolution.ts` validates URLs,
 imports, and confined assets. `styles/outputs.ts` strips esbuild path comments
 and deduplicates shared assets by raw bytes.
 `styles/transformer_inventory.ts` inventories CSS reachable only from the
@@ -80,6 +82,10 @@ from an npx installation. The bundle stays in memory and retains the
 consumer's existing rendering/provider graph.
 `styles/lightning.ts` loads Lightning CSS's native CommonJS binding only on
 the first CSS transformation, not during CLI module import.
+The preprocessor caches by local imports actually excluded in each file,
+allowing both graph and CSS passes to share unaffected transformations. The
+output cleaner drops esbuild's source-path comments and their separator lines
+and retains exactly one final newline.
 
 The retained Serve runtime also carries the compiled CSS and binary assets
 and the root-to-stylesheet route map. Accepted-graph recompilation reuses

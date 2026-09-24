@@ -54,3 +54,21 @@ test("only esbuild source-path comments are removed, not other CSS content", () 
     "/*! keep this license */\n.a { color: red; }\n",
   );
 });
+
+test("source comment separators are removed and CSS ends with one newline", () => {
+  const metafile: Metafile = {
+    inputs: {
+      "entries/a.css": { bytes: 20, imports: [] },
+      "entries/b.css": { bytes: 20, imports: [] },
+      "mokly-styles:mokly:styles": { bytes: 10, imports: [] },
+    },
+    outputs: {},
+  };
+  assert.equal(
+    stripSourcePathComments(
+      "/* entries/a.css */\n.a { color: red; }\n\n/* entries/b.css */\n.b { color: blue; }\n\n/* mokly-styles:mokly:styles */\n\n",
+      metafile,
+    ),
+    ".a { color: red; }\n.b { color: blue; }\n",
+  );
+});
