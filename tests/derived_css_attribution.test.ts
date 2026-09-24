@@ -16,16 +16,20 @@ import { validEntrySource } from "./helpers/fixture.js";
 
 for (const components of [false, true]) {
   test(`derived CSS evidence keeps rule attribution across live and retained comparisons (components=${components})`, async (t) => {
-    const markup =
-      '<link rel="stylesheet" href="../shared.css" /><button className="auth">Sign in</button>';
+    const markup = '<button className="auth">Sign in</button>';
     const source = components
       ? componentEntrySource({ actionRender: `() => <>${markup}</>` })
       : validEntrySource({ body: markup });
-    const fixture = await derivedFixture(t, source, {
-      "shared.css": ".auth { color: black; } .guide { color: black; }",
-      "components/shared.css":
-        ".auth { color: black; } .guide { color: black; }",
-    });
+    const fixture = await derivedFixture(
+      t,
+      source,
+      {
+        "shared.css": ".auth { color: black; } .guide { color: black; }",
+        "components/shared.css":
+          ".auth { color: black; } .guide { color: black; }",
+      },
+      'stylesheets: [{ match: "components/**", stylesheets: ["components/shared.css"] }, { match: "**", stylesheets: ["shared.css"] }],',
+    );
     const repository = await prepareReviewRepository(fixture.config, "HEAD");
     const cssPaths = ["shared.css", "components/shared.css"].map((route) =>
       path.join(fixture.mockupsDir, route),

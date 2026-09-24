@@ -29,6 +29,7 @@ for (const mobile of [false, true]) {
     await writeCompilation(compilation, config);
     const server = await startCatalogueServer(config, {
       base: "main",
+      generatedOutputs: compilation.outputs,
       port: 0,
       manifest: compilation.manifest,
       changesStatus: "pending",

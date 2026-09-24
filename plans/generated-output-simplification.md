@@ -284,29 +284,44 @@ Backend for change B. This milestone moves the output root, keeps assets in
 place, and migrates the example in one step, because hrefs only resolve when
 all of it lands together.
 
-- [ ] Config (`src/config/types.ts`, `validate.ts`, `paths.ts`,
+- [x] Replace the computed removed-key name in `src/config/validate.ts` with
+      one small table of literal `generatedOutput` and `publicExclude` keys,
+      each with its own `config-invalid` guidance; test both rejections.
+- [x] Move the test-only `committedReviewRepository` factory out of
+      `src/review/repository.ts` into `tests/helpers/` and update its callers;
+      production readers must use parent-prepared baseline selection.
+- [x] Config (`src/config/types.ts`, `validate.ts`, `paths.ts`,
       `path_validation.ts`): add the `GENERATED_DIRECTORY` constant, resolve
       `config.generatedDir` as `<mockupsDir>/.generated`, reject entries, the
       renderer, transformer, and package roots inside it, remove
       `publicExclude`, and keep every confinement and symlink rule for the
       catalogue directory.
-- [ ] Output and hrefs (`src/build/output_paths.ts`, `compile.ts`,
+- [x] Output and hrefs (`src/build/output_paths.ts`, `compile.ts`,
       `document_compiler.ts`, `html_links.ts`): write routes and the manifest
       under `generatedDir`; compute stylesheet and resource hrefs relative to
       the document's location inside `.generated/`.
-- [ ] Closure (`src/build/html_links.ts`, resource validation, renderer
+- [x] Keep generated-route rejection for reserved source basenames and
+      realpath aliases of internal metadata inside `.generated/` while
+      allowing an authored file and a generated route to share a name across
+      their separate directories.
+- [x] Closure (`src/build/html_links.ts`, resource validation, renderer
       resource records, stylesheet rules): collect the closure of referenced
       local files, validate each against the catalogue directory and source
       protection, record it and the generated-path inventory with blob hashes
       in the manifest with the bumped schema version, and keep compatibility
       readers for v5 and earlier.
-- [ ] Serve (`src/server/static_routes.ts`, `watch_paths.ts`,
+- [x] Share local-reference path resolution across build, Review, resource
+      watches, and export, preserving each boundary's existing error policy.
+- [x] Apply the retained private static-resource denial to references while
+      validating the build closure, so hidden paths fail `build-invalid`
+      before Serve or export attempts to deliver them.
+- [x] Serve (`src/server/static_routes.ts`, `watch_paths.ts`,
       `watch_resources.ts`, `changed_content.ts`, the Browse shell's route
       mapping): serve generated routes from memory under the `.generated/`
       prefix, serve closure files live from `<mockupsDir>/<path>`, return not
       found for everything else, and keep resource-edit invalidation working
       at the new locations.
-- [ ] Viewer and static delivery: update `packages/viewer` public catalogue
+- [x] Viewer and static delivery: update `packages/viewer` public catalogue
       types/reader/reference validation, shell stages, frame mounting,
       navigation/inspection and geometry to carry the optional literal
       `.generated` prefix (absence means an older prefixless publication);
@@ -314,13 +329,26 @@ all of it lands together.
       Serve shell and SSR/hydration data, and produce prefixed read-model paths
       for new v6 catalogues. Test both layouts, source swaps, independent
       hosted viewer, and rejection of cross-layout mounts/navigation.
-- [ ] Export and publication (`src/export/public_files.ts`, `references.ts`,
+- [x] Export and publication (`src/export/public_files.ts`, `references.ts`,
       `paths.ts`, `src/publication/*`): ship `.generated/` from compiled bytes
       and the closure files from disk at catalogue-relative paths; drop the
       directory-based public walk (retain independent input fingerprinting
       and its safe alias semantics); reject selected closure symlinks and an
       output directory inside or containing `.generated/`.
-- [ ] Baseline (`src/baseline/rebuild.ts`, `reader.ts`, `manifest.ts`,
+- [x] Exclude the private v6 source manifest from the captured export and
+      publication tree; assert its new `.generated/` path is absent in the
+      export regression and packed publication smoke tests.
+- [x] Keep the private v6 source manifest out of Serve's generated-route
+      allowlist; test that its static URL returns 404 while a screen is served.
+- [x] Pass logical generated routes to Browse document adaptation during
+      static export, preserving trusted link/inspector metadata; cover the
+      published bytes and native frame navigation with regression tests.
+- [x] Align the baseline, delivery, and source-protection status text and
+      manifest reader comment with the shipped v6 behavior.
+- [x] Migrate packed-consumer smoke fixtures and inspections to `.generated/`
+      paths, schema v6, and catalogue-root `.gitignore` rules; verify all five
+      package-consumer scenarios with the packed archives.
+- [x] Baseline (`src/baseline/rebuild.ts`, `reader.ts`, `manifest.ts`,
       `src/review/committed.ts`): harvest `.generated/` plus the closure files
       into the cache entry; harvest the legacy layout as today when
       `.generated/` is absent; discover moved historical roots by the bounded,
@@ -332,7 +360,13 @@ all of it lands together.
       baseline selection verifies inventory completeness and hashes with one
       `git ls-tree` before reading blobs and rebuilds with a logged reason
       when output is incomplete or stale.
-- [ ] Example migration: `mockupsDir: "."` in `examples/basic/mokly.config.ts`;
+- [x] Accept a repository-root `mockupsDir` as `.` through baseline preparation
+      and cache identity while still discovering a moved historical catalogue;
+      cover the end-to-end rebuild and reader.
+- [x] Do not reinterpret a malformed v6 manifest in a searched parent as a
+      valid legacy catalogue rooted at its `.generated/` child; test the
+      rejected candidate is absent from historical discovery.
+- [x] Example migration: `mockupsDir: "."` in `examples/basic/mokly.config.ts`;
       `git mv` the 28 stylesheets from `examples/basic/generated/` to
       `examples/basic/` and `examples/basic/design-library/`; update
       `review.sharedImpact`, component `dependency` strings, `.gitignore`
@@ -341,7 +375,7 @@ all of it lands together.
       `scripts/large/*.mjs`, `tests/fixtures/large/generate.ts`, and every
       other test, script, and document that spells `examples/basic/generated`
       (about 45 files).
-- [ ] Tests: config rejection cases; closure collection for rule stylesheets,
+- [x] Tests: config rejection cases; closure collection for rule stylesheets,
       renderer resources, `@import`, `url()`, `srcset`, and nested HTML;
       hrefs resolve from disk and over HTTP; Serve refuses unreferenced files;
       export layout; blob and rebuilt baselines read closure files for both
@@ -351,18 +385,21 @@ all of it lands together.
       pre-v6 flat markers, cross-layout and cross-root route/resource pairs;
       the example baseline fixture rebuilds; a v5
       manifest baseline still compares.
-- [ ] Update publication and Changes regression fixtures that currently
+- [x] Migrate the design-library attribution fixture's committed Git reader
+      to the v6 generated root and descriptor so its batched Serve and Review
+      assertions exercise the migrated catalogue rather than flat paths.
+- [x] Update publication and Changes regression fixtures that currently
       expect public file/directory symlinks or a directory-based public walk:
       selected closure symlinks fail, unreferenced aliases remain private,
       and safe input-fingerprint aliases retain their existing semantics.
-- [ ] Update `tests/component_protocol_docs.test.ts` to assert manifest v6
+- [x] Update `tests/component_protocol_docs.test.ts` to assert manifest v6
       format rows and README text once manifest-v6 generation and readers land.
-- [ ] Smoke test: `npm run example:build` produces `examples/basic/.generated/`
+- [x] Smoke test: `npm run example:build` produces `examples/basic/.generated/`
       only; open a generated document from disk and confirm it is styled;
       `npm run dev` styles screens from the authored files and reflects a CSS
       edit without a rebuild; `npm run example:check`; export a site and
       serve it statically.
-- [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
+- [x] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
       `npm test`, `npm run test:browser`, `npm run example:check`, and
       `cargo xtask check`; commit and push.
 

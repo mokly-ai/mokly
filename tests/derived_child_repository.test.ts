@@ -17,7 +17,7 @@ import { validEntrySource } from "./helpers/fixture.js";
 
 test("derived HTTP child rejects an unprepared unselected comparison without building", async (t) => {
   const fixture = await derivedFixture(t);
-  await prepareReviewRepository(fixture.config, "HEAD");
+  const initial = await prepareReviewRepository(fixture.config, "HEAD");
   await fs.writeFile(
     fixture.entryPath,
     validEntrySource({ body: "Moved baseline" }),
@@ -88,7 +88,12 @@ test("derived HTTP child rejects an unprepared unselected comparison without bui
             ? undefined
             : commit === moved.commit
               ? moved.selection
-              : "rebuild",
+              : initial.selection,
+          commit === null
+            ? undefined
+            : commit === moved.commit
+              ? moved.descriptor
+              : initial.descriptor,
         ),
         undefined,
       );

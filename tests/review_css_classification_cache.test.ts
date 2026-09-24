@@ -1,12 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { baselineCatalogue } from "../dist/baseline/catalogue.js";
 import { compileCatalogue } from "../dist/build/compile.js";
 import {
   FileSystemReviewAssetReader,
   GitReviewAssetReader,
 } from "../dist/review/assets.js";
 import { CommittedBaselineReader } from "../dist/review/committed.js";
+import { CompilationAssetReader } from "../dist/review/compilation_assets.js";
 import { classifyComponents } from "../dist/review/component_classification.js";
 import { CssResourceAnalysis } from "../dist/review/css/resource_analysis.js";
 import { LightningCssRuleParser } from "../dist/review/css/rules.js";
@@ -35,11 +37,15 @@ test("component classification reads base CSS in batches and parses shared sourc
     }
   }
   const runner = new NodeGitCommandRunner(fixture.root);
+  const evidence = new CommittedRepository(runner).evidence;
+  const commit = await evidence.mergeBase("main", "HEAD");
   const git = {
-    evidence: new CommittedRepository(runner).evidence,
-    reader: new ObservedGit(runner),
+    evidence,
+    reader: new ObservedGit(
+      runner,
+      baselineCatalogue(commit, "mockups", "generated-v6"),
+    ),
   };
-  const commit = await git.evidence.mergeBase("main", "HEAD");
   const compilation = await compileCatalogue(fixture.config);
   const calls: string[] = [];
   const native = new LightningCssRuleParser();
@@ -51,8 +57,12 @@ test("component classification reads base CSS in batches and parses shared sourc
       git.reader,
       commit,
       "mockups",
+      compilation.manifest,
     ),
-    afterReader: new FileSystemReviewAssetReader(fixture.config),
+    afterReader: new CompilationAssetReader(
+      compilation.outputs,
+      new FileSystemReviewAssetReader(fixture.config),
+    ),
     changedPaths: ["mockups/shared.css"],
     config: fixture.config,
     baseCommit: commit,

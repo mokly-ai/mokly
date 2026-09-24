@@ -20,6 +20,7 @@ export async function redirectId(
   context: ShellContext,
   method: string,
   documents?: DocumentService,
+  generatedOutputs?: ReadonlyMap<string, string>,
 ): Promise<void> {
   const entry = catalogue.byId.get(safeDecode(encodedId));
   if (!entry || entry.kind === "collection")
@@ -34,8 +35,8 @@ export async function redirectId(
     url,
     entry,
     catalogue,
-    config,
     documents,
+    generatedOutputs,
   );
   if (fragment === null) {
     return send(response, 400, "text/plain", "Invalid fragment query", method);
@@ -58,6 +59,7 @@ export async function renderView(
   context: ShellContext,
   method: string,
   documents?: DocumentService,
+  generatedOutputs?: ReadonlyMap<string, string>,
 ): Promise<void> {
   const route = safeDecodePath(encodedRoute);
   const entry = route ? catalogueRouteEntry(catalogue, route) : undefined;
@@ -77,7 +79,13 @@ export async function renderView(
     ? url.searchParams.has("fragment")
       ? null
       : undefined
-    : await requestedFragment(url, manifestEntry, catalogue, config, documents);
+    : await requestedFragment(
+        url,
+        manifestEntry,
+        catalogue,
+        documents,
+        generatedOutputs,
+      );
   if (fragment === null) {
     return send(response, 400, "text/plain", "Invalid fragment query", method);
   }

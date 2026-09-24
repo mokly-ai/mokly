@@ -1,3 +1,5 @@
+import type { BaselineCatalogue } from "../baseline/catalogue.js";
+
 import { CommittedBaselineReader } from "./committed.js";
 import { GitRepositoryEvidence } from "./git_evidence.js";
 import { executeGit } from "./git_process.js";
@@ -22,6 +24,7 @@ export interface RepositoryEvidence {
 
 /** Historical files addressed by commit and repository-relative path. */
 export interface BaselineReader {
+  readonly catalogue?: BaselineCatalogue | undefined;
   fileExists(commit: string, repoRelativePath: string): Promise<boolean>;
   fileKind(commit: string, repoRelativePath: string): Promise<GitFileKind>;
   readFile(commit: string, repoRelativePath: string): Promise<string>;

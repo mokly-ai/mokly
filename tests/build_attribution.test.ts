@@ -100,7 +100,7 @@ test("dark fragment changes attribute their screen", async (context) => {
   const manifest = (await compileCatalogue(config)).manifest;
 
   const routes = changedManifestRoutes(manifest, manifest, config, [
-    "mockups/screens/home.mobile.dark.html",
+    "mockups/.generated/screens/home.mobile.dark.html",
   ]);
   assert.ok(routes.includes("screens/home.html"));
   assert.equal(routes.includes("screens/details.html"), false);

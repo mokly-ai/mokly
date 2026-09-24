@@ -16,6 +16,7 @@ export async function derivedFixture(
   t: TestContext,
   source = validEntrySource(),
   publicFiles: Readonly<Record<string, string>> = {},
+  extraConfig = "",
 ) {
   const fixture = await createFixture(source);
   t.after(() => removeFixture(fixture));
@@ -24,6 +25,7 @@ export async function derivedFixture(
     `import { defineConfig } from "@mokly/mokly";
 export default defineConfig({
   entriesDir: "entries", mockupsDir: "mockups",
+  ${extraConfig}
   review: { outDir: ".review", sharedImpact: ["**"], baselineBuild: [["node", "baseline.mjs"]] }
 });\n`,
   );
@@ -42,8 +44,9 @@ export default defineConfig({
     path.join(fixture.root, "baseline.mjs"),
     `import fs from "node:fs/promises";
 import path from "node:path";
+await fs.rm("mockups/.generated", { recursive: true, force: true });
 for (const [route, content] of JSON.parse(await fs.readFile("baseline-output.json", "utf8"))) {
-  const target = path.join("mockups", route);
+  const target = path.join("mockups", ".generated", route);
   await fs.mkdir(path.dirname(target), { recursive: true });
   await fs.writeFile(target, content);
 }
@@ -51,7 +54,7 @@ for (const [route, content] of JSON.parse(await fs.readFile("baseline-output.jso
   );
   await fs.writeFile(
     path.join(fixture.root, ".gitignore"),
-    "mockups/**/*.html\nmockups/mokly-manifest.json\n.mokly-cache/\n",
+    "mockups/.generated/\n.mokly-cache/\n",
   );
   const git = (...args: string[]) =>
     execute("git", args, { cwd: fixture.root });

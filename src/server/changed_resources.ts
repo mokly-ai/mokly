@@ -47,18 +47,29 @@ export class ChangedResourceGraph {
     private readonly documents: ReadonlyMap<string, string>,
     private readonly css: CssResourceAnalysis = new CssResourceAnalysis(),
     private readonly compareBytes = false,
+    private readonly headLayout: {
+      readonly prefix: string;
+      readonly routes: ReadonlySet<string>;
+    } = { prefix: "", routes: new Set() },
+    private readonly baseLayout: {
+      readonly prefix: string;
+      readonly routes: ReadonlySet<string>;
+    } = { prefix: "", routes: new Set() },
   ) {
-    this.#base = new ComponentMaterialReader(baseline);
-    this.#head = new ComponentMaterialReader({
-      read: async (route) =>
-        this.#rawContents.has(route)
-          ? Buffer.from(this.#rawContents.get(route)!)
-          : reader.read(route),
-      readIfExists: async (route) =>
-        this.#rawContents.has(route)
-          ? Buffer.from(this.#rawContents.get(route)!)
-          : reader.readIfExists(route),
-    });
+    this.#base = new ComponentMaterialReader(baseline, baseLayout);
+    this.#head = new ComponentMaterialReader(
+      {
+        read: async (route) =>
+          this.#rawContents.has(route)
+            ? Buffer.from(this.#rawContents.get(route)!)
+            : reader.read(route),
+        readIfExists: async (route) =>
+          this.#rawContents.has(route)
+            ? Buffer.from(this.#rawContents.get(route)!)
+            : reader.readIfExists(route),
+      },
+      headLayout,
+    );
     this.#base.pairWith(this.#head, "before");
     this.#head.pairWith(this.#base, "after");
     this.#baseGraph = new ResourceGraph({
@@ -68,9 +79,14 @@ export class ChangedResourceGraph {
         ),
       readReferences: async (route) =>
         /\.(css|html?)$/i.test(route)
-          ? referencedRoutes(route, await this.#base.resourceText(route), {
-              resourceHints: false,
-            })
+          ? referencedRoutes(
+              route,
+              await this.#base.resourceText(route),
+              {
+                resourceHints: false,
+              },
+              this.baseLayout,
+            )
           : [],
     });
   }
@@ -93,7 +109,12 @@ export class ChangedResourceGraph {
     if (cached?.document === document) return cached.resources;
     const resources = await timeAsync("review.resource-graph", () =>
       this.#graph.collect(
-        referencedRoutes(source, document, { resourceHints: false }),
+        referencedRoutes(
+          source,
+          document,
+          { resourceHints: false },
+          this.headLayout,
+        ),
       ),
     );
     this.#viewResources.set(source, { document, resources });
@@ -115,9 +136,14 @@ export class ChangedResourceGraph {
     const bases =
       before && (this.compareBytes || changedStylesheet || changedDocument)
         ? await this.#baseGraph.collect(
-            referencedRoutes(before.path, before.html, {
-              resourceHints: false,
-            }),
+            referencedRoutes(
+              before.path,
+              before.html,
+              {
+                resourceHints: false,
+              },
+              this.baseLayout,
+            ),
           )
         : new Set<string>();
     const all = [...new Set([...bases, ...resources])];
@@ -223,8 +249,18 @@ export class ChangedResourceGraph {
             Buffer.from(before).toString("utf8"),
             Buffer.from(bytes).toString("utf8"),
             route,
+            {
+              before: this.baseLayout.prefix,
+              after: this.headLayout.prefix,
+              beforeRoutes: this.baseLayout.routes,
+              afterRoutes: this.headLayout.routes,
+            },
           );
-          if (pair.base !== pair.head) this.#byteChanges.add(route);
+          if (
+            (pair.comparisonBase ?? pair.base) !==
+            (pair.comparisonHead ?? pair.head)
+          )
+            this.#byteChanges.add(route);
         } else if (!Buffer.from(before).equals(bytes))
           this.#byteChanges.add(route);
       }
@@ -234,6 +270,11 @@ export class ChangedResourceGraph {
       if (extension !== ".css") content = await this.#head.resourceText(route);
     }
     this.#contents.set(route, content);
-    return referencedRoutes(route, content, { resourceHints: false });
+    return referencedRoutes(
+      route,
+      content,
+      { resourceHints: false },
+      this.headLayout,
+    );
   }
 }

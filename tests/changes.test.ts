@@ -88,7 +88,7 @@ test("a material variant edit marks only the variant route", async (t) => {
 
   assert.deepEqual(
     changedManifestRoutes(manifest, manifest, config, [
-      `mockups/${variant.fragments.mobile}`,
+      `mockups/.generated/${variant.fragments.mobile}`,
     ]),
     [variant.route],
   );
@@ -137,7 +137,7 @@ for (const changed of ["parent", "variant"] as const)
 
     assert.deepEqual(
       changedManifestRoutes(manifest, manifest, config, [
-        `mockups/${screen.fragments.mobile}`,
+        `mockups/.generated/${screen.fragments.mobile}`,
       ]),
       changed === "variant"
         ? [screen.route, "user-flows/variant.html"]

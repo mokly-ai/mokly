@@ -10,10 +10,10 @@ import {
   timeAsync,
   type TimingEvent,
 } from "../dist/diagnostics/timings.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { runReview } from "../dist/review/run.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { directoryFiles } from "./helpers/export_fixture.js";
 import { repositoryRoot, validEntrySource } from "./helpers/fixture.js";

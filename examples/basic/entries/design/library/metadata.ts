@@ -15,7 +15,7 @@ export function libraryMetadata(
     `${directory}/${slug}.view.tsx`,
     ...views.map((view) => `${directory}/${view}`),
   ];
-  const stylesheet = `examples/basic/generated/${libraryStyleFiles[slug]}`;
+  const stylesheet = `examples/basic/${libraryStyleFiles[slug]}`;
   return {
     id: `design-ui-${slug}`,
     route: `design/library/${group}/${slug}.html`,

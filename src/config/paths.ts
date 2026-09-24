@@ -5,6 +5,9 @@ import { isSafeCatalogueRoute } from "@mokly/viewer/data";
 
 import { MoklyError } from "../errors.js";
 
+/** Sole directory owned by the generator within the authored catalogue. */
+export const GENERATED_DIRECTORY = ".generated";
+
 /** Convert a platform path to stable POSIX separators. */
 export function toPosixPath(value: string): string {
   return value.split(path.sep).join("/");

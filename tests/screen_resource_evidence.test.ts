@@ -7,7 +7,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { capturePublicFiles } from "../dist/export/public_files.js";
 import { assembleExport } from "../dist/export/site.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
 import {
   childUpdateMessage,
@@ -25,6 +24,7 @@ import {
 import { WorkspaceEvidence } from "../packages/viewer/dist/shell/workspace_evidence.js";
 import { mergeWorkspaceEvidence } from "../packages/viewer/dist/shell/workspace_evidence_merge.js";
 
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 
 for (const [name, edit, resource] of [
@@ -119,7 +119,13 @@ test("static screen-only shells project evidence from the existing v2 comparison
     await compileCatalogue(fixture.config),
     changes.componentChanges!.baseline,
     comparison,
-    await capturePublicFiles(fixture.config),
+    await compileCatalogue(fixture.config).then((compilation) =>
+      capturePublicFiles(
+        fixture.config,
+        compilation.outputs,
+        compilation.manifest.assetClosure,
+      ),
+    ),
     [],
   );
   for (const screen of comparison.result.screens) {

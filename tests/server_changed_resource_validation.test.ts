@@ -3,13 +3,14 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import { compileCatalogue } from "../dist/build/compile.js";
 import { readManifest } from "../dist/registry/manifest.js";
-import { FileSystemReviewAssetReader } from "../dist/review/assets.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
+import { CompiledReviewAssetReader } from "../dist/review/head_assets.js";
 import { computeChangedRoutes } from "../dist/server/changed.js";
 import { classifyChangedContent } from "../dist/server/changed_content.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { validEntrySource } from "./helpers/fixture.js";
 
 for (const reference of ["/root.css", "../notes.md", "missing.css"]) {
@@ -44,7 +45,7 @@ for (const replacement of ["outside", "source", "dangling", "directory"]) {
   test(`Changes rejects a changed image replaced by a ${replacement} target`, async (t) => {
     const fixture = await changedFixture(
       t,
-      validEntrySource({ body: '<img src="../image.svg" alt="Logo" />' }),
+      validEntrySource({ body: '<img src="../../image.svg" alt="Logo" />' }),
       undefined,
       async ({ mockupsDir }) => {
         await fs.writeFile(path.join(mockupsDir, "image.svg"), "<svg/>");
@@ -109,14 +110,14 @@ for (const state of ["changed", "added"]) {
   test(`Changes validates resources even when the screen is already ${state}`, async (t) => {
     const fixture = await changedFixture(
       t,
-      validEntrySource({ body: '<img src="../image.svg" alt="Before" />' }),
+      validEntrySource({ body: '<img src="../../image.svg" alt="Before" />' }),
       undefined,
       async ({ mockupsDir }) => {
         await fs.writeFile(path.join(mockupsDir, "image.svg"), "<svg/>");
       },
     );
     const source = validEntrySource({
-      body: '<img src="../image.svg" alt="After" />',
+      body: '<img src="../../image.svg" alt="After" />',
     });
     await fs.writeFile(
       fixture.entryPath,
@@ -139,7 +140,7 @@ for (const state of ["changed", "added"]) {
 test("Changes rejects resources symlinked into source roots inside mockupsDir", async (t) => {
   const fixture = await changedFixture(
     t,
-    validEntrySource({ body: '<img src="../image.svg" alt="Logo" />' }),
+    validEntrySource({ body: '<img src="../../image.svg" alt="Logo" />' }),
     undefined,
     async ({ mockupsDir }) => {
       await fs.writeFile(path.join(mockupsDir, "image.svg"), "<svg/>");
@@ -164,23 +165,20 @@ test("Changes rejects resources symlinked into source roots inside mockupsDir", 
 });
 
 test("Changes rejects invalid references inside a changed embedded document", async (t) => {
-  const fixture = await changedFixture(
-    t,
+  const source =
     validEntrySource({
-      body: '<iframe src="../embedded.html" title="Embed" />',
-    }),
-    undefined,
-    async ({ mockupsDir }) => {
-      await fs.writeFile(
-        path.join(mockupsDir, "embedded.html"),
-        "<p>Embed</p>",
-      );
-    },
-  );
+      body: '<iframe src="./embedded.html" title="Embed" />',
+    }) +
+    '\nimport { definePage } from "@mokly/mokly"; mockups.push(definePage({ id: "embedded", title: "Embed", description: "Embedded page", route: "screens/embedded.html", dependencies: [], relatedDocs: [], render: () => "<html><body>Valid embedded page</body></html>" }));';
+  const fixture = await changedFixture(t, source);
   await fs.writeFile(
-    path.join(fixture.mockupsDir, "embedded.html"),
-    '<img src="/invalid.png" alt="Image">',
+    fixture.entryPath,
+    source.replace(
+      "Valid embedded page",
+      "<img src='/invalid.png' alt='Image'>",
+    ),
   );
+  await assert.rejects(compileCatalogue(fixture.config), /root-absolute link/);
   assert.equal(
     await computeChangedRoutes(
       fixture.config,
@@ -194,7 +192,9 @@ test("Changes rejects invalid references inside a changed embedded document", as
 test("a removed resource beneath an escaping symlink is not a valid deletion", async (t) => {
   const fixture = await changedFixture(
     t,
-    validEntrySource({ body: '<img src="../images/logo.svg" alt="Logo" />' }),
+    validEntrySource({
+      body: '<img src="../../images/logo.svg" alt="Logo" />',
+    }),
     undefined,
     async ({ mockupsDir }) => {
       await fs.mkdir(path.join(mockupsDir, "images"));
@@ -216,7 +216,9 @@ test("a removed resource beneath an escaping symlink is not a valid deletion", a
 test("Changes rejects deleted directories still referenced by a screen", async (t) => {
   const fixture = await changedFixture(
     t,
-    validEntrySource({ body: '<img src="../images/logo.svg" alt="Logo" />' }),
+    validEntrySource({
+      body: '<img src="../../images/logo.svg" alt="Logo" />',
+    }),
     undefined,
     async ({ mockupsDir }) => {
       await fs.mkdir(path.join(mockupsDir, "images"));
@@ -245,13 +247,14 @@ test("README edits are not public content changes and require no resource traver
   );
   await fs.writeFile(path.join(fixture.mockupsDir, "README.md"), "After");
   const reads: string[] = [];
-  class ObservedReader extends FileSystemReviewAssetReader {
+  class ObservedReader extends CompiledReviewAssetReader {
     override async read(route: string) {
       reads.push(route);
       return super.read(route);
     }
   }
   const manifest = readManifest(fixture.config);
+  const accepted = await compileCatalogue(fixture.config);
   const result = await classifyChangedContent(
     manifest,
     manifest,
@@ -259,7 +262,7 @@ test("README edits are not public content changes and require no resource traver
     committedReviewRepository(fixture.config).reader,
     "HEAD",
     ["mockups/README.md"],
-    new ObservedReader(fixture.config),
+    new ObservedReader(fixture.config, accepted.outputs),
   );
   assert.deepEqual(result, { changedPaths: [], screens: [] });
   assert.deepEqual(reads.sort(), [

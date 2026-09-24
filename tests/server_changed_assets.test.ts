@@ -3,10 +3,10 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { computeChangedRoutes } from "../dist/server/changed.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { validEntrySource } from "./helpers/fixture.js";
 
 for (const resource of ["home.css", "nested.css", "image.svg"]) {
@@ -97,7 +97,7 @@ test("unused public files and broad shared-impact globs do not fill Changes", as
 test("Changes is unavailable when a referenced resource fails compilation", async (t) => {
   const fixture = await changedFixture(
     t,
-    validEntrySource({ body: '<img src="../image.svg" alt="Logo" />' }),
+    validEntrySource({ body: '<img src="../../image.svg" alt="Logo" />' }),
     undefined,
     async ({ mockupsDir }) => {
       await fs.writeFile(
@@ -119,7 +119,7 @@ test("Changes is unavailable when a referenced resource fails compilation", asyn
 
 test("assets used only inside paired ignored regions stay out of Changes", async (t) => {
   const source = validEntrySource({
-    body: '<ReviewIgnore id="nav"><img src="../image.svg" alt="Logo" /></ReviewIgnore><p>Content</p>',
+    body: '<ReviewIgnore id="nav"><img src="../../image.svg" alt="Logo" /></ReviewIgnore><p>Content</p>',
   }).replace(
     "import { defineCollection",
     "import { ReviewIgnore, defineCollection",

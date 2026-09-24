@@ -4,14 +4,13 @@ import path from "node:path";
 import test from "node:test";
 
 import { validateGeneratedOutputPaths } from "../dist/build/output_paths.js";
-import { generatedOwnershipDenial } from "../dist/build/ownership.js";
 import { isAuthoringSource } from "../dist/build/source_inventory.js";
 import { loadConfig } from "../dist/config/load.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 for (const aliases of ["all", "exclusions", "none"] as const) {
-  test(`listed inputs take precedence over public exclusions in ${aliases} mode`, async (t) => {
+  test(`listed inputs remain protected in ${aliases} alias mode`, async (t) => {
     const fixture = await createFixture();
     t.after(() => removeFixture(fixture));
     const candidate = path.join(fixture.mockupsDir, "README.md");
@@ -26,10 +25,8 @@ for (const aliases of ["all", "exclusions", "none"] as const) {
   });
 }
 
-test("source policy identifies entries, reserved names, listed inputs and matched exclusion globs", async (t) => {
-  const fixture = await createFixture(undefined, {
-    extraConfig: 'publicExclude: ["internal/**"],',
-  });
+test("source policy identifies entries, reserved names, listed inputs and generated output", async (t) => {
+  const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
   await fs.writeFile(path.join(fixture.mockupsDir, "helper.html"), "Source");
   await fs.writeFile(path.join(fixture.mockupsDir, "README.md"), "Private");
@@ -43,8 +40,7 @@ test("source policy identifies entries, reserved names, listed inputs and matche
     ["source-alias/page.html", { kind: "entries" }],
     ["page.source.html", { kind: "reserved" }],
     ["helper.html", { kind: "listed" }],
-    ["internal/page.html", { kind: "exclusion", glob: "internal/**" }],
-    ["alias.txt", { kind: "exclusion", glob: "**/README.*" }],
+    [".generated/screens/home.html", { kind: "generated" }],
   ] as const) {
     assert.deepEqual(
       isAuthoringSource(path.join(config.mockupsDir, name), config),
@@ -55,6 +51,17 @@ test("source policy identifies entries, reserved names, listed inputs and matche
   assert.deepEqual(isAuthoringSource(fixture.entryPath, config), {
     kind: "entries",
   });
+  assert.equal(
+    isAuthoringSource(
+      path.join(config.mockupsDir, "internal/page.html"),
+      config,
+    ),
+    undefined,
+  );
+  assert.equal(
+    isAuthoringSource(path.join(config.mockupsDir, "alias.txt"), config),
+    undefined,
+  );
   assert.equal(
     isAuthoringSource(path.join(config.mockupsDir, "public.css"), config),
     undefined,
@@ -69,27 +76,30 @@ test("source policy identifies entries, reserved names, listed inputs and matche
   );
 });
 
-test("generated-route denials distinguish source roots, reserved names, listed inputs and internal metadata", async (t) => {
+test("generated routes stay confined while authored names remain independent", async (t) => {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
   await fs.writeFile(path.join(fixture.mockupsDir, "helper.html"), "Source");
-  await fs.symlink("../entries", path.join(fixture.mockupsDir, "source-alias"));
+  await fs.mkdir(path.join(fixture.mockupsDir, ".generated"));
+  await fs.symlink(
+    "../../entries",
+    path.join(fixture.mockupsDir, ".generated/source-alias"),
+  );
   await fs.writeFile(
     path.join(fixture.mockupsDir, "mokly-manifest.json"),
     "{}",
   );
   await fs.symlink(
-    "mokly-manifest.json",
-    path.join(fixture.mockupsDir, "metadata.html"),
+    "../mokly-manifest.json",
+    path.join(fixture.mockupsDir, ".generated/metadata.html"),
   );
   const config = {
     ...(await loadConfig(fixture.root)),
     sourceFiles: ["mockups/helper.html"],
   };
   for (const [route, cause] of [
-    ["source-alias/page.html", /resolved entry module.*entries/],
+    ["source-alias/page.html", /escapes mockupsDir/],
     ["page.source.html", /reserved source basename/],
-    ["helper.html", /authoring input.*sourceFiles/],
     ["metadata.html", /internal catalogue metadata/],
   ] as const) {
     assert.throws(
@@ -100,10 +110,8 @@ test("generated-route denials distinguish source roots, reserved names, listed i
         return true;
       },
     );
-    if (route !== "metadata.html")
-      assert.match(
-        generatedOwnershipDenial(path.join(config.mockupsDir, route), config)!,
-        cause,
-      );
   }
+  assert.doesNotThrow(() =>
+    validateGeneratedOutputPaths(["helper.html"], config),
+  );
 });

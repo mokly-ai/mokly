@@ -14,6 +14,14 @@ const read = (file: string) =>
 
 test("documented catalogue formats match compilation and both comparison sides", async (t) => {
   const index = await read("docs/protocol/README.md");
+  const outputContract = await read("docs/protocol/mokly-generated-output.md");
+  assert.match(outputContract, /schemaVersion: 6/);
+  assert.match(outputContract, /assetClosure: string\[\]/);
+  assert.match(
+    outputContract,
+    /generatedFiles: \{ path: string; blobHash: string \}\[\]/,
+  );
+  assert.match(outputContract, /blobHashAlgorithm: "sha1" \| "sha256"/);
   const plain = validEntrySource();
   const components = componentEntrySource();
   for (const [before, after] of [
@@ -30,7 +38,7 @@ test("documented catalogue formats match compilation and both comparison sides",
       "main",
     );
     const componentComparison = before === components || after === components;
-    assert.equal(fixture.after.manifest.schemaVersion, 5);
+    assert.equal(fixture.after.manifest.schemaVersion, 6);
     assert.equal(result.schemaVersion, componentComparison ? 3 : 2);
     assert.match(
       index,
@@ -59,5 +67,5 @@ test("delivered component contracts do not retain superseded status or version i
     await read("docs/protocol/mokly-export.md"),
     /Keep `ReviewResult\.schemaVersion` at 2/,
   );
-  assert.match(await read("README.md"), /Milestone 2 still writes manifest v5/);
+  assert.match(await read("README.md"), /manifest v6/);
 });

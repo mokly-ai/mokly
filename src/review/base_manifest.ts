@@ -2,6 +2,7 @@ import path from "node:path";
 
 import type { HistoricalManifest } from "@mokly/viewer/data";
 
+import { joinCataloguePath } from "../baseline/catalogue.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
@@ -30,15 +31,30 @@ async function readMeasured(
   commit: string,
   config: ResolvedConfig,
 ): Promise<HistoricalManifest> {
-  const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
-  const canonicalPath = joinGit(prefix, MANIFEST_NAME);
+  const prefix =
+    git.catalogue?.catalogueRoot ??
+    (toPosixPath(path.relative(config.repoRoot, config.mockupsDir)) || ".");
+  const generated = git.catalogue?.layout === "generated-v6";
+  const canonicalPath = joinCataloguePath(
+    generated ? git.catalogue!.generatedRoot : prefix,
+    MANIFEST_NAME,
+  );
+  if (generated)
+    return parseHistoricalManifest(
+      JSON.parse(await git.readFile(commit, canonicalPath)),
+    );
   const selection = selectManifestInput(
     await git.fileExists(commit, canonicalPath),
-    await git.fileExists(commit, joinGit(prefix, FORMER_MANIFEST_NAME)),
+    await git.fileExists(
+      commit,
+      joinCataloguePath(prefix, FORMER_MANIFEST_NAME),
+    ),
     config.compatibility.readManifestV2,
   );
   return parseHistoricalManifest(
-    JSON.parse(await git.readFile(commit, joinGit(prefix, selection.filename))),
+    JSON.parse(
+      await git.readFile(commit, joinCataloguePath(prefix, selection.filename)),
+    ),
     selection.allowV2,
   );
 }
@@ -58,8 +74,4 @@ export function baselineResourceConfig(
             ...manifest.legacyPages.map((page) => page.sourcePath),
           ],
   };
-}
-
-function joinGit(prefix: string, route: string): string {
-  return prefix === "" ? route : `${prefix}/${route}`;
 }

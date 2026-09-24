@@ -1,15 +1,14 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { isSafeRepositoryPath } from "@mokly/viewer/data";
-
+import { GENERATED_DIRECTORY } from "../config/paths.js";
 import {
-  isPrivateStaticPath,
   isPublicStaticFile,
   privateStaticPathReason,
 } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
+import { exportResourceDenial } from "../export/resource_policy.js";
 import {
   fragmentViolation,
   htmlResource,
@@ -19,6 +18,7 @@ import {
 import {
   extractCssReferences,
   extractHtmlReferences,
+  resolveLocalReferencePath,
 } from "../html_references.js";
 
 import { isOwned, pendingGeneratedOrphanRoutes } from "./ownership.js";
@@ -41,18 +41,24 @@ export function validateHtmlLinks(
   outputs: ReadonlyMap<string, string>,
   config: ResolvedConfig,
   context?: HtmlValidationContext,
-): void {
+  resourceSeeds: readonly string[] = [],
+): string[] {
   const pendingOrphans =
     context?.pendingOrphans ??
     new Set(pendingGeneratedOrphanRoutes(config, outputs.keys()));
   const parsed = context?.parsed ?? new Map<string, ParsedResource>();
+  const resourceDenial = exportResourceDenial(config);
   for (const [route, content] of outputs) {
-    if (isPrivateStaticPath(path.resolve(config.mockupsDir, route), config))
-      continue;
-    parsed.set(route, htmlResource(extractHtmlReferences(content)));
+    if (!route.endsWith(".html")) continue;
+    parsed.set(
+      generatedRoute(route),
+      htmlResource(extractHtmlReferences(content)),
+    );
   }
   const pending = [...outputs.keys()]
+    .map(generatedRoute)
     .filter((route) => parsed.has(route))
+    .concat(resourceSeeds)
     .sort();
   const visited = new Set<string>();
   const violations: string[] = [];
@@ -60,8 +66,11 @@ export function validateHtmlLinks(
     const route = pending.shift();
     if (!route || visited.has(route)) continue;
     visited.add(route);
-    const resource = parsed.get(route);
+    const resource =
+      parsed.get(route) ??
+      loadResource(route, outputs, config, pendingOrphans, context);
     if (!resource) continue;
+    parsed.set(route, resource);
     for (const reference of resource.references) {
       const result = validateReference(
         reference,
@@ -71,6 +80,7 @@ export function validateHtmlLinks(
         config,
         pendingOrphans,
         context,
+        resourceDenial,
       );
       if (result.violation) violations.push(`${route}: ${result.violation}`);
       if (
@@ -98,6 +108,13 @@ export function validateHtmlLinks(
         .join("\n")}`,
     );
   }
+  return [...visited]
+    .filter((route) => !route.startsWith(`${GENERATED_DIRECTORY}/`))
+    .sort();
+}
+
+function generatedRoute(route: string): string {
+  return path.posix.join(GENERATED_DIRECTORY, route);
 }
 
 function validateReference(
@@ -108,6 +125,7 @@ function validateReference(
   config: ResolvedConfig,
   pendingOrphans: ReadonlySet<string>,
   context?: HtmlValidationContext,
+  resourceDenial?: (route: string) => string | undefined,
 ): ReferenceResult {
   const reference = item.value;
   if (reference === "" || /^(?:https?:|mailto:|tel:|data:)/i.test(reference)) {
@@ -125,40 +143,48 @@ function validateReference(
       : undefined;
     return violation ? { violation } : {};
   }
-  const [withoutHash] = reference.split("#", 2);
-  const rawPath = (withoutHash ?? "").split("?", 1)[0] ?? "";
-  let decodedPath: string;
-  try {
-    decodedPath = decodeURIComponent(rawPath);
-  } catch {
+  const resolved = resolveLocalReferencePath(sourceRoute, reference);
+  if (resolved.kind === "invalid-encoding") {
     return { violation: `invalid URL encoding: ${reference}` };
   }
-  if (decodedPath.startsWith("/") || decodedPath.startsWith("\\")) {
+  if (resolved.kind === "root-absolute") {
     return { violation: `root-absolute link is not portable: ${reference}` };
   }
-  const rawTarget = path.posix.normalize(
-    path.posix.join(path.posix.dirname(sourceRoute), decodedPath),
-  );
-  if (
-    rawTarget === ".." ||
-    rawTarget.startsWith("../") ||
-    !isSafeRepositoryPath(rawTarget)
-  ) {
+  if (resolved.kind !== "resolved") {
     return { violation: `link escapes mockupsDir: ${reference}` };
   }
-  const target = rawTarget.replace(/^\.\//, "");
-  const denial = privateStaticPathReason(
-    path.resolve(config.mockupsDir, target),
-    config,
-  );
+  const target = resolved.path;
+  const knownGenerated =
+    target.startsWith(`${GENERATED_DIRECTORY}/`) &&
+    (context?.generatedRoutes.has(
+      target.slice(GENERATED_DIRECTORY.length + 1),
+    ) ||
+      parsed.has(target));
+  if (
+    target.startsWith(`${GENERATED_DIRECTORY}/`) &&
+    /\.html?$/i.test(target) &&
+    !knownGenerated
+  )
+    return { violation: `missing target ${reference}` };
+  if (knownGenerated && item.checkFragment && !reference.includes("#"))
+    return {};
+  const denial = knownGenerated
+    ? undefined
+    : (privateStaticPathReason(
+        path.resolve(config.mockupsDir, target),
+        config,
+      ) ?? resourceDenial?.(target));
   if (denial) return { violation: `protected target ${reference}: ${denial}` };
   let targetResource = parsed.get(target);
-  if (context?.generatedRoutes.has(target)) {
-    if (item.checkFragment && !reference.includes("#")) return {};
-    targetResource ??= htmlResource(
-      extractHtmlReferences(context.readGenerated(target)),
-    );
-    parsed.set(target, targetResource);
+  if (knownGenerated) {
+    if (!targetResource && context) {
+      targetResource = htmlResource(
+        extractHtmlReferences(
+          context.readGenerated(target.slice(GENERATED_DIRECTORY.length + 1)),
+        ),
+      );
+      parsed.set(target, targetResource);
+    }
   }
   if (!targetResource) {
     targetResource = loadResource(
@@ -175,7 +201,7 @@ function validateReference(
     ? fragmentViolation(reference, targetResource.anchors)
     : undefined;
   if (violation) return { violation };
-  return context && item.checkFragment ? {} : { target };
+  return { target };
 }
 
 function loadResource(
@@ -185,19 +211,31 @@ function loadResource(
   pendingOrphans: ReadonlySet<string>,
   context?: HtmlValidationContext,
 ): ParsedResource | undefined {
+  if (route.startsWith(`${GENERATED_DIRECTORY}/`)) {
+    if (
+      context &&
+      !context.generatedRoutes.has(
+        route.slice(GENERATED_DIRECTORY.length + 1),
+      ) &&
+      !outputs.has(route.slice(GENERATED_DIRECTORY.length + 1))
+    )
+      return undefined;
+    const generated =
+      outputs.get(route.slice(GENERATED_DIRECTORY.length + 1)) ??
+      context?.readGenerated(route.slice(GENERATED_DIRECTORY.length + 1));
+    return generated === undefined
+      ? undefined
+      : htmlResource(extractHtmlReferences(generated));
+  }
   const candidate = path.resolve(config.mockupsDir, route);
-  if (isPrivateStaticPath(candidate, config)) return undefined;
-  if (
-    context &&
-    !context.generatedRoutes.has(route) &&
-    isOwned(candidate, config)
-  )
-    return undefined;
-  const generated = outputs.get(route);
-  if (generated !== undefined)
-    return htmlResource(extractHtmlReferences(generated));
+  if (context && isOwned(candidate, config)) return undefined;
   if (pendingOrphans.has(route)) return undefined;
   if (!isPublicStaticFile(candidate, config)) return undefined;
+  if (
+    fs.lstatSync(candidate).isSymbolicLink() ||
+    fs.realpathSync(candidate) !== candidate
+  )
+    return undefined;
   const extension = path.posix.extname(route).toLowerCase();
   if (extension !== ".css" && extension !== ".html" && extension !== ".htm") {
     return { anchors: new Set(), references: [] };

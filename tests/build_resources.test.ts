@@ -14,26 +14,29 @@ test("build rejects missing and non-portable HTML resource URLs", async (context
   await configureRenderer(fixture.root, fixture.configPath);
   const config = await loadConfig(fixture.root);
   const cases = [
-    ["src", '<img src="../assets/missing.png">'],
+    ["src", '<img src="../../assets/missing.png">'],
     [
       "srcset",
-      '<img srcset="data:image/png;base64,AA== 1x, ../assets/missing.png 2x">',
+      '<img srcset="data:image/png;base64,AA== 1x, ../../assets/missing.png 2x">',
     ],
-    ["script", '<script src="../assets/missing.js"></script>'],
-    ["inline CSS", '<div style="background:url(../assets/missing.png)"></div>'],
+    ["script", '<script src="../../assets/missing.js"></script>'],
+    [
+      "inline CSS",
+      '<div style="background:url(../../assets/missing.png)"></div>',
+    ],
     [
       "style block",
-      "<style>body{background:url(../assets/missing.png)}</style>",
+      "<style>body{background:url(../../assets/missing.png)}</style>",
     ],
     ["root absolute", '<img src="/assets/missing.png">'],
-    ["escaping", '<img src="../../outside.png">'],
+    ["escaping", '<img src="../../../outside.png">'],
   ] as const;
 
   for (const [label, markup] of cases) {
     await writeRenderer(fixture.root, markup);
     await assert.rejects(
       () => compileCatalogue(config),
-      /missing target|root-absolute link|escapes mockupsDir/,
+      /missing target|protected target|root-absolute link|escapes mockupsDir/,
       label,
     );
   }
@@ -53,7 +56,7 @@ test("build validates transitive CSS imports and URLs", async (context) => {
   await configureRenderer(fixture.root, fixture.configPath);
   await writeRenderer(
     fixture.root,
-    '<link rel="stylesheet" href="../assets/theme.css"><svg><filter id="blur"></filter></svg><div style="filter:url(#blur)"></div>',
+    '<link rel="stylesheet" href="../../assets/theme.css"><svg><filter id="blur"></filter></svg><div style="filter:url(#blur)"></div>',
   );
   const config = await loadConfig(fixture.root);
 

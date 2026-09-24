@@ -18,7 +18,7 @@ for (const delayedStyles of [false, true]) {
     const desktop = iframe.contentFrame();
     await expectFrameLoaded(
       iframe,
-      /\/static\/design\/components\/overview\.desktop\.html$/,
+      /\/static\/\.generated\/design\/components\/overview\.desktop\.html$/,
     );
     await expect(desktop.locator(".ce-canvas:visible")).toBeVisible();
     let delayedRequests = 0;
@@ -46,7 +46,7 @@ for (const delayedStyles of [false, true]) {
       ).toHaveAttribute("aria-current", "page");
       await expectFrameLoaded(
         iframe,
-        /\/static\/design\/components\/pages\/variants\.desktop\.html$/,
+        /\/static\/\.generated\/design\/components\/pages\/variants\.desktop\.html$/,
       );
       await expect(desktop.locator(".ce-canvas:visible button")).toBeDisabled();
       await expect(desktop.locator(".ce-canvas:visible")).toHaveCount(1);

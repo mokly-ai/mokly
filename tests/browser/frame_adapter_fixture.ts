@@ -38,23 +38,13 @@ export async function crossOriginFixture(
   const fixture = await createFixture(
     componentEntrySource(
       options ?? {
-        body: '<action.Component label="Visible" /><action.Component moklyInstance="hidden" label="Hidden" hidden /><action.Component moklyInstance="multiple" label="Multiple" disabled /><div style={{height:800}} /><div style={{height:100,overflow:"auto"}}><div style={{height:200}}/><action.Component moklyInstance="scroll" label="Scroll" /></div><MockLink to="action">Open Action</MockLink><a href="../unowned.html" id="unowned-link">Open unowned document</a><a href="./home.mobile.html?handoff=exact" id="exact-resource-link">Open exact next document</a>',
+        body: '<action.Component label="Visible" /><action.Component moklyInstance="hidden" label="Hidden" hidden /><action.Component moklyInstance="multiple" label="Multiple" disabled /><div style={{height:800}} /><div style={{height:100,overflow:"auto"}}><div style={{height:200}}/><action.Component moklyInstance="scroll" label="Scroll" /></div><MockLink to="action">Open Action</MockLink><a href="./home.mobile.html?handoff=exact" id="exact-resource-link">Open exact next document</a>',
         actionRender:
           "(props) => props.hidden ? null : props.disabled ? <><span>First root</span> Text root <strong>Last root</strong></> : <button style={{width:160,height:40}}>{props.label}</button>",
       },
     ),
     { extraConfig },
   );
-  await Promise.all([
-    fs.writeFile(
-      path.join(fixture.mockupsDir, "unowned.html"),
-      unownedDocument,
-    ),
-    fs.writeFile(
-      path.join(fixture.mockupsDir, "silent.html"),
-      "<!doctype html><p>No inspector</p>",
-    ),
-  ]);
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
   const catalogue = createCatalogue(compilation.manifest);
   const root = path.join(fixture.root, "site");
@@ -67,8 +57,18 @@ export async function crossOriginFixture(
     ["static/silent.html", "<!doctype html><p>No inspector</p>"],
   ]);
   for (const [name, bytes] of compilation.outputs)
-    if (name.endsWith(".html"))
-      files.set(`static/${name}`, adaptBrowseDocument(bytes, name, catalogue));
+    if (name.endsWith(".html")) {
+      const adapted = adaptBrowseDocument(bytes, name, catalogue);
+      files.set(
+        `static/.generated/${name}`,
+        name.startsWith("screens/home.")
+          ? adapted.replace(
+              "</body>",
+              '<a href="../../unowned.html" id="unowned-link">Open unowned document</a></body>',
+            )
+          : adapted,
+      );
+    }
   files.set("static/unowned.html", unownedDocument);
   for (const [name, bytes] of loadBrowserClientModules())
     files.set(`__mokly/client/${name}`, bytes);
@@ -89,7 +89,7 @@ export async function crossOriginFixture(
   const temporaryFile = path.join(root, temporaryPath.slice(1));
   await fs.mkdir(path.dirname(temporaryFile), { recursive: true });
   await fs.copyFile(
-    path.join(root, "static", home.fragments.mobile),
+    path.join(root, "static/.generated", home.fragments.mobile),
     temporaryFile,
   );
   const usage = home.componentViews![0]!;
@@ -116,7 +116,7 @@ export async function crossOriginFixture(
 export async function mountCrossFrame(
   page: Page,
   fixture: Awaited<ReturnType<typeof crossOriginFixture>>,
-  path = "/static/screens/home.mobile.html",
+  path = "/static/.generated/screens/home.mobile.html",
 ) {
   await page.goto(fixture.host.url);
   await page.evaluate(
@@ -137,7 +137,12 @@ export async function mountCrossFrame(
       });
       state.mounted = await postMessageAdapter({ frameOrigin: origin }).mount(
         document.querySelector<HTMLIFrameElement>("#frame")!,
-        { url: new URL(path, origin), usage: { status: "ready", ...usage } },
+        {
+          url: new URL(path, origin),
+          route: "screens/home.mobile.html",
+          generatedPathPrefix: ".generated",
+          usage: { status: "ready", ...usage },
+        },
       );
       state.unsubscribe = state.mounted.subscribe((event) =>
         state.frameEvents.push(event),

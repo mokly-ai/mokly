@@ -3,11 +3,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
 import { changedContentPaths } from "../dist/server/changed_content.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import {
   historicalPageFixture,
   pageDocument,
@@ -34,7 +34,8 @@ for (const version of [2, 3] as const) {
             }
           : {},
       );
-      const paths = ["mockups/handbook.html"];
+      const paths = ["mockups/.generated/handbook.html"];
+      let headDocument = fixture.currentDocument;
       if (change === "resource") {
         await fs.writeFile(
           path.join(fixture.mockupsDir, "document.css"),
@@ -46,17 +47,9 @@ for (const version of [2, 3] as const) {
         change === "ignored" ||
         change === "one-sided-ignore"
       ) {
-        await fs.writeFile(
-          fixture.currentPath,
-          change === "material"
-            ? fixture.currentDocument.replace(
-                "Document content",
-                "Changed document",
-              )
-            : fixture.currentDocument.replace(
-                "Old navigation",
-                "New navigation",
-              ),
+        headDocument = fixture.currentDocument.replace(
+          change === "material" ? "Document content" : "Old navigation",
+          change === "material" ? "Changed document" : "New navigation",
         );
       }
       assert.deepEqual(
@@ -67,10 +60,11 @@ for (const version of [2, 3] as const) {
           fixture.client.reader,
           fixture.commit,
           paths,
+          await fixture.headReader(headDocument),
         ),
         change === "identical" || change === "ignored"
           ? []
-          : ["mockups/handbook.html"],
+          : ["mockups/.generated/handbook.html"],
       );
     });
   }
@@ -111,7 +105,8 @@ for (const failure of ["symlink", "private", "invalid-ignore"] as const) {
         fixture.config,
         fixture.client.reader,
         fixture.commit,
-        ["mockups/handbook.html"],
+        ["mockups/.generated/handbook.html"],
+        await fixture.headReader(),
       ),
       failure === "symlink"
         ? /not a regular Git file/

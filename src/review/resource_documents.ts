@@ -9,11 +9,12 @@ export function normalizeResourceDocuments(
   before: string | undefined,
   after: string | undefined,
   route: string,
+  layouts?: { before: string; after: string },
 ): { before: string | undefined; after: string | undefined } {
   const historical =
     before === undefined ? undefined : normalizeHistoricalDocument(before);
   if (historical !== undefined && after !== undefined) {
-    const pair = normalizeReviewPair(historical, after, route);
+    const pair = normalizeReviewPair(historical, after, route, layouts);
     return { before: pair.base, after: pair.head };
   }
   return {

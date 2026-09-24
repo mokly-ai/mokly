@@ -65,6 +65,7 @@ test("ordinary Browse serves cached component evidence without generating or wri
     base: "main",
     port: 0,
     componentChanges: { baseline: fixture.before.manifest, result },
+    generatedOutputs: fixture.after.outputs,
     review: {
       base: "main",
       outDir: path.join(fixture.root, ".review"),
@@ -78,7 +79,7 @@ test("ordinary Browse serves cached component evidence without generating or wri
   for (const route of [
     "/",
     "/view/screens/home.html",
-    "/static/screens/home.mobile.html",
+    "/static/.generated/screens/home.mobile.html",
     "/view/screens/home.html",
   ])
     assert.equal((await fetch(server.url + route)).status, 200);
@@ -98,7 +99,10 @@ test("ordinary Browse serves cached component evidence without generating or wri
   });
   for (const [route, html] of fixture.after.outputs)
     assert.equal(
-      await fs.readFile(path.join(fixture.mockupsDir, route), "utf8"),
+      await fs.readFile(
+        path.join(fixture.mockupsDir, ".generated", route),
+        "utf8",
+      ),
       html,
     );
 });

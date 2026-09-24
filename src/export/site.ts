@@ -18,7 +18,7 @@ import {
   CATALOGUE_PATH,
   serializeCatalogue,
 } from "../catalogue/serialization.js";
-import { toPosixPath } from "../config/paths.js";
+import { GENERATED_DIRECTORY, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { staticRemovedPreviews } from "../publication/removed_previews.js";
 import { changedManifestRoutes } from "../registry/changed_routes.js";
@@ -237,8 +237,11 @@ export function assembleExport(
       addShell(`id/${entry.id}/index.html`, html, descriptor);
   }
   for (const [name, bytes] of publicFiles) {
+    const logicalRoute = name.startsWith(`${GENERATED_DIRECTORY}/`)
+      ? name.slice(GENERATED_DIRECTORY.length + 1)
+      : name;
     const adapted = /\.html?$/i.test(name)
-      ? adaptBrowseDocument(bytes.toString("utf8"), name, catalogue)
+      ? adaptBrowseDocument(bytes.toString("utf8"), logicalRoute, catalogue)
       : bytes;
     inventory.add(`static/${name}`, adapted);
   }

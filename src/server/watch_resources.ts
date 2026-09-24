@@ -23,6 +23,7 @@ export interface ResourceWatchSnapshot {
   readonly paths: ReadonlySet<string>;
   readonly references: ReadonlyMap<string, readonly string[]>;
   readonly locations: ReadonlyMap<string, readonly string[]>;
+  readonly closure: ReadonlySet<string>;
 }
 
 /** Keep live ignored-region resources observable without changing Changes semantics. */
@@ -40,6 +41,10 @@ export async function discoverWatchResources(
     (stylesheet) => !/^https?:\/\//.test(stylesheet),
   );
   const configured = new Set(stylesheets);
+  const generated = {
+    prefix: ".generated",
+    routes: new Set(compilation.outputs.keys()),
+  };
   const graph = new ResourceGraph({
     async readReferences(route): Promise<readonly string[]> {
       const logical = path.resolve(config.mockupsDir, route);
@@ -60,9 +65,14 @@ export async function discoverWatchResources(
           }
           content = asset.content;
         }
-        const edges = referencedRoutes(route, content, {
-          resourceHints: false,
-        });
+        const edges = referencedRoutes(
+          route,
+          content,
+          {
+            resourceHints: false,
+          },
+          generated,
+        );
         references.set(route, edges);
         return edges;
       } catch (error) {
@@ -95,5 +105,13 @@ export async function discoverWatchResources(
         paths.add(candidate);
     }
   }
-  return { paths, references, locations, invalid };
+  return {
+    paths,
+    references,
+    locations,
+    invalid,
+    closure: new Set(
+      [...reachable].filter((route) => !compilation.outputs.has(route)),
+    ),
+  };
 }

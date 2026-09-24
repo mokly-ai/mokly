@@ -22,13 +22,13 @@ test("derived check accepts missing or stale local output and tracked authored p
   await store.check(fixture.baseline, fixture.config);
   assert.equal(
     await fs
-      .stat(path.join(fixture.mockupsDir, MANIFEST_NAME))
+      .stat(path.join(fixture.config.generatedDir, MANIFEST_NAME))
       .catch(() => undefined),
     undefined,
   );
   await store.write(fixture.baseline, fixture.config);
   await fs.writeFile(
-    path.join(fixture.mockupsDir, "screens/home.mobile.html"),
+    path.join(fixture.config.generatedDir, "screens/home.mobile.html"),
     "locally edited output",
   );
   await store.check(await compileCatalogue(fixture.config), fixture.config);
@@ -48,8 +48,8 @@ test("check guards indexed cache paths and reports mixed generated paths", async
     "cache",
   );
   const tracked = [
-    "mockups/screens/home.mobile.html",
-    `mockups/${MANIFEST_NAME}`,
+    "mockups/.generated/screens/home.mobile.html",
+    `mockups/.generated/${MANIFEST_NAME}`,
     ".mokly-cache/forced.txt",
   ];
   await fixture.git("add", "-f", "--", ...tracked);
@@ -76,20 +76,20 @@ test("check guards indexed cache paths and reports mixed generated paths", async
   );
 });
 
-test("check ignores indexed routes outside the current compilation", async (t) => {
+test("check rejects indexed stray output but ignores indexed authored files", async (t) => {
   const fixture = await derivedFixture(t);
   const store = new FileSystemGeneratedOutputStore();
   await store.write(fixture.baseline, fixture.config);
-  const retired = "mockups/screens/retired.mobile.html";
+  const retired = "mockups/.generated/screens/retired.mobile.html";
   await fs.rename(
-    path.join(fixture.root, "mockups/screens/home.mobile.html"),
+    path.join(fixture.config.generatedDir, "screens/home.mobile.html"),
     path.join(fixture.root, retired),
   );
   await fixture.git("add", "-f", "--", retired);
   await fs.rm(path.join(fixture.root, retired));
-  assert.equal(
-    await store.check(fixture.baseline, fixture.config),
-    "untracked",
+  await assert.rejects(
+    () => store.check(fixture.baseline, fixture.config),
+    /generated output is partly tracked by Git:[\s\S]*retired.mobile.html/,
   );
   await fixture.git("rm", "--cached", "--", retired);
   const guide = "mockups/guide.html";
@@ -135,7 +135,7 @@ test("derived build creates an absent nested directory transactionally and prese
   await store.check(compilation, config);
   await store.write(compilation, config);
   assert.equal(
-    await fs.readFile(path.join(config.mockupsDir, MANIFEST_NAME), "utf8"),
+    await fs.readFile(path.join(config.generatedDir, MANIFEST_NAME), "utf8"),
     compilation.outputs.get(MANIFEST_NAME),
   );
   const rename = fs.rename;
@@ -153,7 +153,7 @@ test("derived build creates an absent nested directory transactionally and prese
   );
   for (const [route, bytes] of compilation.outputs)
     assert.equal(
-      await fs.readFile(path.join(config.mockupsDir, route), "utf8"),
+      await fs.readFile(path.join(config.generatedDir, route), "utf8"),
       bytes,
     );
 });

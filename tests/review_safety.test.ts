@@ -8,10 +8,10 @@ import { loadConfig } from "../dist/config/load.js";
 import { renderReviewArtifact } from "../dist/review/artifact.js";
 import { compareReview } from "../dist/review/compare.js";
 import { normalizeReviewPair } from "../dist/review/ignore.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { runReview } from "../dist/review/run.js";
 import type { ReviewArtifact } from "../packages/viewer/dist/review/types.js";
 
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 test("Comparison snapshot output cannot overlap generated or authored roots", async (context) => {
@@ -20,7 +20,7 @@ test("Comparison snapshot output cannot overlap generated or authored roots", as
   const config = await loadConfig(fixture.root);
   await writeCompilation(await compileCatalogue(config), config);
 
-  for (const out of ["mockups/review", "entries/review"]) {
+  for (const out of ["mockups/.generated/review", "entries/review"]) {
     await assert.rejects(
       () =>
         runReview(

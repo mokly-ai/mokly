@@ -6,6 +6,7 @@ import { validateProps } from "../components/props.js";
 import { validateComponentViewRecord } from "../components/view_validation.js";
 import { analyzeHierarchy } from "../registry/hierarchy.js";
 
+import { currentDocumentPath } from "./delivery_paths.js";
 import { projectTree } from "./tree.js";
 import type {
   CatalogueCollection,
@@ -67,7 +68,10 @@ export function validateCatalogueReferences(model: CatalogueReadModel): void {
       require(removed
         ? entry.documentPath === null
         : entry.documentPath ===
-            `static/${entry.route}`, "page path must match current route");
+            currentDocumentPath(
+              entry.route,
+              model.generatedPathPrefix,
+            ), "page path must match current route");
     if (entry.kind === "use-case" && !removed) {
       require(entry.steps.length > 0, "use case needs steps");
       for (const step of entry.steps) {
@@ -105,7 +109,13 @@ export function validateCatalogueReferences(model: CatalogueReadModel): void {
               .find((flow) => flow.id === id)
               ?.steps.some((step) => step.screenId === entry.id),
           ), "invalid screen membership");
-      validateViews(entry, entry.views, components, removed);
+      validateViews(
+        entry,
+        entry.views,
+        components,
+        removed,
+        model.generatedPathPrefix,
+      );
     }
     if (entry.kind === "component") {
       require(entry.variants.length > 0, "component needs variants");
@@ -132,7 +142,14 @@ export function validateCatalogueReferences(model: CatalogueReadModel): void {
             entry.id,
           );
         }
-        validateViews(entry, variant.views, components, historical, variant.id);
+        validateViews(
+          entry,
+          variant.views,
+          components,
+          historical,
+          model.generatedPathPrefix,
+          variant.id,
+        );
       }
     }
   }
@@ -161,6 +178,7 @@ function validateViews(
   views: readonly CatalogueView[],
   components: ReadonlyMap<string, CatalogueComponent>,
   historical: boolean,
+  prefix: CatalogueReadModel["generatedPathPrefix"],
   variantId?: string,
 ): void {
   require(canonicalJson(entry.viewports) ===
@@ -178,7 +196,17 @@ function validateViews(
   unique(views.map((view) => `${view.viewport}/${view.colorScheme}`));
   for (const view of views) {
     const stem = entry.route.slice(0, -5);
-    const expected = `static/${variantId ? componentFragmentRoute(entry.route, variantId, view.viewport, view.colorScheme) : `${stem}.${view.viewport}${view.colorScheme === "dark" ? ".dark" : ""}.html`}`;
+    const expected = currentDocumentPath(
+      variantId
+        ? componentFragmentRoute(
+            entry.route,
+            variantId,
+            view.viewport,
+            view.colorScheme,
+          )
+        : `${stem}.${view.viewport}${view.colorScheme === "dark" ? ".dark" : ""}.html`,
+      prefix,
+    );
     require(historical
       ? view.fragmentPath === null
       : view.fragmentPath ===

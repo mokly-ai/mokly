@@ -38,8 +38,9 @@ test("filesystem manifest loading never accepts v2 under the canonical filename"
   context.after(() => removeFixture(fixture));
   const config = withV2Compatibility(await loadConfig(fixture.root));
   const legacy = toV2Manifest((await compileCatalogue(config)).manifest);
+  await fs.promises.mkdir(config.generatedDir, { recursive: true });
   await fs.promises.writeFile(
-    path.join(fixture.mockupsDir, MANIFEST_NAME),
+    path.join(config.generatedDir, MANIFEST_NAME),
     JSON.stringify(legacy),
   );
   await fs.promises.writeFile(
@@ -47,7 +48,7 @@ test("filesystem manifest loading never accepts v2 under the canonical filename"
     JSON.stringify(legacy),
   );
 
-  assert.throws(() => readManifest(config), /schema version 5/);
+  assert.throws(() => readManifest(config), /schema version 6/);
 });
 
 test("manifest loading rejects URL-sensitive catalogue routes", async (context) => {
@@ -143,18 +144,27 @@ test("light-only manifests remain deterministic without variant metadata", () =>
     ],
     generatedBy: "mokly",
     sourceFiles: ["entries/a.mockup.tsx"],
-    schemaVersion: 5,
+    assetClosure: [],
+    blobHashAlgorithm: "sha1",
+    generatedFiles: [],
+    schemaVersion: 6,
   });
 
-  const serialized = serializeManifest(createManifest([entry], [], ["light"]));
+  const serialized = serializeManifest({
+    ...createManifest([entry], [], ["light"]),
+    assetClosure: [],
+    blobHashAlgorithm: "sha1",
+    generatedFiles: [],
+    schemaVersion: 6,
+  });
   assert.equal(serialized, expected);
   assert.equal(serialized.includes("darkFragments"), false);
   assert.equal(serialized.includes("tags"), false);
 });
 
 test("manifest serializes declared tags and omits absent ones", () => {
-  const serialized = serializeManifest(
-    createManifest(
+  const serialized = serializeManifest({
+    ...createManifest(
       [
         resolvedScreen("a", "a.html", {
           tags: ["onboarding", "forms"],
@@ -168,7 +178,11 @@ test("manifest serializes declared tags and omits absent ones", () => {
       [],
       ["light"],
     ),
-  );
+    assetClosure: [],
+    blobHashAlgorithm: "sha1",
+    generatedFiles: [],
+    schemaVersion: 6,
+  });
   const entries = parseManifest(JSON.parse(serialized)).entries;
 
   assert.deepEqual(
@@ -235,7 +249,13 @@ function toV2Manifest(manifest: unknown): Record<string, unknown> {
 }
 
 function manifestWithScreen(id: string, route: string) {
-  return createManifest([resolvedScreen(id, route)], [], ["light"]);
+  return {
+    ...createManifest([resolvedScreen(id, route)], [], ["light"]),
+    assetClosure: [],
+    blobHashAlgorithm: "sha1" as const,
+    generatedFiles: [],
+    schemaVersion: 6 as const,
+  };
 }
 
 function resolvedUseCase(

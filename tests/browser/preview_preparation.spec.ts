@@ -26,7 +26,7 @@ test("the real preview build preserves generated output and serves fresh publica
 });
 
 async function generatedDigest(): Promise<string> {
-  const root = path.join(repositoryRoot, "examples/basic/generated");
+  const root = path.join(repositoryRoot, "examples/basic/.generated");
   const hash = crypto.createHash("sha256");
   for (const relative of (await fs.readdir(root, { recursive: true })).sort()) {
     const file = path.join(root, relative);

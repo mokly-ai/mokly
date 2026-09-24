@@ -24,6 +24,7 @@ import {
   normalizeReviewPair,
   normalizeSingleDocument,
 } from "./ignore.js";
+import { normalizeDocumentUrls } from "./normalize_urls.js";
 import { addArtifactFile, snapshotPath } from "./paths.js";
 import type { ResourceComparison } from "./resource_comparison.js";
 import {
@@ -101,6 +102,10 @@ export async function compareScreen(
         colorScheme,
         beforePath,
         afterPath,
+        resources.before.generated.prefix,
+        resources.after.generated.prefix,
+        resources.before.generated.routes,
+        resources.after.generated.routes,
       );
       const normalized =
         before !== undefined && after !== undefined
@@ -108,8 +113,16 @@ export async function compareScreen(
               normalizeHistoricalDocument(before),
               after,
               entry.route,
+              {
+                before: resources.before.generated.prefix,
+                after: resources.after.generated.prefix,
+                beforeRoutes: resources.before.generated.routes,
+                afterRoutes: resources.after.generated.routes,
+              },
             )
           : {
+              comparisonBase: undefined,
+              comparisonHead: undefined,
               base:
                 before === undefined
                   ? undefined
@@ -129,6 +142,11 @@ export async function compareScreen(
         headFragment && normalized.head !== undefined
           ? { path: headFragment, html: normalized.head }
           : undefined,
+        undefined,
+        {
+          before: normalized.comparisonBase ?? normalized.base,
+          after: normalized.comparisonHead ?? normalized.head,
+        },
       );
       views.push({
         ...view,
@@ -179,6 +197,10 @@ function compareView(
   colorScheme: ColorScheme,
   beforePath: string | undefined,
   afterPath: string | undefined,
+  beforePrefix = "",
+  afterPrefix = "",
+  beforeRoutes?: ReadonlySet<string>,
+  afterRoutes?: ReadonlySet<string>,
 ): ViewReview {
   const context = `${route} (${viewport}, ${colorScheme})`;
   const historicalBefore =
@@ -211,10 +233,33 @@ function compareView(
     normalizeHistoricalDocument(before),
     after,
     context,
+    {
+      before: beforePrefix,
+      after: afterPrefix,
+      ...(beforeRoutes ? { beforeRoutes } : {}),
+      ...(afterRoutes ? { afterRoutes } : {}),
+    },
   );
-  const normalizedEqual = digest(normalized.base) === digest(normalized.head);
+  const normalizedEqual =
+    digest(normalized.comparisonBase ?? normalized.base) ===
+    digest(normalized.comparisonHead ?? normalized.head);
   const rawEqual =
-    digest(normalizedBefore ?? "") === digest(normalizedAfter ?? "");
+    digest(
+      normalizeDocumentUrls(
+        normalizedBefore ?? "",
+        route,
+        beforePrefix,
+        beforeRoutes,
+      ),
+    ) ===
+    digest(
+      normalizeDocumentUrls(
+        normalizedAfter ?? "",
+        route,
+        afterPrefix,
+        afterRoutes,
+      ),
+    );
   return {
     ...(afterPath ? { afterPath } : {}),
     ...(beforePath ? { beforePath } : {}),

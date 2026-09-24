@@ -14,8 +14,13 @@ import {
   validateReviewOut,
   validateSourceRoots,
 } from "./path_validation.js";
-import { resolveInside, validateRelativeRoute } from "./paths.js";
-import { resolvePublicExclude } from "./public_exclusions.js";
+import {
+  GENERATED_DIRECTORY,
+  isInside,
+  projectRealPath,
+  resolveInside,
+  validateRelativeRoute,
+} from "./paths.js";
 import {
   requireString,
   validateColorSchemes,
@@ -25,6 +30,17 @@ import {
   validateWatchRules,
 } from "./rules.js";
 import type { MoklyConfig, ResolvedConfig } from "./types.js";
+
+const REMOVED_CONFIG_KEYS = [
+  {
+    key: "generatedOutput",
+    guidance: "use Git tracking for check and run mokly build to write output",
+  },
+  {
+    key: "publicExclude",
+    guidance: "remove it; only referenced authored assets are public",
+  },
+] as const;
 
 /** Validate an imported config and resolve every filesystem path. */
 export function resolveConfig(
@@ -42,14 +58,10 @@ export function resolveConfig(
       "config-invalid",
       "legacy configuration was removed; register whole documents with definePage",
     );
-  const removedModeKey = `generated${"Output"}`;
-  if (Object.hasOwn(value, removedModeKey))
-    throw new MoklyError(
-      "config-invalid",
-      `${removedModeKey} was removed; use Git tracking for check and run mokly build to write output`,
-    );
+  for (const { key, guidance } of REMOVED_CONFIG_KEYS)
+    if (Object.hasOwn(value, key))
+      throw new MoklyError("config-invalid", `${key} was removed; ${guidance}`);
   const input = value as unknown as MoklyConfig;
-  const publicExclude = resolvePublicExclude(input.publicExclude);
   requireString(input.mockupsDir, "mockupsDir");
   if (input.repoRoot !== undefined) requireString(input.repoRoot, "repoRoot");
   const configDir = path.dirname(configPath);
@@ -71,11 +83,7 @@ export function resolveConfig(
       "config-invalid",
       "mockupsDir must not be inside .mokly-cache",
     );
-  if (mockupsDir === repoRoot)
-    throw new MoklyError(
-      "config-invalid",
-      "mockupsDir must be a directory below repoRoot",
-    );
+  const generatedDir = path.join(mockupsDir, GENERATED_DIRECTORY);
   const renderer = optionalModule(
     repoRoot,
     configDir,
@@ -93,9 +101,35 @@ export function resolveConfig(
     repoRoot,
     configDir,
   );
+  for (const [label, candidate] of [
+    ["entriesDir", entriesDir],
+    ["renderer", renderer],
+    ["compatibility.transformer", compatibilityTransformer],
+    ...moduleResolution.packageRoots.map((root, index) => [
+      `moduleResolution.packageRoots[${index}]`,
+      root,
+    ]),
+  ] as const) {
+    if (candidate) rejectGeneratedInput(candidate, generatedDir, label);
+  }
   validateSourceRoots(repoRoot, entriesDir, mockupsDir);
   const colorSchemes = validateColorSchemes(input.colorSchemes);
   const stylesheets = validateStylesheets(input.stylesheets ?? []);
+  for (const [index, rule] of stylesheets.entries())
+    for (const stylesheet of [
+      ...rule.stylesheets,
+      ...(rule.lightStylesheets ?? []),
+      ...(rule.darkStylesheets ?? []),
+    ]) {
+      if (/^https?:\/\//.test(stylesheet)) continue;
+      const candidate = path.resolve(mockupsDir, stylesheet);
+      if (!isInside(mockupsDir, candidate))
+        throw new MoklyError(
+          "config-invalid",
+          `stylesheets[${index}] must stay outside .generated and inside mockupsDir: ${stylesheet}`,
+        );
+      rejectGeneratedInput(candidate, generatedDir, `stylesheets[${index}]`);
+    }
   const watchRules = validateWatchRules(input.watch?.rules ?? []);
   if (input.review?.base !== undefined)
     requireString(input.review.base, "review.base");
@@ -120,7 +154,7 @@ export function resolveConfig(
     repoRoot,
   });
   const resolved: ResolvedConfig = {
-    publicExclude,
+    generatedDir,
     colorSchemes,
     compatibility: {
       readManifestV2: input.compatibility?.readManifestV2 ?? false,
@@ -154,10 +188,39 @@ export function resolveConfig(
     ...resolved,
     entryModules: discoverEntryModules(resolved),
   };
+  for (const candidate of discovered.entryModules)
+    rejectGeneratedInput(candidate, generatedDir, "entry source");
   validateReviewOut(reviewOut, discovered);
   return discovered;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function rejectGeneratedInput(
+  candidate: string,
+  generatedDir: string,
+  label: string,
+): void {
+  let inside = isInside(generatedDir, candidate);
+  if (!inside) {
+    try {
+      inside = isInside(
+        projectRealPath(generatedDir),
+        projectRealPath(candidate),
+      );
+    } catch (cause) {
+      throw new MoklyError(
+        "config-invalid",
+        `${label} has an invalid filesystem path: ${candidate}`,
+        { cause },
+      );
+    }
+  }
+  if (inside)
+    throw new MoklyError(
+      "config-invalid",
+      `${label} must not be inside .generated: ${candidate}`,
+    );
 }

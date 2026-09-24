@@ -22,7 +22,8 @@ test("composition selects committed reads without building and pins repository e
         calls.push(argv[0]!);
         if (argv[0] === "rev-parse") return fixture.root;
         if (argv[0] === "merge-base") return "a".repeat(40);
-        if (argv[0] === "ls-tree") return "100644\n";
+        if (argv[0] === "ls-tree")
+          return `100644 blob ${"a".repeat(40)}\tmockups/mokly-manifest.json\0`;
         if (argv[0] === "show")
           return JSON.stringify({
             entries: [],

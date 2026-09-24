@@ -3,10 +3,10 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
 import type { ViewResourceEvidence } from "../packages/viewer/dist/review/types.js";
 
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 
 for (const scenario of [
@@ -23,7 +23,7 @@ for (const scenario of [
   },
 ] as const)
   test(`live and complete per-view evidence agree: ${scenario.name}`, async (t) => {
-    const image = '<img src="../image.svg" alt="Logo" />';
+    const image = '<img src="../../image.svg" alt="Logo" />';
     const fixture = await cssAttributionFixture(t, false, {
       body: `<button className="auth">Sign in</button>${image}`,
       prepare: async ({ mockupsDir }) => {

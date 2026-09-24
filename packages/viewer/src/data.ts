@@ -138,10 +138,16 @@ export type {
   ManifestPage,
   ManifestEntry,
   ManifestV5,
+  ManifestV6,
   Manifest,
   HistoricalManifest,
 } from "./registry/types.js";
 export { reviewMaterialKey } from "./data/material_key.js";
+export {
+  currentDocumentPath,
+  currentDocumentRoute,
+} from "./catalogue/delivery_paths.js";
+export type { GeneratedPathPrefix } from "./catalogue/delivery_paths.js";
 export {
   ComponentRenderError,
   renderStatus,

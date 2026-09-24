@@ -120,30 +120,24 @@ Replace the example `<main>` nodes with your product components, then list their
 source files or directories in `dependencies`. An entry file ends in
 `.mockup.ts` or `.mockup.tsx` and exports a `mockups` array.
 
-The target layout keeps generated output local by ignoring its dedicated
-directory and cache:
+Keep generated output local by ignoring its dedicated directory and cache:
 
 ```gitignore
 .mokly-cache/
 /docs/mockups/.generated/
 ```
 
-The planned layout writes only under `docs/mockups/.generated/`; referenced authored
-assets stay under `docs/mockups/` and are served and exported in place. Until
-Milestone 3, `build` writes into the single `mockupsDir` instead, so the
-`.generated/` ignore alone does not cover its output: ignore generated HTML
-routes and `mokly-manifest.json` there, keeping any authored HTML tracked. If
-you prefer committed output, commit every generated file instead. In Milestone 2,
-`check` compares compiled routes only when all are indexed; a partial index
-fails with both remedies. Comparison baselines read blobs if the base commit
-contains a valid manifest and rebuild otherwise; v6 inventory checking follows
-in Milestone 3.
+`build` writes only under `docs/mockups/.generated/`; referenced authored
+assets stay under `docs/mockups/` and are served and exported in place. To
+commit generated output instead, commit every generated file. `check`
+compares compiled output only when the generated tree is indexed; a partial
+index fails with both remedies. A committed baseline's v6 inventory must
+match its Git blobs; otherwise the baseline is rebuilt.
 Build and Serve do not inspect head tracking: a new route builds successfully,
 and `check` then lists it under `untracked:` until staged. Only `check` rejects
 an indexed `.mokly-cache/` path.
-Milestone 2 still writes manifest v5 into the single `mockupsDir` directory;
-the `.generated/` layout and v6 closure and blob-hash inventory arrive in
-Milestone 3. Older formats remain readable as historical baselines.
+The manifest v6 records the referenced asset closure and Git blob-hash
+inventory. Older formats remain readable as historical baselines.
 
 ### 4. Open the catalogue
 

@@ -9,8 +9,6 @@ import { isOwned } from "../dist/build/ownership.js";
 import { isAuthoringSource } from "../dist/build/source_inventory.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
-import { isPublicStaticFile } from "../dist/config/public_files.js";
-import { FileSystemReviewAssetReader } from "../dist/review/assets.js";
 import { startCatalogueServer } from "../dist/server/http.js";
 import { classifyWatchPath } from "../dist/server/watch_events.js";
 
@@ -25,66 +23,55 @@ import {
   writeExclusionFiles,
 } from "./helpers/public_exclusions.js";
 
-test("Serve GET and HEAD and Review deny public exclusions while ordinary assets remain public", async (t) => {
+test("Serve exposes only referenced assets, including for HEAD", async (context) => {
   const fixture = await createFixture(undefined, {
-    extraConfig: 'publicExclude: ["internal/**"],',
+    extraConfig:
+      'stylesheets: [{ match: "**/*", stylesheets: ["styles.css"] }],',
   });
-  t.after(() => removeFixture(fixture));
+  context.after(() => removeFixture(fixture));
   await writeExclusionFiles(fixture.mockupsDir);
   const config = await loadConfig(fixture.root);
-  await writeCompilation(await compileCatalogue(config), config);
+  const compilation = await compileCatalogue(config);
+  assert.ok(compilation.manifest.assetClosure.includes("styles.css"));
+  await writeCompilation(compilation, config);
   const server = await startCatalogueServer(config, { base: "main", port: 0 });
   fixture.beforeRemove(() => server.close());
-  const reader = new FileSystemReviewAssetReader(config);
-  for (const name of excludedNames) {
+  for (const name of [
+    ...excludedNames,
+    ...permittedNames.filter((name) => name !== "styles.css"),
+  ])
     for (const method of ["GET", "HEAD"])
       assert.equal(
         (await fetch(`${server.url}/static/${name}`, { method })).status,
         404,
         `${method} ${name}`,
       );
-    await assert.rejects(reader.read(name), /not a public static file/);
-  }
-  for (const name of permittedNames) {
+  for (const method of ["GET", "HEAD"])
     assert.equal(
-      isPublicStaticFile(path.join(fixture.mockupsDir, name), config),
-      true,
-      name,
-    );
-    assert.equal(
-      (await fetch(`${server.url}/static/${name}`)).status,
+      (await fetch(`${server.url}/static/styles.css`, { method })).status,
       200,
-      name,
     );
-  }
 });
 
-test("source policy matches both aliases and projects missing children relative to the mockups root", async (t) => {
-  const fixture = await createFixture(undefined, {
-    extraConfig: 'publicExclude: ["INTERNAL/**"],',
-  });
-  t.after(() => removeFixture(fixture));
+test("source protection recognizes reserved files and aliases", async (context) => {
+  const fixture = await createFixture();
+  context.after(() => removeFixture(fixture));
   await writeExclusionFiles(fixture.mockupsDir);
-  await fs.symlink("README.md", path.join(fixture.mockupsDir, "alias.txt"));
-  await fs.symlink("internal", path.join(fixture.mockupsDir, "visible"));
-  await fs.symlink("data.json", path.join(fixture.mockupsDir, "README.json"));
-  await fs.symlink("mockups", path.join(fixture.root, "generated"));
-  const config = {
-    ...(await loadConfig(fixture.root)),
-    mockupsDir: path.join(fixture.root, "generated"),
-  };
-  for (const name of [
-    "alias.txt",
-    "visible/private.json",
-    "visible/deleted.json",
-    "README.json",
-    ...excludedNames,
-  ])
+  await fs.writeFile(
+    path.join(fixture.mockupsDir, "private.source.html"),
+    "private",
+  );
+  await fs.symlink(
+    "private.source.html",
+    path.join(fixture.mockupsDir, "alias.txt"),
+  );
+  const config = await loadConfig(fixture.root);
+  for (const name of ["private.source.html", "alias.txt"])
     assert.ok(
       isAuthoringSource(path.join(config.mockupsDir, name), config),
       name,
     );
-  for (const name of permittedNames)
+  for (const name of [...permittedNames, "README.md", "tsconfig.json"])
     assert.equal(
       isAuthoringSource(path.join(config.mockupsDir, name), config),
       undefined,
@@ -92,107 +79,91 @@ test("source policy matches both aliases and projects missing children relative 
     );
 });
 
-for (const route of ["README.html", "internal/page.html"]) {
-  test(`build rejects excluded generated route ${route} before writing`, async (t) => {
-    const fixture = await createFixture(
-      `import { definePage } from "@mokly/mokly"; export const mockups = [definePage({ id: "page", title: "Page", description: "Page", dependencies: [], relatedDocs: [], route: "${route}", render: () => "<!doctype html><html><body><p>Page</p></body></html>" })];`,
-      { extraConfig: 'publicExclude: ["internal/**"],' },
-    );
-    t.after(() => removeFixture(fixture));
-    await assert.rejects(
-      compileCatalogue(await loadConfig(fixture.root)),
-      (error: Error) => {
-        assert.match(error.message, /matches public exclusion.*publicExclude/);
-        assert.ok(error.message.includes(route));
-        assert.ok(
-          error.message.includes(
-            route === "README.html" ? "**/README.*" : "internal/**",
-          ),
-        );
-        return true;
-      },
-    );
-    await assert.rejects(fs.stat(path.join(fixture.mockupsDir, route)), {
-      code: "ENOENT",
-    });
-  });
-}
+test("generated routes may have names formerly reserved by the public directory policy", async (context) => {
+  const fixture = await createFixture(
+    `import { definePage } from "@mokly/mokly"; export const mockups = [definePage({ id: "page", title: "Page", description: "Page", dependencies: [], relatedDocs: [], route: "internal/page.html", render: () => "<!doctype html><html><body><p>Page</p></body></html>" })];`,
+  );
+  context.after(() => removeFixture(fixture));
+  const config = await loadConfig(fixture.root);
+  assert.ok((await compileCatalogue(config)).outputs.has("internal/page.html"));
+});
 
-test("build rejects an excluded public resource with its referring route", async (t) => {
+test("a reference to protected authored HTML fails with its referring route", async (context) => {
   const fixture = await createFixture(
     validEntrySource({
-      body: '<iframe src="../README.html" title="Readme" />',
+      body: '<iframe src="../../private.source.html" title="Private" />',
     }),
   );
-  t.after(() => removeFixture(fixture));
+  context.after(() => removeFixture(fixture));
   await fs.writeFile(
-    path.join(fixture.mockupsDir, "README.html"),
+    path.join(fixture.mockupsDir, "private.source.html"),
     "<p>Private</p>",
   );
   await assert.rejects(
     compileCatalogue(await loadConfig(fixture.root)),
     (error: Error) => {
-      assert.match(error.message, /matches public exclusion.*publicExclude/);
-      assert.ok(error.message.includes("screens/home"));
-      assert.ok(error.message.includes("README.html"));
+      assert.match(error.message, /screens\/home/);
+      assert.match(error.message, /private.source.html/);
       return true;
     },
   );
 });
 
-test("an excluded imported JSON file remains an authoring input and rebuilds", async (t) => {
+test("an imported JSON input remains watched, not public by directory membership", async (context) => {
   const fixture = await createFixture(
     `${validEntrySource()}\nimport settings from "../mockups/tsconfig.fixture.json"; mockups[1].title = settings.title;`,
+    {
+      extraConfig:
+        'watch: { rules: [{ paths: ["mockups/tsconfig.fixture.json"], action: "rebuild" }] },',
+    },
   );
-  t.after(() => removeFixture(fixture));
+  context.after(() => removeFixture(fixture));
   const settings = path.join(fixture.mockupsDir, "tsconfig.fixture.json");
   await fs.writeFile(settings, '{"title":"Before"}');
   const config = await loadConfig(fixture.root);
-  const first = await compileCatalogue(config);
   assert.ok(
-    first.manifest.sourceFiles.includes("mockups/tsconfig.fixture.json"),
+    (await compileCatalogue(config)).manifest.sourceFiles.includes(
+      "mockups/tsconfig.fixture.json",
+    ),
   );
-  await writeCompilation(first, config);
   await fs.writeFile(settings, '{"title":"After"}');
   assert.equal(
     classifyWatchPath({ path: settings, kind: "change" }, config),
     "rebuild",
   );
-  const second = await compileCatalogue(config);
   assert.equal(
-    second.manifest.entries.find((entry) => entry.id === "home")?.title,
+    (await compileCatalogue(config)).manifest.entries.find(
+      (entry) => entry.id === "home",
+    )?.title,
     "After",
   );
 });
 
-test("canonical builder metadata remains writable when excluded from public reads", async (t) => {
-  const fixture = await createFixture(undefined, {
-    extraConfig: 'publicExclude: ["**/*"],',
-  });
-  t.after(() => removeFixture(fixture));
+test("canonical builder metadata remains writable but private", async (context) => {
+  const fixture = await createFixture();
+  context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   assert.doesNotThrow(() =>
     validateGeneratedOutputPaths(["mokly-manifest.json"], config),
   );
   assert.equal(
-    isOwned(path.join(config.mockupsDir, "mokly-manifest.json"), config),
+    isOwned(path.join(config.generatedDir, "mokly-manifest.json"), config),
     true,
   );
-  assert.deepEqual(
+  assert.ok(
     isAuthoringSource(
-      path.join(config.mockupsDir, "mokly-manifest.json"),
+      path.join(config.generatedDir, "mokly-manifest.json"),
       config,
     ),
-    { kind: "exclusion", glob: "**/*" },
   );
 });
 
-test("public exclusions preserve explicit watch actions", async (t) => {
+test("explicit watch actions remain effective", async (context) => {
   const fixture = await createFixture(undefined, {
     extraConfig:
       'watch: { rules: [{ paths: ["mockups/README.md"], action: "rebuild" }] },',
   });
-  t.after(() => removeFixture(fixture));
+  context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   assert.equal(
     classifyWatchPath(

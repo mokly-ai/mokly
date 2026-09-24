@@ -10,11 +10,11 @@ import { validEntrySource } from "./helpers/fixture.js";
 
 const image = '<svg xmlns="http://www.w3.org/2000/svg" width="20"/>';
 const source = validEntrySource({
-  body: '<link rel="stylesheet" href="../theme.css" /><img src="../image.svg" alt="Logo" /><img src="../images/image.svg" alt="Linked logo" />',
+  body: '<link rel="stylesheet" href="../../assets/theme.css" /><img src="../../assets/image.svg" alt="Logo" />',
 });
 
 for (const includeChanges of [false, true]) {
-  test(`publication materializes safe file and directory aliases (changes: ${includeChanges})`, async (context) => {
+  test(`publication copies only referenced assets, not aliases (changes: ${includeChanges})`, async (context) => {
     const fixture = await changedFixture(context);
     await fs.promises.mkdir(path.join(fixture.mockupsDir, "assets"));
     await fs.promises.writeFile(
@@ -43,12 +43,12 @@ for (const includeChanges of [false, true]) {
       output,
       includeChanges ? { includeChanges: true, base: "HEAD" } : {},
     );
-    for (const route of ["image.svg", "images/image.svg", "assets/image.svg"]) {
+    for (const route of ["assets/image.svg"]) {
       const target = path.join(output, "static", route);
       assert.equal((await fs.promises.lstat(target)).isFile(), true, route);
       assert.equal(await fs.promises.readFile(target, "utf8"), image, route);
     }
-    for (const route of ["theme.css", "assets/theme.css", "images/theme.css"])
+    for (const route of ["assets/theme.css"])
       assert.match(
         await fs.promises.readFile(path.join(output, "static", route), "utf8"),
         /image\.svg/,
@@ -56,8 +56,11 @@ for (const includeChanges of [false, true]) {
     for (const route of [
       "cycle",
       "dangling.svg",
+      "image.svg",
+      "images",
       "metadata.json",
       "source.txt",
+      "theme.css",
     ])
       assert.equal(
         fs.existsSync(path.join(output, "static", route)),
@@ -83,7 +86,7 @@ for (const includeChanges of [false, true]) {
     );
     await fs.promises.writeFile(
       fixture.entryPath,
-      validEntrySource({ body: '<img src="../image.svg" alt="Logo" />' }),
+      validEntrySource({ body: '<img src="../../image.svg" alt="Logo" />' }),
     );
     await fixture.build();
     const original = fs.promises.writeFile;

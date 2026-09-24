@@ -110,7 +110,7 @@ test("generated controls remain native links in standalone and Review snapshots"
   page,
 }) => {
   for (const root of [
-    controls.fixture.mockupsDir,
+    path.join(controls.fixture.mockupsDir, ".generated"),
     path.join(controls.reviewDir, "snapshots/after"),
     path.join(controls.reviewDir, "snapshots/before"),
   ]) {

@@ -52,6 +52,16 @@ export class WatchedBackground {
           compilation.manifest,
           accepted.generation,
         );
+        options.running.notifyUpdate(
+          undefined,
+          undefined,
+          "pending",
+          "evidence",
+          undefined,
+          undefined,
+          undefined,
+          [...options.resources.closure],
+        );
       },
       (snapshot) => {
         const duration = Date.now() - this.changesStartedAt;
@@ -77,6 +87,7 @@ export class WatchedBackground {
             "evidence",
             prepared?.commit ?? null,
             prepared?.selection,
+            prepared?.descriptor,
           ),
         baselineStatus: (changesStatus) =>
           options.running.notifyUpdate(

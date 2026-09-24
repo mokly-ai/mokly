@@ -53,6 +53,7 @@ export function isPackageOwnedIgnoredWatchPath(
   const absolute = path.resolve(candidate);
   if (isBaselineCachePath(absolute, config.repoRoot)) return true;
   if (!isInside(config.repoRoot, absolute)) return false;
+  if (isInside(config.generatedDir, absolute)) return true;
   if (isRequiredWatchPath(absolute, config)) return false;
   const globRoots = entryGlobRoots(config);
   if (globRoots.some((root) => isInside(absolute, root))) return false;
@@ -118,8 +119,8 @@ function isGeneratedOutputPath(
   candidate: string,
   config: ResolvedConfig,
 ): boolean {
-  if (!isInside(config.mockupsDir, candidate)) return false;
-  const relative = toPosixPath(path.relative(config.mockupsDir, candidate));
+  if (!isInside(config.generatedDir, candidate)) return false;
+  const relative = toPosixPath(path.relative(config.generatedDir, candidate));
   return relative === MANIFEST_NAME || isOwned(candidate, config);
 }
 

@@ -19,6 +19,7 @@ import type {
 
 import { toPosixPath } from "../config/paths.js";
 import { timeAsync, timingCounts } from "../diagnostics/timings.js";
+import { generatedManifestRoutes } from "../registry/generated_routes.js";
 
 import { affectedConsumers } from "./component_affected.js";
 import {
@@ -66,8 +67,14 @@ export async function classifyComponents(
     after,
     config.review.sharedImpact,
   );
-  const beforeReader = new ComponentMaterialReader(input.beforeReader);
-  const afterReader = new ComponentMaterialReader(input.afterReader);
+  const beforeReader = new ComponentMaterialReader(input.beforeReader, {
+    prefix: before.schemaVersion === 6 ? ".generated" : "",
+    routes: generatedManifestRoutes(before),
+  });
+  const afterReader = new ComponentMaterialReader(input.afterReader, {
+    prefix: after.schemaVersion === 6 ? ".generated" : "",
+    routes: generatedManifestRoutes(after),
+  });
   const changed = new Set(changedPaths);
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
   const context: ComponentViewContext = {

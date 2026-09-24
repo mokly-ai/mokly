@@ -22,15 +22,15 @@ test("the example fixture rebuilds an untracked baseline from its own source and
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const config = await createExampleBaseline(root);
   const tracked = (
-    await execute("git", ["ls-files", "examples/basic/generated"], {
+    await execute("git", ["ls-files", "examples/basic"], {
       cwd: root,
     })
   ).stdout
     .trim()
-    .split("\n");
-  assert.ok(tracked.length > 0);
-  assert.ok(tracked.every((file) => file.endsWith(".css")));
-  const manifestPath = path.join(config.mockupsDir, "mokly-manifest.json");
+    .split("\n")
+    .filter((file) => file.endsWith(".css"));
+  assert.equal(tracked.length, 28);
+  const manifestPath = path.join(config.generatedDir, "mokly-manifest.json");
   await assert.rejects(fs.access(manifestPath), { code: "ENOENT" });
   const prepared = await prepareReviewRepository(config, "HEAD");
   assert.ok(prepared.reader instanceof RebuiltBaselineReader);
@@ -38,7 +38,7 @@ test("the example fixture rebuilds an untracked baseline from its own source and
     JSON.parse(
       await prepared.reader.readFile(
         prepared.commit,
-        "examples/basic/generated/mokly-manifest.json",
+        "examples/basic/.generated/mokly-manifest.json",
       ),
     ),
   );

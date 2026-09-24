@@ -135,10 +135,9 @@ changes. Disabled highlighting explains its specific reason, and outline labels
 use separate rounded chips with a gap above the highlighted region.
 
 Open `design/components/overview.html` in Browse, or open
-`generated/design/components/overview.desktop.html` and
-`generated/design/components/overview.mobile.html`
+`.generated/design/components/overview.desktop.html` and
+`.generated/design/components/overview.mobile.html`
 directly from disk after `npm run build && npm run example:build`.
-Milestone 3 moves these documents to `.generated/`.
 The catalogue hierarchy links all owning design pages;
 there is no navigation footer inside an artboard. Product links connect
 component pages, variants, and consuming screens. The `controls` collection
@@ -230,13 +229,10 @@ npm run example:check
 npm run preview:build
 ```
 
-After Milestone 3 this example uses `mockupsDir: "."`. Until then it uses
-`mockupsDir: "generated"`: generated HTML and its v5 manifest share that
-directory with tracked authored stylesheets, while the generated files are
-ignored local artifacts. In the target layout the schema-v6 manifest and HTML
-under `.generated/` are ignored local artifacts, absent in a fresh clone.
-For now, `example:build` updates only Mokly-owned output inside the flat
-directory; in Milestone 3 it replaces `.generated/` transactionally.
+This example uses `mockupsDir: "."`; its schema-v6 manifest and HTML under
+`.generated/` are ignored local artifacts, absent in a fresh clone.
+`example:build` updates only Mokly-owned output inside `.generated/` with the
+per-file transactional ownership checks retained for now.
 `example:check` validates the current compilation without requiring output on
 disk. Tracked output checks and historical manifest compatibility use isolated fixtures.
 Both `npm test` and `npm run test:browser` build the example before tests read its

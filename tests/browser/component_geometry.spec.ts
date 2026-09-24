@@ -24,8 +24,13 @@ test.beforeAll(async () => {
     }),
   );
   const config = await loadConfig(fixture.root);
-  await writeCompilation(await compileCatalogue(config), config);
-  server = await startCatalogueServer(config, { base: "main", port: 0 });
+  const compilation = await compileCatalogue(config);
+  await writeCompilation(compilation, config);
+  server = await startCatalogueServer(config, {
+    base: "main",
+    port: 0,
+    generatedOutputs: compilation.outputs,
+  });
 });
 test.afterAll(async () => {
   await server?.close();

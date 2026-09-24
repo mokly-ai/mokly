@@ -4,19 +4,17 @@ import fs from "node:fs";
 import test from "node:test";
 import { promisify } from "node:util";
 
+import { baselineCatalogue } from "../dist/baseline/catalogue.js";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
 import { changedManifestRoutes } from "../dist/registry/changed_routes.js";
 import { compareReview } from "../dist/review/compare.js";
-import {
-  NodeGitCommandRunner,
-  CommittedRepository,
-} from "../dist/review/git.js";
+import { NodeGitCommandRunner } from "../dist/review/git.js";
 import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { computeChangedRoutes } from "../dist/server/changed.js";
 
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import {
   createFixture,
   removeFixture,
@@ -46,7 +44,7 @@ test("changed routes select fragment edits rather than source or dependency edit
   );
   assert.deepEqual(
     changedManifestRoutes(compilation.manifest, compilation.manifest, config, [
-      "mockups/screens/home.mobile.html",
+      "mockups/.generated/screens/home.mobile.html",
     ]),
     ["screens/home.html", "user-flows/tour.html"],
   );
@@ -71,7 +69,7 @@ test("manifest entry changes are attributed to their route", async (context) => 
   assert.deepEqual(
     changedManifestRoutes(manifest, baseManifest, config, [
       "entries/fixture.mockup.tsx",
-      "mockups/mokly-manifest.json",
+      "mockups/.generated/mokly-manifest.json",
     ]),
     ["screens/home.html", "user-flows/tour.html"],
   );
@@ -142,7 +140,7 @@ test("changed screens propagate to use cases authored separately", async (contex
 
   assert.deepEqual(
     changedManifestRoutes(manifest, manifest, config, [
-      `mockups/${home.fragments.mobile}`,
+      `mockups/.generated/${home.fragments.mobile}`,
     ]),
     ["screens/home.html", "user-flows/tour.html"],
   );
@@ -159,7 +157,7 @@ test("shared entry changes do not mark unchanged sibling screens", async (contex
   assert.deepEqual(
     changedManifestRoutes(manifest, manifest, config, [
       home.sourcePath,
-      `mockups/${home.fragments.mobile}`,
+      `mockups/.generated/${home.fragments.mobile}`,
     ]),
     ["screens/home.html", "user-flows/tour.html"],
   );
@@ -196,8 +194,10 @@ test("branch comparisons exclude commits made only on the base branch", async (c
   await git(fixture.root, ["commit", "-qm", "test: change main details"]);
   await git(fixture.root, ["checkout", "-q", "feature"]);
 
-  const client = new CommittedRepository(
+  const client = committedReviewRepository(
+    config,
     new NodeGitCommandRunner(fixture.root),
+    commonCommit,
   );
   const changed = await computeChangedRoutes(config, "main", client);
   const review = await compareReview(
@@ -265,6 +265,7 @@ test("changed-route detection degrades to undefined when Git fails", async (cont
   );
   const succeeding: ReadOnlyReviewRepository = {
     ...failing,
+    descriptor: baselineCatalogue("a".repeat(40), "mockups", "generated-v6"),
     evidence: {
       ...failing.evidence,
       changedPaths: () => Promise.resolve(["notes.md"]),
@@ -272,13 +273,15 @@ test("changed-route detection degrades to undefined when Git fails", async (cont
     },
     reader: {
       ...failing.reader,
+      catalogue: baselineCatalogue("a".repeat(40), "mockups", "generated-v6"),
       fileExists: () => Promise.resolve(true),
       fileKind: () => Promise.resolve("regular"),
       readFile: () => Promise.resolve(JSON.stringify(compilation.manifest)),
       readFileBytes: (_commit, file) =>
         Promise.resolve(
           Buffer.from(
-            compilation.outputs.get(file.slice("mockups/".length)) ?? "",
+            compilation.outputs.get(file.slice("mockups/.generated/".length)) ??
+              "",
           ),
         ),
     },

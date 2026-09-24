@@ -219,7 +219,7 @@ test("approved changes mockups render directly from disk", async ({ page }) => {
     for (const viewport of ["desktop", "mobile"]) {
       const file = path.join(
         repositoryRoot,
-        `examples/basic/generated/design/review/controls/${mode}.${viewport}.html`,
+        `examples/basic/.generated/design/review/controls/${mode}.${viewport}.html`,
       );
       expect(fs.existsSync(file)).toBe(true);
       await page.goto(pathToFileURL(file).href);

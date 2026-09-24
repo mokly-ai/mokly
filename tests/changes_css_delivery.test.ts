@@ -6,7 +6,6 @@ import test from "node:test";
 import { exportCatalogue } from "../dist/export/run.js";
 import { readManifest } from "../dist/registry/manifest.js";
 import { prepareReviewRepository } from "../dist/review/prepare.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
 import {
   ComponentChangeCache,
   RepositoryComponentChanges,
@@ -15,6 +14,7 @@ import { configuredServedReview } from "../dist/server/configured_review.js";
 import { startCatalogueServer } from "../dist/server/http.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 
 for (const components of [false, true])
@@ -32,6 +32,7 @@ for (const components of [false, true])
         {
           commit: prepared.commit,
           selection: prepared.selection,
+          descriptor: prepared.descriptor,
         },
       ),
     );

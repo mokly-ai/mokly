@@ -4,6 +4,7 @@ import { parentPort, workerData, type MessagePort } from "node:worker_threads";
 
 import type { ManifestV5 } from "@mokly/viewer/data";
 
+import type { BaselineCatalogue } from "../../baseline/catalogue.js";
 import { compileRuntime } from "../../build/compile_runtime.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
 import { runWithTimings, timeAsync } from "../../diagnostics/timings.js";
@@ -50,6 +51,7 @@ parentPort?.on(
     base: string;
     commit?: string;
     selection?: BaselineSelection;
+    descriptor?: BaselineCatalogue;
   }) => {
     if (message.type !== "classify" || !manifest) return;
     void runWithTimings(debug, "background", async () => {
@@ -64,6 +66,7 @@ parentPort?.on(
         classifier.read(runtime.config, manifest!, message.base, undefined, {
           commit,
           selection,
+          ...(message.descriptor ? { descriptor: message.descriptor } : {}),
           ...(outputs ? { outputs } : {}),
         }),
       );

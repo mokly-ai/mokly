@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-Approved target in [Generated Output Simplification](../../plans/generated-output-simplification.md).
+Implemented for v6 catalogues in [Generated Output Simplification](../../plans/generated-output-simplification.md); prefixless historical publications remain supported.
 This owns URL addressing for [catalogue read models](./mokly-catalogue.md),
 [viewer frames](./mokly-frame-adapter.md), [static export](./mokly-export-delivery.md)
 and [publication](./mokly-publication.md). It does not change logical route

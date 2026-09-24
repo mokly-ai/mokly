@@ -61,10 +61,10 @@ export async function startNavigationFixture(): Promise<NavigationFixture> {
     path.join(legacy, "guide.source.ts"),
     `export const source = () => '<!doctype html><html><body><a id="legacy-link" href="mock:details#section">Details</a></body></html>';\n`,
   );
-  await fs.promises.mkdir(path.join(fixture.mockupsDir, "screens"));
+  await fs.promises.mkdir(path.join(legacy, "nested"));
   await fs.promises.writeFile(
-    path.join(fixture.mockupsDir, "screens", "nested.html"),
-    `<!doctype html><html><head><base target="_top"></head><body><div id="local"></div><a id="local-base" href="#local">Base-targeted</a><a id="local-unmarked" href="#local" target="_top">Local</a><a data-mokly-link="details" href="./details.mobile.html" id="local-marked" target="_top">Marked-looking</a></body></html>`,
+    path.join(legacy, "nested", "page.source.ts"),
+    `export const source = () => '<!doctype html><html><head><base target="_top"></head><body><div id="local"></div><a id="local-base" href="#local">Base-targeted</a><a id="local-unmarked" href="#local" target="_top">Local</a><a href="mock:details#section" id="local-marked" target="_top">Marked-looking</a></body></html>';\n`,
   );
   for (const viewport of ["desktop", "mobile"])
     await fs.promises.writeFile(
@@ -81,10 +81,18 @@ export async function startNavigationFixture(): Promise<NavigationFixture> {
     "guide.html",
     "legacy/guide.source.ts",
   );
+  await registerFixturePage(
+    fixture,
+    "nested-page",
+    "screens/nested.html",
+    "legacy/nested/page.source.ts",
+  );
   const config = await loadConfig(fixture.root);
-  await writeCompilation(await compileCatalogue(config), config);
+  const compilation = await compileCatalogue(config);
+  await writeCompilation(compilation, config);
   const server = await startCatalogueServer(config, {
     base: "origin/main",
+    generatedOutputs: compilation.outputs,
     snapshot: await loadCatalogueSnapshot(config, async () => ({
       schemaVersion: 1,
       baseRef: "origin/main",
@@ -116,7 +124,7 @@ const metadata = { dependencies: [], relatedDocs: [] };
 function Home({ compact }) {
   const nestedGenerated = compact ? "./details.mobile.html" : "./details.desktop.html";
   return <main id="home">
-    <img alt="" src={compact ? "../slow-navigation-mobile.svg" : "../slow-navigation-desktop.svg"} />
+    <img alt="" src={compact ? "../../slow-navigation-mobile.svg" : "../../slow-navigation-desktop.svg"} />
     {compact ? <MockLink fragment="section" id="mock-link" to="details">MockLink details</MockLink> : <a href="mock:details#section" id="raw-link">Raw details</a>}
     <map name="destinations"><area href="mock:details#section" id="area-link" shape="default" /></map>
     <svg viewBox="0 0 100 30"><a href="mock:details#section" id="svg-link"><text x="0" y="20">SVG details</text></a></svg>

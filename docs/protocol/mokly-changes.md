@@ -47,6 +47,10 @@ with changed content remain eligible. Both viewports and every available color
 scheme participate. Metadata includes route/address, titles, descriptions,
 rationale, tags, related-doc links, flow steps and memberships, view structure,
 and collection ancestry; it excludes source locations and dependencies.
+Paired normalization resolves local document URLs on each side against that
+side's catalogue root, so the legacy `styles.css` and v6 `../styles.css`
+hrefs compare equal; resource membership and bytes remain separate material
+evidence. See [baseline addressing](./mokly-baseline-addressing.md#comparison-namespaces).
 The plain generated marker is not material comparison evidence, so a source
 move alone stays unchanged. Stored snapshots retain the document bytes.
 
@@ -117,8 +121,8 @@ complete generated output has been adopted, never during a shell request.
 The watched parent publishes the result. Until the immutable route, baseline, and
 component-evidence snapshot arrives, Browse keeps both tabs without inventing a
 Changes count. A spinner occupies the reserved count slot, and selecting Changes
-shows a loading sidebar. Derived mode publishes a distinct `preparing` state
-before `pending` while its baseline rebuild runs; see the
+shows a loading sidebar. A baseline rebuild publishes a distinct `preparing`
+state before `pending` while it runs; see the
 [derived baselines contract](./mokly-derived-baselines.md). Content updates clear the previous snapshot and publish
 pending status before notifying the browser, then publish a terminal ready or
 unavailable status only when the latest sequence finishes. Empty ready results

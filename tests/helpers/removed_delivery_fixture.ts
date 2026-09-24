@@ -187,7 +187,7 @@ export const mockups = [
     current
       ? ""
       : `defineScreen({ ...metadata, id: "removed-screen", title: "Removed screen", route: "screens/removed.html", mobile: <main>${prefix} mobile screen</main>, desktop: <main>${prefix} desktop screen</main>, useCaseIds: [] }),
-  definePage({ ...metadata, id: "removed-page", title: "Removed page", route: "archive/removed.html", render: () => '<!doctype html><html><head><link rel="stylesheet" href="../assets/page.css"></head><body><main>${prefix} page</main><img src="../assets/past.png"></body></html>' }),`
+  definePage({ ...metadata, id: "removed-page", title: "Removed page", route: "archive/removed.html", render: () => '<!doctype html><html><head><link rel="stylesheet" href="../../assets/page.css"></head><body><main>${prefix} page</main><img src="../../assets/past.png"></body></html>' }),`
   }
 ];`;
 }

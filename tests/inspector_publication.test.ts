@@ -148,7 +148,7 @@ test("export includes the inspector while generated and comparison bytes stay un
   for (const [name, bytes] of snapshotFiles) {
     assert.doesNotMatch(bytes.toString(), /inspector.js|data-mokly-inspector/);
     const relative = name.replace(/^.*\/snapshots\/[^/]+\//, "");
-    assert.deepEqual(bytes, before.get(relative), name);
+    assert.deepEqual(bytes, before.get(`.generated/${relative}`), name);
   }
   const inventory = JSON.parse(
     await fs.readFile(
@@ -169,7 +169,7 @@ test("repository preview adds its inspector after validating portable consumer r
   const published = await directoryFiles(output);
   assert.ok(published.has("__mokly/client/inspector.js"));
   assert.match(
-    published.get("static/screens/home.mobile.html")!.toString(),
+    published.get("static/.generated/screens/home.mobile.html")!.toString(),
     /data-mokly-inspector/,
   );
   assert.deepEqual(await directoryFiles(fixture.config.mockupsDir), original);
@@ -177,9 +177,17 @@ test("repository preview adds its inspector after validating portable consumer r
     path.join(fixture.config.mockupsDir, "unowned.html"),
     '<!doctype html><script src="/__mokly/client/inspector.js"></script>',
   );
+  const entry = await fs.readFile(fixture.entryPath, "utf8");
+  await fs.writeFile(
+    fixture.entryPath,
+    entry.replaceAll(
+      "Open Action</MockLink>",
+      'Open Action</MockLink><a href="../../unowned.html">Nested</a>',
+    ),
+  );
   await assert.rejects(
     buildPreview(fixture.config, output),
-    /non-portable asset URL/,
+    /root-absolute link is not portable/,
   );
   assert.deepEqual(await directoryFiles(output), published);
 });

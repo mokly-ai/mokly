@@ -2,8 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { isSafeRepositoryPath } from "@mokly/viewer/data";
-import type { ReviewArtifactContent } from "@mokly/viewer/data";
+import type { HistoricalManifest } from "@mokly/viewer/data";
 
+import { joinCataloguePath } from "../baseline/catalogue.js";
 import type { FileLocation } from "../config/file_locations.js";
 import { isInside } from "../config/paths.js";
 import {
@@ -11,12 +12,10 @@ import {
   publicPathLocation,
 } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
-import { timeAsync } from "../diagnostics/timings.js";
 import { MoklyError, errorMessage } from "../errors.js";
+import { generatedManifestRoutes } from "../registry/generated_routes.js";
 
-import { referencedRoutes } from "./asset_references.js";
 import type { BaselineReader, GitFile } from "./git.js";
-import { addArtifactFile, snapshotPath } from "./paths.js";
 
 /** Filesystem boundary for current-worktree Review assets. */
 export interface ReviewAssetReader {
@@ -101,20 +100,53 @@ export class GitReviewAssetReader implements ReviewAssetReader {
     private readonly git: BaselineReader,
     private readonly commit: string,
     private readonly mockupsPrefix: string,
+    manifest?: HistoricalManifest,
   ) {
+    this.generatedRoutes = manifest
+      ? generatedManifestRoutes(manifest)
+      : new Set();
+    this.generatedLayout =
+      git.catalogue?.layout ??
+      (manifest?.schemaVersion === 6 ? "generated-v6" : "legacy");
+    const catalogueRoot = git.catalogue?.catalogueRoot ?? mockupsPrefix;
     this.config = {
       ...config,
-      mockupsDir: path.resolve(config.repoRoot, mockupsPrefix),
+      mockupsDir: path.resolve(config.repoRoot, catalogueRoot),
+      generatedDir: path.resolve(
+        config.repoRoot,
+        this.generatedLayout === "generated-v6"
+          ? (git.catalogue?.generatedRoot ??
+              joinCataloguePath(catalogueRoot, ".generated"))
+          : joinCataloguePath(catalogueRoot, ".generated"),
+      ),
     };
   }
 
   private readonly config: ResolvedConfig;
+  private readonly generatedRoutes: ReadonlySet<string>;
+  private readonly generatedLayout: "generated-v6" | "legacy";
+
+  private repoPath(route: string): string {
+    const generated = this.generatedRoutes.has(route);
+    return joinCataloguePath(
+      generated
+        ? (this.git.catalogue?.generatedRoot ??
+            (this.generatedLayout === "generated-v6"
+              ? joinCataloguePath(this.mockupsPrefix, ".generated")
+              : this.mockupsPrefix))
+        : (this.git.catalogue?.catalogueRoot ?? this.mockupsPrefix),
+      route,
+    );
+  }
 
   async readIfExists(route: string): Promise<Uint8Array | undefined> {
-    assertPublicStaticRoute(route, this.config);
-    const repoPath = this.mockupsPrefix
-      ? `${this.mockupsPrefix}/${route}`
-      : route;
+    assertPublicStaticRoute(
+      route,
+      this.config,
+      this.generatedRoutes.has(route) &&
+        this.generatedLayout === "generated-v6",
+    );
+    const repoPath = this.repoPath(route);
     if ((await this.git.fileKind(this.commit, repoPath)) === "missing") return;
     return this.read(route);
   }
@@ -145,10 +177,14 @@ export class GitReviewAssetReader implements ReviewAssetReader {
     routes: readonly string[],
   ): Promise<ReadonlyMap<string, Uint8Array | undefined>> {
     const requested = [...new Set(routes)].sort().map((route) => {
-      assertPublicStaticRoute(route, this.config);
+      assertPublicStaticRoute(
+        route,
+        this.config,
+        this.generatedRoutes.has(route) &&
+          this.generatedLayout === "generated-v6",
+      );
       return {
-        repoPath:
-          this.mockupsPrefix === "" ? route : `${this.mockupsPrefix}/${route}`,
+        repoPath: this.repoPath(route),
         route,
       };
     });
@@ -185,61 +221,6 @@ export class GitReviewAssetReader implements ReviewAssetReader {
   }
 }
 
-/** Copy a pane and every transitively referenced local CSS/static dependency. */
-export async function copySnapshotDependencies(
-  files: Map<string, ReviewArtifactContent>,
-  side: "after" | "before",
-  seedRoutes: ReadonlySet<string>,
-  read: (route: string) => Promise<ReviewArtifactContent>,
-  readMany?: (
-    routes: readonly string[],
-  ) => Promise<ReadonlyMap<string, ReviewArtifactContent>>,
-): Promise<void> {
-  return timeAsync("review.resource-graph", async () => {
-    let queued = [...seedRoutes].sort();
-    const seen = new Set<string>();
-    while (queued.length > 0) {
-      const batch = queued.filter((route) => !seen.has(route));
-      for (const route of batch) seen.add(route);
-      const missing = batch.filter(
-        (route) => files.get(snapshotPath(side, route)) === undefined,
-      );
-      if (missing.length > 0) {
-        const loaded = readMany
-          ? await readMany(missing)
-          : await readIndividually(missing, read);
-        for (const route of missing) {
-          const content = loaded.get(route);
-          if (content === undefined) {
-            throw assetError(route, "batch reader omitted the file");
-          }
-          addArtifactFile(files, snapshotPath(side, route), content);
-        }
-      }
-      const discovered = new Set<string>();
-      for (const route of batch) {
-        const content = files.get(snapshotPath(side, route));
-        if (content === undefined) {
-          throw assetError(route, "snapshot dependency is unavailable");
-        }
-        for (const dependency of referencedRoutes(route, content)) {
-          if (!seen.has(dependency)) discovered.add(dependency);
-        }
-      }
-      queued = [...discovered].sort();
-    }
-  });
-}
-
-async function readIndividually(
-  routes: readonly string[],
-  read: (route: string) => Promise<ReviewArtifactContent>,
-): Promise<ReadonlyMap<string, ReviewArtifactContent>> {
-  const files = new Map<string, ReviewArtifactContent>();
-  for (const route of routes) files.set(route, await read(route));
-  return files;
-}
-
 async function readGitFilesIndividually(
   git: BaselineReader,
   commit: string,
@@ -261,10 +242,17 @@ async function readGitFilesIndividually(
 function assertPublicStaticRoute(
   route: string,
   config: ResolvedConfig,
+  generated = false,
 ): string {
   if (!isSafeRepositoryPath(route)) throw assetError(route, "unsafe path");
-  const candidate = path.resolve(config.mockupsDir, route);
-  const denial = privateStaticPathReason(candidate, config, false);
+  const candidate = path.resolve(
+    generated ? config.generatedDir : config.mockupsDir,
+    route,
+  );
+  const denial =
+    generated && isInside(config.generatedDir, candidate)
+      ? undefined
+      : privateStaticPathReason(candidate, config, false);
   if (!isInside(config.mockupsDir, candidate) || denial) {
     throw assetError(
       route,
@@ -274,7 +262,7 @@ function assertPublicStaticRoute(
   return candidate;
 }
 
-function assetError(
+export function assetError(
   route: string,
   detail: string,
   cause?: unknown,

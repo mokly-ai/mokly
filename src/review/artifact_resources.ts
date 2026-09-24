@@ -4,8 +4,16 @@ import type { ReviewArtifact, ViewReview } from "@mokly/viewer/data";
 import { referencedRoutes } from "./asset_references.js";
 import { normalizeHistoricalDocument, normalizeReviewPair } from "./ignore.js";
 
+export interface ArtifactLayouts {
+  readonly before: ".generated" | "";
+  readonly after: ".generated" | "";
+}
+
 /** Check graph-backed evidence against the actual retained snapshots before publication. */
-export function validateArtifactResources(artifact: ReviewArtifact): void {
+export function validateArtifactResources(
+  artifact: ReviewArtifact,
+  layouts: ArtifactLayouts = { before: "", after: "" },
+): void {
   const views: ViewReview[] = artifact.result.screens.flatMap(
     (screen) => screen.views,
   );
@@ -15,6 +23,22 @@ export function validateArtifactResources(artifact: ReviewArtifact): void {
         entry.variants.flatMap((variant) => variant.views),
       ),
     );
+  const generated = Object.fromEntries(
+    (["before", "after"] as const).map((side) => [
+      side,
+      {
+        prefix: layouts[side],
+        routes: new Set(
+          views.flatMap((view) => {
+            const pathname = view[`${side}Path`];
+            return pathname?.startsWith(`snapshots/${side}/`)
+              ? [pathname.slice(`snapshots/${side}/`.length)]
+              : [];
+          }),
+        ),
+      },
+    ]),
+  ) as Record<"before" | "after", { prefix: string; routes: Set<string> }>;
   const edges = new Map<string, readonly string[]>();
   const text = (route: string): string => {
     const bytes = artifact.files.get(route);
@@ -45,10 +69,11 @@ export function validateArtifactResources(artifact: ReviewArtifact): void {
       if (!root) continue;
       const prefix = `snapshots/${side}/`;
       const pending = referencedRoutes(
-        root,
+        root.slice(prefix.length),
         side === "before" ? normalized.base : normalized.head,
         { resourceHints: false },
-      );
+        generated[side],
+      ).map((route) => `${prefix}${route}`);
       const seen = new Set<string>();
       for (let index = 0; index < pending.length; index++) {
         const route = pending[index]!;
@@ -59,9 +84,14 @@ export function validateArtifactResources(artifact: ReviewArtifact): void {
         reachable.add(route.slice(prefix.length));
         let references = edges.get(route);
         if (!references) {
-          references = referencedRoutes(route, text(route), {
-            resourceHints: false,
-          });
+          references = referencedRoutes(
+            route.slice(prefix.length),
+            text(route),
+            {
+              resourceHints: false,
+            },
+            generated[side],
+          ).map((reference) => `${prefix}${reference}`);
           edges.set(route, references);
         }
         pending.push(...references);

@@ -1,15 +1,21 @@
 /** Component canvases keep the real mobile/desktop renderer contexts. */
+import {
+  currentDocumentPath,
+  type GeneratedPathPrefix,
+} from "../catalogue/delivery_paths.js";
 import type { ManifestComponentVariant } from "../components/manifest_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
-import { encodeUrlPath } from "../data/paths.js";
 
+import { framePath } from "./stage_sources.js";
 import { generatedFrameSource, generatedView } from "./stage_sources.js";
 
 export function ComponentStage({
   variant,
   previewViews,
   title,
+  prefix,
 }: {
+  prefix?: GeneratedPathPrefix;
   variant: ManifestComponentVariant;
   previewViews?: readonly GeneratedComponentView[];
   title: string;
@@ -35,12 +41,14 @@ export function ComponentStage({
           "dark",
         );
         const light = previewLight
-          ? generatedFrameSource(previewLight)
-          : `/static/${encodeUrlPath(variant.fragments[viewport])}`;
+          ? generatedFrameSource(previewLight, undefined, undefined, prefix)
+          : framePath(currentDocumentPath(variant.fragments[viewport], prefix));
         const dark = previewDark
-          ? generatedFrameSource(previewDark)
+          ? generatedFrameSource(previewDark, undefined, undefined, prefix)
           : variant.darkFragments?.[viewport]
-            ? `/static/${encodeUrlPath(variant.darkFragments[viewport])}`
+            ? framePath(
+                currentDocumentPath(variant.darkFragments[viewport], prefix),
+              )
             : undefined;
         return (
           <section

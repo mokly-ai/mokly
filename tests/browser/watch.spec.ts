@@ -126,7 +126,9 @@ test("watched serve rebuilds and reloads after an authored change", async ({
     .poll(async () => {
       try {
         return (
-          await (await fetch(`${url}/static/screens/home.mobile.html`)).text()
+          await (
+            await fetch(`${url}/static/.generated/screens/home.mobile.html`)
+          ).text()
         ).includes('data-watch-version="2"');
       } catch {
         return false;

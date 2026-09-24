@@ -78,7 +78,7 @@ export type BaselineProgress =
 export interface BaselineBuildRequest {
   readonly repoRoot: string;
   readonly commit: string;
-  /** Repository-relative location of historical generated output. */
+  /** Requested/current repository-relative catalogue root (`.` at repo root). */
   readonly mockupsPath: string;
   readonly commands: readonly (readonly string[])[];
   readonly allowManifestV2?: boolean;

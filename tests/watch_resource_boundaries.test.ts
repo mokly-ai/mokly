@@ -25,7 +25,7 @@ test(
   async (context) => {
     const fixture = await changedFixture(
       context,
-      validEntrySource({ body: '<img src="../image.svg" alt="Logo" />' }),
+      validEntrySource({ body: '<img src="../../image.svg" alt="Logo" />' }),
       {
         extraConfig: "watch: { debounceMs: 0 },",
       },
@@ -115,7 +115,7 @@ test(
   { timeout: 90_000 },
   async (context) => {
     const source = validEntrySource({
-      body: '<ReviewIgnore id="nav"><img src="../image.svg" alt="Logo" /></ReviewIgnore><p>Content</p>',
+      body: '<ReviewIgnore id="nav"><img src="../../image.svg" alt="Logo" /></ReviewIgnore><p>Content</p>',
     }).replace(
       "import { defineCollection",
       "import { ReviewIgnore, defineCollection",

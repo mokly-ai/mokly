@@ -42,8 +42,10 @@ export async function completedBaseline(
     );
     const version = await baselineManifestVersion(
       fs,
-      request.repoRoot,
       layout.output,
+      marker.layout === "generated-v6"
+        ? path.join(layout.output, marker.historicalCatalogueRoot!)
+        : layout.output,
       request.allowManifestV2,
       request.signal,
     );

@@ -19,5 +19,5 @@ export const componentLayoutStyles = [
 export const componentStyles = [...designBaseStyles, ...componentLayoutStyles];
 
 export const componentStyleDependencies = componentStyles.map(
-  (stylesheet) => `examples/basic/generated/${stylesheet}`,
+  (stylesheet) => `examples/basic/${stylesheet}`,
 );

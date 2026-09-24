@@ -45,7 +45,7 @@ function Screen({
   return (
     <main className={`scale-screen ${compact ? "compact" : "wide"}`}>
       <header>
-        <img src="../../assets/mark.svg" width="28" height="28" alt="" />
+        <img src="../../../assets/mark.svg" width="28" height="28" alt="" />
         <span>{area.replaceAll("-", " ")}</span>
         <MockLink to={`${area}-guide`}>Help</MockLink>
       </header>

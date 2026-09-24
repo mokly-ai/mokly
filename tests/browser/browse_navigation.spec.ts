@@ -227,11 +227,14 @@ test("logical activation stays host-owned during a frame source handoff", async 
   const requestReleased = new Promise<void>((resolve) => {
     releaseRequest = resolve;
   });
-  await page.route("**/static/screens/home.mobile.dark.html", async (route) => {
-    reportRequest();
-    await requestReleased;
-    await route.continue();
-  });
+  await page.route(
+    "**/static/.generated/screens/home.mobile.dark.html",
+    async (route) => {
+      reportRequest();
+      await requestReleased;
+      await route.continue();
+    },
+  );
 
   try {
     await page.goto(`${navigation.url}/view/screens/home.html`);

@@ -2,17 +2,15 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
+import { setTimeout } from "node:timers/promises";
 
 import { readCatalogue } from "@mokly/viewer";
 import type { CatalogueReadModel, CatalogueUsage } from "@mokly/viewer";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
-import { ConfiguredGitCommandRunner } from "../dist/config/git.js";
 import { exportCatalogue } from "../dist/export/run.js";
-import { CommittedRepository } from "../dist/review/git.js";
-import { configuredServedReview } from "../dist/server/configured_review.js";
-import { startCatalogueServer } from "../dist/server/http.js";
+import { serve } from "../dist/server/serve.js";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
 
@@ -87,29 +85,27 @@ for (const reuse of ["id", "route"] as const) {
         (entry) => entry.id === "home",
       )!.views[0]!.usage;
       await fs.writeFile(fixture.entryPath, source(reuse));
-      let model: CatalogueReadModel;
+      let model: CatalogueReadModel | undefined;
       let holderHtml: string;
       if (delivery === "Serve") {
         await writeCompilation(
           await compileCatalogue(fixture.config),
           fixture.config,
         );
-        const review = configuredServedReview(
-          fixture.config,
-          "origin/main",
-          new CommittedRepository(
-            new ConfiguredGitCommandRunner(fixture.config),
-          ),
-        );
-        const server = await startCatalogueServer(fixture.config, {
+        const server = await serve(fixture.config, {
           port: 0,
           base: "origin/main",
-          review,
+          watch: false,
         });
         t.after(() => server.close());
-        const response = await fetch(`${server.url}/__mokly/catalogue.json`);
-        assert.equal(response.status, 200);
-        model = (await response.json()) as CatalogueReadModel;
+        for (let attempt = 0; attempt < 100; attempt++) {
+          const response = await fetch(`${server.url}/__mokly/catalogue.json`);
+          assert.equal(response.status, 200);
+          model = (await response.json()) as CatalogueReadModel;
+          if (model.changesStatus === "ready") break;
+          await setTimeout(25);
+        }
+        assert.equal(model!.changesStatus, "ready");
         const holder = await fetch(`${server.url}/view/components/holder.html`);
         assert.equal(holder.status, 200);
         holderHtml = await holder.text();
@@ -126,6 +122,7 @@ for (const reuse of ["id", "route"] as const) {
           "utf8",
         );
       }
+      assert.ok(model);
       verify(model);
       assert.doesNotMatch(holderHtml, /Changed component:/);
       const broken = structuredClone(model);

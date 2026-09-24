@@ -8,7 +8,7 @@ export default tseslint.config(
     ignores: [
       "**/.context/**",
       "**/dist/**",
-      "examples/basic/generated/**",
+      "examples/basic/.generated/**",
       "node_modules/**",
       "target/**",
     ],

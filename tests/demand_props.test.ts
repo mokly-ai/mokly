@@ -17,7 +17,7 @@ test("Props renders only its view and freezes resources without copying linked p
   const source =
     componentEntrySource({
       actionRender: `(props) => <section>
-    <button>{props.label}</button><img src="../../image.svg" alt="Example" />
+    <button>{props.label}</button><img src="../../../image.svg" alt="Example" />
     <a href="../../broken.html">Reference</a><MockLink to="home">Home</MockLink>
   </section>`,
     }) +
@@ -59,8 +59,11 @@ test("Props renders only its view and freezes resources without copying linked p
   );
   const html = Buffer.from(bundle.files.get(bundle.route)!.bytes).toString();
   assert.match(html, /Edited/);
-  assert.match(html, /href="\/static\/broken.html"/);
-  assert.match(html, /href="\/static\/screens\/home.desktop.html"/);
+  assert.match(html, /href="\/static\/\.generated\/broken.html"/);
+  assert.match(
+    html,
+    /href="\/static\/\.generated\/screens\/home.desktop.html"/,
+  );
   await fs.writeFile(asset, '<svg width="24"/>');
   assert.equal(
     Buffer.from(bundle.files.get("image.svg")!.bytes).toString(),

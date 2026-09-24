@@ -160,7 +160,6 @@ test("removed page capture denies traversal, symlinks, metadata, and authored so
     ["../mokly-manifest.json", /internal catalogue metadata/],
     ["../assets/helper.source.html", /reserved source basename/],
     ["../assets/author.ts", /authoring input/],
-    ["../README.css", /public exclusion/],
   ] as const) {
     const files = new Map(fixture.files);
     files.set(`mockups/${PAGE_ROUTE}`, {

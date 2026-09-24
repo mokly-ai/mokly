@@ -117,6 +117,7 @@ function waitForChildShutdown(
           update.baselineCommit,
           update.version,
           update.baselineSelection,
+          update.baselineDescriptor,
         );
         server.publishUpdate({
           ...(update.kind ? { kind: update.kind } : {}),
@@ -125,6 +126,7 @@ function waitForChildShutdown(
             (update.changedRoutes === null ? "pending" : "ready"),
           changedRoutes: update.changedRoutes,
           componentChanges: update.componentChanges,
+          ...(update.assetClosure ? { assetClosure: update.assetClosure } : {}),
           version: update.version,
         });
       }

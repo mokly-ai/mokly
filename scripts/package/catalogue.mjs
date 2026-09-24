@@ -10,6 +10,7 @@ export async function inspectPublicCatalogue(root, comparisonPath) {
   );
   const model = JSON.parse(json);
   assert.equal(model.schemaVersion, 1);
+  assert.equal(model.generatedPathPrefix, ".generated");
   assert.match(model.identity.id, /^[a-f0-9]{64}$/);
   assert.match(model.deploymentId, /^[a-f0-9]{64}$/);
   assert.equal(model.comparisonUrl, comparisonPath);

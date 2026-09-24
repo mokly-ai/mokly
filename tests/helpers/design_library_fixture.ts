@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { baselineCatalogue } from "../../dist/baseline/catalogue.js";
 import {
   compileCatalogue,
   type Compilation,
@@ -51,9 +52,9 @@ export async function designLibraryFixture(t: {
   async function compare(after = before, changedPaths = [...originals.keys()]) {
     const current = new Map(resources);
     for (const file of changedPaths) {
-      if (file.startsWith("examples/basic/generated/") && file.endsWith(".css"))
+      if (file.startsWith("examples/basic/") && file.endsWith(".css"))
         current.set(
-          file.slice("examples/basic/generated/".length),
+          file.slice("examples/basic/".length),
           await fs.readFile(path.join(root, file), "utf8"),
         );
     }
@@ -70,23 +71,34 @@ export async function designLibraryFixture(t: {
   }
   const batches: string[][] = [];
   function git(changedPaths: readonly string[]): ReadOnlyReviewRepository {
-    const files = new Map(
-      [...resources, ...before.outputs].map(([file, contents]) => [
-        `examples/basic/generated/${file}`,
-        contents,
-      ]),
+    const commit = "a".repeat(40);
+    const descriptor = baselineCatalogue(
+      commit,
+      "examples/basic",
+      "generated-v6",
     );
+    const files = new Map<string, string>([
+      ...[...resources].map(
+        ([file, contents]) => [`examples/basic/${file}`, contents] as const,
+      ),
+      ...[...before.outputs].map(
+        ([file, contents]) =>
+          [`examples/basic/.generated/${file}`, contents] as const,
+      ),
+    ]);
     const read = async (_commit: string, file: string) => {
       const contents = files.get(file);
       assert.notEqual(contents, undefined, file);
       return Buffer.from(contents!);
     };
     return {
+      descriptor,
       evidence: {
-        mergeBase: async () => "a".repeat(40),
+        mergeBase: async () => commit,
         changedPaths: async () => changedPaths,
       },
       reader: {
+        catalogue: descriptor,
         fileExists: async (_commit, file) => files.has(file),
         fileKind: async (_commit, file) =>
           files.has(file) ? "regular" : "missing",

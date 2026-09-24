@@ -39,7 +39,7 @@ test("watch ownership follows the inventory and does not suppress unowned descen
   for (const name of [
     EXPORT_MARKER,
     "index.html",
-    "static/screens/home.mobile.html",
+    "static/.generated/screens/home.mobile.html",
   ])
     assert.equal(
       classifyWatchPath(

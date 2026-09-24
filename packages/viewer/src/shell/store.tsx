@@ -159,6 +159,11 @@ export function ShellStoreProvider({
             : {})}
         >
           <ShellFrameRegistryProvider
+            {...(activeCatalogue.publicModel?.generatedPathPrefix ||
+            activeCatalogue.manifest.schemaVersion === 6 ||
+            activeCatalogue.manifest.schemaVersion === "live-index-1"
+              ? { generatedPathPrefix: ".generated" as const }
+              : {})}
             {...(frameAdapter ? { adapter: frameAdapter } : {})}
             {...(frameBaseUrl ? { baseUrl: frameBaseUrl } : {})}
           >

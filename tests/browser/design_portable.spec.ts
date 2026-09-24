@@ -9,7 +9,7 @@ const design = (route: string, viewport: string) =>
   pathToFileURL(
     path.join(
       repositoryRoot,
-      `examples/basic/generated/design/${route}.${viewport}.html`,
+      `examples/basic/.generated/design/${route}.${viewport}.html`,
     ),
   ).href;
 

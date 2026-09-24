@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { baselineCatalogue } from "../dist/baseline/catalogue.js";
 import {
   childUpdateMessage,
   parseChildUpdateMessage,
@@ -118,6 +119,9 @@ test("baseline handoffs preserve pinned commits and explicit revocation", () => 
       "evidence",
       commit,
       commit === null ? undefined : "blobs",
+      commit === null
+        ? undefined
+        : baselineCatalogue(commit, "mockups", "generated-v6"),
     );
     assert.equal(message.baselineCommit, commit);
     assert.deepEqual(parseChildUpdateMessage(message), message);

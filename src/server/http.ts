@@ -65,6 +65,14 @@ export async function startCatalogueServer(
   const changes = validated.changes;
   let catalogue = validated.catalogue;
   let manifest = catalogue.manifest;
+  let assetClosure: ReadonlySet<string> = new Set(
+    "assetClosure" in manifest ? manifest.assetClosure : [],
+  );
+  let generatedOutputs =
+    options.generatedOutputs ??
+    (options.componentRuntime?.manifest.schemaVersion === 6
+      ? new Map(options.componentRuntime.outputs)
+      : undefined);
   let controls = options.componentRuntime
     ? new ComponentRenderService(options.componentRuntime)
     : undefined;
@@ -208,7 +216,8 @@ export async function startCatalogueServer(
       options.liveChanges === false ? undefined : changesStatus,
       contentVersion,
       publicCatalogue,
-      options.generatedOutputs,
+      generatedOutputs,
+      assetClosure,
     ).catch(() => {
       if (!response.destroyed && !response.headersSent)
         send(
@@ -234,7 +243,7 @@ export async function startCatalogueServer(
   return {
     completeCatalogue(complete, generation): boolean {
       if (controls?.capability().generation !== generation) return false;
-      parseManifest(complete);
+      const validatedManifest = parseManifest(complete);
       const nextCatalogue = createCatalogue(complete);
       const nextActive = componentChanges
         ? catalogueAtBaseline(complete, componentChanges.baseline)
@@ -244,6 +253,7 @@ export async function startCatalogueServer(
         contentVersion,
       );
       manifest = complete;
+      assetClosure = new Set(validatedManifest.assetClosure);
       catalogue = nextCatalogue;
       activeCatalogue = nextActive;
       return true;
@@ -258,6 +268,10 @@ export async function startCatalogueServer(
     port: address.port,
     replaceComponentRuntime(runtime): void {
       publicCatalogue.clearUsage();
+      generatedOutputs =
+        runtime.manifest.schemaVersion === 6
+          ? new Map(runtime.outputs)
+          : undefined;
       void documents?.close();
       documents = createDocuments(runtime);
       if (runtime.manifest.schemaVersion === "live-index-1") {
@@ -269,6 +283,7 @@ export async function startCatalogueServer(
       else controls = new ComponentRenderService(runtime);
     },
     publishUpdate(update = {}): void {
+      if (update.assetClosure) assetClosure = new Set(update.assetClosure);
       const next = advanceCatalogueState(
         {
           catalogue,

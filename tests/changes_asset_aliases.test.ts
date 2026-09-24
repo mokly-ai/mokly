@@ -3,7 +3,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { committedReviewRepository } from "../dist/review/repository.js";
+import { compileCatalogue } from "../dist/build/compile.js";
+import { prepareReviewRepository } from "../dist/review/prepare.js";
 import { computeChangedRoutes } from "../dist/server/changed.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
@@ -11,13 +12,15 @@ import { validEntrySource } from "./helpers/fixture.js";
 
 for (const kind of ["screen", "page"]) {
   for (const alias of ["file", "directory"]) {
-    test(`${kind} Changes follows a stable ${alias} alias to its edited target`, async (context) => {
+    test(`${kind} compilation rejects a selected ${alias} alias`, async (context) => {
       const route = alias === "file" ? "image.svg" : "images/logo.svg";
       const source =
         kind === "screen"
-          ? validEntrySource({ body: `<img src="../${route}" alt="Logo" />` })
+          ? validEntrySource({
+              body: `<img src="../../${route}" alt="Logo" />`,
+            })
           : validEntrySource() +
-            `\nimport { definePage } from "@mokly/mokly"; mockups.push(definePage({ id: "handbook", title: "Handbook", description: "Document", route: "handbook.html", dependencies: [], relatedDocs: [], render: () => '<html><body><img src="${route}" alt="Logo"/></body></html>' }));`;
+            `\nimport { definePage } from "@mokly/mokly"; mockups.push(definePage({ id: "handbook", title: "Handbook", description: "Document", route: "handbook.html", dependencies: [], relatedDocs: [], render: () => '<html><body><img src="../${route}" alt="Logo"/></body></html>' }));`;
       const fixture = await changedFixture(
         context,
         source,
@@ -28,37 +31,41 @@ for (const kind of ["screen", "page"]) {
             path.join(mockupsDir, "assets/logo.svg"),
             '<svg width="10"/>',
           );
-          await fs.symlink(
-            alias === "file" ? "assets/logo.svg" : "assets",
-            path.join(mockupsDir, alias === "file" ? "image.svg" : "images"),
-          );
+          if (alias === "file")
+            await fs.copyFile(
+              path.join(mockupsDir, "assets/logo.svg"),
+              path.join(mockupsDir, "image.svg"),
+            );
+          else {
+            await fs.mkdir(path.join(mockupsDir, "images"));
+            await fs.copyFile(
+              path.join(mockupsDir, "assets/logo.svg"),
+              path.join(mockupsDir, "images/logo.svg"),
+            );
+          }
         },
       );
-      await fs.writeFile(
-        path.join(fixture.mockupsDir, "assets/logo.svg"),
-        '<svg width="96"/>',
+      const selected = path.join(
+        fixture.mockupsDir,
+        alias === "file" ? "image.svg" : "images",
       );
-      assert.deepEqual(
-        await computeChangedRoutes(
-          fixture.config,
-          "HEAD",
-          committedReviewRepository(fixture.config),
-        ),
-        kind === "screen"
-          ? ["screens/home.html", "user-flows/tour.html"]
-          : ["handbook.html"],
+      await fs.rm(selected, { recursive: true });
+      await fs.symlink(
+        alias === "file" ? "assets/logo.svg" : "assets",
+        selected,
+      );
+      await assert.rejects(
+        compileCatalogue(fixture.config),
+        /\[mokly\/build-invalid\].*document links and resources are invalid/s,
       );
     });
   }
 }
 
-test("ignored alias resources remain outside Changes after target edits", async (context) => {
+test("unreferenced aliases remain private and outside Changes", async (context) => {
   const source = validEntrySource({
-    body: '<ReviewIgnore id="nav"><img src="../image.svg" alt="Logo" /></ReviewIgnore><p>Content</p>',
-  }).replace(
-    "import { defineCollection",
-    "import { ReviewIgnore, defineCollection",
-  );
+    body: "<p>Content</p>",
+  });
   const fixture = await changedFixture(
     context,
     source,
@@ -76,8 +83,12 @@ test("ignored alias resources remain outside Changes after target edits", async 
     await computeChangedRoutes(
       fixture.config,
       "HEAD",
-      committedReviewRepository(fixture.config),
+      await prepareReviewRepository(fixture.config, "HEAD"),
     ),
+    [],
+  );
+  assert.deepEqual(
+    (await compileCatalogue(fixture.config)).manifest.assetClosure,
     [],
   );
 });

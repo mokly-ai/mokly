@@ -11,7 +11,7 @@ import { baselineResourceConfig } from "../dist/review/base_manifest.js";
 import type { BaselineReader } from "../dist/review/git.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
-import { excludedNames, permittedNames } from "./helpers/public_exclusions.js";
+import { permittedNames } from "./helpers/public_exclusions.js";
 
 const reader: BaselineReader = {
   fileExists: async () => true,
@@ -21,10 +21,8 @@ const reader: BaselineReader = {
 };
 
 for (const schema of ["v2", "v3", "component-v4", "page-v4", "v5"]) {
-  test(`historical ${schema} resources use active exclusions relative to the baseline root`, async (t) => {
-    const fixture = await createFixture(undefined, {
-      extraConfig: 'publicExclude: ["INTERNAL/**"],',
-    });
+  test(`historical ${schema} resources protect sources but permit ordinary filenames`, async (t) => {
+    const fixture = await createFixture();
     t.after(() => removeFixture(fixture));
     const config = await loadConfig(fixture.root);
     const manifest = {
@@ -41,17 +39,17 @@ for (const schema of ["v2", "v3", "component-v4", "page-v4", "v5"]) {
       "baseline",
       "old-output",
     );
-    for (const name of [
-      ...excludedNames,
-      "mokly-manifest.json",
-      "unused.source.html",
-    ])
+    for (const name of ["mokly-manifest.json", "unused.source.html"])
       await assert.rejects(
         historical.read(name),
         /not a public static file/,
         name,
       );
-    for (const name of permittedNames)
+    for (const name of [
+      ...permittedNames,
+      "README.md",
+      "internal/private.json",
+    ])
       assert.equal(
         Buffer.from(await historical.read(name)).toString(),
         "baseline",

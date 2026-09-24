@@ -30,7 +30,12 @@ export function changedManifestRoutes(
   for (const entry of manifest.entries) {
     if (entry.kind === "collection") continue;
     const baseEntry = baseEntries.get(entry.id);
-    const candidates = changedPathCandidates(entry, baseEntry, mockupsPrefix);
+    const candidates = changedPathCandidates(
+      entry,
+      baseEntry,
+      mockupsPrefix,
+      baseManifest.schemaVersion === 6,
+    );
     if (
       isDeepStrictEqual(
         routeChangeProjection(entry, hierarchy),
@@ -117,21 +122,26 @@ function changedPathCandidates(
   entry: ManifestEntry,
   baseEntry: ManifestEntry | undefined,
   mockupsPrefix: string,
+  baseGenerated: boolean,
 ): string[] {
   const candidates: string[] = [];
   const prefix = mockupsPrefix ? `${mockupsPrefix}/` : "";
-  for (const candidate of [entry, baseEntry]) {
+  for (const [candidate, generated] of [
+    [entry, true],
+    [baseEntry, baseGenerated],
+  ] as const) {
+    const outputRoot = `${prefix}${generated ? ".generated/" : ""}`;
     if (candidate?.kind === "page")
-      candidates.push(`${prefix}${candidate.route}`);
+      candidates.push(`${outputRoot}${candidate.route}`);
     if (candidate?.kind !== "screen") continue;
     candidates.push(
-      `${prefix}${candidate.fragments.mobile}`,
-      `${prefix}${candidate.fragments.desktop}`,
+      `${outputRoot}${candidate.fragments.mobile}`,
+      `${outputRoot}${candidate.fragments.desktop}`,
     );
     if (candidate.darkFragments) {
       candidates.push(
-        `${prefix}${candidate.darkFragments.mobile}`,
-        `${prefix}${candidate.darkFragments.desktop}`,
+        `${outputRoot}${candidate.darkFragments.mobile}`,
+        `${outputRoot}${candidate.darkFragments.desktop}`,
       );
     }
   }

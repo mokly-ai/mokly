@@ -30,13 +30,24 @@ export class ComponentMaterialReader {
     string,
     Map<string, CachedViewResources>
   >();
-  constructor(private readonly reader: ReviewAssetReader) {
+  constructor(
+    private readonly reader: ReviewAssetReader,
+    readonly generated: {
+      readonly prefix: string;
+      readonly routes: ReadonlySet<string>;
+    } = { prefix: "", routes: new Set() },
+  ) {
     this.graph = new ResourceGraph({
       prefetch: (routes) => this.prefetch(routes),
       readReferences: async (route) =>
-        referencedRoutes(route, await this.resourceText(route), {
-          resourceHints: false,
-        }),
+        referencedRoutes(
+          route,
+          await this.resourceText(route),
+          {
+            resourceHints: false,
+          },
+          this.generated,
+        ),
     });
   }
   /** Bind immutable source sides before traversing embedded-document resources. */
@@ -67,6 +78,16 @@ export class ComponentMaterialReader {
       this.side === "before" ? text : other,
       this.side === "after" ? text : other,
       route,
+      {
+        before:
+          this.side === "before"
+            ? this.generated.prefix
+            : (this.counterpart?.generated.prefix ?? ""),
+        after:
+          this.side === "after"
+            ? this.generated.prefix
+            : (this.counterpart?.generated.prefix ?? ""),
+      },
     );
     return pair[this.side] ?? "";
   }
@@ -186,9 +207,14 @@ export class ComponentMaterialReader {
     const existing = excluded ? cached.filtered.get(excluded) : cached.all;
     if (existing) return existing;
     const resources = timeAsync("review.resource-graph", () => {
-      const seeds = referencedRoutes(route, html, {
-        resourceHints: false,
-      }).filter((path) => !excluded?.(path));
+      const seeds = referencedRoutes(
+        route,
+        html,
+        {
+          resourceHints: false,
+        },
+        this.generated,
+      ).filter((path) => !excluded?.(path));
       return this.graph.collect(seeds);
     });
     if (excluded) cached.filtered.set(excluded, resources);

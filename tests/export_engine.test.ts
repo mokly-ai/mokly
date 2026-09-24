@@ -34,9 +34,13 @@ test("export builds a complete consumer catalogue with an isolated comparison", 
     "view/screens/home.html",
     "id/home/index.html",
     "view/user-flows/tour.html",
-    "static/screens/home.mobile.html",
+    "static/.generated/screens/home.mobile.html",
   ])
     assert.ok(files.has(name), name);
+  assert.match(
+    files.get("static/.generated/screens/home.mobile.html")!.toString(),
+    /data-mokly-link="details"[^>]*data-mokly-inspector-link="0"/,
+  );
   assert.ok(result.comparisonUrl);
   const review = JSON.parse(
     files.get(result.comparisonUrl.slice(1))!.toString(),

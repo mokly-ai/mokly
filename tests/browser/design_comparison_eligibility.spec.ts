@@ -7,7 +7,7 @@ import { expect, test } from "@playwright/test";
 import type { ManifestV5 } from "../../packages/viewer/dist/registry/types.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 
-const directory = path.join(repositoryRoot, "examples/basic/generated");
+const directory = path.join(repositoryRoot, "examples/basic/.generated");
 const manifest = JSON.parse(
   fs.readFileSync(path.join(directory, "mokly-manifest.json"), "utf8"),
 ) as ManifestV5;

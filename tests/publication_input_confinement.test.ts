@@ -73,7 +73,7 @@ test("publication rejects an escaping generated manifest route before reading it
   context.after(() => removeFixture(outside));
   const config = await loadConfig(fixture.root);
   await writeCompilation(await compileCatalogue(config), config);
-  const manifest = path.join(fixture.mockupsDir, "mokly-manifest.json");
+  const manifest = path.join(config.generatedDir, "mokly-manifest.json");
   const target = path.join(outside.root, "metadata.json");
   await fs.promises.copyFile(manifest, target);
   await fs.promises.unlink(manifest);

@@ -15,22 +15,23 @@ for (const components of [false, true]) {
   test(`derived resource comparison (components=${components}) detects bytes absent from Git evidence`, async (t) => {
     const source = components
       ? componentEntrySource({
-          actionRender:
-            '(props) => <button>{props.label}<img src="../image.svg" /></button>',
+          actionRender: "(props) => <button>{props.label}</button>",
         })
-      : validEntrySource({ body: '<img src="../image.svg" />' });
+      : validEntrySource({ body: '<img src="../../image.svg" />' });
     const fixture = await derivedFixture(
       t,
       source,
-      Object.fromEntries(
-        ["image.svg", "components/image.svg"].map((route) => [
-          route,
+      {
+        "image.svg":
           '<svg xmlns="http://www.w3.org/2000/svg"><title>Base</title></svg>',
-        ]),
-      ),
+        "shared.css": 'button { background-image: url("./image.svg"); }',
+      },
+      components
+        ? 'stylesheets: [{ match: "**", stylesheets: ["shared.css"] }],'
+        : "",
     );
     const prepared = await prepareReviewRepository(fixture.config, "HEAD");
-    for (const route of ["image.svg", "components/image.svg"])
+    for (const route of ["image.svg"])
       await fs.writeFile(
         path.join(fixture.mockupsDir, route),
         '<svg xmlns="http://www.w3.org/2000/svg"><title>Changed</title></svg>',

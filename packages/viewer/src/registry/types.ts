@@ -109,12 +109,21 @@ export interface ManifestV5 {
     declaredDependencies: readonly string[];
   })[];
   generatedBy: "mokly";
-  schemaVersion: 5;
+  schemaVersion: 5 | 6;
   sourceFiles: readonly string[];
 }
 
+/** Catalogue with a validated authored closure and Git-object inventory. */
+export interface ManifestV6 extends Omit<ManifestV5, "schemaVersion"> {
+  assetClosure: readonly string[];
+  blobHashAlgorithm: "sha1" | "sha256";
+  generatedFiles: readonly { path: string; blobHash: string }[];
+  schemaVersion: 6;
+}
+
 /** All validated formats accepted at the historical Git boundary. */
-export type Manifest = ManifestV3 | ManifestV4 | ManifestPagesV4 | ManifestV5;
+export type Manifest =
+  ManifestV3 | ManifestV4 | ManifestPagesV4 | ManifestV5 | ManifestV6;
 
 /** Historical comparisons accept older formats without weakening current loading. */
 export type HistoricalManifest = Manifest;

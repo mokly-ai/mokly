@@ -1,0 +1,107 @@
+/* Exclusive shared-component styles. Global and layout rules stay shared. */
+
+.mbk-topbar {
+  align-items: center;
+  background: var(--chrome-surface);
+  border-bottom: 1px solid var(--chrome-border);
+  display: flex;
+  flex-shrink: 0;
+  gap: 16px;
+  height: 48px;
+  padding: 0 16px;
+  position: relative;
+  z-index: 6;
+}
+
+.mbk-brand {
+  align-items: center;
+  display: flex;
+  font-weight: 700;
+  gap: 8px;
+  letter-spacing: -0.01em;
+}
+
+.mbk-mark {
+  background: var(--mbk-sage);
+  border-radius: 6px;
+  color: #fff;
+  display: inline-grid;
+  flex-shrink: 0;
+  height: 24px;
+  place-items: center;
+  width: 24px;
+}
+
+.mbk-menu-btn {
+  background: none;
+  border: 1px solid var(--chrome-border);
+  border-radius: 8px;
+  color: var(--chrome-ink);
+  cursor: pointer;
+  font-size: 14px;
+  height: 30px;
+  line-height: 1;
+  padding: 0 9px;
+}
+
+.mbk-search {
+  align-items: center;
+  background: var(--chrome-bg);
+  border: 1px solid var(--chrome-border);
+  border-radius: 8px;
+  color: var(--chrome-muted);
+  display: flex;
+  flex: 1;
+  gap: 8px;
+  height: 30px;
+  max-width: 440px;
+  padding: 0 12px;
+  position: relative;
+}
+
+.mbk-search > svg {
+  flex-shrink: 0;
+}
+
+.mbk-search-value {
+  color: var(--chrome-ink);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mbk-search-tag {
+  border-radius: 6px;
+  color: var(--chrome-muted);
+  cursor: pointer;
+  display: inline-grid;
+  flex-shrink: 0;
+  height: 20px;
+  margin-left: auto;
+  margin-right: -5px;
+  place-items: center;
+  width: 20px;
+}
+
+.mbk-search-tag:hover {
+  background: var(--chrome-border);
+  color: var(--chrome-ink-2);
+}
+
+.mbk-shell--mobile .mbk-search {
+  position: static;
+}
+
+.ce-design .mbk-menu-btn {
+  display: grid;
+  height: 32px;
+  line-height: 0;
+  padding: 0;
+  place-items: center;
+  width: 32px;
+}
+
+.ce-design .mbk-menu-btn svg {
+  display: block;
+}

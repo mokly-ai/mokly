@@ -43,8 +43,10 @@ export function RegistryHarnessFrame({
   const initial = useFrameSource(mounted.frameRef, source, registry?.baseUrl);
   return (
     <iframe
+      data-mokly-generated-prefix={registry?.generatedPathPrefix}
       data-workspace-frame={view.viewport}
       ref={mounted.frameRef}
+      sandbox="allow-same-origin"
       src={initial}
       style={{ width: 390, height: 300 }}
       title={view.viewport}

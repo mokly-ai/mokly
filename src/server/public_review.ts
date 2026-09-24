@@ -6,6 +6,8 @@ import type { ReviewResult } from "@mokly/viewer/data";
 
 import { comparisonContentId } from "../export/content_id.js";
 import { ownedEntries } from "../export/ownership.js";
+import { generatedManifestRoutes } from "../registry/generated_routes.js";
+import { rebaseGeneratedSnapshotUrls } from "../review/normalize_urls.js";
 import type { SelectedReviewSource } from "../review/selection_types.js";
 
 import { readConfinedFile } from "./confined_file.js";
@@ -46,18 +48,39 @@ export class PublicReviewAliases {
       result.baseRef !== source.baseRef
     )
       return;
+    const headOutputs = new Map(source.headOutputs ?? []);
+    const generatedRoutes = generatedManifestRoutes(source.after);
+    const expectedDigest = (route: string): string | undefined => {
+      const digest = source.headDigests[route];
+      if (!digest) return;
+      if (source.after.schemaVersion !== 6 || !generatedRoutes.has(route))
+        return digest;
+      const raw = headOutputs.get(route);
+      if (!raw || createHash("sha256").update(raw).digest("hex") !== digest)
+        return;
+      return createHash("sha256")
+        .update(
+          rebaseGeneratedSnapshotUrls(
+            raw,
+            route,
+            ".generated",
+            generatedRoutes,
+          ),
+        )
+        .digest("hex");
+    };
     for (const view of source.after.entries.flatMap(generatedViews)) {
       const bytes = files.get(`snapshots/after/${view.path}`);
       if (
         !bytes ||
         createHash("sha256").update(bytes).digest("hex") !==
-          source.headDigests[view.path]
+          expectedDigest(view.path)
       )
         return;
     }
     for (const [name, bytes] of files) {
       const expected = name.startsWith("snapshots/after/")
-        ? source.headDigests[name.slice(16)]
+        ? expectedDigest(name.slice(16))
         : undefined;
       if (
         expected &&

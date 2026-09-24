@@ -10,9 +10,11 @@ independent `BaselineReader`, compiles in memory without writing the catalogue,
 captures the referenced closure,
 compares them through the existing review engine, and verifies inputs again
 before installation. `site.ts` uses the existing shell and Browse adapter to
-assemble real id aliases, package assets, and immutable comparisons. In Milestone 2
-static documents still use the flat layout; Milestone 3 moves v6 documents under
-`.generated/` and places referenced authored assets at catalogue-relative paths.
+assemble real id aliases, package assets, and immutable comparisons. It passes
+the logical route, not the `.generated/` delivery path, to the adapter so
+trusted navigation and inspector metadata survive export. Current static
+documents live under `.generated/`, while referenced authored assets stay at
+catalogue-relative paths.
 Publish's `--no-changes` uses this same engine with baseline reads, removed
 entries and comparisons omitted. Current-only assembly retains the normal
 input consistency checks and a null delivery comparison URL. A capture callback
@@ -136,9 +138,7 @@ owned `.mokly-export-reservations` namespace, retaining only its metadata
 after cleanup. Case and symlink aliases cannot bypass an active lock. Legacy
 hashed reservations require explicit recovery before another export.
 `resource_policy.ts` applies the same package/source boundary to current and
-historical copies. Milestone 2 captures compiled documents under the flat
-layout while retaining the legacy public-file walk and configured exclusions.
-Milestone 3 captures only compiled `.generated/` documents and the manifest v6
+historical copies. Export captures only compiled `.generated/` documents and the manifest v6
 `assetClosure`; reference validation, Review and public content-change
 classification then use the same confined closure. Directory-based public
 scans and consumer exclusion globs no longer decide publication. Manifest/cache

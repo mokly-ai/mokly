@@ -18,8 +18,7 @@ entry-file shape that can trigger rediscovery. Traversal also skips
 else from its event kind, else from one stat that treats any error as a file.
 `addDir` and `unlinkDir` identify directories; `add`, `change`, and `unlink`
 identify files. Supplied stats avoid that stat, but traversal still reads export
-markers; the current flat layout ignores header-proven generated files and
-the manifest. Milestone 3 ignores `.generated/` by prefix. Deleted matched
+markers; the watcher ignores `.generated/` by prefix. Deleted matched
 files rebuild even when named `target`; existing and removed denied
 directories outrank user watch rules.
 Resource notifications coalesce by path with the latest descriptor.
@@ -87,7 +86,7 @@ uses `ServedReviewRepository` in `review_repository.ts` to open a confined cache
 reader through `readOnlyRepositoryForCommit` / `baselineReaderForCommit` and
 ignore stale versions. The single-process host uses the same holder directly.
 The Serve parent selects the pinned baseline reader per commit, using the
-historical manifest's presence (inventory verification follows in Milestone 3)
+historical manifest's presence and matching v6 inventory
 or the rebuild cache. The child receives that selection; it neither
 builds baselines nor writes output. `serve --build` writes in the parent only
 after complete compilation and resource-watch readiness, including once with
@@ -136,9 +135,8 @@ watch-action boundaries. Diagnostics originating in a supervised child cross a
 validated IPC message so the parent remains the sole terminal owner; a child
 without IPC retains direct diagnostic output.
 
-Milestone 2 retains the flat `mockupsDir` URL layout and legacy public-file
-policy. The [referenced asset closure](../../docs/protocol/mokly-generated-output.md#closure-urls-and-publication)
-becomes the only authored public surface in Milestone 3: generated routes move
+The [referenced asset closure](../../docs/protocol/mokly-generated-output.md#closure-urls-and-publication)
+is the only authored public surface: generated routes live
 under `.generated/`, referenced assets remain catalogue-relative, and unreferenced
 requests return 404. Manifest/cache privacy, realpath confinement and authoring
 inputs remain protected now.

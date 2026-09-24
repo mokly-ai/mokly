@@ -28,7 +28,7 @@ test("a page renders exactly one complete document even with dark screens enable
     "app/handbook.html",
     "mokly-manifest.json",
   ]);
-  assert.equal(result.manifest.schemaVersion, 5);
+  assert.equal(result.manifest.schemaVersion, 6);
   assert.equal("legacyPages" in result.manifest, false);
   assert.match(result.outputs.get("app/handbook.html") ?? "", /Whole document/);
   await writeCompilation(result, config);
@@ -137,7 +137,6 @@ test("pages share relationship and collision validation with screen entries", as
     ['mockups[3].steps[0].screenId = "handbook";', /screen/],
     ['mockups.at(-1).route = "screens/home.desktop.html";', /colli/],
     ['mockups.at(-1).route = "../outside.html";', /route|unsafe/],
-    ['mockups.at(-1).route = "private.source.html";', /source/],
     ['mockups.at(-1).id = "home";', /duplicate/],
   ] as const) {
     await fs.promises.writeFile(
@@ -146,6 +145,16 @@ test("pages share relationship and collision validation with screen entries", as
     );
     await assert.rejects(compileCatalogue(config), pattern, mutation);
   }
+  await fs.promises.writeFile(
+    path.join(fixture.mockupsDir, "handbook.html"),
+    "<!doctype html><p>Authored source stays private</p>",
+  );
+  await fs.promises.writeFile(
+    fixture.entryPath,
+    `${original}\nimport { definePage } from "@mokly/mokly"; mockups.push(${declaration});`,
+  );
+  const compiled = await compileCatalogue(config);
+  assert.ok(compiled.outputs.has("handbook.html"));
 });
 
 test("page logical links validate final page anchors and preserve native child controls", async (context) => {

@@ -7,7 +7,7 @@ import { repositoryRoot } from "../helpers/fixture.js";
 
 const design = (route: string): string =>
   pathToFileURL(
-    path.join(repositoryRoot, "examples/basic/generated/design", route),
+    path.join(repositoryRoot, "examples/basic/.generated/design", route),
   ).href;
 
 test("flow designs keep comparisons on the owning screens", async ({

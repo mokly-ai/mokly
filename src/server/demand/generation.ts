@@ -30,7 +30,10 @@ export interface BackgroundGenerationOptions {
   readonly shutdown?: Promise<void>;
   /** The parent publishes or revokes the read capability for this generation. */
   readonly baselinePrepared?: (
-    prepared: Pick<PreparedReviewRepository, "commit" | "selection"> | null,
+    prepared: Pick<
+      PreparedReviewRepository,
+      "commit" | "selection" | "descriptor"
+    > | null,
   ) => void;
   /**
    * Publish `preparing` only while a baseline is genuinely rebuilt.
@@ -122,6 +125,7 @@ export class BackgroundGeneration {
           this.options.baselinePrepared?.({
             commit: baseline.commit,
             selection: baseline.selection,
+            descriptor: baseline.descriptor,
           });
         const snapshot = await timeAsync("changes.classify", () =>
           this.classifier instanceof RepositoryCatalogueChangeClassifier

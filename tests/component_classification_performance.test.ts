@@ -23,7 +23,7 @@ import { validEntrySource } from "./helpers/fixture.js";
 test("component metadata reuses a precomputed catalogue hierarchy", async (t) => {
   const fixture = await componentReviewFixture(t, (source) => source);
   const manifest = fixture.after.manifest;
-  assert.equal(manifest.schemaVersion, 5);
+  assert.equal(manifest.schemaVersion, 6);
   let traversals = 0;
   const entries = new Proxy(manifest.entries, {
     get(target, property, receiver) {
@@ -54,7 +54,7 @@ test("component metadata reuses a precomputed catalogue hierarchy", async (t) =>
 test("component dependency ownership is indexed once per changed path", async (t) => {
   const fixture = await componentReviewFixture(t, (source) => source);
   const sourceManifest = fixture.after.manifest;
-  assert.equal(sourceManifest.schemaVersion, 5);
+  assert.equal(sourceManifest.schemaVersion, 6);
   let ownershipReads = 0;
   const entries = sourceManifest.entries.map((entry) =>
     entry.kind === "component"
@@ -175,7 +175,7 @@ for (const baseline of ["screens", "components"] as const)
       expected,
     );
     const paths = fixture.before.manifest.entries.flatMap((entry) =>
-      generatedViews(entry).map((view) => `mockups/${view.path}`),
+      generatedViews(entry).map((view) => `mockups/.generated/${view.path}`),
     );
     assert.ok(paths.length >= 8);
     assert.equal(

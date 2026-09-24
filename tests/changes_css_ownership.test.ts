@@ -6,15 +6,11 @@ import test from "node:test";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { renderReviewArtifact } from "../dist/review/artifact.js";
 import { compareReview } from "../dist/review/compare.js";
-import {
-  NodeGitCommandRunner,
-  CommittedRepository,
-} from "../dist/review/git.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 
 for (const ownership of ["dependency", "renderer"] as const)
@@ -74,7 +70,7 @@ export default (input) => ({ html: '<html><head><link rel="stylesheet" href="' +
         const artifact = await compareReview(
           await compileCatalogue(fixture.config),
           fixture.config,
-          new CommittedRepository(new NodeGitCommandRunner(fixture.root)),
+          committedReviewRepository(fixture.config),
           "main",
         );
         const { result } = artifact;

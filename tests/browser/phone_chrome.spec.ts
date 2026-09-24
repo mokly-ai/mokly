@@ -39,7 +39,7 @@ for (const width of [390, 1280]) {
     const viewport = width < 700 ? "mobile" : "desktop";
     const file = path.join(
       repositoryRoot,
-      `examples/basic/generated/design/library/preview/device-frame.variants/phone.${viewport}.html`,
+      `examples/basic/.generated/design/library/preview/device-frame.variants/phone.${viewport}.html`,
     );
     await page.goto(pathToFileURL(file).href);
     for (const selector of [".phone-home", ".phone-notch"]) {

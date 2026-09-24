@@ -189,7 +189,7 @@ export function stylesheetsFor(
       );
     }
     const relative = path.posix.relative(
-      path.posix.dirname(fragmentRoute),
+      path.posix.dirname(path.posix.join(".generated", fragmentRoute)),
       stylesheet,
     );
     const encoded = encodeUrlPath(relative);

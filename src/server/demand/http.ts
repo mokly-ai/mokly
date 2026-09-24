@@ -4,6 +4,7 @@ import type { ServerResponse } from "node:http";
 import type { Catalogue } from "@mokly/viewer/server";
 
 import { adaptBrowseDocument } from "../../browse/document_adapter.js";
+import { GENERATED_DIRECTORY } from "../../config/paths.js";
 import { errorMessage } from "../../errors.js";
 import { safeDecodePath, send } from "../respond.js";
 
@@ -18,9 +19,14 @@ export async function handleDemandRequest(
 ): Promise<boolean> {
   const metadata = url.pathname.startsWith("/__mokly/views/");
   if (!metadata && !url.pathname.startsWith("/static/")) return false;
-  const route = safeDecodePath(
+  const raw = safeDecodePath(
     url.pathname.slice(metadata ? "/__mokly/views/".length : 8),
   );
+  const route = metadata
+    ? raw
+    : raw?.startsWith(`${GENERATED_DIRECTORY}/`)
+      ? raw.slice(GENERATED_DIRECTORY.length + 1)
+      : undefined;
   if (!route || !documents.routes.has(route)) return false;
   if (method !== "GET" && method !== "HEAD") {
     send(response, 405, "text/plain", "Method not allowed", method);

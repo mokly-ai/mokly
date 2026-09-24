@@ -7,6 +7,7 @@ import type {
   ScreenResourceEvidence,
 } from "@mokly/viewer/data";
 
+import type { BaselineCatalogue } from "../baseline/catalogue.js";
 import { ConfiguredGitCommandRunner } from "../config/git.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -53,6 +54,7 @@ export interface ComponentChangeSource {
 export interface CatalogueClassificationInputs {
   readonly commit?: string;
   readonly selection?: BaselineSelection;
+  readonly descriptor?: BaselineCatalogue;
   readonly outputs?: ReadonlyMap<string, string>;
 }
 
@@ -156,6 +158,8 @@ export class RepositoryComponentChanges implements ComponentChangeSource {
           this.accepted.selection,
           this.runner,
           this.signal,
+          undefined,
+          this.accepted.descriptor,
         ),
       };
       return this.accepted.commit;
@@ -208,6 +212,7 @@ export async function readCatalogueChanges(
           git.reader,
           commit,
           prefix,
+          baseline,
         ),
         afterReader: reader,
       })

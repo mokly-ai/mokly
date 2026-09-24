@@ -3,12 +3,12 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { computeChangedRoutes } from "../dist/server/changed.js";
 import { serve } from "../dist/server/serve.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { validEntrySource } from "./helpers/fixture.js";
 import { waitForClassifiedCount } from "./helpers/watched_catalogue.js";
 
@@ -103,7 +103,10 @@ test("Changes ignores a stale generated dark view when the source is unchanged",
   const fixture = await changedFixture(t, validEntrySource(), {
     extraConfig: 'colorSchemes: ["light", "dark"],',
   });
-  const file = path.join(fixture.mockupsDir, "screens/home.mobile.dark.html");
+  const file = path.join(
+    fixture.config.generatedDir,
+    "screens/home.mobile.dark.html",
+  );
   const document = await fs.readFile(file, "utf8");
   await fs.writeFile(file, document.replaceAll(">Details<", ">Dark details<"));
   assert.deepEqual(
@@ -167,7 +170,10 @@ test("moving a source module preserves an unchanged review list", async (t) => {
 
 test("invalid baseline ignore markers leave the filter unavailable", async (t) => {
   const fixture = await changedFixture(t);
-  const fragment = path.join(fixture.mockupsDir, "screens/home.mobile.html");
+  const fragment = path.join(
+    fixture.config.generatedDir,
+    "screens/home.mobile.html",
+  );
   const original = await fs.readFile(fragment, "utf8");
   await fs.writeFile(
     fragment,

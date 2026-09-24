@@ -28,8 +28,8 @@ const preview = (root: string, output: string) =>
     { cwd: repositoryRoot, timeout: 60_000 },
   );
 
-for (const source of ["routed pages", "public documents"]) {
-  test(`preview rejects colliding ${source} aliases before replacing an existing site`, async (context) => {
+for (const source of ["routed pages", "unreferenced documents"]) {
+  test(`preview protects its routes from ${source} aliases`, async (context) => {
     const fixture = await createExportFixture();
     context.after(() => fixture.close());
     const output = path.join(fixture.root, ".context/published");
@@ -57,7 +57,19 @@ for (const source of ["routed pages", "public documents"]) {
     }
     await exportCatalogue(fixture.config, { outDir: "site" });
     const before = await directoryFiles(fixture.mockupsDir);
-    await assert.rejects(build(), /Export file\/directory collision/);
+    if (source === "routed pages")
+      await assert.rejects(build(), /Export file\/directory collision/);
+    else {
+      await build();
+      assert.equal(
+        fs.existsSync(path.join(output, "static/guide.html")),
+        false,
+      );
+      assert.equal(
+        fs.existsSync(path.join(output, "static/guide/details.html")),
+        false,
+      );
+    }
     assert.deepEqual(await directoryFiles(fixture.mockupsDir), before);
     assert.deepEqual(await directoryFiles(output), previous);
     assert.deepEqual(
@@ -74,14 +86,14 @@ test("preview captures compiled output without restoring local generated files",
   context.after(() => fixture.close());
   const compilation = await compileCatalogue(fixture.config);
   for (const route of compilation.outputs.keys())
-    await fs.promises.rm(path.join(fixture.mockupsDir, route));
+    await fs.promises.rm(path.join(fixture.config.generatedDir, route));
   const before = await directoryFiles(fixture.mockupsDir);
   const output = path.join(fixture.root, ".context/published");
   await preview(fixture.root, output);
   assert.deepEqual(await directoryFiles(fixture.mockupsDir), before);
   assert.match(
     await fs.promises.readFile(
-      path.join(output, "static/screens/home.mobile.html"),
+      path.join(output, "static/.generated/screens/home.mobile.html"),
       "utf8",
     ),
     /id="home-mobile"/,
@@ -93,7 +105,7 @@ test("preview serves compiled bytes instead of stale local generated output", as
   context.after(() => fixture.close());
   const route = "screens/home.mobile.html";
   await fs.promises.writeFile(
-    path.join(fixture.mockupsDir, route),
+    path.join(fixture.config.generatedDir, route),
     "<!doctype html><html><body>Stale local output</body></html>",
   );
   const before = await directoryFiles(fixture.mockupsDir);
@@ -101,7 +113,7 @@ test("preview serves compiled bytes instead of stale local generated output", as
   await preview(fixture.root, output);
   assert.deepEqual(await directoryFiles(fixture.mockupsDir), before);
   const published = await fs.promises.readFile(
-    path.join(output, "static", route),
+    path.join(output, "static/.generated", route),
     "utf8",
   );
   assert.match(published, /id="home-mobile"/);

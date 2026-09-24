@@ -1,0 +1,41 @@
+.example-action {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: 100%;
+}
+.example-action [role="button"],
+.example-action button {
+  border-radius: var(--example-radius, 8px);
+}
+.example-action-hint {
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+  opacity: 0.75;
+}
+.example-toolbar {
+  border: 1px solid #9daca05c;
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 600px;
+}
+.example-toolbar h2 {
+  font-size: 16px;
+  margin: 0 0 8px;
+}
+.example-toolbar p {
+  font-size: 14px;
+  line-height: 1.5;
+}
+.example-toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  gap: 12px;
+}
+[data-example-renderer] > .example-action,
+[data-example-renderer] > .example-toolbar {
+  margin: 24px;
+}

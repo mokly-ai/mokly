@@ -8,15 +8,13 @@ import type {
 import type { Compilation } from "../build/compile.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
+import { generatedManifestRoutes } from "../registry/generated_routes.js";
 
-import {
-  copySnapshotDependencies,
-  type GitReviewAssetReader,
-  type ReviewAssetReader,
-} from "./assets.js";
+import { type GitReviewAssetReader, type ReviewAssetReader } from "./assets.js";
 import { CompilationAssetReader } from "./compilation_assets.js";
 import { classifyComponents } from "./component_classification.js";
 import { addArtifactFile, snapshotPath } from "./paths.js";
+import { copySnapshotDependencies } from "./snapshot_dependencies.js";
 
 /** Retain every component variant and affected screen, then classify the same immutable bytes. */
 export async function compareComponentCatalogue(
@@ -89,9 +87,21 @@ export async function compareComponentCatalogue(
     new Set(basePaths),
     (route) => beforeReader.read(route),
     (routes) => baseReader.readMany(routes),
+    {
+      prefix: baseline.schemaVersion === 6 ? ".generated" : "",
+      routes: generatedManifestRoutes(baseline),
+    },
   );
-  await copySnapshotDependencies(files, "after", new Set(headPaths), (route) =>
-    afterReader.read(route),
+  await copySnapshotDependencies(
+    files,
+    "after",
+    new Set(headPaths),
+    (route) => afterReader.read(route),
+    undefined,
+    {
+      prefix: ".generated",
+      routes: generatedManifestRoutes(compilation.manifest),
+    },
   );
   return { result, files };
 }

@@ -13,6 +13,7 @@ import {
 import { compareReview } from "../dist/review/compare.js";
 import { computeChangedRoutes } from "../dist/server/changed.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
+import type { ManifestV5 } from "../packages/viewer/dist/registry/types.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentGit } from "./helpers/component_review_fixture.js";
@@ -131,8 +132,20 @@ export default (input) => {
 }
 
 /** Reconstruct old comment bytes with legitimate text-only UTF-16 style offsets. */
-function historical(compilation: Compilation): Compilation {
-  const manifest = structuredClone(compilation.manifest);
+function historical(compilation: Compilation): {
+  manifest: ManifestV5;
+  outputs: Map<string, string>;
+} {
+  const {
+    assetClosure: _assetClosure,
+    blobHashAlgorithm: _blobHashAlgorithm,
+    generatedFiles: _generatedFiles,
+    ...original
+  } = compilation.manifest;
+  const manifest: ManifestV5 = {
+    ...structuredClone(original),
+    schemaVersion: 5,
+  };
   const outputs = new Map(
     [...compilation.outputs].map(([route, html]) => [
       route,

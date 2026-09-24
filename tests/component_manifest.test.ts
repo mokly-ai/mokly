@@ -19,11 +19,11 @@ async function example(t: {
   const fixture = await createFixture(componentEntrySource());
   t.after(() => removeFixture(fixture));
   const result = await compileCatalogue(await loadConfig(fixture.root));
-  assert.equal(result.manifest.schemaVersion, 5);
+  assert.equal(result.manifest.schemaVersion, 6);
   return result.manifest as ManifestV5;
 }
 
-test("manifest v5 rejects broken identities, ownership references and props before readers can suppress changes", async (t) => {
+test("manifest v6 rejects broken identities, ownership references and props before readers can suppress changes", async (t) => {
   const original = await example(t);
   const edits: readonly [
     string,
@@ -33,7 +33,7 @@ test("manifest v5 rejects broken identities, ownership references and props befo
       component: ManifestComponent,
     ) => void,
   ][] = [
-    ["unknown schema", (value) => Object.assign(value, { schemaVersion: 6 })],
+    ["unknown schema", (value) => Object.assign(value, { schemaVersion: 7 })],
     [
       "unknown component field",
       (_v, _s, component) => Object.assign(component, { unexpected: true }),

@@ -17,6 +17,7 @@ import type {
   ManifestV3,
 } from "../packages/viewer/dist/registry/types.js";
 
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import {
   createFixture,
   removeFixture,
@@ -120,7 +121,7 @@ test("Review excludes its active artifact directory from changed paths", async (
   await git(fixture.root, ["add", "review-link"]);
   await git(fixture.root, ["commit", "-qm", "test: add review link"]);
   const outDir = path.join(reviewLink, "artifact");
-  const client = new CommittedRepository({
+  const client = committedReviewRepository(config, {
     run: (arguments_) => gitOutput(fixture.root, arguments_),
     runBytes: (arguments_) => gitBytes(fixture.root, arguments_),
   });

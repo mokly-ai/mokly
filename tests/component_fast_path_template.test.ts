@@ -10,7 +10,7 @@ import { classifyComponents } from "../dist/review/component_classification.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
-const image = '<img loading="lazy" src="../image.svg" />';
+const image = '<img loading="lazy" src="../../image.svg" />';
 const templateCases = [
   {
     name: "receiver template",

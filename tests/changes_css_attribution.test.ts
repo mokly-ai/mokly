@@ -2,10 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { renderReviewArtifact } from "../dist/review/artifact.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 
 for (const components of [false, true]) {

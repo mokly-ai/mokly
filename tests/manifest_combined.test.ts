@@ -21,7 +21,7 @@ test("the current manifest combines pages and complete component usage without l
   await fs.writeFile(`${fixture.entriesDir}/handbook.mockup.ts`, pageSource);
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
   const current = parseManifest(compilation.manifest);
-  assert.equal(current.schemaVersion, 5);
+  assert.equal(current.schemaVersion, 6);
   assert.equal("legacyPages" in current, false);
   assert.ok(current.sourceFiles.includes("entries/handbook.mockup.ts"));
   assert.ok(current.entries.some((entry) => entry.kind === "page"));
@@ -41,6 +41,12 @@ test("both disjoint historical v4 formats remain readable only at the Git bounda
   ).manifest;
   const pages = (await compileCatalogue(await loadConfig(pageFixture.root)))
     .manifest;
+  const {
+    assetClosure: _assetClosure,
+    blobHashAlgorithm: _blobHashAlgorithm,
+    generatedFiles: _generatedFiles,
+    ...legacyPages
+  } = pages;
   const componentV4 = {
     schemaVersion: 4,
     generatedBy: "mokly",
@@ -48,7 +54,7 @@ test("both disjoint historical v4 formats remain readable only at the Git bounda
     entries: components.entries,
   };
   const pageV4 = {
-    ...pages,
+    ...legacyPages,
     schemaVersion: 4,
     entries: pages.entries.map(
       ({ declaredDependencies: _declared, ...entry }) => entry,
@@ -56,7 +62,7 @@ test("both disjoint historical v4 formats remain readable only at the Git bounda
   };
   for (const historical of [componentV4, pageV4]) {
     assert.equal(parseHistoricalManifest(historical).schemaVersion, 4);
-    assert.throws(() => parseManifest(historical), /schema version 5/);
+    assert.throws(() => parseManifest(historical), /schema version 6/);
   }
   assert.throws(() =>
     parseHistoricalManifest({ ...componentV4, sourceFiles: [] }),

@@ -1,3 +1,4 @@
+import { currentDocumentRoute } from "../catalogue/delivery_paths.js";
 import { origin } from "../inspector/values.js";
 
 import type { FrameMount } from "./frame_adapter.js";
@@ -22,9 +23,12 @@ export function frameUrl(
   view: FrameMount,
   expectedOrigin: string,
 ): URL {
-  return validatedFrameUrl(frame, view, expectedOrigin, (pathname) =>
-    pathname.startsWith("/static/"),
-  );
+  return validatedFrameUrl(frame, view, expectedOrigin, (pathname) => {
+    const route = currentDocumentRoute(pathname, view.generatedPathPrefix);
+    return (
+      route !== undefined && (view.route === undefined || route === view.route)
+    );
+  });
 }
 
 /** Confine a private live preview mount to one authenticated render bundle. */

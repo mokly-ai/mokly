@@ -14,7 +14,7 @@ test("each exclusive library stylesheet changes its component and only affects r
     await t.test(slug, async () => {
       await fixture.reset();
       await fixture.edit(
-        `examples/basic/generated/design-library/${group}/${slug}.css`,
+        `examples/basic/design-library/${group}/${slug}.css`,
         (source) => source + "\nbody { outline-width: 3px; }\n",
       );
       const result = await fixture.compare();

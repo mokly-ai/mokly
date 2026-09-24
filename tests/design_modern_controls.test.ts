@@ -7,7 +7,7 @@ import type { ManifestV5 } from "../packages/viewer/dist/registry/types.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
 
-const generated = path.join(repositoryRoot, "examples/basic/generated");
+const generated = path.join(repositoryRoot, "examples/basic/.generated");
 const manifest = JSON.parse(
   await fs.readFile(path.join(generated, "mokly-manifest.json"), "utf8"),
 ) as ManifestV5;

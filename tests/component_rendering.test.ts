@@ -54,7 +54,7 @@ test("component style ownership rebases through generated headers while preservi
   await assert.rejects(compileCatalogue(config), /owners must render/);
   assert.equal(
     await fs.readFile(
-      path.join(fixture.mockupsDir, screen.fragments.mobile),
+      path.join(config.generatedDir, screen.fragments.mobile),
       "utf8",
     ),
     html,

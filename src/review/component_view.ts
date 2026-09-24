@@ -25,6 +25,7 @@ import { changedResourceBytes } from "./component_resource_changes.js";
 import type { ComponentMaterialReader } from "./component_resources.js";
 import { compareUnchangedComponentView } from "./component_view_fast_path.js";
 import { normalizeReviewPair, normalizeSingleDocument } from "./ignore.js";
+import { normalizeDocumentUrls } from "./normalize_urls.js";
 import { snapshotPath } from "./paths.js";
 import type { ResourceComparison } from "./resource_comparison.js";
 
@@ -118,14 +119,37 @@ export async function compareComponentView(
   );
   const { baseRanges, headRanges, projected, excluded } = prepared;
   const reasons: EntryChangeReason[] = [];
-  if (projected.before !== projected.after) reasons.push({ kind: "material" });
+  if (
+    normalizeDocumentUrls(
+      projected.before,
+      before!.path,
+      context.beforeReader.generated.prefix,
+      context.beforeReader.generated.routes,
+    ) !==
+    normalizeDocumentUrls(
+      projected.after,
+      after!.path,
+      context.afterReader.generated.prefix,
+      context.afterReader.generated.routes,
+    )
+  )
+    reasons.push({ kind: "material" });
   if (projected.inputs) reasons.push({ kind: "inputs" });
   if (projected.structure) reasons.push({ kind: "structure" });
   const actual = normalizeReviewPair(
     stripHistoricalMarkers(base),
     stripMarkers(head, after?.usage, headRanges),
     selected.path,
+    {
+      before: context.beforeReader.generated.prefix,
+      after: context.afterReader.generated.prefix,
+      beforeRoutes: context.beforeReader.generated.routes,
+      afterRoutes: context.afterReader.generated.routes,
+    },
   );
+  const materialChanged =
+    (actual.comparisonBase ?? actual.base) !==
+    (actual.comparisonHead ?? actual.head);
   const repoPath = (path: string) =>
     context.prefix ? `${context.prefix}/${path}` : path;
   const evidence = await context.resources.compare(
@@ -192,11 +216,28 @@ export async function compareComponentView(
       ...view,
       ...actualEvidence,
       ignoredIds: actual.ignoredIds,
-      ...(actual.base !== actual.head ? { material: true as const } : {}),
+      ...(materialChanged ? { material: true as const } : {}),
       state:
-        actual.base !== actual.head || actualResourceChange
+        materialChanged || actualResourceChange
           ? "changed"
-          : projected.rawEqual
+          : normalizeDocumentUrls(
+                normalizeSingleDocument(
+                  stripHistoricalMarkers(base),
+                  before!.path,
+                ),
+                before!.path,
+                context.beforeReader.generated.prefix,
+                context.beforeReader.generated.routes,
+              ) ===
+              normalizeDocumentUrls(
+                normalizeSingleDocument(
+                  stripMarkers(head, after?.usage, headRanges),
+                  after!.path,
+                ),
+                after!.path,
+                context.afterReader.generated.prefix,
+                context.afterReader.generated.routes,
+              )
             ? "unchanged"
             : "ignored-only",
     },

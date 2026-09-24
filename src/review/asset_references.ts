@@ -1,12 +1,12 @@
 import path from "node:path";
 
-import { isSafeRepositoryPath } from "@mokly/viewer/data";
 import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
 import { MoklyError } from "../errors.js";
 import {
   extractCssReferences,
   extractHtmlReferences,
+  resolveLocalReferencePath,
   type HtmlReferenceOptions,
 } from "../html_references.js";
 
@@ -15,6 +15,7 @@ export function referencedRoutes(
   sourceRoute: string,
   content: ReviewArtifactContent,
   options?: HtmlReferenceOptions,
+  generated?: { readonly prefix: string; readonly routes: ReadonlySet<string> },
 ): string[] {
   const extension = path.posix.extname(sourceRoute).toLowerCase();
   const text =
@@ -30,14 +31,30 @@ export function referencedRoutes(
   return [
     ...new Set(
       references.flatMap((reference) => {
-        const resolved = resolveReference(sourceRoute, reference);
+        const source = generated?.routes.has(sourceRoute)
+          ? path.posix.join(generated.prefix, sourceRoute)
+          : sourceRoute;
+        const resolved = resolveReference(source, reference);
+        if (
+          resolved &&
+          generated &&
+          resolved.startsWith(`${generated.prefix}/`)
+        ) {
+          const route = resolved.slice(generated.prefix.length + 1);
+          if (!generated.routes.has(route))
+            throw assetError(
+              sourceRoute,
+              `referenced generated document is missing: ${reference}`,
+            );
+          return [route];
+        }
         return resolved ? [resolved] : [];
       }),
     ),
   ].sort();
 }
 
-function resolveReference(
+export function resolveReference(
   sourceRoute: string,
   rawReference: string,
 ): string | undefined {
@@ -67,20 +84,18 @@ function resolveReference(
       `non-portable asset URL ${reference} (unsupported scheme)`,
     );
   }
-  const encodedPath = reference.split(/[?#]/, 1)[0] ?? "";
-  let decodedPath: string;
-  try {
-    decodedPath = decodeURIComponent(encodedPath);
-  } catch (error) {
-    throw assetError(sourceRoute, `invalid asset URL ${reference}`, error);
-  }
-  const resolved = path.posix.normalize(
-    path.posix.join(path.posix.dirname(sourceRoute), decodedPath),
-  );
-  if (!isSafeRepositoryPath(resolved)) {
+  const resolved = resolveLocalReferencePath(sourceRoute, reference);
+  if (resolved.kind === "invalid-encoding")
+    throw assetError(sourceRoute, `invalid asset URL ${reference}`);
+  if (resolved.kind === "root-absolute")
+    throw assetError(
+      sourceRoute,
+      `non-portable asset URL ${reference} (root-absolute)`,
+    );
+  if (resolved.kind !== "resolved") {
     throw assetError(sourceRoute, `asset URL escapes mockupsDir: ${reference}`);
   }
-  return resolved;
+  return resolved.path;
 }
 
 function assetError(

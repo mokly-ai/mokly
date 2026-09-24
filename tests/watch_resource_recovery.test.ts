@@ -104,7 +104,9 @@ test(
       };
       await edit(
         fixture.entryPath,
-        validEntrySource({ body: '<img src="../image.svg" alt="Sample" />' }),
+        validEntrySource({
+          body: '<img src="../../image.svg" alt="Sample" />',
+        }),
       );
       await edit(
         path.join(fixture.mockupsDir, "image.svg"),

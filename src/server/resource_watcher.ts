@@ -36,6 +36,9 @@ export class ResourceWatcher {
   get paths(): ReadonlySet<string> {
     return this.#snapshot?.paths ?? new Set();
   }
+  get closure(): ReadonlySet<string> {
+    return this.#snapshot?.closure ?? new Set();
+  }
 
   /** Observe new inputs before adoption and retain removed inputs until it succeeds. */
   async prepare(
@@ -152,6 +155,7 @@ function mergeResourceSnapshots(
     invalid: new Set([...previous.invalid, ...next.invalid]),
     references: new Map([...previous.references, ...next.references]),
     locations: new Map([...previous.locations, ...next.locations]),
+    closure: next.closure,
   };
 }
 

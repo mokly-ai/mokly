@@ -26,19 +26,19 @@ export const accountHome = defineScreen({
 });
 ```
 
-| Field                  | Meaning                                                    |
-| ---------------------- | ---------------------------------------------------------- |
-| `id`                   | Lowercase kebab-case identity, stable across renames       |
-| `title`, `description` | What the catalogue shows                                   |
-| `route`                | Where the documents are written under `mockupsDir`         |
-| `mobile`, `desktop`    | The React node each viewport renders                       |
-| `dependencies`         | Repository paths this screen is made from                  |
-| `relatedDocs`          | Documents a reader should open beside it                   |
-| `useCaseIds`           | Flows this screen appears in                               |
-| `tags`                 | Lowercase kebab-case classification, searched as `tag:`    |
-| `colorSchemes`         | Opt one screen out of a scheme the catalogue renders       |
-| `rationale`            | Why the screen is the way it is                            |
-| `variants`             | States of this screen, each a full screen grouped under it |
+| Field                  | Meaning                                                          |
+| ---------------------- | ---------------------------------------------------------------- |
+| `id`                   | Lowercase kebab-case identity, stable across renames             |
+| `title`, `description` | What the catalogue shows                                         |
+| `route`                | Where the documents are written under `<mockupsDir>/.generated/` |
+| `mobile`, `desktop`    | The React node each viewport renders                             |
+| `dependencies`         | Repository paths this screen is made from                        |
+| `relatedDocs`          | Documents a reader should open beside it                         |
+| `useCaseIds`           | Flows this screen appears in                                     |
+| `tags`                 | Lowercase kebab-case classification, searched as `tag:`          |
+| `colorSchemes`         | Opt one screen out of a scheme the catalogue renders             |
+| `rationale`            | Why the screen is the way it is                                  |
+| `variants`             | States of this screen, each a full screen grouped under it       |
 
 Each view is generated as its own standalone page, so wrap the content in a
 landmark such as `main`.

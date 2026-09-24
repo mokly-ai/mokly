@@ -62,7 +62,10 @@ function RenderProbe() { appendFileSync(${JSON.stringify(renderLog)}, "render\\n
   );
   assert.ok(unrelated?.kind === "component");
   await fs.rm(
-    path.join(fixture.mockupsDir, unrelated.variants[0]!.fragments.mobile),
+    path.join(
+      fixture.config.generatedDir,
+      unrelated.variants[0]!.fragments.mobile,
+    ),
   );
 
   const response = await fetch(
@@ -78,7 +81,11 @@ function RenderProbe() { appendFileSync(${JSON.stringify(renderLog)}, "render\\n
   if (result.schemaVersion === 3) assert.deepEqual(result.components, []);
   assert.equal(reads.length, 4);
   assert.equal(await fs.readFile(renderLog, "utf8"), "");
-  assert.ok(reads.every((route) => route.startsWith("mockups/screens/home.")));
+  assert.ok(
+    reads.every((route) =>
+      route.startsWith("mockups/.generated/screens/home."),
+    ),
+  );
   const desktop = result.screens[0]!.views.find(
     (view) => view.viewport === "desktop" && view.colorScheme === "light",
   )!;
@@ -104,7 +111,7 @@ function RenderProbe() { appendFileSync(${JSON.stringify(renderLog)}, "render\\n
   ])
     assert.equal((await fetch(new URL(relative, response.url))).status, 404);
   const edited = path.join(
-    fixture.mockupsDir,
+    fixture.config.generatedDir,
     desktop.afterPath!.slice("snapshots/after/".length),
   );
   const checked = await fs.readFile(edited, "utf8");

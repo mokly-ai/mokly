@@ -118,6 +118,7 @@ export async function serve(
             prepared?.commit ?? null,
             undefined,
             prepared?.selection,
+            prepared?.descriptor,
           );
           server.publishUpdate({
             kind: "evidence",

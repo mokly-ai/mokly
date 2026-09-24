@@ -69,7 +69,7 @@ const links = `
   <p><a href="../screens/current.mobile.html">Relative link</a></p>
   <p><a href="https://example.invalid/away" target="_blank">External link</a></p>
   <p><a href="https://example.invalid/plain">Plain external link</a></p>
-  <p><a download href="../assets/archive.css">Download link</a></p>
+  <p><a download href="../../assets/archive.css">Download link</a></p>
   <div><template shadowrootmode="open"><a href="../screens/current.mobile.html">Shadow link</a></template></div>
   <svg viewBox="0 0 120 24" width="120" height="24"><a xlink:href="../screens/current.mobile.html"><text x="0" y="18" font-size="16">SVG link</text></a></svg>
   <p><a href="#foot">Jump to the end</a></p>
@@ -91,7 +91,7 @@ function removedPreviewSource(current: boolean): string {
     useCaseIds: [] }),
   definePage({ ...metadata, id: "removed-page", title: "Removed page", route: "archive/removed.html",
     render: () => ${JSON.stringify(
-      `<!doctype html><html><head><link rel="stylesheet" href="../assets/archive.css"></head><body><main id="top"><h1>Previous page</h1>${links}${paragraphs}<p id="foot">End of the archived page.</p></main></body></html>`,
+      `<!doctype html><html><head><link rel="stylesheet" href="../../assets/archive.css"></head><body><main id="top"><h1>Previous page</h1>${links}${paragraphs}<p id="foot">End of the archived page.</p></main></body></html>`,
     )} }),`;
   return `import React from "react";
 import { defineCollection, definePage, defineScreen } from "@mokly/mokly";

@@ -3,10 +3,9 @@
 ## Delivery Status
 
 Approved target in [Generated Output Simplification](../../plans/generated-output-simplification.md).
-The cached rebuild infrastructure and `preparing` state are shipped. Milestone 2
-selects the reader per commit by historical manifest presence and makes `check`
-index-dependent; v6 inventory verification and the `.generated/` layout follow
-in Milestone 3.
+The cached rebuild infrastructure and `preparing` state are shipped. Reader
+selection is per commit, with v6 inventory verification and a dedicated
+`.generated/` layout. Only `check` inspects head Git index tracking.
 
 ## Purpose And Configuration
 

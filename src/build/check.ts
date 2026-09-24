@@ -19,7 +19,7 @@ export function checkCompilation(
   const missing: string[] = [];
   const stale: string[] = [];
   for (const [route, expected] of compilation.outputs) {
-    const target = path.join(config.mockupsDir, route);
+    const target = path.join(config.generatedDir, route);
     if (!fs.existsSync(target)) {
       missing.push(route);
     } else if (fs.readFileSync(target, "utf8") !== expected) {

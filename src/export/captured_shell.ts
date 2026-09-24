@@ -41,10 +41,11 @@ export function externalizeCapturedShell(
     bootstrap.context.comparisons !== (catalogue.comparisonUrl !== null) ||
     !capturedPreviewsRemainValid(bootstrap.catalogue, catalogue) ||
     !sameRenderedCatalogue(bootstrap.catalogue, catalogue)
-  )
+  ) {
     throw exportError(
       `Captured shell catalogue does not match the published model: ${name}`,
     );
+  }
   const external = externalShellBootstrap({ ...bootstrap, catalogue });
   return `${html.slice(0, start)}${serializeShellBootstrap(external)}${html.slice(end)}`;
 }

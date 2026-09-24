@@ -1,52 +1,38 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { resolvePublicExclude } from "../dist/config/public_exclusions.js";
 import { receiveComponentRuntimeStartup } from "../dist/server/controls/runtime_ipc.js";
 
-function startup(publicExclude?: unknown): object {
+function startup(generatedDir: unknown): object {
   return {
     type: "component-runtime-startup",
     config: {
       configPath: "/repo/mokly.config.ts",
       entryGlobs: ["entries/**/*.mockup.{ts,tsx}"],
-      mockupsDir: "/repo/generated",
+      mockupsDir: "/repo/mockups",
+      generatedDir,
       repoRoot: "/repo",
-      ...(publicExclude === undefined ? {} : { publicExclude }),
     },
-    manifest: { entries: [], schemaVersion: 5, sourceFiles: [] },
+    manifest: { entries: [], schemaVersion: 6, sourceFiles: [] },
   };
 }
 
-test("runtime startup preserves resolved public exclusions without duplicating defaults", async () => {
-  const resolved = resolvePublicExclude(["internal/**"]);
-  const transferred = structuredClone(resolved);
+test("runtime startup transfers the generated root without reconstructing it", async () => {
   const received = receiveComponentRuntimeStartup();
-  process.emit("message", startup(transferred));
+  process.emit("message", startup("/repo/mockups/.generated"));
   const { config } = await received;
-  assert.deepEqual(config.publicExclude, transferred);
-  assert.equal(config.publicExclude.length, 5);
-  assert.ok(Object.isFrozen(config.publicExclude));
-  assert.notEqual(config.publicExclude, transferred);
-  assert.deepEqual(transferred, resolved);
-  assert.equal(Object.isFrozen(transferred), false);
-  const resolvedAgain = resolvePublicExclude(transferred);
-  assert.equal(resolvedAgain.length, 9);
-  assert.notDeepEqual(config.publicExclude, resolvedAgain);
+  assert.equal(config.generatedDir, "/repo/mockups/.generated");
 });
 
 for (const [label, value] of [
   ["a missing value", undefined],
-  ["a non-array", "internal/**"],
-  ["an unsafe glob", ["../secret/**"]],
+  ["a non-string value", [".generated"]],
 ] as const) {
-  test(`runtime startup rejects ${label} and waits for valid public exclusions`, async () => {
-    const accepted = resolvePublicExclude(["accepted/**"]);
+  test(`runtime startup rejects ${label} and waits for a valid generated root`, async () => {
     const received = receiveComponentRuntimeStartup();
     process.emit("message", startup(value));
-    process.emit("message", startup(accepted));
+    process.emit("message", startup("/repo/mockups/.generated"));
     const { config } = await received;
-    assert.deepEqual(config.publicExclude, accepted);
-    assert.ok(Object.isFrozen(config.publicExclude));
+    assert.equal(config.generatedDir, "/repo/mockups/.generated");
   });
 }

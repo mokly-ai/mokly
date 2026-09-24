@@ -4,7 +4,12 @@ import path from "node:path";
 import { MoklyError, type MoklyErrorCode } from "../errors.js";
 
 import { MOKLY_CACHE } from "./cache_paths.js";
-import { isInside, projectRealPath, resolveInside } from "./paths.js";
+import {
+  GENERATED_DIRECTORY,
+  isInside,
+  projectRealPath,
+  resolveInside,
+} from "./paths.js";
 import { requireString } from "./rules.js";
 
 interface ReviewOutBoundary {
@@ -84,7 +89,7 @@ export function validateReviewOut(
 ): void {
   const { mockupsDir, repoRoot } = boundary;
   const protectedRoots = [
-    mockupsDir,
+    path.join(mockupsDir, GENERATED_DIRECTORY),
     ...entryRootsOf(boundary),
     path.join(repoRoot, MOKLY_CACHE),
   ];

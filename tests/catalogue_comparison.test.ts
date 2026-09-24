@@ -1,11 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { ConfiguredGitCommandRunner } from "../dist/config/git.js";
-import { CommittedRepository } from "../dist/review/git.js";
 import { configuredServedReview } from "../dist/server/configured_review.js";
 import { startCatalogueServer } from "../dist/server/http.js";
 
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { createExportFixture } from "./helpers/export_fixture.js";
 
 test("Serve pins only a matching complete comparison and immutable reads never regenerate it", async (t) => {
@@ -14,7 +13,7 @@ test("Serve pins only a matching complete comparison and immutable reads never r
   const review = configuredServedReview(
     fixture.config,
     "origin/main",
-    new CommittedRepository(new ConfiguredGitCommandRunner(fixture.config)),
+    committedReviewRepository(fixture.config),
   );
   const generate = review.generate.bind(review);
   let generations = 0;
@@ -79,7 +78,7 @@ test("a complete comparison finishing after an accepted update cannot pin stale 
   const review = configuredServedReview(
     fixture.config,
     "origin/main",
-    new CommittedRepository(new ConfiguredGitCommandRunner(fixture.config)),
+    committedReviewRepository(fixture.config),
   );
   const generate = review.generate.bind(review);
   const started = signal();

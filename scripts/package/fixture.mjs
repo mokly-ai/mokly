@@ -142,10 +142,10 @@ export async function initializeGit(root) {
   });
 }
 
-export async function initializeDerivedGit(root, generatedRoot) {
+export async function initializeDerivedGit(root, catalogueRoot) {
   await fs.promises.appendFile(
     path.join(root, ".gitignore"),
-    `.mokly-cache/\n${generatedRoot}/**/*.html\n${generatedRoot}/mokly-manifest.json\n`,
+    `.mokly-cache/\n${catalogueRoot}/.generated/\n`,
   );
   await initializeGit(root);
 }

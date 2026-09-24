@@ -38,7 +38,7 @@ test("published scheme swaps survive a redirected source replacement", async ({
   page,
 }) => {
   await page.route(
-    /\/static\/screens\/welcome\.desktop\.dark\.html$/,
+    /\/static\/\.generated\/screens\/welcome\.desktop\.dark\.html$/,
     async (route) => {
       await new Promise((resolve) => setTimeout(resolve, 100));
       await route.continue();
@@ -108,7 +108,9 @@ for (const viewport of ["mobile", "desktop"] as const) {
     await expect(page).toHaveURL(/\/view\/design\/browse\/pages\/view$/);
     await expectFrameLoaded(
       page.locator(`.mbk-frame-${viewport} iframe`),
-      new RegExp(`/static/design/browse/pages/view\\.${viewport}(?:\\.html)?$`),
+      new RegExp(
+        `/static/\\.generated/design/browse/pages/view\\.${viewport}(?:\\.html)?$`,
+      ),
     );
     await frame
       .getByRole("link", { name: "Open Welcome", exact: true })

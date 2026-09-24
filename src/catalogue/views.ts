@@ -2,6 +2,7 @@ import type { ManifestComponentVariant, CatalogueView } from "@mokly/viewer";
 import type { ManifestEntry, ManifestScreen } from "@mokly/viewer/data";
 import {
   fragmentViews,
+  currentDocumentPath,
   readInstance,
   readRange,
   readSlot,
@@ -59,7 +60,17 @@ export function projectViews(
     return {
       viewport: view.viewport,
       colorScheme: view.colorScheme,
-      fragmentPath: removed ? null : publicPath(`static/${view.path}`),
+      fragmentPath: removed
+        ? null
+        : publicPath(
+            currentDocumentPath(
+              view.path,
+              input.catalogue.manifest.schemaVersion === 6 ||
+                input.catalogue.manifest.schemaVersion === "live-index-1"
+                ? ".generated"
+                : undefined,
+            ),
+          ),
       usage: usage
         ? {
             status: "ready",

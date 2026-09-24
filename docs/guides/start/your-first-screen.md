@@ -53,7 +53,7 @@ breadcrumb from that relationship.
 
 ## Give it a route
 
-`route` is where the screen is written under `mockupsDir` and how the
+`route` is where the screen is written under `<mockupsDir>/.generated/` and how the
 catalogue addresses it. Ids are lowercase and kebab-case, and they are the
 name you use when one screen links to another.
 

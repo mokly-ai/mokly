@@ -23,7 +23,7 @@ export const controlsDesign = collection({
     "Edit scalar props, switch complete saved presets, and recover from invalid values or rendering failures. Native fields are interactive; linked artboards show the authored preview outcomes. Live preview rendering is a later implementation milestone.",
   dependencies: [
     ...componentStyleDependencies,
-    "examples/basic/generated/design-component-controls.css",
+    "examples/basic/design-component-controls.css",
   ],
   relatedDocs: [
     "docs/protocol/mokly-component-controls-design.md",

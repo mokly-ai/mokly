@@ -9,6 +9,7 @@ import {
   MAX_BLOBS_PER_BATCH,
 } from "../review/git_batch.js";
 
+import { baselineCatalogue, type BaselineCatalogue } from "./catalogue.js";
 import { confinedBaselineStat } from "./confinement.js";
 import { assertBaselineActive, BaselineError } from "./errors.js";
 import type { BaselineFileSystem, BaselineStat } from "./types.js";
@@ -22,6 +23,11 @@ export class RebuiltBaselineReader implements BaselineReader {
     private readonly commit: string,
     private readonly mockupsPath: string,
     private readonly signal?: AbortSignal,
+    readonly catalogue: BaselineCatalogue = baselineCatalogue(
+      commit,
+      mockupsPath || ".",
+      "legacy",
+    ),
   ) {}
 
   async fileExists(commit: string, repoPath: string): Promise<boolean> {
@@ -150,16 +156,21 @@ export class RebuiltBaselineReader implements BaselineReader {
     if (
       commit !== this.commit ||
       !isSafeRepositoryPath(repoPath) ||
-      !repoPath.startsWith(`${this.mockupsPath}/`)
+      (this.catalogue.catalogueRoot !== "." &&
+        !repoPath.startsWith(`${this.catalogue.catalogueRoot}/`))
     )
       throw new BaselineError(
         "baseline-output-invalid",
         `Path or commit is outside the prepared baseline: ${repoPath}`,
       );
-    return path.join(
-      this.outputDir,
-      repoPath.slice(this.mockupsPath.length + 1),
-    );
+    return this.catalogue.layout === "generated-v6"
+      ? path.join(this.outputDir, repoPath)
+      : path.join(
+          this.outputDir,
+          this.catalogue.catalogueRoot === "."
+            ? repoPath
+            : repoPath.slice(this.catalogue.catalogueRoot.length + 1),
+        );
   }
 }
 

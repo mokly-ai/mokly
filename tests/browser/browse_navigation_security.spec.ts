@@ -198,11 +198,14 @@ test("an unowned frame document stays frame-owned during shell replacement", asy
   const requestReleased = new Promise<void>((resolve) => {
     releaseRequest = resolve;
   });
-  await page.route("**/static/screens/home.mobile.dark.html", async (route) => {
-    reportRequest();
-    await requestReleased;
-    await route.continue();
-  });
+  await page.route(
+    "**/static/.generated/screens/home.mobile.dark.html",
+    async (route) => {
+      reportRequest();
+      await requestReleased;
+      await route.continue();
+    },
+  );
 
   try {
     await page.locator("[data-workspace-scheme]").click();

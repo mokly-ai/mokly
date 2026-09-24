@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   extractCssReferences,
   extractHtmlReferences,
+  resolveLocalReferencePath,
 } from "../dist/html_references.js";
 
 for (const [source, expected] of [
@@ -33,3 +34,31 @@ for (const [source, expected] of [
       expected,
     );
   });
+
+test("local references resolve from the generated document's actual directory", () => {
+  assert.deepEqual(
+    resolveLocalReferencePath(
+      ".generated/screens/home.mobile.html",
+      "../../styles.css?theme=dark#header",
+    ),
+    { kind: "resolved", path: "styles.css" },
+  );
+  assert.deepEqual(
+    resolveLocalReferencePath(
+      ".generated/screens/home.html",
+      "../../../secret.css",
+    ),
+    { kind: "escape" },
+  );
+  assert.deepEqual(
+    resolveLocalReferencePath(".generated/home.html", "%2Fprivate.css"),
+    { kind: "root-absolute" },
+  );
+  assert.deepEqual(resolveLocalReferencePath("index.html", "/", true), {
+    kind: "resolved",
+    path: "index.html",
+  });
+  assert.deepEqual(resolveLocalReferencePath("index.html", "%ZZ"), {
+    kind: "invalid-encoding",
+  });
+});

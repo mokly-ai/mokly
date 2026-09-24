@@ -19,7 +19,7 @@ test("every catalogue route has an independently timed hydration test", async ()
       await fs.readFile(
         path.join(
           repositoryRoot,
-          "examples/basic/generated/mokly-manifest.json",
+          "examples/basic/.generated/mokly-manifest.json",
         ),
         "utf8",
       ),

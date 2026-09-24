@@ -17,7 +17,7 @@ import { toolbar } from "../src/components/toolbar/toolbar.mokly.js";
 import { renderExampleDocument } from "./document.js";
 
 const metadata = {
-  dependencies: ["examples/basic/generated/styles.css"],
+  dependencies: ["examples/basic/styles.css"],
   relatedDocs: ["examples/basic/notes.md"],
 };
 

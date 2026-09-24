@@ -11,10 +11,18 @@ import { isPublicStaticFile } from "../dist/config/public_files.js";
 import { FileSystemReviewAssetReader } from "../dist/review/assets.js";
 import { startCatalogueServer } from "../dist/server/http.js";
 
-import { createFixture, removeFixture } from "./helpers/fixture.js";
+import {
+  createFixture,
+  removeFixture,
+  validEntrySource,
+} from "./helpers/fixture.js";
 
 test("both graphs retain raw and tree-shaken inputs while public resources stay public", async (context) => {
-  const fixture = await createFixture();
+  const fixture = await createFixture(
+    validEntrySource({
+      body: '<img src="../../public.svg" alt="Public" /><link rel="stylesheet" href="../../public.css" />',
+    }),
+  );
   context.after(() => removeFixture(fixture));
   const files: Record<string, string> = {
     "settings.ts":
@@ -68,7 +76,11 @@ test("both graphs retain raw and tree-shaken inputs while public resources stay 
     true,
   );
   await writeCompilation(compilation, config);
-  const server = await startCatalogueServer(config, { base: "main", port: 0 });
+  const server = await startCatalogueServer(config, {
+    base: "main",
+    port: 0,
+    generatedOutputs: compilation.outputs,
+  });
   fixture.beforeRemove(() => server.close());
   const reader = new FileSystemReviewAssetReader(config);
   for (const route of [
@@ -91,7 +103,11 @@ test("both graphs retain raw and tree-shaken inputs while public resources stay 
       );
     await assert.rejects(reader.read(route), /not a public static file/, route);
   }
-  for (const route of ["public.svg", "public.css", "screens/home.desktop.html"])
+  for (const route of [
+    "public.svg",
+    "public.css",
+    ".generated/screens/home.desktop.html",
+  ])
     assert.equal(
       (await fetch(`${server.url}/static/${route}`)).status,
       200,
@@ -124,14 +140,14 @@ test("freshness resolves new imports without executing or rendering the graph", 
   );
   assert.equal(
     await fs.promises.readFile(
-      path.join(fixture.mockupsDir, "mokly-manifest.json"),
+      path.join(config.generatedDir, "mokly-manifest.json"),
       "utf8",
     ),
     compilation.outputs.get("mokly-manifest.json"),
   );
 });
 
-test("failed page builds and source collisions preserve the previous inventory and bytes", async (context) => {
+test("a page route can share an authored filename without overwriting its source", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
@@ -150,7 +166,15 @@ test("failed page builds and source collisions preserve the previous inventory a
     'import { definePage } from "@mokly/mokly"; import html from "../mockups/document.html"; export const mockups = [definePage({ id: "page", title: "Page", description: "Page", dependencies: [], relatedDocs: [], route: "document.html", render: () => html })];',
   );
   const next = await loadConfig(fixture.root);
-  await assert.rejects(compileCatalogue(next), /authoring|source/);
+  const generated = await compileCatalogue(next);
+  await writeCompilation(generated, next);
   assert.equal(config.sourceFiles, inventory);
   assert.equal(await fs.promises.readFile(source, "utf8"), bytes);
+  assert.match(
+    await fs.promises.readFile(
+      path.join(next.generatedDir, "document.html"),
+      "utf8",
+    ),
+    /Protected source/,
+  );
 });

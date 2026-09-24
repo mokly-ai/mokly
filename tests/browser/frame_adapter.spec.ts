@@ -179,7 +179,9 @@ test("view swaps, disposal, and absent inspector timeouts discard old work", asy
       state.mounted = await postMessageAdapter({ frameOrigin: origin }).mount(
         document.querySelector<HTMLIFrameElement>("#frame")!,
         {
-          url: new URL("/static/screens/home.desktop.html", origin),
+          url: new URL("/static/.generated/screens/home.desktop.html", origin),
+          route: "screens/home.desktop.html",
+          generatedPathPrefix: ".generated",
           usage: { status: "ready", ...usage },
         },
       );

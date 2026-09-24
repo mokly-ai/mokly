@@ -32,13 +32,14 @@ for (const [name, cause] of [
   ["private/theme.css", /resolved entry module.*entries/],
   ["theme.source.html", /reserved source basename/],
   ["helper.css", /authoring input.*sourceFiles/],
-  ["README.css", /matches public exclusion.*\*\*\/README\.\*.*publicExclude/],
+  [".generated/README.css", /generated output/],
 ] as const) {
   test(`resource validation and Review retain the protection cause for ${name}`, async (t) => {
     const fixture = await createFixture();
     t.after(() => removeFixture(fixture));
     const entriesDir = path.join(fixture.mockupsDir, "private");
     await fs.mkdir(entriesDir);
+    await fs.mkdir(path.join(fixture.mockupsDir, ".generated"));
     await fs.writeFile(path.join(fixture.mockupsDir, name), "private");
     const config = {
       ...(await loadConfig(fixture.root)),
@@ -72,13 +73,13 @@ for (const [name, cause] of [
     for (const reader of [
       new FileSystemReviewAssetReader(config),
       new GitReviewAssetReader(config, baseline, "baseline", "mockups"),
-      new CompiledReviewAssetReader(config, new Map([[name, "private"]])),
+      new CompiledReviewAssetReader(config, new Map()),
     ])
       await assert.rejects(reader.read(name), check);
   });
 }
 
-test("export comparison reports its excluded snapshot resource and matched glob", async (t) => {
+test("export comparison rejects protected source files in a snapshot", async (t) => {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
@@ -90,7 +91,7 @@ test("export comparison reports its excluded snapshot resource and matched glob"
         compilation,
         compilation.manifest,
         {
-          files: new Map([["snapshots/before/README.css", "private"]]),
+          files: new Map([["snapshots/before/helper.source.html", "private"]]),
           result: {
             baseCommit: "a".repeat(40),
             baseRef: "main",
@@ -107,12 +108,9 @@ test("export comparison reports its excluded snapshot resource and matched glob"
     (error: Error) => {
       assert.match(
         error.message,
-        /private export resource.*snapshots\/before\/README.css/,
+        /private export resource.*snapshots\/before\/helper.source.html/,
       );
-      assert.match(
-        error.message,
-        /matches public exclusion.*\*\*\/README\.\*.*publicExclude/,
-      );
+      assert.match(error.message, /reserved source basename/);
       return true;
     },
   );

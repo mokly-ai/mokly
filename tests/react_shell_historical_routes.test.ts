@@ -5,12 +5,11 @@ import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
-import { ConfiguredGitCommandRunner } from "../dist/config/git.js";
 import { exportCatalogue } from "../dist/export/run.js";
-import { CommittedRepository } from "../dist/review/git.js";
 import { configuredServedReview } from "../dist/server/configured_review.js";
 import { startCatalogueServer } from "../dist/server/http.js";
 
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { createExportFixture } from "./helpers/export_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
 
@@ -73,7 +72,7 @@ async function startReviewedServer(
   const review = configuredServedReview(
     fixture.config,
     "origin/main",
-    new CommittedRepository(new ConfiguredGitCommandRunner(fixture.config)),
+    committedReviewRepository(fixture.config),
   );
   return startCatalogueServer(fixture.config, {
     base: "origin/main",

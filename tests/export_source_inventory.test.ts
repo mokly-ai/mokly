@@ -28,6 +28,7 @@ test("consumer export omits unused reserved templates without treating them as p
   const files = await directoryFiles(result.outDir);
   assert.equal(files.has("static/unused.source.html"), false);
   assert.equal(files.has("static/mokly-manifest.json"), false);
+  assert.equal(files.has("static/.generated/mokly-manifest.json"), false);
   assert.equal(files.has("view/screens/home.html"), true);
 });
 
@@ -56,17 +57,17 @@ mockups.push(definePage({ id: "handbook", title: "Handbook", description: "Guida
   const files = await directoryFiles(result.outDir);
   assert.equal(files.has("static/private-template.html"), false);
   assert.match(
-    files.get("static/handbook.html")!.toString(),
+    files.get("static/.generated/handbook.html")!.toString(),
     /<h1>Handbook<\/h1>/,
   );
 });
 
 for (const includeChanges of [true, false]) {
-  test(`export omits excluded files without extending source inventory (Changes ${includeChanges})`, async (t) => {
+  test(`export omits all unreferenced authored files without extending source inventory (Changes ${includeChanges})`, async (t) => {
     const fixture = await changedFixture(
       t,
       undefined,
-      { extraConfig: 'publicExclude: ["internal/**"],' },
+      undefined,
       ({ mockupsDir }) => writeExclusionFiles(mockupsDir),
     );
     const result = await exportCatalogue(fixture.config, {
@@ -84,15 +85,15 @@ for (const includeChanges of [true, false]) {
       );
     }
     for (const name of permittedNames)
-      assert.equal(files.has(`static/${name}`), true, name);
+      assert.equal(files.has(`static/${name}`), false, name);
   });
 }
 
-test("repository preview omits public exclusions while retaining ordinary assets", async (t) => {
+test("repository preview omits every unreferenced authored asset", async (t) => {
   const fixture = await changedFixture(
     t,
     undefined,
-    { extraConfig: 'publicExclude: ["internal/**"],' },
+    undefined,
     ({ mockupsDir }) => writeExclusionFiles(mockupsDir),
   );
   const output = path.join(fixture.root, ".context/preview");
@@ -101,5 +102,5 @@ test("repository preview omits public exclusions while retaining ordinary assets
   for (const name of excludedNames)
     assert.equal(files.has(`static/${name}`), false, name);
   for (const name of permittedNames)
-    assert.equal(files.has(`static/${name}`), true, name);
+    assert.equal(files.has(`static/${name}`), false, name);
 });

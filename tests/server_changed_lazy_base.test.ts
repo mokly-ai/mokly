@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import { compileCatalogue } from "../dist/build/compile.js";
 import { readManifest } from "../dist/registry/manifest.js";
 import {
   FileSystemReviewAssetReader,
@@ -13,10 +14,12 @@ import {
   NodeGitCommandRunner,
   CommittedRepository,
 } from "../dist/review/git.js";
+import { CompiledReviewAssetReader } from "../dist/review/head_assets.js";
 import { classifyChangedContent } from "../dist/server/changed_content.js";
 import { ChangedResourceGraph } from "../dist/server/changed_resources.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
 
@@ -42,9 +45,11 @@ for (const resource of ["image.svg", "unused.css", "shared.css"])
       }
     }
     const runner = new NodeGitCommandRunner(fixture.root);
+    const descriptor = committedReviewRepository(fixture.config).descriptor;
+    assert.ok(descriptor);
     const git = {
       evidence: new CommittedRepository(runner).evidence,
-      reader: new ObservedGit(runner),
+      reader: new ObservedGit(runner, descriptor),
     };
     const manifest = readManifest(fixture.config);
     await classifyChangedContent(
@@ -54,17 +59,21 @@ for (const resource of ["image.svg", "unused.css", "shared.css"])
       git.reader,
       await git.evidence.mergeBase("main", "HEAD"),
       [`mockups/${resource}`],
+      new CompiledReviewAssetReader(
+        fixture.config,
+        (await compileCatalogue(fixture.config)).outputs,
+      ),
     );
     const documents = reads.filter((route) => route.endsWith(".html"));
     assert.deepEqual(documents.sort(), [
-      "mockups/screens/details.desktop.dark.html",
-      "mockups/screens/details.desktop.html",
-      "mockups/screens/details.mobile.dark.html",
-      "mockups/screens/details.mobile.html",
-      "mockups/screens/home.desktop.dark.html",
-      "mockups/screens/home.desktop.html",
-      "mockups/screens/home.mobile.dark.html",
-      "mockups/screens/home.mobile.html",
+      "mockups/.generated/screens/details.desktop.dark.html",
+      "mockups/.generated/screens/details.desktop.html",
+      "mockups/.generated/screens/details.mobile.dark.html",
+      "mockups/.generated/screens/details.mobile.html",
+      "mockups/.generated/screens/home.desktop.dark.html",
+      "mockups/.generated/screens/home.desktop.html",
+      "mockups/.generated/screens/home.mobile.dark.html",
+      "mockups/.generated/screens/home.mobile.html",
     ]);
     assert.deepEqual(
       [...new Set(reads.filter((route) => !route.endsWith(".html")))].sort(),
@@ -75,7 +84,7 @@ for (const resource of ["image.svg", "unused.css", "shared.css"])
 test("non-CSS evidence does not traverse a supplied base resource graph", async (t) => {
   const fixture = await cssAttributionFixture(t, false);
   const document = await fs.readFile(
-    path.join(fixture.mockupsDir, "screens/home.mobile.html"),
+    path.join(fixture.config.generatedDir, "screens/home.mobile.html"),
     "utf8",
   );
   const graph = new ChangedResourceGraph(
@@ -87,6 +96,10 @@ test("non-CSS evidence does not traverse a supplied base resource graph", async 
     },
     new Set(["image.svg"]),
     new Map(),
+    undefined,
+    false,
+    { prefix: ".generated", routes: new Set(["screens/home.mobile.html"]) },
+    { prefix: ".generated", routes: new Set(["screens/home.mobile.html"]) },
   );
   assert.deepEqual(
     await graph.compare("screens/home.mobile.html", document, {
@@ -101,9 +114,10 @@ test("non-CSS evidence does not traverse a supplied base resource graph", async 
 
 test("deleted stylesheet resources still retain their consumers", async (t) => {
   const fixture = await cssAttributionFixture(t, false);
+  const accepted = await compileCatalogue(fixture.config);
   await fs.unlink(path.join(fixture.mockupsDir, "shared.css"));
   const manifest = readManifest(fixture.config);
-  const git = new CommittedRepository(new NodeGitCommandRunner(fixture.root));
+  const git = committedReviewRepository(fixture.config);
   const result = await classifyChangedContent(
     manifest,
     manifest,
@@ -111,8 +125,11 @@ test("deleted stylesheet resources still retain their consumers", async (t) => {
     git.reader,
     await git.evidence.mergeBase("main", "HEAD"),
     ["mockups/shared.css"],
+    new CompiledReviewAssetReader(fixture.config, accepted.outputs),
   );
-  assert.ok(result.changedPaths.includes("mockups/screens/home.mobile.html"));
+  assert.ok(
+    result.changedPaths.includes("mockups/.generated/screens/home.mobile.html"),
+  );
   assert.equal(
     result.screens[0]?.views[0]?.reasons?.[0]?.analysis?.status,
     "unresolved",
@@ -120,7 +137,7 @@ test("deleted stylesheet resources still retain their consumers", async (t) => {
 });
 
 test("changed documents retain a removed image without any stylesheet in the diff", async (t) => {
-  const image = '<img src="../image.svg" alt="Logo" />';
+  const image = '<img src="../../image.svg" alt="Logo" />';
   const fixture = await changedFixture(
     t,
     validEntrySource({ body: `<p>Home</p>${image}` }),
@@ -139,7 +156,7 @@ test("changed documents retain a removed image without any stylesheet in the dif
   );
   await fs.unlink(path.join(fixture.mockupsDir, "image.svg"));
   await fixture.build();
-  const git = new CommittedRepository(new NodeGitCommandRunner(fixture.root));
+  const git = committedReviewRepository(fixture.config);
   const commit = await git.evidence.mergeBase("main", "HEAD");
   const changedPaths = await git.evidence.changedPaths(commit);
   assert.ok(changedPaths.includes("mockups/image.svg"));
@@ -151,10 +168,16 @@ test("changed documents retain a removed image without any stylesheet in the dif
     git.reader,
     commit,
     changedPaths,
+    new CompiledReviewAssetReader(
+      fixture.config,
+      (await compileCatalogue(fixture.config)).outputs,
+    ),
   );
   for (const viewport of ["mobile", "desktop"])
     assert.ok(
-      result.changedPaths.includes(`mockups/screens/home.${viewport}.html`),
+      result.changedPaths.includes(
+        `mockups/.generated/screens/home.${viewport}.html`,
+      ),
     );
   const consumer = result.screens.find(
     (screen) => screen.route === "screens/home.html",

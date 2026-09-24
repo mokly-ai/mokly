@@ -11,7 +11,6 @@ import type {
   ResolvedRegistryEntry,
   ScreenVariantInput,
 } from "../dist/authoring/types.js";
-import { DEFAULT_PUBLIC_EXCLUDE } from "../dist/config/public_exclusions.js";
 import type { ResolvedConfig } from "../dist/config/types.js";
 import { defineCollection, defineUseCase } from "../dist/index.js";
 import { validateEntry } from "../dist/registry/entry_validation.js";
@@ -23,13 +22,13 @@ import { repositoryRoot } from "./helpers/fixture.js";
 
 const sourceRelativePath = "tests/variant_validation.test.ts";
 const config: ResolvedConfig = {
-  publicExclude: DEFAULT_PUBLIC_EXCLUDE,
   colorSchemes: ["light"],
   compatibility: { readManifestV2: false },
   configPath: path.join(repositoryRoot, "mokly.config.ts"),
   entriesDir: path.join(repositoryRoot, "tests"),
   entryGlobs: ["tests/**/*.mockup.{ts,tsx}"],
   mockupsDir: path.join(repositoryRoot, "mockups"),
+  generatedDir: path.join(repositoryRoot, "mockups/.generated"),
   moduleResolution: { aliases: {}, loaders: {}, packageRoots: [] },
   repoRoot: repositoryRoot,
   review: { base: "main", outDir: ".review", sharedImpact: [] },

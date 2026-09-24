@@ -15,7 +15,7 @@ import {
 const manifest = parseManifest(
   JSON.parse(
     fs.readFileSync(
-      path.resolve("examples/basic/generated/mokly-manifest.json"),
+      path.resolve("examples/basic/.generated/mokly-manifest.json"),
       "utf8",
     ),
   ),

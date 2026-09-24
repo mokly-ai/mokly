@@ -71,7 +71,12 @@ export function StageFrame({
       ? (previewDark ?? previewLight)
       : previewLight;
   const source = preview
-    ? generatedFrameSource(preview, fragment, stepIndex)
+    ? generatedFrameSource(
+        preview,
+        fragment,
+        stepIndex,
+        registry?.generatedPathPrefix,
+      )
     : frameSource(selected, fragment, stepIndex);
   const temporary =
     preview?.path.startsWith("/__mokly/components/renders/") ?? false;
@@ -107,6 +112,7 @@ export function StageFrame({
   const component = entry.kind === "component";
   const frame = source ? (
     <iframe
+      data-mokly-generated-prefix={registry?.generatedPathPrefix}
       aria-busy={mounted.status === "loading" ? true : undefined}
       className="mbk-frag"
       data-mokly-fragment-frame={!flow || stepIndex === 0 ? "" : undefined}
@@ -115,14 +121,24 @@ export function StageFrame({
       data-fragment-light={
         hasDarkFragments
           ? previewLight
-            ? generatedFrameSource(previewLight, fragment, stepIndex)
+            ? generatedFrameSource(
+                previewLight,
+                fragment,
+                stepIndex,
+                registry?.generatedPathPrefix,
+              )
             : frameSource(light, fragment, stepIndex)
           : undefined
       }
       data-fragment-dark={
         hasDarkFragments
           ? previewDark
-            ? generatedFrameSource(previewDark, fragment, stepIndex)
+            ? generatedFrameSource(
+                previewDark,
+                fragment,
+                stepIndex,
+                registry?.generatedPathPrefix,
+              )
             : frameSource(dark, fragment, stepIndex)
           : undefined
       }

@@ -32,9 +32,10 @@ test.beforeAll(async () => {
   );
   const git = (...args: string[]) =>
     promisify(execFile)("git", args, { cwd: root });
-  const tracked = (await git("ls-files", "examples/basic/generated")).stdout
+  const tracked = (await git("ls-files", "examples/basic")).stdout
     .trim()
-    .split("\n");
+    .split("\n")
+    .filter((file) => file.endsWith(".css"));
   expect(tracked).toHaveLength(28);
   expect(tracked.every((file) => file.endsWith(".css"))).toBe(true);
   const file = path.join(

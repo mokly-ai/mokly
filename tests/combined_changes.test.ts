@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { capturedAssetReader } from "../dist/export/inputs.js";
 import { capturePublicFiles } from "../dist/export/public_files.js";
 import { assembleExport } from "../dist/export/site.js";
 import { compareReview } from "../dist/review/compare.js";
@@ -53,6 +54,11 @@ for (const editComponent of [false, true]) {
       fixture.git,
       "main",
     );
+    const captured = await capturePublicFiles(
+      fixture.config,
+      fixture.after.outputs,
+      fixture.after.manifest.assetClosure,
+    );
     const material = await changedContentPaths(
       fixture.after.manifest,
       fixture.before.manifest,
@@ -60,7 +66,7 @@ for (const editComponent of [false, true]) {
       fixture.git.reader,
       "a".repeat(40),
       fixture.changedPaths,
-      undefined,
+      capturedAssetReader(captured, fixture.config),
       "pages",
     );
     const site = assembleExport(
@@ -68,7 +74,7 @@ for (const editComponent of [false, true]) {
       fixture.after,
       fixture.before.manifest,
       comparison,
-      await capturePublicFiles(fixture.config),
+      captured,
       material,
     );
     const home = String(site.inventory.files.get("index.html"));
@@ -78,7 +84,7 @@ for (const editComponent of [false, true]) {
       /data-changed="true"[^>]*data-route="screens\/home.html"/,
     );
     const document = String(site.inventory.files.get("view/handbook.html"));
-    assert.match(document, /src="\/static\/handbook.html"/);
+    assert.match(document, /src="\/static\/\.generated\/handbook.html"/);
     assert.doesNotMatch(document, /data-workspace-data|data-diff-screen/);
   });
 }

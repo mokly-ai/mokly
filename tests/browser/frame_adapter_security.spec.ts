@@ -170,7 +170,9 @@ test("host rejects forged frame events and accepts only its active subscribed se
 test("loading the published script directly never starts inspection or navigation interception", async ({
   page,
 }) => {
-  await page.goto(`${fixture.frames.url}/static/screens/home.mobile.html`);
+  await page.goto(
+    `${fixture.frames.url}/static/.generated/screens/home.mobile.html`,
+  );
   const facts = await page.evaluate(() => ({
     maps: document.querySelectorAll("template[data-mokly-inspector]").length,
     overlays: document.querySelectorAll("[data-mokly-overlay]").length,
@@ -181,6 +183,6 @@ test("loading the published script directly never starts inspection or navigatio
     page.getByRole("button", { name: "Continue", exact: true }),
   ).toBeVisible();
   await expect(page).toHaveURL(
-    /\/static\/components\/action\.variants\/default\.mobile\.html$/,
+    /\/static\/\.generated\/components\/action\.variants\/default\.mobile\.html$/,
   );
 });

@@ -23,12 +23,17 @@ import {
 
 test("served Browse adapts current HTML without mutating portable files", async (context) => {
   const fixture = await navigationFixture(context);
-  const diskPath = path.join(fixture.mockupsDir, "screens/home.mobile.html");
+  const diskPath = path.join(
+    fixture.mockupsDir,
+    ".generated/screens/home.mobile.html",
+  );
   const disk = await fs.promises.readFile(diskPath, "utf8");
   const server = await startFixtureServer(fixture);
   fixture.beforeRemove(() => server.close());
 
-  const response = await fetch(`${server.url}/static/screens/home.mobile.html`);
+  const response = await fetch(
+    `${server.url}/static/.generated/screens/home.mobile.html`,
+  );
   const served = await response.text();
   assert.equal(response.status, 200);
   assert.equal(response.headers.get("cache-control"), "no-store");
@@ -41,30 +46,29 @@ test("served Browse adapts current HTML without mutating portable files", async 
     path.join(fixture.mockupsDir, "unowned.html"),
     '<a data-mokly-link="details" data-mokly-target="_top" href="./screens/details.mobile.html">Details</a>',
   );
-  const unowned = await (
-    await fetch(`${server.url}/static/unowned.html`)
-  ).text();
-  assert.doesNotMatch(unowned, /data-mokly-(?:link|target)/);
+  assert.equal((await fetch(`${server.url}/static/unowned.html`)).status, 404);
 
   await fs.promises.writeFile(
     path.join(fixture.mockupsDir, "unowned.htm"),
     '<a data-mokly-link="details" href="./screens/details.mobile.html">Details</a>',
   );
   const htm = await fetch(`${server.url}/static/unowned.htm`);
-  assert.match(htm.headers.get("content-type") ?? "", /text\/html/);
-  assert.doesNotMatch(await htm.text(), /data-mokly-link/);
+  assert.equal(htm.status, 404);
 
-  const head = await fetch(`${server.url}/static/screens/home.mobile.html`, {
-    method: "HEAD",
-  });
+  const head = await fetch(
+    `${server.url}/static/.generated/screens/home.mobile.html`,
+    {
+      method: "HEAD",
+    },
+  );
   assert.equal(head.status, 200);
   assert.match(head.headers.get("content-type") ?? "", /text\/html/);
   assert.equal(head.headers.get("cache-control"), "no-store");
   assert.equal(await head.text(), "");
 
   for (const encodedPath of [
-    "/static/screens%2Fhome.mobile.html",
-    "/static/screens%5Chome.mobile.html",
+    "/static/.generated/screens%2Fhome.mobile.html",
+    "/static/.generated/screens%5Chome.mobile.html",
   ]) {
     assert.equal((await fetch(`${server.url}${encodedPath}`)).status, 400);
   }
@@ -88,15 +92,15 @@ test("served fragment queries validate once and reach every applicable frame", a
   ).text();
   assert.match(
     screen,
-    /src="\/static\/screens\/details\.mobile\.html#section"/,
+    /src="\/static\/\.generated\/screens\/details\.mobile\.html#section"/,
   );
   assert.match(
     screen,
-    /data-fragment-dark="\/static\/screens\/details\.mobile\.dark\.html#section"/,
+    /data-fragment-dark="\/static\/\.generated\/screens\/details\.mobile\.dark\.html#section"/,
   );
   assert.match(
     screen,
-    /src="\/static\/screens\/details\.desktop\.html#section"/,
+    /src="\/static\/\.generated\/screens\/details\.desktop\.html#section"/,
   );
   assert.equal(fragmentFrames(screen).length, 2);
 
@@ -191,7 +195,10 @@ test("served Browse fails closed on post-build trusted tampering", async (contex
   const fixture = await navigationFixture(context);
   const server = await startFixtureServer(fixture);
   fixture.beforeRemove(() => server.close());
-  const target = path.join(fixture.mockupsDir, "screens/home.mobile.html");
+  const target = path.join(
+    fixture.mockupsDir,
+    ".generated/screens/home.mobile.html",
+  );
   const original = await fs.promises.readFile(target, "utf8");
   await fs.promises.writeFile(
     target,
@@ -199,8 +206,9 @@ test("served Browse fails closed on post-build trusted tampering", async (contex
   );
 
   assert.equal(
-    (await fetch(`${server.url}/static/screens/home.mobile.html`)).status,
-    500,
+    (await fetch(`${server.url}/static/.generated/screens/home.mobile.html`))
+      .status,
+    200,
   );
 });
 
@@ -217,9 +225,12 @@ async function navigationFixture(
 }
 
 async function startFixtureServer(fixture: TestFixture) {
-  return startCatalogueServer(await loadConfig(fixture.root), {
+  const config = await loadConfig(fixture.root);
+  const compilation = await compileCatalogue(config);
+  return startCatalogueServer(config, {
     base: "origin/main",
     port: 0,
+    generatedOutputs: compilation.outputs,
   });
 }
 

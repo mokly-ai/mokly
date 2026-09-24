@@ -78,16 +78,19 @@ test("an unowned exact-resource document stays frame-owned during replacement", 
   const requestReleased = new Promise<void>((resolve) => {
     releaseRequest = resolve;
   });
-  await page.route("**/static/screens/home.mobile.dark.html", async (route) => {
-    matchingRequests++;
-    if (matchingRequests === 1) {
+  await page.route(
+    "**/static/.generated/screens/home.mobile.dark.html",
+    async (route) => {
+      matchingRequests++;
+      if (matchingRequests === 1) {
+        await route.continue();
+        return;
+      }
+      reportRequest();
+      await requestReleased;
       await route.continue();
-      return;
-    }
-    reportRequest();
-    await requestReleased;
-    await route.continue();
-  });
+    },
+  );
 
   await frame.locator("#unowned-next-scheme-link").click();
   await expect
@@ -96,7 +99,7 @@ test("an unowned exact-resource document stays frame-owned during replacement", 
         .locator(".mbk-frame-mobile iframe")
         .evaluate((element: HTMLIFrameElement) =>
           element.contentDocument?.URL.endsWith(
-            "/static/screens/home.mobile.dark.html",
+            "/static/.generated/screens/home.mobile.dark.html",
           ),
         ),
     )

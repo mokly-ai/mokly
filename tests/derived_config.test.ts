@@ -93,6 +93,14 @@ test("removed output mode is rejected with actionable guidance", async (t) => {
       ),
     /generatedOutput was removed; use Git tracking for check and run mokly build to write output/,
   );
+  assert.throws(
+    () =>
+      resolveConfig(
+        { ...input, publicExclude: ["internal/**"] },
+        fixture.configPath,
+      ),
+    /publicExclude was removed; remove it; only referenced authored assets are public/,
+  );
 });
 
 test("baseline build rejects malformed commands", async (t) => {

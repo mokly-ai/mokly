@@ -50,8 +50,14 @@ test(
     context.after(() => {
       if (child.exitCode === null) child.kill("SIGKILL");
     });
-    const manifest = path.join(fixture.mockupsDir, "mokly-manifest.json");
-    const home = path.join(fixture.mockupsDir, "screens/home.mobile.html");
+    const manifest = path.join(
+      fixture.mockupsDir,
+      ".generated/mokly-manifest.json",
+    );
+    const home = path.join(
+      fixture.mockupsDir,
+      ".generated/screens/home.mobile.html",
+    );
     const output = () => `${stdout}\n${stderr}`;
     try {
       await until(() => stdout.includes("Generated "), output);

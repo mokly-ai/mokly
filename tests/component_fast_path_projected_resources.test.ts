@@ -12,7 +12,7 @@ const hiddenResourceCases = [
   {
     name: "srcset and inline style",
     content:
-      "<img srcSet=\"../one.svg 1x, ../two.svg 2x\" style={{ backgroundImage: 'url(../background.svg)' }} />",
+      "<img srcSet=\"../../one.svg 1x, ../../two.svg 2x\" style={{ backgroundImage: 'url(../../background.svg)' }} />",
     files: {
       "one.svg": "one",
       "two.svg": "two",
@@ -24,7 +24,7 @@ const hiddenResourceCases = [
   },
   {
     name: "embedded HTML closure",
-    content: '<iframe src="../embedded.html" />',
+    content: '<iframe src="../../embedded.html" />',
     files: {
       "embedded.html": '<img src="nested.svg">',
       "nested.svg": "nested",
@@ -35,7 +35,7 @@ const hiddenResourceCases = [
   },
   {
     name: "stylesheet import closure",
-    content: '<link rel="stylesheet" href="../main.css" />',
+    content: '<link rel="stylesheet" href="../../main.css" />',
     files: {
       "main.css": '@import "./nested.css";',
       "nested.css": "body { color: red; }",
@@ -106,7 +106,7 @@ for (const direction of ["added", "removed"] as const)
     const fixture = await createFixture(
       componentEntrySource({
         paneRender: "(props) => <select>{props.children}</select>",
-        body: '<pane.Component><link rel="stylesheet" href="../main.css" /></pane.Component>',
+        body: '<pane.Component><link rel="stylesheet" href="../../main.css" /></pane.Component>',
       }),
     );
     t.after(() => removeFixture(fixture));
@@ -161,7 +161,7 @@ for (const context of ["select", "template"] as const)
     const fixture = await createFixture(
       componentEntrySource({
         actionRender: `(props) => <div dangerouslySetInnerHTML={{ __html: "<${context}>" }} />`,
-        body: '<action.Component label="Continue" /><img loading="lazy" src="../image.svg" />',
+        body: '<action.Component label="Continue" /><img loading="lazy" src="../../image.svg" />',
       }),
     );
     t.after(() => removeFixture(fixture));

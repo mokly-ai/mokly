@@ -41,17 +41,19 @@ const metadataRoutes = [
 const publicJson = '{"theme":"light"}';
 
 test("a stale historical-manifest alias does not prevent ordinary public resources", async (context) => {
-  const fixture = await createFixture();
+  const fixture = await createFixture(
+    validEntrySource({ body: '<a href="../../public.json">Public</a>' }),
+  );
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
+  await fs.promises.writeFile(
+    path.join(fixture.mockupsDir, "public.json"),
+    publicJson,
+  );
   await writeCompilation(await compileCatalogue(config), config);
   await fs.promises.symlink(
     "missing.json",
     path.join(fixture.mockupsDir, LEGACY_MANIFEST_NAME),
-  );
-  await fs.promises.writeFile(
-    path.join(fixture.mockupsDir, "public.json"),
-    publicJson,
   );
   const server = await startCatalogueServer(config, { base: "HEAD", port: 0 });
   fixture.beforeRemove(() => server.close());
@@ -74,10 +76,10 @@ test("a pending manifest is not a public resource on the first build", async (co
   context.after(() => removeFixture(fixture));
   await assert.rejects(
     compileCatalogue(await loadConfig(fixture.root)),
-    /target .*mokly-manifest.json.*internal catalogue metadata/,
+    /mokly-manifest.json.*(?:targets generated output|internal catalogue metadata)/,
   );
   assert.equal(
-    fs.existsSync(path.join(fixture.mockupsDir, MANIFEST_NAME)),
+    fs.existsSync(path.join(fixture.mockupsDir, ".generated", MANIFEST_NAME)),
     false,
   );
 });
@@ -86,39 +88,41 @@ test("generated page routes cannot overwrite a manifest through an alias", async
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
-  await writeCompilation(await compileCatalogue(config), config);
-  await fs.promises.symlink(
-    MANIFEST_NAME,
-    path.join(fixture.mockupsDir, "page.html"),
-  );
-  assert.throws(
-    () => validateGeneratedOutputPaths(["page.html"], config),
-    /targets internal catalogue metadata/,
+  const compilation = await compileCatalogue(config);
+  await writeCompilation(compilation, config);
+  const fragment = path.join(config.generatedDir, "screens/home.mobile.html");
+  await fs.promises.rm(fragment);
+  await fs.promises.symlink("../mokly-manifest.json", fragment);
+  await assert.rejects(
+    writeCompilation(compilation, config),
+    /generated route targets internal catalogue metadata/,
   );
   validateGeneratedOutputPaths([MANIFEST_NAME], config);
 });
 
 test("HTTP and current Review deny internal manifests and aliases but allow public JSON", async (context) => {
-  const fixture = await createFixture();
+  const fixture = await createFixture(
+    validEntrySource({ body: '<a href="../../public.json">Public</a>' }),
+  );
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
-  const compilation = await compileCatalogue(config);
-  await writeCompilation(compilation, config);
-  await fs.promises.copyFile(
-    path.join(fixture.mockupsDir, MANIFEST_NAME),
-    path.join(fixture.mockupsDir, LEGACY_MANIFEST_NAME),
-  );
-  await fs.promises.copyFile(
-    path.join(fixture.mockupsDir, MANIFEST_NAME),
-    path.join(fixture.mockupsDir, FORMER_MANIFEST_NAME),
-  );
-  await fs.promises.symlink(
-    MANIFEST_NAME,
-    path.join(fixture.mockupsDir, "metadata.json"),
-  );
   await fs.promises.writeFile(
     path.join(fixture.mockupsDir, "public.json"),
     publicJson,
+  );
+  const compilation = await compileCatalogue(config);
+  await writeCompilation(compilation, config);
+  await fs.promises.copyFile(
+    path.join(config.generatedDir, MANIFEST_NAME),
+    path.join(fixture.mockupsDir, LEGACY_MANIFEST_NAME),
+  );
+  await fs.promises.copyFile(
+    path.join(config.generatedDir, MANIFEST_NAME),
+    path.join(fixture.mockupsDir, FORMER_MANIFEST_NAME),
+  );
+  await fs.promises.symlink(
+    `.generated/${MANIFEST_NAME}`,
+    path.join(fixture.mockupsDir, "metadata.json"),
   );
   const server = await startCatalogueServer(config, { base: "HEAD", port: 0 });
   fixture.beforeRemove(() => server.close());
@@ -150,20 +154,20 @@ for (const route of metadataRoutes) {
     const config = await loadConfig(fixture.root);
     await writeCompilation(await compileCatalogue(config), config);
     await fs.promises.copyFile(
-      path.join(fixture.mockupsDir, MANIFEST_NAME),
+      path.join(config.generatedDir, MANIFEST_NAME),
       path.join(fixture.mockupsDir, LEGACY_MANIFEST_NAME),
     );
     await fs.promises.copyFile(
-      path.join(fixture.mockupsDir, MANIFEST_NAME),
+      path.join(config.generatedDir, MANIFEST_NAME),
       path.join(fixture.mockupsDir, FORMER_MANIFEST_NAME),
     );
     await fs.promises.symlink(
-      MANIFEST_NAME,
+      `.generated/${MANIFEST_NAME}`,
       path.join(fixture.mockupsDir, "metadata.json"),
     );
     for (const body of [
-      `<a href="../${route}">Metadata</a>`,
-      `<img alt="Metadata" src="../${route}" />`,
+      `<a href="../../${route}">Metadata</a>`,
+      `<img alt="Metadata" src="../../${route}" />`,
     ]) {
       await fs.promises.writeFile(
         fixture.entryPath,
@@ -180,25 +184,27 @@ for (const route of metadataRoutes) {
 
 for (const includeChanges of [false, true]) {
   test(`publication omits internal metadata and preserves public JSON (changes: ${includeChanges})`, async (context) => {
-    const fixture = await createFixture();
+    const fixture = await createFixture(
+      validEntrySource({ body: '<a href="../../public.json">Public</a>' }),
+    );
     context.after(() => removeFixture(fixture));
     const config = await loadConfig(fixture.root);
-    await writeCompilation(await compileCatalogue(config), config);
-    await fs.promises.copyFile(
-      path.join(fixture.mockupsDir, MANIFEST_NAME),
-      path.join(fixture.mockupsDir, LEGACY_MANIFEST_NAME),
-    );
-    await fs.promises.copyFile(
-      path.join(fixture.mockupsDir, MANIFEST_NAME),
-      path.join(fixture.mockupsDir, FORMER_MANIFEST_NAME),
-    );
-    await fs.promises.symlink(
-      MANIFEST_NAME,
-      path.join(fixture.mockupsDir, "metadata.json"),
-    );
     await fs.promises.writeFile(
       path.join(fixture.mockupsDir, "public.json"),
       publicJson,
+    );
+    await writeCompilation(await compileCatalogue(config), config);
+    await fs.promises.copyFile(
+      path.join(config.generatedDir, MANIFEST_NAME),
+      path.join(fixture.mockupsDir, LEGACY_MANIFEST_NAME),
+    );
+    await fs.promises.copyFile(
+      path.join(config.generatedDir, MANIFEST_NAME),
+      path.join(fixture.mockupsDir, FORMER_MANIFEST_NAME),
+    );
+    await fs.promises.symlink(
+      `.generated/${MANIFEST_NAME}`,
+      path.join(fixture.mockupsDir, "metadata.json"),
     );
     if (includeChanges) {
       const runner = new NodeGitCommandRunner(fixture.root);
@@ -244,13 +250,20 @@ test("the former Mokabook manifest is accepted only from Git history", async (co
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
+  const {
+    assetClosure: _closure,
+    blobHashAlgorithm: _algorithm,
+    generatedFiles: _files,
+    ...legacy
+  } = compilation.manifest;
   const formerManifest = {
-    ...compilation.manifest,
+    ...legacy,
+    schemaVersion: 5,
     generatedBy: "mokabook",
   };
   assert.throws(
     () => parseManifest(formerManifest),
-    /expected Mokly manifest schema version 5/,
+    /expected Mokly manifest schema version 6/,
   );
   await fs.promises.writeFile(
     path.join(fixture.mockupsDir, FORMER_MANIFEST_NAME),
@@ -270,7 +283,7 @@ test("the former Mokabook manifest is accepted only from Git history", async (co
   ]);
   const git = new CommittedRepository(runner);
   const baseline = await readBaseManifest(git.reader, "HEAD", config);
-  assert.deepEqual(baseline, compilation.manifest);
+  assert.deepEqual(baseline, { ...legacy, schemaVersion: 5 });
   const reader = new GitReviewAssetReader(
     config,
     git.reader,
@@ -290,13 +303,19 @@ for (const schemaVersion of [2, 3, 4, 5]) {
     const config = await loadConfig(fixture.root);
     const compilation = await compileCatalogue(config);
     await writeCompilation(compilation, config);
-    const { sourceFiles: _sources, ...historical } = compilation.manifest;
+    const {
+      assetClosure: _closure,
+      blobHashAlgorithm: _algorithm,
+      generatedFiles: _files,
+      ...legacy
+    } = compilation.manifest;
+    const { sourceFiles: _sources, ...historical } = legacy;
     const manifest =
       schemaVersion === 5
-        ? compilation.manifest
+        ? { ...legacy, schemaVersion: 5 }
         : schemaVersion === 4
           ? {
-              ...compilation.manifest,
+              ...legacy,
               schemaVersion: 4,
               entries: compilation.manifest.entries.map(
                 ({ declaredDependencies: _declared, ...entry }) => entry,
@@ -309,8 +328,7 @@ for (const schemaVersion of [2, 3, 4, 5]) {
               legacyPages: [],
             };
     const filename = schemaVersion === 2 ? LEGACY_MANIFEST_NAME : MANIFEST_NAME;
-    if (schemaVersion === 2)
-      await fs.promises.rm(path.join(fixture.mockupsDir, MANIFEST_NAME));
+    await fs.promises.rm(config.generatedDir, { recursive: true, force: true });
     await fs.promises.writeFile(
       path.join(fixture.mockupsDir, filename),
       JSON.stringify(manifest),

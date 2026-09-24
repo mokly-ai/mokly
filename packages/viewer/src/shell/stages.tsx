@@ -5,22 +5,30 @@
 
 import type { ReactNode } from "react";
 
+import {
+  currentDocumentPath,
+  type GeneratedPathPrefix,
+} from "../catalogue/delivery_paths.js";
 import type { GeneratedComponentView } from "../components/views.js";
-import { encodeUrlPath } from "../data/paths.js";
 import { routedEntries } from "../viewer/selection.js";
 
 import type { Catalogue } from "./catalogue.js";
 import { ComponentStage } from "./component_stage.js";
 import { FramesStage, UseCaseFlowStage } from "./manifest_stages.js";
 import { PublicStage } from "./public_stage.js";
+import { framePath } from "./stage_sources.js";
 import type { RouteTarget } from "./target.js";
 
-function fragmentSrc(route: string, fragment?: string): string {
-  const source = `/static/${encodeUrlPath(route)}`;
-  return fragment ? `${source}#${encodeURIComponent(fragment)}` : source;
+function fragmentSrc(
+  route: string,
+  fragment?: string,
+  prefix?: GeneratedPathPrefix,
+): string {
+  return framePath(currentDocumentPath(route, prefix), fragment);
 }
 
 function EmbedStage(props: {
+  prefix?: GeneratedPathPrefix;
   route: string;
   title: string;
   fragment?: string;
@@ -31,7 +39,7 @@ function EmbedStage(props: {
         className="mbk-frag"
         sandbox="allow-same-origin"
         data-mokly-fragment-frame=""
-        src={fragmentSrc(props.route, props.fragment)}
+        src={fragmentSrc(props.route, props.fragment, props.prefix)}
         title={props.title}
       />
     </div>
@@ -57,6 +65,11 @@ export function TargetStage(props: {
   variantId?: string | undefined;
 }) {
   const entry = props.target.entry;
+  const prefix =
+    props.catalogue.manifest.schemaVersion === 6 ||
+    props.catalogue.manifest.schemaVersion === "live-index-1"
+      ? (".generated" as const)
+      : undefined;
   const model = props.catalogue.publicModel;
   if (model) {
     const current = routedEntries(model).find((item) => item.id === entry.id)!;
@@ -74,6 +87,7 @@ export function TargetStage(props: {
   if (entry.kind === "page")
     return (
       <EmbedStage
+        {...(prefix ? { prefix } : {})}
         route={entry.route}
         title={entry.title}
         {...(props.fragment ? { fragment: props.fragment } : {})}
@@ -85,6 +99,7 @@ export function TargetStage(props: {
       entry.variants[0]!;
     return (
       <ComponentStage
+        {...(prefix ? { prefix } : {})}
         title={entry.title}
         variant={variant}
         {...(props.previewViews ? { previewViews: props.previewViews } : {})}
@@ -93,6 +108,7 @@ export function TargetStage(props: {
   }
   return entry.kind === "screen" ? (
     <FramesStage
+      {...(prefix ? { prefix } : {})}
       {...(props.fragment ? { fragment: props.fragment } : {})}
       hasDarkFragments={props.catalogue.hasDarkFragments}
       screen={entry}

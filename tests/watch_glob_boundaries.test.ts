@@ -147,7 +147,7 @@ test("watch pruning derives denied-leaf directory status from supplied stats", a
   assert.equal(isPackageOwnedIgnoredWatchPath(deniedLeaf, config), false);
   assert.equal(isPackageOwnedIgnoredWatchPath(unowned, config), false);
   assert.ok(calls.readFileSync > 0);
-  assert.ok(calls.openSync > 0);
+  assert.equal(calls.openSync, 0);
 });
 
 test("a notification gate reports classifier errors and keeps delivering", async (context) => {

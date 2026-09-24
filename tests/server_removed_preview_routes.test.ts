@@ -4,11 +4,11 @@ import test from "node:test";
 import { readCatalogue } from "@mokly/viewer";
 import { parseRemovedPagePreview, parseReviewResult } from "@mokly/viewer/data";
 
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { readCatalogueChanges } from "../dist/server/component_changes.js";
 import { configuredServedReview } from "../dist/server/configured_review.js";
 import { startCatalogueServer } from "../dist/server/http.js";
 
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import {
   createRemovedDeliveryFixture,
   REMOVED_BASELINE_IMAGE_BYTES,

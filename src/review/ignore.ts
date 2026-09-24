@@ -1,5 +1,7 @@
 import { generatedSource } from "../build/ownership.js";
 
+import { normalizeDocumentUrls } from "./normalize_urls.js";
+
 const ID = "[a-z0-9]+(?:-[a-z0-9]+)*";
 const KEY = "[a-f0-9]{64}";
 const MARKER_SCAN = /<!--mokly-review-ignore:[\s\S]*?-->/g;
@@ -35,6 +37,8 @@ interface ParsedDocument {
 export interface NormalizedReviewPair {
   base: string;
   head: string;
+  comparisonBase?: string;
+  comparisonHead?: string;
   ignoredIds: readonly string[];
 }
 
@@ -50,6 +54,12 @@ export function normalizeReviewPair(
   baseHtml: string,
   headHtml: string,
   route: string,
+  layouts?: {
+    before: string;
+    after: string;
+    beforeRoutes?: ReadonlySet<string>;
+    afterRoutes?: ReadonlySet<string>;
+  },
 ): NormalizedReviewPair {
   const base = parseDocument(baseHtml, route);
   const head = parseDocument(headHtml, route);
@@ -83,7 +93,27 @@ export function normalizeReviewPair(
       (id) => base.regions.get(id)?.content !== head.regions.get(id)?.content,
     )
     .sort();
-  return { base: normalizedBase, head: normalizedHead, ignoredIds };
+  return {
+    base: normalizedBase,
+    head: normalizedHead,
+    ignoredIds,
+    ...(layouts && layouts.before !== layouts.after
+      ? {
+          comparisonBase: normalizeDocumentUrls(
+            normalizedBase,
+            route,
+            layouts.before,
+            layouts.beforeRoutes,
+          ),
+          comparisonHead: normalizeDocumentUrls(
+            normalizedHead,
+            route,
+            layouts.after,
+            layouts.afterRoutes,
+          ),
+        }
+      : {}),
+  };
 }
 
 /** Validate and strip markers while retaining real child content. */

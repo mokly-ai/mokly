@@ -7,6 +7,7 @@ import type {
   InstanceRef,
   ViewerSelection,
 } from "@mokly/viewer";
+import { currentDocumentPath } from "@mokly/viewer/data";
 
 import { followupFixture } from "./viewer_followup_fixture.js";
 
@@ -101,9 +102,10 @@ function screenVariantCatalogue(): CatalogueReadModel {
     },
     views: parent.views.map((view) => ({
       ...view,
-      fragmentPath: `static/screens/home.variants/error.${view.viewport}${
-        view.colorScheme === "dark" ? ".dark" : ""
-      }.html`,
+      fragmentPath: currentDocumentPath(
+        `screens/home.variants/error.${view.viewport}${view.colorScheme === "dark" ? ".dark" : ""}.html`,
+        model.generatedPathPrefix,
+      ),
       comparison:
         view.viewport === "mobile" && view.colorScheme === "dark"
           ? {

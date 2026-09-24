@@ -10,16 +10,17 @@ import type {
 
 import { isAuthoringSource } from "../build/source_inventory.js";
 import { isInside, toPosixPath } from "../config/paths.js";
+import { GENERATED_DIRECTORY } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
+import { generatedManifestRoutes } from "../registry/generated_routes.js";
 import {
   FORMER_MANIFEST_NAME,
   LEGACY_MANIFEST_NAME,
   MANIFEST_NAME,
 } from "../registry/manifest.js";
 import {
-  FileSystemReviewAssetReader,
   GitReviewAssetReader,
   type OptionalReviewAssetReader,
 } from "../review/assets.js";
@@ -41,7 +42,7 @@ export interface ChangedContent {
 }
 
 /**
- * Find material document/resource changes using live files or a captured reader.
+ * Find material document/resource changes using an accepted captured reader.
  * Exclude authoring paths lexically so retargeted public aliases still reach validation.
  */
 export async function changedContentPaths(
@@ -51,9 +52,7 @@ export async function changedContentPaths(
   git: BaselineReader,
   commit: string,
   changedPaths: readonly string[],
-  headReader: OptionalReviewAssetReader = new FileSystemReviewAssetReader(
-    config,
-  ),
+  headReader: OptionalReviewAssetReader,
   documents: "all" | "pages" = "all",
 ): Promise<readonly string[]> {
   return (
@@ -78,13 +77,22 @@ export async function classifyChangedContent(
   git: BaselineReader,
   commit: string,
   changedPaths: readonly string[],
-  headReader: OptionalReviewAssetReader = new FileSystemReviewAssetReader(
-    config,
-  ),
+  headReader: OptionalReviewAssetReader,
   documents: "all" | "pages" = "all",
 ): Promise<ChangedContent> {
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
-  const repoPath = (route: string) => (prefix ? `${prefix}/${route}` : route);
+  const generatedPaths = generatedManifestRoutes(manifest);
+  const baselinePaths = generatedManifestRoutes(baseline);
+  const basePrefix =
+    git.catalogue?.layout === "generated-v6" ? GENERATED_DIRECTORY : "";
+  const headLayout = { prefix: GENERATED_DIRECTORY, routes: generatedPaths };
+  const baseLayout = { prefix: basePrefix, routes: baselinePaths };
+  const repoPath = (route: string) => {
+    const relative = generatedPaths.has(route)
+      ? `${GENERATED_DIRECTORY}/${route}`
+      : route;
+    return prefix ? `${prefix}/${relative}` : relative;
+  };
   const publicChanges = new Set(
     changedPaths.flatMap((changed) => {
       const candidate = path.resolve(config.repoRoot, changed);
@@ -108,6 +116,7 @@ export async function classifyChangedContent(
     git,
     commit,
     prefix,
+    baseline,
   );
   const result = new Set<string>();
   const normalizedDocuments = new Map<string, string>();
@@ -137,10 +146,18 @@ export async function classifyChangedContent(
       const after =
         headDocuments.get(pair.head) ??
         Buffer.from(await headReader.read(pair.head)).toString("utf8");
-      const normalized = normalizeReviewPair(before, after, pair.context);
+      const normalized = normalizeReviewPair(before, after, pair.head, {
+        before: basePrefix,
+        after: GENERATED_DIRECTORY,
+        beforeRoutes: baselinePaths,
+        afterRoutes: generatedPaths,
+      });
       normalizedDocuments.set(pair.head, normalized.head);
       normalizedBases.set(pair.head, normalized.base);
-      if (normalized.base !== normalized.head) {
+      if (
+        (normalized.comparisonBase ?? normalized.base) !==
+        (normalized.comparisonHead ?? normalized.head)
+      ) {
         result.add(repoPath(pair.head));
         publicChanges.add(pair.head);
       } else if (pair.base === pair.head) publicChanges.delete(pair.head);
@@ -158,6 +175,8 @@ export async function classifyChangedContent(
     normalizedDocuments,
     undefined,
     true,
+    headLayout,
+    baseLayout,
   );
   await timeAsync("review.compare-screens", async () => {
     for (let offset = 0; offset < pairs.length; offset += 32) {
@@ -172,7 +191,7 @@ export async function classifyChangedContent(
           normalizedDocuments.set(
             pair.head,
             pair.base
-              ? normalizeReviewPair(after, after, pair.context).head
+              ? normalizeReviewPair(after, after, pair.head).head
               : normalizeSingleDocument(after, pair.context),
           );
         }

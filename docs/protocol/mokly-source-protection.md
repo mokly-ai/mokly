@@ -2,9 +2,9 @@
 
 ## Delivery Status
 
-Implemented for historical schema-v5 [pages](./mokly-pages.md), screens, and flows;
-the v6 closure is the approved target in
-[Generated Output Simplification](../../plans/generated-output-simplification.md).
+Implemented for schema-v6 [pages](./mokly-pages.md), screens, flows, and the
+referenced asset closure; historical schema-v5 sources remain readable for
+comparisons. See [Generated Output Simplification](../../plans/generated-output-simplification.md).
 The same resolved inventory protects build, runtime, comparisons, and both
 publication options. Verification is tracked in
 [Unified Catalogue Pages](../../plans/unified-catalogue-pages.md); the
@@ -106,6 +106,9 @@ authored HTML can be a closure asset and its links must be traversed. `README`, 
 other unreferenced files remain private without special name-based exclusions.
 A referenced protected source, symlink, missing file, or escape fails the build
 with its referring route; public readers return not found for unlisted files.
+The closure validator also rejects hidden path segments under the existing
+private static-resource rule before serving or exporting the result; a
+referenced hidden path fails `build-invalid` with its referring resource.
 The same closure governs Serve, export, publication and Review. Never use a
 plain generated marker to grant asset access.
 

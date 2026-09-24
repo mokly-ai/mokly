@@ -33,7 +33,7 @@ for (const width of [390, 1280]) {
     await expect(frame).toHaveCount(1);
     await expect(frame).toHaveAttribute(
       "src",
-      /\/static\/handbook.html#next-steps$/,
+      /\/static\/\.generated\/handbook.html#next-steps$/,
     );
     await expect(frame).toHaveAttribute("sandbox", "allow-same-origin");
     await expect(

@@ -46,9 +46,11 @@ for (const cross of [false, true]) {
             document.querySelector<HTMLIFrameElement>("#frame")!,
             {
               url: new URL(
-                "/static/screens/home.mobile.html",
+                "/static/.generated/screens/home.mobile.html",
                 cross ? origin : location.origin,
               ),
+              route: "screens/home.mobile.html",
+              generatedPathPrefix: ".generated",
               usage: { status },
             },
           )) as ReadinessWindow["mounted"];

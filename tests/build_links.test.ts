@@ -188,7 +188,7 @@ test("framework-emitted stylesheet URLs encode path segments", async (context) =
   const compilation = await compileCatalogue(config);
   const mobile = compilation.outputs.get("screens/home.mobile.html") ?? "";
 
-  assert.match(mobile, /href="\.\.\/theme%20%231\.css"/);
+  assert.match(mobile, /href="\.\.\/\.\.\/theme%20%231\.css"/);
 });
 
 test("stylesheet rules match catalogue routes for every viewport", async (context) => {
@@ -216,7 +216,7 @@ test("stylesheet rules match catalogue routes for every viewport", async (contex
     const home = compilation.outputs.get(`screens/home.${viewport}.html`) ?? "";
     const details =
       compilation.outputs.get(`screens/details.${viewport}.html`) ?? "";
-    assert.match(home, /href="\.\.\/home\.css"/);
+    assert.match(home, /href="\.\.\/\.\.\/home\.css"/);
     assert.doesNotMatch(details, /home\.css/);
   }
 });

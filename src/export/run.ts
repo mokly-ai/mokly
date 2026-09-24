@@ -5,6 +5,7 @@ import { projectRealPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError, errorMessage } from "../errors.js";
 import { removedManifestEntries } from "../registry/changes.js";
+import { parseManifest } from "../registry/manifest.js";
 import { readBaseManifest } from "../review/base_manifest.js";
 import { reviewChangedPaths } from "../review/changed_paths.js";
 import { compareReview } from "../review/compare.js";
@@ -69,7 +70,11 @@ async function generateExport(
     const compilation = await compileCatalogue(config);
     config = { ...config, sourceFiles: compilation.manifest.sourceFiles };
     assertExportActive(options.signal);
-    const publicFiles = await capturePublicFiles(config, compilation.outputs);
+    const publicFiles = await capturePublicFiles(
+      config,
+      compilation.outputs,
+      parseManifest(compilation.manifest).assetClosure,
+    );
     const assetReader = capturedAssetReader(publicFiles, config);
     const exclusions = [output, transaction.reservationRoot];
     const changed = prepared

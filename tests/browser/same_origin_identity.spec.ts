@@ -35,7 +35,12 @@ test("an unowned same-origin document gains no navigation privilege during hando
     state.mounted = await sameOriginAdapter().mount(
       document.querySelector<HTMLIFrameElement>("#frame")!,
       {
-        url: new URL("/static/screens/home.mobile.html", location.origin),
+        url: new URL(
+          "/static/.generated/screens/home.mobile.html",
+          location.origin,
+        ),
+        route: "screens/home.mobile.html",
+        generatedPathPrefix: ".generated",
         usage: { status: "unavailable" },
       },
     );
@@ -53,11 +58,14 @@ test("an unowned same-origin document gains no navigation privilege during hando
   const requestReleased = new Promise<void>((resolve) => {
     releaseRequest = resolve;
   });
-  await page.route("**/static/screens/home.mobile.html", async (route) => {
-    reportRequest();
-    await requestReleased;
-    await route.continue();
-  });
+  await page.route(
+    "**/static/.generated/screens/home.mobile.html",
+    async (route) => {
+      reportRequest();
+      await requestReleased;
+      await route.continue();
+    },
+  );
 
   try {
     await page.evaluate(async () => {
@@ -69,7 +77,12 @@ test("an unowned same-origin document gains no navigation privilege during hando
       state.replacement = sameOriginAdapter().mount(
         document.querySelector<HTMLIFrameElement>("#frame")!,
         {
-          url: new URL("/static/screens/home.mobile.html", location.origin),
+          url: new URL(
+            "/static/.generated/screens/home.mobile.html",
+            location.origin,
+          ),
+          route: "screens/home.mobile.html",
+          generatedPathPrefix: ".generated",
           usage: { status: "unavailable" },
           onEvent,
         },
@@ -126,7 +139,12 @@ test("an unowned exact-resource document gains no navigation privilege during ha
     state.mounted = await sameOriginAdapter().mount(
       document.querySelector<HTMLIFrameElement>("#frame")!,
       {
-        url: new URL("/static/screens/home.mobile.html", location.origin),
+        url: new URL(
+          "/static/.generated/screens/home.mobile.html",
+          location.origin,
+        ),
+        route: "screens/home.mobile.html",
+        generatedPathPrefix: ".generated",
         usage: { status: "unavailable" },
       },
     );
@@ -142,7 +160,7 @@ test("an unowned exact-resource document gains no navigation privilege during ha
     releaseRequest = resolve;
   });
   await page.route(
-    "**/static/screens/home.mobile.html?handoff=exact",
+    "**/static/.generated/screens/home.mobile.html?handoff=exact",
     async (route) => {
       matchingRequests++;
       if (matchingRequests === 1) {
@@ -163,7 +181,7 @@ test("an unowned exact-resource document gains no navigation privilege during ha
         .locator("#frame")
         .evaluate((element: HTMLIFrameElement) =>
           element.contentDocument?.URL.endsWith(
-            "/static/screens/home.mobile.html?handoff=exact",
+            "/static/.generated/screens/home.mobile.html?handoff=exact",
           ),
         ),
     )
@@ -180,9 +198,11 @@ test("an unowned exact-resource document gains no navigation privilege during ha
         document.querySelector<HTMLIFrameElement>("#frame")!,
         {
           url: new URL(
-            "/static/screens/home.mobile.html?handoff=exact",
+            "/static/.generated/screens/home.mobile.html?handoff=exact",
             location.origin,
           ),
+          route: "screens/home.mobile.html",
+          generatedPathPrefix: ".generated",
           usage: { status: "unavailable" },
           onEvent,
         },

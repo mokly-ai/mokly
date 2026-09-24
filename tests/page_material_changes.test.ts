@@ -3,14 +3,14 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { computeChangedRoutes } from "../dist/server/changed.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { validEntrySource } from "./helpers/fixture.js";
 
 const document =
-  '<html><head><link rel="stylesheet" href="document.css"></head><body><!--mokly-review-ignore:start:nav--><nav>Old navigation</nav><!--mokly-review-ignore:end:nav--><main>Document content</main></body></html>';
+  '<html><head><link rel="stylesheet" href="../document.css"></head><body><!--mokly-review-ignore:start:nav--><nav>Old navigation</nav><!--mokly-review-ignore:end:nav--><main>Document content</main></body></html>';
 const source =
   validEntrySource() +
   `
@@ -82,12 +82,15 @@ test("Changes cannot treat a historical authoring input as a deleted public reso
   await fs.writeFile(fixture.entryPath, validEntrySource());
   await fixture.build();
   await fs.rm(path.join(fixture.mockupsDir, "helper.js"));
-  const fragment = path.join(fixture.mockupsDir, "screens/home.mobile.html");
+  const fragment = path.join(
+    fixture.config.generatedDir,
+    "screens/home.mobile.html",
+  );
   await fs.writeFile(
     fragment,
     (await fs.readFile(fragment, "utf8")).replace(
       "</head>",
-      '<script src="../helper.js"></script></head>',
+      '<script src="../../helper.js"></script></head>',
     ),
   );
   assert.deepEqual(

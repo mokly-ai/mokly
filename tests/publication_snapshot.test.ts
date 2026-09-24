@@ -81,7 +81,7 @@ for (const includeChanges of [false, true]) {
       ]);
     }
     const originalManifest = await fs.promises.readFile(
-      path.join(fixture.mockupsDir, "mokly-manifest.json"),
+      path.join(fixture.mockupsDir, ".generated/mokly-manifest.json"),
     );
     await fs.promises.appendFile(
       fixture.entryPath,
@@ -95,12 +95,14 @@ for (const includeChanges of [false, true]) {
     );
     assert.deepEqual(
       await fs.promises.readFile(
-        path.join(fixture.mockupsDir, "mokly-manifest.json"),
+        path.join(fixture.mockupsDir, ".generated/mokly-manifest.json"),
       ),
       originalManifest,
     );
     assert.equal(
-      fs.existsSync(path.join(fixture.mockupsDir, "publication-added.html")),
+      fs.existsSync(
+        path.join(fixture.mockupsDir, ".generated/publication-added.html"),
+      ),
       false,
     );
     const read = (file: string) =>
@@ -110,7 +112,10 @@ for (const includeChanges of [false, true]) {
       await read("view/publication-added.html"),
       /Added during publication/,
     );
-    assert.match(await read("static/publication-added.html"), /Added document/);
+    assert.match(
+      await read("static/.generated/publication-added.html"),
+      /Added document/,
+    );
     assert.match(
       await read("_redirects"),
       /\/id\/publication-added \/view\/publication-added 302/,

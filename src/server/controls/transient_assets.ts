@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import type { ComponentViewRecord, ComponentWireProps } from "@mokly/viewer";
-import { ComponentRenderError, isSafeRepositoryPath } from "@mokly/viewer/data";
+import { ComponentRenderError, generatedViews } from "@mokly/viewer/data";
 import { createCatalogue } from "@mokly/viewer/server";
 
 import { adaptBrowseDocument } from "../../browse/document_adapter.js";
@@ -12,11 +12,9 @@ import {
   publicFileFailureReason,
 } from "../../config/public_files.js";
 import type { ResolvedConfig } from "../../config/types.js";
-import {
-  extractCssReferences,
-  extractHtmlReferences,
-} from "../../html_references.js";
 import type { CatalogueMetadata } from "../../registry/catalogue_index.js";
+import { referencedRoutes } from "../../review/asset_references.js";
+import { rebaseGeneratedSnapshotUrls } from "../../review/normalize_urls.js";
 import { contentType } from "../respond.js";
 
 import { rebaseTransientNavigation } from "./transient_links.js";
@@ -40,6 +38,13 @@ export function captureRenderBundle(
   readGenerated?: (route: string) => string | undefined,
 ): ReadonlyMap<string, RenderFile> {
   const catalogue = createCatalogue(manifest);
+  const generatedRoutes = new Set(
+    manifest.entries.flatMap((entry) => [
+      ...(entry.kind === "page" ? [entry.route] : []),
+      ...generatedViews(entry).map((view) => view.path),
+    ]),
+  );
+  const layout = { prefix: ".generated", routes: generatedRoutes };
   const files = new Map<string, RenderFile>();
   const pending = [route];
   let size = 0;
@@ -57,17 +62,30 @@ export function captureRenderBundle(
         ? fs.readFileSync(candidate)
         : Buffer.from(generated);
     const type = contentType(current);
-    const references = type.startsWith("text/html")
-      ? extractHtmlReferences(bytes.toString()).resources
-      : type.startsWith("text/css")
-        ? extractCssReferences(bytes.toString())
-        : [];
+    const references = referencedRoutes(
+      current,
+      bytes,
+      { resourceHints: false },
+      layout,
+    );
     if (type.startsWith("text/html"))
       bytes = Buffer.from(
-        rebaseTransientNavigation(
-          adaptBrowseDocument(bytes.toString(), current, catalogue),
-          current,
-        ),
+        generated === undefined
+          ? rebaseTransientNavigation(
+              adaptBrowseDocument(bytes.toString(), current, catalogue),
+              current,
+              generatedRoutes,
+            )
+          : rebaseGeneratedSnapshotUrls(
+              rebaseTransientNavigation(
+                adaptBrowseDocument(bytes.toString(), current, catalogue),
+                `.generated/${current}`,
+                generatedRoutes,
+              ),
+              current,
+              ".generated",
+              generatedRoutes,
+            ),
       );
     size += bytes.byteLength;
     if (size > RENDER_BYTES)
@@ -76,15 +94,7 @@ export function captureRenderBundle(
         "The preview is too large. Reduce its content and try again.",
       );
     files.set(current, { type, bytes });
-    for (const reference of references) {
-      const value = reference;
-      if (!value || /^(?:[a-z][a-z0-9+.-]*:|#|\?|\/)/i.test(value)) continue;
-      const pathname = decodeURIComponent(value.split(/[?#]/, 1)[0]!);
-      const target = path.posix.normalize(
-        path.posix.join(path.posix.dirname(current), pathname),
-      );
-      if (!isSafeRepositoryPath(target))
-        throw new Error("Preview resource escapes its bundle");
+    for (const target of references) {
       if (!files.has(target) && !pending.includes(target)) pending.push(target);
     }
   }

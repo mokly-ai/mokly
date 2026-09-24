@@ -1,0 +1,32 @@
+/* Exclusive shared-component styles. Global and layout rules stay shared. */
+
+.mbk-cmp-toolbar {
+  align-items: center;
+  background: var(--chrome-surface);
+  border-bottom: 1px solid var(--chrome-border);
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
+  padding: 8px 24px;
+}
+
+.mbk-cmp-refresh {
+  align-items: center;
+  color: var(--mbk-sage);
+  display: inline-flex;
+  font-size: 20px;
+  height: 26px;
+  justify-content: center;
+  margin-left: auto;
+  width: 26px;
+}
+
+.mbk-shell--mobile .mbk-cmp-toolbar {
+  padding: 8px 12px;
+}
+
+.ce-design .mbk-cmp-toolbar {
+  flex-shrink: 0;
+}

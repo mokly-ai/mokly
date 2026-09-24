@@ -21,6 +21,7 @@ import {
   normalizeReviewPair,
   normalizeSingleDocument,
 } from "./ignore.js";
+import { normalizeDocumentUrls } from "./normalize_urls.js";
 
 export interface UnchangedComponentAttempt {
   comparison?: ComparedComponentView;
@@ -42,14 +43,33 @@ export async function compareUnchangedComponentView(
     normalizeHistoricalDocument(base),
     head,
     after.path,
+    {
+      before: context.beforeReader.generated.prefix,
+      after: context.afterReader.generated.prefix,
+      beforeRoutes: context.beforeReader.generated.routes,
+      afterRoutes: context.afterReader.generated.routes,
+    },
   );
-  if (retained.base !== retained.head) return {};
+  if (
+    (retained.comparisonBase ?? retained.base) !==
+    (retained.comparisonHead ?? retained.head)
+  )
+    return {};
   if (!componentUsageTopologyEqual(before.usage, after.usage)) return {};
 
   const strippedBase = stripHistoricalMarkers(base);
   const strippedHead = stripComponentMarkers(head);
-  const actual = normalizeReviewPair(strippedBase, strippedHead, after.path);
-  if (actual.base !== actual.head) return {};
+  const actual = normalizeReviewPair(strippedBase, strippedHead, after.path, {
+    before: context.beforeReader.generated.prefix,
+    after: context.afterReader.generated.prefix,
+    beforeRoutes: context.beforeReader.generated.routes,
+    afterRoutes: context.afterReader.generated.routes,
+  });
+  if (
+    (actual.comparisonBase ?? actual.base) !==
+    (actual.comparisonHead ?? actual.head)
+  )
+    return {};
 
   const hasOwnershipEdits = [before.usage, after.usage].some(
     (usage) =>
@@ -65,7 +85,22 @@ export async function compareUnchangedComponentView(
   const excluded = prepared?.excluded;
   const fallback = (): UnchangedComponentAttempt =>
     prepared ? { prepared } : {};
-  if (projected && projected.before !== projected.after) return fallback();
+  if (
+    projected &&
+    normalizeDocumentUrls(
+      projected.before,
+      before.path,
+      context.beforeReader.generated.prefix,
+      context.beforeReader.generated.routes,
+    ) !==
+      normalizeDocumentUrls(
+        projected.after,
+        after.path,
+        context.afterReader.generated.prefix,
+        context.afterReader.generated.routes,
+      )
+  )
+    return fallback();
 
   const afterResources = await context.afterReader.resources(
     after.path,
@@ -131,8 +166,18 @@ export async function compareUnchangedComponentView(
     ...(signals.structure ? [{ kind: "structure" as const }] : []),
   ];
   const rawEqual =
-    normalizeSingleDocument(strippedBase, after.path) ===
-    normalizeSingleDocument(strippedHead, after.path);
+    normalizeDocumentUrls(
+      normalizeSingleDocument(strippedBase, after.path),
+      before.path,
+      context.beforeReader.generated.prefix,
+      context.beforeReader.generated.routes,
+    ) ===
+    normalizeDocumentUrls(
+      normalizeSingleDocument(strippedHead, after.path),
+      after.path,
+      context.afterReader.generated.prefix,
+      context.afterReader.generated.routes,
+    );
   return {
     ...(prepared ? { prepared } : {}),
     comparison: {

@@ -2,6 +2,7 @@ import path from "node:path";
 
 import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
+import type { BaselineCatalogue } from "./catalogue.js";
 import { BaselineError } from "./errors.js";
 
 export const BASELINE_CACHE_PATH = ".mokly-cache/baselines";
@@ -16,7 +17,9 @@ export interface CompletionMarker {
   readonly commit: string;
   readonly finishedAt: string;
   readonly commands: readonly (readonly string[])[];
-  readonly manifestVersion: 2 | 3 | 4 | 5;
+  readonly manifestVersion: 2 | 3 | 4 | 5 | 6;
+  readonly historicalCatalogueRoot?: string;
+  readonly layout?: BaselineCatalogue["layout"];
 }
 
 export interface CacheLayout {
@@ -48,7 +51,7 @@ export function cacheLayout(repoRoot: string, commit: string): CacheLayout {
 
 export function assertMockupsPath(value: string): void {
   if (
-    !isSafeRepositoryPath(value) ||
+    (value !== "." && !isSafeRepositoryPath(value)) ||
     value === ".mokly-cache" ||
     value.startsWith(".mokly-cache/")
   )
@@ -88,7 +91,18 @@ export function parseCompletionMarker(
     typeof marker.finishedAt !== "string" ||
     !Number.isFinite(Date.parse(marker.finishedAt)) ||
     !validCommands(marker.commands) ||
-    ![2, 3, 4, 5].includes(marker.manifestVersion ?? 0)
+    ![2, 3, 4, 5, 6].includes(marker.manifestVersion ?? 0) ||
+    (marker.manifestVersion === 6 &&
+      (marker.layout !== "generated-v6" ||
+        !marker.historicalCatalogueRoot ||
+        (marker.historicalCatalogueRoot !== "." &&
+          !isSafeRepositoryPath(marker.historicalCatalogueRoot)))) ||
+    (marker.layout !== undefined &&
+      marker.layout !== "generated-v6" &&
+      marker.layout !== "legacy") ||
+    (marker.historicalCatalogueRoot !== undefined &&
+      marker.historicalCatalogueRoot !== "." &&
+      !isSafeRepositoryPath(marker.historicalCatalogueRoot))
   )
     return;
   return marker as CompletionMarker;

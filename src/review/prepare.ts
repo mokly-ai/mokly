@@ -4,6 +4,11 @@ import { isDeepStrictEqual } from "node:util";
 import { completedBaseline } from "../baseline/cache.js";
 import { cacheLayout } from "../baseline/cache_layout.js";
 import type { CompletionMarker } from "../baseline/cache_layout.js";
+import {
+  baselineCatalogue,
+  joinCataloguePath,
+  type BaselineCatalogue,
+} from "../baseline/catalogue.js";
 import { SystemBaselineClock } from "../baseline/clock.js";
 import { assertBaselineActive, BaselineError } from "../baseline/errors.js";
 import { NodeBaselineFileSystem } from "../baseline/filesystem.js";
@@ -35,6 +40,12 @@ import {
   type BaselineSelection,
   type ReadOnlyReviewRepository,
 } from "./repository.js";
+import {
+  incompleteGeneratedInventory,
+  inventoryDiagnostic,
+  readCommitTree,
+  treeEntryKind,
+} from "./tree_inventory.js";
 
 export interface BaselinePreparationOptions {
   readonly signal?: AbortSignal;
@@ -54,6 +65,7 @@ export interface PreparedReviewRepository extends ReadOnlyReviewRepository {
   readonly marker: CompletionMarker | undefined;
   readonly commit: string;
   readonly selection: BaselineSelection;
+  readonly descriptor: BaselineCatalogue;
   /** Validate retained cache identity again before installing an export. */
   assertUnchanged(): Promise<void>;
 }
@@ -94,16 +106,20 @@ export async function prepareReviewRepository(
   );
   const filesystem =
     options.filesystem ?? new NodeBaselineFileSystem(maintenance);
-  const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
+  const prefix =
+    toPosixPath(path.relative(config.repoRoot, config.mockupsDir)) || ".";
   const blobReader = new CommittedBaselineReader(runner);
   let selection: BaselineSelection = "rebuild";
+  let descriptor = baselineCatalogue(commit, prefix, "generated-v6");
+  const tree = await readCommitTree(runner, commit);
   for (const filename of [
+    `.generated/${MANIFEST_NAME}`,
     MANIFEST_NAME,
     FORMER_MANIFEST_NAME,
     ...(config.compatibility.readManifestV2 ? [LEGACY_MANIFEST_NAME] : []),
   ]) {
-    const candidate = prefix ? `${prefix}/${filename}` : filename;
-    const kind = await blobReader.fileKind(commit, candidate);
+    const candidate = joinCataloguePath(prefix, filename);
+    const kind = treeEntryKind(tree.get(candidate));
     if (kind === "missing") continue;
     if (kind !== "regular")
       throw new MoklyError(
@@ -111,10 +127,28 @@ export async function prepareReviewRepository(
         `historical manifest is not a regular file: ${candidate}`,
       );
     try {
-      parseHistoricalManifest(
+      const manifest = parseHistoricalManifest(
         JSON.parse(await blobReader.readFile(commit, candidate)),
         filename === LEGACY_MANIFEST_NAME,
       );
+      const layout = filename.startsWith(".generated/")
+        ? "generated-v6"
+        : "legacy";
+      if (layout === "generated-v6" && manifest.schemaVersion !== 6)
+        throw new MoklyError(
+          "manifest-invalid",
+          `historical manifest is not v6: ${candidate}`,
+        );
+      descriptor = baselineCatalogue(commit, prefix, layout);
+      if (manifest.schemaVersion === 6 && "generatedFiles" in manifest) {
+        const issue = incompleteGeneratedInventory(tree, descriptor, manifest);
+        if (issue) {
+          const line = inventoryDiagnostic(commit, issue);
+          if (options.diagnostic) options.diagnostic(line);
+          else process.stderr.write(`${line}\n`);
+          break;
+        }
+      }
     } catch (error) {
       if (error instanceof MoklyError) throw error;
       throw new MoklyError(
@@ -148,9 +182,16 @@ export async function prepareReviewRepository(
           )
         ).build(request)
       : undefined;
+  if (rebuilt?.marker.historicalCatalogueRoot && rebuilt.marker.layout)
+    descriptor = baselineCatalogue(
+      commit,
+      rebuilt.marker.historicalCatalogueRoot,
+      rebuilt.marker.layout,
+    );
   return {
     commit,
     selection,
+    descriptor,
     [preparedRepository]: true,
     marker: rebuilt?.marker,
     ...readOnlyRepositoryForCommit(
@@ -160,6 +201,7 @@ export async function prepareReviewRepository(
       runner,
       options.signal,
       filesystem,
+      descriptor,
     ),
     async assertUnchanged() {
       if (!rebuilt) return;

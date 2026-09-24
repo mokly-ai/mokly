@@ -45,7 +45,7 @@ test("a second origin can fetch catalogue and fragment with exact-origin headers
     }
     for (const route of [
       "/__mokly/catalogue.json",
-      "/static/screens/home.mobile.html",
+      "/static/.generated/screens/home.mobile.html",
       "/static/missing.html",
     ]) {
       for (const method of ["GET", "HEAD"] as const) {

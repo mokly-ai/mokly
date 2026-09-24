@@ -14,6 +14,8 @@ import {
 import { analyzeHierarchy } from "../packages/viewer/dist/registry/hierarchy.js";
 import type { ManifestV5 } from "../packages/viewer/dist/registry/types.js";
 
+import { currentManifest } from "./helpers/current_manifest.js";
+
 interface TestEntry {
   childIds?: readonly string[];
   id: string;
@@ -161,7 +163,7 @@ test("manifest validation guards cycles while retaining historical paths", () =>
   assert.ok(screen);
   screen.navPath = ["Historical", "Labels"];
 
-  const parsed = parseManifest(historical);
+  const parsed = parseManifest(currentManifest(historical));
   assert.deepEqual(parsed.entries.find(({ id }) => id === "screen")?.navPath, [
     "Historical",
     "Labels",
@@ -172,7 +174,7 @@ test("manifest validation guards cycles while retaining historical paths", () =>
   assert.ok(nested);
   nested.childIds = ["root"];
   assert.throws(
-    () => parseManifest(malformed),
+    () => parseManifest(currentManifest(malformed)),
     /collection cycle: nested -> root -> nested/,
   );
 

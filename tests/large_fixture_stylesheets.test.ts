@@ -7,12 +7,12 @@ import { promisify } from "node:util";
 
 import { loadConfig } from "../dist/config/load.js";
 import { readManifest } from "../dist/registry/manifest.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 import { expectedStylesheetChanges } from "../scripts/large/browse.mjs";
 
 import { generateLargeFixture } from "./fixtures/large/generate.js";
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const exec = promisify(execFile);
@@ -121,7 +121,7 @@ export async function prepareDerivedToolchain(_repository, root) {
     for (const entry of manifest.entries) {
       for (const view of generatedViews(entry)) {
         const html = await fs.readFile(
-          path.join(config.mockupsDir, view.path),
+          path.join(config.generatedDir, view.path),
           "utf8",
         );
         const linked =

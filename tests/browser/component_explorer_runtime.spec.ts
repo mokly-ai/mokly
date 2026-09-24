@@ -43,6 +43,7 @@ test.beforeAll(async () => {
   server = await startCatalogueServer(fixture.config, {
     base: "main",
     port: 0,
+    generatedOutputs: fixture.after.outputs,
     componentChanges: { baseline: fixture.before.manifest, result },
     review: {
       base: "main",

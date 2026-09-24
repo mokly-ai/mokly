@@ -31,11 +31,11 @@ export class GitTrackedGeneratedOutput implements TrackedGeneratedOutput {
       await requireGitTopLevel(config, this.runner);
       const prefixes = [
         ...new Set([
-          toPosixPath(path.relative(config.repoRoot, config.mockupsDir)),
+          toPosixPath(path.relative(config.repoRoot, config.generatedDir)),
           toPosixPath(
             path.relative(
               projectRealPath(config.repoRoot),
-              projectRealPath(config.mockupsDir),
+              projectRealPath(config.generatedDir),
             ),
           ),
         ]),
@@ -69,15 +69,8 @@ export class GitTrackedGeneratedOutput implements TrackedGeneratedOutput {
         );
       const pathForRoute = (prefix: string, route: string) =>
         prefix ? `${prefix}/${route}` : route;
-      const expected = new Set(
-        prefixes.flatMap((prefix) =>
-          [...compilation.outputs.keys()].map((route) =>
-            pathForRoute(prefix, route),
-          ),
-        ),
-      );
       const tracked = [...new Set(indexed)].filter((name) =>
-        expected.has(name),
+        prefixes.some((prefix) => name.startsWith(`${prefix}/`)),
       );
       if (!tracked.length) return "untracked";
       const missing = [...compilation.outputs.keys()]
@@ -89,7 +82,7 @@ export class GitTrackedGeneratedOutput implements TrackedGeneratedOutput {
         .map((route) => pathForRoute(prefixes[0]!, route))
         .sort();
       if (!missing.length) return "tracked";
-      const root = prefixes[0] || ".";
+      const root = prefixes[0] || ".generated";
       throw new MoklyError(
         "build-invalid",
         `generated output is partly tracked by Git:\ntracked:\n${tracked

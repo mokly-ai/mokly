@@ -58,14 +58,14 @@ test(
         }),
       });
     const generated = await fs.readFile(
-      `${fixture.mockupsDir}/mokly-manifest.json`,
+      `${config.generatedDir}/mokly-manifest.json`,
       "utf8",
     );
     assert.equal((await render(first, "Edited")).status, 200);
     await delay(150);
     assert.deepEqual(await capabilities(), first);
     assert.equal(
-      await fs.readFile(`${fixture.mockupsDir}/mokly-manifest.json`, "utf8"),
+      await fs.readFile(`${config.generatedDir}/mokly-manifest.json`, "utf8"),
       generated,
     );
     await fs.writeFile(fixture.entryPath, "syntax error candidate");

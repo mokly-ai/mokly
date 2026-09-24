@@ -21,7 +21,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
     }) => {
       if (viewport === "mobile" && scheme === "dark")
         await page.route(
-          "**/static/screens/welcome.mobile.dark.html",
+          "**/static/.generated/screens/welcome.mobile.dark.html",
           async (route) => {
             await setTimeout(500);
             await route.continue();
@@ -35,7 +35,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       await expectFrameLoaded(
         frameElement,
         new RegExp(
-          `/static/screens/welcome\\.${suffix.replaceAll(".", "\\.")}$`,
+          `/static/\\.generated/screens/welcome\\.${suffix.replaceAll(".", "\\.")}$`,
         ),
       );
       const frame = frameElement.contentFrame();
@@ -68,7 +68,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
         pathToFileURL(
           path.join(
             repositoryRoot,
-            `examples/basic/generated/screens/welcome.${suffix}`,
+            `examples/basic/.generated/screens/welcome.${suffix}`,
           ),
         ).href,
       );

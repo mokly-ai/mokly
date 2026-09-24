@@ -37,7 +37,10 @@ test("Check ignores local output without Git and validates tracked bytes from th
   assert.equal(await store.check(compilation, config), "untracked");
   await execute("git", ["add", "mockups"], { cwd: root });
   assert.equal(await store.check(compilation, config), "tracked");
-  await fs.writeFile(path.join(root, "mockups/mokly-manifest.json"), "stale");
+  await fs.writeFile(
+    path.join(root, "mockups/.generated/mokly-manifest.json"),
+    "stale",
+  );
   await assert.rejects(() => store.check(compilation, config), {
     code: "build-invalid",
   });
@@ -76,7 +79,10 @@ test("Build writes a new route in a tracked repository before staging it", async
     () => new FileSystemGeneratedOutputStore().check(compilation, config),
     (error: unknown) => {
       assert.match(String(error), /generated output is partly tracked by Git:/);
-      assert.match(String(error), /untracked:\n {2}- mockups\/new-page\.html/);
+      assert.match(
+        String(error),
+        /untracked:\n {2}- mockups\/\.generated\/new-page\.html/,
+      );
       return true;
     },
   );

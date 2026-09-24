@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { baselineCatalogue } from "../dist/baseline/catalogue.js";
 import { runServerChild } from "../dist/server/child.js";
 import { childUpdateMessage } from "../dist/server/update_messages.js";
 
@@ -44,6 +45,7 @@ test("committed child rejects a nested repoRoot on the unselected comparison rou
         "evidence",
         commit,
         "blobs",
+        baselineCatalogue(commit, "mockups", "generated-v6"),
       ),
       undefined,
     );

@@ -94,7 +94,10 @@ export async function smokeConsumerPublish(context, root) {
           marker.files.includes(file),
           `missing protocol artifact ${file}`,
         );
-      assert.equal(marker.files.includes("static/mokly-manifest.json"), false);
+      assert.equal(
+        marker.files.includes("static/.generated/mokly-manifest.json"),
+        false,
+      );
       await inspectPublicCatalogue(unpacked, manifest.comparisonPath);
       if (noChanges) {
         assert.equal(manifest.comparisonPath, null);

@@ -108,23 +108,26 @@ for (const owned of [false, true])
 
 test("derived byte-only image changes take the complete path", async (t) => {
   const source = componentEntrySource({
-    actionRender:
-      '(props) => <button>{props.label}<img src="../image.svg" /></button>',
+    actionRender: "(props) => <button>{props.label}</button>",
   });
-  const fixture = await createFixture(source);
+  const fixture = await createFixture(source, {
+    extraConfig: 'stylesheets: [{ match: "**", stylesheets: ["shared.css"] }],',
+  });
   t.after(() => removeFixture(fixture));
-  await fs.mkdir(path.join(fixture.mockupsDir, "components"));
-  for (const route of ["image.svg", "components/image.svg"])
-    await fs.writeFile(path.join(fixture.mockupsDir, route), "base-image");
+  await fs.writeFile(path.join(fixture.mockupsDir, "image.svg"), "base-image");
+  await fs.writeFile(
+    path.join(fixture.mockupsDir, "shared.css"),
+    'button { background: url("image.svg"); }',
+  );
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
   const baseImages = {
     "image.svg": "base-image",
-    "components/image.svg": "base-image",
+    "shared.css": 'button { background: url("image.svg"); }',
   };
   const headImages = {
     "image.svg": "head-image",
-    "components/image.svg": "head-image",
+    "shared.css": 'button { background: url("image.svg"); }',
   };
   const result = await assertFastPathEquivalent({
     before: compilation.manifest,

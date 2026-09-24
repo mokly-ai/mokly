@@ -6,7 +6,6 @@ import type { Manifest } from "@mokly/viewer/data";
 
 import { compileCatalogue } from "../build/compile.js";
 import { isInside, projectRealPath } from "../config/paths.js";
-import { privateStaticPathReason } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 
@@ -27,27 +26,21 @@ export class CompiledReviewAssetReader extends FileSystemReviewAssetReader {
   override async readLocated(route: string): Promise<LocatedReviewAsset> {
     const content = this.outputs?.get(route);
     if (content === undefined) return super.readLocated(route);
-    const logicalPath = path.resolve(this.headConfig.mockupsDir, route);
+    const logicalPath = path.resolve(this.headConfig.generatedDir, route);
     if (
       !isSafeRepositoryPath(route) ||
-      !isInside(this.headConfig.mockupsDir, logicalPath)
+      !isInside(this.headConfig.generatedDir, logicalPath)
     )
       throw new MoklyError(
         "review-invalid",
         `Generated comparison resource is not public: ${route} (unsafe path)`,
-      );
-    const denial = privateStaticPathReason(logicalPath, this.headConfig);
-    if (denial)
-      throw new MoklyError(
-        "review-invalid",
-        `Generated comparison resource is not public: ${route} (${denial})`,
       );
     return {
       content: Buffer.from(content),
       location: {
         logicalPath,
         physicalPath: path.resolve(
-          projectRealPath(this.headConfig.mockupsDir),
+          projectRealPath(this.headConfig.generatedDir),
           route,
         ),
         relativePath: route,

@@ -34,7 +34,9 @@ for (const includeChanges of [false, true]) {
         "home.desktop.html",
       ])
         assert.equal(
-          fs.existsSync(path.join(output, "static", directory, document)),
+          fs.existsSync(
+            path.join(output, "static/.generated", directory, document),
+          ),
           true,
           document,
         );
@@ -57,10 +59,10 @@ for (const includeChanges of [false, true]) {
       const output = path.join(fixture.root, ".context/published");
       await buildPreview(fixture.config, output, options);
       const before = await fs.promises.readFile(
-        path.join(output, "static", route),
+        path.join(output, "static/.generated", route),
       );
       const original = fs.promises.readdir;
-      const omitted = path.join(fixture.mockupsDir, route);
+      const omitted = path.join(fixture.config.generatedDir, route);
       context.mock.method(
         fs.promises,
         "readdir",
@@ -75,10 +77,15 @@ for (const includeChanges of [false, true]) {
       );
       await buildPreview(fixture.config, output, options);
       assert.deepEqual(
-        await fs.promises.readFile(path.join(output, "static", route)),
+        await fs.promises.readFile(
+          path.join(output, "static/.generated", route),
+        ),
         before,
       );
-      assert.equal(fs.existsSync(path.join(output, "static", route)), true);
+      assert.equal(
+        fs.existsSync(path.join(output, "static/.generated", route)),
+        true,
+      );
     });
   }
 }

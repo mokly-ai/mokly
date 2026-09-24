@@ -89,10 +89,8 @@ export interface MoklyConfig {
   entries?: readonly string[];
   /** Config-relative shorthand for one `entries` glob covering a directory. */
   entriesDir?: string;
-  /** Config-relative generated catalogue/output root. */
+  /** Config-relative authored catalogue directory. */
   mockupsDir: string;
-  /** Additional private POSIX globs relative to mockupsDir; extends shipped defaults. */
-  publicExclude?: readonly string[];
   /** Config-relative repository root; defaults to the config directory. */
   repoRoot?: string;
   /** Optional config-relative consumer renderer module. */
@@ -128,8 +126,8 @@ export interface ResolvedConfig {
   /** Absolute shorthand directory when `entriesDir` supplied the single glob. */
   entriesDir?: string;
   mockupsDir: string;
-  /** Shipped defaults followed by validated consumer exclusions. */
-  readonly publicExclude: readonly string[];
+  /** Mokly-owned generated output, always inside the catalogue directory. */
+  generatedDir: string;
   moduleResolution: ResolvedModuleResolutionConfig;
   renderer?: string;
   repoRoot: string;

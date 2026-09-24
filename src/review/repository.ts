@@ -2,6 +2,10 @@
 import path from "node:path";
 
 import { cacheLayout } from "../baseline/cache_layout.js";
+import {
+  baselineCatalogue,
+  type BaselineCatalogue,
+} from "../baseline/catalogue.js";
 import { NodeBaselineFileSystem } from "../baseline/filesystem.js";
 import { RebuiltBaselineReader } from "../baseline/reader.js";
 import type { BaselineFileSystem } from "../baseline/types.js";
@@ -12,7 +16,6 @@ import { MoklyError } from "../errors.js";
 
 import { CommittedBaselineReader } from "./committed.js";
 import {
-  CommittedRepository,
   type RepositoryEvidence,
   type BaselineReader,
   type GitCommandRunner,
@@ -23,18 +26,11 @@ import { GitRepositoryEvidence } from "./git_evidence.js";
 export interface ReadOnlyReviewRepository {
   readonly evidence: RepositoryEvidence;
   readonly reader: BaselineReader;
+  readonly descriptor?: BaselineCatalogue;
 }
 
 /** Only the parent preparation boundary chooses which historical reader to open. */
 export type BaselineSelection = "blobs" | "rebuild";
-
-/** Explicit Git-blob fixture adapter; production comparisons prepare per commit. */
-export function committedReviewRepository(
-  config: ResolvedConfig,
-  runner: GitCommandRunner = new ConfiguredGitCommandRunner(config),
-): ReadOnlyReviewRepository {
-  return new CommittedRepository(runner);
-}
 
 export function comparisonNotPrepared(): MoklyError {
   return new MoklyError("review-invalid", "The comparison is not prepared");
@@ -48,9 +44,11 @@ export function readOnlyRepositoryForCommit(
   runner: GitCommandRunner = new ConfiguredGitCommandRunner(config),
   signal?: AbortSignal,
   filesystem: BaselineFileSystem = new NodeBaselineFileSystem(),
+  descriptor?: BaselineCatalogue,
 ): ReadOnlyReviewRepository {
   const evidence = new GitRepositoryEvidence(runner);
   return {
+    ...(descriptor ? { descriptor } : {}),
     evidence: {
       mergeBase: async () => commit,
       changedPaths: (baseCommit, excluded) =>
@@ -63,6 +61,7 @@ export function readOnlyRepositoryForCommit(
       runner,
       signal,
       filesystem,
+      descriptor,
     ),
   };
 }
@@ -75,6 +74,11 @@ export function baselineReaderForCommit(
   runner: GitCommandRunner = new ConfiguredGitCommandRunner(config),
   signal?: AbortSignal,
   filesystem: BaselineFileSystem = new NodeBaselineFileSystem(),
+  descriptor: BaselineCatalogue = baselineCatalogue(
+    commit,
+    toPosixPath(path.relative(config.repoRoot, config.mockupsDir)) || ".",
+    "legacy",
+  ),
 ): BaselineReader {
   return selection === "rebuild"
     ? new RebuiltBaselineReader(
@@ -84,6 +88,7 @@ export function baselineReaderForCommit(
         commit,
         toPosixPath(path.relative(config.repoRoot, config.mockupsDir)),
         signal,
+        descriptor,
       )
-    : new CommittedBaselineReader(runner);
+    : new CommittedBaselineReader(runner, descriptor);
 }

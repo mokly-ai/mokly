@@ -24,7 +24,10 @@ test("consumer export builds unified pages and preserves a removed page's baseli
   const read = (name: string) =>
     fs.readFile(path.join(fixture.output, name), "utf8");
   assert.match(await read("id/handbook/index.html"), /Handbook/);
-  assert.match(await read("static/handbook.html"), /data-mokly-link="home"/);
+  assert.match(
+    await read("static/.generated/handbook.html"),
+    /href="\.\/screens\/home\.desktop\.html"/,
+  );
   assert.doesNotMatch(
     await read("view/handbook.html"),
     /data-diff-screen|data-viewport-option/,

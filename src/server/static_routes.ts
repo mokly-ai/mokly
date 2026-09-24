@@ -8,12 +8,11 @@ import type { Catalogue } from "@mokly/viewer/server";
 
 import { adaptBrowseDocument } from "../browse/document_adapter.js";
 import { isOwned } from "../build/ownership.js";
-import {
-  publicFileLocation,
-  publicPathLocation,
-} from "../config/public_files.js";
+import { GENERATED_DIRECTORY } from "../config/paths.js";
+import { publicFileLocation } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { errorMessage } from "../errors.js";
+import { MANIFEST_NAME } from "../registry/manifest.js";
 
 import { contentType, safeDecodePath, send } from "./respond.js";
 
@@ -25,24 +24,47 @@ export function serveStatic(
   catalogue: Catalogue,
   method: string,
   generatedOutputs?: ReadonlyMap<string, string>,
+  assetClosure?: ReadonlySet<string>,
 ): void {
   const relative = safeDecodePath(encodedPath);
   if (!relative) {
     return send(response, 400, "text/plain", "Invalid static path", method);
   }
+  const generatedRoute = relative.startsWith(`${GENERATED_DIRECTORY}/`)
+    ? relative.slice(GENERATED_DIRECTORY.length + 1)
+    : undefined;
+  if (generatedRoute === MANIFEST_NAME)
+    return send(response, 404, "text/plain", "Not found", method);
+  const generated =
+    generatedRoute === undefined
+      ? undefined
+      : generatedOutputs?.get(generatedRoute);
+  if (generatedRoute !== undefined && generated === undefined)
+    return send(response, 404, "text/plain", "Not found", method);
+  if (
+    generatedRoute === undefined &&
+    !(
+      assetClosure ??
+      new Set(
+        "assetClosure" in catalogue.manifest
+          ? catalogue.manifest.assetClosure
+          : [],
+      )
+    ).has(relative)
+  )
+    return send(response, 404, "text/plain", "Not found", method);
   const candidate = path.resolve(config.mockupsDir, relative);
   if (
     (catalogue.manifest.schemaVersion === "live-index-1" ||
       generatedOutputs !== undefined) &&
-    !generatedOutputs?.has(relative) &&
+    generatedRoute === undefined &&
     isOwned(candidate, config)
   )
     return send(response, 404, "text/plain", "Not found", method);
-  const generated = generatedOutputs?.get(relative);
   const location =
     generated === undefined
       ? publicFileLocation(candidate, config)
-      : publicPathLocation(candidate, config);
+      : { physicalPath: path.resolve(config.generatedDir, generatedRoute!) };
   if (!location) {
     return send(response, 404, "text/plain", "Not found", method);
   }
@@ -59,7 +81,11 @@ export function serveStatic(
   let body: Buffer | string = content;
   if (type.startsWith("text/html")) {
     try {
-      body = adaptBrowseDocument(content.toString("utf8"), relative, catalogue);
+      body = adaptBrowseDocument(
+        content.toString("utf8"),
+        generatedRoute ?? relative,
+        catalogue,
+      );
     } catch (error) {
       return send(
         response,

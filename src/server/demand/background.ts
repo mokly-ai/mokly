@@ -90,7 +90,10 @@ export class BackgroundCompilation {
   }
   classify(
     base: string,
-    prepared?: Pick<PreparedReviewRepository, "commit" | "selection">,
+    prepared?: Pick<
+      PreparedReviewRepository,
+      "commit" | "selection" | "descriptor"
+    >,
   ): Promise<ComponentChangeSnapshot | undefined> {
     if (this.closed) return Promise.resolve(undefined);
     return new Promise((resolve, reject) => {
@@ -99,7 +102,11 @@ export class BackgroundCompilation {
         type: "classify",
         base,
         ...(prepared
-          ? { commit: prepared.commit, selection: prepared.selection }
+          ? {
+              commit: prepared.commit,
+              selection: prepared.selection,
+              descriptor: prepared.descriptor,
+            }
           : {}),
       });
     });

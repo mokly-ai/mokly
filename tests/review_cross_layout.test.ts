@@ -1,0 +1,79 @@
+import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import path from "node:path";
+import test from "node:test";
+
+import { baselineCatalogue } from "../dist/baseline/catalogue.js";
+import { compileCatalogue } from "../dist/build/compile.js";
+import { loadConfig } from "../dist/config/load.js";
+import { CompiledReviewAssetReader } from "../dist/review/head_assets.js";
+import { classifyChangedContent } from "../dist/server/changed_content.js";
+import type { ManifestV5 } from "../packages/viewer/dist/registry/types.js";
+
+import { createFixture, removeFixture } from "./helpers/fixture.js";
+
+test("legacy and v6 resource href depth does not change screens; changed CSS does", async (context) => {
+  const fixture = await createFixture(undefined, {
+    extraConfig:
+      'stylesheets: [{ match: "screens/home.html", stylesheets: ["styles.css"] }],',
+  });
+  context.after(() => removeFixture(fixture));
+  await fs.writeFile(
+    path.join(fixture.mockupsDir, "styles.css"),
+    "main { color: red; }",
+  );
+  const config = await loadConfig(fixture.root);
+  const head = await compileCatalogue(config);
+  const {
+    assetClosure: _assetClosure,
+    blobHashAlgorithm: _blobHashAlgorithm,
+    generatedFiles: _generatedFiles,
+    ...previous
+  } = head.manifest;
+  const base: ManifestV5 = { ...previous, schemaVersion: 5 };
+  const commit = "a".repeat(40);
+  const files = new Map<string, Uint8Array>([
+    ["mockups/mokly-manifest.json", Buffer.from(JSON.stringify(base))],
+    ["mockups/styles.css", Buffer.from("main { color: red; }")],
+    ...[...head.outputs].map(
+      ([route, html]) =>
+        [
+          `mockups/${route}`,
+          Buffer.from(html.replaceAll("../../styles.css", "../styles.css")),
+        ] as const,
+    ),
+  ]);
+  const baseline = {
+    catalogue: baselineCatalogue(commit, "mockups", "legacy"),
+    fileExists: async (_commit: string, filename: string) =>
+      files.has(filename),
+    fileKind: async (_commit: string, filename: string) =>
+      files.has(filename) ? ("regular" as const) : ("missing" as const),
+    readFile: async (_commit: string, filename: string) =>
+      Buffer.from(files.get(filename)!).toString("utf8"),
+    readFileBytes: async (_commit: string, filename: string) => {
+      const bytes = files.get(filename);
+      assert.ok(bytes, `Missing historical fixture: ${filename}`);
+      return bytes;
+    },
+  };
+  const classify = () =>
+    classifyChangedContent(
+      head.manifest,
+      base,
+      config,
+      baseline,
+      commit,
+      ["mockups/styles.css"],
+      new CompiledReviewAssetReader(config, head.outputs),
+    );
+  assert.deepEqual((await classify()).changedPaths, []);
+  await fs.writeFile(
+    path.join(fixture.mockupsDir, "styles.css"),
+    "main { color: blue; }",
+  );
+  assert.deepEqual((await classify()).changedPaths, [
+    "mockups/.generated/screens/home.desktop.html",
+    "mockups/.generated/screens/home.mobile.html",
+  ]);
+});

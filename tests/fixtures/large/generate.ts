@@ -102,9 +102,7 @@ export async function generateLargeFixture(
   await fs.writeFile(
     path.join(root, ".gitignore"),
     ".review/\n.mokly-cache/\nnode_modules/\n" +
-      (!trackedOutput
-        ? "mockups/**/*.html\nmockups/mokly-manifest.json\n"
-        : ""),
+      (!trackedOutput ? "mockups/.generated/\n" : ""),
   );
   await fs.writeFile(
     path.join(root, "mokly.config.ts"),

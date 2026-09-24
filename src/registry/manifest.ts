@@ -2,7 +2,11 @@ import fs from "node:fs";
 import path from "node:path";
 
 import type { ColorScheme, Viewport, ComponentViewRecord } from "@mokly/viewer";
-import type { ManifestV5, HistoricalManifest } from "@mokly/viewer/data";
+import type {
+  ManifestV5,
+  ManifestV6,
+  HistoricalManifest,
+} from "@mokly/viewer/data";
 import {
   canonicalJson,
   analyzeHierarchy,
@@ -66,13 +70,13 @@ export function createManifest(
 }
 
 /** Serialize the current manifest with canonical object-key ordering. */
-export function serializeManifest(manifest: ManifestV5): string {
+export function serializeManifest(manifest: ManifestV6): string {
   return `${canonicalJson(manifest, 2)}\n`;
 }
 
-/** Read strictly current schema-v5 canonical output. */
-export function readManifest(config: ResolvedConfig): ManifestV5 {
-  const canonicalPath = path.join(config.mockupsDir, MANIFEST_NAME);
+/** Read strictly current schema-v6 canonical output. */
+export function readManifest(config: ResolvedConfig): ManifestV6 {
+  const canonicalPath = path.join(config.generatedDir, MANIFEST_NAME);
   const manifest = readManifestFile(canonicalPath);
   config.sourceFiles = manifest.sourceFiles;
   return manifest;
@@ -94,7 +98,7 @@ export function selectManifestInput(
   return { allowV2: true, filename: LEGACY_MANIFEST_NAME };
 }
 
-function readManifestFile(candidate: string): ManifestV5 {
+function readManifestFile(candidate: string): ManifestV6 {
   let value: unknown;
   try {
     value = JSON.parse(fs.readFileSync(candidate, "utf8"));
@@ -111,8 +115,18 @@ function readManifestFile(candidate: string): ManifestV5 {
 }
 
 /** Validate manifest-shaped JSON and normalize temporary version 2 input. */
-export function parseManifest(value: unknown): ManifestV5 {
-  return validateManifest(value, false, false) as ManifestV5;
+export function parseManifest(value: unknown): ManifestV6 {
+  if (
+    !value ||
+    typeof value !== "object" ||
+    !("schemaVersion" in value) ||
+    value.schemaVersion !== 6
+  )
+    throw new MoklyError(
+      "manifest-invalid",
+      "expected Mokly manifest schema version 6; run mokly build",
+    );
+  return validateManifest(value, false, false) as ManifestV6;
 }
 
 /** Read old schemas only at the historical comparison boundary. */

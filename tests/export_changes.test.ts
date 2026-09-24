@@ -10,11 +10,11 @@ import {
   NodeGitCommandRunner,
   CommittedRepository,
 } from "../dist/review/git.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { computeChangedRoutes } from "../dist/server/changed.js";
 import { changedContentPaths } from "../dist/server/changed_content.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import {
   createExportFixture,
   directoryFiles,
@@ -146,9 +146,12 @@ test("material Changes can use captured documents without reading current file b
   const manifest = readManifest(fixture.config);
   const captured = await directoryFiles(fixture.mockupsDir);
   const fragment = "screens/home.mobile.html";
+  const generatedFragment = `.generated/${fragment}`;
   captured.set(
-    fragment,
-    Buffer.from(captured.get(fragment)!.toString().replace("Details", "Next")),
+    generatedFragment,
+    Buffer.from(
+      captured.get(generatedFragment)!.toString().replace("Details", "Next"),
+    ),
   );
   const git = new CommittedRepository(new NodeGitCommandRunner(fixture.root));
   const commit = await git.evidence.mergeBase("HEAD", "HEAD");
@@ -159,19 +162,21 @@ test("material Changes can use captured documents without reading current file b
     fixture.config,
     git.reader,
     commit,
-    [`mockups/${fragment}`],
+    [`mockups/${generatedFragment}`],
     {
       ...capturedAssetReader(captured, fixture.config),
       read: async (route) => {
         reads.push(route);
-        const bytes = captured.get(route);
+        const bytes =
+          captured.get(`.generated/${route}`) ?? captured.get(route);
         assert.ok(bytes);
         return bytes;
       },
-      readIfExists: async (route) => captured.get(route),
+      readIfExists: async (route) =>
+        captured.get(`.generated/${route}`) ?? captured.get(route),
     },
   );
-  assert.deepEqual(result, [`mockups/${fragment}`]);
+  assert.deepEqual(result, [`mockups/${generatedFragment}`]);
   assert.ok(reads.includes(fragment));
 });
 

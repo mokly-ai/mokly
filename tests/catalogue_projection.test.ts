@@ -53,7 +53,10 @@ test("projection exposes real usage and attribution without private evidence", a
     home.views.map(({ viewport, colorScheme }) => `${viewport}/${colorScheme}`),
     ["mobile/light", "mobile/dark", "desktop/light", "desktop/dark"],
   );
-  assert.equal(home.views[0]?.fragmentPath, "static/screens/home.mobile.html");
+  assert.equal(
+    home.views[0]?.fragmentPath,
+    "static/.generated/screens/home.mobile.html",
+  );
   const json = serializeCatalogue(model);
   for (const privateField of [
     "sourceFiles",

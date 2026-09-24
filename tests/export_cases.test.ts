@@ -127,16 +127,23 @@ test("renamed screens keep both routes but only the current id alias", async (co
 test("missing baseline documents and absent history fail before installing output", async (context) => {
   const fixture = await createExportFixture();
   context.after(() => fixture.close());
-  await fixture.git("rm", "mockups/screens/home.mobile.html");
+  await fixture.git("rm", "mockups/.generated/screens/home.mobile.html");
   await fixture.git("commit", "-qm", "test: missing baseline document");
+  const config = {
+    ...fixture.config,
+    review: {
+      ...fixture.config.review,
+      baselineBuild: [["node", "-e", "process.exit(7)"]],
+    },
+  };
   await assert.rejects(
-    exportCatalogue(fixture.config, { outDir: "site", base: "HEAD" }),
-    /not a regular Git file \(missing\)/,
+    exportCatalogue(config, { outDir: "site", base: "HEAD" }),
+    { code: "baseline-command-failed" },
   );
   assert.equal(fs.existsSync(fixture.output), false);
   await fixture.git("checkout", "--orphan", "unrelated");
   await fixture.git("commit", "-qm", "test: unrelated history");
-  await assert.rejects(exportCatalogue(fixture.config, { outDir: "site" }), {
+  await assert.rejects(exportCatalogue(config, { outDir: "site" }), {
     code: "baseline-history-unavailable",
   });
   assert.equal(fs.existsSync(fixture.output), false);

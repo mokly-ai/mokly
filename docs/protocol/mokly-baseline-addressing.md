@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-Approved target in [Generated Output Simplification](../../plans/generated-output-simplification.md).
+Implemented for v6 and historical baselines in [Generated Output Simplification](../../plans/generated-output-simplification.md).
 This supplements [per-commit selection](./mokly-derived-baselines.md) and
 [baseline storage](./mokly-baseline-storage.md). It does not inspect the head
 Git index: only `check` uses index tracking.
@@ -118,6 +118,14 @@ that side's actual layout, then key the authored resource by its path relative
 to that side's `catalogueRoot`; thus head `../styles.css` and legacy base
 `styles.css` can pair as `styles.css`. Traverse each side's referenced closure
 independently; membership and exact bytes still decide materiality.
+For paired document materiality, normalize each local `href`, `src`, `srcset`
+candidate, and inline-style `url()` against its own side's real document path
+before comparing. Replace the URL's path with its catalogue-relative resource
+key (or logical generated route for a generated-document link), preserving
+query and fragment. Thus v6 `../styles.css` and legacy `styles.css` compare
+equal without hiding a changed stylesheet or a missing resource. Apply the
+same paired normalization in the unchanged-view fast path; raw HTML bytes
+are not a cross-layout materiality signal.
 
 Classification, selected comparisons, removed-content previews, component
 resource attribution, the unchanged-view fast path, CSS change attribution,

@@ -14,6 +14,7 @@ import {
   readSchema,
   projectTree,
   comparisonPath,
+  currentDocumentPath,
   publicPath,
   pagePreviewPath,
   relatedDoc,
@@ -32,6 +33,11 @@ export function projectCatalogue(
   input: CatalogueProjectionInput,
 ): CatalogueReadModel {
   const { catalogue } = input;
+  const generatedPathPrefix =
+    catalogue.manifest.schemaVersion === 6 ||
+    catalogue.manifest.schemaVersion === "live-index-1"
+      ? (".generated" as const)
+      : undefined;
   const comparisonUrl = comparisonPath(input.comparisonUrl);
   const retainedComponents = new Set(
     [
@@ -45,11 +51,12 @@ export function projectCatalogue(
   );
   if (
     catalogue.manifest.schemaVersion !== 5 &&
+    catalogue.manifest.schemaVersion !== 6 &&
     catalogue.manifest.schemaVersion !== "live-index-1"
   )
     invalidData(
       "$catalogue",
-      "current projection requires manifest v5 or live metadata",
+      "current projection requires manifest v5/v6 or live metadata",
     );
   const common = (entry: ManifestEntry, removed: boolean): CatalogueEntry => ({
     id: entry.id,
@@ -74,7 +81,9 @@ export function projectCatalogue(
         ...base,
         kind: "page",
         route: entry.route,
-        documentPath: removed ? null : publicPath(`static/${entry.route}`),
+        documentPath: removed
+          ? null
+          : publicPath(currentDocumentPath(entry.route, generatedPathPrefix)),
       };
     if (entry.kind === "use-case")
       return {
@@ -190,6 +199,7 @@ export function projectCatalogue(
       invalidData("$catalogue", "preview route is not a removed entry");
   return {
     schemaVersion: 1,
+    ...(generatedPathPrefix ? { generatedPathPrefix } : {}),
     identity: catalogueIdentity(input.configPath),
     deploymentId: ZERO_DEPLOYMENT_ID,
     revision: {

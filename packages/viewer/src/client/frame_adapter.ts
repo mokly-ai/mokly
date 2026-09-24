@@ -1,3 +1,4 @@
+import type { GeneratedPathPrefix } from "../catalogue/delivery_paths.js";
 import type { CatalogueUsage } from "../catalogue/types.js";
 
 /** Finite CSS pixels in the immediate frame's visible content viewport. */
@@ -12,6 +13,8 @@ export interface InstanceBoundary {
   ranges: readonly { id: string; boxes: readonly Box[] }[];
 }
 export interface FrameMount {
+  generatedPathPrefix?: GeneratedPathPrefix;
+  route?: string;
   /** Cancel a pending mount or its active session. */
   signal?: AbortSignal;
   /** Receive events from the visible document while the adapter mounts. */

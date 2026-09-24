@@ -1,6 +1,10 @@
-import { isSafeCatalogueRoute } from "@mokly/viewer/data";
+import { isSafeCatalogueRoute, isSafeRepositoryPath } from "@mokly/viewer/data";
 import type { ManifestV5 } from "@mokly/viewer/data";
 
+import {
+  parseBaselineCatalogue,
+  type BaselineCatalogue,
+} from "../baseline/catalogue.js";
 import type { BaselineSelection } from "../review/repository.js";
 
 import type { ComponentChangeSnapshot } from "./component_changes.js";
@@ -21,6 +25,7 @@ export type CatalogueUpdateKind = "content" | "evidence";
 
 /** Mutable running-server state published before clients refresh. */
 export interface CatalogueUpdate {
+  assetClosure?: readonly string[];
   /** Defaults to content, requiring clients to refresh their rendered documents. */
   kind?: CatalogueUpdateKind;
   /** Omit to retain status unless the update replaces change evidence. */
@@ -35,9 +40,11 @@ export interface CatalogueUpdate {
 
 /** Parent-to-child update command with an explicit changed-route snapshot. */
 export interface ChildUpdateMessage {
+  assetClosure?: readonly string[];
   /** Omit to retain the reader; null revokes it while the parent prepares. */
   baselineCommit?: string | null;
   baselineSelection?: BaselineSelection;
+  baselineDescriptor?: BaselineCatalogue;
   kind?: CatalogueUpdateKind;
   changesStatus?: ChangesStatus;
   changedRoutes: readonly string[] | null;
@@ -96,7 +103,8 @@ export function parseCatalogueCompleteMessage(
     (candidate.version ?? 0) <= 0 ||
     !candidate.manifest ||
     typeof candidate.manifest !== "object" ||
-    candidate.manifest.schemaVersion !== 5
+    (candidate.manifest.schemaVersion !== 5 &&
+      candidate.manifest.schemaVersion !== 6)
   )
     return;
   return candidate as CatalogueCompleteMessage;
@@ -119,10 +127,14 @@ export function childUpdateMessage(
   kind?: CatalogueUpdateKind,
   baselineCommit?: string | null,
   baselineSelection?: BaselineSelection,
+  baselineDescriptor?: BaselineCatalogue,
+  assetClosure?: readonly string[],
 ): ChildUpdateMessage {
   return {
     ...(baselineCommit !== undefined ? { baselineCommit } : {}),
     ...(baselineSelection ? { baselineSelection } : {}),
+    ...(baselineDescriptor ? { baselineDescriptor } : {}),
+    ...(assetClosure ? { assetClosure: [...assetClosure] } : {}),
     ...(kind ? { kind } : {}),
     ...(changesStatus ? { changesStatus } : {}),
     changedRoutes: changedRoutes ? [...changedRoutes] : null,
@@ -146,6 +158,8 @@ export function parseChildUpdateMessage(
   const candidate = value as {
     baselineCommit?: unknown;
     baselineSelection?: unknown;
+    baselineDescriptor?: unknown;
+    assetClosure?: unknown;
     kind?: unknown;
     changesStatus?: unknown;
     changedRoutes?: unknown;
@@ -160,8 +174,22 @@ export function parseChildUpdateMessage(
     (typeof candidate.baselineCommit === "string" &&
       candidate.baselineSelection !== "blobs" &&
       candidate.baselineSelection !== "rebuild") ||
+    (typeof candidate.baselineCommit === "string" &&
+      !parseBaselineCatalogue(
+        candidate.baselineDescriptor,
+        candidate.baselineCommit,
+      )) ||
     (typeof candidate.baselineCommit !== "string" &&
-      candidate.baselineSelection !== undefined) ||
+      (candidate.baselineSelection !== undefined ||
+        candidate.baselineDescriptor !== undefined)) ||
+    (candidate.assetClosure !== undefined &&
+      (!Array.isArray(candidate.assetClosure) ||
+        !candidate.assetClosure.every(
+          (route: unknown) =>
+            typeof route === "string" &&
+            isSafeRepositoryPath(route) &&
+            !route.startsWith(".generated/"),
+        ))) ||
     !Number.isSafeInteger(candidate.version) ||
     (candidate.version as number) <= 0 ||
     !isChangedRoutes(candidate.changedRoutes) ||
@@ -180,6 +208,17 @@ export function parseChildUpdateMessage(
       : {}),
     ...(candidate.baselineSelection
       ? { baselineSelection: candidate.baselineSelection as BaselineSelection }
+      : {}),
+    ...(typeof candidate.baselineCommit === "string"
+      ? {
+          baselineDescriptor: parseBaselineCatalogue(
+            candidate.baselineDescriptor,
+            candidate.baselineCommit,
+          )!,
+        }
+      : {}),
+    ...(candidate.assetClosure !== undefined
+      ? { assetClosure: candidate.assetClosure as string[] }
       : {}),
     ...(candidate.kind ? { kind: candidate.kind } : {}),
     ...(candidate.changesStatus

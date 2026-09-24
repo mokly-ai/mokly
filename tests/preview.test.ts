@@ -48,24 +48,27 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
     /<iframe[^>]*data-fragment-light="([^"]+)"[^>]*src="([^"]+)"/,
   );
   assert.ok(frame);
-  assert.equal(frame[1], "/static/screens/welcome.mobile");
+  assert.equal(frame[1], "/static/.generated/screens/welcome.mobile");
   assert.equal(frame[2], frame[1]);
   assert.match(
     welcome,
-    /data-fragment-dark="\/static\/screens\/welcome\.mobile\.dark"/,
+    /data-fragment-dark="\/static\/\.generated\/screens\/welcome\.mobile\.dark"/,
   );
-  assert.match(welcome, /src="\/static\/screens\/welcome\.desktop"/);
+  assert.match(
+    welcome,
+    /src="\/static\/\.generated\/screens\/welcome\.desktop"/,
+  );
   assert.doesNotMatch(
     welcome,
-    /src="\/static\/screens\/welcome\.desktop\.html"/,
+    /src="\/static\/\.generated\/screens\/welcome\.desktop\.html"/,
   );
   assert.doesNotMatch(welcome, /data-fragment-(?:light|dark)="[^"]+\.html"/);
   assert.match(
-    await read(output, "static/screens/welcome.desktop.html"),
+    await read(output, "static/.generated/screens/welcome.desktop.html"),
     /Welcome to Mokly/,
   );
   assert.match(
-    await read(output, "static/screens/welcome.desktop.dark.html"),
+    await read(output, "static/.generated/screens/welcome.desktop.dark.html"),
     /data-color-scheme="dark"/,
   );
   assert.match(await read(output, "__mokly/shell.css"), /--mbk-/);

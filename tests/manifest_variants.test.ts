@@ -5,6 +5,8 @@ import type { ResolvedRegistryEntry } from "../dist/authoring/types.js";
 import { createManifest, parseManifest } from "../dist/registry/manifest.js";
 import { analyzeHierarchy } from "../packages/viewer/dist/registry/hierarchy.js";
 
+import { currentManifest } from "./helpers/current_manifest.js";
+
 test("manifest emits variantOf only for screen variants", () => {
   const manifest = variantManifest();
   const parent = manifest.entries.find(({ id }) => id === "welcome");
@@ -15,7 +17,7 @@ test("manifest emits variantOf only for screen variants", () => {
     variant?.kind === "screen" ? variant.variantOf : undefined,
     "welcome",
   );
-  assert.equal(parseManifest(manifest).schemaVersion, 5);
+  assert.equal(parseManifest(currentManifest(manifest)).schemaVersion, 6);
 });
 
 test("manifest and hierarchy keep authored sibling variant order", () => {
@@ -47,11 +49,17 @@ test("manifest and hierarchy keep authored sibling variant order", () => {
 test("manifest validation rejects broken variant parents and routes", () => {
   const unknown = mutableManifest(variantManifest());
   screenEntry(unknown, "welcome-empty").variantOf = "missing";
-  assert.throws(() => parseManifest(unknown), /parent screen does not exist/);
+  assert.throws(
+    () => parseManifest(currentManifest(unknown)),
+    /parent screen does not exist/,
+  );
 
   const nonScreen = mutableManifest(variantManifest(true));
   screenEntry(nonScreen, "welcome-empty").variantOf = "screens";
-  assert.throws(() => parseManifest(nonScreen), /parent is not a screen/);
+  assert.throws(
+    () => parseManifest(currentManifest(nonScreen)),
+    /parent is not a screen/,
+  );
 
   const rerouted = mutableManifest(variantManifest());
   const reroutedVariant = screenEntry(rerouted, "welcome-empty");
@@ -61,7 +69,7 @@ test("manifest validation rejects broken variant parents and routes", () => {
     mobile: "screens/elsewhere.mobile.html",
   };
   assert.throws(
-    () => parseManifest(rerouted),
+    () => parseManifest(currentManifest(rerouted)),
     /route does not match its parent/,
   );
 });
@@ -80,11 +88,14 @@ test("manifest validation rejects nested and collection-claimed variants", () =>
     [],
     ["light"],
   );
-  assert.throws(() => parseManifest(nested), /parent is itself a variant/);
+  assert.throws(
+    () => parseManifest(currentManifest(nested)),
+    /parent is itself a variant/,
+  );
 
   const claimed = variantManifest(true, true);
   assert.throws(
-    () => parseManifest(claimed),
+    () => parseManifest(currentManifest(claimed)),
     /collection screens claims variant/,
   );
 });
@@ -94,7 +105,10 @@ test("current non-screen manifest entries reject variant fields", () => {
   const collection = manifest.entries.find(({ id }) => id === "screens");
   assert.ok(collection);
   collection.variantOf = undefined;
-  assert.throws(() => parseManifest(manifest), /unsupported variantOf/);
+  assert.throws(
+    () => parseManifest(currentManifest(manifest)),
+    /unsupported variantOf/,
+  );
 });
 
 function variantManifest(collection = false, claimVariant = false) {

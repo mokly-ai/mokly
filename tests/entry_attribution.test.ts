@@ -10,7 +10,6 @@ import {
   pendingGeneratedOrphanRoutes,
 } from "../dist/build/ownership.js";
 import { loadConfig } from "../dist/config/load.js";
-import { resolvePublicExclude } from "../dist/config/public_exclusions.js";
 import { resolveExportOutput } from "../dist/export/paths.js";
 import { receiveComponentRuntimeStartup } from "../dist/server/controls/runtime_ipc.js";
 import { classifyWatchPath } from "../dist/server/watch_events.js";
@@ -190,7 +189,7 @@ test("ownership trusts resolved, inventoried, and glob-matched sources", async (
     }),
     false,
   );
-  const stale = path.join(fixture.mockupsDir, "screens/stale.html");
+  const stale = path.join(fixture.mockupsDir, ".generated/screens/stale.html");
   await fs.promises.mkdir(path.dirname(stale), { recursive: true });
   await fs.promises.writeFile(
     stale,
@@ -259,8 +258,8 @@ test("runtime startup rejects a message without entry globs", async () => {
       configPath: "/repo/mokly.config.ts",
       entryGlobs: ["src/**/*.mockup.{ts,tsx}"],
       mockupsDir: "/repo/generated",
+      generatedDir: "/repo/generated/.generated",
       repoRoot: "/repo",
-      publicExclude: resolvePublicExclude([]),
     },
     manifest: { entries: [], schemaVersion: 5, sourceFiles: [] },
   };

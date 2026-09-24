@@ -45,6 +45,7 @@ export function usageView(
 function fragments(
   views: readonly CatalogueView[],
   fallback: (axis: "mobile" | "desktop", scheme: "light" | "dark") => string,
+  prefix?: CatalogueReadModel["generatedPathPrefix"],
 ) {
   const paths = (scheme: "light" | "dark") =>
     Object.fromEntries(
@@ -52,7 +53,7 @@ function fragments(
         axis,
         views
           .find((v) => v.viewport === axis && v.colorScheme === scheme)
-          ?.fragmentPath?.slice(7) ??
+          ?.fragmentPath?.slice(7 + (prefix ? prefix.length + 1 : 0)) ??
           fallback(axis as "mobile" | "desktop", scheme),
       ]),
     ) as Record<"mobile" | "desktop", string>;
@@ -66,6 +67,7 @@ function fragments(
 }
 export function displayEntry(
   entry: CatalogueRoutedEntry,
+  prefix?: CatalogueReadModel["generatedPathPrefix"],
 ): Exclude<ManifestEntry, { kind: "collection" }> {
   const base = { ...metadata(entry), route: entry.route };
   switch (entry.kind) {
@@ -83,11 +85,14 @@ export function displayEntry(
         ...(entry.variantOf !== undefined
           ? { variantOf: entry.variantOf }
           : {}),
-        ...fragments(entry.views, (axis, scheme) =>
-          entry.route.replace(
-            /\.html$/,
-            `.${axis}${scheme === "dark" ? ".dark" : ""}.html`,
-          ),
+        ...fragments(
+          entry.views,
+          (axis, scheme) =>
+            entry.route.replace(
+              /\.html$/,
+              `.${axis}${scheme === "dark" ? ".dark" : ""}.html`,
+            ),
+          prefix,
         ),
       };
     case "component":
@@ -107,8 +112,11 @@ export function displayEntry(
             : {}),
           props: variant.props,
           suppliedSlots: variant.suppliedSlots,
-          ...fragments(variant.views, (axis, scheme) =>
-            componentFragmentRoute(entry.route, variant.id, axis, scheme),
+          ...fragments(
+            variant.views,
+            (axis, scheme) =>
+              componentFragmentRoute(entry.route, variant.id, axis, scheme),
+            prefix,
           ),
         })),
       };
@@ -131,7 +139,7 @@ export function viewerCatalogue(model: CatalogueReadModel) {
         ...model.useCases,
         ...model.components,
       ].map((entry) => ({
-        ...displayEntry(entry),
+        ...displayEntry(entry, model.generatedPathPrefix),
         declaredDependencies: entry.details.dependencies,
       })),
     ],
@@ -140,7 +148,7 @@ export function viewerCatalogue(model: CatalogueReadModel) {
     ...createCatalogue(
       manifest,
       model.removedEntries.map(({ entry, ancestors }) => ({
-        entry: displayEntry(entry),
+        entry: displayEntry(entry, model.generatedPathPrefix),
         ancestors,
       })),
     ),

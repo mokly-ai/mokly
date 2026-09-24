@@ -16,6 +16,7 @@ import {
   createExportFixture,
   directoryFiles,
 } from "./helpers/export_fixture.js";
+import { validEntrySource } from "./helpers/fixture.js";
 
 test("export excludes source and hidden files and refuses selected symlinks", async (context) => {
   const fixture = await createExportFixture();
@@ -31,6 +32,12 @@ test("export excludes source and hidden files and refuses selected symlinks", as
     path.join(fixture.mockupsDir, "font.css"),
     '@font-face { src: url("font.woff2"); }',
   );
+  await fs.promises.writeFile(
+    fixture.entryPath,
+    validEntrySource({
+      body: '<link rel="stylesheet" href="../../font.css" />',
+    }),
+  );
   await exportCatalogue(fixture.config, { outDir: "site" });
   const files = await directoryFiles(fixture.output);
   assert.deepEqual(files.get("static/font.woff2"), bytes);
@@ -39,13 +46,14 @@ test("export excludes source and hidden files and refuses selected symlinks", as
       /\.env|source\.tsx|source\.js\.map/.test(name),
     ),
   );
+  await fs.promises.rm(path.join(fixture.mockupsDir, "font.woff2"));
   await fs.promises.symlink(
     path.join(fixture.root, "notes.md"),
-    path.join(fixture.mockupsDir, "linked.txt"),
+    path.join(fixture.mockupsDir, "font.woff2"),
   );
   await assert.rejects(
     exportCatalogue(fixture.config, { outDir: "site" }),
-    /symlink/,
+    /font\.css: missing target font\.woff2/,
   );
   assert.deepEqual(await directoryFiles(fixture.output), files);
 });
@@ -132,9 +140,15 @@ test("export rejects references to excluded resources without damaging output", 
     path.join(fixture.mockupsDir, ".secret.css"),
     "body {}",
   );
+  await fs.promises.writeFile(
+    fixture.entryPath,
+    validEntrySource({
+      body: '<link rel="stylesheet" href="../../bad.css" />',
+    }),
+  );
   await assert.rejects(
     exportCatalogue(fixture.config, { outDir: "site" }),
-    /resource is unavailable/,
+    /bad\.css: protected target \.secret\.css: contains a hidden path segment/,
   );
   assert.deepEqual(await directoryFiles(fixture.output), previous);
 });

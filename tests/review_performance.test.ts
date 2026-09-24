@@ -3,6 +3,7 @@ import { execFile } from "node:child_process";
 import test from "node:test";
 import { promisify } from "node:util";
 
+import { baselineCatalogue } from "../dist/baseline/catalogue.js";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
@@ -12,6 +13,7 @@ import { CommittedRepository } from "../dist/review/git.js";
 import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 const execFileAsync = promisify(execFile);
@@ -25,22 +27,30 @@ test("Review batches base viewport reads", async (context) => {
     (entry) => entry.kind === "screen",
   );
   const files = new Map<string, string>([
-    ["mockups/mokly-manifest.json", JSON.stringify(compilation.manifest)],
+    [
+      "mockups/.generated/mokly-manifest.json",
+      JSON.stringify(compilation.manifest),
+    ],
   ]);
   for (const screen of screens) {
     for (const fragment of Object.values(screen.fragments)) {
-      files.set(`mockups/${fragment}`, compilation.outputs.get(fragment) ?? "");
+      files.set(
+        `mockups/.generated/${fragment}`,
+        compilation.outputs.get(fragment) ?? "",
+      );
     }
   }
   let batchReads = 0;
   let individualReads = 0;
   let batchedPathCount = 0;
   const git: ReadOnlyReviewRepository = {
+    descriptor: baselineCatalogue("a".repeat(40), "mockups", "generated-v6"),
     evidence: {
       changedPaths: async () => [],
       mergeBase: async () => "a".repeat(40),
     },
     reader: {
+      catalogue: baselineCatalogue("a".repeat(40), "mockups", "generated-v6"),
       fileExists: async (_commit, repoPath) => files.has(repoPath),
       fileKind: async (_commit, repoPath) =>
         files.has(repoPath) ? "regular" : "missing",
@@ -86,7 +96,7 @@ test("Review batches dark base fragments through CommittedRepository", async (co
   await git(fixture.root, ["add", "."]);
   await git(fixture.root, ["commit", "-qm", "test: dark base catalogue"]);
   const calls: string[][] = [];
-  const client = new CommittedRepository({
+  const client = committedReviewRepository(config, {
     run: async (arguments_) => {
       calls.push([...arguments_]);
       return gitOutput(fixture.root, arguments_);
@@ -105,10 +115,10 @@ test("Review batches dark base fragments through CommittedRepository", async (co
   const expected = screens.flatMap((screen) => {
     assert.ok(screen.darkFragments);
     return [
-      `mockups/${screen.fragments.mobile}`,
-      `mockups/${screen.darkFragments.mobile}`,
-      `mockups/${screen.fragments.desktop}`,
-      `mockups/${screen.darkFragments.desktop}`,
+      `mockups/.generated/${screen.fragments.mobile}`,
+      `mockups/.generated/${screen.darkFragments.mobile}`,
+      `mockups/.generated/${screen.fragments.desktop}`,
+      `mockups/.generated/${screen.darkFragments.desktop}`,
     ];
   });
   const batchedPathspecs = calls

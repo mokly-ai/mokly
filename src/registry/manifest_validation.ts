@@ -44,7 +44,9 @@ export function validateManifestMetadata(
   } else if (historical && value.generatedBy === "mokabook") {
     normalized = { ...value, generatedBy: "mokly" };
   }
-  const current = normalized.schemaVersion === 5;
+  const current =
+    normalized.schemaVersion === 5 || normalized.schemaVersion === 6;
+  const generated = normalized.schemaVersion === 6;
   const pages =
     current || (normalized.schemaVersion === 4 && "sourceFiles" in normalized);
   if (
@@ -54,15 +56,21 @@ export function validateManifestMetadata(
   )
     throw new MoklyError(
       "manifest-invalid",
-      "expected Mokly manifest schema version 5; run mokly build",
+      "expected Mokly manifest schema version 6; run mokly build",
     );
   if (pages) {
     if (
       Object.keys(normalized).some(
         (key) =>
-          !["entries", "generatedBy", "schemaVersion", "sourceFiles"].includes(
-            key,
-          ),
+          ![
+            "entries",
+            "generatedBy",
+            "schemaVersion",
+            "sourceFiles",
+            ...(generated
+              ? ["assetClosure", "blobHashAlgorithm", "generatedFiles"]
+              : []),
+          ].includes(key),
       )
     )
       throw new MoklyError("manifest-invalid", "unexpected manifest field");
@@ -77,6 +85,7 @@ export function validateManifestMetadata(
       );
     for (const source of normalized.sourceFiles)
       validateRepoPath(source, "sourceFiles");
+    if (generated) validateGeneratedInventory(normalized);
   } else if (!Array.isArray(normalized.legacyPages))
     throw new MoklyError(
       "manifest-invalid",
@@ -139,6 +148,57 @@ export function validateManifestMetadata(
   validateManifestRelationships(entries, byId);
   const manifest = normalized as unknown as HistoricalManifest;
   return manifest;
+}
+
+function validateGeneratedInventory(manifest: Record<string, unknown>): void {
+  const algorithm = manifest.blobHashAlgorithm;
+  if (algorithm !== "sha1" && algorithm !== "sha256")
+    throw new MoklyError("manifest-invalid", "invalid blobHashAlgorithm");
+  const closure = manifest.assetClosure;
+  if (
+    !stringArray(closure) ||
+    JSON.stringify(closure) !== JSON.stringify([...new Set(closure)].sort())
+  )
+    throw new MoklyError(
+      "manifest-invalid",
+      "assetClosure must be a sorted unique array",
+    );
+  for (const route of closure) {
+    validateRepoPath(route, "assetClosure");
+    if (route === ".generated" || route.startsWith(".generated/"))
+      throw new MoklyError(
+        "manifest-invalid",
+        "assetClosure contains generated output",
+      );
+  }
+  const inventory = manifest.generatedFiles;
+  if (
+    !Array.isArray(inventory) ||
+    inventory.some(
+      (item) =>
+        !record(item) ||
+        typeof item.path !== "string" ||
+        typeof item.blobHash !== "string",
+    ) ||
+    JSON.stringify(inventory.map((item) => item.path)) !==
+      JSON.stringify([...new Set(inventory.map((item) => item.path))].sort())
+  )
+    throw new MoklyError(
+      "manifest-invalid",
+      "generatedFiles must be sorted and unique",
+    );
+  for (const item of inventory) {
+    validateRoute(item.path, "generatedFiles.path");
+    if (
+      !new RegExp(`^[0-9a-f]{${algorithm === "sha1" ? 40 : 64}}$`).test(
+        item.blobHash,
+      )
+    )
+      throw new MoklyError(
+        "manifest-invalid",
+        `invalid blob hash for ${item.path}`,
+      );
+  }
 }
 
 function validateFragmentRoutes(

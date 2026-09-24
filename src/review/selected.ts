@@ -15,8 +15,9 @@ import type {
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
+import { generatedManifestRoutes } from "../registry/generated_routes.js";
 
-import { copySnapshotDependencies, GitReviewAssetReader } from "./assets.js";
+import { GitReviewAssetReader } from "./assets.js";
 import { baselineResourceConfig } from "./base_manifest.js";
 import { ComponentMaterialReader } from "./component_resources.js";
 import { SelectedAssetReader } from "./evidence_assets.js";
@@ -35,6 +36,7 @@ import type {
   SelectedReviewProvider,
   SelectedReviewSource,
 } from "./selection_types.js";
+import { copySnapshotDependencies } from "./snapshot_dependencies.js";
 
 export class RepositorySelectedReview implements SelectedReviewProvider {
   constructor(
@@ -62,6 +64,7 @@ export class RepositorySelectedReview implements SelectedReviewProvider {
         toPosixPath(
           path.relative(this.config.repoRoot, this.config.mockupsDir),
         ),
+        source.before,
       ),
       signal,
     );
@@ -100,6 +103,17 @@ export class RepositorySelectedReview implements SelectedReviewProvider {
         routes,
         (route) => reader.read(route),
         (routes) => reader.readMany(routes),
+        {
+          prefix:
+            (side === "before"
+              ? source.before.schemaVersion
+              : source.after.schemaVersion) === 6
+              ? ".generated"
+              : "",
+          routes: generatedManifestRoutes(
+            side === "before" ? source.before : source.after,
+          ),
+        },
       );
     }
     signal.throwIfAborted();
@@ -150,8 +164,14 @@ export class RepositorySelectedReview implements SelectedReviewProvider {
       new Set(),
       new Set(),
       new ResourceComparison(
-        new ComponentMaterialReader(beforeReader),
-        new ComponentMaterialReader(afterReader),
+        new ComponentMaterialReader(beforeReader, {
+          prefix: source.before.schemaVersion === 6 ? ".generated" : "",
+          routes: generatedManifestRoutes(source.before),
+        }),
+        new ComponentMaterialReader(afterReader, {
+          prefix: ".generated",
+          routes: generatedManifestRoutes(source.after),
+        }),
         new Set(source.changedPaths),
         toPosixPath(
           path.relative(this.config.repoRoot, this.config.mockupsDir),

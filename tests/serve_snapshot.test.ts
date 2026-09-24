@@ -6,7 +6,6 @@ import { setTimeout } from "node:timers/promises";
 
 import { MoklyError } from "../dist/errors.js";
 import { GitRepositoryEvidence } from "../dist/review/git_evidence.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { configuredServedReview } from "../dist/server/configured_review.js";
 import { NodeCatalogueServerFactory } from "../dist/server/factory.js";
 import { startCatalogueServer } from "../dist/server/http.js";
@@ -14,6 +13,7 @@ import { serve } from "../dist/server/serve.js";
 
 import { observeBackgroundClassification } from "./helpers/background_classification.js";
 import { changedFixture } from "./helpers/changed_fixture.js";
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
 import { documentText } from "./helpers/html.js";
@@ -88,10 +88,10 @@ test("unavailable startup Changes leaves a complete current catalogue without re
   assert.equal(calls, 1);
 });
 
-test("server startup rejects invalid current metadata before querying history", async (context) => {
+test("HTTP startup rejects invalid current metadata before querying history", async (context) => {
   const fixture = await changedFixture(context);
   await fs.writeFile(
-    path.join(fixture.mockupsDir, "mokly-manifest.json"),
+    path.join(fixture.mockupsDir, ".generated/mokly-manifest.json"),
     "{}",
   );
   let calls = 0;
@@ -130,11 +130,9 @@ test("no-watch HTTP startup reuses the catalogue validated before factory handof
       this: NodeCatalogueServerFactory,
       ...args: Parameters<typeof start>
     ) {
-      const manifestPath = path.join(fixture.mockupsDir, "mokly-manifest.json");
-      const bytes = await fs.readFile(manifestPath, "utf8");
       await fs.writeFile(
-        manifestPath,
-        bytes.replace('"title": "Home"', '"title": "Later catalogue"'),
+        fixture.entryPath,
+        validEntrySource({ firstTitle: "Later catalogue" }),
       );
       return start.apply(this, args);
     },

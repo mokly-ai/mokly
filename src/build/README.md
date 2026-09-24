@@ -70,11 +70,11 @@ the public authoring API, including `resolveInstance`. Every repository-owned
 importer of `@mokly/mokly` receives the attributed facade; installed packages
 under `node_modules` and Mokly's own runtime receive the plain API. Registry
 validation accepts an attributed definition source only when it is a resolved
-entry module or an inventoried source file. In Milestone 2, Build writes the
-existing single `mockupsDir` layout (manifest v5) and retains transactional
-ownership checks. Check uses the Git index to compare compiled routes only
-when tracked. Milestones 3 and 4 introduce the dedicated `.generated/` tree,
-manifest v6, and removal of the ownership machinery.
+entry module or an inventoried source file. Build writes manifest v6 and
+generated documents under the dedicated `.generated/` tree; authored assets
+remain in place. Check uses the Git index to compare compiled output only
+when tracked. The per-file ownership transaction remains until its separate
+removal milestone.
 Export and Review boundaries continue to use directories that hold resolved
 entry modules. Source locations do not enter instance keys, props keys, slot
 identities, or Changes projections.
@@ -90,10 +90,9 @@ cargo xtask check
 ```
 
 The example ignores generated HTML and the manifest under
-`examples/basic/generated/`; authored CSS in that directory remains tracked.
-Milestone 2 selects Git blobs when the historical commit contains a valid
-manifest, and rebuilds otherwise. Manifest inventory checks and the dedicated
-`.generated/` tree arrive in Milestone 3. Export and plain Serve compile in
+`examples/basic/.generated/`; authored CSS at the catalogue root remains tracked.
+Historical commits with a complete, matching manifest inventory use Git
+blobs; missing or stale output is rebuilt. Export and plain Serve compile in
 memory without writing local output; `build --watch` and `serve --build` write
 only after successful complete compilations.
 

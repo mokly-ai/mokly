@@ -27,7 +27,10 @@ export async function capturePublicationInputs(
     ))
       if (
         !compilation.outputs.has(
-          path.relative(config.mockupsDir, file.path).split(path.sep).join("/"),
+          path
+            .relative(config.generatedDir, file.path)
+            .split(path.sep)
+            .join("/"),
         ) &&
         !(
           file.kind === "file" &&
@@ -64,7 +67,7 @@ export async function capturePublicationInputs(
   for (const [route, content] of [...compilation.outputs].sort(
     ([left], [right]) => left.localeCompare(right),
   )) {
-    hash.update(`generated/${route}\0${content}\0`);
+    hash.update(`.generated/${route}\0${content}\0`);
   }
   return { fingerprint: hash.digest("hex"), manifest };
 }

@@ -4,7 +4,7 @@ import {
   effectiveColorSchemes,
   VIEWPORTS,
 } from "@mokly/viewer/data";
-import type { ManifestV5, ArtifactView } from "@mokly/viewer/data";
+import type { ManifestV6, ArtifactView } from "@mokly/viewer/data";
 
 import { transformCompatibilityDocuments } from "../compatibility/transform.js";
 import { validateComponentResources } from "../components/output_validation.js";
@@ -13,6 +13,10 @@ import { rebaseStyleOwnership } from "../components/style_ownership.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timeSync, timingCounts } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
+import {
+  gitBlobHash,
+  RepositoryObjectFormatReader,
+} from "../registry/blob_hash.js";
 import {
   createManifest,
   fragmentRoute,
@@ -34,7 +38,7 @@ import { renderCooperatively } from "./render_cooperative.js";
 
 /** Complete in-memory static compilation result. */
 export interface Compilation {
-  manifest: ManifestV5;
+  manifest: ManifestV6;
   outputs: ReadonlyMap<string, string>;
 }
 
@@ -177,7 +181,7 @@ async function compileMeasured(
       normalizeSingleDocument(content, route);
     }
   });
-  const manifest = timeSync("manifest.create", () =>
+  const draftManifest = timeSync("manifest.create", () =>
     createManifest(
       registry.entries,
       graph.sourceFiles,
@@ -185,16 +189,34 @@ async function compileMeasured(
       componentViews,
     ),
   );
-  timeSync("manifest.validate", () => parseManifest(manifest));
   timeSync("components.validate-resources", () =>
     validateComponentResources(componentViews, config),
   );
   await accepted?.checkpoint();
+  const resourceSeeds = [...componentViews.values()].flatMap((view) =>
+    view.resources.map((resource) => resource.path),
+  );
+  const assetClosure = timeSync("html.links-and-resources", () =>
+    validateHtmlLinks(outputs, config, undefined, resourceSeeds),
+  );
+  const blobHashAlgorithm = new RepositoryObjectFormatReader().format(
+    config.repoRoot,
+  );
+  const manifest = {
+    ...draftManifest,
+    assetClosure,
+    blobHashAlgorithm,
+    generatedFiles: [...outputs]
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([path, content]) => ({
+        path,
+        blobHash: gitBlobHash(Buffer.from(content, "utf8"), blobHashAlgorithm),
+      })),
+    schemaVersion: 6 as const,
+  };
+  timeSync("manifest.validate", () => parseManifest(manifest));
   timeSync("manifest.serialize", () =>
     outputs.set(MANIFEST_NAME, serializeManifest(manifest)),
-  );
-  timeSync("html.links-and-resources", () =>
-    validateHtmlLinks(outputs, config),
   );
   timeSync("output.paths", () =>
     validateGeneratedOutputPaths(outputs.keys(), config),

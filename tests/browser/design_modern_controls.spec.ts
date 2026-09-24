@@ -15,7 +15,7 @@ const screens = JSON.parse(
   id: string;
   fragments: Record<"mobile" | "desktop", string>;
 }[];
-const generated = path.join(repositoryRoot, "examples/basic/generated");
+const generated = path.join(repositoryRoot, "examples/basic/.generated");
 const fileUrl = (file: string) =>
   pathToFileURL(path.join(generated, file)).href;
 const withoutInspector = new Set([

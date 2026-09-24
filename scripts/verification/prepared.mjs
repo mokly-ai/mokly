@@ -3,7 +3,7 @@ import path from "node:path";
 
 const outputs = {
   package: ["dist/cli/bin.js", "packages/viewer/dist/browser/inspector.js"],
-  example: ["examples/basic/generated/mokly-manifest.json"],
+  example: ["examples/basic/.generated/mokly-manifest.json"],
 };
 
 export async function requirePrepared(repositoryRoot, kind = "all") {

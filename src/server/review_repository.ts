@@ -1,4 +1,8 @@
 /** HTTP-owned reader state. Only the parent can prepare the supplied commit. */
+import {
+  parseBaselineCatalogue,
+  type BaselineCatalogue,
+} from "../baseline/catalogue.js";
 import type { ResolvedConfig } from "../config/types.js";
 import {
   comparisonNotPrepared,
@@ -32,14 +36,24 @@ export class ServedReviewRepository implements ReviewRepositorySource {
     commit: string | null | undefined,
     version = this.version + 1,
     selection?: BaselineSelection,
+    descriptor?: BaselineCatalogue,
   ): void {
     if (version <= this.version) return;
     this.version = version;
     if (commit === undefined) return;
-    if (commit && !selection) throw comparisonNotPrepared();
+    if (commit && (!selection || !parseBaselineCatalogue(descriptor, commit)))
+      throw comparisonNotPrepared();
     this.repository =
       commit && selection
-        ? readOnlyRepositoryForCommit(this.config, commit, selection)
+        ? readOnlyRepositoryForCommit(
+            this.config,
+            commit,
+            selection,
+            undefined,
+            undefined,
+            undefined,
+            descriptor,
+          )
         : undefined;
   }
 }

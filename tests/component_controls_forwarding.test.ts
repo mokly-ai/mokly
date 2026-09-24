@@ -73,7 +73,7 @@ test("active controls enforce loopback Host admission on ordinary catalogue rout
   for (const route of [
     "/",
     "/view/components/action.html",
-    "/static/components/action.variants/default.mobile.html",
+    "/static/.generated/components/action.variants/default.mobile.html",
   ]) {
     assert.equal(
       (

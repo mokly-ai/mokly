@@ -5,6 +5,7 @@ import test, { type TestContext } from "node:test";
 
 import { compileCatalogue, type Compilation } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
+import { normalizeDocumentUrls } from "../dist/review/normalize_urls.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
 import {
@@ -47,8 +48,16 @@ test("relocated views use the complete in-memory path", async (t) => {
   const afterPath = actionViewPath(fixture.after);
   assert.notEqual(beforePath, afterPath);
   assert.equal(
-    fixture.before.outputs.get(beforePath),
-    fixture.after.outputs.get(afterPath),
+    normalizeDocumentUrls(
+      fixture.before.outputs.get(beforePath)!,
+      beforePath,
+      ".generated",
+    ),
+    normalizeDocumentUrls(
+      fixture.after.outputs.get(afterPath)!,
+      afterPath,
+      ".generated",
+    ),
   );
   const changedPaths = ["entries/fixture.mockup.tsx"];
   const beforeResources = {
@@ -76,7 +85,7 @@ test("relocated views use the complete in-memory path", async (t) => {
 async function relocatedFixture(t: TestContext) {
   const source = componentEntrySource({
     actionRender:
-      '(props) => <button>{props.label}<img src="../image.svg" /></button>',
+      '(props) => <button>{props.label}{props.label === "Continue" ? <img src="../../../image.svg" /> : null}</button>',
   });
   const fixture = await createFixture(source);
   t.after(() => removeFixture(fixture));
@@ -93,10 +102,12 @@ async function relocatedFixture(t: TestContext) {
   const before = await compileCatalogue(config);
   await fs.writeFile(
     fixture.entryPath,
-    source.replace(
-      'route: "components/action.html"',
-      'route: "components/nested/action.html"',
-    ),
+    source
+      .replace(
+        'route: "components/action.html"',
+        'route: "components/nested/action.html"',
+      )
+      .replace('src="../../../image.svg"', 'src="../../../../image.svg"'),
   );
   const after = await compileCatalogue(config);
   return { before, after, config };
@@ -118,7 +129,7 @@ function withRootStylesheet(
     [...compilationFiles(compilation, resources)].map(([route, value]) => [
       route,
       route.endsWith(".html")
-        ? `${Buffer.from(value).toString("utf8")}<link rel="stylesheet" href="${path.posix.relative(path.posix.dirname(route), "main.css")}">`
+        ? `${Buffer.from(value).toString("utf8")}<link rel="stylesheet" href="${path.posix.relative(path.posix.dirname(path.posix.join(".generated", route)), "main.css")}">`
         : value,
     ]),
   );

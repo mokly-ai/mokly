@@ -5,16 +5,14 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
+import { baselineCatalogue } from "../dist/baseline/catalogue.js";
 import { compileCatalogue } from "../dist/build/compile.js";
 import type { Compilation } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
 import { renderReviewArtifact } from "../dist/review/artifact.js";
 import { compareReview } from "../dist/review/compare.js";
-import {
-  NodeGitCommandRunner,
-  CommittedRepository,
-} from "../dist/review/git.js";
+import { CommittedRepository } from "../dist/review/git.js";
 import {
   normalizeReviewPair,
   normalizeSingleDocument,
@@ -24,10 +22,11 @@ import { runReview } from "../dist/review/run.js";
 import { writeReviewArtifact } from "../dist/review/write.js";
 import type {
   ManifestScreen,
-  ManifestV5,
+  ManifestV6,
 } from "../packages/viewer/dist/registry/types.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import {
   createFixture,
   removeFixture,
@@ -362,7 +361,7 @@ test("Review compares Git base without checkout and writes deterministic artifac
     config,
     "HEAD",
     config.review.outDir,
-    new CommittedRepository(new NodeGitCommandRunner(fixture.root)),
+    committedReviewRepository(config),
   );
   assert.equal(
     result.screens.find((screen) => screen.route === "screens/home.html")
@@ -415,7 +414,7 @@ test("Review reports descendants of directory dependencies", async (context) => 
     config,
     "HEAD",
     config.review.outDir,
-    new CommittedRepository(new NodeGitCommandRunner(fixture.root)),
+    committedReviewRepository(config),
   );
 
   assert.ok(
@@ -452,12 +451,18 @@ async function git(cwd: string, arguments_: readonly string[]): Promise<void> {
 }
 
 function fakeGit(files: ReadonlyMap<string, string>): ReadOnlyReviewRepository {
+  const commit = "a".repeat(40);
+  const generated = files.has("mockups/.generated/mokly-manifest.json");
+  const descriptor = generated
+    ? baselineCatalogue(commit, "mockups", "generated-v6")
+    : undefined;
   return {
     evidence: {
       changedPaths: async () => [],
-      mergeBase: async () => "a".repeat(40),
+      mergeBase: async () => commit,
     },
     reader: {
+      ...(descriptor ? { catalogue: descriptor } : {}),
       fileExists: async (_commit, repoPath) => files.has(repoPath),
       fileKind: async (_commit, repoPath) =>
         files.has(repoPath) ? "regular" : "missing",
@@ -474,24 +479,25 @@ function fakeGit(files: ReadonlyMap<string, string>): ReadOnlyReviewRepository {
         return Buffer.from(content);
       },
     },
+    ...(descriptor ? { descriptor } : {}),
   };
 }
 
 function filesForCompilation(
-  manifest: ManifestV5,
+  manifest: ManifestV6,
   compilation: Compilation,
 ): Map<string, string> {
   const files = new Map<string, string>([
-    ["mockups/mokly-manifest.json", `${JSON.stringify(manifest)}\n`],
+    ["mockups/.generated/mokly-manifest.json", `${JSON.stringify(manifest)}\n`],
   ]);
   for (const [route, content] of compilation.outputs) {
     if (route === "mokly-manifest.json") continue;
-    files.set(`mockups/${route}`, content);
+    files.set(`mockups/.generated/${route}`, content);
   }
   return files;
 }
 
-function withoutDarkFragments(manifest: ManifestV5): ManifestV5 {
+function withoutDarkFragments(manifest: ManifestV6): ManifestV6 {
   return {
     ...manifest,
     entries: manifest.entries.map((entry) => {

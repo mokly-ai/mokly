@@ -38,6 +38,11 @@ export function readCatalogue(value: unknown): CatalogueReadModel {
     });
   const model: CatalogueReadModel = {
     schemaVersion: 1,
+    ...(input.generatedPathPrefix === undefined
+      ? {}
+      : input.generatedPathPrefix === ".generated"
+        ? { generatedPathPrefix: ".generated" as const }
+        : invalidData("$catalogue", "unsupported generatedPathPrefix")),
     identity: { id: hash(identity.id), title: text(identity.title) },
     deploymentId: hash(input.deploymentId),
     revision: {

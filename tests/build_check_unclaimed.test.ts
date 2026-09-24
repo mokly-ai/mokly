@@ -22,7 +22,7 @@ test("committed check separates orphan and unclaimed generated files", async (co
   const compilation = await compileCatalogue(config);
   await writeCompilation(compilation, config);
   const generated = async (route: string, owner: string) => {
-    const target = path.join(fixture.mockupsDir, route);
+    const target = path.join(config.generatedDir, route);
     await fs.promises.mkdir(path.dirname(target), { recursive: true });
     await fs.promises.writeFile(
       target,
@@ -65,17 +65,17 @@ test("committed check tolerates a generated file removed before its header is re
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
   await writeCompilation(compilation, config);
-  const disappearing = path.join(fixture.mockupsDir, "disappearing.html");
+  const disappearing = path.join(config.generatedDir, "disappearing.html");
   await fs.promises.writeFile(
     disappearing,
     `${generatedHeader("docs/notes.md")}<html></html>\n`,
   );
   await fs.promises.writeFile(
-    path.join(fixture.mockupsDir, "retained-orphan.html"),
+    path.join(config.generatedDir, "retained-orphan.html"),
     `${generatedHeader("entries/deleted.mockup.tsx")}<html></html>\n`,
   );
   await fs.promises.writeFile(
-    path.join(fixture.mockupsDir, "retained-unclaimed.html"),
+    path.join(config.generatedDir, "retained-unclaimed.html"),
     `${generatedHeader("docs/notes.md")}<html></html>\n`,
   );
   const openSync = fs.openSync;

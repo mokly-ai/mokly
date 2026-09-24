@@ -21,8 +21,8 @@ import { reviewOutcomeScreens } from "./review_outcome_screens.js";
 import { reviewStyleScreens } from "./review_style_screens.js";
 
 const DESIGN_DEPENDENCIES = [
-  "examples/basic/generated/design-stage.css",
-  "examples/basic/generated/design.css",
+  "examples/basic/design-stage.css",
+  "examples/basic/design.css",
 ];
 
 const designMockups = defineRoot({
@@ -159,7 +159,7 @@ const designMockups = defineRoot({
       ],
       dependencies: [
         ...DESIGN_DEPENDENCIES,
-        "examples/basic/generated/design-review.css",
+        "examples/basic/design-review.css",
       ],
       description:
         "Optional screen comparisons within the catalogue Changes filter.",

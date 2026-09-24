@@ -6,7 +6,10 @@ import { timeAsync, timeSync } from "../diagnostics/timings.js";
 import { MoklyError, errorMessage } from "../errors.js";
 
 import type { Compilation } from "./compile.js";
-import { validateGeneratedOutputPaths } from "./output_paths.js";
+import {
+  validateGeneratedInventory,
+  validateGeneratedOutputPaths,
+} from "./output_paths.js";
 import {
   generatedOwnershipDenial,
   pendingGeneratedOrphanRoutes,
@@ -29,9 +32,11 @@ async function writeMeasured(
   timeSync("output.validate-targets", () =>
     rejectUnsafeTargets(compilation, config),
   );
-  await fs.promises.mkdir(path.dirname(config.mockupsDir), { recursive: true });
+  await fs.promises.mkdir(path.dirname(config.generatedDir), {
+    recursive: true,
+  });
   const temporaryRoot = await fs.promises.mkdtemp(
-    path.join(path.dirname(config.mockupsDir), ".mokly-write-"),
+    path.join(path.dirname(config.generatedDir), ".mokly-write-"),
   );
   const stageRoot = path.join(temporaryRoot, "stage");
   const backupRoot = path.join(temporaryRoot, "backup");
@@ -56,7 +61,7 @@ async function writeMeasured(
     });
     await timeAsync("output.backup", async () => {
       for (const route of affected) {
-        const target = path.join(config.mockupsDir, route);
+        const target = path.join(config.generatedDir, route);
         if (!fs.existsSync(target)) continue;
         const backup = path.join(backupRoot, route);
         await fs.promises.mkdir(path.dirname(backup), { recursive: true });
@@ -66,7 +71,7 @@ async function writeMeasured(
     });
     await timeAsync("output.install", async () => {
       for (const route of expected) {
-        const target = path.join(config.mockupsDir, route);
+        const target = path.join(config.generatedDir, route);
         await fs.promises.mkdir(path.dirname(target), { recursive: true });
         await fs.promises.rename(path.join(stageRoot, route), target);
         installed.push(route);
@@ -96,8 +101,9 @@ function rejectUnsafeTargets(
   config: ResolvedConfig,
 ): void {
   validateGeneratedOutputPaths(compilation.outputs.keys(), config);
+  validateGeneratedInventory(compilation);
   for (const route of compilation.outputs.keys()) {
-    const target = path.join(config.mockupsDir, route);
+    const target = path.join(config.generatedDir, route);
     if (!fs.existsSync(target)) continue;
     const denial = generatedOwnershipDenial(target, config);
     if (denial) {
@@ -116,10 +122,12 @@ async function rollback(
   backedUp: readonly string[],
 ): Promise<void> {
   for (const route of [...installed].reverse()) {
-    await fs.promises.rm(path.join(config.mockupsDir, route), { force: true });
+    await fs.promises.rm(path.join(config.generatedDir, route), {
+      force: true,
+    });
   }
   for (const route of [...backedUp].reverse()) {
-    const target = path.join(config.mockupsDir, route);
+    const target = path.join(config.generatedDir, route);
     await fs.promises.mkdir(path.dirname(target), { recursive: true });
     await fs.promises.rename(path.join(backupRoot, route), target);
   }

@@ -4,7 +4,7 @@ import { action } from "../action/action.mokly.js";
 
 import { Toolbar } from "./toolbar.js";
 
-const dependency = "examples/basic/generated/example-components.css";
+const dependency = "examples/basic/example-components.css";
 const implementation = "examples/basic/src/components/toolbar/toolbar.tsx";
 
 export const toolbar = defineComponent({

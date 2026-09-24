@@ -10,8 +10,9 @@ import type {
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
+import { generatedManifestRoutes } from "../registry/generated_routes.js";
 
-import { copySnapshotDependencies, GitReviewAssetReader } from "./assets.js";
+import { GitReviewAssetReader } from "./assets.js";
 import { baselineResourceConfig } from "./base_manifest.js";
 import { SelectedAssetReader } from "./evidence_assets.js";
 import type { BaselineReader } from "./git.js";
@@ -22,6 +23,7 @@ import type {
   RemovedPagePreviewSource,
   RemovedPageSelection,
 } from "./selection_types.js";
+import { copySnapshotDependencies } from "./snapshot_dependencies.js";
 
 /** Git-backed capture over a baseline reader pinned by the caller. */
 export class RepositoryRemovedPagePreview implements RemovedPagePreviewProvider {
@@ -61,6 +63,7 @@ export class RepositoryRemovedPagePreview implements RemovedPagePreviewProvider 
         toPosixPath(
           path.relative(this.config.repoRoot, this.config.mockupsDir),
         ),
+        source.baseline,
       ),
       signal,
     );
@@ -71,6 +74,10 @@ export class RepositoryRemovedPagePreview implements RemovedPagePreviewProvider 
       new Set([removed.entry.route]),
       (route) => reader.read(route),
       (routes) => reader.readMany(routes),
+      {
+        prefix: source.baseline.schemaVersion === 6 ? ".generated" : "",
+        routes: generatedManifestRoutes(source.baseline),
+      },
     );
     signal.throwIfAborted();
     const preview = parseRemovedPagePreview({

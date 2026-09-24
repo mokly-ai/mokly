@@ -21,7 +21,7 @@ test("mixed component design styles retain their actual rendered resource scope"
     await t.test(stylesheet, async () => {
       await fixture.reset();
       await fixture.edit(
-        `examples/basic/generated/${stylesheet}`,
+        `examples/basic/${stylesheet}`,
         (source) => source + "\nbody { gap: 17px; }\n",
       );
       const expected = fixture.before.manifest.entries.filter((entry) =>
@@ -54,7 +54,7 @@ test("mixed component design styles retain their actual rendered resource scope"
         );
       else
         assert.ok(
-          result.sharedImpact.includes("examples/basic/generated/design.css"),
+          result.sharedImpact.includes("examples/basic/design.css"),
           "the glob remains diagnostic evidence without adding unrelated entries",
         );
     });

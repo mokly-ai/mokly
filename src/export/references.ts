@@ -11,6 +11,7 @@ import {
 import {
   extractCssReferences,
   extractHtmlReferences,
+  resolveLocalReferencePath,
 } from "../html_references.js";
 
 import { exportError } from "./error.js";
@@ -98,21 +99,10 @@ function referenceTarget(source: string, value: string): string | undefined {
   if (reference.startsWith("#") || reference.startsWith("?")) return source;
   if (reference.startsWith("//") || /^[a-z][a-z0-9+.-]*:/i.test(reference))
     throw exportError(`Unsupported export URL: ${source} -> ${reference}`);
-  const encoded = reference.split(/[?#]/, 1)[0] ?? "";
-  let decoded: string;
-  try {
-    decoded = decodeURIComponent(encoded);
-  } catch (error) {
-    throw exportError(`Invalid export URL: ${reference}`, error);
-  }
-  if (decoded === "/") return "index.html";
-  const resolved = path.posix.normalize(
-    decoded.startsWith("/")
-      ? decoded.slice(1)
-      : path.posix.join(path.posix.dirname(source), decoded),
-  );
-  const target = resolved.replace(/\/$/, "");
-  if (!isSafeRepositoryPath(target))
+  const resolved = resolveLocalReferencePath(source, reference, true);
+  if (resolved.kind === "invalid-encoding")
+    throw exportError(`Invalid export URL: ${reference}`);
+  if (resolved.kind !== "resolved")
     throw exportError(`Export URL escapes the site: ${reference}`);
-  return target;
+  return resolved.path;
 }

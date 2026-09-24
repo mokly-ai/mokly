@@ -47,11 +47,11 @@ for (const watch of [false, true]) {
           parseReviewResult(await unselected.json()).baseCommit,
           fixture.commit,
         );
-        await fs.mkdir(path.join(fixture.mockupsDir, "screens"), {
+        await fs.mkdir(path.join(fixture.mockupsDir, ".generated/screens"), {
           recursive: true,
         });
         await fs.writeFile(
-          path.join(fixture.mockupsDir, "screens/home.mobile.html"),
+          path.join(fixture.mockupsDir, ".generated/screens/home.mobile.html"),
           "wrong local bytes",
         );
         const response = await fetch(
@@ -95,7 +95,10 @@ for (const watch of [false, true]) {
         build: true,
       });
       try {
-        const file = path.join(fixture.mockupsDir, "screens/home.mobile.html");
+        const file = path.join(
+          fixture.mockupsDir,
+          ".generated/screens/home.mobile.html",
+        );
         await waitFor(async () =>
           fs.readFile(file, "utf8").catch(() => undefined),
         );

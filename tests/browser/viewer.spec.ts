@@ -24,7 +24,7 @@ test("uncontrolled selection, slots and handle lifecycle", async ({ page }) => {
   );
   await expect(page.locator("#one .mbk-frag").first()).toHaveAttribute(
     "src",
-    /\/static\/screens\/home.mobile.html/,
+    /\/static\/\.generated\/screens\/home.mobile.html/,
   );
   await page.getByText("Host start").click();
   await expect(page.getByText("Annotation")).toBeVisible();

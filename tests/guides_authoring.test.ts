@@ -59,8 +59,7 @@ test("the Config guide and MoklyConfig fields agree", () => {
   const fields = configFields();
   assert.ok(fields.length > 5);
   for (const field of fields)
-    if (field !== "publicExclude")
-      assert.ok(names(field, source), `${field} is not on the Config guide`);
+    assert.ok(names(field, source), `${field} is not on the Config guide`);
   assert.ok(names("defineConfig", source));
   const section = /\n## Fields\n([\s\S]*?)\n## /u.exec(source)?.[1] ?? "";
   const documented = [...section.matchAll(/^\| `(\w+)`\s+\|/gmu)].map(

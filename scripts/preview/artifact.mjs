@@ -27,10 +27,14 @@ export const previewOwnership = (config) => ({
     ["index.html", "404.html", "_headers", "_redirects"].includes(name) ||
     (name.startsWith("view/") && name.endsWith(".html")) ||
     (name.startsWith("static/") &&
-      isExportPublicName(name.slice(7), config, {
-        allowBuildDirectories: true,
-        resolveAliases: false,
-      })) ||
+      isExportPublicName(
+        name.startsWith("static/.generated/") ? name.slice(18) : name.slice(7),
+        config,
+        {
+          allowBuildDirectories: true,
+          resolveAliases: false,
+        },
+      )) ||
     /^__mokly\/(?:shell\.css|client\/[^/]+\.js|navigation\/[^/]+\.js|fonts\/[^/]+|diffs\/__generations\/[A-Za-z0-9-]+\/.+)$/.test(
       name,
     ),

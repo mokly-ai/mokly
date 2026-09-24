@@ -14,11 +14,11 @@ import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentViews } from "./helpers/component_views.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
-test("v5 source metadata round-trips deterministically and readers still accept its absence", async (t) => {
+test("v6 source metadata round-trips deterministically and readers still accept its absence", async (t) => {
   const fixture = await createFixture(componentEntrySource());
   t.after(() => removeFixture(fixture));
   const { manifest } = await compileCatalogue(await loadConfig(fixture.root));
-  assert.equal(manifest.schemaVersion, 5);
+  assert.equal(manifest.schemaVersion, 6);
   const original = structuredClone(manifest);
   for (const view of componentViews(original))
     for (const instance of view.instances)

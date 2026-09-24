@@ -7,14 +7,17 @@ import type {
   ReviewResult,
 } from "@mokly/viewer/data";
 
-import { validateArtifactResources } from "./artifact_resources.js";
+import {
+  validateArtifactResources,
+  type ArtifactLayouts,
+} from "./artifact_resources.js";
 import { markdownCode, markdownText } from "./markdown.js";
 import { hasOutputChange, isImpactOnly } from "./materiality.js";
 import { addArtifactFile } from "./paths.js";
 
 /** Add comparison metadata to isolated snapshot files. */
 export function renderReviewArtifact(
-  artifact: ReviewArtifact,
+  artifact: ReviewArtifact & { readonly generatedLayouts?: ArtifactLayouts },
 ): ReadonlyMap<string, ReviewArtifactContent> {
   if (
     artifact.result.schemaVersion === 3 ||
@@ -26,7 +29,7 @@ export function renderReviewArtifact(
     )
   )
     parseReviewResult(artifact.result);
-  validateArtifactResources(artifact);
+  validateArtifactResources(artifact, artifact.generatedLayouts);
   const files = new Map(artifact.files);
   addArtifactFile(
     files,

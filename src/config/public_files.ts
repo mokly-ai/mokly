@@ -13,6 +13,7 @@ import {
 import { isBaselineCachePath } from "./cache_paths.js";
 import { locatePath, type FileLocation } from "./file_locations.js";
 import { projectRealPath } from "./paths.js";
+import { isInside } from "./paths.js";
 import type { ResolvedConfig } from "./types.js";
 
 /** Catalogue manifests are internal even when requested through another path. */
@@ -25,7 +26,10 @@ export function isInternalCatalogueFile(
     MANIFEST_NAME,
     FORMER_MANIFEST_NAME,
     LEGACY_MANIFEST_NAME,
-  ].map((name) => path.join(config.mockupsDir, name));
+  ].flatMap((name) => [
+    path.join(config.mockupsDir, name),
+    path.join(config.generatedDir, name),
+  ]);
   if (internal.includes(candidate)) return true;
   if (!resolveAliases) return false;
   const realCandidate = projectRealPath(candidate);
@@ -53,6 +57,15 @@ export function privateStaticPathReason(
 ): string | undefined {
   if (isBaselineCachePath(candidate, config.repoRoot, resolveAliases))
     return "targets the private .mokly-cache directory";
+  if (
+    isInside(config.generatedDir, candidate) ||
+    (resolveAliases &&
+      isInside(
+        projectRealPath(config.generatedDir),
+        projectRealPath(candidate),
+      ))
+  )
+    return "targets generated output";
   if (isInternalCatalogueFile(candidate, config, resolveAliases))
     return "targets internal catalogue metadata";
   const denial = isAuthoringSource(

@@ -58,7 +58,11 @@ export function screenViewChanges(
                 ? ("removed" as const)
                 : !before
                   ? ("added" as const)
-                  : changed.has(prefix ? `${prefix}/${after.path}` : after.path)
+                  : changed.has(
+                        prefix
+                          ? `${prefix}/.generated/${after.path}`
+                          : `.generated/${after.path}`,
+                      )
                     ? ("changed" as const)
                     : ("unchanged" as const),
             },

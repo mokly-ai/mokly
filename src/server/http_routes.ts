@@ -44,6 +44,7 @@ export async function handleCatalogueRequest(
   contentVersion?: number,
   publicCatalogue?: PublicCatalogueSource,
   generatedOutputs?: ReadonlyMap<string, string>,
+  assetClosure?: ReadonlySet<string>,
 ): Promise<void> {
   if (method !== "GET" && method !== "HEAD")
     return send(response, 405, "text/plain", "Method not allowed", method);
@@ -104,6 +105,7 @@ export async function handleCatalogueRequest(
       catalogue,
       method,
       generatedOutputs,
+      assetClosure,
     );
   const changed =
     componentChanges?.changedRoutes ??
@@ -150,6 +152,7 @@ export async function handleCatalogueRequest(
       context,
       method,
       documents,
+      generatedOutputs,
     );
   if (url.pathname.startsWith("/view/"))
     return renderView(
@@ -161,6 +164,7 @@ export async function handleCatalogueRequest(
       context,
       method,
       documents,
+      generatedOutputs,
     );
   return send(
     response,
