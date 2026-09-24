@@ -462,9 +462,14 @@ Tags: ui
 - [x] Run `cargo xtask check` and require a 100% pass rate.
 - [x] Inspect `git diff --name-status origin/main` and its deletions, and
       record every approved removal in the commit body.
-- [ ] Run `git add -A`, commit with a breaking-change Conventional Commit
+- [x] Run `git add -A`, commit with a breaking-change Conventional Commit
       (`feat!:` with a `BREAKING CHANGE:` footer that lists the migrations),
       and push the branch.
+- [ ] Merge `origin/main` (#115, screen variants and history) into the
+      branch. Audit main's additions first, resolve each conflict path by
+      path, migrate main's new fixtures, tests and docs to this plan's
+      contracts without dropping main's features, rerun `cargo xtask check`,
+      and push.
 - [ ] After the push, review the complete diff against `origin/main` using
       `docs/implementation-review-prompt.md`. Report numbered findings with
       severity, impact, lettered options and a recommendation, without
