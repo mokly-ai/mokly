@@ -169,7 +169,7 @@ they must participate in source watching and repository confinement. CSS, fonts,
 images, and other assets referenced only by public resource URLs remain public
 unless another protection rule applies. If a file serves both roles, source
 protection wins; consumers must emit a separate public artifact instead of exposing the input.
-In the [imported CSS target](./mokly-imported-styles.md), extend this union
+For [imported CSS](./mokly-imported-styles.md), extend this union
 with the stylesheet pass's nested `@import`s and `url()` assets,
 transformer-only CSS inputs, and PostCSS-reported file/directory dependencies.
 Inventory-only freshness loads run the same CSS/PostCSS inventory pass;

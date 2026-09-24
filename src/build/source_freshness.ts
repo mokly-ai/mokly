@@ -32,6 +32,7 @@ export async function assertFreshSourceInventory(
       "source inventory is stale; run mokly build before serving or publishing",
     );
   config.sourceFiles = graph.sourceFiles;
+  config.postcssWatchDirectories = graph.postcssWatchDirectories ?? [];
   config.configSourceFiles = current.configSourceFiles ?? [];
   validateGeneratedOutputPaths(
     manifest.entries.flatMap((entry) =>

@@ -76,6 +76,7 @@
     "lightningcss": "^1.33.0",
     "minimatch": "^10.2.6",
     "parse5": "^8.0.1",
+    "postcss": "^8.5.28",
     "tar": "^7.5.22",
     "tar-stream": "^3.2.1",
     "@mokly/viewer": "0.3.0"

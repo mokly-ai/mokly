@@ -4,6 +4,7 @@ import path from "node:path";
 import { minimatch } from "minimatch";
 
 import { isOwned } from "../build/ownership.js";
+import { isGeneratedRoute } from "../build/styles/routes.js";
 import { isBaselineCachePath } from "../config/cache_paths.js";
 import { globStablePrefix } from "../config/entry_globs.js";
 import { isInside, projectRealPath, toPosixPath } from "../config/paths.js";
@@ -81,6 +82,7 @@ export function watchTargets(config: ResolvedConfig): string[] {
     ...(config.sourceFiles ?? []).map((source) =>
       path.resolve(config.repoRoot, source),
     ),
+    ...(config.postcssWatchDirectories ?? []).map((entry) => entry.directory),
   ];
   if (config.renderer) targets.push(config.renderer);
   for (const stylesheet of configuredStylesheetPaths(config)) {
@@ -120,7 +122,11 @@ function isGeneratedOutputPath(
 ): boolean {
   if (!isInside(config.mockupsDir, candidate)) return false;
   const relative = toPosixPath(path.relative(config.mockupsDir, candidate));
-  return relative === MANIFEST_NAME || isOwned(candidate, config);
+  return (
+    relative === MANIFEST_NAME ||
+    isGeneratedRoute(relative) ||
+    isOwned(candidate, config)
+  );
 }
 
 /** Preserve exact configured inputs and the ancestors needed to reach them. */

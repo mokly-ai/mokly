@@ -18,6 +18,7 @@ import {
   validateSourceRoots,
 } from "./path_validation.js";
 import { resolveInside, validateRelativeRoute } from "./paths.js";
+import { validatePostcssPath } from "./postcss.js";
 import { resolvePublicExclude } from "./public_exclusions.js";
 import {
   isReservedConfiguredPath,
@@ -95,6 +96,7 @@ export function resolveConfig(
     input.renderer,
     "renderer",
   );
+  const postcss = validatePostcssPath(input.postcss, repoRoot, configDir);
   const compatibilityTransformer = optionalModule(
     repoRoot,
     configDir,
@@ -154,6 +156,7 @@ export function resolveConfig(
     mockupsDir,
     moduleResolution,
     ...(renderer ? { renderer } : {}),
+    ...(postcss ? { postcss } : {}),
     repoRoot,
     review: {
       ...(baselineBuild ? { baselineBuild } : {}),

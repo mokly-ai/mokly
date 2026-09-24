@@ -62,6 +62,7 @@ export async function serveWatched(
   const inventory = await loadConsumerGraph(config, false);
   config.entryModules = inventory.entrySources;
   config.sourceFiles = inventory.sourceFiles;
+  config.postcssWatchDirectories = inventory.postcssWatchDirectories ?? [];
   let activeConfig = config;
   let watcher = createSourceWatcher(watcherFactory, config, gate, report);
   const resources = new ResourceWatcher(
@@ -150,6 +151,8 @@ export async function serveWatched(
     const nextInventory = await loadConsumerGraph(nextConfig, false);
     nextConfig.entryModules = nextInventory.entrySources;
     nextConfig.sourceFiles = nextInventory.sourceFiles;
+    nextConfig.postcssWatchDirectories =
+      nextInventory.postcssWatchDirectories ?? [];
     const nextGate = new NotificationGate<WatchEvent>(report);
     const replacement = createSourceWatcher(
       watcherFactory,

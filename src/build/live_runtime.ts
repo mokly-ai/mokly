@@ -22,6 +22,7 @@ export async function prepareLiveRuntime(
       ...config,
       entryModules: graph.entrySources,
       sourceFiles: graph.sourceFiles,
+      postcssWatchDirectories: graph.postcssWatchDirectories ?? [],
     };
     const registry = prepareRegistry(graph.definitions, config);
     const manifest = createCatalogueIndex(

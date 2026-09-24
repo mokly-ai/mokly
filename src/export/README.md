@@ -69,6 +69,10 @@ hashes and alias edges; `shell_metadata.ts` normalizes and stamps only known
 shell roots while preserving other bytes and rejecting adapter metadata drift.
 Descriptor version 2 lets both old and current clients reload across incompatible
 deployments. Comparison generation URLs retain their separate content identity.
+The final export input-stability check compares authored configuration,
+compilation and public bytes. It excludes generation-scoped PostCSS directory
+watch roots from configuration equality; matching source files and transformed
+outputs remain covered by the compilation comparison.
 
 `site.ts` also writes the [public catalogue projection](../catalogue/README.md)
 at `__mokly/catalogue.json`. Its per-entry Changes state uses the same accepted

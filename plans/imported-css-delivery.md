@@ -3,10 +3,10 @@
 ## Status
 
 Active. Created 2026-09-24 from the CSS-in-JS investigation on this branch.
-Milestones 1, 1A, 2, 3, 4, 4A, 5, and 5A (contract, binary-safe output,
+Milestones 1, 1A, 2, 3, 4, 4A, 5, 5A and 6 (contract, binary-safe output,
 reserved generated directory, CSS/asset bundling and follow-ups, stylesheet
-links, and on-demand validation caching) are complete; Milestones 6–9 remain.
-PostCSS will let Tailwind v4 and autoprefixer use the consumer's configuration.
+links, on-demand validation caching and PostCSS) are complete; Milestones 7–9
+remain. PostCSS lets Tailwind v4 and autoprefixer use the consumer's configuration.
 Esbuild remains the only bundler; the optional Vite compatibility package is a
 follow-up plan.
 
@@ -167,6 +167,14 @@ path>` through esbuild's `file` loader with a path-mirroring asset name, and
     source path plus effective pruned-import set per compilation so both passes
     share a result; a different root-specific set requires reprocessing. Tailwind v4
     through `@tailwindcss/postcss` and autoprefixer are the tested plugins.
+    `ResolvedConfig` stays JSON-serializable: config loading only analyzes the
+    PostCSS module's local inputs, and graph loading evaluates and instantiates
+    plugins once per load. Rewrite `import.meta.url`, `.dirname`, and `.filename`
+    in each bundled local module to the original file's values. A plugin that
+    reports a renderer-excluded file through a kept nested `@import` fails
+    rather than duplicating it; plugins that do not inline leave nested pruning
+    to esbuild. Recommend an explicit Tailwind `base`, `optimize: false`, and
+    `@reference` for context-only imports.
 13. **Plugin-reported dependencies join the inventory.** A `dependency`
     message adds its repository file to `sourceFiles`. A `dir-dependency`
     message is expanded with the discovery walker and reported glob (default
@@ -467,33 +475,33 @@ generation-local pending styles while keeping the same resource diagnostics.
 - [x] Commit and push this milestone independently, then review the complete
       diff against `origin/main` using `docs/implementation-review-prompt.md`.
 
-## Milestone 6: PostCSS pipeline
+## Milestone 6: PostCSS pipeline (complete)
 
 Run the consumer's PostCSS configuration over every imported stylesheet so
 Tailwind v4 and autoprefixer work, with complete inventory and watch coverage.
 
-- [ ] Add `postcss` with `npm install postcss` and confirm
+- [x] Add `postcss` with `npm install postcss` and confirm
       `npm run dependencies:check` still passes.
-- [ ] Add the `postcss` config key to `src/config/types.ts` and a new
+- [x] Add the `postcss` config key to `src/config/types.ts` and a new
       `src/config/postcss.ts` that validates the config-relative path, requires
-      a regular file inside `repoRoot`, loads the module through the shared
-      esbuild config loader in `src/config/load.ts` with bare imports resolved
+      a regular file inside `repoRoot`, analyzes it at config load and loads it
+      through a dedicated esbuild-based loader with bare imports resolved
       via Node ESM `import` conditions from each importer and externalized as
       absolute `file:` URLs (without changing `mokly.config` loading), adds its metafile inputs
       to `configSourceFiles`, and normalizes the exported shape with the
       documented errors for missing `plugins`, unknown keys, and unresolvable
       package names.
-- [ ] Add `src/build/styles/postcss.ts`: run the plugins per stylesheet with
+- [x] Add `src/build/styles/postcss.ts`: run the plugins per stylesheet with
       `from` set to the source path and `map: false`, collect `dependency` and
       `dir-dependency` messages, expand directories through the discovery
       walker using the reported glob (default `**/*`), apply explicit and
       directory generated-output plus public-file rules for both modes,
       and memoize by source and effective import-pruning set per compilation.
-- [ ] Wire the runner into the load hook in `src/build/styles/collect.ts`
+- [x] Wire the runner into the load hook in `src/build/styles/collect.ts`
       ahead of CSS Modules naming for both passes, union dependency files into
       `sourceFiles`, and register directory dependencies as package-owned watch
       inputs.
-- [ ] Add `tests/build_postcss.test.ts` using synthetic plugins with no new
+- [x] Add `tests/build_postcss.test.ts` using synthetic plugins with no new
       dev dependencies: a transform applies to imported and `@import`ed
       stylesheets; a transform inside a CSS Module runs before naming; an
       identical stylesheet/pruning input is processed once per compilation;
@@ -507,10 +515,20 @@ Tailwind v4 and autoprefixer work, with complete inventory and watch coverage.
       module's directory; `map` ignored and other keys rejected; a missing or
       escaping path rejected; and byte-identical output across two
       compilations.
-- [ ] Add a `tests/catalogue_watch.test.ts` case where editing the PostCSS
+- [x] Test the nested renderer-import bypass, local `import.meta` rewriting,
+      real Serve IPC and deterministic output across separate processes;
+      cover default globs, private `/static` sources, and in-repository
+      symlink aliases without exposing generated or public mockups files.
+- [x] Keep export input-stability checks independent of generation-scoped
+      PostCSS watch-directory metadata; add an export regression test using an
+      accepted PostCSS generation and rerun existing CSS/route export tests.
+- [x] Add a `tests/catalogue_watch.test.ts` case where editing the PostCSS
       module, a reported dependency, or a file added under a directory
       dependency rebuilds and reloads.
-- [ ] Run the build, relevant tests, and `cargo xtask check`.
+- [x] Run the build, focused and doc tests, example Build/Check, dependency
+      audit, lint, typecheck, and `cargo xtask check`.
+- [x] Commit and push Milestone 6 separately, then review the complete diff
+      against `origin/main` using `docs/implementation-review-prompt.md`.
 
 ## Milestone 7: Serve, watch, export, publication, and Changes
 

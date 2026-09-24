@@ -13,7 +13,7 @@ by generated output:
 - resolved entry modules, page/renderer/transformer imports, and every other
   inventoried source rebuild generated output, including imported bytes handled
   by asset loaders;
-- in the [imported-CSS target](./mokly-imported-styles.md), changed plain/module
+- for [imported CSS](./mokly-imported-styles.md), changed plain/module
   CSS, nested imports, referenced assets, and PostCSS-reported files rebuild;
   PostCSS directory dependencies watch additions matching the reported glob
   (or `**/*`), while the PostCSS module and its imports reload config before

@@ -220,6 +220,18 @@ export function classifyWatchPath(
     )
   )
     return "ignore";
+  if (
+    directory === "file" &&
+    config.postcssWatchDirectories?.some(
+      ({ directory: root, glob }) =>
+        isInside(root, absolute) &&
+        minimatch(toPosixPath(path.relative(root, absolute)), glob, {
+          dot: true,
+          nocase: false,
+        }),
+    )
+  )
+    return "rebuild";
   if ([...resources].some((resource) => isInside(absolute, resource)))
     return "reload";
   const stylesheetPaths = configuredStylesheetPaths(config);

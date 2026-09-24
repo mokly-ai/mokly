@@ -10,9 +10,9 @@ order: 10
 Per-root imported stylesheets and binary assets compile into
 `mokly-generated/`. Mokly passes fragment-relative renderer and entry
 stylesheet links to your renderer; emit them in the document head to make
-imported CSS visible. Pages receive no automatic links. PostCSS processing
-is **not yet implemented**; the Tailwind and autoprefixer setup below is the
-planned workflow, not a supported pipeline yet.
+imported CSS visible. Pages receive no automatic links. An optional PostCSS
+module processes imported CSS before CSS Modules and bundling; Tailwind v4 and
+autoprefixer setup is below.
 
 ## Import CSS beside a screen
 
@@ -108,12 +108,26 @@ export default defineConfig({
 import tailwindcss from "@tailwindcss/postcss";
 import autoprefixer from "autoprefixer";
 
-export default { plugins: [tailwindcss(), autoprefixer()] };
+export default {
+  plugins: [
+    tailwindcss({ base: import.meta.dirname, optimize: false }),
+    autoprefixer(),
+  ],
+};
 ```
 
 Mokly bundles local PostCSS config imports for reloading, but loads package
 plugins unbundled from your repository so their native bindings and
 package-relative files continue to work.
+Tailwind's default `base` is the working directory of the Mokly process, and
+its default `optimize` changes with `NODE_ENV`; pin both as above for stable
+bytes. Alternatively, use `source(none)` and explicit `@source` paths below.
+Tailwind recursively inlines local `@import`s from disk, so a nested import of
+renderer-owned CSS in an entry can bypass Mokly's pruning and fails Build when
+Tailwind reports it. Import shared CSS only from the renderer or directly from
+the entry stylesheet so Mokly can prune it. For Tailwind context in a component
+or module (`@apply`), use `@reference` instead of `@import`: when the renderer
+already delivers Tailwind, a direct entry `@import "tailwindcss"` is pruned.
 
 For `styles/catalogue.css` beneath the repository root, opt into exactly
 the sources whose class names belong in this catalogue. Import the CSS from

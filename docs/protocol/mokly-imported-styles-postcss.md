@@ -2,16 +2,23 @@
 
 This is the PostCSS and inventory companion to the [imported stylesheet
 contract](./mokly-imported-styles.md). [Exact diagnostics](./mokly-imported-styles-errors.md)
-apply throughout. PostCSS support is planned in Milestone 6.
+apply throughout.
 
 Optional top-level `postcss` is a config-relative path to a regular `.ts`,
 `.mts`, `.js`, `.mjs`, or `.cjs` module inside `repoRoot`; no discovery. Bundle
 local imports with esbuild and retain them in `configSourceFiles` (private,
-watched config-reload inputs). Resolve **every bare package import** from its
+watched config-reload inputs), using metafile-only analysis at config load:
+do not evaluate plugins until graph load. `ResolvedConfig` stores only the
+absolute module path and serializable watch metadata, never plugin instances;
+it crosses Serve IPC as JSON. Resolve **every bare package import** from its
 importer with Node ESM `import` conditions and externalize it as an absolute
 `file:` URL in the temporary bundle; plugin packages and native bindings run
 unbundled from the consumer's `node_modules`. Do not change how `mokly.config`
-loads. The PostCSS module must default-export a non-array object with `plugins`
+loads. Rewrite `import.meta.url`, `import.meta.dirname`, and
+`import.meta.filename` for each bundled local source to that source's own
+real file location, not the temporary bundle's; reload/evaluate and instantiate
+plugins exactly once per graph load through the PostCSS config loader. The
+PostCSS module must default-export a non-array object with `plugins`
 as either an ordered array of PostCSS plugin instances or an insertion-ordered
 record mapping package names to plain option objects. Resolve object-form
 package names with the same Node ESM conditions from the PostCSS module's
@@ -22,9 +29,16 @@ keys, missing/invalid plugins, escaping paths and failed package resolution.
 Run the consumer's plugins in order once for each distinct effective
 stylesheet input with `from` set to its physical source path, `map: false`,
 **after** renderer-exclusion pruning and **before** CSS Modules naming and
-esbuild CSS bundling. PostCSS may inline local `@import`s (Tailwind v4 does),
-so preprocessing must prune the entire local import tree before it can see
-excluded content. Cache by `(source path, effective pruned-import set)`
+esbuild CSS bundling. A plugin can inline nested local `@import`s directly
+from disk, bypassing Mokly's pruning. For each processed input, walk the kept
+local prelude-import tree using the stylesheet resolver, without executing
+plugins. If an excluded renderer file is reachable at depth two or more through
+a kept intermediate file and a plugin reports that excluded file as a
+`dependency`, fail with the nested-import diagnostic before inventory checks;
+do not silently duplicate it. If no plugin reports it, esbuild prunes it at
+the nested file as usual. The diagnostic names the immediate intermediate
+file importing the excluded file (for a deeper chain, its direct importer).
+Cache by `(source path, effective pruned-import set)`
 within a compilation and share that result between graph and CSS passes;
 the effective set consists only of resolved local prelude imports excluded
 from that file, not every file in the renderer's closure;
@@ -40,6 +54,10 @@ aliases. Inventory-only `loadConsumerGraph(config, false)` **must run the same
 CSS collection/pass and dependency reporting** without evaluating renderer
 callbacks; `assertFreshSourceInventory` compares this union to
 `manifest.sourceFiles` for Serve and publish. No manifest schema change.
+Directory-dependency watch roots on a `ResolvedConfig` are generation-scoped
+watch metadata, not authored configuration: export's final input-stability
+comparison omits that field from both configurations, while still comparing
+the compiled output, source inventory and captured public bytes.
 
 Interpret a plugin's `dependency.file` or `dir-dependency.dir` relative to
 its stylesheet when not absolute. Ignore inputs outside `repoRoot` (also
@@ -52,13 +70,19 @@ the reported directory using its minimatch `glob`, or `**/*` if absent
 exist and be a directory even if it currently matches no files. Skip
 `node_modules`, `.mokly-cache`, `review.outDir`, denied trees and paths outside
 `repoRoot`. Register allowed directories for watching additions as well as
-current matching files.
+current matching files. A reported directory may be an in-repository symlink
+to an in-repository directory; preserve the logical and physical source
+aliases of its matching files. Never follow symlinks encountered below the
+reported directory during the walk.
 
 **Validation precedence:** Explicit `dependency` naming Mokly-owned output
 fails in both modes. For directory matches, committed mode fails when the
 glob reaches an existing generated fragment, manifest or file below
-`mokly-generated/`; derived mode skips those files. Neither mode inventories
-Mokly output. Next, any plugin-reported file inside `mockupsDir` that is not
+`mokly-generated/`; derived mode skips those files. Resolve in-repository
+symlink aliases before classifying generated output or otherwise-public files
+under `mockupsDir`, so an alias cannot hide either class. Diagnostic `{file}`
+keeps the reported logical path. Neither mode inventories Mokly output. Next,
+any plugin-reported file inside `mockupsDir` that is not
 **already a graph-inventoried source** fails (including public CSS or HTML);
 this applies to explicit files and expanded directories in both modes.
 Entries below `mockupsDir` already in the graph are allowed. Finally validate
@@ -75,3 +99,14 @@ authored trees. Do not silently skip an otherwise-public matching file just
 because Tailwind did not list it individually. Dependencies in `node_modules`
 may still affect the processor's output, but are not private source inventory
 entries.
+
+Tailwind v4 recursively inlines local imports even without a Tailwind directive,
+reports inlined and scanned files as dependencies, and reports scanned
+directories with extension globs. Its default `base` is `process.cwd()` and
+default `optimize` follows `NODE_ENV === "production"`; its default
+`transformAssetUrls` rebases assets from inlined files. For reproducible output,
+prefer `tailwindcss({ base: import.meta.dirname, optimize: false })`, or
+`@import "tailwindcss" source(none)` with explicit `@source` paths. A component
+or CSS Module requiring Tailwind context (not emitted CSS) should use
+`@reference` rather than `@import`; if the renderer already delivers Tailwind,
+the entry's direct Tailwind import is pruned and `@apply` needs `@reference`.

@@ -2,9 +2,9 @@
 
 ## Delivery Status
 
-Approved target; CSS/asset compilation and stylesheet links in fragment render
-input are implemented. PostCSS processing is pending.
-[The plan](../../plans/imported-css-delivery.md) tracks the remaining stages.
+CSS/asset compilation, fragment stylesheet links and optional consumer PostCSS
+processing are implemented. [The plan](../../plans/imported-css-delivery.md)
+tracks the remaining stages.
 Custom renderers must emit the supplied stylesheet links; pages link CSS
 themselves. This contract extends
 [configuration](./mokly-configuration.md),

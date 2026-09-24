@@ -6,18 +6,22 @@ import type { ResolvedConfig } from "../../config/types.js";
 import { MoklyError } from "../../errors.js";
 
 import { scopeModule, type ScopedStyle } from "./modules.js";
+import { nestedExcludedImports } from "./nested_imports.js";
+import type { StyleDependencyReport } from "./postcss.js";
 import { scanImportPrelude } from "./prelude.js";
 
-/** Consumer preprocessing hook; PostCSS supplies a different implementation later. */
+/** Consumer preprocessing hook, shared by graph and stylesheet passes. */
 export interface StyleTextProcessor {
-  /** Transform one already-pruned source and return validated private files. */
+  /** Transform one already-pruned source and report unvalidated dependencies. */
   process(source: string, text: string): Promise<ProcessedStyleText>;
 }
 
-/** Plugin output and already-validated private dependency files. */
+/** Plugin output and dependencies awaiting graph-wide inventory validation. */
 export interface ProcessedStyleText {
   readonly css: string;
   readonly sourceFiles: readonly string[];
+  /** Unvalidated plugin messages are checked after graph input discovery. */
+  readonly reports?: readonly StyleDependencyReport[];
 }
 
 /** Identity processor when no PostCSS module has been configured. */
@@ -32,6 +36,7 @@ export class IdentityStyleProcessor implements StyleTextProcessor {
 export interface PreparedStyle {
   readonly css: string;
   readonly scoped?: ScopedStyle;
+  readonly reports?: readonly StyleDependencyReport[];
 }
 
 /** Share preprocessing between the graph and stylesheet passes per compilation. */
@@ -41,6 +46,8 @@ export class StylePreprocessor {
   private readonly identities = new Map<string, string>();
   /** Private dependencies reported by the effective stylesheet processors. */
   readonly sourceFiles = new Set<string>();
+  /** Raw reports awaiting package-owned source inventory validation. */
+  readonly reports: StyleDependencyReport[] = [];
 
   constructor(
     private readonly config: ResolvedConfig,
@@ -74,7 +81,26 @@ export class StylePreprocessor {
       prepared = this.load(source, text, pruned, resolveImport);
       this.prepared.set(key, prepared);
     }
-    return prepared;
+    const result = await prepared;
+    if (excluded.size && resolveImport && result.reports?.length) {
+      const nested = await nestedExcludedImports(
+        source,
+        text,
+        excluded,
+        resolveImport,
+      );
+      for (const report of result.reports) {
+        if (report.type !== "dependency" || !report.file) continue;
+        const file = path.resolve(path.dirname(source), report.file);
+        const importer = nested.get(file);
+        if (importer)
+          throw new MoklyError(
+            "build-invalid",
+            `PostCSS plugin ${report.plugin} reached renderer-owned CSS in ${toPosixPath(path.relative(this.config.repoRoot, source))}: ${toPosixPath(path.relative(this.config.repoRoot, file))} via ${toPosixPath(path.relative(this.config.repoRoot, importer))}; import it only from the renderer, import it directly so Mokly can prune it, or use Tailwind @reference`,
+          );
+      }
+    }
+    return result;
   }
 
   private async load(
@@ -96,9 +122,14 @@ export class StylePreprocessor {
       }
     }
     const processed = await this.processor.process(source, text);
+    this.reports.push(...(processed.reports ?? []));
     for (const file of processed.sourceFiles) this.sourceFiles.add(file);
     text = processed.css;
-    if (!source.endsWith(".module.css")) return { css: text };
+    if (!source.endsWith(".module.css"))
+      return {
+        css: text,
+        ...(processed.reports ? { reports: processed.reports } : {}),
+      };
     const relative = toPosixPath(path.relative(this.config.repoRoot, source));
     const scoped = scopeModule(text, relative);
     for (const name of scoped.identities) {
@@ -111,6 +142,10 @@ export class StylePreprocessor {
       }
       this.identities.set(name, relative);
     }
-    return { css: scoped.css, scoped };
+    return {
+      css: scoped.css,
+      scoped,
+      ...(processed.reports ? { reports: processed.reports } : {}),
+    };
   }
 }

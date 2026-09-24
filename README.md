@@ -192,7 +192,7 @@ catalogue; your React tree still owns what each screen looks like.
 | Components           | Typed props, saved variants, controls, and usage inspection | [Components](./docs/guides/authoring/components.md)                     |
 | Use-case flows       | Ordered journeys composed from existing screens             | [Use-case flows](./docs/guides/authoring/use-case-flows.md)             |
 | Pages                | Existing complete HTML documents without device variants    | [Pages](./docs/guides/authoring/pages.md)                               |
-| Styles (target)      | Imported CSS, modules, assets and optional PostCSS          | [Styles](./docs/guides/authoring/styles.md)                             |
+| Styles               | Imported CSS, modules, assets and optional PostCSS          | [Styles](./docs/guides/authoring/styles.md)                             |
 | `MockLink`           | Portable links between catalogue entries                    | [Links](./docs/guides/authoring/links.md)                               |
 
 A custom renderer is the integration boundary for product providers, themes,
@@ -202,8 +202,8 @@ so component trees use one React runtime.
 Use `stylesheets` for separately authored public CSS. [Imported CSS delivery](./docs/protocol/mokly-imported-styles.md)
 compiles CSS Modules, per-root stylesheets and assets; fragment renderers
 receive ordered links for the renderer and exporting entry CSS after any
-configured links. Pages link their own CSS. PostCSS processing is pending;
-the Styles guide distinguishes the working flow from planned plugin support.
+configured links. Pages link their own CSS explicitly. An optional consumer
+PostCSS module processes imported CSS; see the Styles guide for plugin setup.
 
 ## Review and share
 

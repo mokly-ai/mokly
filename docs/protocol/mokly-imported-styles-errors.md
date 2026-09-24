@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-Approved target of [imported stylesheet delivery](./mokly-imported-styles.md).
+The diagnostics for [imported stylesheet delivery](./mokly-imported-styles.md).
 Each message below is the complete `MoklyError` message body; the CLI adds
 its normal `[mokly/<code>]` prefix. Placeholders are unquoted POSIX paths
 relative to `repoRoot` unless named `config-path` (config-relative), `url`
@@ -50,6 +50,7 @@ their existing messages. Module suffix/path aliases are checked before load.
 | Invalid reserved output shape                             | `generated route is unsafe: {route}; use mokly-generated/styles/<root path>.css or mokly-generated/assets/<asset path> with supported extensions`                                                                                                   |
 | Catalogue route inside reserved directory                 | `route must not start with mokly-generated/: {route}; choose a consumer-owned HTML route`                                                                                                                                                           |
 | CSS transform failure                                     | `could not transform CSS {stylesheet}: {detail}; fix the stylesheet and rebuild`                                                                                                                                                                    |
+| Plugin reports a nested renderer-owned import             | `PostCSS plugin {plugin} reached renderer-owned CSS in {stylesheet}: {excluded} via {intermediate}; import it only from the renderer, import it directly so Mokly can prune it, or use Tailwind @reference`                                         |
 | Other esbuild CSS bundle failure                          | `could not bundle CSS {root}: {detail}; fix the stylesheet and rebuild`                                                                                                                                                                             |
 | CSS Modules identity collision                            | `CSS Modules generated name collision: {name} in {first} and {second}; rename one local name or file`                                                                                                                                               |
 | Cross-file CSS Modules composition                        | `CSS Modules cross-file composes is unsupported in {stylesheet}: {specifier}; compose within this file or use a global name`                                                                                                                        |

@@ -9,8 +9,133 @@ import { serve } from "../dist/server/serve.js";
 import { readCatalogue } from "../packages/viewer/dist/catalogue/reader.js";
 import type { CatalogueReadModel } from "../packages/viewer/dist/catalogue/types.js";
 
+import { changedFixture } from "./helpers/changed_fixture.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createExportFixture } from "./helpers/export_fixture.js";
+import { version, waitForUpdate } from "./helpers/watched_catalogue.js";
+
+test(
+  "watched PostCSS dependency directories rebuild on a new matching file",
+  { timeout: 60_000 },
+  async (t) => {
+    const fixture = await changedFixture(
+      t,
+      undefined,
+      {
+        extraConfig: 'postcss: "postcss.config.mjs", watch: { debounceMs: 0 },',
+      },
+      async (candidate) => {
+        await fs.mkdir(path.join(candidate.root, "sources"));
+        await fs.writeFile(
+          path.join(candidate.entriesDir, "fixture.css"),
+          ".entry{color:red}",
+        );
+        await fs.appendFile(candidate.entryPath, '\nimport "./fixture.css";');
+        await fs.writeFile(
+          path.join(candidate.root, "postcss.config.mjs"),
+          `import fs from "node:fs";
+           import path from "node:path";
+           const directory = path.join(import.meta.dirname, "sources");
+           export default { plugins: [{ postcssPlugin: "watch-dir", Once(root, { result }) {
+             result.messages.push({ type: "dir-dependency", plugin: "watch-dir", dir: directory, glob: "*.txt" });
+             for (const file of fs.readdirSync(directory))
+               if (file.endsWith(".txt")) root.append({ selector: ".added", nodes: [{ prop: "color", value: fs.readFileSync(path.join(directory, file), "utf8").trim() }] });
+           } }] };`,
+        );
+      },
+    );
+    const running = await serve(fixture.config, { port: 0, watch: true });
+    fixture.beforeRemove(() => running.close());
+    const initial = await fetch(running.url).then((response) =>
+      response.text(),
+    );
+    const stylesheet = `${running.url}/static/mokly-generated/styles/entries/fixture.mockup.tsx.css`;
+    assert.doesNotMatch(
+      await fetch(stylesheet).then((response) => response.text()),
+      /\.added/,
+    );
+    await fs.writeFile(path.join(fixture.root, "sources/new.txt"), "blue");
+    await waitForUpdate(running.url, version(initial));
+    let changed = "";
+    const deadline = Date.now() + 20_000;
+    while (Date.now() < deadline) {
+      try {
+        changed = await fetch(stylesheet).then((response) => response.text());
+      } catch (error) {
+        const code = (error as { cause?: NodeJS.ErrnoException }).cause?.code;
+        if (code !== "ECONNREFUSED" && code !== "ECONNRESET") throw error;
+      }
+      if (/\.added/.test(changed)) break;
+      await setTimeout(80);
+    }
+    assert.match(changed, /\.added/);
+  },
+);
+
+test(
+  "watched PostCSS module and reported file edits refresh the accepted CSS",
+  { timeout: 60_000 },
+  async (t) => {
+    const fixture = await changedFixture(
+      t,
+      undefined,
+      {
+        extraConfig: 'postcss: "postcss.config.mjs", watch: { debounceMs: 0 },',
+      },
+      async (candidate) => {
+        await fs.mkdir(path.join(candidate.root, "sources"));
+        await fs.writeFile(
+          path.join(candidate.root, "sources/color.txt"),
+          "red",
+        );
+        await fs.writeFile(
+          path.join(candidate.entriesDir, "fixture.css"),
+          ".entry{color:red}",
+        );
+        await fs.appendFile(candidate.entryPath, '\nimport "./fixture.css";');
+        await fs.writeFile(
+          path.join(candidate.root, "postcss.config.mjs"),
+          postcssWatchPlugin("margin"),
+        );
+      },
+    );
+    const running = await serve(fixture.config, { port: 0, watch: true });
+    fixture.beforeRemove(() => running.close());
+    const stylesheet = `${running.url}/static/mokly-generated/styles/entries/fixture.mockup.tsx.css`;
+    const waitForStyle = async (pattern: RegExp): Promise<void> => {
+      const deadline = Date.now() + 20_000;
+      let css = "";
+      while (Date.now() < deadline) {
+        try {
+          css = await fetch(stylesheet).then((response) => response.text());
+        } catch (error) {
+          const code = (error as { cause?: NodeJS.ErrnoException }).cause?.code;
+          if (code !== "ECONNREFUSED" && code !== "ECONNRESET") throw error;
+        }
+        if (pattern.test(css)) return;
+        await setTimeout(80);
+      }
+      assert.match(css, pattern);
+    };
+    await waitForStyle(/margin: red/);
+    await fs.writeFile(path.join(fixture.root, "sources/color.txt"), "blue");
+    await waitForStyle(/margin: blue/);
+    await fs.writeFile(
+      path.join(fixture.root, "postcss.config.mjs"),
+      postcssWatchPlugin("padding"),
+    );
+    await waitForStyle(/padding: blue/);
+  },
+);
+
+function postcssWatchPlugin(property: string): string {
+  return `import fs from "node:fs";
+    const file = new URL("./sources/color.txt", import.meta.url).pathname;
+    export default { plugins: [{ postcssPlugin: "watch-file", Once(root, { result }) {
+      result.messages.push({ type: "dependency", plugin: "watch-file", file });
+      root.walkRules(rule => rule.append({ prop: ${JSON.stringify(property)}, value: fs.readFileSync(file, "utf8").trim() }));
+    } }] };`;
+}
 
 test(
   "watched content and background evidence publish coherent catalogue revisions",

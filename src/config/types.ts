@@ -99,6 +99,8 @@ export interface MoklyConfig {
   repoRoot?: string;
   /** Optional config-relative consumer renderer module. */
   renderer?: string;
+  /** Optional config-relative PostCSS configuration module. */
+  postcss?: string;
   /** Optional consumer-specific module resolution for cross-platform sources. */
   moduleResolution?: ModuleResolutionConfig;
   /** Ordered route-to-stylesheet mappings. */
@@ -135,6 +137,13 @@ export interface ResolvedConfig {
   readonly publicExclude: readonly string[];
   moduleResolution: ResolvedModuleResolutionConfig;
   renderer?: string;
+  /** Absolute PostCSS module path; plugin instances never cross IPC. */
+  postcss?: string;
+  /** Globbed PostCSS directory dependencies from the accepted graph. */
+  postcssWatchDirectories?: readonly {
+    readonly directory: string;
+    readonly glob: string;
+  }[];
   repoRoot: string;
   review: Required<Omit<ReviewConfig, "baselineBuild">> &
     Pick<ReviewConfig, "baselineBuild">;

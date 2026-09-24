@@ -6,6 +6,10 @@ import type { RegistryDefinition } from "../authoring/types.js";
 import type { CompatibilityTransformer } from "../compatibility/types.js";
 import type { ComponentGraphRenderer } from "../components/render.js";
 import { discoverEntryModules } from "../config/entry_discovery.js";
+import {
+  FileSystemPostcssConfigLoader,
+  type PostcssConfigLoader,
+} from "../config/postcss_loader.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timeSync, timingCounts } from "../diagnostics/timings.js";
 import { MoklyError, errorMessage } from "../errors.js";
@@ -26,7 +30,9 @@ import { assertSafeGeneratedTree } from "./reserved_tree.js";
 import { graphSourceFiles, normalizeSourceFiles } from "./source_inventory.js";
 import { bundleStyles } from "./styles/bundle.js";
 import { GraphStyles } from "./styles/collect.js";
+import { collectPostcssDependencies } from "./styles/dependency_inventory.js";
 import { orderedStyles } from "./styles/order.js";
+import { PostcssStyleProcessor } from "./styles/postcss.js";
 import { StylePreprocessor } from "./styles/preprocess.js";
 import { inventoryTransformerStyles } from "./styles/transformer_inventory.js";
 
@@ -42,21 +48,25 @@ export interface LoadedGraph {
   stylesheetRoutes: ReadonlyMap<string, string>;
   /** CSS text and opaque assets for this compilation. */
   styleOutputs: ReadonlyMap<string, GeneratedFile>;
+  /** Globbed plugin dependencies monitored for new authored files. */
+  postcssWatchDirectories?: ResolvedConfig["postcssWatchDirectories"];
 }
 
 /** Bundle and import all React-bearing consumer modules as one graph. */
 export async function loadConsumerGraph(
   config: ResolvedConfig,
   evaluate = true,
+  postcssLoader: PostcssConfigLoader = new FileSystemPostcssConfigLoader(),
 ): Promise<LoadedGraph> {
   return timeAsync(evaluate ? "graph.load" : "graph.inventory", () =>
-    loadGraph(config, evaluate),
+    loadGraph(config, evaluate, postcssLoader),
   );
 }
 
 async function loadGraph(
   config: ResolvedConfig,
   evaluate: boolean,
+  postcssLoader: PostcssConfigLoader,
 ): Promise<LoadedGraph> {
   assertSafeGeneratedTree(config);
   const entrySources = timeSync("graph.discover", () =>
@@ -68,7 +78,14 @@ async function loadGraph(
     path.dirname(config.configPath),
     ".mokly-consumer.cjs",
   );
-  const styles = new GraphStyles(config, new StylePreprocessor(config));
+  const plugins = await postcssLoader.load(config);
+  const styles = new GraphStyles(
+    config,
+    new StylePreprocessor(
+      config,
+      config.postcss ? new PostcssStyleProcessor(config, plugins) : undefined,
+    ),
+  );
   try {
     const built = await timeAsync("graph.bundle", () =>
       build({
@@ -168,12 +185,18 @@ async function loadGraph(
       graphInputs,
       styles.preprocessor,
     );
+    const dependencies = collectPostcssDependencies(
+      config,
+      styles.preprocessor.reports,
+      graphInputs,
+    );
     const sourceFiles = normalizeSourceFiles(
       [
         ...graphFiles,
         ...bundled.sourceFiles,
         ...transformerFiles,
         ...styles.preprocessor.sourceFiles,
+        ...dependencies.sourceFiles,
         ...(config.configSourceFiles ?? [config.configPath]),
         ...entrySources,
         ...(config.renderer ? [config.renderer] : []),
@@ -191,6 +214,7 @@ async function loadGraph(
         sourceFiles,
         stylesheetRoutes: bundled.routes,
         styleOutputs: bundled.outputs,
+        postcssWatchDirectories: dependencies.watchDirectories,
         renderWithComponents: () => {
           throw new Error("inventory-only graph cannot render");
         },
@@ -235,6 +259,7 @@ async function loadGraph(
       sourceFiles,
       stylesheetRoutes: bundled.routes,
       styleOutputs: bundled.outputs,
+      postcssWatchDirectories: dependencies.watchDirectories,
       renderer: imported.renderer as Renderer,
       renderWithComponents: imported.renderWithComponents,
     };

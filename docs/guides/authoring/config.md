@@ -44,7 +44,7 @@ Globs are relative to `repoRoot`.
 | `repoRoot`         | The root every path is confined to; defaults to the config directory              |
 | `renderer`         | Your module that wraps a screen in your theme and returns a document              |
 | `stylesheets`      | Ordered route-to-stylesheet rules                                                 |
-| `postcss` (target) | Your config-relative PostCSS module for imported CSS, pending implementation      |
+| `postcss`          | Your config-relative PostCSS module for imported CSS                              |
 | `publicExclude`    | Extra globs under `mockupsDir` that stay private                                  |
 | `moduleResolution` | Aliases, conditions, fields, extensions and loaders for your sources              |
 | `review`           | The Git base, the artifact directory and shared-impact globs                      |
@@ -86,10 +86,10 @@ Rules are evaluated in declaration order. A rule matches a screen route with a
 POSIX glob and lists stylesheets relative to `mockupsDir`, or absolute HTTP(S)
 URLs. A rule may append `lightStylesheets` or `darkStylesheets` after its
 shared list for the matching output.
-Imported CSS delivery (an approved target, not yet available) appends the
+Imported CSS delivery appends the
 configured renderer stylesheet and then the entry stylesheet after those
 links, even if no rule matches. Complete page callbacks receive no automatic
-links. `<mockupsDir>/mokly-generated/` will be reserved for CSS and asset
+links. `<mockupsDir>/mokly-generated/` is reserved for CSS and asset
 output; keep authored public stylesheets elsewhere.
 
 ```ts

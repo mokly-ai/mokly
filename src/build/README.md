@@ -5,7 +5,7 @@ validates the complete catalogue and produces deterministic HTML and manifest v5
 The supported external interface is `mokly build` and `mokly check`; Serve,
 export and local prop controls reuse the same consumer graph and validators.
 
-Imported CSS is a [partially implemented delivery](../../docs/protocol/mokly-imported-styles.md).
+Imported CSS follows the [delivery contract](../../docs/protocol/mokly-imported-styles.md).
 `load_graph.ts` now collects each configured renderer and entry root's CSS
 imports in JavaScript import order, traverses prelude `@import`s, and emits
 one deterministic stylesheet per nonempty root. The renderer's complete CSS
@@ -14,7 +14,19 @@ sources independently. CSS Modules use path-stable Lightning CSS names and
 expose default and named bindings to JavaScript. CSS `url()` assets become
 byte-preserving files under `mokly-generated/assets/`, and CSS/asset inputs
 join the private source inventory in both full and inventory-only graph loads.
-PostCSS processing is still pending. Fragment render input now lists the
+An optional config-relative PostCSS module runs once per distinct effective
+stylesheet input before CSS Modules naming; both graph and CSS passes share
+the result. Its local imports join `configSourceFiles` and trigger config
+reloads, while package imports stay unbundled to preserve plugin-native
+bindings. Only the module path, never plugin instances, crosses Serve IPC.
+Reported file dependencies join `sourceFiles`; globbed directory dependencies
+also watch matching additions. Inventory-only graph loads run the same plugins
+and collect the same dependencies. Generated output and public mockups files
+cannot enter that inventory; nested imports that a plugin reads from disk
+cannot bypass renderer pruning silently. See the
+[PostCSS contract](../../docs/protocol/mokly-imported-styles-postcss.md) for
+validation precedence and deterministic Tailwind settings.
+Fragment render input now lists the
 matching authored stylesheet rule, then generated renderer CSS, then the
 exporting entry's CSS, relative to the fragment route. Pages still render
 without automatic links. `consumer_entry.ts` records the exporting entry
