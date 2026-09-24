@@ -205,6 +205,11 @@ generation's bytes, not on-disk files.
 Full compilation continues to walk and validate transitive references in linked
 authored public HTML; on-demand validation reads only the requested view and
 resources it must validate for that request.
+One accepted on-demand generation computes its pending orphan set once from
+the complete route index and parses each generated CSS file at most once.
+Subsequent view requests reuse both indexes while HTML and edited component
+props remain request-specific. A new accepted generation owns fresh indexes;
+the public validation rules and diagnostic order do not change.
 
 Use esbuild `write: false`, `metafile: true`, `bundle: true`, `minify: false`,
 `target: "esnext"`, `outbase: repoRoot`, path-mirroring

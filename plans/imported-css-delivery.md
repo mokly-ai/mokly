@@ -3,11 +3,12 @@
 ## Status
 
 Active. Created 2026-09-24 from the CSS-in-JS investigation on this branch.
-Milestones 1, 1A, 2, 3, 4, 4A, and 5 (contract, binary-safe output, reserved
-generated directory, CSS/asset bundling and follow-ups, and stylesheet links)
-are complete; Milestones 6–9 remain. PostCSS will let Tailwind v4 and
-autoprefixer use the consumer's configuration. Esbuild remains the only
-bundler; the optional Vite compatibility package is a follow-up plan.
+Milestones 1, 1A, 2, 3, 4, 4A, 5, and 5A (contract, binary-safe output,
+reserved generated directory, CSS/asset bundling and follow-ups, stylesheet
+links, and on-demand validation caching) are complete; Milestones 6–9 remain.
+PostCSS will let Tailwind v4 and autoprefixer use the consumer's configuration.
+Esbuild remains the only bundler; the optional Vite compatibility package is a
+follow-up plan.
 
 ## Problem
 
@@ -449,6 +450,22 @@ Make the delivered CSS reach rendered documents and pass validation.
 - [x] Run the build, relevant tests, and `cargo xtask check`.
 - [x] Commit and push Milestone 5 independently; run the post-push review
       using `docs/implementation-review-prompt.md` against `origin/main`.
+
+## Milestone 5A: Cache on-demand validation per generation (complete)
+
+Remove the per-request output-tree walk and CSS reparse introduced with
+generation-local pending styles while keeping the same resource diagnostics.
+
+- [x] Document one orphan scan and one parse per generated stylesheet per
+      accepted generation; keep view HTML and temporary props request-specific.
+- [x] Write a failing counting-seam test that renders several views and proves
+      one orphan scan and one CSS parse, with the same validation outcome.
+- [x] Cache the pending orphan index and parsed generated CSS in the on-demand
+      generation without changing full-compilation behavior or disk safety.
+- [x] Update the build README; run build, focused tests, example Build/Check,
+      lint, typecheck and `cargo xtask check` before committing.
+- [x] Commit and push this milestone independently, then review the complete
+      diff against `origin/main` using `docs/implementation-review-prompt.md`.
 
 ## Milestone 6: PostCSS pipeline
 

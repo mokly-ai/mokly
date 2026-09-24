@@ -24,6 +24,9 @@ changes authored-source attribution or the manifest.
 the transaction writes anything. Full and on-demand rendering validate links,
 component resources and compatibility routes against this pending generation;
 generated CSS URLs resolve against pending assets, never stale files on disk.
+Each on-demand generation scans for orphan routes once and caches parsed CSS
+resources across view requests; request-specific HTML and temporary prop edits
+remain fresh. A new accepted generation creates new validation indexes.
 The reserved directory is already package-owned: Build removes unexpected
 regular files there as orphans, and committed Check reports them. The root
 and descendants cannot be symlinks or special files; Build and committed Check

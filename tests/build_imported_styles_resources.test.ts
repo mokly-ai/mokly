@@ -7,7 +7,9 @@ import { compileCatalogue } from "../dist/build/compile.js";
 import { runtimeGraph } from "../dist/build/component_runtime.js";
 import { DocumentCompiler } from "../dist/build/document_compiler.js";
 import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
+import { pendingGeneratedOrphanRoutes } from "../dist/build/ownership.js";
 import { loadConfig } from "../dist/config/load.js";
+import { extractCssReferences } from "../dist/html_references.js";
 import { startCatalogueServer } from "../dist/server/http.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
@@ -17,6 +19,38 @@ import {
   validEntrySource,
 } from "./helpers/fixture.js";
 import { styleFixture } from "./helpers/imported_styles_fixture.js";
+
+test("multiple on-demand views scan orphans and parse CSS only once per generation", async (t) => {
+  const fixture = await styleFixture(".entry{color:red}");
+  t.after(() => removeFixture(fixture));
+  const runtime = await prepareLiveRuntime(await loadConfig(fixture.root));
+  let orphanScans = 0;
+  let cssParses = 0;
+  const seams = {
+    orphanRoutes: (config, expected) => {
+      orphanScans += 1;
+      return pendingGeneratedOrphanRoutes(config, expected);
+    },
+    parseCss: (text) => {
+      cssParses += 1;
+      return extractCssReferences(text);
+    },
+  } satisfies ConstructorParameters<typeof DocumentCompiler>[2];
+  const compiler = new DocumentCompiler(runtime, runtimeGraph(runtime), seams);
+  for (const route of [
+    "screens/home.mobile.html",
+    "screens/home.desktop.html",
+    "screens/home.mobile.html",
+  ]) {
+    assert.match(compiler.render(route).html, /mokly-generated/);
+  }
+  assert.equal(orphanScans, 1);
+  assert.equal(cssParses, 1);
+  const next = new DocumentCompiler(runtime, runtimeGraph(runtime), seams);
+  assert.match(next.render("screens/home.mobile.html").html, /mokly-generated/);
+  assert.equal(orphanScans, 2);
+  assert.equal(cssParses, 2);
+});
 
 test("pending CSS and assets validate without reading stale reserved disk files", async (t) => {
   const fixture = await styleFixture('.entry{background:url("./image.png")}');

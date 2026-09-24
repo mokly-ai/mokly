@@ -14,8 +14,12 @@ import {
 import { validateComponentResources } from "../components/output_validation.js";
 import { validateComponentRanges } from "../components/ranges.js";
 import { rebaseStyleOwnership } from "../components/style_ownership.js";
+import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
-import { extractHtmlReferences } from "../html_references.js";
+import {
+  extractCssReferences,
+  extractHtmlReferences,
+} from "../html_references.js";
 import { prepareRegistry } from "../registry/prepare.js";
 import { normalizeSingleDocument } from "../review/ignore.js";
 
@@ -26,7 +30,10 @@ import type { LoadedGraph } from "./load_graph.js";
 import type { LogicalReferenceRecord } from "./logical_record_types.js";
 import { validateLogicalFragments } from "./logical_records.js";
 import { validateGeneratedOutputPaths } from "./output_paths.js";
-import { validateGeneratedOwnershipHeaders } from "./ownership.js";
+import {
+  pendingGeneratedOrphanRoutes,
+  validateGeneratedOwnershipHeaders,
+} from "./ownership.js";
 import { PendingGeneratedFiles } from "./pending_generated.js";
 import { renderFragments } from "./render.js";
 
@@ -44,6 +51,20 @@ interface DocumentTarget extends ArtifactView {
   entryId: string;
   variantId?: string;
 }
+
+/** Pure/countable boundaries used once per accepted document generation. */
+export interface DocumentValidationSeams {
+  readonly orphanRoutes: (
+    config: ResolvedConfig,
+    expected: Iterable<string>,
+  ) => readonly string[];
+  readonly parseCss: (text: string) => readonly string[];
+}
+
+const defaultValidationSeams: DocumentValidationSeams = {
+  orphanRoutes: pendingGeneratedOrphanRoutes,
+  parseCss: extractCssReferences,
+};
 
 export class DocumentCompiler {
   readonly entries: readonly ResolvedRegistryEntry[];
@@ -64,6 +85,7 @@ export class DocumentCompiler {
   constructor(
     readonly runtime: ComponentRuntime,
     private readonly graph: LoadedGraph,
+    seams: DocumentValidationSeams = defaultValidationSeams,
   ) {
     const registry = prepareRegistry(graph.definitions, runtime.config);
     this.entries = registry.entries;
@@ -92,9 +114,13 @@ export class DocumentCompiler {
       graph.styleOutputs,
       this.routes.keys(),
       (route) => (this.activeRead?.(route) ?? this.prepare(route)).html,
+      seams.parseCss,
     );
     this.links = {
       pending: this.pending,
+      pendingOrphans: new Set(
+        seams.orphanRoutes(runtime.config, this.pending.routes()),
+      ),
       parsed: new Map(),
       onDemand: true,
     };

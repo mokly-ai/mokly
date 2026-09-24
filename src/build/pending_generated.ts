@@ -16,12 +16,16 @@ export type PendingGeneratedFile =
 /** The sole compilation-time view of pending HTML, CSS and opaque assets. */
 export class PendingGeneratedFiles {
   private readonly files = new Map<string, PendingGeneratedFile>();
+  private readonly parsedCss = new Map<string, ParsedResource>();
   private readonly htmlRoutes: ReadonlySet<string>;
 
   constructor(
     styles: ReadonlyMap<string, GeneratedFile>,
     htmlRoutes: Iterable<string> = [],
     private readonly renderHtml?: (route: string) => string,
+    private readonly parseCss: (
+      text: string,
+    ) => readonly string[] = extractCssReferences,
   ) {
     this.htmlRoutes = new Set(htmlRoutes);
     for (const [route, content] of styles) {
@@ -62,14 +66,19 @@ export class PendingGeneratedFiles {
     if (!file) return;
     if (file.kind === "html")
       return htmlResource(extractHtmlReferences(file.text));
-    if (file.kind === "css")
-      return {
+    if (file.kind === "css") {
+      let parsed = this.parsedCss.get(route);
+      if (parsed) return parsed;
+      parsed = {
         anchors: new Set(),
-        references: extractCssReferences(file.text).map((value) => ({
+        references: this.parseCss(file.text).map((value) => ({
           checkFragment: false,
           value,
         })),
       };
+      this.parsedCss.set(route, parsed);
+      return parsed;
+    }
     return { anchors: new Set(), references: [] };
   }
 
