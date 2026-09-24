@@ -4,10 +4,10 @@
 
 This is the approved target planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md).
-Milestone 3 implements declaration, validation, linking, ownership, Serve and
-public delivery. Milestone 4 removes legacy source-path attribution; Milestone 6
-removes the old authoring inputs. Until those milestones land, this document
-describes the target rather than current behavior.
+Milestone 3 delivers declaration, validation, linking, ownership, Serve and
+public delivery. Milestone 4 will remove legacy source-path attribution;
+Milestone 6 will remove the old authoring inputs. Those removals remain target
+behavior, not current behavior.
 
 ## Declaration And Public Files
 
@@ -59,7 +59,11 @@ entry source-path dependency lists; these lists are removed by Milestone 6.
 ## Configured Placement Marker
 
 The package root also exports `componentStylesheets`, a singleton opaque
-`unique symbol` value. It is a position marker, not a filename, CSS URL, or
+`unique symbol` value backed by `Symbol.for("@mokly/mokly/componentStylesheets")`
+so separately bundled config and consumer modules share its identity. Config
+validation replaces the marker with a numeric insertion position before
+passing resolved config to Serve workers (symbols cannot be cloned). It is a
+position marker, not a filename, CSS URL, or
 renderer input. A literal string with the same spelling is not the marker.
 
 ```ts

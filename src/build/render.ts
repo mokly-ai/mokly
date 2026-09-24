@@ -6,7 +6,6 @@ import type { ColorScheme, ComponentViewRecord } from "@mokly/viewer";
 import type { ArtifactView } from "@mokly/viewer/data";
 import {
   componentFragmentRoute,
-  encodeUrlPath,
   effectiveColorSchemes,
   VIEWPORTS,
 } from "@mokly/viewer/data";
@@ -19,6 +18,7 @@ import {
   isPublicStaticFile,
   publicFileFailureReason,
 } from "../config/public_files.js";
+import { localStylesheetHref } from "../config/stylesheet_hrefs.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError, errorMessage } from "../errors.js";
 import { fragmentRoute } from "../registry/manifest.js";
@@ -83,12 +83,13 @@ export function renderFragments(
                 colorScheme,
               )
             : fragmentRoute(entry.route, viewport, colorScheme);
-          const stylesheets = stylesheetsFor(
+          const placement = stylesheetPlacementFor(
             entry.route,
             route,
             colorScheme,
             config,
           );
+          const stylesheets = placement.hrefs;
           let rendered: string;
           try {
             const input = {
@@ -100,7 +101,11 @@ export function renderFragments(
               ...(variantId ? { variantId } : {}),
             };
             if (components.length) {
-              const output = graphRenderer(input, renderer, components);
+              const output = graphRenderer(input, renderer, components, {
+                route,
+                position: placement.position,
+                mockupsDir: config.mockupsDir,
+              });
               rendered = output.html;
               componentViews.set(route, {
                 ...output.view,
@@ -168,33 +173,51 @@ export function stylesheetsFor(
   colorScheme: ColorScheme,
   config: ResolvedConfig,
 ): string[] {
+  return stylesheetPlacementFor(
+    catalogueRoute,
+    fragmentRoute,
+    colorScheme,
+    config,
+  ).hrefs;
+}
+
+export interface StylesheetPlacement {
+  hrefs: string[];
+  position: number;
+}
+
+/** Configured links exclude the marker, while its position stays route-local. */
+export function stylesheetPlacementFor(
+  catalogueRoute: string,
+  fragmentRoute: string,
+  colorScheme: ColorScheme,
+  config: ResolvedConfig,
+): StylesheetPlacement {
   const rule = config.stylesheets.find((candidate) =>
     minimatch(catalogueRoute, candidate.match),
   );
-  if (!rule) return [];
+  if (!rule) return { hrefs: [], position: 0 };
   const configured = [
     ...rule.stylesheets,
     ...(colorScheme === "light"
       ? (rule.lightStylesheets ?? [])
       : (rule.darkStylesheets ?? [])),
   ];
-  return configured.map((stylesheet) => {
-    if (/^https?:\/\//.test(stylesheet)) return stylesheet;
-    const absolute = path.resolve(config.mockupsDir, stylesheet);
-    if (!isPublicStaticFile(absolute, config)) {
-      const denial = publicFileFailureReason(absolute, config);
-      throw new MoklyError(
-        "build-invalid",
-        `${catalogueRoute}: ${denial ? `stylesheet ${stylesheet} ${denial}` : `stylesheet does not exist: ${stylesheet}`}`,
-      );
-    }
-    const relative = path.posix.relative(
-      path.posix.dirname(fragmentRoute),
-      stylesheet,
-    );
-    const encoded = encodeUrlPath(relative);
-    return encoded.startsWith(".") ? encoded : `./${encoded}`;
-  });
+  return {
+    position: rule.componentPosition ?? rule.stylesheets.length,
+    hrefs: configured.map((stylesheet) => {
+      if (/^https?:\/\//.test(stylesheet)) return stylesheet;
+      const absolute = path.resolve(config.mockupsDir, stylesheet);
+      if (!isPublicStaticFile(absolute, config)) {
+        const denial = publicFileFailureReason(absolute, config);
+        throw new MoklyError(
+          "build-invalid",
+          `${catalogueRoute}: ${denial ? `stylesheet ${stylesheet} ${denial}` : `stylesheet does not exist: ${stylesheet}`}`,
+        );
+      }
+      return localStylesheetHref(fragmentRoute, stylesheet);
+    }),
+  };
 }
 
 /** Normalize an absolute source path for deterministic diagnostics. */

@@ -1,4 +1,5 @@
 export { defineConfig } from "./config/define.js";
+export { componentStylesheets } from "./config/component_stylesheets.js";
 export type {
   CompatibilityConfig,
   ModuleLoader,

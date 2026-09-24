@@ -5,6 +5,39 @@ import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
 import { designLibraryFixture } from "./helpers/design_library_fixture.js";
 
+test("declared library CSS is owned only by rendered design components", async (t) => {
+  const fixture = await designLibraryFixture(t);
+  const stylesheet = "design-library/chrome/top-bar.css";
+  const owner = { path: stylesheet, componentIds: ["design-ui-top-bar"] };
+  const component = fixture.before.manifest.entries.find(
+    (entry) => entry.id === "design-ui-top-bar",
+  );
+  assert.ok(component?.kind === "component");
+  assert.deepEqual(
+    component.variants[0]!.componentViews[0]!.resources.find(
+      (resource) => resource.path === stylesheet,
+    ),
+    owner,
+  );
+  let consumers = 0;
+  for (const entry of fixture.before.manifest.entries) {
+    if (entry.kind !== "screen") continue;
+    for (const view of entry.componentViews ?? []) {
+      const rendersTopBar = view.instances.some(
+        (instance) => instance.componentId === component.id,
+      );
+      const resource = view.resources.find(
+        (record) => record.path === stylesheet,
+      );
+      if (rendersTopBar) {
+        assert.deepEqual(resource, owner);
+        consumers++;
+      } else assert.equal(resource, undefined);
+    }
+  }
+  assert.ok(consumers > 0);
+});
+
 test("mixed component design styles retain their actual rendered resource scope", async (t) => {
   const fixture = await designLibraryFixture(t);
   for (const [stylesheet, screens, components] of [

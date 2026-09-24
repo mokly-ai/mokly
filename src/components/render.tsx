@@ -1,3 +1,6 @@
+import fs from "node:fs";
+import path from "node:path";
+
 import type { ReactNode } from "react";
 
 import type { ComponentViewRecord } from "@mokly/viewer";
@@ -11,6 +14,7 @@ import { componentInputs } from "./inputs.js";
 import { serializeComponentSentinels } from "./ranges.js";
 import { ComponentContext } from "./render_context.js";
 import { rebaseStyleOwnership } from "./style_ownership.js";
+import { insertComponentStylesheets } from "./stylesheet_links.js";
 import type { ComponentDefinition } from "./types.js";
 
 export interface ComponentRenderOutput {
@@ -21,6 +25,7 @@ export type ComponentGraphRenderer = (
   input: RenderInput,
   renderer: Renderer,
   definitions: readonly ComponentDefinition[],
+  placement: { route: string; position: number; mockupsDir: string },
 ) => ComponentRenderOutput;
 
 /** This entrypoint is bundled with the consumer, sharing its one React context. */
@@ -28,6 +33,7 @@ export const renderWithComponents: ComponentGraphRenderer = (
   input,
   renderer,
   definitions,
+  placement,
 ) => {
   const collector = new ComponentCollector(
     new Map(definitions.map((entry) => [entry.id, entry])),
@@ -61,6 +67,53 @@ export const renderWithComponents: ComponentGraphRenderer = (
     serializeReviewSentinels(rendered.html),
     collector.boundaries,
   );
+  const owners = new Map<string, Set<string>>();
+  const linked: string[] = [];
+  const renderedDefinitions = [
+    ...(input.entry.kind === "component" ? [input.entry] : []),
+    ...[...collector.instances.values()].map((instance) =>
+      collector.definitions.get(instance.componentId)!,
+    ),
+  ];
+  for (const definition of renderedDefinitions) {
+    for (const file of definition.stylesheets) {
+      if (!owners.has(file)) {
+        linked.push(file);
+        owners.set(file, new Set());
+      }
+      owners.get(file)!.add(definition.id);
+    }
+  }
+  const physicalPaths = new Set(
+    [...owners.keys()].map((file) =>
+      fs.realpathSync(path.resolve(placement.mockupsDir, file)),
+    ),
+  );
+  for (const resource of rendered.resources ?? []) {
+    const candidate =
+      typeof resource.path === "string"
+        ? path.resolve(placement.mockupsDir, resource.path)
+        : undefined;
+    const physicalPath =
+      candidate && fs.existsSync(candidate)
+        ? fs.realpathSync(candidate)
+        : undefined;
+    if (
+      owners.has(resource.path) ||
+      (physicalPath !== undefined && physicalPaths.has(physicalPath))
+    )
+      invalidData(
+        placement.route,
+        `renderer resources record conflicts with declared stylesheet ${resource.path}`,
+      );
+  }
+  const html = insertComponentStylesheets(
+    serialized.html,
+    placement.route,
+    input.stylesheets,
+    placement.position,
+    linked,
+  );
   const view: ComponentViewRecord = {
     viewport: input.viewport,
     colorScheme: input.colorScheme,
@@ -71,14 +124,17 @@ export const renderWithComponents: ComponentGraphRenderer = (
       a.key < b.key ? -1 : 1,
     ),
     ranges: serialized.ranges,
-    styles: rebaseStyleOwnership(
-      rendered.html,
-      serialized.html,
-      rendered.styles ?? [],
+    styles: rebaseStyleOwnership(rendered.html, html, rendered.styles ?? []),
+    resources: [
+      ...(rendered.resources ?? []),
+      ...[...owners]
+        .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+        .map(([file, ids]) => ({ path: file, componentIds: [...ids].sort() })),
+    ].sort((left, right) =>
+      left.path < right.path ? -1 : left.path > right.path ? 1 : 0,
     ),
-    resources: rendered.resources ?? [],
   };
-  return { html: serialized.html, view };
+  return { html, view };
 };
 
 function ComponentRoot({

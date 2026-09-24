@@ -126,7 +126,8 @@ function configApiPlugin(): Plugin {
       pluginBuild.onLoad(
         { filter: /.*/, namespace: "mokly-config-api" },
         () => ({
-          contents: "export const defineConfig = (value) => value;",
+          contents:
+            'export const defineConfig = (value) => value; export const componentStylesheets = Symbol.for("@mokly/mokly/componentStylesheets");',
           loader: "js",
         }),
       );

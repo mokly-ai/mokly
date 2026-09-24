@@ -154,11 +154,12 @@ export class DocumentCompiler {
       this.graph.renderer,
       config,
       views,
-      (input, renderer, components) =>
+      (input, renderer, components, placement) =>
         this.graph.renderWithComponents(
           { ...input, ...(componentProps ? { componentProps } : {}) },
           renderer,
           components,
+          placement,
         ),
       componentViews,
       target,

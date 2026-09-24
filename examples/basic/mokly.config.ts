@@ -1,14 +1,10 @@
-import { defineConfig } from "@mokly/mokly";
+import { componentStylesheets, defineConfig } from "@mokly/mokly";
 
 import {
   designBaseStyles,
   componentLayoutStyles,
   workspaceLayoutStyles,
 } from "./entries/design/components/parts/styles.js";
-import {
-  libraryStyleCandidates,
-  withLibraryStyles,
-} from "./entries/design/library/style_files.js";
 
 export default defineConfig({
   colorSchemes: ["light", "dark"],
@@ -54,47 +50,63 @@ export default defineConfig({
   stylesheets: [
     {
       match: "design/library/**",
-      stylesheets: withLibraryStyles(designBaseStyles, [
+      stylesheets: [
+        ...designBaseStyles,
+        componentStylesheets,
         ...componentLayoutStyles,
         "design-component-controls.css",
         "design-library.css",
-      ]),
+      ],
     },
     {
       match: "design/components/controls/**",
-      stylesheets: withLibraryStyles(designBaseStyles, [
+      stylesheets: [
+        ...designBaseStyles,
+        componentStylesheets,
         ...componentLayoutStyles,
         "design-component-controls.css",
-      ]),
+      ],
     },
     {
       match: "design/components/**",
-      stylesheets: withLibraryStyles(designBaseStyles, componentLayoutStyles),
+      stylesheets: [
+        ...designBaseStyles,
+        componentStylesheets,
+        ...componentLayoutStyles,
+      ],
     },
     {
       match: "design/browse/appearance/**",
-      stylesheets: withLibraryStyles(
-        ["design.css", "design-stage.css", "design-review.css"],
-        workspaceLayoutStyles,
-      ),
+      stylesheets: [
+        "design.css",
+        "design-stage.css",
+        "design-review.css",
+        componentStylesheets,
+        ...workspaceLayoutStyles,
+      ],
     },
     {
       match: "design/review/**",
-      stylesheets: withLibraryStyles(
-        ["design.css", "design-stage.css", "design-review.css"],
-        workspaceLayoutStyles,
-      ),
+      stylesheets: [
+        "design.css",
+        "design-stage.css",
+        "design-review.css",
+        componentStylesheets,
+        ...workspaceLayoutStyles,
+      ],
     },
     {
       match: "design/**",
-      stylesheets: withLibraryStyles(
-        ["design.css", "design-stage.css"],
-        workspaceLayoutStyles,
-      ),
+      stylesheets: [
+        "design.css",
+        "design-stage.css",
+        componentStylesheets,
+        ...workspaceLayoutStyles,
+      ],
     },
     {
       match: "**/*.html",
-      stylesheets: ["styles.css", "example-components.css"],
+      stylesheets: ["styles.css"],
     },
   ],
   watch: {
@@ -102,9 +114,6 @@ export default defineConfig({
       {
         action: "reload",
         paths: [
-          ...libraryStyleCandidates.map(
-            (file) => "examples/basic/generated/" + file,
-          ),
           "examples/basic/generated/design-library.css",
           "examples/basic/generated/design-components.css",
           "examples/basic/generated/design-component-inspection.css",

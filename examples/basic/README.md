@@ -174,7 +174,8 @@ when that component actually renders, including transient prop edits. No
 per-render collector or source-path ownership assertion is needed. A changed
 rendered component resource appears on its component page and lists consuming
 screens as affected; independent screen inputs, slots or instance changes still
-appear in Changes. A source edit without a rendered effect adds nothing.
+appear in Changes. Milestone 4 removes remaining source-path-only Changes;
+until then an authored dependency can still add a source-only match.
 
 The shared inspector/workspace sheets cover all 88 design screens and standalone
 library hosts. Other mixed component-design sheets remain scoped to the 32

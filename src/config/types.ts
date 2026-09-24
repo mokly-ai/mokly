@@ -1,5 +1,7 @@
 import type { ColorScheme } from "@mokly/viewer";
 
+import type { componentStylesheets } from "./component_stylesheets.js";
+
 /** Filesystem changes understood by the watched development runtime. */
 export type WatchAction = "ignore" | "rebuild" | "reload" | "restart";
 
@@ -8,11 +10,20 @@ export interface StylesheetRule {
   /** POSIX glob matched against a screen route. */
   match: string;
   /** Paths relative to `mockupsDir`, or absolute HTTP(S) URLs. */
-  stylesheets: readonly string[];
+  stylesheets: readonly (string | typeof componentStylesheets)[];
   /** Additional stylesheets appended for light fragments. */
   lightStylesheets?: readonly string[];
   /** Additional stylesheets appended for dark fragments. */
   darkStylesheets?: readonly string[];
+}
+
+/** Cloneable configured links and their validated insertion position. */
+export interface ResolvedStylesheetRule extends Omit<
+  StylesheetRule,
+  "stylesheets"
+> {
+  stylesheets: readonly string[];
+  componentPosition?: number;
 }
 
 /** One additional consumer watch input. */
@@ -120,6 +131,8 @@ export interface ResolvedConfig {
     transformer?: string;
   };
   configPath: string;
+  /** Public component CSS validated from the current loaded registry. */
+  componentStylesheetPaths?: readonly string[];
   /** Complete authoring inventory retained across compile and serving boundaries. */
   sourceFiles?: readonly string[];
   /** Inputs to the separately bundled configuration graph. */
@@ -138,7 +151,7 @@ export interface ResolvedConfig {
   repoRoot: string;
   review: Required<Omit<ReviewConfig, "baselineBuild">> &
     Pick<ReviewConfig, "baselineBuild">;
-  stylesheets: readonly StylesheetRule[];
+  stylesheets: readonly ResolvedStylesheetRule[];
   watch: Required<Pick<WatchConfig, "debounceMs">> & {
     rules: readonly WatchRule[];
   };

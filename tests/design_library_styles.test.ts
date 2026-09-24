@@ -37,6 +37,11 @@ test("standalone variants emit only the exclusive child styles they actually ren
   assert.ok(picker?.kind === "component");
   const empty = picker.variants.find((variant) => variant.id === "empty")!;
   for (const route of Object.values(empty.fragments))
+    assert.match(
+      outputs.get(route)!,
+      /href="[^"]*design-library\/controls\/tag-picker\.css"/,
+    );
+  for (const route of Object.values(empty.fragments))
     assert.doesNotMatch(
       outputs.get(route)!,
       /href="[^"]*design-library\/controls\/tag-chip\.css"/,
@@ -73,5 +78,15 @@ test("ownership includes implementation and CSS, while variants stay outside imp
       ),
       entry.id,
     );
+    for (const variant of entry.variants)
+      for (const view of variant.componentViews)
+        assert.ok(
+          view.resources.some(
+            (resource) =>
+              resource.path.endsWith(`/` + slug + `.css`) &&
+              resource.componentIds.includes(entry.id),
+          ),
+          `${entry.id}: ${view.viewport}`,
+        );
   }
 });

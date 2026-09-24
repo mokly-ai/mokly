@@ -71,6 +71,33 @@ export function validateComponentDefinition(
   const controls = value.controls ?? {};
   validateControls(value.propSchema, controls, at);
   const owned = value.ownedDependencies ?? [];
+  const stylesheets: unknown = value.stylesheets ?? [];
+  if (!Array.isArray(stylesheets))
+    invalidData(at, "stylesheets must be an array");
+  const declared = stylesheets as unknown[];
+  const seenStylesheets = new Set<string>();
+  for (const stylesheet of declared) {
+    if (
+      typeof stylesheet !== "string" ||
+      !stylesheet ||
+      stylesheet.startsWith("/") ||
+      stylesheet.includes("\\") ||
+      stylesheet.includes("?") ||
+      stylesheet.includes("#") ||
+      /^[A-Za-z][\w+.-]*:/.test(stylesheet) ||
+      stylesheet
+        .split("/")
+        .some((segment) => !segment || segment === "." || segment === "..") ||
+      !/\.css$/i.test(stylesheet)
+    )
+      invalidData(
+        at,
+        `stylesheets must contain mockupsDir-relative public CSS paths: ${String(stylesheet)}`,
+      );
+    if (seenStylesheets.has(stylesheet))
+      invalidData(at, `duplicate stylesheet: ${stylesheet}`);
+    seenStylesheets.add(stylesheet);
+  }
   if (
     !Array.isArray(owned) ||
     !owned.every(
@@ -88,6 +115,7 @@ export function validateComponentDefinition(
     controls: structuredClone(controls),
     slots: [...slots].sort(),
     ownedDependencies: [...new Set(owned)].sort(),
+    stylesheets: [...seenStylesheets],
   };
   if (!Array.isArray(value.variants) || !value.variants.length)
     invalidData(at, "at least one saved variant is required");

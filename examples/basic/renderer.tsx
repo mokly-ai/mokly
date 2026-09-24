@@ -11,10 +11,6 @@ import { AppRegistry } from "react-native-web";
 import type { RenderInput } from "@mokly/mokly";
 
 import { LibraryHost } from "./entries/design/library/host.js";
-import {
-  DesignStyleCollector,
-  DesignStyles,
-} from "./entries/design/library/style_context.js";
 import { DesignRenderedScheme } from "./entries/design/parts/appearance.js";
 import { darkTokens, tokens } from "./theme.js";
 
@@ -43,28 +39,24 @@ function collectNativeStyles(): string {
 
 export default function render(input: RenderInput): string {
   const theme = themes[input.colorScheme];
-  const styles = new DesignStyleCollector(input.stylesheets);
   const body = renderToStaticMarkup(
-    <DesignStyles value={styles}>
-      <DesignRenderedScheme scheme={input.colorScheme}>
-        <SharedUiThemeProvider theme={theme}>
-          <ViewportContext.Provider value={input.viewport}>
-            <RenderBody>
-              {input.entry.kind === "component" &&
-              input.entry.id.startsWith("design-ui-") ? (
-                <LibraryHost input={input}>{input.node}</LibraryHost>
-              ) : (
-                input.node
-              )}
-            </RenderBody>
-          </ViewportContext.Provider>
-        </SharedUiThemeProvider>
-      </DesignRenderedScheme>
-    </DesignStyles>,
+    <DesignRenderedScheme scheme={input.colorScheme}>
+      <SharedUiThemeProvider theme={theme}>
+        <ViewportContext.Provider value={input.viewport}>
+          <RenderBody>
+            {input.entry.kind === "component" &&
+            input.entry.id.startsWith("design-ui-") ? (
+              <LibraryHost input={input}>{input.node}</LibraryHost>
+            ) : (
+              input.node
+            )}
+          </RenderBody>
+        </ViewportContext.Provider>
+      </SharedUiThemeProvider>
+    </DesignRenderedScheme>,
   );
   const nativeStyles = collectNativeStyles();
-  const links = styles
-    .stylesheets()
+  const links = input.stylesheets
     .map((href) => `<link rel="stylesheet" href="${href}">`)
     .join("");
   const documentStyles =

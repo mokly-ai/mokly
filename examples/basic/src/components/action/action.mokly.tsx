@@ -12,6 +12,7 @@ export const action = defineComponent({
   route: "components/action.html",
   dependencies: [dependency, implementation],
   ownedDependencies: [dependency, implementation],
+  stylesheets: ["example-components.css"],
   relatedDocs: ["examples/basic/README.md"],
   tags: ["forms"],
   propSchema: {

@@ -1,5 +1,4 @@
 import { SelectionControl } from "../../parts/selection_control.js";
-import { useDesignStyle } from "../style_context.js";
 
 import type { ComparisonToolbarProps } from "./comparison-toolbar.js";
 
@@ -15,7 +14,6 @@ export function ComparisonToolbarView({
   accessible,
   destinations,
 }: ComparisonToolbarProps) {
-  useDesignStyle("comparison-toolbar", eligible);
   if (!eligible) return null;
   return (
     <div className="mbk-cmp-toolbar">

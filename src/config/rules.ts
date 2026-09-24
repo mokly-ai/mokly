@@ -2,8 +2,13 @@ import type { ColorScheme } from "@mokly/viewer";
 
 import { MoklyError } from "../errors.js";
 
+import { componentStylesheets } from "./component_stylesheets.js";
 import { validateRelativeRoute } from "./paths.js";
-import type { StylesheetRule, WatchRule } from "./types.js";
+import type {
+  ResolvedStylesheetRule,
+  StylesheetRule,
+  WatchRule,
+} from "./types.js";
 
 const WATCH_ACTIONS = new Set(["ignore", "rebuild", "reload", "restart"]);
 
@@ -41,7 +46,7 @@ export function validateColorSchemes(value: unknown): ColorScheme[] {
 /** Validate ordered route-to-stylesheet rules. */
 export function validateStylesheets(
   rules: readonly StylesheetRule[],
-): StylesheetRule[] {
+): ResolvedStylesheetRule[] {
   if (!Array.isArray(rules)) {
     throw new MoklyError("config-invalid", "stylesheets must be an array");
   }
@@ -73,6 +78,7 @@ export function validateStylesheets(
       stylesheets: validateStylesheetPaths(
         rule.stylesheets,
         `stylesheets[${index}] path`,
+        true,
       ),
       ...(rule.lightStylesheets !== undefined
         ? {
@@ -94,7 +100,15 @@ export function validateStylesheets(
         : {}),
     };
     validateRuleStylesheetLinks(normalized, index);
-    return normalized;
+    const componentPosition =
+      normalized.stylesheets.indexOf(componentStylesheets);
+    return {
+      ...normalized,
+      ...(componentPosition < 0 ? {} : { componentPosition }),
+      stylesheets: normalized.stylesheets.filter(
+        (file): file is string => file !== componentStylesheets,
+      ),
+    };
   });
 }
 
@@ -138,8 +152,25 @@ function validateRuleStylesheetLinks(
   );
 }
 
-function validateStylesheetPaths(value: unknown[], label: string): string[] {
+function validateStylesheetPaths(value: unknown[], label: string): string[];
+function validateStylesheetPaths(
+  value: unknown[],
+  label: string,
+  marker: true,
+): (string | typeof componentStylesheets)[];
+function validateStylesheetPaths(
+  value: unknown[],
+  label: string,
+  marker = false,
+): (string | typeof componentStylesheets)[] {
   return value.map((stylesheet) => {
+    if (stylesheet === componentStylesheets) {
+      if (marker) return componentStylesheets;
+      throw new MoklyError(
+        "config-invalid",
+        `${label}: componentStylesheets belongs only in the shared stylesheets list`,
+      );
+    }
     requireString(stylesheet, label);
     return /^https?:\/\//.test(stylesheet)
       ? stylesheet
@@ -148,8 +179,8 @@ function validateStylesheetPaths(value: unknown[], label: string): string[] {
 }
 
 function validateUniqueStylesheetPaths(
-  linked: readonly string[],
-  paths: readonly string[],
+  linked: readonly (string | typeof componentStylesheets)[],
+  paths: readonly (string | typeof componentStylesheets)[],
   index: number,
   field: "darkStylesheets" | "lightStylesheets" | "stylesheets",
 ): void {
@@ -158,7 +189,9 @@ function validateUniqueStylesheetPaths(
     if (seen.has(stylesheet)) {
       throw new MoklyError(
         "config-invalid",
-        `duplicate stylesheet path in stylesheets[${index}].${field}: ${stylesheet}`,
+        stylesheet === componentStylesheets
+          ? `componentStylesheets may appear only once in stylesheets[${index}].stylesheets`
+          : `duplicate stylesheet path in stylesheets[${index}].${field}: ${stylesheet}`,
       );
     }
     seen.add(stylesheet);

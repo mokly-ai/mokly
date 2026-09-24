@@ -3,7 +3,6 @@ import { Fragment } from "react";
 import { DesignLink } from "../../parts/design_navigation.js";
 import { changeStatusBadge } from "../controls/change-status.js";
 import { comparisonToolbar } from "../controls/comparison-toolbar.js";
-import { useDesignStyle } from "../style_context.js";
 
 import type { ScreenHeaderProps } from "./screen-header.js";
 
@@ -18,7 +17,6 @@ export function ScreenHeaderView({
   destinations,
   actions,
 }: ScreenHeaderProps) {
-  useDesignStyle("screen-header");
   return (
     <>
       <div className="mbk-screen-head">

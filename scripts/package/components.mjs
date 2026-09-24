@@ -20,6 +20,16 @@ export async function smokeRegisteredComponents(
       "<section data-component-preview>{children}</section>",
       '<FirnaCard accent="#345678">{children}</FirnaCard>',
     );
+  else {
+    source = source.replace(
+      'id: "packed-action",',
+      'id: "packed-action", stylesheets: ["component.css"],',
+    );
+    await fs.writeFile(
+      path.join(root, "mockups/component.css"),
+      "button{color:navy}",
+    );
+  }
   const entries = crossPlatform ? "catalogue/entries" : "entries";
   const output = crossPlatform ? "docs/mockups" : "mockups";
   await fs.writeFile(path.join(root, entries, "components.mockup.tsx"), source);
@@ -36,6 +46,23 @@ export async function smokeRegisteredComponents(
   const consumer = manifest.entries.find(
     (entry) => entry.id === "packed-components",
   );
+  if (!crossPlatform) {
+    const action = manifest.entries.find(
+      (entry) => entry.id === "packed-action",
+    );
+    const view = action.variants[0].componentViews[0];
+    assert.deepEqual(view.resources, [
+      { path: "component.css", componentIds: ["packed-action"] },
+    ]);
+    const html = await fs.readFile(
+      path.join(root, output, action.variants[0].fragments.mobile),
+      "utf8",
+    );
+    assert.match(
+      html,
+      /<link rel="stylesheet" href="\.\.\/\.\.\/component\.css">/,
+    );
+  }
   for (const view of consumer.componentViews) {
     assert.ok(view.instances.length > 0);
     for (const instance of view.instances) {

@@ -14,9 +14,9 @@ and `Viewport` retain the [package contract](./mokly-package.md) and the named
 
 The optional instance `source` field below is implemented in
 [viewer library Milestone 2](../../plans/mokly-viewer-library.md).
-Manifest v6 and component stylesheet ownership are planned by
+Manifest v6 and component stylesheet ownership are defined by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-implemented in Milestones 6 and 3 respectively. Until Milestone 6 the current
+planned for Milestone 6 and delivered in Milestone 3 respectively. Until Milestone 6 the current
 writer still emits v5; historical parsing of v3–v5 is retained afterward.
 
 ## Entries And Variants

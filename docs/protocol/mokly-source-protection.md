@@ -8,9 +8,10 @@ publication options. Verification is tracked in
 [Unified Catalogue Pages](../../plans/unified-catalogue-pages.md); the
 resolved-entry-set rule was delivered by the
 [co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
-The public-file rules for declared component CSS and manifest v6 are planned
+The public-file rules for declared component CSS and manifest v6 are defined
 by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-implemented in Milestones 3 and 6. Until then the writer emits manifest v5.
+delivered in Milestone 3 and planned for Milestone 6 respectively. Until
+Milestone 6 the writer emits manifest v5.
 
 ## Protected Inputs
 

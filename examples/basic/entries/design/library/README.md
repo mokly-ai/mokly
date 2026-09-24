@@ -87,9 +87,9 @@ retain that caller's ownership.
 
 ## Styles And Hosts
 
-The component stylesheet target is planned by
+The component stylesheet contract was delivered by
 [remove-source-path-evidence](../../../../../plans/remove-source-path-evidence.md)
-for Milestone 3 and replaces the current style collector; source-path evidence
+in Milestone 3 and replaces the style collector; source-path evidence
 disappears in Milestone 4 and declarations in Milestone 6.
 `metadata.ts` assigns each registered component its public
 `design-library/{group}/{slug}.css` relative to `mockupsDir` through

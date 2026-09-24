@@ -83,7 +83,7 @@ export function watchTargets(config: ResolvedConfig): string[] {
     ),
   ];
   if (config.renderer) targets.push(config.renderer);
-  for (const stylesheet of configuredStylesheetPaths(config)) {
+  for (const stylesheet of watchedStylesheetPaths(config)) {
     if (!/^https?:\/\//.test(stylesheet))
       targets.push(path.resolve(config.mockupsDir, stylesheet));
   }
@@ -104,6 +104,14 @@ export function configuredStylesheetPaths(config: ResolvedConfig): string[] {
     ...(rule.lightStylesheets ?? []),
     ...(rule.darkStylesheets ?? []),
   ]);
+}
+
+/** Include the validated component declarations in direct source watches. */
+export function watchedStylesheetPaths(config: ResolvedConfig): string[] {
+  return [
+    ...configuredStylesheetPaths(config),
+    ...(config.componentStylesheetPaths ?? []),
+  ];
 }
 
 function globWatchRoot(repoRoot: string, glob: string): string {
@@ -137,7 +145,7 @@ function isRequiredWatchPath(
     ...(config.sourceFiles ?? []).map((source) =>
       path.resolve(config.repoRoot, source),
     ),
-    ...configuredStylesheetPaths(config).flatMap((stylesheet) =>
+    ...watchedStylesheetPaths(config).flatMap((stylesheet) =>
       /^https?:\/\//.test(stylesheet)
         ? []
         : [path.resolve(config.mockupsDir, stylesheet)],

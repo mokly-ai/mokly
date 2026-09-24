@@ -2,10 +2,10 @@
 
 ## Delivery Status
 
-Watching declared component stylesheets is planned by
+Watching declared component stylesheets is delivered by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md) and
-implemented in Milestone 3. The target below is not yet implemented; existing
-configured stylesheet and referenced-resource watching remains in place.
+implemented in Milestone 3, alongside existing configured stylesheet and
+referenced-resource watching.
 
 `mokly serve` watches by default; `--no-watch` serves one deterministic
 snapshot. Every development catalogue shell loads the package-owned browser client, which connects to

@@ -59,7 +59,12 @@ for (const exact of [false, true])
     );
   });
 
-for (const ownership of ["dependency", "renderer", "unowned"] as const)
+for (const ownership of [
+  "dependency",
+  "renderer",
+  "declared",
+  "unowned",
+] as const)
   test(`external styles retain real snapshots with ${ownership} attribution`, async (t) => {
     const source = componentEntrySource()
       .replace(
@@ -70,13 +75,17 @@ for (const ownership of ["dependency", "renderer", "unowned"] as const)
         'id: "action",',
         ownership === "dependency"
           ? 'id: "action", ownedDependencies: ["mockups/action.css"], dependencies: ["mockups/action.css"],'
-          : 'id: "action",',
+          : ownership === "declared"
+            ? 'id: "action", stylesheets: ["action.css"],'
+            : 'id: "action",',
       );
     const fixture = await createFixture(source, {
       extraConfig:
         ownership === "renderer"
           ? 'renderer: "renderer.tsx", stylesheets: [{ match: "**", stylesheets: ["action.css"] }],'
-          : 'stylesheets: [{ match: "**", stylesheets: ["action.css"] }],',
+          : ownership === "declared"
+            ? "stylesheets: [],"
+            : 'stylesheets: [{ match: "**", stylesheets: ["action.css"] }],',
     });
     t.after(() => removeFixture(fixture));
     await fs.writeFile(

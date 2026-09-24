@@ -17,7 +17,7 @@ import { parseReviewResult } from "../packages/viewer/dist/review/result_validat
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 
-for (const ownership of ["dependency", "renderer"] as const)
+for (const ownership of ["dependency", "renderer", "declared"] as const)
   for (const exact of [false, true])
     for (const matches of [false, true])
       test(`actual invocation CSS ownership=${ownership}, exact screen=${exact}, matches=${matches}`, async (t) => {
@@ -29,7 +29,9 @@ for (const ownership of ["dependency", "renderer"] as const)
             'id: "action",',
             ownership === "dependency"
               ? 'id: "action", dependencies: ["mockups/action.css"], ownedDependencies: ["mockups/action.css"],'
-              : 'id: "action",',
+              : ownership === "declared"
+                ? 'id: "action", stylesheets: ["action.css"],'
+                : 'id: "action",',
           )
           .replace(
             'id: "home",',
@@ -41,7 +43,7 @@ for (const ownership of ["dependency", "renderer"] as const)
           t,
           source,
           {
-            extraConfig: `colorSchemes: ["light", "dark"], stylesheets: [{ match: "**", stylesheets: ["action.css"] }], ${ownership === "renderer" ? 'renderer: "renderer.tsx",' : ""}`,
+            extraConfig: `colorSchemes: ["light", "dark"], stylesheets: ${ownership === "declared" ? "[]" : '[{ match: "**", stylesheets: ["action.css"] }]'}, ${ownership === "renderer" ? 'renderer: "renderer.tsx",' : ""}`,
           },
           async ({ root, mockupsDir }) => {
             await fs.writeFile(

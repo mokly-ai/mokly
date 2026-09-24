@@ -2,7 +2,7 @@
 
 ## Status And Outcome
 
-Status: in progress; Milestones 1–2 are complete and Milestones 3–8 remain.
+Status: in progress; Milestones 1–3 are complete and Milestones 4–8 remain.
 The binding Decisions And Scope remove all three inputs and adopt
 component-declared stylesheets in place of the stylesheet role of
 `ownedDependencies`. The user approved both the removals and the component
@@ -275,7 +275,7 @@ Add the `stylesheets` input and move the example's component CSS to it. The
 migrated example pages must render exactly as before; this milestone changes
 how CSS loads, not the design.
 
-- [ ] Failure-first tests on a fixture catalogue with registered components:
+- [x] Failure-first tests on a fixture catalogue with registered components:
       a declared stylesheet is linked only in documents that render the
       component, at the marker and at the default position; its ownership
       record names the rendered declaring components; an edit to it adds only
@@ -284,31 +284,33 @@ how CSS loads, not the design.
       HTTP URL, duplicate, a file both configured and declared, renderer
       `resources` for a declared file, a second or scheme-specific marker, a
       missing neighbouring link).
-- [ ] Authoring and configuration: add `stylesheets` to the component input,
+- [x] Authoring and configuration: add `stylesheets` to the component input,
       definition and validation; export the `componentStylesheets` marker and
       accept it in configured stylesheet lists.
-- [ ] Rendering: `stylesheetsFor` reports the marker position;
+- [x] Rendering: `stylesheetsFor` reports the marker position;
       `renderWithComponents` inserts the links after the renderer returns,
       derives the ownership records and rebases style-ownership offsets through
       the insertion. Serve's on-demand and transient renders use the same path.
-- [ ] Serve and resources: reload declared stylesheets in Serve and confirm
+- [x] Serve and resources: reload declared stylesheets in Serve and confirm
       resource validation, export and publication include them.
-- [ ] Migrate the example: each design library component declares its sheet
+- [x] Migrate the example: each design library component declares its sheet
       through `libraryMetadata`; `example-action` and `example-toolbar`
       declare `example-components.css`, which leaves the `**/*.html` rule;
       configured design lists use the marker instead of the candidate pool;
       the renderer emits `input.stylesheets` directly. Delete the style
       collector (`style_context.tsx`, the `useDesignStyle` calls,
       `libraryStyleCandidates` and `withLibraryStyles`).
-- [ ] Update the design library tests (`tests/design_library_styles.test.ts`,
+- [x] Update the design library tests (`tests/design_library_styles.test.ts`,
       `tests/component_design_attribution.test.ts`) and add a declared mode to
       the ownership tests (`tests/component_asset_changes.test.ts`,
       `tests/changes_css_ownership.test.ts`).
-- [ ] Run `npm run build`, `npm run example:build` and
+- [x] Prove the marker survives separate config bundling and packed consumer
+      installation with the same `unique symbol` identity.
+- [x] Run `npm run build`, `npm run example:build` and
       `npm run example:check`. Smoke-test design library pages and example
       component screens at both widths through `npm run dev`, and confirm the
       styles match the previous build.
-- [ ] Run the focused rendering, component, CSS, design and Serve tests,
+- [x] Run the focused rendering, component, CSS, design and Serve tests,
       `npm run typecheck` and `npm run lint`.
 
 ## Milestone 4: Base Changes and evidence only on rendered output

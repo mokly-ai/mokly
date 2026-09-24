@@ -48,6 +48,7 @@ export interface ComponentInput<
   colorSchemes?: readonly ColorScheme[];
   tags?: readonly string[];
   ownedDependencies?: readonly string[];
+  stylesheets?: readonly string[];
 }
 
 /** Runtime definition retains the adapter and slots only inside the consumer graph. */
@@ -66,6 +67,7 @@ export interface ComponentDefinition extends RoutedEntryInput {
   colorSchemes?: readonly ColorScheme[];
   tags?: readonly string[];
   ownedDependencies: readonly string[];
+  stylesheets: readonly string[];
 }
 
 export interface RegisteredComponent<

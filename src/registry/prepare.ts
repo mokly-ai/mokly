@@ -7,6 +7,7 @@ import type {
   ResolvedRegistryEntry,
 } from "../authoring/types.js";
 import { validateComponentDefinition } from "../components/definition.js";
+import { validateDeclaredStylesheets } from "../components/stylesheet_validation.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
@@ -80,6 +81,7 @@ export function prepareRegistry(
     });
   }
   if (violations.length > 0) throw invalidRegistry(violations);
+  validateDeclaredStylesheets(orderedEntries, config);
   return {
     byId: new Map(orderedEntries.map((entry) => [entry.id, entry])),
     entries: orderedEntries,

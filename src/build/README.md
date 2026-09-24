@@ -80,6 +80,12 @@ Export and Review boundaries continue to use directories that hold resolved
 entry modules. Source locations do not enter instance keys, props keys, slot
 identities, or Changes projections.
 
+Registry preparation validates component-declared public CSS and conflicts
+across all configured rules. `render.ts` keeps the shared-list marker position
+outside `RenderInput`, while `components/render.tsx` inserts links beside the
+renderer-emitted configured links and derives their resource owners. Config
+bundles use the same namespaced `Symbol.for` marker as consumer bundles.
+
 ## Development
 
 ```sh

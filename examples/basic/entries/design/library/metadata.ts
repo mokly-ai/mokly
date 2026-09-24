@@ -33,6 +33,7 @@ export function libraryMetadata(
     description,
     dependencies: [...modules, stylesheet],
     ownedDependencies: [...modules, stylesheet],
+    stylesheets: [libraryStyleFiles[slug]],
     relatedDocs: ["docs/protocol/mokly-design-component-library.md"],
     colorSchemes: DUAL_SCHEME_SAMPLES.has(slug)
       ? (["light", "dark"] as const)

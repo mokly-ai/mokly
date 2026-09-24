@@ -5,7 +5,7 @@ saved variants, controls, and recorded usage in screens or other components.
 Callers render the returned `Component` and export its `entry` in `mockups`.
 Mokly renders that wrapper in the consumer's existing React/provider graph.
 
-The `stylesheets` target is planned by
+The `stylesheets` input was delivered by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md) for
 Milestone 3. Source-path inputs and manifest v6 change in Milestone 6; current
 code still emits v5 and accepts old inputs.
@@ -86,6 +86,10 @@ resource ownership records for rendered declarers; renderer style or other
 resource records still handle material outside the component's body. Imports
 remain unowned. Global or mixed rendered resources remain conservatively
 attributed. Unrendered source edits do not create Changes or comparison evidence.
+Components declare public `mockupsDir`-relative CSS with `stylesheets`. Rendered
+instances (including null output and saved component roots) receive links in
+first-render order; the same pass derives resource ownership for each linked
+file. Conflicts with configured links and renderer resource records fail Build.
 See [component stylesheets](../../docs/protocol/mokly-component-stylesheets.md).
 Historical Mokabook comparisons preserve the original document coordinates when
 applying recorded style ownership; internal marker renames alone do not create

@@ -9,7 +9,7 @@ import { isInside, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig, WatchAction } from "../config/types.js";
 
 import {
-  configuredStylesheetPaths,
+  watchedStylesheetPaths,
   isEntryGlobCandidate,
   isPackageOwnedIgnoredWatchPath,
 } from "./watch_paths.js";
@@ -222,7 +222,7 @@ export function classifyWatchPath(
     return "ignore";
   if ([...resources].some((resource) => isInside(absolute, resource)))
     return "reload";
-  const stylesheetPaths = configuredStylesheetPaths(config);
+  const stylesheetPaths = watchedStylesheetPaths(config);
   if (
     stylesheetPaths.some(
       (value) =>

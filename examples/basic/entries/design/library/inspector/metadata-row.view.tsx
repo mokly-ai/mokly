@@ -1,5 +1,3 @@
-import { useDesignStyle } from "../style_context.js";
-
 import type { MetadataRowProps } from "./metadata-row.js";
 
 export function MetadataRowView({
@@ -7,7 +5,6 @@ export function MetadataRowView({
   presentation,
   children,
 }: MetadataRowProps) {
-  useDesignStyle("metadata-row");
   return presentation === "props" ? (
     <div>
       <dt>{label}</dt>

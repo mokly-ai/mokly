@@ -14,6 +14,7 @@ export const toolbar = defineComponent({
   route: "components/toolbar.html",
   dependencies: [dependency, implementation],
   ownedDependencies: [dependency, implementation],
+  stylesheets: ["example-components.css"],
   relatedDocs: ["examples/basic/README.md"],
   propSchema: {
     kind: "object",

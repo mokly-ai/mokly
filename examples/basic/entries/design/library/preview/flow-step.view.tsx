@@ -1,5 +1,4 @@
 import { DesignLink } from "../../parts/design_navigation.js";
-import { useDesignStyle } from "../style_context.js";
 
 import type { FlowStepProps } from "./flow-step.js";
 
@@ -10,7 +9,6 @@ export function FlowStepView({
   screenId,
   title,
 }: FlowStepProps) {
-  useDesignStyle("flow-step");
   return (
     <section className="flow-step">
       <div className="flow-step-head">

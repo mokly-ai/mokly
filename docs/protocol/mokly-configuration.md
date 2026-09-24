@@ -8,10 +8,9 @@ This is the detailed configuration boundary of the
 Existing settings in this document are implemented, including glob-based entry
 discovery through `entries` and the `entriesDir` shorthand delivered by the
 [co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
-The `componentStylesheets` marker is planned by
+The `componentStylesheets` marker is delivered by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md) for
 Milestone 3; removal of `review.sharedImpact` is planned for Milestone 4.
-Those target settings are not yet implemented.
 
 ## Configuration Discovery
 

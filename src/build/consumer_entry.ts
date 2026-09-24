@@ -142,6 +142,7 @@ function attributedApiContents(
     `export const collection = (input) => attribute(api.collection(input), source);`,
     `export const defineRoot = (input) => api.defineRoot(input).map((definition) => definition.definedIn ? definition : attribute(definition, source));`,
     `export const defineConfig = api.defineConfig;`,
+    `export const componentStylesheets = api.componentStylesheets;`,
     `export const MockLink = api.MockLink;`,
     `export const mockLink = api.mockLink;`,
     `export const ReviewIgnore = api.ReviewIgnore;`,

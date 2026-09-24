@@ -3,7 +3,6 @@ import type { Viewport } from "@mokly/mokly";
 import { DesignLink } from "../../parts/design_navigation.js";
 import { ChevronIcon } from "../../parts/icons.js";
 import { NavResizeHandle } from "../../parts/nav_resize.js";
-import { useDesignStyle } from "../style_context.js";
 
 import { NavRow } from "./catalogue-navigation-row.view.js";
 import { navigationSections } from "./catalogue-navigation-sections.js";
@@ -56,7 +55,6 @@ export function CatalogueNavigationView({
   changesDestination,
   viewport,
 }: CatalogueNavigationProps & { viewport: Viewport }) {
-  useDesignStyle("catalogue-navigation");
   const status =
     changesStatus === "ready" ? undefined : CHANGES_MESSAGES[changesStatus];
   const sections = navigationSections(rows);

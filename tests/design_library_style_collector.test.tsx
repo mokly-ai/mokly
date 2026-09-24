@@ -1,90 +1,62 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { renderToStaticMarkup } from "react-dom/server";
+import { designCatalogue } from "./helpers/design_catalogue.js";
 
-import {
-  DesignStyleCollector,
-  DesignStyles,
-  useDesignStyle,
-} from "../examples/basic/entries/design/library/style_context.js";
-import type { LibraryStyle } from "../examples/basic/entries/design/library/style_files.js";
-
-const configured = [
-  "../../../design.css",
-  "../../../design-library/controls/tag-chip.css",
-  "../../../design-library/chrome/top-bar.css",
-  "../../../design-stage.css",
-];
-
-function Sample({
-  name,
-  visible = true,
-}: {
-  name: LibraryStyle;
-  visible?: boolean;
-}) {
-  useDesignStyle(name, visible);
-  return visible ? <span>{name}</span> : null;
-}
-
-test("the collector preserves validated hrefs, global sheets and configured cascade order", () => {
-  const styles = new DesignStyleCollector(configured);
-  styles.request("top-bar");
-  styles.request("tag-chip");
-  styles.request("tag-chip");
-  assert.deepEqual(styles.stylesheets(), configured);
-  assert.deepEqual(new DesignStyleCollector(configured).stylesheets(), [
-    configured[0],
-    configured[3],
-  ]);
-});
-
-test("unconfigured style requests fail instead of inventing public URLs", () => {
-  const styles = new DesignStyleCollector(configured);
-  assert.throws(() => styles.request("inspector"), /not configured/);
-});
-
-test("nested render providers and hidden children cannot leak requested styles", () => {
-  const outer = new DesignStyleCollector(configured);
-  const inner = new DesignStyleCollector(configured);
-  renderToStaticMarkup(
-    <DesignStyles value={outer}>
-      <Sample name="top-bar" />
-      <DesignStyles value={inner}>
-        <Sample name="tag-chip" />
-      </DesignStyles>
-      <Sample name="tag-chip" visible={false} />
-    </DesignStyles>,
+test("standalone component styles are derived from each rendered variant", async () => {
+  const { manifest, outputs } = await designCatalogue;
+  const topBar = manifest.entries.find(
+    (entry) => entry.id === "design-ui-top-bar",
   );
-  assert.deepEqual(outer.stylesheets(), [
-    configured[0],
-    configured[2],
-    configured[3],
-  ]);
-  assert.deepEqual(inner.stylesheets(), [
-    configured[0],
-    configured[1],
-    configured[3],
-  ]);
+  assert.ok(topBar?.kind === "component");
+  const closed = topBar.variants.find((variant) => variant.id === "default")!;
+  const opened = topBar.variants.find(
+    (variant) => variant.id === "tag-picker",
+  )!;
+  const files = (html: string): string[] =>
+    [...html.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(
+      (match) => match[1]!,
+    );
+  for (const viewport of ["mobile", "desktop"] as const) {
+    const defaultLinks = files(outputs.get(closed.fragments[viewport])!);
+    const openedLinks = files(outputs.get(opened.fragments[viewport])!);
+    assert.equal(defaultLinks.length, new Set(defaultLinks).size);
+    assert.equal(openedLinks.length, new Set(openedLinks).size);
+    assert.ok(
+      defaultLinks.some((file) => file.endsWith("/chrome/top-bar.css")),
+    );
+    assert.ok(
+      defaultLinks.every((file) => !file.endsWith("/controls/tag-chip.css")),
+    );
+    assert.ok(
+      openedLinks.some((file) => file.endsWith("/controls/tag-chip.css")),
+    );
+    assert.ok(
+      openedLinks.some((file) => file.endsWith("/controls/tag-picker.css")),
+    );
+  }
 });
 
-test("overlapping invocations keep fresh independent style collections", async () => {
-  const results = await Promise.all(
-    (["tag-chip", "top-bar", "tag-chip"] as const).map(async (name) => {
-      const styles = new DesignStyleCollector(configured);
-      await Promise.resolve();
-      renderToStaticMarkup(
-        <DesignStyles value={styles}>
-          <Sample name={name} />
-        </DesignStyles>,
-      );
-      return styles.stylesheets();
-    }),
+test("empty registered components still link their own stylesheet without linking children", async () => {
+  const { manifest, outputs } = await designCatalogue;
+  const picker = manifest.entries.find(
+    (entry) => entry.id === "design-ui-tag-picker",
   );
-  assert.deepEqual(results, [
-    [configured[0], configured[1], configured[3]],
-    [configured[0], configured[2], configured[3]],
-    [configured[0], configured[1], configured[3]],
-  ]);
+  assert.ok(picker?.kind === "component");
+  const empty = picker.variants.find((variant) => variant.id === "empty")!;
+  for (const viewport of ["mobile", "desktop"] as const) {
+    const html = outputs.get(empty.fragments[viewport])!;
+    assert.match(html, /href="[^"]*\/controls\/tag-picker\.css"/);
+    assert.doesNotMatch(html, /href="[^"]*\/controls\/tag-chip\.css"/);
+    assert.deepEqual(
+      empty.componentViews.find((view) => view.viewport === viewport)!
+        .resources,
+      [
+        {
+          path: "design-library/controls/tag-picker.css",
+          componentIds: ["design-ui-tag-picker"],
+        },
+      ],
+    );
+  }
 });

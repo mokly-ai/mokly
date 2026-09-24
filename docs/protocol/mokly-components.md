@@ -2,10 +2,10 @@
 
 ## Delivery Status
 
-Component-declared stylesheet authoring is planned by
+Component-declared stylesheet authoring is delivered by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md) and
 implemented in Milestone 3. Removal of entry `dependencies` and
-`ownedDependencies` is implemented in Milestone 6. The target below is not yet
+`ownedDependencies` remains planned for Milestone 6; those removals are not yet
 the current runtime behavior.
 
 The public `defineComponent` API, saved variants, ownership attribution,

@@ -1,7 +1,6 @@
 import { useId } from "react";
 
 import { ViewIcon } from "../../components/parts/view_icons.js";
-import { useDesignStyle } from "../style_context.js";
 
 import type { ViewControlsProps } from "./view-controls.js";
 
@@ -28,7 +27,6 @@ export function ViewControlsView({
   unavailable,
   changedViews,
 }: ViewControlsProps) {
-  useDesignStyle("view-controls");
   const reasonId = useId();
   const changed = changedViews ?? [];
   const viewportChanged =
