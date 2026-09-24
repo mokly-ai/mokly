@@ -2,8 +2,8 @@
 
 ## Status And Outcome
 
-Status: in progress; Milestones 1–7 and Milestone 8 verification are complete.
-Mainline integration awaits reviewer push and post-push review.
+Status: implemented, verified, merged with `origin/main` (#115), pushed and
+reviewed. The review findings await the user's decision.
 The binding Decisions And Scope remove all three inputs and adopt
 component-declared stylesheets in place of the stylesheet role of
 `ownedDependencies`. The user approved both the removals and the component
@@ -469,8 +469,16 @@ Tags: ui
       branch. Audit main's additions first, resolve each conflict path by
       path, migrate main's new fixtures, tests and docs to this plan's
       contracts without dropping main's features, and rerun `cargo xtask check`.
-      The reviewer pushes this merge after checking it.
-- [ ] After the push, review the complete diff against `origin/main` using
+      The reviewer pushed this merge (`b801d0c8`) after checking it.
+- [x] After the push, review the complete diff against `origin/main` using
       `docs/implementation-review-prompt.md`. Report numbered findings with
       severity, impact, lettered options and a recommendation, without
       changing the implementation.
+
+Review outcome (2026-09-24, against `origin/main` at `2ec4d837`): 4 Medium
+and 9 Low findings, each verified against the code, were reported to the user
+for a decision and were not fixed. The Medium findings are consumer Changes
+rows caused by Mokly-inserted component stylesheet links, renderer ownership
+records for declared stylesheets that are not linked on the page, missing
+tests for the marker at the start or middle of a list, and protocol and
+architecture docs that still describe older formats or behavior as current.

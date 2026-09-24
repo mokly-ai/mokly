@@ -53,7 +53,8 @@
   entry `dependencies`, component `ownedDependencies` and
   `review.sharedImpact`; Changes and comparison evidence use only rendered
   output in every catalogue, and components declare the `stylesheets` that
-  Mokly links and attributes to them. Planned; no milestone has started.
+  Mokly links and attributes to them. Implemented, verified, pushed and
+  reviewed; review findings await the user's decision.
 
 ## Completed
 
