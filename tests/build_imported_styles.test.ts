@@ -13,15 +13,15 @@ import {
   styleFixture,
 } from "./helpers/imported_styles_fixture.js";
 
-test("plain imported CSS emits a stylesheet without changing HTML links", async (t) => {
+test("plain imported CSS emits and links its root stylesheet", async (t) => {
   const fixture = await styleFixture(".button { color: red; }\n");
   t.after(() => removeFixture(fixture));
   const compiled = await compileFixture(fixture);
   assert.match(compiled.outputs.get(entryStyle) as string, /\.button\s*\{/);
   assert.ok(compiled.manifest.sourceFiles.includes("entries/fixture.css"));
-  assert.doesNotMatch(
+  assert.match(
     compiled.outputs.get("screens/home.mobile.html") as string,
-    /mokly-generated/,
+    /href="\.\.\/mokly-generated\/styles\/entries\/fixture\.mockup\.tsx\.css"/,
   );
   assert.deepEqual(
     (await loadConsumerGraph(await loadConfig(fixture.root), false))

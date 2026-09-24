@@ -14,8 +14,16 @@ sources independently. CSS Modules use path-stable Lightning CSS names and
 expose default and named bindings to JavaScript. CSS `url()` assets become
 byte-preserving files under `mokly-generated/assets/`, and CSS/asset inputs
 join the private source inventory in both full and inventory-only graph loads.
-PostCSS processing and automatic links are still pending; use authored public
-CSS with `stylesheets` for styles that must reach views today.
+PostCSS processing is still pending. Fragment render input now lists the
+matching authored stylesheet rule, then generated renderer CSS, then the
+exporting entry's CSS, relative to the fragment route. Pages still render
+without automatic links. `consumer_entry.ts` records the exporting entry
+independently of the helper that defined a screen or component; it never
+changes authored-source attribution or the manifest.
+`pending_generated.ts` holds HTML text, CSS text and opaque asset bytes before
+the transaction writes anything. Full and on-demand rendering validate links,
+component resources and compatibility routes against this pending generation;
+generated CSS URLs resolve against pending assets, never stale files on disk.
 The reserved directory is already package-owned: Build removes unexpected
 regular files there as orphans, and committed Check reports them. The root
 and descendants cannot be symlinks or special files; Build and committed Check
@@ -151,6 +159,8 @@ manifest compatibility are tested with isolated consumers.
 - `load_graph.ts`, `consumer_entry.ts`, `consumer_resolution.ts`: one consumer
   graph, discovered through `config/entry_discovery.ts`, and its module
   resolution.
+- `pending_generated.ts`, `html_links.ts`, `styles/links.ts`: generation-local
+  resource lookup and relative encoded stylesheet delivery for every view.
 - `jsx_dev_runtime.ts`, `component_source.ts`: invocation capture without output
   or input-identity changes.
 - `source_inventory.ts`: complete private authoring inventory, separate from

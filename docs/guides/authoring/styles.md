@@ -7,11 +7,12 @@ order: 10
 
 ## Availability
 
-Per-root imported stylesheets and binary assets now compile into
-`mokly-generated/`. Automatic links and PostCSS processing are **not yet
-implemented**; importing CSS alone still does not put its rules into a view.
-For visible styles, put authored public CSS under `mockupsDir` and link it
-using `stylesheets` in your config until the linking milestone lands.
+Per-root imported stylesheets and binary assets compile into
+`mokly-generated/`. Mokly passes fragment-relative renderer and entry
+stylesheet links to your renderer; emit them in the document head to make
+imported CSS visible. Pages receive no automatic links. PostCSS processing
+is **not yet implemented**; the Tailwind and autoprefixer setup below is the
+planned workflow, not a supported pipeline yet.
 
 ## Import CSS beside a screen
 
@@ -23,6 +24,9 @@ are not inserted into your HTML automatically. When a renderer imports its
 own theme stylesheet, its link comes before the entry's stylesheet. A file
 delivered through the renderer is removed from the entry's CSS bundle, even
 when the entry reaches it through another CSS `@import`.
+An entry that re-exports a screen or component defined in a helper delivers
+that entry's CSS, not a bundle named after the helper. Independent entries
+using the same helper each deliver their own CSS.
 
 ```tsx
 import "./button.css";

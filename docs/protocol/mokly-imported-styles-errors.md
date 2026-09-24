@@ -89,6 +89,13 @@ message. For generated output, invalid route shape precedes exclusion matching;
 an exclusion match precedes generic authoring-source protection. The reserved
 filesystem entry check precedes consumer graph inventory, ownership walks,
 comparison and installation.
+An HTML or CSS reference to a reserved route absent from the current pending
+generation never reads a stale disk file. It uses the existing `build-invalid`
+document-link diagnostic:
+`document links and resources are invalid:\n- {source-route}: missing target {reference}`.
+The pending manifest is never a public target; references to it retain the
+existing `protected target {reference}: targets internal catalogue metadata`
+violation, including on the first Build before a manifest exists on disk.
 The root itself must be a directory when it exists; every descendant must be
 a directory or regular file. The invalid-entry message names the first entry
 in sorted repository-relative path order, including the root if invalid.

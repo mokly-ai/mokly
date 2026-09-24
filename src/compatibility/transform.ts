@@ -12,6 +12,8 @@ import { validateCompatibilityRecords } from "../build/logical_records.js";
 import { logicalArtifactRoutes } from "../build/logical_routes.js";
 import { rewriteMockLinks } from "../build/mock_links.js";
 import { pendingGeneratedOrphanRoutes } from "../build/ownership.js";
+import type { PendingGeneratedFiles } from "../build/pending_generated.js";
+import { isGeneratedRoute } from "../build/styles/routes.js";
 import { toPosixPath } from "../config/paths.js";
 import { isPublicStaticFile } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -27,6 +29,7 @@ export function transformCompatibilityDocuments(
   fragmentViews: ReadonlyMap<string, ArtifactView>,
   retainedRoutes?: readonly string[],
   context?: CompatibilityContext,
+  pending?: PendingGeneratedFiles,
 ): readonly LogicalReferenceRecord[] {
   const byId =
     context?.byId ?? new Map(entries.map((entry) => [entry.id, entry]));
@@ -34,7 +37,7 @@ export function transformCompatibilityDocuments(
   const outputRoutes = [...outputs.keys()];
   const availableRoutes = graph.compatibilityTransformer
     ? (context?.availableRoutes ??
-      availablePublicRoutes(retainedRoutes ?? outputRoutes, config))
+      availablePublicRoutes(retainedRoutes ?? outputRoutes, config, pending))
     : [];
   if (context && graph.compatibilityTransformer)
     context.availableRoutes = availableRoutes;
@@ -119,13 +122,19 @@ export interface CompatibilityContext {
 function availablePublicRoutes(
   outputRoutes: readonly string[],
   config: ResolvedConfig,
+  pending?: PendingGeneratedFiles,
 ): string[] {
-  const nextRoutes = [...outputRoutes, MANIFEST_NAME];
+  const nextRoutes = [
+    ...new Set([...outputRoutes, ...(pending?.routes() ?? []), MANIFEST_NAME]),
+  ];
   const pendingOrphans = new Set(
     pendingGeneratedOrphanRoutes(config, nextRoutes),
   );
   const publicRoutes = walkFiles(config.mockupsDir)
-    .filter((candidate) => isPublicStaticFile(candidate, config))
+    .filter((candidate) => {
+      const route = toPosixPath(path.relative(config.mockupsDir, candidate));
+      return !isGeneratedRoute(route) && isPublicStaticFile(candidate, config);
+    })
     .map((candidate) =>
       toPosixPath(path.relative(config.mockupsDir, candidate)),
     )

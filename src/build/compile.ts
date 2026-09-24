@@ -30,6 +30,7 @@ import { loadConsumerGraph, type LoadedGraph } from "./load_graph.js";
 import { validateLogicalFragments } from "./logical_records.js";
 import { validateGeneratedOutputPaths } from "./output_paths.js";
 import { validateGeneratedOwnershipHeaders } from "./ownership.js";
+import { PendingGeneratedFiles } from "./pending_generated.js";
 import { renderFragments } from "./render.js";
 import { renderCooperatively } from "./render_cooperative.js";
 
@@ -71,6 +72,7 @@ async function compileMeasured(
   }));
   const fragmentViews = new Map<string, ArtifactView>();
   const componentViews = new Map<string, ComponentViewRecord>();
+  const pending = new PendingGeneratedFiles(graph.styleOutputs);
   const outputs = accepted
     ? await timeAsync("render", () =>
         renderCooperatively(
@@ -80,6 +82,7 @@ async function compileMeasured(
           fragmentViews,
           componentViews,
           accepted.checkpoint,
+          pending,
         ),
       )
     : timeSync("render", () =>
@@ -90,8 +93,11 @@ async function compileMeasured(
           fragmentViews,
           graph.renderWithComponents,
           componentViews,
+          undefined,
+          { routes: graph.stylesheetRoutes, pending },
         ),
       );
+  pending.addHtmlMap(outputs);
   const routedEntries = new Set(
     registry.entries.flatMap((entry) =>
       entry.kind === "collection" ? [] : [entry.route],
@@ -150,8 +156,12 @@ async function compileMeasured(
       config,
       graph,
       fragmentViews,
+      undefined,
+      undefined,
+      pending,
     ),
   );
+  pending.addHtmlMap(outputs);
   timeSync("components.validate-metadata", () => {
     for (const [route, view] of componentViews) {
       const final = outputs.get(route)!;
@@ -188,14 +198,18 @@ async function compileMeasured(
   );
   timeSync("manifest.validate", () => parseManifest(manifest));
   timeSync("components.validate-resources", () =>
-    validateComponentResources(componentViews, config),
+    validateComponentResources(componentViews, config, pending),
   );
   await accepted?.checkpoint();
   timeSync("manifest.serialize", () =>
     outputs.set(MANIFEST_NAME, serializeManifest(manifest)),
   );
   timeSync("html.links-and-resources", () =>
-    validateHtmlLinks(outputs, config),
+    validateHtmlLinks(outputs, config, {
+      pending,
+      parsed: new Map(),
+      onDemand: false,
+    }),
   );
   const compilationOutputs = new Map<string, GeneratedFile>(outputs);
   for (const [route, content] of graph.styleOutputs)

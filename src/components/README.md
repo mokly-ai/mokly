@@ -64,6 +64,10 @@ for each variant. `MockLink to="action"` opens the default variant; canonical
 page URLs use `?variant=default` to select a specific saved example.
 
 Local Serve edits declared text, boolean, number, and primitive preset controls.
+Component views defined in a helper module use the stylesheet of the entry
+that exported the component, including saved variants and both viewports.
+Renderer-declared component resources can name pending generated CSS or assets
+before Build writes them; missing generated resources never fall back to disk.
 Complex props remain inspectable; an adapter can map a primitive preset key to
 a complex consumer value. Optional controls distinguish unset from empty text
 or null. Reset restores the saved variant; changing variants, routes, or entering

@@ -91,15 +91,15 @@ function virtualEntryContents(
     config.renderer ??
     runtimeModule("../renderer/default.js", "../renderer/default.tsx");
   const entryValues = entries.map(
-    (_source, index) =>
-      `(entry${index}.mockups ?? entry${index}.default ?? [])`,
+    (source, index) =>
+      `...flatten([entry${index}.mockups ?? entry${index}.default ?? []]).map((definition) => ({ ...definition, entryRoot: ${quote(source)} }))`,
   );
   return [
     ...imports,
     transformerImport,
     `import renderer from ${quote(rendererPath)};`,
     `const flatten = (values) => values.flat(Infinity);`,
-    `export const definitions = flatten([${entryValues.join(",")}]);`,
+    `export const definitions = [${entryValues.join(",")}];`,
     ...(config.compatibility.transformer
       ? [`export { compatibilityTransformer };`]
       : []),

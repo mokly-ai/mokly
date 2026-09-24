@@ -193,4 +193,6 @@ export type NestedChild =
 export type ResolvedRegistryEntry = RegistryDefinition & {
   sourcePath: string;
   sourceRelativePath: string;
+  /** Resolved exporting entry root, independent of the definition's authored source. */
+  entryRoot?: string;
 };

@@ -30,11 +30,14 @@ export async function prepareLiveRuntime(
       config.colorSchemes,
     );
     validateGeneratedOutputPaths(
-      manifest.entries.flatMap((entry) =>
-        entry.kind === "page"
-          ? [entry.route]
-          : generatedViews(entry).map((view) => view.path),
-      ),
+      [
+        ...manifest.entries.flatMap((entry) =>
+          entry.kind === "page"
+            ? [entry.route]
+            : generatedViews(entry).map((view) => view.path),
+        ),
+        ...graph.styleOutputs.keys(),
+      ],
       config,
     );
     return {

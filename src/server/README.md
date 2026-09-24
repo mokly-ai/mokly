@@ -125,6 +125,11 @@ the watched child's JSON IPC channel and decodes them before a controls preview
 serves raw bytes; text documents remain strings. It also carries the accepted
 per-root stylesheet routes and CSS/asset outputs so child and background
 recompilation reuse the original bytes instead of silently dropping them.
+`demand/http.ts` answers on-demand `/static/` stylesheet and image/font
+requests from the accepted generation's CSS or opaque bytes (including HEAD),
+before ordinary public-file serving can see an older reserved file on disk.
+`DocumentCompiler` validates the same pending resources before any HTML view
+is delivered; superseded generations never become resource fallbacks.
 The classification worker uses
 structured-clone byte transfer instead of JSON.
 The CLI injects the terminal reporter's server-facing subset into both Serve

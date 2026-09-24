@@ -6,7 +6,6 @@ import type { ColorScheme, ComponentViewRecord } from "@mokly/viewer";
 import type { ArtifactView } from "@mokly/viewer/data";
 import {
   componentFragmentRoute,
-  encodeUrlPath,
   effectiveColorSchemes,
   VIEWPORTS,
 } from "@mokly/viewer/data";
@@ -27,6 +26,8 @@ import type { Renderer } from "../renderer/types.js";
 
 import { generatedHeader } from "./ownership.js";
 import { renderPage } from "./render_page.js";
+import { stylesheetHref, type StyleDelivery } from "./styles/links.js";
+import { isGeneratedRoute } from "./styles/routes.js";
 
 /** Render every screen view to owned, linked static documents. */
 export function renderFragments(
@@ -42,6 +43,7 @@ export function renderFragments(
     colorScheme: ColorScheme;
     variantId?: string;
   },
+  styles?: StyleDelivery,
 ): Map<string, string> {
   const outputs = new Map<string, string>();
   const components = entries.filter((entry) => entry.kind === "component");
@@ -88,6 +90,8 @@ export function renderFragments(
             route,
             colorScheme,
             config,
+            entry.entryRoot,
+            styles,
           );
           let rendered: string;
           try {
@@ -167,34 +171,38 @@ export function stylesheetsFor(
   fragmentRoute: string,
   colorScheme: ColorScheme,
   config: ResolvedConfig,
+  entryRoot?: string,
+  styles?: StyleDelivery,
 ): string[] {
   const rule = config.stylesheets.find((candidate) =>
     minimatch(catalogueRoute, candidate.match),
   );
-  if (!rule) return [];
   const configured = [
-    ...rule.stylesheets,
+    ...(rule?.stylesheets ?? []),
     ...(colorScheme === "light"
-      ? (rule.lightStylesheets ?? [])
-      : (rule.darkStylesheets ?? [])),
+      ? (rule?.lightStylesheets ?? [])
+      : (rule?.darkStylesheets ?? [])),
   ];
-  return configured.map((stylesheet) => {
+  const local = configured.map((stylesheet) => {
     if (/^https?:\/\//.test(stylesheet)) return stylesheet;
     const absolute = path.resolve(config.mockupsDir, stylesheet);
-    if (!isPublicStaticFile(absolute, config)) {
+    if (
+      !styles?.pending.has(stylesheet) &&
+      (isGeneratedRoute(stylesheet) || !isPublicStaticFile(absolute, config))
+    ) {
       const denial = publicFileFailureReason(absolute, config);
       throw new MoklyError(
         "build-invalid",
         `${catalogueRoute}: ${denial ? `stylesheet ${stylesheet} ${denial}` : `stylesheet does not exist: ${stylesheet}`}`,
       );
     }
-    const relative = path.posix.relative(
-      path.posix.dirname(fragmentRoute),
-      stylesheet,
-    );
-    const encoded = encodeUrlPath(relative);
-    return encoded.startsWith(".") ? encoded : `./${encoded}`;
+    return stylesheetHref(fragmentRoute, stylesheet);
   });
+  for (const root of [config.renderer, entryRoot]) {
+    const route = root && styles?.routes.get(root);
+    if (route) local.push(stylesheetHref(fragmentRoute, route));
+  }
+  return local;
 }
 
 /** Normalize an absolute source path for deterministic diagnostics. */

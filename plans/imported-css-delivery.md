@@ -3,12 +3,11 @@
 ## Status
 
 Active. Created 2026-09-24 from the CSS-in-JS investigation on this branch.
-Milestones 1, 1A, 2, 3, and 4 (contract, binary-safe output, reserved generated
-directory, and CSS/asset bundling) and stylesheet-pass follow-ups (4A) are
-complete; Milestones 5–9 remain. PostCSS
-will let Tailwind v4 and autoprefixer
-use the consumer's configuration. Esbuild remains the only bundler; the optional
-Vite compatibility package is a follow-up plan.
+Milestones 1, 1A, 2, 3, 4, 4A, and 5 (contract, binary-safe output, reserved
+generated directory, CSS/asset bundling and follow-ups, and stylesheet links)
+are complete; Milestones 6–9 remain. PostCSS will let Tailwind v4 and
+autoprefixer use the consumer's configuration. Esbuild remains the only
+bundler; the optional Vite compatibility package is a follow-up plan.
 
 ## Problem
 
@@ -416,23 +415,40 @@ Resolve stylesheet pass performance and deterministic-byte findings before linki
 - [x] Commit and push independently; run post-push review using
       `docs/implementation-review-prompt.md` against `origin/main`.
 
-## Milestone 5: Link generated stylesheets into every view
+## Milestone 5: Link generated stylesheets into every view (complete)
 
 Make the delivered CSS reach rendered documents and pass validation.
 
-- [ ] Add `src/build/styles/links.ts` and extend `stylesheetsFor` in
+- [x] Add `src/build/styles/links.ts` and extend `stylesheetsFor` in
       `src/build/render.ts` to append the renderer and entry stylesheet links
       after the configured rule, resolved and encoded like configured links.
-- [ ] Teach the public-file checks used by `stylesheetsFor` and the resource
+- [x] Teach the public-file checks used by `stylesheetsFor` and the resource
       validators to accept pending generated routes from the current
       compilation, so Build validates links before files exist on disk.
-- [ ] Extend `tests/build_imported_styles.test.ts` with the link order, link
+- [x] Record the exporting resolved entry module for each definition,
+      including helper-defined, re-exported and nested definitions, without
+      changing the manifest or authored-source attribution.
+- [x] Introduce one typed pending-generated-files view (HTML/CSS/opaque bytes)
+      across full and on-demand render, link/resource validation and
+      compatibility route discovery; CSS `url()` assets are pending targets,
+      and reserved routes must never fall back to disk during compilation.
+- [x] Serve accepted stylesheet and asset bytes from the on-demand generation
+      at `/static/` routes, leaving remaining on-demand work to Milestone 7.
+- [x] Write failing tests for entry ownership, generated CSS/asset validation
+      against missing or stale on-disk output, and on-demand byte delivery.
+- [x] Extend `tests/build_imported_styles.test.ts` with the link order, link
       resolution from nested fragment routes and dark fragments, saved variant
       and component views receiving the same links, and page callbacks
       receiving none while their entry stylesheet is still emitted.
-- [ ] Run `npm run example:build` and `npm run example:check` to confirm the
+- [x] Keep full compilation's transitive public HTML resource validation;
+      update the protocol, guide, and READMEs for shipped link behavior.
+- [x] Preserve internal-manifest privacy before the first Build: pending
+      public resources never expose it, and retain its existing link error.
+- [x] Run `npm run example:build` and `npm run example:check` to confirm the
       example catalogue, which imports no CSS yet, is byte-identical.
-- [ ] Run the build, relevant tests, and `cargo xtask check`.
+- [x] Run the build, relevant tests, and `cargo xtask check`.
+- [x] Commit and push Milestone 5 independently; run the post-push review
+      using `docs/implementation-review-prompt.md` against `origin/main`.
 
 ## Milestone 6: PostCSS pipeline
 

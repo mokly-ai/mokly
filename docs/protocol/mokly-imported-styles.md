@@ -2,11 +2,11 @@
 
 ## Delivery Status
 
-Approved target; grouped CSS/asset compilation is implemented, but automatic
-stylesheet links and PostCSS processing are pending.
-[The plan](../../plans/imported-css-delivery.md) tracks the stages. Until
-links land, use authored public CSS via `stylesheets` to style views. This
-contract extends
+Approved target; CSS/asset compilation and stylesheet links in fragment render
+input are implemented. PostCSS processing is pending.
+[The plan](../../plans/imported-css-delivery.md) tracks the remaining stages.
+Custom renderers must emit the supplied stylesheet links; pages link CSS
+themselves. This contract extends
 [configuration](./mokly-configuration.md),
 [rendering](./mokly-rendering.md), and [source protection](./mokly-source-protection.md)
 without changing manifest v5. [Exact diagnostics](./mokly-imported-styles-errors.md)
@@ -138,78 +138,9 @@ Mokly never exposes the extra JavaScript graph outputs as public URLs.
 
 ## PostCSS And Dependency Inventory
 
-Optional top-level `postcss` is a config-relative path to a regular `.ts`,
-`.mts`, `.js`, `.mjs`, or `.cjs` module inside `repoRoot`; no discovery. Bundle
-local imports with esbuild and retain them in `configSourceFiles` (private,
-watched config-reload inputs). Resolve **every bare package import** from its
-importer with Node ESM `import` conditions and externalize it as an absolute
-`file:` URL in the temporary bundle; plugin packages and native bindings run
-unbundled from the consumer's `node_modules`. Do not change how `mokly.config`
-loads. The PostCSS module must
-default-export a non-array object with `plugins` as either an ordered array
-of PostCSS plugin instances or an insertion-ordered record mapping package
-names to plain option objects. Resolve object-form package names with the
-same Node ESM conditions from the PostCSS module's directory, instantiate
-with those options, and preserve declared order.
-`map` is accepted but ignored; Mokly emits no source maps. Reject any other
-keys, missing/invalid plugins, escaping paths and failed package resolution.
-
-Run the consumer's plugins in order once for each distinct effective
-stylesheet input with `from` set to its physical source path, `map: false`,
-**after** renderer-exclusion pruning and **before** CSS Modules naming and
-esbuild CSS bundling. PostCSS may inline local `@import`s (Tailwind v4 does),
-so preprocessing must prune the entire local import tree before it can see
-excluded content. Cache by `(source path, effective pruned-import set)`
-within a compilation and share that result between graph and CSS passes;
-the effective set consists only of resolved local prelude imports excluded
-from that file, not every file in the renderer's closure;
-the same file with different root-specific pruning is a distinct input and
-must be processed again. Mokly supplies PostCSS, not consumer plugins or
-their versions.
-
-Inventory is the sorted, unique, repo-relative union of config/graph inputs,
-entry roots, CSS-pass inputs including nested imports and `url()` assets,
-transformer-only CSS closure, and PostCSS `dependency` messages and expanded
-`dir-dependency` matches. Retain both logical and in-repository realpath
-aliases. Inventory-only `loadConsumerGraph(config, false)` **must run the same
-CSS collection/pass and dependency reporting** without evaluating renderer
-callbacks; `assertFreshSourceInventory` compares this union to
-`manifest.sourceFiles` for Serve and publish. No manifest schema change.
-
-Interpret a plugin's `dependency.file` or `dir-dependency.dir` relative to
-its stylesheet when not absolute. Ignore inputs outside `repoRoot` (also
-physical escapes) and under `node_modules` before normalizing; never feed
-them to `normalizeSourceFiles`. For directory messages, recursively walk
-regular files from the reported directory with the discovery walk's denied
-directory list; do not honor `.gitignore`, but match each path relative to
-the reported directory using its minimatch `glob`, or `**/*` if absent
-(`dot: true`, case-sensitive). Require a reported in-repository directory to
-exist and be a directory even if it currently matches no files. Skip
-`node_modules`, `.mokly-cache`,
-`review.outDir`, denied trees and paths outside `repoRoot`. Register allowed
-directories for watching additions as well as current matching files.
-
-**Validation precedence:** Explicit `dependency` naming Mokly-owned output
-fails in both modes. For directory matches, committed mode fails when the
-glob reaches an existing generated fragment, manifest or file below
-`mokly-generated/`; derived mode skips those files. Neither mode inventories
-Mokly output. Next, any plugin-reported file inside `mockupsDir` that is not
-**already a graph-inventoried source** fails (including public CSS or HTML);
-this applies to explicit files and expanded directories in both modes.
-Entries below `mockupsDir` already in the graph are allowed. Finally validate
-the remaining in-repo regular files. An excluded generated or denied path
-cannot be restored by a plugin glob or explicit watch rule. Directory reports
-outside the root or inside `node_modules` are ignored; malformed in-repo
-messages and missing explicit files fail as specified in the error catalogue.
-For Tailwind, `@source not "<path relative to the stylesheet>"` excludes
-direct scans of that directory, but an **ancestor** directory dependency
-may still report a glob matching files beneath `mockupsDir`. In that case
-exclude the matching reported ancestor (if safe for other authored sources),
-or prefer `@import "tailwindcss" source(none)` plus `@source` for explicit
-authored trees. Do not silently skip an otherwise-public matching file just
-because Tailwind did not list it individually. Dependencies in `node_modules`
-may still affect
-the processor's output, but are not private source inventory entries.
+See the [PostCSS and dependency inventory contract](./mokly-imported-styles-postcss.md)
+for module loading, transform ordering, reported dependencies, and validation
+precedence; [exact messages](./mokly-imported-styles-errors.md) apply to both.
 
 ## Assets, Links And Delivery
 
@@ -249,12 +180,38 @@ or automatic link; they still cause an entry stylesheet to be generated and
 can link it themselves with a relative URL. Pending generated routes are
 valid link/resource targets before the transaction writes them.
 
+The owning entry root is the **resolved entry module whose `mockups` or
+default export yielded the definition** (including re-exports and flattened
+nested definitions), not the module where its `define*` call ran. Record it
+in memory during graph evaluation and propagate it through registry preparation
+without adding a manifest field. Two entries may import the same helper but
+link their own independent entry bundles.
+
+Validation uses one generation-local pending set of HTML text, CSS text and
+opaque asset bytes, seeded with all style outputs before rendering. On-demand
+documents add HTML lazily to that same set; never decode asset bytes. Validate
+generated CSS `url()` references recursively as CSS resources, and binary
+assets by existence only. Pending generated routes satisfy stylesheet and
+component resource checks; compatibility `availableRoutes` includes them.
+The internal manifest is not a public pending resource, even though it is a
+generated text output; links and component resources naming it retain the
+existing internal-metadata rejection before the manifest exists on disk.
+Ownership/orphan checks use the complete pending public set plus the internal
+manifest output, not just HTML routes.
+Never read a reserved route from disk during compilation: absent pending
+reserved bytes mean a missing target even if an old file exists. On-demand
+Serve responds to `/static/` generated CSS and assets from the accepted
+generation's bytes, not on-disk files.
+Full compilation continues to walk and validate transitive references in linked
+authored public HTML; on-demand validation reads only the requested view and
+resources it must validate for that request.
+
 Use esbuild `write: false`, `metafile: true`, `bundle: true`, `minify: false`,
 `target: "esnext"`, `outbase: repoRoot`, path-mirroring
 `assetNames: "../assets/[dir]/[name]"` relative to `styles/`, and no content
 hashes, source maps or browser syntax lowering. Strip only esbuild-inserted
-source-path comments from CSS; Mokly does not add another CSS rewrite beyond
-configured PostCSS, CSS Modules and esbuild's bundling/relative URL conversion.
+source-path comments and their separator blank lines, and end CSS with one
+newline; Mokly does not otherwise rewrite PostCSS/CSS Modules/esbuild output.
 Esbuild itself may drop ordinary authored comments or move legal comments,
 even without minification. Repeated builds with the same
 inputs and deterministic plugins yield byte-identical output; plugin

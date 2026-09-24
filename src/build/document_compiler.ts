@@ -27,6 +27,7 @@ import type { LogicalReferenceRecord } from "./logical_record_types.js";
 import { validateLogicalFragments } from "./logical_records.js";
 import { validateGeneratedOutputPaths } from "./output_paths.js";
 import { validateGeneratedOwnershipHeaders } from "./ownership.js";
+import { PendingGeneratedFiles } from "./pending_generated.js";
 import { renderFragments } from "./render.js";
 
 export interface CompiledDocument {
@@ -57,6 +58,8 @@ export class DocumentCompiler {
       ),
   );
   private readonly links: HtmlValidationContext;
+  private readonly pending: PendingGeneratedFiles;
+  private activeRead: ((route: string) => PreparedDocument) | undefined;
 
   constructor(
     readonly runtime: ComponentRuntime,
@@ -85,11 +88,15 @@ export class DocumentCompiler {
           ...(view.variantId ? { variantId: view.variantId } : {}),
         });
     }
+    this.pending = new PendingGeneratedFiles(
+      graph.styleOutputs,
+      this.routes.keys(),
+      (route) => (this.activeRead?.(route) ?? this.prepare(route)).html,
+    );
     this.links = {
-      generatedRoutes: new Set(this.routes.keys()),
-      pendingOrphans: new Set(),
+      pending: this.pending,
       parsed: new Map(),
-      readGenerated: (route) => this.prepare(route).html,
+      onDemand: true,
     };
   }
 
@@ -115,12 +122,11 @@ export class DocumentCompiler {
       this.runtime.config,
       (target) => read(target).anchors,
     );
+    this.activeRead = read;
     try {
-      validateHtmlLinks(outputs, this.runtime.config, {
-        ...this.links,
-        readGenerated: (target) => read(target).html,
-      });
+      validateHtmlLinks(outputs, this.runtime.config, this.links);
     } finally {
+      this.activeRead = undefined;
       // Generated views are resolved from the bounded document cache, never from stale prop edits.
       for (const target of this.links.parsed.keys())
         if (this.routes.has(target)) this.links.parsed.delete(target);
@@ -162,6 +168,7 @@ export class DocumentCompiler {
         ),
       componentViews,
       target,
+      { routes: this.graph.stylesheetRoutes, pending: this.pending },
     );
     const original = outputs.get(route)!;
     const records = transformCompatibilityDocuments(
@@ -172,6 +179,7 @@ export class DocumentCompiler {
       views,
       [...this.routes.keys()],
       this.compatibility,
+      this.pending,
     );
     const html = outputs.get(route)!;
     const entry = this.compatibility.byId.get(target.entryId)!;
@@ -195,7 +203,11 @@ export class DocumentCompiler {
         route,
         entry.kind === "component" ? entry.id : undefined,
       );
-      validateComponentResources(new Map([[route, view]]), config);
+      validateComponentResources(
+        new Map([[route, view]]),
+        config,
+        this.pending,
+      );
     }
     const prepared = {
       route,

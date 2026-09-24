@@ -199,11 +199,11 @@ A custom renderer is the integration boundary for product providers, themes,
 stylesheets, fonts, and full-document markup. Mokly resolves React from the
 consumer repository and bundles all authoring inputs into one build-time graph,
 so component trees use one React runtime.
-Use separately authored public CSS with `stylesheets` for stylesheets that
-must reach views. [Imported CSS delivery](./docs/protocol/mokly-imported-styles.md)
-now compiles CSS Modules, per-root stylesheets and assets, but automatic
-links and PostCSS processing are pending. The Styles guide documents the
-full intended workflow and what works today.
+Use `stylesheets` for separately authored public CSS. [Imported CSS delivery](./docs/protocol/mokly-imported-styles.md)
+compiles CSS Modules, per-root stylesheets and assets; fragment renderers
+receive ordered links for the renderer and exporting entry CSS after any
+configured links. Pages link their own CSS. PostCSS processing is pending;
+the Styles guide distinguishes the working flow from planned plugin support.
 
 ## Review and share
 

@@ -22,6 +22,8 @@ import {
 } from "../html_references.js";
 
 import { isOwned, pendingGeneratedOrphanRoutes } from "./ownership.js";
+import { PendingGeneratedFiles } from "./pending_generated.js";
+import { isGeneratedRoute } from "./styles/routes.js";
 
 interface ReferenceResult {
   target?: string;
@@ -30,10 +32,10 @@ interface ReferenceResult {
 
 /** Generation-scoped lookup for validating a requested document and its resources. */
 export interface HtmlValidationContext {
-  generatedRoutes: ReadonlySet<string>;
-  readGenerated(route: string): string;
+  pending: PendingGeneratedFiles;
   parsed: Map<string, ParsedResource>;
-  pendingOrphans: ReadonlySet<string>;
+  pendingOrphans?: ReadonlySet<string>;
+  onDemand: boolean;
 }
 
 /** Validate navigation links and transitive local resources in generated HTML. */
@@ -42,16 +44,29 @@ export function validateHtmlLinks(
   config: ResolvedConfig,
   context?: HtmlValidationContext,
 ): void {
+  const pendingFiles = context?.pending ?? new PendingGeneratedFiles(new Map());
+  if (!context) pendingFiles.addHtmlMap(outputs);
   const pendingOrphans =
     context?.pendingOrphans ??
-    new Set(pendingGeneratedOrphanRoutes(config, outputs.keys()));
+    new Set(
+      pendingGeneratedOrphanRoutes(config, [
+        ...pendingFiles.routes(),
+        ...outputs.keys(),
+      ]),
+    );
   const parsed = context?.parsed ?? new Map<string, ParsedResource>();
   for (const [route, content] of outputs) {
     if (isPrivateStaticPath(path.resolve(config.mockupsDir, route), config))
       continue;
     parsed.set(route, htmlResource(extractHtmlReferences(content)));
   }
-  const pending = [...outputs.keys()]
+  for (const route of pendingFiles.stylesheetRoutes()) {
+    const resource = pendingFiles.resource(route);
+    if (resource) parsed.set(route, resource);
+  }
+  const pending = [
+    ...new Set([...outputs.keys(), ...pendingFiles.stylesheetRoutes()]),
+  ]
     .filter((route) => parsed.has(route))
     .sort();
   const visited = new Set<string>();
@@ -70,7 +85,8 @@ export function validateHtmlLinks(
         parsed,
         config,
         pendingOrphans,
-        context,
+        pendingFiles,
+        context?.onDemand ?? false,
       );
       if (result.violation) violations.push(`${route}: ${result.violation}`);
       if (
@@ -80,7 +96,13 @@ export function validateHtmlLinks(
       ) {
         const targetResource =
           parsed.get(result.target) ??
-          loadResource(result.target, outputs, config, pendingOrphans, context);
+          loadResource(
+            result.target,
+            pendingFiles,
+            config,
+            pendingOrphans,
+            context?.onDemand ?? false,
+          );
         if (targetResource) {
           parsed.set(result.target, targetResource);
           pending.push(result.target);
@@ -107,7 +129,8 @@ function validateReference(
   parsed: Map<string, ParsedResource>,
   config: ResolvedConfig,
   pendingOrphans: ReadonlySet<string>,
-  context?: HtmlValidationContext,
+  pending: PendingGeneratedFiles,
+  onDemand: boolean,
 ): ReferenceResult {
   const reference = item.value;
   if (reference === "" || /^(?:https?:|mailto:|tel:|data:)/i.test(reference)) {
@@ -116,6 +139,12 @@ function validateReference(
   if (reference.startsWith("mock:")) {
     return { violation: `unresolved id link ${reference}` };
   }
+  if (
+    sourceRoute.endsWith(".css") &&
+    !item.checkFragment &&
+    reference.startsWith("//")
+  )
+    return {};
   if (reference.startsWith("/")) {
     return { violation: `root-absolute link is not portable: ${reference}` };
   }
@@ -147,26 +176,27 @@ function validateReference(
     return { violation: `link escapes mockupsDir: ${reference}` };
   }
   const target = rawTarget.replace(/^\.\//, "");
-  const denial = privateStaticPathReason(
-    path.resolve(config.mockupsDir, target),
-    config,
-  );
+  const denial =
+    isGeneratedRoute(target) && pending.has(target)
+      ? undefined
+      : privateStaticPathReason(
+          path.resolve(config.mockupsDir, target),
+          config,
+        );
   if (denial) return { violation: `protected target ${reference}: ${denial}` };
   let targetResource = parsed.get(target);
-  if (context?.generatedRoutes.has(target)) {
+  if (pending.has(target)) {
     if (item.checkFragment && !reference.includes("#")) return {};
-    targetResource ??= htmlResource(
-      extractHtmlReferences(context.readGenerated(target)),
-    );
-    parsed.set(target, targetResource);
+    targetResource ??= pending.resource(target);
+    if (targetResource) parsed.set(target, targetResource);
   }
   if (!targetResource) {
     targetResource = loadResource(
       target,
-      new Map(),
+      pending,
       config,
       pendingOrphans,
-      context,
+      onDemand,
     );
     if (!targetResource) return { violation: `missing target ${reference}` };
     parsed.set(target, targetResource);
@@ -175,27 +205,21 @@ function validateReference(
     ? fragmentViolation(reference, targetResource.anchors)
     : undefined;
   if (violation) return { violation };
-  return context && item.checkFragment ? {} : { target };
+  return onDemand && item.checkFragment ? {} : { target };
 }
 
 function loadResource(
   route: string,
-  outputs: ReadonlyMap<string, string>,
+  pending: PendingGeneratedFiles,
   config: ResolvedConfig,
   pendingOrphans: ReadonlySet<string>,
-  context?: HtmlValidationContext,
+  onDemand: boolean,
 ): ParsedResource | undefined {
+  if (pending.has(route)) return pending.resource(route);
+  if (isGeneratedRoute(route)) return undefined;
   const candidate = path.resolve(config.mockupsDir, route);
   if (isPrivateStaticPath(candidate, config)) return undefined;
-  if (
-    context &&
-    !context.generatedRoutes.has(route) &&
-    isOwned(candidate, config)
-  )
-    return undefined;
-  const generated = outputs.get(route);
-  if (generated !== undefined)
-    return htmlResource(extractHtmlReferences(generated));
+  if (onDemand && isOwned(candidate, config)) return undefined;
   if (pendingOrphans.has(route)) return undefined;
   if (!isPublicStaticFile(candidate, config)) return undefined;
   const extension = path.posix.extname(route).toLowerCase();
