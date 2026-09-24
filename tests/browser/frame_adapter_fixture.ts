@@ -5,6 +5,7 @@ import type { Page } from "@playwright/test";
 
 import { adaptBrowseDocument } from "../../dist/browse/document_adapter.js";
 import { compileCatalogue } from "../../dist/build/compile.js";
+import { generatedText } from "../../dist/build/generated_file.js";
 import { projectCatalogue } from "../../dist/catalogue/projection.js";
 import { loadConfig } from "../../dist/config/load.js";
 import {
@@ -68,7 +69,10 @@ export async function crossOriginFixture(
   ]);
   for (const [name, bytes] of compilation.outputs)
     if (name.endsWith(".html"))
-      files.set(`static/${name}`, adaptBrowseDocument(bytes, name, catalogue));
+      files.set(
+        `static/${name}`,
+        adaptBrowseDocument(generatedText(bytes, name)!, name, catalogue),
+      );
   files.set("static/unowned.html", unownedDocument);
   for (const [name, bytes] of loadBrowserClientModules())
     files.set(`__mokly/client/${name}`, bytes);

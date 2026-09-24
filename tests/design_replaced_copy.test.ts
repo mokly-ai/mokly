@@ -4,6 +4,7 @@ import { test } from "node:test";
 import { parse } from "parse5";
 
 import { designCatalogue, textContent } from "./helpers/design_catalogue.js";
+import { textOutput } from "./helpers/generated_text.js";
 import {
   normalizeCopy,
   REPLACED_DESIGN_COPY,
@@ -27,8 +28,10 @@ test("no design entry renders copy a protocol replaced", async () => {
     ([route]) => route.startsWith("design/") && route.endsWith(".html"),
   );
   assert.ok(designs.length > 0);
-  for (const [route, html] of designs) {
-    const rendered = normalizeCopy(textContent(parse(html)));
+  for (const [route] of designs) {
+    const rendered = normalizeCopy(
+      textContent(parse(textOutput(outputs, route)!)),
+    );
     for (const replaced of REPLACED_DESIGN_COPY)
       assert.ok(
         !rendered.includes(normalizeCopy(replaced.text)),

@@ -7,6 +7,10 @@ import type {
   ScreenResourceEvidence,
 } from "@mokly/viewer/data";
 
+import {
+  transferGeneratedFile,
+  type GeneratedFile,
+} from "../build/generated_file.js";
 import { ConfiguredGitCommandRunner } from "../config/git.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -51,7 +55,7 @@ export interface ComponentChangeSource {
 /** Background-owned inputs; a prepared commit prevents builds in disposable workers. */
 export interface CatalogueClassificationInputs {
   readonly commit?: string;
-  readonly outputs?: ReadonlyMap<string, string>;
+  readonly outputs?: ReadonlyMap<string, GeneratedFile>;
 }
 
 /** Read-only catalogue classification boundary used outside the HTTP child. */
@@ -180,7 +184,7 @@ export async function readCatalogueChanges(
   base: string,
   git: ReadOnlyReviewRepository,
   commit: string,
-  outputs?: ReadonlyMap<string, string>,
+  outputs?: ReadonlyMap<string, GeneratedFile>,
 ): Promise<ComponentChangeSnapshot> {
   outputs = await derivedHeadOutputs(config, manifest, outputs);
   const baseline = await readBaseManifest(git.reader, commit, config);
@@ -242,7 +246,14 @@ export async function readCatalogueChanges(
       baseRef: base,
       changedPaths,
       headDigests: reader.digests,
-      ...(outputs ? { headOutputs: [...outputs] } : {}),
+      ...(outputs
+        ? {
+            headOutputs: [...outputs].map(
+              ([route, content]) =>
+                [route, transferGeneratedFile(content)] as const,
+            ),
+          }
+        : {}),
     },
     ...(result ? { result } : {}),
     ...(!components

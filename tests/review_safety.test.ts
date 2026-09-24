@@ -13,6 +13,7 @@ import { runReview } from "../dist/review/run.js";
 import type { ReviewArtifact } from "../packages/viewer/dist/review/types.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("Comparison snapshot output cannot overlap generated or authored roots", async (context) => {
   const fixture = await createFixture();
@@ -181,7 +182,10 @@ test("Review retains marker-bearing pane bytes as portable output", async (conte
   assert.ok(afterPath);
   const pane = String(artifact.files.get(afterPath));
 
-  assert.equal(pane, compilation.outputs.get("screens/home.mobile.html"));
+  assert.equal(
+    pane,
+    textOutput(compilation.outputs, "screens/home.mobile.html"),
+  );
   assert.match(pane, /href="\.\/details\.mobile\.html"/);
   assert.match(pane, /data-mokly-link="details"/);
   assert.doesNotMatch(pane, /data-mokly-target/);

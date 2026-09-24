@@ -13,6 +13,7 @@ import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -29,7 +30,10 @@ test("Review batches base viewport reads", async (context) => {
   ]);
   for (const screen of screens) {
     for (const fragment of Object.values(screen.fragments)) {
-      files.set(`mockups/${fragment}`, compilation.outputs.get(fragment) ?? "");
+      files.set(
+        `mockups/${fragment}`,
+        textOutput(compilation.outputs, fragment) ?? "",
+      );
     }
   }
   let batchReads = 0;

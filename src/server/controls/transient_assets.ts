@@ -8,6 +8,10 @@ import { createCatalogue } from "@mokly/viewer/server";
 
 import { adaptBrowseDocument } from "../../browse/document_adapter.js";
 import {
+  generatedBytes,
+  type GeneratedFile,
+} from "../../build/generated_file.js";
+import {
   isPublicStaticFile,
   publicFileFailureReason,
 } from "../../config/public_files.js";
@@ -34,7 +38,7 @@ export interface TransientRender {
 }
 export function captureRenderBundle(
   route: string,
-  outputs: ReadonlyMap<string, string>,
+  outputs: ReadonlyMap<string, GeneratedFile>,
   manifest: CatalogueMetadata,
   config: ResolvedConfig,
   readGenerated?: (route: string) => string | undefined,
@@ -55,7 +59,7 @@ export function captureRenderBundle(
     let bytes =
       generated === undefined
         ? fs.readFileSync(candidate)
-        : Buffer.from(generated);
+        : generatedBytes(generated);
     const type = contentType(current);
     const references = type.startsWith("text/html")
       ? extractHtmlReferences(bytes.toString()).resources

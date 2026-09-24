@@ -9,6 +9,7 @@ import { writeCompilation } from "../src/build/transaction.js";
 import { loadConfig } from "../src/config/load.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 const metadata =
   'dependencies: [], relatedDocs: [], description: "Document", title: "Handbook", id: "handbook"';
@@ -30,7 +31,10 @@ test("a page renders exactly one complete document even with dark screens enable
   ]);
   assert.equal(result.manifest.schemaVersion, 5);
   assert.equal("legacyPages" in result.manifest, false);
-  assert.match(result.outputs.get("app/handbook.html") ?? "", /Whole document/);
+  assert.match(
+    textOutput(result.outputs, "app/handbook.html") ?? "",
+    /Whole document/,
+  );
   await writeCompilation(result, config);
   checkCompilation(await compileCatalogue(config), config);
 });
@@ -157,11 +161,11 @@ export const mockups = [definePage({ ...meta, id: "page", route: "page.html", re
   const config = await loadConfig(fixture.root);
   const result = await compileCatalogue(config);
   assert.match(
-    result.outputs.get("page.html") ?? "",
+    textOutput(result.outputs, "page.html") ?? "",
     /screen.desktop.html#section/,
   );
   assert.match(
-    result.outputs.get("screen.mobile.html") ?? "",
+    textOutput(result.outputs, "screen.mobile.html") ?? "",
     /<a[^>]*href=".\/page.html#section"[^>]*>Open page<\/a>/,
   );
   await fs.promises.writeFile(
@@ -192,7 +196,7 @@ test("complete documents retain the established post-screen render context", asy
   );
   const result = await compileCatalogue(await loadConfig(fixture.root));
   assert.match(
-    result.outputs.get("aaa.html") ?? "",
+    textOutput(result.outputs, "aaa.html") ?? "",
     /All screen styles are available/,
   );
 });
@@ -203,7 +207,7 @@ test("page callbacks share ReviewIgnore serialization and final validation", asy
   );
   context.after(() => removeFixture(fixture));
   const result = await compileCatalogue(await loadConfig(fixture.root));
-  const html = result.outputs.get("page.html") ?? "";
+  const html = textOutput(result.outputs, "page.html") ?? "";
   assert.doesNotMatch(html, /<template/);
   assert.match(html, /<!--.*chrome/);
 });

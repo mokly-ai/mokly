@@ -17,6 +17,7 @@ const GUIDE_FILES = [
   "docs/guides/start/build.md",
   "docs/guides/start/serve.md",
   "docs/guides/authoring/config.md",
+  "docs/guides/authoring/styles.md",
   "docs/guides/authoring/screens.md",
   "docs/guides/authoring/components.md",
   "docs/guides/authoring/viewports-and-color-schemes.md",

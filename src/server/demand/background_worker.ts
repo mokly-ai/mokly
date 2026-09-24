@@ -6,6 +6,7 @@ import type { ManifestV5 } from "@mokly/viewer/data";
 
 import { compileRuntime } from "../../build/compile_runtime.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
+import type { GeneratedFile } from "../../build/generated_file.js";
 import { runWithTimings, timeAsync } from "../../diagnostics/timings.js";
 import { errorMessage } from "../../errors.js";
 import { RepositoryCatalogueChangeClassifier } from "../component_changes.js";
@@ -18,7 +19,7 @@ const { runtime, pause, debug, existingManifest, existingOutputs, gitPort } =
     pause: SharedArrayBuffer;
     debug: boolean;
     existingManifest?: ManifestV5;
-    existingOutputs?: ReadonlyMap<string, string>;
+    existingOutputs?: ReadonlyMap<string, GeneratedFile>;
     gitPort: MessagePort;
   };
 const classifier = new RepositoryCatalogueChangeClassifier(

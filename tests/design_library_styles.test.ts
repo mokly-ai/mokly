@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { designCatalogue } from "./helpers/design_catalogue.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("standalone variants emit only the exclusive child styles they actually render", async () => {
   const { manifest, outputs } = await designCatalogue;
@@ -10,12 +11,14 @@ test("standalone variants emit only the exclusive child styles they actually ren
   );
   assert.ok(entry?.kind === "component");
   for (const viewport of ["mobile", "desktop"] as const) {
-    const closed = outputs.get(
+    const closed = textOutput(
+      outputs,
       entry.variants.find((variant) => variant.id === "default")!.fragments[
         viewport
       ],
     )!;
-    const opened = outputs.get(
+    const opened = textOutput(
+      outputs,
       entry.variants.find((variant) => variant.id === "tag-picker")!.fragments[
         viewport
       ],
@@ -38,7 +41,7 @@ test("standalone variants emit only the exclusive child styles they actually ren
   const empty = picker.variants.find((variant) => variant.id === "empty")!;
   for (const route of Object.values(empty.fragments))
     assert.doesNotMatch(
-      outputs.get(route)!,
+      textOutput(outputs, route)!,
       /href="[^"]*design-library\/controls\/tag-chip\.css"/,
     );
 });

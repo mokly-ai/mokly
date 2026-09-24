@@ -12,6 +12,7 @@ import {
   removeFixture,
   validEntrySource,
 } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 function source(body: string): string {
   return validEntrySource({ body }).replace(
@@ -35,7 +36,10 @@ test("child controls become styled native links in every generated view", async 
   for (const viewport of ["mobile", "desktop"]) {
     for (const scheme of ["", ".dark"]) {
       const html =
-        compilation.outputs.get(`screens/home.${viewport}${scheme}.html`) ?? "";
+        textOutput(
+          compilation.outputs,
+          `screens/home.${viewport}${scheme}.html`,
+        ) ?? "";
       assert.match(html, /<a class="primary"/);
       assert.match(html, /style="color:red;display:flex"/);
       assert.match(html, /aria-label="Continue preparing"/);
@@ -65,7 +69,7 @@ test("default links and unmarked documents retain identical bytes", async (conte
   const explicit = await compileCatalogue(config);
   assert.deepEqual(explicit.outputs, original.outputs);
   assert.doesNotMatch(
-    original.outputs.get("screens/home.mobile.html") ?? "",
+    textOutput(original.outputs, "screens/home.mobile.html") ?? "",
     /link-control/,
   );
 });
@@ -83,7 +87,8 @@ for (const body of [
     );
     context.after(() => removeFixture(fixture));
     const compilation = await compileCatalogue(await loadConfig(fixture.root));
-    const html = compilation.outputs.get("screens/home.mobile.html") ?? "";
+    const html =
+      textOutput(compilation.outputs, "screens/home.mobile.html") ?? "";
     assert.match(html, /data-nav-href="\.\/details\.mobile\.html"/);
     assert.doesNotMatch(
       html,
@@ -154,7 +159,7 @@ test("child links retain use-case identity, fragments, and light fallback", asyn
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
   const dark =
-    compilation.outputs.get("screens/details.desktop.dark.html") ?? "";
+    textOutput(compilation.outputs, "screens/details.desktop.dark.html") ?? "";
   assert.match(dark, /href="\.\/home\.desktop\.html#summary"/);
   assert.match(dark, /data-mokly-link="tour#summary"/);
   const content = await fs.promises.readFile(fixture.entryPath, "utf8");
@@ -207,7 +212,7 @@ return input.content; };`,
   const compilation = await compileCatalogue(config);
   for (const route of ["screens/home.mobile.html", "old.html"]) {
     assert.match(
-      compilation.outputs.get(route) ?? "",
+      textOutput(compilation.outputs, route) ?? "",
       /data-mokly-link="details"/,
     );
   }

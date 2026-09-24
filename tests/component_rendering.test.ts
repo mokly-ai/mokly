@@ -12,6 +12,7 @@ import { decodeProps } from "../packages/viewer/dist/components/codec.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 const renderer = `import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -37,7 +38,7 @@ test("component style ownership rebases through generated headers while preservi
     (entry) => entry.kind === "screen",
   )!;
   const view = screen.componentViews![0]!;
-  const html = result.outputs.get(screen.fragments.mobile)!;
+  const html = textOutput(result.outputs, screen.fragments.mobile)!;
   assert.equal(
     html.slice(view.styles[0]!.startOffset, view.styles[0]!.endOffset),
     ".action{border-radius:12px}",
@@ -95,7 +96,7 @@ test("component boundaries support multi-root text and reject removed or physica
     (entry) => entry.kind === "screen",
   )!;
   const view = screen.componentViews![0]!;
-  const html = result.outputs.get(screen.fragments.mobile)!;
+  const html = textOutput(result.outputs, screen.fragments.mobile)!;
   const ranges = validateComponentRanges(html, view.ranges);
   assert.ok(
     ranges.some((range) =>

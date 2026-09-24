@@ -7,6 +7,7 @@ import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("consumer module resolution supports package roots, aliases, and web conditions", async (context) => {
   const fixture = await createFixture(`
@@ -74,7 +75,10 @@ export const mockups = [defineScreen({
   const compilation = await compileCatalogue(config);
 
   assert.match(
-    compilation.outputs.get("screens/consumer-resolution.desktop.html") ?? "",
+    textOutput(
+      compilation.outputs,
+      "screens/consumer-resolution.desktop.html",
+    ) ?? "",
     /data-platform="web"/,
   );
 });

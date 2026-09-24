@@ -13,6 +13,7 @@ import {
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 async function compile(
   t: { after: (fn: () => Promise<void>) => void },
@@ -70,7 +71,7 @@ test("component registration emits deterministic variants and actual per-view ow
     instanceKey({ kind: "entry" }, slotted.slotKey, "action"),
   );
   assert.deepEqual(decodeProps(slotted.props), { label: "Slot action" });
-  const html = result.outputs.get(screen.fragments.mobile)!;
+  const html = textOutput(result.outputs, screen.fragments.mobile)!;
   assert.equal(html.includes("<template"), false);
   assert.match(
     html,

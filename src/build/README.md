@@ -55,6 +55,14 @@ and React DOM resolve from consumer package roots, including when Mokly runs
 from an npx installation. The bundle stays in memory and retains the
 consumer's existing rendering/provider graph.
 
+`Compilation.outputs` keeps rendered HTML and the manifest as strings while
+also accepting opaque `Uint8Array` generated files. `generated_file.ts` is the
+shared boundary for raw bytes, byte counts, disk comparison, guarded text
+reads, and JSON-safe process transfer. The writer stages raw bytes and Check
+compares raw bytes; Review, derived export, and Serve's controls previews
+preserve them without UTF-8 round trips. The current compiler still produces
+only text; the binary type prepares it for imported CSS assets.
+
 Automatic JSX uses esbuild's `jsxDev` location arguments. `consumer_resolution.ts`
 resolves `react/jsx-dev-runtime` to a private shim exporting the consumer's
 `Fragment` and a `jsxDEV` function. The shim forwards to the consumer's

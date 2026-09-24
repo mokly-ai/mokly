@@ -13,6 +13,7 @@ import {
   removeFixture,
   validEntrySource,
 } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("migration compatibility transforms documents and legacy id links", async (context) => {
   const fixture = await createFixture(
@@ -76,12 +77,13 @@ export default function transform(input: CompatibilityTransformInput): string {
     "legacy/ambiguous.source.ts",
   );
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
-  const mobile = compilation.outputs.get("screens/home.mobile.html") ?? "";
+  const mobile =
+    textOutput(compilation.outputs, "screens/home.mobile.html") ?? "";
   const mobileDark =
-    compilation.outputs.get("screens/home.mobile.dark.html") ?? "";
-  const legacy = compilation.outputs.get("notice.html") ?? "";
+    textOutput(compilation.outputs, "screens/home.mobile.dark.html") ?? "";
+  const legacy = textOutput(compilation.outputs, "notice.html") ?? "";
   const ambiguousLegacy =
-    compilation.outputs.get("archive/ambiguous.mobile.dark.html") ?? "";
+    textOutput(compilation.outputs, "archive/ambiguous.mobile.dark.html") ?? "";
 
   assert.match(mobile, /href="#"/);
   assert.match(mobile, /href="\.\/details\.mobile\.html"/);
@@ -131,9 +133,13 @@ export default function transform(input: CompatibilityTransformInput): string {
 
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
 
-  for (const [route, output] of compilation.outputs) {
+  for (const route of compilation.outputs.keys()) {
     if (!route.endsWith(".html")) continue;
-    assert.match(output, /data-shared-logical-routes="true"/, route);
+    assert.match(
+      textOutput(compilation.outputs, route)!,
+      /data-shared-logical-routes="true"/,
+      route,
+    );
   }
 });
 

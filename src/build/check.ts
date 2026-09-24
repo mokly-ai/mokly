@@ -5,6 +5,7 @@ import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 
 import type { Compilation } from "./compile.js";
+import { generatedMatchesBytes } from "./generated_file.js";
 import {
   pendingGeneratedOrphanRoutes,
   unclaimedGeneratedRoutes,
@@ -22,7 +23,7 @@ export function checkCompilation(
     const target = path.join(config.mockupsDir, route);
     if (!fs.existsSync(target)) {
       missing.push(route);
-    } else if (fs.readFileSync(target, "utf8") !== expected) {
+    } else if (!generatedMatchesBytes(expected, fs.readFileSync(target))) {
       stale.push(route);
     }
   }

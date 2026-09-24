@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { designCatalogue } from "./helpers/design_catalogue.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("example catalogue generates exactly one inherited Welcome variant", async () => {
   const { manifest, outputs } = await designCatalogue;
@@ -30,7 +31,7 @@ test("example catalogue generates exactly one inherited Welcome variant", async 
     ...Object.values(variant.fragments),
     ...Object.values(variant.darkFragments),
   ]) {
-    const html = outputs.get(route);
+    const html = textOutput(outputs, route);
     assert.match(html ?? "", /aria-label="Workspace name"/);
     assert.match(html ?? "", /disabled=""/);
   }

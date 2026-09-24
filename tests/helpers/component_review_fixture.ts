@@ -4,12 +4,14 @@ import {
   compileCatalogue,
   type Compilation,
 } from "../../dist/build/compile.js";
+import { generatedBytes } from "../../dist/build/generated_file.js";
 import { writeCompilation } from "../../dist/build/transaction.js";
 import { loadConfig } from "../../dist/config/load.js";
 import type { ReadOnlyReviewRepository } from "../../dist/review/repository.js";
 
 import { componentEntrySource } from "./component_fixture.js";
 import { createFixture, removeFixture } from "./fixture.js";
+import { textOutput } from "./generated_text.js";
 
 export async function componentReviewFixture(
   t: { after: (fn: () => Promise<void>) => void },
@@ -27,7 +29,7 @@ export async function componentReviewFixture(
   const changedPaths = [
     "entries/fixture.mockup.tsx",
     ...[...after.outputs]
-      .filter(([route, html]) => before.outputs.get(route) !== html)
+      .filter(([route, html]) => textOutput(before.outputs, route) !== html)
       .map(([route]) => `mockups/${route}`),
   ];
   return {
@@ -61,8 +63,9 @@ export function componentGit(
       fileExists: async (_commit, route) => files.has(route),
       fileKind: async (_commit, route) =>
         files.has(route) ? "regular" : "missing",
-      readFile: async (_commit, route) => read(route),
-      readFileBytes: async (_commit, route) => Buffer.from(read(route)),
+      readFile: async (_commit, route) =>
+        textOutput(compilation.outputs, route.slice("mockups/".length))!,
+      readFileBytes: async (_commit, route) => generatedBytes(read(route)),
     },
   };
 }

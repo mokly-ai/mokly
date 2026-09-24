@@ -7,6 +7,11 @@ import test from "node:test";
 import type { ManifestScreen, ManifestV5 } from "@mokly/viewer/data";
 
 import { compileCatalogue } from "../dist/build/compile.js";
+import {
+  generatedBytes,
+  transferGeneratedFile,
+  type GeneratedFile,
+} from "../dist/build/generated_file.js";
 import { loadConfig } from "../dist/config/load.js";
 import { compareReview } from "../dist/review/compare.js";
 import type { BaselineReader, GitFile } from "../dist/review/git.js";
@@ -15,6 +20,7 @@ import type { ManifestV3 } from "../packages/viewer/dist/registry/types.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 const commit = "a".repeat(40);
 
@@ -29,7 +35,12 @@ for (const mode of ["committed", "derived"] as const) {
       changedPaths: [],
       headDigests: {},
       ...(mode === "derived"
-        ? { headOutputs: [...fixture.current.outputs] as const }
+        ? {
+            headOutputs: [...fixture.current.outputs].map(
+              ([route, content]) =>
+                [route, transferGeneratedFile(content)] as const,
+            ),
+          }
         : {}),
     };
     const artifact = await new RepositorySelectedReview(
@@ -82,7 +93,12 @@ for (const mode of ["committed", "derived"] as const) {
         changedPaths: fixture.changedPaths,
         headDigests: digestOutputs(fixture.after.outputs),
         ...(mode === "derived"
-          ? { headOutputs: [...fixture.after.outputs] as const }
+          ? {
+              headOutputs: [...fixture.after.outputs].map(
+                ([route, content]) =>
+                  [route, transferGeneratedFile(content)] as const,
+              ),
+            }
           : {}),
         result: complete.result,
       },
@@ -99,7 +115,8 @@ for (const mode of ["committed", "derived"] as const) {
       assert.deepEqual(
         Buffer.from(selected.files.get(view.beforePath!)!),
         Buffer.from(
-          fixture.before.outputs.get(
+          textOutput(
+            fixture.before.outputs,
             view.beforePath!.slice("snapshots/before/".length),
           )!,
         ),
@@ -272,12 +289,12 @@ function repository(reader: BaselineReader) {
 }
 
 function digestOutputs(
-  outputs: ReadonlyMap<string, string>,
+  outputs: ReadonlyMap<string, GeneratedFile>,
 ): Record<string, string> {
   return Object.fromEntries(
     [...outputs].map(([route, content]) => [
       route,
-      createHash("sha256").update(content).digest("hex"),
+      createHash("sha256").update(generatedBytes(content)).digest("hex"),
     ]),
   );
 }

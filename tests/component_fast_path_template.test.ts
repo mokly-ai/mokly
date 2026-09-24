@@ -9,6 +9,7 @@ import { classifyComponents } from "../dist/review/component_classification.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 const image = '<img loading="lazy" src="../image.svg" />';
 const templateCases = [
@@ -64,7 +65,7 @@ for (const templateCase of templateCases)
       const files = (content: string) => ({
         read: async (route: string) => {
           const value =
-            compilation.outputs.get(route) ??
+            textOutput(compilation.outputs, route) ??
             (route === "image.svg" ? content : undefined);
           assert.notEqual(value, undefined, route);
           return Buffer.from(value!);
@@ -115,7 +116,7 @@ for (const selectCase of selectCases)
       const reader = (content: string) => ({
         read: async (route: string) => {
           const value =
-            compilation.outputs.get(route) ??
+            textOutput(compilation.outputs, route) ??
             (route === "image.svg" ? content : undefined);
           assert.notEqual(value, undefined, route);
           return Buffer.from(value!);

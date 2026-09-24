@@ -19,6 +19,7 @@ import {
   textContent,
 } from "./helpers/design_catalogue.js";
 import { repositoryRoot } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: design actions navigate to the subject's owning screen`, async () => {
@@ -246,7 +247,7 @@ test("a dark fragment's links stay dark wherever the target has a dark render", 
     for (const viewport of ["mobile", "desktop"] as const) {
       const route: string | undefined = entry.darkFragments[viewport];
       assert.ok(route, `${entry.id} ${viewport}`);
-      const html = outputs.get(route);
+      const html = textOutput(outputs, route);
       assert.ok(html, route);
       for (const link of elements(
         parse(html),
@@ -311,7 +312,7 @@ test("a tag chip without a destination is a label, not a control", async () => {
   for (const entry of manifest.entries) {
     if (entry.kind !== "screen" || !entry.route.startsWith("design/")) continue;
     for (const route of Object.values(entry.fragments)) {
-      const html = outputs.get(route);
+      const html = textOutput(outputs, route);
       assert.ok(html, route);
       for (const chip of byClass(parse(html), "tag")) {
         if (!(attribute(chip, "class") ?? "").includes("mbk-chip")) continue;

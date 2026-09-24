@@ -20,6 +20,7 @@ import {
   repositoryRoot,
   validEntrySource,
 } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("build renders deterministic fragments, resolves id links, and checks committed bytes", async (context) => {
   const fixture = await createFixture();
@@ -44,7 +45,8 @@ test("custom renderer shares consumer React context and injects collected styles
     "examples/basic/mokly.config.ts",
   );
   const compilation = await compileCatalogue(config);
-  const mobile = compilation.outputs.get("screens/welcome.mobile.html") ?? "";
+  const mobile =
+    textOutput(compilation.outputs, "screens/welcome.mobile.html") ?? "";
   assert.match(mobile, /data-example-renderer="mobile"/);
   assert.match(mobile, /data-color-scheme="light"/);
   assert.match(
@@ -74,8 +76,8 @@ test("dark schemes render dark fragments per view", async (context) => {
     assert.ok(compilation.outputs.has(route), `missing ${route}`);
   }
   assert.equal(
-    compilation.outputs.get("screens/home.mobile.dark.html"),
-    compilation.outputs.get("screens/home.mobile.html"),
+    textOutput(compilation.outputs, "screens/home.mobile.dark.html"),
+    textOutput(compilation.outputs, "screens/home.mobile.html"),
   );
   const home = compilation.manifest.entries.find(
     (entry) => entry.id === "home",
@@ -322,8 +324,10 @@ test("scheme-specific stylesheets append after shared stylesheets", async (conte
   const config = await loadConfig(fixture.root);
 
   const compilation = await compileCatalogue(config);
-  const light = compilation.outputs.get("screens/home.mobile.html") ?? "";
-  const dark = compilation.outputs.get("screens/home.mobile.dark.html") ?? "";
+  const light =
+    textOutput(compilation.outputs, "screens/home.mobile.html") ?? "";
+  const dark =
+    textOutput(compilation.outputs, "screens/home.mobile.dark.html") ?? "";
   assert.deepEqual(stylesheetHrefs(light), ["../shared.css"]);
   assert.deepEqual(stylesheetHrefs(dark), ["../shared.css", "../dark.css"]);
 
@@ -393,11 +397,12 @@ export function source() { return "<!doctype html>" + renderToStaticMarkup(<html
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
   assert.match(
-    compilation.outputs.get("old.html") ?? "",
+    textOutput(compilation.outputs, "old.html") ?? "",
     /<aside id="notice">Expanded<\/aside>/,
   );
   assert.equal(
-    (compilation.outputs.get("old.html") ?? "").match(/<aside/g)?.length,
+    (textOutput(compilation.outputs, "old.html") ?? "").match(/<aside/g)
+      ?.length,
     1,
   );
 });

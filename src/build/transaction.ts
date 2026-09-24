@@ -6,6 +6,7 @@ import { timeAsync, timeSync } from "../diagnostics/timings.js";
 import { MoklyError, errorMessage } from "../errors.js";
 
 import type { Compilation } from "./compile.js";
+import { generatedBytes } from "./generated_file.js";
 import { validateGeneratedOutputPaths } from "./output_paths.js";
 import {
   generatedOwnershipDenial,
@@ -47,11 +48,10 @@ async function writeMeasured(
       for (const route of expected) {
         const staged = path.join(stageRoot, route);
         await fs.promises.mkdir(path.dirname(staged), { recursive: true });
-        await fs.promises.writeFile(
-          staged,
-          compilation.outputs.get(route) ?? "",
-          "utf8",
-        );
+        const content = compilation.outputs.get(route);
+        if (content === undefined)
+          throw new Error(`missing generated file: ${route}`);
+        await fs.promises.writeFile(staged, generatedBytes(content));
       }
     });
     await timeAsync("output.backup", async () => {

@@ -19,6 +19,7 @@ import {
 import type { Manifest } from "../packages/viewer/dist/registry/types.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 const records: readonly ComponentRangeRecord[] = [
   { id: "r-0", target: { kind: "instance", instanceKey: "instance" } },
@@ -76,7 +77,7 @@ for (const side of ["added", "removed"] as const)
     assert.ok(screen);
     const view = generatedViews(screen)[0];
     assert.ok(view?.usage?.ranges.length);
-    const current = fixture.after.outputs.get(view.path);
+    const current = textOutput(fixture.after.outputs, view.path);
     assert.notEqual(current, undefined);
     const document =
       side === "removed"

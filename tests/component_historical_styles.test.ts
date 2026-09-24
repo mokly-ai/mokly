@@ -4,6 +4,7 @@ import path from "node:path";
 import { test } from "node:test";
 
 import { compileCatalogue, type Compilation } from "../dist/build/compile.js";
+import type { GeneratedFile } from "../dist/build/generated_file.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
 import {
@@ -17,6 +18,7 @@ import { generatedViews } from "../packages/viewer/dist/components/views.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentGit } from "./helpers/component_review_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 const originalCss = ".action{color:red}";
 const source = componentEntrySource({
@@ -112,11 +114,11 @@ for (const edit of [
     )) {
       assert.equal(
         artifact.files.get(`snapshots/before/${view.path}`),
-        before.outputs.get(view.path),
+        textOutput(before.outputs, view.path),
       );
       assert.equal(
         artifact.files.get(`snapshots/after/${view.path}`),
-        after.outputs.get(view.path),
+        textOutput(after.outputs, view.path),
       );
     }
   });
@@ -133,17 +135,19 @@ export default (input) => {
 /** Reconstruct old comment bytes with legitimate text-only UTF-16 style offsets. */
 function historical(compilation: Compilation): Compilation {
   const manifest = structuredClone(compilation.manifest);
-  const outputs = new Map(
-    [...compilation.outputs].map(([route, html]) => [
+  const outputs = new Map<string, GeneratedFile>(
+    [...compilation.outputs].map(([route, content]) => [
       route,
-      html
-        .replaceAll("<!--mokly-component:", "<!--mokabook-component:")
-        .replaceAll("<!--mokly-review-", "<!--mokabook-review-"),
+      route.endsWith(".html")
+        ? textOutput(compilation.outputs, route)!
+            .replaceAll("<!--mokly-component:", "<!--mokabook-component:")
+            .replaceAll("<!--mokly-review-", "<!--mokabook-review-")
+        : content,
     ]),
   );
   for (const entry of manifest.entries)
     for (const view of generatedViews(entry)) {
-      const html = outputs.get(view.path)!;
+      const html = textOutput(outputs, view.path)!;
       const startOffset = html.indexOf(originalCss);
       assert.ok(startOffset > html.indexOf("<!--mokabook-component:"));
       assert.equal(

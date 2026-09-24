@@ -4,6 +4,7 @@ import test from "node:test";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
 import { designLibraryFixture } from "./helpers/design_library_fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("mixed component design styles retain their actual rendered resource scope", async (t) => {
   const fixture = await designLibraryFixture(t);
@@ -26,7 +27,9 @@ test("mixed component design styles retain their actual rendered resource scope"
       );
       const expected = fixture.before.manifest.entries.filter((entry) =>
         generatedViews(entry).some((view) =>
-          fixture.before.outputs.get(view.path)!.includes(`/${stylesheet}"`),
+          textOutput(fixture.before.outputs, view.path)!.includes(
+            `/${stylesheet}"`,
+          ),
         ),
       );
       assert.equal(

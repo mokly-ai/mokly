@@ -12,6 +12,7 @@ import { FileSystemReviewAssetReader } from "../dist/review/assets.js";
 import { startCatalogueServer } from "../dist/server/http.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("both graphs retain raw and tree-shaken inputs while public resources stay public", async (context) => {
   const fixture = await createFixture();
@@ -127,7 +128,7 @@ test("freshness resolves new imports without executing or rendering the graph", 
       path.join(fixture.mockupsDir, "mokly-manifest.json"),
       "utf8",
     ),
-    compilation.outputs.get("mokly-manifest.json"),
+    textOutput(compilation.outputs, "mokly-manifest.json"),
   );
 });
 

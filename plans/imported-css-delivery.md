@@ -3,10 +3,10 @@
 ## Status
 
 Active. Created 2026-09-24 from the CSS-in-JS investigation on this branch.
-Milestones 1 and 1A (documentation and contract review) are complete;
-Milestones 2–9 have not started. PostCSS will let Tailwind v4 and autoprefixer use the
-consumer's configuration. Esbuild remains the only bundler; the optional Vite
-compatibility package is a follow-up plan.
+Milestones 1, 1A, and 2 (contract and binary-safe output groundwork) are complete;
+Milestones 3–9 have not started. PostCSS will let Tailwind v4 and autoprefixer
+use the consumer's configuration. Esbuild remains the only bundler; the optional
+Vite compatibility package is a follow-up plan.
 
 ## Problem
 
@@ -257,27 +257,30 @@ Resolve review findings without reopening Milestone 1 or changing product code.
       diff, then commit with a heredoc/file message body and push without
       rewriting the Milestone 1 commit.
 
-## Milestone 2: Binary-safe generated outputs
+## Milestone 2: Binary-safe generated outputs (complete)
 
 A refactor with no behavior change that lets later milestones emit fonts and
 images as generated files.
 
-- [ ] Change `Compilation.outputs` in `src/build/compile.ts` to map routes to
+- [x] Change `Compilation.outputs` in `src/build/compile.ts` to map routes to
       `string | Uint8Array` behind one typed `GeneratedFile` helper for reads,
       byte comparison, and byte length.
-- [ ] Write a failing synthetic binary corruption test first; audit every
+- [x] Write a failing synthetic binary corruption test first; audit every
       `Compilation.outputs` and `compileCatalogue` consumer, not only the
       initial file list, while retaining text semantics for HTML/manifest.
-- [ ] Update `src/build/transaction.ts`, `src/build/check.ts`,
+- [x] Update `src/build/transaction.ts`, `src/build/check.ts`,
       `src/build/tracked_output.ts`, `src/build/component_runtime.ts`,
       `src/cli/run.ts`, `src/export/run.ts`, `src/export/inputs.ts`,
       `src/review/compilation_assets.ts`, `src/review/head_assets.ts`,
-      `src/review/screen_compare.ts`, and `src/review/component_compare.ts` to
-      read and compare bytes instead of assuming UTF-8 text.
-- [ ] Add `tests/build_binary_outputs.test.ts` proving a synthetic binary
+      `src/review/screen_compare.ts`, and `src/review/component_compare.ts`:
+      convert byte readers and comparisons, and confirm route/size-only or
+      forwarding consumers need no text decoding.
+- [x] Add `tests/build_binary_outputs.test.ts` proving a synthetic binary
       output is written, checked, staged, rolled back, captured for derived
       export, and served without corruption.
-- [ ] Run `npm run build`, focused tests, `npm run example:build`,
+- [x] Synchronize the archive's required-guide list with the Styles guide
+      added in Milestone 1; its existing release test catches missing guides.
+- [x] Run `npm run build`, focused tests, `npm run example:build`,
       `npm run example:check`, `npm run lint`, `npm run typecheck`, and
       `cargo xtask check` with 100% pass rate; commit with a file/heredoc body
       and push the branch.

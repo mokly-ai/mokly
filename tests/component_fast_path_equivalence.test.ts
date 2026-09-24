@@ -22,6 +22,7 @@ import {
   removeFixture,
   repositoryRoot,
 } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 for (const [name, change, routes] of componentChangeCases)
   test(`fast and complete paths agree for ${name}`, async (t) => {
@@ -219,7 +220,7 @@ function historicalCompilation(compilation: Compilation): Compilation {
   const outputs = new Map(compilation.outputs);
   for (const entry of manifest.entries)
     for (const view of generatedViews(entry)) {
-      const current = compilation.outputs.get(view.path);
+      const current = textOutput(compilation.outputs, view.path);
       assert.notEqual(current, undefined);
       for (const style of view.usage?.styles ?? []) {
         style.startOffset += historicalOffset(current!, style.startOffset);

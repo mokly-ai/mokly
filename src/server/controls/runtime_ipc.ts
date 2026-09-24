@@ -1,5 +1,11 @@
 /** Last-good runtime transfer over the watched child's private IPC channel. */
 import type { ComponentRuntime } from "../../build/component_runtime.js";
+import {
+  receiveGeneratedFile,
+  transferGeneratedFile,
+  type GeneratedFile,
+  type TransferredGeneratedFile,
+} from "../../build/generated_file.js";
 import { validatePublicExclude } from "../../config/public_exclusions.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { MoklyError } from "../../errors.js";
@@ -19,8 +25,17 @@ export type TransferredComponentRuntime = Pick<
 
 export interface RuntimeMessage {
   type: "component-runtime";
-  runtime: TransferredComponentRuntime;
+  runtime: Omit<TransferredComponentRuntime, "outputs"> & {
+    outputs: readonly (readonly [string, TransferredGeneratedFile])[];
+  };
   /** Reserved update version published only after the runtime is attached. */
+  version?: number;
+}
+
+/** Decoded accepted runtime, ready for rendering or binary-safe serving. */
+export interface ReceivedRuntimeMessage {
+  type: "component-runtime";
+  runtime: TransferredComponentRuntime;
   version?: number;
 }
 
@@ -33,7 +48,9 @@ export function componentRuntimeMessage(
     runtime: {
       bundle: runtime.bundle,
       generation: runtime.generation,
-      outputs: runtime.outputs,
+      outputs: runtime.outputs.map(
+        ([route, content]) => [route, transferGeneratedFile(content)] as const,
+      ),
     },
     type: "component-runtime",
     ...(version === undefined ? {} : { version }),
@@ -46,7 +63,7 @@ export function requestComponentRuntime(): void {
 }
 
 /** Live indexes need their small rendering graph attached before announcing readiness. */
-export function receiveRequestedRuntime(): Promise<RuntimeMessage> {
+export function receiveRequestedRuntime(): Promise<ReceivedRuntimeMessage> {
   return new Promise((resolve, reject) => {
     const cleanup = () => {
       clearTimeout(timer);
@@ -149,7 +166,7 @@ function parseRuntimeStartupMessage(
 
 export function parseRuntimeMessage(
   value: unknown,
-): RuntimeMessage | undefined {
+): ReceivedRuntimeMessage | undefined {
   if (
     !value ||
     typeof value !== "object" ||
@@ -158,7 +175,7 @@ export function parseRuntimeMessage(
     !("runtime" in value)
   )
     return;
-  const runtime = value.runtime as TransferredComponentRuntime | undefined;
+  const runtime = value.runtime as RuntimeMessage["runtime"] | undefined;
   const version = "version" in value ? value.version : undefined;
   if (
     !runtime ||
@@ -169,12 +186,24 @@ export function parseRuntimeMessage(
       (!Number.isSafeInteger(version) || (version as number) <= 0))
   )
     return;
+  const outputs: Array<readonly [string, GeneratedFile]> = [];
+  for (const item of runtime.outputs) {
+    if (
+      !Array.isArray(item) ||
+      item.length !== 2 ||
+      typeof item[0] !== "string"
+    )
+      return;
+    const content = receiveGeneratedFile(item[1]);
+    if (content === undefined) return;
+    outputs.push([item[0], content]);
+  }
   return {
     type: "component-runtime",
     runtime: {
       bundle: runtime.bundle,
       generation: runtime.generation,
-      outputs: runtime.outputs,
+      outputs,
     },
     ...(version === undefined ? {} : { version: version as number }),
   };

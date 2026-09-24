@@ -17,6 +17,7 @@ import {
 } from "./helpers/component_review_fixture.js";
 import { componentViews, screenView } from "./helpers/component_views.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("Changes structure projections exclude invocation source for every input owner", async (t) => {
   const fixture = await componentReviewFixture(t, (source) => source);
@@ -64,7 +65,7 @@ test("line and column shifts alone preserve bytes, keys and all Changes results"
   assert.deepEqual(withoutSource(before), withoutSource(after));
   for (const [route, html] of fixture.before.outputs)
     if (route.endsWith(".html"))
-      assert.equal(fixture.after.outputs.get(route), html, route);
+      assert.equal(textOutput(fixture.after.outputs, route), html, route);
   const { result } = await compareReview(
     fixture.after,
     fixture.config,

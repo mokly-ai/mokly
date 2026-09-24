@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { generatedBytes, type GeneratedFile } from "../build/generated_file.js";
 import { toPosixPath } from "../config/paths.js";
 import { isPublicStaticFile } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -11,7 +12,7 @@ import { exportResourcePolicy } from "./resource_policy.js";
 /** Capture ordinary public bytes once, rejecting selected symlinks explicitly. */
 export async function capturePublicFiles(
   config: ResolvedConfig,
-  generated?: ReadonlyMap<string, string>,
+  generated?: ReadonlyMap<string, GeneratedFile>,
 ): Promise<ReadonlyMap<string, Buffer>> {
   const files = new Map<string, Buffer>();
   const isPublic = exportResourcePolicy(config);
@@ -47,7 +48,7 @@ export async function capturePublicFiles(
   };
   await visit(config.mockupsDir);
   for (const [name, bytes] of generated ?? [])
-    if (isPublic(name)) files.set(name, Buffer.from(bytes));
+    if (isPublic(name)) files.set(name, generatedBytes(bytes));
   return new Map(
     [...files].sort(([left], [right]) => left.localeCompare(right)),
   );

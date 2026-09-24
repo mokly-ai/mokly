@@ -19,6 +19,7 @@ import { generatedViews } from "../packages/viewer/dist/components/views.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("prefetch retains empty files and discovers resources only when requested", async () => {
   const reads: string[] = [];
@@ -152,7 +153,7 @@ test("fall-through views reuse actual discovery in derived mode", async (t) => {
   assert.ok(screen);
   const view = generatedViews(screen)[0];
   assert.ok(view);
-  const source = fixture.after.outputs.get(view.path);
+  const source = textOutput(fixture.after.outputs, view.path);
   assert.notEqual(source, undefined);
   const document = `${source}<img src="../image.svg">`;
 
@@ -240,7 +241,7 @@ test("projected discovery applies root-specific ownership before reading", async
         read: async (route) => {
           reads.push(route);
           const content =
-            compilation.outputs.get(route) ??
+            textOutput(compilation.outputs, route) ??
             (route.endsWith("image.svg") ? "image" : undefined);
           assert.notEqual(content, undefined, route);
           return Buffer.from(content!);

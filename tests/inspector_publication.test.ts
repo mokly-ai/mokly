@@ -23,13 +23,14 @@ import {
   directoryFiles,
 } from "./helpers/export_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("published copies receive only accepted identities after ownership/range validation", async (t) => {
   const fixture = await createFixture(componentEntrySource());
   t.after(() => removeFixture(fixture));
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
   const catalogue = createCatalogue(compilation.manifest);
-  const original = compilation.outputs.get("screens/home.mobile.html")!;
+  const original = textOutput(compilation.outputs, "screens/home.mobile.html")!;
   const adapted = adaptBrowseDocument(
     original,
     "screens/home.mobile.html",
@@ -76,7 +77,10 @@ test("published copies receive only accepted identities after ownership/range va
     assert.deepEqual(bodyTags(copy), bodyTags(candidate));
     assert.match(copy, /<head><template data-mokly-inspector>/);
   }
-  assert.equal(compilation.outputs.get("screens/home.mobile.html"), original);
+  assert.equal(
+    textOutput(compilation.outputs, "screens/home.mobile.html"),
+    original,
+  );
   const unowned = "<!doctype html><p>Unowned</p>";
   assert.equal(
     adaptBrowseDocument(unowned, "unowned.html", catalogue),

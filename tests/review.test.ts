@@ -7,6 +7,11 @@ import { promisify } from "node:util";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import type { Compilation } from "../dist/build/compile.js";
+import {
+  generatedBytes,
+  generatedText,
+  type GeneratedFile,
+} from "../dist/build/generated_file.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
 import { renderReviewArtifact } from "../dist/review/artifact.js";
@@ -33,6 +38,7 @@ import {
   removeFixture,
   validEntrySource,
 } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -106,11 +112,11 @@ test("Review classifies added, removed, and unchanged routes independently", asy
     ["mockups/mokly-manifest.json", `${JSON.stringify(baseManifest)}\n`],
     [
       "mockups/screens/details.mobile.html",
-      compilation.outputs.get("screens/details.mobile.html") ?? "",
+      textOutput(compilation.outputs, "screens/details.mobile.html") ?? "",
     ],
     [
       "mockups/screens/details.desktop.html",
-      compilation.outputs.get("screens/details.desktop.html") ?? "",
+      textOutput(compilation.outputs, "screens/details.desktop.html") ?? "",
     ],
     ["mockups/screens/old.mobile.html", "<html><body>Old mobile</body></html>"],
     [
@@ -451,7 +457,9 @@ async function git(cwd: string, arguments_: readonly string[]): Promise<void> {
   await execFileAsync("git", [...arguments_], { cwd });
 }
 
-function fakeGit(files: ReadonlyMap<string, string>): ReadOnlyReviewRepository {
+function fakeGit(
+  files: ReadonlyMap<string, GeneratedFile>,
+): ReadOnlyReviewRepository {
   return {
     evidence: {
       changedPaths: async () => [],
@@ -465,13 +473,13 @@ function fakeGit(files: ReadonlyMap<string, string>): ReadOnlyReviewRepository {
         const content = files.get(repoPath);
         if (content === undefined)
           throw new Error(`missing fake Git path ${repoPath}`);
-        return content;
+        return generatedText(content, repoPath)!;
       },
       readFileBytes: async (_commit, repoPath) => {
         const content = files.get(repoPath);
         if (content === undefined)
           throw new Error(`missing fake Git path ${repoPath}`);
-        return Buffer.from(content);
+        return generatedBytes(content);
       },
     },
   };
@@ -480,8 +488,8 @@ function fakeGit(files: ReadonlyMap<string, string>): ReadOnlyReviewRepository {
 function filesForCompilation(
   manifest: ManifestV5,
   compilation: Compilation,
-): Map<string, string> {
-  const files = new Map<string, string>([
+): Map<string, GeneratedFile> {
+  const files = new Map<string, GeneratedFile>([
     ["mockups/mokly-manifest.json", `${JSON.stringify(manifest)}\n`],
   ]);
   for (const [route, content] of compilation.outputs) {
@@ -515,7 +523,10 @@ function withHomeIgnoredRegions(
   for (const fragment of screenFragments(home)) {
     const content = outputs.get(fragment);
     if (content === undefined) throw new Error(`missing output ${fragment}`);
-    outputs.set(fragment, insertIgnoredRegions(content, label, ids));
+    outputs.set(
+      fragment,
+      insertIgnoredRegions(textOutput(outputs, fragment)!, label, ids),
+    );
   }
   return { ...compilation, outputs };
 }

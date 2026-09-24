@@ -24,6 +24,7 @@ import { prepareRegistry } from "../registry/prepare.js";
 import { normalizeSingleDocument } from "../review/ignore.js";
 
 import { rememberRuntime } from "./component_runtime.js";
+import { generatedByteLength, type GeneratedFile } from "./generated_file.js";
 import { validateHtmlLinks } from "./html_links.js";
 import { loadConsumerGraph, type LoadedGraph } from "./load_graph.js";
 import { validateLogicalFragments } from "./logical_records.js";
@@ -35,7 +36,7 @@ import { renderCooperatively } from "./render_cooperative.js";
 /** Complete in-memory static compilation result. */
 export interface Compilation {
   manifest: ManifestV5;
-  outputs: ReadonlyMap<string, string>;
+  outputs: ReadonlyMap<string, GeneratedFile>;
 }
 
 /** Compile all expected bytes without mutating consumer output. */
@@ -206,7 +207,7 @@ async function compileMeasured(
     views: fragmentViews.size,
     componentViews: componentViews.size,
     bytes: [...outputs.values()].reduce(
-      (total, content) => total + Buffer.byteLength(content),
+      (total, content) => total + generatedByteLength(content),
       0,
     ),
     manifestBytes: Buffer.byteLength(outputs.get(MANIFEST_NAME)!),

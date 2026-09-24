@@ -11,6 +11,7 @@ import type {
 import { VIEWPORTS } from "@mokly/viewer/data";
 
 import type { Compilation } from "../build/compile.js";
+import { generatedText } from "../build/generated_file.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 import { dependencyContainsChangedPath } from "../registry/dependency_paths.js";
@@ -71,7 +72,7 @@ export async function compareScreen(
         ? Buffer.from(baseDocument).toString("utf8")
         : undefined;
       const after = headFragment
-        ? compilation.outputs.get(headFragment)
+        ? generatedText(compilation.outputs.get(headFragment), headFragment)
         : undefined;
       if (headFragment && after === undefined) {
         throw new MoklyError(

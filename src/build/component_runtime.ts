@@ -9,6 +9,7 @@ import { MANIFEST_NAME } from "../registry/manifest.js";
 
 import type { Compilation } from "./compile.js";
 import { consumerBundle, type ConsumerBundle } from "./consumer_bundle.js";
+import type { GeneratedFile } from "./generated_file.js";
 import type { LoadedGraph } from "./load_graph.js";
 
 export interface ComponentRuntime {
@@ -16,7 +17,7 @@ export interface ComponentRuntime {
   config: ResolvedConfig;
   generation: string;
   manifest: ManifestV5 | CatalogueIndex;
-  outputs: readonly (readonly [string, string])[];
+  outputs: readonly (readonly [string, GeneratedFile])[];
 }
 const runtimes = new WeakMap<Compilation, ComponentRuntime>();
 export function rememberRuntime(

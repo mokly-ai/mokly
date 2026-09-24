@@ -13,6 +13,7 @@ import type { ReadOnlyReviewRepository } from "../../dist/review/repository.js";
 
 import { copyExampleSources } from "./example_sources.js";
 import { repositoryRoot } from "./fixture.js";
+import { textOutput } from "./generated_text.js";
 
 /** Copy the actual consumer so source-edit tests never mutate the working catalogue. */
 export async function designLibraryFixture(
@@ -135,7 +136,7 @@ export function snapshotReader(
   resources: ReadonlyMap<string, string>,
 ) {
   const read = async (file: string) => {
-    const value = compilation.outputs.get(file) ?? resources.get(file);
+    const value = textOutput(compilation.outputs, file) ?? resources.get(file);
     assert.notEqual(value, undefined, file);
     return Buffer.from(value!);
   };

@@ -14,6 +14,7 @@ import {
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 for (const direction of ["added", "removed"] as const)
   test(`derived ${direction} stylesheet imports agree across paths`, async (t) => {
@@ -48,8 +49,8 @@ for (const generatedOutput of ["derived", "committed"] as const)
     const afterPath = actionViewPath(fixture.after);
     assert.notEqual(beforePath, afterPath);
     assert.equal(
-      fixture.before.outputs.get(beforePath),
-      fixture.after.outputs.get(afterPath),
+      textOutput(fixture.before.outputs, beforePath),
+      textOutput(fixture.after.outputs, afterPath),
     );
     const changedPaths = ["entries/fixture.mockup.tsx"];
     if (generatedOutput === "committed")

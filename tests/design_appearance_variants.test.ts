@@ -13,6 +13,7 @@ import {
   designCatalogue,
   elements,
 } from "./helpers/design_catalogue.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 /** Registered samples whose appearance is the subject of the sample itself. */
 const dualSchemeComponents = [...DUAL_SCHEME_SAMPLES].map(
@@ -59,12 +60,12 @@ test("each generated appearance variant draws the scheme it was rendered for", a
   for (const entry of screens) {
     assert.ok(entry.kind === "screen");
     for (const viewport of ["mobile", "desktop"] as const) {
-      const light = outputs.get(entry.fragments[viewport]);
+      const light = textOutput(outputs, entry.fragments[viewport]);
       assert.ok(light, `${entry.id} ${viewport} light output`);
       assert.equal(appearanceOf(light), "light", `${entry.id} ${viewport}`);
       const darkRoute: string | undefined = entry.darkFragments?.[viewport];
       assert.ok(darkRoute, `${entry.id} ${viewport} dark route`);
-      const dark = outputs.get(darkRoute);
+      const dark = textOutput(outputs, darkRoute);
       assert.ok(dark, `${entry.id} ${viewport} dark output`);
       assert.equal(appearanceOf(dark), "dark", `${entry.id} ${viewport}`);
     }
@@ -82,7 +83,7 @@ test("the appearance-related registered samples render in both schemes", async (
         `${id}/${variant.id} has no dark sample`,
       );
       for (const viewport of ["mobile", "desktop"] as const) {
-        const dark = outputs.get(variant.darkFragments[viewport]!);
+        const dark = textOutput(outputs, variant.darkFragments[viewport]!);
         assert.ok(dark, `${id}/${variant.id} ${viewport}`);
         assert.equal(appearanceOf(dark), "dark", `${id}/${variant.id}`);
       }
@@ -115,7 +116,8 @@ async function appearanceFragments(): Promise<
             id: entry.id,
             scheme,
             viewport,
-            html: outputs.get(
+            html: textOutput(
+              outputs,
               scheme === "dark"
                 ? entry.darkFragments![viewport]!
                 : entry.fragments[viewport],
@@ -252,8 +254,8 @@ test("the canonical scheme screens render in both schemes", async () => {
     assert.ok(entry?.kind === "screen", id);
     assert.ok(entry.darkFragments, `${id} has no dark fragment`);
     for (const viewport of ["mobile", "desktop"] as const) {
-      const light: string = outputs.get(entry.fragments[viewport])!;
-      const dark: string = outputs.get(entry.darkFragments[viewport]!)!;
+      const light: string = textOutput(outputs, entry.fragments[viewport])!;
+      const dark: string = textOutput(outputs, entry.darkFragments[viewport]!)!;
       assert.equal(appearanceOf(light), "light", `${id} ${viewport}`);
       assert.equal(appearanceOf(dark), "dark", `${id} ${viewport}`);
       assert.equal(
@@ -283,7 +285,7 @@ test("no design artboard depicts a scheme control", async () => {
       ...Object.values(entry.fragments),
       ...Object.values(entry.darkFragments ?? {}),
     ]) {
-      const html = outputs.get(route)!;
+      const html = textOutput(outputs, route)!;
       assert.equal(countClass(html, "ce-theme-control"), 0, route);
       assert.equal(countClass(html, "ce-theme-toggle"), 0, route);
     }
@@ -313,7 +315,7 @@ test("every artboard with a top bar draws one Appearance control", async () => {
       ...Object.values(entry.fragments),
       ...Object.values(entry.darkFragments ?? {}),
     ]) {
-      const html = outputs.get(route)!;
+      const html = textOutput(outputs, route)!;
       if (countClass(html, "mbk-topbar") === 0) continue;
       checked += 1;
       assert.equal(countClass(html, "mbk-appearance"), 1, route);
@@ -332,7 +334,7 @@ test("the depicted Appearance control names the scheme it rendered for", async (
       ["dark", entry.darkFragments ?? {}],
     ] as const) {
       for (const route of Object.values(routes)) {
-        const html = outputs.get(route)!;
+        const html = textOutput(outputs, route)!;
         if (countClass(html, "mbk-topbar") === 0) continue;
         const selector = elements(parse(html), (node) =>
           (attribute(node, "class") ?? "")

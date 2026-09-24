@@ -12,6 +12,7 @@ import type {
 } from "@mokly/viewer/data";
 
 import type { Compilation } from "../build/compile.js";
+import { generatedBytes } from "../build/generated_file.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
@@ -139,7 +140,9 @@ export async function compareReview(
   );
   await copySnapshotDependencies(files, "after", headSeeds, async (route) => {
     const generated = compilation.outputs.get(route);
-    return generated ?? assetReader.read(route);
+    return generated === undefined
+      ? assetReader.read(route)
+      : generatedBytes(generated);
   });
   const result: ReviewResult = {
     baseCommit,
