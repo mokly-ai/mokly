@@ -410,8 +410,10 @@ A watched reload captures search, view, viewport, scheme, disclosure
 (including the pre-filter baseline), drawer, catalogue scroll, per-region
 scroll and the optional validated Changes status into the one-shot recovery
 snapshot defined by the [watch contract](./mokly-watch.md); the hydrated shell
-restores it exactly as before. Native disclosure choices made before hydration
-completes are captured by the pre-hydration script and take precedence over
+restores it exactly as before under the
+[disclosure persistence contract](./mokly-runtime.md#disclosure-persistence).
+Native disclosure choices made before hydration complete are captured by the
+pre-hydration script and take precedence over
 older preferences and the snapshot; capture state is removed after hydration or
 exit. Static export may resolve its shared catalogue after the document `load`
 event, so capture remains authoritative through the actual hydration boundary.

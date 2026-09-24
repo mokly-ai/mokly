@@ -191,11 +191,9 @@ status (older payloads omit it). A selected Changes filter survives pending or
 unavailable states and their completion rather than switching to All to reveal an
 unchanged current preview. Explicit navigation still reveals its destination.
 
-Navigation follows the [path contract](./mokly-nav-paths.md); recovery applies
-to unchanged folder keys, ignoring obsolete keys. An old
-snapshot with `closedCollectionIds` instead of `closedFolderKeys` is discarded
-in full, not migrated. A missing `filterBaselineClosedFolderKeys` on an
-otherwise current snapshot means no filter baseline.
+Navigation follows the [path contract](./mokly-nav-paths.md); recovery uses the
+[disclosure persistence contract](./mokly-runtime.md#disclosure-persistence)
+for current keys, values, and incompatible snapshot handling.
 
 When a successful rebuild leaves the manifest structure unchanged, or a
 resource edit or explicit watch rule requests a reload, the parent keeps the

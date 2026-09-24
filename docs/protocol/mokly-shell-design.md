@@ -348,15 +348,11 @@ scrollable region scrolls internally:
   for derived baselines; see
   [derived baselines](./mokly-derived-baselines.md) for when it is published.
   - The tree begins with separate `Pages` and `Components` native disclosures,
-    both open by default and both closed by `Collapse all`. Pages contains
-    screens, whole-document pages, and use cases; Components contains component
-    entries. A section is omitted from the rendered navigation when it has no
-    matching current or retained removed entries. Search and Changes hide a section when they hide every row
-    in it.
-  - Each section builds folders from the authored `navPath`, not route directories.
-    Matching labels in Pages and Components produce independent folders with
-    their own matching descendants and child count. Empty folders never appear.
-    Folder groups are native
+    both open by default and both closed by `Collapse all`. Search and Changes
+    hide sections when they hide every row in them. The
+    [path contract](./mokly-nav-paths.md#sections-and-path-derivation) owns
+    section and folder structure.
+  - Folder groups are native
     `<details>` whose summary row shows a closed/open folder SVG pair (swapped
     via the `[open]` state), a bold label, and a monospace child count. Leaves
     show a screen, variant, page, flow, or component SVG; flow icons read in

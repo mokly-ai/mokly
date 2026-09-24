@@ -31,7 +31,7 @@ lexical fallback if its projection fails. Source notifications
 are isolated at the gate: classifier failures are reported, that notification
 is dropped, and later notifications continue through the same watcher.
 
-GET/HEAD `/__mokly/catalogue.json` returns the public v1
+GET/HEAD `/__mokly/catalogue.json` returns the public v2
 [read model](../catalogue/README.md) as JSON with `Cache-Control: no-store`.
 `public_catalogue.ts` serializes an atomic snapshot when accepted content,
 background usage/Changes or actual on-demand view records arrive. Requests only

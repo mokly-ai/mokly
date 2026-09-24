@@ -87,9 +87,12 @@ parent title; variants are not independent folder members.
 
 Current v6 manifests use the full label and conflict rules above. At the
 explicit historical-read boundary, v3, both v4 envelopes, v5, and v6
-`navPath` values are checked only as arrays of strings, without current
-label or conflict rules. Historical v3–v5 collection records undergo their
+`navPath` values are checked only as arrays of non-empty strings, without current
+label or conflict rules. Removed entries in the public read model follow this
+historical-label rule as well. Historical v3–v5 collection records undergo their
 original strict shape and relationship validation, then are dropped. Baseline
-paths are used for removed-entry labels and move detection, never to build a
-current folder tree. A changed `navPath` marks an entry moved; removed entries
-retain the baseline entry's path, with no separate ancestor field.
+paths are used for removed-entry labels and [Changes classification](./mokly-changes.md#changes-membership), never to build a
+current folder tree. A difference in `navPath`, including a renamed ancestor
+folder that changes every descendant entry's path, marks each affected routed
+entry changed; there is no separate moved state. Removed entries retain the
+baseline entry's path, with no separate ancestor field.

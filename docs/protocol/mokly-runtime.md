@@ -222,8 +222,8 @@ Route attribution compares each current manifest entry with its base entry and
 matches material fragment changes and changes to rendered local resources.
 Source modules, declared dependencies, and configured shared-impact globs alone
 must not mark unchanged screens or propagate unchanged screens into use cases.
-Entry comparison projects route-affecting fields and follows the
-[path contract](./mokly-nav-paths.md) for moves.
+Entry comparison projects route-affecting fields; a `navPath` difference marks
+the routed entry changed under the [Changes rule](./mokly-changes.md#changes-membership).
 The projection excludes source locations and dependency declarations; changes
 to those implementation details remain secondary comparison evidence. Fragment
 comparison applies the same paired ignore rules and material keys as screen
@@ -269,15 +269,7 @@ popups, downloads, and top navigation remain forbidden in this default mode. The
 explicit cross-origin host exception is confined to the frame-adapter contract.
 Review panes retain their stricter sandbox and byte-unmodified documents.
 
-The top-level disclosures use `section:pages` and `section:components` as their
-rendered and persisted identities. Folder identities and key parsing follow
-the [navigation path contract](./mokly-nav-paths.md#order-and-keys).
-Persist only `section:`,
-`folder:`, and `variants:` disclosures; ignore obsolete `collection:` and
-`legacy:` keys on restore, without attempting migration to new keys.
-A stored non-empty list containing only obsolete keys leaves the server's
-default disclosures unchanged; an explicit empty list retains the existing
-"all open" meaning.
+The stored disclosure rules are in [Disclosure Persistence](#disclosure-persistence).
 
 The [screen variants contract](./mokly-screen-variants.md) adds
 `variants:<section>:<parent id>` for the variant list a screen row discloses,
@@ -423,6 +415,34 @@ the design mockups in the basic example's `design/` catalogue, and the
 custom properties, tokens, and responsive behavior the implementation
 preserves. Intentional presentation differences between the mockups and the
 shipped shell are recorded beside the design catalogue in the example notes.
+
+## Disclosure Persistence
+
+The [navigation path contract](./mokly-nav-paths.md#order-and-keys) defines
+disclosure key formats and prefix-only parsing. Store a JSON object at
+`localStorage` key `mokly:nav-disclosure:v3`, mapping each current disclosure
+key to `true` (open) or `false` (closed). Save **every** disclosure in the
+current navigation, not only user-toggled disclosures. Removed or renamed
+folders therefore drop out on the next save. Do not write while search or the
+Changes filter constrains the tree.
+
+Restore a boolean value only for a valid key that exists in the current
+navigation; ignore obsolete `collection:` (both sectioned and pre-section
+forms) and `legacy:` keys without migration. A missing key uses the server
+default: top-level folders open, deeper folders open only along the active
+route's path, and variant lists closed unless they contain the active route.
+The existing active-row reveal still applies. Ignore a stored value that is
+not a JSON object as a whole; ignore invalid keys and non-boolean values
+individually. The v2 closed-list key `mokly:nav-disclosure:v2` is never read
+or migrated and is deleted on the first v3 write.
+
+Watched-reload recovery stores `disclosures` and
+`filterBaselineDisclosures`, each an explicit map or `null`, using the same
+key and value rules. Discard a snapshot containing `closedFolderKeys` or
+`closedCollectionIds` in full. A missing `filterBaselineDisclosures` on an
+otherwise current snapshot means no filter baseline. Any change to the
+persisted disclosure key format or value shape requires a new storage
+version; older versions are ignored rather than partially interpreted.
 
 ## Watched Development
 

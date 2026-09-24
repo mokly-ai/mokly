@@ -145,14 +145,9 @@ defines route loading, revision fencing and export omission.
 Before standalone hydration, stored disclosure and split-width preferences are
 applied to the server DOM. Disclosure helpers treat native `<details>` groups
 and the button-controlled screen-variant lists as the same persisted state.
-Folders use `folder:<path key>` group identities and
-`folder:<section>:<path key>` disclosure identities; only section, folder and
-variant disclosures persist. Obsolete collection and legacy disclosure keys
-are ignored rather than migrated; a stored list containing only obsolete keys
-leaves the server's default open/closed state untouched. An explicit empty
-current list still opens all groups. A watched reload with an old-shape recovery
-snapshot is discarded; the new shape uses `closedFolderKeys` and
-`filterBaselineClosedFolderKeys`.
+Folder identities follow the [navigation path contract](../../../../docs/protocol/mokly-nav-paths.md#order-and-keys),
+and persisted values and watched-reload recovery follow the
+[disclosure persistence contract](../../../../docs/protocol/mokly-runtime.md#disclosure-persistence).
 A newer native disclosure activation then wins over that stored value. The
 browser entry reads the resulting DOM into the store's initial state and
 persists the adopted disclosure state; hydration or page exit removes the

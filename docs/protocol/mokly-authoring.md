@@ -133,7 +133,8 @@ The [navigation path contract](./mokly-nav-paths.md#labels-and-diagnostics)
 owns the exact `invalid-nav-path` and `nav-path-conflict` texts and
 attribution; [ordering and keys](./mokly-nav-paths.md#order-and-keys)
 are shared by authoring validation, the shell, and the public tree. See the
-[read model](./mokly-catalogue.md) for tree validation and key construction.
+[read model](./mokly-catalogue.md) for tree validation; key construction is
+defined by [ordering and keys](./mokly-nav-paths.md#order-and-keys).
 
 `defineScreen` and nested `screen` inputs may declare `colorSchemes`. When
 omitted, a screen inherits the catalogue set; `colorSchemes: ["light"]` is the

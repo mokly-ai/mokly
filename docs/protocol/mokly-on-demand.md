@@ -7,8 +7,8 @@ hierarchy, schemas, source inventory and output confinement before listening.
 It does not render every document, write output, classify Git changes or transfer
 generated HTML as a prerequisite for Browse. This applies with and without watch.
 
-The live catalogue index is a distinct internal format, not a schema-v5 manifest.
-It describes available views, not completed rendering or usage evidence. A v5
+The live catalogue index is a distinct internal format, not a schema-v6 manifest.
+It describes available views, not completed rendering or usage evidence. A v6
 manifest still requires every view's validated records. Build, Check and Export
 remain exhaustive and produce the same portable artifacts, committed or
 [derived](./mokly-derived-baselines.md) according to `generatedOutput`.
