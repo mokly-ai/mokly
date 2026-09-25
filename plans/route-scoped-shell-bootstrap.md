@@ -229,7 +229,7 @@ catalogue before any UI implementation.
 - [x] Run the complete `cargo xtask check` gate with no failures or skips.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
@@ -477,3 +477,13 @@ Plan amendments from that check also require the prepared unit suite for later
 documentation-only edits, replace live refresh's second catalogue request with
 the fetched page bootstrap in Milestone 5, and extend route-evidence adoption to
 use-case and page targets so their installed scope matches their route.
+
+### Milestone 2 — 2026-09-25
+
+- Reviewed the complete pushed `origin/main...d1ef60b` diff using
+  [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
+- Findings: none.
+- Residual test risk: these are static design states. The runtime transitions,
+  retry behavior and in-place usage adoption remain intentionally deferred to
+  Milestone 5, where browser tests will exercise delayed and failed route
+  evidence against the implemented shell.
