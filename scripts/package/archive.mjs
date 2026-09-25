@@ -41,6 +41,8 @@ const GUIDE_FILES = [
   "docs/guides/cli/export.md",
   "docs/guides/cli/publish.md",
   "docs/guides/cli/options-and-exit-status.md",
+  "docs/guides/reference/export-files.md",
+  "docs/guides/reference/upload-receiver.md",
 ];
 
 export async function createPackageArchive(

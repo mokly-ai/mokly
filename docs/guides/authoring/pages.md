@@ -37,6 +37,12 @@ export const mockups = [
 Add the page id to the `childIds` of the collection that owns it, exactly as
 you would a screen.
 
+`render` runs once per build and must return a complete HTML document, the
+same one each time for the same sources. The catalogue shows it as one light
+document, without a device frame or viewport and color-scheme controls. A page
+takes no screen-only fields such as `mobile`, `desktop`, `colorSchemes` or
+`address`, and a use-case step cannot name a page.
+
 ## Pages inside a tree
 
 The nested `page` marker derives its route from the root path, the collection

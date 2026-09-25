@@ -8,6 +8,10 @@ and browser behavior for the consumer command, with Cloudflare normalization
 kept in the repository adapter. Delivery is tracked in the
 [consumer static export plan](../../plans/consumer-static-export.md).
 
+The [export files guide](../guides/reference/export-files.md) restates the
+artifact layout and every header requirement below for the people who host an
+export; a change to either updates that guide in the same change.
+
 The public catalogue, cross-origin inspector and viewer package are implemented
 by the completed [viewer library plan](../../plans/mokly-viewer-library.md).
 Removed page and screen previous versions are packaged and rendered by the

@@ -9,6 +9,7 @@ export const GUIDE_SECTIONS = [
   "catalogue",
   "ci",
   "cli",
+  "reference",
 ] as const;
 
 export type GuideSection = (typeof GUIDE_SECTIONS)[number];
@@ -100,4 +101,40 @@ export function withoutFencedCode(source: string): string {
     if (!fence) kept.push(line);
   }
   return kept.join("\n");
+}
+
+/** The body of one level-two section, without its heading line. */
+export function guideSection(body: string, heading: string): string {
+  const marker = `\n## ${heading}\n`;
+  const start = body.indexOf(marker);
+  if (start < 0) throw new Error(`missing guide section ${heading}`);
+  const rest = body.slice(start + marker.length);
+  const end = rest.indexOf("\n## ");
+  return end < 0 ? rest : rest.slice(0, end);
+}
+
+/** Every table body row in a Markdown fragment, with trimmed cells. */
+export function tableRows(markdown: string): string[][] {
+  const lines = markdown.split("\n");
+  const separator = (line: string | undefined) => /^\|\s*-/u.test(line ?? "");
+  return lines
+    .filter(
+      (line, index) =>
+        line.startsWith("|") &&
+        !separator(line) &&
+        !separator(lines[index + 1]),
+    )
+    .map((line) =>
+      line
+        .split("|")
+        .slice(1, -1)
+        .map((cell) => cell.trim()),
+    );
+}
+
+/** The literal inside a cell that holds exactly one code span. */
+export function codeCell(cell: string | undefined): string {
+  const value = /^`([^`]+)`$/u.exec(cell ?? "")?.[1];
+  if (!value) throw new Error(`expected one code span, found ${cell}`);
+  return value;
 }

@@ -58,5 +58,6 @@ publish for the repository the manifest names.
 | Anything else, including a timeout      | `upload-failed`              |
 
 A failed upload leaves the complete local export where it was written, so you
-can look at exactly what would have been sent. The full contract is published
-under Reference as the catalogue upload document.
+can look at exactly what would have been sent. A service that receives uploads
+implements the Upload receiver page under Reference, which lists every status,
+manifest field and limit.

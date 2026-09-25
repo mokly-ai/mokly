@@ -229,9 +229,11 @@ directory at the root of an HTTP(S) origin. The
 the required headers and deployment model.
 
 For automated uploads, Mokly also provides a
-[public composite GitHub Action](./.github/actions/publish/README.md) and a
-documented [upload protocol](./docs/protocol/mokly-upload.md) for hosted or
-self-hosted receivers.
+[public composite GitHub Action](./.github/actions/publish/README.md). Hosted or
+self-hosted receivers implement the
+[upload receiver reference](./docs/guides/reference/upload-receiver.md), and
+hosts serving an export follow the
+[export files reference](./docs/guides/reference/export-files.md).
 
 ## Packages
 
@@ -253,6 +255,8 @@ interface appearance with any preview scheme. See the
 - [Getting started](./docs/guides/start/install.md)
 - [Browsing the catalogue](./docs/guides/catalogue/browse.md)
 - [Configuration reference](./docs/guides/authoring/config.md)
+- [Export files](./docs/guides/reference/export-files.md) and
+  [upload receiver](./docs/guides/reference/upload-receiver.md) references
 - [Protocol and specification index](./docs/protocol/README.md)
 - [Removed content previews](./docs/protocol/mokly-removed-previews.md)
 - [Viewer appearance and preview schemes](./docs/protocol/mokly-viewer-appearance.md)
@@ -262,9 +266,11 @@ interface appearance with any preview scheme. See the
 - [Implementation plans](./plans/README.md)
 - [Changelog](./CHANGELOG.md)
 
-The guides are user-facing and ship with the npm package. The protocol
-documents are the detailed implementation contracts used to keep the CLI,
-viewer, generated output, and tests aligned.
+The guides are user-facing and ship with the npm package; the documentation
+site renders them, including the Reference section for hosts and upload
+receivers. The protocol documents are the detailed implementation contracts
+used to keep the CLI, viewer, generated output, and tests aligned, and are not
+published on the site.
 
 ## Develop Mokly
 

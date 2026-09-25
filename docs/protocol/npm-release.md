@@ -36,11 +36,12 @@ release workflow.
 `publishConfig` targets the public npm registry with public access. The CLI package
 contains compiled runtime code, declarations, private host modules,
 README, LICENSE, CHANGELOG, package metadata, `docs/guides`, and
-`docs/protocol`. The CLI guides and protocol documents ship with the exact
-package version so the cloud documentation site and independent upload
-receivers can implement that release's documented boundaries. Source fixtures,
-tests, plans, caches, review artifacts and generated demo output are not
-published.
+`docs/protocol`. The guides ship with the exact package version so the cloud
+documentation site renders that release's documentation, including the
+integrator Reference section. Protocol documents and their compatibility
+fixtures ship beside them for contributors and independent receiver tests.
+Source fixtures, tests, plans, caches, review artifacts and generated demo
+output are not published.
 
 The repository also builds the `@mokly/viewer` workspace, initially version 0.1.0. Its
 MIT ESM distribution owns shell assets, public data readers, adapters, React

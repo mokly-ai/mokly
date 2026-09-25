@@ -33,7 +33,9 @@ it over HTTP(S) rather than from a local folder.
 Configure revalidation for the shell and mutable assets, serve comparison
 files with `Cache-Control: no-store` and `X-Content-Type-Options: nosniff`,
 and deploy atomically so a reader never meets a mixture of two builds. The
-artifact includes a `404.html` your host can use as its error document.
+artifact includes a `404.html` your host can use as its error document. The
+Export files page under Reference lists every file in an export and the headers
+for embedding the catalogue from another origin.
 
 ## What a reader gets
 

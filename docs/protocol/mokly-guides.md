@@ -3,15 +3,21 @@
 ## Scope
 
 This implemented contract makes this repository the owner of the versioned
-documentation for the public Mokly CLI and catalogue. The guides are plain
-Markdown shipped in `@mokly/mokly` beside the published protocol documents and
-changelog. The private `mokly-cloud` repository owns the public documentation
-site and renders the files from an installed package version.
+documentation for the public Mokly CLI, the catalogue, and the formats that
+hosting and upload services build against. The guides are plain Markdown
+shipped in `@mokly/mokly` beside the protocol documents and changelog. The
+private `mokly-cloud` repository owns the public documentation site and renders
+the guides from an installed package version.
 
 This repository does not build, test, or deploy that site. The cloud repository
 also owns its Mokly Cloud, Review and edit, changelog, legal, and marketing
 pages. The package is the version boundary: a site rendering one package
-release must use that release's guides, protocol documents, and changelog.
+release must use that release's guides and changelog.
+
+Protocol documents are implementation contracts for Mokly contributors. They
+ship in the package, but they are not site content: the site renders no
+protocol document, and no guide links to one. A fact that a user or integrator
+needs from a protocol document is restated for that reader in a guide.
 
 ## Guide Sources And Routes
 
@@ -28,9 +34,11 @@ Sections appear in this order:
 | 3     | `catalogue` | Catalogue              | Browse, search, compare and export what the build produced.     |
 | 4     | `ci`        | Continuous integration | Publish a catalogue from a workflow on every branch.            |
 | 5     | `cli`       | CLI reference          | Every command, the options it takes and what it writes.         |
+| 6     | `reference` | Reference              | The files an export writes and the uploads a service accepts.   |
 
-The cloud repository may add its own `cloud`, `reference`, and `review`
-sections. They are not valid section values in this repository's guides.
+The cloud repository adds its own `cloud` and `review` sections and may place
+them between these sections in its site order. They are not valid section
+values in this repository's guides.
 
 ## Frontmatter
 
@@ -53,7 +61,7 @@ base-10 integer. The fields mean:
 - `title` is the page title and navigation label and is not empty.
 - `description` is the page summary, has no leading or trailing whitespace, and
   contains 1 to 180 Unicode characters.
-- `section` is one of the five ids above and equals the containing directory.
+- `section` is one of the six ids above and equals the containing directory.
 - `order` is positive and unique within its section. Pages in a section render
   in ascending order.
 
@@ -75,46 +83,44 @@ code examples. Shell commands belong in language-labelled code fences.
 
 ## Guide Links
 
-The initial guide corpus contains no links. Future links use only these forms:
+The guide corpus contains no links. Future links use only these forms:
 
-- another guide: `/docs/<section>/<slug>/`;
-- one of the published protocol documents:
-  `/docs/reference/<reference-slug>/`;
+- another guide: `/docs/<section>/<slug>/`, naming a guide that exists in the
+  same package release;
 - the documentation or changelog site route: `/docs/` or `/changelog/`; or
 - an absolute HTTP or HTTPS URL.
 
 A fragment may follow an allowed route or absolute URL. A guide never links to
-a repository file path, relative Markdown path, unversioned GitHub source, or
-another cloud-owned route.
+a repository file path, relative Markdown path, unversioned GitHub source,
+protocol document, or another cloud-owned route. Until links are introduced,
+prose names another guide by its section and title.
 
-## Published Protocol Documents
+## Reference Section
 
-The package ships all protocol sources, but the cloud Reference section
-publishes only these documents in this order:
+The `reference` section documents the formats an integrator builds against. Its
+readers host an exported catalogue or run a service that accepts
+`mokly publish` uploads. It contains these guides in this order:
 
-| Order | Package source                            | Reference slug     |
-| ----- | ----------------------------------------- | ------------------ |
-| 1     | `docs/protocol/mokly-export-delivery.md`  | `export-delivery`  |
-| 2     | `docs/protocol/mokly-export-ownership.md` | `export-ownership` |
-| 3     | `docs/protocol/mokly-upload.md`           | `upload`           |
-| 4     | `docs/protocol/mokly-navigation.md`       | `navigation`       |
-| 5     | `docs/protocol/mokly-link-controls.md`    | `link-controls`    |
-| 6     | `docs/protocol/mokly-pages.md`            | `pages`            |
+| Order | Guide                          | Covers                                                             |
+| ----- | ------------------------------ | ------------------------------------------------------------------ |
+| 1     | `reference/export-files.md`    | Export layout, the ownership marker, and the headers a host serves |
+| 2     | `reference/upload-receiver.md` | The upload request, responses, manifest, archive rules, and limits |
 
-The cloud renderer removes a published protocol document's first level-one
-heading and uses it as the page title. It preserves fragment-only and absolute
-HTTP(S) links. A relative link to another allowlisted protocol source maps to
-that source's Reference route, retaining its fragment. Any other relative
-repository link maps to the corresponding file at the package's immutable
-release tag:
+Reference guides follow every other guide rule. They state the exact files,
+fields, headers, status codes, and limits an integrator observes or must
+implement, and they never describe Mokly's internal modules, algorithms, tests,
+delivery status, or plans. The [export delivery](./mokly-export-delivery.md),
+[export ownership](./mokly-export-ownership.md), and
+[catalogue upload](./mokly-upload.md) protocol documents remain the
+implementation contracts behind them. A change to a public value in one of
+those contracts updates the matching reference guide in the same change, and
+root tests compare both reference guides with the implementation.
 
-```text
-https://github.com/mokly-ai/mokly/blob/v<package-version>/<repository-path>
-```
-
-Authors therefore keep protocol links relative. The cloud renderer resolves
-and normalizes the target against the source document before applying this
-mapping and rejects a path that escapes the repository.
+Package versions up to and including 0.12.0 asked the site to publish six
+protocol documents under `/docs/reference/<slug>/`. Later versions withdraw
+that allowlist: the site renders the `reference` section from
+`docs/guides/reference/` like every other package section and publishes no
+protocol document.
 
 ## Versions And Releases
 
@@ -143,12 +149,13 @@ that differs from the package version.
 
 The root package `files` allowlist contains both `docs/guides` and
 `docs/protocol`. A packed package contains the complete guide tree, all protocol
-documents, `CHANGELOG.md`, and the existing runtime surface. Tests, plans,
-examples, site sources, and repository-only tooling remain excluded.
+documents and their public compatibility fixtures, `CHANGELOG.md`, and the
+existing runtime surface. Tests, plans, examples, site sources, and
+repository-only tooling remain excluded.
 
 The cloud site reads documentation only from an installed package. It does not
-copy an unpublished working tree or mix guides, references, or changelog text
-from different package versions.
+copy an unpublished working tree or mix guides or changelog text from different
+package versions.
 
 ## Writing And Verification Rules
 
@@ -162,8 +169,13 @@ from different package versions.
 - Write reader-facing outcomes and actions. Keep internal schema, pipeline,
   environment, and implementation vocabulary out of headline copy unless it is
   itself the documented public interface.
+- Name Mokly's own files only when they are part of the public interface, such
+  as exported artifacts or the packaged compatibility fixtures. Never cite
+  protocol documents, plans, milestones, delivery status, source modules, or
+  tests; root tests reject that vocabulary in guide prose.
 - Root tests validate structure, links, versions, copy, the CLI surface,
-  configuration fields, public authoring exports, and the upload/CI contract.
+  configuration fields, public authoring exports, the upload/CI contract, and
+  the reference formats.
 
 ## Related Docs
 

@@ -5,7 +5,9 @@
 Every complete [export](./mokly-export.md) contains a regular root file named
 `.mokly-export-artifact`. This public inventory is independent of the source
 catalogue manifest, the upload envelope and the comparison result. Receivers
-can read it without importing Mokly's internal modules.
+can read it without importing Mokly's internal modules. The reader-facing
+[export files guide](../guides/reference/export-files.md) restates these rules
+for integrators and changes with them.
 
 The exporter writes UTF-8 JSON without a BOM, with these two fields:
 

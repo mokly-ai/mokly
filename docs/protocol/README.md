@@ -35,8 +35,9 @@ when the historical primary file is absent, never when it is invalid.
 - [Package and authoring contract](./mokly-package.md)
 - [CLI terminal output](./mokly-terminal-output.md) — plain compatibility,
   interactive progress, errors, watched events, and shortcuts.
-- [Packaged CLI guides](./mokly-guides.md) — versioned Markdown consumed by the
-  cloud documentation site.
+- [Packaged CLI guides](./mokly-guides.md) — versioned Markdown, including the
+  integrator Reference section, rendered by the cloud documentation site. The
+  site publishes no protocol document.
 - [Configuration contract](./mokly-configuration.md) — includes public-exclusion validation and defaults.
 - [Public authoring API](./mokly-authoring.md)
 - [Rendering and generated output](./mokly-rendering.md)

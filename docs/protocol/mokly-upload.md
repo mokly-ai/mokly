@@ -8,6 +8,11 @@ only the published `@mokly/mokly` package and these documented file artifacts;
 Mokly Cloud has no special protocol or access to package internals.
 `mokly export` remains local-only. `mokly publish` exports, then uploads once.
 
+Integrators read the reader-facing
+[upload receiver guide](../guides/reference/upload-receiver.md). A change to a
+header, status, manifest field, archive rule or limit here updates that guide
+in the same change; root tests compare it with the implementation.
+
 ## CLI
 
 ```bash

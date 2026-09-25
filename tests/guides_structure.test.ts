@@ -40,38 +40,31 @@ const EXPECTED = [
   "cli/export",
   "cli/publish",
   "cli/options-and-exit-status",
+  "reference/export-files",
+  "reference/upload-receiver",
 ];
 
-const REFERENCE_SLUGS = new Set([
-  "export-delivery",
-  "export-ownership",
-  "upload",
-  "navigation",
-  "link-controls",
-  "pages",
-]);
+const GUIDE_IDS = new Set(GUIDES.map((guide) => guide.id));
 
 function allowedLink(destination: string): boolean {
   const target = destination.split("#", 1)[0] ?? "";
   if (target === "/docs/" || target === "/changelog/") return true;
-  const guide =
-    /^\/docs\/(start|authoring|catalogue|ci|cli)\/([a-z0-9]+(?:-[a-z0-9]+)*)\/$/u.exec(
-      target,
-    );
-  if (guide) return true;
-  const reference = /^\/docs\/reference\/([a-z0-9]+(?:-[a-z0-9]+)*)\/$/u.exec(
+  const guide = /^\/docs\/([a-z]+)\/([a-z0-9]+(?:-[a-z0-9]+)*)\/$/u.exec(
     target,
   );
-  if (reference) return REFERENCE_SLUGS.has(reference[1] ?? "");
+  if (guide) return GUIDE_IDS.has(`${guide[1]}/${guide[2]}`);
   try {
     const url = new URL(destination);
-    return url.protocol === "http:" || url.protocol === "https:";
+    return (
+      (url.protocol === "http:" || url.protocol === "https:") &&
+      !url.pathname.includes("/docs/protocol/")
+    );
   } catch {
     return false;
   }
 }
 
-test("the guide tree contains the exact 30-page reading order", () => {
+test("the guide tree contains the exact 32-page reading order", () => {
   assert.deepEqual(
     GUIDES.map((guide) => guide.id),
     EXPECTED,
@@ -87,7 +80,7 @@ test("the guide tree contains the exact 30-page reading order", () => {
     readdirSync(guidesRoot, { recursive: true, withFileTypes: true }).filter(
       (entry) => entry.isFile(),
     ).length,
-    30,
+    32,
   );
 });
 
@@ -149,7 +142,7 @@ test("bodies use headings, comments, and fenced code within the contract", () =>
   }
 });
 
-test("the initial corpus has no links and future destinations are bounded", () => {
+test("the corpus has no links and future destinations are bounded", () => {
   for (const guide of GUIDES) {
     const prose = withoutFencedCode(guide.body).replace(
       /<!--[\s\S]*?-->/gu,
@@ -162,7 +155,7 @@ test("the initial corpus has no links and future destinations are bounded", () =
   }
   for (const destination of [
     "/docs/authoring/screens/",
-    "/docs/reference/upload/#limits",
+    "/docs/reference/upload-receiver/#limits",
     "/docs/",
     "/changelog/#v0100",
     "https://example.com/docs",
@@ -173,8 +166,11 @@ test("the initial corpus has no links and future destinations are bounded", () =
     "../authoring/screens.md",
     "./screens.md",
     "/docs/cloud/overview/",
+    "/docs/authoring/missing-guide/",
     "/docs/reference/private-contract/",
+    "/docs/reference/upload/",
     "docs/protocol/mokly-upload.md",
+    "https://github.com/mokly-ai/mokly/blob/main/docs/protocol/mokly-upload.md",
     "file:///tmp/guide.md",
   ])
     assert.equal(allowedLink(destination), false, destination);
