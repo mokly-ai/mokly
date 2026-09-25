@@ -99,12 +99,15 @@ test("watched Serve attaches every declared stylesheet before the first build an
     },
   );
   fixture.beforeRemove(() => running.close());
-  assert.ok(
+  assert.equal(
     watchers.targets[0]?.includes(path.join(fixture.mockupsDir, "action.css")),
+    false,
   );
-  assert.ok(
-    watchers.targets[0]?.includes(path.join(fixture.mockupsDir, "pane.css")),
+  const initialExtended = watchers.targets.findLast((targets) =>
+    targets.includes(initial.configPath),
   );
+  for (const file of ["action.css", "pane.css"])
+    assert.ok(initialExtended?.includes(path.join(fixture.mockupsDir, file)));
   await waitFor(() => output.configs.length === 1);
 
   await fs.promises.writeFile(
@@ -118,7 +121,10 @@ test("watched Serve attaches every declared stylesheet before the first build an
       'stylesheets: ["replacement.css"]',
     ),
   );
-  watchers.watchers[0]?.change(initial.configPath);
+  const sourceIndex = watchers.targets.findLastIndex((targets) =>
+    targets.includes(initial.configPath),
+  );
+  watchers.watchers[sourceIndex]?.change(initial.configPath);
   await waitFor(() => supervisor.restarts === 1);
   const replacement = watchers.targets.find((targets) =>
     targets.includes(path.join(fixture.mockupsDir, "replacement.css")),

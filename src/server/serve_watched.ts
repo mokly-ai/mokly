@@ -3,10 +3,8 @@ import { randomBytes } from "node:crypto";
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import { prepareLiveRuntime } from "../build/live_runtime.js";
-import { loadConsumerGraph } from "../build/load_graph.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { bindTimings, timeAsync } from "../diagnostics/timings.js";
-import { prepareRegistry } from "../registry/prepare.js";
 
 import { RepositoryCatalogueChangeClassifier } from "./component_changes.js";
 import {
@@ -21,7 +19,6 @@ import {
   closeWatched,
   createWatchedSupervisor,
   restartWithRecovery,
-  watcherReadyBeforeShutdown,
 } from "./serve_lifecycle.js";
 import type { ProcessSupervisor } from "./supervisor.js";
 import {
@@ -32,10 +29,13 @@ import {
   WatchDebouncer,
   type WatchEvent,
 } from "./watch_events.js";
-import { watchTargets } from "./watch_paths.js";
+import {
+  prepareInitialWatchedSource,
+  prepareWatchedSource,
+  sourceTargetsChanged,
+} from "./watch_preparation.js";
 import { reportedWatchProcessor } from "./watch_reporting.js";
 import { WatchedBackground } from "./watched_background.js";
-import { createSourceWatcher } from "./watcher.js";
 
 /** Serve accepted generations while watching typed source and resource changes. */
 export async function serveWatched(
@@ -60,26 +60,26 @@ export async function serveWatched(
   const report = (error: unknown) => reporter.runtimeDiagnostic(error);
   const gate = new NotificationGate<WatchEvent>(report);
   const failures = new NotificationGate<Error>(report);
-  const inventory = await loadConsumerGraph(config);
-  config.entryModules = inventory.entrySources;
-  config.sourceFiles = inventory.sourceFiles;
-  prepareRegistry(inventory.definitions, config);
-  let activeConfig = config;
-  let watcher = createSourceWatcher(watcherFactory, config, gate, report);
+  const prepared = await prepareInitialWatchedSource(
+    config,
+    watcherFactory,
+    gate,
+    report,
+    shutdown,
+    () => closed,
+  );
+  let activeConfig = prepared.runtime.config;
+  let watcher = prepared.watcher;
   const resources = new ResourceWatcher(
     watcherFactory,
     (event) => gate.notify(event),
     report,
   );
-  let runtime: ComponentRuntime;
-  let signature: string;
+  let runtime: ComponentRuntime = prepared.runtime;
+  let signature = JSON.stringify(runtime.manifest);
   let supervisor: ProcessSupervisor | undefined;
   let port: number;
   try {
-    await timeAsync("watch.source-ready", () => watcher.ready());
-    runtime = await prepareLiveRuntime(config, inventory);
-    activeConfig = runtime.config;
-    signature = JSON.stringify(runtime.manifest);
     supervisor = createWatchedSupervisor(
       activeConfig,
       options,
@@ -149,22 +149,19 @@ export async function serveWatched(
   const reconfigure = async (candidate?: ResolvedConfig): Promise<void> => {
     const nextConfig =
       candidate ?? (await configLoader.load(activeConfig.configPath));
-    const nextInventory = await loadConsumerGraph(nextConfig);
-    nextConfig.entryModules = nextInventory.entrySources;
-    nextConfig.sourceFiles = nextInventory.sourceFiles;
-    prepareRegistry(nextInventory.definitions, nextConfig);
     const nextGate = new NotificationGate<WatchEvent>(report);
-    const replacement = createSourceWatcher(
-      watcherFactory,
+    const prepared = await prepareWatchedSource(
       nextConfig,
+      watcherFactory,
       nextGate,
       report,
+      shutdown,
+      () => closed,
     );
+    if (!prepared) return;
+    const { watcher: replacement, runtime: next } = prepared;
     let adopted = false;
     try {
-      if (!(await watcherReadyBeforeShutdown(replacement, shutdown)) || closed)
-        return;
-      const next = await prepareLiveRuntime(nextConfig, nextInventory);
       if (closed) return;
       await background.invalidate(next.config);
       if (closed) return;
@@ -216,10 +213,7 @@ export async function serveWatched(
     }
     if (action === "rebuild") {
       const next = await prepareLiveRuntime(activeConfig);
-      if (
-        JSON.stringify(watchTargets(next.config)) !==
-        JSON.stringify(watchTargets(activeConfig))
-      )
+      if (sourceTargetsChanged(activeConfig, next.config))
         return reconfigure(next.config);
       if (closed) return;
       await background.invalidate();

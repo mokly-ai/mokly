@@ -125,9 +125,18 @@ traversal. Active transaction trees and the initialized internal reservation
 namespace remain pruned. Unowned files still make subsequent export replacement
 fail; watch classification does not grant permission to overwrite them.
 
-The input graphs are resolved before the source/config watcher is constructed.
-It becomes ready before initial index preparation; import changes replace its watch
-set using the same readiness and recovery rules as configuration adoption.
+The source inventory is resolved without evaluating consumer modules before the
+source/config watcher is constructed. That watcher becomes ready before the
+consumer graph is evaluated or the initial index is prepared, so edits during
+evaluation are buffered. Once registry validation accepts the declared
+stylesheets, a replacement source watcher adds every declaration and becomes
+ready before index completion, child startup, or reported readiness. Keep the
+inventory watcher active until its replacement is ready; apply the same
+ordering and failure recovery on successful configuration reloading. A declared
+CSS edit between evaluation and the replacement becoming ready needs no extra
+compensation: Serve reads CSS from disk for each request and starts background
+Changes only afterwards. Import changes replace the source watch set with the
+same readiness and recovery rules.
 Resource watches are discovered from candidate output and become ready before
 it is written. Discovery repeats after readiness to capture newly introduced
 references during watcher attachment. Notifications during generation and child

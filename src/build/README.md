@@ -88,7 +88,8 @@ bundles use the same namespaced `Symbol.for` marker as consumer bundles.
 The renderer-facing component entry omits `stylesheets`; the internal
 registration still supplies declarations for linking and ownership.
 `RenderInput.stylesheets` remains the configured href list. Watched Serve
-prepares and validates that registration before attaching its initial watcher.
+attaches its inventory watcher before evaluation, then validates registration
+and extends the watch set with declared CSS before index preparation.
 
 ## Development
 

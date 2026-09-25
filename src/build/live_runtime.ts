@@ -7,6 +7,7 @@ import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
 import { createCatalogueIndex } from "../registry/catalogue_index.js";
 import { prepareRegistry } from "../registry/prepare.js";
+import type { PreparedRegistry } from "../registry/prepared_types.js";
 
 import type { ComponentRuntime } from "./component_runtime.js";
 import { consumerBundle } from "./consumer_bundle.js";
@@ -16,6 +17,7 @@ import { validateGeneratedOutputPaths } from "./output_paths.js";
 export async function prepareLiveRuntime(
   config: ResolvedConfig,
   preloaded?: LoadedGraph,
+  prepared?: PreparedRegistry,
 ): Promise<ComponentRuntime> {
   return timeAsync("catalogue.prepare-index", async () => {
     const graph = preloaded ?? (await loadConsumerGraph(config));
@@ -24,7 +26,7 @@ export async function prepareLiveRuntime(
       entryModules: graph.entrySources,
       sourceFiles: graph.sourceFiles,
     };
-    const registry = prepareRegistry(graph.definitions, config);
+    const registry = prepared ?? prepareRegistry(graph.definitions, config);
     const manifest = createCatalogueIndex(
       registry.entries,
       graph.sourceFiles,

@@ -216,10 +216,12 @@ that no current or baseline view links does not itself add an entry to Changes.
 See [component changes](./mokly-component-changes.md) and
 [CSS attribution](./mokly-css-attribution.md).
 
-Watched Serve includes every validated declared stylesheet in its initial
-watch set before accepting edits, even if no view currently renders its
-component. After a successful configuration reload, it refreshes that set
-from the new declarations without waiting for a later full build. Serve
+Watched Serve makes the source inventory watcher ready before evaluating
+consumer modules. After validating declarations it replaces that watcher with
+one containing every declared stylesheet, even if no view renders its
+component, before the child starts or readiness is reported. After a successful
+configuration reload, it refreshes that set from the new declarations without
+waiting for a later full build. Serve
 watches each declared file like a configured stylesheet:
 editing it triggers a reload/evidence refresh for the views that link it,
 without requiring a rebuild of source modules. Changes to the declaration or
