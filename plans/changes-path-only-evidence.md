@@ -81,16 +81,18 @@ Tags: ui
 Show the entry's shared-impact evidence for current results as the existing
 Shared impact mockup already depicts; no visual design change.
 
-- [ ] The Details inspector's "Changes to these files may affect this
+- [x] The Details inspector's "Changes to these files may affect this
       screen:" list is the union of retained dependency reason paths and the
       entry's `sharedImpact` evidence for both result versions; excluded
       stylesheets and analysed-selector groups are unchanged and never
       overlap it.
-- [ ] Failure-first unit tests for the evidence projection, and browser
-      coverage for an unchanged screen opened from All showing shared-impact
-      evidence with no Changes row.
-- [ ] Smoke-test through `npm run dev`.
-- [ ] Commit.
+- [x] Failure-first unit tests for the evidence projection, and browser
+      coverage for a screen opened from All showing shared-impact evidence;
+      defer its Changes-membership assertion until Milestone 3.
+- [x] Smoke-test through `npm run dev`.
+- [x] Check entry-kind wording and the existing mobile/desktop shared-impact
+      mockup; report the component wording without changing copy.
+- [x] Commit.
 
 ## Milestone 3: Path-only evidence adds no Changes reasons
 
@@ -104,6 +106,9 @@ watched updates, Review JSON, and publication.
       `sharedImpact`; an exact declared file and a component-owned path keep
       their reasons; an unowned component registration module under a broad
       glob lists nothing.
+- [ ] Extend the real Git-backed case in
+      `tests/browser/shared_impact_details.spec.ts` with an assertion that the
+      path-only screen has no Changes row after classification.
 - [ ] Change `ComponentDependencyPolicy` so only owned paths and exact
       declared files are independent evidence; remove the glob path from the
       policy.

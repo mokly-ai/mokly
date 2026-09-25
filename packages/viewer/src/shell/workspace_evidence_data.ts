@@ -19,7 +19,7 @@ export interface WorkspaceComparisonEvidence {
   views: readonly ViewReview[];
   resourceViews: readonly ViewResourceEvidence[];
   reasons: readonly EntryChangeReason[];
-  legacyPaths: readonly string[];
+  sharedImpact: readonly string[];
 }
 
 /** Keep catalogue facts while adding only the loaded selection's details. */
@@ -45,8 +45,9 @@ export function workspaceComparisonEvidence(
     ...comparisonViews(selected, variantId),
   ];
   const resources = data.resourceEvidence ?? [];
+  const comparison = data.comparison ?? selected;
   return {
-    comparison: data.comparison ?? selected,
+    comparison,
     views,
     resourceViews: [...resources, ...views],
     reasons: mergeReasons([
@@ -59,8 +60,7 @@ export function workspaceComparisonEvidence(
           )
         : []),
     ]),
-    legacyPaths:
-      loaded?.schemaVersion === 2 ? (selected?.sharedImpact ?? []) : [],
+    sharedImpact: comparison?.sharedImpact ?? [],
   };
 }
 

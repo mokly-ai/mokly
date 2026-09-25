@@ -108,8 +108,13 @@ from validated catalogue records. Embedded bootstrap and workspace JSON use
 canonical key ordering so their validated client projections retain the exact
 server bytes during hydration. `comparison_views.tsx` renders React-owned frame
 chrome around the snapshots from validated comparison metadata. The CLI
-supplies its private live capabilities through typed server context. Standalone
-full-document composition lives in `src/standalone`: its bootstrap contains
+supplies its private live capabilities through typed server context.
+
+`workspace_evidence_data.ts` selects an entry's catalogue or loaded comparison
+record for Details; `workspace_evidence.tsx` combines its shared-impact paths
+with retained dependency paths while keeping stylesheet exclusions separate.
+
+Standalone full-document composition lives in `src/standalone`: its bootstrap contains
 the validated public catalogue and shell delivery state for Serve. Static pages
 carry a compact identity/revision reference and resolve the shared finalized
 catalogue before `src/browser.tsx` hydrates that exact server tree. Live Serve places private

@@ -29,10 +29,11 @@ export function WorkspaceEvidence({
 }) {
   const evidence = workspaceComparisonEvidence(data, variantId, loaded);
   const hidden = data.status === undefined && !evidence.comparison;
-  const retained = [
-    ...new Set([...retainedPaths(evidence.reasons), ...evidence.legacyPaths]),
-  ].sort();
-  const excluded = excludedStylesheets(evidence.resourceViews, retained);
+  const reasonPaths = retainedPaths(evidence.reasons);
+  const excluded = excludedStylesheets(evidence.resourceViews, reasonPaths);
+  const retained = [...new Set([...reasonPaths, ...evidence.sharedImpact])]
+    .filter((path) => !excluded.includes(path))
+    .sort();
   const ignored = evidence.comparison
     ? [...new Set(evidence.views.flatMap((view) => view.ignoredIds))]
     : [];
