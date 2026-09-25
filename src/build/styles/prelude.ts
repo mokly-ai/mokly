@@ -1,3 +1,6 @@
+import { classifyResourceUrl } from "../../resource_url.js";
+import { decodeCssIdentifier, tokenizeCss } from "../../review/css/source.js";
+
 /** A syntactically complete @import in the initial CSS import prelude. */
 export interface PreludeImport {
   readonly start: number;
@@ -47,6 +50,34 @@ export function scanImportPrelude(css: string): PreludeImport[] {
     cursor = end;
   }
   return imports;
+}
+
+/** Find the first authored top-level import that follows a non-prelude rule. */
+export function lateImportSpecifier(css: string): string | undefined {
+  const allowed = new Set(scanImportPrelude(css).map((entry) => entry.start));
+  const tokens = tokenizeCss(css, { allowIncomplete: true });
+  let depth = 0;
+  for (let index = 0; index < tokens.length; index += 1) {
+    const token = tokens[index]!;
+    if (token.value === "{") depth += 1;
+    else if (token.value === "}") depth -= 1;
+    else if (
+      depth === 0 &&
+      token.value === "@" &&
+      tokens[index + 1]?.start === token.end &&
+      decodeCssIdentifier(tokens[index + 1]!.value).toLowerCase() ===
+        "import" &&
+      !allowed.has(token.start)
+    ) {
+      const specifier = scanImportPrelude(css.slice(token.start))[0]?.specifier;
+      if (
+        specifier &&
+        classifyResourceUrl(specifier, "css").kind !== "external"
+      )
+        return specifier;
+    }
+  }
+  return;
 }
 
 function skipTrivia(css: string, from: number): number {

@@ -132,6 +132,7 @@ out of Git:
 .mokly-cache/
 docs/mockups/generated/**/*.html
 docs/mockups/generated/mokly-manifest.json
+docs/mockups/generated/mokly-generated/
 ```
 
 Mokly's current output requires manifest v5; compatibility readers for older

@@ -85,9 +85,23 @@ export class GitTrackedGeneratedOutput implements TrackedGeneratedOutput {
         .map(
           (prefix) => `/${prefix ? `${prefix}/` : ""}${GENERATED_DIRECTORY}/`,
         );
+      const otherIgnoreRules = invalid
+        .filter(
+          (name) =>
+            !prefixes.some((prefix) =>
+              name.startsWith(
+                `${prefix ? `${prefix}/` : ""}${GENERATED_DIRECTORY}/`,
+              ),
+            ),
+        )
+        .map((name) => `/${name}`);
+      const ignoreRules = [
+        ...new Set([...otherIgnoreRules, ...reservedIgnoreRules]),
+        `/${MOKLY_CACHE}/`,
+      ];
       throw new MoklyError(
         "build-invalid",
-        `derived output must not be tracked by Git:\n${invalid.map((name) => `  - ${name}`).join("\n")}\nRemove these paths from the index with git rm --cached and add these rules to .gitignore:\n${[...new Set([...invalid.map((name) => `/${name}`), ...reservedIgnoreRules]), `/${MOKLY_CACHE}/`].join("\n")}`,
+        `derived output must not be tracked by Git:\n${invalid.map((name) => `  - ${name}`).join("\n")}\nRemove these paths from the index with git rm --cached and add these rules to .gitignore:\n${ignoreRules.join("\n")}`,
       );
     } catch (error) {
       if (

@@ -21,11 +21,7 @@ export function validatePostcssPath(
     typeof value !== "string" ||
     !value.trim() ||
     path.isAbsolute(value) ||
-    !isInside(repoRoot, path.resolve(configDir, value)) ||
-    !isInside(
-      projectRealPath(repoRoot),
-      projectRealPath(path.resolve(configDir, value)),
-    )
+    !isInside(repoRoot, path.resolve(configDir, value))
   )
     throw invalidPath();
   const absolute = path.resolve(configDir, value);
@@ -37,5 +33,7 @@ export function validatePostcssPath(
       "config-invalid",
       `postcss module must be an existing regular .ts, .mts, .js, .mjs or .cjs file inside repoRoot: ${value}`,
     );
+  if (!isInside(projectRealPath(repoRoot), projectRealPath(absolute)))
+    throw invalidPath();
   return absolute;
 }

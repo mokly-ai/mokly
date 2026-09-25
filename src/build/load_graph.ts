@@ -169,6 +169,7 @@ async function loadGraph(
           deliveryRoots,
           graphInputs,
           styles.preprocessor,
+          styles.classMaps,
         )
       : {
           outputs: new Map<string, GeneratedFile>(),

@@ -3,6 +3,8 @@
 import type { ServerResponse } from "node:http";
 import path from "node:path";
 
+import { ASSET_MIME_TYPES } from "../build/styles/routes.js";
+
 /** Write one complete text response, omitting the body for HEAD. */
 export function send(
   response: ServerResponse,
@@ -52,19 +54,13 @@ export function safeDecode(value: string): string {
 export function contentType(candidate: string): string {
   const extension = path.extname(candidate).toLowerCase();
   if (extension === ".json") return "application/json; charset=utf-8";
+  const assetType = ASSET_MIME_TYPES.get(extension);
+  if (assetType) return assetType;
   return extension === ".html" || extension === ".htm"
     ? "text/html; charset=utf-8"
     : extension === ".js"
       ? "text/javascript; charset=utf-8"
       : extension === ".css"
         ? "text/css; charset=utf-8"
-        : extension === ".svg"
-          ? "image/svg+xml"
-          : extension === ".png"
-            ? "image/png"
-            : extension === ".jpg" || extension === ".jpeg"
-              ? "image/jpeg"
-              : extension === ".woff2"
-                ? "font/woff2"
-                : "application/octet-stream";
+        : "application/octet-stream";
 }

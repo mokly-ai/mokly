@@ -76,15 +76,27 @@ export function discoveryPaths(
       ? {
           generatedOutput: {
             lexical: path.join(config.mockupsDir, GENERATED_DIRECTORY),
-            projected: projectRealPath(
-              path.join(config.mockupsDir, GENERATED_DIRECTORY),
-            ),
+            projected: generatedRootProjection(config.mockupsDir),
           },
         }
       : {}),
     reviewOutput: { lexical, projected },
     globs,
   };
+}
+
+function generatedRootProjection(mockupsDir: string): string {
+  const root = path.join(mockupsDir, GENERATED_DIRECTORY);
+  try {
+    return projectRealPath(root);
+  } catch (error) {
+    if (
+      (error as NodeJS.ErrnoException).code === "ENOENT" &&
+      fs.lstatSync(root, { throwIfNoEntry: false })?.isSymbolicLink()
+    )
+      return root;
+    throw error;
+  }
 }
 
 /** Only missing or replaced directories are benign races during discovery. */

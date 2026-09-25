@@ -9,6 +9,7 @@ import type { ResolvedConfig } from "../../config/types.js";
 import { MoklyError } from "../../errors.js";
 import { classifyResourceUrl } from "../../resource_url.js";
 
+import { recordFirstFailure } from "./failures.js";
 import { wouldPrivatizePublicFile } from "./public_source.js";
 import { ASSET_EXTENSIONS, assetRoute } from "./routes.js";
 
@@ -153,7 +154,7 @@ export class StyleResolution {
             error instanceof MoklyError
               ? error
               : new MoklyError("build-invalid", String(error));
-          this.errors.set(arguments_.importer, failure);
+          recordFirstFailure(this.errors, arguments_.importer, failure);
           return { errors: [{ text: failure.message }] };
         }
       });

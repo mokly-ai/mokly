@@ -11,8 +11,9 @@ import type { GeneratedFile } from "../generated_file.js";
 import { metafileKey, metafilePath } from "../metafile_paths.js";
 import { graphSourceFiles } from "../source_inventory.js";
 
+import { recordFirstFailure } from "./failures.js";
 import { stripSourcePathComments } from "./outputs.js";
-import { scanImportPrelude } from "./prelude.js";
+import { lateImportSpecifier, scanImportPrelude } from "./prelude.js";
 import type { StylePreprocessor } from "./preprocess.js";
 import { StyleResolution } from "./resolution.js";
 import { ASSET_EXTENSIONS } from "./routes.js";
@@ -39,6 +40,7 @@ export async function bundleStylePass(
   excluded: ReadonlySet<string>,
   graphInputs: ReadonlySet<string>,
   preprocessor: StylePreprocessor,
+  graphClassMaps: ReadonlyMap<string, Readonly<Record<string, string>>>,
 ): Promise<StylePass> {
   const resolution = new StyleResolution(config, graphInputs);
   const closures = new Map(roots.map((root) => [root.path, new Set<string>()]));
@@ -56,6 +58,12 @@ export async function bundleStylePass(
         if (closure.has(file)) return;
         closure.add(file);
         const content = await fs.readFile(file, "utf8");
+        const late = lateImportSpecifier(content);
+        if (late !== undefined)
+          throw new MoklyError(
+            "build-invalid",
+            `CSS @import must come before style rules in ${toPosixPath(path.relative(config.repoRoot, file))}: ${late}; move the import before other rules`,
+          );
         for (const entry of scanImportPrelude(content)) {
           const resolved = await resolveImport(entry.specifier, file);
           if (resolved) await visit(resolved, closure);
@@ -82,7 +90,7 @@ export async function bundleStylePass(
             };
           } catch (error) {
             const failure = asBuildError(error);
-            pluginFailures.set(arguments_.path, failure);
+            recordFirstFailure(pluginFailures, arguments_.path, failure);
             return { errors: [{ text: failure.message }] };
           }
         },
@@ -94,6 +102,16 @@ export async function bundleStylePass(
             excluded,
             resolveImport,
           );
+          const graphMap = graphClassMaps.get(arguments_.path);
+          if (
+            graphMap &&
+            JSON.stringify(graphMap) !==
+              JSON.stringify(prepared.scoped?.exports)
+          )
+            throw new MoklyError(
+              "build-invalid",
+              `CSS Modules exports differ after renderer pruning in ${toPosixPath(path.relative(config.repoRoot, arguments_.path))}; avoid inlining shared imports in modules or use Tailwind @reference`,
+            );
           return {
             contents: prepared.css,
             loader: "css",
@@ -101,7 +119,7 @@ export async function bundleStylePass(
           };
         } catch (error) {
           const failure = asBuildError(error);
-          pluginFailures.set(arguments_.path, failure);
+          recordFirstFailure(pluginFailures, arguments_.path, failure);
           return { errors: [{ text: failure.message }] };
         }
       });

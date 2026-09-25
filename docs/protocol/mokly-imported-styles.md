@@ -106,7 +106,10 @@ nor the `style` main field is selected by esbuild by default. Keep all other
 consumer resolution settings unchanged. Esbuild's metafile input imports
 retain source order, including JavaScript re-exports and dynamic imports.
 When CSS is both JavaScript-imported and imported by an earlier CSS file,
-esbuild places it last within that root; it hoists remote prelude imports.
+esbuild places it last within that root; it hoists remote imports even when
+they appear after an authored style rule. A local `@import` after the import
+prelude fails at its authored file rather than resolving against the generated
+stylesheet. Remote imports remain external and are never inventoried.
 
 ## CSS Modules And Import Loaders
 
@@ -133,6 +136,9 @@ each valid, non-reserved JavaScript identifier as a named string with the
 same value. Other keys (such as `foo-bar`) remain accessible on the default
 object. Cross-file `composes` and cyclic local composition fail, not silently
 flattened. Plain CSS imports supply no JavaScript class map.
+If PostCSS and renderer pruning produce a different export map between the
+graph and delivered stylesheet passes, fail before writing instead of emitting
+class names with no matching rules.
 
 `moduleResolution.loaders` reserves `.css` and `.module.css`: their only
 allowed consumer value is `empty`. `.css: "empty"` opts out of **both**
@@ -140,6 +146,9 @@ plain and module CSS, `.module.css: "empty"` opts out only of modules;
 set both only if desired for clarity. An opted-out module supplies an empty
 default map and no named bindings or delivered CSS; its file remains in
 `sourceFiles` as a graph input. Other CSS loaders fail config validation.
+No extension may use the consumer `css` loader: it would produce an
+undelivered sibling file. Rename a stylesheet to `.css` or choose a
+JavaScript-safe loader for non-stylesheet imports.
 Any other consumer `file` loader used by a JavaScript import fails Build:
 Mokly never exposes the extra JavaScript graph outputs as public URLs.
 
@@ -153,7 +162,13 @@ precedence; [exact messages](./mokly-imported-styles-errors.md) apply to both.
 
 CSS `url()` values beginning `data:`, `http:`, `https:` (schemes matched
 case-insensitively), `//` or `#` remain unchanged. A root-absolute `/...`
-URL is invalid. Relative URLs resolve
+URL is invalid.
+Quoted string URLs inside `image-set()` are not validated by esbuild's
+`url-token` hook; reject them, including in authored public CSS, with guidance
+to write `image-set(url("./a.png") 1x)` instead. Resource reference extraction
+also identifies strings inside `image-set()` for validation. They are never
+treated as already-delivered CSS assets, whether the stylesheet is imported or
+authored under `mockupsDir`. Relative URLs resolve
 against the referring CSS file; strip `?query`/`#hash` for resolution and
 restore that exact suffix after esbuild rewrites the relative path. Require a
 regular confined file. A nested `@import` of a public stylesheet under
@@ -167,6 +182,12 @@ their full repo-relative paths are mirrored. Only `.avif`, `.bmp`, `.gif`,
 `.ico`, `.jpeg`, `.jpg`, `.png`, `.svg`, `.webp`, `.eot`, `.otf`, `.ttf`,
 `.woff`, `.woff2` (matched case-sensitively) use esbuild's `file` loader.
 Every other extension fails.
+Serve, on-demand views and transient previews use the same extension-to-MIME
+mapping for these assets: `.avif` `image/avif`, `.bmp` `image/bmp`, `.gif`
+`image/gif`, `.ico` `image/vnd.microsoft.icon`, `.jpeg`/`.jpg` `image/jpeg`,
+`.png` `image/png`, `.svg` `image/svg+xml`, `.webp` `image/webp`, `.eot`
+`application/vnd.ms-fontobject`, `.otf` `font/otf`, `.ttf` `font/ttf`, `.woff`
+`font/woff`, and `.woff2` `font/woff2`. Binary assets are never decoded.
 `mokly-generated/assets/<path>` must satisfy the existing portable URL-path
 rule segment by segment: `/^[A-Za-z0-9][A-Za-z0-9._~-]*$/`, no trailing
 dot, and no Windows device-name stem (`aux`, `con`, `nul`, `prn`, `com1`–`9`,

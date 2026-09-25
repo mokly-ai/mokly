@@ -24,6 +24,7 @@ import { classifyResourceUrl } from "../resource_url.js";
 
 import { isOwned, pendingGeneratedOrphanRoutes } from "./ownership.js";
 import { PendingGeneratedFiles } from "./pending_generated.js";
+import { validateImageSetStrings } from "./styles/image_set.js";
 import { isGeneratedRoute } from "./styles/routes.js";
 
 interface ReferenceResult {
@@ -226,6 +227,8 @@ function loadResource(
     return { anchors: new Set(), references: [] };
   }
   const content = fs.readFileSync(candidate, "utf8");
+  if (extension === ".css")
+    validateImageSetStrings(content, candidate, config.repoRoot);
   return extension === ".css"
     ? {
         anchors: new Set(),

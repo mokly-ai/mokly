@@ -5,6 +5,7 @@ import { toPosixPath } from "../../config/paths.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { MoklyError } from "../../errors.js";
 
+import { validateImageSetStrings } from "./image_set.js";
 import { scopeModule, type ScopedStyle } from "./modules.js";
 import { nestedExcludedImports } from "./nested_imports.js";
 import type { StyleDependencyReport } from "./postcss.js";
@@ -125,6 +126,7 @@ export class StylePreprocessor {
     this.reports.push(...(processed.reports ?? []));
     for (const file of processed.sourceFiles) this.sourceFiles.add(file);
     text = processed.css;
+    validateImageSetStrings(text, source, this.config.repoRoot);
     if (!source.endsWith(".module.css"))
       return {
         css: text,

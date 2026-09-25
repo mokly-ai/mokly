@@ -173,7 +173,11 @@ export function normalizeSourceFiles(
 ): string[] {
   const inventory = new Set<string>();
   const reservedRoot = path.join(mockupsDir, GENERATED_DIRECTORY);
-  const realReservedRoot = projectRealPath(reservedRoot);
+  const realReservedRoot = fs
+    .lstatSync(reservedRoot, { throwIfNoEntry: false })
+    ?.isSymbolicLink()
+    ? reservedRoot
+    : projectRealPath(reservedRoot);
   for (const file of files) {
     const absolute = path.resolve(repoRoot, file);
     const location = locatePath(absolute, repoRoot);

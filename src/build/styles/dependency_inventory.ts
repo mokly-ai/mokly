@@ -1,14 +1,16 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { compareCodeUnits } from "../../config/path_order.js";
 import { toPosixPath } from "../../config/paths.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { MoklyError } from "../../errors.js";
-import { packageOwnedPath } from "../package_owned_paths.js";
 
 import {
-  walkDependencyDirectory,
+  dependencyOwnership,
   ignoredDependencyPath,
+  walkDependencyDirectory,
+  type DependencyPathCache,
 } from "./dependency_walk.js";
 import type { StyleDependencyReport } from "./postcss.js";
 import { wouldPrivatizePublicFile } from "./public_source.js";
@@ -40,8 +42,11 @@ export function collectPostcssDependencies(
   const explicit: Candidate[] = [];
   const expanded: Candidate[] = [];
   const directories = new Map<string, PostcssWatchDirectory>();
+  const scanned = new Map<string, readonly string[]>();
+  const ownership: DependencyPathCache = new Map();
   const ordered = [...reports].sort((first, second) =>
-    `${first.source}\0${first.plugin}\0${first.type}`.localeCompare(
+    compareCodeUnits(
+      `${first.source}\0${first.plugin}\0${first.type}`,
       `${second.source}\0${second.plugin}\0${second.type}`,
     ),
   );
@@ -55,7 +60,7 @@ export function collectPostcssDependencies(
       path.dirname(report.source),
       report.type === "dependency" ? report.file! : report.directory!,
     );
-    if (ignoredDependencyPath(file, config)) continue;
+    if (ignoredDependencyPath(file, config, ownership)) continue;
     if (report.type === "dependency") {
       explicit.push({ file, report });
     } else {
@@ -65,26 +70,39 @@ export function collectPostcssDependencies(
           `PostCSS plugin ${report.plugin} reported a missing directory dependency for ${relative(config, report.source)}: ${relative(config, file)}; create the directory or correct the plugin`,
         );
       const glob = report.glob ?? "**/*";
-      if (packageOwnedPath(file, config) !== "generated")
-        directories.set(`${file}\0${glob}`, { directory: file, glob });
-      for (const matched of walkDependencyDirectory(file, glob, config))
+      const key = `${file}\0${glob}`;
+      if (dependencyOwnership(file, config, ownership) !== "generated")
+        directories.set(key, { directory: file, glob });
+      let matches = scanned.get(key);
+      if (!matches) {
+        matches = walkDependencyDirectory(file, glob, config, ownership);
+        scanned.set(key, matches);
+      }
+      for (const matched of matches)
         expanded.push({ file: matched, report, directory: file });
     }
   }
   const sorted = (candidates: readonly Candidate[]) =>
     [...candidates].sort((first, second) =>
-      relative(config, first.file).localeCompare(relative(config, second.file)),
+      compareCodeUnits(
+        relative(config, first.file),
+        relative(config, second.file),
+      ),
     );
   for (const candidate of sorted(explicit))
-    if (isGenerated(candidate.file, config))
+    if (isGenerated(candidate.file, config, ownership))
       throw generatedError(candidate, config);
   if (config.generatedOutput === "committed")
     for (const candidate of sorted(expanded))
-      if (isGenerated(candidate.file, config))
+      if (isGenerated(candidate.file, config, ownership))
         throw generatedError(candidate, config);
   const sourceFiles = new Set<string>();
-  for (const candidate of [...sorted(explicit), ...sorted(expanded)]) {
-    if (isGenerated(candidate.file, config)) continue;
+  const explicitPaths = new Set(explicit.map(({ file }) => file));
+  for (const candidate of [
+    ...sorted(explicit),
+    ...sorted(expanded).filter(({ file }) => !explicitPaths.has(file)),
+  ]) {
+    if (isGenerated(candidate.file, config, ownership)) continue;
     if (isPublicMockupsDependency(candidate.file, config, graphInputs))
       throw publicError(candidate, config);
     if (!fs.statSync(candidate.file, { throwIfNoEntry: false })?.isFile())
@@ -97,15 +115,20 @@ export function collectPostcssDependencies(
   return {
     sourceFiles,
     watchDirectories: [...directories.values()].sort((first, second) =>
-      `${first.directory}\0${first.glob}`.localeCompare(
+      compareCodeUnits(
+        `${first.directory}\0${first.glob}`,
         `${second.directory}\0${second.glob}`,
       ),
     ),
   };
 }
 
-function isGenerated(file: string, config: ResolvedConfig): boolean {
-  return packageOwnedPath(file, config) === "generated";
+function isGenerated(
+  file: string,
+  config: ResolvedConfig,
+  cache: DependencyPathCache,
+): boolean {
+  return dependencyOwnership(file, config, cache) === "generated";
 }
 
 function isPublicMockupsDependency(

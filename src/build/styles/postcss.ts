@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import postcss from "postcss";
+import postcss, { CssSyntaxError } from "postcss";
 
 import { toPosixPath } from "../../config/paths.js";
 import type { NormalizedPostcssPlugin } from "../../config/postcss_loader.js";
@@ -46,6 +46,12 @@ export class PostcssStyleProcessor implements StyleTextProcessor {
     try {
       result = await pending;
     } catch (error) {
+      if (error instanceof CssSyntaxError && !error.plugin)
+        throw new MoklyError(
+          "build-invalid",
+          `could not transform CSS ${relative}: ${error.line}:${error.column}: ${error.reason}; fix the stylesheet and rebuild`,
+          { cause: error },
+        );
       const lastPlugin = (
         pending as typeof pending & {
           result?: { lastPlugin?: NormalizedPostcssPlugin };

@@ -21,7 +21,10 @@ both passes share the result. Its local imports join `configSourceFiles` and tri
 reloads, while package imports stay unbundled to preserve plugin-native
 bindings. Only the module path, never plugin instances, crosses Serve IPC.
 Reported file dependencies join `sourceFiles`; globbed directory dependencies
-also watch matching additions. Inventory-only graph loads run the same plugins
+watch matching additions and newly added subdirectories, but not deletions.
+They compile their globs once per report and cache ownership classifications
+during a load; expanded files already reported explicitly are checked once.
+Inventory-only graph loads run the same plugins
 and collect the same dependencies. Generated output and public mockups files
 cannot enter that inventory; nested imports that a plugin reads from disk
 cannot bypass renderer pruning silently. See the
@@ -50,8 +53,8 @@ regular files there as orphans, and committed Check reports them. The root
 and descendants cannot be symlinks or special files; Build and committed Check
 reject them before graph inventory or output writes. Build prunes empty reserved
 directories after successful writes, without touching ordinary public files.
-Derived Check rejects every indexed file there and suggests the directory
-`.gitignore` rule. Only portable stylesheet and supported asset routes may be
+Derived Check rejects every indexed file there and suggests only the directory
+`.gitignore` rule, not redundant per-file rules. Only portable stylesheet and supported asset routes may be
 written beneath it. The exact diagnostics and precedence are in the
 [imported-styles error contract](../../docs/protocol/mokly-imported-styles-errors.md).
 

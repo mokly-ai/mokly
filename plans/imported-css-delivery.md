@@ -3,9 +3,9 @@
 ## Status
 
 Active until the implementation PR merges. Created 2026-09-24 from the
-CSS-in-JS investigation on this branch. Milestones 1–8A are complete;
-remaining supervision review fixes in Milestone 8B precede the final
-independent post-push review. Imported CSS, CSS Modules, binary assets and
+CSS-in-JS investigation on this branch. Milestones 1–8B are complete;
+the final independent post-push review remains with the parent session.
+Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite
 compatibility package is a follow-up plan.
@@ -639,25 +639,25 @@ Repair delivery and lifecycle regressions found in independent review.
 - [x] Inventory transformer-only CSS permissively without rejecting legacy syntax or external package CSS.
 - [x] Update protocol docs and README files, add red-first tests, run the full verification gate, commit and push Milestone 8A.
 
-## Milestone 8B: Supervision review fixes (Low)
+## Milestone 8B: Supervision review fixes (Low) (complete)
 
 Close the remaining edge cases without changing successful delivery bytes.
 
-- [ ] Limit directory-dependency file events to additions and rebuild on newly created nested directories.
-- [ ] Precompile reported dependency glob matchers and avoid redundant explicit-dependency work; test large walks.
-- [ ] Preserve catalogued diagnostics for dangling PostCSS and generated-directory symlinks and plugin-less syntax errors.
-- [ ] Serve every allowed image/font extension with a specific content type on every delivery path.
-- [ ] Avoid redundant per-file ignore guidance for tracked reserved output.
-- [ ] Update derived-mode ignore guidance and Build deletion documentation.
-- [ ] Reject CSS Module class-map divergence between graph and stylesheet passes.
-- [ ] Reject unvalidated string URLs inside image-set() with actionable guidance.
-- [ ] Name the importing module in the error for direct CSS imports outside repoRoot.
-- [ ] Keep the first failure within each stylesheet when several resolutions fail.
-- [ ] Diagnose late CSS @import at its authored file rather than a generated route.
-- [ ] Allow scoped npm-package segments in generated stylesheet routes.
-- [ ] Reject a consumer CSS loader for every extension during config validation.
-- [ ] Sort paths/diagnostics by plain code-unit comparison and prevent localeCompare regressions where practical.
-- [ ] Update protocol docs and README files, add red-first tests, run the full verification gate, commit and push Milestone 8B.
+- [x] Limit directory-dependency file events to additions and rebuild on newly created nested directories.
+- [x] Precompile reported dependency glob matchers and avoid redundant explicit-dependency work; test large walks.
+- [x] Preserve catalogued diagnostics for dangling PostCSS and generated-directory symlinks and plugin-less syntax errors.
+- [x] Serve every allowed image/font extension with a specific content type on every delivery path.
+- [x] Avoid redundant per-file ignore guidance for tracked reserved output.
+- [x] Update derived-mode ignore guidance and Build deletion documentation.
+- [x] Reject CSS Module class-map divergence between graph and stylesheet passes.
+- [x] Reject unvalidated string URLs inside image-set() with actionable guidance.
+- [x] Name the importing module in the error for direct CSS imports outside repoRoot.
+- [x] Keep the first failure within each stylesheet when several resolutions fail.
+- [x] Diagnose late CSS @import at its authored file rather than a generated route.
+- [x] Allow scoped npm-package segments in generated stylesheet routes.
+- [x] Reject a consumer CSS loader for every extension during config validation.
+- [x] Sort paths/diagnostics by plain code-unit comparison and prevent localeCompare regressions where practical.
+- [x] Update protocol docs and README files, add red-first tests, run the full verification gate, commit and push Milestone 8B.
 
 ## Milestone 9: Commit, push, and review
 

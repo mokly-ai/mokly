@@ -11,6 +11,7 @@ import {
   isVanishedDirectory,
   isVanishedModule,
 } from "./entry_discovery_paths.js";
+import { compareCodeUnits } from "./path_order.js";
 import { isInside, projectRealPath, toPosixPath } from "./paths.js";
 import { isDeniedSourceSegment } from "./private_directories.js";
 import type { ResolvedConfig } from "./types.js";
@@ -59,7 +60,7 @@ export function discoverEntryModules(
         .map((deniedRoot) =>
           toPosixPath(path.relative(config.repoRoot, deniedRoot)),
         )
-        .sort((left, right) => left.localeCompare(right));
+        .sort(compareCodeUnits);
       throw new MoklyError(
         "config-invalid",
         `entries glob matches no module: ${glob}${notSearched.length > 0 ? `; not searched: ${notSearched.join(", ")}` : ""}`,
@@ -67,7 +68,8 @@ export function discoverEntryModules(
     }
   }
   return [...discovered].sort((left, right) =>
-    toPosixPath(path.relative(config.repoRoot, left)).localeCompare(
+    compareCodeUnits(
+      toPosixPath(path.relative(config.repoRoot, left)),
       toPosixPath(path.relative(config.repoRoot, right)),
     ),
   );
@@ -93,7 +95,7 @@ function walkEntryCandidates(
       }
       return entry.isFile() ? [candidate] : [];
     })
-    .sort((left, right) => left.localeCompare(right));
+    .sort(compareCodeUnits);
 }
 
 /** Return null for a vanished or replaced module, a denial reason, or undefined when accepted. */

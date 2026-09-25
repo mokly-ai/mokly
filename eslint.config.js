@@ -59,4 +59,23 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    files: [
+      "src/config/**/*.ts",
+      "src/build/discovery.ts",
+      "src/build/styles/**/*.ts",
+      "src/build/source_inventory.ts",
+      "src/build/package_owned_paths.ts",
+    ],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "CallExpression[callee.property.name='localeCompare']",
+          message:
+            "Sort source paths with compareCodeUnits to avoid locale-dependent inventories and diagnostics.",
+        },
+      ],
+    },
+  },
 );

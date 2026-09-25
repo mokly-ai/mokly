@@ -1,6 +1,10 @@
 import { parse } from "parse5";
 
-import { decodeCssIdentifier, tokenizeCss } from "./review/css/source.js";
+import {
+  decodeCssIdentifier,
+  tokenizeCss,
+  type CssSourceToken,
+} from "./review/css/source.js";
 
 interface HtmlAttribute {
   name: string;
@@ -91,9 +95,11 @@ export function extractHtmlReferences(
 
 /** Extract `url()` and string-form `@import` references from CSS. */
 export function extractCssReferences(content: string): string[] {
-  if (!/url\(|@import|\\/i.test(content)) return [];
+  if (!/url\(|image-set\(|@import|\\/i.test(content)) return [];
   const tokens = tokenizeCss(content, { allowIncomplete: true });
-  const references: string[] = [];
+  const references: { start: number; value: string }[] = [
+    ...imageSetStringReferences(tokens),
+  ];
   for (let index = 0; index < tokens.length; index++) {
     const token = tokens[index]!;
     const next = tokens[index + 1];
@@ -104,9 +110,10 @@ export function extractCssReferences(content: string): string[] {
         decodeCssIdentifier(token.value.slice(0, opening)).toLowerCase() ===
           "url"
       )
-        references.push(
-          decodeCssIdentifier(token.value.slice(opening + 1, -1)),
-        );
+        references.push({
+          start: token.start,
+          value: decodeCssIdentifier(token.value.slice(opening + 1, -1)),
+        });
     } else if (
       token.word &&
       decodeCssIdentifier(token.value).toLowerCase() === "url" &&
@@ -115,7 +122,10 @@ export function extractCssReferences(content: string): string[] {
     ) {
       const value = tokens[index + 2]?.value;
       if (value && /^["']/.test(value) && tokens[index + 3]?.value === ")") {
-        references.push(decodeCssIdentifier(value.slice(1, -1)));
+        references.push({
+          start: token.start,
+          value: decodeCssIdentifier(value.slice(1, -1)),
+        });
         index += 3;
       }
     } else if (
@@ -125,9 +135,53 @@ export function extractCssReferences(content: string): string[] {
     ) {
       const value = tokens[index + 2]?.value;
       if (value && /^["']/.test(value)) {
-        references.push(decodeCssIdentifier(value.slice(1, -1)));
+        references.push({
+          start: token.start,
+          value: decodeCssIdentifier(value.slice(1, -1)),
+        });
         index += 2;
       }
+    }
+  }
+  return references
+    .sort((left, right) => left.start - right.start)
+    .map(({ value }) => value);
+}
+
+/** String-form image-set sources are not sent through esbuild's url-token resolver. */
+export function extractImageSetStringReferences(content: string): string[] {
+  if (!/image-set\(/i.test(content)) return [];
+  return imageSetStringReferences(
+    tokenizeCss(content, { allowIncomplete: true }),
+  ).map(({ value }) => value);
+}
+
+function imageSetStringReferences(
+  tokens: readonly CssSourceToken[],
+): { start: number; value: string }[] {
+  const references: { start: number; value: string }[] = [];
+  for (let index = 0; index < tokens.length; index += 1) {
+    const token = tokens[index]!;
+    const next = tokens[index + 1];
+    if (
+      !token.word ||
+      !["image-set", "-webkit-image-set"].includes(
+        decodeCssIdentifier(token.value).toLowerCase(),
+      ) ||
+      next?.value !== "(" ||
+      next.start !== token.end
+    )
+      continue;
+    let depth = 1;
+    for (let cursor = index + 2; cursor < tokens.length && depth; cursor += 1) {
+      const current = tokens[cursor]!;
+      if (current.value === "(") depth += 1;
+      else if (current.value === ")") depth -= 1;
+      else if (depth === 1 && /^['"]/.test(current.value))
+        references.push({
+          start: current.start,
+          value: decodeCssIdentifier(current.value.slice(1, -1)),
+        });
     }
   }
   return references;

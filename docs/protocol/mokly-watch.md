@@ -15,8 +15,11 @@ by generated output:
   by asset loaders;
 - for [imported CSS](./mokly-imported-styles.md), changed plain/module
   CSS, nested imports, referenced assets, and PostCSS-reported files rebuild;
-  PostCSS directory dependencies watch additions matching the reported glob
-  (or `**/*`), while the PostCSS module and its imports reload config before
+  PostCSS directory dependencies watch matching file additions, not deletions,
+  and any newly added non-ignored subdirectory beneath a reported directory,
+  even when its reported glob is `*` and did not yet cover the new child;
+  deletion of generated output cannot start a rebuild. An absent glob means
+  `**/*`. The PostCSS module and its imports reload config before
   rebuilding; the accepted generation and browser reload event advance together;
   generated output, including symlink aliases, never schedules a rebuild loop;
 - a created, renamed, or deleted regular file whose repository-relative path

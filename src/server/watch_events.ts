@@ -233,14 +233,16 @@ export function classifyWatchPath(
   )
     return "ignore";
   if (
-    directory === "file" &&
+    (event.kind === "add" || event.kind === "addDir") &&
     config.postcssWatchDirectories?.some(
       ({ directory: root, glob }) =>
         isInside(root, absolute) &&
-        minimatch(toPosixPath(path.relative(root, absolute)), glob, {
-          dot: true,
-          nocase: false,
-        }),
+        (event.kind === "addDir" ||
+          (directory === "file" &&
+            minimatch(toPosixPath(path.relative(root, absolute)), glob, {
+              dot: true,
+              nocase: false,
+            }))),
     )
   )
     return "rebuild";

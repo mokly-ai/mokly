@@ -27,6 +27,7 @@ export async function bundleStyles(
   }[],
   graphInputs: ReadonlySet<string>,
   preprocessor: StylePreprocessor,
+  graphClassMaps: ReadonlyMap<string, Readonly<Record<string, string>>>,
 ): Promise<BundledStyles> {
   const outputs = new Map<string, GeneratedFile>();
   const routes = new Map<string, string>();
@@ -91,7 +92,14 @@ export async function bundleStyles(
   if (renderer?.styles.length) {
     const root = rootFor(renderer, new Set());
     const pass = await timeAsync("styles.bundle", () =>
-      bundleStylePass(config, [root], new Set(), graphInputs, preprocessor),
+      bundleStylePass(
+        config,
+        [root],
+        new Set(),
+        graphInputs,
+        preprocessor,
+        graphClassMaps,
+      ),
     );
     for (const file of pass.closures.get(root.path) ?? [])
       rendererFiles.add(file);
@@ -110,6 +118,7 @@ export async function bundleStyles(
         rendererFiles,
         graphInputs,
         preprocessor,
+        graphClassMaps,
       ),
     );
     accept(pass, entries);

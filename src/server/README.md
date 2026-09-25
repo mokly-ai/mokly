@@ -25,10 +25,13 @@ markers and ownership headers. Deleted matched files rebuild even when named
 `target`; existing and removed denied directories outrank user watch rules.
 Resource notifications coalesce by path with the latest descriptor.
 PostCSS directory-dependency roots join the package-owned watch targets after
-graph inventory. New regular files matching each reported glob (or `**/*`
-when absent) rebuild; edits to reported files rebuild, and local PostCSS
+graph inventory. Matching file additions and any new non-ignored subdirectory
+below a reported directory rebuild, while deletions do not; absent globs
+default to `**/*`. Edits to already inventoried files rebuild, and local PostCSS
 configuration imports reconfigure before rebuilding. Ignored generated output
 and denied directories do not trigger a rebuild through directory globs.
+All CSS asset extensions use the MIME types in `build/styles/routes.ts` on
+static, on-demand and transient delivery; opaque bytes are never decoded.
 Discovery skips `review.outDir`, denied directories, and directories that vanish
 or are replaced mid-walk (`ENOENT` or `ENOTDIR`). Zero-match messages list denied
 and vanished paths together, including modules dropped during validation. Other

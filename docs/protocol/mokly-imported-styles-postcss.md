@@ -96,6 +96,10 @@ the same explicit-dependency error and committed/derived directory precedence
 as its physical target; diagnostics name the reported logical path. In
 committed mode scan generated trees for matching files before reporting them;
 in derived mode skip those trees entirely.
+Each reported glob is compiled once per report, classification is cached
+within the graph load, and expanded files already checked as explicit
+dependencies are not checked again. Diagnostics and inventory ordering compare
+path UTF-16 code units without locale-sensitive collation.
 
 **Validation precedence:** Explicit `dependency` naming Mokly-owned output
 fails in both modes. For directory matches, committed mode fails when the
