@@ -193,35 +193,41 @@ Tags: mockup
 Summary: design the transient and failed usage states in Mokly's design
 catalogue before any UI implementation.
 
-- [ ] Add `examples/basic/entries/design/components/states/loading/screens.tsx`
+- [x] Add `examples/basic/entries/design/components/states/loading/screens.tsx`
       exporting a loading-states collection nested under
       `design-component-states`, following the existing `additions` child
       collection, because the States page already renders five screens. Add
       mobile and desktop screen components for:
-  - [ ] a component page just opened from navigation, with Usage showing the
+  - [x] a component page just opened from navigation, with Usage showing the
         loading state instead of `Used by` and `Affected`;
-  - [ ] screen inspection while the displayed preview's usage is still loading,
+  - [x] screen inspection while the displayed preview's usage is still loading,
         reusing the existing "Waiting for the component preview." state unless
         Milestone 1 defined replacement copy; and
-  - [ ] usage that could not load, with the product copy and recovery action
+  - [x] usage that could not load, with the product copy and recovery action
         defined in Milestone 1.
-- [ ] Extend `ComponentPage`, `ScreenPage`, `screen_details.tsx` and
+- [x] Extend `ComponentPage`, `ScreenPage`, `screen_details.tsx` and
       `component_usage.tsx` under
       `examples/basic/entries/design/components/parts/` with the new states,
       reusing the existing inspector parts. Keep implementation notes outside
       the rendered screens and use product language only.
-- [ ] Link the new collection from the States collection so every new screen is
+- [x] Extend the reusable design `ViewControls` unavailable-reason contract
+      with the loading state so the disabled Highlight control uses the exact
+      `Waiting for the component preview.` copy.
+- [x] Link the new collection from the States collection so every new screen is
       reachable, and keep each page at five screens or fewer.
-- [ ] After the screens exist in the example registry, add their three rows to
+- [x] After the screens exist in the example registry, add their three rows to
       the canonical inventory table in `mokly-component-design.md` and update
       both component-route counts from thirty-two to thirty-five.
-- [ ] Update the design inventory tests (`tests/design_*.test.ts`) for the
+- [x] Update `examples/basic/README.md` from 92 to 95 total design screens,
+      from 32 to 35 component-design routes, and from 71 to 74 Light-only
+      screens, and document the new Loading and recovery gallery.
+- [x] Update the design inventory tests (`tests/design_*.test.ts`) for the
       added routes.
-- [ ] Run `npm run build`, `npm run example:build` and `npm run example:check`,
+- [x] Run `npm run build`, `npm run example:build` and `npm run example:check`,
       then visually smoke-test the new pages at both viewports through
       `npm run dev`.
-- [ ] Run the complete `cargo xtask check` gate with no failures or skips.
-- [ ] After checks pass, `git add -A`, commit with Conventional Commits, and
+- [x] Run the complete `cargo xtask check` gate with no failures or skips.
+- [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)

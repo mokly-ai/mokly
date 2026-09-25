@@ -3,6 +3,27 @@ import { MockLink } from "@mokly/mokly";
 import type { ComponentPageState } from "./component_details.js";
 import { componentUses, usageViews } from "./fixtures.js";
 
+export function UsageDeliveryState({ state }: { state: "loading" | "failed" }) {
+  return (
+    <section className="ce-usage-state" aria-label="Usage status">
+      {state === "loading" ? (
+        <p className="ce-empty-copy" role="status">
+          Loading usage…
+        </p>
+      ) : (
+        <>
+          <p className="ce-empty-copy" role="alert">
+            Usage couldn’t be loaded.
+          </p>
+          <button className="ce-text-button" type="button">
+            Try again
+          </button>
+        </>
+      )}
+    </section>
+  );
+}
+
 export function UsedBy({ state }: { state: ComponentPageState }) {
   const unused = state === "unused" || state === "added";
   const uses =

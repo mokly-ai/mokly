@@ -13,7 +13,7 @@ const propSchema = {
     unavailable: {
       schema: {
         kind: "enum",
-        values: ["empty", "unavailable", "comparison", "removed"],
+        values: ["empty", "unavailable", "loading", "comparison", "removed"],
       },
       optional: true,
     },

@@ -6,7 +6,11 @@ import { ActionPropValues, actionVariants } from "./action_props.js";
 import { ComparisonDetails } from "./comparison_details.js";
 import { componentComparison } from "./comparison_fixtures.js";
 import { ComponentInfo } from "./component_info.js";
-import { UsedBy, AffectedScreens } from "./component_usage.js";
+import {
+  AffectedScreens,
+  UsageDeliveryState,
+  UsedBy,
+} from "./component_usage.js";
 import { CONTROLS_PAGES } from "./destinations.js";
 import { toolbarPrompt } from "./fixtures.js";
 import { Inspector } from "./inspector.js";
@@ -22,6 +26,8 @@ export type ComponentPageState =
   | "unused"
   | "added"
   | "removed"
+  | "usage-loading"
+  | "usage-failed"
   | "closed";
 
 function ComponentChildren() {
@@ -90,10 +96,16 @@ function ComponentProps({ state }: { state: ComponentPageState }) {
 export function ComponentDetails({ state }: { state: ComponentPageState }) {
   const changed =
     state === "affected" || state === "comparison" || state === "removed";
+  const usageDelivery =
+    state === "usage-loading"
+      ? "loading"
+      : state === "usage-failed"
+        ? "failed"
+        : undefined;
   const initial =
     state === "closed"
       ? "closed"
-      : changed || state === "unused"
+      : changed || state === "unused" || usageDelivery
         ? "usage"
         : state === "disabled" || state === "hidden"
           ? "props"
@@ -129,7 +141,9 @@ export function ComponentDetails({ state }: { state: ComponentPageState }) {
         {
           id: "usage",
           label: "Usage",
-          content: (
+          content: usageDelivery ? (
+            <UsageDeliveryState state={usageDelivery} />
+          ) : (
             <>
               <UsedBy state={state} />
               {changed ? (

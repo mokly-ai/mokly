@@ -21,7 +21,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       ...Object.values(CONTROLS_PAGES),
       ...Object.values(INSPECTION_PAGES),
     ];
-    assert.equal(new Set(destinations).size, 32);
+    assert.equal(new Set(destinations).size, 35);
     for (const id of destinations) {
       const { document } = await designDocument(id, viewport);
       assert.equal(
