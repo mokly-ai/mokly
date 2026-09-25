@@ -102,8 +102,11 @@ stylesheets: [
 `review.base` names the Git ref whose merge base with `HEAD` is the branch
 point a comparison reads; it defaults to `origin/main`. `review.outDir` is the
 config-relative artifact directory. `review.sharedImpact` lists globs for
-files the rendered resource graph cannot see, such as token modules, so an
-edit to them still marks the screens that may depend on them.
+files a screen might use but its rendered files cannot reveal, such as renderer
+and token modules. A renderer or token file matched only by a glob appears in
+Details without adding the screen to Changes. A changed preview or resource
+still appears there, as can a registered component's own file or a dependency
+named by its exact path.
 `review.baselineBuild` is only for derived output: an ordered list of argv
 arrays run without a shell to rebuild the historical catalogue. It defaults to
 `npm ci` followed by `npx --no-install mokly build --config` and the config

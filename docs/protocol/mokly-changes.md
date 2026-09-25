@@ -30,7 +30,8 @@ reviewable route metadata changes, and user flows that embed those screens.
 A new or edited flow is included independently. Source edits, source moves,
 dependency declaration edits, and shared-impact matches alone do not add
 otherwise unchanged entries. Dependency and shared-impact evidence remains in
-comparison details, accessible for every screen from All.
+comparison details, accessible for every screen from All. Component-owned and
+exact declared paths follow [component attribution](./mokly-component-changes.md#dependencies-and-styles).
 
 Each screen variant is projected independently. Its metadata projection
 contains `variantOf`, its parent's `{ id, title }`, and its copied `navPath`.
@@ -311,9 +312,9 @@ Added, removed, changed, and unchanged states handle historical manifest version
 manifests during staged migrations; pre-dark bases simply have no
 `darkFragments`. Configured shared-impact globs and manifest dependencies
 identify changes that can affect many screens. A dependency is a repository file
-or directory root: its own change or any descendant change affects the entry,
-and Review records the matching changed path as evidence. The configured comparison
-directory, including its symlink-resolved in-repository target, is excluded before changed-path and shared-impact evidence
+or directory root: its own change or any descendant change is recorded as
+evidence; Changes membership follows the rule linked above.
+The configured comparison directory, including its symlink-resolved in-repository target, is excluded before changed-path and shared-impact evidence
 is calculated.
 
 Complete comparison output contains `review.json`, `summary.md`, an ownership marker,
@@ -393,8 +394,7 @@ Optional view `material`, `reasons`, and `excludedResources` implement
 [CSS change attribution](./mokly-css-attribution.md). `material` is present
 exactly when the view's normalized documents differ. Empty optional lists are
 omitted; historical results without them remain valid. Retained resource reasons
-make paired views changed. Entry `sharedImpact` includes a stylesheet only if
-some view kept it, and summary counts follow these states.
+make paired views changed, and summary counts follow these states.
 
 Routes sort in deterministic catalogue order; views sort by viewport
 (`mobile`, then `desktop`) and then color scheme (`light`, then `dark`).

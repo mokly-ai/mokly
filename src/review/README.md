@@ -63,7 +63,12 @@ serializable `[route, content]` pairs, alongside its digests, so selected diffs
 use the accepted compilation across worker and child-process boundaries.
 Derived classification compares all generated documents and reachable resource
 bytes even without changed Git output paths. Cache paths and their physical
-aliases are excluded before dependency or shared-impact matching.
+aliases are excluded before dependency or shared-impact matching. Component
+catalogues follow the [path evidence rule](../../docs/protocol/mokly-component-changes.md#dependencies-and-styles):
+owned component paths and exact declarations retain independent reasons;
+glob and declared-directory matches remain evidence. The
+[v3 result definition](../../docs/protocol/mokly-component-review.md#reasons-and-secondary-evidence)
+preserves each entry's `sharedImpact` set.
 
 ```bash
 npm run build
@@ -83,7 +88,9 @@ exclude changed stylesheets whose changed rules cannot match a view. Public
 resource globs cannot bypass the graph or restore excluded stylesheets. These
 review interfaces are internal; the package authoring API is unchanged.
 `analysisOwnsStylesheet` owns the shared public-output boundary. Source/token
-stylesheets outside that boundary retain file-level shared impact in both schemas.
+stylesheets outside that boundary retain file-level evidence under
+[CSS attribution](../../docs/protocol/mokly-css-attribution.md) and the
+[v3 result definition](../../docs/protocol/mokly-component-review.md#reasons-and-secondary-evidence).
 After comparing views, both producers call `assertViewAnalysisScope` to reject
 analysed reasons outside that boundary with `review-invalid`. The shared decoder
 checks stylesheet identity; only producers have the resolved scope configuration.
@@ -211,7 +218,7 @@ unresolved evidence taking precedence. The shared browser/server decoder rejects
 invalid or contradictory evidence; canonical artifact serialization preserves it.
 Owned CSS retained at an actual invocation also keeps its component in Changes
 when saved variants exclude it. Exact screen declarations remain independent
-only for retained CSS; non-CSS declarations keep their existing file-level policy.
+only for retained CSS; non-CSS path-only evidence follows the component path rule.
 The screen-only live classifier retains a `ScreenResourceEvidence` slice from
 the same traversal that determines membership. The shell receives its selected
 `ViewResourceEvidence` records without requesting snapshots or component

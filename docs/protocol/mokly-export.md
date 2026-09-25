@@ -82,8 +82,8 @@ manifest/generated documents, and the same changed-path exclusions. Apply the
 shared Changes calculation to captured public bytes: normalize paired ignored
 regions, compare reviewable metadata, and follow rendered local resources.
 Ignored-only edits, source moves, and dependency/shared-impact evidence alone
-do not add entries. Retain that evidence in comparisons, and do not derive the
-navigation filter by counting materially changed comparison screens.
+do not add entries, except the owned and exact declared paths of [component attribution](./mokly-component-changes.md#dependencies-and-styles).
+Retain that evidence in comparisons, and do not derive the navigation filter by counting materially changed comparison screens.
 
 Use Review schema v3 when either manifest contains registered components;
 otherwise retain schema v2. Both formats retain all existing states,

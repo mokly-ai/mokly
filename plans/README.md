@@ -8,6 +8,11 @@
   model v2. Milestones 1–12 are implemented, verified, pushed, and reviewed;
   findings 1–16 are fixed, findings 17–21 await the user's decision, and the
   plan stays Active until its PR merges.
+- [Path-Only Evidence Stays Out Of Changes](./changes-path-only-evidence.md)
+  — a changed file matched only by a shared-impact glob or a declared
+  dependency directory becomes comparison evidence instead of listing every
+  matching entry in Changes; owned paths and exact declared files keep their
+  reasons. Implemented on the same branch as the navigation path plan.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
   standalone Auto/Light/Dark control for interface and previews, and
   host-owned theme with independent previews when embedded. Dark neutrals align

@@ -220,8 +220,8 @@ All remains available throughout; a completed empty result shows zero. See the
 [on-demand lifecycle](./mokly-on-demand.md).
 Route attribution compares each current manifest entry with its base entry and
 matches material fragment changes and changes to rendered local resources.
-Source modules, declared dependencies, and configured shared-impact globs alone
-must not mark unchanged screens or propagate unchanged screens into use cases.
+Component membership follows [component attribution](./mokly-component-changes.md#dependencies-and-styles).
+Screen-only catalogues follow [Changes membership](./mokly-changes.md#changes-membership).
 Entry comparison projects route-affecting fields; a `navPath` difference marks
 the routed entry changed under the [Changes rule](./mokly-changes.md#changes-membership).
 The projection excludes source locations and dependency declarations; changes

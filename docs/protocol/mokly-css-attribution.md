@@ -44,10 +44,10 @@ A stylesheet is in scope for rule analysis only when it is a public file
 inside `mockupsDir`; only such files can be reached from a view document. A
 stylesheet outside that scope, such as a source or token module matched by a
 `review.sharedImpact` glob or a declared dependency directory, is never
-analysed and keeps its file-level `sharedImpact` evidence in both result
-versions. One shared predicate answers "is this stylesheet in analysis scope"
-for every classification path; a path is stripped from `sharedImpact` only when
-that predicate is true.
+analysed. V2 retains its file-level `sharedImpact` evidence; v3 follows the
+[component result definition](./mokly-component-review.md#reasons-and-secondary-evidence).
+One shared predicate answers "is this stylesheet in analysis scope"
+for every classification path; in-scope paths need retained reasons.
 
 Per-view evidence records are emitted only for views with at least one reason
 or excluded resource. Views and screens with neither carry no record in the
@@ -266,15 +266,15 @@ their original bytes once before both reference discovery and matching. Never
 feed normalized ignore tokens back into the marker parser.
 
 Entry dependency reasons merge by path across views, unioning selectors and
-giving `unresolved` precedence. Keep a stylesheet in entry `sharedImpact`
+giving `unresolved` precedence. Keep an in-scope stylesheet in entry `sharedImpact`
 only when some eligible view retains it. Explicit or renderer-proven ownership
 also attributes retained actual-invocation CSS evidence to its component owner,
 even when every saved variant excludes the stylesheet. Saved view states and
 exclusions remain unchanged; no synthetic variant is created. An exact screen
 dependency remains independent when its actual view keeps the stylesheet.
 A broad public stylesheet glob or declaration cannot bypass rule exclusion.
-Non-CSS and non-public implementation dependencies retain their existing
-ownership policy. Resource evidence makes a paired view
+Non-CSS path-only evidence follows [component attribution](./mokly-component-changes.md#dependencies-and-styles).
+Resource evidence makes a paired view
 `changed`; exclusions alone do not. Diagnostic summary counts use those states
 and, for v3, the resulting `changes` membership.
 

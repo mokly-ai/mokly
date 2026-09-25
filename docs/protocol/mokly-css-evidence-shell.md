@@ -78,8 +78,13 @@ Any other retained reason, such as a changed font or image, or a present
 never emit `analysis`-bearing reasons, so their absent `material` flag cannot
 select the style label.
 
-The Details inspector lists the entry's retained dependency paths under
-"Changes to these files may affect this screen:", then groups analysed
+For both result versions, the Details inspector lists the sorted union of
+retained dependency reason paths (entry reasons in v3, view reasons in v2)
+and entry `sharedImpact` under
+"Changes to these files may affect this screen:". This includes path-only
+evidence for unchanged screens opened from All, without adding a Changes row;
+the [membership rule](./mokly-component-changes.md#dependencies-and-styles)
+defines when a path is a reason. The inspector then groups analysed
 selectors by outcome, so one screen shows at most one matched list and one
 unresolved list however many stylesheets changed. Selectors are unioned,
 deduplicated, and sorted; an `unresolved` outcome with no serialized selector

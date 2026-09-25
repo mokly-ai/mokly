@@ -207,24 +207,24 @@ confined to the named registered component(s). These paths follow normal
 repository confinement and validation and are included in its dependencies.
 Shared ownership by several registered components is allowed and affects each.
 
-A changed component-owned path is attributed to its component entries and
-their affected consumers. Its presence in a broad `review.sharedImpact` glob
-or containing screen dependency directory must not re-add those consumers to
-Changes. The v4 `declaredDependencies` record distinguishes explicit paths from automatic
-source attribution. An explicitly declared exact direct screen dependency, screen-owned
-material change, or additional unowned changed path remains independent
-evidence and keeps the screen in Changes.
+A changed path gives an entry an independent `dependency` reason only when, on either side, the entry:
 
-Renderer, theme, global stylesheet, or mixed source-file changes whose effects
-cannot be assigned exclusively retain the existing conservative shared-impact
-behavior. For linked stylesheets that behavior is narrowed by
-[CSS change attribution](./mokly-css-attribution.md): the stylesheet keeps a
-consuming view in Changes only when a changed rule could match that view's
-document or cannot be resolved, and otherwise is recorded as examined and
-excluded. Ownership and rule analysis compose; neither widens the other. Ownership is not inferred from a filename, one import, or the presence
-of a component marker somewhere in the document. Screen/component-owned
+1. is a component whose `ownedDependencies` file or directory root contains it;
+2. is a screen whose `declaredDependencies` names it exactly, owned or not; or
+3. names it exactly in `declaredDependencies`, and no component owns it.
+
+A `review.sharedImpact` glob match, a file inside a declared dependency
+directory, or automatic source attribution alone adds no reason, Changes row,
+affected consumer, or use-case `screen` reason. Renderer, theme, and token
+edits still reach Changes when rendered documents or referenced resources change.
+
+For linked stylesheets, [CSS change attribution](./mokly-css-attribution.md)
+keeps a consuming view in Changes only when a changed rule could match that
+view's document or cannot be resolved, and otherwise records it as examined
+and excluded. Ownership and rule analysis compose; neither widens the other.
+Ownership is not inferred from a filename, one import, or the presence of a
+component marker somewhere in the document. Screen/component-owned
 dependency overlap must be validated and explained rather than silently dropped.
-
 The rule analysis is implemented in Browse/watch classification, complete and
 selected comparison evidence, and publication. Actual normalized view documents
 supply matching trees; ownership projections supply eligible resources. A public
@@ -236,8 +236,8 @@ Retained CSS evidence at an actual invocation also keeps its explicit or
 renderer-proven component owner in Changes when saved variants do not match.
 Their own view exclusions stay intact; affected-consumer links retain the actual
 invocation context. An exact screen dependency can independently retain the same
-stylesheet only when its actual view analysis keeps it. Non-CSS dependencies
-retain the existing file-level policy.
+stylesheet only when its actual view analysis keeps it. Non-CSS path-only
+evidence follows the independent-reason rule above.
 
 Component-generated style material can live in the document head rather than
 inside a component boundary. Extend the renderer result with optional typed

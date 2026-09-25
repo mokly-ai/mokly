@@ -61,7 +61,8 @@ existing ID-based metadata, material generated-output, rendered-resource, and
 ancestry rules, extended with the page's single document. Apply the same paired
 ignore normalization to page documents. For pages and catalogues without registered components, source paths, dependency
 declarations and shared-impact matches alone do not add otherwise unchanged
-entries. Component catalogues use the [ownership-aware classification](./mokly-component-changes.md)
+entries. Component catalogues use the
+[path evidence rule](./mokly-component-changes.md#dependencies-and-styles)
 for screens, components and flows, unioned with material/metadata page Changes. Screen impact
 continues to propagate to use cases through their screen steps. Current display
 metadata comes from the matching current catalogue; removed display metadata

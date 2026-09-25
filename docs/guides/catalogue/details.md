@@ -17,7 +17,8 @@ it.
 - The tags it carries, as chips you can search from.
 - The dependencies it declares and the related documents it names.
 - Its components, and for a component page the screens that use it.
-- The evidence behind its change status.
+- The changed paths behind its status, including comparison evidence for an
+  unchanged screen opened from All.
 
 Catalogue-wide usage is explicitly unavailable until the background check has
 finished; it is never shown as zero consumers.
@@ -32,7 +33,11 @@ stays inside that secondary list, and a screen kept only by a stylesheet edit
 reads "Styles this screen uses changed" above its comparison.
 
 Screen-only catalogues show this evidence before you open a comparison.
-Opening one keeps those details and adds the evidence it retained.
+Opening one keeps those details and adds the evidence it retained. The file
+list combines changed files the screen uses with broader files that may affect
+it. A listed file can leave the screen unchanged and out of Changes. Files
+owned by a registered component or named by an exact dependency can still
+add their entry.
 
 ## Component props
 

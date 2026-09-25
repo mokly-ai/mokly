@@ -192,12 +192,18 @@ library hosts. Other mixed component-design sheets remain scoped to the 32
 component-design routes and hosts; the controls sheet additionally remains
 scoped to its eleven owning screen routes. `review.sharedImpact` is fallback
 impact evidence for files the rendered resource graph cannot see, such as source
-or token modules. Linked stylesheets, including imported sheets, are attributed
-by rule: a changed rule must potentially match a view or be unresolved to keep
-that dependency. A broad stylesheet glob cannot restore an excluded stylesheet
-or add an unreferenced public file to Changes. Actual rendered references,
-generated usage and component ownership determine the scope; regression tests
-cover each exclusive sheet and the mixed/global sheets.
+or token modules. A glob match or a changed file inside a declared dependency
+directory alone leaves the entry out of Changes; owned component paths and
+exact declared files keep their direct reasons. A renderer or token edit that
+changes a document or referenced resource still appears. The
+[component path rule](../../docs/protocol/mokly-component-changes.md#dependencies-and-styles)
+defines membership and the [result schema](../../docs/protocol/mokly-component-review.md#reasons-and-secondary-evidence)
+preserves every entry's shared-impact evidence. Linked stylesheets, including
+imported sheets, are attributed by rule: a changed rule must potentially match
+a view or be unresolved to keep that dependency. A broad stylesheet glob cannot restore
+an excluded stylesheet or add an unreferenced public file to Changes. Actual
+rendered references, generated usage and component ownership determine the
+scope; regression tests cover each exclusive sheet and the mixed/global sheets.
 
 The recorded tokens and responsive rules live in the
 [shell design contract](../../docs/protocol/mokly-shell-design.md); component
@@ -222,8 +228,8 @@ The Added outcome still shows its factual branch evidence in
 Details; evidence availability, comparison eligibility, and initial inspector
 disclosure are independent. The
 shared-impact and ignored-only examples open from All with zero Changes and one
-Current preview. Dependency evidence remains available in Details, while
-unchanged output and paired ignored-only edits do not fill the review list.
+Current preview. Retained dependency and shared-impact evidence remains in
+Details; unchanged output and paired ignored-only edits do not fill the review list.
 The nested `design/review/impact/stylesheets/` group adds the rule-aware
 stylesheet states: a changed stylesheet whose changed styles apply to the
 screen, one whose change can apply anywhere, and one examined and excluded so
@@ -344,4 +350,4 @@ Output is config-relative. This command builds the example itself, retains exact
 The consumer export command requires the configured Git history and rebuilds its
 baseline with the recipe above. The default repository preview exports current
 content without a baseline; preview Changes uses the same cached rebuild.
-See the [consumer publishing recipe](../../README.md#export-and-publish-a-consumer-build).
+See the [consumer publishing recipe](../../README.md#review-and-share).

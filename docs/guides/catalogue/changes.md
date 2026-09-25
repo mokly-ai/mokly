@@ -19,12 +19,16 @@ changes. Staged, unstaged and untracked edits in your working tree do.
 ## What does not count as a change
 
 A source edit that leaves a screen's output and reviewable metadata identical
-does not add the screen. Source locations and dependency declarations are
-evidence rather than content, so moving files around does not fill Changes.
+usually leaves it out of Changes. A file matched only by `review.sharedImpact`
+or inside a declared dependency folder can appear in Details without adding
+the screen to Changes. The entry's source file alone does not add it either;
+it appears in Details when it also matches one of those file groups. A
+registered component's own file or a dependency named by its exact path can
+still add its entry. Moving files around does not fill Changes.
 Regions marked with Review-ignore are classified as ignored, and a stylesheet
 edit marks a screen only when a changed rule could apply to it or cannot be
 resolved; rules that reach nothing on the screen are recorded as examined and
-excluded.
+excluded. Evidence remains available in Details even when no Changes row exists.
 
 ## Compare a screen
 

@@ -143,8 +143,11 @@ normalized content change; inputs means caller-owned data changed; structure
 means caller-owned logical occurrence identity/order changed. Record every
 applicable reason, without deriving membership from raw fragment paths alone.
 
-A dependency reason's path must be in `changedPaths` and be independent evidence
-under the ownership rules. A stylesheet dependency reason may carry the
+A dependency reason names a `changedPaths` path. Independent reasons follow
+[component change attribution](./mokly-component-changes.md#dependencies-and-styles):
+component ownership, an exact screen declaration, or an exact declaration for
+an unowned path. Retained referenced resources may also supply reasons. A
+stylesheet reason may carry the
 [CSS change attribution](./mokly-css-attribution.md) `analysis` record;
 its `selectors` are sorted and duplicate-free, `analysis` appears only on
 stylesheet paths in analysis scope, a view carries `material: true` exactly
@@ -158,34 +161,19 @@ reason. Its full comparison remains available through the other result arrays.
 
 A view reported `unchanged` or `ignored-only` through the
 [unchanged view decision](./mokly-component-changes.md#unchanged-view-decision)
-carries no `material`, `reasons`, or `excludedResources` fields, contributes
-nothing to the implementation-impact set or owned-resource aggregation, and
-retains its `ignoredIds`. For valid builder output its record is identical to
-the one the complete comparison produces for that view; the decision changes
-cost, not output. Identical handcrafted documents with identically malformed
-ownership markers are outside that guarantee because the shortcut does not
-repeat range validation.
-Eligibility requires equality with component markers retained outside paired
-ignored regions and canonical equality of usage topology. Only `props` and
-`propsKey` on entry-owned instances may differ, and invocation `source`
-metadata is ignored; nested inputs, ownership, identity, slots, ranges, styles,
-and resources require the complete comparison. Views with instances, styles, or entry-owned slots also prove the reachable resources of the ownership-projected documents before
-the shortcut can settle them, because HTML parsing can discard content that
-projection exposes.
-One-sided views always validate their available range records in the side's
-current or historical marker dialect before producing an added or removed
-record.
+carries no `material`, `reasons`, or `excludedResources`, retains its
+`ignoredIds`, and adds no implementation-impact or owned-resource evidence.
+For valid builder output its record equals the complete comparison's record.
+The linked contract defines eligibility, ownership projection, malformed
+markers, and one-sided range validation.
 
-Views carry optional dependency-only `reasons` alongside optional
-`excludedResources` in both schemas. Omit either list when empty and sort it
-uniquely by path. `matched` analysis requires selectors; `unresolved` permits an
-empty selector list. Entry reasons merge retained view evidence by path with a
-sorted selector union and unresolved precedence. Entry ownership can suppress
-a view resource reason from direct membership; one view excluding a path does
-not conflict with another keeping it. A component's reasons also aggregate owned
-CSS retained at actual invocations, even if its saved variants all exclude that
-path. Their unchanged view states remain accurate. Public stylesheet globs alone
-add no reason, and an exact screen declaration cannot override rule exclusion.
+Views omit empty `reasons` and `excludedResources` lists and sort both by path.
+Entry reasons merge retained view evidence by path, with a sorted selector
+union and unresolved precedence. Ownership may suppress a view resource reason
+from entry membership; one view's exclusion does not cancel another's reason.
+Components collect CSS kept at actual invocations when saved variants exclude
+it. The [CSS contract](./mokly-css-attribution.md) defines selector requirements;
+globs and declarations cannot override an excluded in-scope stylesheet.
 
 Each affected record groups one changed component and one canonical consumer.
 Its component id must appear in `changes` with kind component, and evidence
@@ -210,12 +198,24 @@ For removed consumers the before-side address and usage supply the link target.
 Repeated physical placements do not duplicate logical evidence or screen counts;
 the inspector can resolve that logical instance to its current ranges.
 
-`sharedImpact` on the result and entries retains the existing path-evidence
-meaning; it does not override `changes`. Entry dependencies are the sorted union
-of both sides. Existing `ignoredImpact` and view `ignoredIds` retain manual
-Review-ignore evidence for screens; component variant views retain their own
-manual ids. Component suppression is described through `affectedConsumers`,
-not by pretending instance keys are legacy ignore ids.
+Result-level `sharedImpact` remains every changed path matching a configured
+`review.sharedImpact` glob. For each v3 screen, component, or use case, entry
+`sharedImpact` is the sorted, duplicate-free union of:
+
+1. Every matched changed path that is not a stylesheet, regardless of owner.
+2. Every unowned changed path matched by a glob or contained by an explicit
+   `declaredDependencies` root on either side, except a stylesheet in public
+   analysis scope. Containment includes equality and descendants of the root.
+3. Every path in that entry's final `dependency` reasons, including retained
+   stylesheet and actual-invocation owner reasons.
+
+This set is identical to the pre-change entry `sharedImpact` for every entry.
+An out-of-scope stylesheet matched only by a glob belongs to an unowned path's
+evidence; when a component owns it, only a retained owner or exact screen
+reason adds it to that entry. In-scope stylesheets enter only through retained
+reasons. Entry `sharedImpact` never overrides `changes`. Entry dependencies
+remain the sorted union of both sides. `ignoredImpact` and view `ignoredIds`
+retain manual Review-ignore evidence; `affectedConsumers` records suppression.
 
 ## Validation And Canonical Output
 
