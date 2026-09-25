@@ -3,8 +3,9 @@
 ## Status
 
 Active until the implementation PR merges. Created 2026-09-24 from the
-CSS-in-JS investigation on this branch. Milestones 1–8B are complete;
-the final independent post-push review remains with the parent session.
+CSS-in-JS investigation on this branch. Milestones 1–9 are complete;
+the final post-push review's findings await the user's decision in the
+[review record](../docs/reviews/imported-css-delivery.md).
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite
@@ -662,10 +663,13 @@ Close the remaining edge cases without changing successful delivery bytes.
 ## Milestone 9: Commit, push, and review
 
 - [x] Run `git add -A`, commit using Conventional Commits, and push the branch.
-- [ ] Review the complete local diff against `origin/main` using
+- [x] Review the complete local diff against `origin/main` using
       `docs/implementation-review-prompt.md` after the push. Report findings
       with severity, context, impact, lettered options, and a recommendation;
-      do not change the implementation.
+      do not change the implementation. Twenty findings (1 High, 6 Medium,
+      13 Low) are recorded in the
+      [review record](../docs/reviews/imported-css-delivery.md) for the
+      user's decision.
 
 ## Post-merge follow-up (non-blocking)
 

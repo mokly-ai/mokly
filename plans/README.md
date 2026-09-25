@@ -4,8 +4,10 @@
 
 - [Imported CSS Delivery](./imported-css-delivery.md) — implementation complete:
   consumer CSS, CSS Modules, assets, and optional PostCSS ship through Build,
-  Check, Serve, export, publication and Changes. Move this plan to Completed
-  when its implementation PR merges.
+  Check, Serve, export, publication and Changes. Final review findings await
+  the user's decision in the
+  [review record](../docs/reviews/imported-css-delivery.md). Move this plan to
+  Completed when its implementation PR merges.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
   standalone Auto/Light/Dark control for interface and previews, and
   host-owned theme with independent previews when embedded. Dark neutrals align
