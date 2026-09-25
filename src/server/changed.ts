@@ -56,6 +56,7 @@ export async function computeCatalogueChanges(
     git,
     commit,
     compilation?.outputs,
+    compilation?.deliveredStyleSources,
   );
   const { baseline, changedRoutes } = componentChanges;
   const removedEntries = removedManifestEntries(manifest, baseline);

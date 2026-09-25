@@ -102,6 +102,11 @@ orchestrates the renderer pass and one multi-entry pass for all entries;
 `styles/resolution.ts` validates URLs,
 imports, and confined assets. `styles/outputs.ts` strips esbuild path comments
 and deduplicates shared assets by raw bytes.
+`load_graph.ts` retains the delivered CSS-pass inputs and URL asset paths
+separately from the full source inventory (which also includes transformer-only
+CSS and non-delivered plugin candidates). `Compilation.deliveredStyleSources`
+passes this repository-relative set to Changes; the retained runtime carries it
+through child and background worker transfer without adding manifest fields.
 `styles/transformer_inventory.ts` inventories CSS reachable only from the
 compatibility transformer, including nested imports and local URL assets,
 without bundling a stylesheet or evaluating consumer JavaScript. React

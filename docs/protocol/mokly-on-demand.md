@@ -34,6 +34,16 @@ accepts pending generated routes; transient Props previews use the same
 generation's byte-safe closure. Ordinary authored assets retain confined
 static delivery. Inventory-only startup freshness runs the CSS/PostCSS
 dependency pass without rendering every view.
+Every `/static/mokly-generated/**` request is generation-owned: if the route
+is absent from that accepted generation, return 404 even when a stale file
+exists on disk. Apply this to watched and no-watch committed/derived Serve,
+on-demand dispatch, and transient controls; never delegate a reserved route
+to the ordinary static filesystem fallback. Valid routes return exactly the
+accepted bytes with the route's MIME type, including `%40` npm scopes.
+For committed Serve without a retained runtime, derive the exact accepted
+reserved-route set from the inventory-only graph and snapshot only those disk
+bytes at startup; a syntactically valid stray on disk is still a 404. A runtime
+already carries the accepted CSS and asset bytes for both output modes.
 
 The foreground service admits one active document and 32 queued distinct routes,
 with a ten-second deadline, a 256 MiB worker heap limit and a 64 MiB result cache.

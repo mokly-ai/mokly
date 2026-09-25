@@ -24,6 +24,7 @@ export interface ComponentRuntime {
   outputs: readonly (readonly [string, GeneratedFile])[];
   stylesheetRoutes: readonly (readonly [string, string])[];
   styleOutputs: readonly (readonly [string, GeneratedFile])[];
+  deliveredStyleSources: readonly string[];
 }
 const runtimes = new WeakMap<Compilation, ComponentRuntime>();
 export function rememberRuntime(
@@ -41,6 +42,7 @@ export function rememberRuntime(
     ),
     stylesheetRoutes: [...graph.stylesheetRoutes],
     styleOutputs: [...graph.styleOutputs],
+    deliveredStyleSources: graph.deliveredStyleSources,
   });
 }
 
@@ -52,6 +54,7 @@ export function runtimeGraph(runtime: ComponentRuntime): LoadedGraph {
     sourceFiles: runtime.config.sourceFiles ?? [],
     stylesheetRoutes: new Map(runtime.stylesheetRoutes),
     styleOutputs: new Map(runtime.styleOutputs),
+    deliveredStyleSources: runtime.deliveredStyleSources,
   };
 }
 export function componentRuntime(compilation: Compilation): ComponentRuntime {

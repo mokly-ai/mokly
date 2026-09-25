@@ -49,6 +49,7 @@ export async function prepareLiveRuntime(
       outputs: [],
       stylesheetRoutes: [...graph.stylesheetRoutes],
       styleOutputs: [...graph.styleOutputs],
+      deliveredStyleSources: graph.deliveredStyleSources,
     };
   });
 }

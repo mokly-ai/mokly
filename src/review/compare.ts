@@ -29,6 +29,7 @@ import { reviewChangedPaths } from "./changed_paths.js";
 import { CompilationAssetReader } from "./compilation_assets.js";
 import { compareComponentCatalogue } from "./component_compare.js";
 import { ComponentMaterialReader } from "./component_resources.js";
+import { importedChangedPaths } from "./imported_changes.js";
 import type { ReadOnlyReviewRepository } from "./repository.js";
 import { ResourceComparison } from "./resource_comparison.js";
 import { compareScreen } from "./screen_compare.js";
@@ -52,7 +53,7 @@ export async function compareReview(
 ): Promise<ReviewArtifact> {
   const baseCommit = await git.evidence.mergeBase(baseRef, "HEAD");
   const baseManifest = await readBaseManifest(git.reader, baseCommit, config);
-  const changedPaths = await reviewChangedPaths(
+  const authoredPaths = await reviewChangedPaths(
     git.evidence,
     baseCommit,
     config,
@@ -67,6 +68,14 @@ export async function compareReview(
     git.reader,
     baseCommit,
     mockupsPrefix,
+  );
+  const changedPaths = await importedChangedPaths(
+    config,
+    baseAssetReader,
+    assetReader,
+    authoredPaths,
+    compilation.outputs,
+    compilation.deliveredStyleSources,
   );
   if (
     hasRegisteredComponents(baseManifest) ||

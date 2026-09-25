@@ -57,6 +57,7 @@ parentPort?.on(
         classifier.read(runtime.config, manifest!, message.base, undefined, {
           ...(message.commit ? { commit: message.commit } : {}),
           ...(outputs ? { outputs } : {}),
+          deliveredStyleSources: runtime.deliveredStyleSources,
         }),
       );
       parentPort?.postMessage({ type: "classified", snapshot });

@@ -26,6 +26,7 @@ import { classifyComponents } from "../review/component_classification.js";
 import { EvidenceAssetReader } from "../review/evidence_assets.js";
 import { CommittedRepository, type GitCommandRunner } from "../review/git.js";
 import { derivedHeadOutputs } from "../review/head_assets.js";
+import { importedChangedPaths } from "../review/imported_changes.js";
 import {
   baselineReaderForCommit,
   comparisonNotPrepared,
@@ -56,6 +57,7 @@ export interface ComponentChangeSource {
 export interface CatalogueClassificationInputs {
   readonly commit?: string;
   readonly outputs?: ReadonlyMap<string, GeneratedFile>;
+  readonly deliveredStyleSources?: readonly string[];
 }
 
 /** Read-only catalogue classification boundary used outside the HTTP child. */
@@ -173,6 +175,7 @@ export class RepositoryComponentChanges implements ComponentChangeSource {
       this.git,
       commit,
       this.accepted?.outputs,
+      this.accepted?.deliveredStyleSources,
     );
   }
 }
@@ -185,10 +188,11 @@ export async function readCatalogueChanges(
   git: ReadOnlyReviewRepository,
   commit: string,
   outputs?: ReadonlyMap<string, GeneratedFile>,
+  deliveredStyleSources?: readonly string[],
 ): Promise<ComponentChangeSnapshot> {
   outputs = await derivedHeadOutputs(config, manifest, outputs);
   const baseline = await readBaseManifest(git.reader, commit, config);
-  const changedPaths = await reviewChangedPaths(
+  const authoredPaths = await reviewChangedPaths(
     git.evidence,
     commit,
     config,
@@ -198,6 +202,20 @@ export async function readCatalogueChanges(
     hasRegisteredComponents(baseline) || hasRegisteredComponents(manifest);
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
   const reader = new EvidenceAssetReader(config, outputs);
+  const beforeReader = new GitReviewAssetReader(
+    baselineResourceConfig(config, baseline),
+    git.reader,
+    commit,
+    prefix,
+  );
+  const changedPaths = await importedChangedPaths(
+    config,
+    beforeReader,
+    reader,
+    authoredPaths,
+    outputs,
+    deliveredStyleSources,
+  );
   const result = components
     ? await classifyComponents({
         before: baseline,
@@ -206,12 +224,7 @@ export async function readCatalogueChanges(
         baseCommit: commit,
         baseRef: base,
         changedPaths,
-        beforeReader: new GitReviewAssetReader(
-          baselineResourceConfig(config, baseline),
-          git.reader,
-          commit,
-          prefix,
-        ),
+        beforeReader,
         afterReader: reader,
       })
     : undefined;

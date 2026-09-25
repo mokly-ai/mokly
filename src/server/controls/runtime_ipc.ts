@@ -20,7 +20,12 @@ export interface RuntimeStartupMessage {
 /** Heavy retained fields not already supplied in the startup message. */
 export type TransferredComponentRuntime = Pick<
   ComponentRuntime,
-  "bundle" | "generation" | "outputs" | "stylesheetRoutes" | "styleOutputs"
+  | "bundle"
+  | "generation"
+  | "outputs"
+  | "stylesheetRoutes"
+  | "styleOutputs"
+  | "deliveredStyleSources"
 >;
 
 export interface RuntimeMessage {
@@ -56,6 +61,7 @@ export function componentRuntimeMessage(
       styleOutputs: runtime.styleOutputs.map(
         ([route, content]) => [route, transferGeneratedFile(content)] as const,
       ),
+      deliveredStyleSources: runtime.deliveredStyleSources,
     },
     type: "component-runtime",
     ...(version === undefined ? {} : { version }),
@@ -189,6 +195,10 @@ export function parseRuntimeMessage(
     !Array.isArray(runtime.outputs) ||
     !Array.isArray(runtime.stylesheetRoutes) ||
     !Array.isArray(runtime.styleOutputs) ||
+    !Array.isArray(runtime.deliveredStyleSources) ||
+    !runtime.deliveredStyleSources.every(
+      (source) => typeof source === "string",
+    ) ||
     (version !== undefined &&
       (!Number.isSafeInteger(version) || (version as number) <= 0))
   )
@@ -214,6 +224,7 @@ export function parseRuntimeMessage(
       outputs,
       stylesheetRoutes: runtime.stylesheetRoutes,
       styleOutputs,
+      deliveredStyleSources: runtime.deliveredStyleSources,
     },
     ...(version === undefined ? {} : { version: version as number }),
   };

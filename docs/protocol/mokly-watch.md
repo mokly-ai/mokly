@@ -17,7 +17,8 @@ by generated output:
   CSS, nested imports, referenced assets, and PostCSS-reported files rebuild;
   PostCSS directory dependencies watch additions matching the reported glob
   (or `**/*`), while the PostCSS module and its imports reload config before
-  rebuilding; generated output and denied paths cannot re-enter the inventory;
+  rebuilding; the accepted generation and browser reload event advance together;
+  generated output, including symlink aliases, never schedules a rebuild loop;
 - a created, renamed, or deleted regular file whose repository-relative path
   matches an `entries` glob re-runs discovery before that rebuild, so the
   resolved entry set follows the filesystem; the glob defines the complete

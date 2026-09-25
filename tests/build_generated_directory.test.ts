@@ -121,11 +121,7 @@ test("all reserved files are owned, removed as orphans, and empty directories ar
   const response = await fetch(
     `${server.url}/static/${asset.replace("@fontsource", "%40fontsource")}`,
   );
-  assert.equal(response.status, 200);
-  assert.deepEqual(
-    Buffer.from(await response.arrayBuffer()),
-    Buffer.from([0xff, 0x00, 0x80]),
-  );
+  assert.equal(response.status, 404);
   assert.deepEqual(
     await fs
       .stat(path.join(fixture.mockupsDir, directory, "styles", "stale"))

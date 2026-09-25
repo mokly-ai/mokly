@@ -1,8 +1,13 @@
+import fs from "node:fs";
 import http, { type ServerResponse } from "node:http";
+import path from "node:path";
 
 import { createCatalogue } from "@mokly/viewer/server";
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
+import type { GeneratedFile } from "../build/generated_file.js";
+import { loadConsumerGraph } from "../build/load_graph.js";
+import { GENERATED_DIRECTORY } from "../build/styles/routes.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timeSync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
@@ -25,6 +30,7 @@ import { handleControls, localHost } from "./controls/http.js";
 import { ComponentRenderService } from "./controls/service.js";
 import { ForegroundActivity } from "./demand/activity.js";
 import { DocumentService } from "./demand/service.js";
+import { acceptedGeneratedStatic } from "./generated_static.js";
 import { handleCatalogueRequest } from "./http_routes.js";
 import { closeCatalogueHttp } from "./http_shutdown.js";
 import type { RunningServer, ServerOptions } from "./http_types.js";
@@ -65,6 +71,18 @@ export async function startCatalogueServer(
   const changes = validated.changes;
   let catalogue = validated.catalogue;
   let manifest = catalogue.manifest;
+  const expectedGenerated =
+    !options.componentRuntime &&
+    config.generatedOutput === "committed" &&
+    fs.existsSync(path.join(config.mockupsDir, GENERATED_DIRECTORY))
+      ? new Set((await loadConsumerGraph(config, false)).styleOutputs.keys())
+      : new Set<string>();
+  let acceptedGenerated: ReadonlyMap<string, GeneratedFile> =
+    acceptedGeneratedStatic(
+      config,
+      options.componentRuntime,
+      expectedGenerated,
+    );
   let controls = options.componentRuntime
     ? new ComponentRenderService(options.componentRuntime)
     : undefined;
@@ -208,6 +226,7 @@ export async function startCatalogueServer(
       options.liveChanges === false ? undefined : changesStatus,
       contentVersion,
       publicCatalogue,
+      acceptedGenerated,
     ).catch(() => {
       if (!response.destroyed && !response.headersSent)
         send(
@@ -256,6 +275,7 @@ export async function startCatalogueServer(
     },
     port: address.port,
     replaceComponentRuntime(runtime): void {
+      acceptedGenerated = acceptedGeneratedStatic(config, runtime);
       publicCatalogue.clearUsage();
       void documents?.close();
       documents = createDocuments(runtime);

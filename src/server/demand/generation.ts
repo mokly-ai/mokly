@@ -118,7 +118,10 @@ export class BackgroundGeneration {
                   compilation.manifest,
                   base,
                   controller.signal,
-                  { outputs: compilation.outputs },
+                  {
+                    outputs: compilation.outputs,
+                    deliveredStyleSources: compilation.deliveredStyleSources,
+                  },
                 ),
                 new Promise<undefined>((resolve) =>
                   controller.signal.addEventListener(

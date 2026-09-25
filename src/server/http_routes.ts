@@ -4,6 +4,7 @@ import type { RenderCapability } from "@mokly/viewer/data";
 import type { Catalogue } from "@mokly/viewer/server";
 import { shellContext, SHELL_CSS } from "@mokly/viewer/server";
 
+import type { GeneratedFile } from "../build/generated_file.js";
 import type { ResolvedConfig } from "../config/types.js";
 
 import {
@@ -43,6 +44,7 @@ export async function handleCatalogueRequest(
   changesStatus?: ChangesStatus,
   contentVersion?: number,
   publicCatalogue?: PublicCatalogueSource,
+  acceptedGenerated?: ReadonlyMap<string, GeneratedFile>,
 ): Promise<void> {
   if (method !== "GET" && method !== "HEAD")
     return send(response, 405, "text/plain", "Method not allowed", method);
@@ -102,6 +104,7 @@ export async function handleCatalogueRequest(
       config,
       catalogue,
       method,
+      acceptedGenerated,
     );
   const changed =
     componentChanges?.changedRoutes ??

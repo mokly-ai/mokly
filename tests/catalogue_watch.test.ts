@@ -13,6 +13,7 @@ import { changedFixture } from "./helpers/changed_fixture.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createExportFixture } from "./helpers/export_fixture.js";
 import { version, waitForUpdate } from "./helpers/watched_catalogue.js";
+import { waitForBrowserReload } from "./helpers/watched_events.js";
 
 test(
   "watched PostCSS dependency directories rebuild on a new matching file",
@@ -54,7 +55,9 @@ test(
       await fetch(stylesheet).then((response) => response.text()),
       /\.added/,
     );
-    await fs.writeFile(path.join(fixture.root, "sources/new.txt"), "blue");
+    await waitForBrowserReload(running.url, version(initial), () =>
+      fs.writeFile(path.join(fixture.root, "sources/new.txt"), "blue"),
+    );
     await waitForUpdate(running.url, version(initial));
     let changed = "";
     const deadline = Date.now() + 20_000;
@@ -118,11 +121,21 @@ test(
       assert.match(css, pattern);
     };
     await waitForStyle(/margin: red/);
-    await fs.writeFile(path.join(fixture.root, "sources/color.txt"), "blue");
+    let previous = version(
+      await fetch(running.url).then((response) => response.text()),
+    );
+    await waitForBrowserReload(running.url, previous, () =>
+      fs.writeFile(path.join(fixture.root, "sources/color.txt"), "blue"),
+    );
     await waitForStyle(/margin: blue/);
-    await fs.writeFile(
-      path.join(fixture.root, "postcss.config.mjs"),
-      postcssWatchPlugin("padding"),
+    previous = version(
+      await fetch(running.url).then((response) => response.text()),
+    );
+    await waitForBrowserReload(running.url, previous, () =>
+      fs.writeFile(
+        path.join(fixture.root, "postcss.config.mjs"),
+        postcssWatchPlugin("padding"),
+      ),
     );
     await waitForStyle(/padding: blue/);
   },

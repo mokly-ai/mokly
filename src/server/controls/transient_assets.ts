@@ -11,6 +11,7 @@ import {
   generatedBytes,
   type GeneratedFile,
 } from "../../build/generated_file.js";
+import { isGeneratedRoute } from "../../build/styles/routes.js";
 import {
   isPublicStaticFile,
   publicFileFailureReason,
@@ -51,6 +52,11 @@ export function captureRenderBundle(
     const current = pending.shift()!;
     if (files.has(current)) continue;
     const generated = outputs.get(current) ?? readGenerated?.(current);
+    if (generated === undefined && isGeneratedRoute(current))
+      throw new ComponentRenderError(
+        "render-failed",
+        "Preview resource is unavailable; rebuild the catalogue and try again.",
+      );
     const candidate = path.resolve(config.mockupsDir, current);
     if (generated === undefined && !isPublicStaticFile(candidate, config))
       throw new Error(

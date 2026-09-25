@@ -16,6 +16,17 @@ static, and the existing presentation and interactions are preserved.
 
 ## Scope
 
+For imported CSS, the public capture includes only generated stylesheet and
+asset routes owned by the accepted compilation. Committed mode captures checked
+disk bytes; derived mode captures the compiled CSS text and opaque asset bytes
+directly (not stale files below `mockupsDir`). Private stylesheet inputs and
+PostCSS-discovered sources never enter the static inventory. Validate decoded
+relative links to scoped npm assets (`%40scope`) against captured routes.
+An `assets/**/node_modules/@scope/**` route is package-owned public output,
+not a private consumer dependency directory. In derived mode, do not walk the
+reserved tree on disk at all; include only the compilation's routes, so stale
+reserved files cannot enter an export.
+
 An installed consumer can create a complete static Mokly catalogue using
 their existing config, entries, renderer, and assets. The resulting directory
 contains Browse navigation, screens, use cases, whole-document pages, and the existing

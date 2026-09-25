@@ -10,8 +10,38 @@ import { NodeGitCommandRunner } from "../dist/review/git.js";
 import { loadCatalogueSnapshot } from "../dist/server/catalogue_snapshot.js";
 import { startCatalogueServer } from "../dist/server/http.js";
 import { buildPreview } from "../scripts/preview/catalogue.mjs";
+import { capturePublicationInputs } from "../scripts/preview/inputs.mjs";
 
-import { createFixture, removeFixture } from "./helpers/fixture.js";
+import {
+  createFixture,
+  removeFixture,
+  validEntrySource,
+} from "./helpers/fixture.js";
+
+test("derived publication fingerprint ignores helper-owned output before and after freshness hydration", async (context) => {
+  const fixture = await createFixture('export { mockups } from "./helper";');
+  context.after(() => removeFixture(fixture));
+  await fs.promises.writeFile(
+    path.join(fixture.entriesDir, "helper.tsx"),
+    validEntrySource(),
+  );
+  await fs.promises.writeFile(
+    fixture.configPath,
+    (await fs.promises.readFile(fixture.configPath, "utf8")).replace(
+      '"committed"',
+      '"derived"',
+    ),
+  );
+  const compiled = await compileCatalogue(await loadConfig(fixture.root));
+  await writeCompilation(compiled, await loadConfig(fixture.root));
+  const config = await loadConfig(fixture.root);
+  assert.equal(config.sourceFiles, undefined);
+  const before = await capturePublicationInputs(config, []);
+  await loadCatalogueSnapshot(config, undefined, compiled.manifest);
+  assert.deepEqual(config.sourceFiles, compiled.manifest.sourceFiles);
+  const after = await capturePublicationInputs(config, []);
+  assert.equal(after.fingerprint, before.fingerprint);
+});
 
 test("publication fingerprints inventoried helpers inside an otherwise ignored context directory", async (context) => {
   const fixture = await createFixture();

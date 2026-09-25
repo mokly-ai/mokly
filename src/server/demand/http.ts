@@ -5,6 +5,7 @@ import type { Catalogue } from "@mokly/viewer/server";
 
 import { adaptBrowseDocument } from "../../browse/document_adapter.js";
 import { generatedBytes } from "../../build/generated_file.js";
+import { isGeneratedRoute } from "../../build/styles/routes.js";
 import { errorMessage } from "../../errors.js";
 import { contentType, safeDecodePath, send } from "../respond.js";
 
@@ -26,7 +27,10 @@ export async function handleDemandRequest(
     !route ||
     (!documents.routes.has(route) && (metadata || !documents.styles.has(route)))
   )
-    return false;
+    if (!metadata && route && isGeneratedRoute(route)) {
+      send(response, 404, "text/plain", "Not found", method);
+      return true;
+    } else return false;
   if (method !== "GET" && method !== "HEAD") {
     send(response, 405, "text/plain", "Method not allowed", method);
     return true;

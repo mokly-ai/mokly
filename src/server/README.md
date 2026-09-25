@@ -137,6 +137,10 @@ recompilation reuse the original bytes instead of silently dropping them.
 `demand/http.ts` answers on-demand `/static/` stylesheet and image/font
 requests from the accepted generation's CSS or opaque bytes (including HEAD),
 before ordinary public-file serving can see an older reserved file on disk.
+Committed Serve without a runtime derives the exact output route set from the
+inventory-only graph and snapshots only those disk bytes; syntactically valid
+strays in the reserved tree remain 404 even before startup. Derived Serve and
+watched children use retained runtime bytes, never reserved disk fallbacks.
 `DocumentCompiler` validates the same pending resources before any HTML view
 is delivered; superseded generations never become resource fallbacks.
 The classification worker uses

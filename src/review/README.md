@@ -85,6 +85,17 @@ resource globs cannot bypass the graph or restore excluded stylesheets. These
 review interfaces are internal; the package authoring API is unchanged.
 `analysisOwnsStylesheet` owns the shared public-output boundary. Source/token
 stylesheets outside that boundary retain file-level shared impact in both schemas.
+`imported_changes.ts` compares accepted generated CSS and binary asset bytes
+against the pinned branch-point reader, even when Git ignores derived output.
+It merges those route changes with Git's authored paths and removes file-level
+shared impact only for delivered CSS whose generated stylesheet changed or an
+asset whose matching generated route changed. A baseline predating generated
+CSS makes a one-time jump; unrelated transformer-only and PostCSS candidate
+sources retain their independent impact. Both result versions and live Changes
+use the same byte comparison and source filter.
+Direct committed classification reuses one inventory-only graph for accepted
+route discovery and delivered-source attribution, including asset-only edits;
+retained runtimes carry the same source list without reloading the graph.
 After comparing views, both producers call `assertViewAnalysisScope` to reject
 analysed reasons outside that boundary with `review-invalid`. The shared decoder
 checks stylesheet identity; only producers have the resolved scope configuration.

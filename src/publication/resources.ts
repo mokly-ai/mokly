@@ -4,9 +4,13 @@ import path from "node:path";
 import type { Catalogue } from "@mokly/viewer/server";
 
 import { adaptBrowseDocument } from "../browse/document_adapter.js";
+import { generatedBytes, type GeneratedFile } from "../build/generated_file.js";
+import { isOwned } from "../build/ownership.js";
+import { GENERATED_DIRECTORY } from "../build/styles/routes.js";
 import { locatePath } from "../config/file_locations.js";
 import { publicFileLocation } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
+import { MANIFEST_NAME } from "../registry/manifest.js";
 import { referencedRoutes } from "../review/asset_references.js";
 
 import { publicationFiles, readPublicationFile } from "./files.js";
@@ -17,17 +21,28 @@ export async function copyPublicFiles(
   catalogue: Catalogue,
   stage: string,
   excludedRoots: readonly string[],
+  generated?: ReadonlyMap<string, GeneratedFile>,
 ): Promise<void> {
   const root = path.join(stage, "static");
   const copied = new Set<string>();
   const files = await publicationFiles(
     config,
     config.mockupsDir,
-    excludedRoots,
+    generated
+      ? [...excludedRoots, path.join(config.mockupsDir, GENERATED_DIRECTORY)]
+      : excludedRoots,
     true,
   );
   for (const file of files) {
     if (file.kind !== "file") continue;
+    if (
+      generated &&
+      (generated.has(
+        path.relative(config.mockupsDir, file.path).split(path.sep).join("/"),
+      ) ||
+        isOwned(file.path, config))
+    )
+      continue;
     const location = publicFileLocation(file.path, config);
     if (!location) continue;
     const relative = location.relativePath;
@@ -36,6 +51,13 @@ export async function copyPublicFiles(
     await fs.promises.mkdir(path.dirname(target), { recursive: true });
     await fs.promises.writeFile(target, content);
     copied.add(relative);
+  }
+  for (const [route, content] of generated ?? []) {
+    if (route === MANIFEST_NAME) continue;
+    const target = path.join(root, route);
+    await fs.promises.mkdir(path.dirname(target), { recursive: true });
+    await fs.promises.writeFile(target, generatedBytes(content));
+    copied.add(route);
   }
   for (const route of catalogueDocuments(catalogue)) {
     if (!copied.has(route)) throw resourceError(route, "catalogue");

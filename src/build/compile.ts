@@ -38,6 +38,8 @@ import { renderCooperatively } from "./render_cooperative.js";
 export interface Compilation {
   manifest: ManifestV5;
   outputs: ReadonlyMap<string, GeneratedFile>;
+  /** Repository-relative inputs of delivered CSS and asset routes. */
+  deliveredStyleSources: readonly string[];
 }
 
 /** Compile all expected bytes without mutating consumer output. */
@@ -217,7 +219,11 @@ async function compileMeasured(
   timeSync("output.paths", () =>
     validateGeneratedOutputPaths(compilationOutputs.keys(), config),
   );
-  const compilation = { manifest, outputs: compilationOutputs };
+  const compilation = {
+    manifest,
+    outputs: compilationOutputs,
+    deliveredStyleSources: graph.deliveredStyleSources,
+  };
   timeSync("runtime.retain", () => rememberRuntime(compilation, graph, config));
   timingCounts("output", () => ({
     files: compilationOutputs.size,

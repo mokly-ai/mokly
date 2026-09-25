@@ -6,6 +6,7 @@ import type { RegistryDefinition } from "../authoring/types.js";
 import type { CompatibilityTransformer } from "../compatibility/types.js";
 import type { ComponentGraphRenderer } from "../components/render.js";
 import { discoverEntryModules } from "../config/entry_discovery.js";
+import { toPosixPath } from "../config/paths.js";
 import {
   FileSystemPostcssConfigLoader,
   type PostcssConfigLoader,
@@ -48,6 +49,8 @@ export interface LoadedGraph {
   stylesheetRoutes: ReadonlyMap<string, string>;
   /** CSS text and opaque assets for this compilation. */
   styleOutputs: ReadonlyMap<string, GeneratedFile>;
+  /** Authored CSS-pass inputs and assets actually delivered by a root. */
+  deliveredStyleSources: readonly string[];
   /** Globbed plugin dependencies monitored for new authored files. */
   postcssWatchDirectories?: ResolvedConfig["postcssWatchDirectories"];
 }
@@ -207,6 +210,9 @@ async function loadGraph(
       config.repoRoot,
       config.mockupsDir,
     );
+    const deliveredStyleSources = [...bundled.sourceFiles]
+      .map((file) => toPosixPath(path.relative(config.repoRoot, file)))
+      .sort();
     if (!evaluate)
       return {
         definitions: [],
@@ -214,6 +220,7 @@ async function loadGraph(
         sourceFiles,
         stylesheetRoutes: bundled.routes,
         styleOutputs: bundled.outputs,
+        deliveredStyleSources,
         postcssWatchDirectories: dependencies.watchDirectories,
         renderWithComponents: () => {
           throw new Error("inventory-only graph cannot render");
@@ -259,6 +266,7 @@ async function loadGraph(
       sourceFiles,
       stylesheetRoutes: bundled.routes,
       styleOutputs: bundled.outputs,
+      deliveredStyleSources,
       postcssWatchDirectories: dependencies.watchDirectories,
       renderer: imported.renderer as Renderer,
       renderWithComponents: imported.renderWithComponents,

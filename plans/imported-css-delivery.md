@@ -3,12 +3,13 @@
 ## Status
 
 Active. Created 2026-09-24 from the CSS-in-JS investigation on this branch.
-Milestones 1, 1A, 2, 3, 4, 4A, 5, 5A, 6 and 6A (contract, binary-safe output,
-reserved generated directory, CSS/asset bundling and follow-ups, stylesheet
-links, on-demand validation caching, PostCSS and package-owned aliases) are complete; Milestones 7–9
-remain. PostCSS lets Tailwind v4 and autoprefixer use the consumer's configuration.
-Esbuild remains the only bundler; the optional Vite compatibility package is a
-follow-up plan.
+Milestones 1, 1A, 2, 3, 4, 4A, 5, 5A, 6, 6A and 7 (contract, binary-safe
+output, reserved generated directory, CSS/asset bundling and follow-ups,
+stylesheet links, on-demand validation caching, PostCSS, package-owned aliases,
+and delivery through Serve, watch, export, publication and Changes) are complete;
+Milestones 8–9 remain. PostCSS lets Tailwind v4 and autoprefixer use the
+consumer's configuration. Esbuild remains the only bundler; the optional Vite
+compatibility package is a follow-up plan.
 
 ## Problem
 
@@ -548,25 +549,45 @@ Close the path-alias and plugin-normalization gaps before widening delivery.
 - [x] Commit and push this milestone separately, then review the diff against
       `origin/main` using `docs/implementation-review-prompt.md`.
 
-## Milestone 7: Serve, watch, export, publication, and Changes
+## Milestone 7: Serve, watch, export, publication, and Changes (complete)
 
 Carry the new outputs through every delivery path.
 
-- [ ] Serve reserved-directory routes from the live compilation in
+- [x] Serve reserved-directory routes from the live compilation in
       `src/server/static_routes.ts` and on-demand route dispatch, and the
-      controls preview path in
-      `src/server/controls/transient_assets.ts`, never from a stale disk copy.
-- [ ] Confirm watched edits to imported CSS, `@import`ed CSS, and referenced
-      assets rebuild the graph and reload the browser; add cases to
-      `tests/catalogue_watch.test.ts`.
-- [ ] Include reserved-directory files in export and publication captures from
+      controls preview path in `src/server/controls/transient_assets.ts`,
+      never from a stale disk copy; test GET/HEAD, MIME, `%40` and stale disk
+      in each path and both output modes, including transient HTTP.
+- [x] Align the existing synthetic reserved-output ownership test with Serve's
+      accepted-route rule: written but unbundled reserved assets remain 404.
+- [x] Confirm watched edits to imported CSS, `@import`ed CSS, and referenced
+      assets rebuild the graph and reload the browser; add plain/module,
+      nested import, font/image, PostCSS configuration/dependency/directory
+      cases to `tests/catalogue_watch.test.ts` and
+      `tests/catalogue_watch_imported_styles.test.ts`. Generated edits never loop.
+- [x] Include reserved-directory files in export and publication captures from
       compilation bytes in derived mode and from disk in committed mode; add
-      cases to `tests/catalogue_export.test.ts` and verify
-      `scripts/preview/build.mjs`.
-- [ ] Add a Changes case to `tests/changes_css_attribution.test.ts` proving a
-      CSS Modules edit keeps only views whose documents match the changed rule,
-      and a case for a catalogue whose baseline predates generated stylesheets.
-- [ ] Run the build, relevant tests, and `cargo xtask check`.
+      cases to `tests/catalogue_export.test.ts`,
+      `tests/export_imported_styles.test.ts`, and
+      `tests/publication_imported_styles.test.ts`; verify
+      `scripts/preview/build.mjs`, private exclusion and scoped links.
+- [x] Keep derived publication's input fingerprint stable when freshness
+      hydrates `config.sourceFiles`: classify generated ownership against the
+      pinned manifest inventory, and regress helper-defined views.
+- [x] Keep the preview orchestrator short by extracting the existing static
+      shell and asset capture helpers without changing their output.
+- [x] Add a Changes case to `tests/changes_imported_styles.test.ts` proving a
+      CSS Modules and a plain-CSS edit keep only views whose documents match
+      the changed rule in both modes even with shared-impact source globs;
+      cover a changed linked font asset (including asset-only direct Changes)
+      and a baseline predating generated CSS.
+- [x] Measure example Build wall time and the complete unit suite duration
+      before and after this milestone; neither regresses noticeably. Example
+      Build: 8.561 s before, 8.396 s after; unit suite: 814.559 s before,
+      829.405 s after (2,514 passing tests).
+- [x] Run the build, relevant tests, and `cargo xtask check`.
+- [x] Commit and push Milestone 7 separately, then review the complete diff
+      against `origin/main` using `docs/implementation-review-prompt.md`.
 
 ## Milestone 8: Example, guides, and smoke tests
 

@@ -123,6 +123,22 @@ validated compilation bytes, including binary fonts/images. Private CSS
 inputs and PostCSS-scanned sources are never published. Inventory freshness
 runs the CSS/PostCSS pass before publication; links to generated routes are
 validated against captured bytes.
+Do not enumerate derived reserved files from disk: only the accepted
+compilation's CSS and asset routes can enter `static/mokly-generated/`.
+Committed captures use checked disk bytes, not a recompiled replacement.
+Missing accepted routes fail resource validation even if a stale disk copy
+would otherwise satisfy a link. Preserve `%40`-encoded scoped asset links.
+The repository preview first fingerprints authored inputs and the checked
+manifest; in derived mode it then compiles once, requires that compilation's
+manifest to match the captured one, and uses its generated HTML/CSS and asset
+bytes for capture. The fingerprint ignores on-disk generated fragments and
+the entire reserved tree in derived mode; before installing, recheck the
+fingerprint and recompile to reject any changed accepted output bytes. This
+ownership filtering uses the captured manifest's pinned `sourceFiles` on both
+passes: freshness may hydrate the mutable configuration inventory between
+passes without changing which generated HTML is excluded from the digest. This
+does not turn the preview builder into a repair/build command for stale
+manifests. Committed mode continues to capture checked disk bytes.
 Repository discovery may skip dependency/build directories, but the public walk
 must retain valid catalogue routes under names such as `target` and
 `node_modules`. Git administrative directories, generated artifacts, protected
