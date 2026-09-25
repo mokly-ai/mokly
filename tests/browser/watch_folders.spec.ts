@@ -4,6 +4,7 @@ import { expect, test, type Locator } from "@playwright/test";
 
 import { reparentedEntrySource } from "../helpers/fixture.js";
 
+import { readDisclosureStorage } from "./disclosure_storage.js";
 import { startWatchedServe, type WatchedServe } from "./watched_serve.js";
 
 let server: WatchedServe;
@@ -106,11 +107,7 @@ test("duplicate folder titles under different parents retain independent disclos
   await expect(screens).toHaveAttribute("open", "");
   await expect(archive).toHaveAttribute("open", "");
   await expect
-    .poll(() =>
-      page.evaluate(() =>
-        JSON.parse(localStorage.getItem("mokly:nav-disclosure:v3") ?? "{}"),
-      ),
-    )
+    .poll(() => readDisclosureStorage(page))
     .toMatchObject({ "folder:pages:Fixture/Screens/Same title": true });
 
   await page.reload();
@@ -143,11 +140,7 @@ test("a watched folder rename resets its subtree without changing unrelated pref
     await expect(oldChild).toHaveAttribute("open", "");
     await expect(unrelated).toHaveAttribute("open", "");
     await expect
-      .poll(() =>
-        page.evaluate(() =>
-          JSON.parse(localStorage.getItem("mokly:nav-disclosure:v3") ?? "{}"),
-        ),
-      )
+      .poll(() => readDisclosureStorage(page))
       .toMatchObject({
         "folder:pages:Fixture/Screens/States": true,
         "folder:pages:Fixture/Archive": true,
@@ -176,9 +169,7 @@ test("a watched folder rename resets its subtree without changing unrelated pref
     await expect(renamedChild).not.toHaveAttribute("open", "");
     await expect(oldChild).toHaveCount(0);
     await expect(unrelated).toHaveAttribute("open", "");
-    const stored = await page.evaluate(() =>
-      JSON.parse(localStorage.getItem("mokly:nav-disclosure:v3") ?? "{}"),
-    );
+    const stored = await readDisclosureStorage(page);
     expect(stored).toMatchObject({
       "folder:pages:Fixture/Panels/States": false,
       "folder:pages:Fixture/Archive": true,

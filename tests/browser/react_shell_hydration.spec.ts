@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
+import { readDisclosureStorage } from "./disclosure_storage.js";
 import {
   buildDevelopmentBundle,
   captureBrowserErrors,
@@ -222,11 +223,7 @@ test("an early native disclosure wins hydration before reload promotes active an
   await expectCleanHydration(page, errors);
   await expect(disclosure).not.toHaveAttribute("open", "");
   await expect
-    .poll(() =>
-      page.evaluate(() =>
-        JSON.parse(localStorage.getItem("mokly:nav-disclosure:v3") ?? "{}"),
-      ),
-    )
+    .poll(() => readDisclosureStorage(page))
     .toMatchObject({ "section:pages": false });
   await page.reload();
   await expectCleanHydration(page, errors);

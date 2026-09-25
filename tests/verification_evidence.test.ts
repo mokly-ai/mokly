@@ -85,6 +85,26 @@ test("completed reports reject missing execution and non-passing evidence", () =
   }
 });
 
+test("developer unit reports tolerate skips without relaxing completion", () => {
+  const report = { ...unitReport(1, ["tests/a.test.ts"]), skipped: 2 };
+  assert.throws(() => validateCompletedReport(report), /skipped tests/u);
+  assert.doesNotThrow(() =>
+    validateCompletedReport(report, { allowUnitSkips: true }),
+  );
+  for (const change of [
+    { observedFiles: [] },
+    { cancelled: 1 },
+    { failures: ["failed test"] },
+    { outcome: { exitCode: 1, signal: null, status: "failed" } },
+  ])
+    assert.throws(() =>
+      validateCompletedReport(
+        { ...report, ...change },
+        { allowUnitSkips: true },
+      ),
+    );
+});
+
 test("four shard reports require disjoint complete current evidence", () => {
   const files = [
     "tests/a.test.ts",

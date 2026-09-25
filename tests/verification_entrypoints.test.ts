@@ -24,15 +24,37 @@ test("public browser test command retains the Playwright entrypoint", async () =
   assert.equal(browser.includes("test:browser:prepared"), false);
 });
 
-test("npm test delegates to the gate's recursive unit discovery", async () => {
+test("npm test and the strict gate share recursive unit discovery", async () => {
   const packageJson = JSON.parse(
     await fs.readFile(path.join(repositoryRoot, "package.json"), "utf8"),
   );
   assert.equal(
     packageJson.scripts.test,
-    "npm run prepare:verification && npm run -s test:prepared",
-    "npm test must delegate to test:prepared: shell expansion of unquoted ** globs silently skips root-level unit files",
+    "npm run prepare:verification && node scripts/verification/run-unit-dev.mjs",
+    "npm test must use the developer runner, not shell globs that silently skip root-level unit files",
   );
+  assert.equal(
+    packageJson.scripts["test:prepared"],
+    "node scripts/verification/run-unit.mjs",
+  );
+  for (const [entrypoint, policy] of [
+    ["run-unit.mjs", "strict"],
+    ["run-unit-dev.mjs", "developer"],
+  ] as const) {
+    const source = await fs.readFile(
+      path.join(repositoryRoot, "scripts/verification", entrypoint),
+      "utf8",
+    );
+    assert.match(
+      source,
+      /from "\.\/unit-runner\.mjs"/u,
+      `${entrypoint} must use shared discovery and execution; unquoted shell globs and Playwright's matcher cannot cover the Node inventory`,
+    );
+    assert.ok(
+      source.includes(`runUnitVerification("${policy}",`),
+      `${entrypoint} must keep the ${policy} skip policy; test:prepared rejects skipped tests`,
+    );
+  }
 });
 
 test("unit discovery never loads a file from Playwright's testDir", async () => {

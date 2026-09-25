@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { readDisclosureStorage } from "./disclosure_storage.js";
+
 test("stored obsolete collection keys do not close current folders", async ({
   page,
 }) => {
@@ -43,11 +45,7 @@ test("a mixed v2 list does not open normally closed folders on upgrade", async (
     page.locator('[data-nav-folder="folder:Example/Screens"]'),
   ).not.toHaveAttribute("open", "");
   await expect
-    .poll(() =>
-      page.evaluate(() =>
-        JSON.parse(localStorage.getItem("mokly:nav-disclosure:v3") ?? "{}"),
-      ),
-    )
+    .poll(() => readDisclosureStorage(page))
     .toMatchObject({
       "folder:pages:Example": true,
       "folder:pages:Example/Screens": false,
@@ -74,11 +72,7 @@ test("folder disclosures persist across reload without closing the same path in 
   await pagesFolder.locator(":scope > summary").click();
   await expect(pagesFolder).not.toHaveAttribute("open", "");
   await expect
-    .poll(() =>
-      page.evaluate(() =>
-        JSON.parse(localStorage.getItem("mokly:nav-disclosure:v3") ?? "{}"),
-      ),
-    )
+    .poll(() => readDisclosureStorage(page))
     .toMatchObject({ "folder:pages:Example": false });
   await page.reload();
   await expect(pagesFolder).not.toHaveAttribute("open", "");

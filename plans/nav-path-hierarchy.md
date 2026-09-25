@@ -1,8 +1,8 @@
 # Path-Based Navigation Hierarchy
 
-Status: Milestones 1–9 are complete, verified, pushed, and reviewed; findings
-1–10 are fixed and findings 11–16 await the user's decision. The plan stays
-Active until its PR merges.
+Status: Milestones 1–9 are complete, verified, pushed, and reviewed;
+Milestones 10–11 are implemented and ready for separate supervisor commits,
+and Milestone 12 remains. The plan stays Active until its PR merges.
 Created 2026-09-23 with the user's
 consent after the design discussion in this workspace. This plan supersedes the
 collection-forest contract delivered by
@@ -450,8 +450,7 @@ From the Milestone 5 review (against `c6b2595`):
     `browseState()` helper is duplicated in `tests/client.test.ts` and
     `tests/client_disclosures.test.ts`. Fixed in Milestone 7.
 
-From the Milestones 6–9 review (against `a90503b`), awaiting the user's
-decision:
+From the Milestones 6–9 review (against `a90503b`):
 
 11. Low: a watched reload while search or the Changes filter is active
     restores folders missing from the snapshot (new or renamed folders) to
@@ -677,6 +676,95 @@ product change.
       recommendation, without changing the implementation. Two independent
       reviewers ran against `a90503b`; findings 11–16 await the user's
       decision.
+
+## Milestone 10: Disclosure and verification contract follow-up
+
+On 2026-09-24 the user asked to fix review findings 11–16 with the
+recommended options. This milestone updates the contracts; Milestones 11 and
+12 implement them. Documentation only.
+
+- [x] Finding 15: move "Disclosure Persistence" out of `mokly-runtime.md` into
+      its own short spec and link it from the runtime, viewer, watch, and
+      shell README docs. `mokly-runtime.md`, `mokly-viewer.md`, and
+      `ci-verification.md` end no longer than on `origin/main`.
+- [x] Finding 11 (contract): state one restore rule with an explicit fallback
+      for keys missing from a stored map. Browser storage, unfiltered
+      recovery snapshots, and the pre-filter baseline fall back to the server
+      default; a recovery snapshot restored while search or the Changes
+      filter is active falls back to open, matching the rule that filter
+      edits open every group. Resolve the runtime spec's two conflicting
+      passages.
+- [x] Finding 12 (contract): whenever the navigation changes in place
+      (for example accepted comparison evidence adds or removes a Removed
+      variant), the disclosure map and the filter baseline are reconciled to
+      exactly the current keys: existing values kept, removed keys dropped,
+      new keys set by the same fallback rule.
+- [x] Finding 16: state the complete server default (sections open,
+      top-level folders open, deeper folders open along the active route's
+      path, and a screen's variant list open when the active route is that
+      screen or one of its variants) and that the active-route reveal
+      overrides stored values for those keys; add the parent-screen case to
+      the navigation spec's active-row list; replace "the existing keys" in
+      `mokly-viewer.md` with a link to the storage rule.
+- [x] Finding 13 (contract): in `ci-verification.md`, `npm test` uses the
+      gate's discovery but a developer entrypoint that tolerates skipped
+      tests and reports their count, while `test:prepared` and the gate stay
+      strict.
+- [x] Validate with Prettier, relative links and heading anchors, the guide
+      tests, and the unit tests that read protocol docs.
+- [x] Commit.
+
+## Milestone 11: Verification and test-strength follow-up
+
+Test infrastructure for findings 13, 14, and 15. No product change.
+
+- [x] Finding 13: one module owns unit discovery and running; the strict
+      gate entrypoint (`test:prepared`) and a developer entrypoint used by
+      `npm test` share it. Developer runs fail on failed or cancelled tests
+      and on files that did not report, but tolerate skipped tests and print
+      their count. No environment variables in `package.json` scripts.
+- [x] Finding 13: the collection-model guard compares normalized `/` paths,
+      so it passes on Windows.
+- [x] Finding 14: a shared browser-spec helper returns the parsed v3
+      disclosure map; `viewer_bootstrap.spec.ts` and every other spec assert
+      stored values through it; delete the tautology in
+      `client_browse_navigation.test.ts`.
+- [x] Finding 15: a ratchet test fails when a protocol doc over 250 lines
+      grows past its recorded cap, when a recorded cap is higher than the
+      doc's current length, or when a new protocol doc exceeds 250 lines.
+- [x] Run the unit suite and every touched browser spec.
+- [x] Commit.
+
+## Milestone 12: Disclosure reconciliation
+
+Tags: ui
+
+Implement findings 11 and 12 from the Milestone 10 contract. No visual
+change.
+
+- [ ] One reconciliation function takes the current navigation, a stored or
+      previous map, and a required fallback (server default or open); initial
+      restore, recovery, the filter baseline, and in-place navigation changes
+      all use it.
+- [ ] A recovery snapshot restored during filtering opens folders it does not
+      list; the pre-filter baseline and unfiltered restores use the server
+      default.
+- [ ] Accepting comparison evidence that changes the navigation reconciles
+      the disclosure map and filter baseline, so Collapse all, v3 saves, and
+      recovery snapshots cover every current disclosure.
+- [ ] Failure-first unit tests: a table over filtered and unfiltered restores
+      against listed, unlisted, and obsolete keys; evidence adoption that adds
+      and removes a Removed variant.
+- [ ] Browser coverage: a filtered watched reload after a folder rename shows
+      the renamed folder open with its matching rows visible.
+- [ ] Mark findings 11–16 as fixed in the review-findings list.
+- [ ] Run `cargo xtask check`; fix anything it reports until it passes.
+- [ ] Commit and push.
+- [ ] Review the complete local diff against `origin/main` using
+      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      after the push; report each finding with a number, severity, plain
+      explanation, impact of doing nothing, lettered options, and a
+      recommendation, without changing the implementation.
 
 ## Post-merge follow-up (non-blocking)
 

@@ -2,6 +2,8 @@ import { expect, test } from "@playwright/test";
 
 import { startEvidenceFixture } from "../helpers/evidence_fixture.js";
 
+import { readDisclosureStorage } from "./disclosure_storage.js";
+
 test("reload recovery starts without fetching another catalogue snapshot", async ({
   page,
 }) => {
@@ -102,10 +104,11 @@ test("early native disclosures survive delayed hydration and recovery", async ({
     await expect(archive).toHaveAttribute("open", "");
     await expect(page.locator("[data-mokly-early-disclosure]")).toHaveCount(0);
     await expect
-      .poll(() =>
-        page.evaluate(() => localStorage.getItem("mokly:nav-disclosure:v3")),
-      )
-      .toContain("folder:pages:Fixture/Screens");
+      .poll(() => readDisclosureStorage(page))
+      .toMatchObject({
+        "folder:pages:Fixture/Screens": false,
+        "folder:pages:Fixture/Archive": true,
+      });
     await archive.locator("summary").click();
     await expect(archive).not.toHaveAttribute("open", "");
     await expect(page.locator("[data-mokly-early-disclosure]")).toHaveCount(0);

@@ -6,8 +6,8 @@
   collection entities and `childIds` with a Storybook-style `navPath` on
   every leaf, derived from nested `folder` titles; manifest v6 and read
   model v2. Milestones 1–9 are implemented, verified, pushed, and reviewed;
-  findings 1–10 are fixed, findings 11–16 await the user's decision, and the
-  plan stays Active until its PR merges.
+  Milestones 10–11 are implemented and ready for separate supervisor commits;
+  Milestone 12 remains. The plan stays Active until its PR merges.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
   standalone Auto/Light/Dark control for interface and previews, and
   host-owned theme with independent previews when embedded. Dark neutrals align

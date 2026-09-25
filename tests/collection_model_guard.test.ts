@@ -59,20 +59,22 @@ test("collection-model constructs stay within historical manifest validation", (
   const matches: string[] = [];
   for (const root of roots)
     for (const name of readdirSync(root, { recursive: true })) {
+      if (typeof name !== "string") continue;
+      const relativeName = name.split(path.sep).join("/");
       if (
-        typeof name !== "string" ||
-        !/\.(?:ts|tsx|mts|cts|js|jsx|mjs|cjs)$/u.test(name) ||
-        /(?:^|\/)(?:dist|generated|node_modules)(?:\/|$)/u.test(name)
+        !/\.(?:ts|tsx|mts|cts|js|jsx|mjs|cjs)$/u.test(relativeName) ||
+        /(?:^|\/)(?:dist|generated|node_modules)(?:\/|$)/u.test(relativeName)
       )
         continue;
       const file = path.join(root, name);
+      const canonicalFile = file.split(path.sep).join("/");
       const text = readFileSync(file, "utf8");
       const currentText =
-        file === obsoleteRecoveryBoundary
+        canonicalFile === obsoleteRecoveryBoundary
           ? text.replace(obsoleteRecoveryFieldOccurrences, "")
           : text;
       if (!collectionModel.test(currentText)) continue;
-      if (!historicalBoundary.has(file)) matches.push(file);
+      if (!historicalBoundary.has(canonicalFile)) matches.push(canonicalFile);
     }
   assert.deepEqual(
     matches,

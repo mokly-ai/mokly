@@ -43,10 +43,6 @@ test("stable folder keys preserve independent disclosure values", () => {
     "folder:pages:alpha": false,
     "folder:pages:beta": true,
   };
-  assert.deepEqual(disclosures, {
-    "folder:pages:alpha": false,
-    "folder:pages:beta": true,
-  });
   assert.deepEqual(openDisclosures(disclosures, ["folder:pages:alpha"]), {
     "folder:pages:alpha": true,
     "folder:pages:beta": true,

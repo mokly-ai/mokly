@@ -1,4 +1,4 @@
-export function validateCompletedReport(report) {
+export function validateCompletedReport(report, options = {}) {
   if (report?.schemaVersion !== 1) throw new Error("invalid report schema");
   if (!["unit", "browser"].includes(report.suite))
     throw new Error("invalid report suite");
@@ -29,7 +29,13 @@ export function validateCompletedReport(report) {
     if (!Number.isInteger(entry.tests) || entry.tests < 1)
       throw new Error(`invalid test count for ${entry.file}`);
   }
-  if (report.skipped !== 0) throw new Error("report contains skipped tests");
+  if (!Number.isInteger(report.skipped) || report.skipped < 0)
+    throw new Error("report has an invalid skipped count");
+  if (
+    report.skipped !== 0 &&
+    !(report.suite === "unit" && options.allowUnitSkips === true)
+  )
+    throw new Error("report contains skipped tests");
   if (report.cancelled !== 0)
     throw new Error("report contains cancelled tests");
   if (report.reporterComplete !== true)
