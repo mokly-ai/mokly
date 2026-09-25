@@ -456,15 +456,18 @@ Backend for change C.
       using `docs/implementation-review-prompt.md`; report numbered findings
       with severities and recommendations without changing the implementation.
 
-Review outcome: 35 findings were reported to the user without changes (4 high,
-17 medium, 14 low). The high findings are that the manifest inventory is sorted
-with the locale-dependent `localeCompare`, so builds fail for routes with
-capitals, `_` or `~`; that Serve returns 404 for authored stylesheets and images
-until the complete background build finishes; that stale legacy output left in
-Git after upgrading silently becomes every later baseline, with no upgrade
-guide or breaking-change notice; and that same-layout comparisons whose
-documents differ only in HTML formatting produce a record the result validator
-rejects. Each finding is awaiting the user's decision.
+Review outcome: after each finding was verified against the code, 27 findings
+were reported to the user without changes (4 high, 9 medium, 14 low). Findings
+with one shared fix were merged, and a watcher-test flake that also occurs on
+`main` was moved out of scope. The high findings are that the manifest
+inventory is sorted with the locale-dependent `localeCompare`, so builds fail
+for routes with capitals or `_`; that Serve refuses authored stylesheets and
+images until the complete background build finishes (permanently if it fails)
+and later serves the file watcher's unchecked list; that stale pre-upgrade
+output left in Git silently becomes later baselines, with no upgrade guide or
+breaking-change notice; and that the new link normalization in comparisons
+can crash Changes or report false differences. Each finding is awaiting the
+user's decision.
 
 ## Post-merge follow-up (non-blocking)
 

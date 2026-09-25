@@ -6,8 +6,8 @@
   — Git-index tracking, per-commit baselines, opt-in writers, a disposable
   `<mockupsDir>/.generated/` tree with referenced authored assets, and removal
   of generated-file ownership machinery are implemented and verified; the
-  post-push review's 35 findings (4 high) await the user's decision before the
-  PR merges.
+  post-push review's 27 verified findings (4 high) await the user's decision
+  before the PR merges.
 - [Release-Gated Node Compatibility](./release-gated-node-compatibility.md) —
   run the minimum supported runtime on ordinary changes and reserve the full
   Node 22.14/24 compatibility matrix for Release Please pull requests.
