@@ -171,7 +171,7 @@ completely before any code changes.
 - [x] Validate the changed Markdown with `npm run format:check` and review the
       diff; documentation-only work does not require `cargo xtask check`.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
@@ -409,3 +409,16 @@ ordinary-preview fixture took:
 - 96.7 s at #96.
 
 At #96, the browser shard 2 job took 897 s.
+
+## Review record
+
+### Milestone 1 — 2026-09-25
+
+- Reviewed the complete pushed `origin/main...b18ac46` diff using
+  [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
+- Findings: none.
+- Residual test risk: this milestone defines the documentation contract only.
+  Historical-route scope resolution, loading/failed retry transitions,
+  serialize-once call counts, scoped capture comparison, and static artifact
+  byte identity remain unimplemented until their owning later milestones and
+  therefore are not yet covered by executable regression tests.
