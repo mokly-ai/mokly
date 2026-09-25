@@ -9,6 +9,7 @@ import { DESTINATIONS, type DesignDestination } from "./parts/destinations.js";
 import { DetailsPanel } from "./parts/details.js";
 import { MiniWelcome } from "./parts/mini_screens.js";
 import { NavTree } from "./parts/nav.js";
+import { EXCLUDED_STYLE_ROWS } from "./parts/nav_data.js";
 import {
   ExcludedStyleCard,
   MatchedStyleCard,
@@ -99,9 +100,15 @@ function ExcludedStyles({ viewport }: { viewport: ArtboardViewport }) {
     <Shell
       design={DESTINATIONS.styleExcluded}
       viewport={viewport}
-      nav={<NavTree activeLabel="Welcome" changedCount={1} />}
+      nav={
+        <NavTree
+          activeDestination={DESTINATIONS.styleExcluded}
+          changedCount={1}
+          nodes={EXCLUDED_STYLE_ROWS}
+        />
+      }
     >
-      <WelcomeHead active={viewport} />
+      <WelcomeHead active={viewport} changed />
       <PreviewWorkspace
         viewport={viewport}
         inspector={

@@ -22,6 +22,7 @@ const changedDesigns = new Set([
   "design-review-changed",
   "design-review-difference",
   "design-review-style-matched",
+  "design-review-style-excluded",
   "design-review-style-unresolved",
   "design-review-style-unnamed",
   "design-publication-changes",

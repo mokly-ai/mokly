@@ -252,6 +252,9 @@ screen first.
 The stylesheet-evidence states keep the same preview and inspector treatment.
 Excluded styles depicts All with Welcome selected and one changed screen: one
 stylesheet is excluded for Welcome, while a second changed stylesheet matches.
+The Welcome title shows Changed, its All row carries the changed mark, and its
+comparison controls appear below the heading with Current selected, just as a
+changed screen does in the viewer.
 Its Changes filter opens Matched styles for that same Welcome. Matched styles'
 All filter returns to the Excluded styles view. Ignored only and No changes
 depict a separate zero-change catalogue; their filters pair its All and Changes
@@ -265,8 +268,9 @@ views. Unresolved and Unnamed styles remain standalone tree-opened examples.
 | Unresolved evidence: All filter   | Canonical All Welcome, `design-browse-screen`                |
 
 Matched and unresolved depict Changes holding only the screen their evidence
-keeps; Excluded depicts All with one changed Welcome. None adds comparison-mode
-destinations or tag transitions.
+keeps; Excluded depicts All with one changed Welcome. Excluded shows the
+Current-selected comparison modes, but the unrepresented mode destinations
+remain depictions; no stylesheet state adds tag transitions.
 
 Tag interactions are restricted to the canonical Welcome states:
 

@@ -154,6 +154,12 @@ function catalogueTree(variants: "closed" | "open"): NavigationRows {
 /** The canonical catalogue fixture, with Welcome's variant list collapsed. */
 export const NAV_TREE: NavigationRows = catalogueTree("closed");
 
+export const EXCLUDED_STYLE_ROWS: NavigationRows = NAV_TREE.map((row) =>
+  row.key === "welcome"
+    ? { ...row, changed: true, to: DESTINATIONS.styleExcluded }
+    : row,
+);
+
 /** The same catalogue with Welcome's variant list disclosed. */
 export const NAV_TREE_VARIANTS_OPEN: NavigationRows = catalogueTree("open");
 

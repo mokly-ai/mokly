@@ -270,7 +270,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       );
       assert.equal(
         byClass(document, "mbk-cmp-toolbar").length,
-        compared ? 1 : 0,
+        compared || id === "design-review-style-excluded" ? 1 : 0,
         id,
       );
       if (!compared)

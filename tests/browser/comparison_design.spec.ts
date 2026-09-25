@@ -31,6 +31,29 @@ test("stylesheet and empty Changes filters preserve their depicted catalogue", a
   await expect(page).toHaveURL(/impact\/ignored-only\.desktop\.html$/);
 });
 
+test("Excluded styles shows changed Welcome controls in both artboards", async ({
+  page,
+}) => {
+  for (const viewport of ["mobile", "desktop"] as const) {
+    await page.goto(
+      design(`review/impact/stylesheets/excluded.${viewport}.html`),
+    );
+    await expect(page.locator('[data-change-status="changed"]')).toHaveText(
+      "Changed",
+    );
+    const controls = page.getByRole("group", { name: "Comparison mode" });
+    await expect(controls).toBeVisible();
+    await expect(controls.locator(".active")).toHaveText("Current");
+    await expect(controls).toContainText("Side by side");
+    await expect(controls).toContainText("Overlay");
+    await expect(controls).toContainText("Difference");
+    if (viewport === "desktop")
+      await expect(
+        page.locator(".mbk-nav-row.active .mbk-nav-changed-text"),
+      ).toHaveText("Changed");
+  }
+});
+
 test("flow designs keep comparisons on the owning screens", async ({
   page,
 }) => {

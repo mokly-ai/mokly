@@ -112,3 +112,37 @@ test("matched and excluded styles share one changed Welcome; empty Changes keeps
       "0",
     );
 });
+
+for (const viewport of ["mobile", "desktop"] as const)
+  test(`${viewport}: Excluded styles keeps Changed status and Current comparison controls`, async () => {
+    const { document } = await designDocument(
+      "design-review-style-excluded",
+      viewport,
+    );
+    const status = byClass(document, "ce-change-status");
+    assert.deepEqual(status.map(textContent), ["Changed"]);
+    assert.equal(attribute(status[0]!, "data-change-status"), "changed");
+    const toolbar = byClass(document, "mbk-cmp-toolbar");
+    assert.equal(toolbar.length, 1);
+    assert.match(
+      textContent(toolbar[0]!),
+      /Current.*Side by side.*Overlay.*Difference/,
+    );
+    assert.deepEqual(byClass(toolbar[0]!, "active").map(textContent), [
+      "Current",
+    ]);
+    if (viewport === "desktop") {
+      const activeRow = byClass(document, "mbk-nav-row").find(
+        (row) => attribute(row, "aria-current") === "page",
+      );
+      assert.ok(activeRow);
+      assert.equal(
+        attribute(activeRow, "data-mokly-link"),
+        "design-review-style-excluded",
+      );
+      assert.deepEqual(
+        byClass(activeRow, "mbk-nav-changed-text").map(textContent),
+        ["Changed"],
+      );
+    }
+  });
