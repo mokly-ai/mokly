@@ -11,6 +11,10 @@ import {
 } from "../registry/catalogue_index.js";
 import type { CatalogueChangeSnapshot } from "../registry/changes.js";
 import { parseManifest, readManifest } from "../registry/manifest.js";
+import {
+  acceptedGenerationFromInventory,
+  type AcceptedGeneration,
+} from "../review/accepted_generation.js";
 import type { ReadOnlyReviewRepository } from "../review/repository.js";
 
 import {
@@ -34,15 +38,18 @@ export async function loadCatalogueSnapshot(
   config: ResolvedConfig,
   resolveChanges?: (
     manifest: ManifestV5,
+    accepted: AcceptedGeneration,
   ) => Promise<ResolvedCatalogueChanges | undefined>,
   manifest: ManifestV5 = readManifest(config),
 ): Promise<CatalogueSnapshot> {
   timeSync("catalogue.validate", () => parseManifest(manifest));
-  await timeAsync("catalogue.source-freshness", () =>
+  const inventory = await timeAsync("catalogue.source-freshness", () =>
     assertFreshSourceInventory(config, manifest),
   );
   const changes = resolveChanges
-    ? await timeAsync("changes.classify", () => resolveChanges(manifest))
+    ? await timeAsync("changes.classify", () =>
+        resolveChanges(manifest, acceptedGenerationFromInventory(inventory)),
+      )
     : undefined;
   return {
     [configIdentity]: config,
@@ -77,13 +84,15 @@ export function loadServedCatalogueSnapshot(
     config,
     base === undefined || !repository
       ? undefined
-      : async (current) => {
+      : async (current, accepted) => {
           try {
             return await computeCatalogueChanges(
               config,
               base,
               repository(),
               current,
+              undefined,
+              accepted,
             );
           } catch (error) {
             if (

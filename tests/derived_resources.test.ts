@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import { acceptedGenerationFromCompilation } from "../dist/review/accepted_generation.js";
 import { prepareReviewRepository } from "../dist/review/prepare.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
 import { readCatalogueChanges } from "../dist/server/component_changes.js";
@@ -48,7 +49,7 @@ for (const components of [false, true]) {
       "HEAD",
       repository,
       fixture.commit,
-      fixture.baseline.outputs,
+      acceptedGenerationFromCompilation(fixture.baseline),
     );
     if (components) {
       assert.equal(

@@ -7,15 +7,13 @@ import type {
   ScreenResourceEvidence,
 } from "@mokly/viewer/data";
 
-import {
-  transferGeneratedFile,
-  type GeneratedFile,
-} from "../build/generated_file.js";
+import { transferGeneratedFile } from "../build/generated_file.js";
 import { ConfiguredGitCommandRunner } from "../config/git.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { changedManifestRoutes } from "../registry/changed_routes.js";
 import { hasRegisteredComponents } from "../registry/manifest_capabilities.js";
+import type { AcceptedGeneration } from "../review/accepted_generation.js";
 import { GitReviewAssetReader } from "../review/assets.js";
 import {
   baselineResourceConfig,
@@ -57,8 +55,7 @@ export interface ComponentChangeSource {
 /** Background-owned inputs; a prepared commit prevents builds in disposable workers. */
 export interface CatalogueClassificationInputs {
   readonly commit?: string;
-  readonly outputs?: ReadonlyMap<string, GeneratedFile>;
-  readonly deliveredStyleSources?: readonly string[];
+  readonly generation?: AcceptedGeneration;
 }
 
 /** Read-only catalogue classification boundary used outside the HTTP child. */
@@ -175,8 +172,7 @@ export class RepositoryComponentChanges implements ComponentChangeSource {
       this.base,
       this.git,
       commit,
-      this.accepted?.outputs,
-      this.accepted?.deliveredStyleSources,
+      this.accepted?.generation,
     );
   }
 }
@@ -188,11 +184,10 @@ export async function readCatalogueChanges(
   base: string,
   git: ReadOnlyReviewRepository,
   commit: string,
-  outputs?: ReadonlyMap<string, GeneratedFile>,
-  deliveredStyleSources?: readonly string[],
+  accepted?: AcceptedGeneration,
   acceptedEvidence?: ChangeEvidence,
 ): Promise<ComponentChangeSnapshot> {
-  outputs = await derivedHeadOutputs(config, manifest, outputs);
+  const outputs = await derivedHeadOutputs(config, manifest, accepted?.outputs);
   const baseline = await readBaseManifest(git.reader, commit, config);
   const authoredPaths = acceptedEvidence
     ? undefined
@@ -220,7 +215,8 @@ export async function readCatalogueChanges(
       reader,
       authoredPaths!,
       outputs,
-      deliveredStyleSources,
+      accepted?.deliveredStyleSources,
+      accepted?.routes,
     ));
   const result = components
     ? await classifyComponents({

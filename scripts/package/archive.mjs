@@ -104,6 +104,7 @@ export function validatePackageReport(report, name = "@mokly/mokly") {
     "dist/catalogue/projection.js",
     "dist/components/definition.js",
     "dist/server/controls/worker.js",
+    "dist/build/styles/postcss_worker.js",
     "dist/browser.manifest.json",
     "docs/protocol/mokly-frame-adapter.md",
     "dist/export/run.js",

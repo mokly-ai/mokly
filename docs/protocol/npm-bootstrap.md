@@ -133,7 +133,7 @@ release-managed version state. Before the next release:
    publishing requires 2FA, and token bypass is disabled. Store no npm write
    token in GitHub.
 3. Verify the [GitHub publishing protections](./npm-github-protections.md) and
-   the [release token's repository access](./npm-release.md#maintainer-setup).
+   the [release token's repository access](./npm-release-management.md#maintainer-setup).
 4. Review and merge the next Release Please PR only after those prerequisites
    are satisfied. Its new `vX.Y.Z` tag identifies the next release; the verified
    trusted publication advances `latest` while `bootstrap` stays on `0.8.0`.

@@ -125,7 +125,11 @@ through child and background worker transfer without adding manifest fields.
 compatibility transformer, including nested imports and local URL assets,
 without bundling a stylesheet or evaluating consumer JavaScript. It skips
 already delivered CSS and package CSS and recovers legacy syntax. React
-and React DOM resolve from consumer package roots, including when Mokly runs
+`styles/root_graph.ts` validates direct CSS imports before a virtual
+stylesheet pass, including extensionless imports, `require()` and dynamic
+imports. `config/package_code.ts` excludes physically installed package code
+while retaining in-repository workspace CSS/asset aliases. React and React DOM
+resolve from consumer package roots, including when Mokly runs
 from an npx installation. The bundle stays in memory and retains the
 consumer's existing rendering/provider graph.
 `styles/lightning.ts` loads Lightning CSS's native CommonJS binding only on

@@ -3,6 +3,7 @@ import path from "node:path";
 
 import { build, type Plugin } from "esbuild";
 
+import { isPackageCode } from "../../config/package_code.js";
 import { isInside, toPosixPath } from "../../config/paths.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { timeAsync } from "../../diagnostics/timings.js";
@@ -23,7 +24,7 @@ export async function inventoryTransformerStyles(
   delivered: ReadonlySet<string> = new Set(),
 ): Promise<ReadonlySet<string>> {
   const pending = styles.filter(
-    (file) => !delivered.has(file) && !isPackageCss(file),
+    (file) => !delivered.has(file) && !isPackageCode(file, config.repoRoot),
   );
   if (!pending.length) return new Set();
   return timeAsync("styles.inventory", async () => {
@@ -35,7 +36,11 @@ export async function inventoryTransformerStyles(
       name: "mokly-transformer-style-inventory",
       setup(pluginBuild) {
         const visit = async (file: string): Promise<void> => {
-          if (closure.has(file) || delivered.has(file) || isPackageCss(file))
+          if (
+            closure.has(file) ||
+            delivered.has(file) ||
+            isPackageCode(file, config.repoRoot)
+          )
             return;
           closure.add(file);
           const original = await fs.readFile(file, "utf8");
@@ -134,15 +139,8 @@ export async function inventoryTransformerStyles(
       [...closure, ...resolution.assets].filter(
         (file) =>
           isInside(config.repoRoot, file) &&
-          !path
-            .relative(config.repoRoot, file)
-            .split(path.sep)
-            .includes("node_modules"),
+          !isPackageCode(file, config.repoRoot),
       ),
     );
   });
-}
-
-function isPackageCss(file: string): boolean {
-  return file.split(path.sep).includes("node_modules");
 }

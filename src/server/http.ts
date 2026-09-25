@@ -26,18 +26,16 @@ import {
   loadShellFontAssets,
 } from "./client_modules.js";
 import { ComponentChangeCache } from "./component_changes.js";
-import { handleControls, localHost } from "./controls/http.js";
 import { ComponentRenderService } from "./controls/service.js";
 import { ForegroundActivity } from "./demand/activity.js";
 import { DocumentService } from "./demand/service.js";
 import { acceptedGeneratedStatic } from "./generated_static.js";
-import { handleCatalogueRequest } from "./http_routes.js";
+import { dispatchHttpRequest } from "./http_dispatch.js";
 import { closeCatalogueHttp } from "./http_shutdown.js";
 import type { RunningServer, ServerOptions } from "./http_types.js";
 import { listenOnAvailablePort } from "./ports.js";
 import { LivePublicCatalogue } from "./public_catalogue.js";
 import type { PublicComparison } from "./public_review.js";
-import { send } from "./respond.js";
 import { ReviewRoutes } from "./review_routes.js";
 import {
   livePublicInput,
@@ -186,58 +184,26 @@ export async function startCatalogueServer(
     publicInput(),
     contentVersion,
   );
-  const server = http.createServer((request, response) => {
-    if (controls && !localHost(request))
-      return send(
-        response,
-        403,
-        "text/plain",
-        "This request is not allowed.",
-        request.method ?? "GET",
-      );
-    if (controls && request.url?.startsWith("/__mokly/components/")) {
-      const busy = activity.channel();
-      busy(true);
-      void handleControls(
-        request,
-        response,
-        controls,
-        options.onDiagnostic,
-      ).finally(() => busy(false));
-      return;
-    }
-    const requestedVersion = updateVersion;
-    const requestedChanges = changedRoutes;
-    void handleCatalogueRequest(
-      request.url ?? "/",
-      request.method ?? "GET",
-      response,
-      activeCatalogue,
+  const server = http.createServer((request, response) =>
+    dispatchHttpRequest(request, response, {
+      controls,
+      activity,
+      options,
+      catalogue: activeCatalogue,
       config,
-      options.base,
-      () => requestedChanges,
+      changedRoutes,
       streams,
-      { clientModules, fontAssets, navigationModules },
-      () => requestedVersion,
+      assets: { clientModules, fontAssets, navigationModules },
+      updateVersion,
       reviewRoutes,
       componentChanges,
-      controls?.capability(),
       documents,
-      options.liveChanges === false ? undefined : changesStatus,
+      changesStatus,
       contentVersion,
       publicCatalogue,
       acceptedGenerated,
-    ).catch(() => {
-      if (!response.destroyed && !response.headersSent)
-        send(
-          response,
-          500,
-          "text/plain",
-          "Could not open this page.",
-          request.method ?? "GET",
-        );
-    });
-  });
+    }),
+  );
   await timeAsync("server.listen", () =>
     listenOnAvailablePort(server, options.port, options.strictPort ?? false),
   );

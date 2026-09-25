@@ -31,6 +31,7 @@ when the historical primary file is absent, never when it is invalid.
 - [CI verification](./ci-verification.md) — implemented suite, shard, evidence,
   cache and aggregation contract; hosted acceptance measurements remain tracked
   by the active CI performance plan.
+  - [CI evidence, cache and cleanup](./ci-verification-evidence.md).
 - [Catalogue upload v1](./mokly-upload.md) — public CLI and hosted/self-hosted receiver boundary.
 - [Package and authoring contract](./mokly-package.md)
 - [CLI terminal output](./mokly-terminal-output.md) — plain compatibility,
@@ -38,8 +39,10 @@ when the historical primary file is absent, never when it is invalid.
 - [Packaged CLI guides](./mokly-guides.md) — versioned Markdown consumed by the
   cloud documentation site.
 - [Configuration contract](./mokly-configuration.md) — includes public-exclusion validation and defaults.
+  - [Entry discovery and public exclusions](./mokly-configuration-discovery.md).
 - [Public authoring API](./mokly-authoring.md)
 - [Rendering and generated output](./mokly-rendering.md)
+  - [Generated rendering contract](./mokly-rendering-generated.md).
 - [Build and Browse runtime](./mokly-runtime.md)
 - [Component instance identity](./mokly-instances.md) — existing key/boundary
   rules and approved resolution/source-location target.
@@ -66,14 +69,19 @@ when the historical primary file is absent, never when it is invalid.
 - [Screen variants](./mokly-screen-variants.md) — implemented: variant
   screens grouped under their parent screen with their own ids and routes.
 - [Source protection](./mokly-source-protection.md)
+  - [Complete source inventory](./mokly-source-inventory.md).
 - [Imported stylesheets](./mokly-imported-styles.md) — implemented:
   renderer/entry CSS, CSS Modules, assets, PostCSS, inventory, and
   [exact diagnostics](./mokly-imported-styles-errors.md).
   - [PostCSS and dependency inventory](./mokly-imported-styles-postcss.md).
+  - [Assets, links and delivery](./mokly-imported-styles-assets.md).
 - [Catalogue change metadata](./mokly-catalogue-changes.md)
 - [Breaking page migration](./mokly-page-migration.md)
 - [Optional changes in publication](./mokly-publication.md)
+  - [Published Changes and acceptance](./mokly-publication-changes.md).
 - [Changes and screen comparisons](./mokly-changes.md)
+  - [Changes controls and serving](./mokly-changes-controls.md).
+  - [Changes comparison engine](./mokly-changes-engine.md).
 - [Removed content previews](./mokly-removed-previews.md) — removed screens
   and pages show their pinned baseline version.
 - [Derived baselines](./mokly-derived-baselines.md) — default uncommitted
@@ -85,8 +93,10 @@ when the historical primary file is absent, never when it is invalid.
 - [Current manifest v5 schema](./mokly-component-manifest.md)
 - [Component comparison v3 schema](./mokly-component-review.md)
 - [Component change attribution](./mokly-component-changes.md)
-- [CSS change attribution](./mokly-css-attribution.md) — approved
-  target: rule-aware stylesheet evidence.
+- [CSS change attribution](./mokly-css-attribution.md) — implemented
+  rule-aware stylesheet evidence.
+  - [CSS rule analysis](./mokly-css-attribution-rules.md).
+  - [CSS membership and evidence](./mokly-css-attribution-evidence.md).
 - [CSS evidence in the shell](./mokly-css-evidence-shell.md) — inspector and
   comparison-stage presentation of stylesheet evidence.
 - [Component pages and screen inspection](./mokly-component-explorer.md)
@@ -97,6 +107,7 @@ when the historical primary file is absent, never when it is invalid.
 - [Component controls](./mokly-component-controls.md)
 - [Consumer static export](./mokly-export.md) — consumer CLI and
   transactional artifact-generation contract.
+  - [Export ownership and public boundaries](./mokly-export-boundary.md).
 - [Static export delivery](./mokly-export-delivery.md) — portable
   hosting, navigation, and comparison behavior.
 - [Export recovery](./mokly-export-recovery.md) — backup ownership,
@@ -104,6 +115,7 @@ when the historical primary file is absent, never when it is invalid.
 - [Export ownership v1](./mokly-export-ownership.md) — public inventory schema
   and compatibility fixtures for independent upload receivers.
 - [Watched development](./mokly-watch.md)
+  - [Watch adoption and recovery](./mokly-watch-lifecycle.md).
 - [Catalogue navigation contract](./mokly-navigation.md)
 - [Styled catalogue link controls](./mokly-link-controls.md)
 - [Shell design contract](./mokly-shell-design.md)
@@ -112,6 +124,7 @@ when the historical primary file is absent, never when it is invalid.
   — implemented shared design components and ownership rules, with the
   [component library inventory](./mokly-design-component-library.md).
 - [CI and npm release contract](./npm-release.md)
+  - [Release management and evidence](./npm-release-management.md).
   - [Release verification evidence](./npm-release-evidence.md)
   - [One-time registry bootstrap](./npm-bootstrap.md)
   - [GitHub publishing protections](./npm-github-protections.md)

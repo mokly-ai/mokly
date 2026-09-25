@@ -80,7 +80,8 @@ Interpret a plugin's `dependency.file` or `dir-dependency.dir` relative to
 its stylesheet when not absolute. Translate physical paths reported by
 PostCSS under a symlinked repository root to the configured logical root,
 retaining real aliases for confinement and privacy checks. Ignore inputs
-outside the repository's physical root and under `node_modules` before normalizing; never feed
+outside the repository's physical root and physically under `node_modules`
+before normalizing; never feed
 them to `normalizeSourceFiles`. For directory messages, recursively walk
 regular files from the reported directory with the discovery walk's denied
 directory list; do not honor `.gitignore`, but match each path relative to
@@ -109,7 +110,10 @@ committed mode scan generated trees for matching files before reporting them;
 in derived mode skip those trees entirely.
 Each reported glob is compiled once per report, classification is cached
 within the graph load, and expanded files already checked as explicit
-dependencies are not checked again. Diagnostics and inventory ordering compare
+dependencies are not checked again. Resolve fixed logical/physical roots once
+per dependency collection, compute each candidate's repository-relative path
+once, sort each candidate class once, then apply generated-output, public-file,
+and regular-file checks in that order. Diagnostics and inventory ordering compare
 path UTF-16 code units without locale-sensitive collation.
 
 **Validation precedence:** Explicit `dependency` naming Mokly-owned output
@@ -133,9 +137,12 @@ may still report a glob matching files beneath `mockupsDir`. In that case
 exclude the matching reported ancestor (if safe for other authored sources),
 or prefer `@import "tailwindcss" source(none)` plus `@source` for explicit
 authored trees. Do not silently skip an otherwise-public matching file just
-because Tailwind did not list it individually. Dependencies in `node_modules`
-may still affect the processor's output, but are not private source inventory
-entries.
+because Tailwind did not list it individually. Dependencies physically in
+`node_modules` may still affect processor output, but are not private source
+inventory entries. A logical `node_modules` symlink into an in-repository
+workspace package is different: its physical package source and logical alias
+remain inventoried as exact required inputs, including CSS `url()` assets, and
+rebuild when either authored path changes.
 
 Tailwind v4 recursively inlines local imports even without a Tailwind directive,
 reports inlined and scanned files as dependencies, and reports scanned

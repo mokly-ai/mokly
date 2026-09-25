@@ -5,7 +5,7 @@ import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 
 import type { ComponentRuntime } from "./component_runtime.js";
-import { loadConsumerGraph } from "./load_graph.js";
+import { loadConsumerGraph, type LoadedGraph } from "./load_graph.js";
 import { validateGeneratedOutputPaths } from "./output_paths.js";
 import { normalizeSourceFiles } from "./source_inventory.js";
 
@@ -13,7 +13,7 @@ import { normalizeSourceFiles } from "./source_inventory.js";
 export async function assertFreshSourceInventory(
   config: ResolvedConfig,
   manifest: ComponentRuntime["manifest"],
-): Promise<void> {
+): Promise<LoadedGraph> {
   const current = await loadConfig(config.repoRoot, config.configPath);
   const graph = await loadConsumerGraph(current, false);
   if (
@@ -47,4 +47,5 @@ export async function assertFreshSourceInventory(
     ),
     config,
   );
+  return graph;
 }

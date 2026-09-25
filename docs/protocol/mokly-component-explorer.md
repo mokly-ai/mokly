@@ -61,7 +61,7 @@ Only expose comparison modes when the shown status is Changed or when a
 component saved variant's shown status is Removed. A known selection shows
 Added, Changed, Removed, or Unmodified beside its title from the selected
 viewport and scheme; Both follows the aggregation rule in the
-[Changes contract](./mokly-changes.md#screen-controls). A removed variant does
+[Changes contract](./mokly-changes-controls.md#screen-controls). A removed variant does
 not mark its surviving component Removed. Added and Unmodified show only their
 current preview. Missing per-view evidence retains route-level status and
 eligibility rather than implying Unmodified. Affected

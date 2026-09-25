@@ -67,7 +67,8 @@ The current maintenance choices are:
   unrelated dependency parents.
 - Compatible Browserslist, browser-baseline data, and Nano ID patches remain
   lockfile-only updates; they do not add direct runtime dependencies.
-- Lightning CSS is a production dependency for stylesheet rule parsing. Its
+- Lightning CSS is a production dependency for stylesheet rule parsing and
+  imported CSS Modules transformation/dependency analysis. Its
   MPL-2.0 native packages and Apache-2.0 `detect-libc` dependency participate in
   the workspace and packed-consumer audits. Retain every platform's optional
   lockfile entry when updating it; ordinary Ubuntu and native macOS/Windows

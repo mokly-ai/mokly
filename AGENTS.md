@@ -293,6 +293,8 @@
 
 ### Rust File Size Limits
 
+The repository gate also limits changed TypeScript/JavaScript to 300 lines and protocol Markdown to 250 lines; fetch `origin/main` before `cargo xtask source-file-length-lint`.
+
 The file length linter enforces a **300-line** hard cap for Rust files under `crates/` and `xtask/` when they are changed relative to `origin/main` or present in the working tree. Run `cargo xtask rust-file-length-lint --all` to audit every Rust file under those directories. Files exceeding 300 lines must be refactored into multiple modules; there is no override mechanism.
 
 ### File Size Management

@@ -30,6 +30,7 @@ export function packageReport(): PackageReport {
       { path: "dist/export/transaction.js", size: 1 },
       { path: "dist/components/definition.js", size: 1 },
       { path: "dist/server/controls/worker.js", size: 1 },
+      { path: "dist/build/styles/postcss_worker.js", size: 1 },
       { path: "docs/protocol/mokly-frame-adapter.md", size: 1 },
       { path: "README.md", size: 1 },
       { path: "LICENSE", size: 1 },

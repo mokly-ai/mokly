@@ -35,6 +35,12 @@ enum Command {
         #[arg(long)]
         all: bool,
     },
+    /// Enforce changed TypeScript/JavaScript and protocol Markdown limits.
+    SourceFileLengthLint {
+        /// Audit every scoped source/protocol file rather than changed files.
+        #[arg(long)]
+        all: bool,
+    },
 }
 
 /// Side-effecting xtask application boundary.
@@ -58,6 +64,7 @@ impl Xtask for Application {
             Command::RustFileLengthLint { all: _ } => {
                 self.rust_file_length_auditor.run(&self.workspace)
             }
+            Command::SourceFileLengthLint { all } => self.check_runner.source_file_length(all),
         }
     }
 }

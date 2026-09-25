@@ -9,6 +9,7 @@ import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
 import { isAuthoredEntryPath } from "../config/entry_membership.js";
 import { locatePath } from "../config/file_locations.js";
+import { isPackageCode } from "../config/package_code.js";
 import { isInside, projectRealPath, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
@@ -159,7 +160,7 @@ export function graphSourceFiles(
     if (!fs.existsSync(absolute) || !fs.statSync(absolute).isFile()) return [];
     const real = fs.realpathSync(absolute);
     if (isInside(runtime, real) || isInside(viewerRuntime, real)) return [];
-    if (real.split(path.sep).includes("node_modules")) return [];
+    if (isPackageCode(absolute, repoRoot)) return [];
     return [absolute];
   });
   return normalizeSourceFiles(candidates, repoRoot, mockupsDir);

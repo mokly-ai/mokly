@@ -172,5 +172,5 @@ function ruleEnd(css: string, from: number): number | undefined {
     else if (css[cursor] === ";" && depth === 0) return cursor + 1;
     cursor++;
   }
-  return;
+  return depth === 0 ? css.length : undefined;
 }

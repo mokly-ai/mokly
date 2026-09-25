@@ -3,7 +3,6 @@ import { randomBytes } from "node:crypto";
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import { prepareLiveRuntime } from "../build/live_runtime.js";
-import { loadConsumerGraph } from "../build/load_graph.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { bindTimings, timeAsync } from "../diagnostics/timings.js";
 
@@ -31,6 +30,7 @@ import {
   WatchDebouncer,
   type WatchEvent,
 } from "./watch_events.js";
+import { hydrateWatchInventory } from "./watch_inventory.js";
 import { watchTargets } from "./watch_paths.js";
 import { reportedWatchProcessor } from "./watch_reporting.js";
 import { WatchedBackground } from "./watched_background.js";
@@ -59,10 +59,7 @@ export async function serveWatched(
   const report = (error: unknown) => reporter.runtimeDiagnostic(error);
   const gate = new NotificationGate<WatchEvent>(report);
   const failures = new NotificationGate<Error>(report);
-  const inventory = await loadConsumerGraph(config, false);
-  config.entryModules = inventory.entrySources;
-  config.sourceFiles = inventory.sourceFiles;
-  config.postcssWatchDirectories = inventory.postcssWatchDirectories ?? [];
+  await hydrateWatchInventory(config);
   let activeConfig = config;
   let watcher = createSourceWatcher(watcherFactory, config, gate, report);
   const resources = new ResourceWatcher(
@@ -148,11 +145,7 @@ export async function serveWatched(
   const reconfigure = async (candidate?: ResolvedConfig): Promise<void> => {
     const nextConfig =
       candidate ?? (await configLoader.load(activeConfig.configPath));
-    const nextInventory = await loadConsumerGraph(nextConfig, false);
-    nextConfig.entryModules = nextInventory.entrySources;
-    nextConfig.sourceFiles = nextInventory.sourceFiles;
-    nextConfig.postcssWatchDirectories =
-      nextInventory.postcssWatchDirectories ?? [];
+    await hydrateWatchInventory(nextConfig);
     const nextGate = new NotificationGate<WatchEvent>(report);
     const replacement = createSourceWatcher(
       watcherFactory,

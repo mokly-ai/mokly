@@ -120,6 +120,8 @@ impl CheckRequest {
 pub(crate) trait CheckRunner: Send + Sync {
     /// Execute the validated request in dependency order.
     fn run(&self, request: CheckRequest) -> Result<()>;
+    /// Audit changed source/protocol files or every scoped file.
+    fn source_file_length(&self, all: bool) -> Result<()>;
 }
 
 /// Verification implementation backed by injected side-effect boundaries.
@@ -155,6 +157,15 @@ impl DefaultCheckRunner {
 }
 
 impl CheckRunner for DefaultCheckRunner {
+    fn source_file_length(&self, all: bool) -> Result<()> {
+        let mut command =
+            CommandSpec::new("node").args(["scripts/verification/source-file-length.mjs"]);
+        if all {
+            command = command.args(["--all"]);
+        }
+        self.command_runner.run(&command)
+    }
+
     fn run(&self, request: CheckRequest) -> Result<()> {
         if let Some(suite) = request.suite {
             return self.run_suite(suite, request.shard);
@@ -180,6 +191,7 @@ fn repository_commands() -> Vec<CommandSpec> {
         npm(&["run", "dependencies:check"]),
         npm(&["run", "format:check"]),
         npm(&["run", "lint"]),
+        CommandSpec::new("node").args(["scripts/verification/source-file-length.mjs"]),
         cargo(&["fmt", "--all", "--", "--check"]),
         cargo(&[
             "clippy",

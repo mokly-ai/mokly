@@ -3,10 +3,9 @@
 ## Status
 
 Active until the implementation PR merges. Created 2026-09-24 from the
-CSS-in-JS investigation on this branch. Milestones 1–9 are complete;
-the user authorized final-review fixes in Milestones 10–11 and resolved
-finding 3 in the separate `922c1ec` merge. Milestone 10 is complete;
-Milestone 11 and the parent's final independent review remain. See the
+CSS-in-JS investigation on this branch. Milestones 1–11 are complete;
+finding 3 was resolved in the separate `922c1ec` merge. Milestone 12's
+resolution-reference push and the parent's independent review remain. See the
 [review record](../docs/reviews/imported-css-delivery.md).
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
@@ -569,8 +568,7 @@ Carry the new outputs through every delivery path.
       `tests/catalogue_watch_imported_styles.test.ts`. Generated edits never loop.
 - [x] Include reserved-directory files in export and publication captures from
       compilation bytes in derived mode and from disk in committed mode; add
-      cases to `tests/catalogue_export.test.ts`,
-      `tests/export_imported_styles.test.ts`, and
+      cases to `tests/export_imported_styles.test.ts` and
       `tests/publication_imported_styles.test.ts`; verify
       `scripts/preview/build.mjs`, private exclusion and scoped links.
 - [x] Keep derived publication's input fingerprint stable when freshness
@@ -687,23 +685,23 @@ findings 1, 2, 4, 5, 6 and 7. Finding 3 was resolved by the separate
 - [x] Map physical esbuild, PostCSS and watch paths back to a symlinked configured root, retaining both identities and guard precedence.
 - [x] Update contracts and READMEs, add red-first regressions, run the full verification gate, commit and push Milestone 10.
 
-## Milestone 11: Final review fixes (Low)
+## Milestone 11: Final review fixes (Low) (complete)
 
 Close review findings 8–20 without changing the accepted-generation model.
 
-- [ ] Recognize an EOF CSS `@import` and cross-check import-prelude parsing with esbuild edges.
-- [ ] Reject only local quoted `image-set()` strings; document the behavior change for the PR.
-- [ ] Use one alias-aware package-code predicate throughout graph, CSS, transformer and PostCSS inventory.
-- [ ] Validate every root's direct CSS imports after graph build, including extensionless, `require()` and dynamic imports.
-- [ ] Pass typed accepted-generation Changes inputs and avoid committed graph reloads and edit races.
-- [ ] Collect 20,000 Tailwind-shaped dependencies within a generous bound using cached roots and one sort.
-- [ ] Apply public-mockups dependency diagnostics before regular-file diagnostics.
-- [ ] Align and test global delivered-source shared-impact stripping.
-- [ ] Remove repository-only packaged Styles guide text and test the guide copy.
-- [ ] Correct protocol drift, stale status text, and the Milestone 7 test names.
-- [ ] Split oversized server modules and protocol pages; add a changed-file TypeScript/JavaScript and protocol-Markdown length lint to `xtask` and document it.
-- [ ] Exercise CSS Modules, assets and local PostCSS in packed-consumer smoke and require the runtime worker artifact.
-- [ ] Update contracts, guides, READMEs and review resolutions; add red-first regressions, run the full verification gate, commit and push Milestone 11.
+- [x] Recognize an EOF CSS `@import` and cross-check import-prelude parsing with esbuild edges.
+- [x] Reject only local quoted `image-set()` strings; document the behavior change for the PR: quoted `data:`, HTTP(S), and `//` sources are now accepted unchanged in imported and authored public CSS.
+- [x] Use one alias-aware package-code predicate throughout graph, CSS, transformer and PostCSS inventory.
+- [x] Validate every root's direct CSS imports after graph build, including extensionless, `require()` and dynamic imports.
+- [x] Pass typed accepted-generation Changes inputs and avoid committed graph reloads and edit races.
+- [x] Collect 20,000 Tailwind-shaped dependencies within a generous bound using cached roots and one sort.
+- [x] Apply public-mockups dependency diagnostics before regular-file diagnostics.
+- [x] Align and test global delivered-source shared-impact stripping.
+- [x] Remove repository-only packaged Styles guide text and test the guide copy.
+- [x] Correct protocol drift, stale status text, and the Milestone 7 test names.
+- [x] Split oversized server modules and protocol pages; add a changed-file TypeScript/JavaScript and protocol-Markdown length lint to `xtask` and document it.
+- [x] Exercise CSS Modules, assets and local PostCSS in packed-consumer smoke and require the runtime worker artifact.
+- [x] Update contracts, guides and READMEs; add red-first regressions, run the full verification gate, commit and push Milestone 11. Record exact review-resolution commit references in Milestone 12.
 
 ## Milestone 12: Commit, push, and review
 

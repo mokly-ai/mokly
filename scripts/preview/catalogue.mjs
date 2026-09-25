@@ -19,6 +19,7 @@ import { resolveExportOutput } from "../../dist/export/paths.js";
 import { ExportTransaction } from "../../dist/export/transaction.js";
 import { publicationOptions } from "../../dist/publication/options.js";
 import { copyPublicFiles } from "../../dist/publication/resources.js";
+import { acceptedGenerationFromCompilation } from "../../dist/review/accepted_generation.js";
 import { prepareReviewRepository } from "../../dist/review/prepare.js";
 import { loadCatalogueSnapshot } from "../../dist/server/catalogue_snapshot.js";
 import { computeCatalogueChanges } from "../../dist/server/changed.js";
@@ -83,13 +84,16 @@ export async function buildPreview(config, output, options = {}) {
         const snapshot = await loadCatalogueSnapshot(
           config,
           git
-            ? (manifest) =>
+            ? (manifest, accepted) =>
                 computeCatalogueChanges(
                   config,
                   base,
                   git,
                   manifest,
                   changeEvidence,
+                  compiled
+                    ? acceptedGenerationFromCompilation(compiled)
+                    : accepted,
                 )
             : undefined,
           compiled?.manifest ?? inputs.manifest,

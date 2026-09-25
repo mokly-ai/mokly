@@ -8,9 +8,12 @@ The Welcome screen also includes a small `WorkspaceNote` built from a CSS
 Module, an authored PNG-backed stylesheet, and Tailwind v4 utilities, including
 a small `note-title` utility. Its
 PostCSS module pins Tailwind's base and optimization, scans only `src/` with
-`source(none)` plus `@source`, and runs autoprefixer against Safari 14. It
-suppresses the aging Browserslist dataset warning for this fixed-target
-example; applications should update their dataset instead.
+`source(none)` plus `@source`, and runs autoprefixer against Safari 14.
+In `src/components/workspace-note/utilities.css`, `@source "../..";` scans
+only this example's `src/` tree, and `@utility note-title` applies to the
+Welcome component. The example sets `BROWSERSLIST_IGNORE_OLD_DATA=1` in its
+PostCSS module to avoid an aging `caniuse-lite` warning in reproducible demo
+builds; application owners should update Browserslist data instead.
 `shims.d.ts` declares CSS Module class maps and side-effect CSS imports for
 the example's TypeScript check.
 The Components → Example → Components collection contains real registered Action and Toolbar

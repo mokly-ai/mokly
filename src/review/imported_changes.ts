@@ -1,4 +1,3 @@
-import fs from "node:fs";
 import path from "node:path";
 
 import { generatedBytes, type GeneratedFile } from "../build/generated_file.js";
@@ -20,6 +19,7 @@ export async function importedChangedPaths(
   authored: readonly string[],
   outputs?: ReadonlyMap<string, GeneratedFile>,
   delivered?: readonly string[],
+  acceptedRoutes?: readonly string[],
 ): Promise<ChangeEvidence> {
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
   const reserved = `${prefix ? `${prefix}/` : ""}${generatedRoot}/`;
@@ -27,15 +27,16 @@ export async function importedChangedPaths(
     (route) => !route.startsWith(reserved),
   );
   const graph =
-    outputs === undefined &&
-    fs.existsSync(path.join(config.mockupsDir, generatedRoot))
+    outputs === undefined && acceptedRoutes === undefined
       ? await loadConsumerGraph(config, false)
       : undefined;
-  const routes = outputs
-    ? [...outputs.keys()].filter(isValidGeneratedRoute).sort()
-    : [...(graph?.styleOutputs.keys() ?? [])]
-        .filter(isValidGeneratedRoute)
-        .sort();
+  const routes = acceptedRoutes
+    ? [...acceptedRoutes].filter(isValidGeneratedRoute).sort()
+    : outputs
+      ? [...outputs.keys()].filter(isValidGeneratedRoute).sort()
+      : [...(graph?.styleOutputs.keys() ?? [])]
+          .filter(isValidGeneratedRoute)
+          .sort();
   const generated = await changedGeneratedStyles(
     config,
     baseline,

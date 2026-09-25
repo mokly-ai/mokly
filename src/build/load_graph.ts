@@ -6,7 +6,6 @@ import type { RegistryDefinition } from "../authoring/types.js";
 import type { CompatibilityTransformer } from "../compatibility/types.js";
 import type { ComponentGraphRenderer } from "../components/render.js";
 import { discoverEntryModules } from "../config/entry_discovery.js";
-import { toPosixPath } from "../config/paths.js";
 import {
   FileSystemPostcssConfigLoader,
   type PostcssConfigLoader,
@@ -32,8 +31,8 @@ import { graphSourceFiles, normalizeSourceFiles } from "./source_inventory.js";
 import { bundleStyles } from "./styles/bundle.js";
 import { GraphStyles } from "./styles/collect.js";
 import { collectPostcssDependencies } from "./styles/dependency_inventory.js";
-import { orderedStyles } from "./styles/order.js";
 import { createStyleProcessor } from "./styles/processor_setup.js";
+import { graphStyleRoots } from "./styles/root_graph.js";
 import { inventoryTransformerStyles } from "./styles/transformer_inventory.js";
 
 /** Consumer modules loaded in one React-safe esbuild graph. */
@@ -133,31 +132,13 @@ async function loadGraph(
         "build-invalid",
         `consumer graph emitted an undelivered file: ${path.relative(config.repoRoot, extraOutputs[0]!.path).split(path.sep).join("/")}; use a dataurl or binary loader for JavaScript assets instead of file`,
       );
+    const roots = graphStyleRoots(config, built.metafile, entrySources);
     const graphFiles = graphSourceFiles(
       built.metafile,
       path.dirname(config.configPath),
       config.repoRoot,
       config.mockupsDir,
     );
-    const roots = [
-      ...(config.renderer ? [{ path: config.renderer, emit: true }] : []),
-      ...entrySources.map((entry) => ({ path: entry, emit: true })),
-      ...(config.compatibility.transformer
-        ? [{ path: config.compatibility.transformer, emit: false }]
-        : []),
-    ].map((root) => ({
-      ...root,
-      styles: orderedStyles(
-        built.metafile,
-        root.path,
-        path.dirname(config.configPath),
-      ).filter(
-        (file) =>
-          config.moduleResolution.loaders[".css"] !== "empty" &&
-          (!file.endsWith(".module.css") ||
-            config.moduleResolution.loaders[".module.css"] !== "empty"),
-      ),
-    }));
     const deliveryRoots = roots.filter((root) => root.emit);
     const transformerStyles = roots.find((root) => !root.emit)?.styles ?? [];
     const graphInputs = new Set(
@@ -205,9 +186,11 @@ async function loadGraph(
       config.repoRoot,
       config.mockupsDir,
     );
-    const deliveredStyleSources = [...bundled.sourceFiles]
-      .map((file) => toPosixPath(path.relative(config.repoRoot, file)))
-      .sort();
+    const deliveredStyleSources = normalizeSourceFiles(
+      [...bundled.sourceFiles],
+      config.repoRoot,
+      config.mockupsDir,
+    );
     if (!evaluate)
       return {
         definitions: [],

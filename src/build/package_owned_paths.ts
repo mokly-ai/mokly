@@ -3,6 +3,7 @@ import path from "node:path";
 
 import { isBaselineCachePath } from "../config/cache_paths.js";
 import { logicalRepositoryPath } from "../config/file_locations.js";
+import { isPackageCode } from "../config/package_code.js";
 import { isInside, projectRealPath, toPosixPath } from "../config/paths.js";
 import { isDeniedSourceSegment } from "../config/private_directories.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -14,6 +15,22 @@ import { isGeneratedRoute } from "./styles/routes.js";
 /** Reasons a consumer path cannot be discovered through a broad walk. */
 export type PackageOwnedReason =
   "generated" | "review" | "cache" | "denied" | "package" | "outside";
+
+/** Fixed physical boundaries shared by every dependency path in one load. */
+export interface PackageOwnedRoots {
+  readonly repo: string;
+  readonly mockups: string;
+  readonly review: string;
+}
+
+/** Resolve fixed roots once before classifying many reported paths. */
+export function packageOwnedRoots(config: ResolvedConfig): PackageOwnedRoots {
+  return {
+    repo: projectRealPath(config.repoRoot),
+    mockups: projectRealPath(config.mockupsDir),
+    review: projectRealPath(config.review.outDir),
+  };
+}
 
 /** Generated output, Review output and cache outrank explicitly required inputs. */
 export function blocksRequiredInput(
@@ -29,6 +46,7 @@ export function packageOwnedPath(
   config: ResolvedConfig,
   directory?: boolean,
   deniedRoot = config.repoRoot,
+  roots?: PackageOwnedRoots,
 ): PackageOwnedReason | undefined {
   const absolute = logicalRepositoryPath(candidate, config.repoRoot);
   if (!isInside(config.repoRoot, absolute)) return "outside";
@@ -65,7 +83,6 @@ export function packageOwnedPath(
     if (isBaselineCachePath(pathName, repoRoot, false)) return "cache";
     if (isInside(sourceRoot, pathName)) {
       const segments = path.relative(sourceRoot, pathName).split(path.sep);
-      if (segments.includes("node_modules")) return "package";
       if (
         segments.slice(0, -1).some(isDeniedSourceSegment) ||
         (isDirectory && isDeniedSourceSegment(segments.at(-1) ?? ""))
@@ -81,18 +98,28 @@ export function packageOwnedPath(
     config.review.outDir,
     deniedRoot,
   );
-  if (lexical) return lexical;
+  if (lexical && lexical !== "denied") return lexical;
   try {
+    const projectedRoots = roots ?? packageOwnedRoots(config);
     const physical = projectRealPath(absolute);
-    const realRoot = projectRealPath(config.repoRoot);
-    if (!isInside(realRoot, physical)) return "outside";
-    return inspect(
+    if (!isInside(projectedRoots.repo, physical)) return "outside";
+    if (
+      isPackageCode(absolute, config.repoRoot, {
+        file: physical,
+        root: projectedRoots.repo,
+      })
+    )
+      return "package";
+    const physicalReason = inspect(
       physical,
-      realRoot,
-      projectRealPath(config.mockupsDir),
-      projectRealPath(config.review.outDir),
-      projectRealPath(deniedRoot),
+      projectedRoots.repo,
+      projectedRoots.mockups,
+      projectedRoots.review,
+      deniedRoot === config.repoRoot
+        ? projectedRoots.repo
+        : projectRealPath(deniedRoot),
     );
+    return physicalReason ?? lexical;
   } catch (error) {
     if (
       ["ENOENT", "ENOTDIR", "ELOOP", "EACCES"].includes(

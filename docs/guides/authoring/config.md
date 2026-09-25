@@ -91,6 +91,10 @@ configured renderer stylesheet and then the entry stylesheet after those
 links, even if no rule matches. Complete page callbacks receive no automatic
 links. `<mockupsDir>/mokly-generated/` is reserved for CSS and asset
 output; keep authored public stylesheets elsewhere.
+In authored or imported CSS, write local `image-set()` sources as `url()`
+values (`image-set(url("./photo.png") 1x)`) so Mokly validates and copies the
+asset. Quoted remote HTTP(S), protocol-relative and `data:` sources remain
+external and unchanged.
 
 ```ts
 stylesheets: [

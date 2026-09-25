@@ -9,6 +9,10 @@ import {
   type CatalogueChangeSnapshot,
 } from "../registry/changes.js";
 import { readManifest } from "../registry/manifest.js";
+import {
+  acceptedGenerationFromCompilation,
+  type AcceptedGeneration,
+} from "../review/accepted_generation.js";
 import type { ChangeEvidence } from "../review/change_evidence.js";
 import type { ReadOnlyReviewRepository } from "../review/repository.js";
 
@@ -44,6 +48,7 @@ export async function computeCatalogueChanges(
   git: ReadOnlyReviewRepository,
   manifest?: ManifestV5,
   acceptedEvidence?: ChangeEvidence,
+  accepted?: AcceptedGeneration,
 ): Promise<ResolvedCatalogueChanges> {
   const compilation =
     config.generatedOutput === "derived" && !manifest
@@ -57,8 +62,10 @@ export async function computeCatalogueChanges(
     base,
     git,
     commit,
-    compilation?.outputs,
-    compilation?.deliveredStyleSources,
+    accepted ??
+      (compilation
+        ? acceptedGenerationFromCompilation(compilation)
+        : undefined),
     acceptedEvidence,
   );
   const { baseline, changedRoutes } = componentChanges;

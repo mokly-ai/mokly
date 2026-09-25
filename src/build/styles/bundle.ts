@@ -1,5 +1,4 @@
-import path from "node:path";
-
+import { isPackageCode } from "../../config/package_code.js";
 import { isInside } from "../../config/paths.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { timeAsync } from "../../diagnostics/timings.js";
@@ -46,10 +45,7 @@ export async function bundleStyles(
       ]) {
         if (
           isInside(config.repoRoot, file) &&
-          !path
-            .relative(config.repoRoot, file)
-            .split(path.sep)
-            .includes("node_modules")
+          !isPackageCode(file, config.repoRoot)
         )
           sourceFiles.add(file);
       }
@@ -58,10 +54,7 @@ export async function bundleStyles(
     for (const file of pass.assets) {
       if (
         isInside(config.repoRoot, file) &&
-        !path
-          .relative(config.repoRoot, file)
-          .split(path.sep)
-          .includes("node_modules")
+        !isPackageCode(file, config.repoRoot)
       )
         sourceFiles.add(file);
     }

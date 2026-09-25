@@ -28,6 +28,10 @@ without including the uncommitted Milestone 10 work.
    rebuilds the watcher and loads the graph twice more. Recommended: cache the
    required paths and their ancestors once per config, stop adding
    individually covered files as watch targets, and add a scale test.
+
+   Resolved in `b197b0c`: indexed required paths and covering watch roots reduced
+   1,000/4,000-file readiness to 384 ms/1,483 ms; a 3,000-file addition rebuilt once.
+
 2. **Medium — exported and published catalogues over-report Changes in
    derived mode.** `src/export/run.ts` passes Git's changed paths to
    `changedContentPaths` instead of the merged imported-CSS evidence. Ignored
@@ -37,6 +41,10 @@ without including the uncommitted Milestone 10 work.
    the merged evidence, with its own type, shared by live Changes,
    `compareReview` and export. Add export and publish tests that match live
    Changes.
+
+   Resolved in `b197b0c`: typed merged evidence is shared by Review, export,
+   publication and Changes, with both modes and all three edit classes tested.
+
 3. **Medium — merging `origin/main` needs two manual repairs.** Main's #115
    changed the link-rewriting regex in `scripts/preview/catalogue.mjs`, which
    this branch moved to `scripts/preview/capture.mjs`. Keeping the branch file
@@ -56,6 +64,10 @@ without including the uncommitted Milestone 10 work.
    target, and on-demand Serve fails every view. Recommended: restore `url()`
    after Lightning, or use its dependency analysis, and re-run the string guard
    on Lightning's output.
+
+   Resolved in `b197b0c`: Lightning URL placeholders restore `url()` before
+   esbuild, and transformed CSS is rechecked across six asset contexts.
+
 5. **Medium — a crashed PostCSS worker hangs Build and Serve.**
    `src/build/styles/isolated_postcss.ts` rejects only in-flight requests, and
    only on a non-zero exit. A plugin that throws later or calls
@@ -63,6 +75,10 @@ without including the uncommitted Milestone 10 work.
    Serve's serial queue and its shutdown. Recommended: a small reusable worker
    request helper that fails permanently on any unexpected exit or error. Test
    crash, exit 0, late exception and calls made after the worker has died.
+
+   Resolved in `b197b0c`: one request channel permanently rejects pending and
+   future calls on worker error, messageerror or unexpected exit.
+
 6. **Medium — explicit PostCSS dependencies under `dist`, `target`,
    `coverage` and similar are dropped.** `ignoredDependencyPath` treats denied
    folder names like `node_modules`. An `@reference` or `@plugin` file under
@@ -70,6 +86,10 @@ without including the uncommitted Milestone 10 work.
    contradicts the contract. Recommended: one shared exact-required-input rule
    in `package_owned_paths.ts`, used by PostCSS, watch and freshness, with a
    test for each denied name.
+
+   Resolved in `b197b0c`: explicit dependencies survive every denied-name
+   directory while broad scans remain pruned and exact changes rebuild.
+
 7. **Medium — a symlinked repository root drops PostCSS dependencies and skips
    guards.** Plugins report real paths, but the checks compare them with the
    configured symlink path. Reported files go missing from the inventory. The
@@ -77,6 +97,10 @@ without including the uncommitted Milestone 10 work.
    check stop firing. Recommended: one helper that maps reported real paths
    back to configured-root paths, used by esbuild metafiles, PostCSS reports
    and watch events, with symlinked-root tests.
+
+   Resolved in `b197b0c`: physical reports/events map through the configured
+   root; alias inventory, watch, generated/public guards and nested pruning pass.
+
 8. **Low — an `@import` at end of file without a semicolon bypasses renderer
    pruning.** `ruleEnd` in `prelude.ts` finds no end at end of file, so the
    renderer's CSS reappears in entry stylesheets. Recommended: treat end of

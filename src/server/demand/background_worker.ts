@@ -56,8 +56,11 @@ parentPort?.on(
       const snapshot = await timeAsync("changes.classify", () =>
         classifier.read(runtime.config, manifest!, message.base, undefined, {
           ...(message.commit ? { commit: message.commit } : {}),
-          ...(outputs ? { outputs } : {}),
-          deliveredStyleSources: runtime.deliveredStyleSources,
+          generation: {
+            routes: runtime.styleOutputs.map(([route]) => route),
+            ...(outputs ? { outputs } : {}),
+            deliveredStyleSources: runtime.deliveredStyleSources,
+          },
         }),
       );
       parentPort?.postMessage({ type: "classified", snapshot });

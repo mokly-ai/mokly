@@ -3,12 +3,13 @@ import path from "node:path";
 
 import { logicalRepositoryPath } from "../../config/file_locations.js";
 import { compareCodeUnits } from "../../config/path_order.js";
-import { toPosixPath } from "../../config/paths.js";
+import { isInside, projectRealPath, toPosixPath } from "../../config/paths.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { MoklyError } from "../../errors.js";
 
 import {
   dependencyOwnership,
+  createDependencyPathCache,
   ignoredDependencyPath,
   walkDependencyDirectory,
   type DependencyPathCache,
@@ -30,6 +31,7 @@ export interface PostcssDependencies {
 
 interface Candidate {
   readonly file: string;
+  readonly relativePath: string;
   readonly report: StyleDependencyReport;
   readonly directory?: string;
 }
@@ -44,7 +46,7 @@ export function collectPostcssDependencies(
   const expanded: Candidate[] = [];
   const directories = new Map<string, PostcssWatchDirectory>();
   const scanned = new Map<string, readonly string[]>();
-  const ownership: DependencyPathCache = new Map();
+  const ownership: DependencyPathCache = createDependencyPathCache(config);
   const ordered = [...reports].sort((first, second) =>
     compareCodeUnits(
       `${first.source}\0${first.plugin}\0${first.type}`,
@@ -68,7 +70,11 @@ export function collectPostcssDependencies(
     const normalizedReport = { ...report, source };
     if (ignoredDependencyPath(file, config, ownership)) continue;
     if (report.type === "dependency") {
-      explicit.push({ file, report: normalizedReport });
+      explicit.push({
+        file,
+        relativePath: relative(config, file),
+        report: normalizedReport,
+      });
     } else {
       if (!fs.statSync(file, { throwIfNoEntry: false })?.isDirectory())
         throw new MoklyError(
@@ -87,34 +93,38 @@ export function collectPostcssDependencies(
       for (const matched of matches)
         expanded.push({
           file: matched,
+          relativePath: relative(config, matched),
           report: normalizedReport,
           directory: file,
         });
     }
   }
-  const sorted = (candidates: readonly Candidate[]) =>
-    [...candidates].sort((first, second) =>
-      compareCodeUnits(
-        relative(config, first.file),
-        relative(config, second.file),
-      ),
-    );
-  for (const candidate of sorted(explicit))
+  const byPath = (first: Candidate, second: Candidate) =>
+    compareCodeUnits(first.relativePath, second.relativePath);
+  explicit.sort(byPath);
+  expanded.sort(byPath);
+  for (const candidate of explicit)
     if (isGenerated(candidate.file, config, ownership))
       throw generatedError(candidate, config);
   if (config.generatedOutput === "committed")
-    for (const candidate of sorted(expanded))
+    for (const candidate of expanded)
       if (isGenerated(candidate.file, config, ownership))
         throw generatedError(candidate, config);
   const sourceFiles = new Set<string>();
   const explicitPaths = new Set(explicit.map(({ file }) => file));
-  for (const candidate of [
-    ...sorted(explicit),
-    ...sorted(expanded).filter(({ file }) => !explicitPaths.has(file)),
-  ]) {
+  const candidates = [
+    ...explicit,
+    ...expanded.filter(({ file }) => !explicitPaths.has(file)),
+  ];
+  for (const candidate of candidates) {
     if (isGenerated(candidate.file, config, ownership)) continue;
-    if (isPublicMockupsDependency(candidate.file, config, graphInputs))
+    if (
+      isPublicMockupsDependency(candidate.file, config, graphInputs, ownership)
+    )
       throw publicError(candidate, config);
+  }
+  for (const candidate of candidates) {
+    if (isGenerated(candidate.file, config, ownership)) continue;
     if (!fs.statSync(candidate.file, { throwIfNoEntry: false })?.isFile())
       throw new MoklyError(
         "build-invalid",
@@ -145,7 +155,13 @@ function isPublicMockupsDependency(
   file: string,
   config: ResolvedConfig,
   graphInputs: ReadonlySet<string>,
+  cache: DependencyPathCache,
 ): boolean {
+  if (
+    !isInside(config.mockupsDir, file) &&
+    !isInside(cache.roots.mockups, projectRealPath(file))
+  )
+    return false;
   return wouldPrivatizePublicFile(file, config, graphInputs);
 }
 

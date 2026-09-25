@@ -8,12 +8,14 @@ internal binary and is not published to npm or crates.io.
 - Run the current source-level TypeScript, package, example, and Rust suite.
 - Fail verification when the live dependency audit reports an advisory or error.
 - Enforce the Rust file-length limit.
+- Enforce changed TypeScript/JavaScript (300 lines) and protocol Markdown
+  (250 lines) limits against the fetched `origin/main` baseline.
 - Keep the complete local gate aligned with the approved independent CI suites.
 
 ## What This Crate Does
 
-The crate provides the implementation behind `cargo xtask check` and
-`cargo xtask rust-file-length-lint`.
+The crate provides the implementation behind `cargo xtask check`,
+`cargo xtask rust-file-length-lint`, and `cargo xtask source-file-length-lint`.
 The Node unit/integration suite runs at most two test files concurrently;
 individual concurrency tests and their existing timeouts remain unchanged.
 The complete check starts with `npm run dependencies:check`, covering all
@@ -44,6 +46,8 @@ cargo xtask check --suite package
 cargo xtask check --suite unit --shard 1/4
 cargo xtask check --suite browser --shard 1/4
 cargo xtask rust-file-length-lint --all
+cargo xtask source-file-length-lint
+cargo xtask source-file-length-lint --all
 ```
 
 `--shard INDEX/TOTAL` is valid only for the unit and browser suites. Omitting it

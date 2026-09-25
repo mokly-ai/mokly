@@ -30,6 +30,7 @@ fn complete_gate_is_the_ordered_union_of_every_suite() {
             "npm run dependencies:check",
             "npm run format:check",
             "npm run lint",
+            "node scripts/verification/source-file-length.mjs",
             "cargo fmt --all -- --check",
             "cargo clippy --workspace --all-targets -- -D warnings",
             "cargo test --workspace",
@@ -83,6 +84,9 @@ fn repository_suite_runs_audit_first_and_includes_file_length() {
             .next_call(matching!((command) if command.display() == "npm run lint"))
             .returns(Ok(())),
         CommandRunnerRunMock
+            .next_call(matching!((command) if command.display() == "node scripts/verification/source-file-length.mjs"))
+            .returns(Ok(())),
+        CommandRunnerRunMock
             .next_call(matching!((command) if command.display() == "cargo fmt --all -- --check"))
             .returns(Ok(())),
         CommandRunnerRunMock
@@ -102,6 +106,25 @@ fn repository_suite_runs_audit_first_and_includes_file_length() {
         .expect("repository request is valid");
 
     runner.run(request).expect("repository suite succeeds");
+}
+
+#[test]
+fn source_length_audit_supports_changed_and_all_modes() {
+    let command_runner = Arc::new(Unimock::new((
+        CommandRunnerRunMock
+            .next_call(matching!((command) if command.display() == "node scripts/verification/source-file-length.mjs"))
+            .returns(Ok(())),
+        CommandRunnerRunMock
+            .next_call(matching!((command) if command.display() == "node scripts/verification/source-file-length.mjs --all"))
+            .returns(Ok(())),
+    )));
+    let runner = DefaultCheckRunner::new(command_runner, Arc::new(Unimock::new(())), workspace());
+    runner
+        .source_file_length(false)
+        .expect("changed-file audit succeeds");
+    runner
+        .source_file_length(true)
+        .expect("all-file audit succeeds");
 }
 
 #[test]

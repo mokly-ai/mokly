@@ -74,8 +74,13 @@ Mokly copies local font/image URLs to generated assets, mirrors their paths
 under `mokly-generated/assets/`, and preserves query/hash suffixes. Keep
 asset filenames and directories URL-safe: no spaces, trailing dots or Windows
 device names. An npm scope following `node_modules` may begin with `@`;
-`encodeUrlPath` writes it as `%40` in links. Use a stylesheet-relative
+Mokly encodes that character in view links and serves the original package
+asset path. Use a stylesheet-relative
 `url()`, never `/root/asset.png`.
+Inside `image-set()` and `-webkit-image-set()`, wrap a local asset in `url()`:
+`image-set(url("./cover.webp") 1x)`. Quoted local filenames cannot be copied
+or validated and fail Build; quoted HTTP(S), `//` and `data:` sources remain
+external.
 Remote HTTP(S), `//`, `data:` and `#fragment` URLs are unchanged. Link your
 own separately authored public assets normally. An imported `url()` asset
 that is already a public file under `mockupsDir` fails rather than silently
@@ -151,21 +156,13 @@ sets `overrideBrowserslist: ["Safari 14"]` on autoprefixer so
 }
 ```
 
-In `examples/basic/src/components/workspace-note/utilities.css` the explicit
-source is `@source "../..";`, relative to that CSS file, to scan only
-`examples/basic/src`; its `@utility note-title` affects only the Welcome
-component that uses that class. The example sets `BROWSERSLIST_IGNORE_OLD_DATA=1` in
-its PostCSS module to prevent an aging `caniuse-lite` warning from adding
-noise to this fixed-target demo. In an application, update Browserslist's
-dataset instead of suppressing that warning.
-
 If you intentionally use Tailwind's **automatic** discovery instead, use
 `@source not "../docs/mockups";` to exclude direct scans in this layout.
 Tailwind can still report a broad scan of the parent `docs/` directory whose
 glob reaches `mockupsDir`; when the whole `docs/` tree can be excluded, use
 `@source not "../docs";` instead. Otherwise keep the `source(none)` example
 above and explicitly include only authored trees. The build fails if a
-plugin scans public files that the catalogue links, rather than quietly
+plugin scans any otherwise-public file under `mockupsDir`, rather than quietly
 hiding them. `@source` paths are relative to the stylesheet, not the shell's
 working directory.
 
