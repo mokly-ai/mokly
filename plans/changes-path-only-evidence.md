@@ -1,7 +1,7 @@
 # Path-Only Evidence Stays Out Of Changes
 
-Status: Milestones 1–3 are implemented, verified, pushed, and reviewed;
-findings 2–6 await the user's decision. The plan stays Active until PR #118 merges. Created
+Status: Milestones 1–4 are complete; Milestones 5–9 fix review findings
+3–6, and finding 2 awaits the user's decision. The plan stays Active until PR #118 merges. Created
 2026-09-25 with the user's consent (option B of
 finding 1 raised while reviewing the PR #118 preview). Implemented on the
 `calummoore/halifax-v2` branch alongside
@@ -143,6 +143,87 @@ watched updates, Review JSON, and publication.
       explanation, impact of doing nothing, lettered options, and a
       recommendation, without changing the implementation. An independent
       reviewer ran against `49a23bd`; findings 3–6 await the user's decision.
+
+## Milestone 5: Review follow-up contract documentation
+
+The user asked to fix findings 3–6 with the recommended options. Define the
+contract for each before any code changes.
+
+- [x] Finding 3: state that source validation accepts an entry `dependency`
+      reason only from evidence the classifier collected itself (the path
+      rule, the resources its view comparisons retained for that entry, or
+      propagated owned CSS), never from the result's own records, and that
+      this evidence is keyed exactly like entry pairs (route for screens and
+      flows, id for components). Update `src/review/README.md`, whose current
+      sentence lists "retained view" evidence.
+- [x] Finding 5: link the `mokly-authoring.md` (~57) passage and the
+      `mokly-design-components.md` change table (~227) to the owning rule in
+      `mokly-component-changes.md` instead of the old wording.
+- [x] Finding 6: in `mokly-css-evidence-shell.md` (and
+      `mokly-component-workspace-design.md` if it owns component Details
+      copy), define the component wording of the four Details sentences that
+      now say "screen", choosing "component" or "variant" by whether the
+      evidence is entry-level or per saved variant, all supplied by the shared
+      wording helper.
+- [x] Distinguish ordinary Unmodified component mockups from the shared-impact
+      state that keeps a file list in Details.
+- [x] Split validation and canonical output into a focused spec, retaining the
+      original affected-consumer wording and linking back from the result schema.
+- [x] Validate Prettier, links, and anchors on changed Markdown; run the
+      doc-size, guide, and protocol-reading unit tests.
+- [x] Commit.
+
+## Milestone 6: Component shared-impact mockup
+
+Tags: mockup
+
+- [ ] Add a component version of the Shared impact state (a component page
+      whose Details lists files that may affect it, with the Milestone 5
+      wording), mobile and desktop, reachable from the existing component
+      mockup pages and within the five-mockups-per-page limit; reuse the
+      existing screen components and design parts.
+- [ ] Run `npm run build`, `npm run example:build`, and
+      `npm run example:check`; inspect the new artboards through
+      `npm run dev`.
+- [ ] Commit.
+
+## Milestone 7: Source validation and invariant oracle
+
+- [ ] Finding 3, failure-first: a forged reason recorded on both a view and
+      the entry, and a reason injected onto a screen that only uses a changed
+      component, are rejected; a screen moved onto another screen's former
+      route with a view-level dependency reason validates.
+- [ ] Remove the result-based fallback from producer source validation and
+      key the classifier's view evidence with the entry pair key, shared with
+      `entryPairs`.
+- [ ] Finding 4: compute the invariant test's expected `sharedImpact` from the
+      fixture's manifests and changed files under the old rule, without
+      reading the result under test; show it fails when an owner reason is
+      dropped.
+- [ ] Commit.
+
+## Milestone 8: Component Details wording
+
+Tags: ui
+
+- [ ] Route the four Details evidence sentences through the shared wording
+      helper with the Milestone 5 copy; screen copy stays unchanged.
+- [ ] Failure-first test that renders component Details evidence and fails
+      on screen wording, plus screen regression coverage; smoke-test a
+      component page through `npm run dev`.
+- [ ] Commit.
+
+## Milestone 9: Review follow-up verification, close-out, and review
+
+- [ ] Mark findings 3–6 fixed in the review-findings list.
+- [ ] Run `cargo xtask check`; fix anything it reports until it passes.
+- [ ] Update the PR #118 description if it no longer covers the branch.
+- [ ] Commit and push.
+- [ ] Review the complete local diff against `origin/main` using
+      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      after the push; report each finding with a number, severity, plain
+      explanation, impact of doing nothing, lettered options, and a
+      recommendation, without changing the implementation.
 
 ## Review findings
 

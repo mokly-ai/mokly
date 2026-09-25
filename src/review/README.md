@@ -68,8 +68,9 @@ catalogues follow the [path evidence rule](../../docs/protocol/mokly-component-c
 `component_metadata.ts` owns glob matching, owned/exact reasons, and unowned
 directory evidence. The classifier combines that evidence with reasons to
 preserve the [v3 result set](../../docs/protocol/mokly-component-review.md#reasons-and-secondary-evidence).
-Source validation rejects a dependency reason without an independent path,
-retained view or ownership-projected resource, or propagated owned CSS source.
+Source validation keys evidence by entry pair and rejects dependency reasons
+without the classifier's own path policy, view-comparison paths, or propagated
+owned CSS; result view records never justify their entry reasons.
 
 ```bash
 npm run build

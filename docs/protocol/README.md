@@ -88,6 +88,7 @@ when the historical primary file is absent, never when it is invalid.
 - [Component runtime prop schema](./mokly-component-props.md)
 - [Current manifest v6 schema](./mokly-component-manifest.md)
 - [Component comparison v3 schema](./mokly-component-review.md)
+- [Component review validation and canonical output](./mokly-component-review-validation.md)
 - [Component change attribution](./mokly-component-changes.md)
 - [CSS change attribution](./mokly-css-attribution.md) — approved
   target: rule-aware stylesheet evidence.

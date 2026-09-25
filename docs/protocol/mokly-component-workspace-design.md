@@ -146,11 +146,14 @@ Name the information icon Details. Keep comparison evidence, when present,
 inside this panel alongside description and secondary source metadata. Do not
 add a comparison disclosure below the canvas or a separate explanatory banner
 above it. The panel remains available on a Removed screen's stage even though
-that screen has no comparison modes. Unmodified
-examples omit the comparison section.
+that screen has no comparison modes. Ordinary Unmodified mockups omit the
+comparison section; a shared-impact-only component keeps its file list in Details.
 
 Use structured evidence: entry/variant state, a generic output-change reason,
-paired prop values, and links to changed components actually used by the screen.
+the component-level changed-file list and style outcomes, selected-variant
+stylesheet exclusions, paired prop values, and links to changed components
+actually used by the screen. The [CSS evidence contract](./mokly-css-evidence-shell.md#component-details-copy)
+owns the exact component and variant sentences.
 Prop rows identify their component instance and show Before and Current values.
 The mockup fixtures share these values with the rendered preview and Props panel.
 Do not invent explanations such as “corners and spacing changed”: the runtime

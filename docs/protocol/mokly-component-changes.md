@@ -65,7 +65,7 @@ component-aware results use schema v3. Screen entries retain their actual view
 results, with affected-only evidence separate from direct Changes membership.
 All comparisons keep full unmodified before/after documents and isolated assets.
 The [comparison schema](./mokly-component-review.md) defines the exact result,
-Changes membership, reasons, affected evidence, side pairing, and validation.
+Changes membership, reasons, affected evidence, and side pairing; the [validation contract](./mokly-component-review-validation.md) defines validation.
 Live [selected comparisons](./mokly-selected-comparisons.md) project this
 completed evidence onto one screen or saved variant before capturing its assets.
 They retain the full catalogue's affected-consumer evidence in the shell inspector.

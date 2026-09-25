@@ -78,6 +78,23 @@ Any other retained reason, such as a changed font or image, or a present
 never emit `analysis`-bearing reasons, so their absent `material` flag cannot
 select the style label.
 
+### Component Details Copy
+
+The shared entry wording helper selects these exact component sentences;
+screen copy stays as written below. File paths and analysed outcomes come from
+entry-level `sharedImpact` and retained dependency reasons, so they name the
+component. Exclusions come from the selected saved variant's compared views,
+so they name that variant. Changes lists components, never variants.
+
+| Evidence                            | Component Details sentence                                                            |
+| ----------------------------------- | ------------------------------------------------------------------------------------- |
+| File list                           | "Changes to these files may affect this component:"                                   |
+| Matched styles                      | "Changed styles that apply to this component:"                                        |
+| Unresolved styles with selectors    | "This change can apply anywhere on the component, so the component stays in Changes:" |
+| Unresolved styles without selectors | "This change can apply anywhere on the component, so the component stays in Changes." |
+| One excluded stylesheet             | "This stylesheet changed, but none of the changed styles apply to this variant."      |
+| Several excluded stylesheets        | "These stylesheets changed, but none of the changed styles apply to this variant."    |
+
 For both result versions, the Details inspector lists the sorted union of
 retained dependency reason paths (entry reasons in v3, view reasons in v2)
 and entry `sharedImpact` under

@@ -54,10 +54,13 @@ level.
 Each entry provides a title, description, related docs, and dependency paths.
 A dependency may identify an existing repository file or directory; Review
 matches the path itself and every descendant and reports the concrete changed
-path as impact evidence. Dependency declarations and source paths alone do not
-add entries to Browse Changes: that filter compares output, rendered resources,
-reviewable metadata, and `navPath`, then propagates affected screens
-to their flows. See [the Changes contract](./mokly-changes.md).
+path as impact evidence. A source path or a changed descendant matched only by
+a declared directory does not list an otherwise unchanged entry in Browse
+Changes. Exact declarations and component-owned paths follow the
+[component path rule](./mokly-component-changes.md#dependencies-and-styles).
+Changes also compares output, rendered resources, reviewable metadata, and
+`navPath`, then propagates directly changed screens to their flows. See
+[the Changes contract](./mokly-changes.md).
 Screens, pages, and use cases provide a stable relative `.html` route; use cases live
 under `user-flows/`. Screens may
 provide an address-bar label and use-case membership. Nested definitions

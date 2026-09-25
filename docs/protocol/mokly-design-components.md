@@ -217,15 +217,15 @@ class proximity is not proof of exclusive ownership.
 
 Acceptance after a registered baseline exists:
 
-| Edit                                                           | Direct Changes                   | Secondary evidence                        |
-| -------------------------------------------------------------- | -------------------------------- | ----------------------------------------- |
-| Top bar implementation or its exclusive CSS                    | Top bar                          | Consuming design screens                  |
-| Nested Tag chip implementation                                 | Tag chip                         | Picker/Top bar and their screen consumers |
-| A screen changes query, title, target, status or a field value | That screen                      | Actual usage updates                      |
-| A screen changes supplied slot content or instance order       | That screen                      | Actual usage updates                      |
-| A saved variant's props change                                 | That component                   | No automatic consumer change              |
-| Global tokens or screen layout change                          | Existing conservative membership | Existing dependency evidence              |
-| Temporary local prop edit or Reset                             | None                             | Preview only                              |
+| Edit                                                           | Direct Changes                                                                                              | Secondary evidence                        |
+| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| Top bar implementation or its exclusive CSS                    | Top bar                                                                                                     | Consuming design screens                  |
+| Nested Tag chip implementation                                 | Tag chip                                                                                                    | Picker/Top bar and their screen consumers |
+| A screen changes query, title, target, status or a field value | That screen                                                                                                 | Actual usage updates                      |
+| A screen changes supplied slot content or instance order       | That screen                                                                                                 | Actual usage updates                      |
+| A saved variant's props change                                 | That component                                                                                              | No automatic consumer change              |
+| Global tokens or screen layout change                          | Rendered screens when output changes; see [path rule](./mokly-component-changes.md#dependencies-and-styles) | Shared-file evidence                      |
+| Temporary local prop edit or Reset                             | None                                                                                                        | Preview only                              |
 
 The initial registration migration may create legitimate one-time structural
 changes against an unregistered baseline. Do not add blanket Review ignores to
