@@ -1,6 +1,6 @@
 /** Exact current or historical entry resolution for public selection. */
 
-import type { CatalogueReadModel, CatalogueRoutedEntry } from "./types.js";
+import type { CatalogueRoutedEntry } from "./types.js";
 
 interface CatalogueRouteEntry {
   id: string;
@@ -36,11 +36,11 @@ export function currentCatalogueEntries<Entry extends CatalogueRouteEntry>(
 }
 
 /** Resolve the complete public selection; explicit snapshots never downgrade. */
-export function resolveCatalogueSelection(
-  model: CatalogueReadModel,
+export function resolveCatalogueSelection<Entry extends CatalogueRouteEntry>(
+  model: CatalogueRouteIndex<Entry>,
   entryId: string,
   snapshotId?: string,
-): ResolvedCatalogueEntry | undefined {
+): ResolvedCatalogueEntry<Entry> | undefined {
   if (snapshotId !== undefined) {
     const historical = model.removedEntries.find(
       (record) =>

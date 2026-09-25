@@ -6,8 +6,10 @@ Live evidence updates and bounded affected-usage deduplication are implemented.
 Deduplication verification is recorded in Milestone 2 of the
 [dependency patch upstreaming plan](../../plans/mokabook-dependency-patch-upstreaming.md).
 Adoption of the current route's scoped bootstrap with its complete private
-workspace is an approved target tracked by the
+workspace is implemented by Milestone 5 of the
 [route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
+During the transition its one live reader also accepts complete Serve pages;
+Milestone 6 removes that mode when Serve starts emitting scope.
 
 ## Revisions and publication
 

@@ -10,6 +10,10 @@ import {
   type ShellBootstrapView,
 } from "../src/standalone/bootstrap.js";
 import { readScopedShellBootstrap } from "../src/standalone/scoped_bootstrap.js";
+import {
+  readLiveShellBootstrap,
+  readLiveShellBootstrapState,
+} from "../src/standalone/scoped_bootstrap.js";
 
 import { scopedCatalogueFixture } from "./scoped_catalogue_fixture.js";
 
@@ -41,6 +45,49 @@ test("scoped bootstraps for every route shape round-trip canonical bytes", () =>
     const parsed = readScopedShellBootstrap(JSON.parse(bytes));
     assert.equal(serializeShellBootstrap(parsed), bytes, JSON.stringify(view));
   }
+});
+
+test("the live reader's explicit transition mode accepts complete or exact scope", () => {
+  const view = { kind: "target" as const, route: "screens/home.html" };
+  const complete = { catalogue: model, context, view };
+  const scoped = JSON.parse(scopedBytes(view));
+  assert.deepEqual(
+    readLiveShellBootstrap(complete, "transitional").catalogue,
+    model,
+  );
+  assert.deepEqual(
+    readLiveShellBootstrap(scoped, "transitional"),
+    readScopedShellBootstrap(scoped),
+  );
+  assert.throws(
+    () => readLiveShellBootstrap(complete, "scoped"),
+    /out-of-scope usage must be omitted/i,
+  );
+
+  const hybrid = JSON.parse(scopedBytes(view));
+  hybrid.catalogue.components[0].variants[0].views[0].usage =
+    model.components[0]!.variants[0]!.views[0]!.usage;
+  assert.throws(
+    () => readLiveShellBootstrap(hybrid, "transitional"),
+    /out-of-scope usage must be omitted/i,
+  );
+});
+
+test("the transitional state reader leaves static external references unchanged", () => {
+  const external = {
+    catalogue: {
+      identity: model.identity.id,
+      kind: "external",
+      path: "/__mokly/catalogue.json",
+      revision: model.revision,
+    },
+    context,
+    view: { kind: "home" as const },
+  };
+  assert.deepEqual(
+    readLiveShellBootstrapState(external, "transitional"),
+    external,
+  );
 });
 
 test("public catalogue reading still rejects shell-only omitted usage", () => {

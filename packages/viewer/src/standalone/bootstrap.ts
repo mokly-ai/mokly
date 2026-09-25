@@ -2,6 +2,7 @@
 
 import { resolveCatalogueRoute } from "../catalogue/entry_selection.js";
 import { readCatalogue } from "../catalogue/reader.js";
+import type { ShellCatalogueReadModel } from "../catalogue/scoped_types.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import { canonicalJson } from "../components/data.js";
 import type { StaticDelivery } from "../navigation/delivery.js";
@@ -128,7 +129,9 @@ export function serializeShellBootstrap(
 }
 
 /** Recreate the exact component inputs used by standalone SSR. */
-export function shellBootstrapProps(bootstrap: ShellBootstrap) {
+export function shellBootstrapProps(
+  bootstrap: ShellBootstrapEnvelope<ShellCatalogueReadModel>,
+) {
   const catalogue = viewerCatalogue(bootstrap.catalogue);
   const selected =
     bootstrap.view.kind === "target"
@@ -179,13 +182,18 @@ export function shellBootstrapProps(bootstrap: ShellBootstrap) {
 }
 
 /** Adopt the finalized authenticated descriptor over static staging values. */
-export function shellBootstrapWithDelivery(
-  bootstrap: ShellBootstrap,
+export function shellBootstrapWithDelivery<
+  Catalogue extends ShellCatalogueReadModel,
+>(
+  bootstrap: ShellBootstrapEnvelope<Catalogue>,
   delivery: StaticDelivery,
-): ShellBootstrap {
+): ShellBootstrapEnvelope<Catalogue> {
   return {
     ...bootstrap,
-    catalogue: { ...bootstrap.catalogue, deploymentId: delivery.deploymentId },
+    catalogue: {
+      ...bootstrap.catalogue,
+      deploymentId: delivery.deploymentId,
+    } as Catalogue,
     context: { ...bootstrap.context, delivery },
   };
 }

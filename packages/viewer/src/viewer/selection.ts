@@ -2,8 +2,8 @@ import {
   currentCatalogueEntries,
   resolveCatalogueSelection,
 } from "../catalogue/entry_selection.js";
+import type { ShellCatalogueReadModel } from "../catalogue/scoped_types.js";
 import { isHistoricalSnapshotId } from "../catalogue/snapshot_identity.js";
-import type { CatalogueReadModel } from "../catalogue/types.js";
 import { parseSearchQuery, rowMatchesQuery } from "../shell/search_query.js";
 
 import type { ViewerSelection } from "./types.js";
@@ -28,7 +28,7 @@ const selectionKeys = new Set([
 ]);
 /** Normalize without mutating either the caller's object or tag array. */
 export function normalizeSelection(
-  model: CatalogueReadModel,
+  model: ShellCatalogueReadModel,
   value: ViewerSelection,
 ): ViewerSelection {
   const resolved =
@@ -94,7 +94,7 @@ export function sameSelection(a: ViewerSelection, b: ViewerSelection): boolean {
 }
 /** Merge one public proposal and reset a saved variant on entry changes. */
 export function mergeSelection(
-  model: CatalogueReadModel,
+  model: ShellCatalogueReadModel,
   current: ViewerSelection,
   partial: Partial<ViewerSelection>,
 ): ViewerSelection {
@@ -122,7 +122,7 @@ export function selectionQuery(value: ViewerSelection): string {
     .filter(Boolean)
     .join(" ");
 }
-export function routedEntries(model: CatalogueReadModel) {
+export function routedEntries(model: ShellCatalogueReadModel) {
   return [
     ...currentCatalogueEntries(model),
     ...model.removedEntries.map(({ entry }) => entry),
@@ -130,7 +130,7 @@ export function routedEntries(model: CatalogueReadModel) {
 }
 /** Route activation clears only constraints hiding its actual destination. */
 export function revealSelection(
-  model: CatalogueReadModel,
+  model: ShellCatalogueReadModel,
   value: ViewerSelection,
 ): ViewerSelection {
   const entry =

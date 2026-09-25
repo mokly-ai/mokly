@@ -346,10 +346,11 @@ boundary accepts only that complete v1 model and rejects `omitted`.
 
 The runtime subpath exposes `projectScopedCatalogue`, the
 `ShellCatalogueUsage`/`ShellCatalogueReadModel` types and the strict
-`readScopedShellBootstrap` boundary. These primitives are isolated from the
-current browser reader while Serve still emits complete bootstraps; live
-emission and reading switch together so mixed payload expectations cannot
-reach users.
+`readScopedShellBootstrap` boundary. Browser hydration and live evidence use
+the centralized `readLiveShellBootstrap` transition mode: a payload is either
+complete or exactly scoped, never a partial hybrid. Serve still emits complete
+bootstraps until Milestone 6 switches emission and the reader to scoped-only
+together.
 
 Full-document rendering serializes each bootstrap and capability descriptor
 once. Hydration reuses the exact embedded text across later React renders;

@@ -21,8 +21,10 @@ static, and embedded hosts through the same tree, as implemented by the
 Serialize-once embedded state is implemented by Milestone 3 of the
 [route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
 Milestone 4 implements its isolated route-scoped model, projection and strict
-reader; browser hydration remains on complete Serve bootstraps until the
-coordinated emission-and-reader switch in Milestone 6.
+reader. Milestone 5 implements scoped hydration, pending frames and atomic
+route/live-evidence adoption behind a transitional reader that also accepts
+complete Serve bootstraps. Milestone 6 switches emission and that reader to
+scoped-only together.
 
 ## Package And Props
 

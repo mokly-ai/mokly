@@ -31,7 +31,7 @@ export function readShellDelivery(doc: Document): StaticDelivery | undefined {
 /** Verify that the deployed read model still belongs to the mounted shell. */
 export async function currentDeploymentMatches(
   win: Window & typeof globalThis,
-  catalogue: CatalogueReadModel,
+  catalogue: Pick<CatalogueReadModel, "deploymentId">,
   signal: AbortSignal,
 ): Promise<boolean> {
   try {

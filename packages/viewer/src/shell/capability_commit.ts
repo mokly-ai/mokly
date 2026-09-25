@@ -23,6 +23,7 @@ export interface BoundViewerWorkspace {
 
 export interface ViewerCapabilitySnapshot {
   catalogue: Catalogue;
+  routeEvidence?: ViewerCapabilityRequest;
   source?: ViewerCapabilitySource;
   workspace?: BoundViewerWorkspace;
 }
@@ -55,6 +56,7 @@ export function commitViewerEvidence(
   return {
     snapshot: {
       catalogue,
+      routeEvidence: request,
       source: revision.source,
       ...(revision.workspace
         ? { workspace: { request, value: revision.workspace } }

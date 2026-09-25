@@ -331,46 +331,68 @@ Tags: ui
 Summary: make the shell correct for route-scoped catalogues before the server
 emits them, while complete catalogues keep today's behavior.
 
-- [ ] In `workspace_data.ts` and `use_workspace_data.ts`, expose usage as
+- [x] In `workspace_data.ts` and `use_workspace_data.ts`, expose usage as
       loading instead of deriving `Used by` whenever out-of-scope usage is
       `omitted`, and as failed after a rejected or failed route-evidence read.
-- [ ] Render the Milestone 2 loading and failed states in `WorkspaceUsage`, and
+- [x] Render the Milestone 2 loading and failed states in `WorkspaceUsage`, and
       never show "No recorded consumers." before complete data arrives.
-- [ ] Treat omitted usage as pending in `workspace_inspection_runtime.ts` and
+- [x] Treat omitted usage as pending in `workspace_inspection_runtime.ts` and
       the frame mount path, then adopt the committed route usage without
       remounting frames.
-- [ ] Accept destination-scoped catalogues in the route- and live-evidence
-      adoption paths (`capability_store.ts`, `host_capabilities.ts` and
-      `catalogue_updates.ts`), replacing the installed catalogue atomically so
-      out-of-scope usage never accumulates. `?instance=` selections from
-      `Used by` links must resolve after adoption.
-- [ ] Change `refreshEvidence` in `src/client/react_capability_updates.ts` to
+- [x] Accept destination-scoped catalogues in the route- and live-evidence
+      adoption paths (`capability_store.ts` and `host_capabilities.ts`),
+      replacing the installed catalogue atomically so out-of-scope usage never
+      accumulates. Audit `catalogue_updates.ts` separately and keep its unused
+      public-catalogue boundary strict. `?instance=` selections from `Used by`
+      links must resolve after adoption.
+- [x] Add one live-bootstrap reader with an explicit transitional mode that
+      accepts either an ordinary complete bootstrap or an exactly scoped one.
+      Browser hydration, route evidence and live refresh use that mode in this
+      milestone; static external bootstraps and `readCatalogue` remain strict
+      and unchanged. Milestone 6 removes complete-live acceptance when it
+      switches Serve emission and reading together.
+- [x] Change `refreshEvidence` in `src/client/react_capability_updates.ts` to
       read the public bootstrap from the same fetched shell page as its private
       descriptor and remove the second `__mokly/catalogue.json` request. Before
       Milestone 6 that bootstrap still carries the complete projection; after
       Milestone 6 the same path adopts the scoped projection. Test mixed
       descriptor/bootstrap revisions, stale sources and updates, rejected
       candidates, and the absence of the second request.
-- [ ] Audit every consumer of catalogue view usage, including
+  - [x] Update the existing reload-recovery browser regression to preserve its
+        no-extra-fetch intent with zero `catalogue.json` requests after an
+        evidence update; it previously expected the removed second request.
+- [x] Audit every consumer of catalogue view usage, including
       `changes_activation.ts`, `stage_frame.tsx`, `workspace_instances.tsx`,
       `frame_instances.ts` and `component_geometry.ts`.
-  - [ ] Apply the chosen route-scope decision: extend `useRouteEvidence` to
+  - [x] Apply the chosen route-scope decision: extend `useRouteEvidence` to
         every resolved target entry, including use cases and pages, while
         continuing to require private workspace data only for screens and
         components. A use case must adopt its step-screen usage and a page its
         zero-usage scope instead of retaining the previous route's scope.
-  - [ ] Hold and fail those use-case/page evidence responses in tests to prove
+  - [x] Hold and fail those use-case/page evidence responses in tests to prove
         their frames still load and navigate normally while omitted usage is
         pending, without enabling inspection or deriving partial Usage.
-  - [ ] Record the completed consumer audit and any additional dependency found
+  - [x] Record the completed consumer audit and any additional dependency found
         in this plan before closing the milestone.
-- [ ] Add viewer tests with synthetic scoped bootstraps, including
+  - `changes_activation.ts` reads comparison state, not usage. `stage_frame.tsx`
+    now normalizes `omitted` to pending; `workspace_instances.tsx` and
+    `workspace_props.tsx` render the mockup's waiting copy. `frame_instances.ts`,
+    `component_geometry.ts`, markers and both adapters already require ready
+    validated usage before inspection or geometry. `viewer/projection.ts`
+    intentionally omits non-ready records, while `public_workspace.ts` now
+    records selected-view pending state and disables every cross-route scan if
+    any omission exists. Private-only `workspace_input_changes.ts` remains
+    unchanged. `adoptCatalogueRevision` has no in-repository production caller
+    and stays on the complete public reader.
+- [x] Add viewer tests with synthetic scoped bootstraps, including
       development-React hydration of scoped server output without mismatches.
-- [ ] Add browser tests through a fixture that serves scoped pages and holds the
+- [x] Add browser tests through a fixture that serves scoped pages and holds the
       route-evidence response: loading then the list, failure then the failed
       state, no zero-consumer flash, and an instance deep link that resolves.
-- [ ] Run the complete `cargo xtask check` gate with no failures or skips.
-- [ ] After checks pass, `git add -A`, commit with Conventional Commits, and
+- [x] Run the complete `cargo xtask check` gate with no failures or skips.
+  - Complete gate on 2026-09-25: unit 2,449 passed; browser 788 passed;
+    zero failures, skips or cancellations in either suite.
+- [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)

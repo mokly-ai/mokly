@@ -113,11 +113,13 @@ Versioned historical selection adopts new evidence and becomes unavailable if
 that exact snapshot disappears. Identity-less legacy history adopts only an
 unchanged removed record; metadata changes reject live adoption and preserve the
 existing document reload boundary.
-The runtime-only scoped catalogue model, projection and strict reader are
-implemented as isolated data-layer entry points. Browser hydration, route/live
-evidence and capture intentionally keep the complete-bootstrap reader until
-Serve emission and live reading switch together in Milestone 6 of the
-route-scoped bootstrap plan.
+The runtime-only scoped catalogue model, projection and strict reader back
+browser hydration and route/live evidence through one explicit transitional
+mode. It accepts a complete model or an exact scoped model, while any omission
+activates strict scope enforcement. Serve emission remains complete until it
+and this reader switch to scoped-only together in Milestone 6 of the
+route-scoped bootstrap plan. Capture keeps its existing complete reader until
+that milestone.
 Static export uses `src/standalone/static_workspace_evidence.ts` to read inert
 workspace JSON from a destination shell in the mounted deployment, validating
 the response route, compact catalogue reference, and delivery identities against

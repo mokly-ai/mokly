@@ -93,6 +93,15 @@ export function catalogueUsageViews(
   ];
 }
 
+/** Whether a shell catalogue withholds any view usage from this route. */
+export function catalogueHasOmittedUsage(
+  model: ShellCatalogueReadModel,
+): boolean {
+  return catalogueUsageViews(model).some(
+    (view) => view.usage.status === "omitted",
+  );
+}
+
 function addViews(target: Set<ScopedView>, views: readonly ScopedView[]): void {
   for (const view of views) target.add(view);
 }

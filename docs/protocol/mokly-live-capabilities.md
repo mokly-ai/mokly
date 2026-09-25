@@ -8,9 +8,11 @@ capabilities. Serve uses the React host composition for every shell request.
 Static export has a separate inert destination-page evidence reader so
 same-shell navigation can retain the route-scoped data already present in each
 exported page; it has no live behavior, update transport, or private token.
-Scoped public-bootstrap adoption and the loading/failed Usage fallback are
-approved targets tracked by the
+Scoped public-bootstrap adoption, every-target route evidence, and the
+loading/failed Usage fallback are implemented by Milestone 5 of the
 [route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
+Its live reader temporarily also accepts complete Serve bootstraps until
+Milestone 6 switches emission and reading to scoped-only together.
 
 ## Boundary
 

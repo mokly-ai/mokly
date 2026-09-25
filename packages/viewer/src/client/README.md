@@ -13,12 +13,13 @@ import resolves within that complete inventory.
 `host_capability_descriptor.ts` validates the private live Serve bootstrap and
 source identity. `host_capabilities.ts` defines the behavior context, atomic
 public/private evidence revision and route/source cancellation scope. Route and
-live evidence accept the current page's strictly validated scoped catalogue and
-complete private workspace together, replacing the installed scoped model so
-usage from visited routes never accumulates. A rejected current route read is
-reported to the shell as failed Usage; obsolete or aborted reads stay inert.
-Both modules are kept protocol modules; static export omits their standalone
-browser outputs.
+live evidence use the one transitional live reader: complete pages remain valid
+until Serve emission changes, while a page containing any `omitted` usage must
+be exactly scoped. The accepted catalogue and complete private workspace
+replace the installed scoped model together, so usage from visited routes never
+accumulates. A rejected current route read is reported to the shell as failed
+Usage; obsolete or aborted reads stay inert. Both modules are kept protocol
+modules; static export omits their standalone browser outputs.
 
 Disclosure capture and pre-hydration navigation width capture are owned directly
 under `src/standalone`. The synchronous navigation bootstrap records native
@@ -92,11 +93,12 @@ nonce after load. `message_transport.ts` owns the five-second request timeouts,
 16-request bound and response matching. A replacement or disposal invalidates
 the session and all pending work. Subscriptions share one remote event set;
 removing the final subscriber sends an empty replacement set.
-`frame_usage.ts` shares the automatic event capability rule: only validated ready
-usage enables pointer inspection and geometry events; other usage retains only
-navigation. Bootstrap-only omitted usage is normalized to the same pending
-frame state as a view awaiting evidence, so it shows the existing waiting copy
-rather than empty or unavailable inspection. Both built-in mounts accept
+`stage_sources.ts` normalizes bootstrap-only omitted usage to the same pending
+frame state as a view awaiting evidence before it reaches an adapter, so it
+shows the existing waiting copy rather than empty or unavailable inspection.
+`frame_usage.ts` shares the automatic event capability rule: only validated
+ready usage enables pointer inspection and geometry events; other usage retains
+only navigation. Both built-in mounts accept
 `updateUsage` to refresh this capability without replacing their
 document/session. The update clears old inspection
 presentation and preserves navigation subscribers; no inspector wire change is

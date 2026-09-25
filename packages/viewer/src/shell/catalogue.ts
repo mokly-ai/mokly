@@ -1,5 +1,5 @@
 import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
-import type { CatalogueReadModel } from "../catalogue/types.js";
+import type { ShellCatalogueReadModel } from "../catalogue/scoped_types.js";
 import type { ManifestComponent } from "../components/manifest_types.js";
 import {
   analyzeHierarchy,
@@ -12,7 +12,7 @@ import { type RemovedEntrySnapshot } from "./metadata.js";
 
 /** Validated lookup model used by server routes. */
 export interface Catalogue {
-  publicModel?: CatalogueReadModel;
+  publicModel?: ShellCatalogueReadModel;
   byId: ReadonlyMap<string, ManifestEntry>;
   byRoute: ReadonlyMap<string, ManifestEntry>;
   /** Whether any screen in the catalogue was rendered in the dark scheme. */

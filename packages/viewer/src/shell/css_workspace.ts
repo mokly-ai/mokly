@@ -73,6 +73,8 @@ export const SHELL_WORKSPACE_CSS = `
 .mbk-props-table pre { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; font-size: 12px; }
 .mbk-usage-list li { padding: 8px 0; border-bottom: 1px solid var(--chrome-border); }
 .mbk-usage-list small { display: block; margin-top: 4px; color: var(--chrome-muted); }
+.mbk-text-button { background: none; border: 0; color: var(--mbk-accent-deep); cursor: pointer; font: inherit; padding: 0; }
+.mbk-text-button:focus-visible { outline: 2px solid var(--mokly-accent); outline-offset: 2px; }
 .mbk-comparison-evidence { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--chrome-border); }
 .mbk-comparison-evidence p, .mbk-comparison-evidence ul { margin: 8px 0 0; }
 .mbk-comparison-evidence ul + p { margin-top: 14px; }

@@ -16,7 +16,6 @@ import { readShellDelivery } from "./shell/delivery.js";
 import { catalogueNavSections, disclosurePath } from "./shell/nav_model.js";
 import { refreshStandaloneAppearance } from "./standalone/appearance_host.js";
 import {
-  readShellBootstrapState,
   resolveShellBootstrap,
   shellBootstrapProps,
   shellBootstrapWithDelivery,
@@ -27,6 +26,12 @@ import {
 import { isExternalCatalogueReference } from "./standalone/catalogue_reference.js";
 import { StandaloneShellDocument } from "./standalone/document.js";
 import { prepareHydrationState } from "./standalone/preferences.js";
+import {
+  LIVE_SHELL_BOOTSTRAP_MODE,
+  readLiveShellBootstrapState,
+  type LiveShellBootstrap,
+  type LiveShellBootstrapState,
+} from "./standalone/scoped_bootstrap.js";
 import { staticWorkspaceEvidence } from "./standalone/static_workspace_evidence.js";
 
 const hydratedDocuments = new WeakSet<Document>();
@@ -49,13 +54,13 @@ export function hydrateMoklyShell(
   );
   if (!state?.textContent) return;
   const bootstrapJson = state.textContent;
-  const bootstrapState = readShellBootstrapState(JSON.parse(bootstrapJson));
+  const bootstrapState = readLiveShellBootstrapState(
+    JSON.parse(bootstrapJson),
+    LIVE_SHELL_BOOTSTRAP_MODE,
+  );
   const embeddedCapability = readCapabilityDescriptor(doc, capabilities);
   if (!isExternalShellBootstrap(bootstrapState)) {
-    const bootstrap = resolveShellBootstrap(
-      bootstrapState,
-      bootstrapState.catalogue,
-    );
+    const bootstrap = bootstrapState;
     hydrateResolvedShell(
       doc,
       bootstrapJson,
@@ -115,14 +120,17 @@ function readCapabilityDescriptor(
 function hydrateResolvedShell(
   doc: Document,
   bootstrapJson: string,
-  bootstrap: ShellBootstrap,
+  bootstrap: LiveShellBootstrap,
   capabilities: ViewerHostCapabilities | undefined,
   embeddedCapability: EmbeddedCapabilityDescriptor,
 ): void {
   if (hydratedDocuments.has(doc)) return;
   refreshStandaloneAppearance(doc);
   const props = shellBootstrapProps(bootstrap);
-  const delivery = bootstrap.context.delivery;
+  const staticBootstrap = bootstrap.context.delivery
+    ? { ...bootstrap, catalogue: readCatalogue(bootstrap.catalogue) }
+    : undefined;
+  const delivery = staticBootstrap?.context.delivery;
   const workspaceState =
     delivery === undefined
       ? undefined
@@ -131,8 +139,8 @@ function hydrateResolvedShell(
     ? readViewerWorkspace(JSON.parse(workspaceState.textContent), props.context)
     : undefined;
   const staticEvidence =
-    delivery && doc.defaultView
-      ? staticWorkspaceEvidence(doc.defaultView, bootstrap)
+    delivery && doc.defaultView && staticBootstrap
+      ? staticWorkspaceEvidence(doc.defaultView, staticBootstrap)
       : undefined;
   const activeDisclosures =
     props.view.kind === "target"
@@ -201,7 +209,7 @@ async function loadExternalBootstrap(
 }
 
 function isExternalShellBootstrap(
-  state: ShellBootstrapState,
+  state: LiveShellBootstrapState,
 ): state is ExternalShellBootstrap {
   return isExternalCatalogueReference(state.catalogue);
 }

@@ -3,9 +3,11 @@ import fs from "node:fs";
 import test from "node:test";
 
 import { readCatalogue } from "../src/catalogue/reader.js";
+import { projectScopedCatalogue } from "../src/catalogue/scoped_projection.js";
 import type { CatalogueReadModel } from "../src/catalogue/types.js";
 import type { ViewerEvidenceRevision } from "../src/client/host_capabilities.js";
 import type { ViewerCapabilitySource } from "../src/client/host_capability_descriptor.js";
+import { viewerCapabilityRequest } from "../src/client/host_capability_descriptor.js";
 import {
   adoptedViewerCatalogue,
   shellContextWithViewerEvidence,
@@ -159,6 +161,69 @@ test("newer evidence adopts when the server update version is unchanged", () => 
   assert.equal(
     commit.snapshot.workspace?.value.entry.route,
     "screens/home.html",
+  );
+});
+
+test("route adoption replaces scoped usage and private workspace atomically", () => {
+  const componentRoute = model.components[0]!.route;
+  const screenRoute = model.screens[0]!.route;
+  const componentScope = projectScopedCatalogue(model, {
+    kind: "target",
+    route: componentRoute,
+  });
+  const screenScope = projectScopedCatalogue(model, {
+    kind: "target",
+    route: screenRoute,
+  });
+  const current = viewerCatalogue(componentScope);
+  const complete = viewerCatalogue(model);
+  const component = complete.byRoute.get(componentRoute);
+  const screen = complete.byRoute.get(screenRoute);
+  assert.ok(component?.kind === "component");
+  assert.ok(screen?.kind === "screen");
+  const route = routeFromUrl(
+    current,
+    new URL(`https://example.test/view/${screenRoute}`),
+  );
+  const source = capabilitySource(model, 4);
+  const state = createInitialShellState(
+    current,
+    viewerContext(componentScope, {
+      ...defaultSelection,
+      screenId: screen.id,
+    }),
+    route.view,
+    undefined,
+  );
+  const componentRequest = viewerCapabilityRequest(source, componentRoute);
+  const commit = commitViewerEvidence(
+    {
+      catalogue: current,
+      routeEvidence: componentRequest,
+      source,
+      workspace: {
+        request: componentRequest,
+        value: publicWorkspace(model, component),
+      },
+    },
+    state,
+    {
+      catalogue: screenScope,
+      source,
+      workspace: publicWorkspace(model, screen),
+    },
+  );
+  assert.ok(commit);
+  assert.equal(commit.snapshot.workspace?.value.entry.route, screenRoute);
+  assert.equal(commit.snapshot.routeEvidence?.route, screenRoute);
+  const adopted = commit.snapshot.catalogue.publicModel!;
+  assert.ok(
+    adopted.screens[0]!.views.every(({ usage }) => usage.status !== "omitted"),
+  );
+  assert.ok(
+    adopted.components[0]!.variants.every((variant) =>
+      variant.views.every(({ usage }) => usage.status === "omitted"),
+    ),
   );
 });
 
