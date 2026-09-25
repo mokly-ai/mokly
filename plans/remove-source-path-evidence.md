@@ -3,7 +3,8 @@
 ## Status And Outcome
 
 Status: implemented, verified, merged with `origin/main` (#115), pushed and
-reviewed. The review findings await the user's decision.
+reviewed. Milestones 9 to 12 fix the review findings that the user chose on
+2026-09-25.
 The binding Decisions And Scope remove all three inputs and adopt
 component-declared stylesheets in place of the stylesheet role of
 `ownedDependencies`. The user approved both the removals and the component
@@ -475,10 +476,117 @@ Tags: ui
       severity, impact, lettered options and a recommendation, without
       changing the implementation.
 
-Review outcome (2026-09-24, against `origin/main` at `2ec4d837`): 4 Medium
-and 9 Low findings, each verified against the code, were reported to the user
-for a decision and were not fixed. The Medium findings are consumer Changes
-rows caused by Mokly-inserted component stylesheet links, renderer ownership
-records for declared stylesheets that are not linked on the page, missing
-tests for the marker at the start or middle of a list, and protocol and
-architecture docs that still describe older formats or behavior as current.
+Review outcome (2026-09-24, against `origin/main` at `2ec4d837`): 13 findings,
+each verified against the code, were reported to the user for a decision and
+were not fixed. After a follow-up test on 2026-09-25, finding 2 (renderer
+ownership records for declared stylesheets on pages without the declaring
+component) is Low, because the CSS rule check limits its effect. That leaves
+3 Medium and 10 Low findings. The Medium findings are consumer Changes rows
+caused by Mokly-inserted component stylesheet links (1), missing tests for the
+marker at the start or middle of a list (3), and docs that still describe older
+formats or behavior as current (4).
+
+On 2026-09-25 the user chose to fix findings 1, 4, 5, 6, 7, 8, 9, 10, 12 and
+13, and asked for a protocol rule that prefers graceful handling to build
+failures where Mokly can still produce correct output. Findings 2, 3 and 11
+are not scheduled. Milestones 9 to 12 hold this work. The fixes for findings
+1 and 7, and the scope of the graceful-handling rule, await the user's
+confirmation and will get their own milestones before Milestone 12.
+
+## Milestone 9: Document the confirmed review fixes
+
+Update the contracts before code changes. This milestone changes docs only.
+
+- [ ] Finding 4: correct every current doc that describes older formats or
+      removed behavior as current. Known lines: `docs/protocol/README.md:37,60`,
+      `mokly-runtime.md:74`, `mokly-selected-comparisons.md:54,59`,
+      `mokly-page-migration.md:74,76,119`, `mokly-catalogue-changes.md:53,62`,
+      `mokly-instances.md:127,166`, `mokly-pages.md:150`, `mokly-export.md:292`,
+      `mokly-removed-previews.md:145`, `mokly-changes.md:242-244,424`,
+      `docs/architecture/build-pipeline.md:5-8,317-318`,
+      `docs/architecture/package-boundary.md:5-8,24`, `examples/basic/README.md:3-6`,
+      `tests/fixtures/consumers/esm/notes.md:3-6`, the design library screen
+      count in `examples/basic/entries/design/library/README.md:151` and the
+      code comment in `src/server/changed_content.ts:73`. Search for others.
+- [ ] Finding 4: document that retained evidence for non-CSS resources goes to
+      the components that own the resource at the actual invocation
+      (`mokly-component-changes.md`, `mokly-component-review.md`,
+      `mokly-css-attribution.md`), and remove the wrong "not yet implemented"
+      status line from `mokly-timings.md`.
+- [ ] Finding 5: state in the authoring contract that the public input types
+      reject `dependencies` and component `ownedDependencies`.
+- [ ] Finding 6: state in the watch and stylesheet contracts that watched Serve
+      watches every declared stylesheet from startup and after reconfiguration.
+- [ ] Finding 8: two declared paths that resolve to one real file are linked
+      once per page, with one ownership record that lists every rendered
+      component that declares the file.
+- [ ] Finding 9: a configured link is any `<link>` whose `rel` includes the
+      `stylesheet` token. Mokly needs the end of `<head>` only when it adds
+      links there, and it never fails because the renderer omitted optional
+      tags such as `</head>`.
+- [ ] Finding 10: the renderer's `input.entry` has no `stylesheets` field. When
+      a renderer links a declared stylesheet itself, Mokly adds no second link
+      and still records the rendered declaring components as owners.
+- [ ] Validate the changed Markdown with `npx prettier --check` and review the
+      diff.
+
+## Milestone 10: Link to the Matched styles design screen
+
+Tags: mockup
+
+Finding 13: no design screen links to "Matched styles"
+(`design-review-style-matched`) since the Shared impact screen was deleted.
+
+- [ ] Choose the related review screen whose "Changes" filter should open
+      "Matched styles", so that the depicted catalogue, counts and story stay
+      consistent. Keep every other design screen reachable from another design
+      screen.
+- [ ] Update the navigation states, the design-links spec row
+      (`docs/protocol/mokly-design-links.md:255`) and the design inventory.
+- [ ] Restore a test that enters "Matched styles" from that screen.
+- [ ] Run `npm run build`, `npm run example:build`, `npm run example:check`
+      and the design tests, and smoke-test the changed screens at mobile and
+      desktop widths through `npm run dev`.
+
+## Milestone 11: Implement the confirmed review fixes
+
+- [ ] Finding 5: add `dependencies?: never` to every authoring input type and
+      `ownedDependencies?: never` to the component input type. Add
+      `@ts-expect-error` cases to the packed consumer type check
+      (`tests/fixtures/consumers/nodenext/api.tsx`) and remove the leftover
+      `dependencies` in `tests/component_authoring_types.tsx`.
+- [ ] Finding 6: watched Serve watches declared stylesheets from startup and
+      after reconfiguration. Test the real startup order.
+- [ ] Finding 8: link each real file once per page and merge the owners into
+      one record. Test with a symlink alias and a CSS edit.
+- [ ] Finding 9: accept any `rel` that includes `stylesheet`, and insert at the
+      end of the head content without failing when `</head>` is omitted.
+- [ ] Finding 10: remove `stylesheets` from the entry that the renderer gets,
+      at runtime and in the `RenderInput` type. When the renderer already
+      links a declared file, add no second link and keep the ownership record.
+- [ ] Finding 12: make `tests/review.test.ts` "unrendered source" and
+      `scripts/package/consumer_cases.mjs` assert an unchanged screen with no
+      evidence; make the variant and root non-inheritance tests declare the
+      field on the parent and expect exactly one violation; make
+      `packages/viewer/tests/details_contract.test.tsx` inject the old fields;
+      remove removed fields from v6 test data; rename stale test names; move
+      the unique checks of `tests/design_library_style_collector.test.tsx`
+      into `tests/design_library_styles.test.ts` and delete the file; delete
+      `stylesheetsFor` after moving its test caller to
+      `stylesheetPlacementFor`.
+- [ ] Finding 4: add a docs test that fails when a current doc describes an
+      older format, a removed field or shared impact as current. Use the stale
+      lines from Milestone 9 as regression cases.
+- [ ] Run `npm run build`, `npm run typecheck`, `npm run lint`,
+      `npm run example:build`, `npm run example:check`, the focused tests and
+      the complete unit suite, and require 100%.
+
+## Milestone 12: Verify, deliver and review the fixes
+
+- [ ] Run `cargo xtask check` and require a 100% pass rate.
+- [ ] Inspect `git diff --name-status origin/main` and its deletions.
+- [ ] Run `git add -A`, commit with a Conventional Commit, and push the branch.
+- [ ] After the push, review the complete diff against `origin/main` using
+      `docs/implementation-review-prompt.md`. Report numbered findings with
+      severity, impact, lettered options and a recommendation, without
+      changing the implementation.

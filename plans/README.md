@@ -54,7 +54,7 @@
   `review.sharedImpact`; Changes and comparison evidence use only rendered
   output in every catalogue, and components declare the `stylesheets` that
   Mokly links and attributes to them. Implemented, verified, pushed and
-  reviewed; review findings await the user's decision.
+  reviewed; the chosen review fixes are in progress.
 
 ## Completed
 
