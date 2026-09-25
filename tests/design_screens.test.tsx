@@ -274,7 +274,12 @@ for (const viewport of ["mobile", "desktop"] as const) {
         id,
       );
       if (!compared)
-        assert.ok(text.trimEnd().endsWith("No changes to this screen."), id);
+        assert.ok(
+          text
+            .trimEnd()
+            .endsWith("Other changed styles keep Welcome in Changes."),
+          id,
+        );
       for (const heading of elements(document, (node) =>
         ["h1", "h2", "h3"].includes(node.tagName),
       ))
@@ -289,15 +294,11 @@ for (const viewport of ["mobile", "desktop"] as const) {
 
 test("stylesheet evidence states are entered and left through the filter", async () => {
   for (const [source, filter, target] of [
-    [
-      "design-review-ignored-only",
-      "Changes0",
-      "design-review-style-unresolved",
-    ],
+    ["design-review-ignored-only", "Changes0", "design-review-empty"],
+    ["design-review-style-excluded", "Changes1", "design-review-style-matched"],
     ["design-review-style-matched", "All", "design-review-style-excluded"],
     ["design-review-style-unresolved", "All", "design-browse-screen"],
     ["design-review-style-unnamed", "All", "design-browse-screen"],
-    ["design-review-style-excluded", "Changes0", "design-review-empty"],
   ] as const) {
     const { document } = await designDocument(source, "desktop");
     assert.deepEqual(

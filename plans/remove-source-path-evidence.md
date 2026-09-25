@@ -540,16 +540,20 @@ Tags: mockup
 Finding 13: no design screen links to "Matched styles"
 (`design-review-style-matched`) since the Shared impact screen was deleted.
 
-- [ ] Choose the related review screen whose "Changes" filter should open
+- [x] Choose the related review screen whose "Changes" filter should open
       "Matched styles", so that the depicted catalogue, counts and story stay
       consistent. Keep every other design screen reachable from another design
       screen.
-- [ ] Update the navigation states, the design-links spec row
-      (`docs/protocol/mokly-design-links.md:255`) and the design inventory.
-- [ ] Restore a test that enters "Matched styles" from that screen.
-- [ ] Run `npm run build`, `npm run example:build`, `npm run example:check`
+- [x] Update the navigation states and design-links spec row
+      (`docs/protocol/mokly-design-links.md:255`); verify the inventory is
+      unchanged because no screen id, route or count changed.
+- [x] Restore a test that enters "Matched styles" from that screen.
+- [x] Assert every design screen has another design screen linking to it or
+      appears in an explicit, minimal catalogue-tree-only list.
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`
       and the design tests, and smoke-test the changed screens at mobile and
       desktop widths through `npm run dev`.
+- [x] Run the complete unit suite with a 100% pass rate before committing.
 
 ## Milestone 11: Implement the confirmed review fixes
 

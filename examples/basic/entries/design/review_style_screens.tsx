@@ -99,7 +99,7 @@ function ExcludedStyles({ viewport }: { viewport: ArtboardViewport }) {
     <Shell
       design={DESTINATIONS.styleExcluded}
       viewport={viewport}
-      nav={<NavTree activeLabel="Welcome" changedCount={0} />}
+      nav={<NavTree activeLabel="Welcome" changedCount={1} />}
     >
       <WelcomeHead active={viewport} />
       <PreviewWorkspace
@@ -156,7 +156,7 @@ export const reviewStyleScreens = [
   screen({
     colorSchemes: ["light"],
     description:
-      "A linked stylesheet changed but none of its changed styles apply here, so the screen stays out of Changes, offers no comparison, and Details lists the stylesheet as examined and excluded.",
+      "Two linked stylesheets changed. One has no changed styles that apply to Welcome and is excluded in Details; the other does apply, so Welcome remains in Changes and opens its comparison.",
     desktop: <ExcludedStyles viewport="desktop" />,
     id: "design-review-style-excluded",
     mobile: <ExcludedStyles viewport="mobile" />,

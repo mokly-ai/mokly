@@ -10,6 +10,27 @@ const design = (route: string): string =>
     path.join(repositoryRoot, "examples/basic/generated/design", route),
   ).href;
 
+test("stylesheet and empty Changes filters preserve their depicted catalogue", async ({
+  page,
+}) => {
+  await page.goto(design("review/impact/stylesheets/excluded.desktop.html"));
+  await expect(page.locator(".mbk-nav-filter-count")).toHaveText("1");
+  await page.locator("a.mbk-nav-filter-opt").click();
+  await expect(page).toHaveURL(/stylesheets\/matched\.desktop\.html$/);
+  await expect(page.locator(".mbk-nav-filter-opt.active")).toHaveText(
+    "Changes1",
+  );
+  await page.locator("a.mbk-nav-filter-opt").click();
+  await expect(page).toHaveURL(/stylesheets\/excluded\.desktop\.html$/);
+
+  await page.goto(design("review/impact/ignored-only.desktop.html"));
+  await page.locator("a.mbk-nav-filter-opt").click();
+  await expect(page).toHaveURL(/impact\/empty\.desktop\.html$/);
+  await expect(page.locator(".mbk-nav-filter-count")).toHaveText("0");
+  await page.locator("a.mbk-nav-filter-opt").click();
+  await expect(page).toHaveURL(/impact\/ignored-only\.desktop\.html$/);
+});
+
 test("flow designs keep comparisons on the owning screens", async ({
   page,
 }) => {

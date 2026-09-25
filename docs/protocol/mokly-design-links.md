@@ -20,6 +20,8 @@ The Shared impact state and its links were removed by Milestone 2 of
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md);
 Milestone 5 removed legacy runtime comparison details. The links below match the
 current example pages and inspector.
+Milestone 10 of the same plan connects Excluded styles to Matched styles while
+keeping the zero-change review screens paired by their filters.
 
 ## Scope And Ownership
 
@@ -128,7 +130,7 @@ stable id and points readers to Welcome; no unrelated route or membership moves.
 | Welcome All / Changes filter                    | `design-browse-screen` / `design-changes-current`                                                              |
 | Details All / Changes filter                    | `design-browse-details-screen` / `design-review-added`                                                         |
 | Removed screen All filter                       | `design-browse-home`, because the depicted product screen has no current entry                                 |
-| Empty Changes All filter                        | `design-browse-screen`                                                                                         |
+| Empty Changes All filter                        | `design-review-ignored-only`, the same zero-change catalogue with Welcome selected                             |
 | Removed consumer return, component explorer     | `design-component-removed`, from the desktop Action row and the narrow Changes shortcut, never from the stage  |
 
 Collection headings and collection-only breadcrumbs are not catalogue-link
@@ -247,20 +249,24 @@ modes; factual evidence lives in Details. Their existing routes and All escape
 remain available. A future interactive mode needs its own contract and owning
 screen first.
 
-The three stylesheet-evidence states keep the same preview and inspector
-treatment and are entered through the existing filter controls:
+The stylesheet-evidence states keep the same preview and inspector treatment.
+Excluded styles depicts All with Welcome selected and one changed screen: one
+stylesheet is excluded for Welcome, while a second changed stylesheet matches.
+Its Changes filter opens Matched styles for that same Welcome. Matched styles'
+All filter returns to the Excluded styles view. Ignored only and No changes
+depict a separate zero-change catalogue; their filters pair its All and Changes
+views. Unresolved and Unnamed styles remain standalone tree-opened examples.
 
-| Control/context                   | Destination                                                      |
-| --------------------------------- | ---------------------------------------------------------------- |
-| Changed styles: Changes filter    | Matched stylesheet evidence, `design-review-style-matched`       |
-| Ignored only: Changes filter      | Unresolved stylesheet evidence, `design-review-style-unresolved` |
-| Matched evidence: All filter      | Excluded stylesheet evidence, `design-review-style-excluded`     |
-| Unresolved evidence: All filter   | Canonical All Welcome, `design-browse-screen`                    |
-| Excluded evidence: Changes filter | Empty Changes, `design-review-empty`                             |
+| Control/context                   | Destination                                                  |
+| --------------------------------- | ------------------------------------------------------------ |
+| Excluded evidence: Changes filter | Matched stylesheet evidence, `design-review-style-matched`   |
+| Ignored only: Changes filter      | Empty Changes, `design-review-empty`                         |
+| Matched evidence: All filter      | Excluded stylesheet evidence, `design-review-style-excluded` |
+| Unresolved evidence: All filter   | Canonical All Welcome, `design-browse-screen`                |
 
 Matched and unresolved depict Changes holding only the screen their evidence
-keeps; excluded depicts All with no Changes. None of them offers comparison
-modes or tag transitions.
+keeps; Excluded depicts All with one changed Welcome. None adds comparison-mode
+destinations or tag transitions.
 
 Tag interactions are restricted to the canonical Welcome states:
 

@@ -200,15 +200,19 @@ export function UnnamedStyleCard() {
 export function ExcludedStyleCard() {
   return (
     <>
+      <p>Changes to these files may affect this screen:</p>
+      <ul>
+        <li>generated/styles.css</li>
+      </ul>
       <p>
         This stylesheet changed, but none of the changed styles apply to this
         screen.
       </p>
       <p>Examined and excluded:</p>
       <ul>
-        <li>generated/styles.css</li>
+        <li>generated/excluded.css</li>
       </ul>
-      <p>No changes to this screen.</p>
+      <p>Other changed styles keep Welcome in Changes.</p>
     </>
   );
 }
