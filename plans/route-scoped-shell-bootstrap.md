@@ -432,6 +432,10 @@ Summary: switch Serve and export/preview capture to route-scoped bootstraps.
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
+  - [ ] Restate prominently in the Milestone 6 review record and checkpoint
+        report that the deferred Medium A → B → A initial-workspace finding is
+        now visible with native scoped emission. Keep it open for the user's
+        decision unless they separately authorize a fix.
 
 ## Milestone 7: Measure And Close Out
 
@@ -630,3 +634,31 @@ use-case and page targets so their installed scope matches their route.
 - No other findings. Residual test risk: scoped browser coverage rewrites real
   Serve responses at the test boundary because Milestone 6 still owns native
   scoped emission and capture comparison.
+
+#### Supervisor corrections — 2026-09-25
+
+- The supervisor found that static-export hydration validated its already-read
+  complete catalogue a second time. Commit `e9e1dea` now carries resolved live
+  and validated static bootstraps through distinct typed hydration paths. A V8
+  precise-coverage regression first observed two `readCatalogue` calls and now
+  proves exactly one call for a finalized static page.
+- The supervisor also reproduced a cold-server race where a canceled route
+  evidence request reached `route.fulfill` after Playwright had handled it.
+  Commit `e9e1dea` moves the behavior into the shared scoped-shell fixture: only
+  an exact already-handled failure for a non-document request is settled, while
+  document and unrelated failures still surface. The route-specific catch was
+  removed, and `route_scoped_shell_usage.spec.ts` was audited to use the same
+  shared boundary without another exception path.
+- Verification after the final fix: three independent build-first focused runs
+  passed 18 of 18 browser tests each; both scoped spec files passed 35 of 35
+  with `--repeat-each=5`; static hydration passed 4 of 4; formatting, lint and
+  TypeScript typechecks passed. The complete gate passed 2,449 unit and 789
+  browser tests, with zero failures, skips or cancellations.
+- Re-reviewed the complete pushed `origin/main...e9e1dea` diff using
+  [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
+  No additional findings were identified by the correction review.
+- **Still deferred — Medium:** the numbered A → B → A initial-workspace finding
+  above was not fixed. Milestone 6 must restate it prominently in its review
+  record and checkpoint report because native scoped emission makes the stale
+  workspace state visible. The low-severity descriptor value/JSON pairing
+  finding also remains deferred and unchanged.
