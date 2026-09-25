@@ -52,15 +52,20 @@ mobile component and desktop component; there are no new user-flow pages.
 | `design-component-removed`                  | `design/components/states/removed.html`               | Removed saved variant and former consumer                 |
 | `design-component-removed-consumer`         | `design/components/states/removed-consumer.html`      | Former consumer's previous version behind a Removed badge |
 | `design-component-added`                    | `design/components/states/additions/added.html`       | Added Badge current preview without comparison controls   |
-| `design-component-usage-loading`            | `design/components/states/loading/usage.html`         | Component Usage waiting for private route evidence        |
-| `design-component-inspection-loading`       | `design/components/states/loading/inspection.html`    | Screen inspection waiting for displayed-view usage        |
-| `design-component-usage-failed`             | `design/components/states/loading/failed.html`        | Usage read failure with a Try again action                |
 
-The final three screens belong to the `design-component-loading-states`
-collection at segment `loading`, nested under `design-component-states` after
-the existing Additions collection. Standalone files insert `.mobile` or
-`.desktop` before `.html`. All 35 component screens opt into light documents,
-matching the existing shell mockups. Their
+The approved Loading and recovery gallery uses the
+`design-component-loading-states` collection at segment `loading`, nested under
+`design-component-states` after the existing Additions collection. Its target
+screens are `design-component-usage-loading` at
+`design/components/states/loading/usage.html`,
+`design-component-inspection-loading` at
+`design/components/states/loading/inspection.html`, and
+`design-component-usage-failed` at
+`design/components/states/loading/failed.html`. They enter the canonical table
+only when those screens are added to the example registry.
+
+Standalone files insert `.mobile` or `.desktop` before `.html`. All thirty-two
+component screens opt into light documents, matching the existing shell mockups. Their
 depicted preview caption names the artboard's own scheme, and the toolbar has
 no scheme switch: the catalogue's one Appearance control, drawn in their top
 bar like every other artboard's, sets it. Links use
@@ -170,7 +175,7 @@ small gap above an intact rounded outline, shared by all three region layouts.
 
 Use the real generator; never hand-edit generated HTML. Six shared component
 stylesheets are hand-authored public inputs, confined to `design/components/**`.
-Route-scoped stylesheet matching links them only from the thirty-five component design routes; Changes follows those rendered resource references. The collection also declares inherited dependencies for comparison evidence. The controls stylesheet is scoped
+Route-scoped stylesheet matching links them only from the thirty-two component design routes; Changes follows those rendered resource references. The collection also declares inherited dependencies for comparison evidence. The controls stylesheet is scoped
 further to its eleven owning routes, with a matching dependency and watch rule. Keep them out of the global
 `review.sharedImpact` list; watched stylesheet rules still reload their edits.
 Child collection dependency lists replace inherited lists; Controls explicitly

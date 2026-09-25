@@ -38,7 +38,9 @@ That cost is paid:
    destination's whole shell page and `readViewerRouteEvidenceRevision` in
    [`host_capabilities.ts`](../packages/viewer/src/client/host_capabilities.ts)
    re-reads the entire catalogue;
-3. on every live evidence refresh, which fetches the current shell URL; and
+3. on every live evidence refresh, because `refreshEvidence` fetches the
+   current shell URL and then fetches the complete `__mokly/catalogue.json`;
+   and
 4. for every page captured by export and repository preview builds, because
    `externalizeCapturedShell` in
    [`captured_shell.ts`](../src/export/captured_shell.ts) parses, validates,
@@ -156,8 +158,11 @@ completely before any code changes.
 - [x] Update [`mokly-on-demand.md`](../docs/protocol/mokly-on-demand.md) and
       [`mokly-component-explorer.md`](../docs/protocol/mokly-component-explorer.md)
       with the loading and failed Usage states and their product copy.
-- [x] Add the new state screens, their ids and routes to the design table in
-      [`mokly-component-design.md`](../docs/protocol/mokly-component-design.md).
+- [x] Define the Loading and recovery gallery, its collection, screen ids,
+      routes and copy in prose in
+      [`mokly-component-design.md`](../docs/protocol/mokly-component-design.md),
+      while leaving its canonical inventory table and counts aligned with the
+      32 screens that currently exist.
 - [x] Update the bootstrap, reader and adoption descriptions wherever they
       appear in
       [`packages/viewer/README.md`](../packages/viewer/README.md),
@@ -168,8 +173,12 @@ completely before any code changes.
       [`src/server/README.md`](../src/server/README.md) and
       [`src/export/README.md`](../src/export/README.md).
 - [x] Add this plan to the active list in [`plans/README.md`](./README.md).
-- [x] Validate the changed Markdown with `npm run format:check` and review the
-      diff; documentation-only work does not require `cargo xtask check`.
+- [x] Validate the changed Markdown with `npm run format:check`, run
+      `npm run prepare:verification` and the complete `npm run test:prepared`
+      unit suite, and review the diff. Documentation-only work does not require
+      `cargo xtask check`, but docs, READMEs, plans and fixtures are unit-test
+      inputs, so every later documentation-only change under this plan must
+      repeat the prepared unit suite.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
@@ -203,6 +212,9 @@ catalogue before any UI implementation.
       the rendered screens and use product language only.
 - [ ] Link the new collection from the States collection so every new screen is
       reachable, and keep each page at five screens or fewer.
+- [ ] After the screens exist in the example registry, add their three rows to
+      the canonical inventory table in `mokly-component-design.md` and update
+      both component-route counts from thirty-two to thirty-five.
 - [ ] Update the design inventory tests (`tests/design_*.test.ts`) for the
       added routes.
 - [ ] Run `npm run build`, `npm run example:build` and `npm run example:check`,
@@ -298,10 +310,26 @@ emits them, while complete catalogues keep today's behavior.
       `catalogue_updates.ts`), replacing the installed catalogue atomically so
       out-of-scope usage never accumulates. `?instance=` selections from
       `Used by` links must resolve after adoption.
+- [ ] Change `refreshEvidence` in `src/client/react_capability_updates.ts` to
+      read the public bootstrap from the same fetched shell page as its private
+      descriptor and remove the second `__mokly/catalogue.json` request. Before
+      Milestone 6 that bootstrap still carries the complete projection; after
+      Milestone 6 the same path adopts the scoped projection. Test mixed
+      descriptor/bootstrap revisions, stale sources and updates, rejected
+      candidates, and the absence of the second request.
 - [ ] Audit every consumer of catalogue view usage, including
       `changes_activation.ts`, `stage_frame.tsx`, `workspace_instances.tsx`,
-      `frame_instances.ts` and `component_geometry.ts`, and record in this plan
-      that none depends on out-of-scope usage.
+      `frame_instances.ts` and `component_geometry.ts`.
+  - [ ] Apply the chosen route-scope decision: extend `useRouteEvidence` to
+        every resolved target entry, including use cases and pages, while
+        continuing to require private workspace data only for screens and
+        components. A use case must adopt its step-screen usage and a page its
+        zero-usage scope instead of retaining the previous route's scope.
+  - [ ] Hold and fail those use-case/page evidence responses in tests to prove
+        their frames still load and navigate normally while omitted usage is
+        pending, without enabling inspection or deriving partial Usage.
+  - [ ] Record the completed consumer audit and any additional dependency found
+        in this plan before closing the milestone.
 - [ ] Add viewer tests with synthetic scoped bootstraps, including
       development-React hydration of scoped server output without mismatches.
 - [ ] Add browser tests through a fixture that serves scoped pages and holds the
@@ -416,9 +444,30 @@ At #96, the browser shard 2 job took 897 s.
 
 - Reviewed the complete pushed `origin/main...b18ac46` diff using
   [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
-- Findings: none.
+- Initial self-review findings: none.
 - Residual test risk: this milestone defines the documentation contract only.
   Historical-route scope resolution, loading/failed retry transitions,
   serialize-once call counts, scoped capture comparison, and static artifact
   byte identity remain unimplemented until their owning later milestones and
   therefore are not yet covered by executable regression tests.
+
+### Milestone 1 supervisor correction — 2026-09-25
+
+1. **High — Future screens were added to the canonical design inventory before
+   they existed.** The supervisor's prepared unit check found that
+   `tests/design_links.test.ts` treated the three target rows as current screens
+   and failed its exact manifest comparison. Leaving the rows in place would
+   keep the branch's unit suite red and make the design protocol disagree with
+   the generated registry.
+   - **Option A:** keep the collection, ids, routes and copy in prose, then add
+     the canonical rows and raise the counts with the Milestone 2 screens.
+   - **Option B:** create the screens during Milestone 1, collapsing the required
+     docs-before-mockups milestone boundary.
+   - **Recommendation:** Option A. It preserves the milestone ordering and the
+     exact-inventory test. Applied by the
+     `fix(docs): defer future design inventory` correction commit.
+
+Plan amendments from that check also require the prepared unit suite for later
+documentation-only edits, replace live refresh's second catalogue request with
+the fetched page bootstrap in Milestone 5, and extend route-evidence adoption to
+use-case and page targets so their installed scope matches their route.

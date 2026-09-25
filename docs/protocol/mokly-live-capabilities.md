@@ -93,14 +93,16 @@ bootstrap. Both SSR and hydration read that data from the descriptor,
 independently of browser-only behavior, so a matching direct load starts with
 ready Usage rather than flashing a loading or empty state.
 
-React navigation does not replace the mounted shell with fetched HTML. When a
-newly routed screen or component needs private data,
-`evidence.loadRouteEvidence` fetches the current page as evidence only. The
-page's public shell bootstrap and private capability descriptor form one
-atomic candidate: the shell adopts the destination-scoped catalogue, source
-and routed workspace together, or retains its current evidence. Adoption
-replaces the prior scoped catalogue instead of merging usage retained by routes
-visited earlier. It accepts the result
+React navigation does not replace the mounted shell with fetched HTML. Every
+newly routed target calls `evidence.loadRouteEvidence` and fetches the current
+page as evidence only. Screens and components pair their scoped catalogue with
+private workspace data; use cases and pages adopt their destination scope with
+no workspace. The page's public shell bootstrap and private capability
+descriptor form one atomic candidate: the shell adopts the
+destination-scoped catalogue, source and optional routed workspace together,
+or retains its current evidence. Adoption replaces the prior scoped catalogue
+instead of merging usage retained by routes visited earlier. It accepts the
+result
 when all of these remain true:
 
 - the response is successful and its final URL is the requested URL without a

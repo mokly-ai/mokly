@@ -148,6 +148,14 @@ shell page as evidence. The fetched scoped catalogue, source descriptor, and
 private workspace are one candidate. Accept all of them or retain the installed
 candidate; never accumulate retained usage from previously visited routes.
 
+Every committed live target route performs that evidence read, including use
+cases and pages that own no private workspace. This keeps the installed scope
+aligned with the destination: a use case adopts its step screens' usage, while
+a page adopts the zero-usage scope. While either read is pending, and if it
+fails, complete index data still lets those frames load and navigate normally;
+any usage left omitted is treated as pending and cannot enable inspection or
+produce a partial cross-route list.
+
 The candidate must pass the live-capability route, location, base, catalogue
 identity, content/evidence revision, update version, preview/renderer
 generation, token, snapshot, and cancellation fences. Its private workspace
