@@ -2,9 +2,13 @@
 
 import { renderToStaticMarkup, renderToString } from "react-dom/server";
 
-import { viewerCapabilityDescriptor } from "../client/host_capability_descriptor.js";
+import {
+  serializeViewerCapabilityDescriptor,
+  viewerCapabilityDescriptor,
+} from "../client/host_capability_descriptor.js";
 import {
   externalShellBootstrap,
+  serializeShellBootstrap,
   shellBootstrap,
   shellBootstrapProps,
 } from "../standalone/bootstrap.js";
@@ -56,12 +60,17 @@ export function renderHydratedShellPage(
     context,
     initialWorkspace,
   );
+  const bootstrapJson = serializeShellBootstrap(bootstrap);
+  const capabilityDescriptorJson = capabilityDescriptor
+    ? serializeViewerCapabilityDescriptor(capabilityDescriptor)
+    : undefined;
   const props = shellBootstrapProps(resolvedBootstrap);
   const markup = renderToString(
     <StandaloneShellDocument
       {...props}
-      bootstrap={bootstrap}
+      bootstrapJson={bootstrapJson}
       {...(capabilityDescriptor ? { capabilityDescriptor } : {})}
+      {...(capabilityDescriptorJson ? { capabilityDescriptorJson } : {})}
       {...(initialWorkspace ? { initialWorkspace } : {})}
     />,
   );

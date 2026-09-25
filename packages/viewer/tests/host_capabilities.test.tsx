@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import { Session } from "node:inspector/promises";
 import { test } from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
@@ -242,4 +243,45 @@ test("live SSR carries a private descriptor while export carries no host loader"
   assert.doesNotMatch(exported, /client\/react-host\.js/);
   assert.doesNotMatch(exported, new RegExp(token));
   assert.match(exported, /client\/react-shell\.js/);
+});
+
+test("server rendering serializes each embedded state exactly once", async () => {
+  const display = viewerCatalogue(catalogue);
+  const { publicModel: _publicModel, ...privateDisplay } = display;
+  const view = viewerView(display, {
+    ...defaultSelection,
+    screenId: catalogue.components[0]!.id,
+  });
+  const session = new Session();
+  session.connect();
+  try {
+    await session.post("Profiler.enable");
+    await session.post("Profiler.startPreciseCoverage", {
+      callCount: true,
+      detailed: true,
+    });
+    renderHydratedShellPage(
+      view,
+      {
+        base: source.base,
+        contentVersion: source.contentRevision,
+        previewGeneration: generation,
+        readModel: catalogue,
+        renderCapability: { generation, token },
+        updateVersion: source.updateVersion,
+      },
+      privateDisplay,
+    );
+    const { result } = await session.post("Profiler.takePreciseCoverage");
+    const calls = (name: string) =>
+      result
+        .flatMap((script) => script.functions)
+        .filter((fn) => fn.functionName === name)
+        .reduce((total, fn) => total + (fn.ranges[0]?.count ?? 0), 0);
+    assert.equal(calls("serializeShellBootstrap"), 1);
+    assert.equal(calls("serializeViewerCapabilityDescriptor"), 1);
+  } finally {
+    await session.post("Profiler.stopPreciseCoverage");
+    session.disconnect();
+  }
 });

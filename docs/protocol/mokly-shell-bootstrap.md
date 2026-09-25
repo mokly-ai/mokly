@@ -2,11 +2,12 @@
 
 ## Delivery Status
 
-This document defines the approved target tracked by the
+The serialize-once embedded-state boundary is implemented by Milestone 3 of the
 [route-scoped shell bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
-It changes live Serve hydration and captured-page validation only. The public
-catalogue v1 format, static artifact bytes, and application-owned
-`MoklyViewer` sources remain unchanged.
+Route-scoped payloads, adoption and capture remain approved targets tracked by
+that plan. This contract changes live Serve hydration and captured-page
+validation only. The public catalogue v1 format, static artifact bytes, and
+application-owned `MoklyViewer` sources remain unchanged.
 
 ## Purpose And Boundary
 

@@ -5,6 +5,11 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
+import {
+  readShellBootstrapState,
+  serializeShellBootstrap,
+} from "../packages/viewer/dist/standalone/bootstrap.js";
+
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
@@ -39,6 +44,21 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
   assert.match(index, /href="\/view\/screens\/welcome"/);
   assert.doesNotMatch(index, /href="\/view\/screens\/welcome\.html"/);
   const welcome = await read(output, "view/screens/welcome.html");
+  for (const [name, html] of [
+    ["index.html", index],
+    ["view/screens/welcome.html", welcome],
+    ["404.html", await read(output, "404.html")],
+  ] as const) {
+    const state = html.match(
+      /data-mokly-shell-bootstrap="" type="application\/json">([^<]+)<\/script>/,
+    )?.[1];
+    assert.ok(state, name);
+    assert.equal(
+      serializeShellBootstrap(readShellBootstrapState(JSON.parse(state))),
+      state,
+      name,
+    );
+  }
   assert.match(welcome, /Welcome · Mokly/);
   assert.match(welcome, /data-diff-screen="screens\/welcome.html"/);
   for (const mode of ["current", "side", "overlay", "difference"])

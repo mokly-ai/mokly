@@ -18,9 +18,9 @@ use the same tree with host-owned appearance and independent preview selection.
 Removed pages and screens load their advertised previous versions in local,
 static, and embedded hosts through the same tree, as implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md).
-Route-scoped Serve hydration and serialize-once embedded state are approved
-targets tracked by the
-[route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
+Serialize-once embedded state is implemented by Milestone 3 of the
+[route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md);
+route-scoped Serve hydration remains an approved target tracked by that plan.
 
 ## Package And Props
 

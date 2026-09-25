@@ -243,22 +243,34 @@ Summary: remove per-render re-serialisation independently of the payload
 change, so current Serve pages benefit immediately. This changes only the
 viewer's document rendering and browser entry, not the CLI server.
 
-- [ ] Add failing tests first proving that server rendering serialises each
+- [x] Add failing tests first proving that server rendering serialises each
       embedded script exactly once, and that hydration plus later shell
       re-renders (drawer toggle and route announcement) serialise nothing.
-- [ ] Pass pre-serialised JSON into `StandaloneShellDocument`:
+- [x] Pass pre-serialised JSON into `StandaloneShellDocument`:
       `renderHydratedShellPage` in
       [`shell/document.tsx`](../packages/viewer/src/shell/document.tsx)
       computes it once, `hydrateMoklyShell` passes the text it already read from
       the DOM, and `StandaloneDocumentContents` renders the given strings for
       the bootstrap and capability-descriptor scripts.
-- [ ] Keep the byte-reproduction invariant as a test over served and captured
+- [x] Keep the byte-reproduction invariant as a test over served and captured
       example pages.
-- [ ] Run the development-hydration specs (`react_shell_hydration*.spec.ts`
+- [x] Update the bootstrap and viewer protocol delivery status for the
+      implemented serialize-once boundary.
+- [x] Run the development-hydration specs (`react_shell_hydration*.spec.ts`
       and `react_shell_static_hydration.spec.ts`) plus the static delivery and
       capture tests, and record drawer-toggle main-thread time before and after.
-- [ ] Run the complete `cargo xtask check` gate with no failures or skips.
-- [ ] After checks pass, `git add -A`, commit with Conventional Commits, and
+  - Interaction profile on 2026-09-25, using
+    `.context/test-timings/interaction-profile.mjs` for both bundles:
+    - Development before: 215 ms wall, 156 ms JavaScript busy, 55 ms attributed
+      to bootstrap serialization.
+    - Development after: 159 ms wall, 100 ms JavaScript busy, 1 ms attributed
+      to bootstrap serialization.
+    - Production before: 170 ms wall, 114 ms JavaScript busy, 0 ms attributed
+      by the minified-bundle profiler.
+    - Production after: 100 ms wall, 43 ms JavaScript busy, 0 ms attributed by
+      the minified-bundle profiler.
+- [x] Run the complete `cargo xtask check` gate with no failures or skips.
+- [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)

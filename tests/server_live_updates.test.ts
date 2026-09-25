@@ -5,6 +5,14 @@ import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
 import { startCatalogueServer } from "../dist/server/http.js";
+import {
+  readViewerCapabilityDescriptor,
+  serializeViewerCapabilityDescriptor,
+} from "../packages/viewer/dist/client/host_capability_descriptor.js";
+import {
+  readShellBootstrap,
+  serializeShellBootstrap,
+} from "../packages/viewer/dist/standalone/bootstrap.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
@@ -35,6 +43,20 @@ test("every served document loads the hydrated live host", async (context) => {
     /data-mokly-host-capability-state="" type="application\/json">([^<]+)<\/script>/,
   )?.[1];
   assert.ok(capabilityState);
+  const bootstrapState = reactDocument.match(
+    /data-mokly-shell-bootstrap="" type="application\/json">([^<]+)<\/script>/,
+  )?.[1];
+  assert.ok(bootstrapState);
+  assert.equal(
+    serializeShellBootstrap(readShellBootstrap(JSON.parse(bootstrapState))),
+    bootstrapState,
+  );
+  assert.equal(
+    serializeViewerCapabilityDescriptor(
+      readViewerCapabilityDescriptor(JSON.parse(capabilityState)),
+    ),
+    capabilityState,
+  );
   const capability = JSON.parse(capabilityState) as {
     workspace: Record<string, unknown> & {
       affected: unknown[];
