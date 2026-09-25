@@ -4,7 +4,7 @@ import type { ScreenPageState } from "./screen_preview.js";
 
 export type ChangeStatus = "unmodified" | "added" | "changed" | "removed";
 
-export interface ComparisonFixture {
+interface ChangedComparisonFixture {
   status: Exclude<ChangeStatus, "unmodified">;
   reason: "output" | "inputs" | "added" | "removed" | "variant-removed";
   variant?: string;
@@ -20,6 +20,13 @@ export interface ComparisonFixture {
     to: ComponentDesignDestination;
   }[];
 }
+
+interface SharedImpactFixture {
+  status: "unmodified";
+  sharedImpact: readonly string[];
+}
+
+export type ComparisonFixture = ChangedComparisonFixture | SharedImpactFixture;
 
 /** Paired synthetic values also supply the current screen and its Props panel. */
 export const footerLabelChange = {
@@ -44,9 +51,18 @@ const componentComparisons: Partial<
   affected: actionComparison,
   added: { status: "added", reason: "added", variant: "Default" },
   removed: { status: "changed", reason: "variant-removed", variant: "Compact" },
+  "shared-impact": {
+    status: "unmodified",
+    sharedImpact: [
+      "examples/basic/src/components/action/action.mokly.tsx",
+      "examples/basic/src/components/toolbar/toolbar.mokly.tsx",
+    ],
+  },
 };
 
-const screenComparisons: Partial<Record<ScreenPageState, ComparisonFixture>> = {
+const screenComparisons: Partial<
+  Record<ScreenPageState, ChangedComparisonFixture>
+> = {
   "direct-change": {
     status: "changed",
     reason: "inputs",

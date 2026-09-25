@@ -53,6 +53,7 @@ export const COMPONENT_BY_STATE = {
   unused: "badge",
   added: "badge",
   removed: "action",
+  "shared-impact": "action",
   closed: "action",
 } as const satisfies Record<ComponentPageState, ComponentId>;
 

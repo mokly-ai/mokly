@@ -158,6 +158,9 @@
   margin-top: 20px;
   padding-top: 16px;
 }
+.ce-comparison-paths li {
+  overflow-wrap: anywhere;
+}
 .ce-prop-comparison {
   border-collapse: collapse;
   font-size: 12px;

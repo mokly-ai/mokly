@@ -148,6 +148,8 @@ add a comparison disclosure below the canvas or a separate explanatory banner
 above it. The panel remains available on a Removed screen's stage even though
 that screen has no comparison modes. Ordinary Unmodified mockups omit the
 comparison section; a shared-impact-only component keeps its file list in Details.
+The `design-component-shared-impact` artboard in States → Shared impact depicts
+that Unmodified component with its Details open and no comparison band.
 
 Use structured evidence: entry/variant state, a generic output-change reason,
 the component-level changed-file list and style outcomes, selected-variant

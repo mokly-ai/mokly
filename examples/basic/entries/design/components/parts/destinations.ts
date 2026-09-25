@@ -15,6 +15,7 @@ export const COMPONENT_PAGES = {
   unused: "design-component-unused",
   added: "design-component-added",
   removed: "design-component-removed",
+  "shared-impact": "design-component-shared-impact",
 } as const satisfies Record<ComponentPageState, string>;
 
 /** Screen inspection states remain separate from the existing Browse subjects. */

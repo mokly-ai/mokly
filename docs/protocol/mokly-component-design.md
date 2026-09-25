@@ -50,8 +50,9 @@ mobile component and desktop component; there are no new user-flow pages.
 | `design-component-removed`                  | `design/components/states/removed.html`               | Removed saved variant and former consumer                 |
 | `design-component-removed-consumer`         | `design/components/states/removed-consumer.html`      | Former consumer's previous version behind a Removed badge |
 | `design-component-added`                    | `design/components/states/additions/added.html`       | Added Badge current preview without comparison controls   |
+| `design-component-shared-impact`            | `design/components/states/shared-impact/action.html`  | Unmodified Action with shared-file evidence in Details    |
 
-Standalone files insert `.mobile` or `.desktop` before `.html`. All thirty-two component
+Standalone files insert `.mobile` or `.desktop` before `.html`. All thirty-three component
 screens opt into light documents, matching the existing shell mockups. Their
 depicted preview caption names the artboard's own scheme, and the toolbar has
 no scheme switch: the catalogue's one Appearance control, drawn in their top
@@ -119,6 +120,8 @@ beside its title. Action's route-level state stays Changed when only Compact is
 removed, while Compact reads Removed when selected; Farewell is Removed.
 States links an Additions child gallery with one new Badge example and one Changes
 entry, preserving the five-screen limit in its parent and the existing unused state.
+Its Shared impact child gallery shows an unchanged Action component opened from
+All, with a changed-file list in Details and no comparison band or Changes entry.
 Comparison evidence appears only in the Details panel. Its typed fixture records
 show output/variant changes, paired prop values, and related changed components;
 they do not generate visual-analysis prose or a separate banner. See the
@@ -157,7 +160,7 @@ small gap above an intact rounded outline, shared by all three region layouts.
 
 Use the real generator; never hand-edit generated HTML. Six shared component
 stylesheets are hand-authored public inputs, confined to `design/components/**`.
-Route-scoped stylesheet matching links them only from the thirty-two component design routes; Changes follows those rendered resource references. The folder marker supplies inherited dependencies to its leaves for comparison evidence. The controls stylesheet is scoped
+Route-scoped stylesheet matching links them only from the thirty-three component design routes; Changes follows those rendered resource references. The folder marker supplies inherited dependencies to its leaves for comparison evidence. The controls stylesheet is scoped
 further to its eleven owning routes, with a matching dependency and watch rule. Keep them out of the global
 `review.sharedImpact` list; watched stylesheet rules still reload their edits.
 Child folder dependency lists replace inherited lists; Controls explicitly

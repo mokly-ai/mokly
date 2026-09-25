@@ -177,15 +177,21 @@ contract for each before any code changes.
 
 Tags: mockup
 
-- [ ] Add a component version of the Shared impact state (a component page
+- [x] Add a component version of the Shared impact state (a component page
       whose Details lists files that may affect it, with the Milestone 5
       wording), mobile and desktop, reachable from the existing component
       mockup pages and within the five-mockups-per-page limit; reuse the
       existing screen components and design parts.
-- [ ] Run `npm run build`, `npm run example:build`, and
+- [x] Update component design inventory counts in the specs, example README,
+      and the exact-count example tests for the new screen.
+- [x] Wrap the new mockup's real shared-file paths within the mobile Details
+      panel and inspect both panel sizes.
+- [x] Run `npm run build`, `npm run example:build`, and
       `npm run example:check`; inspect the new artboards through
       `npm run dev`.
-- [ ] Commit.
+- [x] Run lint, format check, the design-screen inventory unit tests, and all
+      browser specs that open component design pages.
+- [x] Commit.
 
 ## Milestone 7: Source validation and invariant oracle
 

@@ -38,11 +38,10 @@ export function ComponentPage({
           ? "removed"
           : state === "added"
             ? "added"
-            : state === "disabled"
+            : state === "disabled" ||
+                (evidence && evidence.status !== "unmodified")
               ? "component"
-              : evidence
-                ? "component"
-                : "all"
+              : "all"
       }
       viewport={viewport}
       variants={<VariantPicker state={state} />}

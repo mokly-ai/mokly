@@ -22,6 +22,7 @@ export type ComponentPageState =
   | "unused"
   | "added"
   | "removed"
+  | "shared-impact"
   | "closed";
 
 function ComponentChildren() {

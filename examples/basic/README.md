@@ -29,7 +29,7 @@ The [large fixture](../../tests/fixtures/large/README.md)
 uses the same Firna/React Native Web rendering stack with configurable volume,
 without expanding this example or slowing ordinary development startup.
 
-Mokly's 92 design screens now use 16 registered shared components, including
+Mokly's 93 design screens now use 16 registered shared components, including
 the footer tabs panel and the appearance selector. Open **Components → Design → Shared components** for Chrome, Controls,
 Inspector and Preview galleries with 66 saved variants, real mobile/desktop
 previews and editable local props. The outer Components and Usage tabs show actual
@@ -116,7 +116,7 @@ The `Design` navigation group is the owning design catalogue for Mokly's
 Browse and Changes views. Its sixty Browse, page, publication, appearance and Changes
 screens cover navigation, Details, tags, color schemes, comparison outcomes,
 stylesheet evidence, the preparing and unavailable comparison states, and the
-previous-version states of removed documents and screens. Thirty-two component
+previous-version states of removed documents and screens. Thirty-three component
 explorer screens add component pages, saved variants, affected screens,
 repeated/nested inspection, highlighting, and empty or removed states. The shared icon inspector and complete controls
 mockups include edited/reset, optional, loading, validation, retry, comparison,
@@ -148,6 +148,8 @@ active content scrolls; closing and reopening retains edits. Viewport carets,
 the mobile menu, and the Usage icon use centered SVGs. Known entries show
 Added, Changed, Removed, or Unmodified; removing a variant marks its surviving
 component Changed. The States → Additions gallery demonstrates a newly added Badge.
+States → Shared impact shows an Unmodified Action opened from All with changed
+shared files in Details and no comparison band.
 Removed screens show their status and previous version without comparison
 controls; the removed component variant retains its baseline comparison.
 Comparison facts live in Details, using shared fixture values for prop differences
@@ -187,8 +189,8 @@ A shared implementation edit appears on its component page and lists consuming
 screens as affected; independent screen inputs, slots or instance changes still
 appear in Changes. This is tested against fully registered baseline snapshots.
 
-The shared inspector/workspace sheets cover all 92 design screens and standalone
-library hosts. Other mixed component-design sheets remain scoped to the 32
+The shared inspector/workspace sheets cover all 93 design screens and standalone
+library hosts. Other mixed component-design sheets remain scoped to the 33
 component-design routes and hosts; the controls sheet additionally remains
 scoped to its eleven owning screen routes. `review.sharedImpact` is fallback
 impact evidence for files the rendered resource graph cannot see, such as source
