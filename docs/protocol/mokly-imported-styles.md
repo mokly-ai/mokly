@@ -54,7 +54,13 @@ repository-relative POSIX path. A compatibility transformer still participates
 in the JavaScript graph: CSS it imports is inventoried, including its local
 `@import` closure and local `url()` assets, but transformer-only CSS has no
 stylesheet route or link. Analyze transformer-only CSS imports and URLs without
-running a stylesheet bundle; when no renderer or entry reaches CSS, skip the
+running a stylesheet bundle; when a stylesheet is already delivered by a root,
+do not parse it again for the transformer. For transformer-only syntax
+use parser recovery, and never parse or inventory package CSS under
+`node_modules` solely for the transformer. Metafile input and output keys
+are relative to esbuild's real working directory even when the configured
+repository root is a symlink; map all keys back to the logical root before
+ordering roots or recording sources. When no renderer or entry reaches CSS, skip the
 stylesheet pass entirely. A CSS-only entry still has an entry root even if it
 registers no view. Two entries sharing CSS each emit it in their own bundle.
 
@@ -150,7 +156,10 @@ case-insensitively), `//` or `#` remain unchanged. A root-absolute `/...`
 URL is invalid. Relative URLs resolve
 against the referring CSS file; strip `?query`/`#hash` for resolution and
 restore that exact suffix after esbuild rewrites the relative path. Require a
-regular confined file. An asset inside `mockupsDir` that is not already an
+regular confined file. A nested `@import` of a public stylesheet under
+`mockupsDir` is likewise rejected before it can become an inventoried private
+source. Compare both logical and physical locations with `mockupsDir` for
+both kinds of source. An asset inside `mockupsDir` that is not already an
 inventoried graph source fails instead of silently making an existing public
 URL private; move the imported asset outside `mockupsDir` or keep it as a
 separately linked public asset. In-repository `node_modules` assets are allowed and
@@ -164,7 +173,8 @@ dot, and no Windows device-name stem (`aux`, `con`, `nul`, `prn`, `com1`–`9`,
 `lpt1`–`9`, ignoring case). No empty, `.`, `..`, backslash, drive or colon
 segments. **Only** the segment immediately after `node_modules` may instead
 match `/^@[A-Za-z0-9][A-Za-z0-9._~-]*$/` (npm scope, e.g. `@fontsource`);
-all other constraints remain. Esbuild emits the literal `@` in relative CSS
+all other constraints remain, including for a stylesheet root inside a scoped
+npm package. Esbuild emits the literal `@` in relative CSS
 `url()` references; `encodeUrlPath` converts it to
 `%40` for links, Serve decodes it, and export resource discovery accepts and
 decodes both forms. The complete stylesheet route obeys the usual rule.

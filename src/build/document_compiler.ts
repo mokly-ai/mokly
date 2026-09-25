@@ -25,6 +25,7 @@ import { normalizeSingleDocument } from "../review/ignore.js";
 
 import type { ComponentRuntime } from "./component_runtime.js";
 import { DocumentCache } from "./document_cache.js";
+import type { GeneratedFile } from "./generated_file.js";
 import { validateHtmlLinks, type HtmlValidationContext } from "./html_links.js";
 import type { LoadedGraph } from "./load_graph.js";
 import type { LogicalReferenceRecord } from "./logical_record_types.js";
@@ -163,6 +164,12 @@ export class DocumentCompiler {
       ...(document.view ? { view: document.view } : {}),
       ...(observed.size ? { watchDocuments: [...observed] } : {}),
     };
+  }
+
+  /** Read one accepted pending route without consulting reserved files on disk. */
+  readGeneratedFile(route: string): GeneratedFile | undefined {
+    const file = this.pending.get(route);
+    return file?.kind === "bytes" ? file.bytes : file?.text;
   }
 
   private prepare(

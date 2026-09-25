@@ -54,6 +54,72 @@ test("PostCSS transforms imported CSS before CSS Modules and inventories its dep
   );
 });
 
+test("sequential compiles isolate module-level PostCSS plugin candidates", async (t) => {
+  const fixture = await styleFixture(".underline{color:red}", {
+    extraConfig: 'postcss: "postcss.config.mjs",',
+  });
+  t.after(() => removeFixture(fixture));
+  const packageRoot = path.join(
+    fixture.root,
+    "node_modules",
+    "stateful-postcss",
+  );
+  await fs.mkdir(packageRoot, { recursive: true });
+  await fs.writeFile(
+    path.join(packageRoot, "package.json"),
+    '{"type":"module","exports":"./index.mjs"}',
+  );
+  await fs.writeFile(
+    path.join(packageRoot, "index.mjs"),
+    `const seen = new Set(); export default () => ({ postcssPlugin: "stateful", Once(root) {
+      root.walkRules(rule => seen.add(rule.selector));
+      for (const selector of seen) if (!root.nodes.some(node => node.selector === selector)) root.append({ selector, nodes: [{ prop: "color", value: "red" }] });
+    } });`,
+  );
+  await fs.writeFile(
+    path.join(fixture.root, "postcss.config.mjs"),
+    'import stateful from "stateful-postcss"; export default { plugins: [stateful()] };',
+  );
+  const initial = (await compileFixture(fixture)).outputs.get(
+    entryStyle,
+  ) as string;
+  assert.match(initial, /\.underline/);
+  await fs.writeFile(
+    path.join(fixture.entriesDir, "fixture.css"),
+    ".italic{color:blue}",
+  );
+  const next = (await compileFixture(fixture)).outputs.get(
+    entryStyle,
+  ) as string;
+  assert.match(next, /\.italic/);
+  assert.doesNotMatch(next, /\.underline/);
+});
+
+test("CommonJS PostCSS configs require packages, builtins and local CTS helpers", async (t) => {
+  const fixture = await styleFixture(".source{color:red}", {
+    extraConfig: 'postcss: "postcss.config.cjs",',
+  });
+  t.after(() => removeFixture(fixture));
+  const packageRoot = path.join(fixture.root, "node_modules", "local-plugin");
+  await fs.mkdir(packageRoot, { recursive: true });
+  await fs.writeFile(
+    path.join(packageRoot, "package.json"),
+    '{"main":"index.cjs"}',
+  );
+  await fs.writeFile(
+    path.join(packageRoot, "index.cjs"),
+    'module.exports = () => ({ postcssPlugin: "local", Once(root) { root.append({ selector: ".loaded", nodes: [{ prop: "color", value: "blue" }] }); } });',
+  );
+  await fs.writeFile(
+    path.join(fixture.root, "postcss.config.cjs"),
+    'const path = require("node:path"); const create = require("local-plugin"); module.exports = { plugins: [create()], map: { filename: path.join(__dirname, "x") } };',
+  );
+  assert.match(
+    (await compileFixture(fixture)).outputs.get(entryStyle) as string,
+    /\.loaded/,
+  );
+});
+
 test("PostCSS module import.meta values name the authored file", async (t) => {
   const fixture = await styleFixture(".source{color:red}", {
     extraConfig: 'postcss: "postcss.config.mjs",',

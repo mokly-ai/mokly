@@ -10,13 +10,25 @@ import { MANIFEST_NAME } from "../registry/manifest.js";
 import { isOwned } from "./ownership.js";
 import { isGeneratedRoute } from "./styles/routes.js";
 
+/** Reasons a consumer path cannot be discovered through a broad walk. */
+export type PackageOwnedReason =
+  "generated" | "review" | "cache" | "denied" | "outside";
+
+/** Generated output, Review output and cache outrank explicitly required inputs. */
+export function blocksRequiredInput(
+  reason: PackageOwnedReason | undefined,
+  required: boolean,
+): boolean {
+  return reason !== undefined && (reason !== "denied" || !required);
+}
+
 /** Classify a path by both its authored name and projected physical location. */
 export function packageOwnedPath(
   candidate: string,
   config: ResolvedConfig,
   directory?: boolean,
   deniedRoot = config.repoRoot,
-): "generated" | "ignored" | "outside" | undefined {
+): PackageOwnedReason | undefined {
   const absolute = path.resolve(candidate);
   if (!isInside(config.repoRoot, absolute)) return "outside";
   if (
@@ -40,7 +52,7 @@ export function packageOwnedPath(
     mockupsDir: string,
     reviewDir: string,
     sourceRoot: string,
-  ): "generated" | "ignored" | undefined => {
+  ): PackageOwnedReason | undefined => {
     if (isInside(mockupsDir, pathName)) {
       const route = toPosixPath(path.relative(mockupsDir, pathName));
       if (route === MANIFEST_NAME || isGeneratedRoute(route))
@@ -48,18 +60,15 @@ export function packageOwnedPath(
       if (!isDirectory && isOwned(pathName, { ...config, mockupsDir }))
         return "generated";
     }
-    if (
-      isInside(reviewDir, pathName) ||
-      isBaselineCachePath(pathName, repoRoot, false)
-    )
-      return "ignored";
+    if (isInside(reviewDir, pathName)) return "review";
+    if (isBaselineCachePath(pathName, repoRoot, false)) return "cache";
     if (isInside(sourceRoot, pathName)) {
       const segments = path.relative(sourceRoot, pathName).split(path.sep);
       if (
         segments.slice(0, -1).some(isDeniedSourceSegment) ||
         (isDirectory && isDeniedSourceSegment(segments.at(-1) ?? ""))
       )
-        return "ignored";
+        return "denied";
     }
     return undefined;
   };

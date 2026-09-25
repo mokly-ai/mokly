@@ -1,8 +1,6 @@
-import path from "node:path";
-
 import type { Metafile } from "esbuild";
 
-import { toPosixPath } from "../../config/paths.js";
+import { metafileKey, metafilePath } from "../metafile_paths.js";
 
 /** Ordered, first-reachable CSS files for a JavaScript delivery root. */
 export function orderedStyles(
@@ -17,7 +15,7 @@ export function orderedStyles(
     if (seen.has(file)) return;
     seen.add(file);
     if (file.endsWith(".css")) {
-      const absolute = path.resolve(workingDir, file);
+      const absolute = metafilePath(workingDir, file);
       if (!excluded.has(absolute)) styles.add(absolute);
     }
     for (const imported of metafile.inputs[file]?.imports ?? []) {
@@ -25,6 +23,6 @@ export function orderedStyles(
       visit(imported.path);
     }
   };
-  visit(toPosixPath(path.relative(workingDir, root)));
+  visit(metafileKey(workingDir, root));
   return [...styles];
 }

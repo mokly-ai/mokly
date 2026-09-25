@@ -4,7 +4,7 @@ import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
 import { sourceDenialMessage } from "../build/source_denial.js";
 import { isAuthoringSource } from "../build/source_inventory.js";
-import { isPortableGeneratedPath } from "../build/styles/routes.js";
+import { isPublicGeneratedRoute } from "../build/styles/routes.js";
 import { entryModuleRoots } from "../config/entry_membership.js";
 import { isInside, projectRealPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -51,20 +51,10 @@ function exportPublicNameDenial(
     [MANIFEST_NAME, FORMER_MANIFEST_NAME, LEGACY_MANIFEST_NAME].includes(name)
   )
     return "targets internal catalogue metadata";
+  if (isPublicGeneratedRoute(name)) return;
   for (const part of name.split("/")) {
     if (part.startsWith(".")) return "contains a hidden path segment";
-    if (
-      !options.allowBuildDirectories &&
-      PRIVATE_DIRECTORIES.has(part) &&
-      !(
-        part === "node_modules" &&
-        name.startsWith("mokly-generated/assets/") &&
-        isPortableGeneratedPath(
-          name.slice("mokly-generated/assets/".length),
-          true,
-        )
-      )
-    )
+    if (!options.allowBuildDirectories && PRIVATE_DIRECTORIES.has(part))
       return `is inside a private build or dependency directory (${part})`;
   }
   if (/\.(?:[cm]?[jt]sx?|map)$/i.test(name))

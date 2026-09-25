@@ -74,6 +74,12 @@ An imported CSS asset that is a public file inside `mockupsDir` and is not
 already a graph source fails with `build-invalid` and the exact message:
 `CSS asset is already public in {stylesheet}: {file}; move the imported asset outside mockupsDir or keep it as a separately linked public file`.
 
+A nested `@import` of a public stylesheet inside `mockupsDir` that is not
+already an inventoried graph source fails with `build-invalid` and the exact
+message: `CSS @import is already public in {stylesheet}: {file}; move the imported stylesheet outside mockupsDir or link it as public CSS`.
+Both guards check the reported logical path and its physical alias, so a
+symlinked `mockupsDir` does not silently privatize public files.
+
 `{relative-mockups-dir}` is the path from the offending stylesheet's
 directory to `mockupsDir`, prefixed with `./` if neither `.` nor `..` starts
 it, with POSIX separators. `{relative-reported-dir}` is the same relative

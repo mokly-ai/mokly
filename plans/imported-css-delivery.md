@@ -3,8 +3,8 @@
 ## Status
 
 Active until the implementation PR merges. Created 2026-09-24 from the
-CSS-in-JS investigation on this branch. Milestones 1–8 and Milestone 9's
-commit-and-push step are complete; the parent session will perform the
+CSS-in-JS investigation on this branch. Milestones 1–8A are complete;
+remaining supervision review fixes in Milestone 8B precede the final
 independent post-push review. Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite
@@ -622,6 +622,42 @@ Exercise the feature end to end in the tracked example.
 - [x] Run the complete `npm test`, `npm run typecheck`, `npm run lint`,
       `npm run preview:build`, relevant guide/package tests, and
       `cargo xtask check`.
+
+## Milestone 8A: Supervision review fixes (High and Medium) (complete)
+
+Repair delivery and lifecycle regressions found in independent review.
+
+- [x] Preserve exact required watch inputs under denied directory names, and test all four source layouts and a real watcher.
+- [x] Isolate stateful PostCSS plugins per graph load; prove in-process and watched determinism and measure real Tailwind overhead.
+- [x] Support CommonJS and TypeScript PostCSS modules, helpers and require/import semantics across accepted formats.
+- [x] Transfer large generated assets safely over Serve IPC and test a >4 MiB round-trip and watched Serve.
+- [x] Capture controls Props previews from pending generated CSS/assets through ComponentRenderService.
+- [x] Keep valid generated routes with denied-name segments public in Serve, comparison, export and publication.
+- [x] Classify protocol-relative CSS URLs consistently across Build, Serve, export, Review and watch.
+- [x] Normalize esbuild metafile keys through physical working directories, including symlinked repo roots.
+- [x] Reject private inventory of authored public CSS/assets through logical or physical aliases.
+- [x] Inventory transformer-only CSS permissively without rejecting legacy syntax or external package CSS.
+- [x] Update protocol docs and README files, add red-first tests, run the full verification gate, commit and push Milestone 8A.
+
+## Milestone 8B: Supervision review fixes (Low)
+
+Close the remaining edge cases without changing successful delivery bytes.
+
+- [ ] Limit directory-dependency file events to additions and rebuild on newly created nested directories.
+- [ ] Precompile reported dependency glob matchers and avoid redundant explicit-dependency work; test large walks.
+- [ ] Preserve catalogued diagnostics for dangling PostCSS and generated-directory symlinks and plugin-less syntax errors.
+- [ ] Serve every allowed image/font extension with a specific content type on every delivery path.
+- [ ] Avoid redundant per-file ignore guidance for tracked reserved output.
+- [ ] Update derived-mode ignore guidance and Build deletion documentation.
+- [ ] Reject CSS Module class-map divergence between graph and stylesheet passes.
+- [ ] Reject unvalidated string URLs inside image-set() with actionable guidance.
+- [ ] Name the importing module in the error for direct CSS imports outside repoRoot.
+- [ ] Keep the first failure within each stylesheet when several resolutions fail.
+- [ ] Diagnose late CSS @import at its authored file rather than a generated route.
+- [ ] Allow scoped npm-package segments in generated stylesheet routes.
+- [ ] Reject a consumer CSS loader for every extension during config validation.
+- [ ] Sort paths/diagnostics by plain code-unit comparison and prevent localeCompare regressions where practical.
+- [ ] Update protocol docs and README files, add red-first tests, run the full verification gate, commit and push Milestone 8B.
 
 ## Milestone 9: Commit, push, and review
 

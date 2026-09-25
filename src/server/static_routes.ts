@@ -9,7 +9,10 @@ import type { Catalogue } from "@mokly/viewer/server";
 import { adaptBrowseDocument } from "../browse/document_adapter.js";
 import { generatedBytes, type GeneratedFile } from "../build/generated_file.js";
 import { isOwned } from "../build/ownership.js";
-import { isGeneratedRoute } from "../build/styles/routes.js";
+import {
+  isGeneratedRoute,
+  isPublicGeneratedRoute,
+} from "../build/styles/routes.js";
 import { publicFileLocation } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { errorMessage } from "../errors.js";
@@ -32,7 +35,7 @@ export function serveStatic(
   const candidate = path.resolve(config.mockupsDir, relative);
   if (isGeneratedRoute(relative)) {
     const content = acceptedGenerated.get(relative);
-    if (content === undefined)
+    if (content === undefined || !isPublicGeneratedRoute(relative))
       return send(response, 404, "text/plain", "Not found", method);
     response.writeHead(200, {
       "cache-control": "no-store",

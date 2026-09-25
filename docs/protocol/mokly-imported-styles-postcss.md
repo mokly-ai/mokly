@@ -17,7 +17,14 @@ unbundled from the consumer's `node_modules`. Do not change how `mokly.config`
 loads. Rewrite `import.meta.url`, `import.meta.dirname`, and
 `import.meta.filename` for each bundled local source to that source's own
 real file location, not the temporary bundle's; reload/evaluate and instantiate
-plugins exactly once per graph load through the PostCSS config loader. The
+plugins in a fresh isolated worker module context once per graph load through the
+PostCSS config loader; a stateful plugin package must not retain candidates
+across compilations or watched rebuilds. Terminate that context after the
+load, without reinstantiating plugins for each stylesheet. CommonJS modules
+and local `.cts` helpers use CommonJS `require` conditions for bare packages,
+retain Node built-ins, and receive `require` rooted at the real module path
+plus per-file `__dirname` and `__filename`; ESM imports retain `import`
+conditions. The
 PostCSS module must default-export a non-array object with `plugins`
 as either an ordered array of PostCSS 8-compatible plugins (instances,
 uncalled creators with `postcss: true`, plain function plugins and objects
@@ -79,13 +86,12 @@ to an in-repository directory; preserve the logical and physical source
 aliases of its matching files. Never follow symlinks encountered below the
 reported directory during the walk.
 Dependency walking, inventory, entry discovery and watch classification use
-one package-owned-path classification by both reported logical path and
-projected real path. It identifies generated fragments (owned HTML), the
-manifest and reserved tree separately from ignored Review output, cache,
-denied trees (relative to an explicit entry-glob stable root when classifying
-entry watch events) and physical escapes. Reject ignored directories before walking,
-ignored files before inventory and package-owned events before matching watch
-globs or required authored inputs. A symlink alias to generated output keeps
+one reasoned path classification by both reported logical path and projected
+real path: generated fragments/manifest/reserved tree, Review output, cache,
+denied directory names, and physical escapes are distinct reasons. Reject
+generated output, Review and cache ahead of required inputs; denied directory
+names prune discovery and directory scans but cannot hide exact required inputs
+or their ancestors. A symlink alias to generated output keeps
 the same explicit-dependency error and committed/derived directory precedence
 as its physical target; diagnostics name the reported logical path. In
 committed mode scan generated trees for matching files before reporting them;

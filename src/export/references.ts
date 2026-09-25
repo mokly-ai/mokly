@@ -12,6 +12,7 @@ import {
   extractCssReferences,
   extractHtmlReferences,
 } from "../html_references.js";
+import { classifyResourceUrl } from "../resource_url.js";
 
 import { exportError } from "./error.js";
 import { ExportPathIndex } from "./path_index.js";
@@ -93,10 +94,16 @@ export function validateExportReferences(
 
 function referenceTarget(source: string, value: string): string | undefined {
   const reference = value.trim();
-  if (reference === "" || /^(?:https?:|mailto:|tel:|data:)/i.test(reference))
-    return undefined;
+  const classification = classifyResourceUrl(
+    reference,
+    source.endsWith(".css") ? "css" : "html",
+  );
+  if (classification.kind === "external") return;
   if (reference.startsWith("#") || reference.startsWith("?")) return source;
-  if (reference.startsWith("//") || /^[a-z][a-z0-9+.-]*:/i.test(reference))
+  if (
+    classification.kind === "invalid" &&
+    classification.reason !== "root-absolute"
+  )
     throw exportError(`Unsupported export URL: ${source} -> ${reference}`);
   const encoded = reference.split(/[?#]/, 1)[0] ?? "";
   let decoded: string;

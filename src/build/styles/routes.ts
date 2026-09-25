@@ -88,3 +88,14 @@ export function isValidGeneratedRoute(route: string): boolean {
   }
   return false;
 }
+
+/** Admit only portable stylesheet/asset routes from an accepted generation. */
+export function isPublicGeneratedRoute(
+  route: string,
+  accepted?: ReadonlySet<string>,
+): boolean {
+  return (
+    isValidGeneratedRoute(route) &&
+    (accepted === undefined || accepted.has(route))
+  );
+}

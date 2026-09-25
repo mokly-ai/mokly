@@ -9,6 +9,7 @@ import {
   extractHtmlReferences,
   type HtmlReferenceOptions,
 } from "../html_references.js";
+import { classifyResourceUrl } from "../resource_url.js";
 
 /** Resolve portable local resource references using the snapshot URL rules. */
 export function referencedRoutes(
@@ -42,29 +43,15 @@ function resolveReference(
   rawReference: string,
 ): string | undefined {
   const reference = rawReference.trim();
-  if (reference.startsWith("//")) {
+  const classification = classifyResourceUrl(
+    reference,
+    sourceRoute.endsWith(".css") ? "css" : "html",
+  );
+  if (classification.kind === "external" || reference.startsWith("#")) return;
+  if (classification.kind === "invalid") {
     throw assetError(
       sourceRoute,
-      `non-portable asset URL ${reference} (protocol-relative)`,
-    );
-  }
-  if (reference.startsWith("/")) {
-    throw assetError(
-      sourceRoute,
-      `non-portable asset URL ${reference} (root-absolute)`,
-    );
-  }
-  if (
-    reference === "" ||
-    reference.startsWith("#") ||
-    /^(?:https?:|data:)/i.test(reference)
-  ) {
-    return undefined;
-  }
-  if (/^[a-z][a-z0-9+.-]*:/i.test(reference)) {
-    throw assetError(
-      sourceRoute,
-      `non-portable asset URL ${reference} (unsupported scheme)`,
+      `non-portable asset URL ${reference} (${classification.reason})`,
     );
   }
   const encodedPath = reference.split(/[?#]/, 1)[0] ?? "";

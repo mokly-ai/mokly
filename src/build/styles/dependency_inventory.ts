@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { isInside, projectRealPath, toPosixPath } from "../../config/paths.js";
+import { toPosixPath } from "../../config/paths.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { MoklyError } from "../../errors.js";
 import { packageOwnedPath } from "../package_owned_paths.js";
@@ -11,6 +11,7 @@ import {
   ignoredDependencyPath,
 } from "./dependency_walk.js";
 import type { StyleDependencyReport } from "./postcss.js";
+import { wouldPrivatizePublicFile } from "./public_source.js";
 
 /** Package-owned directory root, including its reported glob for new files. */
 export interface PostcssWatchDirectory {
@@ -112,13 +113,7 @@ function isPublicMockupsDependency(
   config: ResolvedConfig,
   graphInputs: ReadonlySet<string>,
 ): boolean {
-  const physical = projectRealPath(file);
-  return (
-    (isInside(config.mockupsDir, file) ||
-      isInside(projectRealPath(config.mockupsDir), physical)) &&
-    !graphInputs.has(file) &&
-    !graphInputs.has(physical)
-  );
+  return wouldPrivatizePublicFile(file, config, graphInputs);
 }
 
 function generatedError(

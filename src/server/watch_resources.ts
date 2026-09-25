@@ -15,6 +15,7 @@ import { ResourceGraph } from "../review/resource_graph.js";
 import {
   configuredStylesheetPaths,
   isPackageOwnedIgnoredWatchPath,
+  isRecoverablePublicResource,
 } from "./watch_paths.js";
 
 /** Reachable inputs and recovery edges from one resource-discovery pass. */
@@ -89,7 +90,8 @@ export async function discoverWatchResources(
     if (compilation.outputs.has(route) || configured.has(route)) continue;
     for (const candidate of locations.get(route) ?? []) {
       if (
-        !isPackageOwnedIgnoredWatchPath(candidate, config) &&
+        (!isPackageOwnedIgnoredWatchPath(candidate, config) ||
+          isRecoverablePublicResource(candidate, config)) &&
         !isOwned(candidate, config)
       )
         paths.add(candidate);

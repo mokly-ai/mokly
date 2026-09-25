@@ -20,6 +20,7 @@ import {
   extractCssReferences,
   extractHtmlReferences,
 } from "../html_references.js";
+import { classifyResourceUrl } from "../resource_url.js";
 
 import { isOwned, pendingGeneratedOrphanRoutes } from "./ownership.js";
 import { PendingGeneratedFiles } from "./pending_generated.js";
@@ -133,18 +134,16 @@ function validateReference(
   onDemand: boolean,
 ): ReferenceResult {
   const reference = item.value;
-  if (reference === "" || /^(?:https?:|mailto:|tel:|data:)/i.test(reference)) {
+  if (
+    classifyResourceUrl(
+      reference,
+      sourceRoute.endsWith(".css") ? "css" : "html",
+    ).kind === "external"
+  )
     return {};
-  }
   if (reference.startsWith("mock:")) {
     return { violation: `unresolved id link ${reference}` };
   }
-  if (
-    sourceRoute.endsWith(".css") &&
-    !item.checkFragment &&
-    reference.startsWith("//")
-  )
-    return {};
   if (reference.startsWith("/")) {
     return { violation: `root-absolute link is not portable: ${reference}` };
   }

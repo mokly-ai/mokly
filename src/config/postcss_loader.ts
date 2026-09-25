@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -81,6 +82,9 @@ async function bundleModule(
       conditions: ["node", "import", "default"],
       entryPoints: [entry],
       format: "esm",
+      banner: {
+        js: `import { createRequire as __moklyCreateRequire } from "node:module"; const require = __moklyCreateRequire(${JSON.stringify(entry)});`,
+      },
       logLevel: "silent",
       metafile: true,
       outfile: path.join(os.tmpdir(), "mokly-postcss-analysis.mjs"),
@@ -108,6 +112,16 @@ function postcssImports(): Plugin {
         if (!isBareImport(arguments_.path)) return;
         if (arguments_.path.startsWith("node:"))
           return { path: arguments_.path, external: true };
+        if (arguments_.kind === "require-call") {
+          try {
+            return {
+              path: createRequire(arguments_.importer).resolve(arguments_.path),
+              external: true,
+            };
+          } catch (error) {
+            return { errors: [{ text: errorMessage(error) }] };
+          }
+        }
         const resolved = await pluginBuild.resolve(arguments_.path, {
           importer: arguments_.importer,
           resolveDir: arguments_.resolveDir,
@@ -131,8 +145,10 @@ function postcssImports(): Plugin {
             "import.meta.url": JSON.stringify(pathToFileURL(physical).href),
             "import.meta.dirname": JSON.stringify(path.dirname(physical)),
             "import.meta.filename": JSON.stringify(physical),
+            __dirname: JSON.stringify(path.dirname(physical)),
+            __filename: JSON.stringify(physical),
           },
-          loader: extension === ".ts" || extension === ".mts" ? "ts" : "js",
+          loader: [".ts", ".mts", ".cts"].includes(extension) ? "ts" : "js",
           target: "node22",
         });
         return {

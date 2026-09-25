@@ -56,9 +56,9 @@ abort export while preserving the previous artifact. Cache trees and aliases
 cannot be exported or selected as a destination.
 `public_files.ts` never enumerates the reserved tree on disk in derived mode;
 its only CSS/assets come from the accepted compilation. Committed exports
-capture checked disk bytes. `resource_policy.ts` admits portable package-owned
-`mokly-generated/assets/**/node_modules/@scope/**` routes without exposing
-ordinary consumer `node_modules` or imported CSS sources as public resources.
+capture checked disk bytes. `resource_policy.ts` admits portable generated
+CSS/asset routes even when they contain `dist`, `target` or
+`node_modules/@scope`; authored dependency trees and CSS inputs stay private.
 
 `stage.ts` shares ownership assembly, alias/reference validation, and staged
 file writes between consumer export and repository preview capture.

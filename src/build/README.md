@@ -14,9 +14,10 @@ sources independently. CSS Modules use path-stable Lightning CSS names and
 expose default and named bindings to JavaScript. CSS `url()` assets become
 byte-preserving files under `mokly-generated/assets/`, and CSS/asset inputs
 join the private source inventory in both full and inventory-only graph loads.
-An optional config-relative PostCSS module runs once per distinct effective
-stylesheet input before CSS Modules naming; both graph and CSS passes share
-the result. Its local imports join `configSourceFiles` and trigger config
+An optional config-relative PostCSS module runs in a fresh isolated worker
+per graph load so plugin package caches cannot leak into the next compile.
+Each distinct effective stylesheet input runs once before CSS Modules naming;
+both passes share the result. Its local imports join `configSourceFiles` and trigger config
 reloads, while package imports stay unbundled to preserve plugin-native
 bindings. Only the module path, never plugin instances, crosses Serve IPC.
 Reported file dependencies join `sourceFiles`; globbed directory dependencies
@@ -28,9 +29,9 @@ cannot bypass renderer pruning silently. See the
 validation precedence and deterministic Tailwind settings.
 PostCSS 8 normalizes plugin instances, uncalled creators, plain functions and
 objects with `postcss` factories; Mokly does not narrow accepted plugin shapes.
-`package_owned_paths.ts` classifies logical and projected physical paths
-together so symlinked dependency roots cannot inventory Review or generated
-output, and watch aliases cannot rebuild on package-owned files.
+`package_owned_paths.ts` classifies logical and physical paths by generated,
+Review, cache, denied-directory-name and outside reasons. Exact required
+inputs inside denied-name directories remain watchable; output never does.
 Fragment render input now lists the
 matching authored stylesheet rule, then generated renderer CSS, then the
 exporting entry's CSS, relative to the fragment route. Pages still render
@@ -94,13 +95,16 @@ the same lexical and alias-aware source boundaries.
 the renderer and any compatibility transformer together and refreshes the
 resolved set on the config as `entryModules`. `styles/collect.ts` replaces
 esbuild's discarded sibling CSS output with class bindings and records graph
-imports. `styles/order.ts` walks metafile imports. `styles/prelude.ts` scans
+imports. `styles/order.ts` walks metafile imports, while `metafile_paths.ts`
+maps esbuild's physical working directory back to symlinked consumer roots.
+`styles/prelude.ts` scans
 valid CSS import preludes, `styles/preprocess.ts` owns the memoized post-pruning
 transform seam, `styles/modules.ts` scopes local identities, `styles/bundle.ts`
 orchestrates the renderer pass and one multi-entry pass for all entries;
 `styles/bundle_pass.ts` owns esbuild and per-root input attribution, and
-`styles/resolution.ts` validates URLs,
-imports, and confined assets. `styles/outputs.ts` strips esbuild path comments
+`styles/resolution.ts` validates URLs, imports and confined assets, rejecting
+public stylesheet and asset aliases before they enter private inventory.
+`styles/outputs.ts` strips esbuild path comments
 and deduplicates shared assets by raw bytes.
 `load_graph.ts` retains the delivered CSS-pass inputs and URL asset paths
 separately from the full source inventory (which also includes transformer-only
@@ -109,7 +113,8 @@ passes this repository-relative set to Changes; the retained runtime carries it
 through child and background worker transfer without adding manifest fields.
 `styles/transformer_inventory.ts` inventories CSS reachable only from the
 compatibility transformer, including nested imports and local URL assets,
-without bundling a stylesheet or evaluating consumer JavaScript. React
+without bundling a stylesheet or evaluating consumer JavaScript. It skips
+already delivered CSS and package CSS and recovers legacy syntax. React
 and React DOM resolve from consumer package roots, including when Mokly runs
 from an npx installation. The bundle stays in memory and retains the
 consumer's existing rendering/provider graph.

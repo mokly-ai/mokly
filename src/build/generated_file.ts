@@ -62,10 +62,28 @@ export function receiveGeneratedFile(
     content.kind !== "bytes" ||
     !("base64" in content) ||
     typeof content.base64 !== "string" ||
-    !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(
-      content.base64,
-    )
+    !validBase64(content.base64)
   )
     return undefined;
   return Buffer.from(content.base64, "base64");
+}
+
+function validBase64(value: string): boolean {
+  if (value.length % 4 !== 0) return false;
+  const padding = value.endsWith("==") ? 2 : value.endsWith("=") ? 1 : 0;
+  if (padding && value.length < 4) return false;
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index);
+    if (index >= value.length - padding) {
+      if (code !== 61) return false;
+    } else if (!(
+      (code >= 65 && code <= 90) ||
+      (code >= 97 && code <= 122) ||
+      (code >= 48 && code <= 57) ||
+      code === 43 ||
+      code === 47
+    ))
+      return false;
+  }
+  return true;
 }

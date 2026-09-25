@@ -8,6 +8,7 @@ import type { ResolvedConfig } from "../../config/types.js";
 import { MoklyError, errorMessage } from "../../errors.js";
 import { packageNodePaths } from "../consumer_resolution.js";
 import type { GeneratedFile } from "../generated_file.js";
+import { metafileKey, metafilePath } from "../metafile_paths.js";
 import { graphSourceFiles } from "../source_inventory.js";
 
 import { stripSourcePathComments } from "./outputs.js";
@@ -179,7 +180,10 @@ export async function bundleStylePass(
 
   const inputs = new Map<string, readonly string[]>();
   for (const root of roots) {
-    const output = `${path.relative(config.repoRoot, config.mockupsDir).split(path.sep).join("/")}/${root.route}`;
+    const output = metafileKey(
+      config.repoRoot,
+      path.join(config.mockupsDir, root.route),
+    );
     const cssInputs = metafile.outputs[output]?.inputs ?? {};
     const rootMetafile: Metafile = {
       inputs: Object.fromEntries(
@@ -216,7 +220,7 @@ function rootIndex(
 ): number {
   const virtual = source && /^mokly-styles:mokly:styles:(\d+)$/.exec(source);
   if (virtual) return Number(virtual[1]);
-  const absolute = source && path.resolve(config.repoRoot, source);
+  const absolute = source && metafilePath(config.repoRoot, source);
   const index = roots.findIndex(
     (root) => absolute && closures.get(root.path)?.has(absolute),
   );

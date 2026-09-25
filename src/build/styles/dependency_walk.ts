@@ -5,7 +5,10 @@ import { minimatch } from "minimatch";
 
 import { toPosixPath } from "../../config/paths.js";
 import type { ResolvedConfig } from "../../config/types.js";
-import { packageOwnedPath } from "../package_owned_paths.js";
+import {
+  blocksRequiredInput,
+  packageOwnedPath,
+} from "../package_owned_paths.js";
 
 /** Walk regular matching files, without following symlinks or denied trees. */
 export function walkDependencyDirectory(
@@ -17,9 +20,8 @@ export function walkDependencyDirectory(
   const visit = (current: string): void => {
     const owned = packageOwnedPath(current, config, true);
     if (
-      owned === "ignored" ||
-      owned === "outside" ||
-      (owned === "generated" && config.generatedOutput === "derived")
+      blocksRequiredInput(owned, false) &&
+      (owned !== "generated" || config.generatedOutput === "derived")
     )
       return;
     for (const entry of fs
@@ -36,7 +38,7 @@ export function walkDependencyDirectory(
         })
       )
         if (
-          !["ignored", "outside"].includes(
+          !["review", "cache", "denied", "outside"].includes(
             packageOwnedPath(candidate, config, false) ?? "",
           )
         )
@@ -53,5 +55,5 @@ export function ignoredDependencyPath(
   config: ResolvedConfig,
 ): boolean {
   const owned = packageOwnedPath(candidate, config);
-  return owned === "ignored" || owned === "outside";
+  return owned !== undefined && owned !== "generated";
 }

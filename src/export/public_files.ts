@@ -2,7 +2,11 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { generatedBytes, type GeneratedFile } from "../build/generated_file.js";
-import { GENERATED_DIRECTORY } from "../build/styles/routes.js";
+import {
+  GENERATED_DIRECTORY,
+  isGeneratedRoute,
+  isPublicGeneratedRoute,
+} from "../build/styles/routes.js";
 import { toPosixPath } from "../config/paths.js";
 import { isPublicStaticFile } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -35,6 +39,10 @@ export async function capturePublicFiles(
       const candidate = path.join(directory, entry.name);
       const name = toPosixPath(path.relative(config.mockupsDir, candidate));
       if (generated && name === GENERATED_DIRECTORY) continue;
+      if (entry.isDirectory() && isGeneratedRoute(name)) {
+        await visit(candidate);
+        continue;
+      }
       if (!isPublic(name)) continue;
       if (generated?.has(name)) continue;
       if (entry.isSymbolicLink())
@@ -49,8 +57,13 @@ export async function capturePublicFiles(
     }
   };
   await visit(config.mockupsDir);
+  const accepted = new Set(generated?.keys());
   for (const [name, bytes] of generated ?? [])
-    if (isPublic(name)) files.set(name, generatedBytes(bytes));
+    if (
+      (!isGeneratedRoute(name) || isPublicGeneratedRoute(name, accepted)) &&
+      isPublic(name)
+    )
+      files.set(name, generatedBytes(bytes));
   return new Map(
     [...files].sort(([left], [right]) => left.localeCompare(right)),
   );

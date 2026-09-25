@@ -58,13 +58,10 @@ export function renderTransient(
     view: document.view!,
     files: captureRenderBundle(
       route,
-      new Map([[route, document.html]]),
+      new Map([...graph.styleOutputs, [route, document.html]]),
       runtime.manifest,
       runtime.config,
-      (target) =>
-        compiler!.routes.has(target)
-          ? compiler!.render(target).html
-          : undefined,
+      (target) => compiler!.readGeneratedFile(target),
     ),
   };
 }

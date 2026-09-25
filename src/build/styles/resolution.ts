@@ -4,10 +4,12 @@ import path from "node:path";
 import type { Plugin, PluginBuild } from "esbuild";
 
 import { locatePath } from "../../config/file_locations.js";
-import { isInside, toPosixPath } from "../../config/paths.js";
+import { toPosixPath } from "../../config/paths.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { MoklyError } from "../../errors.js";
+import { classifyResourceUrl } from "../../resource_url.js";
 
+import { wouldPrivatizePublicFile } from "./public_source.js";
 import { ASSET_EXTENSIONS, assetRoute } from "./routes.js";
 
 /** Per-bundle stylesheet resolver and the assets it validated. */
@@ -58,6 +60,17 @@ export class StyleResolution {
         "build-invalid",
         `could not resolve CSS @import in ${this.relative(importer)}: ${specifier}; use an existing stylesheet inside repoRoot`,
       );
+    if (
+      wouldPrivatizePublicFile(
+        location.logicalPath,
+        this.config,
+        this.graphInputs,
+      )
+    )
+      throw new MoklyError(
+        "build-invalid",
+        `CSS @import is already public in ${this.relative(importer)}: ${location.relativePath}; move the imported stylesheet outside mockupsDir or link it as public CSS`,
+      );
     return location.logicalPath;
   };
 
@@ -92,9 +105,11 @@ export class StyleResolution {
       );
     assetRoute(location.logicalPath, this.config.repoRoot);
     if (
-      isInside(this.config.mockupsDir, location.physicalPath) &&
-      !this.graphInputs.has(location.logicalPath) &&
-      !this.graphInputs.has(location.physicalPath)
+      wouldPrivatizePublicFile(
+        location.logicalPath,
+        this.config,
+        this.graphInputs,
+      )
     )
       throw new MoklyError(
         "build-invalid",
@@ -151,9 +166,5 @@ export class StyleResolution {
 }
 
 function externalCssUrl(value: string): boolean {
-  return (
-    /^(?:data:|https?:)/i.test(value) ||
-    value.startsWith("//") ||
-    value.startsWith("#")
-  );
+  return classifyResourceUrl(value, "css").kind === "external";
 }

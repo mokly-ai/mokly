@@ -3,7 +3,10 @@ import path from "node:path";
 
 import { minimatch } from "minimatch";
 
-import { packageOwnedPath } from "../build/package_owned_paths.js";
+import {
+  blocksRequiredInput,
+  packageOwnedPath,
+} from "../build/package_owned_paths.js";
 import { isBaselineCachePath } from "../config/cache_paths.js";
 import { globStablePrefix } from "../config/entry_globs.js";
 import { isInside, projectRealPath, toPosixPath } from "../config/paths.js";
@@ -53,7 +56,7 @@ export function isEntryGlobCandidate(
     directory === "directory",
     relativeRoot,
   );
-  return owned !== "generated" && owned !== "ignored" && owned !== "outside";
+  return !blocksRequiredInput(owned, false);
 }
 
 /** Return whether package-owned output should be pruned from a broad watch. */
@@ -76,8 +79,9 @@ export function isPackageOwnedIgnoredWatchPath(
     stats?.isDirectory() ?? (directory === "directory" ? true : undefined),
     packageRoot,
   );
-  if (owned === "generated" || owned === "ignored") return true;
-  if (isRequiredWatchPath(absolute, config)) return false;
+  const required = isRequiredWatchPath(absolute, config);
+  if (blocksRequiredInput(owned, required)) return true;
+  if (required) return false;
   if (globRoots.some((root) => isInside(absolute, root))) return false;
   if (isExportIgnoredPath(absolute, config.repoRoot, mode)) return true;
   if (isInside(config.review.outDir, absolute)) return true;
@@ -90,6 +94,16 @@ export function isPackageOwnedIgnoredWatchPath(
     isDeniedSourceSegment(leaf) &&
     (stats?.isDirectory() ?? isDirectory(candidate, directory))
   );
+}
+
+/** Keep a known public alias observable when its symlink temporarily escapes. */
+export function isRecoverablePublicResource(
+  candidate: string,
+  config: ResolvedConfig,
+): boolean {
+  if (!isInside(config.mockupsDir, candidate)) return false;
+  const reason = packageOwnedPath(candidate, config, false);
+  return reason === undefined || reason === "outside" || reason === "denied";
 }
 
 /** Resolve the finite roots/globs watched for this consumer. */

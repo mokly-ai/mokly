@@ -167,6 +167,53 @@ test("runtime and selected-review JSON transfers retain binary bytes", async (co
   );
 });
 
+test("generated IPC preserves more than four MiB of opaque bytes", () => {
+  const bytes = Buffer.alloc(4 * 1024 * 1024 + 127);
+  for (let index = 0; index < bytes.length; index += 1)
+    bytes[index] = index % 251;
+  assert.deepEqual(receiveGeneratedFile(transferGeneratedFile(bytes)), bytes);
+});
+
+test("props render captures linked CSS and binary assets from the accepted generation", async (context) => {
+  const fixture = await createFixture(componentEntrySource());
+  context.after(() => removeFixture(fixture));
+  await fs.promises.writeFile(
+    path.join(fixture.entriesDir, "render.css"),
+    '.component{background:url("./picture.png")}',
+  );
+  await fs.promises.writeFile(
+    path.join(fixture.entriesDir, "picture.png"),
+    rawBytes,
+  );
+  await fs.promises.appendFile(fixture.entryPath, '\nimport "./render.css";\n');
+  const compilation = await compileCatalogue(await loadConfig(fixture.root));
+  const runtime = componentRuntime(compilation);
+  const service = new ComponentRenderService(runtime);
+  context.after(() => service.close());
+  const result = await service.render(
+    {
+      componentId: "action",
+      variantId: "default",
+      viewport: "desktop",
+      colorScheme: "light",
+      generation: runtime.generation,
+      pageId: "a".repeat(32),
+      overrides: {},
+    },
+    new AbortController().signal,
+  );
+  const captured = service.store.get(result.renderId);
+  assert.ok(
+    captured.files.has("mokly-generated/styles/entries/fixture.mockup.tsx.css"),
+  );
+  assert.deepEqual(
+    Buffer.from(
+      captured.files.get("mokly-generated/assets/entries/picture.png")!.bytes,
+    ),
+    Buffer.from(rawBytes),
+  );
+});
+
 test("controls Serve sends synthetic generated asset bytes without decoding", async (context) => {
   const fixture = await createFixture(componentEntrySource());
   context.after(() => removeFixture(fixture));

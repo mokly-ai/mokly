@@ -66,7 +66,16 @@ Exact required files, including the config and its imports, inventoried sources,
 the renderer, and configured stylesheets, retain both their ancestor path and the
 file itself even when intentionally nested beneath an ordinarily ignored
 directory. Configured stylesheet files remain reload inputs.
-Those package-owned classifications take precedence over additional watch rules.
+The logical path of a previously reachable public resource remains a reload
+input when its symlink temporarily points outside the repository or dangles;
+never watch the escaped physical target. Generated output, Review output and
+cache still take precedence, so only an authored public alias can recover.
+Generated output, Review output and the cache take precedence over exact
+required inputs; denied directory **names** apply only to discovery and
+directory scans, not inventoried files, configured modules or their ancestors.
+Classify logical and physical aliases by these distinct reasons before applying
+the required-input exception. Those package-owned output classifications take
+precedence over additional watch rules.
 A created path beneath a denied directory relative to its glob root, or beneath
 `review.outDir`, is ignored because discovery cannot accept it. A file created
 under an entry glob root that no `entries` glob matches and that is not imported

@@ -20,8 +20,12 @@ export async function inventoryTransformerStyles(
   styles: readonly string[],
   graphInputs: ReadonlySet<string>,
   preprocessor: StylePreprocessor,
+  delivered: ReadonlySet<string> = new Set(),
 ): Promise<ReadonlySet<string>> {
-  if (!styles.length) return new Set();
+  const pending = styles.filter(
+    (file) => !delivered.has(file) && !isPackageCss(file),
+  );
+  if (!pending.length) return new Set();
   return timeAsync("styles.inventory", async () => {
     const resolution = new StyleResolution(config, graphInputs);
     const closure = new Set<string>();
@@ -31,7 +35,8 @@ export async function inventoryTransformerStyles(
       name: "mokly-transformer-style-inventory",
       setup(pluginBuild) {
         const visit = async (file: string): Promise<void> => {
-          if (closure.has(file)) return;
+          if (closure.has(file) || delivered.has(file) || isPackageCss(file))
+            return;
           closure.add(file);
           const original = await fs.readFile(file, "utf8");
           const prepared = await preprocessor.prepare(file);
@@ -52,6 +57,7 @@ export async function inventoryTransformerStyles(
                 filename: toPosixPath(path.relative(config.repoRoot, file)),
                 code: Buffer.from(prepared.css),
                 analyzeDependencies: true,
+                errorRecovery: true,
                 minify: false,
               }).dependencies ?? [];
           } catch (error) {
@@ -82,7 +88,7 @@ export async function inventoryTransformerStyles(
         );
         pluginBuild.onStart(async () => {
           try {
-            for (const file of styles) await visit(file);
+            for (const file of pending) await visit(file);
             return {};
           } catch (error) {
             failure =
@@ -135,4 +141,8 @@ export async function inventoryTransformerStyles(
       ),
     );
   });
+}
+
+function isPackageCss(file: string): boolean {
+  return file.split(path.sep).includes("node_modules");
 }

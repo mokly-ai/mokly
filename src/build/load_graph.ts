@@ -33,8 +33,7 @@ import { bundleStyles } from "./styles/bundle.js";
 import { GraphStyles } from "./styles/collect.js";
 import { collectPostcssDependencies } from "./styles/dependency_inventory.js";
 import { orderedStyles } from "./styles/order.js";
-import { PostcssStyleProcessor } from "./styles/postcss.js";
-import { StylePreprocessor } from "./styles/preprocess.js";
+import { createStyleProcessor } from "./styles/processor_setup.js";
 import { inventoryTransformerStyles } from "./styles/transformer_inventory.js";
 
 /** Consumer modules loaded in one React-safe esbuild graph. */
@@ -81,14 +80,8 @@ async function loadGraph(
     path.dirname(config.configPath),
     ".mokly-consumer.cjs",
   );
-  const plugins = await postcssLoader.load(config);
-  const styles = new GraphStyles(
-    config,
-    new StylePreprocessor(
-      config,
-      config.postcss ? new PostcssStyleProcessor(config, plugins) : undefined,
-    ),
-  );
+  const processor = await createStyleProcessor(config, postcssLoader);
+  const styles = new GraphStyles(config, processor.preprocessor);
   try {
     const built = await timeAsync("graph.bundle", () =>
       build({
@@ -187,6 +180,7 @@ async function loadGraph(
       transformerStyles,
       graphInputs,
       styles.preprocessor,
+      bundled.sourceFiles,
     );
     const dependencies = collectPostcssDependencies(
       config,
@@ -283,6 +277,8 @@ async function loadGraph(
         cause: error,
       },
     );
+  } finally {
+    await processor.close();
   }
 }
 

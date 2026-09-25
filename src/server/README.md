@@ -14,12 +14,11 @@ descendants. Discovery and watching share one denied-directory policy below the
 relevant glob root: traversal uses the deepest containing root, and entry-file
 classification uses the deepest matching root. The glob itself defines every
 entry-file shape that can trigger rediscovery. Traversal also skips
-`review.outDir`. A denied leaf's directory status comes from watcher stats,
-and a shared logical-and-physical package-owned check rejects alias events
-for generated files, Review output, cache and denied trees before any rebuild
-or directory-dependency glob classification. A symlink cannot re-enable a
-package-owned path through a watch rule.
-else from its event kind, else from one stat that treats any error as a file.
+`review.outDir`. Generated output, Review and cache outrank exact required
+inputs; denied directory names only prune broad discovery and directory scans.
+Logical and physical aliases share these distinct reasons. A denied leaf's
+directory status comes from watcher stats, else its event kind, else one stat
+that treats any error as a file.
 `addDir` and `unlinkDir` identify directories; `add`, `change`, and `unlink`
 identify files. Supplied stats avoid that stat, but traversal still reads export
 markers and ownership headers. Deleted matched files rebuild even when named
@@ -130,7 +129,8 @@ does not change the live selected-page boundary.
 owns child shutdown. HTTP readiness precedes exhaustive compilation and baseline
 preparation, so All remains usable while Changes is pending or preparing.
 `controls/runtime_ipc.ts` encodes generated binary files as tagged base64 over
-the watched child's JSON IPC channel and decodes them before a controls preview
+the watched child's JSON IPC channel and validates them in linear time before
+a controls preview
 serves raw bytes; text documents remain strings. It also carries the accepted
 per-root stylesheet routes and CSS/asset outputs so child and background
 recompilation reuse the original bytes instead of silently dropping them.

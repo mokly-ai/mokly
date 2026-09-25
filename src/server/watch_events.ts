@@ -3,7 +3,10 @@ import path from "node:path";
 
 import { minimatch } from "minimatch";
 
-import { packageOwnedPath } from "../build/package_owned_paths.js";
+import {
+  blocksRequiredInput,
+  packageOwnedPath,
+} from "../build/package_owned_paths.js";
 import { isBaselineCachePath } from "../config/cache_paths.js";
 import { isAuthoredEntryPath } from "../config/entry_membership.js";
 import { isInside, toPosixPath } from "../config/paths.js";
@@ -13,6 +16,7 @@ import {
   configuredStylesheetPaths,
   isEntryGlobCandidate,
   isPackageOwnedIgnoredWatchPath,
+  isRecoverablePublicResource,
 } from "./watch_paths.js";
 
 /** Filesystem notification with the watcher-provided identity and directory evidence. */
@@ -206,16 +210,17 @@ export function classifyWatchPath(
       (source) => path.resolve(config.repoRoot, source) === absolute,
     )
   )
-    return packageOwnedPath(
-      absolute,
-      config,
-      directory === "directory" ? true : false,
+    return blocksRequiredInput(
+      packageOwnedPath(absolute, config, directory === "directory"),
+      true,
     )
       ? "ignore"
       : "rebuild";
   if (isAuthoredEntryPath(absolute, config)) return "rebuild";
   if (isEntryGlobCandidate(absolute, config, directory)) return "rebuild";
   if (config.renderer === absolute) return "rebuild";
+  if (resources.has(absolute) && isRecoverablePublicResource(absolute, config))
+    return "reload";
   const relative = toPosixPath(path.relative(config.repoRoot, absolute));
   if (
     isPackageOwnedIgnoredWatchPath(

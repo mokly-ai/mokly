@@ -22,6 +22,7 @@ import {
   extractHtmlReferences,
 } from "../../html_references.js";
 import type { CatalogueMetadata } from "../../registry/catalogue_index.js";
+import { classifyResourceUrl } from "../../resource_url.js";
 import { contentType } from "../respond.js";
 
 import { rebaseTransientNavigation } from "./transient_links.js";
@@ -42,7 +43,7 @@ export function captureRenderBundle(
   outputs: ReadonlyMap<string, GeneratedFile>,
   manifest: CatalogueMetadata,
   config: ResolvedConfig,
-  readGenerated?: (route: string) => string | undefined,
+  readGenerated?: (route: string) => GeneratedFile | undefined,
 ): ReadonlyMap<string, RenderFile> {
   const catalogue = createCatalogue(manifest);
   const files = new Map<string, RenderFile>();
@@ -88,7 +89,18 @@ export function captureRenderBundle(
     files.set(current, { type, bytes });
     for (const reference of references) {
       const value = reference;
-      if (!value || /^(?:[a-z][a-z0-9+.-]*:|#|\?|\/)/i.test(value)) continue;
+      const classification = classifyResourceUrl(
+        value,
+        type.startsWith("text/css") ? "css" : "html",
+      );
+      if (
+        classification.kind === "external" ||
+        value.startsWith("#") ||
+        value.startsWith("?")
+      )
+        continue;
+      if (classification.kind === "invalid")
+        throw new Error(`Preview resource has a non-portable URL: ${value}`);
       const pathname = decodeURIComponent(value.split(/[?#]/, 1)[0]!);
       const target = path.posix.normalize(
         path.posix.join(path.posix.dirname(current), pathname),

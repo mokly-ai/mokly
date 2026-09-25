@@ -330,9 +330,10 @@ and retain its snapshots in memory.
 Base and head panes live under separate route-preserving snapshot roots. Local
 resources referenced by pane HTML or CSS are copied transitively, including
 binary fonts and images, while explicit HTTP(S)/data resources remain external.
-Root-absolute, protocol-relative, and other scheme-qualified resource URLs are
-not portable in an isolated snapshot and fail comparison instead of being
-silently omitted.
+HTTP(S) and data resource URLs are external. CSS protocol-relative `//` URLs
+are likewise external, remain unchanged and are never fetched or inventoried.
+HTML protocol-relative and root-absolute URLs and other scheme-qualified
+resources are not portable in an isolated snapshot and fail comparison.
 Current-worktree resources must resolve to regular public files. Every base
 resource, including the pane document itself and each transitive dependency,
 must be a regular Git file. Neither side may read from protected authoring inputs. Pane documents remain byte-unmodified and run in
