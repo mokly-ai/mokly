@@ -1,7 +1,8 @@
 # Path-Only Evidence Stays Out Of Changes
 
-Status: Milestones 1–4 are complete; Milestones 5–9 fix review findings
-3–6, and finding 2 awaits the user's decision. The plan stays Active until PR #118 merges. Created
+Status: Milestones 1–8 are complete and findings 3–6 are fixed; Milestone 9
+(verification and review) is in progress, and finding 2 awaits the user's
+decision. The plan stays Active until PR #118 merges. Created
 2026-09-25 with the user's consent (option B of
 finding 1 raised while reviewing the PR #118 preview). Implemented on the
 `calummoore/halifax-v2` branch alongside
@@ -229,10 +230,10 @@ Tags: ui
 
 ## Milestone 9: Review follow-up verification, close-out, and review
 
-- [ ] Mark findings 3–6 fixed in the review-findings list.
-- [ ] Run `cargo xtask check`; fix anything it reports until it passes.
-- [ ] Update the PR #118 description if it no longer covers the branch.
-- [ ] Commit and push.
+- [x] Mark findings 3–6 fixed in the review-findings list.
+- [x] Run `cargo xtask check`; fix anything it reports until it passes.
+- [x] Update the PR #118 description if it no longer covers the branch.
+- [x] Commit and push.
 - [ ] Review the complete local diff against `origin/main` using
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       after the push; report each finding with a number, severity, plain
@@ -244,7 +245,8 @@ Tags: ui
 Findings 1 and 2 came from the PR #118 preview: 1 is this plan (option B);
 2 (a listed screen whose views look unchanged does not say why it is listed)
 awaits the user's choice of option. Findings 3–6 come from the review of
-`49a23bd` and are not fixed.
+`49a23bd`; the user chose the recommended options and Milestones 5–8 fixed
+them.
 
 3. Medium: producer source validation accepts a `dependency` reason when the
    result itself records the same path on one of the entry's views
@@ -258,18 +260,19 @@ awaits the user's choice of option. Findings 3–6 come from the review of
    is gone (found by reading the code; not reproduced). Recommended: drop the
    fallback, key the evidence with the pair key, and test a forged view
    reason, an injected reason on an affected-only screen, and a screen moved
-   onto another screen's former route.
+   onto another screen's former route. Fixed in Milestones 5 and 7.
 4. Low: `tests/component_shared_impact_invariant.test.ts` builds its expected
    set from the result's own reasons and models the new definition, so it
    cannot catch a lost owner reason or show that the set matches the old rule.
    Recommended: compute the old rule's set from the fixture's manifests and
-   changed files only.
+   changed files only. Fixed in Milestone 7.
 5. Low: `mokly-authoring.md` (~57) says dependency declarations never add
    entries, which has been incomplete since exact declared files and owned
    paths could list entries in component catalogues; the
    `mokly-design-components.md` change table (~227) still gives token changes
    "existing conservative membership", which this plan made stale.
    Recommended: link both to the owning rule in `mokly-component-changes.md`.
+   Fixed in Milestone 5.
 6. Low (pre-existing): on component pages four Details evidence sentences say
    "screen" (the file list lead, the excluded-stylesheet sentence, and two
    style-outcome leads), although the spec requires Details wording to follow
@@ -277,7 +280,8 @@ awaits the user's choice of option. Findings 3–6 come from the review of
    terminal line already uses. Milestone 2 made the file list appear on more
    component pages. Recommended: add the component state to the Shared impact
    mockup, then route every evidence sentence through the helper, with a test
-   that renders component Details and fails on screen wording.
+   that renders component Details and fails on screen wording. Fixed in
+   Milestones 5, 6, and 8.
 
 ## Post-merge follow-up (non-blocking)
 
