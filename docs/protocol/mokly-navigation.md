@@ -326,7 +326,8 @@ To establish the invariant, Browse must:
 
 1. remove `aria-current` from every other row;
 2. open each ancestor `[data-nav-disclosure]` of the active row, including
-   its Pages or Components section and, for a variant screen, the parent
+   its Pages or Components section and, for a screen with variants or one of
+   its variants, the parent
    row's variant list defined by the
    [screen variants contract](./mokly-screen-variants.md). That list is a
    container rather than a `<details>`, so opening it clears its `hidden`

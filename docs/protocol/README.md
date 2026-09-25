@@ -45,6 +45,8 @@ when the historical primary file is absent, never when it is invalid.
 - [Public authoring API](./mokly-authoring.md)
 - [Rendering and generated output](./mokly-rendering.md)
 - [Build and Browse runtime](./mokly-runtime.md)
+- [Navigation disclosure persistence](./mokly-disclosure-persistence.md) —
+  storage, defaults, watched recovery, and in-place reconciliation.
 - [Component instance identity](./mokly-instances.md) — existing key/boundary
   rules and approved resolution/source-location target.
 - [Public catalogue read model v2](./mokly-catalogue.md) — public inventory

@@ -192,7 +192,7 @@ unavailable states and their completion rather than switching to All to reveal a
 unchanged current preview. Explicit navigation still reveals its destination.
 
 Navigation follows the [path contract](./mokly-nav-paths.md); recovery uses the
-[disclosure persistence contract](./mokly-runtime.md#disclosure-persistence)
+[disclosure persistence contract](./mokly-disclosure-persistence.md)
 for current keys, values, and incompatible snapshot handling.
 
 When a successful rebuild leaves the manifest structure unchanged, or a

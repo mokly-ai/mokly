@@ -4,7 +4,7 @@ This is the single contract for navigation paths, folder identities, sibling
 ordering, and path diagnostics. [Authoring](./mokly-authoring.md) defines the
 helper inputs and authoring-time errors; the [private manifest](./mokly-component-manifest.md)
 and [public catalogue](./mokly-catalogue.md) define their wire shapes. The
-[runtime](./mokly-runtime.md) owns disclosure persistence and restore behavior.
+[disclosure persistence contract](./mokly-disclosure-persistence.md) owns storage and restoration.
 
 ## Sections And Path Derivation
 
@@ -76,7 +76,7 @@ key is `folder:<section>:<path key>`, with `<section>` exactly `pages` or
 state. Labels may contain `:`, so key parsers match fixed prefixes rather
 than using `split(":")`. A `folder:` key with an empty path or an empty
 segment is invalid. `section:` and `variants:` keys and the handling of
-obsolete keys are governed by the [runtime](./mokly-runtime.md).
+obsolete keys are governed by the [disclosure persistence contract](./mokly-disclosure-persistence.md).
 
 ## Variants And Historical Paths
 

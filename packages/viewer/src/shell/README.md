@@ -151,7 +151,7 @@ applied to the server DOM. Disclosure helpers treat native `<details>` groups
 and the button-controlled screen-variant lists as the same persisted state.
 Folder identities follow the [navigation path contract](../../../../docs/protocol/mokly-nav-paths.md#order-and-keys),
 and persisted values and watched-reload recovery follow the
-[disclosure persistence contract](../../../../docs/protocol/mokly-runtime.md#disclosure-persistence).
+[disclosure persistence contract](../../../../docs/protocol/mokly-disclosure-persistence.md).
 A newer native disclosure activation then wins over that stored value. The
 browser entry reads the resulting DOM into the store's initial state and
 persists the adopted disclosure state; hydration or page exit removes the

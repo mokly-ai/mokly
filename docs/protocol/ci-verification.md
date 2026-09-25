@@ -64,24 +64,23 @@ cache, report and tool scratch paths are therefore outside the repository gate
 even when an earlier suite leaves them in the checkout; in particular, Wrangler
 scratch from the browser suite cannot make a later complete gate fail.
 
-The public npm entrypoints `npm test`, `npm run typecheck`, and
-`npm run test:browser` remain clean-checkout entrypoints: each prepares its
-required package output, and both test commands also prepare the example. The
-browser command supports Playwright listing, filtering, and selected spec paths;
-any filtered selection is partial verification. `npm test` prepares the package
-and example, then delegates to `test:prepared`, the same recursively discovered
-unit inventory used by the gate. It runs all `.test.ts` and `.test.tsx` files
-under `tests/` and `packages/viewer/tests/` at a two-file concurrency limit;
-Node unit tests stay outside Playwright's `tests/browser/` test directory.
-Playwright discovers only `**/*.spec.ts` files there. Public
-`package:check` and `package:smoke` wrappers preserve every caller argument
-across their nested npm boundary; in particular, `--artifacts DIR` reaches the
-prepared consumer as the same two arguments. Internal prepared test entrypoints
-skip preparation, reject arguments other than the optional shard, and fail when
-required output is missing. Prepared package commands may instead receive the
-archive pair created by the package gate. Xtask suite invocations prepare their
-own output and call only the prepared consumers. Output is reused only for the
-lifetime of that suite invocation.
+The public `npm test` and `npm run test:browser` commands prepare package and
+example output; `npm run typecheck` prepares the package. Browser listing,
+filtering, and selected specs are partial verification. `npm test` and
+`test:prepared` share recursive discovery of `.test.ts` and `.test.tsx` files
+under `tests/` and `packages/viewer/tests/`, with two-file concurrency. The
+developer runner fails on failures, cancellations, and unreported files; it
+tolerates skipped and todo tests (including intentional Windows skips) and
+prints their count. The prepared runner and every `cargo xtask check` suite
+reject skips and todos. Node unit tests stay outside Playwright's
+`tests/browser/` directory; Playwright matches only `**/*.spec.ts`.
+
+Public `package:check` and `package:smoke` preserve caller arguments,
+including `--artifacts DIR`, across nested npm. Prepared test commands skip
+preparation, reject arguments other than the optional shard, and fail when
+required output is missing; prepared package commands may instead receive the
+gate's archive pair. Xtask prepares output per suite and calls only prepared
+consumers; output is reused only within that suite.
 
 Builds that are themselves under test are not removed. Package dry-run
 allowlist inspection retains its existing `--ignore-scripts` boundary, while
@@ -167,11 +166,8 @@ job's presence alone.
 
 ## Inventory And Report Evidence
 
-Test totals are discovered on the executing runtime; no fixed count is part of
-the contract. Before execution, the unit runner independently discovers all
-matching `.test.ts` and `.test.tsx` files across the root and viewer suites. The
-browser runner independently asks Playwright for the current spec inventory.
-Discovery fails on an empty suite.
+Unit and browser inventories are discovered on the executing runtime, not
+fixed in advance. Browser discovery asks Playwright; an empty suite fails.
 
 Development hydration registers one browser test per unique generated catalogue
 route at discovery time, plus the home, missing-route and id-redirect cases.

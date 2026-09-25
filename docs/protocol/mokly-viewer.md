@@ -393,12 +393,11 @@ Shell state is one store scoped to a mounted viewer:
 - **Selection** is the public `ViewerSelection`: screen, saved variant, All/Changes view,
   viewport, colour scheme, search phrase and tags. Standalone modes keep
   viewport, scheme and filters in memory across in-shell navigation.
-- **Disclosure** covers navigation groups (with folder keys defined by the
-  [path contract](./mokly-nav-paths.md#order-and-keys), alongside `section:*`
-  and `variants:<section>:<parent id>`), the details inspector, the navigation split width and the
-  responsive drawer. Navigation, details and split-width choices persist per
-  served origin in browser storage under the existing keys; the drawer and the
-  tag picker panel do not persist and reset on reload.
+- **Disclosure** covers navigation groups, the details inspector, navigation
+  split width and responsive drawer. Group storage and recovery follow the
+  [disclosure persistence contract](./mokly-disclosure-persistence.md). Details
+  and split-width choices persist per served origin; the drawer and tag picker
+  panel reset on reload.
 - **Scroll** is tracked per `data-mokly-scroll` region and saved into the
   history entry for Back/Forward restoration; route-change focus never
   overrides a restored position.
@@ -406,12 +405,9 @@ Shell state is one store scoped to a mounted viewer:
   pane size, active pick, highlight scope) lives with the mounted view and is
   discarded on route change or source replacement.
 
-A watched reload captures search, view, viewport, scheme, disclosure
-(including the pre-filter baseline), drawer, catalogue scroll, per-region
-scroll and the optional validated Changes status into the one-shot recovery
-snapshot defined by the [watch contract](./mokly-watch.md); the hydrated shell
-restores it exactly as before under the
-[disclosure persistence contract](./mokly-runtime.md#disclosure-persistence).
+A watched reload restores the one-shot shell snapshot defined by the
+[watch contract](./mokly-watch.md), including the disclosure and pre-filter
+baseline values governed by the [persistence contract](./mokly-disclosure-persistence.md).
 Native disclosure choices made before hydration complete are captured by the
 pre-hydration script and take precedence over
 older preferences and the snapshot; capture state is removed after hydration or
