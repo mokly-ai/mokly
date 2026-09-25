@@ -42,8 +42,9 @@ styling, and rendering context.
 - **Use real product UI.** Screens are React nodes composed from the same
   components, providers, styles, and assets as the product.
 - **See the whole product in one place.** Collections, search, tags, mobile and
-  desktop views, color schemes, pages, components, and user flows share one
-  catalogue.
+  desktop views, color schemes, pages, components, screen variants, and user
+  flows share one catalogue. Variants remain grouped beneath their parent
+  screen while keeping their own stable ids and routes.
 - **Review outcomes, not file lists.** The Changes view compares rendered
   screens and their reachable resources with the branch point of your Git base,
   while removed screens and pages retain a read-only previous version.
@@ -216,7 +217,10 @@ reachable resources, catalogue metadata, registered components, and applicable
 stylesheet changes. Changed screens, screen variants, and saved component
 variants generate comparisons only when an eligible shown view is opened.
 Per-view evidence keeps known unchanged views marked Unmodified without offering
-a comparison. Removed screens and pages load their read-only
+a comparison. A light-only screen or saved component variant uses its effective
+Light view for status and marks even while Dark stays selected for the rest of
+the catalogue. Missing per-view evidence preserves the selected entry or saved
+variant's existing comparison eligibility. Removed screens and pages load their read-only
 [previous version](./docs/protocol/mokly-removed-previews.md) from the branch
 point.
 

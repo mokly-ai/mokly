@@ -89,7 +89,9 @@ function NavRowLink(props: {
       hidden={props.hidden}
       data-route={props.node.route}
       data-tags={tags.length > 0 ? tags.join(" ") : undefined}
-      href={catalogueViewHref(props.node.route)}
+      href={`${catalogueViewHref(props.node.route)}${
+        props.node.snapshotId ? `?snapshot=${props.node.snapshotId}` : ""
+      }`}
       style={navRowStyle(props.depth)}
     >
       <LeafGlyph

@@ -20,6 +20,7 @@ export interface NavLeafNode {
   kind: "leaf";
   label: string;
   route: string;
+  snapshotId?: string;
   /** Declared classification tags, present only when the entry has them. */
   tags?: readonly string[];
   /**
@@ -71,10 +72,13 @@ export function buildNavSections(
   additionalLeaves: readonly NavLeafNode[] = [],
 ): NavSectionNode[] {
   const adopted = adoptedVariants(hierarchy, additionalLeaves);
-  const tree = attachRemovedVariants(buildNavTree(hierarchy), adopted);
-  const flat = additionalLeaves.filter(
-    (leaf) => !(adopted.get(leaf.variantOf ?? "") ?? []).includes(leaf),
+  const attached = new Set<NavLeafNode>();
+  const tree = attachRemovedVariants(
+    buildNavTree(hierarchy),
+    adopted,
+    attached,
   );
+  const flat = additionalLeaves.filter((leaf) => !attached.has(leaf));
   return (["pages", "components"] as const).flatMap((id) => {
     const current = projectNodes(tree, id);
     const additional = flat.filter((leaf) =>
@@ -121,7 +125,7 @@ function adoptedVariants(
     const parentId = leaf.variantOf;
     if (parentId === undefined) continue;
     const parent = hierarchy.byId.get(parentId);
-    if (parent?.kind !== "screen") continue;
+    if (parent?.kind !== "screen" || parent.variantOf !== undefined) continue;
     byParent.set(parentId, [...(byParent.get(parentId) ?? []), leaf]);
   }
   return byParent;
@@ -135,15 +139,17 @@ function adoptedVariants(
 function attachRemovedVariants(
   nodes: readonly NavNode[],
   byParent: ReadonlyMap<string, readonly NavLeafNode[]>,
+  attached: Set<NavLeafNode>,
 ): NavNode[] {
   if (byParent.size === 0) return [...nodes];
   return nodes.map((node) => {
     if (node.kind === "group")
       return {
         ...node,
-        children: attachRemovedVariants(node.children, byParent),
+        children: attachRemovedVariants(node.children, byParent, attached),
       };
     const removed = node.entryId ? byParent.get(node.entryId) : undefined;
+    for (const leaf of removed ?? []) attached.add(leaf);
     return removed
       ? {
           ...node,

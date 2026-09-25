@@ -20,9 +20,10 @@ test("catalogue navigation's All example matches its in-screen navigation", () =
 /**
  * `screens.json` is a frozen record proving the shared-library refactor never
  * dropped a screen or changed a route, so an entry may only be removed from it
- * with the user's recorded approval. The precedent is the three head-band
- * scheme routes removed in `plans/viewer-dark-mode.md`; a screen that vanishes
- * for any other reason is a regression, not a fixture to update.
+ * with the user's recorded approval. `plans/screen-variants-follow-up.md`
+ * approves six Welcome variant route moves, while `plans/viewer-dark-mode.md`
+ * removes the dark-comparison screen. Other disappearances are regressions,
+ * not reasons to rewrite this fixture.
  */
 /**
  * Baseline screens that have since gained a dark render: the canonical screens
@@ -34,6 +35,8 @@ test("catalogue navigation's All example matches its in-screen navigation", () =
 const DUAL_SCHEME_SINCE_BASELINE = new Set([
   "design-browse-screen",
   "design-browse-details-screen",
+  "design-browse-dark-scheme",
+  "design-browse-light-only",
   "design-changes-current",
   "design-changes-overlay",
   "design-review-changed",
@@ -52,7 +55,7 @@ test("the shared library preserves every existing design screen and viewport rou
     ),
   );
   const { manifest } = await designCatalogue;
-  assert.equal(baseline.length, 53);
+  assert.equal(baseline.length, 55);
   for (const original of baseline) {
     const entry = manifest.entries.find((entry) => entry.id === original.id);
     assert.ok(entry?.kind === "screen", original.id);

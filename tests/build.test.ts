@@ -217,7 +217,32 @@ export const mockups = [defineCollection({
   const config = await loadConfig(fixture.root);
   await assert.rejects(
     () => compileCatalogue(config),
-    /childIds must be a non-empty array of strings/,
+    /childIds must be an array of strings/,
+  );
+});
+
+test("registry builds an empty structural collection", async (context) => {
+  const fixture = await createFixture(`
+import { defineCollection } from "@mokly/mokly";
+export const mockups = [defineCollection({
+  childIds: [],
+  dependencies: [],
+  description: "Retained navigation identity",
+  id: "retained-empty",
+  relatedDocs: [],
+  title: "Retained empty"
+})];
+`);
+  context.after(() => removeFixture(fixture));
+
+  const compilation = await compileCatalogue(await loadConfig(fixture.root));
+  const collection = compilation.manifest.entries.find(
+    (entry) => entry.id === "retained-empty",
+  );
+  assert.equal(collection?.kind, "collection");
+  assert.deepEqual(
+    collection?.kind === "collection" ? collection.childIds : undefined,
+    [],
   );
 });
 

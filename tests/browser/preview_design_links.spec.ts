@@ -83,18 +83,18 @@ for (const viewport of ["mobile", "desktop"] as const) {
     await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen$/);
     await frame.locator(".mbk-search-tag").click();
     await expect(page).toHaveURL(
-      /\/view\/design\/browse\/states\/tags\/picker$/,
+      /\/view\/design\/browse\/views\/screen\.variants\/picker$/,
     );
     await frame
       .getByRole("group", { name: "Tags", exact: true })
       .getByRole("link", { name: "onboarding", exact: true })
       .click();
     await expect(page).toHaveURL(
-      /\/view\/design\/browse\/states\/tags\/onboarding$/,
+      /\/view\/design\/browse\/views\/screen\.variants\/onboarding$/,
     );
     await frame.locator(".mbk-search-tag").click();
     await expect(page).toHaveURL(
-      /\/view\/design\/browse\/states\/tags\/onboarding-picker$/,
+      /\/view\/design\/browse\/views\/screen\.variants\/onboarding-picker$/,
     );
     await frame
       .getByRole("group", { name: "Tags", exact: true })

@@ -7,7 +7,7 @@ import { textOutput } from "./helpers/generated_text.js";
 test("example catalogue generates exactly one inherited Welcome variant", async () => {
   const { manifest, outputs } = await designCatalogue;
   const variants = manifest.entries.filter(
-    (entry) => entry.kind === "screen" && entry.variantOf !== undefined,
+    (entry) => entry.kind === "screen" && entry.variantOf === "example-welcome",
   );
 
   assert.equal(variants.length, 1);
