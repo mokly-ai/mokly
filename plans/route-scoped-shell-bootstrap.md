@@ -464,8 +464,8 @@ At #96, the browser shard 2 job took 897 s.
    - **Option B:** create the screens during Milestone 1, collapsing the required
      docs-before-mockups milestone boundary.
    - **Recommendation:** Option A. It preserves the milestone ordering and the
-     exact-inventory test. Applied by the
-     `fix(docs): defer future design inventory` correction commit.
+     exact-inventory test. Applied by correction commit `778182c`
+     (`fix(docs): defer future design inventory`).
 
 Plan amendments from that check also require the prepared unit suite for later
 documentation-only edits, replace live refresh's second catalogue request with
