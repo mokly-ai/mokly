@@ -1,7 +1,7 @@
 # Path-Only Evidence Stays Out Of Changes
 
-Status: Milestones 1–3 are implemented, verified, and pushed; the review
-runs after the push. The plan stays Active until PR #118 merges. Created
+Status: Milestones 1–3 are implemented, verified, pushed, and reviewed;
+findings 2–6 await the user's decision. The plan stays Active until PR #118 merges. Created
 2026-09-25 with the user's consent (option B of
 finding 1 raised while reviewing the PR #118 preview). Implemented on the
 `calummoore/halifax-v2` branch alongside
@@ -137,11 +137,36 @@ watched updates, Review JSON, and publication.
 - [x] Run `cargo xtask check`; fix anything it reports until it passes.
 - [x] Update the PR #118 description to cover this change.
 - [x] Commit and push.
-- [ ] Review the complete local diff against `origin/main` using
+- [x] Review the complete local diff against `origin/main` using
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       after the push; report each finding with a number, severity, plain
       explanation, impact of doing nothing, lettered options, and a
-      recommendation, without changing the implementation.
+      recommendation, without changing the implementation. An independent
+      reviewer ran against `49a23bd`; findings 3–6 await the user's decision.
+
+## Review findings
+
+Findings 1 and 2 came from the PR #118 preview: 1 is this plan (option B);
+2 (a listed screen whose views look unchanged does not say why it is listed)
+awaits the user's choice of option. Findings 3–6 come from the review of
+`49a23bd` and are not fixed.
+
+3. Medium: producer source validation accepts a `dependency` reason that only
+   the result's own view reasons support (`keepsDependency` in
+   `src/review/component_result_sources.ts`), so a classifier bug that adds
+   both would pass. Recommended: validate only against classifier-collected
+   evidence (policy, entry-adopted view paths, owned CSS) and test a forged
+   view reason.
+4. Low: `tests/component_shared_impact_invariant.test.ts` derives its expected
+   reason paths from the result under test, so losing the owned out-of-scope
+   stylesheet reason would not fail it. Recommended: compute the expected set
+   from the input manifests and changed paths.
+5. Low: `mokly-authoring.md` (~57) and the `mokly-design-components.md` change
+   table (~227) still state the old membership rule. Recommended: link both to
+   the owning rule in `mokly-component-changes.md`.
+6. Low (pre-existing copy, found in Milestone 2): component Details reads
+   "Changes to these files may affect this screen:". Recommended: add a
+   component mockup, then component-specific copy.
 
 ## Post-merge follow-up (non-blocking)
 
