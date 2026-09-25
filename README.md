@@ -204,6 +204,8 @@ compiles CSS Modules, per-root stylesheets and assets; fragment renderers
 receive ordered links for the renderer and exporting entry CSS after any
 configured links. Pages link their own CSS explicitly. An optional consumer
 PostCSS module processes imported CSS; see the Styles guide for plugin setup.
+The basic consumer example imports a CSS Module, a PNG-backed stylesheet, and
+preflight-free Tailwind v4 utilities to exercise this delivery end to end.
 
 ## Review and share
 

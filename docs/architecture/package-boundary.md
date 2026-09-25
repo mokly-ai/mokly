@@ -7,16 +7,16 @@ owns everything that gives a screen application meaning or appearance. The
 boundary is enforced through peer dependencies, a renderer hook, declarative
 paths, and synthetic tests.
 
-| Mokly owns                                                    | Consumer owns                                 | Configured at the boundary               |
-| ------------------------------------------------------------- | --------------------------------------------- | ---------------------------------------- |
-| Registry definitions and validation                           | Product screens and fixture data              | Source and output roots                  |
-| esbuild discovery and one-graph loading                       | Product component library                     | Renderer/module resolution               |
-| Static fragments and manifest schema                          | Theme/tokens/providers                        | Stylesheet rules                         |
-| Target: per-root CSS/asset bundling and PostCSS orchestration | Imported CSS/fonts/images and PostCSS plugins | `postcss` module and CSS `empty` opt-out |
-| Generated-file ownership and check                            | Product CSS/fonts/images                      | Document transformer                     |
-| Safe routes and catalogue navigation                          | Product route semantics                       | Additional watch inputs                  |
-| Git comparison and Review-ignore rules                        | Comparison policy                             | Base, output, impact globs               |
-| Complete static catalogue export                              | Hosting, credentials, deployment              | Export output and Git base               |
+| Mokly owns                                            | Consumer owns                                 | Configured at the boundary               |
+| ----------------------------------------------------- | --------------------------------------------- | ---------------------------------------- |
+| Registry definitions and validation                   | Product screens and fixture data              | Source and output roots                  |
+| esbuild discovery and one-graph loading               | Product component library                     | Renderer/module resolution               |
+| Static fragments and manifest schema                  | Theme/tokens/providers                        | Stylesheet rules                         |
+| Per-root CSS/asset bundling and PostCSS orchestration | Imported CSS/fonts/images and PostCSS plugins | `postcss` module and CSS `empty` opt-out |
+| Generated-file ownership and check                    | Product CSS/fonts/images                      | Document transformer                     |
+| Safe routes and catalogue navigation                  | Product route semantics                       | Additional watch inputs                  |
+| Git comparison and Review-ignore rules                | Comparison policy                             | Base, output, impact globs               |
+| Complete static catalogue export                      | Hosting, credentials, deployment              | Export output and Git base               |
 
 ## Dependency Direction
 
@@ -36,7 +36,7 @@ Module-resolution configuration is likewise consumer-owned: aliases,
 conditions, package fields, extensions, loaders, and package roots describe the
 consumer component tree. Mokly validates and applies them without supplying
 React Native Web or application-specific defaults.
-The [imported-CSS target](../protocol/mokly-imported-styles.md) reserves
+The [imported-CSS contract](../protocol/mokly-imported-styles.md) reserves
 `.css`/`.module.css` import handling and `mokly-generated/` ownership for
 Mokly. Consumer files, PostCSS plugins and their dependency/version choices
 remain consumer-owned; Mokly owns their private inventory and byte-safe

@@ -68,6 +68,7 @@
     "typecheck:prepared": "node scripts/verification/prepared.mjs package && tsc --project tsconfig.json --noEmit && npm run typecheck --workspace @mokly/viewer"
   },
   "dependencies": {
+    "@mokly/viewer": "0.3.0",
     "chokidar": "^5.0.0",
     "css-select": "^7.0.0",
     "css-what": "^8.0.0",
@@ -78,8 +79,7 @@
     "parse5": "^8.0.1",
     "postcss": "^8.5.28",
     "tar": "^7.5.22",
-    "tar-stream": "^3.2.1",
-    "@mokly/viewer": "0.3.0"
+    "tar-stream": "^3.2.1"
   },
   "peerDependencies": {
     "react": ">=19.0.0",
@@ -90,9 +90,11 @@
     "@firna/ui": "^0.14.0",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@playwright/test": "^1.61.1",
+    "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^26.1.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
+    "autoprefixer": "^10.6.1",
     "eslint": "^10.7.0",
     "eslint-plugin-import-x": "^4.17.1",
     "globals": "^17.7.0",
@@ -106,6 +108,7 @@
     "react-native-svg": "^15.15.4",
     "react-native-web": "^0.21.2",
     "react-native-worklets": "^0.8.3",
+    "tailwindcss": "^4.3.3",
     "terser": "^5.51.2",
     "tsx": "^4.23.1",
     "typescript": "^6.0.3",

@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { repositoryRoot } from "./fixture.js";
 
-/** Copy the real example's authored inputs without reusing local generated output. */
+/** Copy the authored example and CSS package without reusing generated output. */
 export async function copyExampleSources(root: string): Promise<void> {
   const generated = path.join(repositoryRoot, "examples/basic/generated");
   for (const name of ["examples/basic", "docs/protocol", "README.md"])
@@ -13,6 +13,7 @@ export async function copyExampleSources(root: string): Promise<void> {
         ![".context", ".mokly-cache", "node_modules", ".git"].includes(
           path.basename(source),
         ) &&
+        source !== path.join(generated, "mokly-generated") &&
         !(
           source.startsWith(generated + path.sep) &&
           (source.endsWith(".html") ||
@@ -23,4 +24,9 @@ export async function copyExampleSources(root: string): Promise<void> {
             ].includes(path.basename(source)))
         ),
     });
+  await fs.cp(
+    path.join(repositoryRoot, "node_modules/tailwindcss"),
+    path.join(root, "node_modules/tailwindcss"),
+    { recursive: true },
+  );
 }

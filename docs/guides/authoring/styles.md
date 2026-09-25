@@ -5,8 +5,6 @@ section: "authoring"
 order: 10
 ---
 
-## Availability
-
 Per-root imported stylesheets and binary assets compile into
 `mokly-generated/`. Mokly passes fragment-relative renderer and entry
 stylesheet links to your renderer; emit them in the document head to make
@@ -61,6 +59,11 @@ export function Card() {
 }
 ```
 
+For a TypeScript application, add ambient declarations for `*.module.css`
+(a default `Readonly<Record<string, string>>` class map) and `*.css`
+(side-effect imports) in your own `.d.ts` file. Mokly does not generate
+TypeScript declarations for consumer stylesheets.
+
 ```css
 .card {
   background: url("./cover.webp?size=small#preview") center / cover;
@@ -111,7 +114,7 @@ import autoprefixer from "autoprefixer";
 export default {
   plugins: [
     tailwindcss({ base: import.meta.dirname, optimize: false }),
-    autoprefixer(),
+    autoprefixer({ overrideBrowserslist: ["Safari 14"] }),
   ],
 };
 ```
@@ -121,7 +124,8 @@ plugins unbundled from your repository so their native bindings and
 package-relative files continue to work.
 Tailwind's default `base` is the working directory of the Mokly process, and
 its default `optimize` changes with `NODE_ENV`; pin both as above for stable
-bytes. Alternatively, use `source(none)` and explicit `@source` paths below.
+bytes. Also use `source(none)` and explicit `@source` paths below to avoid
+scanning the public mockups directory (even when launched from another cwd).
 Tailwind recursively inlines local `@import`s from disk, so a nested import of
 renderer-owned CSS in an entry can bypass Mokly's pruning and fails Build when
 Tailwind reports it. Import shared CSS only from the renderer or directly from
@@ -131,18 +135,29 @@ already delivers Tailwind, a direct entry `@import "tailwindcss"` is pruned.
 
 For `styles/catalogue.css` beneath the repository root, opt into exactly
 the sources whose class names belong in this catalogue. Import the CSS from
-an entry or its component and use its generated stylesheet. Set a
-`browserslist` target in your project to control autoprefixer (for example
-`["Safari 14"]`); `appearance: none` then yields a WebKit prefix.
+an entry or its component and use its generated stylesheet. Import the
+theme and utilities layers separately to leave existing screen defaults
+intact: the full `tailwindcss` import also includes a CSS reset. The example
+sets `overrideBrowserslist: ["Safari 14"]` on autoprefixer so
+`user-select: none` produces a WebKit prefix.
 
 ```css
-@import "tailwindcss" source(none);
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
 @source "../src";
 
 .control {
-  appearance: none;
+  user-select: none;
 }
 ```
+
+In `examples/basic/src/components/workspace-note/utilities.css` the explicit
+source is `@source "../..";`, relative to that CSS file, to scan only
+`examples/basic/src`; its `@utility note-title` affects only the Welcome
+component that uses that class. The example sets `BROWSERSLIST_IGNORE_OLD_DATA=1` in
+its PostCSS module to prevent an aging `caniuse-lite` warning from adding
+noise to this fixed-target demo. In an application, update Browserslist's
+dataset instead of suppressing that warning.
 
 If you intentionally use Tailwind's **automatic** discovery instead, use
 `@source not "../docs/mockups";` to exclude direct scans in this layout.

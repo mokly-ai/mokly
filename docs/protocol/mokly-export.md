@@ -217,7 +217,7 @@ export exclusions below. Retain relative resource and fallback document links
 and verify their transitive HTML/CSS dependencies, including fonts, images,
 `srcset`, nested local documents, and linked stylesheets. Referenced files that
 cannot be exported safely fail the operation instead of producing broken links.
-In the [imported-CSS target](./mokly-imported-styles.md), this also includes
+For [imported CSS](./mokly-imported-styles.md), this also includes
 every owned route under `mokly-generated/styles/` and
 `mokly-generated/assets/`, not their private source files. Committed export
 checks and copies disk bytes; derived export captures validated compilation

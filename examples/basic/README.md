@@ -4,6 +4,15 @@ This is a synthetic external-consumer fixture. It contains two distinct mobile
 and desktop product-style screens built with `@firna/ui` controls, nested
 collections, one use case, id-addressed links, a Firna renderer adapter, local
 stylesheets, light and dark product fragments, and a safe Review-ignore region.
+The Welcome screen also includes a small `WorkspaceNote` built from a CSS
+Module, an authored PNG-backed stylesheet, and Tailwind v4 utilities, including
+a small `note-title` utility. Its
+PostCSS module pins Tailwind's base and optimization, scans only `src/` with
+`source(none)` plus `@source`, and runs autoprefixer against Safari 14. It
+suppresses the aging Browserslist dataset warning for this fixed-target
+example; applications should update their dataset instead.
+`shims.d.ts` declares CSS Module class maps and side-effect CSS imports for
+the example's TypeScript check.
 The Components → Example → Components collection contains real registered Action and Toolbar
 components. Both product screens use Action repeatedly, directly and inside the
 Toolbar, with caller-owned slots. Action has Default, Disabled and Secondary
@@ -237,8 +246,9 @@ npm run example:check
 npm run preview:build
 ```
 
-This example uses the default `generatedOutput: "derived"`. Generated HTML and
-the schema-v5 manifest under `generated/` are ignored local artifacts, absent in a fresh clone.
+This example uses the default `generatedOutput: "derived"`. Generated HTML,
+the schema-v5 manifest, and `generated/mokly-generated/` stylesheets and binary
+assets are ignored local artifacts, absent in a fresh clone.
 `example:build` writes them transactionally; `example:check` validates the current
 compilation and rejects tracked generated output without requiring files on disk.
 Committed-mode stale and deterministic-output tests use isolated consumer fixtures.
@@ -247,7 +257,9 @@ generated files. Baseline fixtures copy authored inputs and use the normal cache
 rebuild through the historical commit's own package source and lockfile. The
 hand-authored stylesheets (`styles.css`, `design.css`, `design-stage.css`,
 `design-review.css`, and the component design stylesheets) also live under `generated/` because it doubles as the
-public static root and remain tracked. The config's `review.baselineBuild` runs
+public static root and remain tracked. Imported styles live under
+`src/components/workspace-note/` and are never public files. The config's
+`review.baselineBuild` runs
 `npm ci`, `npm run build`, then `npm run example:build` in the historical commit's
 extraction. The package build step ensures comparisons use that commit's own
 Mokly code. The resulting baseline is cached under `.mokly-cache/`.

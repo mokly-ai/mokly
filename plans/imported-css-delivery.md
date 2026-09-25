@@ -2,19 +2,18 @@
 
 ## Status
 
-Active. Created 2026-09-24 from the CSS-in-JS investigation on this branch.
-Milestones 1, 1A, 2, 3, 4, 4A, 5, 5A, 6, 6A and 7 (contract, binary-safe
-output, reserved generated directory, CSS/asset bundling and follow-ups,
-stylesheet links, on-demand validation caching, PostCSS, package-owned aliases,
-and delivery through Serve, watch, export, publication and Changes) are complete;
-Milestones 8–9 remain. PostCSS lets Tailwind v4 and autoprefixer use the
-consumer's configuration. Esbuild remains the only bundler; the optional Vite
+Active until the implementation PR merges. Created 2026-09-24 from the
+CSS-in-JS investigation on this branch. Milestones 1–8 and Milestone 9's
+commit-and-push step are complete; the parent session will perform the
+independent post-push review. Imported CSS, CSS Modules, binary assets and
+optional consumer PostCSS ship through Build, Check, Serve, export,
+publication and Changes. Esbuild remains the only bundler; the optional Vite
 compatibility package is a follow-up plan.
 
 ## Problem
 
-Consumer modules can import CSS today, and the build accepts them, but the CSS
-never reaches a rendered view:
+Before this work, the build accepted consumer CSS imports, but their CSS never
+reached a rendered view:
 
 - `import "./button.css"` and `import styles from "./card.module.css"` bundle
   with exit code 0. esbuild emits the CSS as a sibling `.mokly-consumer.css`
@@ -589,34 +588,44 @@ Carry the new outputs through every delivery path.
 - [x] Commit and push Milestone 7 separately, then review the complete diff
       against `origin/main` using `docs/implementation-review-prompt.md`.
 
-## Milestone 8: Example, guides, and smoke tests
+## Milestone 8: Example, guides, and smoke tests (complete)
 
 Exercise the feature end to end in the tracked example.
 
-- [ ] Add one component under `examples/basic/src/components` styled with a
+- [x] Add one component under `examples/basic/src/components` styled with a
       CSS Module and a plain stylesheet that references a small font or image,
       and use it from an existing entry so `npm run example:build` and
       `npm run example:check` cover generated stylesheets and assets.
-- [ ] Add `tailwindcss`, `@tailwindcss/postcss`, and `autoprefixer` as root
+- [x] Add `tailwindcss`, `@tailwindcss/postcss`, and `autoprefixer` as root
       devDependencies for the example, add `examples/basic/postcss.config.mjs`
       and `postcss: "postcss.config.mjs"` to `examples/basic/mokly.config.ts`,
       and style one example component with Tailwind utilities scoped by
       `@source` to `examples/basic/src` plus one declaration autoprefixer
       expands for the configured browserslist. Confirm
       `npm run dependencies:check` passes with the new dev dependencies.
-- [ ] Verify the guide added in Milestone 1 matches the shipped behavior and
+- [x] Verify the guide added in Milestone 1 matches the shipped behavior and
       that `tests/package.test.ts` includes it in the packaged guides.
-- [ ] Smoke test: run `npm run dev`, open the styled screen in mobile and
+- [x] Smoke test: run `npm run dev`, open the styled screen in mobile and
       desktop views and both color schemes, edit the CSS Module and then a
       Tailwind utility while serving, confirm each reload and that Changes
       lists only the affected screen, then run an export and open the exported
       screen from disk.
-- [ ] Run the complete `npm test`, `npm run typecheck`, `npm run lint`, and
+- [x] Ignore derived output under `generated/mokly-generated/`; verify an
+      example build leaves no generated files in Git status and emits identical
+      CSS/asset bytes from a different working directory.
+- [x] Sweep READMEs, guides, architecture and protocol docs for unshipped CSS
+      labels; document TypeScript CSS shims and conservative shared-impact
+      evidence when generated CSS bytes are unchanged.
+- [x] Keep example-source test fixtures isolated from generated outputs and
+      provide the package stylesheet within each fixture's repoRoot; preserve
+      binary asset bytes in snapshot readers.
+- [x] Run the complete `npm test`, `npm run typecheck`, `npm run lint`,
+      `npm run preview:build`, relevant guide/package tests, and
       `cargo xtask check`.
 
 ## Milestone 9: Commit, push, and review
 
-- [ ] Run `git add -A`, commit using Conventional Commits, and push the branch.
+- [x] Run `git add -A`, commit using Conventional Commits, and push the branch.
 - [ ] Review the complete local diff against `origin/main` using
       `docs/implementation-review-prompt.md` after the push. Report findings
       with severity, context, impact, lettered options, and a recommendation;

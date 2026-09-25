@@ -116,7 +116,7 @@ HTML/CSS resource reference against confined regular files in
 the staged static tree, including transitive references. An unavailable resource,
 including a reference through a skipped cycle or excluded alias, fails before
 installation and preserves the previous artifact.
-For the [imported-CSS target](./mokly-imported-styles.md), include owned
+For [imported-CSS delivery](./mokly-imported-styles.md), include owned
 `mokly-generated/styles/` and `mokly-generated/assets/` routes in preview and
 publish capture. Committed mode takes checked disk bytes; derived mode takes
 validated compilation bytes, including binary fonts/images. Private CSS

@@ -2,12 +2,10 @@
 
 ## Active
 
-- [Imported CSS Delivery](./imported-css-delivery.md) — deliver CSS imported
-  by consumer modules as per-root generated stylesheets and assets under a
-  reserved `mokly-generated/` directory, linked into every view, with the
-  consumer's PostCSS configuration for Tailwind v4 and autoprefixer, and with
-  Mokly's inventory, determinism, Check, Serve, export, and Changes
-  guarantees; esbuild only, no Vite.
+- [Imported CSS Delivery](./imported-css-delivery.md) — implementation complete:
+  consumer CSS, CSS Modules, assets, and optional PostCSS ship through Build,
+  Check, Serve, export, publication and Changes. Move this plan to Completed
+  when its implementation PR merges.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
   standalone Auto/Light/Dark control for interface and previews, and
   host-owned theme with independent previews when embedded. Dark neutrals align

@@ -12,7 +12,7 @@ resolve `entries` globs -> matched entry modules + renderer + optional compatibi
 one esbuild graph, with React resolved from the consumer
         |
         v
-target: collect imported CSS, run PostCSS, bundle per-root CSS and assets
+collect imported CSS, run optional PostCSS, bundle per-root CSS and assets
         |
         v
 validate definitions and cross-references in memory
@@ -27,7 +27,7 @@ adapt explicit child controls -> resolve mock:id links -> compatibility bridge
 validate markers/links/resources
         |
         v
-mobile/desktop light and optional dark HTML for every screen and variant screen, saved component variants, whole documents + schema-v5 manifest (target: CSS and binary asset outputs) in memory
+mobile/desktop light and optional dark HTML for every screen and variant screen, saved component variants, whole documents + schema-v5 manifest + CSS and binary asset outputs in memory
         |
         +---- check (committed): compare with disk, write nothing
         |
@@ -77,9 +77,9 @@ resolved set travels with the config beside `sourceFiles`.
 
 ## 2. One Consumer Graph
 
-The additional stylesheet step shown above is the approved target of
-[imported stylesheet delivery](../protocol/mokly-imported-styles.md), **not
-yet implemented**. After the JavaScript graph, derive renderer and entry
+The additional stylesheet step follows
+[imported stylesheet delivery](../protocol/mokly-imported-styles.md). After
+the JavaScript graph, derive renderer and entry
 import order, compute the full renderer CSS closure, and prune its files
 at any depth of entry imports _before_ PostCSS can inline them. PostCSS runs
 per effective stylesheet input; Lightning CSS names CSS Modules with a

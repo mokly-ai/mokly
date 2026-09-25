@@ -1,8 +1,8 @@
 # Protocol
 
 These documents define Mokly's implementation contract. They describe
-implemented pre-release behavior unless a document's Delivery Status explicitly
-labels an approved target that is still tracked by an active plan. Package,
+implemented pre-release behavior unless a document explicitly marks a future
+change. Package,
 authoring, static build/check, responsive Browse, watched development, on-demand comparisons,
 packed consumer verification, CI, and npm release automation are implemented.
 The first public release remains an external delivery step.
@@ -66,7 +66,7 @@ when the historical primary file is absent, never when it is invalid.
 - [Screen variants](./mokly-screen-variants.md) — implemented: variant
   screens grouped under their parent screen with their own ids and routes.
 - [Source protection](./mokly-source-protection.md)
-- [Imported stylesheets](./mokly-imported-styles.md) — approved target:
+- [Imported stylesheets](./mokly-imported-styles.md) — implemented:
   renderer/entry CSS, CSS Modules, assets, PostCSS, inventory, and
   [exact diagnostics](./mokly-imported-styles-errors.md).
   - [PostCSS and dependency inventory](./mokly-imported-styles-postcss.md).

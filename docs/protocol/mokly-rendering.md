@@ -124,7 +124,7 @@ screen-route rule applies to both viewports and every enabled scheme. Shared
 stylesheets come first, followed by the matching scheme-specific list.
 Generated fragment links are relative to the fragment route and URL-encoded by
 segment.
-In the [approved imported-CSS target](./mokly-imported-styles.md), the
+With [imported CSS](./mokly-imported-styles.md), the
 configured renderer stylesheet follows these links, then the entry
 stylesheet, even when no configured rule matches. The built-in renderer adds
 none; the custom renderer emits any `<link>` tags. Complete page callbacks
@@ -146,7 +146,7 @@ never copied into the npm package.
 - one complete HTML document at each page route;
 - `mokly-manifest.json` using schema version 5.
 
-The imported-CSS target additionally owns
+Imported CSS additionally owns
 `mokly-generated/styles/<repository-relative root module path>.css` for each
 root with CSS and `mokly-generated/assets/<repository-relative asset path>`
 for referenced local assets. Every regular file below `mokly-generated/`
@@ -214,7 +214,7 @@ type ManifestEntry =
       componentViews?: readonly ComponentViewRecord[];
       darkFragments?: { mobile: string; desktop: string };
       fragments: { mobile: string; desktop: string };
-      variantOf?: string; // Approved target: present exactly on variant screens.
+      variantOf?: string;
       viewports: readonly ["mobile", "desktop"];
       useCaseIds: readonly string[];
     })

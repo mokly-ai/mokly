@@ -27,7 +27,7 @@ the HTTP event loop in a bounded, terminable worker. Concurrent requests for the
 same view share work. Only validated results enter the generation-local bounded
 cache. A renderer failure cannot make unrelated routes or shutdown unavailable.
 
-In the [imported-CSS target](./mokly-imported-styles.md), reserved stylesheet
+Under [imported-CSS delivery](./mokly-imported-styles.md), reserved stylesheet
 and asset routes use the accepted generation's compilation bytes for GET/HEAD
 with CSS/image/font content types, never a stale disk file. Resource validation
 accepts pending generated routes; transient Props previews use the same

@@ -153,12 +153,8 @@ from different package versions.
 ## Writing And Verification Rules
 
 - Document shipped commands, flags, fields, exports, and behavior only after
-  verification against the current implementation. A guide about an approved
-  **unshipped target** is permitted when its opening section explicitly marks
-  the target as unimplemented, explains the current working alternative, and
-  labels target-only field table entries; do not present target examples as
-  runnable in the installed version. The imported-CSS guide is this exception
-  until its implementation ships.
+  verification against the current implementation. Guide examples must run
+  in the installed version; do not present future target behavior as shipped.
 - Use present tense for current behavior and conditional language for a
   target. Do not use "coming soon", invent customers or figures, or list
   unrelated absent features in place of actionable guidance.

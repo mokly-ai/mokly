@@ -54,7 +54,7 @@ in a fresh checkout. Existing ancestors and symlinks remain confined.
 The repository example uses the default derived mode with `npm ci`,
 `npm run build`, and `npm run example:build` as its explicit recipe.
 Generated HTML and the manifest are ignored; authored public CSS remains tracked.
-In the [imported-CSS target](./mokly-imported-styles.md), also ignore the
+For [imported CSS](./mokly-imported-styles.md), also ignore the
 entire `<mockupsDir>/mokly-generated/` directory (for example
 `/docs/mockups/generated/mokly-generated/` in `.gitignore`). Generated
 stylesheets and binary assets are derived output, not authored public CSS.
@@ -93,7 +93,7 @@ rules for the listed paths. Consumer-authored public files below `mockupsDir`,
 including hand-written HTML without an ownership header, stay tracked and are
 never reported. Derived `check` does not require the on-disk generated files to
 exist or to match; the working tree copy is a local artifact.
-In the imported-CSS target, **any** Git-tracked file below the reserved
+With imported CSS, **any** Git-tracked file below the reserved
 directory fails derived Check (including stale assets no longer compiled),
 and the error includes `git rm --cached` plus one directory-level ignore
 rule. Committed Check instead compares generated text/binary bytes and
@@ -113,7 +113,7 @@ In both modes the head side of a comparison is the current compilation's
 validated output. Committed mode additionally requires that output to equal
 the working tree, as today. Derived mode never reads head bytes from the
 working tree.
-In the imported-CSS target, derived comparison and export capture imported
+For imported CSS, derived comparison and export capture imported
 stylesheet and binary font/image bytes from the validated compilation;
 committed capture uses checked disk bytes. Authored public resources still
 use confined current reads. Derived membership
