@@ -1,8 +1,8 @@
 # Path-Based Navigation Hierarchy
 
-Status: Milestones 1–12 are complete, verified, and pushed, and findings 1–16
-are fixed; Milestone 12's post-push review is pending. The plan stays Active
-until its PR merges.
+Status: Milestones 1–12 are complete, verified, pushed, and reviewed; findings
+1–16 are fixed and findings 17–21 await the user's decision. The plan stays
+Active until its PR merges.
 Created 2026-09-23 with the user's
 consent after the design discussion in this workspace. This plan supersedes the
 collection-forest contract delivered by
@@ -475,6 +475,27 @@ From the Milestones 6–9 review (against `a90503b`):
     says "the existing keys"; and `plans/README.md` said the gate and push
     were pending after they were done. Fixed in Milestone 10.
 
+From the Milestones 10–12 review (against `ed79154`), awaiting the user's
+decision:
+
+17. Medium, present on `origin/main` since screen variants: while search or
+    the Changes filter is active, a variant list with a matching variant is
+    forced open even when its stored value is closed, so its toggle, Collapse
+    all, and a filtered watched reload cannot close it.
+18. Low: the historical collection validator walks collection children
+    recursively, so a valid v3–v5 baseline nested about 6,000 levels deep
+    overflows the stack; the collection-forest code on `origin/main` walked
+    iteratively.
+19. Low: no test distinguishes the open fallback from the server default for
+    a new key during unfiltered evidence adoption; hard-coding the fallback
+    to open passes every test.
+20. Low: no test runs the strict and developer unit runners with a skipped
+    test; inverting their skip policy passes every test, and both write the
+    same report path without recording the policy.
+21. Nit: `mokly-watch.md` still promises that an old recovery snapshot
+    restores its other valid state, but the persistence spec and the parser
+    reject every pre-v3 snapshot in full.
+
 ## Milestone 5: Review follow-up for findings 3 and 4
 
 On 2026-09-24 the user chose to fix review findings 3 and 4 with the
@@ -760,11 +781,13 @@ change.
 - [x] Mark findings 11–16 as fixed in the review-findings list.
 - [x] Run `cargo xtask check`; fix anything it reports until it passes.
 - [x] Commit and push.
-- [ ] Review the complete local diff against `origin/main` using
+- [x] Review the complete local diff against `origin/main` using
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       after the push; report each finding with a number, severity, plain
       explanation, impact of doing nothing, lettered options, and a
-      recommendation, without changing the implementation.
+      recommendation, without changing the implementation. Two independent
+      reviewers ran against `ed79154`; findings 17–21 await the user's
+      decision.
 
 ## Post-merge follow-up (non-blocking)
 
