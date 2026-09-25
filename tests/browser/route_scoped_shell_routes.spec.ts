@@ -56,9 +56,7 @@ test("use-case and page frames keep loading and navigating while evidence is una
       await route.abort("failed");
       return;
     }
-    await fulfillScopedShell(route).catch((error: unknown) => {
-      if (!(evidence && pathname === tourRoute)) throw error;
-    });
+    await fulfillScopedShell(route);
   });
   await page.goto(actionRoute);
   await expectHydrated(page);

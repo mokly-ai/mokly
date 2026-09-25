@@ -42,6 +42,10 @@ interface EmbeddedCapabilityDescriptor {
   json?: string;
 }
 
+type ResolvedHydrationInput =
+  | { kind: "live"; bootstrap: LiveShellBootstrap }
+  | { kind: "static"; bootstrap: ShellBootstrap };
+
 /** Hydrate one complete standalone shell with optional live host capabilities. */
 export function hydrateMoklyShell(
   doc: Document = document,
@@ -64,7 +68,12 @@ export function hydrateMoklyShell(
     hydrateResolvedShell(
       doc,
       bootstrapJson,
-      delivery ? shellBootstrapWithDelivery(bootstrap, delivery) : bootstrap,
+      {
+        kind: "live",
+        bootstrap: delivery
+          ? shellBootstrapWithDelivery(bootstrap, delivery)
+          : bootstrap,
+      },
       capabilities,
       embeddedCapability,
     );
@@ -82,7 +91,7 @@ export function hydrateMoklyShell(
       hydrateResolvedShell(
         doc,
         bootstrapJson,
-        bootstrap,
+        { kind: "static", bootstrap },
         capabilities,
         embeddedCapability,
       );
@@ -120,16 +129,15 @@ function readCapabilityDescriptor(
 function hydrateResolvedShell(
   doc: Document,
   bootstrapJson: string,
-  bootstrap: LiveShellBootstrap,
+  input: ResolvedHydrationInput,
   capabilities: ViewerHostCapabilities | undefined,
   embeddedCapability: EmbeddedCapabilityDescriptor,
 ): void {
   if (hydratedDocuments.has(doc)) return;
   refreshStandaloneAppearance(doc);
+  const bootstrap = input.bootstrap;
   const props = shellBootstrapProps(bootstrap);
-  const staticBootstrap = bootstrap.context.delivery
-    ? { ...bootstrap, catalogue: readCatalogue(bootstrap.catalogue) }
-    : undefined;
+  const staticBootstrap = input.kind === "static" ? input.bootstrap : undefined;
   const delivery = staticBootstrap?.context.delivery;
   const workspaceState =
     delivery === undefined
