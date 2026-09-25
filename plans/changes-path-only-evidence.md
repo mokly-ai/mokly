@@ -151,22 +151,38 @@ Findings 1 and 2 came from the PR #118 preview: 1 is this plan (option B);
 awaits the user's choice of option. Findings 3–6 come from the review of
 `49a23bd` and are not fixed.
 
-3. Medium: producer source validation accepts a `dependency` reason that only
-   the result's own view reasons support (`keepsDependency` in
-   `src/review/component_result_sources.ts`), so a classifier bug that adds
-   both would pass. Recommended: validate only against classifier-collected
-   evidence (policy, entry-adopted view paths, owned CSS) and test a forged
-   view reason.
-4. Low: `tests/component_shared_impact_invariant.test.ts` derives its expected
-   reason paths from the result under test, so losing the owned out-of-scope
-   stylesheet reason would not fail it. Recommended: compute the expected set
-   from the input manifests and changed paths.
-5. Low: `mokly-authoring.md` (~57) and the `mokly-design-components.md` change
-   table (~227) still state the old membership rule. Recommended: link both to
-   the owning rule in `mokly-component-changes.md`.
-6. Low (pre-existing copy, found in Milestone 2): component Details reads
-   "Changes to these files may affect this screen:". Recommended: add a
-   component mockup, then component-specific copy.
+3. Medium: producer source validation accepts a `dependency` reason when the
+   result itself records the same path on one of the entry's views
+   (`keepsDependency` in `src/review/component_result_sources.ts`), so a
+   classifier bug that writes both passes, including a reason wrongly given to
+   an affected-only screen. The full unit suite passes without that fallback
+   (2,496/2,496). Its evidence map is also keyed by kind and id while
+   `entryPairs` pairs screens and flows by route: when a screen moves onto a
+   route another screen used, two pairs share a key and one overwrites the
+   other's view evidence, so a valid result can be rejected once the fallback
+   is gone (found by reading the code; not reproduced). Recommended: drop the
+   fallback, key the evidence with the pair key, and test a forged view
+   reason, an injected reason on an affected-only screen, and a screen moved
+   onto another screen's former route.
+4. Low: `tests/component_shared_impact_invariant.test.ts` builds its expected
+   set from the result's own reasons and models the new definition, so it
+   cannot catch a lost owner reason or show that the set matches the old rule.
+   Recommended: compute the old rule's set from the fixture's manifests and
+   changed files only.
+5. Low: `mokly-authoring.md` (~57) says dependency declarations never add
+   entries, which has been incomplete since exact declared files and owned
+   paths could list entries in component catalogues; the
+   `mokly-design-components.md` change table (~227) still gives token changes
+   "existing conservative membership", which this plan made stale.
+   Recommended: link both to the owning rule in `mokly-component-changes.md`.
+6. Low (pre-existing): on component pages four Details evidence sentences say
+   "screen" (the file list lead, the excluded-stylesheet sentence, and two
+   style-outcome leads), although the spec requires Details wording to follow
+   the entry kind through one shared helper (`entryWording`), which the
+   terminal line already uses. Milestone 2 made the file list appear on more
+   component pages. Recommended: add the component state to the Shared impact
+   mockup, then route every evidence sentence through the helper, with a test
+   that renders component Details and fails on screen wording.
 
 ## Post-merge follow-up (non-blocking)
 
