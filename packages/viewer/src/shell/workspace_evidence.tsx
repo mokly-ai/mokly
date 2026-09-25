@@ -28,6 +28,7 @@ export function WorkspaceEvidence({
   variantId?: string;
 }) {
   const evidence = workspaceComparisonEvidence(data, variantId, loaded);
+  const wording = entryWording(data.entry.kind);
   const hidden = data.status === undefined && !evidence.comparison;
   const reasonPaths = retainedPaths(evidence.reasons);
   const excluded = excludedStylesheets(evidence.resourceViews, reasonPaths);
@@ -80,13 +81,13 @@ export function WorkspaceEvidence({
           ))}
           {retained.length ? (
             <>
-              <p>Changes to these files may affect this screen:</p>
+              <p>{wording.filesLead}</p>
               <PathList paths={retained} />
             </>
           ) : null}
           {styleOutcomes(evidence.reasons).map((outcome) => (
             <Fragment key={outcome.status}>
-              <p>{styleOutcomeLead(outcome)}</p>
+              <p>{styleOutcomeLead(outcome, data.entry.kind)}</p>
               {outcome.selectors.length ? (
                 <ul>
                   {outcome.selectors.map((selector) => (
@@ -102,8 +103,8 @@ export function WorkspaceEvidence({
             <>
               <p>
                 {excluded.length === 1
-                  ? "This stylesheet changed, but none of the changed styles apply to this screen."
-                  : "These stylesheets changed, but none of the changed styles apply to this screen."}
+                  ? wording.excludedStylesheet
+                  : wording.excludedStylesheets}
               </p>
               <p>Examined and excluded:</p>
               <PathList paths={excluded} />
@@ -133,9 +134,7 @@ export function WorkspaceEvidence({
               <pre>{propText(decodeProps(variant.after.props))}</pre>
             </>
           ) : null}
-          {data.status === "Unmodified" ? (
-            <p>{entryWording(data.entry.kind).noChanges}</p>
-          ) : null}
+          {data.status === "Unmodified" ? <p>{wording.noChanges}</p> : null}
         </>
       ) : null}
     </section>

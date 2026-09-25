@@ -47,7 +47,7 @@ test("a registered catalogue shows shared-impact-only files in a screen's Detail
   }
 });
 
-test("a real changed shared-impact file appears in screen Details from All", async ({
+test("a real changed shared-impact file appears in screen and component Details from All", async ({
   page,
 }) => {
   test.setTimeout(90_000);
@@ -76,8 +76,29 @@ test("a real changed shared-impact file appears in screen Details from All", asy
       timeout: 30_000,
     });
     await expect(evidence.getByRole("listitem")).toHaveText(["notes.md"]);
+    await page.goto(`${running.url}/view/components/action.html`);
+    await expect(page.locator('[data-filter="all"]')).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    const componentEvidence = await openEvidence(page);
+    await expect(
+      componentEvidence.getByText(
+        "Changes to these files may affect this component:",
+        { exact: true },
+      ),
+    ).toBeVisible({ timeout: 30_000 });
+    await expect(componentEvidence.getByRole("listitem")).toHaveText([
+      "notes.md",
+    ]);
+    await expect(componentEvidence).toContainText(
+      "No changes to this saved view.",
+    );
     await page.locator('[data-filter="changed"]').click();
     await expect(page.locator('[data-route="screens/home.html"]')).toBeHidden();
+    await expect(
+      page.locator('[data-route="components/action.html"]'),
+    ).toBeHidden();
   } finally {
     await running?.close();
     await removeFixture(fixture);

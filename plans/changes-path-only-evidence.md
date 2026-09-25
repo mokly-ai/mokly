@@ -214,12 +214,18 @@ Tags: mockup
 
 Tags: ui
 
-- [ ] Route the four Details evidence sentences through the shared wording
+- [x] Route the four Details evidence sentences through the shared wording
       helper with the Milestone 5 copy; screen copy stays unchanged.
-- [ ] Failure-first test that renders component Details evidence and fails
+- [x] Failure-first test that renders component Details evidence and fails
       on screen wording, plus screen regression coverage; smoke-test a
       component page through `npm run dev`.
-- [ ] Commit.
+- [x] Extend the shared-impact browser test to open a component from All and
+      assert the component file-list sentence.
+- [x] Compare live component Details with the shared-impact mockup at desktop
+      and mobile widths, verify long paths wrap, and save smoke screenshots.
+- [x] Run build, prepared typecheck, lint, format check, the full unit suite,
+      and every browser spec that exercises Details evidence.
+- [x] Commit.
 
 ## Milestone 9: Review follow-up verification, close-out, and review
 

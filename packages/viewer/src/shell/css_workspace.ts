@@ -75,6 +75,7 @@ export const SHELL_WORKSPACE_CSS = `
 .mbk-usage-list small { display: block; margin-top: 4px; color: var(--chrome-muted); }
 .mbk-comparison-evidence { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--chrome-border); }
 .mbk-comparison-evidence p, .mbk-comparison-evidence ul { margin: 8px 0 0; }
+.mbk-comparison-evidence li { overflow-wrap: anywhere; }
 .mbk-comparison-evidence ul + p { margin-top: 14px; }
 .mbk-highlight-layer { position: fixed; pointer-events: none; z-index: 4; overflow: hidden; }
 .mbk-highlight-layer svg { position: absolute; inset: 0; width: 100%; height: 100%; }

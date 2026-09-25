@@ -7,6 +7,8 @@ import type {
   ViewResourceEvidence,
 } from "../review/types.js";
 
+import { entryWording, type EntryKind } from "./entry_wording.js";
+
 /** Analysed selectors grouped by the outcome that retained them. */
 export interface StyleOutcome {
   status: DependencyAnalysis["status"];
@@ -70,10 +72,16 @@ export function excludedStylesheets(
 }
 
 /** User-facing lead for one selector outcome. */
-export function styleOutcomeLead(outcome: StyleOutcome): string {
-  const lead =
-    outcome.status === "matched"
-      ? "Changed styles that apply to this screen"
-      : "This change can apply anywhere on the screen, so the screen stays in Changes";
-  return `${lead}${outcome.selectors.length ? ":" : "."}`;
+export function styleOutcomeLead(
+  outcome: StyleOutcome,
+  kind: EntryKind,
+): string {
+  const wording = entryWording(kind);
+  if (outcome.status === "matched")
+    return outcome.selectors.length
+      ? wording.matchedStylesWithSelectors
+      : wording.matchedStylesWithoutSelectors;
+  return outcome.selectors.length
+    ? wording.unresolvedStylesWithSelectors
+    : wording.unresolvedStylesWithoutSelectors;
 }
