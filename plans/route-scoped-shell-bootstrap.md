@@ -272,7 +272,7 @@ viewer's document rendering and browser entry, not the CLI server.
 - [x] Run the complete `cargo xtask check` gate with no failures or skips.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
@@ -513,3 +513,13 @@ use-case and page targets so their installed scope matches their route.
    - **Recommendation:** Option A. It makes the catalogue label match the
      contract without changing the screen flow. Applied by the
      `fix(mockups): distinguish usage load failure` correction commit.
+
+### Milestone 3 — 2026-09-25
+
+- Reviewed the complete pushed `origin/main...3a4fda8` diff using
+  [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
+- Findings: none.
+- Residual test risk: the before/after interaction timings are single profiles
+  and therefore include ordinary scheduling noise. Structural serializer
+  ownership, exact call counts and embedded-byte stability are independently
+  enforced by unit, browser, served-page and captured-page regressions.
