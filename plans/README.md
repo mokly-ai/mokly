@@ -12,7 +12,8 @@
   — a changed file matched only by a shared-impact glob or a declared
   dependency directory becomes comparison evidence instead of listing every
   matching entry in Changes; owned paths and exact declared files keep their
-  reasons. Implemented on the same branch as the navigation path plan.
+  reasons. Milestones 1–3 are implemented, verified, and pushed on the
+  navigation path plan's branch; the plan stays Active until PR #118 merges.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
   standalone Auto/Light/Dark control for interface and previews, and
   host-owned theme with independent previews when embedded. Dark neutrals align

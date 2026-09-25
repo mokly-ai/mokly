@@ -1,6 +1,8 @@
 # Path-Only Evidence Stays Out Of Changes
 
-Status: Active. Created 2026-09-25 with the user's consent (option B of
+Status: Milestones 1–3 are implemented, verified, and pushed; the review
+runs after the push. The plan stays Active until PR #118 merges. Created
+2026-09-25 with the user's consent (option B of
 finding 1 raised while reviewing the PR #118 preview). Implemented on the
 `calummoore/halifax-v2` branch alongside
 [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md).
@@ -132,9 +134,9 @@ watched updates, Review JSON, and publication.
 
 ## Milestone 4: Verification, close-out, and review
 
-- [ ] Run `cargo xtask check`; fix anything it reports until it passes.
-- [ ] Update the PR #118 description to cover this change.
-- [ ] Commit and push.
+- [x] Run `cargo xtask check`; fix anything it reports until it passes.
+- [x] Update the PR #118 description to cover this change.
+- [x] Commit and push.
 - [ ] Review the complete local diff against `origin/main` using
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       after the push; report each finding with a number, severity, plain
