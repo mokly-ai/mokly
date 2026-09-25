@@ -4,7 +4,6 @@ import { test } from "node:test";
 import { minimatch } from "minimatch";
 
 import type { Manifest } from "../packages/viewer/dist/registry/types.js";
-import type { ReviewResultV3 } from "../packages/viewer/dist/review/component_types.js";
 
 import {
   pathCatalogueSource,
@@ -34,31 +33,23 @@ test("entry sharedImpact matches the documented old set across globs, declaratio
     sharedGlobs: globs,
   });
 
-  const journey = result.changes.find(
-    (entry) => (entry.after ?? entry.before)?.id === "journey",
-  );
-  assert.deepEqual(
-    journey?.reasons.flatMap((reason) =>
-      reason.kind === "dependency" ? [reason.path] : [],
-    ) ?? [],
-    [],
-  );
-  for (const [kind, entries] of [
-    ["screen", result.screens],
-    ["component", result.components],
-  ] as const)
-    for (const entry of entries)
+  const pairs = manifestPairs(before.manifest, after.manifest);
+  for (const [kind, actual] of [
+    ["screen", result.screens.map((entry) => entry.sharedImpact)],
+    ["component", result.components.map((entry) => entry.sharedImpact)],
+  ] as const) {
+    const expectedPairs = pairs.filter(
+      (pair) => (pair.after ?? pair.before)!.kind === kind,
+    );
+    assert.equal(actual.length, expectedPairs.length);
+    expectedPairs.forEach((pair, index) =>
       assert.deepEqual(
-        entry.sharedImpact,
-        documentedEntryImpact(
-          before.manifest,
-          after.manifest,
-          result,
-          kind,
-          entry.id,
-        ),
-        entry.route,
-      );
+        actual[index],
+        documentedEntryImpact(before.manifest, after.manifest, pair),
+        pairKey((pair.after ?? pair.before)!),
+      ),
+    );
+  }
 });
 
 function mixedSource(directory: string): string {
@@ -82,50 +73,79 @@ function mixedSource(directory: string): string {
   ]);
 }
 
-/** Independent oracle for the pre-change set, written from the v3 contract. */
+type RoutedEntry = Exclude<Manifest["entries"][number], { kind: "page" }>;
+type EntryPair = {
+  before: RoutedEntry | undefined;
+  after: RoutedEntry | undefined;
+};
+
+function routedEntries(manifest: Manifest): RoutedEntry[] {
+  return manifest.entries.filter(
+    (entry): entry is RoutedEntry => entry.kind !== "page",
+  );
+}
+
+function pairKey(entry: RoutedEntry): string {
+  return `${entry.kind}:${entry.kind === "component" ? entry.id : entry.route}`;
+}
+
+function manifestPairs(before: Manifest, after: Manifest): EntryPair[] {
+  const bases = new Map(
+    routedEntries(before).map((entry) => [pairKey(entry), entry]),
+  );
+  const heads = new Map(
+    routedEntries(after).map((entry) => [pairKey(entry), entry]),
+  );
+  return [...new Set([...bases.keys(), ...heads.keys()])]
+    .sort()
+    .map((key) => ({ before: bases.get(key), after: heads.get(key) }));
+}
+
+/** Independent oracle for the pre-change set, using only fixture inputs. */
 function documentedEntryImpact(
   before: Manifest,
   after: Manifest,
-  result: ReviewResultV3,
-  kind: "screen" | "component",
-  id: string,
+  pair: EntryPair,
 ): string[] {
-  const records = [before, after].flatMap((manifest) =>
-    manifest.entries.filter((entry) => entry.kind === kind && entry.id === id),
-  );
-  const globalMatches = changedPaths.filter((changed) =>
-    globs.some((glob) => minimatch(changed, glob, { dot: true })),
-  );
-  const unownedMatches = changedPaths.filter(
-    (changed) =>
-      ![before, after].some((manifest) =>
-        manifest.entries.some(
-          (entry) =>
+  return changedPaths
+    .filter((changed) => {
+      const owners = new Set(
+        [before, after].flatMap((manifest) =>
+          manifest.entries.flatMap((entry) =>
             entry.kind === "component" &&
-            entry.ownedDependencies.some((root) => contains(root, changed)),
+            entry.ownedDependencies.some((root) => contains(root, changed))
+              ? [entry.id]
+              : [],
+          ),
         ),
-      ) &&
-      (globalMatches.includes(changed) ||
-        records.some((entry) =>
-          entry.declaredDependencies?.some((root) => contains(root, changed)),
-        )) &&
-      !(/^mockups\//.test(changed) && /\.css$/i.test(changed)),
+      );
+      const matchedGlob = globs.some((glob) =>
+        minimatch(changed, glob, { dot: true }),
+      );
+      const stylesheet = /\.css$/i.test(changed);
+      if (matchedGlob && !stylesheet) return true;
+      // The fixture's public stylesheet analysis root is mockups/.
+      if (stylesheet && changed.startsWith("mockups/")) return false;
+      return [pair.before, pair.after].some(
+        (entry) => entry && oldIndependent(entry, changed, owners, matchedGlob),
+      );
+    })
+    .sort();
+}
+
+function oldIndependent(
+  entry: RoutedEntry,
+  changed: string,
+  owners: ReadonlySet<string>,
+  matchedGlob: boolean,
+): boolean {
+  if (entry.kind === "component" && owners.has(entry.id)) return true;
+  const declared = entry.declaredDependencies ?? [];
+  if (entry.kind === "screen" && declared.includes(changed)) return true;
+  return (
+    owners.size === 0 &&
+    (matchedGlob || declared.some((root) => contains(root, changed)))
   );
-  const reasons = result.changes
-    .find(
-      (entry) =>
-        entry.kind === kind && (entry.after ?? entry.before)?.id === id,
-    )
-    ?.reasons.flatMap((reason) =>
-      reason.kind === "dependency" ? [reason.path] : [],
-    );
-  return [
-    ...new Set([
-      ...globalMatches.filter((changed) => !/\.css$/i.test(changed)),
-      ...unownedMatches,
-      ...(reasons ?? []),
-    ]),
-  ].sort();
 }
 
 function contains(root: string, changed: string): boolean {

@@ -195,18 +195,20 @@ Tags: mockup
 
 ## Milestone 7: Source validation and invariant oracle
 
-- [ ] Finding 3, failure-first: a forged reason recorded on both a view and
+- [x] Finding 3, failure-first: a forged reason recorded on both a view and
       the entry, and a reason injected onto a screen that only uses a changed
       component, are rejected; a screen moved onto another screen's former
       route with a view-level dependency reason validates.
-- [ ] Remove the result-based fallback from producer source validation and
+- [x] Remove the result-based fallback from producer source validation and
       key the classifier's view evidence with the entry pair key, shared with
       `entryPairs`.
-- [ ] Finding 4: compute the invariant test's expected `sharedImpact` from the
+- [x] Finding 4: compute the invariant test's expected `sharedImpact` from the
       fixture's manifests and changed files under the old rule, without
       reading the result under test; show it fails when an owner reason is
       dropped.
-- [ ] Commit.
+- [x] Run build, prepared typecheck, lint, format check, the full unit suite,
+      and the five comparison-evidence browser specs.
+- [x] Commit.
 
 ## Milestone 8: Component Details wording
 

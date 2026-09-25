@@ -23,7 +23,7 @@ import { ComponentComparisonCounts } from "./component_comparison_counts.js";
 import {
   address,
   ComponentDependencyPolicy,
-  entryEvidenceKey,
+  entryPairKey,
   entryPairs,
   lexical,
   metadata,
@@ -159,7 +159,7 @@ export async function classifyComponents(
         ),
       );
       viewDependencyPaths.set(
-        entryEvidenceKey(entry),
+        entryPairKey(entry),
         retainedDependencyPaths(compared),
       );
       comparisonCounts.add(compared);

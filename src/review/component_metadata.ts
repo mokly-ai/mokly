@@ -17,9 +17,10 @@ export const address = (entry: RoutedEntry): ReviewEntryAddress => ({
   route: entry.route,
   title: entry.title,
 });
-/** Key classifier evidence by entry kind and id. */
-export const entryEvidenceKey = (entry: RoutedEntry): string =>
-  `${entry.kind}:${entry.id}`;
+/** Pair screens and flows by route, and components by stable id. */
+export function entryPairKey(entry: RoutedEntry): string {
+  return `${entry.kind}:${entry.kind === "component" ? entry.id : entry.route}`;
+}
 /** Paths of the dependency reasons an entry's view comparisons retained. */
 export function retainedDependencyPaths(
   compared: readonly { reasons: readonly EntryChangeReason[] }[],
@@ -38,16 +39,14 @@ export function entryPairs(
   before: Manifest,
   after: Manifest,
 ): { before: RoutedEntry | undefined; after: RoutedEntry | undefined }[] {
-  const key = (entry: RoutedEntry) =>
-    `${entry.kind}:${entry.kind === "component" ? entry.id : entry.route}`;
   const bases = new Map(
     before.entries.flatMap((entry) =>
-      entry.kind === "page" ? [] : [[key(entry), entry] as const],
+      entry.kind === "page" ? [] : [[entryPairKey(entry), entry] as const],
     ),
   );
   const heads = new Map(
     after.entries.flatMap((entry) =>
-      entry.kind === "page" ? [] : [[key(entry), entry] as const],
+      entry.kind === "page" ? [] : [[entryPairKey(entry), entry] as const],
     ),
   );
   return [...new Set([...bases.keys(), ...heads.keys()])]

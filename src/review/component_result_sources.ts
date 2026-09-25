@@ -10,7 +10,7 @@ import { affectedConsumers } from "./component_affected.js";
 import {
   address,
   type ComponentDependencyPolicy,
-  entryEvidenceKey,
+  entryPairKey,
   entryPairs,
   metadata,
 } from "./component_metadata.js";
@@ -79,8 +79,7 @@ export function validateComponentReviewSources(
             (candidate) =>
               candidate && sources.policy.independent(candidate, reason.path),
           ) &&
-          !keepsDependency(record, reason.path) &&
-          !sources.viewPaths.get(entryEvidenceKey(entry))?.has(reason.path) &&
+          !sources.viewPaths.get(entryPairKey(entry))?.has(reason.path) &&
           !(
             entry.kind === "component" &&
             sources.ownedCss.some(
@@ -160,22 +159,6 @@ export function validateComponentReviewSources(
   requireEqual(
     result.affectedConsumers,
     affectedConsumers(before, after, implementationImpact),
-  );
-}
-function keepsDependency(
-  record:
-    | ReviewResultV3["screens"][number]
-    | ReviewResultV3["components"][number]
-    | undefined,
-  path: string,
-): boolean {
-  if (!record) return false;
-  const views =
-    "views" in record
-      ? record.views
-      : record.variants.flatMap((variant) => variant.views);
-  return views.some((view) =>
-    view.reasons?.some((reason) => reason.path === path),
   );
 }
 function validateViews(
