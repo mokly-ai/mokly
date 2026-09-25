@@ -55,7 +55,7 @@ export const loadingStateDesigns = collection({
     screen({
       id: "design-component-usage-failed",
       slug: "failed",
-      title: "Usage unavailable",
+      title: "Usage failed to load",
       colorSchemes: ["light"],
       description:
         "A component page that could not load usage and offers another attempt.",

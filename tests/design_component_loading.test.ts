@@ -15,14 +15,17 @@ const loadingScreens = [
   [
     "design-component-usage-loading",
     "design/components/states/loading/usage.html",
+    "Usage loading",
   ],
   [
     "design-component-inspection-loading",
     "design/components/states/loading/inspection.html",
+    "Inspection loading",
   ],
   [
     "design-component-usage-failed",
     "design/components/states/loading/failed.html",
+    "Usage failed to load",
   ],
 ] as const;
 
@@ -64,10 +67,11 @@ test("Loading and recovery is a bounded child of component States", async () => 
   );
   assert.ok(loading.childIds.length <= 5);
 
-  for (const [id, route] of loadingScreens) {
+  for (const [id, route, title] of loadingScreens) {
     const entry = manifest.entries.find((entry) => entry.id === id);
     assert.ok(entry?.kind === "screen", id);
     assert.equal(entry.route, route, id);
+    assert.equal(entry.title, title, id);
     assert.equal(entry.darkFragments, undefined, id);
   }
 });

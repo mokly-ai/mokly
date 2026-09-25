@@ -487,3 +487,17 @@ use-case and page targets so their installed scope matches their route.
   retry behavior and in-place usage adoption remain intentionally deferred to
   Milestone 5, where browser tests will exercise delayed and failed route
   evidence against the implemented shell.
+
+### Milestone 2 supervisor correction — 2026-09-25
+
+1. **Low — The failed-delivery screen reused unavailable-state wording.** The
+   screen title `Usage unavailable` blurred the protocol's distinction between
+   a failed evidence delivery and genuinely unavailable usage, and sat beside
+   the separate `Inspection unavailable` screen.
+   - **Option A:** retitle only this screen to `Usage failed to load`, retaining
+     its id, route and rendered state.
+   - **Option B:** keep the ambiguous title and rely on the panel copy to explain
+     the distinction.
+   - **Recommendation:** Option A. It makes the catalogue label match the
+     contract without changing the screen flow. Applied by the
+     `fix(mockups): distinguish usage load failure` correction commit.
