@@ -199,7 +199,7 @@ Repeated physical placements do not duplicate logical evidence or screen counts;
 the inspector can resolve that logical instance to its current ranges.
 
 Result-level `sharedImpact` remains every changed path matching a configured
-`review.sharedImpact` glob. For each v3 screen, component, or use case, entry
+`review.sharedImpact` glob. For each v3 screen or component record, entry
 `sharedImpact` is the sorted, duplicate-free union of:
 
 1. Every matched changed path that is not a stylesheet, regardless of owner.

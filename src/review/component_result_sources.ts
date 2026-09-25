@@ -7,16 +7,34 @@ import {
 import type { Manifest, ReviewResultV3, ViewReview } from "@mokly/viewer/data";
 
 import { affectedConsumers } from "./component_affected.js";
-import { address, entryPairs, metadata } from "./component_metadata.js";
+import {
+  address,
+  type ComponentDependencyPolicy,
+  entryEvidenceKey,
+  entryPairs,
+  metadata,
+} from "./component_metadata.js";
 import { variantAddress } from "./component_pairing.js";
+import type { OwnedCssReason } from "./component_resource_attribution.js";
 import { snapshotPath } from "./paths.js";
 
-/** Validate result coverage, addresses, data, dependency and usage references against both manifests. */
+/** Classifier evidence that can justify an entry's `dependency` reasons. */
+export interface DependencyReasonSources {
+  /** The ownership and exact-declaration policy the classifier applied. */
+  policy: ComponentDependencyPolicy;
+  /** Owned CSS retained at actual invocations, by owning component. */
+  ownedCss: readonly OwnedCssReason[];
+  /** Dependency paths each entry's view comparisons retained, by evidence key. */
+  viewPaths: ReadonlyMap<string, ReadonlySet<string>>;
+}
+
+/** Validate result coverage, addresses, dependency sources, and usage against both manifests. */
 export function validateComponentReviewSources(
   result: ReviewResultV3,
   before: Manifest,
   after: Manifest,
   implementationImpact: ReadonlySet<string>,
+  sources: DependencyReasonSources,
 ): void {
   parseReviewResult(result);
   const pairs = entryPairs(before, after);
@@ -55,6 +73,24 @@ export function validateComponentReviewSources(
     if (change) {
       requireEqual({ before: change.before, after: change.after }, sides);
       for (const reason of change.reasons) {
+        if (
+          reason.kind === "dependency" &&
+          ![pair.before, pair.after].some(
+            (candidate) =>
+              candidate && sources.policy.independent(candidate, reason.path),
+          ) &&
+          !keepsDependency(record, reason.path) &&
+          !sources.viewPaths.get(entryEvidenceKey(entry))?.has(reason.path) &&
+          !(
+            entry.kind === "component" &&
+            sources.ownedCss.some(
+              (item) =>
+                item.componentId === entry.id &&
+                item.reason.path === reason.path,
+            )
+          )
+        )
+          reviewInvalid("dependency reason has no source evidence");
         if (
           reason.kind === "metadata" &&
           (!pair.before ||
@@ -124,6 +160,22 @@ export function validateComponentReviewSources(
   requireEqual(
     result.affectedConsumers,
     affectedConsumers(before, after, implementationImpact),
+  );
+}
+function keepsDependency(
+  record:
+    | ReviewResultV3["screens"][number]
+    | ReviewResultV3["components"][number]
+    | undefined,
+  path: string,
+): boolean {
+  if (!record) return false;
+  const views =
+    "views" in record
+      ? record.views
+      : record.variants.flatMap((variant) => variant.views);
+  return views.some((view) =>
+    view.reasons?.some((reason) => reason.path === path),
   );
 }
 function validateViews(

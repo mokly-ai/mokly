@@ -99,31 +99,36 @@ Shared impact mockup already depicts; no visual design change.
 Implement the rule in the one component-aware classifier used by Browse,
 watched updates, Review JSON, and publication.
 
-- [ ] Failure-first tests: a changed path matched only by a
+- [x] Failure-first tests: a changed path matched only by a
       `review.sharedImpact` glob, and one inside a declared dependency
       directory, add no Changes row for a screen, component, or use case, do
       not make a component affect its consumers, and stay in entry
       `sharedImpact`; an exact declared file and a component-owned path keep
       their reasons; an unowned component registration module under a broad
       glob lists nothing.
-- [ ] Extend the real Git-backed case in
+- [x] Extend the real Git-backed case in
       `tests/browser/shared_impact_details.spec.ts` with an assertion that the
       path-only screen has no Changes row after classification.
-- [ ] Change `ComponentDependencyPolicy` so only owned paths and exact
+- [x] Change `ComponentDependencyPolicy` so only owned paths and exact
       declared files are independent evidence; remove the glob path from the
       policy.
-- [ ] Produce entry `sharedImpact` exactly as Milestone 1 defines it.
-- [ ] Align every validator of review results (producer and viewer) with the
-      rule so a result carrying a path-only `dependency` reason is rejected.
-- [ ] Update tests that encoded the old membership, listing each one in the
-      milestone report.
-- [ ] Smoke: `npm run preview:build -- --include-changes` on this branch
+- [x] Produce entry `sharedImpact` exactly as Milestone 1 defines it.
+- [x] Validate dependency reasons against source manifests in the producer;
+      the source-free viewer decoder retains structural validation.
+- [x] Preserve legitimate ownership-projected resource reasons in producer
+      validation without repeating the comparison.
+- [x] Align the v3 result contract with its screen/component record shape;
+      use cases have no entry `sharedImpact` record.
+- [x] Audit tests that encoded old membership; existing expectations covered
+      v2 evidence, explicit paths, rendered resources, or CSS and needed no
+      changes. Report that list as empty.
+- [x] Smoke: `npm run preview:build -- --include-changes` on this branch
       lists 83 Changes entries instead of 114 (82 screens whose component
       data changed and the Catalogue navigation component); the Example tour
       flow drops with its two screens; `design-appearance-props` stays listed
       for its data reason, and its comparison details name one changed
       component (Catalogue navigation) instead of eight.
-- [ ] Commit.
+- [x] Commit.
 
 ## Milestone 4: Verification, close-out, and review
 

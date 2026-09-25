@@ -65,10 +65,11 @@ Derived classification compares all generated documents and reachable resource
 bytes even without changed Git output paths. Cache paths and their physical
 aliases are excluded before dependency or shared-impact matching. Component
 catalogues follow the [path evidence rule](../../docs/protocol/mokly-component-changes.md#dependencies-and-styles):
-owned component paths and exact declarations retain independent reasons;
-glob and declared-directory matches remain evidence. The
-[v3 result definition](../../docs/protocol/mokly-component-review.md#reasons-and-secondary-evidence)
-preserves each entry's `sharedImpact` set.
+`component_metadata.ts` owns glob matching, owned/exact reasons, and unowned
+directory evidence. The classifier combines that evidence with reasons to
+preserve the [v3 result set](../../docs/protocol/mokly-component-review.md#reasons-and-secondary-evidence).
+Source validation rejects a dependency reason without an independent path,
+retained view or ownership-projected resource, or propagated owned CSS source.
 
 ```bash
 npm run build

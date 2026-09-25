@@ -1,7 +1,5 @@
 import path from "node:path";
 
-import { minimatch } from "minimatch";
-
 import { canonicalJson, generatedViews } from "@mokly/viewer/data";
 import type {
   ChangedEntry,
@@ -25,9 +23,11 @@ import { ComponentComparisonCounts } from "./component_comparison_counts.js";
 import {
   address,
   ComponentDependencyPolicy,
+  entryEvidenceKey,
   entryPairs,
   lexical,
   metadata,
+  retainedDependencyPaths,
   uniqueReasons,
 } from "./component_metadata.js";
 import { variantAddress, viewPairs } from "./component_pairing.js";
@@ -99,17 +99,14 @@ export async function classifyComponents(
       ),
     ),
   ]);
-  const sharedImpact = changedPaths.filter((path) =>
-    config.review.sharedImpact.some((glob) =>
-      minimatch(path, glob, { dot: true }),
-    ),
-  );
+  const sharedImpact = dependencies.sharedPaths(changedPaths);
   const screens: ScreenReviewV3[] = [];
   const components: ComponentReview[] = [];
   const changes: ChangedEntry[] = [];
   const impacting = new Set<string>();
   const actualImplementations = new Set<string>();
   const ownedResources: OwnedCssReason[] = [];
+  const viewDependencyPaths = new Map<string, ReadonlySet<string>>();
   const pairs = entryPairs(before, after);
   const comparisonCounts = new ComponentComparisonCounts();
   await timeAsync("review.compare-screens", async () => {
@@ -161,6 +158,10 @@ export async function classifyComponents(
           ),
         ),
       );
+      viewDependencyPaths.set(
+        entryEvidenceKey(entry),
+        retainedDependencyPaths(compared),
+      );
       comparisonCounts.add(compared);
       assertViewAnalysisScope(
         compared.map((result) => result.view),
@@ -174,7 +175,14 @@ export async function classifyComponents(
           compared.map((result) => result.view),
         ),
       );
-      common.sharedImpact = resourceImpact(sharedImpact, reasons);
+      const unownedEvidence = dependencies
+        .unownedEvidence(pair.before, pair.after, changedPaths)
+        .filter((path) => !analysisOwnsStylesheet(path, config));
+      common.sharedImpact = resourceImpact(
+        sharedImpact,
+        unownedEvidence,
+        reasons,
+      );
       ownedResources.push(
         ...compared.flatMap((result) => result.ownedResources),
       );
@@ -279,6 +287,10 @@ export async function classifyComponents(
     affectedConsumers: affectedConsumers(before, after, impacting),
     ignoredImpact: aggregateIgnored(screens),
   };
-  validateComponentReviewSources(result, before, after, impacting);
+  validateComponentReviewSources(result, before, after, impacting, {
+    policy: dependencies,
+    ownedCss: ownedResources,
+    viewPaths: viewDependencyPaths,
+  });
   return result;
 }

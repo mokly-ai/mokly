@@ -17,6 +17,21 @@ export const address = (entry: RoutedEntry): ReviewEntryAddress => ({
   route: entry.route,
   title: entry.title,
 });
+/** Key classifier evidence by entry kind and id. */
+export const entryEvidenceKey = (entry: RoutedEntry): string =>
+  `${entry.kind}:${entry.id}`;
+/** Paths of the dependency reasons an entry's view comparisons retained. */
+export function retainedDependencyPaths(
+  compared: readonly { reasons: readonly EntryChangeReason[] }[],
+): ReadonlySet<string> {
+  return new Set(
+    compared.flatMap((comparison) =>
+      comparison.reasons.flatMap((reason) =>
+        reason.kind === "dependency" ? [reason.path] : [],
+      ),
+    ),
+  );
+}
 export const lexical = (a: string, b: string): number =>
   a < b ? -1 : a > b ? 1 : 0;
 export function entryPairs(
@@ -65,7 +80,7 @@ export function metadata(entry: RoutedEntry): string {
   return canonicalJson({ ...common, navPath });
 }
 
-/** Explicit owners override broad consumer declarations, retaining exact screen evidence. */
+/** Track owners, exact reasons, and unowned path evidence across both manifests. */
 export class ComponentDependencyPolicy {
   private readonly components: readonly Extract<
     ManifestEntry,
@@ -103,11 +118,27 @@ export class ComponentDependencyPolicy {
     const owners = this.owners(changed);
     if (owners.has(entry.id) && entry.kind === "component") return true;
     const declared = entry.declaredDependencies ?? [];
-    if (entry.kind === "screen" && declared.includes(changed)) return true;
-    if (owners.size) return false;
     return (
-      declared.some((root) => dependencyContainsChangedPath(root, changed)) ||
-      this.sharedPath(changed)
+      declared.includes(changed) && (!owners.size || entry.kind === "screen")
+    );
+  }
+  sharedPaths(changed: readonly string[]): string[] {
+    return changed.filter((item) => this.sharedPath(item));
+  }
+  unownedEvidence(
+    before: RoutedEntry | undefined,
+    after: RoutedEntry | undefined,
+    changed: readonly string[],
+  ): string[] {
+    return changed.filter(
+      (item) =>
+        !this.owners(item).size &&
+        (this.sharedPath(item) ||
+          [before, after].some((entry) =>
+            entry?.declaredDependencies?.some((root) =>
+              dependencyContainsChangedPath(root, item),
+            ),
+          )),
     );
   }
   reasons(

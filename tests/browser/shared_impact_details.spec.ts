@@ -76,6 +76,8 @@ test("a real changed shared-impact file appears in screen Details from All", asy
       timeout: 30_000,
     });
     await expect(evidence.getByRole("listitem")).toHaveText(["notes.md"]);
+    await page.locator('[data-filter="changed"]').click();
+    await expect(page.locator('[data-route="screens/home.html"]')).toBeHidden();
   } finally {
     await running?.close();
     await removeFixture(fixture);

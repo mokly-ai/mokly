@@ -75,14 +75,16 @@ export function exactScreenCssReasons(
   );
 }
 
-/** Preserve non-CSS diagnostics and derive stylesheet impact from retained evidence. */
+/** Preserve glob and unowned-path evidence alongside retained dependency reasons. */
 export function resourceImpact(
   shared: readonly string[],
+  unowned: readonly string[],
   reasons: readonly EntryChangeReason[],
 ): string[] {
   return [
     ...new Set([
       ...shared.filter((path) => !isStylesheetPath(path)),
+      ...unowned,
       ...reasons.flatMap((reason) =>
         reason.kind === "dependency" ? [reason.path] : [],
       ),
