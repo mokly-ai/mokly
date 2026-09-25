@@ -3,8 +3,8 @@
 ## Active
 
 - [Imported CSS Delivery](./imported-css-delivery.md) — shipped implementation
-  and authorized final-review fixes complete; resolution-reference bookkeeping
-  and independent review remain. Finding 3 was resolved by the
+  and authorized final-review fixes complete; only the independent review
+  remains. Finding 3 was resolved by the
   separate `922c1ec` merge. Move this plan to Completed
   when its implementation PR merges.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one

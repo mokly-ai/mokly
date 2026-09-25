@@ -106,40 +106,76 @@ without including the uncommitted Milestone 10 work.
    renderer's CSS reappears in entry stylesheets. Recommended: treat end of
    file as the end of the rule, and cross-check the scanner against esbuild's
    import edges.
+
+   Resolved in `390a21a`: EOF imports now join the prelude and renderer closure;
+   tokenizer cases are cross-checked with esbuild metafile edges.
+
 9. **Low — the `image-set()` string rule is too broad and undocumented for
    public CSS.** It rejects quoted `data:` and `https:` URLs, and it breaks
    authored public stylesheets that built before this branch. Recommended:
    reject only quoted local URLs, and document the rule in the Config and
    Styles guides and in the pull request.
+
+   Resolved in `390a21a`: quoted remote and data sources remain external; only
+   local strings fail with `url()` guidance. This is a PR behavior change.
+
 10. **Low — assets in workspace packages linked through `node_modules` are not
     inventoried.** `bundle.ts` and `transformer_inventory.ts` check the link
     path, not the real path. Recommended: one shared "package code" predicate.
+
+    Resolved in `390a21a`: physical package identity keeps linked workspace
+    CSS and images inventoried, watched and delivered under both aliases.
+
 11. **Low — the virtual `mokly:styles:N` name still leaks for extensionless
     specifiers or `require()` of CSS outside `repoRoot`.** Recommended: check
     each root's CSS against `repoRoot` after the graph build. Never print
     virtual module names.
+
+    Resolved in `390a21a`: graph metafile edges now name the authored importer
+    and original specifier for extensionless, `require()` and dynamic CSS.
+
 12. **Low — committed-mode Changes reloads the consumer graph on every
     classification.** The reload runs PostCSS again, and it can race a newer
     edit, leaving Changes unavailable until the next build. Recommended: pass
     one accepted-generation input (routes, outputs, delivered sources) through
     `readCatalogueChanges`.
+
+    Resolved in `390a21a`: typed generation routes prevent committed PostCSS
+    reloads and reject a newer entry racing an older accepted classification.
+
 13. **Low — collecting large PostCSS dependency lists is slow.** It takes 3.4 s
     against Tailwind's 251 ms at 20,000 files, because of repeated sorting and
     path resolution. Recommended: compute each relative path once and resolve
     fixed roots once, with a timed test using Tailwind's report shape.
+
+    Resolved in `390a21a`: cached roots and one sort reduced isolated 20,000-file
+    collection from 3,430.5 ms to 1,436.1 ms in the measured fixture.
+
 14. **Low — dependency diagnostics are ordered differently from the
     contract.** A missing file is reported before a public-mockups file.
     Recommended: run the public-file pass first, and test both failures
     together.
+
+    Resolved in `390a21a`: public-file diagnostics precede regular-file checks,
+    even when a missing dependency sorts first.
+
 15. **Low — `src/review/README.md` describes the shared-impact rule per
     stylesheet, but the code uses one global flag.** Rendering is unaffected.
     Recommended: align the README and pin the rule with a test.
+
+    Resolved in `390a21a`: the README and test state global stripping whenever
+    any generated stylesheet bytes change.
+
 16. **Low — the packaged Styles guide contains repository-only material.** It
     mentions the example component, `BROWSERSLIST_IGNORE_OLD_DATA` and the
     internal `encodeUrlPath`. It also says the failure applies to linked
     public files, when any public file under `mockupsDir` triggers it.
     Recommended: fix the text, and add a guide test that rejects repository
     paths.
+
+    Resolved in `390a21a`: example-only guidance moved to the example README;
+    packaged guide text uses product language and a copy-boundary test.
+
 17. **Low — small protocol drift.** Two claims in `mokly-configuration.md` are
     outdated: plugin forms and loader values. The status sentence in
     `mokly-imported-styles.md` will go stale at merge. `mokly-rendering.md`
@@ -147,17 +183,32 @@ without including the uncommitted Milestone 10 work.
     `dependency-security.md` and `npm-release.md` is outdated.
     `mokly-source-protection.md` has a garbled sentence. Recommended: fix each
     one, and link to the PostCSS protocol instead of restating it.
+
+    Resolved in `390a21a`: plugin forms, loader rules, shipped status,
+    Lightning CSS scope and source-inventory wording now agree with the code.
+
 18. **Low — the plan ticks a test change that was never made.** Milestone 7
     names `tests/catalogue_export.test.ts`; the coverage lives in
     `tests/export_imported_styles.test.ts` and
     `tests/publication_imported_styles.test.ts`. Recommended: correct the
     TODO.
+
+    Resolved in `390a21a`: Milestone 7 now names the actual export and
+    publication test files.
+
 19. **Low — files grew past the length guidelines.** Code:
     `src/server/http.ts` (334 lines) and `src/server/serve_watched.ts` (303).
     Protocol docs: `mokly-imported-styles.md` (280, against the plan's 250)
     and several existing protocol docs. Recommended: split them, and add a
     length check for TypeScript and protocol Markdown like the Rust lint.
+
+    Resolved in `390a21a`: oversized modules, tests and protocol pages are
+    split; `xtask` enforces changed-file limits and offers an `--all` audit.
+
 20. **Low — no packed-install test covers imported CSS or PostCSS.** The
     package check does not require `dist/build/styles/postcss_worker.js`, which
     is loaded by URL at runtime. Recommended: a packed consumer with a CSS
     Module, a `url()` asset and a local PostCSS plugin.
+
+    Resolved in `390a21a`: archive validation requires the worker and a sixth
+    packed consumer builds and checks real CSS Module, PostCSS and binary URLs.

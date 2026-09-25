@@ -3,9 +3,9 @@
 ## Status
 
 Active until the implementation PR merges. Created 2026-09-24 from the
-CSS-in-JS investigation on this branch. Milestones 1–11 are complete;
-finding 3 was resolved in the separate `922c1ec` merge. Milestone 12's
-resolution-reference push and the parent's independent review remain. See the
+CSS-in-JS investigation on this branch. All implementation milestones and the
+bookkeeping push are complete; finding 3 was resolved in the separate
+`922c1ec` merge. The parent's independent post-push review remains. See the
 [review record](../docs/reviews/imported-css-delivery.md).
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
@@ -705,7 +705,7 @@ Close review findings 8–20 without changing the accepted-generation model.
 
 ## Milestone 12: Commit, push, and review
 
-- [ ] Commit and push final bookkeeping, including exact resolution commit references, with a clean intended diff.
+- [x] Commit and push final bookkeeping, including exact resolution commit references, with a clean intended diff.
 - [ ] Review the complete local diff against `origin/main` using
       `docs/implementation-review-prompt.md` after the push. Report findings
       without changing the implementation; the parent session owns this review.
