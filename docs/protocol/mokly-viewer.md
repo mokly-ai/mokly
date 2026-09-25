@@ -19,8 +19,10 @@ Removed pages and screens load their advertised previous versions in local,
 static, and embedded hosts through the same tree, as implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md).
 Serialize-once embedded state is implemented by Milestone 3 of the
-[route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md);
-route-scoped Serve hydration remains an approved target tracked by that plan.
+[route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
+Milestone 4 implements its isolated route-scoped model, projection and strict
+reader; browser hydration remains on complete Serve bootstraps until the
+coordinated emission-and-reader switch in Milestone 6.
 
 ## Package And Props
 

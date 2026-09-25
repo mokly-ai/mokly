@@ -2,15 +2,31 @@
 
 import type { CatalogueReadModel, CatalogueRoutedEntry } from "./types.js";
 
-export interface ResolvedCatalogueEntry {
-  entry: CatalogueRoutedEntry;
+interface CatalogueRouteEntry {
+  id: string;
+  kind: CatalogueRoutedEntry["kind"];
+  route: string;
+}
+
+interface CatalogueRouteIndex<Entry extends CatalogueRouteEntry> {
+  screens: readonly Entry[];
+  pages: readonly Entry[];
+  useCases: readonly Entry[];
+  components: readonly Entry[];
+  removedEntries: readonly { entry: Entry; snapshotId?: string }[];
+}
+
+export interface ResolvedCatalogueEntry<
+  Entry extends CatalogueRouteEntry = CatalogueRoutedEntry,
+> {
+  entry: Entry;
   snapshotId?: string;
 }
 
 /** Current routed entries in public model order. */
-export function currentCatalogueEntries(
-  model: CatalogueReadModel,
-): readonly CatalogueRoutedEntry[] {
+export function currentCatalogueEntries<Entry extends CatalogueRouteEntry>(
+  model: CatalogueRouteIndex<Entry>,
+): readonly Entry[] {
   return [
     ...model.screens,
     ...model.pages,
@@ -50,11 +66,11 @@ export function resolveCatalogueSelection(
 }
 
 /** Resolve one route, inferring a published snapshot only from that exact route. */
-export function resolveCatalogueRoute(
-  model: CatalogueReadModel,
+export function resolveCatalogueRoute<Entry extends CatalogueRouteEntry>(
+  model: CatalogueRouteIndex<Entry>,
   route: string,
   snapshotId?: string,
-): ResolvedCatalogueEntry | undefined {
+): ResolvedCatalogueEntry<Entry> | undefined {
   const current = currentCatalogueEntries(model).find(
     (entry) => entry.route === route,
   );
@@ -78,10 +94,10 @@ export function resolveCatalogueRoute(
 }
 
 /** Resolve the public record corresponding to an already exact routed entry. */
-export function resolveCatalogueRecord(
-  model: CatalogueReadModel,
+export function resolveCatalogueRecord<Entry extends CatalogueRouteEntry>(
+  model: CatalogueRouteIndex<Entry>,
   entry: { id: string; kind: string; route: string },
-): ResolvedCatalogueEntry | undefined {
+): ResolvedCatalogueEntry<Entry> | undefined {
   const current = currentCatalogueEntries(model).find(
     (candidate) =>
       candidate.id === entry.id &&

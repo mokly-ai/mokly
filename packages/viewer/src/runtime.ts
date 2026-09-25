@@ -5,6 +5,15 @@ export {
   readShellBootstrap,
   serializeShellBootstrap,
 } from "./standalone/bootstrap.js";
+export { readScopedShellBootstrap } from "./standalone/scoped_bootstrap.js";
+export type { ScopedShellBootstrap } from "./standalone/scoped_bootstrap.js";
+export { projectScopedCatalogue } from "./catalogue/scoped_projection.js";
+export type {
+  ShellCatalogueReadModel,
+  ShellCatalogueUsage,
+} from "./catalogue/scoped_types.js";
+export { resolveCatalogueUsageScope } from "./catalogue/usage_scope.js";
+export type { CatalogueUsageScopeTarget } from "./catalogue/usage_scope.js";
 export { localFramePath } from "./client/same_origin_adapter.js";
 export { BYTE_LIMIT } from "./inspector/values.js";
 export { compactRanges, readMetadata } from "./inspector/metadata.js";

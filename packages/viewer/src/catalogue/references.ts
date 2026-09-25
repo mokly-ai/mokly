@@ -6,6 +6,12 @@ import { validateProps } from "../components/props.js";
 import { validateComponentViewRecord } from "../components/view_validation.js";
 import { analyzeHierarchy } from "../registry/hierarchy.js";
 
+import type {
+  ShellCatalogueComponent,
+  ShellCatalogueReadModel,
+  ShellCatalogueRoutedEntry,
+  ShellCatalogueView,
+} from "./scoped_types.js";
 import { projectTree } from "./tree.js";
 import type {
   CatalogueCollection,
@@ -16,10 +22,15 @@ import type {
 } from "./types.js";
 import { unique } from "./values.js";
 
+type ValidatedCatalogue = CatalogueReadModel | ShellCatalogueReadModel;
+type ValidatedRoutedEntry = CatalogueRoutedEntry | ShellCatalogueRoutedEntry;
+type ValidatedComponent = CatalogueComponent | ShellCatalogueComponent;
+type ValidatedView = CatalogueView | ShellCatalogueView;
+
 /** Validate relationships after parsing all known fields, including both ownership sections. */
-export function validateCatalogueReferences(model: CatalogueReadModel): void {
+export function validateCatalogueReferences(model: ValidatedCatalogue): void {
   require(model.identity.title === "Mokly", "catalogue title must be Mokly");
-  const current: (CatalogueCollection | CatalogueRoutedEntry)[] = [
+  const current: (CatalogueCollection | ValidatedRoutedEntry)[] = [
     ...model.collections,
     ...model.screens,
     ...model.pages,
@@ -162,9 +173,9 @@ export function validateCatalogueReferences(model: CatalogueReadModel): void {
 }
 
 function validateViews(
-  entry: Extract<CatalogueRoutedEntry, { kind: "screen" | "component" }>,
-  views: readonly CatalogueView[],
-  components: ReadonlyMap<string, CatalogueComponent>,
+  entry: Extract<ValidatedRoutedEntry, { kind: "screen" | "component" }>,
+  views: readonly ValidatedView[],
+  components: ReadonlyMap<string, ValidatedComponent>,
   historical: boolean,
   variantId?: string,
 ): void {

@@ -344,6 +344,13 @@ supplies complete cross-route Usage. Static pages keep their compact external
 reference and resolve the complete shared `catalogue.json`. The public `readCatalogue`
 boundary accepts only that complete v1 model and rejects `omitted`.
 
+The runtime subpath exposes `projectScopedCatalogue`, the
+`ShellCatalogueUsage`/`ShellCatalogueReadModel` types and the strict
+`readScopedShellBootstrap` boundary. These primitives are isolated from the
+current browser reader while Serve still emits complete bootstraps; live
+emission and reading switch together so mixed payload expectations cannot
+reach users.
+
 Full-document rendering serializes each bootstrap and capability descriptor
 once. Hydration reuses the exact embedded text across later React renders;
 canonical parse/validation plus serialization is tested to reproduce those

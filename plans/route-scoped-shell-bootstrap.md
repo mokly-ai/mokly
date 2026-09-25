@@ -283,24 +283,40 @@ viewer's document rendering and browser entry, not the CLI server.
 Summary: add the scope resolver, projection and validation in the viewer data
 layer without emitting scoped bootstraps yet, so product behavior is unchanged.
 
-- [ ] Add pure, documented modules under `packages/viewer/src/catalogue/`: one
+- [x] Add pure, documented modules under `packages/viewer/src/catalogue/`: one
       resolving the usage scope for a bootstrap view, and one projecting a
       complete read model to its route-scoped form.
-- [ ] Type the bootstrap-only `omitted` usage state in the runtime subpath and
+- [x] Type the bootstrap-only `omitted` usage state in the runtime subpath and
       keep the public `CatalogueUsage` type unchanged.
-- [ ] Make the `catalogue.json` reader reject `omitted`, make the bootstrap
+- [x] Make the `catalogue.json` reader reject `omitted`, make the bootstrap
       reader enforce the exact derived scope, and make reference validation
       skip omitted views without weakening historical or snapshot rules.
-- [ ] Test the scope for every route kind: screen, variant screen, component
+- [x] Keep that strict scoped-bootstrap reader as a separate entry point in
+      this milestone. Existing browser hydration, route evidence and capture
+      continue to use the complete-bootstrap reader until Milestones 5 and 6;
+      Milestone 6 switches live reading and scoped emission together so no
+      complete Serve page is rejected in between.
+- [x] Test the scope for every route kind: screen, variant screen, component
       with saved variants, use case, removed-entry snapshot, page, home and
       missing.
-- [ ] Test projection invariance: changing another entry's usage leaves the
+- [x] Test projection invariance: changing another entry's usage leaves the
       scoped bytes unchanged.
-- [ ] Test that the reader rejects leaked, missing and misplaced `omitted`
+- [x] Test that the reader rejects leaked, missing and misplaced `omitted`
       usage, that the public v1 fixture and conformance tests are unchanged,
       and that scoped bootstraps round-trip to identical canonical bytes.
-- [ ] Run the complete `cargo xtask check` gate with no failures or skips.
-- [ ] After checks pass, `git add -A`, commit with Conventional Commits, and
+- [x] On the real example catalogue, find the largest route-scoped bootstrap,
+      measure its strict scoped reader against the complete reader for the
+      equivalent complete bootstrap, and record both costs here.
+  - Measurement on 2026-09-25 with Node 24.21.0 used three warmups and 15
+    samples per reader over pre-parsed objects, excluding JSON parsing and
+    serialization. The largest scoped route was
+    `design/review/outcomes/changed.html`: 428,379 bytes and a 37.4 ms median
+    strict read (36.4–38.7 ms), compared with the equivalent 3,623,388-byte
+    complete bootstrap and a 605.6 ms median complete read (597.3–761.6 ms).
+- [x] Run the complete `cargo xtask check` gate with no failures or skips.
+  - Complete gate on 2026-09-25: unit 2,439 passed; browser 781 passed;
+    zero failures, skips or cancellations in either suite.
+- [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)

@@ -1,8 +1,17 @@
 import { exactKeys, invalidData } from "../components/data.js";
 
-import { CHANGE_STATUSES, readCollection, readEntry } from "./entry_reader.js";
+import {
+  CHANGE_STATUSES,
+  readCollection,
+  readEntry,
+  readShellEntry,
+} from "./entry_reader.js";
 import { assertPublicCatalogue } from "./privacy.js";
 import { validateCatalogueReferences } from "./references.js";
+import type {
+  ShellCatalogueReadModel,
+  ShellCatalogueRoutedEntry,
+} from "./scoped_types.js";
 import {
   comparisonGeneration,
   historicalSnapshotId,
@@ -10,6 +19,7 @@ import {
 import type {
   CatalogueNode,
   CatalogueReadModel,
+  CatalogueRoutedEntry,
   RemovedEntryPreview,
 } from "./types.js";
 import {
@@ -26,6 +36,39 @@ import {
 
 /** Parse known v1 fields; ignore compatible additions without exposing private data. */
 export function readCatalogue(value: unknown): CatalogueReadModel {
+  const model = readCatalogueModel(value, readEntry);
+  validateCatalogueReferences(model);
+  return model;
+}
+
+/** Parse the shell-only usage union before its route scope is enforced. */
+export function readShellCatalogue(value: unknown): ShellCatalogueReadModel {
+  const model = readCatalogueModel(value, readShellEntry);
+  validateCatalogueReferences(model);
+  return model;
+}
+
+type ParsedRoutedEntry = CatalogueRoutedEntry | ShellCatalogueRoutedEntry;
+type ParsedCatalogue<Entry extends ParsedRoutedEntry> = Omit<
+  CatalogueReadModel,
+  "screens" | "pages" | "useCases" | "components" | "removedEntries"
+> & {
+  screens: readonly Extract<Entry, { kind: "screen" }>[];
+  pages: readonly Extract<Entry, { kind: "page" }>[];
+  useCases: readonly Extract<Entry, { kind: "use-case" }>[];
+  components: readonly Extract<Entry, { kind: "component" }>[];
+  removedEntries: readonly {
+    entry: Entry;
+    ancestors: readonly { id: string; title: string }[];
+    snapshotId?: string;
+    preview?: RemovedEntryPreview;
+  }[];
+};
+
+function readCatalogueModel<Entry extends ParsedRoutedEntry>(
+  value: unknown,
+  readRoutedEntry: (value: unknown) => Entry,
+): ParsedCatalogue<Entry> {
   const input = object(value);
   if (input.schemaVersion !== 1)
     invalidData("$catalogue", "unsupported schemaVersion");
@@ -36,14 +79,14 @@ export function readCatalogue(value: unknown): CatalogueReadModel {
   const catalogueIdentity = hash(identity.id);
   const comparisonUrl = comparisonPath(input.comparisonUrl);
   const legacyGeneration = comparisonGeneration(comparisonUrl);
-  const entries = (field: string, kind: string) =>
+  const entries = <Kind extends Entry["kind"]>(field: string, kind: Kind) =>
     array(input[field]).map((raw) => {
-      const entry = readEntry(raw);
+      const entry = readRoutedEntry(raw);
       if (entry.kind !== kind)
         invalidData("$catalogue", "entry in wrong array");
-      return entry;
+      return entry as Extract<Entry, { kind: Kind }>;
     });
-  const model: CatalogueReadModel = {
+  return {
     schemaVersion: 1,
     identity: { id: catalogueIdentity, title: text(identity.title) },
     deploymentId: hash(input.deploymentId),
@@ -58,19 +101,13 @@ export function readCatalogue(value: unknown): CatalogueReadModel {
       pages: array(tree.pages).map(readNode),
       components: array(tree.components).map(readNode),
     },
-    screens: entries("screens", "screen").filter(
-      (entry) => entry.kind === "screen",
-    ),
-    pages: entries("pages", "page").filter((entry) => entry.kind === "page"),
-    useCases: entries("useCases", "use-case").filter(
-      (entry) => entry.kind === "use-case",
-    ),
-    components: entries("components", "component").filter(
-      (entry) => entry.kind === "component",
-    ),
+    screens: entries("screens", "screen"),
+    pages: entries("pages", "page"),
+    useCases: entries("useCases", "use-case"),
+    components: entries("components", "component"),
     removedEntries: array(input.removedEntries).map((raw) => {
       const removed = object(raw);
-      const entry = readEntry(removed.entry);
+      const entry = readRoutedEntry(removed.entry);
       const snapshotId =
         removed.snapshotId === undefined
           ? legacyGeneration
@@ -94,8 +131,6 @@ export function readCatalogue(value: unknown): CatalogueReadModel {
       };
     }),
   };
-  validateCatalogueReferences(model);
-  return model;
 }
 
 function readPreview(value: unknown): RemovedEntryPreview {
