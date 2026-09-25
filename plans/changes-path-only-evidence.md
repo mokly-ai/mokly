@@ -1,8 +1,7 @@
 # Path-Only Evidence Stays Out Of Changes
 
-Status: Milestones 1–8 are complete and findings 3–6 are fixed; Milestone 9
-(verification and review) is in progress, and finding 2 awaits the user's
-decision. The plan stays Active until PR #118 merges. Created
+Status: Milestones 1–9 are complete and findings 3–6 are fixed; findings 2,
+7, and 8 await the user's decision. The plan stays Active until PR #118 merges. Created
 2026-09-25 with the user's consent (option B of
 finding 1 raised while reviewing the PR #118 preview). Implemented on the
 `calummoore/halifax-v2` branch alongside
@@ -234,11 +233,13 @@ Tags: ui
 - [x] Run `cargo xtask check`; fix anything it reports until it passes.
 - [x] Update the PR #118 description if it no longer covers the branch.
 - [x] Commit and push.
-- [ ] Review the complete local diff against `origin/main` using
+- [x] Review the complete local diff against `origin/main` using
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       after the push; report each finding with a number, severity, plain
       explanation, impact of doing nothing, lettered options, and a
-      recommendation, without changing the implementation.
+      recommendation, without changing the implementation. An independent
+      reviewer ran against `83e0879`; findings 7 and 8 await the user's
+      decision.
 
 ## Review findings
 
@@ -282,6 +283,25 @@ them.
    mockup, then route every evidence sentence through the helper, with a test
    that renders component Details and fails on screen wording. Fixed in
    Milestones 5, 6, and 8.
+
+7. Medium: source validation re-runs the dependency policy without the
+   classifier's stylesheet-scope filter, so an exact-declared or
+   component-owned public stylesheet that every view excluded after CSS
+   analysis passes as a `dependency` reason (the reviewer reproduced this with
+   a synthetic result). Adding the scope filter alone would reject a valid
+   exact screen declaration that its view retained while a component owns the
+   file. Recommended: the classifier hands validation its per-entry reason
+   sources (scope-filtered path reasons, view-comparison paths, exact-screen
+   stylesheet reasons, and owned CSS) keyed by `entryPairKey`, and validation
+   accepts only those; test excluded owned and exact-declared stylesheets
+   (rejected) and a retained exact screen stylesheet that a component owns
+   (accepted).
+8. Low: the invariant fixture has no added or removed entries, so path
+   evidence that only one side declares is not checked against the old rule.
+   Referenced-resource and invocation-CSS evidence reach Details through
+   reasons, and the CSS tests already assert them. Recommended: add added and
+   removed entries with glob and declared-directory evidence to the invariant
+   fixture.
 
 ## Post-merge follow-up (non-blocking)
 
