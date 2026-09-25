@@ -394,7 +394,7 @@ emits them, while complete catalogues keep today's behavior.
     zero failures, skips or cancellations in either suite.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
@@ -594,3 +594,39 @@ use-case and page targets so their installed scope matches their route.
   integration: Milestone 4 keeps the strict scoped reader isolated, so live
   hydration, route evidence and capture still exercise complete bootstraps.
   Milestones 5 and 6 own those adoption and coordinated-emission paths.
+
+### Milestone 5 — 2026-09-25
+
+- Reviewed the complete pushed `origin/main...d25df6d` diff using
+  [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
+
+1. **Medium — Returning to the initial route can reuse private workspace data
+   before route evidence is adopted.** `useWorkspaceData` accepts
+   `useViewerInitialWorkspace()` whenever its entry matches the current route,
+   even after the capability store has adopted another route and no longer owns
+   that initial workspace request. In a scoped A → B → A navigation, the
+   installed B catalogue still omits A's view usage while the unbound initial A
+   workspace makes Usage report Ready. Doing nothing can expose old `Used by`,
+   `Affected`, counts or instance details during a held or failed return read,
+   instead of the required Loading/Failed state paired atomically with A's
+   scoped catalogue.
+   - **Option A:** when a live request exists, select private workspace only
+     from the capability store's request-bound `live.workspace`; retain the
+     direct initial fallback only for static/non-live shells. Add an A → B → A
+     browser regression that holds and fails the return response.
+   - **Option B:** consume or clear the initial workspace context after the
+     first route/source transition, then keep the current selection precedence.
+   - **Option C:** retain the route-only initial-workspace match and accept the
+     temporary cross-revision presentation.
+   - **Recommendation:** Option A. The capability store already binds its
+     initial workspace to the exact source and route, so making that the sole
+     live authority removes the invalid state at the ownership boundary. The
+     round-trip regression should be added because a local copy change alone
+     would not prevent future unbound fallback paths.
+
+- The previously recorded low-severity descriptor value/JSON pairing finding
+  remains unchanged and deferred by supervisor direction; this review made no
+  implementation change for it.
+- No other findings. Residual test risk: scoped browser coverage rewrites real
+  Serve responses at the test boundary because Milestone 6 still owns native
+  scoped emission and capture comparison.
