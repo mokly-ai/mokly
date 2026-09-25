@@ -57,7 +57,7 @@ those old versions; exported catalogues must be regenerated.
 - [Component instance identity](./mokly-instances.md) — existing key/boundary
   rules and approved resolution/source-location target.
 - [Public catalogue read model](./mokly-catalogue.md) — implemented:
-  public inventory v1 beside the private manifest.
+  public inventory v2 beside the private manifest.
 - [Embeddable viewer](./mokly-viewer.md) — approved `@mokly/viewer` API and
   shared hydrated shell.
 - [Live viewer capabilities](./mokly-live-capabilities.md) — private Serve

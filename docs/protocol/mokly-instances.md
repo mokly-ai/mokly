@@ -124,7 +124,7 @@ errors, not a fourth resolution state.
 
 ## Optional Invocation Source
 
-Manifest v5 includes this optional instance field:
+The current manifest v6 includes this optional instance field:
 
 ```ts
 interface ComponentSourceLocation {
@@ -163,8 +163,8 @@ The name is reserved from authored data props and slots. Capture it in the
 collector only; do not emit DOM attributes, source maps, or debug markup.
 Programmatic `createElement` calls and already-transformed modules without
 invocation information may omit `source`. Replayed slots retain the original
-invocation location. Existing v5 records without `source` remain valid; updated
-readers accept both forms without a schema-version bump.
+invocation location. Historical v5 records without `source` remain valid; current
+v6 readers accept both forms without a schema-version bump.
 
 `source` is excluded from instance/slot keys, `propsKey`, direct-input comparison,
 and every Changes projection. Line shifts and source moves alone are not material.

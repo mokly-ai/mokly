@@ -237,11 +237,11 @@ comparison controls.
 
 ## Generation and serving
 
-The existing Git branch-point comparison engine, ownership checks, dependency
+The Git branch-point comparison engine, ownership checks, rendered-resource
 copying, ignored-region rules, and light/dark classifications remain in force.
-The existing `review` configuration and authoring helpers are retained; the
-configuration selects the Git base, internal snapshot directory, and shared
-impact patterns. `serve --base` and `export --base` override the configured base.
+The `review` configuration selects the Git base and internal snapshot directory;
+it has no shared-impact patterns. `serve --base` and `export --base` override
+the configured base. Authoring path declarations do not supply evidence.
 
 The [consumer static export](./mokly-export.md) reuses this engine
 and schema. Its [static delivery contract](./mokly-export-delivery.md)
@@ -421,8 +421,8 @@ resource; it does not mean an authored repository-path declaration.
 
 Routes sort in deterministic catalogue order; views sort by viewport
 (`mobile`, then `desktop`) and then color scheme (`light`, then `dark`).
-Changed and impact paths sort lexically. No timestamp or absolute checkout path
-enters the JSON. Before/after HTML remains unmodified in the artifact even when
+Changed paths and retained ignored-impact paths sort lexically. No timestamp or
+absolute checkout path enters the JSON. Before/after HTML remains unmodified in the artifact even when
 ignore normalization changes classification.
 
 ## Review Ignore

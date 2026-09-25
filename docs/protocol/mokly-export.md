@@ -289,7 +289,7 @@ fragments keep their existing direct-from-disk behavior.
 ## Verification
 
 Implementation must cover option validation and config-relative paths, custom
-renderer/module resolution, v5 pages, both schemes/viewports, invalid empty and
+renderer/module resolution, v6 pages, both schemes/viewports, invalid empty and
 removed catalogues, non-default bases, missing history/resources, output overlap,
 symlinks, ownership/collisions, concurrent writers, input changes, rollback,
 shutdown, export self-attribution, public-file exclusion, and asset closure.

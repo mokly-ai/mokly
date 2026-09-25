@@ -6,6 +6,9 @@ Component-declared stylesheet authoring is delivered by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md) and
 implemented in Milestone 3. Removal of entry `dependencies` and
 `ownedDependencies` is implemented in Milestone 6.
+Milestone 11 of the same plan will omit `stylesheets` from the renderer's
+component entry at runtime and in its public type; that refinement is not
+implemented yet.
 
 The public `defineComponent` API, saved variants, ownership attribution,
 explorer, inspection, and local controls are implemented. The
@@ -105,9 +108,10 @@ variants do not infer or override that schema. The adapter receives
 `render(props, { viewport, colorScheme })` and may choose a
 viewport-specific consumer component. Theme providers and styling remain
 consumer-owned.
-`RenderInput.entry` becomes a screen/component union and gains the selected
-variant id for component renders; both use the configured renderer and one
-consumer React instance. Packed-consumer tests cover this public type change.
+`RenderInput.entry` is a screen/component union, but its component branch omits
+`stylesheets`. The selected variant id is supplied separately for component
+renders; both use the configured renderer and one consumer React instance.
+Packed-consumer tests cover this public type change.
 
 Ordinary inputs are deterministic plain data: strings, booleans, finite
 numbers, null, arrays, and plain objects, with the existing material-key

@@ -10,6 +10,8 @@ The removal of entry `dependencies` was planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md) and
 implemented in Milestone 6; the `componentStylesheets` export is implemented in
 Milestone 3. Removed inputs now fail with a registry violation.
+Milestone 11 of the same plan will make the public input types reject these
+removed fields at compile time; that type refinement is not implemented yet.
 
 ## Public Authoring API
 
@@ -89,6 +91,7 @@ The common and nested-root input boundary is:
 
 ```ts
 interface EntryInput {
+  dependencies?: never;
   description: string;
   id: string;
   rationale?: string;
@@ -101,6 +104,7 @@ interface CollectionInput extends EntryInput {
 }
 
 interface RootCollectionInput {
+  dependencies?: never;
   address?: string;
   description: string;
   id: string;
@@ -125,6 +129,11 @@ The registry reports violation code `removed-field` with the exact message
 path/id context and `build-invalid` wrapper remain unchanged). Component
 `ownedDependencies` likewise reports `removed-field` with exact message
 `ownedDependencies has been removed; delete this field.`
+All public entry, nested-marker and screen-variant input types carry
+`dependencies?: never`, including the root collection metadata type. The
+component input additionally carries `ownedDependencies?: never`; an explicit
+value or a spread object retaining either removed field is a TypeScript error.
+Runtime registry validation remains mandatory for JavaScript and untyped calls.
 
 `defineRoot` always flattens nested children into ordinary definitions and
 preserves their real `childIds` relationships. With `collection` metadata it

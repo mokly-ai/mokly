@@ -148,11 +148,12 @@ saved variants and local edit/unset/reset behavior in Serve, plus read-only
 inspection after export. Keep the generated HTML and manifest as ignored local
 artifacts; commit their authored source instead.
 
-The tests retain the original 56 screen ids/routes from before the shared
-library existed, assert real consumers and
-owner chains, guard migrated composition points, and edit actual source files in
-isolated copies. They distinguish implementation changes, saved metadata changes,
-screen inputs/slots/order, exclusive CSS and conservative global rendered resources.
+The frozen inventory retains 54 approved screen ids/routes from before the
+shared library existed, after approved route removals. Tests assert real
+consumers and owner chains, guard migrated composition points, and edit actual
+source files in isolated copies. They distinguish implementation changes, saved
+metadata changes, screen inputs/slots/order, exclusive CSS and conservative
+global rendered resources.
 Serve and comparison share the same classification and bounded baseline reads.
 Full-catalogue browser fixtures share a five-minute setup budget to build the
 packages and example or the historical baseline, export every generated view

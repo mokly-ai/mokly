@@ -51,12 +51,12 @@ different bytes fails instead of combining old evidence with new output. Missing
 or pending evidence produces the existing retryable comparison failure state;
 it never falls back to an exhaustive foreground build.
 
-For a component-aware catalogue, project the existing v3 result onto the selected
+For a component-aware catalogue, project the v5 result onto the selected
 screen, or the selected component and saved variant. Keep its entry sides, view
 states, ignored regions and direct change reasons. Recompute the selected screen
 ignored-impact aggregate. Catalogue-wide affected-consumer evidence remains in
 the shell inspector; the selected response omits those cross-entry records.
-Screen-only catalogues use the same v2 screen comparison policy as complete
+Screen-only catalogues use the same v4 screen comparison policy as complete
 comparisons, applied only to the requested route. Both response shapes pass the
 existing result validator. Missing entries or variants fail without inventing
 comparison records.

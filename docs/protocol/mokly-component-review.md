@@ -8,6 +8,8 @@ The schema v5 below was planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md) and
 implemented in Milestone 7. The
 reader accepts v4/v5 only and rejects v2/v3 as unsupported.
+The Milestone 4 classifier already routes retained non-CSS resource evidence
+to owners at actual invocations, independently of saved-variant matches.
 `ReviewResult`, `ScreenReview`, `ViewReview`, and `ReviewState` refer to the
 screen-only [schema-v4 contract](./mokly-changes.md) and
 [named result interfaces](../../packages/viewer/src/review/types.ts). Manifest/usage types come
@@ -159,6 +161,11 @@ Use cases also retain their own metadata reasons. One screen with
 only affected component evidence cannot produce a use-case screen reason.
 An affected-only consumer has no ChangedEntry unless it has another direct
 reason. Its full comparison remains available through the other result arrays.
+For a non-stylesheet resource, a retained view `dependency` reason is also a
+direct component reason for each rendered owner named by that view's
+`resources` record, even if no saved variant uses the resource. A consuming
+screen with no independent change remains affected-only; unowned resources
+retain ordinary view-level evidence.
 
 A view reported `unchanged` or `ignored-only` through the
 [unchanged view decision](./mokly-component-changes.md#unchanged-view-decision)

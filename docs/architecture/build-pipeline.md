@@ -2,10 +2,11 @@
 
 ## Delivery Status
 
-Component CSS linking, manifest v6 and source-path-free classification are
-planned by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-implemented in Milestones 3, 6 and 4 respectively. The pipeline below
-describes the target; current code still emits v5 and retains path inputs.
+Component CSS linking, manifest v6 and source-path-free classification were
+planned by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md)
+and implemented in Milestones 3, 6 and 4 respectively. The pipeline below
+describes current behavior. The renderer-entry refinement below is planned for
+Milestone 11 and is not yet implemented.
 
 ## Overview
 
@@ -146,7 +147,7 @@ its neutral default. The renderer receives:
 
 ```ts
 interface RenderInput {
-  entry: ScreenDefinition | ComponentDefinition;
+  entry: ScreenDefinition | Omit<ComponentDefinition, "stylesheets">;
   variantId?: string;
   node: ReactNode;
   stylesheets: readonly string[];
@@ -165,8 +166,9 @@ the same consumer graph. Wrappers record actual invocations, data, caller-owned
 slots, and layout-neutral ranges. The root saved variant is not its own instance.
 After the renderer returns, Mokly inserts linked component-declared public CSS
 beside configured `<link>` elements and derives their per-view `resources`
-owners; `RenderInput` stays unchanged. See
-[component stylesheets](../protocol/mokly-component-stylesheets.md).
+owners; the renderer receives only configured hrefs in
+`RenderInput.stylesheets`, and its component entry omits the declaration list.
+See [component stylesheets](../protocol/mokly-component-stylesheets.md).
 All catalogues emit manifest v6 with the complete source inventory. Registered
 components add saved variants and complete per-view invocation/ownership records;
 explicit page callbacks still emit exactly one complete document. Both historical
@@ -314,5 +316,5 @@ Shared catalogue validation uses synchronous browser-safe SHA-256, checked again
 Node digests; source inventory excludes the resolved viewer runtime even when
 npm installs it as a workspace symlink. Browser
 packaging fails if a client imports Node-only code. Comparison JSON is decoded
-with the same new-record validator used by its producer; v2 artifacts remain
-supported without adding component suppression.
+with the same v4/v5 validator used by its producer; comparison v2/v3 artifacts
+are rejected, with no compatibility reader for those public formats.

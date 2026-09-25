@@ -85,6 +85,9 @@ across all configured rules. `render.ts` keeps the shared-list marker position
 outside `RenderInput`, while `components/render.tsx` inserts links beside the
 renderer-emitted configured links and derives their resource owners. Config
 bundles use the same namespaced `Symbol.for` marker as consumer bundles.
+The renderer-facing component entry will omit `stylesheets` under Milestone 11
+of the [source-path removal plan](../../plans/remove-source-path-evidence.md);
+`RenderInput.stylesheets` remains the configured href list.
 
 ## Development
 

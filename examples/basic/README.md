@@ -1,9 +1,9 @@
 # Basic Mokly Consumer
 
-The component stylesheet migration and removal of source-path evidence are
-planned by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md)
-for Milestones 3, 4 and 6. The target guidance below does not yet describe the
-current example code; its authored entries and renderer migrate later.
+The example declares component CSS with `stylesheets`, uses manifest v6 and
+classifies Changes from rendered output rather than source-path declarations.
+See the [source-path removal plan](../../plans/remove-source-path-evidence.md)
+for the migration and remaining review fixes.
 
 This is a synthetic external-consumer fixture. It contains two distinct mobile
 and desktop product-style screens built with `@firna/ui` controls, nested

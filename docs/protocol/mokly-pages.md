@@ -147,7 +147,7 @@ interface ManifestV6 {
 `ManifestEntry` includes pages, screens, collections, use cases and components, and its
 base `kind` union includes `page`. All existing common fields remain,
 including derived `navPath` compatibility output. Pages have no fragments,
-viewport arrays, callbacks, or screen-only fields in the manifest. Schema v5
+viewport arrays, callbacks, or screen-only fields in the manifest. Schema v6
 rejects a top-level `legacyPages` field. Preserve existing deterministic
 entry sorting and serialization conventions. The current v6 validator rejects
 the removed path-declaration fields on every entry.

@@ -70,7 +70,7 @@ export async function changedContentPaths(
   ).changedPaths;
 }
 
-/** Preserve resource evidence from the v2 membership pass without repeating analysis. */
+/** Preserve rendered-resource evidence from membership without repeating analysis. */
 export async function classifyChangedContent(
   manifest: Manifest,
   baseline: Manifest,

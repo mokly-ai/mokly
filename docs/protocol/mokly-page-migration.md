@@ -71,9 +71,9 @@ whole output directories, or generated files outside the recorded inventory.
 On failure, restore the previous dependency/config, authoring tree, and artifacts;
 do not commit a half-migrated catalogue. On success, compare old and new route,
 anchor, resource, and rendered-content inventories. Derived mode keeps the
-regenerated pages and v5 manifest as ignored local artifacts and commits the
+regenerated pages and v6 manifest as ignored local artifacts and commits the
 authored migration; committed mode commits the regenerated pages with their new
-ownership headers and v5 manifest. A missing document is a migration failure even
+ownership headers and v6 manifest. A missing document is a migration failure even
 when the remaining catalogue builds successfully.
 
 Follow the [source-protection contract](./mokly-source-protection.md): record
@@ -116,8 +116,8 @@ promise of a zero Changes count during adoption. A changed historical route
 without an explicit preserved match is treated as an added current page.
 
 Unmatched legacy records have no catalogue IDs and remain historical
-artifact records; they never become synthetic removed-page entries. Normal v5
-page removals have real IDs and open their
+artifact records; they never become synthetic removed-page entries. Removed
+pages from supported typed baselines, including v6, have real IDs and open their
 [previous version](./mokly-removed-previews.md) through the page contract and
 its [shared metadata](./mokly-catalogue-changes.md) wherever Changes is
 enabled. Ordinary publication omits removed pages;

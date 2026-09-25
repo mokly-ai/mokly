@@ -7,6 +7,10 @@ This implemented contract was planned by
 Milestone 3 delivered declaration, validation, linking, ownership, Serve and
 public delivery. Milestone 4 removed legacy source-path attribution and
 Milestone 6 removed the old authoring inputs.
+Milestone 11 of the same plan will implement the optional-never authoring types,
+startup/reconfiguration watching, real-file alias deduplication, stylesheet
+`rel` token and omitted-tag handling, and renderer-link reuse described below;
+those refinements are not implemented yet.
 
 ## Declaration And Public Files
 
@@ -19,6 +23,8 @@ import { defineComponent } from "@mokly/mokly";
 
 interface ComponentInput {
   stylesheets?: readonly string[];
+  dependencies?: never;
+  ownedDependencies?: never;
 }
 
 const { Component, entry } = defineComponent({
@@ -106,24 +112,36 @@ do not gain component links; their current stylesheet behavior is unchanged.
 
 Walk the actual registered render occurrences in first-render order (root
 first for a component document). Within each first-seen component append its
-authored stylesheet list; emit each public file once per document. If two
-rendered components declare the same file, its first occurrence determines
-link position but both are owners. Do not link the union of registered or
-saved-variant components: a component absent from this render contributes
-neither a link nor an owner. The order is the same in Build, Check, on-demand
-Serve and transient comparison renders.
+authored stylesheet list. Group declarations by resolved real file, not by
+their lexical paths: two components may name that file through different
+public aliases. Emit one link per real file that Mokly must link. The first
+occurrence determines its link position and the declared public path used for
+its href; all rendered components declaring that real file are owners. Do not
+link the union of registered or saved-variant components: a component absent
+from this render contributes neither a link nor an owner. This order is stable
+in Build, Check, on-demand Serve and transient comparison renders.
 
 Resolve each href relative to this document's output route, with the same
 per-segment URL encoding as configured local stylesheet links. Emit a normal
 `<link rel="stylesheet" href="...">` inside `<head>`. The path recorded for
-ownership is the decoded, `mockupsDir`-relative public path, not the href.
+ownership is the decoded, `mockupsDir`-relative public path used by that link,
+not its encoded href or the real filesystem path. For a Mokly-inserted link,
+both the href and ownership path use the first rendered declaration's lexical
+public path, even when later declarers use aliases of the same real file.
 Shared/scheme configured link ordering otherwise stays unchanged.
 
-The renderer still receives the existing `RenderInput`, whose `stylesheets`
-contains only configured hrefs in configured order; it does not receive the
-marker or the component-declared paths. The renderer emits those configured
-links as before. After it returns, Mokly locates the configured link elements
-in the returned document and inserts component links next to them:
+`RenderInput.stylesheets` contains only configured hrefs in configured order;
+it does not receive the marker or component-declared paths. Its component
+`entry` omits `stylesheets` at runtime and in its public type. The renderer
+emits configured links as before. If it also emits a local stylesheet link to
+the same real file as a declaration, Mokly keeps that link at its authored
+position and does not insert another. Its decoded, `mockupsDir`-relative href
+path becomes the ownership-record path, even when an alias was declared first.
+If several renderer links already name the same real file, Mokly leaves them
+unchanged, adds none, and takes the first in document order for the record;
+Mokly's one-link guarantee applies to links it inserts, not duplicates the
+renderer already authored. For files not already linked by the renderer, Mokly
+locates the configured links and inserts component links next to them:
 
 1. For a marker between configured links, insert immediately before the first
    configured link after the marker (and after the preceding configured link).
@@ -131,26 +149,33 @@ in the returned document and inserts component links next to them:
    link; at the default position, insert before the first scheme-specific link.
 3. If there is no configured link after the insertion position, insert just
    after the last configured link before it.
-4. If this route has no configured stylesheets at all, insert at the end of
-   `<head>` (before `</head>`), even if it contains unrelated link elements.
+4. If this route has no configured stylesheets at all, insert at the end of the
+   logical head, even if it contains unrelated link elements. Use `</head>`
+   when present. When it is omitted, insert after the last element in the head;
+   if the head is empty, insert at the start of body content. An omitted
+   `<head>` or `<body>` tag is not by itself an error: use the parsed document's
+   inferred head/body boundaries.
 
 When inserting component links, require **every** configured link to appear
-exactly once in the renderer's `<head>` as a `rel="stylesheet"` link with its
-resolved href, and in configured order, even if the link is not adjacent to
+exactly once in the renderer's logical head as a `<link>` whose `rel` contains
+the ASCII-case-insensitive, whitespace-delimited `stylesheet` token (including
+`rel="alternate stylesheet"`) and whose href matches its resolved href. The
+links must appear in configured order, even if a link is not adjacent to
 the insertion position. Locate the neighbouring configured links from this
 complete ordered set; do not anchor on unrelated links or text. If any
 configured link is missing, duplicated, or out of configured order, fail
 Build/Check with `build-invalid`, naming the route and offending href. Never
-silently append instead. A missing `<head>` also fails rather than creating
-one. Preserve the renderer's other head content. Rebase all recorded
-UTF-16 style-ownership offsets after insertion and validate the final output
-through the normal ownership and source-protection pipeline. A compatibility
+silently append instead. Do not require an explicit head end tag when insertion
+uses a configured neighbouring link; omitted optional HTML tags never fail
+placement on their own. Preserve the renderer's other head content. Rebase all
+recorded UTF-16 style-ownership offsets after insertion and validate the final
+output through the normal ownership and source-protection pipeline. A compatibility
 transform must retain the links or fail normal output/resource validation.
 
 ## Derived Ownership And Conflicts
 
-For every linked declared file, Mokly adds exactly one record to the current
-view's `ComponentViewRecord.resources`:
+For every real file linked through a declaration, Mokly adds exactly one record
+to the current view's `ComponentViewRecord.resources`:
 
 ```ts
 interface ComponentResourceOwnership {
@@ -159,9 +184,11 @@ interface ComponentResourceOwnership {
 }
 ```
 
-Owners are exactly the rendered component ids declaring that file (including
+Owners are exactly the rendered component ids declaring that real file (including
 the component root when applicable). Merge declarations from repeated
-instances/owners of one file, sort paths and ids by the manifest's lexical
+instances/owners and realpath aliases of one file; the record's `path` is the
+decoded public path of the sole Mokly-inserted link or the first matching
+renderer link. Sort records by that path and ids by the manifest's lexical
 order, and retain the file's separate authored link position. Never infer
 ownership from selectors, a shared config link, or a transitive CSS import.
 Imported files remain unowned even when reached through a declared stylesheet.
@@ -187,7 +214,11 @@ that no current or baseline view links does not itself add an entry to Changes.
 See [component changes](./mokly-component-changes.md) and
 [CSS attribution](./mokly-css-attribution.md).
 
-Serve watches the validated declared file like a configured stylesheet:
+Watched Serve includes every validated declared stylesheet in its initial
+watch set before accepting edits, even if no view currently renders its
+component. After a successful configuration reload, it refreshes that set
+from the new declarations without waiting for a later full build. Serve
+watches each declared file like a configured stylesheet:
 editing it triggers a reload/evidence refresh for the views that link it,
 without requiring a rebuild of source modules. Changes to the declaration or
 component source still rebuild. Imports and referenced assets retain the

@@ -6,6 +6,9 @@ Watching declared component stylesheets is delivered by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md) and
 implemented in Milestone 3, alongside existing configured stylesheet and
 referenced-resource watching.
+Milestone 11 of the same plan will implement watching every declared stylesheet
+from initial watched-Serve startup and after reconfiguration; that stronger
+timing guarantee is not implemented yet.
 
 `mokly serve` watches by default; `--no-watch` serves one deterministic
 snapshot. Every development catalogue shell loads the package-owned browser client, which connects to
@@ -26,8 +29,12 @@ by generated output:
   entry shape, and the stable prefix of every entry glob is a watched root for
   this purpose;
 - an input shared with shell metadata rebuilds before restarting the child;
-- configured or component-declared stylesheets and referenced local CSS, fonts, images, and other
-  resources used only through public URLs reload the browser without rebuilding;
+- configured or component-declared stylesheets and referenced local CSS, fonts,
+  images, and other resources used only through public URLs reload the browser
+  without rebuilding; every validated declaration is an exact watch target
+  from initial startup, even before a full build references it or its component
+  renders; after a successful reconfiguration, the replacement watch graph
+  includes every newly declared file without waiting for a later build;
 - header-proven generated output plus `.git`, `.context`, `node_modules`,
   `dist`, `target`, coverage, browser-test output, comparison output, and Mokly
   transaction trees are pruned from broad watches and classify as ignored;

@@ -12,6 +12,9 @@ The component stylesheet injection and manifest-v6 shape below are defined by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md):
 Milestone 3 implemented injection and Milestone 6 implemented manifest v6.
 Both are in current generated output.
+Milestone 11 of the same plan will remove component `stylesheets` from the
+renderer-facing `input.entry` at runtime and in its public type; this narrower
+entry boundary is not implemented yet.
 
 ## Rendering Boundary
 
@@ -40,7 +43,7 @@ import type {
 
 interface RenderInput {
   colorScheme: ColorScheme;
-  entry: ScreenDefinition | ComponentDefinition;
+  entry: ScreenDefinition | Omit<ComponentDefinition, "stylesheets">;
   variantId?: string;
   componentProps?: Readonly<Record<string, unknown>>;
   node: ReactNode;
@@ -131,8 +134,9 @@ screen-route rule applies to both viewports and every enabled scheme. Shared
 stylesheets come first, followed by the matching scheme-specific list.
 Generated fragment links are relative to the fragment route and URL-encoded by
 segment.
-Mokly inserts declared component stylesheets beside the renderer's configured
-links after rendering, without changing `RenderInput`; see the
+`RenderInput.stylesheets` contains only configured hrefs, and component
+`RenderInput.entry` has no declaration list. Mokly inserts declared component
+stylesheets beside the renderer's configured links after rendering; see the
 [component stylesheet contract](./mokly-component-stylesheets.md) for marker
 placement, missing-link errors, derived owners and style-offset rebasing.
 Shell and device-frame CSS is package-owned and self-contained; product CSS is

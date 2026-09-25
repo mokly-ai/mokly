@@ -142,7 +142,7 @@ static shell metadata. The development server it captured remains unchanged.
 
 ## Public Descriptor
 
-Catalogue v1 gains one optional, additive field on each removed entry:
+The current catalogue read model v2 permits one optional field on each removed entry:
 
 ```ts
 interface RemovedEntry {

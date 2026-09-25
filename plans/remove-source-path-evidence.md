@@ -497,7 +497,7 @@ confirmation and will get their own milestones before Milestone 12.
 
 Update the contracts before code changes. This milestone changes docs only.
 
-- [ ] Finding 4: correct every current doc that describes older formats or
+- [x] Finding 4: correct every current doc that describes older formats or
       removed behavior as current. Known lines: `docs/protocol/README.md:37,60`,
       `mokly-runtime.md:74`, `mokly-selected-comparisons.md:54,59`,
       `mokly-page-migration.md:74,76,119`, `mokly-catalogue-changes.md:53,62`,
@@ -508,26 +508,29 @@ Update the contracts before code changes. This milestone changes docs only.
       `tests/fixtures/consumers/esm/notes.md:3-6`, the design library screen
       count in `examples/basic/entries/design/library/README.md:151` and the
       code comment in `src/server/changed_content.ts:73`. Search for others.
-- [ ] Finding 4: document that retained evidence for non-CSS resources goes to
+- [x] Finding 4: document that retained evidence for non-CSS resources goes to
       the components that own the resource at the actual invocation
       (`mokly-component-changes.md`, `mokly-component-review.md`,
       `mokly-css-attribution.md`), and remove the wrong "not yet implemented"
       status line from `mokly-timings.md`.
-- [ ] Finding 5: state in the authoring contract that the public input types
+- [x] Finding 5: state in the authoring contract that the public input types
       reject `dependencies` and component `ownedDependencies`.
-- [ ] Finding 6: state in the watch and stylesheet contracts that watched Serve
+- [x] Finding 6: state in the watch and stylesheet contracts that watched Serve
       watches every declared stylesheet from startup and after reconfiguration.
-- [ ] Finding 8: two declared paths that resolve to one real file are linked
+- [x] Finding 8: two declared paths that resolve to one real file are linked
       once per page, with one ownership record that lists every rendered
       component that declares the file.
-- [ ] Finding 9: a configured link is any `<link>` whose `rel` includes the
+- [x] Finding 9: a configured link is any `<link>` whose `rel` includes the
       `stylesheet` token. Mokly needs the end of `<head>` only when it adds
       links there, and it never fails because the renderer omitted optional
       tags such as `</head>`.
-- [ ] Finding 10: the renderer's `input.entry` has no `stylesheets` field. When
+- [x] Finding 10: the renderer's `input.entry` has no `stylesheets` field. When
       a renderer links a declared stylesheet itself, Mokly adds no second link
       and still records the rendered declaring components as owners.
-- [ ] Validate the changed Markdown with `npx prettier --check` and review the
+- [x] Align the rendering/component contracts and module READMEs with the
+      renderer-facing entry projection, and correct the remaining stale
+      component README status.
+- [x] Validate the changed Markdown with `npx prettier --check` and review the
       diff.
 
 ## Milestone 10: Link to the Matched styles design screen

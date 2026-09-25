@@ -14,6 +14,8 @@ component-declared stylesheets was planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
 implemented in Milestones 3 and 4. Those attribution rules are now live;
 comparison-format changes were implemented in Milestone 7.
+Retained non-CSS resource reasons already follow actual-invocation component
+ownership under the Milestone 4 classifier.
 
 ## Purpose
 
@@ -275,11 +277,13 @@ also attributes retained actual-invocation CSS evidence to its component owner,
 even when every saved variant excludes the stylesheet. Saved view states and
 exclusions remain unchanged; no synthetic variant is created. A screen can
 independently retain evidence only when its actual view keeps the stylesheet.
-A broad public stylesheet glob cannot bypass rule exclusion. Non-CSS rendered
-resources retain their existing file-level policy; non-public implementation
-source alone supplies no evidence. Resource evidence makes a paired view
-`changed`; exclusions alone do not. Diagnostic summary counts use those states
-and, for v5, the resulting `changes` membership.
+A broad public stylesheet glob cannot bypass rule exclusion. A non-CSS rendered
+resource retains file-level matching, but a retained reason routes to each
+rendered component named in that view's `resources` ownership record, even
+without a matching saved variant. Unowned resources remain view-level evidence;
+non-public implementation source alone supplies no evidence. Resource evidence
+makes a paired view `changed`; exclusions alone do not. Diagnostic summary
+counts use those states and, for v5, the resulting `changes` membership.
 
 Baseline CSS uses the bounded Git batch reader, including optional counterpart
 reads for added/removed files. The head uses compilation outputs or the confined

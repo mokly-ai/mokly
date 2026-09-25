@@ -10,6 +10,8 @@ and applying one Changes rule to every catalogue was planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
 delivered across Milestones 3 and 4. Source paths no longer classify changes;
 Milestone 6 removed the legacy authoring fields; the current writer emits v6.
+Actual-invocation ownership of retained non-CSS resource evidence is implemented
+by the same Milestone 4 classifier.
 
 ## Changes Membership
 
@@ -236,8 +238,12 @@ Retained CSS evidence at an actual invocation also keeps its declared or
 renderer-proven component owner in Changes when saved variants do not match.
 Their own view exclusions stay intact; affected-consumer links retain the actual
 invocation context. A screen can independently retain the same stylesheet
-only when its own rendered-resource analysis keeps it. Non-CSS rendered
-resources retain the existing file-level policy.
+only when its own rendered-resource analysis keeps it. A retained non-CSS
+resource reason follows the file-level resource check, then belongs to every
+rendered component named as its owner in that view's `resources` record,
+including an actual invocation with no matching saved variant. Its consumers
+remain affected-only unless they have an independent change; an unowned resource
+reason remains with the consuming view.
 
 Component-generated style material can live in the document head rather than
 inside a component boundary. Extend the renderer result with optional typed

@@ -50,7 +50,9 @@ requested on-demand screen comparison to the startup Git state.
 
 The entry types are the validated manifest DTOs, including their common metadata
 and tags. Historical screen readers normalize older supported shapes first;
-pages enter `removedEntries` only from v5 or the historical page-v4 format with a real catalogue ID.
+pages enter `removedEntries` from any supported baseline with a validated page
+entry and real catalogue ID, including v6. Legacy page artifacts without IDs
+remain outside `removedEntries`.
 `ancestors` is the baseline's root-to-parent collection path, captured before
 current hierarchy lookup. It never depends on a surviving current parent or on
 serialized `navPath` labels. A removed variant screen retains its baseline
@@ -59,7 +61,7 @@ shell can place its Removed row under a surviving parent as the
 [screen variants contract](./mokly-screen-variants.md) specifies; when the
 parent is also removed, each is its own removed entry. `variantOf` is not a
 parallel snapshot field: retaining the complete baseline screen DTO preserves
-it on schema-v5 baselines, while historical v3/v4 screens simply omit it.
+it on v5/v6 baselines, while historical v3/v4 screens simply omit it.
 
 `changedRoutes` is the sorted, unique union of affected current routed entries
 and the selected removed-entry routes. Current route attribution keeps the

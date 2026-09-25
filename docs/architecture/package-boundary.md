@@ -2,10 +2,10 @@
 
 ## Delivery Status
 
-Public catalogue v2 and source-path-free comparison are planned by
+Public catalogue v2 and source-path-free comparison were planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-implemented in Milestones 7 and 4. The current packages still emit the older
-formats until those milestones land.
+implemented in Milestones 7 and 4. Current packages emit manifest v6,
+catalogue v2 and comparison v4/v5 without source-path evidence.
 
 ## Rule
 
@@ -21,7 +21,7 @@ paths, and synthetic tests.
 | Static fragments and manifest schema    | Theme/tokens/providers           | Stylesheet rules           |
 | Generated-file ownership and check      | Product CSS/fonts/images         | Document transformer       |
 | Safe routes and catalogue navigation    | Product route semantics          | Additional watch inputs    |
-| Git comparison and Review-ignore rules  | Comparison policy                | Base, output, impact globs |
+| Git comparison and Review-ignore rules  | Comparison policy                | Base and output directory  |
 | Complete static catalogue export        | Hosting, credentials, deployment | Export output and Git base |
 
 ## Dependency Direction

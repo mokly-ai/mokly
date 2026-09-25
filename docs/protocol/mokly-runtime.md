@@ -71,7 +71,7 @@ Changes. Screen-owned prop and slot changes still count as screen changes.
 3. Validate registry metadata, routes, relationships, and output collisions.
 4. Render screen fragments and registered whole-document pages in deterministic order.
 5. Resolve id links and validate document links and anchors.
-6. Build the version 5 manifest and resolved source inventory.
+6. Build the version 6 manifest and resolved source inventory.
 7. Stage every generated file before changing the last-good output.
 8. Atomically replace generated files and remove proven generated orphans.
 
