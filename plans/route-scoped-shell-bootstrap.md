@@ -318,7 +318,7 @@ layer without emitting scoped bootstraps yet, so product behavior is unchanged.
     zero failures, skips or cancellations in either suite.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
@@ -539,3 +539,36 @@ use-case and page targets so their installed scope matches their route.
   and therefore include ordinary scheduling noise. Structural serializer
   ownership, exact call counts and embedded-byte stability are independently
   enforced by unit, browser, served-page and captured-page regressions.
+
+### Milestone 4 — 2026-09-25
+
+- Reviewed the complete pushed `origin/main...378f9a1` diff using
+  [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
+
+1. **Low — The capability descriptor value and its serialized text can
+   disagree.** `StandaloneShellDocument` accepts both `capabilityDescriptor`
+   and `capabilityDescriptorJson` independently. The object supplies the
+   server-rendered workspace and source, while the string controls the embedded
+   descriptor script and live-host bundle. Current server and browser callers
+   derive the pair from the same accepted value, but a future direct caller can
+   pass mismatched props. Doing nothing leaves that caller able to render one
+   private workspace while hydrating or refreshing against another descriptor,
+   producing a difficult-to-diagnose state or hydration mismatch.
+   - **Option A:** introduce one paired serialized-descriptor value, created by
+     a focused factory from the accepted descriptor, and pass that single value
+     through the document boundary; add a regression showing that independent
+     values cannot be supplied.
+   - **Option B:** pass only the serialized string and parse it once inside the
+     document to recover the server value, trading an extra parse for one source
+     of truth.
+   - **Option C:** retain the two independent props and rely on every caller to
+     keep them synchronized.
+   - **Recommendation:** Option A. A cohesive boundary type and factory prevent
+     this class of mismatch for every future caller without restoring render-time
+     serialization; a caller-specific assertion would be less durable. No
+     implementation change was made during this read-only review.
+
+- No other findings. Residual test risk is intentionally limited to later
+  integration: Milestone 4 keeps the strict scoped reader isolated, so live
+  hydration, route evidence and capture still exercise complete bootstraps.
+  Milestones 5 and 6 own those adoption and coordinated-emission paths.
