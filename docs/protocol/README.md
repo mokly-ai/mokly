@@ -45,6 +45,8 @@ when the historical primary file is absent, never when it is invalid.
   rules and approved resolution/source-location target.
 - [Public catalogue read model](./mokly-catalogue.md) — implemented:
   public inventory v1 beside the private manifest.
+- [Standalone shell bootstrap](./mokly-shell-bootstrap.md) — approved
+  route-scoped Serve hydration, reader, adoption, and static capture contract.
 - [Embeddable viewer](./mokly-viewer.md) — approved `@mokly/viewer` API and
   shared hydrated shell.
 - [Live viewer capabilities](./mokly-live-capabilities.md) — private Serve

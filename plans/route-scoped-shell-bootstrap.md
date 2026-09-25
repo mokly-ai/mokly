@@ -126,7 +126,7 @@ A prototype that keeps only the current route's usage measured 360–445 KB and
 Summary: define the route-scoped bootstrap, its reader rules and its UI states
 completely before any code changes.
 
-- [ ] Add `docs/protocol/mokly-shell-bootstrap.md`, kept near 250 lines,
+- [x] Add `docs/protocol/mokly-shell-bootstrap.md`, kept near 250 lines,
       defining: the live route-scoped and static external bootstrap forms; the
       usage-scope table and the bootstrap-only `omitted` state; reader rules for
       bootstraps versus `catalogue.json`; ownership of cross-route `Used by` and
@@ -134,31 +134,31 @@ completely before any code changes.
       serialise-once rule and its tested byte-reproduction invariant; capture
       comparison rules; the size guardrails; and acceptance tests. Link it from
       [`docs/protocol/README.md`](../docs/protocol/README.md).
-- [ ] Update the hydration section and acceptance list of
+- [x] Update the hydration section and acceptance list of
       [`mokly-viewer.md`](../docs/protocol/mokly-viewer.md): Serve embeds the
       route-scoped projection of the read model rather than the model itself.
-- [ ] Update [`mokly-catalogue.md`](../docs/protocol/mokly-catalogue.md):
+- [x] Update [`mokly-catalogue.md`](../docs/protocol/mokly-catalogue.md):
       `catalogue.json` stays complete and never contains `omitted`; shell
       bootstraps use the route-scoped projection.
-- [ ] Update
+- [x] Update
       [`mokly-live-capabilities.md`](../docs/protocol/mokly-live-capabilities.md):
       route evidence adopts the destination's scoped catalogue atomically with
       its private workspace; the fallback workspace reports loading or failed
       usage and never a partial `Used by` list.
-- [ ] Update [`mokly-live-evidence.md`](../docs/protocol/mokly-live-evidence.md):
+- [x] Update [`mokly-live-evidence.md`](../docs/protocol/mokly-live-evidence.md):
       complete `Used by` and `Affected` usage comes from the private workspace;
       evidence refresh adopts the current route's scoped bootstrap; retained
       per-view usage rules are unchanged.
-- [ ] Update
+- [x] Update
       [`mokly-export-delivery.md`](../docs/protocol/mokly-export-delivery.md):
       Serve's inline read model is route-scoped, captured-shell externalisation
       compares scoped projections, and exported artifacts are unchanged.
-- [ ] Update [`mokly-on-demand.md`](../docs/protocol/mokly-on-demand.md) and
+- [x] Update [`mokly-on-demand.md`](../docs/protocol/mokly-on-demand.md) and
       [`mokly-component-explorer.md`](../docs/protocol/mokly-component-explorer.md)
       with the loading and failed Usage states and their product copy.
-- [ ] Add the new state screens, their ids and routes to the design table in
+- [x] Add the new state screens, their ids and routes to the design table in
       [`mokly-component-design.md`](../docs/protocol/mokly-component-design.md).
-- [ ] Update the bootstrap, reader and adoption descriptions wherever they
+- [x] Update the bootstrap, reader and adoption descriptions wherever they
       appear in
       [`packages/viewer/README.md`](../packages/viewer/README.md),
       [`packages/viewer/src/shell/README.md`](../packages/viewer/src/shell/README.md),
@@ -168,9 +168,9 @@ completely before any code changes.
       [`src/server/README.md`](../src/server/README.md) and
       [`src/export/README.md`](../src/export/README.md).
 - [x] Add this plan to the active list in [`plans/README.md`](./README.md).
-- [ ] Validate the changed Markdown with `npm run format:check` and review the
+- [x] Validate the changed Markdown with `npm run format:check` and review the
       diff; documentation-only work does not require `cargo xtask check`.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report

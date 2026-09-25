@@ -89,18 +89,25 @@ hosts and history. Headings, crumbs, Details and previous-preview lookup consume
 the resolved historical record and route, never a colliding current-id lookup.
 
 `workspace_data.ts` describes shell data; the public viewer projects it only
-from validated catalogue records. Embedded bootstrap and workspace JSON use
-canonical key ordering so their validated client projections retain the exact
-server bytes during hydration. `comparison_views.tsx` renders React-owned frame
-chrome around the snapshots from validated comparison metadata. The CLI
-supplies its private live capabilities through typed server context. Standalone
-full-document composition lives in `src/standalone`: its bootstrap contains
-the validated public catalogue and shell delivery state for Serve. Static pages
+from validated complete catalogue records. A live route-scoped fallback never
+derives cross-route Usage from `omitted` views: `use_workspace_data.ts` exposes
+loading until matching private evidence is adopted and failed after a current
+read failure or rejection, rather than publishing a partial or false-empty
+list. Embedded bootstrap and workspace JSON use canonical key ordering so their
+validated client projections reproduce the exact server bytes during
+hydration. `comparison_views.tsx` renders React-owned frame chrome around the
+snapshots from validated comparison metadata. The CLI supplies its private live
+capabilities through typed server context. Standalone full-document composition
+lives in `src/standalone`: Serve's bootstrap contains the validated
+route-scoped public catalogue and shell delivery state, while static pages
 carry a compact identity/revision reference and resolve the shared finalized
-catalogue before `src/browser.tsx` hydrates that exact server tree. Live Serve places private
-route evidence in a separate descriptor; the capability store adopts the
-fetched page's public bootstrap, source and private workspace as one monotonic
-revision. `use_workspace_data.ts` keeps one route-owned workspace object so
+complete catalogue before `src/browser.tsx` hydrates that exact server tree.
+The document receives pre-serialized script text; server rendering serializes
+it once and later client renders preserve it verbatim. Live Serve places
+complete private route evidence in a separate descriptor; the capability store
+replaces the fetched page's scoped public bootstrap, source and private
+workspace as one monotonic revision instead of accumulating per-route usage.
+`use_workspace_data.ts` keeps one route-owned workspace object so
 matching evidence refreshes retain already loaded usage and local editor state.
 Versioned historical selection adopts new evidence and becomes unavailable if
 that exact snapshot disappears. Identity-less legacy history adopts only an
@@ -130,6 +137,8 @@ navigation and the inspector outside an overlay's bounds. Browser transport
 remains behind `useViewerCapabilities`. The
 [live capability contract](../../../../docs/protocol/mokly-live-capabilities.md)
 defines route loading, revision fencing and export omission.
+The [standalone bootstrap contract](../../../../docs/protocol/mokly-shell-bootstrap.md)
+defines usage scope, strict readers, serialization and capture invariants.
 
 Before standalone hydration, stored disclosure and split-width preferences are
 applied to the server DOM. Disclosure helpers treat native `<details>` groups

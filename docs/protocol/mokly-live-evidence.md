@@ -5,6 +5,9 @@
 Live evidence updates and bounded affected-usage deduplication are implemented.
 Deduplication verification is recorded in Milestone 2 of the
 [dependency patch upstreaming plan](../../plans/mokabook-dependency-patch-upstreaming.md).
+Adoption of the current route's scoped bootstrap with its complete private
+workspace is an approved target tracked by the
+[route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
 
 ## Revisions and publication
 
@@ -30,16 +33,19 @@ edits can be ignored.
 ## Browser adoption
 
 For a newer update or reconnect `ready`, the browser requests its current durable
-shell URL without caching. This reuses the existing public shell projection;
-it introduces no manifest endpoint and does not transfer the internal catalogue
-or baseline inventories. It does not request comparison snapshots or replace
-the current iframe documents.
+shell URL without caching. It validates that page's
+[route-scoped public bootstrap](./mokly-shell-bootstrap.md) and paired private
+capability descriptor; it introduces no manifest endpoint and does not transfer
+the internal catalogue or baseline inventories. It does not request comparison
+snapshots or replace the current iframe documents.
 
-If the fetched content version matches the mounted page, apply its evidence
-in place. Its update version must be at least the triggering event version and
-the mounted page's version. A later response can catch up beyond its triggering
-event. Superseded requests are aborted and cannot apply data or cause a reload.
-Page shutdown cancels pending fetches and navigation waits.
+If the fetched content version matches the mounted page, atomically replace the
+installed scoped catalogue and current route's private workspace. Its update
+version must be at least the triggering event version and the mounted page's
+version. A later response can catch up beyond its triggering event. Never merge
+retained usage from the previous route or revision. Superseded requests are
+aborted and cannot apply data, report failure, or cause a reload. Page shutdown
+cancels pending fetches and navigation waits.
 
 The browser retains the navigation tree, All/Changes buttons, current preview
 frames, user filter, search, section and folder disclosure, focus, drawer and
@@ -84,8 +90,12 @@ releases evidence waiting for it. Only the current navigation may commit.
 ## Workspace evidence
 
 Update entry/variant statuses, comparison eligibility, baseline variants,
-Details evidence and complete Used by/Affected usage without reinstalling the
-workspace. Keep temporary props, current variant/instance selection, inspector
+Details evidence and complete Used by/Affected usage from the paired private
+workspace without reinstalling the workspace. A route-scoped public fallback
+never derives those lists from omitted records: it reports loading until the
+private workspace is adopted and failed after a current read failure or
+rejection, without showing a partial or zero-consumer result. Keep temporary
+props, current variant/instance selection, inspector
 disclosure, highlight state and authenticated preview documents intact. Usage
 updates retain matching link elements while adding, removing or changing only
 the affected sections and rows, so background completion cannot interrupt a
@@ -100,7 +110,9 @@ its actual displayed documents, even after exhaustive Usage becomes available.
 Retain its preview generation and already loaded per-view usage. Unloaded live
 views still request their own records when displayed; exhaustive render-order
 records cannot substitute for those documents. Exhaustive catalogue records
-supply the complete Used by list.
+supply the complete private-workspace `Used by` list. Scoped-bootstrap adoption
+does not replace a newer matching per-view record or change these retention
+rules.
 
 ### Affected-Usage Identity And Ordering
 
@@ -130,8 +142,10 @@ evidence.
 Cover Changed selection while its current preview is unchanged, actual Usage
 completion during a temporary prop edit, later variant/scheme switches, removed
 row membership/order, superseded responses, navigation races, reconnect catch-up
-and content updates followed immediately by evidence updates. Genuine source
-and resource edits must still refresh the rendered content.
+and content updates followed immediately by evidence updates. Cover loading,
+failed and retry presentation without a partial/zero list, plus scoped-catalogue
+replacement without iframe remount or loss of retained per-view usage. Genuine
+source and resource edits must still refresh the rendered content.
 Test affected-link duplicates across evidence records, first-occurrence order,
 and distinct fields/contexts; assert at most one serialization per input link,
 including duplicates, with the same projection for served and published shells.

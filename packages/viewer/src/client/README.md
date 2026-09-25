@@ -12,8 +12,13 @@ import resolves within that complete inventory.
 
 `host_capability_descriptor.ts` validates the private live Serve bootstrap and
 source identity. `host_capabilities.ts` defines the behavior context, atomic
-public/private evidence revision and route/source cancellation scope. Both are
-kept protocol modules; static export omits their standalone browser outputs.
+public/private evidence revision and route/source cancellation scope. Route and
+live evidence accept the current page's strictly validated scoped catalogue and
+complete private workspace together, replacing the installed scoped model so
+usage from visited routes never accumulates. A rejected current route read is
+reported to the shell as failed Usage; obsolete or aborted reads stay inert.
+Both modules are kept protocol modules; static export omits their standalone
+browser outputs.
 
 Disclosure capture and pre-hydration navigation width capture are owned directly
 under `src/standalone`. The synchronous navigation bootstrap records native
@@ -89,8 +94,11 @@ the session and all pending work. Subscriptions share one remote event set;
 removing the final subscriber sends an empty replacement set.
 `frame_usage.ts` shares the automatic event capability rule: only validated ready
 usage enables pointer inspection and geometry events; other usage retains only
-navigation. Both built-in mounts accept `updateUsage` to refresh this capability
-without replacing their document/session. The update clears old inspection
+navigation. Bootstrap-only omitted usage is normalized to the same pending
+frame state as a view awaiting evidence, so it shows the existing waiting copy
+rather than empty or unavailable inspection. Both built-in mounts accept
+`updateUsage` to refresh this capability without replacing their
+document/session. The update clears old inspection
 presentation and preserves navigation subscribers; no inspector wire change is
 needed. Viewer frame updates use it when the document identity is unchanged.
 The viewer inspection owner restores valid presentation after adoption, retains
@@ -121,5 +129,6 @@ npx playwright test tests/browser/frame_adapter.spec.ts tests/browser/frame_adap
 
 Related boundaries: [inspector](../inspector/README.md),
 [Browse document adaptation](../../../../src/browse/README.md),
-[logical navigation](../../../../docs/protocol/mokly-navigation.md), and
+[logical navigation](../../../../docs/protocol/mokly-navigation.md),
+[standalone bootstrap](../../../../docs/protocol/mokly-shell-bootstrap.md), and
 [implementation plans](../../../../plans/README.md).
