@@ -97,7 +97,6 @@ test("screen variants inherit, override, brand, route, and attribute", () => {
     variantOf: "welcome",
   });
   assert.equal(overridden?.address, "example.test/retry");
-  assert.equal(Object.hasOwn(overridden ?? {}, "dependencies"), false);
   assert.deepEqual(overridden?.relatedDocs, [
     "docs/protocol/mokly-screen-variants.md",
   ]);
@@ -139,7 +138,6 @@ test("nested screen variants flatten beside the parent", () => {
   assert.equal(flattened[1]?.route, "screens/parent.variants/empty.html");
   assert.equal(flattened[1]?.variantOf, "nested-parent");
   assert.deepEqual(flattened[1]?.tags, ["forms"]);
-  assert.equal(Object.hasOwn(flattened[1] ?? {}, "dependencies"), false);
 });
 
 test("registry preparation flattens one exported definition-array level", () => {

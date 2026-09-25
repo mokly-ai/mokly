@@ -31,6 +31,7 @@ export interface ComponentInput<
   S extends ObjectPropSchema,
   Slots extends readonly string[],
 > extends RoutedEntryInput {
+  ownedDependencies?: never;
   propSchema: S;
   slots?: Slots;
   controls?: {

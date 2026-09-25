@@ -70,13 +70,14 @@ function variantDefinition(
   const address = variant.address ?? parent.address;
   const colorSchemes = variant.colorSchemes ?? parent.colorSchemes;
   const tags = variant.tags ?? parent.tags;
+  const removed: object = Object.hasOwn(variant, "dependencies")
+    ? { dependencies: (input as { dependencies?: unknown }).dependencies }
+    : {};
   const definition: AuthoredVariantDefinition = {
     __viaDefine: true,
     ...(address !== undefined ? { address } : {}),
     ...(colorSchemes !== undefined ? { colorSchemes } : {}),
-    ...(Object.hasOwn(variant, "dependencies")
-      ? { dependencies: (input as { dependencies?: unknown }).dependencies }
-      : {}),
+    ...removed,
     description: variant.description,
     desktop: variant.desktop,
     id: variant.id,

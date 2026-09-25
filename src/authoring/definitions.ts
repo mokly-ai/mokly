@@ -209,7 +209,7 @@ function mergeInherited(
   };
 }
 
-function removedDependencies(input: object): { dependencies?: unknown } {
+function removedDependencies(input: object): object {
   return Object.hasOwn(input, "dependencies")
     ? { dependencies: (input as { dependencies?: unknown }).dependencies }
     : {};

@@ -304,7 +304,7 @@ test("screen colorSchemes must be a subset of config", async (context) => {
   }
 });
 
-test("missing declared dependencies and stylesheets are actionable", async (context) => {
+test("missing related documents and stylesheets are actionable", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);

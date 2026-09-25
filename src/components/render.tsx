@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import type { ComponentViewRecord } from "@mokly/viewer";
 import { invalidData } from "@mokly/viewer/data";
 
+import type { ScreenDefinition } from "../authoring/types.js";
 import { serializeReviewSentinels } from "../renderer/sentinels.js";
 import type { RenderInput, Renderer, RenderResult } from "../renderer/types.js";
 
@@ -15,6 +16,7 @@ import { serializeComponentSentinels } from "./ranges.js";
 import { ComponentContext } from "./render_context.js";
 import { rebaseStyleOwnership } from "./style_ownership.js";
 import { insertComponentStylesheets } from "./stylesheet_links.js";
+import { rendererStylesheetPaths } from "./stylesheet_reuse.js";
 import type { ComponentDefinition } from "./types.js";
 
 export interface ComponentRenderOutput {
@@ -22,7 +24,9 @@ export interface ComponentRenderOutput {
   view: ComponentViewRecord;
 }
 export type ComponentGraphRenderer = (
-  input: RenderInput,
+  input: Omit<RenderInput, "entry"> & {
+    entry: ScreenDefinition | ComponentDefinition;
+  },
   renderer: Renderer,
   definitions: readonly ComponentDefinition[],
   placement: { route: string; position: number; mockupsDir: string },
@@ -51,7 +55,11 @@ export const renderWithComponents: ComponentGraphRenderer = (
       )}
     </ComponentContext>
   );
-  const result = renderer({ ...input, node });
+  const rendererEntry =
+    input.entry.kind === "component"
+      ? (({ stylesheets: _stylesheets, ...entry }) => entry)(input.entry)
+      : input.entry;
+  const result = renderer({ ...input, entry: rendererEntry, node });
   const rendered: RenderResult =
     typeof result === "string" ? { html: result } : result;
   if (
@@ -67,8 +75,7 @@ export const renderWithComponents: ComponentGraphRenderer = (
     serializeReviewSentinels(rendered.html),
     collector.boundaries,
   );
-  const owners = new Map<string, Set<string>>();
-  const linked: string[] = [];
+  const owners = new Map<string, { file: string; ids: Set<string> }>();
   const renderedDefinitions = [
     ...(input.entry.kind === "component" ? [input.entry] : []),
     ...[...collector.instances.values()].map((instance) =>
@@ -77,18 +84,14 @@ export const renderWithComponents: ComponentGraphRenderer = (
   ];
   for (const definition of renderedDefinitions) {
     for (const file of definition.stylesheets) {
-      if (!owners.has(file)) {
-        linked.push(file);
-        owners.set(file, new Set());
-      }
-      owners.get(file)!.add(definition.id);
+      const physical = fs.realpathSync(
+        path.resolve(placement.mockupsDir, file),
+      );
+      if (!owners.has(physical)) owners.set(physical, { file, ids: new Set() });
+      owners.get(physical)!.ids.add(definition.id);
     }
   }
-  const physicalPaths = new Set(
-    [...owners.keys()].map((file) =>
-      fs.realpathSync(path.resolve(placement.mockupsDir, file)),
-    ),
-  );
+  const physicalPaths = new Set(owners.keys());
   for (const resource of rendered.resources ?? []) {
     const candidate =
       typeof resource.path === "string"
@@ -99,7 +102,7 @@ export const renderWithComponents: ComponentGraphRenderer = (
         ? fs.realpathSync(candidate)
         : undefined;
     if (
-      owners.has(resource.path) ||
+      [...owners.values()].some(({ file }) => file === resource.path) ||
       (physicalPath !== undefined && physicalPaths.has(physicalPath))
     )
       invalidData(
@@ -107,12 +110,20 @@ export const renderWithComponents: ComponentGraphRenderer = (
         `renderer resources record conflicts with declared stylesheet ${resource.path}`,
       );
   }
+  const rendererLinks = rendererStylesheetPaths(
+    serialized.html,
+    placement.route,
+    placement.mockupsDir,
+    physicalPaths,
+  );
   const html = insertComponentStylesheets(
     serialized.html,
     placement.route,
     input.stylesheets,
     placement.position,
-    linked,
+    [...owners]
+      .filter(([physical]) => !rendererLinks.has(physical))
+      .map(([, owner]) => owner.file),
   );
   const view: ComponentViewRecord = {
     viewport: input.viewport,
@@ -127,9 +138,10 @@ export const renderWithComponents: ComponentGraphRenderer = (
     styles: rebaseStyleOwnership(rendered.html, html, rendered.styles ?? []),
     resources: [
       ...(rendered.resources ?? []),
-      ...[...owners]
-        .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
-        .map(([file, ids]) => ({ path: file, componentIds: [...ids].sort() })),
+      ...[...owners].map(([physical, { file, ids }]) => ({
+        path: rendererLinks.get(physical) ?? file,
+        componentIds: [...ids].sort(),
+      })),
     ].sort((left, right) =>
       left.path < right.path ? -1 : left.path > right.path ? 1 : 0,
     ),
@@ -142,7 +154,9 @@ function ComponentRoot({
   input,
 }: {
   definition: ComponentDefinition;
-  input: RenderInput;
+  input: Omit<RenderInput, "entry"> & {
+    entry: ScreenDefinition | ComponentDefinition;
+  };
 }): ReactNode {
   const variant = definition.variants.find(
     (variant) => variant.id === input.variantId,

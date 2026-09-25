@@ -7,10 +7,10 @@ This implemented contract was planned by
 Milestone 3 delivered declaration, validation, linking, ownership, Serve and
 public delivery. Milestone 4 removed legacy source-path attribution and
 Milestone 6 removed the old authoring inputs.
-Milestone 11 of the same plan will implement the optional-never authoring types,
+Milestone 11 of the same plan implemented the optional-never authoring types,
 startup/reconfiguration watching, real-file alias deduplication, stylesheet
 `rel` token and omitted-tag handling, and renderer-link reuse described below;
-those refinements are not implemented yet.
+these refinements are now in Build, Check, Serve, export and publication.
 
 ## Declaration And Public Files
 
@@ -137,6 +137,8 @@ emits configured links as before. If it also emits a local stylesheet link to
 the same real file as a declaration, Mokly keeps that link at its authored
 position and does not insert another. Its decoded, `mockupsDir`-relative href
 path becomes the ownership-record path, even when an alias was declared first.
+Query and fragment suffixes on a renderer-authored local href do not change
+real-file identity; keep them on that link but omit them from the record path.
 If several renderer links already name the same real file, Mokly leaves them
 unchanged, adds none, and takes the first in document order for the record;
 Mokly's one-link guarantee applies to links it inserts, not duplicates the

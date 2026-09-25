@@ -72,7 +72,7 @@ test("Changes keeps real content edits alongside ignored-region edits", async (t
   );
 });
 
-test("unrendered dependency-only edits produce neither Changes nor evidence", async (t) => {
+test("unrendered source-only edits produce neither Changes nor evidence", async (t) => {
   const fixture = await changedFixture(t);
   await fs.writeFile(path.join(fixture.root, "notes.md"), "# Edited notes\n");
   assert.deepEqual(

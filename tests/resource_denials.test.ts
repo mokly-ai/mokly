@@ -7,7 +7,7 @@ import type { ComponentViewRecord } from "@mokly/viewer";
 import { ComponentValidationError } from "@mokly/viewer/data";
 
 import { compileCatalogue } from "../dist/build/compile.js";
-import { stylesheetsFor } from "../dist/build/render.js";
+import { stylesheetPlacementFor } from "../dist/build/render.js";
 import { validateComponentResources } from "../dist/components/output_validation.js";
 import { loadConfig } from "../dist/config/load.js";
 import { MoklyError } from "../dist/errors.js";
@@ -62,7 +62,7 @@ for (const [name, cause] of [
       return true;
     };
     for (const validate of [
-      () => stylesheetsFor(route, route, "light", config),
+      () => stylesheetPlacementFor(route, route, "light", config),
       () => validateComponentResources(new Map([[route, view]]), config),
     ])
       assert.throws(validate, (error: Error) => {
@@ -136,7 +136,7 @@ test("unresolvable resource aliases retain typed errors and the referring route"
     resources: [{ path: "alias.css", componentIds: [] }],
   };
   for (const [validate, errorType] of [
-    [() => stylesheetsFor(route, route, "light", config), MoklyError],
+    [() => stylesheetPlacementFor(route, route, "light", config), MoklyError],
     [
       () => validateComponentResources(new Map([[route, view]]), config),
       ComponentValidationError,

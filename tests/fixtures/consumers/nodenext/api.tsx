@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import {
   collection,
   defineCollection,
+  defineComponent,
   defineConfig,
   defineRoot,
   definePage,
@@ -268,8 +269,13 @@ type PublicTypes =
   | WatchConfig
   | WatchRule;
 
-const renderer: Renderer = (input) =>
-  `<html><body>${input.entry.title}</body></html>`;
+const renderer: Renderer = (input) => {
+  if (input.entry.kind === "component") {
+    // @ts-expect-error Renderer entries do not expose component declarations.
+    void input.entry.stylesheets;
+  }
+  return `<html><body>${input.entry.title}</body></html>`;
+};
 const compatibilityTransformer: CompatibilityTransformer = (input) =>
   input.content;
 const exhaustive:
@@ -287,3 +293,96 @@ const asynchronousPage: PageInput = {
   render: async () => "<html/>",
 };
 void [unsupportedPage, obsoleteConfig, asynchronousPage];
+
+// @ts-expect-error A direct screen cannot declare removed dependencies.
+defineScreen({ ...screenInputBase, dependencies: [] });
+defineScreen({
+  ...screenInputBase,
+  // @ts-expect-error Variants do not restore the removed parent field.
+  dependencies: [],
+  variants: [typedVariant],
+});
+defineScreen({
+  ...screenInputBase,
+  variants: [
+    {
+      ...typedVariant,
+      // @ts-expect-error A screen variant cannot declare removed dependencies.
+      dependencies: [],
+    },
+  ],
+});
+// @ts-expect-error Pages cannot declare removed dependencies.
+definePage({ ...documentPage, dependencies: [] });
+defineCollection({
+  childIds: [],
+  description: "Collection",
+  id: "collection",
+  relatedDocs: [],
+  title: "Collection",
+  // @ts-expect-error Collections cannot declare removed dependencies.
+  dependencies: [],
+});
+defineUseCase({
+  description: "Flow",
+  id: "flow",
+  relatedDocs: [],
+  route: "flow.html",
+  steps: [],
+  title: "Flow",
+  // @ts-expect-error Use cases cannot declare removed dependencies.
+  dependencies: [],
+});
+screen({
+  description: "Nested",
+  desktop: node,
+  id: "nested",
+  mobile: node,
+  slug: "nested",
+  title: "Nested",
+  // @ts-expect-error Nested screens cannot declare removed dependencies.
+  dependencies: [],
+});
+page({
+  description: "Nested",
+  id: "nested-page",
+  render: documentPage.render,
+  slug: "nested-page",
+  title: "Nested",
+  // @ts-expect-error Nested pages cannot declare removed dependencies.
+  dependencies: [],
+});
+collection({
+  children: [],
+  description: "Nested",
+  id: "nested-group",
+  segment: "nested-group",
+  title: "Nested",
+  // @ts-expect-error Nested collections cannot declare removed dependencies.
+  dependencies: [],
+});
+defineRoot({
+  path: "nested",
+  children: [],
+  collection: {
+    description: "Root",
+    id: "root",
+    title: "Root",
+    // @ts-expect-error Root collection metadata cannot declare removed dependencies.
+    dependencies: [],
+  },
+});
+const componentInput = {
+  id: "typed-component",
+  title: "Typed component",
+  description: "Component",
+  route: "components/typed.html",
+  relatedDocs: [],
+  propSchema: { kind: "object" as const, properties: {} },
+  render: () => null,
+  variants: [{ id: "default", title: "Default", props: {} }],
+};
+// @ts-expect-error Components cannot declare removed dependencies.
+defineComponent({ ...componentInput, dependencies: [] });
+// @ts-expect-error Components cannot declare removed ownership paths.
+defineComponent({ ...componentInput, ownedDependencies: [] });

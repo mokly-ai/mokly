@@ -221,6 +221,10 @@ export async function smokeThemedConsumer(context) {
   packageJson.dependencies["react-native-web"] =
     "file:packages/react-native-web";
   await installConsumer(root, context.archivePath, packageJson);
+  await fs.promises.writeFile(
+    path.join(root, "shared/unrendered.ts"),
+    "export const unused = 1;\n",
+  );
   await initializeDerivedGit(root, "docs/mockups");
   await runBin(root, ["build"]);
   await runBin(root, ["check"]);
@@ -267,6 +271,23 @@ export async function smokeThemedConsumer(context) {
   await smokeExternalWatch(root);
 
   await fs.promises.writeFile(
+    path.join(root, "shared/unrendered.ts"),
+    "export const unused = 2;\n",
+  );
+  await runBin(root, ["build"]);
+  await smokeServer(root, ["--base", "HEAD"], async (url) => {
+    const response = await fetch(`${url}/__mokly/diffs/review.json`);
+    assert.equal(response.status, 200);
+    const review = await response.json();
+    assert.ok(review.screens.every((screen) => screen.state === "unchanged"));
+    assert.ok(
+      review.screens.every((screen) =>
+        screen.views.every((view) => !view.reasons?.length),
+      ),
+    );
+  });
+
+  await fs.promises.writeFile(
     path.join(root, "shared/tokens.ts"),
     'export const accent = "#6b4eff";\n',
   );
@@ -278,6 +299,10 @@ export async function smokeThemedConsumer(context) {
     review = await response.json();
   });
   assert.equal(Object.hasOwn(review, "sharedImpact"), false);
+  assert.ok(
+    review.screens.some((screen) => screen.state === "changed"),
+    "rendered token edits still produce screen evidence",
+  );
   assert.ok(
     review.screens.every((screen) => !Object.hasOwn(screen, "sharedImpact")),
   );

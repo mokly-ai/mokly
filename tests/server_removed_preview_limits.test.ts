@@ -11,8 +11,6 @@ import { SelectedReviewRoutes } from "../dist/server/selected_review_routes.js";
 
 const route = "archive/removed.html";
 const page = {
-  declaredDependencies: [],
-  dependencies: [],
   description: "Removed page",
   id: "removed-page",
   kind: "page" as const,

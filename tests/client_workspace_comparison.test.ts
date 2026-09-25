@@ -9,7 +9,7 @@ import type { ReviewResultV4 } from "../packages/viewer/dist/review/types.js";
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 import { WorkspaceEvidence } from "../packages/viewer/dist/shell/workspace_evidence.js";
 
-test("loaded v2 details merge with classification, deduplicate selectors and suppress retained exclusions", () => {
+test("loaded comparison details merge with classification, deduplicate selectors and suppress retained exclusions", () => {
   const data = workspace();
   data.resourceEvidence = [
     {
@@ -69,7 +69,7 @@ test("loaded v2 details merge with classification, deduplicate selectors and sup
   assert.equal(renderEvidence(data, parsed), markup);
 });
 
-test("loaded v2 view reasons remain visible without classification, not legacy shared-impact paths", () => {
+test("loaded view reasons remain visible without classification, not legacy shared-impact paths", () => {
   const data = workspace();
   delete data.status;
   const loaded = comparison();

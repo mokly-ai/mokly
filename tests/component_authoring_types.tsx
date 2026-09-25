@@ -7,7 +7,6 @@ const metadata = {
   title: "Test",
   description: "Typed component",
   route: "test.html",
-  dependencies: [],
   relatedDocs: [],
 };
 const definition = defineComponent({

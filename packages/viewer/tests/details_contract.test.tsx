@@ -57,8 +57,15 @@ test("details omit authoring dependencies for every routed entry kind", () => {
   const catalogue = createCatalogue(manifest);
   for (const entry of manifest.entries) {
     if (entry.kind === "collection") continue;
+    const legacyEntry = {
+      ...entry,
+      dependencies: ["legacy/source-only.ts"],
+      ...(entry.kind === "component"
+        ? { ownedDependencies: ["legacy/owned.css"] }
+        : {}),
+    } as unknown as typeof entry;
     const markup = renderToStaticMarkup(
-      <EntryDetailsBody catalogue={catalogue} entry={entry} />,
+      <EntryDetailsBody catalogue={catalogue} entry={legacyEntry} />,
     );
     assert.match(markup, /<span class="mbk-meta-k">Source<\/span>/);
     assert.match(markup, /<span class="mbk-meta-k">Related docs<\/span>/);

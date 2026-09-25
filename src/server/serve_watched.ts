@@ -6,6 +6,7 @@ import { prepareLiveRuntime } from "../build/live_runtime.js";
 import { loadConsumerGraph } from "../build/load_graph.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { bindTimings, timeAsync } from "../diagnostics/timings.js";
+import { prepareRegistry } from "../registry/prepare.js";
 
 import { RepositoryCatalogueChangeClassifier } from "./component_changes.js";
 import {
@@ -59,9 +60,10 @@ export async function serveWatched(
   const report = (error: unknown) => reporter.runtimeDiagnostic(error);
   const gate = new NotificationGate<WatchEvent>(report);
   const failures = new NotificationGate<Error>(report);
-  const inventory = await loadConsumerGraph(config, false);
+  const inventory = await loadConsumerGraph(config);
   config.entryModules = inventory.entrySources;
   config.sourceFiles = inventory.sourceFiles;
+  prepareRegistry(inventory.definitions, config);
   let activeConfig = config;
   let watcher = createSourceWatcher(watcherFactory, config, gate, report);
   const resources = new ResourceWatcher(
@@ -75,7 +77,7 @@ export async function serveWatched(
   let port: number;
   try {
     await timeAsync("watch.source-ready", () => watcher.ready());
-    runtime = await prepareLiveRuntime(config);
+    runtime = await prepareLiveRuntime(config, inventory);
     activeConfig = runtime.config;
     signature = JSON.stringify(runtime.manifest);
     supervisor = createWatchedSupervisor(
@@ -147,9 +149,10 @@ export async function serveWatched(
   const reconfigure = async (candidate?: ResolvedConfig): Promise<void> => {
     const nextConfig =
       candidate ?? (await configLoader.load(activeConfig.configPath));
-    const nextInventory = await loadConsumerGraph(nextConfig, false);
+    const nextInventory = await loadConsumerGraph(nextConfig);
     nextConfig.entryModules = nextInventory.entrySources;
     nextConfig.sourceFiles = nextInventory.sourceFiles;
+    prepareRegistry(nextInventory.definitions, nextConfig);
     const nextGate = new NotificationGate<WatchEvent>(report);
     const replacement = createSourceWatcher(
       watcherFactory,
@@ -161,7 +164,7 @@ export async function serveWatched(
     try {
       if (!(await watcherReadyBeforeShutdown(replacement, shutdown)) || closed)
         return;
-      const next = await prepareLiveRuntime(nextConfig);
+      const next = await prepareLiveRuntime(nextConfig, nextInventory);
       if (closed) return;
       await background.invalidate(next.config);
       if (closed) return;

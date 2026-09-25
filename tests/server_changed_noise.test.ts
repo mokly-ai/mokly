@@ -7,7 +7,7 @@ import { changedManifestRoutes } from "../dist/registry/changed_routes.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
-test("unchanged screens and flows stay out of Changes after dependency edits", async (t) => {
+test("unchanged screens and flows stay out of Changes after unrelated source edits", async (t) => {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);

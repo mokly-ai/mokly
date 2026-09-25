@@ -12,9 +12,8 @@ The component stylesheet injection and manifest-v6 shape below are defined by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md):
 Milestone 3 implemented injection and Milestone 6 implemented manifest v6.
 Both are in current generated output.
-Milestone 11 of the same plan will remove component `stylesheets` from the
-renderer-facing `input.entry` at runtime and in its public type; this narrower
-entry boundary is not implemented yet.
+Milestone 11 of the same plan removed component `stylesheets` from the
+renderer-facing `input.entry` at runtime and in its public type.
 
 ## Rendering Boundary
 

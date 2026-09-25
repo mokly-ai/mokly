@@ -55,8 +55,6 @@ test("public workspace keeps each saved variant's changed views", () => {
 
 test("public workspace derives a screen's ready per-view states", () => {
   const screen = {
-    declaredDependencies: [],
-    dependencies: [],
     description: "Welcome screen",
     fragments: {
       desktop: "screens/welcome.desktop.html",

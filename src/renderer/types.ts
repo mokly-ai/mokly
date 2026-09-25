@@ -13,7 +13,7 @@ import type { ComponentDefinition } from "../components/types.js";
 /** Context passed by the builder to a consumer renderer. */
 export interface RenderInput {
   colorScheme: ColorScheme;
-  entry: ScreenDefinition | ComponentDefinition;
+  entry: ScreenDefinition | Omit<ComponentDefinition, "stylesheets">;
   variantId?: string;
   componentProps?: Readonly<Record<string, unknown>>;
   node: ReactNode;

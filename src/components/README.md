@@ -9,6 +9,10 @@ The `stylesheets` input was delivered by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md) for
 Milestone 3. Milestone 6 removed source-path inputs; current output uses
 manifest v6.
+Milestone 11 of that plan groups declarations by real file, merges all rendered
+owners, and reuses renderer-authored links without exposing declarations through
+`RenderInput.entry`. The first rendered declaration determines a new link's
+public path; a renderer-authored link keeps its own path and position.
 
 ```tsx
 import { defineComponent } from "@mokly/mokly";

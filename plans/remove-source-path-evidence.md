@@ -557,21 +557,21 @@ Finding 13: no design screen links to "Matched styles"
 
 ## Milestone 11: Implement the confirmed review fixes
 
-- [ ] Finding 5: add `dependencies?: never` to every authoring input type and
+- [x] Finding 5: add `dependencies?: never` to every authoring input type and
       `ownedDependencies?: never` to the component input type. Add
       `@ts-expect-error` cases to the packed consumer type check
       (`tests/fixtures/consumers/nodenext/api.tsx`) and remove the leftover
       `dependencies` in `tests/component_authoring_types.tsx`.
-- [ ] Finding 6: watched Serve watches declared stylesheets from startup and
+- [x] Finding 6: watched Serve watches declared stylesheets from startup and
       after reconfiguration. Test the real startup order.
-- [ ] Finding 8: link each real file once per page and merge the owners into
+- [x] Finding 8: link each real file once per page and merge the owners into
       one record. Test with a symlink alias and a CSS edit.
-- [ ] Finding 9: accept any `rel` that includes `stylesheet`, and insert at the
+- [x] Finding 9: accept any `rel` that includes `stylesheet`, and insert at the
       end of the head content without failing when `</head>` is omitted.
-- [ ] Finding 10: remove `stylesheets` from the entry that the renderer gets,
+- [x] Finding 10: remove `stylesheets` from the entry that the renderer gets,
       at runtime and in the `RenderInput` type. When the renderer already
       links a declared file, add no second link and keep the ownership record.
-- [ ] Finding 12: make `tests/review.test.ts` "unrendered source" and
+- [x] Finding 12: make `tests/review.test.ts` "unrendered source" and
       `scripts/package/consumer_cases.mjs` assert an unchanged screen with no
       evidence; make the variant and root non-inheritance tests declare the
       field on the parent and expect exactly one violation; make
@@ -581,10 +581,16 @@ Finding 13: no design screen links to "Matched styles"
       into `tests/design_library_styles.test.ts` and delete the file; delete
       `stylesheetsFor` after moving its test caller to
       `stylesheetPlacementFor`.
-- [ ] Finding 4: add a docs test that fails when a current doc describes an
+- [x] Finding 4: add a docs test that fails when a current doc describes an
       older format, a removed field or shared impact as current. Use the stale
       lines from Milestone 9 as regression cases.
-- [ ] Run `npm run build`, `npm run typecheck`, `npm run lint`,
+- [x] Remove the discovered `declaredDependencies` field from the v6 page
+      fixture in `tests/server_removed_preview_lifecycle.test.ts` too.
+- [x] Preserve valid dot-prefixed public alias filenames when recognizing a
+      renderer-authored link to a declared real file; add a regression test.
+- [x] Reuse renderer-authored local stylesheet links with query/fragment
+      suffixes when they resolve to a declared real file; add a regression test.
+- [x] Run `npm run build`, `npm run typecheck`, `npm run lint`,
       `npm run example:build`, `npm run example:check`, the focused tests and
       the complete unit suite, and require 100%.
 

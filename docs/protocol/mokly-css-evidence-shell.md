@@ -67,8 +67,8 @@ replace the slice, clearing stale evidence while Changes is pending/unavailable.
 One inspector renderer merges classification evidence with the loaded selected
 comparison. Dependency reasons merge by path with sorted selector unions and
 unresolved precedence. Retained paths suppress exclusions across all selected
-views; loaded ignored-content details remain available, without any legacy
-shared-impact path list. Screen-only results use v4 and component results v5.
+views; loaded ignored-content details remain available, without the
+legacy shared-impact path list. Screen-only results use v4 and component results v5.
 Loaded evidence is selection-scoped and cleared on classification invalidation.
 Component ownership facts continue to come from entry reasons and the complete
 classification; a v4 resource change never implies a changed shared component.

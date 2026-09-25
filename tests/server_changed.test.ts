@@ -26,7 +26,7 @@ import { nestedRepository } from "./helpers/nested_repository.js";
 
 const execFileAsync = promisify(execFile);
 
-test("changed routes select fragment edits rather than source or dependency edits", async (context) => {
+test("changed routes select fragment edits rather than unrendered source edits", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);

@@ -6,9 +6,8 @@ Watching declared component stylesheets is delivered by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md) and
 implemented in Milestone 3, alongside existing configured stylesheet and
 referenced-resource watching.
-Milestone 11 of the same plan will implement watching every declared stylesheet
-from initial watched-Serve startup and after reconfiguration; that stronger
-timing guarantee is not implemented yet.
+Milestone 11 of the same plan implemented watching every declared stylesheet
+from initial watched-Serve startup and after successful reconfiguration.
 
 `mokly serve` watches by default; `--no-watch` serves one deterministic
 snapshot. Every development catalogue shell loads the package-owned browser client, which connects to

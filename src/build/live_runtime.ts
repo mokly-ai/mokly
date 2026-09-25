@@ -10,14 +10,15 @@ import { prepareRegistry } from "../registry/prepare.js";
 
 import type { ComponentRuntime } from "./component_runtime.js";
 import { consumerBundle } from "./consumer_bundle.js";
-import { loadConsumerGraph } from "./load_graph.js";
+import { loadConsumerGraph, type LoadedGraph } from "./load_graph.js";
 import { validateGeneratedOutputPaths } from "./output_paths.js";
 
 export async function prepareLiveRuntime(
   config: ResolvedConfig,
+  preloaded?: LoadedGraph,
 ): Promise<ComponentRuntime> {
   return timeAsync("catalogue.prepare-index", async () => {
-    const graph = await loadConsumerGraph(config);
+    const graph = preloaded ?? (await loadConsumerGraph(config));
     config = {
       ...config,
       entryModules: graph.entrySources,

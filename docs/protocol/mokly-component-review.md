@@ -221,8 +221,8 @@ For removed consumers the before-side address and usage supply the link target.
 Repeated physical placements do not duplicate logical evidence or screen counts;
 the inspector can resolve that logical instance to its current ranges.
 
-The v5 result has no `sharedImpact`, and its entries have no `dependencies` or
-`sharedImpact`. The inherited `kind: "dependency"` reason names a referenced
+The v5 result has no `sharedImpact`; its entries omit `dependencies` and
+`sharedImpact` (both removed). The inherited `kind: "dependency"` reason names a referenced
 resource, not a manually declared repository path. Existing `ignoredImpact`
 and view `ignoredIds` retain manual
 Review-ignore evidence for screens; component variant views retain their own

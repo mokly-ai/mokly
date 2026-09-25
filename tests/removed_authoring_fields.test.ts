@@ -24,7 +24,7 @@ const common = {
   relatedDocs: [],
 };
 const views = { mobile: "Mobile", desktop: "Desktop" };
-const removed = { dependencies: undefined };
+const removed: Record<string, unknown> = { dependencies: undefined };
 
 function component(input: Record<string, unknown> = {}) {
   return defineComponent({
@@ -187,4 +187,47 @@ test("component ownedDependencies reports the same typed registry violation", as
         "[removed-field] entries/fixture.mockup.tsx (example): ownedDependencies has been removed; delete this field.",
       ),
   );
+});
+
+test("removed fields on a variant parent or root collection produce one parent violation without inheritance", async (context) => {
+  const fixture = await createFixture();
+  context.after(() => removeFixture(fixture));
+  const config = await loadConfig(fixture.root);
+  const cases = [
+    defineScreen({
+      ...common,
+      ...views,
+      ...removed,
+      route: "screens/example.html",
+      variants: [{ ...common, ...views, id: "child", slug: "child" }],
+    }),
+    defineRoot({
+      collection: { ...common, ...removed },
+      children: [screen({ ...common, ...views, id: "child", slug: "child" })],
+      path: "screens",
+    }),
+  ];
+  for (const definitions of cases) {
+    assert.throws(
+      () =>
+        prepareRegistry(
+          [definitions].flat().map((entry) => ({
+            ...entry,
+            definedIn: "entries/fixture.mockup.tsx",
+          })),
+          config,
+        ),
+      (error: Error & { code?: string }) => {
+        assert.equal(error.code, "build-invalid");
+        assert.deepEqual(error.message.match(/\[removed-field\]/g), [
+          "[removed-field]",
+        ]);
+        assert.match(
+          error.message,
+          /\[removed-field\] entries\/fixture\.mockup\.tsx \(example\): dependencies has been removed; delete this field\./,
+        );
+        return true;
+      },
+    );
+  }
 });

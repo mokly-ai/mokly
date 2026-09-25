@@ -167,20 +167,6 @@ export function addOutput(
   outputs.set(route, content.endsWith("\n") ? content : `${content}\n`);
 }
 
-export function stylesheetsFor(
-  catalogueRoute: string,
-  fragmentRoute: string,
-  colorScheme: ColorScheme,
-  config: ResolvedConfig,
-): string[] {
-  return stylesheetPlacementFor(
-    catalogueRoute,
-    fragmentRoute,
-    colorScheme,
-    config,
-  ).hrefs;
-}
-
 export interface StylesheetPlacement {
   hrefs: string[];
   position: number;

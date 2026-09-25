@@ -344,8 +344,7 @@ another blank line, then
 Add a blank line and one `- <kind>: <title> (<comma-separated reason kinds>)`
 line per changed entry in result order, using the `after ?? before` title and
 the existing Markdown escaping. With no changed entries retain the blank line;
-end the file with LF. Neither version includes impact-evidence or
-impact-only counts or a "Shared-impact paths" section. Changed views include
+end the file with LF. No version includes impact-evidence, impact-only counts, or a "Shared-impact paths" section. Changed views include
 retained rendered-resource evidence as well as
 material document changes. Ignored-only screens do not inflate output changes.
 These counts aggregate fragment comparisons per screen; the catalogue Changes
@@ -415,7 +414,7 @@ omitted; historical results without them remain valid. Retained resource reasons
 make paired views changed. Comparison readers reject v2 and v3 as unsupported;
 v4 is the screen-only successor to v2 and v5 is the component-aware successor
 to v3. Both omit top-level `sharedImpact` and per-entry `dependencies` and
-`sharedImpact`, with no compatibility shim for those public fields. The
+`sharedImpact` (all removed), with no compatibility shim for those public fields. The
 `kind: "dependency"` view reason remains the wire name for a referenced
 resource; it does not mean an authored repository-path declaration.
 

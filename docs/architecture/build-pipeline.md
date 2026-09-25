@@ -5,8 +5,8 @@
 Component CSS linking, manifest v6 and source-path-free classification were
 planned by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md)
 and implemented in Milestones 3, 6 and 4 respectively. The pipeline below
-describes current behavior. The renderer-entry refinement below is planned for
-Milestone 11 and is not yet implemented.
+describes current behavior. Milestone 11 implemented the renderer-entry
+refinement below.
 
 ## Overview
 

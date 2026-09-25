@@ -6,6 +6,7 @@ import type { ComponentDefinition } from "../components/types.js";
 
 /** Metadata shared by all structured catalogue entries. */
 export interface EntryInput {
+  dependencies?: never;
   description: string;
   id: string;
   rationale?: string;
@@ -20,6 +21,7 @@ export interface RoutedEntryInput extends EntryInput {
 
 /** One authored state flattened beneath its parent screen. */
 export interface ScreenVariantInput {
+  dependencies?: never;
   address?: string;
   colorSchemes?: readonly ColorScheme[];
   description: string;
@@ -115,6 +117,7 @@ export interface NestedInherited {
 
 /** A screen in a nested definition tree. */
 export interface NestedScreenInput extends NestedInherited {
+  dependencies?: never;
   colorSchemes?: readonly ColorScheme[];
   description: string;
   desktop: ReactNode;
@@ -146,6 +149,7 @@ export interface NestedPageMarker extends NestedPageInput {
 
 /** A collection in a nested definition tree. */
 export interface NestedCollectionInput extends NestedInherited {
+  dependencies?: never;
   children: readonly NestedChild[];
   description: string;
   id: string;
@@ -156,6 +160,7 @@ export interface NestedCollectionInput extends NestedInherited {
 
 /** Root collection metadata for a nested definition tree. */
 export interface RootCollectionInput extends NestedInherited {
+  dependencies?: never;
   description: string;
   id: string;
   rationale?: string;

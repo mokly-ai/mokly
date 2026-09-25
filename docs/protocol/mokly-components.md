@@ -5,10 +5,9 @@
 Component-declared stylesheet authoring is delivered by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md) and
 implemented in Milestone 3. Removal of entry `dependencies` and
-`ownedDependencies` is implemented in Milestone 6.
-Milestone 11 of the same plan will omit `stylesheets` from the renderer's
-component entry at runtime and in its public type; that refinement is not
-implemented yet.
+removal of `ownedDependencies` was implemented in Milestone 6.
+Milestone 11 of the same plan omits `stylesheets` from the renderer's
+component entry at runtime and in its public type.
 
 The public `defineComponent` API, saved variants, ownership attribution,
 explorer, inspection, and local controls are implemented. The

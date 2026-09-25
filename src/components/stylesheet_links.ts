@@ -5,6 +5,51 @@ import { MoklyError } from "../errors.js";
 
 type Node = DefaultTreeAdapterMap["node"];
 
+/** A stylesheet link may carry other rel tokens, including alternate. */
+export function stylesheetLink(
+  node: Node,
+): node is DefaultTreeAdapterMap["element"] {
+  return (
+    "tagName" in node &&
+    node.tagName === "link" &&
+    node.attrs.some(
+      (attribute) =>
+        attribute.name === "rel" &&
+        attribute.value
+          .toLowerCase()
+          .split(/[\t\n\f\r ]+/)
+          .includes("stylesheet"),
+    )
+  );
+}
+
+function headEndOffset(
+  head: DefaultTreeAdapterMap["element"],
+  document: DefaultTreeAdapterMap["document"],
+  html: string,
+): number {
+  const endTag = head.sourceCodeLocation?.endTag;
+  if (endTag) return endTag.startOffset;
+  const lastElement = head.childNodes
+    .filter(
+      (node): node is DefaultTreeAdapterMap["element"] => "tagName" in node,
+    )
+    .at(-1);
+  if (lastElement?.sourceCodeLocation)
+    return lastElement.sourceCodeLocation.endOffset;
+  const body = document.childNodes
+    .flatMap((node) => ("childNodes" in node ? node.childNodes : []))
+    .find((node) => "tagName" in node && node.tagName === "body");
+  if (body && "childNodes" in body) {
+    if (body.sourceCodeLocation?.startTag)
+      return body.sourceCodeLocation.startTag.startOffset;
+    const first = body.childNodes.find((node) => node.sourceCodeLocation);
+    if (first?.sourceCodeLocation) return first.sourceCodeLocation.startOffset;
+    if (body.sourceCodeLocation) return body.sourceCodeLocation.endOffset;
+  }
+  return html.length;
+}
+
 /** Insert declared links beside the renderer's actual configured links. */
 export function insertComponentStylesheets(
   html: string,
@@ -24,22 +69,14 @@ export function insertComponentStylesheets(
     if ("childNodes" in node) node.childNodes.forEach(findHead);
   }
   findHead(document);
-  if (!head?.sourceCodeLocation?.endTag)
+  if (!head)
     throw new MoklyError(
       "build-invalid",
       `${route}: cannot insert component stylesheets: missing <head>`,
     );
   function findLinks(node: Node): void {
     if ("tagName" in node) {
-      if (
-        node.tagName === "link" &&
-        node.attrs.some(
-          (attribute) =>
-            attribute.name === "rel" &&
-            attribute.value.toLowerCase().split(/\s+/).includes("stylesheet"),
-        )
-      )
-        links.push(node);
+      if (stylesheetLink(node)) links.push(node);
     }
     if ("childNodes" in node) node.childNodes.forEach(findLinks);
   }
@@ -66,7 +103,7 @@ export function insertComponentStylesheets(
   const offset =
     anchors[position]?.startOffset ??
     anchors.at(-1)?.endOffset ??
-    head.sourceCodeLocation.endTag.startOffset;
+    headEndOffset(head, document, html);
   const insertion = declared
     .map(
       (file) =>

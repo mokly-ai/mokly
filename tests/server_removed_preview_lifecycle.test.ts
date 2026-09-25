@@ -15,7 +15,6 @@ import type { RemovedPagePreviewArtifact } from "../packages/viewer/dist/review/
 import type { ReviewArtifact } from "../packages/viewer/dist/review/types.js";
 
 const page = {
-  declaredDependencies: [],
   description: "Removed page",
   id: "removed-page",
   kind: "page" as const,

@@ -10,8 +10,8 @@ The removal of entry `dependencies` was planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md) and
 implemented in Milestone 6; the `componentStylesheets` export is implemented in
 Milestone 3. Removed inputs now fail with a registry violation.
-Milestone 11 of the same plan will make the public input types reject these
-removed fields at compile time; that type refinement is not implemented yet.
+Milestone 11 of the same plan made public input types reject these removed
+fields at compile time; runtime validation remains in place for untyped input.
 
 ## Public Authoring API
 

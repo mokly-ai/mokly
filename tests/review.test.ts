@@ -413,6 +413,13 @@ test("Review ignores edits to unrendered source files", async (context) => {
     new CommittedRepository(new NodeGitCommandRunner(fixture.root)),
   );
 
+  assert.ok(result.screens.every((screen) => screen.state === "unchanged"));
+  assert.deepEqual(result.ignoredImpact, []);
+  assert.ok(
+    result.screens.every((screen) =>
+      screen.views.every((view) => !view.reasons?.length),
+    ),
+  );
   assert.ok(
     result.screens.every((screen) => !Object.hasOwn(screen, "sharedImpact")),
   );

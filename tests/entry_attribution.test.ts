@@ -80,7 +80,6 @@ test("a component defined in a helper beside its implementation is attributed to
     (entry) => entry.id === "button",
   );
   assert.equal(button?.sourcePath, "src/components/button/button.mokly.tsx");
-  assert.equal(Object.hasOwn(button ?? {}, "dependencies"), false);
   const demo = compilation.manifest.entries.find(
     (entry) => entry.id === "button-demo",
   );

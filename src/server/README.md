@@ -4,6 +4,11 @@ Serve publishes a validated catalogue, renders requested documents and exposes
 comparison snapshots. `serve.ts` owns single-process Serve; `serve_watched.ts`
 owns watchers, background work and the supervised HTTP child. `http.ts` and
 `child.ts` serve accepted inputs and never prepare historical baselines.
+Watched Serve validates component declarations before creating its initial
+source watcher. Every declared CSS file is an exact watch target even before
+any view renders it; a successful configuration reload prepares new
+declarations before replacing the watcher. The preloaded consumer graph is
+reused for the first live runtime rather than bundled twice.
 `http_shutdown.ts` stops HTTP admission, ends live-update streams, and disconnects
 open clients before draining every owned service. Incomplete request headers or
 unfinished responses cannot keep shutdown waiting for the browser.
