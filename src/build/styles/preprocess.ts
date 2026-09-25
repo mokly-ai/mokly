@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { logicalRepositoryPath } from "../../config/file_locations.js";
 import { toPosixPath } from "../../config/paths.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { MoklyError } from "../../errors.js";
@@ -92,7 +93,10 @@ export class StylePreprocessor {
       );
       for (const report of result.reports) {
         if (report.type !== "dependency" || !report.file) continue;
-        const file = path.resolve(path.dirname(source), report.file);
+        const file = logicalRepositoryPath(
+          path.resolve(path.dirname(source), report.file),
+          this.config.repoRoot,
+        );
         const importer = nested.get(file);
         if (importer)
           throw new MoklyError(
@@ -134,6 +138,7 @@ export class StylePreprocessor {
       };
     const relative = toPosixPath(path.relative(this.config.repoRoot, source));
     const scoped = scopeModule(text, relative);
+    validateImageSetStrings(scoped.css, source, this.config.repoRoot);
     for (const name of scoped.identities) {
       const first = this.identities.get(name);
       if (first && first !== relative) {

@@ -36,6 +36,12 @@ directory, instantiate with those options, and preserve declared order.
 keys, missing/invalid plugins, escaping paths and failed package resolution.
 Let PostCSS normalize array elements instead of requiring `postcssPlugin`;
 map normalization failures to the indexed `config-invalid` diagnostic.
+The parent treats `error`, `messageerror`, and every unexpected worker exit
+(including exit code 0) as permanent failure. Reject all in-flight requests
+and reject later calls immediately with the worker diagnostic in the
+[error catalogue](./mokly-imported-styles-errors.md); a requested `close()`
+is not a worker failure. Worker death cannot leave Build or watched Serve's
+serialized action queue waiting for a response.
 
 Run the consumer's plugins in order once for each distinct effective
 stylesheet input with `from` set to its physical source path, `map: false`,
@@ -71,8 +77,10 @@ comparison omits that field from both configurations, while still comparing
 the compiled output, source inventory and captured public bytes.
 
 Interpret a plugin's `dependency.file` or `dir-dependency.dir` relative to
-its stylesheet when not absolute. Ignore inputs outside `repoRoot` (also
-physical escapes) and under `node_modules` before normalizing; never feed
+its stylesheet when not absolute. Translate physical paths reported by
+PostCSS under a symlinked repository root to the configured logical root,
+retaining real aliases for confinement and privacy checks. Ignore inputs
+outside the repository's physical root and under `node_modules` before normalizing; never feed
 them to `normalizeSourceFiles`. For directory messages, recursively walk
 regular files from the reported directory with the discovery walk's denied
 directory list; do not honor `.gitignore`, but match each path relative to
@@ -91,7 +99,10 @@ real path: generated fragments/manifest/reserved tree, Review output, cache,
 denied directory names, and physical escapes are distinct reasons. Reject
 generated output, Review and cache ahead of required inputs; denied directory
 names prune discovery and directory scans but cannot hide exact required inputs
-or their ancestors. A symlink alias to generated output keeps
+or their ancestors. An explicit `dependency.file` is an exact required input:
+an existing file under `dist`, `target`, `coverage`, `test-results`,
+`playwright-report`, or `.context` remains inventoried and watched. Broad
+directory scans still prune those trees. A symlink alias to generated output keeps
 the same explicit-dependency error and committed/derived directory precedence
 as its physical target; diagnostics name the reported logical path. In
 committed mode scan generated trees for matching files before reporting them;

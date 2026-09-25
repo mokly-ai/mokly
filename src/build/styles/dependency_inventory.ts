@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { logicalRepositoryPath } from "../../config/file_locations.js";
 import { compareCodeUnits } from "../../config/path_order.js";
 import { toPosixPath } from "../../config/paths.js";
 import type { ResolvedConfig } from "../../config/types.js";
@@ -51,23 +52,28 @@ export function collectPostcssDependencies(
     ),
   );
   for (const report of ordered) {
+    const source = logicalRepositoryPath(report.source, config.repoRoot);
     if (report.malformed)
       throw new MoklyError(
         "build-invalid",
-        `PostCSS plugin ${report.plugin} reported an invalid dependency for ${relative(config, report.source)}; report a file or directory path and optional glob`,
+        `PostCSS plugin ${report.plugin} reported an invalid dependency for ${relative(config, source)}; report a file or directory path and optional glob`,
       );
-    const file = path.resolve(
-      path.dirname(report.source),
-      report.type === "dependency" ? report.file! : report.directory!,
+    const file = logicalRepositoryPath(
+      path.resolve(
+        path.dirname(source),
+        report.type === "dependency" ? report.file! : report.directory!,
+      ),
+      config.repoRoot,
     );
+    const normalizedReport = { ...report, source };
     if (ignoredDependencyPath(file, config, ownership)) continue;
     if (report.type === "dependency") {
-      explicit.push({ file, report });
+      explicit.push({ file, report: normalizedReport });
     } else {
       if (!fs.statSync(file, { throwIfNoEntry: false })?.isDirectory())
         throw new MoklyError(
           "build-invalid",
-          `PostCSS plugin ${report.plugin} reported a missing directory dependency for ${relative(config, report.source)}: ${relative(config, file)}; create the directory or correct the plugin`,
+          `PostCSS plugin ${report.plugin} reported a missing directory dependency for ${relative(config, source)}: ${relative(config, file)}; create the directory or correct the plugin`,
         );
       const glob = report.glob ?? "**/*";
       const key = `${file}\0${glob}`;
@@ -79,7 +85,11 @@ export function collectPostcssDependencies(
         scanned.set(key, matches);
       }
       for (const matched of matches)
-        expanded.push({ file: matched, report, directory: file });
+        expanded.push({
+          file: matched,
+          report: normalizedReport,
+          directory: file,
+        });
     }
   }
   const sorted = (candidates: readonly Candidate[]) =>

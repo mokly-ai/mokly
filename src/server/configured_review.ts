@@ -1,5 +1,6 @@
 /** Configure Serve's repository-backed complete and selected Review providers. */
 import type { ResolvedConfig } from "../config/types.js";
+import type { ChangeEvidence } from "../review/change_evidence.js";
 import { RepositoryRemovedPagePreview } from "../review/page_preview.js";
 import type { ReadOnlyReviewRepository } from "../review/repository.js";
 import { runReview } from "../review/run.js";
@@ -26,6 +27,7 @@ export function configuredServedReview(
   config: ResolvedConfig,
   base: string,
   git: ReadOnlyReviewRepository | ReviewRepositorySource,
+  changeEvidence?: ChangeEvidence,
 ): ServedReview {
   const repository = () => ("current" in git ? git.current() : git);
   return {
@@ -51,6 +53,7 @@ export function configuredServedReview(
         repository(),
         undefined,
         options.changedPathExclusions,
+        changeEvidence,
       );
     },
     outDir: config.review.outDir,

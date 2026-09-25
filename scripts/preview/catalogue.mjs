@@ -26,6 +26,7 @@ import { startCatalogueServer } from "../../dist/server/http.js";
 
 import { previewOwnership, stagePreviewArtifact } from "./artifact.mjs";
 import { captureAssets, capturePage, writeText } from "./capture.mjs";
+import { publicationChangeEvidence } from "./change_evidence.mjs";
 import {
   captureComparison,
   capturePublicationPagePreviews,
@@ -71,17 +72,32 @@ export async function buildPreview(config, output, options = {}) {
           throw new Error(
             "consumer inputs changed during publication; retry with stable inputs",
           );
+        const changeEvidence = git
+          ? await publicationChangeEvidence(
+              config,
+              git,
+              compiled,
+              excludedRoots,
+            )
+          : undefined;
         const snapshot = await loadCatalogueSnapshot(
           config,
           git
-            ? (manifest) => computeCatalogueChanges(config, base, git, manifest)
+            ? (manifest) =>
+                computeCatalogueChanges(
+                  config,
+                  base,
+                  git,
+                  manifest,
+                  changeEvidence,
+                )
             : undefined,
           compiled?.manifest ?? inputs.manifest,
         );
         const { catalogue, changes } = snapshot;
         const manifest = catalogue.manifest;
         const review = git
-          ? previewComparisonProvider(config, stage, base, git)
+          ? previewComparisonProvider(config, stage, base, git, changeEvidence)
           : undefined;
         const server = await startCatalogueServer(config, {
           base,

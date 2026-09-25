@@ -21,6 +21,7 @@ import {
   baselineResourceConfig,
   readBaseManifest,
 } from "../review/base_manifest.js";
+import type { ChangeEvidence } from "../review/change_evidence.js";
 import { reviewChangedPaths } from "../review/changed_paths.js";
 import { classifyComponents } from "../review/component_classification.js";
 import { EvidenceAssetReader } from "../review/evidence_assets.js";
@@ -189,15 +190,18 @@ export async function readCatalogueChanges(
   commit: string,
   outputs?: ReadonlyMap<string, GeneratedFile>,
   deliveredStyleSources?: readonly string[],
+  acceptedEvidence?: ChangeEvidence,
 ): Promise<ComponentChangeSnapshot> {
   outputs = await derivedHeadOutputs(config, manifest, outputs);
   const baseline = await readBaseManifest(git.reader, commit, config);
-  const authoredPaths = await reviewChangedPaths(
-    git.evidence,
-    commit,
-    config,
-    config.review.outDir,
-  );
+  const authoredPaths = acceptedEvidence
+    ? undefined
+    : await reviewChangedPaths(
+        git.evidence,
+        commit,
+        config,
+        config.review.outDir,
+      );
   const components =
     hasRegisteredComponents(baseline) || hasRegisteredComponents(manifest);
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
@@ -208,14 +212,16 @@ export async function readCatalogueChanges(
     commit,
     prefix,
   );
-  const changedPaths = await importedChangedPaths(
-    config,
-    beforeReader,
-    reader,
-    authoredPaths,
-    outputs,
-    deliveredStyleSources,
-  );
+  const changedPaths =
+    acceptedEvidence ??
+    (await importedChangedPaths(
+      config,
+      beforeReader,
+      reader,
+      authoredPaths!,
+      outputs,
+      deliveredStyleSources,
+    ));
   const result = components
     ? await classifyComponents({
         before: baseline,

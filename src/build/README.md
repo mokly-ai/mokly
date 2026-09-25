@@ -11,11 +11,16 @@ imports in JavaScript import order, traverses prelude `@import`s, and emits
 one deterministic stylesheet per nonempty root. The renderer's complete CSS
 closure is pruned before processing entry CSS; separate entries still share
 sources independently. CSS Modules use path-stable Lightning CSS names and
-expose default and named bindings to JavaScript. CSS `url()` assets become
+expose default and named bindings to JavaScript. Lightning dependency analysis
+restores `url()` tokens that module normalization would otherwise turn into
+unvalidated `image-set()` strings; the string guard runs again afterwards.
+CSS `url()` assets become
 byte-preserving files under `mokly-generated/assets/`, and CSS/asset inputs
 join the private source inventory in both full and inventory-only graph loads.
 An optional config-relative PostCSS module runs in a fresh isolated worker
 per graph load so plugin package caches cannot leak into the next compile.
+Unexpected worker errors, clone failures and exits reject every pending and
+later request promptly, including an exit with code zero.
 Each distinct effective stylesheet input runs once before CSS Modules naming;
 both passes share the result. Its local imports join `configSourceFiles` and trigger config
 reloads, while package imports stay unbundled to preserve plugin-native
@@ -33,8 +38,10 @@ validation precedence and deterministic Tailwind settings.
 PostCSS 8 normalizes plugin instances, uncalled creators, plain functions and
 objects with `postcss` factories; Mokly does not narrow accepted plugin shapes.
 `package_owned_paths.ts` classifies logical and physical paths by generated,
-Review, cache, denied-directory-name and outside reasons. Exact required
-inputs inside denied-name directories remain watchable; output never does.
+Review, cache, package-code, denied-directory-name and outside reasons. Exact
+reported files inside denied-name directories remain private and watchable;
+directory scans still prune those trees. Physical paths reported by PostCSS or
+esbuild map back to a symlinked configured root before inventory and guards.
 Fragment render input now lists the
 matching authored stylesheet rule, then generated renderer CSS, then the
 exporting entry's CSS, relative to the fragment route. Pages still render

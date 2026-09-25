@@ -59,7 +59,7 @@ export function walkDependencyDirectory(
         entry.isFile() &&
         matcher.match(toPosixPath(path.relative(directory, candidate))) &&
         (!insideMockups ||
-          !["review", "cache", "denied", "outside"].includes(
+          !["review", "cache", "denied", "package", "outside"].includes(
             dependencyOwnership(candidate, config, cache, false) ?? "",
           ))
       ) {
@@ -78,5 +78,5 @@ export function ignoredDependencyPath(
   cache: DependencyPathCache = new Map(),
 ): boolean {
   const owned = dependencyOwnership(candidate, config, cache);
-  return owned !== undefined && owned !== "generated";
+  return blocksRequiredInput(owned, true) && owned !== "generated";
 }

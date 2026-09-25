@@ -10,7 +10,13 @@ import { configuredServedReview } from "../../dist/server/configured_review.js";
 const comparisonRoute = "/__mokly/diffs/review.json";
 
 /** Keep publishing isolated from another server's configured comparison output. */
-export function previewComparisonProvider(config, stage, base, git) {
+export function previewComparisonProvider(
+  config,
+  stage,
+  base,
+  git,
+  changeEvidence,
+) {
   return configuredServedReview(
     {
       ...config,
@@ -18,6 +24,7 @@ export function previewComparisonProvider(config, stage, base, git) {
     },
     base,
     git,
+    changeEvidence,
   );
 }
 

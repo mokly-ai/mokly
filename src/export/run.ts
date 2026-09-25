@@ -1,14 +1,21 @@
+import path from "node:path";
+
 import type { ReviewArtifact } from "@mokly/viewer/data";
 
 import { compileCatalogue } from "../build/compile.js";
 import { writeCompilation } from "../build/transaction.js";
-import { projectRealPath } from "../config/paths.js";
+import { projectRealPath, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError, errorMessage } from "../errors.js";
 import { removedManifestEntries } from "../registry/changes.js";
-import { readBaseManifest } from "../review/base_manifest.js";
+import { GitReviewAssetReader } from "../review/assets.js";
+import {
+  baselineResourceConfig,
+  readBaseManifest,
+} from "../review/base_manifest.js";
 import { reviewChangedPaths } from "../review/changed_paths.js";
 import { compareReview } from "../review/compare.js";
+import { importedChangedPaths } from "../review/imported_changes.js";
 import {
   captureRemovedPagePreviews,
   packageRemovedPagePreviews,
@@ -89,6 +96,23 @@ async function generateExport(
     let comparison: ReviewArtifact | undefined;
     let contentChanges: readonly string[] = [];
     if (prepared && baseline) {
+      const prefix = toPosixPath(
+        path.relative(config.repoRoot, config.mockupsDir),
+      );
+      const baselineAssets = new GitReviewAssetReader(
+        baselineResourceConfig(config, baseline),
+        prepared.reader,
+        prepared.commit,
+        prefix,
+      );
+      const changeEvidence = await importedChangedPaths(
+        config,
+        baselineAssets,
+        assetReader,
+        changed,
+        compilation.outputs,
+        compilation.deliveredStyleSources,
+      );
       comparison = await compareReview(
         compilation,
         config,
@@ -100,6 +124,7 @@ async function generateExport(
         transaction.stage,
         assetReader,
         exclusions,
+        { changeEvidence },
       );
       contentChanges = await changedContentPaths(
         compilation.manifest,
@@ -107,7 +132,7 @@ async function generateExport(
         config,
         prepared.reader,
         prepared.commit,
-        changed,
+        changeEvidence,
         assetReader,
         comparison.result.schemaVersion === 3 ? "pages" : "all",
       );

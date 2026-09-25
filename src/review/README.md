@@ -249,6 +249,10 @@ cargo xtask check
 
 Key code:
 
+- `change_evidence.ts`, `imported_changes.ts`: freeze Git-authored paths merged
+  with accepted generated stylesheet/asset bytes and delivered-source stripping;
+  live, export and Changes-enabled publication use the same typed input for
+  comparison and membership.
 - `compare.ts`, `screen_compare.ts`: screen comparisons and retained artifacts.
 - `page_preview.ts`: typed before-only page capture from accepted removal state.
 - `component_classification.ts`, `component_view.ts`: component ownership policy.

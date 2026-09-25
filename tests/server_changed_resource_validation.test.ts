@@ -5,6 +5,7 @@ import test from "node:test";
 
 import { readManifest } from "../dist/registry/manifest.js";
 import { FileSystemReviewAssetReader } from "../dist/review/assets.js";
+import { asChangeEvidence } from "../dist/review/change_evidence.js";
 import { committedReviewRepository } from "../dist/review/repository.js";
 import { computeChangedRoutes } from "../dist/server/changed.js";
 import { classifyChangedContent } from "../dist/server/changed_content.js";
@@ -258,7 +259,7 @@ test("README edits are not public content changes and require no resource traver
     fixture.config,
     committedReviewRepository(fixture.config).reader,
     "HEAD",
-    ["mockups/README.md"],
+    asChangeEvidence(["mockups/README.md"]),
     new ObservedReader(fixture.config),
   );
   assert.deepEqual(result, { changedPaths: [], screens: [] });

@@ -2,7 +2,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { isInside, toPosixPath } from "../config/paths.js";
+import { logicalRepositoryPath } from "../config/file_locations.js";
+import { toPosixPath } from "../config/paths.js";
 
 /** Find the metafile key for an existing module or emitted output. */
 export function metafileKey(workingDir: string, candidate: string): string {
@@ -14,9 +15,5 @@ export function metafileKey(workingDir: string, candidate: string): string {
 export function metafilePath(workingDir: string, key: string): string {
   const physicalRoot = fs.realpathSync(workingDir);
   const absolute = path.resolve(physicalRoot, key);
-  return isInside(workingDir, absolute)
-    ? absolute
-    : isInside(physicalRoot, absolute)
-      ? path.resolve(workingDir, path.relative(physicalRoot, absolute))
-      : absolute;
+  return logicalRepositoryPath(absolute, workingDir);
 }

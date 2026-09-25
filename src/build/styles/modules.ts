@@ -25,6 +25,7 @@ export function scopeModule(css: string, relative: string): ScopedStyle {
         customIdents: true,
         pure: false,
       },
+      analyzeDependencies: true,
       minify: false,
     });
   } catch (error) {
@@ -78,8 +79,16 @@ export function scopeModule(css: string, relative: string): ScopedStyle {
       .sort()
       .map((name) => [name, expand(name, new Set())]),
   );
+  let output = result.code.toString();
+  for (const dependency of result.dependencies ?? []) {
+    if (dependency.type !== "url") continue;
+    const quoted = `"${dependency.placeholder}"`;
+    const value = JSON.stringify(dependency.url);
+    output = output.replaceAll(`url(${quoted})`, `url(${value})`);
+    output = output.replaceAll(quoted, `url(${value})`);
+  }
   return {
-    css: result.code.toString(),
+    css: output,
     exports: exported,
     identities: names,
   };

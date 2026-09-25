@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { capturePublicFiles } from "../dist/export/public_files.js";
 import { assembleExport } from "../dist/export/site.js";
+import { asChangeEvidence } from "../dist/review/change_evidence.js";
 import { compareReview } from "../dist/review/compare.js";
 import { changedContentPaths } from "../dist/server/changed_content.js";
 import { readCatalogueChanges } from "../dist/server/component_changes.js";
@@ -59,7 +60,7 @@ for (const editComponent of [false, true]) {
       fixture.config,
       fixture.git.reader,
       "a".repeat(40),
-      fixture.changedPaths,
+      asChangeEvidence(fixture.changedPaths),
       undefined,
       "pages",
     );

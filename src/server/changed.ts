@@ -9,6 +9,7 @@ import {
   type CatalogueChangeSnapshot,
 } from "../registry/changes.js";
 import { readManifest } from "../registry/manifest.js";
+import type { ChangeEvidence } from "../review/change_evidence.js";
 import type { ReadOnlyReviewRepository } from "../review/repository.js";
 
 import {
@@ -42,6 +43,7 @@ export async function computeCatalogueChanges(
   base: string,
   git: ReadOnlyReviewRepository,
   manifest?: ManifestV5,
+  acceptedEvidence?: ChangeEvidence,
 ): Promise<ResolvedCatalogueChanges> {
   const compilation =
     config.generatedOutput === "derived" && !manifest
@@ -57,6 +59,7 @@ export async function computeCatalogueChanges(
     commit,
     compilation?.outputs,
     compilation?.deliveredStyleSources,
+    acceptedEvidence,
   );
   const { baseline, changedRoutes } = componentChanges;
   const removedEntries = removedManifestEntries(manifest, baseline);

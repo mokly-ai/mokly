@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { isBaselineCachePath } from "../config/cache_paths.js";
+import { logicalRepositoryPath } from "../config/file_locations.js";
 import { isInside, projectRealPath, toPosixPath } from "../config/paths.js";
 import { isDeniedSourceSegment } from "../config/private_directories.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -12,7 +13,7 @@ import { isGeneratedRoute } from "./styles/routes.js";
 
 /** Reasons a consumer path cannot be discovered through a broad walk. */
 export type PackageOwnedReason =
-  "generated" | "review" | "cache" | "denied" | "outside";
+  "generated" | "review" | "cache" | "denied" | "package" | "outside";
 
 /** Generated output, Review output and cache outrank explicitly required inputs. */
 export function blocksRequiredInput(
@@ -29,7 +30,7 @@ export function packageOwnedPath(
   directory?: boolean,
   deniedRoot = config.repoRoot,
 ): PackageOwnedReason | undefined {
-  const absolute = path.resolve(candidate);
+  const absolute = logicalRepositoryPath(candidate, config.repoRoot);
   if (!isInside(config.repoRoot, absolute)) return "outside";
   if (
     absolute.endsWith(".html") &&
@@ -64,6 +65,7 @@ export function packageOwnedPath(
     if (isBaselineCachePath(pathName, repoRoot, false)) return "cache";
     if (isInside(sourceRoot, pathName)) {
       const segments = path.relative(sourceRoot, pathName).split(path.sep);
+      if (segments.includes("node_modules")) return "package";
       if (
         segments.slice(0, -1).some(isDeniedSourceSegment) ||
         (isDirectory && isDeniedSourceSegment(segments.at(-1) ?? ""))

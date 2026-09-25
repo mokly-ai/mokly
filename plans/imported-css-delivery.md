@@ -4,7 +4,9 @@
 
 Active until the implementation PR merges. Created 2026-09-24 from the
 CSS-in-JS investigation on this branch. Milestones 1–9 are complete;
-the final post-push review's findings await the user's decision in the
+the user authorized final-review fixes in Milestones 10–11 and resolved
+finding 3 in the separate `922c1ec` merge. Milestone 10 is complete;
+Milestone 11 and the parent's final independent review remain. See the
 [review record](../docs/reviews/imported-css-delivery.md).
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
@@ -670,6 +672,45 @@ Close the remaining edge cases without changing successful delivery bytes.
       13 Low) are recorded in the
       [review record](../docs/reviews/imported-css-delivery.md) for the
       user's decision.
+
+## Milestone 10: Final review fixes (High and Medium) (complete)
+
+Repair scale, evidence, CSS delivery and worker/source confinement from review
+findings 1, 2, 4, 5, 6 and 7. Finding 3 was resolved by the separate
+`922c1ec` merge and is not part of this milestone.
+
+- [x] Index required watch paths and ancestors once, deduplicate covered watch targets, compare watch-root sets, and measure 1,000/4,000-file readiness and a 3,000-file addition.
+- [x] Construct typed merged Changes evidence once per export/publish and require it at every classification boundary; match live membership for plain CSS, CSS Modules and assets in both output modes.
+- [x] Preserve `image-set(url(...))` asset semantics through CSS Modules, validate transformed CSS, and prove unrelated on-demand views remain available.
+- [x] Fail every pending and later PostCSS worker request promptly and consistently after unexpected error, messageerror or exit, including exit zero.
+- [x] Apply one exact-required-input rule to explicit PostCSS dependencies, discovery, watching and freshness while keeping broad scans pruned.
+- [x] Map physical esbuild, PostCSS and watch paths back to a symlinked configured root, retaining both identities and guard precedence.
+- [x] Update contracts and READMEs, add red-first regressions, run the full verification gate, commit and push Milestone 10.
+
+## Milestone 11: Final review fixes (Low)
+
+Close review findings 8–20 without changing the accepted-generation model.
+
+- [ ] Recognize an EOF CSS `@import` and cross-check import-prelude parsing with esbuild edges.
+- [ ] Reject only local quoted `image-set()` strings; document the behavior change for the PR.
+- [ ] Use one alias-aware package-code predicate throughout graph, CSS, transformer and PostCSS inventory.
+- [ ] Validate every root's direct CSS imports after graph build, including extensionless, `require()` and dynamic imports.
+- [ ] Pass typed accepted-generation Changes inputs and avoid committed graph reloads and edit races.
+- [ ] Collect 20,000 Tailwind-shaped dependencies within a generous bound using cached roots and one sort.
+- [ ] Apply public-mockups dependency diagnostics before regular-file diagnostics.
+- [ ] Align and test global delivered-source shared-impact stripping.
+- [ ] Remove repository-only packaged Styles guide text and test the guide copy.
+- [ ] Correct protocol drift, stale status text, and the Milestone 7 test names.
+- [ ] Split oversized server modules and protocol pages; add a changed-file TypeScript/JavaScript and protocol-Markdown length lint to `xtask` and document it.
+- [ ] Exercise CSS Modules, assets and local PostCSS in packed-consumer smoke and require the runtime worker artifact.
+- [ ] Update contracts, guides, READMEs and review resolutions; add red-first regressions, run the full verification gate, commit and push Milestone 11.
+
+## Milestone 12: Commit, push, and review
+
+- [ ] Commit and push final bookkeeping, including exact resolution commit references, with a clean intended diff.
+- [ ] Review the complete local diff against `origin/main` using
+      `docs/implementation-review-prompt.md` after the push. Report findings
+      without changing the implementation; the parent session owns this review.
 
 ## Post-merge follow-up (non-blocking)
 

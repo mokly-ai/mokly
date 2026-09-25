@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import { asChangeEvidence } from "../dist/review/change_evidence.js";
 import { committedReviewRepository } from "../dist/review/repository.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
 import { changedContentPaths } from "../dist/server/changed_content.js";
@@ -66,7 +67,7 @@ for (const version of [2, 3] as const) {
           fixture.config,
           fixture.client.reader,
           fixture.commit,
-          paths,
+          asChangeEvidence(paths),
         ),
         change === "identical" || change === "ignored"
           ? []
@@ -111,7 +112,7 @@ for (const failure of ["symlink", "private", "invalid-ignore"] as const) {
         fixture.config,
         fixture.client.reader,
         fixture.commit,
-        ["mockups/handbook.html"],
+        asChangeEvidence(["mockups/handbook.html"]),
       ),
       failure === "symlink"
         ? /not a regular Git file/

@@ -25,6 +25,7 @@ import {
   type ReviewAssetReader,
 } from "./assets.js";
 import { baselineResourceConfig, readBaseManifest } from "./base_manifest.js";
+import type { ChangeEvidence } from "./change_evidence.js";
 import { reviewChangedPaths } from "./changed_paths.js";
 import { CompilationAssetReader } from "./compilation_assets.js";
 import { compareComponentCatalogue } from "./component_compare.js";
@@ -38,6 +39,8 @@ import { aggregateIgnored, fragmentRoutes } from "./screen_views.js";
 export interface CompareReviewOptions {
   /** Disable the unchanged-view optimization for differential tests. */
   useFastPath?: boolean;
+  /** Reuse the exact merged evidence already constructed for export/publication. */
+  changeEvidence?: ChangeEvidence;
 }
 
 /** Compare checked head output to its Git branch point and retain pane artifacts. */
@@ -53,13 +56,15 @@ export async function compareReview(
 ): Promise<ReviewArtifact> {
   const baseCommit = await git.evidence.mergeBase(baseRef, "HEAD");
   const baseManifest = await readBaseManifest(git.reader, baseCommit, config);
-  const authoredPaths = await reviewChangedPaths(
-    git.evidence,
-    baseCommit,
-    config,
-    outDir,
-    changedPathExclusions,
-  );
+  const authoredPaths = options.changeEvidence
+    ? undefined
+    : await reviewChangedPaths(
+        git.evidence,
+        baseCommit,
+        config,
+        outDir,
+        changedPathExclusions,
+      );
   const mockupsPrefix = toPosixPath(
     path.relative(config.repoRoot, config.mockupsDir),
   );
@@ -69,14 +74,16 @@ export async function compareReview(
     baseCommit,
     mockupsPrefix,
   );
-  const changedPaths = await importedChangedPaths(
-    config,
-    baseAssetReader,
-    assetReader,
-    authoredPaths,
-    compilation.outputs,
-    compilation.deliveredStyleSources,
-  );
+  const changedPaths =
+    options.changeEvidence ??
+    (await importedChangedPaths(
+      config,
+      baseAssetReader,
+      assetReader,
+      authoredPaths!,
+      compilation.outputs,
+      compilation.deliveredStyleSources,
+    ));
   if (
     hasRegisteredComponents(baseManifest) ||
     hasRegisteredComponents(compilation.manifest)

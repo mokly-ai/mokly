@@ -7,7 +7,8 @@ The separate `mokly publish` command uploads through the
 
 `run.ts` pins one merge-base commit through `RepositoryEvidence`, retains the
 independent `BaselineReader`, runs the normal build, captures public inputs,
-compares them through the existing review engine, and verifies inputs again
+constructs one typed authored-plus-generated `ChangeEvidence` shared by Review
+and material Changes classification, and verifies inputs again
 before installation. `site.ts` uses the existing shell and Browse adapter to
 assemble exact v5 pages, real id aliases, package assets, and immutable comparisons.
 Publish's `--no-changes` uses this same engine with baseline reads, removed
@@ -37,7 +38,8 @@ with repository preview packaging. Repository capture therefore cannot publish
 a page path that consumer export would reject, while Serve itself continues to
 omit live page descriptors.
 The shared `server/changed_content.ts` calculation receives the same captured
-asset reader as comparisons, preserving Serve's material-output/resource Changes
+asset reader and merged evidence as comparisons, preserving Serve's
+material-output/resource Changes
 membership without reading a different current-file snapshot.
 For screen-only catalogues, `site.ts` projects per-view resource evidence from
 the existing v2 comparison into shell workspace data. Details can show matched,

@@ -127,6 +127,13 @@ Global `var(--brand)` tokens, grid-area and container names stay unchanged.
 Lightning may normalize declarations (e.g. `animation: pulse 1s` to
 `animation: 1s <scoped-name>`), preserving their meaning. A collision between
 distinct local identities fails rather than appending a suffix.
+Enable Lightning CSS `analyzeDependencies` for CSS Modules. Restore each
+reported URL placeholder as an authored `url(...)` token, including URLs
+Lightning would otherwise turn into a quoted `image-set()` source; preserve
+the original URL value and suffix for esbuild's resolver. Run the quoted
+`image-set()` guard again on the transformed text so an unhandled rewrite
+cannot escape Build validation. The same local asset must be copied under
+`mokly-generated/assets/` in plain and module CSS.
 PostCSS runs first. Feed the identical transformed CSS to the stylesheet
 pass and use Lightning's exports for JavaScript: a default plain object
 whose original local names map to space-joined scoped names; recursively
@@ -163,7 +170,7 @@ precedence; [exact messages](./mokly-imported-styles-errors.md) apply to both.
 CSS `url()` values beginning `data:`, `http:`, `https:` (schemes matched
 case-insensitively), `//` or `#` remain unchanged. A root-absolute `/...`
 URL is invalid.
-Quoted string URLs inside `image-set()` are not validated by esbuild's
+Quoted local string URLs inside `image-set()` are not validated by esbuild's
 `url-token` hook; reject them, including in authored public CSS, with guidance
 to write `image-set(url("./a.png") 1x)` instead. Resource reference extraction
 also identifies strings inside `image-set()` for validation. They are never

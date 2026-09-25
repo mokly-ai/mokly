@@ -9,6 +9,7 @@ import {
 } from "../build/package_owned_paths.js";
 import { isBaselineCachePath } from "../config/cache_paths.js";
 import { isAuthoredEntryPath } from "../config/entry_membership.js";
+import { logicalRepositoryPath } from "../config/file_locations.js";
 import { isInside, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig, WatchAction } from "../config/types.js";
 
@@ -195,7 +196,7 @@ export function classifyWatchPath(
   config: ResolvedConfig,
   resources: ReadonlySet<string> = new Set(),
 ): RuntimeWatchAction {
-  const absolute = path.resolve(event.path);
+  const absolute = logicalRepositoryPath(event.path, config.repoRoot);
   const directory = directoryStatus(event);
   if (isBaselineCachePath(absolute, config.repoRoot)) return "ignore";
   if (

@@ -13,8 +13,9 @@ reproduced in a scratch copy unless noted otherwise.
 
 An earlier supervision review of `6676894` found 10 High or Medium and
 15 Low defects. Milestones 8A and 8B fixed all of them, and this review confirmed
-those fixes. The findings below are new. The implementation has not changed in
-response to them; they await the user's decision.
+those fixes. The user authorized fixes for findings 1, 2 and 4–20 as Milestones
+10–11. A separate session merged `origin/main` as `922c1ec`, resolving finding 3
+without including the uncommitted Milestone 10 work.
 
 ## Findings
 
@@ -44,6 +45,11 @@ response to them; they await the user's decision.
    type-checking against the widened `GeneratedFile` outputs. Recommended:
    merge now, port the regex to `capture.mjs`, and read the test's outputs with
    `textOutput()`.
+
+   Resolved by the separately requested merge `922c1ec`. The link rewrite in
+   `scripts/preview/capture.mjs` retains `.html` before query/fragment suffixes,
+   and the appearance test reads `GeneratedFile` text through `textOutput()`.
+
 4. **Medium — `image-set(url(...))` breaks inside CSS Modules.** Lightning CSS
    rewrites it to quoted strings (`image-set("./a.png" 1x)`) after Mokly's
    string check has already run. Build then fails with a misleading missing
