@@ -5,8 +5,9 @@
 Active until the implementation PR merges. Created 2026-09-24 from the
 CSS-in-JS investigation on this branch. All implementation milestones and the
 bookkeeping push are complete; finding 3 was resolved in the separate
-`922c1ec` merge. The parent's independent post-push review remains. See the
-[review record](../docs/reviews/imported-css-delivery.md).
+`922c1ec` merge. The Milestone 12 post-push review found 16 new issues that
+await the user's decision in the
+[review record](../docs/reviews/imported-css-delivery.md#milestone-12-review).
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite
@@ -706,9 +707,12 @@ Close review findings 8–20 without changing the accepted-generation model.
 ## Milestone 12: Commit, push, and review
 
 - [x] Commit and push final bookkeeping, including exact resolution commit references, with a clean intended diff.
-- [ ] Review the complete local diff against `origin/main` using
+- [x] Review the complete local diff against `origin/main` using
       `docs/implementation-review-prompt.md` after the push. Report findings
       without changing the implementation; the parent session owns this review.
+      Sixteen findings (1 High, 2 Medium, 13 Low) are recorded in the
+      [review record](../docs/reviews/imported-css-delivery.md#milestone-12-review)
+      for the user's decision.
 
 ## Post-merge follow-up (non-blocking)
 

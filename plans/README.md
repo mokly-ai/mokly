@@ -3,10 +3,10 @@
 ## Active
 
 - [Imported CSS Delivery](./imported-css-delivery.md) — shipped implementation
-  and authorized final-review fixes complete; only the independent review
-  remains. Finding 3 was resolved by the
-  separate `922c1ec` merge. Move this plan to Completed
-  when its implementation PR merges.
+  and authorized final-review fixes complete; finding 3 was resolved by the
+  separate `922c1ec` merge. Milestone 12 review findings await the user's
+  decision in the [review record](../docs/reviews/imported-css-delivery.md).
+  Move this plan to Completed when its implementation PR merges.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
   standalone Auto/Light/Dark control for interface and previews, and
   host-owned theme with independent previews when embedded. Dark neutrals align

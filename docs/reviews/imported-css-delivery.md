@@ -212,3 +212,83 @@ without including the uncommitted Milestone 10 work.
 
     Resolved in `390a21a`: archive validation requires the worker and a sixth
     packed consumer builds and checks real CSS Module, PostCSS and binary URLs.
+
+## Milestone 12 Review
+
+The post-push review of `f154d3d` ran on 2026-09-25 with the same prompt
+against `origin/main` (merge base `2ec4d83`). Three read-only reviewers
+checked the Milestone 10 fixes, the Milestone 11 fixes, and the documentation
+and length gate. They confirmed that fixes 2, 5, 6, 7, 12, 13, 15, 16, 18 and
+20 are correct. The parent session checked, with its own fixture, derived
+export Changes and CSS Module `image-set()`. The 16 findings below were each
+reproduced in a scratch copy. They await the user's decision; the
+implementation has not changed in response to them.
+
+1. **High — CSS Modules drop `@import` rules and reject `url()` in custom
+   properties.** The finding 4 fix enabled Lightning CSS
+   `analyzeDependencies` in `src/build/styles/modules.ts`. That option removes
+   every `@import` from module output, and Mokly never restores it. The option
+   also fails on `--icon: url("./icon.svg")`, which built before the fix.
+   Recommended: disable the option, turn quoted `image-set()` sources back into
+   `url()` after Lightning, keep the second string check, and add a test that
+   plain and module CSS deliver the same output.
+2. **Medium — committed mode loses package assets to ordinary `.gitignore`
+   rules.** Assets are mirrored under `mokly-generated/assets/node_modules/…`
+   (or `dist/…`), which common ignore rules exclude. Fresh clones then fail
+   Check, Changes over-reports, and Review throws. The bug predates Milestones
+   10 and 11, and Milestone 11 widened it. Recommended: committed Build and
+   Check fail when a generated route is ignored by Git, naming a negation rule,
+   and a guide note documents it.
+3. **Medium — required files under `dist`-like folders inside a watched root
+   stop being watched when they appear during Serve.** Finding 1 removed
+   covered files from the target list, and the watcher keeps its original
+   skip list. Recommended: keep such files as explicit targets when a skipped
+   segment lies between the root and the file, with real-watcher tests.
+4. **Low — per-event watch classification still scans every source and
+   recompiles directory globs** (13.9 ms per event at 20,000 sources).
+   Recommended: use the per-generation index, compile globs once, and add a
+   burst timing budget.
+5. **Low — Milestone 11 adds about 220 ms per graph load.** Root validation
+   and `isPackageCode` resolve real paths for every edge. Recommended: resolve
+   only on failure, use one path mapper per metafile, and add a timed test.
+6. **Low — the finding 8 scanner still disagrees with esbuild on malformed
+   end-of-file imports.** Recommended: assert that the renderer's CSS closure
+   equals esbuild's inputs, and fail with a "malformed @import" message
+   otherwise.
+7. **Low — changed assets in linked workspace packages attach shared-impact
+   evidence to unrelated screens.** Recommended: an alias-aware map from
+   source to asset route in the accepted generation.
+8. **Low — a missing dependency directory is still reported before
+   generated-output and public-file errors.** Recommended: defer it to the
+   regular-file pass, and test all four diagnostics together.
+9. **Low — virtual `mokly:styles:N` names still appear in other CSS-pass
+   diagnostics.** Recommended: map virtual importers to their root in every
+   diagnostic, and test that none contains the name.
+10. **Low — the finding 9 pull request note describes the wrong change.**
+    Compared with main, the breaking change is that quoted local `image-set()`
+    sources in authored public CSS now fail Build. Public CSS `//` URLs are now
+    accepted. Recommended: correct the note and prepare the pull request text
+    or a `BREAKING CHANGE` footer.
+11. **Low — the length gate fails when `cargo xtask` runs from a
+    subdirectory.** Recommended: run every xtask subprocess from the workspace
+    root, use one shared command builder, and add parse and dispatch tests.
+12. **Low — the gate covers less than the documentation says.** It misses
+    `packages/viewer/tests`, `packages/viewer/scripts`, `examples` and
+    `.mts`/`.cts`. Recommended: cover all TypeScript and JavaScript files
+    repository-wide, and document any exclusions.
+13. **Low — the gate's test never covers committed branch changes, which is
+    the path CI uses.** Recommended: add committed, staged-only, exact-limit
+    and `--all` exit-code cases, plus one per directory and extension.
+14. **Low — the protocol split broke one inbound link, and the stale-text
+    tests miss continuation pages.** Recommended: fix the link, add a
+    repository-wide link and anchor check, and group the stale-text tests by
+    page family.
+15. **Low — documentation drift.** The CI table omits the length audit, two
+    documents say five packed consumers instead of six, `npm-release.md` says
+    xtask only delegates to npm scripts and has an ambiguous "its", the
+    Lightning CSS scope omits transformer inventory, and the Config guide says
+    Mokly copies assets in authored public CSS. Recommended: fix each, and
+    avoid hard-coded counts.
+16. **Low — plan bookkeeping.** Milestone 9 is not marked complete, and a
+    Milestone 11 TODO points at commit references that live in this record.
+    Recommended: mark Milestone 9 complete and reword the TODO.
