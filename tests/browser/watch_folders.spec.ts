@@ -179,3 +179,47 @@ test("a watched folder rename resets its subtree without changing unrelated pref
     await watched.stop();
   }
 });
+
+test("filtered watched folder rename opens new matches and restores defaults after clearing", async ({
+  page,
+}) => {
+  const watched = await startWatchedServe(
+    reparentedEntrySource("screens", { sharedChildTitle: "States" }),
+  );
+  try {
+    await page.goto(`${watched.url}/`);
+    await page.fill("[data-mokly-search]", "Details");
+    await expect(
+      page.locator('[data-nav-folder="folder:Fixture/Screens/States"]'),
+    ).toHaveAttribute("open", "");
+
+    await fs.promises.writeFile(
+      watched.fixture.entryPath,
+      reparentedEntrySource("screens", {
+        screensTitle: "Panels",
+        sharedChildTitle: "States",
+      }),
+    );
+    const parent = page.locator('[data-nav-folder="folder:Fixture/Panels"]');
+    const child = page.locator(
+      '[data-nav-folder="folder:Fixture/Panels/States"]',
+    );
+    await expect(parent).toHaveAttribute("open", "", { timeout: 45_000 });
+    await expect(child).toHaveAttribute("open", "");
+    await expect(
+      child.locator('a[data-nav-row][data-route="screens/details.html"]'),
+    ).toBeVisible();
+
+    await page.fill("[data-mokly-search]", "");
+    await expect(parent).not.toHaveAttribute("open", "");
+    await expect(child).not.toHaveAttribute("open", "");
+    await expect
+      .poll(() => readDisclosureStorage(page))
+      .toMatchObject({
+        "folder:pages:Fixture/Panels": false,
+        "folder:pages:Fixture/Panels/States": false,
+      });
+  } finally {
+    await watched.stop();
+  }
+});

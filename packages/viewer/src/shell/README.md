@@ -117,6 +117,13 @@ route evidence in a separate descriptor; the capability store adopts the
 fetched page's public bootstrap, source and private workspace as one monotonic
 revision. `use_workspace_data.ts` keeps one route-owned workspace object so
 matching evidence refreshes retain already loaded usage and local editor state.
+Evidence commits rebuild navigation sections and reconcile the current
+disclosures and pre-filter baseline to exactly their new keys; initial restore
+uses the same `disclosure_storage.ts` reconciliation with an explicit fallback.
+Evidence-only refresh keeps surviving collapsed choices; route navigation owns
+active-route reveal.
+The `nav_rows.tsx` and `nav_leaf_rows.tsx` missing-key defaults remain defensive
+for rendering without a store; mounted shells supply every current key.
 Versioned historical selection adopts new evidence and becomes unavailable if
 that exact snapshot disappears. Identity-less legacy history adopts only an
 unchanged removed record; metadata changes reject live adoption and preserve the

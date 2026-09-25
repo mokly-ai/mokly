@@ -8,7 +8,7 @@ import type {
   ManifestV6,
 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
-import { restoreDisclosureMap } from "../packages/viewer/dist/shell/disclosure_storage.js";
+import { reconcileDisclosures } from "../packages/viewer/dist/shell/disclosure_storage.js";
 import {
   defaultDisclosures,
   disclosurePath,
@@ -132,7 +132,11 @@ test("folder identities preserve colons and remain section-local", () => {
   assert.equal(defaults["folder:pages:Design: System/Browse"], false);
   assert.equal(defaults["folder:components:Design: System/Browse"], false);
   assert.deepEqual(
-    restoreDisclosureMap(defaults, { "folder:pages:Design: System": false }),
+    reconcileDisclosures(
+      defaults,
+      { "folder:pages:Design: System": false },
+      "default",
+    ),
     { ...defaults, "folder:pages:Design: System": false },
   );
   const pagesClosed = fixtureShellState({

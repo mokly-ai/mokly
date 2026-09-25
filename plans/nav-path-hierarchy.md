@@ -1,8 +1,8 @@
 # Path-Based Navigation Hierarchy
 
-Status: Milestones 1–9 are complete, verified, pushed, and reviewed;
-Milestones 10–11 are implemented and ready for separate supervisor commits,
-and Milestone 12 remains. The plan stays Active until its PR merges.
+Status: Milestones 1–12 are complete, verified, and pushed, and findings 1–16
+are fixed; Milestone 12's post-push review is pending. The plan stays Active
+until its PR merges.
 Created 2026-09-23 with the user's
 consent after the design discussion in this workspace. This plan supersedes the
 collection-forest contract delivered by
@@ -456,24 +456,24 @@ From the Milestones 6–9 review (against `a90503b`):
     restores folders missing from the snapshot (new or renamed folders) to
     their server default, usually closed, so matching rows stay hidden. The
     old closed list treated them as open, so this regressed in Milestone 8;
-    `mokly-runtime.md` also disagrees with itself on it.
+    `mokly-runtime.md` also disagrees with itself on it. Fixed in Milestone 12.
 12. Low: adopting live comparison evidence keeps the old disclosure map, so a
     screen that gains a Removed variant has no `variants:` key: Collapse all
-    cannot close that list, and the v3 save and reload snapshot omit it.
+    cannot close that list, and the v3 save and reload snapshot omit it. Fixed in Milestone 12.
 13. Low: `npm test` now applies the gate's evidence rules, which reject
     skipped tests, and 12 tests skip on Windows; the collection guard also
     compares `/` paths with `path.join` results. `npm test` therefore always
-    fails on Windows, and Windows CI runs only six named files.
+    fails on Windows, and Windows CI runs only six named files. Fixed in Milestone 11.
 14. Low: two migrated assertions can no longer fail:
     `viewer_bootstrap.spec.ts` searches the raw v3 JSON for a key that is
     always present, and `client_browse_navigation.test.ts` compares a literal
-    with an identical literal.
+    with an identical literal. Fixed in Milestone 11.
 15. Nit: `mokly-runtime.md` (468 lines, 443 on `origin/main`),
-    `mokly-viewer.md`, and `ci-verification.md` grew again.
+    `mokly-viewer.md`, and `ci-verification.md` grew again. Fixed in Milestone 10.
 16. Nit: the runtime spec's variant-list default omits that a screen's own
     list opens on its page and that sections open; `mokly-viewer.md` still
     says "the existing keys"; and `plans/README.md` said the gate and push
-    were pending after they were done.
+    were pending after they were done. Fixed in Milestone 10.
 
 ## Milestone 5: Review follow-up for findings 3 and 4
 
@@ -742,24 +742,24 @@ Tags: ui
 Implement findings 11 and 12 from the Milestone 10 contract. No visual
 change.
 
-- [ ] One reconciliation function takes the current navigation, a stored or
+- [x] One reconciliation function takes the current navigation, a stored or
       previous map, and a required fallback (server default or open); initial
       restore, recovery, the filter baseline, and in-place navigation changes
       all use it.
-- [ ] A recovery snapshot restored during filtering opens folders it does not
+- [x] A recovery snapshot restored during filtering opens folders it does not
       list; the pre-filter baseline and unfiltered restores use the server
       default.
-- [ ] Accepting comparison evidence that changes the navigation reconciles
+- [x] Accepting comparison evidence that changes the navigation reconciles
       the disclosure map and filter baseline, so Collapse all, v3 saves, and
       recovery snapshots cover every current disclosure.
-- [ ] Failure-first unit tests: a table over filtered and unfiltered restores
+- [x] Failure-first unit tests: a table over filtered and unfiltered restores
       against listed, unlisted, and obsolete keys; evidence adoption that adds
       and removes a Removed variant.
-- [ ] Browser coverage: a filtered watched reload after a folder rename shows
+- [x] Browser coverage: a filtered watched reload after a folder rename shows
       the renamed folder open with its matching rows visible.
-- [ ] Mark findings 11–16 as fixed in the review-findings list.
-- [ ] Run `cargo xtask check`; fix anything it reports until it passes.
-- [ ] Commit and push.
+- [x] Mark findings 11–16 as fixed in the review-findings list.
+- [x] Run `cargo xtask check`; fix anything it reports until it passes.
+- [x] Commit and push.
 - [ ] Review the complete local diff against `origin/main` using
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       after the push; report each finding with a number, severity, plain

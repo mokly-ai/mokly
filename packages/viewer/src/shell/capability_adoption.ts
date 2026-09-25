@@ -11,6 +11,12 @@ import { viewerCatalogue, viewerContext } from "../viewer/projection.js";
 
 import { catalogueRouteEntry, type Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
+import { reconcileDisclosures } from "./disclosure_storage.js";
+import {
+  catalogueNavSections,
+  defaultDisclosures,
+  navigationFiltering,
+} from "./nav_model.js";
 import type { ShellRoute } from "./routes.js";
 import type { ShellState } from "./store_state.js";
 import { toRouteTarget } from "./target.js";
@@ -107,7 +113,24 @@ export function shellStateWithViewerEvidence(
             view: { kind: "missing", requested: previous.route },
           };
   }
-  const next = { ...state, route };
+  const sections = catalogueNavSections(catalogue);
+  const activeRoute =
+    route.view.kind === "target" ? route.view.target.entry.route : undefined;
+  const defaults = defaultDisclosures(sections, activeRoute);
+  const disclosures = reconcileDisclosures(
+    defaults,
+    state.disclosures,
+    navigationFiltering(state.selection) ? "open" : "default",
+  );
+  const filterBaseline = state.filterBaseline
+    ? reconcileDisclosures(defaults, state.filterBaseline, "default")
+    : undefined;
+  const next: ShellState = {
+    ...state,
+    route,
+    disclosures,
+    filterBaseline,
+  };
   const status = catalogue.publicModel?.changesStatus;
   next.changesStatus = status && status !== "disabled" ? status : undefined;
   return next;

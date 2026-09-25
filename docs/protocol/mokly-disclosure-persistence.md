@@ -8,9 +8,8 @@ lifecycle.
 
 ## Delivery Status
 
-The v3 storage format, early activation capture, and active-route reveal are
-implemented. The filtered-recovery fallback and in-place reconciliation below
-are approved targets of [Milestone 12](../../plans/nav-path-hierarchy.md#milestone-12-disclosure-reconciliation).
+The v3 storage format, early activation capture, active-route reveal,
+filtered-recovery fallback, and in-place reconciliation are implemented.
 
 ## Storage And Defaults
 
@@ -58,7 +57,9 @@ keys. Retain values of surviving keys and drop keys that disappeared. Give
 new keys the same fallback: open for the current map while filtering, server
 default for the current map otherwise, and server default for the baseline.
 Accepted comparison evidence adding or removing a Removed variant row and
-its `variants:` key is one such change. Apply active-route reveal afterward.
+its `variants:` key is one such change. In-place reconciliation preserves every
+surviving value and does not re-run active-route reveal; background evidence
+cannot reopen a folder the user collapsed.
 
 ## Recovery And Versioning
 

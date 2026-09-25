@@ -5,11 +5,12 @@ import { defaultSelection } from "../viewer/selection.js";
 
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
-import { restoreDisclosureMap } from "./disclosure_storage.js";
+import { reconcileDisclosures } from "./disclosure_storage.js";
 import {
   catalogueNavSections,
   defaultDisclosures,
   disclosurePath,
+  navigationFiltering,
 } from "./nav_model.js";
 import { routeScreenId, type ShellRoute } from "./routes.js";
 import { parseSearchQuery } from "./search_query.js";
@@ -40,15 +41,40 @@ export function createInitialShellState(
     ...(snapshotId ? { snapshot: snapshotId } : {}),
   };
   const sections = catalogueNavSections(catalogue);
-  let disclosures = defaultDisclosures(sections, context.activeRoute);
+  const defaults = defaultDisclosures(sections, context.activeRoute);
+  const parsed = parseSearchQuery(recovery?.query ?? "");
+  const selection = {
+    ...defaultSelection,
+    screenId: routeScreenId(route),
+    ...(route.snapshot ? { snapshotId: route.snapshot } : {}),
+    view: recovery?.view ?? "all",
+    viewport: recovery?.viewport ?? "both",
+    colorScheme:
+      catalogue.hasDarkFragments &&
+      (initial?.colorScheme ?? recovery?.colorScheme) === "dark"
+        ? ("dark" as const)
+        : ("light" as const),
+    search: parsed.freeText,
+    tags: parsed.tags,
+  };
+  let disclosures = defaults;
   if (initial?.disclosures)
-    disclosures = restoreDisclosureMap(disclosures, initial.disclosures);
+    disclosures = reconcileDisclosures(
+      defaults,
+      initial.disclosures,
+      "default",
+    );
   if (recovery)
-    disclosures = restoreDisclosureMap(disclosures, recovery.disclosures);
+    disclosures = reconcileDisclosures(
+      defaults,
+      recovery.disclosures,
+      navigationFiltering(selection) ? "open" : "default",
+    );
   let filterBaseline = recovery?.filterBaselineDisclosures
-    ? restoreDisclosureMap(
-        defaultDisclosures(sections, context.activeRoute),
+    ? reconcileDisclosures(
+        defaults,
         recovery.filterBaselineDisclosures,
+        "default",
       )
     : undefined;
   if (route.view.kind === "target") {
@@ -58,8 +84,11 @@ export function createInitialShellState(
       filterBaseline = openDisclosures(filterBaseline, activePath);
   }
   if (initial?.earlyDisclosures)
-    disclosures = restoreDisclosureMap(disclosures, initial.earlyDisclosures);
-  const parsed = parseSearchQuery(recovery?.query ?? "");
+    disclosures = reconcileDisclosures(
+      defaults,
+      { ...disclosures, ...initial.earlyDisclosures },
+      "default",
+    );
   const componentDefault =
     route.view.kind === "target" &&
     route.view.target.entry.kind === "component";
@@ -83,20 +112,7 @@ export function createInitialShellState(
     query: recovery?.query ?? "",
     regionScrolls: recovery?.regionScrolls ?? {},
     route,
-    selection: {
-      ...defaultSelection,
-      screenId: routeScreenId(route),
-      ...(route.snapshot ? { snapshotId: route.snapshot } : {}),
-      view: recovery?.view ?? "all",
-      viewport: recovery?.viewport ?? "both",
-      colorScheme:
-        catalogue.hasDarkFragments &&
-        (initial?.colorScheme ?? recovery?.colorScheme) === "dark"
-          ? "dark"
-          : "light",
-      search: parsed.freeText,
-      tags: parsed.tags,
-    },
+    selection,
     tagPickerIndex: 0,
     tagPickerOpen: false,
   };

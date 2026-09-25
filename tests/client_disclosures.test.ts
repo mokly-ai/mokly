@@ -7,10 +7,12 @@ import {
   decodeDisclosureMap,
   encodeDisclosureMap,
   parseDisclosureMap,
-  restoreDisclosureMap,
+  reconcileDisclosures,
 } from "../packages/viewer/dist/shell/disclosure_storage.js";
+import type { ShellRecoverySnapshot } from "../packages/viewer/dist/shell/store_state.js";
 
 import { browseState } from "./helpers/browse_recovery_state.js";
+import { fixtureShellState } from "./helpers/viewer_catalogue.js";
 
 test("stored disclosures accept valid folder paths, including colons, but not empty segments", () => {
   for (const key of [
@@ -168,11 +170,106 @@ test("a renamed folder and descendants use defaults while unrelated keys retain 
     "folder:pages:Unrelated": true,
   };
   assert.deepEqual(
-    restoreDisclosureMap(defaults, {
-      "folder:pages:Old": false,
-      "folder:pages:Old/Child": true,
-      "folder:pages:Unrelated": false,
-    }),
+    reconcileDisclosures(
+      defaults,
+      {
+        "folder:pages:Old": false,
+        "folder:pages:Old/Child": true,
+        "folder:pages:Unrelated": false,
+      },
+      "default",
+    ),
     { ...defaults, "folder:pages:Unrelated": false },
   );
+  assert.deepEqual(
+    reconcileDisclosures(
+      defaults,
+      {
+        "folder:pages:Old": false,
+        "folder:pages:Old/Child": true,
+        "folder:pages:Unrelated": false,
+      },
+      "open",
+    ),
+    {
+      "folder:pages:Renamed": true,
+      "folder:pages:Renamed/Child": true,
+      "folder:pages:Unrelated": false,
+    },
+  );
+});
+
+test("recovery and its baseline reconcile listed, missing, obsolete, and invalid keys", () => {
+  const folder = "folder:pages:Product/Browse";
+  const unrelated = "folder:components:Product";
+  const modes = [
+    { name: "unfiltered", query: "", view: "all", filtered: false },
+    { name: "search", query: "home", view: "all", filtered: true },
+    { name: "Changes", query: "", view: "changes", filtered: true },
+  ] as const;
+  const cases: readonly {
+    name: string;
+    stored: Record<string, unknown>;
+    listed: boolean;
+  }[] = [
+    { name: "listed", stored: { [folder]: true }, listed: true },
+    { name: "unlisted", stored: {}, listed: false },
+    {
+      name: "obsolete",
+      stored: { "collection:pages:Product/Browse": true },
+      listed: false,
+    },
+    { name: "invalid", stored: { [folder]: "open" }, listed: false },
+  ];
+  for (const mode of modes)
+    for (const scenario of cases) {
+      const stored = {
+        [unrelated]: false,
+        ...scenario.stored,
+      } as unknown as Readonly<Record<string, boolean>>;
+      const recovery: ShellRecoverySnapshot = {
+        disclosures: stored,
+        colorScheme: "light",
+        detailsOpen: false,
+        drawerOpen: false,
+        filterBaselineDisclosures: mode.filtered ? stored : null,
+        navScroll: 0,
+        query: mode.query,
+        regionScrolls: {},
+        view: mode.view,
+        viewport: "both",
+      };
+      const state = fixtureShellState({
+        href: "https://example.test/",
+        initial: { recovery },
+      });
+      const label = `${mode.name}/${scenario.name}`;
+      assert.equal(
+        state.disclosures[folder],
+        scenario.listed || mode.filtered,
+        `${label}: recovery disclosure`,
+      );
+      assert.equal(state.disclosures[unrelated], false, `${label}: unrelated`);
+      assert.equal(
+        state.filterBaseline?.[folder],
+        mode.filtered ? scenario.listed : undefined,
+        `${label}: pre-filter baseline`,
+      );
+      const baseline = reconcileDisclosures(
+        { [folder]: false, [unrelated]: true },
+        stored,
+        "default",
+      );
+      assert.equal(
+        baseline[folder],
+        scenario.listed,
+        `${label}: baseline fallback`,
+      );
+      assert.deepEqual(Object.keys(baseline), [folder, unrelated]);
+      assert.equal(
+        Object.hasOwn(state.disclosures, "collection:pages:Product/Browse"),
+        false,
+        `${label}: obsolete key`,
+      );
+    }
 });

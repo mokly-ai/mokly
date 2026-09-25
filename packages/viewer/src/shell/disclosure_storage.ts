@@ -45,14 +45,17 @@ export function encodeDisclosureMap(
   return JSON.stringify(decodeDisclosureMap(disclosures));
 }
 
-/** Apply valid stored values only to keys that exist in the current navigation. */
-export function restoreDisclosureMap(
-  defaults: Readonly<Record<string, boolean>>,
+/** Restore exactly the current keys, choosing a required fallback for missing values. */
+export function reconcileDisclosures(
+  current: Readonly<Record<string, boolean>>,
   stored: unknown,
+  fallback: "default" | "open",
 ): Record<string, boolean> {
-  const values = { ...defaults };
-  for (const [key, value] of Object.entries(decodeDisclosureMap(stored))) {
-    if (Object.hasOwn(values, key)) values[key] = value;
-  }
-  return values;
+  const valid = decodeDisclosureMap(stored);
+  return Object.fromEntries(
+    Object.entries(current).map(([key, defaultValue]) => [
+      key,
+      valid[key] ?? (fallback === "open" ? true : defaultValue),
+    ]),
+  );
 }
