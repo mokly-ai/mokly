@@ -456,7 +456,7 @@ Summary: switch Serve and export/preview capture to route-scoped bootstraps.
     synthetic historical routes.
 - [x] Update existing tests that assert complete Serve bootstraps, and exercise
       navigation, loading and usage flows against the real Serve.
-  - The unchanged development hydration inventory passed all 115 catalogue
+  - The unchanged development hydration inventory passed all 118 catalogue
     routes plus its three shell routes on native scoped pages. The focused
     hydration, static and evidence run passed 136 of 136 browser tests.
   - Updated tests retaining their prior intent:
