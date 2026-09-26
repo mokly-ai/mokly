@@ -2,7 +2,7 @@
 
 Status: Milestones 1–9 are complete and findings 3–6 are fixed; finding 2 is
 superseded by [Configurable Changes Listing](./configurable-changes-listing.md),
-and Milestones 10–12 fix findings 7 and 8. The plan stays Active until PR #118 merges. Created
+and Milestones 10–11 fixed findings 7 and 8; their review runs after the push. The plan stays Active until PR #118 merges. Created
 2026-09-25 with the user's consent (option B of
 finding 1 raised while reviewing the PR #118 preview). Implemented on the
 `calummoore/halifax-v2` branch alongside
@@ -278,9 +278,9 @@ The user asked to fix findings 7 and 8 with the recommended options.
 
 ## Milestone 12: Findings 7 and 8 close-out and review
 
-- [ ] Mark findings 7 and 8 fixed in the review-findings list.
-- [ ] Run `cargo xtask check`; fix anything it reports until it passes.
-- [ ] Commit and push.
+- [x] Mark findings 7 and 8 fixed in the review-findings list.
+- [x] Run `cargo xtask check`; fix anything it reports until it passes.
+- [x] Commit and push.
 - [ ] Review the complete local diff against `origin/main` using
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       after the push; report each finding with a number, severity, plain
@@ -343,13 +343,13 @@ them.
    stylesheet reasons, and owned CSS) keyed by `entryPairKey`, and validation
    accepts only those; test excluded owned and exact-declared stylesheets
    (rejected) and a retained exact screen stylesheet that a component owns
-   (accepted).
+   (accepted). Fixed in Milestones 10 and 11.
 8. Low: the invariant fixture has no added or removed entries, so path
    evidence that only one side declares is not checked against the old rule.
    Referenced-resource and invocation-CSS evidence reach Details through
    reasons, and the CSS tests already assert them. Recommended: add added and
    removed entries with glob and declared-directory evidence to the invariant
-   fixture.
+   fixture. Fixed in Milestone 11.
 
 ## Post-merge follow-up (non-blocking)
 
