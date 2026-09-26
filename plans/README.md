@@ -78,7 +78,8 @@
   manifest, read model, review result, and viewer indexes drop every
   derivable path field and key on id; and the static export writes each
   shell once without the `id/<id>/index.html` alias. No backwards
-  compatibility. Planned for a new PR after PR #118 merges.
+  compatibility. Implemented on the navigation-path branch; a pull request
+  opens when the work is ready.
 
 ## Completed
 

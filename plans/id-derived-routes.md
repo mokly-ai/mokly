@@ -2,12 +2,11 @@
 
 Status: Planned; not started. Created 2026-09-26 with the user's consent after
 discussing route redundancy on the navigation-path branch; the variant
-unification and the wire cleanup were folded in the same day. Implement in a
-new PR after [PR #118](https://github.com/mokly-ai/mokly/pull/118) merges,
-because it rewrites the same authoring, registry, and export surfaces. Mokly
-is not live, so this plan adds no backwards compatibility: readers it rewrites
-accept only the new versions, and there are no migration guards or
-transitional shapes.
+unification and the wire cleanup were folded in the same day. The work is
+implemented on this branch, `calummoore/halifax-v2`, and the user opens a
+pull request when it is ready. Mokly is not live, so this plan adds no
+backwards compatibility: readers it rewrites accept only the new versions,
+and there are no migration guards or transitional shapes.
 
 **Problem:** every routed entry carries two hierarchies. `navPath` is the list
 of folder labels; `route` is an author-chosen `.html` path built from a root
