@@ -8,11 +8,10 @@ stays private; local Browse keeps its embedded data, appearance and behavior.
 The additive removed-page and removed-screen preview descriptors are
 implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md).
-The public model remains implemented and unchanged. The isolated route-scoped
-shell model, projection and strict reader are implemented by Milestone 4 of the
-[route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md), and
-Milestone 6 uses them for every live Serve page while this public endpoint stays
-complete.
+The public model remains implemented and unchanged. The
+[route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md)
+implements its separate shell model, projection and strict reader for every
+live Serve page while this public endpoint stays complete.
 
 ## Location And Types
 

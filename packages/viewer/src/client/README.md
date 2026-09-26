@@ -14,9 +14,9 @@ import resolves within that complete inventory.
 source identity. `host_capabilities.ts` defines the behavior context, atomic
 public/private evidence revision and route/source cancellation scope. Route and
 live evidence use the one strict live reader, which accepts only the exact
-scope derived from the page route. The accepted catalogue and complete private
-workspace replace the installed scoped model together, so usage from visited
-routes never accumulates. A rejected current route read is reported to the
+scope derived from the page route. The accepted catalogue and optional complete
+private workspace replace the installed scoped model together, so usage from
+visited routes never accumulates. A rejected current route read is reported to the
 shell as failed Usage; obsolete or aborted reads stay inert. Both modules are
 kept protocol modules; static export omits their standalone browser outputs.
 

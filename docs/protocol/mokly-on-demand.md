@@ -3,8 +3,8 @@
 ## Delivery Status
 
 On-demand startup, rendering and evidence completion are implemented. The
-route-evidence loading and failed Usage states are approved targets tracked by
-the [route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
+route-evidence loading and failed Usage states are implemented by the
+[route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
 
 ## Startup and completeness
 

@@ -105,7 +105,7 @@ complete catalogue before `src/browser.tsx` hydrates that exact server tree.
 The document receives pre-serialized script text; server rendering serializes
 it once and later client renders preserve it verbatim. Live Serve places
 complete private route evidence in a separate descriptor; the capability store
-replaces the fetched page's scoped public bootstrap, source and private
+replaces the fetched page's scoped public bootstrap, source and optional private
 workspace as one monotonic revision instead of accumulating per-route usage.
 `use_workspace_data.ts` keeps one route-owned workspace object so
 matching evidence refreshes retain already loaded usage and local editor state.

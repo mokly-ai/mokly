@@ -162,9 +162,9 @@ order and serializing each input only once. Distinct usage contexts retain their
 comparison eligibility; deduplication does not alter Changes membership.
 
 Route and live-evidence reads return ordinary scoped shell pages. The client
-adopts a page's scoped catalogue and complete private workspace atomically,
-replacing the prior route scope. Failed current reads expose retryable Usage
-rather than a partial or zero-consumer list. See the
+adopts a page's scoped catalogue and optional complete private workspace
+atomically, replacing the prior route scope. Failed current reads expose
+retryable Usage rather than a partial or zero-consumer list. See the
 [bootstrap contract](../../docs/protocol/mokly-shell-bootstrap.md).
 
 Run the server tests with `npm test` and the navigation/comparison smoke tests

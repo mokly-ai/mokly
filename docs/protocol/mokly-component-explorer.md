@@ -9,8 +9,7 @@ icon inspector. Local Serve additionally provides editable controls. See the
 and [component design catalogue](./mokly-component-design.md). Removed
 consumers open their historical screen through the behavior implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md).
-Loading and failed route-evidence Usage presentation is an approved target
-tracked by the
+Loading and failed route-evidence Usage presentation is implemented by the
 [route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
 
 ## Catalogue And Component Pages
@@ -218,12 +217,12 @@ host picking and clears stale inspection under the viewer lifecycle contract.
 
 ## Mockups And Verification
 
-Before UI implementation, extend the existing design catalogue under
-`examples/basic/entries/design` and regenerate its local derived HTML. This is
-Mokly's current owning mockup tree; do not introduce an unrelated Expo app
-or a second mockup generator. Provide mobile and desktop screen components for
-the component page/variants, changed component/Affected screens, screen inspector
-usage, highlight selection, loading/failed Usage, and empty/unavailable states.
+The owning design catalogue lives under `examples/basic/entries/design`; UI
+changes update it first and regenerate its local derived HTML. Do not introduce
+an unrelated Expo app or a second mockup generator. It provides mobile and
+desktop screen components for the component page/variants, changed
+component/Affected screens, screen inspector usage, highlight selection,
+loading/failed Usage, and empty/unavailable states.
 The [controls designs](./mokly-component-controls-design.md) are delivered
 with the inspector revision; local Serve implements those controls.
 

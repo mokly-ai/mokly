@@ -532,15 +532,19 @@ Summary: switch Serve and export/preview capture to route-scoped bootstraps.
 Summary: record the result against the baseline below and align the docs with
 the delivered behavior.
 
-- [ ] Repeat the baseline measurements on comparable hardware: median Serve
+- [x] Repeat the baseline measurements on comparable hardware: median Serve
       page and bootstrap bytes, browser `readCatalogue` time, one in-shell
       navigation's transfer and script time, `npm run preview:build` with and
       without `--include-changes`, `tests/preview.test.ts`, the four browser
       setup builds and `react_shell_hydration_routes.spec.ts`. Record the
       results in a review record in this plan.
-- [ ] Re-read every protocol document and README changed in Milestone 1
+- [x] Re-read every protocol document and README changed in Milestone 1
       against the implementation and fix any drift.
-- [ ] Run the complete `cargo xtask check` gate with no failures or skips.
+- [x] Run the complete `cargo xtask check` gate with no failures or skips.
+  - Complete closeout gate on 2026-09-26: unit 2,454 passed; browser 789
+    passed; zero failures, skips or cancellations in either suite. Repository,
+    package, Rust, typecheck, example and all five packed-consumer smoke stages
+    also passed.
 - [ ] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
 - [ ] After the push, use
@@ -894,3 +898,68 @@ use-case and page targets so their installed scope matches their route.
   correction itself is covered by the complete 2,454-unit/789-browser gate,
   the 131-test focused development hydration run, packed-consumer smoke and the
   three normalized `214fffa` artifact comparisons.
+
+### Milestone 7 measurements — 2026-09-26
+
+The controlled comparison used this 8-vCPU Linux VM, Node 24.21.0, npm 11.7.0
+and Chrome 153.0.8010.52 in one session. `origin/main` at `2ec4d83` lived in the
+separate `.context/m7-main` worktree with its own `npm ci` and
+`prepare:verification`; the branch was `5dbdba1`. Heavy measurements ran one at
+a time.
+
+- Serve sizes enumerate every non-collection route in each real generated
+  manifest (115 main, 118 branch), fetch its live page after Changes settles,
+  and count UTF-8 HTML and embedded-bootstrap bytes.
+- Browser timings use `design/review/outcomes/changed.html`, a development
+  `react-shell.js`, one warm-up and five fresh-context samples. CDP
+  `ScriptDuration` supplies main-thread script time; a 100 µs V8 CPU profile
+  supplies inclusive reader time. Main calls public `readCatalogue`; the branch
+  intentionally does not and instead reports its strict live-bootstrap reader.
+- Navigation timings use one warm-up and five fresh-context
+  `screens/welcome.html` → `screens/details.html` transitions. CDP sums encoded
+  bytes for requests begun by the transition and measures the script-duration
+  delta after destination evidence and frames settle.
+
+| Serve/browser metric                   |   `2ec4d83` |            Branch | Change |
+| -------------------------------------- | ----------: | ----------------: | -----: |
+| Median Serve page                      | 3,820,481 B |         662,615 B | −82.7% |
+| Largest Serve page                     | 4,381,225 B |       1,215,866 B | −72.2% |
+| Median bootstrap                       | 3,554,709 B |       390,412.5 B | −89.0% |
+| Largest bootstrap                      | 3,554,729 B |         450,045 B | −87.3% |
+| Development-load script time           |  1,063.9 ms |          311.2 ms | −70.7% |
+| Public `readCatalogue` inclusive time  |    511.6 ms | 0 ms (not called) |      — |
+| Active bootstrap-reader inclusive time |    511.6 ms |           60.3 ms | −88.2% |
+| Development-load wall time             |  1,467.5 ms |          551.0 ms | −62.5% |
+| Navigation encoded transfer            | 3,840,741 B |         665,228 B | −82.7% |
+| Navigation script time                 |    331.8 ms |          118.0 ms | −64.5% |
+| Navigation wall time                   |  1,698.6 ms |          399.2 ms | −76.5% |
+
+The largest page is `design/library/inspector/metadata-row.html` in both trees.
+Main's largest bootstrap is
+`design/review/outcomes/previous-version/no-captured-view.html`; the branch's is
+`design/review/outcomes/changed.html`.
+
+Direct preview commands started with absent output and `.mokly-cache` paths.
+`tests/preview.test.ts` likewise began cold and retained its own second warm
+build. The setup comparison ran the same four Playwright specs together and
+uses their `[mokly:fixture-timing]` operation durations.
+
+| Build/test metric                 |           `2ec4d83` |              Branch | Change |
+| --------------------------------- | ------------------: | ------------------: | -----: |
+| Cold preview, no Changes          |             159.5 s |              34.7 s | −78.2% |
+| Cold preview, `--include-changes` |             214.6 s |              86.8 s | −59.6% |
+| `tests/preview.test.ts`           |             409.6 s |             144.0 s | −64.9% |
+| Static-example setup export       |             156.3 s |             157.8 s |  +1.0% |
+| Design-library setup export       |             156.4 s |             159.1 s |  +1.7% |
+| Cold-preview browser setup        |             167.6 s |              48.2 s | −71.2% |
+| Ordinary-preview browser setup    |             151.8 s |              31.6 s | −79.2% |
+| Four-setup Playwright command     |             726.1 s |             485.8 s | −33.1% |
+| Hydration-route command           | 338.8 s / 118 tests | 247.3 s / 121 tests | −27.0% |
+| Median hydration-route test       |             2.726 s |             1.925 s | −29.4% |
+
+Both full comparison-export setups remain effectively flat while processing
+three additional branch routes; their baseline installation, build and Review
+work dominates capture. The capture-heavy preview paths, page loads,
+navigations and hydration inventory show the intended reduction. Every measured
+test command passed without retries or skips. Raw JSON, timing events and logs
+are retained under `.context/test-timings/m7/`.

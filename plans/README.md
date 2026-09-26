@@ -51,8 +51,10 @@
   the fail-closed fallback.
 - [Route-Scoped Shell Bootstrap](./route-scoped-shell-bootstrap.md) — Serve
   pages embed the catalogue index plus only their own route's component usage
-  (3.5 MB to about 0.4 MB per page) and serialise that state once, while the
-  public `catalogue.json` and static exports stay unchanged.
+  and serialise that state once. The public `catalogue.json` stays complete;
+  normalized non-client static content stays stable while viewer client changes
+  update deployment identity. Implementation is complete; move this plan to
+  Completed when its implementation PR merges.
 
 ## Completed
 

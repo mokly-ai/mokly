@@ -18,12 +18,10 @@ use the same tree with host-owned appearance and independent preview selection.
 Removed pages and screens load their advertised previous versions in local,
 static, and embedded hosts through the same tree, as implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md).
-Serialize-once embedded state is implemented by Milestone 3 of the
-[route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
-Milestone 4 implements its isolated route-scoped model, projection and strict
-reader. Milestone 5 implements scoped hydration, pending frames and atomic
-route/live-evidence adoption. Milestone 6 switches Serve emission and every live
-reader to exact route scope together; complete live bootstraps are rejected.
+The [route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md)
+implements serialize-once embedded state, the isolated scoped model and strict
+reader, pending frames, atomic route/live-evidence adoption, and exact-scoped
+Serve emission. Complete live bootstraps are rejected.
 
 ## Package And Props
 

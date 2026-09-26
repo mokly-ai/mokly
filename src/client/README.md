@@ -13,12 +13,13 @@ adapters live in [the viewer package](../../packages/viewer/README.md). The
 capabilities. `react_capability_updates.ts` and `react_update_controller.ts` own
 the event stream, latest-wins evidence refresh, reload recovery and cancellation.
 Each route or live-evidence page contributes a validated public bootstrap and a
-complete private workspace. The centralized reader accepts only exact route
-scope and rejects complete, missing or leaked live usage. They are adopted as
-one revision by replacing the prior catalogue, never merging usage across
-visited routes. Until scoped adoption, the shell reports Usage as loading; a
-current read failure or rejection reports failed and supports retry without
-remounting the preview. Authored content changes retain the reload lifecycle.
+complete private workspace for screen and component routes. The centralized
+reader accepts only exact route scope and rejects complete, missing or leaked
+live usage. They are adopted as one revision by replacing the prior catalogue,
+never merging usage across visited routes. Until scoped adoption, the shell
+reports Usage as loading; a current read failure or rejection reports failed
+and supports retry without remounting the preview. Authored content changes
+retain the reload lifecycle.
 
 The synchronous viewer bootstrap captures native disclosure choices made before
 module initialization. Browse preferences and one-shot recovery retain these

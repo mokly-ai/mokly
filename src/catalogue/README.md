@@ -7,8 +7,8 @@ a separate route-scoped bootstrap from it, retaining the whole index but
 replacing out-of-scope usage with the viewer runtime's `omitted` state. The
 endpoint, exported file, fixture, upload and ownership inventories never contain
 that state. The local shell keeps its embedded private data; Serve evidence
-updates replace the validated scoped public snapshot and matching private
-workspace together.
+updates replace the validated scoped public snapshot and optional matching
+private workspace together.
 
 `projection_input.ts` is the typed input boundary. It accepts validated manifest
 v5 or live-index metadata, the collection forest, and accepted comparison/usage

@@ -12,8 +12,8 @@ The public catalogue, cross-origin inspector and viewer package are implemented
 by the completed [viewer library plan](../../plans/mokly-viewer-library.md).
 Removed page and screen previous versions are packaged and rendered by the
 [removed content previews plan](../../plans/removed-content-previews.md).
-Scoped live-capture comparison with normalized static-content invariance is an
-approved target tracked by the
+Scoped live-capture comparison with normalized static-content invariance is
+implemented by the
 [route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
 
 ## Hosting Contract

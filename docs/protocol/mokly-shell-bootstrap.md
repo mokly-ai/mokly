@@ -2,16 +2,14 @@
 
 ## Delivery Status
 
-The serialize-once embedded-state boundary is implemented by Milestone 3 of the
-[route-scoped shell bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
-Milestone 4 implements the runtime-only scoped model, shared route resolver,
-pure projection and strict scoped reader as isolated data-layer entry points.
-Milestone 5 implements scoped shell hydration, frame and Usage presentation,
-route/live evidence adoption and retry. Milestone 6 implements scoped Serve
-emission, strict live reading and captured-page validation. The public
-catalogue v1 format and application-owned `MoklyViewer` sources remain
-unchanged. Static content retains its bytes after deployment-identity
-normalization; the shared viewer client may change with viewer source.
+Implemented by the
+[route-scoped shell bootstrap plan](../../plans/route-scoped-shell-bootstrap.md):
+serialize-once embedded state, the runtime-only scoped model and strict reader,
+scoped hydration and evidence adoption, exact Serve emission, and captured-page
+validation all use this contract. The public catalogue v1 format and
+application-owned `MoklyViewer` sources remain unchanged. Static content
+retains its bytes after deployment-identity normalization; the shared viewer
+client may change with viewer source.
 
 ## Purpose And Boundary
 
@@ -157,8 +155,9 @@ unavailable; it never presents omitted usage as a real empty view.
 
 In-shell navigation commits the destination route immediately, then reads its
 shell page as evidence. The fetched scoped catalogue, source descriptor, and
-private workspace are one candidate. Accept all of them or retain the installed
-candidate; never accumulate retained usage from previously visited routes.
+private workspace when that route owns one are a single candidate. Accept all
+of them or retain the installed candidate; never accumulate retained usage from
+previously visited routes.
 
 Every committed live target route performs that evidence read, including use
 cases and pages that own no private workspace. This keeps the installed scope
