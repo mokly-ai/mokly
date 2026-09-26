@@ -174,9 +174,10 @@ settings: thirteen Appearance screens, four Changes designs, two product
 screens, and two retained Welcome appearance variants. `mokly build` writes a
 Light and a Dark file for each viewport, and the outer Appearance control moves
 between them.
-Design headers retain the approved screen-stack logo: 17px overlapping mobile
-and desktop outlines in a 24px sage square. Desktop keeps the navigation resize
-grip; mobile keeps its fixed drawer. The component designs reuse the existing shell, frames, controls,
+Design headers use the published Mokly logo: the 22px mark of two overlapping
+rounded screens in the brand green (lighter in Dark), followed on desktop by
+the serif `mokly.` wordmark. Desktop keeps the navigation resize grip; mobile
+keeps its fixed drawer. The component designs reuse the existing shell, frames, controls,
 and a shared icon inspector, with synthetic usage fixtures under
 `entries/design/components/parts`. The real examples use the public `defineComponent` API.
 

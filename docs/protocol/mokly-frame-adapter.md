@@ -99,6 +99,11 @@ subscription rather than installing a duplicate; the returned cleanup restores
 ordinary subscription semantics. This closes the interval between React session
 ownership and mount readiness without treating a loading frame as unenhanced.
 Callers that omit `onEvent` retain the explicit post-mount `subscribe` interface.
+A wrapper that changes the event stream, such as a test double, must wrap
+`onEvent` itself and pass that wrapped callback when the shell subscribes its
+mount-time receiver. Subscribing any other callback adds a second listener and
+leaves the unwrapped receiver attached, so every event arrives twice and events
+the wrapper meant to drop still arrive once.
 An optional mount signal cancels both pending initialization and an active
 session. Built-in adapters remove cancellation listeners on disposal. Viewer
 cleanup also fences late custom-adapter results and disposes them immediately.
