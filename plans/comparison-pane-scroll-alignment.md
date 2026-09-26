@@ -196,10 +196,11 @@ the following milestones have a complete contract, and register the plan.
       note that the presentation pipeline is shared with comparison panes and
       that removed previews still accept only `snapshots/before/`.
 - [x] In [`mokly-shell-design.md`](../docs/protocol/mokly-shell-design.md),
-      add the `design-changes-overlay-long` row at
-      `design/review/controls/overlay-long.html`, describe the single-chrome
-      stacked structure for Overlay and Difference, and keep the comparison
-      family statements consistent; update
+      describe the single-chrome stacked structure for Overlay and Difference
+      and keep the comparison family statements consistent, without adding the
+      `design-changes-overlay-long` inventory row, which
+      `tests/design_links.test.ts` checks against the compiled registry and
+      which therefore lands with the mockup in Milestone 2; update
       [`mokly-design-links.md`](../docs/protocol/mokly-design-links.md) where it
       enumerates the family.
 - [x] Update the user guide
@@ -217,8 +218,8 @@ the following milestones have a complete contract, and register the plan.
       and this plan to the active list in [`plans/README.md`](./README.md).
 - [x] Validate the changed Markdown with `npm run format:check` and review the
       diff; documentation-only work does not require `cargo xtask check`.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] After the push, use
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and report the
       findings without changing the implementation.
@@ -235,8 +236,10 @@ the design catalogue before the implementation lands.
       mobile variants: a long screen in Overlay scrolled part-way inside one
       chrome, both layers at the same offset, the chrome viewport showing its
       scrollbar, and no annotations inside the screen area; register its
-      destination in `examples/basic/entries/design/parts/destinations.ts` and
-      keep the Changes page within the five-screen limit.
+      destination in `examples/basic/entries/design/parts/destinations.ts`,
+      add its inventory row at `design/review/controls/overlay-long.html` to
+      the table in `docs/protocol/mokly-shell-design.md`, and keep the Changes
+      page within the five-screen limit.
 - [ ] Restructure the Difference mockups in
       `examples/basic/entries/design/review_outcome_screens.tsx` and
       `examples/basic/entries/design/browse/appearance/workspaces/screens.tsx`
@@ -359,4 +362,25 @@ side, and prove alignment in the browser.
 
 ## Review record
 
-Filled in as each milestone's review runs.
+### Milestone 1
+
+- Base commit: `origin/main` at `3699c56`; the contract landed as `1849a31`
+  on `calummoore/kelowna-v2` and its review fixes follow it.
+- Checks: `npm run format:check` passed before and after the review fixes.
+  `npm run example:build` cannot run in the review sandbox because its Node
+  24.14.1 falls in the CLI's unsupported range; the design tests were run
+  directly with `npx tsx --test tests/design_links.test.ts`.
+- Finding 1 pre-fix regression: that test's documented-inventory case failed
+  with the extra `design-changes-overlay-long` row, because the row is checked
+  against the compiled design registry and the mockup lands in Milestone 2.
+  The row was removed from `mokly-shell-design.md` and moved to the Milestone
+  2 TODOs; the test then passed 10/10.
+- Finding 6 (three statements that still let comparison panes keep an opaque
+  sandbox or navigable links, in `mokly-navigation.md`,
+  `mokly-design-links.md` and `docs/guides/authoring/links.md`) was fixed as
+  part of the milestone's no-conflicting-statements scope.
+- Findings 2, 3, 4, 5, 7, 8, 9 and 10 change the contract's substance
+  (Side by side sizing, lifecycle cancellation versus sharing, viewport-sized
+  documents, the Milestone 3 and 4 TODO lists, CSP `base-uri`, keyboard
+  scrolling, forward-looking design references, and the pane frame attribute)
+  and were reported for a decision rather than applied.

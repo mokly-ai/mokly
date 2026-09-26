@@ -57,8 +57,9 @@ an accidental resource request.
 
 ## What the build checks
 
-Generated files keep portable relative links, so standalone documents and
-comparison snapshots still navigate. The build validates every destination and
+Generated files keep portable relative links, so standalone documents still
+navigate and comparison snapshots stay portable on disk, even though links
+inside a comparison pane do nothing. The build validates every destination and
 every fragment, and a fragment must exist in each generated view the catalogue
 may show for that destination. A document that contains an activatable logical
 link must not contain a `base href`. Root-absolute links and links into your

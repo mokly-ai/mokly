@@ -80,7 +80,6 @@ contract until their standalone screens are implemented.
 | `design-browse-changed-views`         | `design/browse/variants/changed-views.html`                     | Change confined to the views that are not shown            |
 | `design-changes-current`              | `design/review/controls/current.html`                           | Current screen in Changes                                  |
 | `design-changes-overlay`              | `design/review/controls/overlay.html`                           | On-demand overlay comparison                               |
-| `design-changes-overlay-long`         | `design/review/controls/overlay-long.html`                      | Long screen overlay scrolled inside one shared chrome      |
 | `design-review-changed`               | `design/review/outcomes/changed.html`                           | Changed screen, side-by-side compare                       |
 | `design-review-added`                 | `design/review/outcomes/added.html`                             | Added screen current preview without comparison controls   |
 | `design-review-removed`               | `design/review/outcomes/removed.html`                           | Removed badge and previous version without comparisons     |

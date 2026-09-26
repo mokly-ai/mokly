@@ -290,8 +290,9 @@ outer-navigation fallback.
 
 Consumer scripts remain disabled in default Browse. It permits same-origin inspection but
 does not grant script, form, popup, download, or either top-navigation
-capability to consumer documents. Comparison panes retain their stricter existing
-sandbox.
+capability to consumer documents. Comparison panes are viewer-owned,
+script-disabled documents under the
+[comparison pane contract](./mokly-comparison-panes.md).
 
 External, raw relative, download, same-document hash, metadata-only, and
 unmarked links retain their existing frame-owned behavior subject to the

@@ -300,7 +300,8 @@ viewports and light/dark generation without changing fixture ids or routes.
 All design and example links must retain portable relative hrefs on disk and
 authenticated markers in served/deployed Browse. Standalone activation opens
 the matching generated viewport with the existing scheme fallback. Real
-comparison snapshots retain their existing portable, frame-owned link behavior;
+comparison snapshots keep portable links on disk, which the viewer's read-only
+guard cancels inside a comparison pane;
 design artboards depicting comparisons are ordinary Browse screens and use
 normal enhanced navigation. Do not equate these two contexts.
 
