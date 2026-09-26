@@ -553,6 +553,48 @@ the delivered behavior.
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
 
+## Milestone 8: Split Oversized Test Files
+
+Summary: restore the repository's maintainable test-file size without changing
+coverage or behavior.
+
+- [x] Split `packages/viewer/tests/host_capabilities.test.tsx` into focused
+      sibling test files around 300 lines or fewer. Move tests, assertions and
+      helpers without changing them.
+  - `host_capabilities.test.tsx` grew from 245 lines on `origin/main` to 359
+    before the split. It is now 164 lines, with the rendering tests in
+    `host_capabilities_rendering.test.tsx` (188) and the unchanged shared setup
+    in `host_capabilities_fixture.ts` (26).
+- [x] Split `packages/viewer/tests/capability_adoption.test.ts` into focused
+      sibling test files around 300 lines or fewer. Move tests, assertions and
+      helpers without changing them.
+  - `capability_adoption.test.ts` grew from 324 lines on `origin/main` to 389
+    before the split. It is now 212 lines, with historical adoption in
+    `capability_history_adoption.test.ts` (121) and its unchanged fixtures and
+    helpers in `capability_adoption_fixture.ts` (86).
+- [x] Record before/after line counts and prove the ordered test-name inventory
+      and total test count are unchanged. Leave `workspace.tsx` and
+      `scripts/preview/catalogue.mjs` unchanged.
+  - AST comparison against `ba90e8b` proves all seven host-capability and all
+    seven capability-adoption test bodies remain in their original order and
+    are byte-identical. The three moved adoption helper bodies and both moved
+    fixture setups are also identical apart from their new exports. Total test
+    count remains 14. The exempt files remain 305 and 304 lines respectively.
+- [x] Run formatting, lint, typecheck and the prepared unit suite, then run the
+      complete `cargo xtask check` gate with no failures or skips.
+  - Focused split tests passed 14 of 14. Formatting, lint and typecheck passed;
+    the prepared unit suite passed 2,454 tests with no failures or skips.
+  - Complete gate on 2026-09-26: unit 2,454 passed; browser 789 passed; zero
+    failures, skips or cancellations. Repository, package, Rust, typecheck,
+    example and all five packed-consumer smoke stages also passed.
+- [ ] After checks pass, `git add -A`, commit with Conventional Commits, and
+      push the branch.
+- [ ] After the push, use
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main`; report
+      numbered, severity-rated findings with options and recommendations
+      without changing the implementation.
+
 ## Post-merge follow-up (non-blocking)
 
 - Compare the first `main` CI runs after merge with the CI baseline below,
