@@ -1,5 +1,45 @@
 # Changelog
 
+## [0.13.0](https://github.com/mokly-ai/mokly/compare/v0.12.0...v0.13.0) (2026-09-26)
+
+
+### Features
+
+* add co-located entries and screen variants ([ce3da27](https://github.com/mokly-ai/mokly/commit/ce3da27f2c5d9d9c8e7fbb4faf1b9cac5b167a33))
+* **design:** add the disabled and validation roles ([d4228f9](https://github.com/mokly-ai/mokly/commit/d4228f90b97b2698a1b6bed53ddbdf446d4750c8))
+* **viewer:** add Auto/Light/Dark appearance ([#96](https://github.com/mokly-ai/mokly/issues/96)) ([d4228f9](https://github.com/mokly-ai/mokly/commit/d4228f90b97b2698a1b6bed53ddbdf446d4750c8))
+* **viewer:** adopt the mokly-cloud logo ([#119](https://github.com/mokly-ai/mokly/issues/119)) ([3699c56](https://github.com/mokly-ai/mokly/commit/3699c56619fd9450a001547ffc7e92b9f8536fba))
+
+
+### Bug Fixes
+
+* align screen variants and history ([#115](https://github.com/mokly-ai/mokly/issues/115)) ([2ec4d83](https://github.com/mokly-ai/mokly/commit/2ec4d837df2c2fdbd74453b5844a36bd9b4272bf))
+* **ci:** align workflow tests with Blacksmith ([74043d2](https://github.com/mokly-ai/mokly/commit/74043d2ca8e45c18264b25c63882ea81e58b568d))
+* **ci:** await navigation disclosure transitions ([#108](https://github.com/mokly-ai/mokly/issues/108)) ([2dac7b0](https://github.com/mokly-ai/mokly/commit/2dac7b04ab60dd3cb3729bdbb119b5d195e07ba8))
+* **ci:** drain fixtures before removal ([d3d3e4c](https://github.com/mokly-ai/mokly/commit/d3d3e4ceae1241f979a540bacb5cdbbd38c75008))
+* **ci:** drain fixtures before removal ([c19cccb](https://github.com/mokly-ai/mokly/commit/c19cccb969f495e0ed4dfd0798341e511640af6f))
+* **ci:** enforce fixture-owned teardown ([a8e2ea4](https://github.com/mokly-ai/mokly/commit/a8e2ea4ff765be1342166c1e7a09017e9ee8972b))
+* **ci:** enforce fixture-owned teardown ([a32b9f2](https://github.com/mokly-ai/mokly/commit/a32b9f292c4b2d1a7fe92b75b59c0f7ffdc45292))
+* **ci:** pin release checkout action ([a59aab2](https://github.com/mokly-ai/mokly/commit/a59aab2ea8134ac1b4cc0d86ca5293aa4c50eb76))
+* **ci:** prevent hydration timeouts and shutdown hangs ([47c5197](https://github.com/mokly-ai/mokly/commit/47c5197976ed65d5e89562c507e53f0bac067762))
+* **ci:** resolve Node 24 once per run ([#113](https://github.com/mokly-ai/mokly/issues/113)) ([a233cbd](https://github.com/mokly-ai/mokly/commit/a233cbded960c3a753e111d9c2a46ef161fed989))
+* **ci:** reuse one Node 24 version across jobs ([bbba28e](https://github.com/mokly-ai/mokly/commit/bbba28e3a61b9bc9ca650dbd1ce94e6f3449326b))
+* **cli:** arm shutdown before ready output ([#106](https://github.com/mokly-ai/mokly/issues/106)) ([0216610](https://github.com/mokly-ai/mokly/commit/02166103317b312de2ecb0e1ffc63b4065136dfe))
+* complete entry discovery follow-up ([#111](https://github.com/mokly-ai/mokly/issues/111)) ([5ea5258](https://github.com/mokly-ai/mokly/commit/5ea52589acb697cc375f4c2649056d257fa343f3))
+* **viewer:** resolve effective views ([#112](https://github.com/mokly-ai/mokly/issues/112)) ([d665d06](https://github.com/mokly-ai/mokly/commit/d665d066388a1e21efc0016f32536909e040acdd))
+
+
+### Performance Improvements
+
+* **ci:** gate Node 24 checks on release PRs ([#114](https://github.com/mokly-ai/mokly/issues/114)) ([a8f408d](https://github.com/mokly-ai/mokly/commit/a8f408d16738e8d5461b23fdc32cd94198143038))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @mokly/viewer bumped from 0.3.0 to 0.4.0
+
 ## [0.12.0](https://github.com/mokly-ai/mokly/compare/v0.11.0...v0.12.0) (2026-09-22)
 
 
