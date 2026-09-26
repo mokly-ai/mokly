@@ -5,7 +5,9 @@
 - [Delta Publishing](./delta-publishing.md) — replace the single-archive
   `mokly publish` upload with the content-addressed plan, blob and complete
   exchange, the schema 2 export ownership marker, v2 fixtures and guides for
-  the next minor release.
+  the next minor release. Implemented, verified, pushed and reviewed; the
+  [review findings](../docs/reviews/delta-publishing.md) await the user's
+  decision. The plan stays Active until its pull request merges.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
   standalone Auto/Light/Dark control for interface and previews, and
   host-owned theme with independent previews when embedded. Dark neutrals align

@@ -317,7 +317,7 @@ stderr: <empty>
 PUT requests: 44
 ```
 
-## Milestone 6: Verification and delivery
+## Milestone 6: Verification and delivery — completed
 
 Complete branch work before review; merge remains the completion boundary.
 
@@ -326,16 +326,20 @@ Complete branch work before review; merge remains the completion boundary.
 - [x] Confirm the documentation, READMEs and fixtures match the shipped
       behaviour, and that no `upload v1` single-archive wording remains
       outside historical plans and reviews.
-- [ ] After checks pass, `git add -A` and commit with a Conventional Commits
-      message titled `feat(publish)!: upload catalogues as content deltas` and
-      a `BREAKING CHANGE:` footer describing the removed single-archive
-      exchange and the schema 2 marker, so the release PR records the
-      CHANGELOG entry and bumps the next minor; push the branch.
-- [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After checks pass, `git add -A` and commit with a Conventional Commits
+      message and a `BREAKING CHANGE:` footer describing the removed
+      single-archive exchange and the schema 2 marker, so the release PR
+      records the CHANGELOG entry and bumps the next minor; push the branch.
+      Committed as `52ca854 feat(publish)!: upload catalogue content deltas`;
+      the title originally planned here was 51 characters, over the
+      50-character limit in `AGENTS.md`.
+- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; write the
       numbered, severity-rated findings with lettered options and a
       recommendation to `docs/reviews/delta-publishing.md` and report them
-      without changing the implementation.
+      without changing the implementation. Fifteen findings (five Medium,
+      ten Low) are recorded in the
+      [review](../docs/reviews/delta-publishing.md) for the user's decision.
 
 ## Post-merge follow-up (non-blocking)
 
