@@ -490,12 +490,12 @@ Summary: switch Serve and export/preview capture to route-scoped bootstraps.
     Rust, typecheck, example and five packed-consumer smoke stages also passed.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
-  - [ ] Restate prominently in the Milestone 6 review record and checkpoint
+  - [x] Restate prominently in the Milestone 6 review record and checkpoint
         report that the deferred Medium A → B → A initial-workspace finding is
         now visible with native scoped emission. Keep it open for the user's
         decision unless they separately authorize a fix.
@@ -725,3 +725,83 @@ use-case and page targets so their installed scope matches their route.
   record and checkpoint report because native scoped emission makes the stale
   workspace state visible. The low-severity descriptor value/JSON pairing
   finding also remains deferred and unchanged.
+
+### Milestone 6 — 2026-09-26
+
+- Reviewed the complete pushed `origin/main...b386d76` diff using
+  [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
+- The review was read-only; none of the findings below changed the
+  implementation.
+
+1. **Medium — Returning A → B → A can now expose A's stale initial private
+   workspace while its scoped catalogue is still B's.** At
+   `packages/viewer/src/shell/use_workspace_data.ts:49`, `useWorkspaceData`
+   still falls back to `useViewerInitialWorkspace()` whenever only the route
+   entry matches. After native scoped emission, returning to the initial route
+   before its held or failed evidence response can therefore pair old complete
+   `Used by`, `Affected`, counts and instance details with the prior route's
+   scoped catalogue. Doing nothing makes this previously deferred state
+   user-visible: Usage can report Ready instead of Loading or Failed during an
+   A → B → A round trip.
+   - **Option A:** for a live request, select private workspace only from the
+     capability store's source-and-route-bound `live.workspace`; retain the
+     initial fallback only for static or otherwise non-live shells. Add a
+     browser regression that holds and then fails the return-to-A response.
+   - **Option B:** consume or clear initial workspace context after the first
+     live route/source transition, then retain the current precedence rules.
+   - **Option C:** keep route-only initial matching and accept the temporary
+     cross-revision presentation.
+   - **Recommendation:** Option A. The live capability store already owns the
+     exact request identity, so using it as the sole live authority fixes the
+     ownership boundary rather than one presentation symptom. The A → B → A
+     regression is required to prevent another unbound fallback from
+     reintroducing the same class of bug. This remains deferred by explicit
+     supervisor direction.
+
+2. **Low — The server-rendered capability object and its embedded JSON can
+   still disagree.** At
+   `packages/viewer/src/standalone/document.tsx:30`,
+   `StandaloneShellDocument` accepts `capabilityDescriptor` and
+   `capabilityDescriptorJson` as independent props. Current callers build both
+   from one descriptor, but a future caller can render one private workspace
+   while the browser hydrates against another serialized source. Doing nothing
+   leaves a difficult-to-diagnose hydration mismatch and cross-revision state
+   available at this component boundary.
+   - **Option A:** introduce one paired descriptor value created by a factory
+     from the validated object, and pass that value through the document
+     boundary. Add a type/runtime regression proving independent values cannot
+     be supplied.
+   - **Option B:** pass only serialized JSON and parse it once inside the
+     document to recover the server value, accepting another parse.
+   - **Option C:** keep both props and rely on callers to synchronize them.
+   - **Recommendation:** Option A. A cohesive boundary type prevents the whole
+     mismatch class without restoring render-time serialization. This remains
+     deferred by explicit supervisor direction.
+
+3. **Low — Repository preview validates the same complete catalogue twice per
+   build.** `scripts/preview/catalogue.mjs:157` calls
+   `readCapturedShellCatalogue` before per-page comparison, then
+   `scripts/preview/artifact.mjs:124` reaches `finalizeDeployment`, whose
+   `src/export/deployment.ts:28` calls `readCatalogue` again on the same
+   complete model. Doing nothing preserves correct output, but repeats the
+   largest complete-model read, contradicts the once-per-build capture
+   contract, and adds avoidable build time as catalogues grow.
+   - **Option A:** carry the validated catalogue proof and canonical bytes into
+     preview staging/finalization. Finalization can compare the staged bytes
+     with that proof before stamping deployment identity instead of decoding
+     the model again; direct exports can retain their post-adapter validation.
+     Add a real-behavior call-count regression for one preview build.
+   - **Option B:** delay the only validation until finalization and let capture
+     compare unvalidated data, weakening the capture boundary.
+   - **Option C:** keep both validations and accept the extra complete-model
+     cost.
+   - **Recommendation:** Option A. Passing one validated proof through the
+     complete preview pipeline preserves final-byte tamper protection and
+     prevents duplicate reads structurally. A local cache or caller-specific
+     skip would be less durable.
+
+- No other findings. Residual risk is limited to the deliberately deferred
+  A → B → A and descriptor-pair decisions plus the new duplicate build-time
+  validation finding. The complete gate, native scoped hydration inventory,
+  capture rejection tests, 1 MiB guardrail and post-commit byte-for-byte
+  artifact comparison all passed.
