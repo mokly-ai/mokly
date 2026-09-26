@@ -2,9 +2,10 @@
 
 ## Status And Outcome
 
-Status: implemented, verified, merged with `origin/main` (#115), pushed and
-reviewed. Milestones 9 to 11 fixed the review findings that the user chose on
-2026-09-25. Milestones 12 to 15 implement the user's 2026-09-26 decisions.
+Status: implemented, verified, merged with `origin/main` (#115 and #119), pushed
+and reviewed twice. Milestones 9 to 11 fixed the review findings that the user
+chose on 2026-09-25, and Milestones 12 to 15 implemented the user's 2026-09-26
+decisions. The second review's findings await the user's decision.
 The binding Decisions And Scope remove all three inputs and adopt
 component-declared stylesheets in place of the stylesheet role of
 `ownedDependencies`. The user approved both the removals and the component
@@ -713,7 +714,15 @@ Update the contracts for the 2026-09-26 decisions. Docs only.
       deletions are plan-approved: the example style collector, the old
       dependency validator and path matcher, and the old style-collector test.
 - [x] Run `git add -A`, commit with a Conventional Commit, and push the branch.
-- [ ] After the push, review the complete diff against `origin/main` using
+- [x] After the push, review the complete diff against `origin/main` using
       `docs/implementation-review-prompt.md`. Report numbered findings with
       severity, impact, lettered options and a recommendation, without
       changing the implementation.
+
+Second review outcome (2026-09-26, against `origin/main` at `3699c566`): 11
+findings, each checked in the code, were reported to the user and not fixed:
+1 High, 4 Medium and 6 Low. The High finding is that an edit to a file
+imported by a declared component stylesheet can leave Changes empty. The
+Medium findings are repeated warnings after a watched rebuild, the lost
+excluded-only stylesheet mockup, tests that do not protect several fixes, and
+a docs guard test that misses stale lines.
