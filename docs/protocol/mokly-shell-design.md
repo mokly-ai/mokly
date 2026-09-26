@@ -220,15 +220,17 @@ Consumers may set exactly these CSS custom properties to tune the shell accent.
 The shell reads them with the defaults below; every other shell style is
 package-owned and not a compatibility surface.
 
-| Property                  | Default                   | Used for                          |
-| ------------------------- | ------------------------- | --------------------------------- |
-| `--mokly-accent`          | `#4f7864`                 | Brand mark, active pills and rows |
-| `--mokly-accent-contrast` | `#ffffff`                 | Text and glyphs on the accent     |
-| `--mokly-accent-soft`     | `rgba(79, 120, 100, 0.1)` | Hover and highlight surfaces      |
+| Property                  | Default                   | Used for                      |
+| ------------------------- | ------------------------- | ----------------------------- |
+| `--mokly-accent`          | `#4f7864`                 | Active pills and rows         |
+| `--mokly-accent-contrast` | `#ffffff`                 | Text and glyphs on the accent |
+| `--mokly-accent-soft`     | `rgba(79, 120, 100, 0.1)` | Hover and highlight surfaces  |
 
 A consumer accent pair must keep at least WCAG AA contrast between
 `--mokly-accent` and `--mokly-accent-contrast`; the shell does not
-recompute contrast at runtime.
+recompute contrast at runtime. The Mokly brand mark is identity rather than
+accent: it keeps its package-owned `--chrome-brand` color whatever accent a
+consumer sets.
 
 ## Package-Owned Tokens
 
@@ -248,6 +250,7 @@ the [semantic palette](./mokly-viewer-palette.md). The Light values are:
 | `--chrome-border-strong` | `#c8ccc4`                        | Frame and strong borders |
 | `--chrome-control-edge`  | `#868e88`                        | Interactive boundaries   |
 | `--chrome-accent`        | `#2a4733`                        | Deep-accent prose links  |
+| `--chrome-brand`         | `#2f5945`                        | Mokly brand mark         |
 | `--chrome-shadow`        | `0 30px 90px rgba(20,28,22,.14)` | Overlay elevation        |
 
 The shipped shell and appearance mockups share the two corrected Light values:
@@ -260,6 +263,8 @@ Typography is **Inter** (a variable font packaged with the shell and served at
 `/__mokly/fonts/InterVariable.woff2` under its SIL OFL license) via
 `--sans: "Inter", ui-sans-serif, system-ui, …` at a 13px shell base, with
 `--mono: "SFMono-Regular", Consolas, …` for routes, ids, addresses, and paths.
+Only the brand wordmark uses `--serif: Georgia, "Times New Roman", serif`, the
+Mokly wordmark's system serif stack; no serif font file is packaged.
 The nav indent guides use the faint `--mbk-guide: #dbded8` tint. The shell
 ships no consumer product fonts beyond Inter, and no consumer-specific color,
 name, or route family may appear in shell styles or copy.
@@ -269,21 +274,29 @@ name, or route family may appear in shell styles or copy.
 The shell fills the viewport (`100vh`, document scrolling disabled); every
 scrollable region scrolls internally:
 
-- **Top bar** — 48px, surface background, hairline bottom border: brand mark
-  (a non-shrinking 24px accent square with 6px corners and a 17px inline SVG
-  of overlapping mobile and desktop screen outlines), the product name in
-  its own `mbk-name` span, a centred search field (max-width 440px, led by a
-  15px stroked magnifier icon that holds its size while the field flexes)
+- **Top bar** — 48px, surface background, hairline bottom border: the Mokly
+  logo (a non-shrinking 22px brand mark followed, 8px later, by the lowercase
+  `mokly.` wordmark in its own `mbk-name` span), a centred search field
+  (max-width 440px, led by a 15px stroked magnifier icon that holds its size
+  while the field flexes)
   that flexes down to whatever room the bar leaves it. Below the breakpoint a menu button opens the
-  catalogue drawer. The product name hides in the narrow header so the search
-  retains space; the brand link keeps its accessible name. Search uses
+  catalogue drawer. The wordmark hides in the narrow header so the search
+  retains space; the brand link keeps its `Mokly` accessible name. Search uses
   `Search catalogue` as its accessible name and `Search catalogue…` as its
   placeholder in both viewport sizes, covering screens, pages, and flows.
-  The decorative mark
-  inherits the accent-contrast color and uses two-unit strokes on a 24-unit
-  viewBox, with the mobile outline in front and a gap in the desktop outline
-  at the overlap. The bar carries no preview mode switch; the delivered
-  Auto/Light/Dark Appearance control is the one setting that belongs here.
+  The decorative mark is a 22px SVG on a 32-unit viewBox, the size Mokly
+  Cloud's product header draws it at, so a host showing its own header before
+  the viewer loads keeps the mark the same size. It matches the published
+  Mokly logo: two overlapping rounded screens (20×21 units with
+  4-unit corners at 3,3 and 9,8), the back one at 30% opacity, both filled in
+  `--chrome-brand`, and the front one carrying two short rules (`M14 15h10`
+  and `M14 20h7`, two-unit round-capped strokes) in `--chrome-surface`. Both
+  roles follow the interface appearance, so Dark draws the light-green mark
+  with dark rules exactly as Mokly Cloud's dark logo does. The wordmark is
+  20px `--serif` at regular weight in the chrome ink, with `-0.01em`
+  tracking, and never wraps. The bar carries no preview mode switch; the
+  delivered Auto/Light/Dark Appearance control is the one setting that
+  belongs here.
   A query splits into terms: every `tag:<tag>`
   term matches only rows whose entry declares that tag, and the remaining words
   rejoin into one phrase that must appear in a row's authored ID, title, or

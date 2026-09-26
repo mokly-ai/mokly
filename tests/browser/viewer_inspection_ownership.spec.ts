@@ -12,6 +12,55 @@ test.beforeAll(async () => {
 });
 test.afterAll(async () => fixture?.close());
 
+/** Let any geometry read the viewer has scheduled start. */
+const twoFrames = () =>
+  new Promise<void>((resolve) =>
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+  );
+
+/**
+ * The holds below are only meaningful when the test decides every geometry
+ * read. A preview reports geometry after its own layout, scroll, font and DOM
+ * changes; if one of those reports reached the viewer, its extra read could
+ * take the hold meant for the operation under test.
+ */
+for (const cross of [false, true]) {
+  test(`${cross ? "postMessage" : "same-origin"} preview geometry reaches the viewer only when the test emits it`, async ({
+    page,
+  }) => {
+    await page.goto(fixture.host.url);
+    await startInspection(page, cross);
+    await page.evaluate(() =>
+      window.viewerHarness.get("one").ref.current.startPick(),
+    );
+    await page.evaluate(twoFrames);
+    const reads = () =>
+      page.evaluate(
+        () =>
+          window.inspectionProbe.calls.filter(
+            (call) => call.viewport === "mobile" && call.operation === "list",
+          ).length,
+      );
+    const withheld = () =>
+      page.evaluate(() => window.inspectionProbe.withheldGeometry);
+    const before = { reads: await reads(), withheld: await withheld() };
+
+    await page
+      .locator('iframe[data-workspace-frame="mobile"]')
+      .contentFrame()
+      .locator("body")
+      .evaluate((body) => body.append(body.ownerDocument.createElement("div")));
+    await expect.poll(withheld).toBeGreaterThan(before.withheld);
+    await page.evaluate(twoFrames);
+    expect(await reads()).toBe(before.reads);
+
+    await page.evaluate(() =>
+      window.inspectionProbe.emit({ type: "geometry" }),
+    );
+    await expect.poll(reads).toBeGreaterThan(before.reads);
+  });
+}
+
 for (const cross of [false, true]) {
   for (const replacement of ["frame", "request"] as const) {
     for (const operation of [
