@@ -109,6 +109,10 @@ replaces the fetched page's scoped public bootstrap, source and optional private
 workspace as one monotonic revision instead of accumulating per-route usage.
 `use_workspace_data.ts` keeps one route-owned workspace object so
 matching evidence refreshes retain already loaded usage and local editor state.
+In a live shell it trusts only the store's workspace bound to the current
+request; the page-lifetime initial workspace seeds that first binding but is
+never reused after navigation, so returning to the first route shows Loading or
+Failed until its own evidence is adopted.
 Versioned historical selection adopts new evidence and becomes unavailable if
 that exact snapshot disappears. Identity-less legacy history adopts only an
 unchanged removed record; metadata changes reject live adoption and preserve the

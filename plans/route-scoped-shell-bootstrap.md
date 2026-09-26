@@ -597,6 +597,53 @@ coverage or behavior.
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
 
+## Milestone 9: Request-Bound Live Workspace
+
+Tags: ui
+
+Summary: fix the deferred Medium review finding, approved by the user on
+2026-09-26 with option A. After navigating A → B → A in Serve, the Usage panel
+reused A's page-lifetime initial workspace and showed it as Ready while A's
+return evidence was pending or had failed. A live shell now trusts only private
+evidence bound to the current request.
+
+- [x] Define the rule in
+      [`mokly-shell-bootstrap.md`](../docs/protocol/mokly-shell-bootstrap.md),
+      [`mokly-live-capabilities.md`](../docs/protocol/mokly-live-capabilities.md)
+      and the shell README. The initial descriptor workspace seeds only the
+      first request's binding, and a return to the first route is Loading, then
+      Ready or Failed.
+- [x] Add a failing browser regression,
+      `tests/browser/route_scoped_shell_return.spec.ts`. It loads Action
+      directly, adopts Toolbar's evidence, returns to Action, and covers both a
+      held read (Loading, then Ready) and a failed read (Failed, Try again,
+      Loading, then Ready), with the frame retained.
+  - Before the fix both tests failed. The held case received the first-load
+    `Used by` list instead of `Loading usage…`, and the failed case showed no
+    `Usage couldn’t be loaded.` alert.
+- [x] In `use_workspace_data.ts`, select only the request-bound
+      `live.workspace` when a live request exists. Keep the static and initial
+      fallbacks for shells without one.
+- [x] Move the scoped browser specs' shared helpers into
+      `tests/browser/scoped_shell_helpers.ts` instead of adding a third copy.
+- [x] Run the regression, the adjacent scoped, evidence, explorer and hydration
+      browser specs, and the viewer and client unit tests.
+  - The regression and adjacent specs passed 28 of 28, and the regression passed
+    8 of 8 with `--repeat-each=4`. The viewer, client and route unit tests passed
+    198 of 198.
+- [x] Run the complete `cargo xtask check` gate with no failures or skips.
+  - Complete gate on 2026-09-26: unit 2,454 passed in 456 files; browser 791
+    passed in 126 specs, including the two new return regressions; zero
+    failures, skips or cancellations. Repository, package, Rust, typecheck,
+    example and all five packed-consumer stages also passed.
+- [x] After checks pass, `git add -A`, commit with Conventional Commits, and
+      push the branch.
+- [ ] After the push, use
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main`; report
+      numbered, severity-rated findings with options and recommendations
+      without changing the implementation.
+
 ## Post-merge follow-up (non-blocking)
 
 - Compare the first `main` CI runs after merge with the CI baseline below,

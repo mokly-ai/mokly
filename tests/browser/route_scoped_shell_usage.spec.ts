@@ -1,7 +1,14 @@
 import { expect, test } from "@playwright/test";
-import type { Page, Route } from "@playwright/test";
 
 import { fulfillScopedShell } from "./scoped_shell_fixture.js";
+import {
+  expectDesktopFrameRetained,
+  expectHydrated,
+  isEvidenceRequest,
+  latch,
+  markDesktopFrame,
+  recordFalseEmptyState,
+} from "./scoped_shell_helpers.js";
 
 const actionRoute = "/view/components/action.html";
 const toolbarRoute = "/view/components/toolbar.html";
@@ -158,54 +165,3 @@ test("an instance deep link resolves after scoped route evidence adoption", asyn
   await expectDesktopFrameRetained(page);
   await page.unrouteAll({ behavior: "wait" });
 });
-
-function isEvidenceRequest(route: Route, pathname: string): boolean {
-  return (
-    route.request().resourceType() === "fetch" &&
-    new URL(route.request().url()).pathname === pathname
-  );
-}
-
-function latch() {
-  let markRequested = (): void => undefined;
-  const requested = new Promise<void>((resolve) => {
-    markRequested = resolve;
-  });
-  let release = (): void => undefined;
-  const wait = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  return { markRequested, release, requested, wait };
-}
-
-async function expectHydrated(page: Page) {
-  await expect(page.locator("html")).toHaveAttribute("data-mokly-hydrated", "");
-}
-
-async function recordFalseEmptyState(page: Page) {
-  await page.evaluate(() => {
-    const inspect = () => {
-      if (document.body.textContent?.includes("No recorded consumers."))
-        document.documentElement.dataset.sawFalseUsageEmpty = "";
-    };
-    new MutationObserver(inspect).observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
-    inspect();
-  });
-}
-
-async function markDesktopFrame(page: Page) {
-  await page.locator('[data-workspace-frame="desktop"]').evaluate((frame) => {
-    frame.setAttribute("data-scope-frame-retained", "");
-  });
-}
-
-async function expectDesktopFrameRetained(page: Page) {
-  await expect(
-    page.locator(
-      '[data-workspace-frame="desktop"][data-scope-frame-retained=""]',
-    ),
-  ).toHaveCount(1);
-}

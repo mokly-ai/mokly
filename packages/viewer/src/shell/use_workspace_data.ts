@@ -29,7 +29,15 @@ export type UsageDeliveryState =
   | { status: "loading" }
   | { status: "failed"; retry(): void };
 
-/** Select atomically adopted private evidence, then fall back to public data. */
+/**
+ * Select atomically adopted private evidence, then fall back to public data.
+ *
+ * A live shell trusts only the store's evidence bound to the current request.
+ * Its page-lifetime initial workspace already seeds that binding for the first
+ * request, so reusing it after navigation would present stale Usage as Ready.
+ * Static and embedded shells have no live request; they keep their inert
+ * initial and destination evidence.
+ */
 export function useWorkspaceData(
   catalogue: Catalogue,
   context: ShellContext,
@@ -46,8 +54,10 @@ export function useWorkspaceData(
     [catalogue, context, entry],
   );
   const [, refresh] = useReducer((value: number) => value + 1, 0);
-  const privateWorkspace = matchingWorkspace(live.workspace, entry)
-    ? live.workspace
+  const privateWorkspace = live.request
+    ? matchingWorkspace(live.workspace, entry)
+      ? live.workspace
+      : undefined
     : matchingWorkspace(staticWorkspace, entry)
       ? staticWorkspace
       : matchingWorkspace(initial, entry)

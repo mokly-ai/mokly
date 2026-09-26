@@ -11,6 +11,7 @@ import {
   installDevelopmentBundle,
 } from "./react_shell_hydration_helpers.js";
 import { fulfillScopedShell } from "./scoped_shell_fixture.js";
+import { expectHydrated, latch } from "./scoped_shell_helpers.js";
 
 const actionRoute = "/view/components/action.html";
 const handbookRoute = "/view/handbook.html";
@@ -122,22 +123,6 @@ test("development React hydrates a scoped live page with initial Usage ready", a
   );
   await page.unrouteAll({ behavior: "wait" });
 });
-
-function latch() {
-  let markRequested = (): void => undefined;
-  const requested = new Promise<void>((resolve) => {
-    markRequested = resolve;
-  });
-  let release = (): void => undefined;
-  const wait = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  return { markRequested, release, requested, wait };
-}
-
-async function expectHydrated(page: Page) {
-  await expect(page.locator("html")).toHaveAttribute("data-mokly-hydrated", "");
-}
 
 async function recordLoadingFlash(page: Page) {
   await page.addInitScript(() => {

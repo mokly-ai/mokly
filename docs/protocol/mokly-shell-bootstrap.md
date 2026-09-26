@@ -144,6 +144,14 @@ failure and keeps its existing catalogue-checking copy. A matching initial
 descriptor may begin Ready on direct load; the shell must not insert a Loading
 flash before adopting that descriptor.
 
+Ready in a live shell always means private evidence bound to the current
+request: the same route and the same source revision. The initial descriptor
+workspace seeds only the first request's binding. After the route or source
+changes, the shell never falls back to that page-lifetime copy. Returning to
+the first route after visiting another one is therefore Loading, then Ready or
+Failed, like any other navigation. Static and application-owned shells have no
+live request and keep their inert initial and destination evidence.
+
 Displayed frames treat `omitted` as pending. Inspection uses the existing
 `Waiting for the component preview.` state until matching route evidence
 commits real usage. The commit updates mounted frame usage in place: it does
@@ -251,7 +259,8 @@ Acceptance requires:
 - no hydration mismatch in development React and no iframe remount on usage
   adoption;
 - Loading → Ready, Loading → Failed, retry, no false-zero flash, and instance
-  deep-link coverage with delayed route evidence;
+  deep-link coverage with delayed route evidence, including a return to the
+  first-loaded route;
 - atomic route and live-evidence adoption with stale, mixed, rejected, aborted,
   and historical candidates;
 - scoped capture drift rejection plus normalized static-content invariance,

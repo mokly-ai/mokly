@@ -57,7 +57,9 @@ can expose temporary rendering without enabling on-demand Usage loading.
 - `useViewerInitialWorkspace()` returns the descriptor workspace during both
   server rendering and first client render. This makes private status,
   comparison eligibility, affected usage, input changes, related components
-  and evidence identical across hydration.
+  and evidence identical across hydration. A live shell uses it only to seed
+  the store's binding for the first request; routed workspace selection never
+  falls back to it after the route or source changes.
 - `useViewerLiveState()` returns the exact adopted request and its matching
   private workspace from the shell store. A workspace from an older route or
   revision is never exposed.
