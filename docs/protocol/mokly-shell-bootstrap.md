@@ -9,8 +9,9 @@ pure projection and strict scoped reader as isolated data-layer entry points.
 Milestone 5 implements scoped shell hydration, frame and Usage presentation,
 route/live evidence adoption and retry. Milestone 6 implements scoped Serve
 emission, strict live reading and captured-page validation. The public
-catalogue v1 format, static artifact bytes, and application-owned `MoklyViewer`
-sources remain unchanged.
+catalogue v1 format and application-owned `MoklyViewer` sources remain
+unchanged. Static content retains its bytes after deployment-identity
+normalization; the shared viewer client may change with viewer source.
 
 ## Purpose And Boundary
 
@@ -214,11 +215,16 @@ Comparison is exact for all data the captured page carries. It cannot compare a
 scoped model directly with the complete published model, ignore extra retained
 usage, or accept missing route-owned usage.
 
-For identical inputs, `__mokly/catalogue.json`, canonical and alias shell HTML,
-workspace JSON, ownership inventory, comparison files, and deployment identity
-remain byte-identical to the pre-scope export. Static pages still resolve and
-validate the one complete catalogue and retain their current fallback Usage
-behavior.
+For identical catalogue, consumer, and comparison inputs,
+`__mokly/catalogue.json`, canonical and alias shell HTML, workspace JSON,
+ownership inventory, and comparison files remain byte-identical to the
+pre-scope export after replacing each tree's deployment identity with 64
+zeroes. Files under `__mokly/client/` may change when checked, type-checked
+viewer source changes. Across the route-scoping switch, the final deployment
+identity may therefore change only because those client bytes changed; all
+other identity inputs must match after normalization. Static pages still
+resolve and validate the one complete catalogue and retain their current
+fallback Usage behavior.
 
 ## Size And Regression Guardrails
 
@@ -249,6 +255,6 @@ Acceptance requires:
   deep-link coverage with delayed route evidence;
 - atomic route and live-evidence adoption with stale, mixed, rejected, aborted,
   and historical candidates;
-- scoped capture drift rejection plus byte-identical export and repository
-  preview artifacts for identical inputs; and
+- scoped capture drift rejection plus normalized static-content invariance,
+  with any client and deployment-identity changes accounted for; and
 - the out-of-scope invariance and real-example 1 MiB limits above.

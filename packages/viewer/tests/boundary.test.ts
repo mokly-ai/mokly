@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { test } from "node:test";
@@ -35,7 +34,7 @@ test("React entry bundles for browsers without CLI, server or Node code", async 
       /(?:^|\/)src\/(?:cli|server|build)\/|viewer\/server\.(?:js|tsx)$/,
     );
 });
-test("standalone browser modules isolate React to hydration bundles", async () => {
+test("standalone browser modules isolate React to the hydration bundle", async () => {
   const directories = [
     path.join(root, "dist/browser"),
     path.resolve(root, "../../dist/browser"),
@@ -46,7 +45,7 @@ test("standalone browser modules isolate React to hydration bundles", async () =
       if (!file.endsWith(".js")) continue;
       const code = await fs.readFile(path.join(directory, file), "utf8");
       assert.doesNotMatch(code, /from\s*["']node:/);
-      if (file === "react-shell.js" || file === "react-host.js") {
+      if (file === "react-shell.js") {
         hydrationBundles++;
         assert.match(code, /hydrateRoot/);
       } else {
@@ -57,7 +56,7 @@ test("standalone browser modules isolate React to hydration bundles", async () =
       }
     }
   }
-  assert.equal(hydrationBundles, 2);
+  assert.equal(hydrationBundles, 1);
 });
 test("standalone appearance startup is a self-contained classic bundle", async () => {
   const code = await fs.readFile(
@@ -70,15 +69,6 @@ test("standalone appearance startup is a self-contained classic bundle", async (
   assert.doesNotMatch(
     code,
     /react-dom|hydrateRoot|react\.production|["'](?:react|node:|@mokly\/mokly)|(?:^|\/)dist\/cli\//,
-  );
-});
-test("finalized static hydration retains its established client bytes", async () => {
-  const code = await fs.readFile(
-    path.join(root, "dist/browser/react-shell.js"),
-  );
-  assert.equal(
-    createHash("sha256").update(code).digest("hex"),
-    "391560c509ed65e7e0c613d3d7582c50d1167848292cdd665817002ff6d1f11c",
   );
 });
 test("the Node-only SSR entry cannot be imported into a browser graph", async () => {

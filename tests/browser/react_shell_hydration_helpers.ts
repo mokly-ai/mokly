@@ -1,9 +1,7 @@
 import path from "node:path";
 
-import { expect, type Page, type Route } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import { build } from "esbuild";
-
-let hostBundle: Promise<string> | undefined;
 
 export async function buildDevelopmentBundle(): Promise<string> {
   const result = await build({
@@ -25,12 +23,8 @@ export async function installDevelopmentBundle(
   page: Page,
   bundle: string,
 ): Promise<void> {
-  const host = await buildDevelopmentHostBundle();
   await page.route("**/__mokly/client/react-shell.js", (route) =>
     route.fulfill({ body: bundle, contentType: "text/javascript" }),
-  );
-  await page.route("**/__mokly/client/react-host.js", (route) =>
-    route.fulfill({ body: host, contentType: "text/javascript" }),
   );
 }
 
@@ -38,7 +32,6 @@ export async function delayHydration(
   page: Page,
   bundle: string,
 ): Promise<{ release(): void; requested: Promise<void> }> {
-  const host = await buildDevelopmentHostBundle();
   let markRequested = (): void => undefined;
   const requested = new Promise<void>((resolve) => {
     markRequested = resolve;
@@ -47,32 +40,12 @@ export async function delayHydration(
   const released = new Promise<void>((resolve) => {
     release = resolve;
   });
-  const delay = (body: string) => async (route: Route) => {
+  await page.route("**/__mokly/client/react-shell.js", async (route) => {
     markRequested();
     await released;
-    await route.fulfill({ body, contentType: "text/javascript" });
-  };
-  await page.route("**/__mokly/client/react-shell.js", delay(bundle));
-  await page.route("**/__mokly/client/react-host.js", delay(host));
-  return { release, requested };
-}
-
-async function buildDevelopmentHostBundle(): Promise<string> {
-  hostBundle ??= build({
-    bundle: true,
-    define: { "process.env.NODE_ENV": '"development"' },
-    entryPoints: [path.resolve("src/client/react_host.ts")],
-    format: "esm",
-    logLevel: "silent",
-    platform: "browser",
-    target: "es2023",
-    write: false,
-  }).then((result) => {
-    const bundle = result.outputFiles[0]?.text ?? "";
-    expect(bundle).toContain("react-dom-client.development.js");
-    return bundle;
+    await route.fulfill({ body: bundle, contentType: "text/javascript" });
   });
-  return hostBundle;
+  return { release, requested };
 }
 
 export function captureBrowserErrors(page: Page): string[] {

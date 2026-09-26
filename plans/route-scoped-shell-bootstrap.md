@@ -3,7 +3,9 @@
 Make every `mokly serve` page carry the catalogue index plus only the component
 usage its own route renders, instead of every screen's usage, and stop
 re-serialising that embedded state on every render. The public
-`__mokly/catalogue.json` and every static-export artifact stay unchanged.
+`__mokly/catalogue.json` stays unchanged. Static content stays byte-identical
+after deployment-identity normalization; viewer client files and the identity
+derived from them may change.
 
 ## Problem
 
@@ -105,8 +107,14 @@ A prototype that keeps only the current route's usage measured 360–445 KB and
 7. **Capture compares scoped projections.** Export and repository preview
    capture validate each captured route-scoped bootstrap and compare it with the
    route-scoped projection of the published model for that page. For the same
-   inputs, export artifacts (catalogue, shells, workspace JSON and deployment
-   identity) stay byte-identical.
+   catalogue, consumer and comparison inputs, the catalogue, canonical and
+   alias shells, workspace JSON, ownership inventory and comparison files stay
+   byte-identical after replacing each tree's deployment identity with zeroes.
+   Files under `__mokly/client/` may change with viewer source; across this
+   switch, only those client changes may cause the deployment identity to
+   change. The supervisor corrected the earlier whole-artifact byte-identity
+   requirement after Milestone 6 exposed that it required unreviewed build-time
+   source rewriting.
 8. **Guard the class of regression.** Tests assert that a page's bootstrap
    bytes do not change when another entry's usage changes, and that the example
    catalogue's largest Serve bootstrap stays under 1 MiB, more than twice the
@@ -418,35 +426,47 @@ Summary: switch Serve and export/preview capture to route-scoped bootstraps.
       published model so drift is still rejected for everything a page carries.
   - [x] Add a regression that leaks one out-of-scope usage record into a
         captured page and requires capture to reject it.
-- [x] Add a regression proving that the example's export and repository
-      preview artifacts are byte-identical before and after the switch
-      (catalogue, shells, workspace JSON and deployment identity).
-  - Manual comparison on 2026-09-26 used the artifacts saved at `214fffa` and
-    the post-switch tree. The Changes builds were supplied the same captured
-    96-path Git evidence list, because newly changed implementation/test paths
-    are themselves a different comparison input. All regular files were
-    enumerated in sorted path order and hashed with SHA-256.
-    - Consumer export: 1,587 files, 108,288,926 bytes, whole-manifest digest
-      `58cbf6ded9b47075d532303e8ffd754c990d4604ee0488d4316dad8f97f2f1e5`
-      before and after; zero differing files.
-    - Ordinary repository preview: 716 files, 86,562,915 bytes,
-      `ec7e40d8a10c15f6e60254ccb8ec81f413455d26392fe1665a8affc33c563221`
-      before and after; zero differing files.
-    - Repository preview with Changes: 1,590 files, 105,865,839 bytes,
-      `0c977ab6100372ec5017a469f76aacc7b5c17be2b260c0b2213ea631421b26b9`
-      before and after; zero differing files.
-    - The comparison covers the complete catalogues, canonical and id-alias
-      shells, workspace scripts, ownership inventories, comparison JSON and
-      snapshots, client assets and finalized deployment identities.
-  - Automatic coverage reconstructs static external state against the complete
-    published model and requires identical shell-bootstrap bytes, private
-    workspace JSON and deployment identity. The static hydration bundle's
-    established SHA-256 is pinned as
-    `391560c509ed65e7e0c613d3d7582c50d1167848292cdd665817002ff6d1f11c`.
-- [x] Keep the static external-bootstrap client byte-identical while deleting
-      the complete-live reader mode: Serve's private `react-host.js` now
-      bundles the strict live entry, while finalized pages retain the previous
-      external-only `react-shell.js` bytes.
+- [x] Recompare the saved `214fffa` consumer export and both repository
+      previews with the corrected invariant: replace each tree's deployment
+      identity with 64 zeroes, exclude `__mokly/client/**`, and require every
+      remaining file to be byte-identical. Record file counts, old/new
+      identities, differing client files, and normalized diff results.
+  - Manual comparison on 2026-09-26 used the saved `214fffa` artifacts and the
+    same captured 96-path Git evidence. There were no added or removed paths.
+    Every tree differed in only `__mokly/client/react-shell.js` plus 239 files
+    carrying its resulting deployment identity. The client changed from
+    461,979 bytes / SHA-256
+    `391560c509ed65e7e0c613d3d7582c50d1167848292cdd665817002ff6d1f11c`
+    to 461,804 bytes /
+    `02a813c54f365d10ff17ac8e5ea8100477aca8081f7736e764f8d38a2f536119`.
+    - Consumer export: 1,587 files; 28 client files excluded; all 1,559
+      remaining files matched. Identity changed from
+      `792625935ae40a322f43bb0ebaaae1c90e1c351ee72f469861839b07d6da9d3f`
+      to
+      `2e912e4512027d4c734096e1f4c0d1b5d1599029ec22404ba6a2f5ad87011e08`;
+      both normalized manifests digest to
+      `71a23b2aba4ab39c1eea29e8a16dfdb42a9f0ad65ff46a8a15989a8c17c87137`.
+    - Ordinary repository preview: 716 files; 28 client files excluded; all
+      688 remaining files matched. Identity changed from
+      `a38d753df656c832a5ef517b32af1af2ac82800c17fcbc0738b10678e8e7e839`
+      to
+      `009565bb2576598bf30a2155f980cb78e8e9f8abde866a1b48f08a686bb9ea17`;
+      both normalized manifests digest to
+      `f2e7426dda9bd499d7b69dbe84fbd7134a2c82c063308936e0d8f28ab5027da1`.
+    - Repository preview with Changes: 1,590 files; 28 client files excluded;
+      all 1,562 remaining files matched. Identity changed from
+      `57c8a7c80a1f0ecc5e9022a478f3ba45e62243c8fd40b961896ea8d185710bad`
+      to
+      `3ac503e36f3294073091e04b708954f0ef8090962713b2bf312baa05918cde8d`;
+      both normalized manifests digest to
+      `66f87cb6fdc1d8b4a530f2b4af5924bfa819acd5e337e8bdc722819ff45f8044`.
+  - Automatic coverage changes one finalized viewer client, proves deployment
+    identity changes, then excludes `__mokly/client/**`, normalizes each tree's
+    identity, and compares every remaining artifact byte.
+- [x] Build every browser asset from checked source, restore the single shared
+      `react-shell.js` hydration bundle imported by `react-host.js`, remove the
+      build-time compatibility transform and global hydration registry, and
+      restore one-bundle package, graph, and browser-test assertions.
 - [x] Add the guardrail tests on real Serve pages: bootstrap invariance when
       another entry's usage changes, and the 1 MiB budget for the example's
       largest bootstrap.
@@ -470,10 +490,10 @@ Summary: switch Serve and export/preview capture to route-scoped bootstraps.
     `tests/browser/scoped_shell_fixture.ts`. The shared development hydration
     fixture and its two explicit delay cases in
     `tests/browser/react_shell_hydration_helpers.ts` and
-    `tests/browser/react_shell_hydration.spec.ts` now target the self-contained
-    live host while retaining the same pre-hydration assertions.
-    `scripts/package/fixture.mjs` keeps the packed-consumer smoke assertion
-    aligned with the self-contained strict live host.
+    `tests/browser/react_shell_hydration.spec.ts` retain the same
+    pre-hydration assertions against the one shared hydration bundle.
+    `scripts/package/fixture.mjs` requires the packed live host to import that
+    shared bundle.
   - New capture and real-Serve guardrails live in
     `tests/captured_shell_scope.test.ts` and
     `tests/server_route_scoped_bootstrap.test.ts`.
@@ -483,11 +503,18 @@ Summary: switch Serve and export/preview capture to route-scoped bootstraps.
     baseline run and 33.737 seconds for the first post-switch run. The latter
     reused the derived baseline prepared by the former, so this is a sanity
     result rather than the controlled performance comparison owned by
-    Milestone 7; a repeat after the static-client split took 34.231 seconds.
+    Milestone 7; a repeat during the now-removed static-client split took
+    34.231 seconds.
 - [x] Run the complete `cargo xtask check` gate with no failures or skips.
   - Complete gate on 2026-09-26: unit 2,455 passed; browser 789 passed;
     zero failures, skips or cancellations in either suite. Repository, package,
     Rust, typecheck, example and five packed-consumer smoke stages also passed.
+  - Supervisor-correction gate on 2026-09-26: unit 2,454 passed; browser 789
+    passed; zero failures, skips or cancellations in either suite. The unit
+    count decreased by one because the invalid fixed client-hash test was
+    deleted; the normalized non-client invariant runs inside the deployment
+    client-change test. Repository, package, Rust, typecheck, example and all
+    five packed-consumer smoke stages also passed.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
 - [x] After the push, use
@@ -803,5 +830,40 @@ use-case and page targets so their installed scope matches their route.
 - No other findings. Residual risk is limited to the deliberately deferred
   A → B → A and descriptor-pair decisions plus the new duplicate build-time
   validation finding. The complete gate, native scoped hydration inventory,
-  capture rejection tests, 1 MiB guardrail and post-commit byte-for-byte
-  artifact comparison all passed.
+  capture rejection tests and 1 MiB guardrail all passed. The original
+  post-commit whole-artifact comparison relied on a contract later corrected by
+  the supervisor; the normalized static-content comparison supersedes it.
+
+### Milestone 6 supervisor correction — 2026-09-26
+
+1. **High — The original byte-identity requirement forced unreviewed source
+   rewriting into the static client build.** The supervisor identified that
+   `staticHydrationCompatibility` patched two TypeScript modules with string
+   replacements so `react-shell.js` kept its old hash. The shipped client then
+   ran a transitional reader and hydration registry that no checked source file
+   contained, ordinary viewer edits failed with a source-drift error, and a
+   fixed SHA-256 test prevented legitimate client changes. Doing nothing would
+   leave delivered behavior outside typechecking and code review and make the
+   viewer bundle structurally brittle.
+   - **Option A:** correct the invariant, build the shared hydration bundle from
+     checked source, allow client bytes and their derived deployment identity to
+     change, and compare every remaining artifact after identity normalization.
+   - **Option B:** keep separate static/live source entry points checked into the
+     repository, accepting two React bundles and duplicated runtime behavior.
+   - **Option C:** retain build-time source rewriting and its pinned output hash.
+   - **Recommendation:** Option A. It restores one source of truth and one React
+     hydration bundle while preserving the static content that route scoping
+     does not need to change. Applied by the supervisor-correction commit. The
+     global `__moklyViewerHydrationStateV1` registry had no independent purpose
+     once `react-host.js` returned to importing `react-shell.js`, so it was
+     removed.
+
+- The corrected manual comparison found only
+  `__mokly/client/react-shell.js` and the resulting deployment identities
+  changed; after excluding client files and zeroing each identity, all 1,559
+  export files, 688 ordinary-preview files and 1,562 Changes-preview files
+  matched their saved `214fffa` baselines.
+- The three existing review findings remain deferred for the user's decision:
+  the Medium A → B → A initial-workspace authority issue, the Low independent
+  descriptor object/JSON boundary, and the Low duplicate complete-catalogue
+  preview validation.

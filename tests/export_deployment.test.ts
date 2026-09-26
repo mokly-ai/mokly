@@ -19,10 +19,15 @@ for (const name of [
   "__mokly/fonts/InterVariable.woff2",
   "static/extra.txt",
 ]) {
-  test(`deployment identity includes final ${name} bytes with unchanged comparisons`, async (context) => {
+  const normalizedInvariant =
+    name === "__mokly/client/react-shell.js"
+      ? " and preserves every normalized non-client artifact"
+      : "";
+  test(`deployment identity includes final ${name} bytes with unchanged comparisons${normalizedInvariant}`, async (context) => {
     const fixture = await createExportFixture();
     context.after(() => fixture.close());
     const before = await exportCatalogue(fixture.config, { outDir: "site" });
+    const beforeFiles = await directoryFiles(fixture.output);
     const after = await exportCatalogue(fixture.config, {
       outDir: "site",
       adapter: {
@@ -40,6 +45,11 @@ for (const name of [
     assert.equal(after.comparisonUrl, before.comparisonUrl);
     assert.notEqual(after.deploymentId, before.deploymentId);
     const files = await directoryFiles(fixture.output);
+    if (name === "__mokly/client/react-shell.js")
+      assert.deepEqual(
+        normalizedNonClientFiles(beforeFiles, before.deploymentId),
+        normalizedNonClientFiles(files, after.deploymentId),
+      );
     for (const shell of [
       "index.html",
       "404.html",
@@ -51,6 +61,27 @@ for (const name of [
         after.deploymentId,
       );
   });
+}
+
+function normalizedNonClientFiles(
+  files: ReadonlyMap<string, Buffer>,
+  deploymentId: string,
+): readonly (readonly [string, Buffer])[] {
+  const identity = Buffer.from(deploymentId);
+  const normalized = Buffer.from("0".repeat(64));
+  return [...files]
+    .filter(([name]) => !name.startsWith("__mokly/client/"))
+    .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+    .map(([name, bytes]) => {
+      const result = Buffer.from(bytes);
+      for (
+        let offset = result.indexOf(identity);
+        offset !== -1;
+        offset = result.indexOf(identity, offset + normalized.length)
+      )
+        normalized.copy(result, offset);
+      return [name, result] as const;
+    });
 }
 
 test("deployment identity covers alias edges and ignores map insertion order", async (context) => {

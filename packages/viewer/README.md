@@ -350,10 +350,10 @@ The runtime subpath exposes `projectScopedCatalogue`, the
 the centralized `readLiveShellBootstrap` boundary, which accepts only exact
 route scope and rejects complete or partial live payloads. Its state reader
 also accepts the unchanged external reference used by finalized static pages.
-Serve's private `react-host.js` bundles that strict entry. The delivered static
-`react-shell.js` retains its previous bytes and is confined to the external
-reference path, so changing live scope does not change a finalized artifact's
-client asset or deployment identity.
+Serve's private `react-host.js` imports the same type-checked `react-shell.js`
+entry that finalized pages load directly. That one bundle handles strict live
+scope and the external static reference; viewer changes may change its bytes
+and therefore the finalized deployment identity.
 
 Full-document rendering serializes each bootstrap and capability descriptor
 once. Hydration reuses the exact embedded text across later React renders;

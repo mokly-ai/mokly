@@ -91,9 +91,11 @@ For each captured live page, it validates the page's scoped bootstrap and
 compares it with the route-scoped projection of the published model before
 replacing it with the existing compact reference. Conversion rejects leaked or
 missing route usage and rendered catalogue drift beyond the deployment id,
-revision counters, and finalized comparison path. For identical inputs,
-catalogue, shell, workspace, ownership, comparison, and deployment-identity
-bytes remain unchanged by live route scoping.
+revision counters, and finalized comparison path. For identical catalogue,
+consumer, and comparison inputs, catalogue, shell, workspace, ownership, and
+comparison bytes remain unchanged by live route scoping after deployment-id
+normalization. Viewer changes may alter `__mokly/client/**`; across this switch,
+only those changed client bytes may account for a new deployment identity.
 Its opt-in Changes build captures removed pages through the already prepared
 repository reader; the default build performs no Git or historical capture.
 The finalized projection carries validated packaged preview descriptors, and

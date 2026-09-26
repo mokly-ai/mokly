@@ -21,5 +21,6 @@ for (const match of runtime.matchAll(
 const target = path.join(root, "dist/browser");
 await buildBrowserModules(path.join(root, "src/client"), target, {
   runtimeExports,
+  viewerBrowserBundle: "react-shell.js",
 });
 await writeBrowserManifest(target);

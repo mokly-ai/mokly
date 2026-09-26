@@ -105,8 +105,8 @@ test("every served document loads the hydrated live host", async (context) => {
   const liveHost = await (
     await fetch(`${server.url}/__mokly/client/react-host.js`)
   ).text();
-  assert.match(liveHost, /hydrateRoot/);
-  assert.doesNotMatch(liveHost, /\.\/react-shell\.js/);
+  assert.match(liveHost, /\.\/react-shell\.js/);
+  assert.doesNotMatch(liveHost, /hydrateRoot/);
   const publicCatalogue = await (
     await fetch(`${server.url}/__mokly/catalogue.json`)
   ).json();

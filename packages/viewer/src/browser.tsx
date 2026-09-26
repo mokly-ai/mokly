@@ -33,19 +33,8 @@ import {
 } from "./standalone/scoped_bootstrap.js";
 import { staticWorkspaceEvidence } from "./standalone/static_workspace_evidence.js";
 
-interface BrowserHydrationState {
-  hydratedDocuments: WeakSet<Document>;
-  pendingDocuments: WeakSet<Document>;
-}
-
-const hydrationGlobal = globalThis as typeof globalThis & {
-  __moklyViewerHydrationStateV1?: BrowserHydrationState;
-};
-const hydrationState = (hydrationGlobal.__moklyViewerHydrationStateV1 ??= {
-  hydratedDocuments: new WeakSet<Document>(),
-  pendingDocuments: new WeakSet<Document>(),
-});
-const { hydratedDocuments, pendingDocuments } = hydrationState;
+const hydratedDocuments = new WeakSet<Document>();
+const pendingDocuments = new WeakSet<Document>();
 
 interface EmbeddedCapabilityDescriptor {
   descriptor?: ViewerCapabilityDescriptor;

@@ -12,8 +12,8 @@ The public catalogue, cross-origin inspector and viewer package are implemented
 by the completed [viewer library plan](../../plans/mokly-viewer-library.md).
 Removed page and screen previous versions are packaged and rendered by the
 [removed content previews plan](../../plans/removed-content-previews.md).
-Scoped live-capture comparison with byte-identical static output is an approved
-target tracked by the
+Scoped live-capture comparison with normalized static-content invariance is an
+approved target tracked by the
 [route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
 
 ## Hosting Contract
@@ -199,10 +199,14 @@ once, then validate each captured Serve bootstrap and compare it with the
 same route-scoped projection of that model. The comparison remains exact for
 everything the page carries and rejects leaked or missing usage. Only after it
 passes does capture replace the inline projection with the existing compact
-external reference. For identical inputs, that conversion must leave the
-catalogue, canonical and alias shells, workspace JSON, ownership inventory,
-comparison files, and deployment identity byte-identical to delivery before
-Serve bootstraps became scoped.
+external reference. For identical catalogue, consumer, and comparison inputs,
+that conversion must leave the catalogue, canonical and alias shells,
+workspace JSON, ownership inventory, and comparison files byte-identical to
+delivery before Serve bootstraps became scoped after replacing each tree's
+deployment identity with 64 zeroes. Files under `__mokly/client/` may change
+with viewer source. Across this route-scoping switch, the deployment identity
+may change only because those client bytes changed; every other input to the
+identity must match after normalization.
 
 Preserve the existing [navigation contract](./mokly-navigation.md): trusted
 ownership-checked link markers only, immediate-frame parent enhancement,

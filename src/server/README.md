@@ -49,17 +49,17 @@ Each shell request derives the usage scope from its route/snapshot, embeds that
 route-scoped public projection, and computes its private workspace from the
 complete private catalogue so `Used by` and `Affected` remain complete. The
 server serializes the bootstrap and capability descriptor once and passes the
-strings through document rendering unchanged. Live pages load the
-self-contained strict `react-host.js`; finalized pages keep the byte-stable
-external-bootstrap `react-shell.js` and never use it as a live reader.
+strings through document rendering unchanged. Live pages load `react-host.js`,
+which imports the shared `react-shell.js`; finalized pages load that same shell
+bundle directly.
 `client_modules.ts` reads the generated viewer and CLI browser manifests,
 requires exact equality with their build directories, rejects missing,
 non-JavaScript, unexpected or colliding outputs, and loads the complete delivery
 inventory before binding. The manifests are emitted from actual completed
 esbuild outputs rather than maintained by hand. Every shell request renders the
-hydrated React document. Serve loads `react-host.js`, while export and preview
-load `react-shell.js`. The CLI host modules retain private live-update and
-capability transports.
+hydrated React document. Serve loads the small `react-host.js` composition over
+the shared `react-shell.js`; export and preview load `react-shell.js` directly.
+The CLI host modules retain private live-update and capability transports.
 
 `screen_view_changes.ts` retains per-view screen-only material decisions from
 the existing classification pass. The public projection does not infer Changes

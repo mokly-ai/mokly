@@ -24,13 +24,11 @@ a private descriptor in a separate `application/json` script with
 temporary-render token never enter the public catalogue or shell bootstrap.
 
 The live document has `data-mokly-host-capabilities` and loads
-`/__mokly/client/react-host.js`. That self-contained live host uses the strict
-scoped hydration entry, creates CLI-owned capabilities, and calls
-`hydrateMoklyShell(document, capabilities)`. The separate static
-`react-shell.js` retains the external-bootstrap hydration bytes used before
-live scoping; it only ships in finalized pages, whose bootstrap is the compact
-external form. This separation keeps static artifacts byte-identical without
-leaving a complete-live mode in the runtime API. React receives its capability
+`/__mokly/client/react-host.js`. The live host imports the shared
+`react-shell.js`, creates CLI-owned capabilities, and calls
+`hydrateMoklyShell(document, capabilities)`. That shared, type-checked entry
+accepts exact route scope for live pages and the compact external form for
+finalized pages; it has no complete-live mode. React receives its capability
 context before the live root is created. Export has no marker, descriptor,
 token, private host modules, or host loader; its direct `react-shell.js` import
 auto-hydrates.

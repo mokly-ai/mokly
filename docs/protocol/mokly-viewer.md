@@ -516,5 +516,7 @@ and private-workspace adoption, no false empty Usage state, one server
 serialization per embedded script, no serialization on client rerender, and
 the size/invariance guards in the
 [bootstrap contract](./mokly-shell-bootstrap.md). Behavioural parity under
-`tests/browser` is the bar. Route scoping alone must not change static shell
-bytes or export deployment identity.
+`tests/browser` is the bar. After normalizing the deployment identity, route
+scoping must not change static catalogue, shell, workspace, ownership, or
+comparison bytes. The shared viewer client may change, and the deployment
+identity may change only as a consequence of those client bytes.

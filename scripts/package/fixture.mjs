@@ -83,13 +83,10 @@ export async function smokeServer(root, args = [], inspect) {
     if (!hydration.ok)
       throw new Error(`hydration bundle returned ${hydration.status}`);
     const host = await fetch(`${match[1]}/__mokly/client/react-host.js`);
-    const hostCode = await host.text();
-    if (
-      !host.ok ||
-      !hostCode.includes("hydrateRoot") ||
-      hostCode.includes("./react-shell.js")
-    )
-      throw new Error("React host bundle was not self-contained");
+    if (!host.ok || !(await host.text()).includes("./react-shell.js"))
+      throw new Error(
+        "React host bundle did not load the shared hydration bundle",
+      );
     const inspector = await fetch(`${match[1]}/__mokly/client/inspector.js`);
     if (!inspector.ok || (await inspector.arrayBuffer()).byteLength > 9216)
       throw new Error("inspector bundle exceeded its delivery budget");
