@@ -2,7 +2,7 @@
 
 Status: Milestones 1–9 are complete and findings 3–6 are fixed; finding 2 is
 superseded by [Configurable Changes Listing](./configurable-changes-listing.md),
-and findings 7 and 8 await the user's decision. The plan stays Active until PR #118 merges. Created
+and Milestones 10–12 fix findings 7 and 8. The plan stays Active until PR #118 merges. Created
 2026-09-25 with the user's consent (option B of
 finding 1 raised while reviewing the PR #118 preview). Implemented on the
 `calummoore/halifax-v2` branch alongside
@@ -241,6 +241,51 @@ Tags: ui
       recommendation, without changing the implementation. An independent
       reviewer ran against `83e0879`; findings 7 and 8 await the user's
       decision.
+
+## Milestone 10: Validation source contract
+
+The user asked to fix findings 7 and 8 with the recommended options.
+
+- [x] Finding 7: `mokly-component-review-validation.md` states that source
+      validation accepts an entry `dependency` reason only when that entry's
+      recorded classifier sources contain the path (the path rule after the
+      stylesheet analysis-scope filter, the entry's view comparisons, an exact
+      screen declaration of a stylesheet its view retained, or owned CSS
+      propagated from an actual invocation), and does not re-evaluate the
+      path rule itself. Update `src/review/README.md` to match.
+- [x] Validate Prettier, links, anchors, doc sizes, and protocol-reading tests.
+- [x] Commit.
+
+## Milestone 11: Recorded reason sources and single-side evidence
+
+- [x] Finding 7, failure-first: an owned public stylesheet and an exact
+      declared one, each excluded by every view, are rejected when injected
+      as reasons; a stylesheet a component owns and a screen declares
+      exactly, retained by the screen's view, still validates.
+- [x] The classifier records every dependency path each source adds for each
+      entry, keyed by `entryPairKey`, and passes that record to source
+      validation, which accepts only recorded paths.
+- [x] Finding 8, failure-first: the invariant fixture gains added and removed
+      entries with glob and declared-directory evidence, and the independent
+      oracle covers them; show the test failing when one side's declarations
+      are ignored.
+- [x] Run build, prepared typecheck, lint, format check, the full unit suite,
+      and the five comparison-evidence browser specs.
+- [x] Split the classifier into its validating entry
+      (`component_classification.ts`) and the source-recording worker
+      (`component_classification_sources.ts`) to keep files near 300 lines.
+- [x] Commit.
+
+## Milestone 12: Findings 7 and 8 close-out and review
+
+- [ ] Mark findings 7 and 8 fixed in the review-findings list.
+- [ ] Run `cargo xtask check`; fix anything it reports until it passes.
+- [ ] Commit and push.
+- [ ] Review the complete local diff against `origin/main` using
+      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      after the push; report each finding with a number, severity, plain
+      explanation, impact of doing nothing, lettered options, and a
+      recommendation, without changing the implementation.
 
 ## Review findings
 

@@ -13,12 +13,14 @@ reasons must match the source manifests' use-case steps. Unknown fields in new
 structures, inconsistent sides, duplicate records/reasons, missing view evidence,
 and invalid values fail rather than being silently dropped.
 
-Source validation accepts an entry `dependency` reason only when the classifier
-collected that path through the [dependency path rule](./mokly-component-changes.md#dependencies-and-styles),
-dependency paths retained by the entry's own view comparisons, or owned CSS
-propagated from an actual invocation. The result's own view and entry records
-cannot justify that reason.
-The classifier keys per-entry evidence exactly as it keys entry pairs: by kind and
+For each entry, the classifier records the dependency paths added by the
+[path rule](./mokly-component-changes.md#dependencies-and-styles) after
+excluding stylesheets in analysis scope, its own view comparisons, an exact
+screen declaration of a stylesheet its view retained, and owned CSS propagated
+from an actual invocation. Source validation accepts an entry `dependency`
+reason only when that entry's recorded sources contain its path. It never
+re-evaluates the path rule or treats the result's own records as sources.
+The classifier keys these sources exactly as it keys entry pairs: by kind and
 route for screens and flows, and by kind and id for components.
 
 Source validation also receives the implementation-impact set computed from

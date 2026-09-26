@@ -14,9 +14,9 @@
   matching entry in Changes; owned paths and exact declared files keep their
   reasons. Milestones 1–9 are complete on the navigation path plan's branch
   and findings 3–6 are fixed; finding 2 moves to
-  [Configurable Changes Listing](./configurable-changes-listing.md), findings 7
-  and 8 await the user's decision, and the plan stays Active until PR #118
-  merges.
+  [Configurable Changes Listing](./configurable-changes-listing.md),
+  Milestones 10–12 fix findings 7 and 8, and the plan stays Active until PR
+  #118 merges.
 - [Configurable Changes Listing](./configurable-changes-listing.md) — settings
   under `review.changes` decide which invisible change kinds (component data,
   component structure, declared files, shared files) list an entry in Changes;
