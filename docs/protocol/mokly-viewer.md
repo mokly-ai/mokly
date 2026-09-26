@@ -5,9 +5,12 @@
 The package, React API, static server entry and first-party hosts were
 implemented by the [viewer library plan](../../plans/mokly-viewer-library.md),
 and [coordinated release preparation](./npm-release.md) by its Milestone 6.
-Saved-variant selection, multi-instance highlights and markers are implemented
-by the [comment anchoring plan](../../plans/viewer-comment-anchoring.md) and
-remain part of the hydrated shell's public contract.
+Multi-instance highlights and markers are implemented by the
+[comment anchoring plan](../../plans/viewer-comment-anchoring.md) and remain
+part of the hydrated shell's public contract; the saved-variant selection that
+plan delivered is replaced by variant entries under the
+[id-derived routes plan](../../plans/id-derived-routes.md), so a selection
+names one entry id.
 This document now defines the hydrated shell contract delivered by the
 [React Browse shell plan](../../plans/react-browse-shell.md): one React
 component tree rendered on the server and hydrated in every delivery mode.
@@ -39,9 +42,8 @@ import type { CatalogueReadModel } from "@mokly/viewer";
 import type { FrameAdapter, Box, FrameNavigation } from "@mokly/viewer";
 
 interface ViewerSelection {
+  /** Entry id: screen, page, use case, component, or variant; null is home. */
   screenId: string | null;
-  /** Saved variant of a selected component; absent means its default. */
-  variantId?: string;
   view: "all" | "changes";
   viewport: "mobile" | "desktop" | "both";
   colorScheme: "light" | "dark";
@@ -55,7 +57,6 @@ type CatalogueFetcher = (context: { signal: AbortSignal }) => Promise<{
 type CatalogueSource = CatalogueReadModel | string | URL | CatalogueFetcher;
 interface InstanceRef {
   screenId: string;
-  variantId?: string;
   stepIndex?: number;
   viewport: "mobile" | "desktop";
   colorScheme: "light" | "dark";
@@ -68,8 +69,6 @@ interface InstanceEvent {
 }
 interface ScreenNavigateEvent {
   screenId: string;
-  route: string;
-  variantId?: string;
   fragment?: string;
   navigation?: FrameNavigation;
 }
@@ -137,12 +136,16 @@ interface MoklyViewerProps {
 }
 ```
 
+`ScreenNavigateEvent` names the destination by `screenId` only. A host that
+needs the shell URL derives it with `viewHref(kind, id)` from the shared path
+module exported by `@mokly/viewer/data`; the event carries no route.
+
 For an object source, `baseUrl` is required and supplies its HTTP(S) artifact
 origin root. A URL/string source must be an absolute HTTP(S) catalogue URL;
 its validated final response URL establishes that root. A fetcher returns the
 same pair explicitly and must honor cancellation; `baseUrl` is invalid for URL
 or fetcher sources. Do not resolve artifact paths relative to the embedding app.
-Validate every source as [catalogue v2](./mokly-catalogue.md) before rendering.
+Validate every source as [catalogue v3](./mokly-catalogue.md) before rendering.
 Fetchers are host-supplied source transports, not permission for viewer telemetry.
 Fetch failure renders an explicit error/retry state and emits `onError`.
 Missing data is never replaced by examples or invented counts.
@@ -154,15 +157,14 @@ independent frames; it owns no global document state.
 
 ## Selection, Events And Imperative Use
 
-`screenId` addresses any routed catalogue entry, including pages, components,
-use cases and [variant screens](./mokly-screen-variants.md); null selects
-home. Unknown ids show the existing not-found view
-with usable navigation. `variantId` is valid only for a component or removed
-component that declares that saved variant; omission selects its default.
-It never addresses a variant screen, which is selected by its own `screenId`.
-Variants are invalid for home, pages and use cases. `view` selects the
-All/Changes **catalogue filter**, not a comparison mode. Logical fragments and
-comparison mode retain their existing route/runtime state.
+`screenId` names one catalogue entry id: a screen, page, use case, component,
+or a screen or component [variant](./mokly-variants.md); null selects home.
+Unknown ids show the existing not-found view with usable navigation. A variant
+of either kind is selected by its own id; selecting a component parent shows
+its first variant entry, and there is no separate variant selection field.
+`view` selects the All/Changes **catalogue filter**, not a comparison mode.
+Logical fragments and comparison mode retain their existing route/runtime
+state.
 
 `snapshotId` is the optional opaque identity published beside a removed entry.
 Without it, `screenId` selects current content when that id exists. With it, the
@@ -171,7 +173,7 @@ cross-catalogue identity is unavailable and never falls back to the current
 entry. An id-only selection of a unique removed record remains supported and
 normalizes to its published identity when present. A legacy current/removed id
 collision without identity fails closed. The same rules apply to screens,
-pages, components and every routed kind retained in `removedEntries`.
+pages, components, variants and every kind retained in `removedEntries`.
 Evidence adoption can compare an explicit snapshot identity directly: a newer
 catalogue is adopted, and a replaced or missing selected record becomes
 unavailable without retargeting. Identity-less legacy history has no such
@@ -186,27 +188,28 @@ when present, require `onSelectionChange` and do not also accept
 into current state, validates it and emits a complete next state only if changed.
 Controlled changes remain proposals until the host supplies them back; incoming
 props do not echo an event. Uncontrolled mode commits the next state itself.
-Invalid selection props, including invalid variants or snapshots, render an unavailable state
+Invalid selection props, including invalid snapshots, render an unavailable state
 and emit one selection error; invalid imperative selections reject without
 committing. A partial selection that explicitly supplies `screenId` without
 `snapshotId` returns to current content and clears a historical selection;
-viewport, scheme, filter, search and tag changes retain it. A changed screen
-also drops an omitted `variantId`. Shell links and pending route intents propose
-`{ screenId, snapshotId, variantId }` atomically. The workspace variant control
-proposes `select({ variantId })`; in controlled mode it changes only after the
-host supplies that selection back. A committed variant replaces frames and
-announces `onScreenNavigate` once with `snapshotId` when historical content was
-committed. Switching control mode requires remounting.
+viewport, scheme, filter, search and tag changes retain it. Shell links and
+pending route intents propose `{ screenId, snapshotId }` atomically. The
+component workspace's variant bar links to the parent's sibling variant
+entries, proposing `select({ screenId })` for the chosen variant; in controlled
+mode it changes only after the host supplies that selection back. A committed
+selection replaces frames and announces `onScreenNavigate` once, with
+`snapshotId` when historical content was committed. Switching control mode
+requires remounting.
 Never mutate supplied objects/arrays.
 
-The Viewer rebuilds `variantOf` for current and removed screens from the public
-model, so its hierarchy, breadcrumbs, details rows, aggregate mark, and
+The Viewer rebuilds `variantOf` for current and removed entries of both kinds
+from the public model, so its hierarchy, breadcrumbs, details rows, aggregate mark, and
 removed-variant adoption match Serve. Removed variants attach only to a current
 non-variant parent; otherwise each remains one flat fallback row, and every
-removed route appears exactly once. A shell-link activation while `view` is
+removed entry appears exactly once. A shell-link activation while `view` is
 `changes` proposes one atomic selection. An aggregate-only parent proposes its
 first visible changed variant's `screenId`. If the current selection is not
-itself a changed route, a changed destination also proposes the first changed
+itself a changed entry, a changed destination also proposes the first changed
 view's `viewport` and `colorScheme` from the public model's per-view comparison
 states, ordered mobile/light, mobile/dark, desktop/light, desktop/dark, unless
 the link contains at least one valid explicit axis. The shared parser accepts
@@ -215,17 +218,19 @@ or repeated values and parses the other axis independently. Valid axes apply in
 the same complete selection proposal, omitted axes retain their sticky values,
 and an axis-only link to the current destination still proposes the change.
 Only a valid explicit axis suppresses first-changed-view landing. Once a changed
-route is selected, later shell-link
+entry is selected, later shell-link
 activations preserve the sticky axes while aggregate-parent redirection remains
 active. An imperative `select` call and supplied `defaultSelection` or
 `selection` props also keep their axes. Controlled mode emits the complete
 proposal and waits for the host to supply it back.
 
-Historical route URLs carry at most one validated `snapshot=<64-hex>` query.
-Direct URLs, SSR/hydration and Back/Forward restore the exact record. The query
-stays through viewport, scheme and filter changes and is removed by navigation
-to current content. A route/snapshot mismatch is unavailable. Current and
-historical records may share `screenId`; route title, breadcrumbs, Details,
+Historical `/view/<route>` URLs carry at most one validated
+`snapshot=<64-hex>` query, where the route derives from the removed entry's
+kind and id. Direct URLs, SSR/hydration and Back/Forward restore the exact
+record. The query stays through viewport, scheme and filter changes and is
+removed by navigation to current content. An id/snapshot mismatch is
+unavailable. Current and historical records may share `screenId`; the entry
+title, breadcrumbs, Details,
 status, active row, preview lookup and navigation events always use the resolved
 record rather than a current-id lookup. Removed screens expose only their
 read-only previous version: no current component picking, inspection or
@@ -241,16 +246,15 @@ the existing fallback labels when Dark is selected; no fake dark view is made.
 The shared workspace resolver uses that effective Light view for the title
 status, hidden-change marks, and comparison presentation in both SSR and the
 hydrated Viewer. When ready evidence does not cover every effective shown view,
-the Viewer preserves the public entry or saved variant's status and comparison
-eligibility independently instead of deriving eligibility from the fallback
-status.
+the Viewer preserves the public entry's status and comparison eligibility
+independently instead of deriving eligibility from the fallback status.
 
 Per-view resolution returns the shown status, comparison eligibility, and
 whether matching evidence produced them. Ready evidence applies only when its
-entry or saved-variant key matches the selected preview. Missing, pending, or
-nonmatching evidence may retain the route-level displayed status, but it must
-preserve the entry or saved variant's existing comparison eligibility rather
-than deriving new eligibility from that fallback status. Server rendering,
+entry id matches the selected preview. Missing, pending, or nonmatching
+evidence may retain the entry-level displayed status, but it must preserve the
+entry's existing comparison eligibility rather than deriving new eligibility
+from that fallback status. Server rendering,
 controlled selection, comparison deep links, and background evidence updates
 use the same decision. A deep link is honored only after that decision confirms
 eligibility, and every matching evidence update recomputes it in place.
@@ -259,7 +263,7 @@ views. Partial evidence uses the fallback status and existing eligibility
 together until a complete matching update arrives.
 
 `onSelectionChange` reports requested state changes. `onScreenNavigate` fires
-once after a committed route/variant/fragment transition, including accepted
+once after a committed entry, snapshot or fragment transition, including accepted
 frame links and Back/Forward; it is observational, not a second router.
 Instance hover/click reports scoped keys and current frame-relative boxes;
 hover exit uses null and empty boxes, clicks always have an instance. Flow
@@ -289,13 +293,13 @@ actually changes. No pick button is added to the default local shell.
 Concurrent `startPick` calls share one activation and one start event. Cancelling
 a pending activation rejects its promise; only an activated pick emits an end
 event. Starting pick focuses the viewer so keyboard cancellation stays scoped.
-Any actual frame replacement, including viewport, effective scheme, saved variant
-or fragment changes, ends active picking exactly once with `navigation`, cancels
+Any actual frame replacement, including viewport, effective scheme, entry or
+fragment changes, ends active picking exactly once with `navigation`, cancels
 pending activation and clears inspection masks, labels and selection. A pending
 pick emits neither start nor end; a subsequent start activates the replacement
 frames. Changes that preserve the mounted views do not end picking.
-Public operations retain complete `InstanceRef` scope, including exact viewport,
-effective scheme, saved variant and flow step. Package labels and markers refresh
+Public operations retain complete `InstanceRef` scope, including the exact
+entry, viewport, effective scheme and flow step. Package labels and markers refresh
 after inner geometry, outer viewer scrolling, viewer/frame resizing, expansion,
 replacement and evidence adoption. Late asynchronous work is fenced by request
 and frame generation; obsolete promises reject with `disposed` and cannot affect
@@ -386,10 +390,12 @@ comparison documents retain their existing adapter and sandbox boundaries.
 Shell state is one store scoped to a mounted viewer:
 
 - **Route** is derived from the URL and is the only source of route truth:
-  screen, saved variant, comparison selection and the validated `fragment`
-  query. Standalone modes own the document URL and history; React hosts
-  receive route changes through `onScreenNavigate` and own their own URL.
-- **Selection** is the public `ViewerSelection`: screen, saved variant, All/Changes view,
+  the entry, comparison selection and the validated `fragment` query. The
+  shared parser turns `/view/<route>` into kind and id, and the entry resolves
+  through the read model. Standalone modes own the document URL and history;
+  React hosts receive route changes through `onScreenNavigate` and own their
+  own URL.
+- **Selection** is the public `ViewerSelection`: entry id, All/Changes view,
   viewport, colour scheme, search phrase and tags. Standalone modes keep
   viewport, scheme and filters in memory across in-shell navigation.
 - **Disclosure** covers navigation groups, the details inspector, navigation
@@ -400,9 +406,9 @@ Shell state is one store scoped to a mounted viewer:
 - **Scroll** is tracked per `data-mokly-scroll` region and saved into the
   history entry for Back/Forward restoration; route-change focus never
   overrides a restored position.
-- **Workspace** state (component variant, props under edit, inspector tab and
-  pane size, active pick, highlight scope) lives with the mounted view and is
-  discarded on route change or source replacement.
+- **Workspace** state (props under edit, inspector tab and pane size, active
+  pick, highlight scope) lives with the mounted view and is discarded on route
+  change or source replacement.
 
 A watched reload restores the one-shot shell snapshot defined by the
 [watch contract](./mokly-watch.md), including the disclosure and pre-filter
@@ -465,8 +471,8 @@ asset delivery never decodes the catalogue. The browser graph never imports
 this entry.
 
 First paint is real: the server output is the complete shell with real anchors
-for every route, so direct URLs, refresh, alias pages and JavaScript-disabled
-use show the correct screen before any script runs. Serve and export then load
+for every route, so direct URLs, refresh and JavaScript-disabled use show the
+correct screen before any script runs. Serve and export then load
 the documented standalone hydration entry, which bundles React and hydrates
 that tree in place. React hosts render `MoklyViewer` with their own React and
 hydrate it the same way. **Exported catalogues ship React and hydrate**; the

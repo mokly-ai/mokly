@@ -1,18 +1,19 @@
 # Selected live comparisons
 
-Live comparison loading must scale with the selected screen or saved component
-variant and its referenced resources. It must not compile the consumer, check
-unrelated generated documents, classify the catalogue again, or snapshot other
-entries. Build, Check, Export and the complete comparison endpoint retain their
-exhaustive behavior.
+Live comparison loading must scale with the selected entry, a screen or a
+component variant, and its referenced resources. It must not compile the
+consumer, check unrelated generated documents, classify the catalogue again, or
+snapshot other entries. Build, Check, Export and the complete comparison
+endpoint retain their exhaustive behavior.
 
 ## Requests and evidence
 
-The live browser requests
-`/__mokly/diffs/review.json?route=<encoded-catalogue-route>`, adding
-`variant=<saved-variant-id>` for a component and `refresh=1` for an explicit retry
-or refresh, or `page=<encoded-catalogue-route>` for a removed page's
-[preview](./mokly-removed-previews.md). Current, navigation and filtering never
+The live browser requests `/__mokly/diffs/review.json?id=<entry id>`, where
+the id names the selected screen or component variant entry, adding
+`refresh=1` for an explicit retry or refresh, or `page=<page id>` for a
+removed page's [preview](./mokly-removed-previews.md). Both values use the
+catalogue id grammar; the server derives every route. There is no `variant` parameter: a
+component variant is its own entry. Current, navigation and filtering never
 request snapshots. Static delivery continues to request its complete, packaged
 comparison URL without selection parameters.
 Changing viewport or color scheme inside a comparison, or switching between diff
@@ -27,8 +28,9 @@ renewal or depend on matching browser/server expiry clocks. Static delivery
 reuses its packaged result without renewal requests.
 
 Repeated view or mode switches share a pending renewal or capture and apply the
-latest viewport, scheme and mode when it completes. Changing the saved variant
-requests its own result and fences responses from the previous selection.
+latest viewport, scheme and mode when it completes. Navigating to a sibling
+variant entry requests that entry's own result and fences responses from the
+previous selection.
 Current and navigation cancel both renewal and capture requests; late responses
 cannot replace the current view. Background [evidence updates](./mokly-live-evidence.md)
 also cancel pending comparisons, discard their cached selection and return an
@@ -45,21 +47,22 @@ different bytes fails instead of combining old evidence with new output. Missing
 or pending evidence produces the existing retryable comparison failure state;
 it never falls back to an exhaustive foreground build.
 
-For a component-aware catalogue, project the existing v3 result onto the selected
-screen, or the selected component and saved variant. Keep its entry sides, view
-states, ignored regions and direct change reasons. Recompute the selected screen
-ignored-impact aggregate. Catalogue-wide affected-consumer evidence remains in
-the shell inspector; the selected response omits those cross-entry records.
-Screen-only catalogues use the same v2 screen comparison policy as complete
-comparisons, applied only to the requested route. Both response shapes pass the
-existing result validator. Missing entries or variants fail without inventing
+Project the complete [review result v4](./mokly-changes.md#comparison-engine)
+onto the selected entry: a screen, or a component variant entry addressed by
+its id. Keep its entry sides, view states, ignored regions and direct change
+reasons. Recompute the selected screen ignored-impact aggregate. Catalogue-wide
+affected-consumer evidence remains in the shell inspector; the selected
+response omits those cross-entry records. Screen-only catalogues apply the same
+policy as complete comparisons to the requested screen only. The response
+passes the v4 result validator. Missing entries fail without inventing
 comparison records.
 
 ## Capture and lifetime
 
 Capture all available viewport/scheme views of the selection and only their
 transitive resource closure. Keep original before/after documents unmodified,
-with separate route-preserving snapshot roots. Historical reads use the pinned
+under separate `snapshots/before/` and `snapshots/after/` roots whose files are
+named by the derived view route. Historical reads use the pinned
 Git commit and bounded batches of regular files. Current reads retain the public
 file and source-confinement rules. Resource hints not read by classification are
 validated and captured on demand. Frames retain their script-disabled sandbox.
@@ -92,11 +95,12 @@ view or mode switch renews or reacquires them before loading new panes.
 ## Verification
 
 Regressions must prove that selection avoids unrelated output reads and renderer
-work, includes only the chosen variant, and keeps the existing before/after bytes.
-Cover schema v2 and v3, removed and added sides, themes/viewports, asset isolation,
-input mutation, malformed requests, coalescing, refresh, invalidation, cancellation,
-shutdown and retry. Advance the server clock to prove that idle screen and saved
-variant comparisons recover after snapshot collection, without failed pane
+work, includes only the chosen entry, and keeps the existing before/after bytes.
+Cover screen-only and component catalogues, removed and added sides,
+themes/viewports, asset isolation, input mutation, malformed requests,
+coalescing, refresh, invalidation, cancellation, shutdown and retry. Advance
+the server clock to prove that idle screen and component variant comparisons
+recover after snapshot collection, without failed pane
 requests. Cover HEAD retention extension, repeated switches during renewal,
 abandoned renewals, retry and static delivery's absence of renewal traffic.
 Measure real browser comparison readiness on the large fixture

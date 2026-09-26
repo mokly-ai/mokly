@@ -59,14 +59,14 @@ A variant of either kind is an entry of its parent's kind, so the table covers
 it. Ids contain no `.`, so `<id>.<suffix>.html` never collides with another
 id's document. The `.variants/` directory scheme disappears for both kinds.
 The four prefixes are reserved output directories under `mockupsDir` and enter
-the existing collision inventory. The shell URL is `/view/<document>` and the
+the existing collision inventory. The shell URL is `/view/<route>` and the
 canonical share URL is therefore `/view/<kind prefix>/<id>.html`.
 
 **Further decisions:**
 
 - One shared path module exported from `@mokly/viewer/data` owns
-  `documentPath(kind, id)`, `viewPath(kind, id, viewport, scheme)`,
-  `viewHref(kind, id)`, and the URL parser for `/view/<document>`. The builder,
+  `entryRoute(kind, id)`, `viewRoute(kind, id, viewport, scheme)`,
+  `viewHref(kind, id)`, and the URL parser for `/view/<route>`. The builder,
   server, export, review, and shell all call it; `fragmentRoute`,
   `componentFragmentRoute`, `catalogueViewHref`, `routeHref`,
   `artifactRouteForEntry`, `logicalArtifactRoutes`, `snapshotPath(side,
@@ -145,11 +145,11 @@ removed authoring fields, unified variants, identity-only wire formats,
 id-keyed removal, the new schema versions, and the URL surface before any
 code changes.
 
-- [ ] [`mokly-nav-paths.md`](../docs/protocol/mokly-nav-paths.md): remove
+- [x] [`mokly-nav-paths.md`](../docs/protocol/mokly-nav-paths.md): remove
       root `path`, folder `segment`, and leaf `slug` route derivation; state
-      that nothing but the id moves a document; variants of both kinds copy
+      that nothing but the id moves a route; variants of both kinds copy
       the parent path; keep label, conflict, order, and key rules unchanged.
-- [ ] [`mokly-authoring.md`](../docs/protocol/mokly-authoring.md): drop
+- [x] [`mokly-authoring.md`](../docs/protocol/mokly-authoring.md): drop
       `RoutedEntryInput` and every `route`, `slug`, `segment`, and `path`
       field from the interfaces; add the document table, the reserved
       prefixes, and the shared path helpers; add the device-name id rule;
@@ -159,16 +159,17 @@ code changes.
       `navPath` plus ancestor and current folder titles with `›` using
       `String(title)`; remove the authored-route grammar sentences while
       keeping the static asset segment rule.
-- [ ] Generalize [`mokly-screen-variants.md`](../docs/protocol/mokly-screen-variants.md)
-      into the variant contract for screens and components, renamed to
-      `mokly-variants.md` with every link updated: global ids, `variantOf`,
+- [x] Generalize the screen variants contract into
+      [`mokly-variants.md`](../docs/protocol/mokly-variants.md) for screens
+      and components, renamed from `mokly-screen-variants.md` with every link
+      updated: global ids, `variantOf`,
       copied `navPath`, derived documents, inheritance per kind, forbidden
       fields `variants` and `navPath`, public grouping, and removal.
-- [ ] [`mokly-pages.md`](../docs/protocol/mokly-pages.md) and
+- [x] [`mokly-pages.md`](../docs/protocol/mokly-pages.md) and
       [`mokly-page-migration.md`](../docs/protocol/mokly-page-migration.md):
       `PageInput` without `route`, nested pages without `slug`, output at
       `mockupsDir/pages/<id>.html`, no `/id/` URL.
-- [ ] [`mokly-components.md`](../docs/protocol/mokly-components.md),
+- [x] [`mokly-components.md`](../docs/protocol/mokly-components.md),
       [`mokly-component-manifest.md`](../docs/protocol/mokly-component-manifest.md),
       [`mokly-component-explorer.md`](../docs/protocol/mokly-component-explorer.md),
       [`mokly-component-review.md`](../docs/protocol/mokly-component-review.md),
@@ -180,7 +181,7 @@ code changes.
       selection as sibling navigation without `?variant=`; review result v4
       and instance records addressing variant entry ids; `MockLink` targeting
       a variant.
-- [ ] [`mokly-catalogue.md`](../docs/protocol/mokly-catalogue.md),
+- [x] [`mokly-catalogue.md`](../docs/protocol/mokly-catalogue.md),
       [`mokly-changes.md`](../docs/protocol/mokly-changes.md),
       [`mokly-catalogue-changes.md`](../docs/protocol/mokly-catalogue-changes.md),
       [`mokly-removed-previews.md`](../docs/protocol/mokly-removed-previews.md),
@@ -190,38 +191,58 @@ code changes.
       changed routes, the reused-id precedence text deleted, current-entry
       precedence kept, kind-then-id sort order, component variant rows in
       Changes.
-- [ ] [`mokly-component-review.md`](../docs/protocol/mokly-component-review.md)
+- [x] [`mokly-component-review.md`](../docs/protocol/mokly-component-review.md)
       and [`mokly-changes.md`](../docs/protocol/mokly-changes.md): review
       result v4 addresses screens, components, variants, and views by id and
       view axes; artifact locations under the generation directory follow the
       shared path helper and are never stored in the result.
-- [ ] [`mokly-export-delivery.md`](../docs/protocol/mokly-export-delivery.md):
+- [x] [`mokly-export-delivery.md`](../docs/protocol/mokly-export-delivery.md):
       delete the `id/<id>/index.html` row and the static alias paragraphs;
-      delivery v3 without `idRoutes`; the `/view/<document>` grammar and its
+      delivery v3 without `idRoutes`; the `/view/<route>` grammar and its
       parser; extensionless normalization resolves through the parser and
       `byId`.
-- [ ] [`mokly-navigation.md`](../docs/protocol/mokly-navigation.md): frame
-      activation derives a `/view/<document>` destination from the marker id
+- [x] [`mokly-navigation.md`](../docs/protocol/mokly-navigation.md): frame
+      activation derives a `/view/<route>` destination from the marker id
       through the read model; delete the `/id/` redirect and the
       `/id/<id>?snapshot=` rejection rule.
-- [ ] Audit the manifest and read model fields derivable from identity and
+- [x] Audit the manifest and read model fields derivable from identity and
       configuration (`viewports`, `dependencies`, and any others found),
       decide each, and record the decisions in the manifest and catalogue
       contracts.
-- [ ] Sweep `mokly-runtime.md`, `mokly-design-links.md`,
+- [x] Sweep `mokly-runtime.md`, `mokly-design-links.md`,
       `mokly-configuration.md`, `mokly-rendering.md`, `mokly-shell-design.md`,
       `mokly-upload.md`, `mokly-viewer.md`, `mokly-viewer-appearance.md`, and
       `mokly-guides.md` for `route`, `slug`, `segment`, `fragments`, `/id/`,
       `idRoutes`, `?variant=`, and `variantValues`; leave only
       historical-manifest mentions.
-- [ ] Update the authoring guides under `docs/guides/authoring/`, the start
+- [x] Update the authoring guides under `docs/guides/authoring/`, the start
       guide, the root `README.md` Authoring section, `examples/basic/README.md`,
       `src/catalogue/README.md`, `src/components/README.md`,
       `src/export/README.md`, `src/review/README.md`, and
       `packages/viewer/README.md`.
-- [ ] Confirm the docs agree with each other with one grep for the removed
+- [x] Confirm the docs agree with each other with one grep for the removed
       terms; run `npm run format:check` on the changed Markdown; review the
       diff; commit.
+- [x] Decisions recorded while writing the docs, implemented by the
+      milestones named: `defineComponent` returns `{ Component, entries }`
+      with the parent first (Milestone 3); `RenderInput.entry` is the variant
+      entry and `RenderInput` has no `variantId` (Milestone 3); the changed
+      set handed to the shell is `changedIds` (Milestone 4); a removed row's
+      identity is `removed:<id>` (Milestone 4); `RemovedPagePreview` is
+      schema 2 and carries only the page id, with its document at
+      `snapshots/before/pages/<id>.html` (Milestone 4); the read model's page
+      preview descriptor is `{ kind: "page" }` and the packaged metadata lives
+      at `pages/<id>.json` inside the comparison generation (Milestone 4);
+      the selected-comparison endpoint takes `id=<entry id>` or
+      `page=<page id>` (Milestone 4); review result v4 is one shape for every
+      catalogue with empty component arrays when none are registered
+      (Milestone 4); `ScreenNavigateEvent` carries `screenId` only
+      (Milestone 4); Details has no Generated or Route row and search
+      matches id, title, and tags (Milestone 6); the shared path module
+      exports `entryRoute`, `viewRoute`, and `viewHref` (Milestone 2).
+- [x] Known dangling links until code lands: `fixtures/catalogue-v3.json`
+      is created in Milestone 3, and the example README's generated overview
+      paths exist after the Milestone 2 rebuild.
 
 ## Milestone 2: Authoring, registry, and manifest documents
 
@@ -232,7 +253,7 @@ untouched, and the export still writes aliases, so the product works end to
 end.
 
 - [ ] Create the shared path module in `@mokly/viewer/data` with
-      `documentPath`, `viewPath`, `viewHref`, and the `/view/<document>`
+      `entryRoute`, `viewRoute`, `viewHref`, and the `/view/<route>`
       parser; move `fragmentRoute` and `componentFragmentRoute` behind it and
       delete the `src` copy of `fragmentRoute`.
 - [ ] Types in `src/authoring/types.ts` and `src/components/types.ts`: remove
@@ -252,7 +273,7 @@ end.
       forbidden variant fields; keep `invalid-nested-nav-path` and the
       `navPath` equality check.
 - [ ] Manifest: write `schemaVersion: 7`; strict validation accepts only 7
-      and requires `route === documentPath(kind, id)` until Milestone 4 drops
+      and requires `route === entryRoute(kind, id)` until Milestone 4 drops
       the field; rename `ManifestV6` types to `ManifestV7`; the historical
       boundary accepts 3–7.
 - [ ] Key `removedManifestEntries` by id for every kind.
@@ -343,7 +364,7 @@ because derived documents already produce it.
       become changed ids; `ExportRoutes`, `site.ts`, `run.ts`, `view_routes.ts`,
       `fragments.ts`, `review_routes.ts`, and the controls use the helper;
       `logical_routes.ts` is deleted.
-- [ ] Shell and client data layer: `routeFromUrl` parses `/view/<document>`
+- [ ] Shell and client data layer: `routeFromUrl` parses `/view/<route>`
       into kind and id and resolves through `byId`; `routeHref`,
       `catalogueViewHref`, `activeRoute`, `selectionForRoute`,
       `catalogueRouteEntry`, `hostRoute`, `sameShellRoute`, and the
@@ -398,7 +419,7 @@ ignores `idRoutes`.
       `capability_adoption.ts`, and `catalogue.ts` while keeping current-entry
       precedence over historical content.
 - [ ] Remove the details Route row and route matching from search; search
-      keeps id, title, tags, and folder labels.
+      keeps id, title, and tags.
 - [ ] Failure-first viewer unit and browser tests: frame click, modifier
       click, and named-target navigation land on `/view/` URLs; Back/Forward
       and reload keep entry identity; a removed entry still opens with its
@@ -412,7 +433,7 @@ writer together, and remove the development redirect and preview redirects.
 - [ ] `parseStaticDelivery` accepts only `schemaVersion: 3` without
       `idRoutes`; delete `resolveDeliveryHref`; remove `idRoutes` from
       `site.ts` and `run.ts`; `site.ts` writes each shell once at
-      `view/<document>`.
+      `view/<route>`.
 - [ ] Delete `redirectId` and the `/id/` branch in `http_routes.ts`; `/id/`
       now returns the not-found view.
 - [ ] `scripts/preview/artifact.mjs` drops `idRoutes` and the `/id/`

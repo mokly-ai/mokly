@@ -11,10 +11,10 @@ section, or `mokly review` command; `--out` belongs only to static `export`.
 
 [Pages](./mokly-pages.md) participate in Changes and removed-entry states,
 while comparison controls remain exclusive to changed screens and eligible
-component variants. A [variant screen](./mokly-screen-variants.md) is a
-screen for every rule in this document: it has its own route, row, count
-contribution, views, and comparison result, and only its navigation placement
-under the parent screen is variant-specific. The
+component variants. A [variant](./mokly-variants.md) of either kind is an
+entry of its parent's kind for every rule in this document: it has its own
+derived route, row, count contribution, views, and comparison result, and only
+its navigation placement under the parent is variant-specific. The
 [shared catalogue snapshot](./mokly-catalogue-changes.md) supplies metadata
 independently of screen results; removed pages are flat Changes-only rows with
 baseline ancestry. Review reads follow the [source policy](./mokly-source-protection.md).
@@ -26,26 +26,26 @@ comparisons, history, and removals; both options omit live updates.
 ## Changes membership
 
 Changes is a review list of added/removed screens and pages, material document changes,
-reviewable route metadata changes, and user flows that embed those screens.
+reviewable entry metadata changes, and user flows that embed those screens.
 A new or edited flow is included independently. Source edits, source moves,
 dependency declaration edits, and shared-impact matches alone do not add
 otherwise unchanged entries. Dependency and shared-impact evidence remains in
 comparison details, accessible for every screen from All. Component-owned and
 exact declared paths follow [component attribution](./mokly-component-changes.md#dependencies-and-styles).
 
-Each screen variant is projected independently. Its metadata projection
+Each variant of either kind is projected independently. Its metadata projection
 contains `variantOf`, its parent's `{ id, title }`, and its copied `navPath`.
-Changing `variantOf`, its `navPath`, or the parent title therefore marks the variant
-route, while a material or metadata change confined to the variant never adds
-the parent route. A flow is propagated only when its `screenId` step names the
-exact changed screen, including a variant.
+Changing `variantOf`, its `navPath`, or the parent title therefore marks the
+variant changed, while a material or metadata change confined to the variant
+never adds the parent. A flow is propagated only when its `screenId` step names
+the exact changed screen, including a variant.
 
 Before marking an existing fragment, compare its branch-point and working-tree
 documents with the same paired ignore normalization and material-key rules as
 the comparison engine. Ignored-only changes are excluded from Changes; real
 content changes, material-key changes, and one-sided ignored-region adoption
 with changed content remain eligible. Both viewports and every available color
-scheme participate. Metadata includes route/address, titles, descriptions,
+scheme participate. Metadata includes address, titles, descriptions,
 rationale, tags, related-doc links, flow steps and memberships, view structure,
 and `navPath`; it excludes source locations and dependencies.
 Valid generated ownership headers are excluded from document comparison, so a
@@ -98,10 +98,10 @@ kept or excluded resource evidence.
 
 The shell receives this per-view resource evidence for screen-only catalogues
 as well as component catalogues, including in Current before snapshots exist.
-Live v2 classification retains its existing analysis as `screenEvidence`; the
-workspace selects its `resourceEvidence` slice without a second analysis pass.
-Static exports select that slice from their existing v2 comparison. Both result
-schema versions remain unchanged. Details merge the loaded comparison's evidence
+Live screen-only classification retains its analysis as `screenEvidence`, keyed
+by entry id; the workspace selects its `resourceEvidence` slice without a
+second analysis pass. Static exports select that slice from their packaged v4
+comparison. Details merge the loaded comparison's evidence
 with classification evidence, preserving retained stylesheet selectors,
 exclusions, and legacy shared-impact/ignored-content details without duplicate
 cards. See [CSS evidence in the shell](./mokly-css-evidence-shell.md#shell-derivation).
@@ -115,7 +115,7 @@ Watched updates and static publishing use this same membership calculation.
 
 Serve performs the calculation in a background worker after HTTP is ready and
 complete generated output has been adopted, never during a shell request.
-The watched parent publishes the result. Until the immutable route, baseline, and
+The watched parent publishes the result. Until the immutable changed-entry, baseline, and
 component-evidence snapshot arrives, Browse keeps both tabs without inventing a
 Changes count. A spinner occupies the reserved count slot, and selecting Changes
 shows a loading sidebar. Derived mode publishes a distinct `preparing` state
@@ -129,8 +129,8 @@ late results from superseded generations are ignored. Non-watched Serve uses the
 same asynchronous startup boundary, without observing later edits. Watched Git-only
 ref changes reclassify completed output without rendering views again.
 
-Component-aware classification preloads every baseline screen and saved-variant
-view in one logical, bounded Git batch, including mobile, desktop, dark and
+Component-aware classification preloads every baseline screen and component
+variant view in one logical, bounded Git batch, including mobile, desktop, dark and
 removed views. This applies to asynchronous watched startup, immutable Browse
 evidence, watched updates and publishing, including a screen-only baseline
 during component adoption. Readers without bulk support retain individual
@@ -142,7 +142,7 @@ dropping views or disabling Git file validation.
 ## Screen controls
 
 The status beside the title and the comparison band describe the view actually
-shown, not the entry's route-wide result or merely the requested axes. A Dark
+shown, not the entry-wide result or merely the requested axes. A Dark
 selection on a light-only screen therefore resolves to its Light view for
 status, control marks, and comparison presentation while retaining the Dark
 control state and the visible Light-only fallback label. With one viewport and
@@ -152,18 +152,18 @@ Changed, `added` to Added, `removed` to Removed, and `unchanged` or
 Changed when any shown view is Changed, else Added when any is Added, else
 Removed when any is Removed, else Unmodified. Comparison eligibility follows
 that shown status under the existing kind rule: Changed is eligible, and
-Removed is eligible only for a component saved variant. Thus a route with
+Removed is eligible only for a component variant. Thus an entry with
 changes can show Unmodified with no comparison band while the marks on the view
 controls and the `Changed views` row point to the views that changed.
 
 Per-view evidence is authoritative only when it names every effective view in
 the current selection. Unknown, pending, or partial per-view evidence preserves
-the selected entry or saved variant's fallback status and comparison eligibility
-as two independent values. In particular, a Changed fallback status must not
-turn an explicitly ineligible public selection into an eligible comparison.
-Switching viewport, requested scheme, or saved variant recomputes the effective
-views, status, marks, and eligibility without a page load, as does a background
-evidence refresh.
+the selected entry's fallback status and comparison eligibility as two
+independent values. In particular, a Changed fallback status must not turn an
+explicitly ineligible public selection into an eligible comparison. Switching
+viewport or requested scheme recomputes the effective views, status, marks, and
+eligibility without a page load, as does a background evidence refresh;
+selecting a sibling variant is navigation to that entry.
 
 Server rendering, controlled selection, and comparison deep links use the same
 decision; a deep link is honored only after it confirms eligibility. Nonmatching
@@ -183,7 +183,7 @@ at build time, but never fetch or render them while browsing in Current. The fir
 explicit diff selection requests the comparison in either delivery mode.
 Returning to Current cancels pending UI work and restores the current screen.
 Navigation must never let a late comparison response replace another screen.
-Shell-owned links carry comparison intent only when the destination saved view
+Shell-owned links carry comparison intent only when the destination view
 is eligible. The destination revalidates that eligibility before honoring a
 comparison query, so stale, manually edited, or historical URLs cannot bypass a
 current-only state or trigger a hidden comparison request.
@@ -194,10 +194,10 @@ The theme control is marked when a changed view uses the other scheme, and the
 viewport control when a changed view uses the other viewport; selecting both
 viewports shows every viewport at once, so that control is never marked. The
 details inspector lists the same views as `Changed views`. When the current
-selection is not itself a changed route, activating a changed row while the
+selection is not itself a changed entry, activating a changed row while the
 Changes filter is selected opens that destination's first changed view instead
 of the sticky selection, unless the URL names a viewport or scheme. Once a
-changed route is selected, later row activations keep the sticky axes while an
+changed entry is selected, later row activations keep the sticky axes while an
 aggregate parent still redirects to its first visible changed variant. A direct
 URL, an All-filter activation, Back, Forward, and a reload also keep the sticky
 selection.
@@ -237,8 +237,8 @@ and schema. Its [static delivery contract](./mokly-export-delivery.md)
 defines direct generation URLs without requiring a hosting-provider redirect;
 the server and repository adapter retain their stable redirect for compatibility.
 
-The development shell requests `/__mokly/diffs/review.json` with the selected
-`route` and optional saved `variant` on demand, following the
+The development shell requests `/__mokly/diffs/review.json` for the selected
+entry on demand, following the
 [selected comparison contract](./mokly-selected-comparisons.md). The response
 redirects to an immutable generation; snapshot URLs resolve relative to that
 response URL. No standalone HTML report or navigation payload is generated.
@@ -263,17 +263,17 @@ No comparison data or snapshot document is requested until a user selects a diff
 or opens a removed entry. Refresh and retry fetch the currently published
 comparison; only publishing a new
 artifact updates the underlying snapshots. Removed screens retain their Changes
-rows, screen pages, and id redirects; a current entry takes precedence when an id
-has been reused. Comparison failure aborts publishing transactionally, preserving
-the previous artifact. Publishing never writes to a running development server's
-configured comparison directory.
+rows and previous-version pages; a current entry excludes historical content
+with its id unless a snapshot is requested. Comparison failure aborts
+publishing transactionally, preserving the previous artifact. Publishing never
+writes to a running development server's configured comparison directory.
 
 ## Design references
 
-The synthetic design catalogue owns distinct mobile and desktop examples at
-`design/review/controls/current.html` and `design/review/controls/overlay.html`.
-Existing outcome and impact examples now depict the same catalogue shell.
-Their stable authoring ids and routes are retained to preserve links.
+The synthetic design catalogue owns distinct mobile and desktop examples,
+`design-changes-current` and `design-changes-overlay`. Existing outcome and
+impact examples now depict the same catalogue shell. Their stable authoring ids
+are retained to preserve links.
 
 See [the shell design](./mokly-shell-design.md) and
 [runtime behavior](./mokly-runtime.md) for the surrounding contracts.
@@ -303,14 +303,15 @@ set is one logical batch request; transitively referenced assets are grouped by
 dependency depth. File modes are still checked before any blob is accepted, so
 batching does not weaken symlink or non-regular-file rejection.
 
-Screens pair by stable manifest route. Views pair by route, viewport, and color
-scheme, enumerated from the union of base and head manifest entries. Each side's
-view set is `["light", ...(screen.darkFragments ? ["dark"] : [])]`: a dark
-view present only in head is `added`, and one present only in base is
-`removed`. Mobile and desktop still classify separately from their fragments.
-Added, removed, changed, and unchanged states handle historical manifest versions v2–v5 and current v6
-manifests during staged migrations; pre-dark bases simply have no
-`darkFragments`. Configured shared-impact globs and manifest dependencies
+Screens pair by id. Views pair by id, viewport, and color scheme, enumerated
+from the union of base and head manifest entries. Each side's view set is its
+entry's effective `colorSchemes`: a dark view present only in head is `added`,
+and one present only in base is `removed`. Mobile and desktop still classify
+separately from their own documents. Added, removed, changed, and unchanged
+states handle historical manifest versions v2–v6 and current v7 manifests; the
+historical reader normalizes stored routes and fragment paths inside its
+boundary, and pre-dark bases simply have no dark views. Configured
+shared-impact globs and manifest dependencies
 identify changes that can affect many screens. A dependency is a repository file
 or directory root: its own change or any descendant change is recorded as
 evidence; Changes membership follows the rule linked above.
@@ -329,10 +330,11 @@ without output changes and can overlap ignored-only. Neither evidence nor
 ignored-only edits inflate output changes. These counts aggregate fragment
 comparisons per screen; the catalogue Changes total also considers reviewable
 metadata and flows. Complete JSON retains every screen and its
-evidence. Selected live responses contain only the requested screen or saved variant
-and retain its snapshots in memory.
+evidence. Selected live responses contain only the requested entry and retain
+its snapshots in memory.
 
-Base and head panes live under separate route-preserving snapshot roots. Local
+Base and head panes live under separate snapshot roots, `snapshots/before/` and
+`snapshots/after/`, whose files are named by the derived view route. Local
 resources referenced by pane HTML or CSS are copied transitively, including
 binary fonts and images, while explicit HTTP(S)/data resources remain external.
 Root-absolute, protocol-relative, and other scheme-qualified resource URLs are
@@ -343,11 +345,11 @@ resource, including the pane document itself and each transitive dependency,
 must be a regular Git file. Neither side may read from protected authoring inputs. Pane documents remain byte-unmodified and run in
 script-disabled sandboxes.
 
-`review.json` is the normative machine-readable result:
+`review.json` is the normative machine-readable result. Its screen records are:
 
 ```ts
 interface ReviewResult {
-  schemaVersion: 2;
+  schemaVersion: 4;
   baseRef: string;
   baseCommit: string; // merge base shared by HEAD and baseRef
   changedPaths: readonly string[];
@@ -360,7 +362,6 @@ interface ReviewResult {
   }[];
   screens: readonly {
     id: string;
-    route: string;
     title: string;
     state: "added" | "removed" | "changed" | "ignored-only" | "unchanged";
     dependencies: readonly string[];
@@ -369,8 +370,6 @@ interface ReviewResult {
       viewport: "mobile" | "desktop";
       colorScheme: "light" | "dark";
       state: "added" | "removed" | "changed" | "ignored-only" | "unchanged";
-      beforePath?: string;
-      afterPath?: string;
       ignoredIds: readonly string[];
       material?: true;
       reasons?: readonly {
@@ -390,14 +389,32 @@ interface ReviewResult {
 }
 ```
 
+Version 4 addresses screens, components, variants, and views by entry id and
+view axes and stores no route or artifact path. A view's snapshot documents
+live at `snapshots/<side>/<view route>` beneath the generation root, where the
+view route derives from the entry's kind, id, viewport, and color scheme under
+the [derived route rule](./mokly-authoring.md#derived-routes); a side the
+view's state lacks (`added` has no `before`, `removed` has no `after`) has no
+document. Component catalogues add component, variant, use-case, and
+affected-consumer records addressed by entry id, defined by the
+[component comparison schema](./mokly-component-review.md). Readers accept
+only version 4.
+
+Every catalogue emits the complete `ReviewResultV4` shape defined by the
+[component comparison schema](./mokly-component-review.md), which extends the
+screen fields above with `components`, `changes`, and `affectedConsumers`; a
+catalogue without registered components emits those arrays empty rather than
+a second screen-only shape.
+
 Optional view `material`, `reasons`, and `excludedResources` implement
 [CSS change attribution](./mokly-css-attribution.md). `material` is present
 exactly when the view's normalized documents differ. Empty optional lists are
-omitted; historical results without them remain valid. Retained resource reasons
-make paired views changed, and summary counts follow these states.
+omitted; results without them mean the analysis did not run. Retained resource
+reasons make paired views changed, and summary counts follow these states.
 
-Routes sort in deterministic catalogue order; views sort by viewport
-(`mobile`, then `desktop`) and then color scheme (`light`, then `dark`).
+Entry records sort in canonical catalogue order, kind then id with a parent's
+variants following it in authored order; views sort by viewport (`mobile`,
+then `desktop`) and then color scheme (`light`, then `dark`).
 Changed and impact paths sort lexically. No timestamp or absolute checkout path
 enters the JSON. Before/after HTML remains unmodified in the artifact even when
 ignore normalization changes classification.

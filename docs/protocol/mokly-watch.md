@@ -197,16 +197,17 @@ for current keys, values, and incompatible snapshot handling.
 
 When a successful rebuild leaves the manifest structure unchanged, or a
 resource edit or explicit watch rule requests a reload, the parent keeps the
-ready child. It first publishes a typed update that clears stale route and
+ready child. It first publishes a typed update that clears stale entry and
 component evidence, making the successful content generation visible without
 waiting on Git. The parent then computes one complete classification outside the
 HTTP request path. A sequence token discards results superseded by a newer watch
 action; the current successful result publishes a second typed update that
-atomically replaces route membership, removed-entry baseline data, and component
-evidence. Both tabs are present from startup: pending status shows a spinner in
-the reserved count slot and, when selected, in the sidebar. An available empty list
-shows zero; a failed or unavailable comparison ends loading and shows a dash plus an
-unavailable sidebar. Every terminal status uses the same sequence/version checks as
+atomically replaces changed-entry membership, removed-entry baseline data, and
+component evidence. Both tabs are present from startup: pending status shows a
+spinner in the reserved count slot and, when selected, in the sidebar. An
+available empty list shows zero; a failed or unavailable comparison ends loading
+and shows a dash plus an unavailable sidebar. Every terminal status uses the
+same sequence/version checks as
 the result, including background build and write failures. Initial watched startup follows the
 same asynchronous classification rule after listener readiness, as does non-watched
 Serve. Watched Serve polls resolved HEAD/base commits once per second outside HTTP;

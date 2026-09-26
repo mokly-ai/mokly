@@ -69,8 +69,8 @@ A change confined to another preview scheme marks the standalone Appearance
 selector with the shared change dot and an `Other theme changed` description.
 The viewport dropdown keeps the separate other-viewport indicator. Embedded
 viewers mark their Dark preview control instead. The active workspace supplies
-both controls from one route-owned evidence and view resolution, including
-Light fallback, selected component variant, and later evidence updates. Leaving
+both controls from one entry-owned evidence and view resolution, including
+Light fallback and later evidence updates. Leaving
 a workspace clears its mark; no control depends on a second evidence fetch.
 
 ## React And Server API
@@ -104,7 +104,7 @@ mode. Changing or removing `theme` takes effect on the mounted root immediately.
 
 Apply the theme to loading, unavailable-selection, error/retry and ready roots.
 Changing `theme` preserves the runtime, frame elements and sessions, selected
-variant, comparison mode, temporary props, inspector disclosure/width,
+entry, comparison mode, temporary props, inspector disclosure/width,
 navigation and scroll. It emits no selection/navigation/pick events and does
 not cancel active picking or lose highlights and markers. Existing geometry
 updates may run when needed, without triggering fragment requests or comparison
@@ -295,7 +295,7 @@ existing screen compositions. Appearance screens and their affected shared
 component samples publish Light and Dark fragments for both viewports through
 Mokly's existing authoring: the entries inherit the configured `colorSchemes`,
 `mokly build` writes one file per scheme, and Browse's existing outer preview
-control swaps between them at the same entry and route. A shared render context
+control swaps between them at the same entry. A shared render context
 carries the renderer's `input.colorScheme` to the artboard roots as a
 pass-through, not a second theme setting, and each artboard's
 `data-mbk-appearance` reflects that requested scheme. Generated pages must not
@@ -320,21 +320,22 @@ Device-screen tokens stay independent of the interface palette.
 
 A linked Appearance section sits under Browse, with matching source directories
 under `examples/basic/entries/design/browse/appearance/`. Each design page
-names a canonical routed screen; other screens can share its `navPath`. The
-folder itself has no route or owning screen.
+names a canonical screen; other screens can share its `navPath`. The folder
+itself has no route or owning screen. Folders below are the `navPath` labels
+under `Design › Mokly design › Browse shell`.
 
-| Page                         | Owning screens                                                                             |
-| ---------------------------- | ------------------------------------------------------------------------------------------ |
-| `design/browse/appearance/`  | `overview.html`: the canonical interface around a selected screen, all light or all dark   |
-| `.../appearance/states/`     | Auto selector, light-only screen fallback                                                  |
-| `.../appearance/workspaces/` | Props validation, selected-instance inspector, navigation drawer, Side by side, Difference |
-| `.../appearance/status/`     | Home/empty, catalogue loading, error/retry, Changes unavailable, use-case flow             |
+| Folder                              | Owning screens                                                                                        |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Appearance                          | `design-appearance-overview`: the canonical interface around a selected screen, all light or all dark |
+| Appearance › Appearance states      | Auto selector, light-only screen fallback                                                             |
+| Appearance › Panels and comparisons | Props validation, selected-instance inspector, navigation drawer, Side by side, Difference            |
+| Appearance › Status and recovery    | Home/empty, catalogue loading, error/retry, Changes unavailable, use-case flow                        |
 
 The catalogue groups the overview and its three nested families; artboards
 carry no navigation footer. Each screen has its own mobile and desktop
 component and reuses the registered shared components. Do not inline duplicate
 screen markup. Keep no more than five owning screen definitions per page. The
-exact ids and routes are listed in the
+exact ids are listed in the
 [shell design inventory](./mokly-shell-design.md#design-mockups). The
 branch-only `light-preview` and `dark-preview` scenarios are removed by the
 single-control correction. `design-review-dark-scheme` is removed; `design-review-changed` renders in

@@ -31,7 +31,7 @@ without expanding this example or slowing ordinary development startup.
 
 Mokly's 93 design screens now use 16 registered shared components, including
 the footer tabs panel and the appearance selector. Open **Components → Design → Shared components** for Chrome, Controls,
-Inspector and Preview galleries with 66 saved variants, real mobile/desktop
+Inspector and Preview galleries with 66 component variants, real mobile/desktop
 previews and editable local props. The outer Components and Usage tabs show actual
 recorded relationships; pictured example data inside an artboard stays separate.
 See the [library authoring guide](./entries/design/library/README.md),
@@ -44,8 +44,8 @@ The entry definitions use `navPath` as their only navigation hierarchy.
 groups the Mokly design tree. Matching path labels merge within Pages or
 Components independently and produce the same breadcrumb labels. The flat
 component definitions author paths; nested screen and page definitions derive
-them from the root's navigation prefix and folder titles. Routes are independent
-of those labels.
+them from the root's navigation prefix and folder titles. Routes derive from
+ids and are independent of those labels.
 
 The Welcome screen uses
 `<MockLink to="example-details" fragment="details">` to prove that generated
@@ -79,15 +79,16 @@ Six established Welcome design states remain real variants of
 `design-browse-screen`: two appearance examples and four tag picker/filter
 states. Both appearance variants render in Light and Dark using the single
 catalogue-wide Appearance selector; the Details example keeps its light device
-preview under Dark. They retain their ids under
-`design/browse/views/screen.variants/`. The former `design-browse-tags` (Tag
-states) collection was empty; it has no folder row because no routed entry
-uses that `navPath`. The separate
-`design-browse-tag-filter` route remains in Shell states.
+preview under Dark. They keep their own ids, `design-browse-dark-scheme`,
+`design-browse-light-only`, and the four `design-browse-tag-*` filter states,
+and therefore their own routes under `screens/`. The former
+`design-browse-tags` (Tag states) collection was empty; it has no folder row
+because no routed entry uses that `navPath`. The separate
+`design-browse-tag-filter` screen remains in Shell states.
 The reparented removed-variant design state depicts the Changes filter when
 only the historical child was removed: its rail shows a single flat Removed
 row, even though its former parent remains in the current catalogue as another
-screen's variant. This matches the served rail's route-based Changes filter.
+screen's variant. This matches the served rail's Changes filter.
 
 `tests/helpers/replaced_copy.ts` lists the shell sentences the protocols
 replaced, and `tests/design_replaced_copy.test.ts` fails when any generated
@@ -117,10 +118,10 @@ Browse and Changes views. Its sixty Browse, page, publication, appearance and Ch
 screens cover navigation, Details, tags, color schemes, comparison outcomes,
 stylesheet evidence, the preparing and unavailable comparison states, and the
 previous-version states of removed documents and screens. Thirty-three component
-explorer screens add component pages, saved variants, affected screens,
+explorer screens add component pages, variants, affected screens,
 repeated/nested inspection, highlighting, and empty or removed states. The shared icon inspector and complete controls
 mockups include edited/reset, optional, loading, validation, retry, comparison,
-and published saved-variant states. Every
+and published variant states. Every
 screen has distinct mobile and desktop components. The component designs are
 static mockups; the outer package workspace implements the live component explorer. Native
 fields can be edited, and authored state links show the designed outcomes.
@@ -146,8 +147,9 @@ rounded bottom sheet over the preview, with an iOS-style grabber that toggles
 compact/expanded heights by touch, click, or Space. The runtime also supports pan gestures. In both layouts, the icon strip stays visible while the
 active content scrolls; closing and reopening retains edits. Viewport carets,
 the mobile menu, and the Usage icon use centered SVGs. Known entries show
-Added, Changed, Removed, or Unmodified; removing a variant marks its surviving
-component Changed. The States → Additions gallery demonstrates a newly added Badge.
+Added, Changed, Removed, or Unmodified; removing a variant lists it as its own
+Removed entry beneath its surviving component, whose row carries an aggregate
+mark. The States → Additions gallery demonstrates a newly added Badge.
 States → Shared impact shows an Unmodified Action opened from All with changed
 shared files in Details and no comparison band.
 Removed screens show their status and previous version without comparison
@@ -157,9 +159,9 @@ and linked component changes. These rows do not generate descriptions of visual
 changes. Disabled highlighting explains its specific reason, and outline labels
 use separate rounded chips with a gap above the highlighted region.
 
-Open `design/components/overview.html` in Browse, or open
-[`generated/design/components/overview.desktop.html`](./generated/design/components/overview.desktop.html)
-and [`overview.mobile.html`](./generated/design/components/overview.mobile.html)
+Open `screens/design-component-overview.html` in Browse, or open
+[`generated/screens/design-component-overview.desktop.html`](./generated/screens/design-component-overview.desktop.html)
+and [`design-component-overview.mobile.html`](./generated/screens/design-component-overview.mobile.html)
 directly from disk after `npm run build && npm run example:build`.
 The catalogue hierarchy links all owning design pages;
 there is no navigation footer inside an artboard. Product links connect
@@ -221,19 +223,18 @@ Changed screens and changed or removed component variants retain an opaque
 comparison band. Added designs show their current preview and status without
 comparison controls; removed screens and documents show their status and their
 previous version, labelled “Showing previous version”, without them. Their
-nested `design/browse/pages/previous-version/` and
-`design/review/outcomes/previous-version/` groups add the long, loading, and
-unavailable-with-retry states, each reached from its own row in the same flat
-Changes list. A removed screen also has a viewport with no captured previous
-view, whose stage names the viewport that still opens instead of standing
-empty.
+nested Previous document versions and Previous screen versions groups add the
+long, loading, and unavailable-with-retry states, each reached from its own
+row in the same flat Changes list. A removed screen also has a viewport with no
+captured previous view, whose stage names the viewport that still opens instead
+of standing empty.
 The Added outcome still shows its factual branch evidence in
 Details; evidence availability, comparison eligibility, and initial inspector
 disclosure are independent. The
 shared-impact and ignored-only examples open from All with zero Changes and one
 Current preview. Retained dependency and shared-impact evidence remains in
 Details; unchanged output and paired ignored-only edits do not fill the review list.
-The nested `design/review/impact/stylesheets/` group adds the rule-aware
+The nested Stylesheet evidence group under Impact states adds the rule-aware
 stylesheet states: a changed stylesheet whose changed styles apply to the
 screen, one whose change can apply anywhere, and one examined and excluded so
 the screen stays out of Changes. Their contract is
@@ -263,7 +264,7 @@ npm run preview:build
 ```
 
 This example uses the default `generatedOutput: "derived"`. Generated HTML and
-the schema-v6 manifest under `generated/` are ignored local artifacts, absent in a fresh clone.
+the schema-v7 manifest under `generated/` are ignored local artifacts, absent in a fresh clone.
 `example:build` writes them transactionally; `example:check` validates the current
 compilation and rejects tracked generated output without requiring files on disk.
 Committed-mode stale and deterministic-output tests use isolated consumer fixtures.
@@ -282,7 +283,7 @@ current catalogue used by the main preview workflow. It preserves search, tags,
 navigation, Light/Dark choices, client assets, and light/dark fragment files.
 Public HTML copies pass through the same ownership-aware link adapter as served
 Browse; direct preview URLs apply one validated `fragment` query progressively
-in the parent shell. PR previews explicitly include Changes and immutable screen and saved component
+in the parent shell. PR previews explicitly include Changes and immutable screen and component variant
 comparisons with `--include-changes --base origin/main`. Publishing then prepares
 isolated before/after resources and removed-entry states. Changed-screen
 snapshots load only after a comparison option is selected; selecting a removed
@@ -291,10 +292,11 @@ frames navigate between authored artboards; their pictured comparison controls
 do not request actual comparison snapshots. There is no separate Review section
 or comparison CLI command.
 
-`design/browse/appearance/` records the delivered Auto/Light/Dark interface
-appearance for standalone Browse. `overview.html` is its canonical screen;
-`states/` owns two more and `workspaces/` and `status/` own five each. Every one
-of them is an ordinary dual-scheme entry, so `mokly build` writes a Light and a
+The Browse shell › Appearance folder records the delivered Auto/Light/Dark
+interface appearance for standalone Browse. `design-appearance-overview` is its
+canonical screen; Appearance states owns two more, and Panels and comparisons
+and Status and recovery own five each. Every one of them is an ordinary
+dual-scheme entry, so `mokly build` writes a Light and a
 Dark file per viewport and Browse's Appearance control switches the mockup you
 are looking at, at the same route. The renderer passes
 `input.colorScheme` to the shared artboard scope, which stamps
@@ -319,9 +321,9 @@ The shipped standalone viewer uses the depicted one-control model, while the
 embedded viewer keeps its host-supplied theme alongside its own preview
 controls.
 
-The shell designs now include `design/browse/pages/` (document, details,
-removal, and the nested `previous-version/` states) and
-`design/browse/publication/` (current catalogue and Changes).
+The shell designs now include the Document pages folder (document, details,
+removal, and the nested Previous document versions states) and the Published
+catalogue folder (current catalogue and Changes).
 Each state has its own mobile and desktop component and reuses the shell,
 navigation, and stage primitives. The synthetic handbook in `entries/document.tsx`
 is shared by these designs and the first-class page example; its read-only copy
@@ -329,10 +331,10 @@ keeps the document's own appearance while its link, like every link in a
 previous version, does nothing.
 
 The `example-handbook` page imports the shared example document and belongs to
-the Example folder alongside Screens and Example tour. Its exact
-`handbook.html` route, `next-steps` anchor, and incoming Welcome link exercise
-the public page API. The design catalogue has seven responsive page states and
-two publication states.
+the Example folder alongside Screens and Example tour. Its derived
+`pages/example-handbook.html` route, `next-steps` anchor, and incoming Welcome
+link exercise the public page API. The design catalogue has seven responsive
+page states and two publication states.
 
 Every design uses the shared `Search catalogue…` wording. Home guidance and the
 `Item not found` state cover screens, documents, and flows; the runtime shell
@@ -349,7 +351,7 @@ node dist/cli/bin.js export --config examples/basic/mokly.config.ts --out ../../
 ```
 
 Output is config-relative. This command builds the example itself, retains exact
-`.html` URLs and real `/id/<id>/index.html` aliases, and needs no provider rewrites.
+`.html` URLs with one shell page per entry, and needs no provider rewrites.
 The consumer export command requires the configured Git history and rebuilds its
 baseline with the recipe above. The default repository preview exports current
 content without a baseline; preview Changes uses the same cached rebuild.

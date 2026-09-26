@@ -32,7 +32,7 @@ Example Action/Toolbar components, miniature subject screens and pictured usage
 fixtures keep their separate roles. New usage in the outer inspector comes from
 the real generated manifest, not from those pictured fixtures.
 
-All existing design ids, routes, relationships, mobile/desktop artboards, copy,
+All existing design ids, relationships, mobile/desktop artboards, copy,
 links and supported native controls remain. The requested normalization replaces
 the legacy Details disclosure and segmented viewport/theme controls throughout
 the catalogue with the shared icon inspector and view toolbar. The legacy footer
@@ -48,7 +48,9 @@ Components section, not a shared root entity. Keep the
 existing Component explorer design section and Components → Example → Components group.
 The gallery folders are `Design → Shared components` and its
 `Chrome`, `Controls`, `Inspector`, and `Preview` children. They contain the 15
-routed components in the inventory, with no duplicate screens for variants.
+component parents in the inventory; each parent's variant entries nest beneath
+its row under the [variant contract](./mokly-variants.md) rather than adding
+folder members.
 
 Use flat `defineComponent` exports from
 `entries/design/library/library.mockup.ts`, authoring a `navPath` on each
@@ -58,14 +60,17 @@ folder identity across sections.
 
 For inventory group `G` and slug `S`:
 
-- Component id: `design-ui-S`; route: `design/library/G/S.html`.
+- Component id: `design-ui-S`, routed at `components/design-ui-S.html` under
+  the [derived route rule](./mokly-authoring.md#derived-routes); its `navPath`
+  places it in the `G` gallery folder.
 - Registration/schema/variants: `entries/design/library/G/S.tsx`, split into
   short metadata siblings if needed. Render logic: `G/S.view.tsx` and its
   exclusive implementation helpers. Source and visible hierarchy must agree.
 - Public stylesheet: `generated/design-library/G/S.css` when styles are owned
   exclusively by that component. It is authored CSS, not generated HTML.
-- Saved variant ids and exposed props are defined by the inventory. A single
-  selected variant renders at a time, in both actual viewport contexts.
+- Variant entry ids and exposed props are defined by the inventory. Each
+  variant entry renders in both actual viewport contexts; the parent's page
+  shows its first variant entry.
 
 Gallery-only folder indexes need no additional canonical artboard. Any
 later screen-spec sub-page must retain the canonical-screen and five-screen
@@ -184,7 +189,7 @@ validated props and the actual viewport to that renderer. Test real source
 edits to saved variants and control labels as well as implementation source edits.
 
 Separate stylesheet loading from review dependency declaration. A typed consumer
-style map describes ordered candidate sheets for each design route and library
+style map describes ordered candidate sheets for each design screen and library
 entry, covering its variants and supported control states, descendants and slots.
 All design rules share the ordered exclusive candidate pool in
 `library/style_files.ts`; route rules select their required mixed sheets. The
@@ -223,7 +228,7 @@ Acceptance after a registered baseline exists:
 | Nested Tag chip implementation                                 | Tag chip                                                                                                    | Picker/Top bar and their screen consumers |
 | A screen changes query, title, target, status or a field value | That screen                                                                                                 | Actual usage updates                      |
 | A screen changes supplied slot content or instance order       | That screen                                                                                                 | Actual usage updates                      |
-| A saved variant's props change                                 | That component                                                                                              | No automatic consumer change              |
+| A variant entry's props change                                 | That variant entry                                                                                          | No automatic consumer change              |
 | Global tokens or screen layout change                          | Rendered screens when output changes; see [path rule](./mokly-component-changes.md#dependencies-and-styles) | Shared-file evidence                      |
 | Temporary local prop edit or Reset                             | None                                                                                                        | Preview only                              |
 
@@ -236,7 +241,7 @@ owned styles, not the old raw changed-path helper.
 
 ## Verification And Completion
 
-Freeze the existing id/route inventory before migration and assert it remains a
+Freeze the existing id inventory before migration and assert it remains a
 subset of the finished catalogue. Every existing design screen must record its
 actual shared components in both views. Every inventory component must have a
 page, the specified saved variants, and real screen consumers (directly or through

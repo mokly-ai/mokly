@@ -170,7 +170,7 @@ Unit and browser inventories are discovered on the executing runtime, not
 fixed in advance. Browser discovery asks Playwright; an empty suite fails.
 
 Development hydration registers one browser test per unique generated catalogue
-route at discovery time, plus the home, missing-route and id-redirect cases.
+route at discovery time, plus the home and missing-route cases.
 Each route keeps the normal test deadline and error assertions; catalogue growth
 cannot exhaust a shared route-loop deadline. Unit coverage checks that browser
 discovery includes every generated route exactly once.

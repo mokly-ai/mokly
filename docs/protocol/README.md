@@ -6,27 +6,34 @@ labels an approved target that is still tracked by an active plan. Package,
 authoring, static build/check, responsive Browse, watched development, on-demand comparisons,
 packed consumer verification, CI, and npm release automation are implemented.
 The first public release remains an external delivery step. Path-based
-navigation, manifest v6, public read model v2, and folder disclosure keys are
-implemented; their verification and review remain in the active
-[plan](../../plans/nav-path-hierarchy.md).
+navigation and folder disclosure keys are implemented; their verification and
+review remain in the active [plan](../../plans/nav-path-hierarchy.md). The
+[id-derived routes plan](../../plans/id-derived-routes.md) defines the
+identity-only formats below: every route derives from an entry's kind and id,
+variants of both kinds are entries, and there is no `/id/<id>` URL.
 
 ## Supported Formats
 
 | Catalogue                     | Generated manifest | Comparison result |
 | ----------------------------- | ------------------ | ----------------- |
-| Without registered components | 6                  | 2                 |
-| With registered components    | 6                  | 3                 |
+| Without registered components | 7                  | 4                 |
+| With registered components    | 7                  | 4                 |
 
-All current catalogues emit manifest v6 with explicit pages, authored `navPath`, the complete
-source inventory and declared dependencies. Component catalogues also include
-saved variants and complete per-view usage. Comparisons use v3 whenever either
-side contains registered components, including when the last component is removed;
-otherwise they use v2. Pages participate in Browse Changes without visual comparisons.
+All current catalogues emit manifest v7 with explicit pages, authored `navPath`,
+the complete source inventory and declared dependencies, and no route, view
+path, or other value derivable from kind, id, and configuration. Component
+catalogues also include variant entries and complete per-view usage.
+Comparisons use review result v4, which addresses screens, components,
+variants, and views by entry id and view axes, for every catalogue. Pages
+participate in Browse Changes without visual comparisons. The public read
+model is v3 and the static delivery descriptor is v3; readers accept only
+these versions.
 
-The current primary file requires v6. Git baseline readers accept v3 and both
+The current primary file requires v7. Git baseline readers accept v3 and both
 historical v4 formats: pages with `sourceFiles`, or components with `legacyPages`.
-These envelopes are disjoint; combining them is invalid. Historical v5 and
-v6 are accepted; v3–v5 `collection` records are dropped after validation. Explicit
+These envelopes are disjoint; combining them is invalid. Historical v5, v6, and
+v7 are accepted; v3–v5 `collection` records are dropped after validation, and
+stored v3–v6 routes and fragment paths never leave the historical reader. Explicit
 `compatibility.readManifestV2` permits the legacy v2-format fallback only
 when the historical primary file is absent, never when it is invalid.
 
@@ -49,8 +56,8 @@ when the historical primary file is absent, never when it is invalid.
   storage, defaults, watched recovery, and in-place reconciliation.
 - [Component instance identity](./mokly-instances.md) — existing key/boundary
   rules and approved resolution/source-location target.
-- [Public catalogue read model v2](./mokly-catalogue.md) — public inventory
-  beside the private manifest.
+- [Public catalogue read model v3](./mokly-catalogue.md) — identity-only
+  public inventory beside the private manifest.
 - [Navigation paths and folders](./mokly-nav-paths.md) — section trees, path
   diagnostics, sibling order, and folder keys.
 - [Embeddable viewer](./mokly-viewer.md) — approved `@mokly/viewer` API and
@@ -75,8 +82,9 @@ when the historical primary file is absent, never when it is invalid.
 - [Live catalogue evidence updates](./mokly-live-evidence.md)
 - [Startup diagnostics and scale fixtures](./mokly-timings.md)
 - [Pages in the catalogue](./mokly-pages.md)
-- [Screen variants](./mokly-screen-variants.md) — implemented: variant
-  screens grouped under their parent screen with their own ids and routes.
+- [Variants](./mokly-variants.md) — screen and component variants as
+  entries with their own global ids, derived routes, and `variantOf`, grouped
+  under their parent.
 - [Source protection](./mokly-source-protection.md)
 - [Catalogue change metadata](./mokly-catalogue-changes.md)
 - [Breaking page migration](./mokly-page-migration.md)
@@ -90,8 +98,8 @@ when the historical primary file is absent, never when it is invalid.
     command environments, locking and crash cleanup.
 - [Registered components](./mokly-components.md)
 - [Component runtime prop schema](./mokly-component-props.md)
-- [Current manifest v6 schema](./mokly-component-manifest.md)
-- [Component comparison v3 schema](./mokly-component-review.md)
+- [Current manifest v7 schema](./mokly-component-manifest.md)
+- [Component comparison v4 schema](./mokly-component-review.md)
 - [Component review validation and canonical output](./mokly-component-review-validation.md)
 - [Component change attribution](./mokly-component-changes.md)
 - [CSS change attribution](./mokly-css-attribution.md) — approved

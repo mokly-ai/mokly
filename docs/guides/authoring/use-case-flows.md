@@ -17,7 +17,6 @@ export const accountTour = defineUseCase({
   id: "account-tour",
   title: "Account tour",
   description: "An ordered journey through the account screens.",
-  route: "user-flows/account-tour.html",
   steps: [
     { screenId: "account-home" },
     { screenId: "account-invoice", title: "Open an invoice" },
@@ -27,9 +26,9 @@ export const accountTour = defineUseCase({
 });
 ```
 
-Use-case routes live under `user-flows/`. A step names the screen with
-`screenId` and may add its own `title` and `description` for that moment in
-the flow.
+A flow's route is `user-flows/<id>.html`, derived from its id. A step names
+the screen with `screenId` and may add its own `title` and `description` for
+that moment in the flow.
 
 ## Name the flow from a screen
 

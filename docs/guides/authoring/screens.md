@@ -7,8 +7,8 @@ order: 2
 
 ## Define a screen
 
-`defineScreen` takes the screen's identity, its route and the two React nodes
-the catalogue renders.
+`defineScreen` takes the screen's identity and the two React nodes the
+catalogue renders.
 
 ```tsx
 import { defineScreen } from "@mokly/mokly";
@@ -17,7 +17,6 @@ export const accountHome = defineScreen({
   id: "account-home",
   title: "Account home",
   description: "The account landing screen.",
-  route: "account/home.html",
   mobile: <main>Account</main>,
   desktop: <main>Account</main>,
   dependencies: ["src/account/home.tsx"],
@@ -28,10 +27,9 @@ export const accountHome = defineScreen({
 
 | Field                  | Meaning                                                    |
 | ---------------------- | ---------------------------------------------------------- |
-| `id`                   | Lowercase kebab-case identity, stable across renames       |
+| `id`                   | Lowercase kebab-case identity, unique across the catalogue |
 | `title`, `description` | What the catalogue shows                                   |
 | `navPath`              | Folder labels above this screen (defaults to `[]`)         |
-| `route`                | Where the documents are written under `mockupsDir`         |
 | `mobile`, `desktop`    | The React node each viewport renders                       |
 | `dependencies`         | Repository paths this screen is made from                  |
 | `relatedDocs`          | Documents a reader should open beside it                   |
@@ -41,8 +39,12 @@ export const accountHome = defineScreen({
 | `rationale`            | Why the screen is the way it is                            |
 | `variants`             | States of this screen, each a full screen grouped under it |
 
-Each view is generated as its own standalone page, so wrap the content in a
-landmark such as `main`.
+Mokly derives the route from the id: the documents are written under
+`mockupsDir` as `screens/<id>.mobile.html` and `screens/<id>.desktop.html`,
+with `.dark` before `.html` for dark views, and the catalogue addresses the
+screen at `screens/<id>.html`. An id may not be a Windows device name such as
+`con` or `nul`. Each view is generated as its own standalone page, so wrap the
+content in a landmark such as `main`.
 
 ## Variants of a screen
 
@@ -55,7 +57,6 @@ export const accountHomeStates = defineScreen({
   id: "account-home",
   title: "Account home",
   description: "The account landing screen.",
-  route: "account/home.html",
   mobile: <main>Account</main>,
   desktop: <main>Account</main>,
   dependencies: ["src/account/home.tsx"],
@@ -64,7 +65,6 @@ export const accountHomeStates = defineScreen({
   variants: [
     {
       id: "account-home-empty",
-      slug: "empty",
       title: "Account home, empty",
       description: "The landing screen before any account exists.",
       mobile: <main>No accounts yet</main>,
@@ -74,8 +74,8 @@ export const accountHomeStates = defineScreen({
 });
 ```
 
-The variant's route is derived from the parent's, so this one is written to
-`account/home.variants/empty.html`. It inherits the parent's address, tags,
+The variant's route derives from its own id, so this one lives at
+`screens/account-home-empty.html`. It inherits the parent's address, tags,
 color schemes, dependencies and related docs unless it sets its own, and it
 keeps its own global id, so a link to `account-home-empty` opens it like any
 screen. Its `useCaseIds` defaults to an empty list and never inherits; list a
@@ -91,23 +91,19 @@ accept the same `variants` field and flatten in the same order.
 
 `defineRoot` flattens a nested tree into ordinary definitions, so a folder of
 related screens is described once. Children are markers made by `screen` and
-`folder`, and their routes come from the root path, the folder
-segments and each slug.
+`folder`, and their routes derive from their ids like every other entry.
 
 ```tsx
 import { defineRoot, folder, screen } from "@mokly/mokly";
 
 export const mockups = defineRoot({
-  path: "account",
   navPath: ["Account"],
   children: [
     folder({
-      segment: "billing",
       title: "Billing",
       children: [
         screen({
           id: "account-invoice",
-          slug: "invoice",
           title: "Invoice",
           description: "One invoice.",
           mobile: <main>Invoice</main>,
@@ -119,11 +115,11 @@ export const mockups = defineRoot({
 });
 ```
 
-The route of that screen is `account/billing/invoice.html`: the root path, the
-folder segment and the slug, with the extension added for you. The screen's
-`navPath` is `["Account", "Billing"]`; changing those titles does not change
-its route. A nested child inherits `dependencies` and `relatedDocs` from its
-ancestors; tags are never inherited. An empty `folder()` is an authoring error.
+The route of that screen is `screens/account-invoice.html`, derived from its
+id. The screen's `navPath` is `["Account", "Billing"]`; changing those titles
+does not change its route. A nested child inherits `dependencies` and
+`relatedDocs` from its ancestors; tags are never inherited. An empty `folder()`
+is an authoring error.
 
 ## Exported types
 
@@ -133,5 +129,8 @@ ancestors; tags are never inherited. An empty `folder()` is an authoring error.
 | `ScreenVariantInput`              | One screen state nested under its parent  |
 | `NestedScreenInput`               | What `screen` takes inside a tree         |
 | `RootInput`                       | What `defineRoot` takes                   |
-| `EntryInput`, `RoutedEntryInput`  | The metadata every entry and route shares |
+| `EntryInput`                      | The metadata every entry shares           |
 | `RegistryDefinition`              | Any definition an entry module may export |
+
+There is no `RoutedEntryInput`: every input extends `EntryInput`, and the
+route is derived from the id.

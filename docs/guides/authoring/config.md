@@ -20,7 +20,7 @@ export default defineConfig({
   mockupsDir: "docs/mockups/generated",
   renderer: "docs/mockups/renderer.tsx",
   repoRoot: ".",
-  stylesheets: [{ match: "app/**/*.html", stylesheets: ["app.css"] }],
+  stylesheets: [{ match: "screens/*.html", stylesheets: ["app.css"] }],
   review: {
     base: "origin/main",
     outDir: ".context/mokly-review",
@@ -81,15 +81,16 @@ file as its source, wherever the entry module that exports it lives.
 
 ## Stylesheets
 
-Rules are evaluated in declaration order. A rule matches a screen route with a
-POSIX glob and lists stylesheets relative to `mockupsDir`, or absolute HTTP(S)
-URLs. A rule may append `lightStylesheets` or `darkStylesheets` after its
-shared list for the matching output.
+Rules are evaluated in declaration order. A rule matches a screen's derived
+route, such as `screens/account-home.html`, with a POSIX glob and lists
+stylesheets relative to `mockupsDir`, or absolute HTTP(S) URLs. A rule may
+append `lightStylesheets` or `darkStylesheets` after its shared list for the
+matching output.
 
 ```ts
 stylesheets: [
   {
-    match: "app/**/*.html",
+    match: "screens/account-*.html",
     stylesheets: ["app.css"],
     darkStylesheets: ["dark.css"],
   },

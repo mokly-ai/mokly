@@ -44,13 +44,13 @@ version in that shared tree through the lifecycle implemented by the
 
 ## Component Workspaces
 
-Registered components extend this runtime with saved variant pages, nested usage,
-actual screen instances, and local prop editing. The [explorer contract](./mokly-component-explorer.md)
+Registered components extend this runtime with component pages, variant
+entries, nested usage, actual screen instances, and local prop editing. The [explorer contract](./mokly-component-explorer.md)
 owns the icon inspector, bounded panes, desktop resizing, mobile bottom sheet,
 viewport/theme controls, and authenticated highlighting. The [controls contract](./mokly-component-controls.md)
 owns the private same-origin endpoint, bounded worker, immutable memory previews,
 last-good watched generation, and no-output/no-reload editing boundary. Exported
-workspaces retain saved variants and inspection with read-only props.
+workspaces retain variant entries and inspection with read-only props.
 
 [Component attribution](./mokly-component-changes.md) separates directly changed
 entries from affected consumers. Watch, Browse and export share that calculation;
@@ -63,10 +63,11 @@ Changes. Screen-owned prop and slot changes still count as screen changes.
 
 1. Load and validate config.
 2. Discover and bundle all entry, renderer, transformer, and imported helper modules.
-3. Validate registry metadata, routes, relationships, and output collisions.
+3. Validate registry metadata, relationships, derived routes, and output
+   collisions.
 4. Render screen fragments and registered whole-document pages in deterministic order.
 5. Resolve id links and validate document links and anchors.
-6. Build the version 6 manifest and resolved source inventory.
+6. Build the version 7 manifest and resolved source inventory.
 7. Stage every generated file before changing the last-good output.
 8. Atomically replace generated files and remove proven generated orphans.
 
@@ -87,7 +88,8 @@ contents, and does not require generated output to exist or match on disk. It
 fails for:
 
 - invalid config or registry metadata;
-- duplicate ids/routes or route/fragment/page collisions;
+- duplicate ids, or a derived route or view that collides with another
+  generated or public file;
 - forbidden nested paths or empty folders, plus
   [path violations](./mokly-nav-paths.md#labels-and-diagnostics), missing
   use-case screens, or reciprocal memberships;
@@ -98,7 +100,6 @@ fails for:
   color-scheme subsets unsupported by the catalogue config;
 - missing `lightStylesheets` / `darkStylesheets` files, or a stylesheet path one
   rule would link twice into the same fragment;
-- invalid or colliding `darkFragments` manifest routes;
 - stale, missing, proven-orphan, or unclaimed generated output in committed
   mode; unclaimed means Mokly-headered HTML whose owner is outside every
   configured entry-glob prefix and the current source inventory;
@@ -117,19 +118,20 @@ unclaimed-file error. `check` never rewrites output.
 comparison engines to create a complete static site. Its separate output
 transaction, Git prerequisites, path ownership, and input-consistency checks
 are defined by [Consumer static export](./mokly-export.md). Exact file routes,
-real directory-index id aliases, static delivery metadata, and lazy immutable
-comparisons are defined by [Static export delivery](./mokly-export-delivery.md).
+static delivery metadata, and lazy immutable comparisons are defined by
+[Static export delivery](./mokly-export-delivery.md).
 No server or watcher is started for export; served behavior below is unchanged.
 
 Serve validates its distinct live catalogue index and independently resolves both
-source graphs before binding. Full-manifest consumers still require validated v6
+source graphs before binding. Full-manifest consumers still require validated v7
 output and a current source inventory. These scans never render pages or rewrite
 output. The [on-demand contract](./mokly-on-demand.md) defines completeness,
 worker isolation and generation-local caches. Browse exposes:
 
 - `/` for the catalogue home;
-- `/view/<route>` for screens, use cases, and registered whole-document pages;
-- `/id/<id>` as a canonical redirect for routed registry entries;
+- `/view/<route>` for screens, components, use cases, and registered
+  whole-document pages, where the route derives from the entry's kind and id
+  under the [derived route rule](./mokly-authoring.md#derived-routes);
 - `/static/<path>` for generated fragments, document pages, and consumer assets,
   always delivered with `Cache-Control: no-store` because watched rebuilds
   replace bytes at stable URLs;
@@ -154,8 +156,7 @@ replaced worker never orphans a rebuild; the parent cancels and restarts it when
 an observed ref change moves the merge base.
 
 All ordinary routes support GET and HEAD. HEAD returns the same status and
-headers without a body, including `/id` not-found and fragment-validation
-errors. A HEAD request to the update endpoint completes without opening or
+headers without a body, including not-found and fragment-validation errors. A HEAD request to the update endpoint completes without opening or
 registering an event stream.
 
 Folders are navigation groups, not destinations. Unknown ids and routes
@@ -167,10 +168,10 @@ backslash separators introduced by decoding one original URL segment before
 any filesystem resolution.
 
 Browse caches [section trees](./mokly-nav-paths.md#sections-and-path-derivation)
-from validated manifest v6 paths.
+from validated manifest v7 paths.
 The serve-mode `live-index-1` retains that literal `schemaVersion` but carries
-the v6 four-kind routed entry shape and authored `navPath` (with unrendered
-usage metadata omitted), validated through the v6 metadata schema.
+the v7 four-kind entry shape and authored `navPath` (with unrendered
+usage metadata omitted), validated through the v7 metadata schema.
 
 ## Browse Shell
 
@@ -222,8 +223,8 @@ Route attribution compares each current manifest entry with its base entry and
 matches material fragment changes and changes to rendered local resources.
 Component membership follows [component attribution](./mokly-component-changes.md#dependencies-and-styles).
 Screen-only catalogues follow [Changes membership](./mokly-changes.md#changes-membership).
-Entry comparison projects route-affecting fields; a `navPath` difference marks
-the routed entry changed under the [Changes rule](./mokly-changes.md#changes-membership).
+Entry comparison projects reviewable metadata; a `navPath` difference marks
+the entry changed under the [Changes rule](./mokly-changes.md#changes-membership).
 The projection excludes source locations and dependency declarations; changes
 to those implementation details remain secondary comparison evidence. Fragment
 comparison applies the same paired ignore rules and material keys as screen
@@ -271,8 +272,9 @@ Review panes retain their stricter sandbox and byte-unmodified documents.
 
 Stored disclosure rules are in the [persistence contract](./mokly-disclosure-persistence.md).
 
-The [screen variants contract](./mokly-screen-variants.md) adds
-`variants:<section>:<parent id>` for the variant list a screen row discloses,
+The [variant contract](./mokly-variants.md) adds
+`variants:<section>:<parent id>` for the variant list a screen or component
+row discloses,
 persisted, restored, and collapsed beside the folder keys. That list is a
 container rather than a `<details>`, because the row beside it is a link and
 cannot also be a summary; its `hidden` state and its button's `aria-expanded`
@@ -280,7 +282,7 @@ carry the same disclosure the folder keys carry, and the button's
 accessible name follows the state. When search or the Changes filter hides a
 parent row, it hides the entire leaf container, so no disclosure button remains
 visible or focusable without its row; the container reappears with the row. A
-parent row whose list holds a changed route carries `data-changed-variants`,
+parent row whose list holds a changed variant carries `data-changed-variants`,
 the aggregate mark that keeps the group visible under the Changes filter
 without claiming the parent itself changed.
 The stylesheet draws that attribute and `data-changed` as the same trailing
@@ -291,17 +293,16 @@ carries only the aggregate mark while the Changes filter is selected navigates
 to the first changed variant row its list still shows.
 
 Per-view change evidence drives the status beside the title and the comparison
-band, so both describe the shown view rather than the route-wide result. With
+band, so both describe the shown view rather than the entry-wide result. With
 one viewport and one scheme selected, `changed`, `added`, and `removed` map to
 Changed, Added, and Removed; `unchanged` and `ignored-only` map to Unmodified.
 While Both is selected, the shown status is Changed if any shown view is
 Changed, else Added if any is Added, else Removed if any is Removed, else
 Unmodified. Comparison eligibility follows the shown status under the existing
-kind rule: Changed, or Removed for a component saved variant. If neither a ready
-result nor screen-view evidence exists for the entry, route-level status and
-eligibility remain in force. Switching viewport, scheme, or saved variant
-recomputes both without a page load, and a background evidence refresh does the
-same.
+kind rule: Changed, or Removed for a component variant. If neither a ready
+result nor screen-view evidence exists for the entry, entry-level status and
+eligibility remain in force. Switching viewport or scheme recomputes both
+without a page load, and a background evidence refresh does the same.
 
 The workspace publishes the changed views in its serialized data. Each view
 control carries a mark for changed views the reader cannot currently see: the
@@ -312,9 +313,8 @@ keeping it distinct from the pressed state and independent of color. The
 details inspector lists the same views as `Changed views`, in mobile-before-
 desktop and light-before-dark order, and hides the row while nothing is named.
 The marks and row point to the changed views when the shown view is Unmodified.
-A light-only catalogue has no scheme control or scheme mark. For a component,
-this evidence describes the selected saved variant and changes with that
-selection.
+A light-only catalogue has no scheme control or scheme mark. For a component
+page, this evidence describes the variant entry whose views it shows.
 
 Opening a changed row while the Changes filter is selected lands on the first
 changed view instead of the sticky selection. Arriving from the filter is an
@@ -359,8 +359,8 @@ Search, disclosure, filters, and catalogue scroll remain mounted. A search
 value splits into whitespace-separated terms: every `tag:<tag>` term
 (case-insensitive) keeps only rows whose entry declares that tag, and the
 remaining words rejoin into one phrase that must appear in a row's authored ID,
-title, or route. A row survives only when every tag term and that one phrase
-match, so tags compose with free text and with the All/Changes filter, and a term
+title, or tags. A row survives only when every tag term and
+that one phrase match, so tags compose with free text and with the All/Changes filter, and a term
 nothing matches hides those rows and the groups they empty. Selecting a tag chip enters
 `tag:<tag>` in the search field, replacing any tag term already entered;
 selecting the chip whose tag is entered clears that term. Chips are buttons that

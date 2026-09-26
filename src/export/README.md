@@ -9,7 +9,8 @@ The separate `mokly publish` command uploads through the
 independent `BaselineReader`, runs the normal build, captures public inputs,
 compares them through the existing review engine, and verifies inputs again
 before installation. `site.ts` uses the existing shell and Browse adapter to
-assemble exact v5 pages, real id aliases, package assets, and immutable comparisons.
+assemble one shell page per entry at `view/<route>`, package assets, and
+immutable comparisons.
 Publish's `--no-changes` uses this same engine with baseline reads, removed
 entries and comparisons omitted. Current-only assembly retains the normal
 input consistency checks and a null delivery comparison URL. A capture callback
@@ -47,6 +48,9 @@ The projection omits views without retained or excluded resources and drops
 screens whose evidence slice is empty. Comparison JSON separately retains all
 view states and the material-change flag.
 
+Review result v4 is the only comparison result: a catalogue without
+registered components emits the same shape with empty component arrays.
+
 With comparisons enabled, derived mode awaits `prepareReviewRepository` before
 compiling or capturing head input. Public capture and its final recheck substitute the accepted
 compilation for generated files; authored public resources retain confinement
@@ -67,8 +71,10 @@ against this parser and an independent reader in the packed-consumer smoke.
 transformation and ownership assembly. `content_id.ts` uses deterministic file
 hashes and alias edges; `shell_metadata.ts` normalizes and stamps only known
 shell roots while preserving other bytes and rejecting adapter metadata drift.
-Descriptor version 2 lets both old and current clients reload across incompatible
-deployments. Comparison generation URLs retain their separate content identity.
+Descriptor version 3 carries `deploymentId`, `canonicalPath`, and
+`comparisonUrl` so clients reload across incompatible deployments; it carries
+no id-to-route map. Comparison generation URLs retain their separate content
+identity.
 
 `site.ts` also writes the [public catalogue projection](../catalogue/README.md)
 at `__mokly/catalogue.json`. Its per-entry Changes state uses the same accepted
@@ -77,8 +83,8 @@ ownership v1 marker and upload v1 archive without changing either schema.
 Each shell page embeds only a compact reference with this catalogue's identity
 and revisions. The standalone browser validates and fetches the shared finalized
 resource once before hydration, avoiding catalogue-sized bytes repeated for
-every canonical page and id alias while preserving complete server-rendered
-HTML before JavaScript runs.
+every shell page while preserving complete server-rendered HTML before
+JavaScript runs.
 Finalization validates the catalogue and canonicalizes only its top-level
 `deploymentId` to zeroes for hashing, then stamps the same identity as the shell.
 Other catalogue fields participate in the hash, including additive fields.
@@ -128,7 +134,8 @@ source/resource fingerprint contract. Its capture server disables live Changes
 states: ordinary publications omit the tabs, while opt-in Changes publications
 render their completed counts without a pending or unavailable state.
 Current-only static delivery explicitly
-disables comparison requests while retaining canonical id navigation.
+disables comparison requests while retaining canonical `/view/<route>`
+navigation resolved by entry id.
 It also declares its stricter `.context` output root; the same shared path
 validator enforces that scope at preflight and before installation.
 
@@ -173,7 +180,8 @@ See the [export contract](../../docs/protocol/mokly-export.md),
 [plan index](../../plans/README.md).
 
 Registered components export through the same transactional delivery boundary.
-The manifest, saved variants and validated comparison evidence supply the shared
-workspace; removed components and variants retain baseline snapshots. Controls
-have no rendering capability in exported pages, while usage, highlighting and
-saved-variant navigation remain available without the consumer repository.
+The manifest, variant entries and validated comparison evidence supply the
+shared workspace; removed components and variants retain baseline snapshots.
+Controls have no rendering capability in exported pages, while usage,
+highlighting and navigation between variant entries remain available without
+the consumer repository.

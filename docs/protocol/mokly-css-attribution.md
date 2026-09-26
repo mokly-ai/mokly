@@ -2,12 +2,13 @@
 
 ## Delivery Status
 
-Rule parsing, diffing, document matching, and classification are implemented in
-both result versions, live Serve, watched updates, and publication. The
-inspector receives retained and excluded stylesheet evidence for component
-catalogues and screen-only catalogues, including before a comparison is loaded.
-Screen-only delivery reuses the existing v2 classification; it does not run
-component classification or an additional resource analysis. See
+Rule parsing, diffing, document matching, and classification are implemented
+for screen-only and component catalogues, live Serve, watched updates, and
+publication. The inspector receives retained and excluded stylesheet evidence
+for component catalogues and screen-only catalogues, including before a
+comparison is loaded. Screen-only delivery reuses the screen-only
+classification; it does not run component classification or an additional
+resource analysis. See
 [CSS Change Attribution](../../plans/css-change-attribution.md).
 
 ## Purpose
@@ -44,7 +45,8 @@ A stylesheet is in scope for rule analysis only when it is a public file
 inside `mockupsDir`; only such files can be reached from a view document. A
 stylesheet outside that scope, such as a source or token module matched by a
 `review.sharedImpact` glob or a declared dependency directory, is never
-analysed. V2 retains its file-level `sharedImpact` evidence; v3 follows the
+analysed. Screen-only results retain file-level `sharedImpact` evidence;
+component results follow the
 [component result definition](./mokly-component-review.md#reasons-and-secondary-evidence).
 One shared predicate answers "is this stylesheet in analysis scope"
 for every classification path; in-scope paths need retained reasons.
@@ -230,11 +232,9 @@ interface ViewReview {
 ```
 
 `material` is present exactly when the paired ignore-normalized before and
-after documents differ, in both result versions. It is omitted otherwise and
-never carries `false`. Historical results without it remain valid: the style
-label additionally requires an `analysis`-bearing reason, which only producers
-that also emit `material` ever write, so an absent flag on a historical view can
-never select the style label.
+after documents differ. It is omitted otherwise and never carries `false`. The
+style label additionally requires an `analysis`-bearing reason, so an absent
+flag alone can never select it.
 
 Examined-and-excluded resources are recorded on the view, not as reasons:
 
@@ -251,14 +251,13 @@ interface ViewReview {
 }
 ```
 
-Both the schema-v2 `ReviewResult` and the schema-v3 `ReviewResultV3` carry
-these fields. Schema versions do not change. Results without them remain valid
-and mean the analysis did not run.
+Every [review result v4](./mokly-changes.md#comparison-engine) view record
+carries these fields. Results without them remain valid and mean the analysis
+did not run.
 
-`reasons` holds the view's retained resource evidence in both versions; it is
-omitted when empty. This supplies the dependency-analysis location that v2 did
-not previously have. View evidence describes the complete retained render;
-v3 entry reasons still apply component ownership separately. Match selectors
+`reasons` holds the view's retained resource evidence; it is omitted when
+empty. View evidence describes the complete retained render; component entry
+reasons still apply component ownership separately. Match selectors
 against the actual paired-ignore-normalized documents, including component
 markup; ownership projections determine resource eligibility, not selector
 matchability. Embedded documents contribute their own normalized trees; pair
@@ -269,14 +268,15 @@ Entry dependency reasons merge by path across views, unioning selectors and
 giving `unresolved` precedence. Keep an in-scope stylesheet in entry `sharedImpact`
 only when some eligible view retains it. Explicit or renderer-proven ownership
 also attributes retained actual-invocation CSS evidence to its component owner,
-even when every saved variant excludes the stylesheet. Saved view states and
-exclusions remain unchanged; no synthetic variant is created. An exact screen
-dependency remains independent when its actual view keeps the stylesheet.
+even when every variant entry excludes the stylesheet. Variant view states and
+exclusions remain unchanged; no synthetic variant entry is created. An exact
+screen dependency remains independent when its actual view keeps the
+stylesheet.
 A broad public stylesheet glob or declaration cannot bypass rule exclusion.
 Non-CSS path-only evidence follows [component attribution](./mokly-component-changes.md#dependencies-and-styles).
 Resource evidence makes a paired view
 `changed`; exclusions alone do not. Diagnostic summary counts use those states
-and, for v3, the resulting `changes` membership.
+and, for component catalogues, the resulting `changes` membership.
 
 Baseline CSS uses the bounded Git batch reader, including optional counterpart
 reads for added/removed files. The head uses compilation outputs or the confined
@@ -296,7 +296,7 @@ paths and sides. Parsing a shared stylesheet therefore does not repeat per view.
 - `analysis.selectors` must be sorted and duplicate-free.
 - A `matched` analysis has at least one selector; `unresolved` may have none.
 - View reasons and exclusions sort uniquely by path. Entry analysis is the
-  union of its eligible saved-view and actual-invocation analyses; a view's
+  union of its eligible variant-view and actual-invocation analyses; a view's
   exclusion does not conflict with another view retaining the same path.
 - `analysis` may appear only on stylesheet paths. Producers guarantee analysis
   scope during discovery through the shared `analysisOwnsStylesheet` predicate

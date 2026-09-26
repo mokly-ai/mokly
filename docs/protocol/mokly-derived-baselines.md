@@ -136,7 +136,10 @@ rejected exactly as symlink and non-regular Git blobs are. Bulk reads batch
 filesystem access (at most 32 reads in flight) and use the same 4,096-object
 and 48 MiB per-batch budgets as committed reads, including metadata overhead.
 Source protection applies the baseline's own manifest inventory, entry source
-paths, and reserved basenames, as for any historical manifest.
+paths, and reserved basenames, as for any historical manifest. A baseline
+rebuilt by an older Mokly version arrives as a v6 manifest with stored routes
+and fragment paths; the historical reader normalizes it inside its boundary, so
+it still compares against current v7 output.
 
 ## Serve And Watch
 

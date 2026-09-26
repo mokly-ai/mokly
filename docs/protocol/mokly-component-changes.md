@@ -8,23 +8,34 @@ records delivery. Unregistered catalogue and legacy behavior remains intact.
 
 ## Changes Membership
 
-Changes counts directly changed routed entries, including components, once per
-entry. Variants, instances, and affected consumers do not increase that count.
+Changes counts directly changed entries, including components and component
+variant entries, once per entry. Instances and affected consumers do not
+increase that count.
 Existing folder ancestor disclosure and screen-to-use-case propagation
 remain; an affected-only screen does not make its use cases changed.
 
-| Edit                                                          | Direct Changes entries | Secondary impact                                              |
-| ------------------------------------------------------------- | ---------------------- | ------------------------------------------------------------- |
-| Component implementation or owned styling                     | Component              | Its consuming screens/components                              |
-| Screen supplies different component data props                | Screen                 | None solely from this input edit                              |
-| Screen changes rendered slot content                          | Screen                 | None solely from this content edit                            |
-| Screen adds/removes/replaces/reorders an instance             | Screen                 | Usage links update                                            |
-| Screen changes surrounding content or layout                  | Screen                 | Existing screen/use-case rules                                |
-| Parent component changes props passed to a child              | Parent component       | Parent's consuming screens                                    |
-| Child implementation changes with parent inputs unchanged     | Child component        | Parent components and consuming screens                       |
-| Component and a consuming screen both change directly         | Component and screen   | Screen is also a consumer                                     |
-| Component saved variant, controls schema, or metadata changes | Component              | Consumers only when their rendering/dependencies are affected |
-| Temporary controls edits                                      | None                   | None                                                          |
+| Edit                                                      | Direct Changes entries | Secondary impact                                              |
+| --------------------------------------------------------- | ---------------------- | ------------------------------------------------------------- |
+| Component implementation or owned styling                 | Component              | Its consuming screens/components                              |
+| Screen supplies different component data props            | Screen                 | None solely from this input edit                              |
+| Screen changes rendered slot content                      | Screen                 | None solely from this content edit                            |
+| Screen adds/removes/replaces/reorders an instance         | Screen                 | Usage links update                                            |
+| Screen changes surrounding content or layout              | Screen                 | Existing screen/use-case rules                                |
+| Parent component changes props passed to a child          | Parent component       | Parent's consuming screens                                    |
+| Child implementation changes with parent inputs unchanged | Child component        | Parent components and consuming screens                       |
+| Component and a consuming screen both change directly     | Component and screen   | Screen is also a consumer                                     |
+| Component variant props, title, or description change     | That variant entry     | Consumers only when their rendering/dependencies are affected |
+| Component controls schema or parent metadata changes      | Component              | Consumers only when their rendering/dependencies are affected |
+| Temporary controls edits                                  | None                   | None                                                          |
+
+A component implementation or owned-style edit lists each variant entry
+whose views changed. The parent entry is listed only for its own reasons:
+schema, controls, slots, declared metadata, and declared-file or shared-file
+evidence attributed to the component itself. A parent whose only change is a
+changed variant carries the navigation aggregate mark defined by the
+[variant contract](./mokly-variants.md#changes) and is not a Changes row.
+Affected-consumer evidence keys on the parent component id, which instance
+records reference.
 
 A component page has Used by links for all known consumers. A changed component
 also has Affected screens, built from the union of baseline and current usage,
@@ -45,7 +56,12 @@ Browse, watched Changes updates, comparison JSON, and published catalogues use
 one materiality policy. A raw generated HTML path appearing in Git is candidate
 evidence, not sufficient reason to classify a registered consumer as changed.
 Component catalogues use the same ownership-aware classifier for Browse and
-detailed comparisons; unregistered catalogues retain `changedManifestRoutes`.
+detailed comparisons; unregistered catalogues retain their id-keyed
+changed-entry set.
+
+That set is `changedIds`: the ids of every current entry whose
+material, resources, or reviewable metadata differ from the baseline, plus the
+flows that step through a changed screen.
 
 Lightweight Browse classification reads the current compiled manifest and usage
 metadata together with the baseline manifest and required fragment material.
@@ -59,21 +75,23 @@ that affect its inputs. No-watch Serve and publication instead reuse their
 validated startup snapshot, including ownership evidence and unavailable-history
 state, for the lifetime of that capture.
 
-The comparison artifact adds a versioned component/variant result and explicit
-affected-consumer evidence. New readers retain schema-v2 screen artifact support;
-component-aware results use schema v3. Screen entries retain their actual view
+The comparison artifact is the schema v4 result with component/variant records
+and explicit affected-consumer evidence; readers accept only v4, and every
+record addresses its entry by id. Screen entries retain their actual view
 results, with affected-only evidence separate from direct Changes membership.
 All comparisons keep full unmodified before/after documents and isolated assets.
 The [comparison schema](./mokly-component-review.md) defines the exact result,
 Changes membership, reasons, affected evidence, and side pairing; the [validation contract](./mokly-component-review-validation.md) defines validation.
 Live [selected comparisons](./mokly-selected-comparisons.md) project this
-completed evidence onto one screen or saved variant before capturing its assets.
+completed evidence onto one screen or component variant entry before capturing
+its assets.
 They retain the full catalogue's affected-consumer evidence in the shell inspector.
 
 ## Normalization And Input Ownership
 
 Match component occurrences by owner, scoped instance id, component id, viewport,
-and scheme; saved component comparisons also include variant id. At a consuming
+and scheme; a component variant entry's own comparison is keyed by that entry's
+id. At a consuming
 boundary, replace only a paired component's implementation output with its
 stable identity token. Keep the caller's input material and occurrence order in
 the caller's comparison. This suppresses internal rendering changes while
@@ -264,9 +282,9 @@ rename is not a content change, while owned CSS edits still affect the component
 and independent caller edits still affect the consumer.
 
 Use the existing merge base with `origin/main` or the configured base; staged,
-unstaged, and untracked current edits still participate. Pair component entries
-by stable id, and variants by component id plus variant id; route or title edits
-remain metadata changes. Screen route pairing retains the existing contract.
+unstaged, and untracked current edits still participate. Pair every entry,
+including variants of both kinds, by its stable id; title edits remain metadata
+changes.
 
 New/removed components and variants retain explicit missing comparison sides.
 Union baseline/current usage so removing a component does not erase its former

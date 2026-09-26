@@ -123,7 +123,7 @@ the Markdown and review the diff instead.
       "Collections are navigation folders" passage, the changed-projection
       paragraph, breadcrumb derivation, and disclosure keys (`folder:` keys,
       obsolete `collection:` keys ignored).
-- [x] `docs/protocol/mokly-screen-variants.md`: replace every collection rule
+- [x] `docs/protocol/mokly-variants.md`: replace every collection rule
       with `navPath` inheritance and the rejected `navPath` field on variants.
 - [x] Smaller passages: `mokly-navigation.md` (a folder is not a destination),
       `mokly-viewer.md` (disclosure key kinds), `mokly-design-components.md`

@@ -30,7 +30,8 @@ const detailsHref = mockLink("account-detail", "summary");
 
 The id is lowercase kebab-case. Neither helper accepts `id#fragment`,
 percent-encoded syntax or a `mock:` value in the id, and an unknown but
-well-formed id fails later when the catalogue is built.
+well-formed id fails later when the catalogue is built. A link may name any
+entry, including a screen or component variant.
 
 ## Style your own control
 

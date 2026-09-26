@@ -2,8 +2,9 @@
 
 This is the single contract for navigation paths, folder identities, sibling
 ordering, and path diagnostics. [Authoring](./mokly-authoring.md) defines the
-helper inputs and authoring-time errors; the [private manifest](./mokly-component-manifest.md)
-and [public catalogue](./mokly-catalogue.md) define their wire shapes. The
+helper inputs, derived routes, and authoring-time errors; the
+[private manifest](./mokly-component-manifest.md) and
+[public catalogue](./mokly-catalogue.md) define their wire shapes. The
 [disclosure persistence contract](./mokly-disclosure-persistence.md) owns storage and restoration.
 
 ## Sections And Path Derivation
@@ -19,13 +20,15 @@ root. Explicit `null` or any other non-array value is not an omission.
 
 A nested leaf derives its path as `[...(root.navPath ?? []), ...ancestor folder
 titles]`; its own title is not included. Root `navPath` is the navigation
-prefix above the root's direct children. Root `path`, folder `segment`s, and
-leaf `slug` build routes independently; changing labels does not move routes.
-The rendered navigation omits a section with no matching current or retained
-removed entries; the public tree emits both required section arrays, using
-`[]` when a section has no current entries. A folder with no routed descendants
-is not emitted. Breadcrumbs follow `navPath`; variants additionally include
-their parent screen title.
+prefix above the root's direct children. Routes are never built from labels:
+an entry's route derives from its kind and id under the
+[authoring contract](./mokly-authoring.md#derived-routes), so changing labels,
+moving an entry between folders, or renaming a folder never moves a route, and
+nothing but the id does. The rendered navigation omits a section with no
+matching current or retained removed entries; the public tree emits both
+required section arrays, using `[]` when a section has no current entries. A
+folder with no routed descendants is not emitted. Breadcrumbs follow
+`navPath`; variants additionally include their parent title.
 
 ## Labels And Diagnostics
 
@@ -67,7 +70,7 @@ comparator: folders before leaves; then
 comparison of the folder path key (folders) or entry id (leaves). Variants
 stay under their parent in authored order and are never separate folder
 members. This intentionally replaces v1's authored `childIds` tree order in
-public read model v2.
+public read model v2 and later.
 
 The path key joins validated root-to-folder labels with `/` (labels cannot
 contain `/`). A folder's nav group key is `folder:<path key>`; its disclosure
@@ -80,19 +83,22 @@ obsolete keys are governed by the [disclosure persistence contract](./mokly-disc
 
 ## Variants And Historical Paths
 
-A flattened variant copies its parent's `navPath`; authored `navPath` on a
-variant is forbidden even when `undefined`, like `route`. Registry validation requires the paths to
-match. A variant's breadcrumbs follow the parent's path followed by the
-parent title; variants are not independent folder members.
+A flattened variant of either kind copies its parent's `navPath`; authored
+`navPath` on a variant is forbidden even when `undefined`, as is `variants`.
+Registry validation requires the paths to match. A variant's breadcrumbs
+follow the parent's path followed by the parent title; variants are not
+independent folder members. The complete variant rules live in the
+[variant contract](./mokly-variants.md).
 
-Current v6 manifests use the full label and conflict rules above. At the
-explicit historical-read boundary, v3, both v4 envelopes, v5, and v6
-`navPath` values are checked only as arrays of non-empty strings, without current
-label or conflict rules. Removed entries in the public read model follow this
-historical-label rule as well. Historical v3–v5 collection records undergo their
-original strict shape and relationship validation, then are dropped. Baseline
-paths are used for removed-entry labels and [Changes classification](./mokly-changes.md#changes-membership), never to build a
-current folder tree. A difference in `navPath`, including a renamed ancestor
+Current v7 manifests use the full label and conflict rules above. At the
+explicit historical-read boundary, v3, both v4 envelopes, v5, v6, and v7
+`navPath` values are checked only as arrays of non-empty strings, without
+current label or conflict rules. Removed entries in the public read model
+follow this historical-label rule as well. Historical v3–v5 collection records
+undergo their original strict shape and relationship validation, then are
+dropped. Baseline paths are used for removed-entry labels and
+[Changes classification](./mokly-changes.md#changes-membership), never to build
+a current folder tree. A difference in `navPath`, including a renamed ancestor
 folder that changes every descendant entry's path, marks each affected routed
 entry changed; there is no separate moved state. Removed entries retain the
 baseline entry's path, with no separate ancestor field.

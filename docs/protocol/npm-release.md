@@ -26,6 +26,12 @@ regenerate manifest v6 and adopt catalogue read model v2. Obsolete
 record this upgrade as breaking; version numbers and `CHANGELOG.md` remain
 release-PR owned.
 
+The id-derived routes release is also breaking: authored `route`, `slug`,
+`segment`, and root `path` fields are removed and every route derives from
+kind and id; component variants become entries with global ids; consumers
+must regenerate manifest v7 and adopt catalogue read model v3, review result
+v4, and delivery descriptor v3; and the `/id/<id>` URLs no longer exist.
+
 ## Package Metadata
 
 `package.json` describes the published, scoped public ESM package `@mokly/mokly`,
@@ -59,7 +65,7 @@ Root build, clean, formatting, lint, typecheck and package gates cover both
 packages. Pack the viewer first; local smoke and release fixtures install both
 tarballs explicitly so an unpublished viewer is never resolved from the registry.
 Consumer fixtures exercise every public viewer entry, SSR of the
-[public v2 fixture](./fixtures/catalogue-v2.json) in
+[public v3 fixture](./fixtures/catalogue-v3.json) in
 `scripts/package/viewer.mjs` (`smokeViewer`), browser bundle boundaries and
 NodeNext declarations. Both manifests,
 packed metadata, export targets, allowlists, licenses, React peers and the exact
@@ -185,8 +191,8 @@ receive Cloudflare credentials or write-capable execution.
 The repository-only preview builder starts the real Browse server on
 an ephemeral loopback port and snapshots the home, not-found, current catalogue
 routes, plus removed-entry routes only when Changes is included. It copies the shell stylesheet, browser and
-shared navigation modules, fonts, id redirects, and every validated public
-consumer asset into `.context/mokly-preview`. HTML copies pass through the
+shared navigation modules, fonts, and every validated public consumer asset
+into `.context/mokly-preview`. HTML copies pass through the
 same manifest/header-aware logical-link adapter as served Browse; unowned
 reserved metadata is removed and invalid trusted output fails the build.
 Preview shell links use Cloudflare
@@ -194,8 +200,8 @@ Pages' canonical extensionless HTML routes, and static shell HTML omits the
 watched server's live-update entrypoint. The parent client validates one optional
 `fragment` query and applies its encoded hash to every applicable current and
 light/dark frame source, with first-step-only use-case scope. Default capture needs no Git or comparison provider and omits review controls,
-counts, removed routes, and baseline artifacts. Explicit Changes capture pins
-one merge-base commit for impact and screen and saved component comparisons and rejects any input
+counts, removed entries, and baseline artifacts. Explicit Changes capture pins
+one merge-base commit for impact and screen and component variant comparisons and rejects any input
 mutation during capture. It packages comparison JSON and isolated resources
 under an immutable generation path; visitors fetch them only after selecting a
 diff. Refresh loads that same published result. Unavailable requested baselines
@@ -205,7 +211,7 @@ and stale comparison directories. Full history remains available in both jobs.
 Static shell metadata addresses an included comparison generation directly;
 the stable comparison redirect remains available when Changes is enabled.
 Eligible shown views offer comparison controls; known unchanged views show
-Unmodified. Missing per-view evidence uses route-level status and eligibility;
+Unmodified. Missing per-view evidence uses entry-level status and eligibility;
 absent change evidence never invents a status. Pages retain Changes membership
 but never offer visual comparisons.
 The [Changes contract](./mokly-changes.md) owns the shared interaction and

@@ -1,6 +1,6 @@
 ---
 title: "Components"
-description: "Give a shared component its own page, typed props and saved variants."
+description: "Give a shared component its own page, typed props and variants."
 section: "authoring"
 order: 3
 ---
@@ -17,7 +17,6 @@ export const action = defineComponent({
   id: "action",
   title: "Action",
   description: "A shared action.",
-  route: "components/action.html",
   dependencies: [],
   relatedDocs: [],
   propSchema: {
@@ -26,10 +25,12 @@ export const action = defineComponent({
   },
   controls: { label: { kind: "text", label: "Label", maxLength: 80 } },
   render: (props) => <button>{props.label}</button>,
-  variants: [{ id: "default", title: "Default", props: { label: "Continue" } }],
+  variants: [
+    { id: "action-default", title: "Default", props: { label: "Continue" } },
+  ],
 });
 
-export const mockups = [action.entry];
+export const mockups = [...action.entries];
 ```
 
 Render it in a screen with `action.Component`, and give repeated siblings
@@ -55,7 +56,6 @@ export const button = defineComponent({
   id: "button",
   title: "Button",
   description: "The product button.",
-  route: "components/button.html",
   dependencies: ["src/components/button/button.tsx"],
   ownedDependencies: ["src/components/button/button.tsx"],
   relatedDocs: [],
@@ -64,7 +64,9 @@ export const button = defineComponent({
     properties: { label: { schema: { kind: "string" } } },
   },
   render: (props) => <Button>{props.label}</Button>,
-  variants: [{ id: "default", title: "Default", props: { label: "Save" } }],
+  variants: [
+    { id: "button-default", title: "Default", props: { label: "Save" } },
+  ],
 });
 ```
 
@@ -72,26 +74,30 @@ export const button = defineComponent({
 // src/components/button/button.mockup.tsx
 import { button } from "./button.mokly.js";
 
-export const mockups = [button.entry];
+export const mockups = [...button.entries];
 ```
 
 Screens anywhere in the repository import `button` from the registration and
 render `button.Component`; an edit to `button.tsx` is then attributed to the
 component, with those screens listed as affected.
 
-## Saved variants
+## Variants
 
-Variants are explicit named examples, never inferred. Every variant is built
-for both viewports and every configured scheme. A link to the component id
-opens its default variant; a canonical page URL selects one with
-`?variant=default`.
+Variants are explicit named examples, never inferred. Each variant is its own
+catalogue entry with a global kebab-case id such as `action-disabled`: it is
+grouped beneath the component in navigation, has its own page at
+`components/<id>.html`, its own Changes row, and can be the target of a link.
+Every variant is built for both viewports and every configured scheme. A link
+to the component id opens its first variant; a link to a variant id opens that
+variant.
 
 ## Controls
 
 `controls` declares what can be edited while serving locally: `text`,
 `boolean`, `number` and primitive `select` presets. Complex props stay
-inspectable but are not edited. Reset restores the saved variant, and a
-published catalogue keeps the variants and inspection with controls read only.
+inspectable but are not edited. Reset restores the variant's declared props,
+and a published catalogue keeps the variants and inspection with controls read
+only.
 
 ## Prop schemas
 
@@ -141,7 +147,7 @@ catalogue, inspect rendered markup or classify a visual change.
 | `ComponentInput`, `ComponentDefinition`                         | What `defineComponent` takes and stores |
 | `RegisteredComponent`                                           | The returned `Component` and `entry`    |
 | `ComponentProps`, `ComponentRenderContext`                      | What `render` receives                  |
-| `ComponentVariant`                                              | One saved example                       |
+| `ComponentVariant`                                              | One variant declaration                 |
 | `ComponentControl`, `ComponentControlLabel`, `ControlFor`       | The editable controls                   |
 | `ObjectPropSchema`, `DataPropSchema`, `DataPropField`           | The schema of a component's data        |
 | `InferProp`, `ComponentPropsData`, `PropValue`, `PropPrimitive` | The values a schema allows              |

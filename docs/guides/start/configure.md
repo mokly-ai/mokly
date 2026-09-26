@@ -56,7 +56,7 @@ export default defineConfig({
   entries: ["src/**/*.mockup.{ts,tsx}"],
   mockupsDir: "docs/mockups/generated",
   renderer: "docs/mockups/renderer.tsx",
-  stylesheets: [{ match: "app/**/*.html", stylesheets: ["app.css"] }],
+  stylesheets: [{ match: "screens/*.html", stylesheets: ["app.css"] }],
 });
 ```
 

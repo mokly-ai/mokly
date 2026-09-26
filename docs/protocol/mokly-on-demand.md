@@ -7,8 +7,8 @@ hierarchy, schemas, source inventory and output confinement before listening.
 It does not render every document, write output, classify Git changes or transfer
 generated HTML as a prerequisite for Browse. This applies with and without watch.
 
-The live catalogue index is a distinct internal format, not a schema-v6 manifest.
-It describes available views, not completed rendering or usage evidence. A v6
+The live catalogue index is a distinct internal format, not a schema-v7 manifest.
+It describes available views, not completed rendering or usage evidence. A v7
 manifest still requires every view's validated records. Build, Check and Export
 remain exhaustive and produce the same portable artifacts, committed or
 [derived](./mokly-derived-baselines.md) according to `generatedOutput`.
@@ -36,13 +36,13 @@ before replacements start. Exhaustive background work uses one worker with a
 The single-document compiler reuses exhaustive Build's validation primitives: rendering,
 stylesheet selection, compatibility, logical links, ownership, component ranges,
 props, style/resource metadata, ignore markers, output confinement, and resource
-validation. Navigation without anchors needs the destination's registered route,
+validation. Navigation without anchors needs the destination's registered entry,
 not its rendered HTML. Anchors require the actual destination document; logical
 anchors require every applicable destination view. Embedded local resources and
 CSS imports are validated transitively. Protected sources and manifests remain
 private even through aliases. No validation is skipped to meet the time target.
 
-Route indexes and parsed resource metadata are reused within the generation.
+Entry indexes and parsed resource metadata are reused within the generation.
 The inspector loads usage for displayed views on demand. Uncomputed catalogue-wide
 usage is explicitly unavailable, never displayed as zero consumers. Live All/Changes
 controls are always present. While a calculation is pending, a spinner replaces the
@@ -69,7 +69,7 @@ They never clone a full rendered manifest or validate unrelated documents. Exist
 origin/token checks, cancellation, last-valid previews and memory/time limits apply.
 
 Explicit live diffs reuse completed background evidence and capture only the selected
-screen or saved variant plus its assets. They do not repeat compilation or catalogue
+screen or component variant entry plus its assets. They do not repeat compilation or catalogue
 classification. The [selected comparison contract](./mokly-selected-comparisons.md)
 defines request scope, checked-input digests, immutable snapshots and cancellation.
 

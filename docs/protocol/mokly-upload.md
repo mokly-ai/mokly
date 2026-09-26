@@ -111,7 +111,6 @@ mokly-upload.json
 index.html
 404.html
 view/...
-id/...
 static/...
 __mokly/...
 __mokly/diffs/__generations/<content-id>/review.json  # comparisons only
@@ -137,7 +136,7 @@ interface MoklyUploadV1 {
 
 - `moklyVersion` is the installed package's exact SemVer (at most 255 bytes), including prerelease
   or build metadata when present. `schemaVersion` versions this envelope,
-  independently of catalogue manifest v6 and review v2/v3.
+  independently of catalogue manifest v7 and review result v4.
 - `repository` obeys the identity grammar above; it is an assertion to authorize,
   not proof of repository ownership. `host` is at most 253 bytes; owner and name
   are each at most 255 bytes.

@@ -22,18 +22,20 @@ migration procedure.
 
 Every whole-document page must be a `definePage` or nested `page` entry in a
 resolved entry module or a repository-owned helper it imports, with an explicit
-ID, route or slug, render callback, and metadata.
+ID, render callback, and metadata; its route derives from the ID under the
+[derived route rule](./mokly-authoring.md#derived-routes).
 An authored or tree-derived `navPath` places it in navigation. Existing `.source.ts`/`.source.tsx` modules may
 remain as ordinary imported render helpers; their filename has no discovery
 meaning. The compiler never scans them into a second inventory. Consumers with
-only structured entries need no screen API rewrite but must rebuild v6 output.
+only structured entries need no screen API rewrite but must rebuild v7 output.
 
 Consumers replace `.source.html` comment templates with ordinary TSX/function
 composition returning complete HTML. Preserve the rendered component content
-and portable links. Translate each route alias into the new page's explicit
-`route`, and retain screen-count, stage-ID, allowlist, and source-content
-requirements as consumer source-policy tests. Shared package HTML, resource,
-link, metadata, ownership, and sandbox checks continue to apply to all pages.
+and portable links. Legacy route aliases have no successor: a migrated page is
+addressed by its ID, and any external link to an old route must be updated.
+Retain screen-count, stage-ID, allowlist, and source-content requirements as
+consumer source-policy tests. Shared package HTML, resource, link, metadata,
+ownership, and sandbox checks continue to apply to all pages.
 
 Only historical manifest parsing remains for old Git comparisons, as defined
 below. The existing unrelated document-transformer API retains its contract;
@@ -59,17 +61,18 @@ During the consumer migration, verify each old generated page against the
 saved validated manifest and old config: exact route and source/header match,
 regular file, in-root path, no symlink escape, and no authored-source collision.
 Archive its bytes, then remove only those verified generated files before
-rebuilding at the same routes. This is a consumer migration step, not an
-automatic runtime cleanup command. Unowned or mismatched files require manual
-resolution and must not be deleted. Never remove source files, static assets,
-whole output directories, or generated files outside the recorded inventory.
+rebuilding at the new derived routes. This is a consumer migration step, not
+an automatic runtime cleanup command. Unowned or mismatched files require
+manual resolution and must not be deleted. Never remove source files, static
+assets, whole output directories, or generated files outside the recorded
+inventory.
 
 On failure, restore the previous dependency/config, authoring tree, and artifacts;
 do not commit a half-migrated catalogue. On success, compare old and new route,
 anchor, resource, and rendered-content inventories. Derived mode keeps the
-regenerated pages and v6 manifest as ignored local artifacts and commits the
+regenerated pages and v7 manifest as ignored local artifacts and commits the
 authored migration; committed mode commits the regenerated pages with their new
-ownership headers and v6 manifest. A missing document is a migration failure even
+ownership headers and v7 manifest. A missing document is a migration failure even
 when the remaining catalogue builds successfully.
 
 Follow the [source-protection contract](./mokly-source-protection.md): record
@@ -80,39 +83,38 @@ unimported helpers a reserved source name or a public exclusion. Removing
 
 ## Manifest Readers And Git Baselines
 
-New successful builds emit only schema v6. In committed mode, `check` recomputes
+New successful builds emit only schema v7. In committed mode, `check` recomputes
 that output without rewriting files and reports an older manifest as stale. In
 derived mode, `check` validates the current compilation and rejects a tracked
 manifest without comparing local artifact bytes. A current Browse or publication
-reader requires v6; encountering v2/v3/v4/v5 reports that the catalogue must be
-migrated and rebuilt before serving. Watched Serve retains its last-good child if
-a candidate migration fails validation.
+reader requires v7; encountering v2 through v6 reports that the catalogue must
+be rebuilt before serving. Watched Serve retains its last-good child if a
+candidate migration fails validation.
 
 Historical v3 manifests remain valid Git baselines; v2 keeps its existing
 `compatibility.readManifestV2` opt-in and filename fallback. A present malformed
 canonical manifest never falls back to the older filename. Build a dedicated,
-typed historical reader so current-v6 validation cannot reject an otherwise
+typed historical reader so current-v7 validation cannot reject an otherwise
 valid screen comparison against a v2/v3 base or silently accept legacy current
 navigation. Parse and validate historical source/route/artifact fields before
 using them; never rewrite the Git baseline or synthesize a current legacy tree.
+The historical reader normalizes every baseline entry into one internal shape
+whose artifact paths are read from the stored v3–v6 route and fragment fields
+or derived for v7, so stored routes never leave that boundary.
 
-Match a historical legacy page to a current page by its exact preserved route,
-whose uniqueness has been validated. Use the historical document/source for
-artifact comparison and the current ID for attribution. This is a comparison
-adapter only: it cannot assign a current `navPath` or change a current title.
 The typed page-baseline index maps each current ID to a validated historical
-document: v5/v6 and page-v4 match by ID; legacy records in v2/v3 or component-v4
-match only by route. It feeds
-the existing paired-ignore/material comparison and rendered-resource traversal.
-Historical source paths retain the baseline's own source-protection policy;
-document reads still require public, regular Git files. The adapter executes no
-historical source code and creates no page visual-comparison snapshots.
-New explicit metadata/ancestry can mark migration routes changed; there is no
-promise of a zero Changes count during adoption. A changed historical route
-without an explicit preserved match is treated as an added current page.
+document: v5, v6, v7, and page-v4 match by ID. Legacy records in v2/v3 or
+component-v4 have no IDs and match nothing; a current page without an ID match
+is an added page. The index feeds the existing paired-ignore/material
+comparison and rendered-resource traversal. Historical source paths retain
+the baseline's own source-protection policy; document reads still require
+public, regular Git files. The adapter executes no historical source code and
+creates no page visual-comparison snapshots. New explicit metadata/ancestry
+can mark migrated pages changed; there is no promise of a zero Changes count
+during adoption.
 
 Unmatched legacy records have no catalogue IDs and remain historical
-artifact records; they never become synthetic removed-page entries. Normal v5/v6
+artifact records; they never become synthetic removed-page entries. Normal v5+
 page removals have real IDs and open their
 [previous version](./mokly-removed-previews.md) through the page contract and
 its [shared metadata](./mokly-catalogue-changes.md) wherever Changes is
@@ -125,7 +127,7 @@ confinement, cancellation, and publication safeguards through schema changes.
 
 Mokly owns the API, schema/readers, shell, generic regression fixtures, packed
 consumers, and this generic migration procedure. Concrete application IDs,
-routes, counts, source policies, and adoption commands belong in the owning
+counts, source policies, and adoption commands belong in the owning
 repositories. Retain multiple-consumer packed coverage.
 
 Before the feature branch is ready, pack the candidate and verify the API,

@@ -21,7 +21,7 @@ from an actual invocation. Source validation accepts an entry `dependency`
 reason only when that entry's recorded sources contain its path. It never
 re-evaluates the path rule or treats the result's own records as sources.
 The classifier keys these sources exactly as it keys entry pairs: by kind and
-route for screens and flows, and by kind and id for components.
+id for every entry, including variants of both kinds.
 
 Source validation also receives the implementation-impact set computed from
 the classifier's paired material, unchanged inputs and dependency policy. It
@@ -32,15 +32,17 @@ changes without implementation impact. Every classification path performs this
 validation before returning results, including lightweight Browse updates.
 
 The [selected live endpoint](./mokly-selected-comparisons.md) projects a validated
-complete result onto one screen or saved variant. Its response uses this schema's
-record and reference validation, while catalogue-wide source coverage and affected
-evidence remain owned by the original background classification and shell inspector.
+complete result onto one screen or component variant entry. Its response uses
+this schema's record and reference validation, while catalogue-wide source
+coverage and affected evidence remain owned by the original background
+classification and shell inspector.
 
-Entry ids and routes use normal catalogue validation. Snapshot paths are exact
-artifact-root-relative paths under `snapshots/before/` or `snapshots/after/`,
-as appropriate, retaining the selected fragment's relative path. Reject absolute
-paths, traversal, encoded separators, source-root access, and non-regular files
-using existing snapshot/resource validation. Props in variant addresses use
+Entry ids use normal catalogue validation. The result stores no snapshot path:
+a side's snapshot file is `snapshots/<side>/<view route>` under the generation
+directory, derived from the entry's kind, id, viewport, and scheme. When those
+files are written or served, reject absolute paths, traversal, encoded
+separators, source-root access, and non-regular files using existing
+snapshot/resource validation. Props in variant addresses use
 the corresponding side's schema and canonical wire codec. Instance keys are
 opaque validated identifiers and never become filesystem paths or selectors.
 
@@ -53,12 +55,13 @@ Selected live generations instead serve an immutable captured byte map; they do
 not reopen filesystem paths when delivering a retained snapshot.
 
 Lexical ordering uses UTF-16 code units, not a locale-sensitive collator.
-Sort screens by route and components by id. Variants follow current authored
-order, followed by removed variants in baseline order. Views retain
-mobile/light, mobile/dark, desktop/light, desktop/dark order. Sort changes by
-preferred side's route, then kind and id. Reasons sort by kind then path/route.
-Affected records sort by changed component id, consumer kind, then route/id.
-Evidence sorts by side (before then after), context route, variant id when
+Sort screens and components by id; the review result is not a navigation
+structure, so it applies no authored-order exception for variants, and each
+variant entry sorts by its own id. Views retain mobile/light, mobile/dark,
+desktop/light, desktop/dark order. Sort changes by kind name and then the
+preferred side's id. Reasons sort by kind then path/id.
+Affected records sort by changed component id, consumer kind, then id.
+Evidence sorts by side (before then after), context entry id, variant id when
 present, viewport/scheme order, and canonical JSON of the `via` list. The list's
 own order is its dependency-chain order. Sort path/id sets uniquely and retain
 the existing viewport/scheme/id ordering for `ignoredImpact`.
@@ -68,9 +71,8 @@ arrays remain explicit. Emit two-space JSON and a final LF, with no timestamp,
 absolute checkout path, or transient controls result. Serve no-store/nosniff
 headers and retain immutable snapshot generations and unmodified documents.
 
-Emit schema v3 when either source manifest has component metadata; otherwise
-retain schema-v2 output. Readers keep the existing v2 contract without inventing
-component usage or suppression. Unknown versions fail. Shared fixture tests must
+Emit schema v4 for every result. Readers accept only v4; older and unknown
+versions fail. Shared fixture tests must
 cover valid/invalid schemas, deterministic round trips, current and removed
 variants/consumers, metadata-only changes, zero Changes with affected screens,
 and identical served/published membership. These are Milestone 3 requirements.

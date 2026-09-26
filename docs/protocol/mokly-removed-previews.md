@@ -66,14 +66,16 @@ and therefore no previews.
 ## Screens Reuse The Comparison
 
 A removed screen's previous views are the `before` views of its existing
-comparison. The comparison engine already captures every baseline fragment as
-`snapshots/before/<route>` with its transitive resources, the selected endpoint
-accepts a before-only route, and Changes-enabled exports package those files
-under the generation root. The shell requests the selected comparison exactly as
-for a changed screen, using the stable endpoint in development and
-`comparisonUrl` in static delivery, then renders each view's `beforePath`.
-Only views whose `state` is `removed` render; a response with an `afterPath`
-for that route is a stale or reused generation and is treated as unavailable.
+comparison. The comparison engine already captures every baseline view as
+`snapshots/before/<view route>`, the derived view route, with its transitive
+resources; the selected endpoint accepts a before-only entry, and
+Changes-enabled exports package those files under the generation root. The
+shell requests the selected comparison exactly as for a changed screen, using
+the stable endpoint in development and `comparisonUrl` in static delivery, then
+renders each `removed` view's document at its derived `snapshots/before/` path.
+Only views whose `state` is `removed` render; a response whose views carry an
+`after` side for that entry is a stale or reused generation and is treated as
+unavailable.
 Review JSON, snapshot bytes, retention, renewal by HEAD, coalescing, capacity,
 cancellation, invalidation, and shutdown follow the
 [selected comparison contract](./mokly-selected-comparisons.md) unchanged.
@@ -82,36 +84,37 @@ cancellation, invalidation, and shutdown follow the
 
 Pages have no comparison records, so a removed page adds a page selection to
 the same generation lifecycle. The stable request is
-`/__mokly/diffs/review.json?page=<encoded-catalogue-route>`, optionally with
-`refresh=1`. `page` is exclusive with `route` and `variant`; combining them,
-repeating it, or naming a route that is not a selected removed page fails with
-the existing malformed-request or missing-selection responses. The response
+`/__mokly/diffs/review.json?page=<page id>`, naming the removed page's id,
+optionally with `refresh=1`. `page` is exclusive with `id`;
+combining them, repeating it, or naming a page that is not a selected removed
+page fails with the existing malformed-request or missing-selection responses.
+The response
 redirects to `/__mokly/diffs/__generations/selected-<uuid>/preview.json`, an
 immutable generation served with `no-store` and `nosniff`, GET/HEAD parity, and
 the existing file-map confinement:
 
 ```ts
 interface RemovedPagePreview {
-  schemaVersion: 1;
+  schemaVersion: 2;
   baseRef: string;
   baseCommit: string;
-  route: string;
-  documentPath: string; // snapshots/before/<route> below the generation root
+  id: string;
 }
 ```
 
-Resolve `documentPath` against the generation root: the directory of the
-redirected `preview.json` in development, or the directory of `comparisonUrl`
-in static delivery.
+The preview carries only the page id. Its historical document lives at
+`snapshots/before/pages/<id>.html` below the generation root: the directory of
+the redirected `preview.json` in development, or the directory of
+`comparisonUrl` in static delivery. Readers accept only version 2.
 
 Capture reads the page's single historical document and its transitive local
 closure through the pinned `BaselineReader` with the same Git asset reader,
 regular-file, bounded-batch, source-exclusion, reserved-file, and size rules as
 screen snapshots. Root-absolute, protocol-relative, and unsupported-scheme
 resource URLs fail capture. A current file at the same path never replaces a
-deleted or changed historical byte. The page and its route must belong to the
-accepted removed-entry snapshot of the generation being served; a snapshot from
-another generation is rejected before capture. No baseline is rebuilt during an
+deleted or changed historical byte. The page must belong to the accepted
+removed-entry snapshot of the generation being served; a snapshot from another
+generation is rejected before capture. No baseline is rebuilt during an
 HTTP request; unprepared derived evidence returns the existing retryable
 failure. Page generations share the selected queue, 32-request bound, ten-second
 deadline, 60-second idle retention, 64 MiB artifact and 128 MiB capacity bounds,
@@ -127,8 +130,9 @@ __mokly/diffs/__generations/<generation>/pages/<route>.json
 __mokly/diffs/__generations/<generation>/snapshots/before/<route>
 ```
 
-`pages/<route>.json` is the same `RemovedPagePreview` shape; `<route>` keeps
-its `.html` suffix. Its files enter the generation content identity, ownership
+`pages/<route>.json` is the same `RemovedPagePreview` shape; `<route>` is the
+page's derived route and keeps its `.html` suffix. Its files enter the
+generation content identity, ownership
 inventory, reference validation, deployment hash, and upload archive. A preview
 whose closure is incomplete fails the export transactionally, as an incomplete
 screen snapshot does. Current-only delivery writes no historical files and
@@ -139,13 +143,13 @@ static shell metadata. The development server it captured remains unchanged.
 
 ## Public Descriptor
 
-Catalogue v2 retains the optional preview descriptor on each removed entry:
+Catalogue v3 carries the optional preview descriptor on each removed entry:
 
 ```ts
 interface RemovedEntry {
-  entry: CatalogueRoutedEntry;
+  entry: CatalogueRecord;
   snapshotId?: string;
-  preview?: { kind: "screen" } | { kind: "page"; path: PublicPath };
+  preview?: { kind: "screen" } | { kind: "page" };
 }
 ```
 
@@ -156,35 +160,35 @@ stable entry id. It is a selection key, not an authorization capability, and
 does not name or grant access to preview bytes.
 
 `preview.kind: "screen"` states that the removed screen's comparison `before`
-views are its preview; the viewer resolves them from `comparisonUrl`.
-`preview.path` is the packaged `pages/<route>.json` path relative to the
-artifact root, only when that file is published in the same generation as
-`comparisonUrl`. Serve leaves `preview` absent for pages, because live page
-generations are selected through the stable endpoint rather than a
-catalogue-wide pointer, and the local shell keeps its private data. Removed
-entries keep null `fragmentPath` and `documentPath`; historical HTML is never
-disguised as current output. The descriptor contains no baseline metadata,
-source paths, or commit identifiers beyond those already public in review JSON.
-Readers validate each published `snapshotId` as a unique lowercase 64-hex
-identity. They tolerate its absence for older inputs and may derive it from an
-immutable `comparisonUrl` generation; an explicitly published baseline-backed
-identity remains valid before a generation exists or while `comparisonUrl` is
-null. Preview validation is separate: readers validate `preview.kind`, require
-a confined `__mokly/diffs/__generations/**` page path whose generation matches
-`comparisonUrl` and whose suffix is the exact removed page route plus `.json`,
-tolerate `preview` being absent, and reject a preview on current entries or when
-`comparisonUrl` is null.
-When the readers learn the field, the shipped
-[v2 fixture](./fixtures/catalogue-v2.json) exercises both variants.
+views are its preview; the viewer resolves them from `comparisonUrl` at the
+derived `snapshots/before/<view route>` paths. `preview.kind: "page"` states
+that the page's packaged preview metadata is published at `pages/<id>.json`
+inside the same generation directory as `comparisonUrl`, so the viewer derives
+that location from the generation and the page id. Serve leaves `preview`
+absent for pages, because live page generations are selected through the
+stable endpoint rather than a catalogue-wide pointer, and the local shell keeps
+its private data. Removed entries have no current files and no route field;
+their URL derives from kind and id, and historical HTML is never disguised as
+current output. The descriptor contains no baseline metadata, source paths, or
+commit identifiers beyond those already public in review JSON. Readers validate
+each published `snapshotId` as a unique lowercase 64-hex identity. They
+tolerate its absence and may derive it from an immutable `comparisonUrl`
+generation; an explicitly published baseline-backed identity remains valid
+before a generation exists or while `comparisonUrl` is null. Preview validation
+is separate: readers validate `preview.kind`, tolerate `preview` being
+absent, and reject a preview on current entries or when `comparisonUrl` is
+null; the derived page metadata path stays confined to the advertised
+generation beneath `__mokly/diffs/__generations/**` by construction. The shipped
+[v3 fixture](./fixtures/catalogue-v3.json) exercises both variants.
 
-The embedded viewer first resolves the selected snapshot and historical route,
-then loads preview metadata only from advertised paths:
-`comparisonUrl` for screens and `preview.path` for pages, resolved against the
-source origin root for object and URL sources. Validated metadata may then name
+The embedded viewer first resolves the selected snapshot and historical entry,
+then loads preview metadata only from the advertised generation:
+`comparisonUrl` for screens and `<generation directory>/pages/<id>.json` for
+pages, resolved against the source origin root for object and URL sources. Validated metadata may then name
 a historical document only on that source origin beneath the advertised
 generation's `snapshots/before/` directory. It never discovers
-`/__mokly/diffs/review.json`, runs Git, or derives a historical URL from a
-removed entry's current path. A catalogue without the field, or with
+`/__mokly/diffs/review.json`, runs Git, or fetches a removed entry's derived
+route as current output. A catalogue without the field, or with
 `comparisonUrl: null`, shows the unavailable state without a request. Neither
 frame adapter mounts a preview frame. Previews are viewer-owned documents, so
 no adapter handshake or inspection, marker, or navigation message exists for
@@ -262,9 +266,10 @@ truthful and the package keeps its external-module execution model.
 
 Navigation, evidence or source replacement, unmount, and viewport or scheme
 changes fence late responses exactly as comparisons do: a preview response can
-never replace another entry's stage. Back/Forward, direct old routes, reused
-ids or routes, stale or unknown snapshot ids, idle generation expiry, embedded controlled selection, and
-several viewers on one page follow the selected-comparison rules. Saved
+never replace another entry's stage. Back/Forward, direct removed-entry URLs,
+reused ids, stale or unknown snapshot ids, idle generation expiry, embedded
+controlled selection, and several viewers on one page follow the
+selected-comparison rules. Saved
 viewport and scheme choices are revalidated against the historical views
 without inventing views.
 

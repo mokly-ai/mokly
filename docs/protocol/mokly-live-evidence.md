@@ -44,14 +44,14 @@ Page shutdown cancels pending fetches and navigation waits.
 The browser retains the navigation tree, All/Changes buttons, current preview
 frames, user filter, search, section and folder disclosure, focus, drawer and
 scroll state.
-Update the count/status, changed-route attributes and baseline-only rows from
+Update the count/status, changed-entry attributes and baseline-only rows from
 the same snapshot. Retained removed rows keep their identity; additions/removals
 follow the canonical server order after the current tree. Existing rules for
 removed screens/components in All and removed pages only in Changes still apply.
 Changes preparing, loading and empty/unavailable states use the existing
 sidebar design; `preparing` precedes loading only in
 [derived mode](./mokly-derived-baselines.md). A status-only evidence update
-carries no routes or snapshot, so entering and leaving `preparing` replaces the
+carries no changed ids or snapshot, so entering and leaving `preparing` replaces the
 count slot and the selected-Changes sidebar without touching the tree, the
 current documents, or the focused control. The tree stays `aria-busy` while
 either working state is selected.
@@ -78,22 +78,22 @@ main view is discarded and retried for the current destination. Navigation
 adopts the destination's navigation evidence and update stamp with its main
 view. If that response predates already adopted evidence, fetch the destination
 again; if content changed, use durable navigation instead. A same-document
-history action or saved-variant selection cancels obsolete navigation and
+history action or sibling-variant navigation cancels obsolete navigation and
 releases evidence waiting for it. Only the current navigation may commit.
 
 ## Workspace evidence
 
-Update entry/variant statuses, comparison eligibility, baseline variants,
+Update entry statuses, including variant entries, comparison eligibility,
 Details evidence and complete Used by/Affected usage without reinstalling the
-workspace. Keep temporary props, current variant/instance selection, inspector
+workspace. Keep temporary props, current instance selection, inspector
 disclosure, highlight state and authenticated preview documents intact. Usage
 updates retain matching link elements while adding, removing or changing only
 the affected sections and rows, so background completion cannot interrupt a
 keyboard interaction with an unchanged link.
-Background evidence never calls the preview-source swapping path for a retained
-saved variant. Evidence changes invalidate loaded/pending comparisons and return
-an active comparison to Current; another explicit selection requests comparison
-work. Current browsing makes no comparison request.
+Background evidence never calls the preview-source swapping path for the
+retained current entry. Evidence changes invalidate loaded/pending comparisons
+and return an active comparison to Current; another explicit selection requests
+comparison work. Current browsing makes no comparison request.
 
 On-demand rendering remains authoritative for the usage records associated with
 its actual displayed documents, even after exhaustive Usage becomes available.
@@ -107,15 +107,20 @@ supply the complete Used by list.
 The shared served/published workspace deduplicates Affected usage links after
 projecting the selected component's affected-consumer evidence. Two links are
 duplicates exactly when `JSON.stringify` of each complete link produces the same
-string: every serialized field must match. The fields are `title`, `route`,
-optional `variantId`, `viewport`, `colorScheme`, `instanceKey`, `direct`, `removed`,
-and `comparisonEligible`; future serialized fields also participate. Preserve
-normal JSON field order and omission semantics; do not replace this identity with
-route-only, instance-only, or a sorted/subset key.
+string: every serialized field must match. The fields are `title`, the
+consumer entry `id`, `viewport`, `colorScheme`, `instanceKey`, `direct`,
+`removed`, and `comparisonEligible`; a link carries no route or saved-variant
+id, because a component variant consumer is addressed by its own entry id;
+future serialized fields also participate. Preserve normal JSON field order and
+omission semantics; do not replace this identity with id-only, instance-only,
+or a sorted/subset key.
+
+An affected-usage link identifies its consumer by entry `id` alone; ids are
+global, and the read model supplies the kind.
 
 Keep the first occurrence in evidence order: affected-consumer record order,
 then each record's evidence order. Do not sort the result or merge distinct
-viewport, color scheme, saved variant, instance, ownership (`direct`), removal,
+entry, viewport, color scheme, instance, ownership (`direct`), removal,
 or comparison-eligibility contexts. Deduplication performs at most one
 serialization per input usage link and tracks previously seen keys in one pass;
 it must not rescan or reserialize prior links. This changes neither Changes

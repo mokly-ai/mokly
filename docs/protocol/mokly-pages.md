@@ -3,7 +3,7 @@
 ## Delivery Status
 
 All routed entries use section-scoped folder paths,
-and current builds emit schema v6. [Page migration](./mokly-page-migration.md)
+and current builds emit schema v7. [Page migration](./mokly-page-migration.md)
 defines the required breaking consumer upgrade and historical comparison
 support. Verification is tracked in
 [Unified Catalogue Pages](../../plans/unified-catalogue-pages.md). The
@@ -14,8 +14,9 @@ implements the page-only historical capture and delivery boundary.
 
 Every browsable document belongs to the same catalogue as screens and use
 cases. Entries own `navPath` labels, which create shared folders within each
-section. Source directories, route directories, and leaf titles never
-create folders.
+section. Source directories and leaf titles never create folders, and a page's
+route derives from its id under the
+[derived route rule](./mokly-authoring.md#derived-routes).
 Whole-document rendering remains supported independently of navigation.
 
 This is a breaking upgrade: remove legacy source discovery and configuration.
@@ -26,7 +27,7 @@ definitions/configuration and rebuild the catalogue before using the new version
 A page is one complete authored HTML document, such as a printable document
 or an existing multi-state reference page. It does not require invented
 mobile/desktop variants. Screens continue to own their real viewport and
-color-scheme fragments; use-case steps continue to reference screens only.
+color-scheme views; use-case steps continue to reference screens only.
 This change adds no PDF parser, browser scripting privilege, or page comparison
 engine. A page callback always returns HTML, including printable documents.
 
@@ -36,7 +37,7 @@ The root package exports `definePage`, nested `page`, and their public input
 and definition types. The additional flat input is:
 
 ```ts
-interface PageInput extends RoutedEntryInput {
+interface PageInput extends EntryInput {
   render: () => string;
   tags?: readonly string[];
 }
@@ -45,8 +46,9 @@ interface PageInput extends RoutedEntryInput {
 `PageDefinition` adds `kind: "page"` and the same private definition brand and
 module attribution as other definitions. Common metadata (`id`, `title`,
 `description`, `dependencies`, `relatedDocs`, optional `rationale`) follows
-`EntryInput`. Routes and IDs use the existing validation grammars. Page tags
-use the existing optional, unique kebab-case tag contract.
+`EntryInput`. Ids use the existing validation grammar; the route is
+`pages/<id>.html`. Page tags use the existing optional, unique kebab-case tag
+contract.
 
 ```tsx
 import { definePage } from "@mokly/mokly";
@@ -58,7 +60,6 @@ export const mockups = [
     title: "Account statement",
     description: "The printable account statement.",
     navPath: ["Documents"],
-    route: "documents/statement.html",
     render: source,
     relatedDocs: [],
     dependencies: ["documents/statement.source.tsx"],
@@ -66,11 +67,12 @@ export const mockups = [
 ];
 ```
 
-The example assumes an existing `source(): string` export. A nested `page`
-accepts the same metadata and callback, replaces `route` with `slug`, and
-inherits only `dependencies` and `relatedDocs`. Path derivation and route
-independence follow the [navigation path contract](./mokly-nav-paths.md).
-It does not inherit screen addresses, tags, viewports, or color schemes.
+The example assumes an existing `source(): string` export and generates
+`pages/account-statement.html`. A nested `page` accepts the same metadata and
+callback minus `navPath`, which derives from the tree, and inherits only
+`dependencies` and `relatedDocs`. Path derivation follows the
+[navigation path contract](./mokly-nav-paths.md). It does not inherit screen
+addresses, tags, viewports, or color schemes.
 
 Pages reject `mobile`, `desktop`, `colorSchemes`, `address`, `useCaseIds`,
 `steps`, `variants`, and `variantOf`, including keys whose value
@@ -92,11 +94,12 @@ throws, and incomplete HTML fail with the page ID and source location before
 any output changes. Callbacks must be deterministic and return complete HTML;
 they must not write output themselves.
 
-A page generates exactly one file at `mockupsDir/<route>`. Its route is both
-its logical catalogue destination and its artifact path. The screen renderer
-does not wrap it, inject stylesheets, or generate extra variants. The consumer
-continues to own the document's styles, responsive markup, and render context.
-Pages are one light document regardless of the catalogue color-scheme setting.
+A page generates exactly one file at `mockupsDir/pages/<id>.html`. Its route
+is both its logical catalogue destination and its artifact path. The screen
+renderer does not wrap it, inject stylesheets, or generate extra variants. The
+consumer continues to own the document's styles, responsive markup, and render
+context. Pages are one light document regardless of the catalogue color-scheme
+setting.
 
 Registry imports, page callbacks, imported document modules, and screen rendering
 share the existing consumer bundle and React runtime.
@@ -108,9 +111,10 @@ The complete output passes the shared child-control adapter, logical-link and
 fragment validation, compatibility transformer, final metadata/ownership checks,
 HTML/CSS/resource validation, and Review-ignore validation. The existing
 transaction protects all output, including collision, orphan, rollback,
-source-path, symlink, and foreign-file safeguards. Page routes cannot collide
-with any other logical route or generated fragment. One owner may use its own
-page route as its output; this is not treated as a self-collision.
+source-path, symlink, and foreign-file safeguards. The `pages/` prefix is a
+reserved generated directory: a public static file at a page's route is a
+collision, and one owner may use its own page route as its output without a
+self-collision.
 
 Ownership headers identify the definition's registry module. Consumer migration
 must explicitly regenerate old artifacts whose previous source is no longer an
@@ -120,29 +124,30 @@ paths never imply folder ancestry.
 
 ## Manifest And Runtime Model
 
-New builds write schema v6 at the existing `mokly-manifest.json` filename:
+New builds write schema v7 at the existing `mokly-manifest.json` filename:
 
 ```ts
 interface ManifestPage extends ManifestEntryBase {
   kind: "page";
-  route: string;
   tags?: readonly string[];
 }
 
-interface ManifestV6 {
+interface ManifestV7 {
   entries: readonly ManifestEntry[];
   generatedBy: "mokly";
-  schemaVersion: 6;
+  schemaVersion: 7;
   sourceFiles: readonly string[];
 }
 ```
 
 `ManifestEntry` includes pages, screens, use cases and components, and its
 base `kind` union includes `page`. All existing common fields remain,
-including authored or tree-derived `navPath` and required `declaredDependencies`. Pages have no fragments,
-viewport arrays, callbacks, or screen-only fields in the manifest. Schema v6
-rejects a top-level `legacyPages` field. Preserve existing deterministic
-entry sorting, dependency normalization, and serialization conventions.
+including authored or tree-derived `navPath` and required
+`declaredDependencies`. No entry carries a route: readers derive
+`pages/<id>.html` from the kind and id. Pages have no views, viewport arrays,
+callbacks, or screen-only fields in the manifest. Schema v7 rejects a top-level
+`legacyPages` field. Preserve existing deterministic entry sorting, dependency
+normalization, and serialization conventions.
 
 `sourceFiles` follows the [source-protection contract](./mokly-source-protection.md):
 the complete config/consumer authoring graph, validated against current inputs.
@@ -165,10 +170,10 @@ sibling labels; matching entry titles never erase either entry.
 
 A page appears once at its `navPath`, using the existing page
 icon. The heading uses its title; breadcrumbs use those folder labels;
-the ID chip, search by ID/title/route/tags, tag picker, details, and home counts
+the ID chip, search by ID/title/tags, tag picker, details, and home counts
 include pages. Details show authored description, rationale, dependencies,
-related docs, and the generated page path. No migration explanation or legacy
-badge appears in a product view.
+and related docs. No migration explanation or legacy badge appears in a
+product view.
 
 Reuse the complete-document frame, responsive shell, expansion control,
 ownership authentication, and script-free sandbox. Do not add device chrome
@@ -177,11 +182,11 @@ viewport variants, page color variants, or page comparisons; remember the
 user's screen choices when navigating back to a screen. Mobile drawer and
 desktop navigation show the same path-derived folders.
 
-`/view/<route>`, `/id/<id>`, and `/static/<route>` resolve a page with the
+`/view/pages/<id>.html` and `/static/pages/<id>.html` resolve a page with the
 existing GET/HEAD behavior. `MockLink` and `mockLink` accept its ID. Their
 portable target is its single generated file with the validated optional
 anchor; Browse opens the canonical page and reveals its ancestor folders.
-Page-to-screen logical links resolve to the desktop/light fragment; a page has
+Page-to-screen logical links resolve to the desktop/light view; a page has
 no per-viewport render context. Screen-to-page links target the same document
 from every screen viewport and scheme. Use-case links still resolve through
 their first screen.
@@ -200,22 +205,21 @@ stable page metadata, its `navPath`, the generated document, and its
 rendered local resources against the Git branch point. Apply the shared
 [material-change rules](./mokly-changes.md), including paired ignore regions;
 source/dependency changes alone do not affect membership. Renaming
-or reparenting a page marks that entry changed. A flat `definePage` keeps its
-explicit `route`; title and `navPath` never rewrite it. A nested
-`page` derives its route from the root path, folder segments, and its slug,
-so changing those path inputs changes its URL; changing titles alone does not.
+or reparenting a page marks that entry changed. A page's route derives from
+its id in both authoring forms; titles, `navPath`, and tree position never
+change it, so moving a page between folders changes its `navPath` only.
 Moving unrelated source composition without changing those inputs does not
 mark every page in that module changed. Regression coverage must distinguish
-change attribution from URL derivation for both authoring forms.
+metadata change attribution from tree position for both authoring forms.
 Compare `navPath` directly with the baseline: changing it marks the page changed.
 
 Screen comparison generation and use-case impact propagation retain their
 screen-only boundary. Adding page support must not make those paths assume
-every non-use-case entry has screen fragments. Pages expose
+every non-use-case entry has screen views. Pages expose
 Current only and never fabricate comparisons; the only historical capture for a
 page is its [removed page preview](./mokly-removed-previews.md).
 The [catalogue-change contract](./mokly-catalogue-changes.md) owns the shared
-typed impact/removal snapshot, route/ID precedence, and flat removed-page rows
+typed impact/removal snapshot, id-keyed removal, and flat removed-page rows
 in Changes. Baseline ancestry stays in details even when every ancestor is
 deleted; no historical folder tree is synthesized.
 
@@ -226,8 +230,8 @@ and restores disclosures by the keys defined in the
 [runtime](./mokly-runtime.md) owns obsolete-key handling.
 Active sections and ancestors open through the existing reveal logic.
 
-Static publishing includes each page route, generated document and resources,
-ID redirect, validated anchor navigation, metadata, search/filter behavior,
+Static publishing includes each page's shell page, generated document and
+resources, validated anchor navigation, metadata, search/filter behavior,
 and the current hierarchy. The [publication option](./mokly-publication.md)
 defaults to the current catalogue; only an explicit opt-in includes Changes,
 removed registered-page state, and screen comparison artifacts. Removed pages are absent
@@ -240,7 +244,7 @@ Authoring, schema, build, links, server, browser, watcher, comparison-regression
 and packed-consumer tests cover normal pages and mandatory consumer migration,
 including obsolete-config rejection and safe old-artifact regeneration.
 Use a shared folder containing a screen, page, and use case; a top-level
-page; matching folder paths across sections; and a document whose route
-disagrees with its `navPath`. Verify output determinism and every existing
-screen safety boundary. [Migration](./mokly-page-migration.md) owns generic
-release acceptance; consumer-specific inventory belongs in migration notes.
+page; and matching folder paths across sections. Verify output determinism
+and every existing screen safety boundary. [Migration](./mokly-page-migration.md)
+owns generic release acceptance; consumer-specific inventory belongs in
+migration notes.

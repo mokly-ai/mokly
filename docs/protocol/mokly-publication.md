@@ -54,11 +54,12 @@ Consumer `mokly export` performs its own build and always includes Changes.
 ## Current Catalogue By Default
 
 Publish the current home, catalogue routes, resources, metadata, search, tags,
-folder hierarchy, ID redirects, and not-found page. Preserve screen
-viewport/color selection and page rendering.
+folder hierarchy, and not-found page. Preserve screen viewport/color selection
+and page rendering.
 
 Omit All/Changes controls and counts, screen comparison controls, removed-entry
-rows/routes/redirects, comparison JSON, and baseline snapshots/resources. Do not
+rows and previous-version pages, comparison JSON, and baseline
+snapshots/resources. Do not
 resolve Git history, compute changes, read historical manifests, or initialize
 a comparison provider. Publication must succeed from a valid source archive
 without `.git` or a configured base ref.
@@ -81,8 +82,8 @@ for home, missing-route, and removed-entry pages.
 Existing generated comparison directories, including configured review output,
 must stay excluded from public asset copying. Building over a previous export
 with comparisons replaces the complete owned artifact transactionally, removing
-obsolete review files and redirects; never leave them reachable through a
-previous generation or stale asset copy.
+obsolete review files; never leave them reachable through a previous
+generation or stale asset copy.
 
 Both publication options use the consumer exporter's shared output transaction,
 ownership inventory, alias/reference validation, and complete deployment identity.
@@ -94,8 +95,9 @@ Only the repository adapter may migrate the prior preview ownership marker.
 Migration retains valid public routes beneath build-directory names such as
 `target` and `node_modules`, while private/source names remain disallowed.
 Its owned reservation namespace remains after cleanup, with no active locks.
-Static id aliases contain real shells; current-only shell metadata explicitly
-sets `comparisonUrl: null` and never requests a development comparison endpoint.
+Each entry's shell is written once at its derived `view/<route>`; current-only
+shell metadata explicitly sets `comparisonUrl: null` and never requests a
+development comparison endpoint.
 
 Use the shared confined file enumeration for input fingerprints and public
 copying. Resolve each logical path inside the real repository before reading
@@ -128,9 +130,9 @@ the manifest bytes once and hash those exact bytes together with its inventoried
 inputs and public resources. Include inventoried helpers even beneath otherwise
 excluded `.context` directories. Construct one validated catalogue snapshot
 from that captured manifest and use it for the capture server, page capture
-list, resource adaptation, and ID
-redirects. When Changes is enabled, compute its route impact and removed-entry
-metadata from that exact current manifest and the pinned Git baseline. The
+list, and resource adaptation. When Changes is enabled, compute its
+changed-entry impact and removed-entry metadata from that exact current
+manifest and the pinned Git baseline. The
 capture server must not independently reload the manifest.
 
 Exclude the active staging directory and destination from input enumeration by
@@ -143,14 +145,16 @@ Fingerprint again after capturing pages, comparisons, and public resources and
 before installing the staged artifact. A changed fingerprint fails publication
 and preserves the previous artifact. A completed rebuild before the initial
 fingerprint belongs wholly to the new snapshot; a rebuild after it must not
-produce mixed navigation, missing pages, or stale redirects. Default publication
-performs the same filesystem consistency checks without consulting Git.
+produce mixed navigation, missing pages, or stale shell metadata. Default
+publication performs the same filesystem consistency checks without consulting
+Git.
 
 ## Explicitly Include Changes
 
 With `--include-changes`, publish the existing All/Changes navigation and screen
 comparison controls, including a zero changed count. Retain removed-screen
-metadata, routes, and comparisons under the existing ID/route precedence rules.
+metadata, previous-version pages, and comparisons; a current entry excludes
+historical content with its id unless a snapshot is requested.
 Render those removed screens with their Removed badge and no comparison
 controls. Publication packages their baseline views and advertises the
 descriptor defined by [removed previews](./mokly-removed-previews.md), which the
@@ -162,7 +166,7 @@ preview. Pages have no visual comparisons; screen metadata
 remains supported.
 
 Resolve the effective base and HEAD once, then pin their merge-base commit for
-both route impact and screen comparisons. Capture the current catalogue,
+both entry impact and screen comparisons. Capture the current catalogue,
 generated documents, and resources consistently for that build; fail if inputs
 change during capture rather than mix revisions. Record the resolved comparison
 baseline with the exported review metadata. The artifact represents the files
@@ -222,8 +226,8 @@ For both options, reject escaping context, parent, and output symlinks without
 changing the outside target. Prove valid in-repository symlinks and a symlinked
 repository root still support publication.
 Test a rebuild immediately before the first input scan and a manifest mutation
-after its initial read. Verify navigation, captured routes, ID redirects, and
-opted-in change metadata agree, and failed capture preserves the previous output.
+after its initial read. Verify navigation, captured pages, and opted-in change
+metadata agree, and failed capture preserves the previous output.
 Cover safe file/directory aliases in both options, target-only edits, private
 aliases, unrelated outside/dangling/cyclic links, and an escaping manifest before
 any target read. Remove a copied resource during staging to prove validation

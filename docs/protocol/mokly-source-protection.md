@@ -2,8 +2,9 @@
 
 ## Delivery Status
 
-Implemented for current schema-v6 [pages](./mokly-pages.md), screens, flows,
-and components; historical v5 baselines retain their validated source inventory.
+Implemented for current schema-v7 [pages](./mokly-pages.md), screens, flows,
+and components; historical v5 and later baselines retain their validated
+source inventory.
 The same resolved inventory protects build, runtime, comparisons, and both
 publication options. Verification is tracked in
 [Unified Catalogue Pages](../../plans/unified-catalogue-pages.md); the
@@ -146,7 +147,7 @@ remain public unless another protection rule or consumer exclusion matches.
 
 ## Complete Source Inventory
 
-Manifest v6 `sourceFiles` is a sorted, unique array of repository-relative POSIX
+Manifest v7 `sourceFiles` is a sorted, unique array of repository-relative POSIX
 paths. Derive it from the union of file inputs resolved by both the config
 bundle and the consumer bundle, including inputs eliminated by tree shaking:
 
@@ -187,7 +188,7 @@ inside `repoRoot` or explicitly configure a common root containing it.
 ## Freshness And Lifecycle
 
 Build/check derive the inventory from the same resolved graphs used for that
-compilation. Before serving or publishing a current v6 catalogue, independently
+compilation. Before serving or publishing a current v7 catalogue, independently
 resolve the config and consumer input graphs and require the persisted inventory
 to match. This scan may bundle modules but must not run page render callbacks,
 rewrite generated output, or read Git history. A missing, malformed, or stale
@@ -203,9 +204,10 @@ the browser. A failed candidate keeps the last-good generation. Asset checks
 continue resolving the requested realpath at read time so changed symlinks
 cannot bypass the generation's protected paths.
 
-For v5 or historical page-v4 Review resources, use that baseline's structurally
-validated inventory, entry source paths, and reserved-name rules. Never execute
-historical config with the current package or rebuild a Git baseline to refresh
+For v5 and later or historical page-v4 Review resources, use that baseline's
+structurally validated inventory, entry source paths, and reserved-name rules.
+Never execute historical config with the current package or rebuild a Git
+baseline to refresh
 its inventory; a [derived baseline](./mokly-derived-baselines.md) is built once
 by its own commit's tooling and then read like any historical baseline.
 Historical v2/v3 and component-v4 readers retain their version-specific

@@ -67,7 +67,7 @@ aliases are excluded before dependency or shared-impact matching. Component
 catalogues follow the [path evidence rule](../../docs/protocol/mokly-component-changes.md#dependencies-and-styles):
 `component_metadata.ts` owns glob matching, owned/exact reasons, and unowned
 directory evidence. The classifier combines that evidence with reasons to
-preserve the [v3 result set](../../docs/protocol/mokly-component-review.md#reasons-and-secondary-evidence).
+preserve the [v4 result set](../../docs/protocol/mokly-component-review.md#reasons-and-secondary-evidence).
 The classifier records each entry's scope-filtered path reasons, retained view
 paths, exact screen stylesheet reasons, and actual-invocation owned CSS by entry
 pair. Source validation accepts dependency reasons only from that record; it
@@ -90,10 +90,14 @@ Both result versions, live membership, watched updates and publishing use it to
 exclude changed stylesheets whose changed rules cannot match a view. Public
 resource globs cannot bypass the graph or restore excluded stylesheets. These
 review interfaces are internal; the package authoring API is unchanged.
+
+Review result v4 replaces both earlier result versions; a catalogue without
+registered components emits the same shape with empty component arrays.
+
 `analysisOwnsStylesheet` owns the shared public-output boundary. Source/token
 stylesheets outside that boundary retain file-level evidence under
 [CSS attribution](../../docs/protocol/mokly-css-attribution.md) and the
-[v3 result definition](../../docs/protocol/mokly-component-review.md#reasons-and-secondary-evidence).
+[v4 result definition](../../docs/protocol/mokly-component-review.md#reasons-and-secondary-evidence).
 After comparing views, both producers call `assertViewAnalysisScope` to reject
 analysed reasons outside that boundary with `review-invalid`. The shared decoder
 checks stylesheet identity; only producers have the resolved scope configuration.
@@ -220,8 +224,9 @@ Entry reasons merge by path and union selectors, with
 unresolved evidence taking precedence. The shared browser/server decoder rejects
 invalid or contradictory evidence; canonical artifact serialization preserves it.
 Owned CSS retained at an actual invocation also keeps its component in Changes
-when saved variants exclude it. Exact screen declarations remain independent
-only for retained CSS; non-CSS path-only evidence follows the component path rule.
+when its variant entries exclude it. Exact screen declarations remain
+independent only for retained CSS; non-CSS path-only evidence follows the
+component path rule.
 The screen-only live classifier retains a `ScreenResourceEvidence` slice from
 the same traversal that determines membership. The shell receives its selected
 `ViewResourceEvidence` records without requesting snapshots or component
@@ -273,7 +278,7 @@ Key code:
   removed. Views without ownership text edits use actual-document evidence
   alone.
 - `component_resource_attribution.ts`: actual-invocation CSS ownership and entry
-  evidence aggregation without inventing saved variants.
+  evidence aggregation without inventing variants.
 - `assets.ts`, `component_resources.ts`, `resource_graph.ts`: confined reads and
   traversal shared by resource evidence and snapshots.
 - `css/types.ts`: rule records, the parser interface, and result/error contracts.

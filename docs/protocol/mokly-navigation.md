@@ -36,12 +36,15 @@ is absent from the path-based example.
 
 ## Component Navigation
 
-Registered component ids share the existing catalogue namespace. Portable links
-resolve to the first saved variant in the effective viewport and color scheme;
-Browse opens the component page at its default variant. The [explorer contract](./mokly-component-explorer.md)
-owns saved-variant and usage queries, removed variants, and selecting an actual
-consumer instance. View/theme swaps replace iframe history; outer Back/Forward
-continues between catalogue pages and saved variants. Only authenticated immediate
+Registered component and component variant ids share the existing catalogue
+namespace. A portable link to a component parent resolves to its first variant
+entry's view in the effective viewport and color scheme, and a link to a
+variant resolves to that variant's own view; Browse opens the component page,
+which shows the first variant, or the variant entry. The
+[explorer contract](./mokly-component-explorer.md) owns usage queries and
+selecting an actual consumer instance; variant rows follow the
+[variant contract](./mokly-variants.md). View/theme swaps replace iframe
+history; outer Back/Forward continues between catalogue entries. Only authenticated immediate
 frames receive inspection/link enhancement. Temporary control documents retain
 the same script-disabled boundary and do not grant nested frames shell access.
 
@@ -76,8 +79,8 @@ build instead of becoming an accidental resource request. Authors use
 `data-nav-href` for metadata-only references; it is valid on any element but
 does not invent click or keyboard semantics. A logical `data-nav-href` may
 coexist with an eligible logical `href`, in which case both must name the same
-destination. The entry's `route` is its current Browse location. A folder has
-no id or route and is not a destination. A use-case destination opens the use-case page,
+destination. The entry's derived route is its current Browse location. A
+folder has no id or route and is not a destination. A use-case destination opens the use-case page,
 even though its portable fragment fallback resolves through the first screen in
 that use case.
 
@@ -153,10 +156,9 @@ Mokly authenticates its marker for trusted parent enhancement while retaining
 the portable `href` and live `target`. The trusted-document set is exactly every
 current manifest screen fragment, including dark fragments, plus every
 generated page in that manifest. Its generated header must name the same
-`sourcePath` as that manifest entry. The parent derives the canonical
-`/id/<encoded-id>` or
-`/id/<encoded-id>?fragment=<encoded-fragment>` destination from the marker; it
-never trusts the portable URL as route identity. The adapter removes any
+`sourcePath` as that manifest entry. The parent resolves the marker's id through its catalogue read model to the
+canonical `/view/<route>` or `/view/<route>?fragment=<encoded-fragment>`
+destination; it never trusts the portable URL as entry identity. The adapter removes any
 consumer-authored `data-mokly-target`, resolves the eligible link's effective
 request from its own `target` or the document's applicable first `<base target>`,
 parses it, and retains a valid non-self request only in newly derived inert
@@ -207,9 +209,8 @@ nested content the adapter cannot inspect. Trusted parent code is the only
 outer-navigation authority. Portable and comparison documents retain their original
 bytes and comparisons keep its stricter sandbox.
 
-In served Browse, the `/id/<id>` redirect preserves the optional
-request-visible `fragment` query on
-`/view/<route>?fragment=<encoded-fragment>`. The server accepts at most one
+In served Browse, `/view/<route>?fragment=<encoded-fragment>` carries the
+optional request-visible `fragment` query. The server accepts at most one
 value, decodes it exactly once, checks the grammar and cross-view anchor
 existence above, and returns HTTP 400 without injecting a fragment when
 validation fails. It renders the validated value as an encoded hash on every
@@ -269,11 +270,10 @@ result cannot replace the retained view. Saved scroll positions may be
 restored without a reload. A changed route or query still uses in-shell
 navigation and its normal history restoration.
 
-For exported catalogues the shared delivery resolver maps that trusted id to
-the exact `/view/<route>.html` URL in shell-owned metadata before rendering or
-opening any context. Development still follows the `/id` redirect. Real static
-id aliases show full content without JavaScript and normalize their history
-entry once hydrated; see [Static export delivery](./mokly-export-delivery.md).
+In every delivery the shell resolves that trusted id through its catalogue
+read model to the exact `/view/<route>` URL before rendering or opening any
+context; there is no id alias page or redirect. See
+[Static export delivery](./mokly-export-delivery.md).
 
 The same trusted parent enhancement exclusively handles modified pointer
 activation and explicit non-self targets after validating the marker and
@@ -326,10 +326,10 @@ To establish the invariant, Browse must:
 
 1. remove `aria-current` from every other row;
 2. open each ancestor `[data-nav-disclosure]` of the active row, including
-   its Pages or Components section and, for a screen with variants or one of
+   its Pages or Components section and, for an entry with variants or one of
    its variants, the parent
    row's variant list defined by the
-   [screen variants contract](./mokly-screen-variants.md). That list is a
+   [variant contract](./mokly-variants.md). That list is a
    container rather than a `<details>`, so opening it clears its `hidden`
    state and presses its disclosure button instead of setting `open`;
 3. preserve unrelated folder disclosures;
@@ -368,18 +368,15 @@ receive the complete proposal and commit nothing until they supply it back.
 
 A removed-entry destination also carries its public `snapshot` identity. Route
 parsing accepts exactly one lowercase 64-hex value and requires it to match that
-historical route and id. The query survives same-entry axis and filter changes,
+removed entry's id. The query survives same-entry axis and filter changes,
 Back/Forward and hydration; a current-entry link omits it and therefore clears
 historical selection. Unknown, stale, repeated, mismatched, or identity-less
 same-id history is unavailable through the Viewer error state rather than
 redirected to current content or left to native host navigation.
-Historical snapshot queries are supported only on the exact canonical
-`/view/<old-route>` URL or its provider-normalized extensionless form. The
-normalized form resolves against the retained historical route itself; it does
-not use `idRoutes`, which may map the same stable id to current content.
-`/id/<id>?snapshot=...` is rejected because an id alias cannot distinguish
-current and historical routes. Existing id-only aliases remain available for
-current entries and uniquely identified removed entries.
+Historical snapshot queries are supported only on the removed entry's
+canonical `/view/<route>` URL or its provider-normalized extensionless form,
+where the route derives from the removed entry's kind and id. Without the
+query, that URL shows current content when a current entry has the same id.
 
 ## Verification Contract
 

@@ -10,9 +10,17 @@ those implementations.
 
 ## Components And Saved Examples
 
-Each row defines `design-ui-{slug}` at `design/library/{group}/{slug}.html`.
-The first listed variant is the default. Every variant has mobile and desktop
-output; the existing shell selects one saved variant at a time.
+Each row defines the component parent `design-ui-{slug}`, routed at
+`components/design-ui-{slug}.html`, and its variant entries, each a routed
+entry with a global kebab-case id under the
+[variant contract](./mokly-variants.md). The first listed variant is the
+default. Every variant entry has mobile and desktop views and its own page;
+the parent's page shows its first variant entry.
+
+A variant entry's id is `design-ui-{slug}-{name}`, the parent id followed by
+the variant name in kebab-case; the table lists each variant's name within its
+parent.
+
 Group indexes are pure galleries, containing at most five component entries.
 Samples are light-only except the appearance selector and the top bar that
 composes it, whose own subject is the catalogue's appearance: those render in
@@ -22,7 +30,7 @@ from its render context rather than pinning them in its fixture, so the top
 bar's samples name the scheme they rendered for; a fixture sets such a prop only
 to depict a different setting, as the `auto-appearance` sample does.
 
-| Group / slug                  | Existing implementation                                             | Saved variant ids                                                                                          |
+| Group / slug                  | Existing implementation                                             | Variant names                                                                                              |
 | ----------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | chrome / top-bar              | `parts/top_bar.tsx`, `parts/tag_filter.tsx`                         | `default`, `search`, `tag-picker`, `drawer-open`, `auto-appearance`                                        |
 | chrome / catalogue-navigation | `parts/nav.tsx`, scenario data in `components/parts/navigation.tsx` | `all`, `changes`, `empty`, `drawer`, `loading`, `preparing`, `unavailable`, `variants`, `changed-variants` |
@@ -182,7 +190,7 @@ Keep registered definitions/variant fixtures outside the exclusive `.view.tsx`
 implementation and its dependency declarations, so editing an example alone
 cannot be mistaken for a shared implementation change.
 
-Every library route needs ordered stylesheet candidates covering all descendant
+Every library entry needs ordered stylesheet candidates covering all descendant
 components, slot examples and supported prop edits. The per-render collector
 specified in the core contract selects only the exclusive sheets actually used
 by that view; a union of every variant's emitted links would incorrectly attribute
@@ -204,6 +212,6 @@ The host must not supply hidden scenario data or another full-screen component.
 
 Adoption tests enumerate the actual owning screen inventory, assert the expected
 component ids per viewport, and verify there are no calls bypassing the registered
-implementations at migrated composition points. Test ids/routes and behavior,
+implementations at migrated composition points. Test ids and behavior,
 not raw marker counts. Keep existing visual contracts and meaningful source
 attribution coverage when replacing old exact counts with the expanded inventory.

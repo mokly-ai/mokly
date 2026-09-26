@@ -4,7 +4,7 @@
 
 Milestones 4c, 4f, and 4g of the [component explorer plan](../../plans/component-explorer.md)
 revise the existing component, controls, and consuming-screen artboards after
-design feedback. The package-owned runtime implements the same layout. The existing owning routes and mobile/desktop screen components
+design feedback. The package-owned runtime implements the same layout. The existing owning entries and mobile/desktop screen components
 remain the review entry points. The removed-consumer workspace is aligned with
 the [removed content previews plan](../../plans/removed-content-previews.md).
 
@@ -102,9 +102,9 @@ One selected viewport and scheme maps `changed`,
 `added`, and `removed` to their matching status, and `unchanged` or
 `ignored-only` to Unmodified. Both uses the first status present in this order:
 Changed, Added, Removed, Unmodified. Comparison controls follow that result:
-Changed is eligible, as is Removed only for a component saved variant. If
+Changed is eligible, as is Removed only for a component variant entry. If
 neither a ready result nor matching screen-view evidence exists, retain the
-route-level status and the entry or saved variant's independently supplied
+entry-level status and the entry's independently supplied
 eligibility. Never derive eligibility from fallback status. Evidence provenance
 travels with both values, and viewport, effective-scheme, saved-variant, and
 background-evidence changes recompute the shared decision without a page load.
@@ -123,19 +123,20 @@ its previous version.
 Missing inspection metadata is distinct from comparison availability.
 
 The runtime uses actual comparison eligibility for the selected saved example.
-Missing, pending, or nonmatching per-view evidence uses the route-level status
+Missing, pending, or nonmatching per-view evidence uses the entry-level status
 fallback without changing that eligibility and cannot trigger eager screenshot
 work merely to decide whether to show a mode row. The same rule gates comparison
 deep links during server render, controlled selection, and later evidence
 updates.
 Affected consumers may still expose comparisons while staying out of Changes.
 
-Entry status and variant status are distinct. Removing Compact from Action is
-a Changed component with a comparable Removed variant; Farewell is a Removed
-screen with no comparison controls.
-The `design-component-variants` mockup depicts the inverse boundary: Action is
-Changed because another saved example changed, while selected Disabled is
-Unmodified and ineligible, so no comparison band appears.
+Parent status and variant status are distinct. Removing Compact from Action
+makes Compact its own Removed component variant entry, comparable with an
+explicit missing current side, while Action's status describes the parent
+only; Farewell is a Removed screen with no comparison controls.
+The `design-component-variants` mockup depicts the inverse boundary: the
+selected Disabled variant entry is Unmodified and ineligible, so no comparison
+band appears, even though a sibling variant changed.
 The Added Badge example lives in States → Additions and shows its current saved
 preview without comparison controls, plus one Changes entry. The existing unused Badge
 example remains Unmodified. Status must never be inferred from usage counts.

@@ -20,8 +20,8 @@ change. No consumer JavaScript runtime is added to static preview frames.
 
 The Props/Controls tab in the shared component inspector lists only explicitly declared editable
 props. Data props without controls remain visible in the inspector and still
-participate in change detection. A control starts from the selected saved
-variant's actual value, updates the preview after validation, and has a label
+participate in change detection. A control starts from the shown variant
+entry's actual value, updates the preview after validation, and has a label
 derived from declared metadata or the prop name. No invented sample values
 replace missing values; optional fields expose their unset state.
 
@@ -59,9 +59,10 @@ zero for lossless schema JSON. Every saved value must satisfy its prop schema
 and control limits/options. A number control still sends negative-zero inputs
 losslessly through the tagged wire codec.
 
-Reset restores the selected saved variant's complete props. Changing the saved
-variant discards temporary edits. Viewport/theme changes preserve validated edits
-and render them in the new context. Route navigation or reload discards edits.
+Reset restores the shown variant entry's complete props. Navigating to another
+variant entry discards temporary edits, as does any other navigation or reload.
+Viewport/theme changes preserve validated edits and render them in the new
+context.
 Temporary state is neither written to source/generated files nor encoded as
 arbitrary prop data in URLs, local storage, comparisons, or Changes counts.
 
@@ -69,7 +70,7 @@ Temporary edits operate in Current. Selecting a comparison restores the saved
 variant and compares its baseline output with its current rendered output;
 controls become unavailable while comparing. The product explains that the
 comparison shows the saved variant. Controls render responses cannot overwrite
-a comparison, another variant, a new viewport/theme, or a different route.
+a comparison, another variant entry, a new viewport/theme, or a different entry.
 
 Published pages show the same saved variants and props with controls read-only
 and a secondary message, "Open this catalogue locally to edit props."
@@ -79,10 +80,11 @@ Users can browse, inspect, and compare the saved variants normally.
 ## Rendering Boundary
 
 Serve exposes a private POST endpoint at `/__mokly/components/render`.
-The request carries a component id, variant id, viewport, color scheme,
-catalogue generation, page id, and a data object containing only declared control
-overrides. It does not accept a module path, source code, arbitrary component
-name, callback, resource path, or renderer selection.
+The request carries a component id, the global id of one of its variant
+entries, viewport, color scheme, catalogue generation, page id, and a data
+object containing only declared control overrides. It does not accept a module
+path, source code, arbitrary component name, callback, resource path, or
+renderer selection.
 
 The exact request and success-response shapes are below. The response's `view`
 uses [manifest usage records](./mokly-component-manifest.md). Errors retain
@@ -113,6 +115,10 @@ interface ComponentRenderSuccess {
   view: ComponentViewRecord;
 }
 ```
+
+`variantId` is the variant entry's global catalogue id; the request carries no
+separate component id because the variant entry names its parent through
+`variantOf`, and the server resolves the component definition from it.
 
 The parent creates one random 32-hex `pageId` per mounted component edit owner
 and rendered viewport/color-scheme context, retaining it until that owner is

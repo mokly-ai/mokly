@@ -18,7 +18,6 @@ export const accountHome = defineScreen({
   id: "account-home",
   title: "Account home",
   description: "The account landing screen.",
-  route: "account/home.html",
   navPath: ["Account", "Screens"],
   mobile: <main>Account</main>,
   desktop: <main>Account</main>,
@@ -39,8 +38,8 @@ and breadcrumbs without changing the entry's route. Variants copy their
 parent's path and appear beneath its row.
 
 Inside a `defineRoot` tree, optional root `navPath` and ancestor `folder()`
-titles derive each leaf's path; `segment` builds routes and never moves a
-folder in navigation. Nested leaves must not author their own `navPath`.
+titles derive each leaf's path; a leaf's route derives from its id, so no
+folder field moves it. Nested leaves must not author their own `navPath`.
 
 ## Classify with tags
 

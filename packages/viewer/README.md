@@ -209,11 +209,11 @@ value for an axis applies in the same selection proposal; invalid or repeated
 values retain that sticky axis.
 
 The selected color scheme remains host-visible even when the chosen screen or
-saved variant has only a Light render. In that case the preview keeps the Dark
-selection and Light-only label, while status, change marks, and comparisons use
-the effective Light view. If ready evidence does not cover every shown view,
-the Viewer preserves the selected entry or variant's published status and
-comparison eligibility independently.
+component variant has only a Light render. In that case the preview keeps the
+Dark selection and Light-only label, while status, change marks, and
+comparisons use the effective Light view. If ready evidence does not cover
+every shown view, the Viewer preserves the selected entry's published status
+and comparison eligibility independently.
 
 ### Host integration
 
@@ -235,11 +235,11 @@ frame sessions.
 
 ### Component instance references
 
-Instance events return an `InstanceRef` scoped to a screen, saved variant or
-flow step, viewport, color scheme and stable component key. Persist that value
-to reconnect external data such as a review comment. `resolveInstance` compares
-a saved component record with its corresponding current record from a newer
-catalogue without fetching preview evidence.
+Instance events return an `InstanceRef` scoped to a screen, component variant
+or flow step, viewport, color scheme and stable component key. Persist that
+value to reconnect external data such as a review comment. `resolveInstance`
+compares a saved component record with its corresponding current record from a
+newer catalogue without fetching preview evidence.
 
 Markers accept unique IDs, exact instance references and React content. Marker
 content is pointer-inert by default; opt an interactive child in with
@@ -302,6 +302,10 @@ cancellation and evidence-refresh behavior are defined in the
 React applications normally need only the root entry and stylesheet. Do not
 import `@mokly/viewer/browser` in an application-owned React root; it
 automatically hydrates a matching standalone Mokly document.
+
+`@mokly/viewer/data` also exports the shared route helpers `entryRoute`,
+`viewRoute` and `viewHref`, which derive every route and `/view/<route>` URL
+from an entry's kind and id.
 
 ## Server Rendering
 

@@ -76,7 +76,7 @@ sufficient history before invoking the command; export never fetches it.
 Unavailable or invalid baselines fail explicitly, including shallow-history
 failures. It does not silently export a zero Changes count or disable controls.
 
-Resolve and pin one merge-base commit for the operation. Both route-level
+Resolve and pin one merge-base commit for the operation. Both entry-level
 Changes attribution and screen comparisons use that commit, the same current
 manifest/generated documents, and the same changed-path exclusions. Apply the
 shared Changes calculation to captured public bytes: normalize paired ignored
@@ -85,20 +85,21 @@ Ignored-only edits, source moves, and dependency/shared-impact evidence alone
 do not add entries, except the owned and exact declared paths of [component attribution](./mokly-component-changes.md#dependencies-and-styles).
 Retain that evidence in comparisons, and do not derive the navigation filter by counting materially changed comparison screens.
 
-Use Review schema v3 when either manifest contains registered components;
-otherwise retain schema v2. Both formats retain all existing states,
-shared/dependency impact, ignored regions, both viewports and all effective color
-schemes; see the [supported format matrix](./README.md#supported-formats).
-Removed screens, pages and components retain their baseline context; current ids
-and routes win when reused. Pages have no visual comparisons. A route absent
-from a side's manifest follows the existing added/removed rules. A declared but
+Comparisons use [review result v4](./mokly-changes.md#comparison-engine) for
+every catalogue. It retains all existing states, shared/dependency impact,
+ignored regions, both viewports and all effective color schemes; see the
+[supported format matrix](./README.md#supported-formats). Removed screens,
+pages, components and variants retain their baseline context; a current entry
+excludes historical content with its id unless a snapshot is requested. Pages
+have no visual comparisons. An id absent from a side's manifest follows the
+existing added/removed rules. A declared but
 missing baseline document, invalid manifest, or unavailable resource fails;
 none becomes an invented empty baseline. Empty registries retain the normal
 build error; export does not weaken registry validation to create an empty site.
 
 Comparisons use private temporary storage, independent of `review.outDir` and
 any running development server. Exclude the final export directory, its
-temporary stage/backup/lock paths, and their resolved aliases from route and
+temporary stage/backup/lock paths, and their resolved aliases from entry and
 comparison change attribution before broad dependencies/shared-impact globs
 are evaluated. Exporting twice must not make the export affect its own Changes.
 Watch also ignores owned export artifacts and export transaction paths before
@@ -239,9 +240,10 @@ public-safe inventory is distinct from private comparison metadata.
 
 [`__mokly/catalogue.json`](./mokly-catalogue.md) is implemented in the same
 collision-checked ownership/upload inventories, alongside the implemented
-`__mokly/client/inspector.js`. The read model v2 is a public allowlist projection of manifest v6;
-`mokly-manifest.json` remains excluded. Ownership v1, upload v1, review v2/v3
-and delivery descriptor v2 keep their schema versions. Deployment identity
+`__mokly/client/inspector.js`. The read model v3 is a public allowlist
+projection of manifest v7; `mokly-manifest.json` remains excluded. Ownership v1
+and upload v1 keep their schema versions; the review result is v4 and the
+delivery descriptor v3. Deployment identity
 includes the catalogue under the [delivery hashing rule](./mokly-export-delivery.md#deployment-identity)
 and includes the inspector and its inert maps.
 Only the ownership-aware adapter's current published HTML copies gain the
@@ -282,7 +284,7 @@ fragments keep their existing direct-from-disk behavior.
 ## Verification
 
 Implementation must cover option validation and config-relative paths, custom
-renderer/module resolution, v6 pages, both schemes/viewports, invalid empty and
+renderer/module resolution, v7 pages, both schemes/viewports, invalid empty and
 removed catalogues, non-default bases, missing history/resources, output overlap,
 symlinks, ownership/collisions, concurrent writers, input changes, rollback,
 shutdown, export self-attribution, public-file exclusion, and asset closure.
@@ -295,9 +297,11 @@ Cloudflare preview regression coverage and the existing build/check/serve gate.
 
 ## Registered Components
 
-Component catalogues retain manifest-v6 saved variants and comparison-schema-v3
-evidence, including removed variants and actual affected consumers. The same
-inspector renders in served and exported shells. Export supplies no local render
-capability or token; controls are read-only and make no render requests. The
-existing resource validation, deployment identity, route aliases, reservations,
-transaction, and immutable snapshot rules apply to component pages as well.
+Component catalogues carry manifest-v7 component variant entries and review
+result v4 evidence, including removed variants and actual affected consumers.
+The same inspector renders in served and exported shells. Export supplies no
+local render capability or token; controls are read-only and make no render
+requests. The existing resource validation, deployment identity, adapter
+aliases, reservations, transaction, and immutable snapshot rules apply to
+component pages as well, and each variant entry's shell is written once at its
+derived `view/<route>`.

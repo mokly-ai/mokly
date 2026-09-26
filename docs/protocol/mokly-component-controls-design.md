@@ -32,14 +32,15 @@ value and show a nearby error; the preview retains the last valid values.
 Controls fit one column on mobile and a compact grid on desktop. Focus indicators
 and error text remain legible, and controls do not rely on color alone.
 
-The Edit props link from a saved component example keeps its selected variant
+The Edit props link from a saved component example stays on its variant entry
 when opening Controls.
 
 An edited-state indicator and Reset action accompany temporary overrides. Reset
-restores the full saved variant. Selecting a different variant replaces temporary
-edits with that variant's complete values. Controls do not create a saved variant
-or change source files. Viewport and theme selection keep edits in the target
-runtime; changing routes or entering a comparison discards them.
+restores the full saved variant. Navigating to a different variant entry
+replaces temporary edits with that entry's complete values. Controls do not
+create a saved variant or change source files. Viewport and theme selection
+keep edits in the target runtime; navigating to another entry or entering a
+comparison discards them.
 
 Pending state keeps the last valid preview visible and shows Updating preview.
 Rendering failure also retains that preview, with Try again and Reset actions.
@@ -61,20 +62,23 @@ The Controls page is the canonical parent representation. Editing, States, and P
 are bounded child galleries with four, four, and two owning screens respectively.
 Every screen has distinct mobile and desktop components. The catalogue provides
 state navigation without adding a footer to the rendered product artboard.
+Each entry's route is `screens/<id>.html` under the
+[derived route rule](./mokly-authoring.md#derived-routes); gallery membership
+is the entry's `navPath`.
 
-| Entry id                                     | Route                                               | State                                           |
-| -------------------------------------------- | --------------------------------------------------- | ----------------------------------------------- |
-| `design-component-controls`                  | `design/components/controls/overview.html`          | Default saved variant with all control types    |
-| `design-component-controls-edited`           | `design/components/controls/editing/edited.html`    | Edited values and matching preview              |
-| `design-component-controls-unset`            | `design/components/controls/editing/unset.html`     | Optional hint unset                             |
-| `design-component-controls-variant`          | `design/components/controls/editing/variant.html`   | Disabled saved variant selected                 |
-| `design-component-controls-reset`            | `design/components/controls/editing/reset.html`     | Reset to saved values                           |
-| `design-component-controls-pending`          | `design/components/controls/states/pending.html`    | Last valid preview while an update is pending   |
-| `design-component-controls-invalid`          | `design/components/controls/states/invalid.html`    | Field validation with last valid preview        |
-| `design-component-controls-error`            | `design/components/controls/states/error.html`      | Render failure, retry, and reset                |
-| `design-component-controls-comparison`       | `design/components/controls/states/comparison.html` | Saved variant comparison and read-only controls |
-| `design-component-controls-readonly`         | `design/components/controls/published/default.html` | Read-only values and available saved variants   |
-| `design-component-controls-readonly-variant` | `design/components/controls/published/variant.html` | Disabled saved variant with read-only values    |
+| Entry id                                     | State                                           |
+| -------------------------------------------- | ----------------------------------------------- |
+| `design-component-controls`                  | Default saved variant with all control types    |
+| `design-component-controls-edited`           | Edited values and matching preview              |
+| `design-component-controls-unset`            | Optional hint unset                             |
+| `design-component-controls-variant`          | Disabled saved variant selected                 |
+| `design-component-controls-reset`            | Reset to saved values                           |
+| `design-component-controls-pending`          | Last valid preview while an update is pending   |
+| `design-component-controls-invalid`          | Field validation with last valid preview        |
+| `design-component-controls-error`            | Render failure, retry, and reset                |
+| `design-component-controls-comparison`       | Saved variant comparison and read-only controls |
+| `design-component-controls-readonly`         | Read-only values and available saved variants   |
+| `design-component-controls-readonly-variant` | Disabled saved variant with read-only values    |
 
 ## Verification
 

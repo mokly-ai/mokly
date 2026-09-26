@@ -135,7 +135,7 @@ replaces the usage snapshot and updates its existing event subscription. A
 pending/unavailable-to-ready update enables hover/click inspection without a
 document load or new session; the reverse transition disables it while preserving
 navigation. The viewer's frame update path uses this capability for unchanged
-URL/viewport/scheme/variant/step identities; custom adapters that omit it retain
+URL/viewport/scheme/step identities; custom adapters that omit it retain
 replacement-mount behavior for changed usage. Updates reject after disposal and
 their failures retain session cancellation ownership. This is a host-side method;
 the existing wire `subscribe` event set, schemas and inspector script are unchanged.

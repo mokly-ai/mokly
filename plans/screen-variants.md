@@ -67,7 +67,7 @@ user should reconsider):**
   approval under the mainline preservation rule. Task 9.1 was not implemented
   in this PR; the standalone screens stay until the follow-up conversion.
 
-**Spec:** [`docs/protocol/mokly-screen-variants.md`](../docs/protocol/mokly-screen-variants.md)
+**Spec:** [`docs/protocol/mokly-variants.md`](../docs/protocol/mokly-variants.md)
 plus the targeted updates listed in Milestone 1.
 
 **Tech stack:** TypeScript ESM (Node 22 test runner via `tsx --test`, tests
@@ -125,7 +125,7 @@ read model, and the viewer.
 
 **Files:**
 
-- Create: `docs/protocol/mokly-screen-variants.md`
+- Create: `docs/protocol/mokly-variants.md`
 - Modify: `docs/protocol/README.md` (index entry)
 
 **Steps:**
@@ -700,7 +700,7 @@ Changes activation, and the parent row's leaf container under filtering.
       route-level status. Add the same rule to
       `docs/protocol/mokly-component-workspace-design.md` (Comparison
       Availability) and one sentence to `docs/guides/catalogue/changes.md`.
-- [x] Finding 4 contract: in `docs/protocol/mokly-screen-variants.md`, replace
+- [x] Finding 4 contract: in `docs/protocol/mokly-variants.md`, replace
       "manifest entry order (the route order)" with authored order, and in
       `docs/protocol/mokly-component-manifest.md` and
       `docs/protocol/mokly-catalogue.md` state that variant screens of one
@@ -710,7 +710,7 @@ Changes activation, and the parent row's leaf container under filtering.
       route order.
 - [x] Findings 1 and 2 contract: in `docs/protocol/mokly-viewer.md`
       (Selection, Events And Imperative Use) and
-      `docs/protocol/mokly-screen-variants.md` (Public Read Model And
+      `docs/protocol/mokly-variants.md` (Public Read Model And
       Viewer), state that the Viewer rebuilds `variantOf` for current and
       removed screens so the rendered hierarchy, crumbs, details rows,
       aggregate mark, and removed-variant adoption match Serve, and that a
@@ -720,7 +720,7 @@ Changes activation, and the parent row's leaf container under filtering.
       and scheme unless the link names them; a direct `select` call keeps the
       supplied axes.
 - [x] Finding 5 contract: in `docs/protocol/mokly-runtime.md` (Browse Shell
-      navigation paragraph) and `docs/protocol/mokly-screen-variants.md`
+      navigation paragraph) and `docs/protocol/mokly-variants.md`
       (Navigation), state that a parent row hidden by search or the Changes
       filter hides its leaf container, so no disclosure button remains
       visible or focusable without its row.

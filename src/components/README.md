@@ -1,7 +1,7 @@
 # Registered Components
 
 Use `defineComponent` to give a shared React component its own catalogue page,
-saved variants, controls, and recorded usage in screens or other components.
+variants, controls, and recorded usage in screens or other components.
 Callers render the returned `Component` and export its `entry` in `mockups`.
 Mokly renders that wrapper in the consumer's existing React/provider graph.
 
@@ -12,7 +12,6 @@ export const action = defineComponent({
   id: "action",
   title: "Action",
   description: "A shared action.",
-  route: "components/action.html",
   dependencies: [],
   relatedDocs: [],
   propSchema: {
@@ -21,9 +20,11 @@ export const action = defineComponent({
   },
   controls: { label: { kind: "text", label: "Label", maxLength: 80 } },
   render: (props) => <button>{props.label}</button>,
-  variants: [{ id: "default", title: "Default", props: { label: "Continue" } }],
+  variants: [
+    { id: "action-default", title: "Default", props: { label: "Continue" } },
+  ],
 });
-export const mockups = [action.entry];
+export const mockups = [...action.entries];
 ```
 
 A registration may live in any repository module, typically beside the
@@ -50,7 +51,7 @@ values from the same view. It returns `missing` for an absent or different key,
 classify visual or material Changes.
 
 Compiled JSX invocations record optional `source: { path, line, column }` in
-manifest v6. The path identifies the caller inside the repository, with 1-based
+manifest v7. The path identifies the caller inside the repository, with 1-based
 coordinates. Programmatic or already-compiled calls can omit it. The internal
 `__moklySource` prop is reserved from data schemas and slots and stripped before
 validation, hashing and rendering. Source metadata never affects identity or
@@ -59,16 +60,20 @@ original location and have one matched comment pair per recorded placement,
 including empty output.
 
 Variants are explicit named examples, never inferred from screenshots or every
-combination of controls. Both viewports and every configured scheme are built
-for each variant. `MockLink to="action"` opens the default variant; canonical
-page URLs use `?variant=default` to select a specific saved example.
+combination of controls. Each variant is its own `kind: "component"` entry with
+a global kebab-case id and `variantOf`, grouped beneath its component in
+navigation with its own route `components/<variant id>.html`, its own Changes
+row, and its own comparison. Both viewports and every configured scheme are
+built for each variant. `MockLink to="action"` opens the component page, which
+shows its first variant; `MockLink to="action-disabled"` opens that variant
+directly.
 
 Local Serve edits declared text, boolean, number, and primitive preset controls.
 Complex props remain inspectable; an adapter can map a primitive preset key to
 a complex consumer value. Optional controls distinguish unset from empty text
-or null. Reset restores the saved variant; changing variants, routes, or entering
-comparisons discards edits. Published catalogues retain saved variants and
-inspection with controls read-only.
+or null. Reset restores the variant's declared props; navigating to another
+variant or entry, or entering comparisons, discards edits. Published catalogues
+retain variants and inspection with controls read-only.
 Background Usage and Changes completion preserves local prop edits and the
 current preview. Complete Used by data appears without resetting controls;
 per-view inspection continues to use the records from the actual displayed
@@ -106,7 +111,7 @@ node --import tsx --test tests/component_*.test.ts
 - `instance_structure.ts`: explicit logical inputs, excluding source metadata.
 - `comparison_projection.ts`: caller versus implementation material.
 - `../server/controls`: supervised local rendering and transient storage.
-- `../client/workspace.ts`: shared saved-view explorer and inspector.
+- `../client/workspace.ts`: shared component explorer and inspector.
 
 See the [registered component contract](../../docs/protocol/mokly-components.md),
 [instance identity](../../docs/protocol/mokly-instances.md),

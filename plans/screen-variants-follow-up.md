@@ -20,7 +20,7 @@ retains its completed milestones and historical review record.
 
 Contract owners:
 
-- [Screen variants](../docs/protocol/mokly-screen-variants.md) and
+- [Screen variants](../docs/protocol/mokly-variants.md) and
   [authoring](../docs/protocol/mokly-authoring.md).
 - [Viewer](../docs/protocol/mokly-viewer.md),
   [navigation](../docs/protocol/mokly-navigation.md), and

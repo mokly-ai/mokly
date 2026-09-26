@@ -48,8 +48,8 @@ styling, and rendering context.
 - **Review outcomes, not file lists.** The Changes view compares rendered
   screens and their reachable resources with the branch point of your Git base,
   while removed screens and pages retain a read-only previous version.
-- **Inspect reusable components.** Register typed props, saved variants, slots,
-  and local controls, then see where each component is used.
+- **Inspect reusable components.** Register typed props, variants, slots, and
+  local controls, then see where each component is used.
 - **Keep delivery simple.** A catalogue can be exported as static files and
   hosted without a Mokly server, source checkout, or Git installation.
 - **Stay app-independent.** Plain React, React Native Web, design systems, and
@@ -105,7 +105,6 @@ export const mockups = [
     title: "Account home",
     description: "The account landing screen.",
     navPath: ["Account"],
-    route: "account/home.html",
     mobile: <main>Account on mobile</main>,
     desktop: <main>Account on desktop</main>,
     dependencies: [],
@@ -117,7 +116,9 @@ export const mockups = [
 
 Replace the example `<main>` nodes with your product components, then list their
 source files or directories in `dependencies`. An entry file ends in
-`.mockup.ts` or `.mockup.tsx` and exports a `mockups` array.
+`.mockup.ts` or `.mockup.tsx` and exports a `mockups` array. Mokly derives
+every route from the id: this screen lives at `screens/account-home.html`,
+with one generated view per viewport and color scheme beside it.
 
 Mokly derives generated output by default. Keep its HTML, manifest, and cache
 out of Git:
@@ -128,7 +129,7 @@ docs/mockups/generated/**/*.html
 docs/mockups/generated/mokly-manifest.json
 ```
 
-Current output uses manifest v6; compatibility readers for older formats are
+Current output uses manifest v7; compatibility readers for older formats are
 limited to historical Git baselines.
 
 ### 4. Open the catalogue
@@ -179,14 +180,14 @@ Detailed command references:
 Mokly's public API is declarative. Definitions describe what belongs in a
 catalogue; your React tree still owns what each screen looks like.
 
-| Concept          | Use it for                                                  | Guide                                                               |
-| ---------------- | ----------------------------------------------------------- | ------------------------------------------------------------------- |
-| Screens          | Product states, view renders, and full-screen variants      | [Screens](./docs/guides/authoring/screens.md)                       |
-| Folders and tags | Navigation paths and searchable vocabulary                  | [Folders and tags](./docs/guides/authoring/collections-and-tags.md) |
-| Components       | Typed props, saved variants, controls, and usage inspection | [Components](./docs/guides/authoring/components.md)                 |
-| Use-case flows   | Ordered journeys composed from existing screens             | [Use-case flows](./docs/guides/authoring/use-case-flows.md)         |
-| Pages            | Existing complete HTML documents without device variants    | [Pages](./docs/guides/authoring/pages.md)                           |
-| `MockLink`       | Portable links between catalogue entries                    | [Links](./docs/guides/authoring/links.md)                           |
+| Concept          | Use it for                                               | Guide                                                               |
+| ---------------- | -------------------------------------------------------- | ------------------------------------------------------------------- |
+| Screens          | Product states, view renders, and full-screen variants   | [Screens](./docs/guides/authoring/screens.md)                       |
+| Folders and tags | Navigation paths and searchable vocabulary               | [Folders and tags](./docs/guides/authoring/collections-and-tags.md) |
+| Components       | Typed props, variants, controls, and usage inspection    | [Components](./docs/guides/authoring/components.md)                 |
+| Use-case flows   | Ordered journeys composed from existing screens          | [Use-case flows](./docs/guides/authoring/use-case-flows.md)         |
+| Pages            | Existing complete HTML documents without device variants | [Pages](./docs/guides/authoring/pages.md)                           |
+| `MockLink`       | Portable links between catalogue entries                 | [Links](./docs/guides/authoring/links.md)                           |
 
 A custom renderer is the integration boundary for product providers, themes,
 stylesheets, fonts, and full-document markup. Mokly resolves React from the
@@ -198,13 +199,13 @@ so component trees use one React runtime.
 The local **Changes** view compares the working tree with the merge base of
 `HEAD` and `origin/main` by default. It accounts for generated documents,
 reachable resources, catalogue metadata, registered components, and applicable
-stylesheet changes. Changed screens, screen variants, and saved component
-variants generate comparisons only when an eligible shown view is opened.
-Per-view evidence keeps known unchanged views marked Unmodified without offering
-a comparison. A light-only screen or saved component variant uses its effective
-Light view for status and marks even while Dark stays selected for the rest of
-the catalogue. Missing per-view evidence preserves the selected entry or saved
-variant's existing comparison eligibility. Removed screens and pages load their read-only
+stylesheet changes. Changed screens, screen variants, and component variants
+generate comparisons only when an eligible shown view is opened. Per-view
+evidence keeps known unchanged views marked Unmodified without offering a
+comparison. A light-only screen or component variant uses its effective Light
+view for status and marks even while Dark stays selected for the rest of the
+catalogue. Missing per-view evidence preserves the selected entry's existing
+comparison eligibility. Removed screens and pages load their read-only
 [previous version](./docs/protocol/mokly-removed-previews.md) from the branch
 point.
 
@@ -249,7 +250,7 @@ interface appearance with any preview scheme. See the
 - [Protocol and specification index](./docs/protocol/README.md)
 - [Removed content previews](./docs/protocol/mokly-removed-previews.md)
 - [Viewer appearance and preview schemes](./docs/protocol/mokly-viewer-appearance.md)
-- [Screen variants](./docs/protocol/mokly-screen-variants.md)
+- [Variants](./docs/protocol/mokly-variants.md)
 - [Package ownership boundary](./docs/architecture/package-boundary.md)
 - [React-to-static-HTML pipeline](./docs/architecture/build-pipeline.md)
 - [Implementation plans](./plans/README.md)
