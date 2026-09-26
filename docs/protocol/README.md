@@ -13,10 +13,9 @@ The versioned formats below were planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md):
 Milestone 6 changed the private manifest, Milestone 7 changed public
 catalogue/comparison formats, and Milestone 3 implemented stylesheet links.
-The graceful-handling and build-warning extensions below are planned by the
-same plan: Milestone 13 handles stylesheet placement and comparison, and
-Milestone 14 adds warnings and ignores removed inputs. They are not implemented
-yet.
+The graceful stylesheet placement and comparison extensions were implemented
+by the same plan's Milestone 13. Milestone 14 will add build warnings and
+ignore removed inputs; those warning changes are not implemented yet.
 
 ## Graceful Handling
 
@@ -73,6 +72,8 @@ those old versions; exported catalogues must be regenerated.
 - [Rendering and generated output](./mokly-rendering.md)
 - [Component-declared stylesheets](./mokly-component-stylesheets.md) — implemented
   link placement, validation, ownership, watching and delivery.
+- [Component stylesheet ownership and comparison](./mokly-component-stylesheet-ownership.md)
+  — final-link owners and comparison-only provenance.
 - [Build and Browse runtime](./mokly-runtime.md)
 - [Component instance identity](./mokly-instances.md) — existing key/boundary
   rules and approved resolution/source-location target.

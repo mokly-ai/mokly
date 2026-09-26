@@ -43,6 +43,7 @@ export function validateComponentViews(
         "ranges",
         "styles",
         "resources",
+        "insertedStylesheets",
       ],
       at,
     );
@@ -175,6 +176,26 @@ export function validateComponentViewRecord(
     view.resources.map((resource) => resource.path),
     `${at}.resources`,
   );
+  if (view.insertedStylesheets !== undefined) {
+    if (!Array.isArray(view.insertedStylesheets))
+      invalidData(at, "insertedStylesheets must be an array");
+    let previousEnd = 0;
+    for (const link of view.insertedStylesheets) {
+      exactKeys(link, ["startOffset", "endOffset", "path", "componentIds"], at);
+      if (
+        typeof link.startOffset !== "number" ||
+        typeof link.endOffset !== "number" ||
+        !Number.isSafeInteger(link.startOffset) ||
+        !Number.isSafeInteger(link.endOffset) ||
+        link.startOffset < previousEnd ||
+        link.endOffset <= link.startOffset
+      )
+        invalidData(at, "invalid or overlapping inserted stylesheet span");
+      validateResourcePath(link.path, at);
+      validateOwners(link.componentIds, rendered, at);
+      previousEnd = link.endOffset;
+    }
+  }
 }
 
 function validateOwner(

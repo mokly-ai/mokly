@@ -99,6 +99,12 @@ are linked once with a warning. The comparison omits Mokly-inserted links from
 consumer page material but retains a component page's own links; final
 post-transform links determine which derived owners remain.
 See [component stylesheets](../../docs/protocol/mokly-component-stylesheets.md).
+The [ownership and comparison contract](../../docs/protocol/mokly-component-stylesheet-ownership.md)
+defines final-link pruning and private link provenance.
+`stylesheet_provenance.ts` strips transient tokens from final HTML, while
+`comparison_stylesheets.ts` removes only proven inserted links from review
+material. `render.tsx` returns structured warnings for ignored renderer
+ownership; command/Serve reporting is added separately.
 Historical Mokabook comparisons preserve the original document coordinates when
 applying recorded style ownership; internal marker renames alone do not create
 consumer changes or alter the retained snapshots.

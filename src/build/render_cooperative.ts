@@ -11,6 +11,7 @@ import type { ResolvedConfig } from "../config/types.js";
 
 import type { LoadedGraph } from "./load_graph.js";
 import { renderFragments } from "./render.js";
+import type { BuildWarning } from "./warnings.js";
 
 export async function renderCooperatively(
   entries: readonly ResolvedRegistryEntry[],
@@ -19,6 +20,7 @@ export async function renderCooperatively(
   fragmentViews: Map<string, ArtifactView>,
   componentViews: Map<string, ComponentViewRecord>,
   checkpoint: () => Promise<void>,
+  onWarning?: (warning: BuildWarning) => void,
 ): Promise<Map<string, string>> {
   const outputs = new Map<string, string>();
   const render = async (
@@ -33,6 +35,7 @@ export async function renderCooperatively(
       graph.renderWithComponents,
       componentViews,
       selection,
+      onWarning,
     ))
       outputs.set(route, content);
   };

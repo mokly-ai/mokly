@@ -13,8 +13,10 @@ export function rendererStylesheetPaths(
   route: string,
   mockupsDir: string,
   declaredPhysicalPaths: ReadonlySet<string>,
+  configuredHrefs: readonly string[] = [],
 ): Map<string, string> {
   const first = new Map<string, string>();
+  const preferred = new Map<string, { index: number; publicPath: string }>();
   const document = parse(html);
   function visit(node: Node, inHead: boolean): void {
     const head = inHead || ("tagName" in node && node.tagName === "head");
@@ -27,16 +29,32 @@ export function rendererStylesheetPaths(
         if (file && declaredPhysicalPaths.has(file.physicalPath))
           if (!first.has(file.physicalPath))
             first.set(file.physicalPath, file.publicPath);
+        const configuredIndex = configuredHrefs.indexOf(href);
+        if (
+          file &&
+          configuredIndex >= 0 &&
+          configuredIndex <
+            (preferred.get(file.physicalPath)?.index ?? Infinity)
+        )
+          preferred.set(file.physicalPath, {
+            index: configuredIndex,
+            publicPath: file.publicPath,
+          });
       }
     }
     if ("childNodes" in node)
       for (const child of node.childNodes) visit(child, head);
   }
   visit(document, false);
-  return first;
+  return new Map(
+    [...first].map(([physical, publicPath]) => [
+      physical,
+      preferred.get(physical)?.publicPath ?? publicPath,
+    ]),
+  );
 }
 
-function publicFileFromHref(
+export function publicFileFromHref(
   href: string,
   route: string,
   mockupsDir: string,

@@ -14,6 +14,7 @@ import {
 import { validateComponentResources } from "../components/output_validation.js";
 import { validateComponentRanges } from "../components/ranges.js";
 import { rebaseStyleOwnership } from "../components/style_ownership.js";
+import { finalizeComponentStylesheets } from "../components/stylesheet_provenance.js";
 import { MoklyError } from "../errors.js";
 import { extractHtmlReferences } from "../html_references.js";
 import { prepareRegistry } from "../registry/prepare.js";
@@ -27,13 +28,15 @@ import type { LogicalReferenceRecord } from "./logical_record_types.js";
 import { validateLogicalFragments } from "./logical_records.js";
 import { validateGeneratedOutputPaths } from "./output_paths.js";
 import { validateGeneratedOwnershipHeaders } from "./ownership.js";
-import { renderFragments } from "./render.js";
+import { renderFragments, stylesheetPlacementFor } from "./render.js";
+import type { BuildWarning } from "./warnings.js";
 
 export interface CompiledDocument {
   route: string;
   html: string;
   view?: ComponentViewRecord;
   watchDocuments?: readonly (readonly [string, string])[];
+  warnings?: readonly BuildWarning[];
 }
 interface PreparedDocument extends CompiledDocument {
   records: readonly LogicalReferenceRecord[];
@@ -103,9 +106,13 @@ export class DocumentCompiler {
       : this.prepare(route);
     const outputs = new Map([[route, document.html]]);
     const observed = new Map<string, string>();
+    const warnings = [...(document.warnings ?? [])];
     const read = (target: string) => {
       const value = target === route ? document : this.prepare(target);
-      if (target !== route) observed.set(target, value.html);
+      if (target !== route) {
+        observed.set(target, value.html);
+        warnings.push(...(value.warnings ?? []));
+      }
       return value;
     };
     validateLogicalFragments(
@@ -130,6 +137,7 @@ export class DocumentCompiler {
       html: document.html,
       ...(document.view ? { view: document.view } : {}),
       ...(observed.size ? { watchDocuments: [...observed] } : {}),
+      ...(warnings.length ? { warnings } : {}),
     };
   }
 
@@ -149,6 +157,7 @@ export class DocumentCompiler {
     validateGeneratedOutputPaths([route], config);
     const views = new Map<string, ArtifactView>();
     const componentViews = new Map<string, ComponentViewRecord>();
+    const warnings: BuildWarning[] = [];
     const outputs = renderFragments(
       this.entries,
       this.graph.renderer,
@@ -163,6 +172,7 @@ export class DocumentCompiler {
         ),
       componentViews,
       target,
+      (warning) => warnings.push(warning),
     );
     const original = outputs.get(route)!;
     const records = transformCompatibilityDocuments(
@@ -174,19 +184,41 @@ export class DocumentCompiler {
       [...this.routes.keys()],
       this.compatibility,
     );
-    const html = outputs.get(route)!;
+    let html = outputs.get(route)!;
     const entry = this.compatibility.byId.get(target.entryId)!;
     validateGeneratedOwnershipHeaders(
       outputs,
       new Map([[route, entry.sourceRelativePath]]),
     );
-    normalizeSingleDocument(html, route);
     const captured = componentViews.get(route);
     const view = captured
-      ? {
-          ...captured,
-          styles: rebaseStyleOwnership(original, html, captured.styles),
-        }
+      ? (() => {
+          if (entry.kind !== "screen" && entry.kind !== "component")
+            throw new MoklyError(
+              "build-invalid",
+              `${route}: unexpected component view`,
+            );
+          const finalized = finalizeComponentStylesheets(
+            original,
+            html,
+            captured,
+            route,
+            config.mockupsDir,
+            this.entries.filter((entry) => entry.kind === "component"),
+            stylesheetPlacementFor(
+              entry.route,
+              route,
+              target.colorScheme,
+              config,
+            ).hrefs,
+          );
+          html = finalized.html;
+          outputs.set(route, html);
+          return {
+            ...finalized.view,
+            styles: rebaseStyleOwnership(original, html, captured.styles),
+          };
+        })()
       : undefined;
     if (view) {
       validateComponentRanges(html, view.ranges);
@@ -198,12 +230,14 @@ export class DocumentCompiler {
       );
       validateComponentResources(new Map([[route, view]]), config);
     }
+    normalizeSingleDocument(html, route);
     const prepared = {
       route,
       html,
       records,
       anchors: extractHtmlReferences(html).anchors,
       ...(view ? { view } : {}),
+      ...(warnings.length ? { warnings } : {}),
     };
     if (!componentProps) this.prepared.set(route, prepared);
     return prepared;

@@ -146,21 +146,6 @@ for (const [name, source, rule, pattern] of [
     undefined,
     /stylesheets.*HTTP|stylesheets.*relative/i,
   ],
-  [
-    "duplicate declaration",
-    declared().replace(
-      'stylesheets: ["action.css"]',
-      'stylesheets: ["action.css", "action.css"]',
-    ),
-    undefined,
-    /duplicate.*action\.css/i,
-  ],
-  [
-    "configured and declared",
-    declared(),
-    'stylesheets: [{ match: "**", stylesheets: ["action.css"] }],',
-    /action\.css.*configured|configured.*action\.css/i,
-  ],
 ] as const)
   test(`rejects ${name}`, async (t) => {
     const fixture = await fixtureWithSheets(source, rule);
@@ -171,7 +156,7 @@ for (const [name, source, rule, pattern] of [
     );
   });
 
-test("renderer cannot report ownership for a declared stylesheet", async (t) => {
+test("renderer ownership for declared CSS is ignored in favour of rendered declarers", async (t) => {
   const fixture = await fixtureWithSheets(
     declared(),
     'renderer: "renderer.tsx",',
@@ -181,9 +166,17 @@ test("renderer cannot report ownership for a declared stylesheet", async (t) => 
     path.join(fixture.root, "renderer.tsx"),
     `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => ({html: '<html><head></head><body>' + renderToStaticMarkup(input.node) + '</body></html>', resources: [{path: "action.css", componentIds: ["action"]}]});`,
   );
-  await assert.rejects(
-    compileCatalogue(await loadConfig(fixture.root)),
-    /action\.css/,
+  const result = await compileCatalogue(await loadConfig(fixture.root));
+  const screen = result.manifest.entries.find((entry) => entry.id === "home");
+  assert.ok(screen?.kind === "screen");
+  assert.deepEqual(screen.componentViews![0]!.resources, [
+    { path: "action.css", componentIds: ["action"] },
+    { path: "pane.css", componentIds: ["pane"] },
+  ]);
+  assert.ok(
+    result.warnings?.some(
+      (warning) => warning.code === "ignored-declared-resource-owner",
+    ),
   );
 });
 
@@ -210,7 +203,7 @@ for (const value of [
     );
   });
 
-test("missing configured link fails instead of silently appending component links", async (t) => {
+test("missing configured link places component links at the end of the head", async (t) => {
   const fixture = await fixtureWithSheets(
     declared(),
     'renderer: "renderer.tsx", stylesheets: [{ match: "**", stylesheets: ["base.css"] }],',
@@ -220,45 +213,44 @@ test("missing configured link fails instead of silently appending component link
     path.join(fixture.root, "renderer.tsx"),
     `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => '<html><head></head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`,
   );
-  await assert.rejects(
-    compileCatalogue(await loadConfig(fixture.root)),
-    /base\.css/,
+  const result = await compileCatalogue(await loadConfig(fixture.root));
+  const screen = result.manifest.entries.find((entry) => entry.id === "home");
+  assert.ok(screen?.kind === "screen");
+  const html = result.outputs.get(screen.fragments.mobile)!;
+  assert.doesNotMatch(html, /href="\.\.\/base\.css"/);
+  assert.match(html, /pane\.css/);
+  assert.match(html, /action\.css/);
+});
+
+test("a configured link away from the insertion position may be absent", () => {
+  const html = insertComponentStylesheets(
+    '<html><head><link rel="stylesheet" href="b.css"><link rel="stylesheet" href="c.css"></head><body></body></html>',
+    "screens/home.html",
+    ["a.css", "b.css", "c.css"],
+    2,
+    ["action.css"],
+  );
+  assert.match(
+    html,
+    /href="b\.css"><link rel="stylesheet" href="\.\.\/action\.css"><link rel="stylesheet" href="c\.css"/,
   );
 });
 
-test("a configured link away from the insertion position must still be present", () => {
-  assert.throws(
-    () =>
-      insertComponentStylesheets(
-        '<html><head><link rel="stylesheet" href="b.css"><link rel="stylesheet" href="c.css"></head><body></body></html>',
-        "screens/home.html",
-        ["a.css", "b.css", "c.css"],
-        2,
-        ["action.css"],
-      ),
-    (error: Error & { code?: string }) =>
-      error.code === "build-invalid" && error.message.includes("a.css"),
-  );
-});
-
-for (const [name, head, pattern] of [
+for (const [name, head] of [
   [
     "duplicate",
     '<link rel="stylesheet" href="${input.stylesheets[0]}"><link rel="stylesheet" href="${input.stylesheets[0]}">',
-    /ambiguous.*base\.css/,
   ],
   [
     "out of order",
     '<link rel="stylesheet" href="${input.stylesheets[1]}"><link rel="stylesheet" href="${input.stylesheets[0]}">',
-    /out of order.*extra\.css/,
   ],
   [
     "outside head",
     '</head><body><link rel="stylesheet" href="${input.stylesheets[0]}">',
-    /missing.*base\.css/,
   ],
 ] as const)
-  test(`rejects ${name} configured links when inserting component links`, async (t) => {
+  test(`keeps ${name} configured links when inserting component links`, async (t) => {
     const fixture = await fixtureWithSheets(
       declared(),
       'renderer: "renderer.tsx", stylesheets: [{ match: "**", stylesheets: ["base.css", "extra.css"] }],',
@@ -272,8 +264,11 @@ for (const [name, head, pattern] of [
       path.join(fixture.root, "renderer.tsx"),
       `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => \`<html><head>${head}</head><body>\${renderToStaticMarkup(input.node)}</body></html>\`;`,
     );
-    await assert.rejects(
-      compileCatalogue(await loadConfig(fixture.root)),
-      pattern,
-    );
+    const result = await compileCatalogue(await loadConfig(fixture.root));
+    const screen = result.manifest.entries.find((entry) => entry.id === "home");
+    assert.ok(screen?.kind === "screen");
+    const html = result.outputs.get(screen.fragments.mobile)!;
+    assert.match(html, /href="\.\.\/pane\.css"/);
+    assert.match(html, /href="\.\.\/action\.css"/);
+    assert.match(html, /href="\.\.\/base\.css"/);
   });

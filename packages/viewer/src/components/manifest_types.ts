@@ -45,6 +45,12 @@ export interface ComponentResourceOwnership {
   path: string;
   componentIds: readonly string[];
 }
+export interface InsertedComponentStylesheet {
+  startOffset: number;
+  endOffset: number;
+  path: string;
+  componentIds: readonly string[];
+}
 export interface ComponentViewRecord {
   viewport: Viewport;
   colorScheme: ColorScheme;
@@ -53,6 +59,7 @@ export interface ComponentViewRecord {
   ranges: readonly ComponentRangeRecord[];
   styles: readonly ComponentStyleOwnership[];
   resources: readonly ComponentResourceOwnership[];
+  insertedStylesheets?: readonly InsertedComponentStylesheet[];
 }
 export interface ManifestComponentVariant {
   id: string;

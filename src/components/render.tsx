@@ -4,9 +4,10 @@ import path from "node:path";
 import type { ReactNode } from "react";
 
 import type { ComponentViewRecord } from "@mokly/viewer";
-import { invalidData } from "@mokly/viewer/data";
+import { invalidData, validateResourcePath } from "@mokly/viewer/data";
 
 import type { ScreenDefinition } from "../authoring/types.js";
+import type { BuildWarning } from "../build/warnings.js";
 import { serializeReviewSentinels } from "../renderer/sentinels.js";
 import type { RenderInput, Renderer, RenderResult } from "../renderer/types.js";
 
@@ -15,13 +16,17 @@ import { componentInputs } from "./inputs.js";
 import { serializeComponentSentinels } from "./ranges.js";
 import { ComponentContext } from "./render_context.js";
 import { rebaseStyleOwnership } from "./style_ownership.js";
-import { insertComponentStylesheets } from "./stylesheet_links.js";
+import {
+  assertNoAuthoredStylesheetToken,
+  insertComponentStylesheets,
+} from "./stylesheet_links.js";
 import { rendererStylesheetPaths } from "./stylesheet_reuse.js";
 import type { ComponentDefinition } from "./types.js";
 
 export interface ComponentRenderOutput {
   html: string;
   view: ComponentViewRecord;
+  warnings?: readonly BuildWarning[];
 }
 export type ComponentGraphRenderer = (
   input: Omit<RenderInput, "entry"> & {
@@ -29,7 +34,12 @@ export type ComponentGraphRenderer = (
   },
   renderer: Renderer,
   definitions: readonly ComponentDefinition[],
-  placement: { route: string; position: number; mockupsDir: string },
+  placement: {
+    route: string;
+    position: number;
+    mockupsDir: string;
+    isPublicFile: (candidate: string) => boolean;
+  },
 ) => ComponentRenderOutput;
 
 /** This entrypoint is bundled with the consumer, sharing its one React context. */
@@ -71,6 +81,7 @@ export const renderWithComponents: ComponentGraphRenderer = (
       collector.label,
       "renderer must return a complete HTML document",
     );
+  assertNoAuthoredStylesheetToken(rendered.html, placement.route);
   const serialized = serializeComponentSentinels(
     serializeReviewSentinels(rendered.html),
     collector.boundaries,
@@ -92,29 +103,44 @@ export const renderWithComponents: ComponentGraphRenderer = (
     }
   }
   const physicalPaths = new Set(owners.keys());
-  for (const resource of rendered.resources ?? []) {
-    const candidate =
-      typeof resource.path === "string"
-        ? path.resolve(placement.mockupsDir, resource.path)
-        : undefined;
-    const physicalPath =
-      candidate && fs.existsSync(candidate)
-        ? fs.realpathSync(candidate)
-        : undefined;
-    if (
-      [...owners.values()].some(({ file }) => file === resource.path) ||
-      (physicalPath !== undefined && physicalPaths.has(physicalPath))
-    )
+  const allDeclared = new Set(
+    definitions.flatMap((definition) =>
+      definition.stylesheets.map((file) =>
+        fs.realpathSync(path.resolve(placement.mockupsDir, file)),
+      ),
+    ),
+  );
+  const warnings: BuildWarning[] = [];
+  const warned = new Set<string>();
+  const retainedResources = (rendered.resources ?? []).filter((resource) => {
+    validateResourcePath(resource.path, placement.route);
+    const candidate = path.resolve(placement.mockupsDir, resource.path);
+    const physicalPath = fs.existsSync(candidate)
+      ? fs.realpathSync(candidate)
+      : undefined;
+    if (physicalPath === undefined || !allDeclared.has(physicalPath))
+      return true;
+    if (!placement.isPublicFile(candidate))
       invalidData(
         placement.route,
-        `renderer resources record conflicts with declared stylesheet ${resource.path}`,
+        `renderer resource is not a public file: ${resource.path}`,
       );
-  }
+    if (!warned.has(physicalPath)) {
+      warned.add(physicalPath);
+      warnings.push({
+        code: "ignored-declared-resource-owner",
+        context: [placement.route, physicalPath],
+        message: `renderer resources for declared stylesheet ${JSON.stringify(resource.path)} on ${JSON.stringify(placement.route)} are ignored; Mokly derives owners from rendered components.`,
+      });
+    }
+    return false;
+  });
   const rendererLinks = rendererStylesheetPaths(
     serialized.html,
     placement.route,
     placement.mockupsDir,
     physicalPaths,
+    input.stylesheets,
   );
   const html = insertComponentStylesheets(
     serialized.html,
@@ -124,6 +150,7 @@ export const renderWithComponents: ComponentGraphRenderer = (
     [...owners]
       .filter(([physical]) => !rendererLinks.has(physical))
       .map(([, owner]) => owner.file),
+    true,
   );
   const view: ComponentViewRecord = {
     viewport: input.viewport,
@@ -137,7 +164,7 @@ export const renderWithComponents: ComponentGraphRenderer = (
     ranges: serialized.ranges,
     styles: rebaseStyleOwnership(rendered.html, html, rendered.styles ?? []),
     resources: [
-      ...(rendered.resources ?? []),
+      ...retainedResources,
       ...[...owners].map(([physical, { file, ids }]) => ({
         path: rendererLinks.get(physical) ?? file,
         componentIds: [...ids].sort(),
@@ -146,7 +173,7 @@ export const renderWithComponents: ComponentGraphRenderer = (
       left.path < right.path ? -1 : left.path > right.path ? 1 : 0,
     ),
   };
-  return { html, view };
+  return { html, view, ...(warnings.length ? { warnings } : {}) };
 };
 
 function ComponentRoot({

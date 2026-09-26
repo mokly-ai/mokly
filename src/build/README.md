@@ -95,6 +95,10 @@ Component stylesheet links use the nearest present configured link, or the end
 of head content when none exists. A transient marker survives a compatibility
 transform on retained inserted links; Mokly removes it before writing output
 and records private final-document spans for comparison projection.
+`stylesheet_provenance.ts` prunes derived owners after compatibility output;
+renderer owner records ignored for declared CSS are retained as structured
+`BuildWarning` values on exhaustive compilations and requested documents.
+Terminal reporting of those values belongs to the next warning milestone.
 
 ## Development
 

@@ -100,6 +100,7 @@ export type {
   ComponentSourceLocation,
   ComponentStyleOwnership,
   ComponentResourceOwnership,
+  InsertedComponentStylesheet,
 } from "./components/manifest_types.js";
 export { instanceKey, slotKey } from "./components/keys.js";
 export { resolveInstance } from "./components/resolve_instance.js";

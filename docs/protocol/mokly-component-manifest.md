@@ -18,8 +18,8 @@ Manifest v6 and component stylesheet ownership are defined by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
 implemented in Milestone 6 and delivered in Milestone 3 respectively.
 Historical parsing of v3–v5 is retained for Git baselines.
-The optional inserted-link provenance record below is planned by the same
-plan's Milestone 13 and is not implemented yet. It extends private v6 view
+The optional inserted-link provenance record below was implemented by the same
+plan's Milestone 13. It extends private v6 view
 metadata without changing the manifest version or public read model.
 Ignoring renderer records for declared CSS with a warning is planned by
 Milestone 14.
@@ -202,7 +202,7 @@ links. The current writer emits the field for every component view, including
 an empty array when nothing was inserted. An absent field on an earlier v6
 baseline means no link can be proven Mokly-inserted; comparison retains those
 links as page content. The
-[stylesheet contract](./mokly-component-stylesheets.md#provenance-and-comparison-material)
+[stylesheet ownership contract](./mokly-component-stylesheet-ownership.md#provenance-and-comparison-material)
 defines the transient transform token and projection rules.
 
 `owner` identifies the caller whose inputs are compared. `slotKey`, when present,

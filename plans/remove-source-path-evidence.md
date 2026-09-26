@@ -668,19 +668,24 @@ Update the contracts for the 2026-09-26 decisions. Docs only.
 
 ## Milestone 13: Implement the stylesheet comparison and graceful handling
 
-- [ ] Finding 1: failure-first tests. A parent that starts to show a child
+- [x] Finding 1: failure-first tests. A parent that starts to show a child
       with declared stylesheets puts only the parent in Changes, with its
       consumers affected. A component that adds a stylesheet puts only the
       component in Changes. A component page keeps its own links in the
       comparison. The complete and fast comparison paths agree.
-- [ ] Finding 7: a test with a transformer that removes an inserted link.
-- [ ] Rule cases 1 to 4, each with a failure-first test. The case 4 test uses a
+- [x] Finding 7: a test with a transformer that removes an inserted link.
+- [x] Rule cases 1 to 4, each with a failure-first test. The case 4 test uses a
       renderer record for a declared stylesheet on a page without the
       declaring component, and proves that Changes names the right entries.
-- [ ] Finding 3: marker placement tests with the marker first, in the middle
+- [x] Finding 3: marker placement tests with the marker first, in the middle
       and missing, and one table test for each placement rule, including the
       new cases.
-- [ ] Run the focused tests, `npm run typecheck`, `npm run lint`,
+- [x] Keep public-file protection when ignoring a renderer owner record;
+      cover an excluded symlink alias and retain structured ignored-record
+      warnings in exhaustive and requested-document results.
+- [x] Split the component stylesheet protocol into linked declaration and
+      ownership/comparison documents and update referring contracts and READMEs.
+- [x] Run the focused tests, `npm run typecheck`, `npm run lint`,
       `npm run example:build`, `npm run example:check` and the complete unit
       suite at 100%.
 

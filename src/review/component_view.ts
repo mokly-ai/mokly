@@ -3,12 +3,14 @@ import type {
   EntryChangeReason,
   ViewReview,
 } from "@mokly/viewer/data";
+import { canonicalJson } from "@mokly/viewer/data";
 
 import {
   stripHistoricalMarkers,
   stripMarkers,
 } from "../components/comparison_material.js";
 import { changedComponentImplementations } from "../components/comparison_projection.js";
+import { comparisonStylesheetMaterial } from "../components/comparison_stylesheets.js";
 import { validateComponentRanges } from "../components/ranges.js";
 import { MoklyError } from "../errors.js";
 
@@ -71,11 +73,11 @@ export async function compareComponentView(
   if (base === undefined || head === undefined) {
     const normalized =
       base !== undefined
-        ? normalizeOneSidedView(base, before!, "historical")
-        : normalizeOneSidedView(head!, after!, "current");
+        ? normalizeOneSidedView(base, before!, "historical", root)
+        : normalizeOneSidedView(head!, after!, "current", root);
     const evidence = await context.resources.compare(
-      before ? { path: before.path, html: normalized } : undefined,
-      after ? { path: after.path, html: normalized } : undefined,
+      before ? { path: before.path, html: normalized.resource } : undefined,
+      after ? { path: after.path, html: normalized.resource } : undefined,
     );
     return {
       comparisonPath: "complete",
@@ -108,12 +110,37 @@ export async function compareComponentView(
   prepared ??= prepareComponentProjection(before!, after!, base, head, root);
   const { baseRanges, headRanges, projected, excluded } = prepared;
   const reasons: EntryChangeReason[] = [];
+  const rootOwnershipChanged = Boolean(
+    root &&
+    canonicalJson(
+      before!.usage?.resources
+        .filter((resource) => resource.componentIds.includes(root))
+        .map((resource) => resource.path) ?? [],
+    ) !==
+      canonicalJson(
+        after!.usage?.resources
+          .filter((resource) => resource.componentIds.includes(root))
+          .map((resource) => resource.path) ?? [],
+      ),
+  );
   if (projected.before !== projected.after) reasons.push({ kind: "material" });
+  if (rootOwnershipChanged) reasons.push({ kind: "material" });
   if (projected.inputs) reasons.push({ kind: "inputs" });
   if (projected.structure) reasons.push({ kind: "structure" });
-  const actual = normalizeReviewPair(
+  const actualResource = normalizeReviewPair(
     stripHistoricalMarkers(base),
     stripMarkers(head, after?.usage, headRanges),
+    selected.path,
+  );
+  const baseMaterial = comparisonStylesheetMaterial(base, before!.usage, root);
+  const headMaterial = comparisonStylesheetMaterial(head, after!.usage, root);
+  const actual = normalizeReviewPair(
+    stripHistoricalMarkers(baseMaterial.html),
+    stripMarkers(
+      headMaterial.html,
+      headMaterial.usage,
+      headMaterial.html === head ? headRanges : undefined,
+    ),
     selected.path,
   );
   const repoPath = (path: string) =>
@@ -122,12 +149,12 @@ export async function compareComponentView(
     { path: before!.path, html: projected.before },
     { path: after!.path, html: projected.after },
     excluded,
-    { before: actual.base, after: actual.head },
+    { before: actualResource.base, after: actualResource.head },
   );
   reasons.push(...(evidence.reasons ?? []));
   const actualEvidence = await context.resources.compare(
-    { path: before!.path, html: actual.base },
-    { path: after!.path, html: actual.head },
+    { path: before!.path, html: actualResource.base },
+    { path: after!.path, html: actualResource.head },
   );
   const byteChanges = context.compareResourceBytes
     ? await changedResourceBytes(
@@ -149,8 +176,8 @@ export async function compareComponentView(
     reasons.push({ kind: "material" });
   const actualByteChanges = context.compareResourceBytes
     ? await changedResourceBytes(
-        await context.beforeReader.resources(before!.path, actual.base),
-        await context.afterReader.resources(after!.path, actual.head),
+        await context.beforeReader.resources(before!.path, actualResource.base),
+        await context.afterReader.resources(after!.path, actualResource.head),
         context.beforeReader,
         context.afterReader,
       )
@@ -181,9 +208,13 @@ export async function compareComponentView(
       ...view,
       ...actualEvidence,
       ignoredIds: actual.ignoredIds,
-      ...(actual.base !== actual.head ? { material: true as const } : {}),
+      ...(actual.base !== actual.head || rootOwnershipChanged
+        ? { material: true as const }
+        : {}),
       state:
-        actual.base !== actual.head || actualResourceChange
+        actual.base !== actual.head ||
+        actualResourceChange ||
+        rootOwnershipChanged
           ? "changed"
           : projected.rawEqual
             ? "unchanged"
@@ -197,13 +228,22 @@ function normalizeOneSidedView(
   html: string,
   view: GeneratedComponentView,
   dialect: "current" | "historical",
-): string {
+  root?: string,
+): { page: string; resource: string } {
   const ranges = view.usage
     ? validateComponentRanges(html, view.usage.ranges, dialect)
     : undefined;
+  const compared = comparisonStylesheetMaterial(html, view.usage, root);
   const material =
+    dialect === "historical"
+      ? stripHistoricalMarkers(compared.html)
+      : stripMarkers(compared.html, compared.usage);
+  const original =
     dialect === "historical"
       ? stripHistoricalMarkers(html)
       : stripMarkers(html, view.usage, ranges);
-  return normalizeSingleDocument(material, view.path);
+  return {
+    page: normalizeSingleDocument(material, view.path),
+    resource: normalizeSingleDocument(original, view.path),
+  };
 }

@@ -50,7 +50,7 @@ test("a marker from a separately bundled config places links and retains its sin
   );
 });
 
-test("realpath aliases cannot duplicate or hide configured conflicts", async (t) => {
+test("realpath aliases deduplicate declarations and reuse configured links", async (t) => {
   const fixture = await fixtureWithSheets(declared());
   t.after(() => removeFixture(fixture));
   await fs.symlink("action.css", path.join(fixture.mockupsDir, "alias.css"));
@@ -61,9 +61,18 @@ test("realpath aliases cannot duplicate or hide configured conflicts", async (t)
       'stylesheets: ["action.css", "alias.css"]',
     ),
   );
-  await assert.rejects(
-    compileCatalogue(await loadConfig(fixture.root)),
-    /duplicate stylesheet realpath: alias\.css/,
+  const deduplicated = await compileCatalogue(await loadConfig(fixture.root));
+  const first = deduplicated.manifest.entries.find(
+    (entry) => entry.id === "home",
+  );
+  assert.ok(first?.kind === "screen");
+  assert.equal(
+    (
+      deduplicated.outputs
+        .get(first.fragments.mobile)!
+        .match(/href="\.\.\/action\.css"/g) ?? []
+    ).length,
+    1,
   );
   await fs.writeFile(fixture.entryPath, declared());
   await fs.writeFile(
@@ -73,13 +82,26 @@ test("realpath aliases cannot duplicate or hide configured conflicts", async (t)
       '"alias.css"',
     ),
   );
-  await assert.rejects(
-    compileCatalogue(await loadConfig(fixture.root)),
-    /action\.css conflicts with configured/,
+  const reused = await compileCatalogue(await loadConfig(fixture.root));
+  const screen = reused.manifest.entries.find((entry) => entry.id === "home");
+  assert.ok(screen?.kind === "screen");
+  assert.equal(
+    (
+      reused.outputs
+        .get(screen.fragments.mobile)!
+        .match(/href="\.\.\/alias\.css"/g) ?? []
+    ).length,
+    1,
+  );
+  assert.deepEqual(
+    screen.componentViews![0]!.resources.find(
+      (resource) => resource.path === "alias.css",
+    )?.componentIds,
+    ["action"],
   );
 });
 
-test("renderer resource aliases also conflict with a declared stylesheet", async (t) => {
+test("renderer resource aliases cannot override declared owners", async (t) => {
   const fixture = await fixtureWithSheets(
     declared(),
     'renderer: "renderer.tsx",',
@@ -90,8 +112,33 @@ test("renderer resource aliases also conflict with a declared stylesheet", async
     path.join(fixture.root, "renderer.tsx"),
     `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => ({ html: '<html><head></head><body>' + renderToStaticMarkup(input.node) + '</body></html>', resources: [{path: "alias.css", componentIds: ["action"]}] });`,
   );
+  const result = await compileCatalogue(await loadConfig(fixture.root));
+  const screen = result.manifest.entries.find((entry) => entry.id === "home");
+  assert.ok(screen?.kind === "screen");
+  assert.deepEqual(
+    screen.componentViews![0]!.resources.find(
+      (resource) => resource.path === "action.css",
+    )?.componentIds,
+    ["action"],
+  );
+  assert.ok(
+    result.warnings?.some((warning) => warning.message.includes("alias.css")),
+  );
+});
+
+test("an excluded renderer alias cannot bypass public-file protection", async (context) => {
+  const fixture = await fixtureWithSheets(
+    declared(),
+    'renderer: "renderer.tsx", publicExclude: ["private.css"],',
+  );
+  context.after(() => removeFixture(fixture));
+  await fs.symlink("action.css", path.join(fixture.mockupsDir, "private.css"));
+  await fs.writeFile(
+    path.join(fixture.root, "renderer.tsx"),
+    `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => ({ html: '<html><head></head><body>' + renderToStaticMarkup(input.node) + '</body></html>', resources: [{path: "private.css", componentIds: ["action"]}] });`,
+  );
   await assert.rejects(
     compileCatalogue(await loadConfig(fixture.root)),
-    /alias\.css/,
+    /not a public file.*private\.css/,
   );
 });

@@ -4,6 +4,27 @@ import { localStylesheetHref } from "../config/stylesheet_hrefs.js";
 import { MoklyError } from "../errors.js";
 
 type Node = DefaultTreeAdapterMap["node"];
+const PROVENANCE_ATTRIBUTE = "data-mokly-component-stylesheet";
+
+/** Reserve the transient marker only when authored as an actual HTML attribute. */
+export function assertNoAuthoredStylesheetToken(
+  html: string,
+  route: string,
+): void {
+  function visit(node: Node): void {
+    if (
+      "attrs" in node &&
+      node.attrs.some((attribute) => attribute.name === PROVENANCE_ATTRIBUTE)
+    )
+      throw new MoklyError(
+        "build-invalid",
+        `${route}: renderer authored reserved ${PROVENANCE_ATTRIBUTE} attribute`,
+      );
+    if ("childNodes" in node) for (const child of node.childNodes) visit(child);
+    if ("content" in node) visit(node.content);
+  }
+  visit(parse(html));
+}
 
 /** A stylesheet link may carry other rel tokens, including alternate. */
 export function stylesheetLink(
@@ -57,6 +78,7 @@ export function insertComponentStylesheets(
   configured: readonly string[],
   position: number,
   declared: readonly string[],
+  provenance = false,
 ): string {
   if (!declared.length) return html;
   const document = parse(html, { sourceCodeLocationInfo: true });
@@ -81,33 +103,39 @@ export function insertComponentStylesheets(
     if ("childNodes" in node) node.childNodes.forEach(findLinks);
   }
   findLinks(head);
-  const anchors = configured.map((href) => {
-    const matches = links.filter((link) =>
+  const anchors = configured.flatMap((href, index) => {
+    const match = links.find((link) =>
       link.attrs.some(
         (attribute) => attribute.name === "href" && attribute.value === href,
       ),
     );
-    if (matches.length !== 1 || !matches[0]!.sourceCodeLocation)
-      throw new MoklyError(
-        "build-invalid",
-        `${route}: missing or ambiguous configured stylesheet link: ${href}`,
-      );
-    return matches[0]!.sourceCodeLocation!;
+    return match?.sourceCodeLocation
+      ? [{ index, location: match.sourceCodeLocation }]
+      : [];
   });
-  for (let index = 1; index < anchors.length; index++)
-    if (anchors[index - 1]!.startOffset >= anchors[index]!.startOffset)
-      throw new MoklyError(
-        "build-invalid",
-        `${route}: configured stylesheet link out of order: ${configured[index]}`,
-      );
-  const offset =
-    anchors[position]?.startOffset ??
-    anchors.at(-1)?.endOffset ??
-    headEndOffset(head, document, html);
+  anchors.sort((left, right) => {
+    const leftDistance =
+      left.index < position ? position - left.index : left.index - position + 1;
+    const rightDistance =
+      right.index < position
+        ? position - right.index
+        : right.index - position + 1;
+    return (
+      leftDistance - rightDistance ||
+      Number(right.index >= position) - Number(left.index >= position) ||
+      left.index - right.index
+    );
+  });
+  const anchor = anchors[0];
+  const offset = anchor
+    ? anchor.index < position
+      ? anchor.location.endOffset
+      : anchor.location.startOffset
+    : headEndOffset(head, document, html);
   const insertion = declared
     .map(
-      (file) =>
-        `<link rel="stylesheet" href="${localStylesheetHref(route, file).replaceAll("&", "&amp;").replaceAll('"', "&quot;")}">`,
+      (file, index) =>
+        `<link rel="stylesheet" href="${localStylesheetHref(route, file).replaceAll("&", "&amp;").replaceAll('"', "&quot;")}"${provenance ? ` data-mokly-component-stylesheet="${index}"` : ""}>`,
     )
     .join("");
   return html.slice(0, offset) + insertion + html.slice(offset);

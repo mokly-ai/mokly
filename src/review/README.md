@@ -16,6 +16,10 @@ stylesheet links, except a component page's root-owned links. It uses private
 final-document spans on both complete and unchanged-view fast paths; actual
 resource and CSS analysis still reads the final linked document. Renderer
 links reused for ownership remain page content.
+`component_projection_resources.ts` prepares the comparison-only copies,
+while `component_view.ts` and `component_view_fast_path.ts` preserve the full
+documents for actual resource closure and CSS rule evidence. See the
+[stylesheet ownership contract](../../docs/protocol/mokly-component-stylesheet-ownership.md).
 
 `git.ts` defines separate `RepositoryEvidence` (merge base and changed paths)
 and `BaselineReader` (historical files) interfaces. Paths at the reader boundary

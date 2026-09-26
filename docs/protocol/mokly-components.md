@@ -9,9 +9,8 @@ removal of `ownedDependencies` was implemented in Milestone 6.
 Milestone 11 of the same plan omits `stylesheets` from the renderer's
 component entry at runtime and in its public type.
 Deduplicating declarations and ignoring redundant renderer ownership follow
-the [graceful-handling rule](./README.md#graceful-handling); these changes and
-their warnings are planned by the same plan's Milestones 13 and 14,
-respectively, and are not implemented yet.
+the [graceful-handling rule](./README.md#graceful-handling); Milestone 13
+implemented that handling. Warning delivery is planned for Milestone 14.
 
 The public `defineComponent` API, saved variants, ownership attribution,
 explorer, inspection, and local controls are implemented. The

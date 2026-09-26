@@ -11,9 +11,9 @@ reader accepts v4/v5 only and rejects v2/v3 as unsupported.
 The Milestone 4 classifier already routes retained non-CSS resource evidence
 to owners at actual invocations, independently of saved-variant matches.
 Comparison-material exclusion for Mokly-inserted child stylesheet links and
-post-transform owner pruning are planned by
+post-transform owner pruning were implemented by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-Milestone 13, and are not implemented yet. The v5 wire result stays unchanged.
+Milestone 13. The v5 wire result stays unchanged.
 `ReviewResult`, `ScreenReview`, `ViewReview`, and `ReviewState` refer to the
 screen-only [schema-v4 contract](./mokly-changes.md) and
 [named result interfaces](../../packages/viewer/src/review/types.ts). Manifest/usage types come

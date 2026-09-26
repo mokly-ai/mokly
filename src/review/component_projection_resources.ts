@@ -6,6 +6,7 @@ import {
   projectComponentPair,
   type ComponentProjection,
 } from "../components/comparison_projection.js";
+import { comparisonStylesheetMaterial } from "../components/comparison_stylesheets.js";
 import {
   validateComponentRanges,
   type RenderedRange,
@@ -33,15 +34,17 @@ export function prepareComponentProjection(
   const headRanges = after.usage
     ? validateComponentRanges(head, after.usage.ranges)
     : undefined;
+  const baseMaterial = comparisonStylesheetMaterial(base, before.usage, root);
+  const headMaterial = comparisonStylesheetMaterial(head, after.usage, root);
   const projected = projectComponentPair(
-    base,
-    head,
-    before.usage,
-    after.usage,
+    baseMaterial.html,
+    headMaterial.html,
+    baseMaterial.usage,
+    headMaterial.usage,
     after.path,
     root,
-    baseRanges,
-    headRanges,
+    baseMaterial.html === base ? baseRanges : undefined,
+    headMaterial.html === head ? headRanges : undefined,
   );
   return {
     ...(baseRanges ? { baseRanges } : {}),

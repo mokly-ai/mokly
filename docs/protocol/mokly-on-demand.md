@@ -6,9 +6,9 @@ The internal v6 entry shape and declared-stylesheet on-demand linking were
 planned by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md)
 and implemented in Milestones 6 and 3 respectively. Serve now uses the v6
 entry shape and links declared stylesheets.
-Post-transform owner pruning, inserted-link provenance and render warning
-collection in foreground and transient Serve renders are planned by the same
-plan's Milestones 13 and 14, respectively; they are not implemented yet.
+Post-transform owner pruning and inserted-link provenance were implemented by
+the same plan's Milestone 13. Render warning reporting in foreground and
+transient Serve renders remains planned for Milestone 14.
 
 ## Startup and completeness
 

@@ -27,6 +27,7 @@ import type { Renderer } from "../renderer/types.js";
 
 import { generatedHeader } from "./ownership.js";
 import { renderPage } from "./render_page.js";
+import type { BuildWarning } from "./warnings.js";
 
 /** Render every screen view to owned, linked static documents. */
 export function renderFragments(
@@ -42,6 +43,7 @@ export function renderFragments(
     colorScheme: ColorScheme;
     variantId?: string;
   },
+  onWarning?: (warning: BuildWarning) => void,
 ): Map<string, string> {
   const outputs = new Map<string, string>();
   const components = entries.filter((entry) => entry.kind === "component");
@@ -105,8 +107,11 @@ export function renderFragments(
                 route,
                 position: placement.position,
                 mockupsDir: config.mockupsDir,
+                isPublicFile: (candidate) =>
+                  isPublicStaticFile(candidate, config),
               });
               rendered = output.html;
+              if (onWarning) output.warnings?.forEach(onWarning);
               componentViews.set(route, {
                 ...output.view,
                 styles: rebaseStyleOwnership(

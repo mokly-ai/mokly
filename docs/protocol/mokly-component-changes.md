@@ -13,8 +13,8 @@ Milestone 6 removed the legacy authoring fields; the current writer emits v6.
 Actual-invocation ownership of retained non-CSS resource evidence is implemented
 by the same Milestone 4 classifier.
 The inserted-link comparison projection and post-transform ownership rule
-below are planned by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-Milestone 13, and are not implemented yet.
+below were implemented by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
+Milestone 13. Warning delivery remains planned for Milestone 14.
 
 ## Changes Membership
 
@@ -97,7 +97,7 @@ Its own Mokly-inserted stylesheet links stay in its comparison material; a
 child-only inserted link does not. A screen's inserted component links never
 count as screen material. Renderer-authored links stay material even when
 Mokly reuses them to record owners. The
-[stylesheet provenance contract](./mokly-component-stylesheets.md#provenance-and-comparison-material)
+[stylesheet provenance contract](./mokly-component-stylesheet-ownership.md#provenance-and-comparison-material)
 defines the private final-document spans that distinguish those cases.
 Nested registered components use the same boundary rules, so a child-only
 implementation edit does not create duplicate direct changes on every parent.

@@ -8,7 +8,7 @@ Milestone 4 has implemented membership, summary updates and removal of
 source-path evidence. Milestone 7 implemented the versioned result schemas;
 writers and readers now use v4/v5 and reject v2/v3.
 The component-aware page-material exclusion for Mokly-inserted stylesheet
-links is planned by the same plan's Milestone 13 and is not implemented yet;
+links was implemented by the same plan's Milestone 13;
 result versions remain v4/v5.
 
 The implemented [component attribution extension](./mokly-component-changes.md)

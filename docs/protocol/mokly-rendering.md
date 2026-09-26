@@ -15,8 +15,8 @@ Both are in current generated output.
 Milestone 11 of the same plan removed component `stylesheets` from the
 renderer-facing `input.entry` at runtime and in its public type.
 The transient inserted-link provenance and relaxed configured-link placement
-below are planned by Milestone 13; the warning channel is planned by
-Milestone 14. They are not implemented yet.
+below were implemented by Milestone 13; the warning channel remains planned
+by Milestone 14 and is not implemented yet.
 
 ## Rendering Boundary
 
@@ -140,7 +140,8 @@ segment.
 `RenderInput.entry` has no declaration list. Mokly inserts declared component
 stylesheets beside the renderer's configured links after rendering; see the
 [component stylesheet contract](./mokly-component-stylesheets.md) for marker
-placement, nearest-present-link fallback, transient comparison provenance,
+placement and nearest-present-link fallback, and the linked
+[ownership contract](./mokly-component-stylesheet-ownership.md) for transient comparison provenance,
 post-transform owner pruning and style-offset rebasing. The compatibility
 transform may remove a declared link; only files still linked in its final
 output receive derived owners. A transform retaining an inserted link preserves

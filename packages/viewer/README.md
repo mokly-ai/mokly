@@ -25,6 +25,10 @@ exported Mokly catalogue inside another product. It provides the same browsing,
 comparison and inspection experience as Mokly's standalone catalogue while
 your application keeps control of its navigation, branding, authentication and
 collaboration UI.
+The `@mokly/viewer/data` boundary also validates Mokly's private manifest v6
+component view records, including optional inserted-stylesheet provenance.
+That provenance is not part of the public catalogue read model; see the
+[component manifest contract](../../docs/protocol/mokly-component-manifest.md).
 
 > Need to create a catalogue? Use
 > [`@mokly/mokly`](https://www.npmjs.com/package/@mokly/mokly). The viewer is a

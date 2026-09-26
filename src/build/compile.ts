@@ -10,6 +10,7 @@ import { transformCompatibilityDocuments } from "../compatibility/transform.js";
 import { validateComponentResources } from "../components/output_validation.js";
 import { validateComponentRanges } from "../components/ranges.js";
 import { rebaseStyleOwnership } from "../components/style_ownership.js";
+import { finalizeComponentStylesheets } from "../components/stylesheet_provenance.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timeSync, timingCounts } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
@@ -29,13 +30,15 @@ import { loadConsumerGraph, type LoadedGraph } from "./load_graph.js";
 import { validateLogicalFragments } from "./logical_records.js";
 import { validateGeneratedOutputPaths } from "./output_paths.js";
 import { validateGeneratedOwnershipHeaders } from "./ownership.js";
-import { renderFragments } from "./render.js";
+import { renderFragments, stylesheetPlacementFor } from "./render.js";
 import { renderCooperatively } from "./render_cooperative.js";
+import type { BuildWarning } from "./warnings.js";
 
 /** Complete in-memory static compilation result. */
 export interface Compilation {
   manifest: ManifestV6;
   outputs: ReadonlyMap<string, string>;
+  warnings?: readonly BuildWarning[];
 }
 
 /** Compile all expected bytes without mutating consumer output. */
@@ -70,6 +73,7 @@ async function compileMeasured(
   }));
   const fragmentViews = new Map<string, ArtifactView>();
   const componentViews = new Map<string, ComponentViewRecord>();
+  const warnings: BuildWarning[] = [];
   const outputs = accepted
     ? await timeAsync("render", () =>
         renderCooperatively(
@@ -79,6 +83,7 @@ async function compileMeasured(
           fragmentViews,
           componentViews,
           accepted.checkpoint,
+          (warning) => warnings.push(warning),
         ),
       )
     : timeSync("render", () =>
@@ -89,6 +94,8 @@ async function compileMeasured(
           fragmentViews,
           graph.renderWithComponents,
           componentViews,
+          undefined,
+          (warning) => warnings.push(warning),
         ),
       );
   const routedEntries = new Set(
@@ -97,6 +104,7 @@ async function compileMeasured(
     ),
   );
   const generatedOwners = new Map<string, string>();
+  const catalogueRoutes = new Map<string, string>();
   for (const entry of registry.entries) {
     if (entry.kind === "page")
       generatedOwners.set(entry.route, entry.sourceRelativePath);
@@ -109,17 +117,16 @@ async function compileMeasured(
           entry,
           config.colorSchemes,
         )) {
-          generatedOwners.set(
-            variantId
-              ? componentFragmentRoute(
-                  entry.route,
-                  variantId,
-                  viewport,
-                  colorScheme,
-                )
-              : fragmentRoute(entry.route, viewport, colorScheme),
-            entry.sourceRelativePath,
-          );
+          const fragment = variantId
+            ? componentFragmentRoute(
+                entry.route,
+                variantId,
+                viewport,
+                colorScheme,
+              )
+            : fragmentRoute(entry.route, viewport, colorScheme);
+          generatedOwners.set(fragment, entry.sourceRelativePath);
+          catalogueRoutes.set(fragment, entry.route);
         }
       }
     }
@@ -153,15 +160,26 @@ async function compileMeasured(
   );
   timeSync("components.validate-metadata", () => {
     for (const [route, view] of componentViews) {
-      const final = outputs.get(route)!;
-      validateComponentRanges(final, view.ranges);
+      const original = beforeTransform.get(route)!;
+      const finalized = finalizeComponentStylesheets(
+        original,
+        outputs.get(route)!,
+        view,
+        route,
+        config.mockupsDir,
+        registry.entries.filter((entry) => entry.kind === "component"),
+        stylesheetPlacementFor(
+          catalogueRoutes.get(route)!,
+          route,
+          fragmentViews.get(route)!.colorScheme,
+          config,
+        ).hrefs,
+      );
+      outputs.set(route, finalized.html);
+      validateComponentRanges(finalized.html, view.ranges);
       componentViews.set(route, {
-        ...view,
-        styles: rebaseStyleOwnership(
-          beforeTransform.get(route)!,
-          final,
-          view.styles,
-        ),
+        ...finalized.view,
+        styles: rebaseStyleOwnership(original, finalized.html, view.styles),
       });
     }
   });
@@ -199,7 +217,11 @@ async function compileMeasured(
   timeSync("output.paths", () =>
     validateGeneratedOutputPaths(outputs.keys(), config),
   );
-  const compilation = { manifest, outputs };
+  const compilation = {
+    manifest,
+    outputs,
+    ...(warnings.length ? { warnings } : {}),
+  };
   timeSync("runtime.retain", () => rememberRuntime(compilation, graph, config));
   timingCounts("output", () => ({
     files: outputs.size,

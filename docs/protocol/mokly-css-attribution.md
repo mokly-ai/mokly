@@ -17,9 +17,9 @@ comparison-format changes were implemented in Milestone 7.
 Retained non-CSS resource reasons already follow actual-invocation component
 ownership under the Milestone 4 classifier.
 Leaving Mokly-inserted links out of consumer page-comparison material while
-retaining final-document CSS analysis is planned by
+retaining final-document CSS analysis was implemented by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-Milestone 13, and is not implemented yet.
+Milestone 13.
 
 ## Purpose
 
@@ -46,7 +46,8 @@ documents after the same paired ignore normalization the comparison engine
 uses. It never widens the set of examined files; unreferenced public files and
 source paths add nothing on their own. Declared component CSS is eligible only
 when linked in a rendered document, under the
-[component stylesheet contract](./mokly-component-stylesheets.md).
+[component stylesheet contract](./mokly-component-stylesheets.md) and its
+[ownership rules](./mokly-component-stylesheet-ownership.md).
 The comparison-only removal of Mokly-inserted links does not remove those
 links from the actual final document used to discover CSS and match changed
 rules. An unlinked declaration has no CSS evidence or derived owner record.

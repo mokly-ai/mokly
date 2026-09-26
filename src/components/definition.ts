@@ -93,8 +93,6 @@ export function validateComponentDefinition(
         at,
         `stylesheets must contain mockupsDir-relative public CSS paths: ${String(stylesheet)}`,
       );
-    if (seenStylesheets.has(stylesheet))
-      invalidData(at, `duplicate stylesheet: ${stylesheet}`);
     seenStylesheets.add(stylesheet);
   }
   const definition: ComponentDefinition = {
