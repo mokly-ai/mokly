@@ -2,6 +2,10 @@
 
 ## Active
 
+- [Comparison Pane Scroll Alignment](./comparison-pane-scroll-alignment.md)
+  — Overlay and Difference drift apart when scrolled because each snapshot
+  scrolls inside its own opaque frame; comparison panes become viewer-owned
+  presentations sized to their documents inside one shared chrome viewport.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
   standalone Auto/Light/Dark control for interface and previews, and
   host-owned theme with independent previews when embedded. Dark neutrals align
