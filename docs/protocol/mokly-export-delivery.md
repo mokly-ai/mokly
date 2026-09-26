@@ -12,6 +12,9 @@ The public catalogue, cross-origin inspector and viewer package are implemented
 by the completed [viewer library plan](../../plans/mokly-viewer-library.md).
 Removed page and screen previous versions are packaged and rendered by the
 [removed content previews plan](../../plans/removed-content-previews.md).
+Scoped live-capture comparison with normalized static-content invariance is
+implemented by the
+[route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
 
 ## Hosting Contract
 
@@ -163,8 +166,11 @@ path, pass the public catalogue reader, carry the finalized deployment identity,
 and match both bootstrap revisions and the catalogue identity. Only then may
 React hydrate the existing server tree. A missing, redirected, malformed, or
 mismatched catalogue leaves the complete server-rendered page and its ordinary
-links in place without installing partial interaction. Serve retains its
-self-contained inline read model and performs no initial catalogue fetch.
+links in place without installing partial interaction. Serve instead retains a
+self-contained inline
+[route-scoped projection](./mokly-shell-bootstrap.md) of its read model and
+performs no initial catalogue fetch. The bootstrap-only `omitted` usage state
+never enters the shared static catalogue.
 
 The pre-hydration disclosure and navigation-width handoff remains active until
 the asynchronous static catalogue resolution reaches the actual hydration
@@ -187,6 +193,20 @@ and exact destination route; and the workspace entry must match that route's
 id and kind. Abort the read when navigation replaces the route. A rejected,
 failed, or obsolete read leaves the already-committed public workspace in
 place and never falls back to a live endpoint.
+
+Export and repository preview capture validate the complete published model
+once, then validate each captured Serve bootstrap and compare it with the
+same route-scoped projection of that model. The comparison remains exact for
+everything the page carries and rejects leaked or missing usage. Only after it
+passes does capture replace the inline projection with the existing compact
+external reference. For identical catalogue, consumer, and comparison inputs,
+that conversion must leave the catalogue, canonical and alias shells,
+workspace JSON, ownership inventory, and comparison files byte-identical to
+delivery before Serve bootstraps became scoped after replacing each tree's
+deployment identity with 64 zeroes. Files under `__mokly/client/` may change
+with viewer source. Across this route-scoping switch, the deployment identity
+may change only because those client bytes changed; every other input to the
+identity must match after normalization.
 
 Preserve the existing [navigation contract](./mokly-navigation.md): trusted
 ownership-checked link markers only, immediate-frame parent enhancement,

@@ -7,7 +7,6 @@ test("reload recovery starts without fetching another catalogue snapshot", async
 }) => {
   const fixture = await startEvidenceFixture();
   let catalogueRequests = 0;
-  let catalogueAllowed = false;
   let connected = false;
   page.on("response", (response) => {
     if (new URL(response.url()).pathname === "/__mokly/events" && response.ok())
@@ -15,7 +14,7 @@ test("reload recovery starts without fetching another catalogue snapshot", async
   });
   await page.route("**/__mokly/catalogue.json", (route) => {
     catalogueRequests++;
-    return catalogueAllowed ? route.continue() : route.abort();
+    return route.abort();
   });
   try {
     await page.goto(`${fixture.server.url}/view/screens/home.html`);
@@ -24,7 +23,6 @@ test("reload recovery starts without fetching another catalogue snapshot", async
     await page.locator("html").evaluate((root) => {
       root.setAttribute("data-test-retained", "true");
     });
-    catalogueAllowed = true;
     expect(
       fixture.server.completeCatalogue?.(
         fixture.compilation.manifest,
@@ -36,7 +34,7 @@ test("reload recovery starts without fetching another catalogue snapshot", async
       "data-mokly-update-version",
       "2",
     );
-    expect(catalogueRequests).toBe(1);
+    expect(catalogueRequests).toBe(0);
     await expect(page.locator("html")).toHaveAttribute(
       "data-test-retained",
       "true",

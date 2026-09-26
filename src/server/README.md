@@ -32,7 +32,8 @@ are isolated at the gate: classifier failures are reported, that notification
 is dropped, and later notifications continue through the same watcher.
 
 GET/HEAD `/__mokly/catalogue.json` returns the public v1
-[read model](../catalogue/README.md) as JSON with `Cache-Control: no-store`.
+[read model](../catalogue/README.md) as complete JSON with
+`Cache-Control: no-store`; it never contains bootstrap-only omitted usage.
 `public_catalogue.ts` serializes an atomic snapshot when accepted content,
 background usage/Changes or actual on-demand view records arrive. Requests only
 read the retained bytes. Content revisions follow accepted content versions;
@@ -44,12 +45,20 @@ Shell pages render through `@mokly/viewer/server` with CLI-owned live context.
 `public_catalogue_model.ts` validates each serialized public revision once and
 reuses it across shell requests until the bytes change. CSS, browser modules,
 fonts, events and static documents bypass that decoding entirely.
+Each shell request derives the usage scope from its route/snapshot, embeds that
+route-scoped public projection, and computes its private workspace from the
+complete private catalogue so `Used by` and `Affected` remain complete. The
+server serializes the bootstrap and capability descriptor once and passes the
+strings through document rendering unchanged. Live pages load `react-host.js`,
+which imports the shared `react-shell.js`; finalized pages load that same shell
+bundle directly.
 `client_modules.ts` reads the generated viewer and CLI browser manifests,
 requires exact equality with their build directories, rejects missing,
 non-JavaScript, unexpected or colliding outputs, and loads the complete delivery
 inventory before binding. The manifests are emitted from actual completed
 esbuild outputs rather than maintained by hand. Every shell request renders the
-hydrated React document and loads the canonical `react-shell.js` browser entry.
+hydrated React document. Serve loads the small `react-host.js` composition over
+the shared `react-shell.js`; export and preview load `react-shell.js` directly.
 The CLI host modules retain private live-update and capability transports.
 
 `screen_view_changes.ts` retains per-view screen-only material decisions from
@@ -151,6 +160,12 @@ headers grant no access; invalid required authorization returns 403.
 using complete serialized-link identity, keeping the first occurrence in evidence
 order and serializing each input only once. Distinct usage contexts retain their
 comparison eligibility; deduplication does not alter Changes membership.
+
+Route and live-evidence reads return ordinary scoped shell pages. The client
+adopts a page's scoped catalogue and optional complete private workspace
+atomically, replacing the prior route scope. Failed current reads expose
+retryable Usage rather than a partial or zero-consumer list. See the
+[bootstrap contract](../../docs/protocol/mokly-shell-bootstrap.md).
 
 Run the server tests with `npm test` and the navigation/comparison smoke tests
 with `npm run test:browser`. `derived_child_repository.test.ts` covers revocation,

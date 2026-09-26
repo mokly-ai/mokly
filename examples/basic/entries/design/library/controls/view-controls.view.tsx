@@ -8,6 +8,7 @@ import type { ViewControlsProps } from "./view-controls.js";
 const reasons = {
   empty: "No registered components in this view",
   unavailable: "Component inspection is unavailable",
+  loading: "Waiting for the component preview.",
   comparison: "Highlighting is unavailable in comparisons",
   removed: "Highlighting is unavailable for removed screens",
 } as const;

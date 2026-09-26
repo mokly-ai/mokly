@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import type { CDPSession } from "@playwright/test";
 
 import {
   buildDevelopmentBundle,
@@ -34,6 +35,27 @@ test("development React hydrates a finalized export cleanly", async ({
   await page.goto(`${exported.url}/view/screens/home.html`);
   await expect(page.locator("html")).toHaveAttribute("data-mokly-static", "");
   await expectCleanHydration(page, errors);
+});
+
+test("static hydration validates its shared catalogue exactly once", async ({
+  context,
+  page,
+}) => {
+  const errors = captureBrowserErrors(page);
+  await installDevelopmentBundle(page, developmentBundle);
+  const session = await context.newCDPSession(page);
+  await session.send("Profiler.enable");
+  await session.send("Profiler.startPreciseCoverage", {
+    callCount: true,
+    detailed: true,
+  });
+  try {
+    await page.goto(`${exported.url}/view/screens/home.html`);
+    await expectCleanHydration(page, errors);
+    expect(await functionCalls(session, "readCatalogue")).toBe(1);
+  } finally {
+    await session.send("Profiler.stopPreciseCoverage");
+  }
 });
 
 test("static hydration adopts choices made after load while its catalogue is pending", async ({
@@ -109,4 +131,19 @@ test("development React hydrates removed and renamed finalized routes", async ({
 
 function encodeRoute(route: string): string {
   return route.split("/").map(encodeURIComponent).join("/");
+}
+
+async function functionCalls(session: CDPSession, name: string) {
+  const coverage = (await session.send("Profiler.takePreciseCoverage")) as {
+    result: Array<{
+      functions: Array<{
+        functionName: string;
+        ranges: Array<{ count: number }>;
+      }>;
+    }>;
+  };
+  return coverage.result
+    .flatMap((script) => script.functions)
+    .filter((fn) => fn.functionName === name)
+    .reduce((total, fn) => total + (fn.ranges[0]?.count ?? 0), 0);
 }

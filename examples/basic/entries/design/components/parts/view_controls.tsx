@@ -5,7 +5,8 @@ import type { ArtboardViewport } from "../../parts/shell.js";
 
 export interface HighlightOption {
   active: boolean;
-  unavailable: "empty" | "unavailable" | "comparison" | "removed" | undefined;
+  unavailable:
+    "empty" | "unavailable" | "loading" | "comparison" | "removed" | undefined;
 }
 
 /** Screen adapters supply recorded inputs to the same native view controls. */

@@ -9,11 +9,20 @@ import {
   readSlot,
 } from "./component_values.js";
 import type {
+  ShellCatalogueRoutedEntry,
+  ShellCatalogueUsage,
+  ShellCatalogueView,
+} from "./scoped_types.js";
+import type {
   CatalogueChanges,
   CatalogueCollection,
+  CatalogueComponent,
   CatalogueEntry,
+  CataloguePage,
   CatalogueRoutedEntry,
+  CatalogueScreen,
   CatalogueUsage,
+  CatalogueUseCase,
   CatalogueVariant,
   CatalogueView,
   ComparisonSelection,
@@ -83,13 +92,40 @@ export function readUsage(value: unknown): CatalogueUsage {
       }
     : { status };
 }
+export function readShellUsage(value: unknown): ShellCatalogueUsage {
+  const input = object(value),
+    status = choice(input.status, [
+      "ready",
+      "pending",
+      "unavailable",
+      "omitted",
+    ] as const);
+  if (status !== "ready") absent(input, ["instances", "slots", "ranges"]);
+  return status === "ready"
+    ? {
+        status,
+        instances: array(input.instances).map(readInstance),
+        slots: array(input.slots).map(readSlot),
+        ranges: array(input.ranges).map(readRange),
+      }
+    : { status };
+}
 export function readView(value: unknown): CatalogueView {
+  return readViewWithUsage(value, readUsage);
+}
+export function readShellView(value: unknown): ShellCatalogueView {
+  return readViewWithUsage(value, readShellUsage);
+}
+function readViewWithUsage<Usage extends ShellCatalogueUsage>(
+  value: unknown,
+  read: (value: unknown) => Usage,
+): Omit<CatalogueView, "usage"> & { usage: Usage } {
   const input = object(value);
   return {
     viewport: choice(input.viewport, ["mobile", "desktop"] as const),
     colorScheme: choice(input.colorScheme, ["light", "dark"] as const),
     fragmentPath: publicPath(input.fragmentPath),
-    usage: readUsage(input.usage),
+    usage: read(input.usage),
     comparison: readComparison(input.comparison),
   };
 }
@@ -120,6 +156,28 @@ export function readCollection(value: unknown): CatalogueCollection {
   };
 }
 export function readEntry(value: unknown): CatalogueRoutedEntry {
+  return readEntryWithViews(value, readView);
+}
+export function readShellEntry(value: unknown): ShellCatalogueRoutedEntry {
+  return readEntryWithViews(value, readShellView);
+}
+
+type ParsedVariant<View extends ShellCatalogueView> = Omit<
+  CatalogueVariant,
+  "views"
+> & { views: readonly View[] };
+type ParsedEntry<View extends ShellCatalogueView> =
+  | (Omit<CatalogueScreen, "views"> & { views: readonly View[] })
+  | CataloguePage
+  | CatalogueUseCase
+  | (Omit<CatalogueComponent, "variants"> & {
+      variants: readonly ParsedVariant<View>[];
+    });
+
+function readEntryWithViews<View extends ShellCatalogueView>(
+  value: unknown,
+  readCatalogueView: (value: unknown) => View,
+): ParsedEntry<View> {
   const input = object(value),
     base = common(input),
     path = route(input.route);
@@ -168,7 +226,7 @@ export function readEntry(value: unknown): CatalogueRoutedEntry {
       kind,
       route: path,
       ...axes,
-      views: array(input.views).map(readView),
+      views: array(input.views).map(readCatalogueView),
       useCaseIds: array(input.useCaseIds).map(id),
       ...(input.address !== undefined
         ? { address: string(input.address) }
@@ -188,17 +246,22 @@ export function readEntry(value: unknown): CatalogueRoutedEntry {
     propSchema: schema,
     slots: array(input.slots).map(string),
     controls: readControls(input.controls, schema),
-    variants: array(input.variants).map(readVariant),
+    variants: array(input.variants).map((variant) =>
+      readVariant(variant, readCatalogueView),
+    ),
   };
 }
-function readVariant(value: unknown): CatalogueVariant {
+function readVariant<View extends ShellCatalogueView>(
+  value: unknown,
+  readCatalogueView: (value: unknown) => View,
+): ParsedVariant<View> {
   const input = object(value);
   return {
     id: id(input.id),
     title: text(input.title),
     props: readProps(input.props),
     suppliedSlots: array(input.suppliedSlots).map(string),
-    views: array(input.views).map(readView),
+    views: array(input.views).map(readCatalogueView),
     comparison: readComparison(input.comparison),
     ...(input.description !== undefined
       ? { description: text(input.description) }

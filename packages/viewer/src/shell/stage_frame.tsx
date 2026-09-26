@@ -3,9 +3,9 @@
 import { useContext, useMemo } from "react";
 
 import type {
-  CatalogueRoutedEntry,
-  CatalogueView,
-} from "../catalogue/types.js";
+  ShellCatalogueRoutedEntry,
+  ShellCatalogueView,
+} from "../catalogue/scoped_types.js";
 import { temporaryPreviewAdapter } from "../client/same_origin_adapter.js";
 import type { GeneratedComponentView } from "../components/views.js";
 import { DisplaySelection } from "../viewer/display_context.js";
@@ -23,6 +23,7 @@ import {
   generatedFrameSource,
   generatedUsage,
   generatedView,
+  shellFrameUsage,
   unavailableUsage,
 } from "./stage_sources.js";
 import { useOptionalShellStore } from "./store_context.js";
@@ -39,14 +40,14 @@ export function StageFrame({
   views,
   viewport,
 }: {
-  entry: CatalogueRoutedEntry;
+  entry: ShellCatalogueRoutedEntry;
   flow?: boolean;
   fragment?: string;
   hasDarkFragments: boolean;
   previewViews?: readonly GeneratedComponentView[];
   stepIndex?: number;
   variantId?: string;
-  views: readonly CatalogueView[];
+  views: readonly ShellCatalogueView[];
   viewport: "desktop" | "mobile";
 }) {
   const selection = useContext(DisplaySelection);
@@ -94,9 +95,7 @@ export function StageFrame({
     enabled: store?.interactive ?? false,
     identity,
     source,
-    usage: preview
-      ? generatedUsage(preview)
-      : (selected?.usage ?? unavailableUsage),
+    usage: preview ? generatedUsage(preview) : shellFrameUsage(selected?.usage),
   });
   const initialSource = useFrameSource(
     mounted.frameRef,
@@ -181,7 +180,7 @@ export function DocumentStageFrame({
   entry,
   fragment,
 }: {
-  entry: Extract<CatalogueRoutedEntry, { kind: "page" }>;
+  entry: Extract<ShellCatalogueRoutedEntry, { kind: "page" }>;
   fragment?: string;
 }) {
   const store = useOptionalShellStore();

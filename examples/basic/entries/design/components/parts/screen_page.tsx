@@ -51,9 +51,11 @@ export function ScreenPage({
               active: highlighting,
               unavailable: removed
                 ? "removed"
-                : state === "unavailable" || state === "empty"
-                  ? state
-                  : undefined,
+                : state === "inspection-loading"
+                  ? "loading"
+                  : state === "unavailable" || state === "empty"
+                    ? state
+                    : undefined,
             }}
           />
         }

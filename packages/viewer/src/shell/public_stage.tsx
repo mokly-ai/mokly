@@ -3,10 +3,10 @@
 import { useContext } from "react";
 
 import type {
-  CatalogueReadModel,
-  CatalogueRoutedEntry,
-  CatalogueScreen,
-} from "../catalogue/types.js";
+  ShellCatalogueReadModel,
+  ShellCatalogueRoutedEntry,
+  ShellCatalogueScreen,
+} from "../catalogue/scoped_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
 import { encodeUrlPath } from "../data/paths.js";
 import { DisplaySelection } from "../viewer/display_context.js";
@@ -22,8 +22,8 @@ export function PublicStage({
   previewViews,
   variantId,
 }: {
-  catalogue: CatalogueReadModel;
-  entry: CatalogueRoutedEntry;
+  catalogue: ShellCatalogueReadModel;
+  entry: ShellCatalogueRoutedEntry;
   fragment?: string;
   hasDarkFragments: boolean;
   previewViews?: readonly GeneratedComponentView[];
@@ -52,7 +52,7 @@ export function PublicStage({
   const views =
     entry.kind === "component"
       ? (selectedVariant?.views ?? [])
-      : (entry as CatalogueScreen).views;
+      : (entry as ShellCatalogueScreen).views;
   const effectiveVariant = selectedVariant?.id;
   return (
     <div
@@ -86,8 +86,8 @@ function UseCaseFlow({
   fragment,
   hasDarkFragments,
 }: {
-  catalogue: CatalogueReadModel;
-  entry: Extract<CatalogueRoutedEntry, { kind: "use-case" }>;
+  catalogue: ShellCatalogueReadModel;
+  entry: Extract<ShellCatalogueRoutedEntry, { kind: "use-case" }>;
   fragment?: string;
   hasDarkFragments: boolean;
 }) {

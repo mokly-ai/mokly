@@ -9,6 +9,8 @@ icon inspector. Local Serve additionally provides editable controls. See the
 and [component design catalogue](./mokly-component-design.md). Removed
 consumers open their historical screen through the behavior implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md).
+Loading and failed route-evidence Usage presentation is implemented by the
+[route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
 
 ## Catalogue And Component Pages
 
@@ -102,6 +104,14 @@ frames as additional screen uses. Empty lists have explicit empty states. The
 shared layout and native mockup behavior; runtime keyboard focus and Escape
 handling belong to the shell implementation.
 
+A route-scoped live fallback never derives these cross-route lists from
+omitted usage. Until matching private workspace evidence arrives, the Usage
+panel shows `Loading usage…` with no counts, list headings, rows, or empty
+state. If the current evidence read fails or is rejected, it shows
+`Usage couldn’t be loaded.` with a `Try again` button. Retry preserves the
+component preview, saved variant, inspector disclosure, and local edits. Only
+ready complete evidence may show the existing zero-consumer state.
+
 ## Components In The Screen Inspector
 
 Every registered screen uses the same icon inspector. Its Components panel
@@ -111,6 +121,13 @@ opens Props with supplied data, slot references, and links to its component page
 Unrendered conditional branches do not appear; null-rendering instances are
 listed without a visible region. An empty usage set says no registered components
 are used in this view. Legacy/missing metadata says inspection is unavailable.
+
+Bootstrap usage omitted only while route evidence is loading is neither empty
+nor unavailable metadata. The Components panel and Highlight control use
+`Waiting for the component preview.` until real usage is adopted into the
+mounted frame. A failed route-evidence read leaves inspection unavailable and
+exposes recovery through the Usage panel; it never substitutes the empty-view
+copy.
 
 Repeated instances remain individually selectable. Nested component groups start
 collapsed and can be expanded to inspect inner instances. Selecting an instance
@@ -200,12 +217,13 @@ host picking and clears stale inspection under the viewer lifecycle contract.
 
 ## Mockups And Verification
 
-Before UI implementation, extend the existing design catalogue under
-`examples/basic/entries/design` and regenerate its local derived HTML. This is
-Mokly's current owning mockup tree; do not introduce an unrelated Expo app
-or a second mockup generator. Provide mobile and desktop screen components for
-the component page/variants, changed component/Affected screens, screen inspector
-usage, highlight selection, and empty/unavailable states. The [controls designs](./mokly-component-controls-design.md) are delivered
+The owning design catalogue lives under `examples/basic/entries/design`; UI
+changes update it first and regenerate its local derived HTML. Do not introduce
+an unrelated Expo app or a second mockup generator. It provides mobile and
+desktop screen components for the component page/variants, changed
+component/Affected screens, screen inspector usage, highlight selection,
+loading/failed Usage, and empty/unavailable states.
+The [controls designs](./mokly-component-controls-design.md) are delivered
 with the inspector revision; local Serve implements those controls.
 
 Each owning screen-spec page has at most five screens. Split additional states

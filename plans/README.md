@@ -49,6 +49,12 @@
   — publish consumes the release PR's validated CI evidence for the same
   tree instead of re-running the complete gate, with the complete gate as
   the fail-closed fallback.
+- [Route-Scoped Shell Bootstrap](./route-scoped-shell-bootstrap.md) — Serve
+  pages embed the catalogue index plus only their own route's component usage
+  and serialise that state once. The public `catalogue.json` stays complete;
+  normalized non-client static content stays stable while viewer client changes
+  update deployment identity. Implementation is complete; move this plan to
+  Completed when its implementation PR merges.
 
 ## Completed
 

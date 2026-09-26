@@ -57,6 +57,8 @@ export interface UsageLink {
 export interface WorkspaceData {
   previewGeneration?: string;
   usageComplete?: boolean;
+  /** Selected public views are waiting for route-scoped usage evidence. */
+  viewUsagePending?: boolean;
   renderCapability?: RenderCapability;
   entry: ManifestScreen | ManifestComponent;
   components: readonly Pick<ManifestComponent, "id" | "title" | "route">[];

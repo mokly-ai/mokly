@@ -9,6 +9,7 @@ import { ComponentPage } from "./parts/component_page.js";
 import { componentDesignDocs } from "./parts/fixtures.js";
 import { componentStyleDependencies } from "./parts/styles.js";
 import { additionDesigns } from "./states/additions/screens.js";
+import { loadingStateDesigns } from "./states/loading/screens.js";
 import { stateScreens } from "./states/screens.js";
 
 export function ComponentOverviewDesktop() {
@@ -78,8 +79,8 @@ export const componentDesign = collection({
       segment: "states",
       title: "Empty and change states",
       description:
-        "Empty usage, unavailable inspection, unused components, and retained comparisons.",
-      children: [...stateScreens, additionDesigns],
+        "Empty usage, loading, recovery, unavailable inspection, and retained comparisons.",
+      children: [...stateScreens, additionDesigns, loadingStateDesigns],
     }),
   ],
 });

@@ -1,12 +1,13 @@
 /** Workspace values derived only from the validated public catalogue. */
 import { resolveCatalogueRecord } from "../catalogue/entry_selection.js";
 import type {
-  CatalogueComponent,
-  CatalogueReadModel,
-  CatalogueRoutedEntry,
-  CatalogueScreen,
-  CatalogueView,
-} from "../catalogue/types.js";
+  ShellCatalogueComponent,
+  ShellCatalogueReadModel,
+  ShellCatalogueRoutedEntry,
+  ShellCatalogueScreen,
+  ShellCatalogueView,
+} from "../catalogue/scoped_types.js";
+import { catalogueHasOmittedUsage } from "../catalogue/usage_scope.js";
 import { generatedViews } from "../components/views.js";
 import type { ReviewState } from "../review/types.js";
 import { orderChangedViews, type ChangedView } from "../shell/view_marks.js";
@@ -33,14 +34,14 @@ const reviewStates: Readonly<Record<keyof typeof statuses, ReviewState>> = {
   removed: "removed",
   unmodified: "unchanged",
 };
-function status(entry: CatalogueRoutedEntry): EntryStatus | undefined {
+function status(entry: ShellCatalogueRoutedEntry): EntryStatus | undefined {
   return entry.changes.status === "ready"
     ? statuses[entry.changes.kind]
     : undefined;
 }
 /** Published per-view comparisons name the same changed views the shell derives. */
 function publishedChangedViews(
-  views: readonly CatalogueView[],
+  views: readonly ShellCatalogueView[],
 ): readonly ChangedView[] {
   return orderChangedViews(
     views.flatMap((view) =>
@@ -54,7 +55,7 @@ function publishedChangedViews(
 
 /** Key public comparison evidence exactly like the served workspace data. */
 function publishedChangedViewsBySelection(
-  entry: CatalogueComponent | CatalogueScreen,
+  entry: ShellCatalogueComponent | ShellCatalogueScreen,
 ): ChangedViewsBySelection {
   if (entry.kind === "screen")
     return { [entry.id]: publishedChangedViews(entry.views) };
@@ -68,7 +69,7 @@ function publishedChangedViewsBySelection(
 
 /** Keep only published views whose comparison state is ready. */
 function publishedViewStates(
-  views: readonly CatalogueView[],
+  views: readonly ShellCatalogueView[],
 ): readonly ViewState[] | undefined {
   const states = views.flatMap((view) =>
     view.comparison.status === "ready"
@@ -86,7 +87,7 @@ function publishedViewStates(
 
 /** Key published ready states like the served workspace evidence. */
 function publishedViewStatesBySelection(
-  entry: CatalogueComponent | CatalogueScreen,
+  entry: ShellCatalogueComponent | ShellCatalogueScreen,
 ): ViewStatesBySelection {
   if (entry.kind === "screen") {
     const states = publishedViewStates(entry.views);
@@ -101,7 +102,7 @@ function publishedViewStatesBySelection(
 }
 
 export function publicWorkspace(
-  model: CatalogueReadModel,
+  model: ShellCatalogueReadModel,
   entry: WorkspaceData["entry"],
   comparisons = model.comparisonUrl !== null,
 ): WorkspaceData {
@@ -112,26 +113,31 @@ export function publicWorkspace(
   )
     throw new Error("The selected item is unavailable.");
   const removed = model.removedEntries.some((item) => item.entry === original);
+  const scoped = catalogueHasOmittedUsage(model);
+  const viewUsagePending = entryUsageViews(original).some(
+    (view) => view.usage.status === "omitted",
+  );
   const usedBy: UsageLink[] = [];
-  for (const owner of routedEntries(model)) {
-    if (owner.kind !== "screen" && owner.kind !== "component") continue;
-    for (const view of generatedViews(displayEntry(owner)))
-      for (const instance of view.usage?.instances ?? [])
-        if (instance.componentId === entry.id)
-          usedBy.push({
-            title: owner.title,
-            route: owner.route,
-            ...(view.variantId ? { variantId: view.variantId } : {}),
-            viewport: view.viewport,
-            colorScheme: view.colorScheme,
-            instanceKey: instance.key,
-            direct: instance.owner.kind === "entry",
-            removed: model.removedEntries.some(
-              (value) => value.entry === owner,
-            ),
-            comparisonEligible: false,
-          });
-  }
+  if (!scoped)
+    for (const owner of routedEntries(model)) {
+      if (owner.kind !== "screen" && owner.kind !== "component") continue;
+      for (const view of generatedViews(displayEntry(owner)))
+        for (const instance of view.usage?.instances ?? [])
+          if (instance.componentId === entry.id)
+            usedBy.push({
+              title: owner.title,
+              route: owner.route,
+              ...(view.variantId ? { variantId: view.variantId } : {}),
+              viewport: view.viewport,
+              colorScheme: view.colorScheme,
+              instanceKey: instance.key,
+              direct: instance.owner.kind === "entry",
+              removed: model.removedEntries.some(
+                (value) => value.entry === owner,
+              ),
+              comparisonEligible: false,
+            });
+    }
   const entryStatus = status(original);
   const variants =
     entry.kind === "component" && original.kind === "component"
@@ -180,6 +186,15 @@ export function publicWorkspace(
     removed,
     relatedComponents: [],
     inputChanges: [],
+    ...(viewUsagePending ? { viewUsagePending: true } : {}),
     ...(entryStatus ? { status: entryStatus } : {}),
   };
+}
+
+function entryUsageViews(
+  entry: ShellCatalogueScreen | ShellCatalogueComponent,
+): readonly ShellCatalogueView[] {
+  return entry.kind === "screen"
+    ? entry.views
+    : entry.variants.flatMap((variant) => variant.views);
 }

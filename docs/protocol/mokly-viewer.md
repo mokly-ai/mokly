@@ -18,6 +18,10 @@ use the same tree with host-owned appearance and independent preview selection.
 Removed pages and screens load their advertised previous versions in local,
 static, and embedded hosts through the same tree, as implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md).
+The [route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md)
+implements serialize-once embedded state, the isolated scoped model and strict
+reader, pending frames, atomic route/live-evidence adoption, and exact-scoped
+Serve emission. Complete live bootstraps are rejected.
 
 ## Package And Props
 
@@ -423,12 +427,17 @@ values to React as initial store state and persists the adopted disclosure
 state, and only then is temporary capture discarded. React does not replay or
 overwrite those values after mounting. Hydration must produce no mismatches:
 the server tree and the initial client tree are the same function of the same
-read model, route, selection and delivery descriptor. Serve embeds that read
-model directly. Static pages embed a compact identity/revision reference and
-hydrate only after the one shared deployment catalogue has been fetched and
-matched; resolution failure leaves SSR intact. Embedded hydration and workspace state uses canonical
-object-key ordering, and validating then serializing hydration state must
-reproduce the embedded bytes exactly.
+read model, route, selection and delivery descriptor. Serve embeds the
+[route-scoped projection](./mokly-shell-bootstrap.md) of that read model: all
+index data remains available, while only usage rendered by the bootstrap's
+route is retained. Its separately embedded private workspace supplies complete
+cross-route Usage. Static pages embed a compact identity/revision reference and
+hydrate only after the one shared, complete deployment catalogue has been
+fetched and matched; resolution failure leaves SSR intact. Embedded hydration
+and workspace state uses canonical object-key ordering. The server serializes
+each embedded state once, the browser retains those exact strings across React
+renders, and validating then serializing either state must reproduce the
+embedded bytes exactly.
 
 A source change (object/fetcher identity, URL value, object base origin), or
 adapter change, remounts the shell tree, cancelling stale loads, pick and frame
@@ -501,5 +510,13 @@ Acceptance includes all props, slots, events, handle methods, controlled-state
 round trips, multiple independent mounts, SSR/client lifecycle cleanup,
 hydration without mismatches on every fixture route, source replacement,
 same/cross-origin frames and the existing local browser tests passing against
-the hydrated shell. Behavioural parity under `tests/browser` is the bar; shell
-module bytes and export deployment identity are expected to change.
+the hydrated shell. Standalone coverage also requires the exact route-scoped
+usage table, strict bootstrap/public-reader separation, atomic scoped-catalogue
+and private-workspace adoption, no false empty Usage state, one server
+serialization per embedded script, no serialization on client rerender, and
+the size/invariance guards in the
+[bootstrap contract](./mokly-shell-bootstrap.md). Behavioural parity under
+`tests/browser` is the bar. After normalizing the deployment identity, route
+scoping must not change static catalogue, shell, workspace, ownership, or
+comparison bytes. The shared viewer client may change, and the deployment
+identity may change only as a consequence of those client bytes.

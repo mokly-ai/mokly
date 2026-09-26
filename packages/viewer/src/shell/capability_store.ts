@@ -1,8 +1,10 @@
 /** React-store integration for optional live host capabilities. */
 
 import {
+  useCallback,
   useEffect,
   useMemo,
+  useReducer,
   useRef,
   useState,
   type Dispatch,
@@ -31,6 +33,7 @@ import {
   useViewerInitialSource,
   useViewerInitialWorkspace,
   type ViewerLiveState,
+  type ViewerRouteEvidenceState,
 } from "./capability_context.js";
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
@@ -66,6 +69,7 @@ export function useViewerCapabilityStore(input: {
   );
   const [snapshot, setSnapshot] = useState<ViewerCapabilitySnapshot>(() => ({
     catalogue: input.catalogue,
+    ...(initialRequest ? { routeEvidence: initialRequest } : {}),
     ...(initialRequest ? { source: initialRequest.source } : {}),
     ...(initialRequest && initialWorkspace?.entry.route === initialRequest.route
       ? { workspace: { request: initialRequest, value: initialWorkspace } }
@@ -89,7 +93,7 @@ export function useViewerCapabilityStore(input: {
       ? snapshot.workspace?.value
       : undefined;
 
-  useRouteEvidence(
+  const routeEvidence = useRouteEvidence(
     capabilities,
     input.interactive,
     input.state,
@@ -156,9 +160,10 @@ export function useViewerCapabilityStore(input: {
     () => ({
       ...(capabilities ? { capabilities } : {}),
       ...(request ? { request } : {}),
+      ...(routeEvidence ? { routeEvidence } : {}),
       ...(workspace ? { workspace } : {}),
     }),
-    [capabilities, request, workspace],
+    [capabilities, request, routeEvidence, workspace],
   );
   return { catalogue: snapshot.catalogue, context, liveState };
 }
@@ -173,57 +178,97 @@ function useRouteEvidence(
   snapshotRef: { current: ViewerCapabilitySnapshot },
   setSnapshot: Dispatch<SetStateAction<ViewerCapabilitySnapshot>>,
   setState: Dispatch<SetStateAction<ShellState>>,
-): void {
+): ViewerRouteEvidenceState | undefined {
   const target = state.route.view.kind === "target" && state.route.view.target;
   const ownsWorkspace =
     target &&
     target.kind === "entry" &&
     (target.entry.kind === "screen" || target.entry.kind === "component");
+  const [failedRequest, setFailedRequest] = useState<
+    ViewerCapabilityRequest | undefined
+  >();
+  const [attempt, retryAttempt] = useReducer((value: number) => value + 1, 0);
+  const retry = useCallback(() => {
+    setFailedRequest(undefined);
+    retryAttempt();
+  }, []);
+  const routeReady = Boolean(
+    request && sameRequest(snapshotRef.current.routeEvidence, request),
+  );
+  const workspaceReady = Boolean(
+    !ownsWorkspace || (request && sameRequest(workspace?.request, request)),
+  );
+  const ready = routeReady && workspaceReady;
+  const failed = Boolean(
+    request && failedRequest && sameRequest(failedRequest, request),
+  );
   useEffect(() => {
-    if (
-      !capabilities ||
-      !interactive ||
-      !request ||
-      !ownsWorkspace ||
-      sameRequest(workspace?.request, request)
-    )
-      return;
+    if (!capabilities || !interactive || !request || !target || ready) return;
     const controller = new AbortController();
     void capabilities.evidence
       .loadRouteEvidence(request, controller.signal)
       .then((revision) => {
-        if (!revision || controller.signal.aborted) return;
+        if (controller.signal.aborted) return;
         const current = snapshotRef.current;
-        if (
-          !current.source ||
-          !viewerCapabilitySourceEquals(current.source, request.source) ||
-          viewerCapabilityRoute(stateRef.current.route) !== request.route
-        )
+        if (!currentRequestOwns(current, stateRef.current, request)) return;
+        if (!revision) {
+          setFailedRequest(request);
           return;
+        }
         const commit = commitViewerEvidence(
           current,
           stateRef.current,
           revision,
         );
-        if (!commit) return;
+        if (!commit) {
+          setFailedRequest(request);
+          return;
+        }
         snapshotRef.current = commit.snapshot;
         stateRef.current = commit.state;
+        setFailedRequest(undefined);
         setSnapshot(commit.snapshot);
         setState(commit.state);
       })
-      .catch(() => undefined);
+      .catch(() => {
+        if (
+          !controller.signal.aborted &&
+          currentRequestOwns(snapshotRef.current, stateRef.current, request)
+        )
+          setFailedRequest(request);
+      });
     return () => controller.abort();
   }, [
+    attempt,
     capabilities,
     interactive,
-    ownsWorkspace,
+    ready,
     request,
     setSnapshot,
     setState,
     snapshotRef,
     stateRef,
-    workspace?.request,
+    target,
   ]);
+  return useMemo(
+    () =>
+      request && target
+        ? { status: ready ? "ready" : failed ? "failed" : "loading", retry }
+        : undefined,
+    [failed, ready, request, retry, target],
+  );
+}
+
+function currentRequestOwns(
+  snapshot: ViewerCapabilitySnapshot,
+  state: ShellState,
+  request: ViewerCapabilityRequest,
+): boolean {
+  return Boolean(
+    snapshot.source &&
+    viewerCapabilitySourceEquals(snapshot.source, request.source) &&
+    viewerCapabilityRoute(state.route) === request.route,
+  );
 }
 
 function capabilityRequest(

@@ -8,22 +8,30 @@ capabilities. Serve uses the React host composition for every shell request.
 Static export has a separate inert destination-page evidence reader so
 same-shell navigation can retain the route-scoped data already present in each
 exported page; it has no live behavior, update transport, or private token.
+Scoped public-bootstrap adoption, every-target route evidence, loading/failed
+Usage, exact-scoped emission and strict live reading are implemented by the
+[route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
+Only the separate static state form remains external and complete after
+resolution.
 
 ## Boundary
 
-The public catalogue is the shell's portable read model. Local Serve adds a
-private descriptor in a separate `application/json` script with
+The public catalogue is the shell's portable read model. A live page embeds its
+[route-scoped bootstrap projection](./mokly-shell-bootstrap.md), while the
+complete model remains available at `__mokly/catalogue.json`. Local Serve adds
+a private descriptor in a separate `application/json` script with
 `data-mokly-host-capability-state`. Private workspace evidence and the
 temporary-render token never enter the public catalogue or shell bootstrap.
 
 The live document has `data-mokly-host-capabilities` and loads
-`/__mokly/client/react-host.js`. That host imports the same
-`react-shell.js` module used by export, creates CLI-owned capabilities, and
-calls `hydrateMoklyShell(document, capabilities)`. Importing `react-shell.js`
-while the host marker is present does not auto-hydrate. This ordering ensures
-React receives its capability context before creating the root. Export has no
-marker, descriptor, token, private host modules, or host loader; its direct
-`react-shell.js` import auto-hydrates.
+`/__mokly/client/react-host.js`. The live host imports the shared
+`react-shell.js`, creates CLI-owned capabilities, and calls
+`hydrateMoklyShell(document, capabilities)`. That shared, type-checked entry
+accepts exact route scope for live pages and the compact external form for
+finalized pages; it has no complete-live mode. React receives its capability
+context before the live root is created. Export has no marker, descriptor,
+token, private host modules, or host loader; its direct `react-shell.js` import
+auto-hydrates.
 
 The descriptor contains:
 
@@ -49,7 +57,9 @@ can expose temporary rendering without enabling on-demand Usage loading.
 - `useViewerInitialWorkspace()` returns the descriptor workspace during both
   server rendering and first client render. This makes private status,
   comparison eligibility, affected usage, input changes, related components
-  and evidence identical across hydration.
+  and evidence identical across hydration. A live shell uses it only to seed
+  the store's binding for the first request; routed workspace selection never
+  falls back to it after the route or source changes.
 - `useViewerLiveState()` returns the exact adopted request and its matching
   private workspace from the shell store. A workspace from an older route or
   revision is never exposed.
@@ -81,16 +91,23 @@ changes, and closes the scope on unmount.
 
 ## Initial And Routed Workspace Evidence
 
-The server computes initial private `WorkspaceData` from the same accepted
-catalogue snapshot and shell context used for SSR. Both SSR and hydration read
-that data from the descriptor, independently of browser-only behavior.
+The server computes initial private `WorkspaceData` from the complete accepted
+private catalogue and the same shell context used for SSR. It never derives
+cross-route `Used by` or `Affected` lists from the route-scoped public
+bootstrap. Both SSR and hydration read that data from the descriptor,
+independently of browser-only behavior, so a matching direct load starts with
+ready Usage rather than flashing a loading or empty state.
 
-React navigation does not replace the mounted shell with fetched HTML. When a
-newly routed screen or component needs private data,
-`evidence.loadRouteEvidence` fetches the current page as evidence only. The
-page's public shell bootstrap and private capability descriptor form one
-atomic candidate: the shell adopts the public catalogue, source and routed
-workspace together, or retains its current evidence. It accepts the result
+React navigation does not replace the mounted shell with fetched HTML. Every
+newly routed target calls `evidence.loadRouteEvidence` and fetches the current
+page as evidence only. Screens and components pair their scoped catalogue with
+private workspace data; use cases and pages adopt their destination scope with
+no workspace. The page's public shell bootstrap and private capability
+descriptor form one atomic candidate: the shell adopts the
+destination-scoped catalogue, source and optional routed workspace together,
+or retains its current evidence. Adoption replaces the prior scoped catalogue
+instead of merging usage retained by routes visited earlier. It accepts the
+result
 when all of these remain true:
 
 - the response is successful and its final URL is the requested URL without a
@@ -105,6 +122,14 @@ when all of these remain true:
   logical route;
 - the render generation and token still match the installed host;
 - the returned workspace route equals the current logical route.
+
+Before that candidate is accepted, a route-scoped public fallback reports
+Usage as loading and derives no cross-route list from omitted records. If the
+read fails or a completed candidate is rejected, it reports
+`Usage couldn’t be loaded.` with `Try again`; retry starts a fresh fenced read.
+It never reports zero consumers from partial data. A fallback built from a
+complete catalogue, including static delivery and application-owned viewers,
+keeps the existing public-workspace behavior.
 
 A route response may advance the evidence revision while retaining the update
 version. On-demand rendering can publish newer evidence without a watch event,
@@ -124,18 +149,20 @@ obsolete request while retaining the mounted shell.
 The CLI keeps the existing event protocol and `LiveUpdateController`. One
 effect-scoped subscription owns one `EventSource`; abort, page exit or effect
 replay closes it and any pending refresh. A newer update first fetches the
-current page descriptor, then the public catalogue.
+current shell page and reads its scoped bootstrap and private descriptor as one
+candidate.
 
 Evidence adoption is atomic. The page descriptor's source and private
-workspace must describe the exact same evidence revision as the public
-catalogue response. Catalogue identity, content revision, evidence revision,
-update version, base ref, preview generation, route and render capability are
-fenced before `adoptEvidence` runs. A mixed response from two server snapshots
-is rejected and follows the existing reload recovery path. Successful adoption
-returns a `ViewerEvidenceRevision` containing the public catalogue, private
-workspace when the route owns one, and the source for the next request. Frames
-and shell state are updated in place by the consumer; the capability does not
-mutate DOM.
+workspace must describe the exact same evidence revision as the page's scoped
+bootstrap. Catalogue identity, content revision, evidence revision, update
+version, base ref, preview generation, route, snapshot and render capability
+are fenced before `adoptEvidence` runs. A mixed response from two server
+snapshots is rejected and follows the existing reload recovery path.
+Successful adoption returns a `ViewerEvidenceRevision` containing the current
+route's scoped catalogue, complete private workspace when the route owns one,
+and the source for the next request. The store replaces both public and private
+evidence in one commit. Frames and shell state are updated in place by the
+consumer; the capability does not mutate DOM.
 
 Content revision or render-generation changes are never adopted as evidence.
 They retain the full reload lifecycle.

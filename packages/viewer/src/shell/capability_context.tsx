@@ -29,7 +29,14 @@ interface ViewerCapabilityContextValue {
 export interface ViewerLiveState {
   capabilities?: ViewerHostCapabilities;
   request?: ViewerCapabilityRequest;
+  routeEvidence?: ViewerRouteEvidenceState;
   workspace?: WorkspaceData;
+}
+
+/** Route-owned public/private evidence delivery exposed to workspace UI. */
+export interface ViewerRouteEvidenceState {
+  status: "failed" | "loading" | "ready";
+  retry(): void;
 }
 
 const ViewerCapabilityContext = createContext<ViewerCapabilityContextValue>({});

@@ -11,6 +11,7 @@ import type {
 } from "../components/prop_types.js";
 
 import type { WorkspaceData } from "./workspace_data.js";
+import { WAITING_REASON } from "./workspace_inspection_runtime.js";
 
 /** Current inspector selection independent of its rendering surface. */
 export interface WorkspaceInspectorSelection {
@@ -42,7 +43,13 @@ export function WorkspaceProps({
 }) {
   const props = selection.instance?.props ?? selection.props;
   if (!props)
-    return <p>Select a component instance to see its supplied props.</p>;
+    return (
+      <p role={data.viewUsagePending ? "status" : undefined}>
+        {data.viewUsagePending
+          ? WAITING_REASON
+          : "Select a component instance to see its supplied props."}
+      </p>
+    );
   const component = selection.instance
     ? data.components.find(
         (item) => item.id === selection.instance?.componentId,

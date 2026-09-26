@@ -1,11 +1,11 @@
 /** Convert validated public data to the existing shell's display records. */
 import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
 import type {
-  CatalogueEntry,
-  CatalogueReadModel,
-  CatalogueRoutedEntry,
-  CatalogueView,
-} from "../catalogue/types.js";
+  ShellCatalogueReadModel,
+  ShellCatalogueRoutedEntry,
+  ShellCatalogueView,
+} from "../catalogue/scoped_types.js";
+import type { CatalogueEntry } from "../catalogue/types.js";
 import type {
   ComponentViewRecord,
   ManifestComponentVariant,
@@ -30,7 +30,7 @@ function metadata(entry: CatalogueEntry) {
   };
 }
 export function usageView(
-  view: CatalogueView,
+  view: ShellCatalogueView,
 ): ComponentViewRecord | undefined {
   if (view.usage.status !== "ready") return;
   return {
@@ -44,7 +44,7 @@ export function usageView(
   };
 }
 function fragments(
-  views: readonly CatalogueView[],
+  views: readonly ShellCatalogueView[],
   fallback: (axis: "mobile" | "desktop", scheme: "light" | "dark") => string,
 ) {
   const paths = (scheme: "light" | "dark") =>
@@ -66,7 +66,7 @@ function fragments(
   };
 }
 export function displayEntry(
-  entry: CatalogueRoutedEntry,
+  entry: ShellCatalogueRoutedEntry,
 ): Exclude<ManifestEntry, { kind: "collection" }> {
   const base = { ...metadata(entry), route: entry.route };
   switch (entry.kind) {
@@ -115,7 +115,7 @@ export function displayEntry(
       };
   }
 }
-export function viewerCatalogue(model: CatalogueReadModel) {
+export function viewerCatalogue(model: ShellCatalogueReadModel) {
   const manifest: ManifestV5 = {
     schemaVersion: 5,
     generatedBy: "mokly",
@@ -150,7 +150,7 @@ export function viewerCatalogue(model: CatalogueReadModel) {
   };
 }
 export function viewerContext(
-  model: CatalogueReadModel,
+  model: ShellCatalogueReadModel,
   selection: ViewerSelection,
 ): ShellContext {
   const resolved =

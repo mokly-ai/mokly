@@ -2,7 +2,7 @@
 
 import {
   readViewerCapabilityDescriptor,
-  readViewerEvidenceRevision,
+  readViewerRouteEvidenceRevision,
   viewerCapabilityRequestMatches,
 } from "@mokly/viewer/runtime";
 import type {
@@ -139,7 +139,10 @@ async function refreshEvidence(
   const state = nextDocument.querySelector<HTMLScriptElement>(
     "script[data-mokly-host-capability-state]",
   );
-  if (!state?.textContent) return;
+  const publicState = nextDocument.querySelector<HTMLScriptElement>(
+    "script[data-mokly-shell-bootstrap]",
+  );
+  if (!state?.textContent || !publicState?.textContent) return;
   const next = readViewerCapabilityDescriptor(JSON.parse(state.textContent));
   if (
     !viewerCapabilityRequestMatches(installed.source, {
@@ -151,25 +154,11 @@ async function refreshEvidence(
     !sameRenderCapability(installed, next)
   )
     return;
-  const catalogueUrl = new URL("/__mokly/catalogue.json", href);
-  const publicResponse = await environment.fetch(catalogueUrl, {
-    signal,
-    cache: "no-store",
-    credentials: "omit",
-  });
-  if (
-    !publicResponse.ok ||
-    publicResponse.url !== catalogueUrl.href ||
-    environment.location.href !== href
-  )
-    return;
-  const catalogue: unknown = await publicResponse.json();
-  signal.throwIfAborted();
-  return readViewerEvidenceRevision(
+  return readViewerRouteEvidenceRevision(
     installed.source,
     request,
     next.source,
-    catalogue,
+    JSON.parse(publicState.textContent),
     next.workspace,
   );
 }

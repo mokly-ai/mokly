@@ -73,7 +73,9 @@ deployments. Comparison generation URLs retain their separate content identity.
 `site.ts` also writes the [public catalogue projection](../catalogue/README.md)
 at `__mokly/catalogue.json`. Its per-entry Changes state uses the same accepted
 attribution as the shell. It enters the normal collision-checked inventory,
-ownership v1 marker and upload v1 archive without changing either schema.
+ownership v1 marker and upload v1 archive without changing either schema. This
+model is complete and never contains the live-bootstrap-only `omitted` usage
+state.
 Each shell page embeds only a compact reference with this catalogue's identity
 and revisions. The standalone browser validates and fetches the shared finalized
 resource once before hydration, avoiding catalogue-sized bytes repeated for
@@ -84,10 +86,16 @@ Finalization validates the catalogue and canonicalizes only its top-level
 Other catalogue fields participate in the hash, including additive fields.
 Export revisions are zero; current-only exports have disabled Changes and a
 null comparison pointer. Repository preview capture uses the same projection and
-finalization. Captured live shell bootstraps are replaced with references to
-that projected model before staging; conversion rejects rendered catalogue
-drift beyond the deployment id, revision counters, and finalized comparison
-path. Shell HTML retains its existing bytes apart from the identity.
+finalization. Capture validates that complete published model once per build.
+For each captured live page, it validates the page's scoped bootstrap and
+compares it with the route-scoped projection of the published model before
+replacing it with the existing compact reference. Conversion rejects leaked or
+missing route usage and rendered catalogue drift beyond the deployment id,
+revision counters, and finalized comparison path. For identical catalogue,
+consumer, and comparison inputs, catalogue, shell, workspace, ownership, and
+comparison bytes remain unchanged by live route scoping after deployment-id
+normalization. Viewer changes may alter `__mokly/client/**`; across this switch,
+only those changed client bytes may account for a new deployment identity.
 Its opt-in Changes build captures removed pages through the already prepared
 repository reader; the default build performs no Git or historical capture.
 The finalized projection carries validated packaged preview descriptors, and
@@ -169,7 +177,8 @@ npm run package:smoke
 ```
 
 See the [export contract](../../docs/protocol/mokly-export.md),
-[static delivery contract](../../docs/protocol/mokly-export-delivery.md), and
+[static delivery contract](../../docs/protocol/mokly-export-delivery.md),
+[shell bootstrap contract](../../docs/protocol/mokly-shell-bootstrap.md), and
 [plan index](../../plans/README.md).
 
 Registered components export through the same transactional delivery boundary.

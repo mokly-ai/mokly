@@ -2,13 +2,10 @@
 
 import { resolveCatalogueRoute } from "../catalogue/entry_selection.js";
 import { readCatalogue } from "../catalogue/reader.js";
+import type { ShellCatalogueReadModel } from "../catalogue/scoped_types.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import { canonicalJson } from "../components/data.js";
-import {
-  parseStaticDelivery,
-  type StaticDelivery,
-} from "../navigation/delivery.js";
-import { isLogicalFragment } from "../navigation/logical.js";
+import type { StaticDelivery } from "../navigation/delivery.js";
 import { catalogueRouteEntry } from "../shell/catalogue.js";
 import type { ShellContext } from "../shell/context.js";
 import { toRouteTarget } from "../shell/target.js";
@@ -16,8 +13,12 @@ import type { ShellView } from "../shell/views.js";
 import { viewerCatalogue, viewerContext } from "../viewer/projection.js";
 import { defaultSelection } from "../viewer/selection.js";
 import { normalizeTheme } from "../viewer/theme.js";
-import type { ViewerTheme } from "../viewer/types.js";
 
+import {
+  readShellBootstrapEnvelope,
+  type ShellBootstrapEnvelope,
+  type ShellBootstrapView,
+} from "./bootstrap_envelope.js";
 import {
   catalogueReferenceMatches,
   externalCatalogueReference,
@@ -26,35 +27,19 @@ import {
   type ExternalCatalogueReference,
 } from "./catalogue_reference.js";
 
-type BootstrapView =
-  | { kind: "home" }
-  | { kind: "missing"; requested: string }
-  | { kind: "target"; route: string };
-
-interface BootstrapContext {
-  base: string;
-  updateVersion: number;
-  contentVersion?: number;
-  previewGeneration?: string;
-  comparisons: boolean;
-  delivery?: StaticDelivery;
-  fragment?: string;
-  theme?: ViewerTheme;
-}
+export { readShellBootstrapEnvelope } from "./bootstrap_envelope.js";
+export type {
+  ShellBootstrapContext,
+  ShellBootstrapEnvelope,
+  ShellBootstrapView,
+} from "./bootstrap_envelope.js";
 
 /** Public-catalogue state embedded in one server-rendered standalone page. */
-export interface ShellBootstrap {
-  catalogue: CatalogueReadModel;
-  context: BootstrapContext;
-  view: BootstrapView;
-}
+export type ShellBootstrap = ShellBootstrapEnvelope<CatalogueReadModel>;
 
 /** Compact static-page state resolved from the deployment catalogue before hydration. */
-export interface ExternalShellBootstrap {
-  catalogue: ExternalCatalogueReference;
-  context: BootstrapContext;
-  view: BootstrapView;
-}
+export type ExternalShellBootstrap =
+  ShellBootstrapEnvelope<ExternalCatalogueReference>;
 
 /** Either a self-contained live bootstrap or a static shared-catalogue reference. */
 export type ShellBootstrapState = ShellBootstrap | ExternalShellBootstrap;
@@ -112,19 +97,16 @@ export function readShellBootstrap(value: unknown): ShellBootstrap {
 
 /** Validate either supported embedded bootstrap representation. */
 export function readShellBootstrapState(value: unknown): ShellBootstrapState {
-  if (!isRecord(value) || !isRecord(value.context) || !isRecord(value.view))
-    throw new Error("Invalid shell hydration state.");
-  const context = readContext(value.context);
-  const view = readView(value.view);
-  if (isExternalCatalogueReference(value.catalogue))
+  const envelope = readShellBootstrapEnvelope(value);
+  if (isExternalCatalogueReference(envelope.catalogue))
     return {
-      catalogue: readExternalCatalogueReference(value.catalogue),
-      context,
-      view,
+      catalogue: readExternalCatalogueReference(envelope.catalogue),
+      context: envelope.context,
+      view: envelope.view,
     };
-  const catalogue = readCatalogue(value.catalogue);
-  validateTarget(catalogue, view);
-  return { catalogue, context, view };
+  const catalogue = readCatalogue(envelope.catalogue);
+  validateTarget(catalogue, envelope.view);
+  return { ...envelope, catalogue };
 }
 
 /** Resolve a compact static bootstrap against its validated deployment catalogue. */
@@ -141,13 +123,15 @@ export function resolveShellBootstrap(
 
 /** Encode hydration state with stable lexical object-key ordering. */
 export function serializeShellBootstrap(
-  bootstrap: ShellBootstrapState,
+  bootstrap: ShellBootstrapEnvelope<unknown>,
 ): string {
   return canonicalJson(bootstrap).replaceAll("<", "\\u003c");
 }
 
 /** Recreate the exact component inputs used by standalone SSR. */
-export function shellBootstrapProps(bootstrap: ShellBootstrap) {
+export function shellBootstrapProps(
+  bootstrap: ShellBootstrapEnvelope<ShellCatalogueReadModel>,
+) {
   const catalogue = viewerCatalogue(bootstrap.catalogue);
   const selected =
     bootstrap.view.kind === "target"
@@ -198,66 +182,20 @@ export function shellBootstrapProps(bootstrap: ShellBootstrap) {
 }
 
 /** Adopt the finalized authenticated descriptor over static staging values. */
-export function shellBootstrapWithDelivery(
-  bootstrap: ShellBootstrap,
+export function shellBootstrapWithDelivery<
+  Catalogue extends ShellCatalogueReadModel,
+>(
+  bootstrap: ShellBootstrapEnvelope<Catalogue>,
   delivery: StaticDelivery,
-): ShellBootstrap {
+): ShellBootstrapEnvelope<Catalogue> {
   return {
     ...bootstrap,
-    catalogue: { ...bootstrap.catalogue, deploymentId: delivery.deploymentId },
+    catalogue: {
+      ...bootstrap.catalogue,
+      deploymentId: delivery.deploymentId,
+    } as Catalogue,
     context: { ...bootstrap.context, delivery },
   };
-}
-
-function readContext(value: Record<string, unknown>): BootstrapContext {
-  if (
-    typeof value["base"] !== "string" ||
-    !isVersion(value["updateVersion"]) ||
-    typeof value["comparisons"] !== "boolean"
-  )
-    throw new Error("Invalid shell hydration context.");
-  const contentVersion = value["contentVersion"];
-  const previewGeneration = value["previewGeneration"];
-  const fragment = value["fragment"];
-  const theme = value["theme"];
-  if (contentVersion !== undefined && !isVersion(contentVersion))
-    throw new Error("Invalid shell content version.");
-  if (previewGeneration !== undefined && typeof previewGeneration !== "string")
-    throw new Error("Invalid shell preview generation.");
-  if (fragment !== undefined && !isLogicalFragment(fragment))
-    throw new Error("Invalid shell fragment.");
-  if (
-    theme !== undefined &&
-    theme !== "auto" &&
-    theme !== "dark" &&
-    theme !== "light"
-  )
-    throw new Error("Invalid shell appearance.");
-  const delivery =
-    value["delivery"] === undefined
-      ? undefined
-      : parseStaticDelivery(value["delivery"]);
-  if (value["delivery"] !== undefined && !delivery)
-    throw new Error("Invalid shell delivery metadata.");
-  return {
-    base: value["base"],
-    updateVersion: value["updateVersion"],
-    comparisons: value["comparisons"],
-    ...(contentVersion === undefined ? {} : { contentVersion }),
-    ...(previewGeneration === undefined ? {} : { previewGeneration }),
-    ...(delivery === undefined ? {} : { delivery }),
-    ...(fragment === undefined ? {} : { fragment }),
-    ...(theme === undefined ? {} : { theme }),
-  };
-}
-
-function readView(value: Record<string, unknown>): BootstrapView {
-  if (value["kind"] === "home") return { kind: "home" };
-  if (value["kind"] === "missing" && typeof value["requested"] === "string")
-    return { kind: "missing", requested: value["requested"] };
-  if (value["kind"] === "target" && typeof value["route"] === "string")
-    return { kind: "target", route: value["route"] };
-  throw new Error("Invalid shell hydration view.");
 }
 
 function isExternalShellBootstrap(
@@ -268,7 +206,7 @@ function isExternalShellBootstrap(
 
 function validateTarget(
   catalogue: CatalogueReadModel,
-  view: BootstrapView,
+  view: ShellBootstrapView,
 ): void {
   if (view.kind === "target" && !resolveCatalogueRoute(catalogue, view.route))
     throw new Error("Invalid shell hydration target.");
@@ -282,12 +220,4 @@ function targetView(
   const target = entry && toRouteTarget(entry);
   if (!target) throw new Error("Invalid shell hydration target.");
   return { kind: "target", target };
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
-}
-
-function isVersion(value: unknown): value is number {
-  return Number.isSafeInteger(value) && Number(value) >= 0;
 }

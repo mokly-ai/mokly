@@ -19,6 +19,7 @@ export type ScreenPageState =
   | "consumer"
   | "empty"
   | "unavailable"
+  | "inspection-loading"
   | "removed-consumer";
 
 /** A single consumer screen reused by Current, inspection, and comparison mockups. */

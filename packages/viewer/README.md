@@ -297,7 +297,7 @@ cancellation and evidence-refresh behavior are defined in the
 | `@mokly/viewer/server`     | Node-only synchronous rendering and full-document server helpers                      |
 | `@mokly/viewer/browser`    | Side-effectful hydration entry for Mokly's standalone documents                       |
 | `@mokly/viewer/data`       | Pure catalogue, component and comparison value contracts for tooling                  |
-| `@mokly/viewer/runtime`    | Browser-safe standalone and live-host integration primitives                          |
+| `@mokly/viewer/runtime`    | Browser-safe standalone, route-scoped bootstrap and live-host integration primitives  |
 
 React applications normally need only the root entry and stylesheet. Do not
 import `@mokly/viewer/browser` in an application-owned React root; it
@@ -336,6 +336,30 @@ leave Appearance hidden; back/forward-cache restoration retains and refreshes
 the controller. Final disposal removes both system and selector listeners.
 Serve loads live capabilities separately; static navigation reads inert
 workspace evidence from the same finalized deployment.
+
+Serve's inline shell bootstrap keeps the complete navigation/index model but
+retains usage only for that route's derived scope; other views use the
+runtime-only `omitted` state. The matching private capability descriptor
+supplies complete cross-route Usage. Static pages keep their compact external
+reference and resolve the complete shared `catalogue.json`. The public `readCatalogue`
+boundary accepts only that complete v1 model and rejects `omitted`.
+
+The runtime subpath exposes `projectScopedCatalogue`, the
+`ShellCatalogueUsage`/`ShellCatalogueReadModel` types and the strict
+`readScopedShellBootstrap` boundary. Browser hydration and live evidence use
+the centralized `readLiveShellBootstrap` boundary, which accepts only exact
+route scope and rejects complete or partial live payloads. Its state reader
+also accepts the unchanged external reference used by finalized static pages.
+Serve's private `react-host.js` imports the same type-checked `react-shell.js`
+entry that finalized pages load directly. That one bundle handles strict live
+scope and the external static reference; viewer changes may change its bytes
+and therefore the finalized deployment identity.
+
+Full-document rendering serializes each bootstrap and capability descriptor
+once. Hydration reuses the exact embedded text across later React renders;
+canonical parse/validation plus serialization is tested to reproduce those
+bytes. See the
+[standalone bootstrap contract](../../docs/protocol/mokly-shell-bootstrap.md).
 
 ## Theming
 
@@ -403,8 +427,9 @@ complete path, header, sandbox and CSP requirements.
 
 `@mokly/viewer` owns the validated catalogue reader, Browse presentation,
 selection model, navigation, inspection, instance resolution and frame
-adapters. It makes no analytics or discovery requests and does not use ambient
-credentials.
+adapters. Its runtime subpath owns strict route-scoped bootstrap validation
+without extending the public catalogue type. It makes no analytics or
+discovery requests and does not use ambient credentials.
 
 The embedding application owns catalogue delivery, authentication, its URL and
 route mapping, surrounding product UI, slot content, markers and collaboration
@@ -443,6 +468,7 @@ consumers.
 - [Viewer behavior contract](../../docs/protocol/mokly-viewer.md)
 - [Markers and multi-instance highlights](../../docs/protocol/mokly-viewer-markers.md)
 - [Catalogue read model](../../docs/protocol/mokly-catalogue.md)
+- [Standalone shell bootstrap](../../docs/protocol/mokly-shell-bootstrap.md)
 - [Frame adapter protocol](../../docs/protocol/mokly-frame-adapter.md)
 - [Component instance identity](../../docs/protocol/mokly-instances.md)
 - [Package ownership boundary](../../docs/architecture/package-boundary.md)

@@ -8,6 +8,10 @@ stays private; local Browse keeps its embedded data, appearance and behavior.
 The additive removed-page and removed-screen preview descriptors are
 implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md).
+The public model remains implemented and unchanged. The
+[route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md)
+implements its separate shell model, projection and strict reader for every
+live Serve page while this public endpoint stays complete.
 
 ## Location And Types
 
@@ -17,6 +21,14 @@ Component value types follow the [manifest](./mokly-component-manifest.md),
 [props](./mokly-component-props.md), [controls](./mokly-component-controls.md)
 and [instance](./mokly-instances.md) contracts. The viewer exports these types
 without a CLI dependency.
+
+This public artifact is always the complete v1 projection. Its
+`CatalogueUsage` union is exactly `ready | pending | unavailable`; readers
+reject the bootstrap-only `omitted` state anywhere in current or historical
+views. Live shell pages separately embed the
+[route-scoped bootstrap projection](./mokly-shell-bootstrap.md), whose runtime
+type may replace only out-of-scope usage with `omitted`. That standalone
+delivery optimization does not extend this schema or change this file's bytes.
 
 ```ts
 import type {
@@ -217,6 +229,11 @@ the model; it never publishes dangling references or weakens reader validation.
 Proven empty usage is ready with empty arrays, never inferred
 from a failed or incomplete render.
 
+The complete projection retains the real usage state for every published view.
+Route scoping happens only after this model is accepted and only for a live
+shell bootstrap; it never changes the retained public snapshot used by the
+catalogue endpoint, export, upload, ownership inventory, or fixture.
+
 `comparisonUrl` is null or `__mokly/diffs/__generations/<generation>/review.json`,
 pinned to this content's evidence. Resolve snapshots against that JSON response
 URL. Null forbids fallback requests to `/__mokly/diffs/review.json`.
@@ -281,7 +298,9 @@ and is checked by the reader/projection conformance tests.
 ## Serve And Fetch Rules
 
 Serve uses `Cache-Control: no-store` and live-index metadata, with pending usage
-until real view/background records arrive. GET never triggers Git or rendering.
+until real view/background records arrive. GET returns this complete model even
+though each Serve HTML page carries only its route-scoped shell projection.
+GET never triggers Git or rendering.
 Revisions are nonnegative safe integers: content
 advances on accepted content, evidence on accepted usage/Changes updates. Each
 response is one atomic snapshot; failed candidates retain the last good content.

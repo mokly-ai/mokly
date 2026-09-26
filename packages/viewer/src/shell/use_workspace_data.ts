@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 
+import { catalogueHasOmittedUsage } from "../catalogue/usage_scope.js";
 import type { ViewerCapabilityRequest } from "../client/host_capability_descriptor.js";
 
 import {
@@ -19,9 +20,24 @@ export interface RoutedWorkspaceData {
   data: WorkspaceData;
   refresh(): void;
   request?: ViewerCapabilityRequest;
+  usageDelivery: UsageDeliveryState;
 }
 
-/** Select atomically adopted private evidence, then fall back to public data. */
+/** Cross-route Usage delivery, distinct from catalogue usage availability. */
+export type UsageDeliveryState =
+  | { status: "ready" }
+  | { status: "loading" }
+  | { status: "failed"; retry(): void };
+
+/**
+ * Select atomically adopted private evidence, then fall back to public data.
+ *
+ * A live shell trusts only the store's evidence bound to the current request.
+ * Its page-lifetime initial workspace already seeds that binding for the first
+ * request, so reusing it after navigation would present stale Usage as Ready.
+ * Static and embedded shells have no live request; they keep their inert
+ * initial and destination evidence.
+ */
 export function useWorkspaceData(
   catalogue: Catalogue,
   context: ShellContext,
@@ -38,13 +54,16 @@ export function useWorkspaceData(
     [catalogue, context, entry],
   );
   const [, refresh] = useReducer((value: number) => value + 1, 0);
-  const selected = matchingWorkspace(live.workspace, entry)
-    ? live.workspace
+  const privateWorkspace = live.request
+    ? matchingWorkspace(live.workspace, entry)
+      ? live.workspace
+      : undefined
     : matchingWorkspace(staticWorkspace, entry)
       ? staticWorkspace
       : matchingWorkspace(initial, entry)
         ? initial
-        : fallback;
+        : undefined;
+  const selected = privateWorkspace ?? fallback;
   const dataRef = useRef(selected);
   const adoptedRef = useRef(selected);
   if (!matchingWorkspace(dataRef.current, entry)) {
@@ -77,10 +96,20 @@ export function useWorkspaceData(
     return () => controller.abort();
   }, [entry, initial, staticEvidence, staticWorkspace]);
 
+  const incomplete = Boolean(
+    catalogue.publicModel && catalogueHasOmittedUsage(catalogue.publicModel),
+  );
+  const usageDelivery: UsageDeliveryState =
+    privateWorkspace || !incomplete
+      ? { status: "ready" }
+      : live.routeEvidence?.status === "failed"
+        ? { status: "failed", retry: live.routeEvidence.retry }
+        : { status: "loading" };
   return dataRef.current
     ? {
         data: dataRef.current,
         refresh,
+        usageDelivery,
         ...(live.request ? { request: live.request } : {}),
       }
     : undefined;

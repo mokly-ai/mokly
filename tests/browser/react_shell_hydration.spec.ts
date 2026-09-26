@@ -4,6 +4,7 @@ import type { Page } from "@playwright/test";
 import {
   buildDevelopmentBundle,
   captureBrowserErrors,
+  delayHydration,
   expectCleanHydration,
   expectNoBrowserErrors,
   installDevelopmentBundle as installBundle,
@@ -105,31 +106,16 @@ test("development React hydrates live component controls before enabling them", 
   page,
 }) => {
   const errors = captureBrowserErrors(page);
-  let markRequested = (): void => undefined;
-  const requested = new Promise<void>((resolve) => {
-    markRequested = resolve;
-  });
-  let release = (): void => undefined;
-  const released = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  await page.route("**/__mokly/client/react-shell.js", async (route) => {
-    markRequested();
-    await released;
-    await route.fulfill({
-      body: developmentBundle,
-      contentType: "text/javascript",
-    });
-  });
+  const gate = await delayHydration(page, developmentBundle);
   const navigation = page.goto("/view/components/action.html");
-  await requested;
+  await gate.requested;
   const props = page.locator('[data-inspector-panel="props"]');
   await expect(props.locator("[data-controls-status]")).toHaveText(
     "Open this catalogue locally to edit props.",
   );
   await expect(props.locator("[data-prop-control]").first()).toBeDisabled();
 
-  release();
+  gate.release();
   await navigation;
   await expectCleanHydration(page, errors);
   await page.getByRole("tab", { name: "Props", exact: true }).click();
@@ -193,31 +179,16 @@ test("an early native disclosure wins hydration before reload promotes active an
   page,
 }) => {
   const errors = captureBrowserErrors(page);
-  let bundleRequested = () => {};
-  const requested = new Promise<void>((resolve) => {
-    bundleRequested = resolve;
-  });
-  let releaseBundle = () => {};
-  const released = new Promise<void>((resolve) => {
-    releaseBundle = resolve;
-  });
-  await page.route("**/__mokly/client/react-shell.js", async (route) => {
-    bundleRequested();
-    await released;
-    await route.fulfill({
-      body: developmentBundle,
-      contentType: "text/javascript",
-    });
-  });
+  const gate = await delayHydration(page, developmentBundle);
   const navigation = page.goto("/view/screens/welcome.html");
-  await requested;
+  await gate.requested;
   const disclosure = page.locator(
     'details[data-nav-disclosure="section:pages"]',
   );
   await expect(disclosure).toHaveAttribute("open", "");
   await disclosure.locator(":scope > summary").click();
   await expect(disclosure).not.toHaveAttribute("open", "");
-  releaseBundle();
+  gate.release();
   await navigation;
   await expectCleanHydration(page, errors);
   await expect(disclosure).not.toHaveAttribute("open", "");

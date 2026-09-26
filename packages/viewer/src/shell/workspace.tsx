@@ -286,7 +286,9 @@ export function ComponentWorkspace({
               />
             ),
             props: propsPanel,
-            usage: <WorkspaceUsage data={data} />,
+            usage: (
+              <WorkspaceUsage data={data} delivery={workspace.usageDelivery} />
+            ),
           }}
         />
       </div>
