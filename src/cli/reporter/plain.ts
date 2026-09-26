@@ -12,6 +12,7 @@ import type {
 const INACTIVE_PHASE: ReporterPhase = {
   fail: () => undefined,
   succeed: () => undefined,
+  update: () => undefined,
 };
 
 /** Compatibility reporter whose bytes match the historical CLI output. */

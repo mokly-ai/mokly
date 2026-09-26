@@ -156,7 +156,9 @@ file uploads, `<total>` the number of files the receiver asked for, and
 one decimal place above it, such as `312 B`, `4.1 KiB`, or `12.0 MiB`. The
 label updates as each file completes; a forced-rich pipe shows only the
 starting line and the durable `Catalogue uploaded` line. A replay in which
-the receiver already holds every file shows no progress label.
+the receiver already holds every file shows no progress label. When the
+exchange re-plans, the label restarts at zero with the new round's missing-file
+count and total size.
 
 Completion summaries are:
 
@@ -173,7 +175,8 @@ Export follows its summary with the unstyled guidance
 `Deploy this directory at your site's root with your hosting provider.`
 Publish follows its summary with the receiver's viewer URL on its own unstyled
 line when the completion response supplied an absolute http(s) URL, and adds
-nothing otherwise. Its counts are the export's ownership entries whose content
+nothing otherwise. Omit that line when the normalized URL contains the bearer
+token or its `encodeURIComponent` form. Its counts are the export's ownership entries whose content
 the receiver requested during this command against the remaining entries. The
 already-published summary replaces the counted one when the receiver answers
 the completion with `200`, meaning it kept an earlier publication for the same

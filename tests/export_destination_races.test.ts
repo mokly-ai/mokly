@@ -4,10 +4,10 @@ import path from "node:path";
 import test from "node:test";
 
 import { fileExportOperations } from "../dist/export/operations.js";
-import { EXPORT_MARKER } from "../dist/export/ownership.js";
 import { ExportTransaction } from "../dist/export/transaction.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { writeOwnershipMarker } from "./helpers/ownership_marker.js";
 
 test("destination creation during initial ownership inspection cannot be adopted", async (context) => {
   const fixture = await createFixture();
@@ -159,10 +159,7 @@ test("an empty output created at the restore operation is never replaced", async
 async function writeOwned(directory: string, contents: string): Promise<void> {
   await fs.promises.mkdir(directory, { recursive: true });
   await fs.promises.writeFile(path.join(directory, "index.html"), contents);
-  await fs.promises.writeFile(
-    path.join(directory, EXPORT_MARKER),
-    JSON.stringify({ schemaVersion: 1, files: ["index.html"] }),
-  );
+  await writeOwnershipMarker(directory);
 }
 
 async function readIndex(directory: string): Promise<string> {

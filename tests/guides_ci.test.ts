@@ -3,8 +3,11 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { uploadCatalogue } from "../src/publish/http.js";
+import { uploadMissingBlobs } from "../src/publish/blobs.js";
+import { completeUpload } from "../src/publish/complete.js";
+import { statusError } from "../src/publish/http.js";
 import { validateUploadManifest } from "../src/publish/manifest.js";
+import { requestUploadPlan } from "../src/publish/plan.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
 import { GUIDES } from "./helpers/guides.js";
@@ -85,26 +88,67 @@ test("documented request headers and acceptance match the transport", async () =
   });
   const protocolFences = fenceHeaders(read("docs/protocol/mokly-upload.md"));
   assert.deepEqual(protocolFences, fences);
-  const fixed = Object.entries(plan ?? {}).filter(
-    ([key]) => key !== "Content-Length",
-  );
-  for (const status of [200, 201, 204, 299]) {
-    let requests = 0;
-    await uploadCatalogue(
-      { endpoint, token: "TOKEN" },
-      Buffer.from("archive"),
-      async (url, init) => {
-        requests++;
+  const retry = {
+    now: () => new Date("2026-09-26T12:00:00.000Z"),
+    random: () => 0,
+    sleep: async () => undefined,
+  };
+  const digest = "a".repeat(64);
+  const selectedPlan = await requestUploadPlan(
+    { endpoint, token: "TOKEN" },
+    Buffer.from("archive"),
+    new Set([digest]),
+    {
+      ...retry,
+      fetch: async (url, init) => {
         assert.equal(url, endpoint);
         assert.equal(init?.method, "POST");
         assert.equal(init?.redirect, "manual");
-        for (const [key, value] of fixed)
+        for (const [key, value] of Object.entries(plan ?? {}).filter(
+          ([key]) => key !== "Content-Length",
+        ))
           assert.equal(new Headers(init?.headers).get(key), value);
-        return new Response(null, { status });
+        return Response.json({
+          schemaVersion: 1,
+          upload: {
+            id: "upload",
+            expiresAt: "2026-09-26T13:00:00.000Z",
+          },
+          missing: [digest],
+          blobUrl: "https://example.com/blobs/{sha256}",
+          completeUrl: "https://example.com/complete",
+        });
       },
-    );
-    assert.equal(requests, 1);
-  }
+    },
+  );
+  await uploadMissingBlobs(
+    selectedPlan,
+    new Map([[digest, { sha256: digest, size: 1, bytes: Buffer.from("a") }]]),
+    { endpoint, token: "TOKEN" },
+    1,
+    {
+      ...retry,
+      fetch: async (_url, init) => {
+        for (const [key, value] of Object.entries(blob ?? {}).filter(
+          ([key]) => key !== "Content-Length",
+        ))
+          assert.equal(new Headers(init?.headers).get(key), value);
+        return new Response(null, { status: 204 });
+      },
+    },
+  );
+  await completeUpload(
+    selectedPlan,
+    { endpoint, token: "TOKEN" },
+    {
+      ...retry,
+      fetch: async (_url, init) => {
+        for (const [key, value] of Object.entries(complete ?? {}))
+          assert.equal(new Headers(init?.headers).get(key), value);
+        return new Response(null, { status: 201 });
+      },
+    },
+  );
   assert.match(prose, /Any `2xx` answer means the file is stored/u);
   assert.match(protocol, /Any 2xx means stored/u);
   assert.match(prose, /`201` means a new publication is live/u);
@@ -204,7 +248,7 @@ test("archive rules accept only regular files and authenticate before decompress
   assert.match(receiver, /`409`/u);
 });
 
-test("documented rejections agree with the protocol", async () => {
+test("documented rejections agree with the protocol", () => {
   const categories = [
     ...upload.matchAll(/^\|[^\n]+\| `(upload-[a-z-]+)`\s*\|/gmu),
   ].map(([, category]) => category ?? "");
@@ -229,23 +273,11 @@ test("documented rejections agree with the protocol", async () => {
     302,
     500,
   ]) {
-    let requests = 0;
     const category =
       statuses.find(([, value]) => Number(value) === status)?.[2] ??
       "upload-failed";
     assert.ok(protocol.includes(category));
-    await assert.rejects(
-      uploadCatalogue(
-        { endpoint: "https://example.com", token: "TOKEN" },
-        Buffer.from("archive"),
-        async () => {
-          requests++;
-          return new Response(null, { status });
-        },
-      ),
-      { code: category },
-    );
-    assert.equal(requests, 1);
+    assert.equal(statusError(status).code, category);
   }
 });
 

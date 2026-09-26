@@ -9,6 +9,7 @@ import { assertExportOwnership } from "../dist/export/ownership.js";
 import { resolveExportOutput } from "../dist/export/paths.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { ownershipMarkerFromFiles } from "./helpers/ownership_marker.js";
 
 test("export confines output before any write and resolves against config", async (context) => {
   const fixture = await createFixture();
@@ -55,15 +56,30 @@ test("export refuses unowned, malformed, and mixed output", async (context) => {
   const marker = path.join(output, ".mokly-export-artifact");
   for (const content of [
     "{}",
-    '{"schemaVersion":2,"files":[]}',
-    '{"schemaVersion":1,"files":["../keep.txt"]}',
+    '{"schemaVersion":3,"files":[]}',
+    '{"schemaVersion":2,"files":[{"path":"../keep.txt","sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","size":10}]}',
   ]) {
     await fs.promises.writeFile(marker, content);
-    await assert.rejects(assertExportOwnership(output), /ownership/);
+    await assert.rejects(assertExportOwnership(output), /export-invalid/);
   }
   await fs.promises.writeFile(
     marker,
     JSON.stringify({ schemaVersion: 1, files: ["index.html"] }),
+  );
+  await assert.rejects(
+    assertExportOwnership(output),
+    (error: unknown) =>
+      error instanceof Error &&
+      "code" in error &&
+      error.code === "export-invalid" &&
+      error.message.includes(output) &&
+      /remove/i.test(error.message),
+  );
+  await fs.promises.writeFile(
+    marker,
+    JSON.stringify(
+      ownershipMarkerFromFiles(new Map([["index.html", "Owned"]])),
+    ),
   );
   await assert.rejects(assertExportOwnership(output), /unowned/);
   assert.equal(

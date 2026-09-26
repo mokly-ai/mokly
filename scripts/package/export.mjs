@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { inspectPublicCatalogue } from "./catalogue.mjs";
+import { assertOwnershipMarker, verifyOwnershipFiles } from "./ownership.mjs";
 /** Inspect only the installed CLI's artifact; never import the source exporter. */
 export async function inspectConsumerExport(
   root,
@@ -14,7 +15,9 @@ export async function inspectConsumerExport(
   const output = path.join(root, relative);
   const read = (name) => fs.promises.readFile(path.join(output, name), "utf8");
   const marker = JSON.parse(await read(".mokly-export-artifact"));
-  assert.equal(marker.schemaVersion, 1);
+  const entries = assertOwnershipMarker(marker);
+  await verifyOwnershipFiles(marker, output);
+  const files = entries.map(({ path: name }) => name);
   for (const name of [
     "index.html",
     "404.html",
@@ -27,8 +30,8 @@ export async function inspectConsumerExport(
     "__mokly/fonts/InterVariable.woff2",
     ...expected,
   ])
-    assert.ok(marker.files.includes(name), `export missing ${name}`);
-  for (const name of marker.files) {
+    assert.ok(files.includes(name), `export missing ${name}`);
+  for (const name of files) {
     assert.ok(!name.split("/").includes(".."));
     assert.equal(
       /(?:^|\/)(?:node_modules|\.git|scripts|entries)\//.test(name),
@@ -37,7 +40,7 @@ export async function inspectConsumerExport(
     assert.equal(/\.(?:tsx?|map)$/.test(name), false);
     assert.ok((await fs.promises.stat(path.join(output, name))).isFile());
   }
-  assert.equal(marker.files.includes("__mokly/client/react-shell.js"), true);
+  assert.equal(files.includes("__mokly/client/react-shell.js"), true);
   for (const name of [
     "host_capabilities.js",
     "host_capability_descriptor.js",
@@ -47,13 +50,13 @@ export async function inspectConsumerExport(
     "react_transports.js",
     "react_update_controller.js",
   ])
-    assert.equal(marker.files.includes(`__mokly/client/${name}`), false);
+    assert.equal(files.includes(`__mokly/client/${name}`), false);
   const home = await read("index.html");
   assert.match(home, /data-mokly-static=""/);
   assert.match(home, /client\/react-shell\.js/);
   assert.doesNotMatch(home, /client\/browser\.js/);
   assert.doesNotMatch(home, /data-mokly-host-capabilit|react-host\.js/);
-  const comparison = marker.files.find((name) =>
+  const comparison = files.find((name) =>
     /^__mokly\/diffs\/__generations\/[a-f0-9]{64}\/review\.json$/.test(name),
   );
   assert.ok(comparison);
@@ -68,7 +71,7 @@ export async function inspectConsumerExport(
     for (const view of screen.views) {
       for (const snapshot of [view.beforePath, view.afterPath].filter(Boolean))
         assert.ok(
-          marker.files.includes(
+          files.includes(
             path.posix.join(path.posix.dirname(comparison), snapshot),
           ),
         );

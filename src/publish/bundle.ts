@@ -34,8 +34,7 @@ export async function bundleUpload(
   limits: typeof UPLOAD_LIMITS = UPLOAD_LIMITS,
 ): Promise<Buffer> {
   if (signal?.aborted) throw interrupted();
-  if (files.size > limits.files) throw tooLarge();
-  const entries = validateEntries(files, limits.fileBytes);
+  const entries = validateUploadFiles(files, limits);
   const archive = pack();
   const chunks: Buffer[] = [];
   let tarBytes = 0;
@@ -91,10 +90,12 @@ export async function bundleUpload(
   }
 }
 
-function validateEntries(
+/** Validate the complete finalized upload snapshot without archiving it. */
+export function validateUploadFiles(
   files: ReadonlyMap<string, ReviewArtifactContent>,
-  fileLimit: number,
+  limits: typeof UPLOAD_LIMITS = UPLOAD_LIMITS,
 ): Map<string, Buffer> {
+  if (files.size > limits.files) throw tooLarge();
   const names = new Set<string>();
   const entries = new Map<string, Buffer>();
   for (const [name, content] of files) {
@@ -105,7 +106,10 @@ function validateEntries(
       typeof content === "string"
         ? Buffer.byteLength(content)
         : content.byteLength;
-    if (size > fileLimit || (name === UPLOAD_MANIFEST && size > 16 * 1024))
+    if (
+      size > limits.fileBytes ||
+      (name === UPLOAD_MANIFEST && size > 16 * 1024)
+    )
       throw tooLarge();
     entries.set(
       name,

@@ -124,10 +124,15 @@ broad rules, without ignoring unrelated authored files with similar names.
    graph, and comparison engine as development. An ephemeral loopback server
    may be used, but no watcher or persistent process is started.
 5. Assemble all routes and resources defined by the static delivery contract.
-   Verify internal references, ownership, route collisions, and complete local
-   dependency closure, then hash every staged file and write the export
-   ownership inventory. A regular file over 64 MiB, the inventory's size
-   ceiling, fails as `export-invalid` before staging.
+   Finalize the deployment identity from every staged file except the ownership
+   marker, stamp that identity into the owned catalogue and shell documents,
+   then hash those final bytes and add the schema 2 marker to the
+   collision-checked inventory last. Verify internal references, ownership,
+   route collisions, including the marker path, and complete local dependency
+   closure before writing the stage. A regular file over 64 MiB, the
+   inventory's size ceiling, fails as `export-invalid` before staging. The
+   marker is excluded from the identity input because it is derived entirely
+   from the paths and finalized bytes that the identity calculation determines.
 6. Drain generation work and close temporary servers before installing the
    stage. Replace owned output with rollback protection, then clean owned
    temporary resources and release the writer reservation.

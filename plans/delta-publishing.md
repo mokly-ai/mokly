@@ -111,7 +111,7 @@ Prettier and the guide-structure test.
       because the Reference slugs are unchanged.
 - [x] Author the contract fixtures now so the docs link to real files:
       `docs/protocol/fixtures/export-ownership-v2.json` (46 cases with real
-      digests) and `docs/protocol/fixtures/upload-plan-v1.json` (47 cases);
+      digests) and `docs/protocol/fixtures/upload-plan-v1.json` (65 cases);
       the v1 ownership fixture stays until Milestone 2 switches every reader.
 - [x] Rewrite the guides [`cli/publish.md`](../docs/guides/cli/publish.md)
       ("What is uploaded" as the three-step exchange, retries, the counted
@@ -141,50 +141,52 @@ Prettier and the guide-structure test.
 - [x] Add this plan to `plans/README.md`; run `npx prettier --check` and the
       guide-structure test on every changed file and review the diff.
 
-## Milestone 2: Export ownership v2
+## Milestone 2: Export ownership v2 — completed
 
 The exporter writes schema 2 markers with real digests, every local reader
 accepts only schema 2, and the public fixture is replaced. Export, repository
 preview and the existing publish path keep working end to end.
 
-- [ ] Add failing tests first: `parseExportOwnership` accepts only v2 entries,
+- [x] Add failing tests first: `parseExportOwnership` accepts only v2 entries,
       rejects schema 1, missing fields, bad hex, out-of-range sizes and
       duplicate or case-colliding paths; `stageExport` writes sorted entries
       with SHA-256 and byte sizes for every file including `mokly-upload.json`;
       a file over 64 MiB fails as `export-invalid` before staging.
-- [ ] Add a v2 marker builder (digest and size per file) beside
+- [x] Add a v2 marker builder (digest and size per file) beside
       `src/export/ownership.ts`, keeping `src/export/stage.ts` byte-identical
       for every other file; update `ExportOwnership` to the v2 type and adapt
       `assertExportOwnership`, `src/export/ignored.ts`, `src/export/backup.ts`
       and `scripts/preview/catalogue.mjs` to entry paths.
-- [ ] Give a stale v1 directory an actionable `export-invalid` message naming
+- [x] Give a stale v1 directory an actionable `export-invalid` message naming
       the directory to remove.
-- [ ] Delete `docs/protocol/fixtures/export-ownership-v1.json` and point every
+- [x] Delete `docs/protocol/fixtures/export-ownership-v1.json` and point every
       reader at the `export-ownership-v2.json` fixture authored in Milestone 1;
       extend its cases if the parser work exposes a missing shape.
-- [ ] Update `scripts/package/ownership.mjs` to an independent v2 reader that
+- [x] Update `scripts/package/ownership.mjs` to an independent v2 reader that
       also verifies each entry's digest and size against extracted bytes, and
       `scripts/package/export.mjs` to iterate entry paths; update
       `tests/export_ownership_contract.test.ts`, `tests/package.test.ts`,
       `tests/helpers/release_fixture.ts`, `tests/helpers/bootstrap_fixture.ts`
       and `scripts/package/archive.mjs` to the new fixture name.
-- [ ] Add `tests/helpers/ownership_marker.ts` that builds a v2 marker from a
+- [x] Add `tests/helpers/ownership_marker.ts` that builds a v2 marker from a
       directory or file map, and use it in every test that hand-writes a
       marker (`export_transaction`, `export_transaction_races`,
       `export_destination_races`, `export_paths`, `export_backup_cleanup`) and
       every test that reads `files.includes(...)` (`catalogue_export`,
       `inspector_publication`, `removed_preview_delivery`).
-- [ ] Run the export, publish, package and browser export suites; rebuild the
+- [x] Extend the v2 fixture for the discovered control-character, invalid
+      Unicode and over-limit UTF-8 path shapes; cover schema 1 watch treatment.
+- [x] Run the export, publish, package and browser export suites; rebuild the
       example and run `npm run package:smoke`.
 
-## Milestone 3: Plan, blob and complete exchange in the CLI
+## Milestone 3: Plan, blob and complete exchange in the CLI — completed
 
 `mokly publish` performs the three-step exchange through the injectable fetch
 boundary with typed failures, deterministic retries and bounded concurrency.
 The command remains fully functional against a receiver implementing the new
 contract; the single-archive upload is deleted.
 
-- [ ] Add failing unit tests first, driven by an injected `fetch`, `now`,
+- [x] Add failing unit tests first, driven by an injected `fetch`, `now`,
       `sleep` and `random`: the plan archive contains exactly the three
       artifact files byte-identical to the export (two without comparisons);
       plan-response validation accepts the documented body and rejects each
@@ -201,44 +203,49 @@ contract; the single-archive upload is deleted.
       concurrency never exceeds the limit and a failed blob cancels the rest;
       `--upload-concurrency` parsing (1 to 32, default 8, publish-only,
       assigned form, `cli-invalid` otherwise).
-- [ ] Split `src/publish/http.ts` into small modules: a shared request helper
+- [x] Split `src/publish/http.ts` into small modules: a shared request helper
       (120 s timeout, `redirect: "manual"`, status→category mapping, bounded
       body reader), `plan.ts` (archive of the three artifacts and response
       validation), `blobs.ts` (bounded worker pool of PUTs), `complete.ts`,
       `retry.ts` (schedule, jitter, `Retry-After`, expiry) and typed
       `PlanResponse`/`PublishResult` in `types.ts`; move the `exportedAt`
       timestamp validator into `validation.ts` for `expiresAt`.
-- [ ] Extend `PublishDependencies` with `sleep` and `random` seams and
+- [x] Extend `PublishDependencies` with `sleep` and `random` seams and
       `PublishOptions` with `uploadConcurrency`; make `publishCatalogue` keep
       the finalized file map plus the parsed v2 marker, run plan → blobs →
       complete (with the single re-plan after 409, 410 or expiry), and return
       a `PublishResult` whose `outcome` is `published` or `already-published`
       beside `uploaded`, `unchanged` and `viewerUrl`.
-- [ ] Add `--upload-concurrency` to `src/cli/arguments.ts`, `src/cli/help.ts`
+- [x] Add `--upload-concurrency` to `src/cli/arguments.ts`, `src/cli/help.ts`
       and the publish command validation; wire it through `src/cli/publish.ts`;
       then add its rows to `docs/guides/cli/publish.md` and
       `docs/guides/cli/options-and-exit-status.md` and name it where the
       guides say "several files at a time".
-- [ ] Update the transport assertions in `tests/guides_ci.test.ts` (plan
+- [x] Update the transport assertions in `tests/guides_ci.test.ts` (plan
       request headers through the new request helper, status mapping per
       request kind, retry schedule instead of "one request per status").
-- [ ] Check the `upload-plan-v1.json` fixture authored in Milestone 1 (root
+- [x] Check the `upload-plan-v1.json` fixture authored in Milestone 1 (root
       `endpoint`, `marker` digests and cases with optional `status`,
       `contentType`, `document` or raw `body`, plus `step: "complete"` cases
       with `outcome` and `viewerUrl`) against the CLI validator and an
       independent reader in `scripts/package/`, mirroring the ownership
       fixture tests; register the file in the package allowlists and release
       fixtures.
-- [ ] Remove the single-archive `uploadCatalogue` and its tests; update
+- [x] Remove the single-archive `uploadCatalogue` and its tests; update
       `tests/publish_http.test.ts` and `tests/publish_run.test.ts` to the
       new boundaries.
+- [x] Keep the existing CLI integrations and packed-consumer smoke green with
+      minimal plan/blob/complete receivers until Milestone 5 installs the full
+      scripted fake receiver.
+- [x] Update the protocol delivery status, CLI/CI guides and publish/CLI
+      READMEs for the shipped content-addressed exchange.
 
-## Milestone 4: Terminal output for the exchange
+## Milestone 4: Terminal output for the exchange — completed
 
 Progress, summary and the viewer URL line follow the updated terminal
 contract in both output modes.
 
-- [ ] Add failing reporter tests first: rich mode renders the in-place
+- [x] Add failing reporter tests first: rich mode renders the in-place
       `Uploading <n> of <total> files · <size>` progress and settles to the
       counted success line; plain mode prints exactly
       `Published Mokly catalogue. <uploaded> files uploaded, <unchanged> unchanged.`
@@ -246,26 +253,30 @@ contract in both output modes.
       `Mokly catalogue already published for this commit.`, followed by the
       viewer URL line only when present; forced-rich pipes remain
       deterministic; nothing else reaches stdout or stderr.
-- [ ] Add a phase `update(label)` capability to `ReporterPhase` (no-op in
+- [x] Add a phase `update(label)` capability to `ReporterPhase` (no-op in
       plain mode, in-place re-render in rich mode) and a publish progress
       observer that reports completed blob counts and the total size.
-- [ ] Use the `PublishResult` in `src/cli/run.ts` for the plain and rich
+- [x] Use the `PublishResult` in `src/cli/run.ts` for the plain and rich
       summaries and print the viewer URL as its own unstyled line.
+- [x] Reset rich progress to the new missing set after a re-plan and omit the
+      progress label when that set is empty; document the behavior.
+- [x] Suppress viewer URLs containing the raw or encoded bearer token and
+      document the defense-in-depth rule.
 
-## Milestone 5: Fake receiver integration and packed-consumer smoke
+## Milestone 5: Fake receiver integration and packed-consumer smoke — completed
 
 The complete CLI is exercised against a local receiver that implements the
 contract, and the packed package smoke proves the shipped artifact does the
 same without importing package internals.
 
-- [ ] Add `tests/helpers/fake_receiver.ts`: an HTTP receiver that extracts the
+- [x] Add `tests/helpers/fake_receiver.ts`: an HTTP receiver that extracts the
       plan archive, validates the v2 marker, answers `missing` from its own
       blob store, verifies PUT bytes against the declared digest and size,
       completes with `201`/`200`, stores the plan-archive files at plan time,
       keeps the first publication per `headSha` and `configPath`, and can be
       scripted to return 409 once, 410 once, a short `expiresAt`, retryable
       statuses with `Retry-After`, and each rejection status.
-- [ ] Add integration tests through `dist/cli/bin.js`: first publish uploads
+- [x] Add integration tests through `dist/cli/bin.js`: first publish uploads
       every blob; replay with the same export yields empty `missing`, no PUTs,
       `200` and the already-published line; 409 once then success; 410 once
       then success; a short `expiresAt` re-plans once and then succeeds, and a
@@ -273,25 +284,46 @@ same without importing package internals.
       and complete maps to its category;
       tokens never appear in output; a failed publish keeps the local export;
       `--no-changes` sends a two-entry plan archive.
-- [ ] Update `tests/publish_cli.test.ts`, `tests/publish_assigned_options.test.ts`
+- [x] Update `tests/publish_cli.test.ts`, `tests/publish_assigned_options.test.ts`
       and `tests/publish_derived.test.ts` to the fake receiver and the new
       plain output line.
-- [ ] Rewrite `scripts/package/publish.mjs` to run the receiver exchange
+- [x] Rewrite `scripts/package/publish.mjs` to run the receiver exchange
       against the installed CLI in both comparison modes, compare every stored
       blob and the plan archive entries with the local export bytes, and check
       the v2 marker with the independent reader; keep the leading-dash token
       case and the fixture conformance check.
-- [ ] Run `npm run package:smoke` and the publish action tests; smoke-test
+- [x] Run `npm run package:smoke` and the publish action tests; smoke-test
       the built CLI manually against the fake receiver in rich and plain
       modes and record the observed output in this plan.
+
+Manual smoke observed on 2026-09-26 against two fresh fake-receiver instances:
+
+```text
+MOKLY_OUTPUT=plain
+Published Mokly catalogue. 47 files uploaded, 1 unchanged.
+http://127.0.0.1:<port>/catalogues/publication-1/view
+stderr: <empty>
+PUT requests: 44
+
+rich pseudo-terminal (representative in-place frames)
+  ⠋ Uploading 0 of 44 files · 1.1 MiB…
+  ⠋ Uploading 1 of 44 files · 1.1 MiB…
+  …
+  ⠙ Uploading 44 of 44 files · 1.1 MiB…
+  ✔ Catalogue uploaded (95ms)
+  ✔ Published Mokly catalogue · 47 files uploaded, 1 unchanged (594ms)
+http://127.0.0.1:<port>/catalogues/publication-1/view
+stderr: <empty>
+PUT requests: 44
+```
 
 ## Milestone 6: Verification and delivery
 
 Complete branch work before review; merge remains the completion boundary.
 
-- [ ] Run the focused publish, export, guides, package and browser suites,
+- [x] Run the focused publish, export, guides, package and browser suites,
       then `cargo xtask check`; resolve every failure.
-- [ ] Confirm the documentation, READMEs and fixtures match the shipped
+- [x] Confirm the documentation, READMEs and fixtures match the shipped
       behaviour, and that no `upload v1` single-archive wording remains
       outside historical plans and reviews.
 - [ ] After checks pass, `git add -A` and commit with a Conventional Commits

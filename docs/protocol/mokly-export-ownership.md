@@ -2,11 +2,11 @@
 
 ## Delivery Status And Boundary
 
-Schema 2 is the approved contract tracked by
-[Delta Publishing](../../plans/delta-publishing.md). Until that plan's exporter
-milestone lands, the installed CLI still writes schema 1; receivers built
-against this document accept only schema 2. The schema 1 shape is retired and
-no longer documented.
+Schema 2 is implemented by the exporter and every local ownership reader.
+[Delta Publishing](../../plans/delta-publishing.md) records the completed
+exporter, CLI and receiver-side compatibility work. Receivers built against
+this document accept only schema 2. The schema 1 shape is retired and no
+longer documented.
 
 Every complete [export](./mokly-export.md) contains a regular root file named
 `.mokly-export-artifact`. This public inventory is independent of the source
@@ -128,8 +128,9 @@ Cases cover a valid complete inventory, an empty inventory, unsorted entries,
 ignored unknown fields, Unicode paths and lowercase-only collisions, then
 rejections for schema 1 and other versions, entries missing `path`, `sha256`
 or `size`, uppercase or short hex, negative, fractional and over-limit sizes,
-duplicate and case-colliding paths, the marker owning itself and every path
-grammar rule. They test marker shape, not gzip/tar parsing, raw JSON decoding,
-archive completeness, digest verification, authorization or all upload limits.
-The packed-consumer smoke checks these installed fixtures with an independent
-reader, then verifies an actual published inventory against the stored blobs.
+duplicate and case-colliding paths, the marker owning itself, invalid Unicode,
+control characters, the UTF-8 byte ceiling and every other path grammar rule.
+They test marker shape, not gzip/tar parsing, raw JSON decoding, archive
+completeness, digest verification, authorization or all upload limits. The
+packed-consumer smoke checks these installed fixtures with an independent
+reader, then verifies an actual published inventory against the extracted bytes.

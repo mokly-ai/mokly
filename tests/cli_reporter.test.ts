@@ -5,6 +5,7 @@ import { PlainReporter } from "../dist/cli/reporter/plain.js";
 import { RichReporter } from "../dist/cli/reporter/rich.js";
 import { selectOutputMode } from "../dist/cli/reporter/select.js";
 import {
+  formatBytes,
   formatDuration,
   truncateTerminalLine,
 } from "../dist/cli/reporter/terminal.js";
@@ -48,7 +49,9 @@ test("plain reporter retains every stable successful command string", () => {
   reporter.write(
     "Exported Mokly to site.\nDeploy this directory at your site's root with your hosting provider.\n",
   );
-  reporter.write("Published Mokly catalogue.\n");
+  reporter.write(
+    "Published Mokly catalogue. 12 files uploaded, 266 unchanged.\n",
+  );
   reporter.renderError(
     new MoklyError("build-invalid", "broken entry"),
     (value) => value,
@@ -62,9 +65,52 @@ test("plain reporter retains every stable successful command string", () => {
       "Mokly output is current (278 files).\n" +
       "Exported Mokly to site.\n" +
       "Deploy this directory at your site's root with your hosting provider.\n" +
-      "Published Mokly catalogue.\n",
+      "Published Mokly catalogue. 12 files uploaded, 266 unchanged.\n",
   );
   assert.equal(terminal.stderr(), "[mokly/build-invalid] broken entry\n");
+});
+
+test("plain phases ignore progress label updates", () => {
+  const terminal = memoryTerminal({ isTTY: false });
+  const reporter = new PlainReporter(terminal.environment);
+  const phase = reporter.startPhase("Uploading catalogue");
+  phase.update("Uploading 1 of 2 files · 4.1 KiB");
+  phase.succeed("Catalogue uploaded");
+  assert.equal(terminal.stdout(), "");
+  assert.equal(terminal.stderr(), "");
+});
+
+test("rich TTY phases replace their active label before settling", () => {
+  const terminal = memoryTerminal({ columns: 80, isTTY: true });
+  const reporter = new RichReporter(terminal.environment);
+  const phase = reporter.startPhase("Uploading catalogue");
+  phase.update("Uploading 0 of 2 files · 4.1 KiB");
+  phase.update("Uploading 1 of 2 files · 4.1 KiB");
+  phase.succeed("Catalogue uploaded");
+  const output = terminal.stdout();
+  assert.match(output, /Uploading 0 of 2 files · 4\.1 KiB/);
+  assert.match(output, /Uploading 1 of 2 files · 4\.1 KiB/);
+  assert.match(output, /✔ Catalogue uploaded \(100ms\)/);
+});
+
+test("forced-rich pipes omit progress frames but keep durable phase lines", () => {
+  const terminal = memoryTerminal({ isTTY: false });
+  const reporter = new RichReporter(terminal.environment);
+  const phase = reporter.startPhase("Uploading catalogue");
+  phase.update("Uploading 0 of 2 files · 4.1 KiB");
+  phase.update("Uploading 2 of 2 files · 4.1 KiB");
+  phase.succeed("Catalogue uploaded");
+  reporter.summary(
+    "Published Mokly catalogue. 2 files uploaded, 3 unchanged.\n",
+    "Published Mokly catalogue · 2 files uploaded, 3 unchanged",
+    900,
+  );
+  assert.equal(
+    terminal.stdout(),
+    "  ⠋ Uploading catalogue…\n" +
+      "  ✔ Catalogue uploaded (100ms)\n" +
+      "  ✔ Published Mokly catalogue · 2 files uploaded, 3 unchanged (900ms)\n",
+  );
 });
 
 test("rich reporter clears one spinner before durable output and bounds lines", () => {
@@ -200,6 +246,16 @@ test("terminal helpers format durations and width deterministically", () => {
     truncateTerminalLine(`${ESCAPE}[36m0123456789${ESCAPE}[39m`, 8),
     `${ESCAPE}[36m0123456…${ESCAPE}[0m`,
   );
+});
+
+test("terminal byte sizes use binary units at every boundary", () => {
+  assert.equal(formatBytes(0), "0 B");
+  assert.equal(formatBytes(312), "312 B");
+  assert.equal(formatBytes(1_023), "1023 B");
+  assert.equal(formatBytes(1_024), "1.0 KiB");
+  assert.equal(formatBytes(4_198), "4.1 KiB");
+  assert.equal(formatBytes(12 * 1024 * 1024), "12.0 MiB");
+  assert.equal(formatBytes(2 * 1024 * 1024 * 1024), "2.0 GiB");
 });
 
 test("rich error rendering redacts secrets before writing", () => {

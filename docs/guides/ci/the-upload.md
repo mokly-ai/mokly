@@ -5,7 +5,7 @@ section: "ci"
 order: 4
 ---
 
-## Three requests
+## Three steps
 
 Publish talks to the endpoint you gave it in three steps and presents the
 token as a bearer credential on every request. Every request goes to the
@@ -36,7 +36,8 @@ endpoint's own scheme, host and port; publish never sends the token elsewhere.
 ## The blobs
 
 For each missing digest, publish sends the file's raw bytes to the blob URL
-with the digest filled in, several files at a time.
+with the digest filled in, up to the CLI's `--upload-concurrency` limit at a
+time.
 
 ```http
 Authorization: Bearer TOKEN
@@ -82,8 +83,8 @@ it holds your source inventory and is not a public artifact.
 A service first authenticates the bearer credential. Only then does it
 decompress the plan archive, enforcing size and file-count limits before
 reporting version or structural failures. It validates the manifest's fields
-and version, the marker's schema, digests, sizes and paths, stores the three
-archived files once their bytes match their digests, and compares the
+and version, the marker's schema, digests, sizes and paths, stores the two or
+three archived artifacts once their bytes match their digests, and compares the
 remaining digests with what it already holds for that project. Each stored
 blob must match its declared digest and size. The service commits only once
 every listed digest is present and answers `409` until then, and it keeps the

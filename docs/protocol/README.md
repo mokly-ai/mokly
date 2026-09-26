@@ -33,8 +33,7 @@ when the historical primary file is absent, never when it is invalid.
   by the active CI performance plan.
 - [Catalogue upload v1](./mokly-upload.md) — public CLI and the
   content-addressed plan, blob and complete exchange for hosted/self-hosted
-  receivers; the delta exchange is an approved target tracked by the active
-  Delta Publishing plan.
+  receivers, implemented and verified by the Delta Publishing plan.
 - [Package and authoring contract](./mokly-package.md)
 - [CLI terminal output](./mokly-terminal-output.md) — plain compatibility,
   interactive progress, errors, watched events, and shortcuts.

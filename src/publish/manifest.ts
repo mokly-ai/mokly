@@ -7,6 +7,7 @@ import {
   GIT_SHA,
   repositoryHost,
   repositorySegment,
+  uploadTimestamp,
   uploadPath,
 } from "./validation.js";
 
@@ -54,14 +55,7 @@ export function validateUploadManifest(value: unknown): UploadManifest {
     !uploadPath(value["configPath"])
   )
     throw invalid();
-  const date = value["exportedAt"];
-  if (
-    typeof date !== "string" ||
-    !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(date) ||
-    !Number.isFinite(Date.parse(date)) ||
-    new Date(date).toISOString() !== date
-  )
-    throw invalid();
+  if (!uploadTimestamp(value["exportedAt"])) throw invalid();
   const pr = value["pullRequest"];
   if (
     pr !== null &&

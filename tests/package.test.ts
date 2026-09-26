@@ -159,7 +159,8 @@ test("packed package contains only the declared public surface", async () => {
   assert.ok(files.has("dist/cli/publish.js"));
   assert.ok(files.has("docs/protocol/mokly-upload.md"));
   assert.ok(files.has("docs/protocol/mokly-export-ownership.md"));
-  assert.ok(files.has("docs/protocol/fixtures/export-ownership-v1.json"));
+  assert.ok(files.has("docs/protocol/fixtures/export-ownership-v2.json"));
+  assert.ok(files.has("docs/protocol/fixtures/upload-plan-v1.json"));
   for (const guidePath of GUIDE_PATHS) assert.ok(files.has(guidePath));
   assert.equal(
     [...files].filter((file) => file.startsWith("docs/guides/")).length,

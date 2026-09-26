@@ -4,6 +4,7 @@ import path from "node:path";
 import test from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
 
+import { isExportIgnoredPath } from "../dist/export/ignored.js";
 import { EXPORT_MARKER } from "../dist/export/ownership.js";
 import { exportCatalogue } from "../dist/export/run.js";
 import { classifyWatchPath } from "../dist/server/watch_events.js";
@@ -47,6 +48,23 @@ test("watch ownership follows the inventory and does not suppress unowned descen
         config,
       ),
       "ignore",
+      name,
+    );
+});
+
+test("retired schema 1 markers do not suppress watch paths", async (context) => {
+  const fixture = await createExportFixture();
+  context.after(() => fixture.close());
+  await fs.promises.mkdir(fixture.output);
+  await fs.promises.writeFile(path.join(fixture.output, "index.html"), "Old");
+  await fs.promises.writeFile(
+    path.join(fixture.output, EXPORT_MARKER),
+    JSON.stringify({ schemaVersion: 1, files: ["index.html"] }),
+  );
+  for (const name of [EXPORT_MARKER, "index.html"])
+    assert.equal(
+      isExportIgnoredPath(path.join(fixture.output, name), fixture.root),
+      false,
       name,
     );
 });

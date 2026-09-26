@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import fs from "node:fs";
-import http from "node:http";
 import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
@@ -9,6 +8,7 @@ import { promisify } from "node:util";
 import { parseArguments } from "../dist/cli/arguments.js";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
+import { startFakeReceiver } from "./helpers/fake_receiver.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
@@ -30,6 +30,8 @@ test("publish accepts its options without making export an upload alias", () => 
       "main",
       "--repository",
       "git.example.com/team/project",
+      "--upload-concurrency",
+      "4",
     ]),
     {
       command: "publish",
@@ -41,6 +43,7 @@ test("publish accepts its options without making export an upload alias", () => 
       out: "site",
       base: "main",
       repository: "git.example.com/team/project",
+      uploadConcurrency: 4,
     },
   );
   assert.equal(parseArguments(["publish", "--no-changes"]).noChanges, true);
@@ -58,6 +61,21 @@ test("publish accepts its options without making export an upload alias", () => 
     /cli-invalid/,
   );
   assert.throws(() => parseArguments(["publish", "--watch"]), /cli-invalid/);
+  assert.equal(
+    parseArguments(["publish", "--upload-concurrency=32"]).uploadConcurrency,
+    32,
+  );
+  for (const value of ["", "0", "01", "1.5", "33", "-1", "four"])
+    assert.throws(
+      () => parseArguments(["publish", `--upload-concurrency=${value}`]),
+      /cli-invalid.*upload-concurrency/,
+      value,
+    );
+  assert.throws(
+    () =>
+      parseArguments(["export", "--out", "site", "--upload-concurrency", "4"]),
+    /cli-invalid.*upload-concurrency.*publish/,
+  );
 });
 
 test("publish help and credential preflight need no config", async () => {
@@ -102,27 +120,13 @@ test("publish POSTs gzip using environment credentials and keeps a replaceable o
     )
   ).stdout.trim();
   await fixture.git("update-ref", "refs/remotes/origin/main", ahead);
-  const bodies: Buffer[] = [];
-  const server = http.createServer(async (request, response) => {
-    assert.equal(request.method, "POST");
-    assert.equal(request.url, "/upload?scope=catalogue");
-    assert.equal(request.headers.authorization, "Bearer fixture-token");
-    assert.equal(request.headers["content-type"], "application/gzip");
-    const chunks: Buffer[] = [];
-    for await (const chunk of request) chunks.push(Buffer.from(chunk));
-    const body = Buffer.concat(chunks);
-    assert.equal(Number(request.headers["content-length"]), body.length);
-    bodies.push(body);
-    response.writeHead(204).end();
+  const receiver = await startFakeReceiver(context, {
+    endpointPath: "/upload?scope=catalogue",
+    token: "fixture-token",
   });
-  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
-  context.after(
-    () => new Promise<void>((resolve) => server.close(() => resolve())),
-  );
-  const port = (server.address() as { port: number }).port;
   const env = {
     ...process.env,
-    MOKLY_ENDPOINT: `http://127.0.0.1:${port}/upload?scope=catalogue`,
+    MOKLY_ENDPOINT: receiver.endpoint,
     MOKLY_TOKEN: "fixture-token",
     GITHUB_ACTIONS: "true",
     GITHUB_HEAD_REF: "feature/screens",
@@ -133,11 +137,42 @@ test("publish POSTs gzip using environment credentials and keeps a replaceable o
     cwd: fixture.root,
     env,
   });
-  assert.match(stdout, /Published Mokly catalogue/);
+  const firstMarker = JSON.parse(
+    receiver.plans[0]!.files.get(".mokly-export-artifact")!.toString("utf8"),
+  ) as { files: Array<{ sha256: string }> };
+  const firstUploaded = firstMarker.files.filter(({ sha256 }) =>
+    receiver.plans[0]!.missing.includes(sha256),
+  ).length;
+  assert.equal(
+    stdout,
+    `Published Mokly catalogue. ${firstUploaded} files uploaded, ${firstMarker.files.length - firstUploaded} unchanged.\n` +
+      `${receiver.origin}/catalogues/publication-1/view\n`,
+  );
   assert.doesNotMatch(stdout + stderr, /fixture-token/);
-  assert.equal(bodies[0]!.subarray(0, 2).toString("hex"), "1f8b");
+  assert.equal(receiver.plans.length, 1);
+  assert.deepEqual(
+    [...receiver.plans[0]!.files.keys()],
+    [
+      "mokly-upload.json",
+      ".mokly-export-artifact",
+      JSON.parse(
+        await fs.promises.readFile(
+          path.join(fixture.output, "mokly-upload.json"),
+          "utf8",
+        ),
+      ).comparisonPath,
+    ],
+  );
+  assert.ok(receiver.puts.length > 0);
   const manifestPath = path.join(fixture.output, "mokly-upload.json");
   const manifest = JSON.parse(await fs.promises.readFile(manifestPath, "utf8"));
+  for (const archivedPath of ["mokly-upload.json", manifest.comparisonPath]) {
+    const entry = receiver.plans[0]!.ownership.files.find(
+      ({ path: name }) => name === archivedPath,
+    );
+    assert.ok(entry, archivedPath);
+    assert.equal(receiver.plans[0]!.missing.includes(entry.sha256), false);
+  }
   assert.equal(manifest.schemaVersion, 1);
   assert.equal(manifest.branch, "feature/screens");
   assert.equal(manifest.pullRequest, 42);
@@ -164,14 +199,35 @@ test("publish POSTs gzip using environment credentials and keeps a replaceable o
     "baseSha is the merge base, not the base branch tip",
   );
   assert.equal(manifest.baseRef, review.baseRef);
-  await execute(process.execPath, [...args, "--no-changes"], {
+  const putsAfterFirst = receiver.puts.length;
+  const replay = await execute(process.execPath, args, {
     cwd: fixture.root,
     env,
   });
+  assert.equal(
+    replay.stdout,
+    "Mokly catalogue already published for this commit.\n" +
+      `${receiver.origin}/catalogues/publication-1/view\n`,
+  );
+  assert.deepEqual(receiver.plans[1]!.missing, []);
+  assert.equal(receiver.puts.length, putsAfterFirst);
+  const second = await execute(process.execPath, [...args, "--no-changes"], {
+    cwd: fixture.root,
+    env,
+  });
+  assert.equal(
+    second.stdout,
+    "Mokly catalogue already published for this commit.\n" +
+      `${receiver.origin}/catalogues/publication-1/view\n`,
+  );
   const current = JSON.parse(await fs.promises.readFile(manifestPath, "utf8"));
   assert.equal(current.baseRef, null);
   assert.equal(current.baseSha, null);
   assert.equal(current.comparisonPath, null);
+  assert.deepEqual(
+    [...receiver.plans[2]!.files.keys()],
+    ["mokly-upload.json", ".mokly-export-artifact"],
+  );
   assert.equal(
     fs.existsSync(path.join(fixture.output, "__mokly/diffs")),
     false,
@@ -181,8 +237,8 @@ test("publish POSTs gzip using environment credentials and keeps a replaceable o
     env,
   });
   assert.equal(
-    bodies.length,
-    2,
+    receiver.plans.length,
+    3,
     "export never uploads even with credentials in env",
   );
   assert.equal(fs.existsSync(manifestPath), false);
@@ -191,16 +247,9 @@ test("publish POSTs gzip using environment credentials and keeps a replaceable o
 test("rejected uploads keep the export and redact secrets even in diagnostic errors", async (context) => {
   const fixture = await createExportFixture();
   context.after(() => fixture.close());
-  const server = http.createServer((request, response) => {
-    request.resume();
-    response.writeHead(401).end("fixture-token");
-  });
-  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
-  context.after(
-    () => new Promise<void>((resolve) => server.close(() => resolve())),
-  );
-  const port = (server.address() as { port: number }).port;
+  const receiver = await startFakeReceiver(context, { token: "fixture-token" });
   for (const suffix of [[], ["--unexpected=fixture-token"]]) {
+    receiver.queue("plan", { status: 401, body: "fixture-token" });
     await assert.rejects(
       execute(
         process.execPath,
@@ -208,7 +257,7 @@ test("rejected uploads keep the export and redact secrets even in diagnostic err
           cli,
           "publish",
           "--endpoint",
-          `http://127.0.0.1:${port}`,
+          receiver.endpoint,
           "--token",
           "fixture-token",
           "--repository",

@@ -33,6 +33,7 @@ takes no value. There are no silent positional arguments.
 | `--token <token>`                    | `publish`                    | Bearer token, or `MOKLY_TOKEN`                                 |
 | `--repository <host>/<owner>/<name>` | `publish`                    | Override the detected repository identity                      |
 | `--no-changes`                       | `publish`                    | Publish with no comparison baseline                            |
+| `--upload-concurrency <n>`           | `publish`                    | Upload 1 to 32 missing files at once; defaults to 8            |
 | `--help`                             | every command                | Show the commands and their options                            |
 | `-h`                                 | every command                | Short form of `--help`                                         |
 | `--version`                          | every command                | Print the installed version                                    |

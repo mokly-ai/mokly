@@ -128,8 +128,9 @@ __mokly/diffs/__generations/<generation>/snapshots/before/<route>
 ```
 
 `pages/<route>.json` is the same `RemovedPagePreview` shape; `<route>` keeps
-its `.html` suffix. Its files enter the generation content identity, ownership
-inventory, reference validation, deployment hash, and upload archive. A preview
+its `.html` suffix. Its files enter the generation content identity, non-marker
+inventory, deployment hash, finalized ownership marker, reference validation,
+and content-addressed upload. A preview
 whose closure is incomplete fails the export transactionally, as an incomplete
 screen snapshot does. Current-only delivery writes no historical files and
 removes a previous artifact's historical files when replacing it.

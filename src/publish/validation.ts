@@ -3,6 +3,16 @@ import { isSafeRepositoryPath } from "@mokly/viewer/data";
 /** Full Git SHA-1 or SHA-256 object id. */
 export const GIT_SHA = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/;
 
+/** Exact UTC millisecond timestamp used by upload envelopes and plans. */
+export function uploadTimestamp(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value) &&
+    Number.isFinite(Date.parse(value)) &&
+    new Date(value).toISOString() === value
+  );
+}
+
 /** Nonempty bounded UTF-8 metadata with no control characters. */
 export function boundedText(value: unknown, bytes: number): value is string {
   return (

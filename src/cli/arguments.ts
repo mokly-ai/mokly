@@ -12,6 +12,7 @@ export interface CliArguments {
   debugTimings?: boolean;
   endpoint?: string;
   token?: string;
+  uploadConcurrency?: number;
   repository?: string;
   noChanges?: boolean;
   open?: boolean;
@@ -72,6 +73,10 @@ export function parseArguments(argv: readonly string[]): CliArguments {
       parsed.token = takeValue(option, values, assigned);
     else if (option === "--repository")
       parsed.repository = takeValue(option, values, assigned);
+    else if (option === "--upload-concurrency")
+      parsed.uploadConcurrency = parseUploadConcurrency(
+        takeValue(option, values, assigned),
+      );
     else if (argument === "--no-changes") parsed.noChanges = true;
     else if (option === "--port")
       parsed.port = parsePort(takeValue(option, values, assigned));
@@ -83,6 +88,15 @@ export function parseArguments(argv: readonly string[]): CliArguments {
   }
   validateCommandOptions(parsed);
   return parsed;
+}
+
+function parseUploadConcurrency(value: string): number {
+  if (!/^(?:[1-9]|[12]\d|3[0-2])$/.test(value))
+    throw new MoklyError(
+      "cli-invalid",
+      "--upload-concurrency must be an integer from 1 to 32",
+    );
+  return Number(value);
 }
 
 function parseUpdateVersion(value: string): number {
@@ -136,11 +150,12 @@ function validateCommandOptions(arguments_: CliArguments): void {
     (arguments_.endpoint !== undefined ||
       arguments_.token !== undefined ||
       arguments_.repository !== undefined ||
-      arguments_.noChanges !== undefined)
+      arguments_.noChanges !== undefined ||
+      arguments_.uploadConcurrency !== undefined)
   )
     throw new MoklyError(
       "cli-invalid",
-      "--endpoint, --token, --repository and --no-changes belong to publish",
+      "--endpoint, --token, --repository, --no-changes and --upload-concurrency belong to publish",
     );
   if (arguments_.noChanges && arguments_.base !== undefined)
     throw new MoklyError(

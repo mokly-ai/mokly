@@ -128,11 +128,12 @@ test("Changes export packages removed previews into every delivery boundary", as
   const ownership = parseExportOwnership(
     await fs.readFile(path.join(fixture.output, EXPORT_MARKER), "utf8"),
   );
-  assert.ok(ownership?.files.includes(pagePath));
+  assert.equal(ownership.kind, "valid");
+  if (ownership.kind !== "valid") assert.fail("expected valid ownership");
+  const ownedPaths = ownership.value.files.map(({ path: name }) => name);
+  assert.ok(ownedPaths.includes(pagePath));
   assert.ok(
-    ownership?.files.includes(
-      `${generationRoot}/snapshots/before/assets/past.png`,
-    ),
+    ownedPaths.includes(`${generationRoot}/snapshots/before/assets/past.png`),
   );
   const archived = await archiveNames(await bundleUpload(captured));
   assert.ok(archived.has(pagePath));

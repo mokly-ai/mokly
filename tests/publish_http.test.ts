@@ -1,11 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { uploadCatalogue } from "../dist/publish/http.js";
+import {
+  readBoundedBody,
+  retryableResponse,
+  statusError,
+} from "../dist/publish/http.js";
 import { resolvePublishOptions } from "../dist/publish/options.js";
 
 const options = {
-  endpoint: "https://example.com/upload",
+  endpoint: "https://example.com/upload?scope=catalogue",
   token: "private-token",
 };
 
@@ -42,90 +46,54 @@ test("publish options prefer explicit credentials and reject unsafe HTTP inputs"
     );
 });
 
-test("HTTP boundary sends exact bytes with bearer auth and refuses redirects", async () => {
-  const body = Buffer.from("compressed archive");
-  let calls = 0;
-  const request: typeof fetch = async (url, init) => {
-    calls++;
-    assert.equal(url, options.endpoint);
-    assert.equal(init?.method, "POST");
-    assert.equal(init?.redirect, "manual");
-    assert.equal(init?.body, body);
-    const headers = new Headers(init?.headers);
-    assert.equal(headers.get("Authorization"), "Bearer private-token");
-    assert.equal(headers.get("Content-Type"), "application/gzip");
-    assert.equal(headers.get("Content-Length"), String(body.length));
-    assert.ok(init?.signal);
-    return new Response(null, { status: 204 });
-  };
-  await uploadCatalogue(options, body, request);
-  assert.equal(calls, 1);
+test("HTTP statuses have stable categories without response diagnostics", () => {
+  for (const [status, code] of [
+    [400, "upload-invalid-bundle"],
+    [422, "upload-invalid-bundle"],
+    [401, "upload-unauthorized"],
+    [403, "upload-unauthorized"],
+    [413, "upload-too-large"],
+    [426, "upload-unsupported-version"],
+    [302, "upload-failed"],
+    [404, "upload-failed"],
+  ] as const) {
+    const error = statusError(status);
+    assert.equal(error.code, code);
+    assert.doesNotMatch(String(error), /private-token/);
+    assert.equal(error.cause, undefined);
+  }
 });
 
-for (const [status, code] of [
-  [400, "upload-invalid-bundle"],
-  [422, "upload-invalid-bundle"],
-  [401, "upload-unauthorized"],
-  [403, "upload-unauthorized"],
-  [413, "upload-too-large"],
-  [426, "upload-unsupported-version"],
-  [302, "upload-failed"],
-  [429, "upload-failed"],
-  [500, "upload-failed"],
-] as const) {
-  test(`HTTP ${status} has a stable ${code} category without leaking the response`, async () => {
-    let cancelled = false;
-    let calls = 0;
-    const request: typeof fetch = async () => {
-      calls++;
-      return new Response(
-        new ReadableStream({
-          cancel() {
-            cancelled = true;
-          },
-        }),
-        {
-          status,
-          headers: { Location: "https://private-token.invalid" },
-        },
-      );
-    };
-    await assert.rejects(
-      uploadCatalogue(options, Buffer.from("body"), request),
-      (error: unknown) => {
-        assert.equal((error as { code: string }).code, code);
-        assert.doesNotMatch(String(error), /private-token/);
-        return true;
-      },
+test("retryable statuses accept only bounded integer Retry-After", () => {
+  for (const [value, expected] of [
+    ["0", 0],
+    ["60", 60_000],
+    ["61", undefined],
+    ["1.5", undefined],
+    ["date", undefined],
+  ] as const) {
+    const retry = retryableResponse(
+      new Response(null, { status: 503, headers: { "Retry-After": value } }),
     );
-    assert.equal(calls, 1);
-    assert.equal(cancelled, true);
-  });
-}
-
-test("network errors and aborts remain typed and never retain transport secrets", async () => {
-  await assert.rejects(
-    uploadCatalogue(options, Buffer.from("body"), async () => {
-      throw new Error("private-token");
-    }),
-    (error: unknown) => {
-      assert.equal((error as { code: string }).code, "upload-failed");
-      assert.doesNotMatch(String(error), /private-token/);
-      assert.equal((error as Error).cause, undefined);
-      return true;
-    },
+    assert.equal(retry?.retryAfterMs, expected, value);
+  }
+  assert.equal(
+    retryableResponse(new Response(null, { status: 404 })),
+    undefined,
   );
-  const controller = new AbortController();
-  controller.abort();
-  await assert.rejects(
-    uploadCatalogue(
-      options,
-      Buffer.from("body"),
-      async () => {
-        assert.fail("an aborted publish must not start a request");
-      },
-      controller.signal,
+});
+
+test("bounded response reads reject declared and streamed excess", async () => {
+  assert.equal(
+    await readBoundedBody(
+      new Response("1234", { headers: { "Content-Length": "4" } }),
+      3,
     ),
-    /upload-failed/,
+    undefined,
+  );
+  assert.equal(await readBoundedBody(new Response("1234"), 3), undefined);
+  assert.deepEqual(
+    await readBoundedBody(new Response("1234"), 4),
+    Buffer.from("1234"),
   );
 });

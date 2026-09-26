@@ -1,13 +1,17 @@
+import { setTimeout as delay } from "node:timers/promises";
+
 import { loadConfig } from "../config/load.js";
 import { MoklyError } from "../errors.js";
 import { exportCatalogue } from "../export/run.js";
 import { resolvePublishOptions } from "../publish/options.js";
-import { publishCatalogue } from "../publish/run.js";
+import { publishCatalogue, type PublishProgress } from "../publish/run.js";
+import type { PublishResult } from "../publish/types.js";
 import { NodeGitCommandRunner } from "../review/git.js";
 
 import type { CliArguments } from "./arguments.js";
 import { reportPhase } from "./reporter/phase.js";
-import type { CliReporter } from "./reporter/types.js";
+import { formatBytes } from "./reporter/terminal.js";
+import type { CliReporter, ReporterPhase } from "./reporter/types.js";
 import { packageVersion } from "./version.js";
 
 /** Validate credentials first and drain export/upload work on termination signals. */
@@ -16,12 +20,43 @@ export async function runPublish(
   cwd: string,
   reporter: CliReporter,
   env: NodeJS.ProcessEnv,
-): Promise<void> {
+): Promise<PublishResult> {
   const options = resolvePublishOptions(arguments_, env);
   const controller = new AbortController();
   const cancel = (): void => controller.abort();
   process.on("SIGINT", cancel);
   process.on("SIGTERM", cancel);
+  let uploadPhase: ReporterPhase | undefined;
+  const progress: PublishProgress = {
+    run: async (phase, action) => {
+      const copy = {
+        export: ["Exporting catalogue", "Catalogue exported"],
+        prepare: ["Preparing upload", "Upload prepared"],
+        upload: ["Uploading catalogue", "Catalogue uploaded"],
+      } as const;
+      const [label, success] = copy[phase];
+      if (phase !== "upload")
+        return reportPhase(reporter, label, success, action);
+      const active = reporter.startPhase(label);
+      uploadPhase = active;
+      try {
+        const result = await action();
+        active.succeed(success);
+        return result;
+      } catch (error) {
+        active.fail();
+        throw error;
+      } finally {
+        if (uploadPhase === active) uploadPhase = undefined;
+      }
+    },
+    update: ({ completed, total, totalBytes }) =>
+      uploadPhase?.update(
+        total === 0
+          ? "Uploading catalogue"
+          : `Uploading ${completed} of ${total} files · ${formatBytes(totalBytes)}`,
+      ),
+  };
   try {
     const config = await reportPhase(
       reporter,
@@ -29,7 +64,7 @@ export async function runPublish(
       "Configuration loaded",
       () => loadConfig(cwd, arguments_.config),
     );
-    await publishCatalogue(
+    return await publishCatalogue(
       config,
       {
         ...arguments_,
@@ -43,17 +78,11 @@ export async function runPublish(
         export: exportCatalogue,
         fetch,
         now: () => new Date(),
-        progress: {
-          run: (phase, action) => {
-            const copy = {
-              export: ["Exporting catalogue", "Catalogue exported"],
-              prepare: ["Preparing upload", "Upload prepared"],
-              upload: ["Uploading catalogue", "Catalogue uploaded"],
-            } as const;
-            const [label, success] = copy[phase];
-            return reportPhase(reporter, label, success, action);
-          },
+        random: Math.random,
+        sleep: async (milliseconds, signal) => {
+          await delay(milliseconds, undefined, { signal });
         },
+        progress,
       },
       controller.signal,
     );

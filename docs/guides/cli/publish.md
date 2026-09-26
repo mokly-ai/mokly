@@ -28,6 +28,7 @@ with any service that implements the upload contract.
 | `--base <ref>`                       | Git base ref used to find the branch point                             |
 | `--no-changes`                       | Publish the current catalogue with no comparison baseline              |
 | `--repository <host>/<owner>/<name>` | Override the detected repository identity                              |
+| `--upload-concurrency <n>`           | Upload 1 to 32 missing files at once; defaults to 8                    |
 | `--debug-timings`                    | Report phase timings and catalogue counts on standard error            |
 
 ## Credentials
@@ -65,9 +66,10 @@ The export's `mokly-upload.json`, its ownership marker and, with comparisons,
 the pinned comparison file go first, as one small archive posted to the exact
 endpoint. The marker lists every exported file with its SHA-256 digest and byte
 size, so the service can answer with the digests it is missing. Publish then
-uploads each missing file's bytes, several files at a time, and asks the
-service to complete the publication. A service that already holds
-every file receives no file at all.
+uploads each missing file's bytes, up to `--upload-concurrency` files at a
+time, and asks the service to complete the publication. A service that already holds
+every digest receives no blob PUT; the plan artifacts still go first so the
+service can validate and complete the publication.
 
 A request that fails in transit or is answered with a temporary status is
 retried up to five times with growing delays. When the plan's expiry time

@@ -605,6 +605,51 @@
           }
         ]
       }
+    },
+    {
+      "name": "control-character",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "static/\tlogo.svg",
+            "sha256": "da0ada9bb4e28d3a590fdcbe195c593eefe0239f4e76eb218950f1b40f0e97e7",
+            "size": 16
+          }
+        ]
+      }
+    },
+    {
+      "name": "invalid-unicode",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "static/\ud800logo.svg",
+            "sha256": "da0ada9bb4e28d3a590fdcbe195c593eefe0239f4e76eb218950f1b40f0e97e7",
+            "size": 16
+          }
+        ]
+      }
+    },
+    {
+      "name": "path-byte-limit-exceeded",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "sha256": "da0ada9bb4e28d3a590fdcbe195c593eefe0239f4e76eb218950f1b40f0e97e7",
+            "size": 16
+          }
+        ]
+      }
     }
   ]
 }

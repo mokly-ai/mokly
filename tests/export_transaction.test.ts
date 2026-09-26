@@ -4,10 +4,10 @@ import path from "node:path";
 import test from "node:test";
 
 import { fileExportOperations } from "../dist/export/operations.js";
-import { EXPORT_MARKER } from "../dist/export/ownership.js";
 import { ExportTransaction } from "../dist/export/transaction.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { writeOwnershipMarker } from "./helpers/ownership_marker.js";
 
 test("export reserves one writer, restores failed installs, and cleans its stage", async (context) => {
   const fixture = await createFixture();
@@ -15,10 +15,7 @@ test("export reserves one writer, restores failed installs, and cleans its stage
   const output = path.join(fixture.root, "site");
   await fs.promises.mkdir(output);
   await fs.promises.writeFile(path.join(output, "index.html"), "Previous");
-  await fs.promises.writeFile(
-    path.join(output, EXPORT_MARKER),
-    JSON.stringify({ schemaVersion: 1, files: ["index.html"] }),
-  );
+  await writeOwnershipMarker(output);
   const transaction = await ExportTransaction.open(output, undefined, {
     ...fileExportOperations,
     rename: async (from, to) => {

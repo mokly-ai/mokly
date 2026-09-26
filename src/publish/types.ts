@@ -34,3 +34,23 @@ export interface UploadOptions {
   endpoint: string;
   token: string;
 }
+
+/** Validated response from the upload plan request. */
+export interface PlanResponse {
+  schemaVersion: 1;
+  upload: {
+    id: string;
+    expiresAt: string;
+  };
+  missing: string[];
+  blobUrl: string;
+  completeUrl: string;
+}
+
+/** Completed publication counts and optional receiver destination. */
+export interface PublishResult {
+  outcome: "published" | "already-published";
+  uploaded: number;
+  unchanged: number;
+  viewerUrl: string | null;
+}

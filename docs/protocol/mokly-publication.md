@@ -85,7 +85,8 @@ obsolete review files and redirects; never leave them reachable through a
 previous generation or stale asset copy.
 
 Both publication options use the consumer exporter's shared output transaction,
-ownership inventory, alias/reference validation, and complete deployment identity.
+non-marker deployment identity, finalized ownership inventory, and
+alias/reference validation.
 The destination must retain its captured identity until installation; an unowned
 replacement is preserved, including one introduced during capture. Retain the
 writer reservation, OS-enforced non-replacing moves, and safe backup recovery

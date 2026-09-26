@@ -8,7 +8,7 @@ import { extract } from "tar-stream";
 
 import { bundleUpload, UPLOAD_LIMITS } from "../dist/publish/bundle.js";
 
-test("upload archive preserves binary bytes, Unicode and long paths without an enclosing directory", async () => {
+test("plan archive preserves binary bytes, Unicode and long paths without an enclosing directory", async () => {
   const files = new Map([
     ["mokly-upload.json", Buffer.from('{"schemaVersion":1}\n')],
     ["index.html", Buffer.from("<html>catalogue</html>")],
@@ -54,6 +54,10 @@ test("bundle limits stop oversized files, file counts, tar bytes and compressed 
     bundleUpload(new Map([["mokly-upload.json", Buffer.alloc(16 * 1024 + 1)]])),
     /upload-too-large/,
   );
+  const tooManyFiles = new Map<string, Buffer>();
+  for (let index = 0; index <= UPLOAD_LIMITS.files; index++)
+    tooManyFiles.set(`static/${index}.txt`, Buffer.alloc(0));
+  await assert.rejects(bundleUpload(tooManyFiles), /upload-too-large/);
 });
 
 test("bundle rejects unsafe paths and case-folded file/directory collisions", async () => {

@@ -2,10 +2,10 @@
 
 ## Delivery Status And Boundary
 
-The content-addressed exchange below is the approved contract tracked by
-[Delta Publishing](../../plans/delta-publishing.md); the installed CLI sends
-its earlier single-archive request until that plan's CLI milestones land.
-Nothing is live, so the earlier exchange is replaced, not kept beside this one.
+The content-addressed exchange below is implemented by the installed CLI.
+[Delta Publishing](../../plans/delta-publishing.md) records its contract,
+implementation, integration coverage and delivery verification. Nothing is
+live, so the earlier exchange was replaced, not kept beside this one.
 Receivers, hosted or self-hosted, need only the published `@mokly/mokly`
 package and these documented artifacts; Mokly Cloud has no special protocol.
 `mokly export` remains local-only. `mokly publish` exports, then runs one
@@ -186,7 +186,9 @@ the upload counts. Any other 2xx is `upload-failed`. The body is
 `{ "id", "projectId", "state", "catalogueUrl", "viewerUrl" }`. When
 `viewerUrl` is an absolute http(s) URL string in a JSON body of at most 16 MiB,
 the CLI prints it on its own line after the success line; otherwise it prints
-the success line alone, and an unreadable body does not fail the command. `409`
+the success line alone, and an unreadable body does not fail the command. The
+line is also omitted when the normalized URL contains the bearer token or its
+`encodeURIComponent` form. `409`
 means the receiver still misses blobs and `410` means the upload expired: run
 Plan once more, upload the returned set, complete again; a second `409` or
 `410` is `upload-failed`. `404` means an unknown or foreign upload id:

@@ -38,6 +38,7 @@ export type OutputMode = "plain" | "rich";
 export interface ReporterPhase {
   fail(): void;
   succeed(message: string): void;
+  update(label: string): void;
 }
 
 /** Output seam shared by command composition and terminal tests. */

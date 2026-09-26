@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
-import http from "node:http";
 import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
+import { startFakeReceiver } from "./helpers/fake_receiver.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
@@ -20,22 +20,11 @@ test("publish sends assigned leading-dash credentials and paths, preserving secr
     fixture.config.configPath,
     path.join(fixture.root, "-catalogue.config.ts"),
   );
-  let status = 204;
-  const requests: string[] = [];
-  const server = http.createServer((request, response) => {
-    requests.push(request.headers.authorization ?? "");
-    request.resume();
-    response.writeHead(status).end(status === 204 ? undefined : token);
-  });
-  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
-  context.after(
-    () => new Promise<void>((resolve) => server.close(() => resolve())),
-  );
-  const port = (server.address() as { port: number }).port;
+  const receiver = await startFakeReceiver(context, { token });
   const argv = [
     cli,
     "publish",
-    `--endpoint=http://127.0.0.1:${port}/upload`,
+    `--endpoint=${receiver.endpoint}`,
     `--token=${token}`,
     "--config=-catalogue.config.ts",
     "--out=-site",
@@ -51,7 +40,20 @@ test("publish sends assigned leading-dash credentials and paths, preserving secr
     },
   };
   const { stdout, stderr } = await execute(process.execPath, argv, options);
-  assert.match(stdout, /Published Mokly catalogue/);
+  const ownership = JSON.parse(
+    await fs.readFile(
+      path.join(fixture.root, "-site/.mokly-export-artifact"),
+      "utf8",
+    ),
+  ) as { files: Array<{ sha256: string }> };
+  const uploaded = ownership.files.filter(({ sha256 }) =>
+    receiver.plans[0]!.missing.includes(sha256),
+  ).length;
+  assert.equal(
+    stdout,
+    `Published Mokly catalogue. ${uploaded} files uploaded, ${ownership.files.length - uploaded} unchanged.\n` +
+      `${receiver.origin}/catalogues/publication-1/view\n`,
+  );
   assert.equal((stdout + stderr).includes(token), false);
   const marker = JSON.parse(
     await fs.readFile(
@@ -60,7 +62,8 @@ test("publish sends assigned leading-dash credentials and paths, preserving secr
     ),
   );
   assert.equal(marker.configPath, "-catalogue.config.ts");
-  status = 401;
+  const successfulRequests = receiver.requests.length;
+  receiver.queue("plan", { status: 401 });
   await assert.rejects(
     execute(process.execPath, argv, options),
     (error: unknown) => {
@@ -70,7 +73,11 @@ test("publish sends assigned leading-dash credentials and paths, preserving secr
       return true;
     },
   );
-  assert.deepEqual(requests, [`Bearer ${token}`, `Bearer ${token}`]);
+  assert.equal(receiver.requests.length, successfulRequests + 1);
+  assert.equal(
+    receiver.requests.at(-1)?.headers["authorization"],
+    "Bearer [redacted]",
+  );
 });
 
 test("CLI redacts assigned tokens when parsing fails before any config is loaded", async () => {

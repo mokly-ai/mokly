@@ -24,7 +24,7 @@ export function comparisonContentId(
     .digest("hex");
 }
 
-/** Include alias edges as well as every finalized deployment file. */
+/** Include alias edges and every finalized non-derived deployment file. */
 export function deploymentContentId(
   files: ReadonlyMap<string, ReviewArtifactContent>,
   aliases: ReadonlyMap<string, string>,

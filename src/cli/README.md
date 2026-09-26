@@ -29,8 +29,12 @@ remain unstyled when colour is disabled. `main.ts` is the application process
 boundary: it selects the reporter before parsing arguments, applies secret
 redaction, and controls the exit code.
 
+Publish updates the active rich upload phase as missing blobs complete, then
+renders its counted or already-published `PublishResult`. Plain mode emits only
+the stable result line and optional credential-safe viewer URL.
+
 Publish-only modules are loaded after command selection. Build, Check, Export,
-and supervised Serve children therefore do not initialize the upload archiver.
+and supervised Serve children therefore do not initialize the upload exchange.
 
 Rich presentation never changes `MoklyError`, generated output, HTTP responses,
 or timing JSON. The supervised Serve child stays plain and forwards diagnostics

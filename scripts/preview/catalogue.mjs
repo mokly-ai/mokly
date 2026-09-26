@@ -50,7 +50,7 @@ export async function buildPreview(config, output, options = {}) {
     await assertExportOwnership(destination, ownership);
   } catch (cause) {
     throw new Error(
-      `refusing to replace unowned preview directory: ${output}`,
+      `refusing to replace unowned preview directory: ${output}. ${errorMessage(cause)}`,
       { cause },
     );
   }

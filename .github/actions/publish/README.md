@@ -95,4 +95,5 @@ npm run package:smoke
 
 The action tests run its actual composite shell steps with an injected npm
 installer. Packed-consumer smoke tests install the real package archive, run
-publish against a local HTTP receiver, and inspect the uploaded tarball.
+publish against a local HTTP receiver, and inspect the plan archive and every
+content-addressed blob.

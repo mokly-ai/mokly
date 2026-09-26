@@ -13,7 +13,7 @@ import {
   type ExportShellMetadata,
 } from "./shell_metadata.js";
 
-/** Hash the complete final artifact, then stamp only its authenticated shell roots. */
+/** Hash finalized non-marker files, then stamp only authenticated shell roots. */
 export function finalizeDeployment(
   files: Map<string, ReviewArtifactContent>,
   shells: ReadonlyMap<string, StaticDelivery>,

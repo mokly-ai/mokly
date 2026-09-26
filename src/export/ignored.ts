@@ -21,15 +21,21 @@ export function isExportIgnoredPath(
     directory = path.dirname(directory)
   ) {
     const content = readMarker(directory, EXPORT_MARKER);
-    const ownership = content ? parseExportOwnership(content) : undefined;
-    if (ownership) {
+    const parsed = content ? parseExportOwnership(content) : undefined;
+    if (parsed?.kind === "valid") {
+      const ownership = parsed.value;
       const relative = toPosixPath(path.relative(directory, candidate));
-      if (relative === EXPORT_MARKER || ownership.files.includes(relative))
+      if (
+        relative === EXPORT_MARKER ||
+        ownership.files.some(({ path: name }) => name === relative)
+      )
         return true;
       if (
         mode === "event" &&
         (relative === "" ||
-          ownership.files.some((file) => file.startsWith(`${relative}/`)))
+          ownership.files.some(({ path: name }) =>
+            name.startsWith(`${relative}/`),
+          ))
       )
         return true;
       return false;

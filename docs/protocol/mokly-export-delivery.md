@@ -279,14 +279,17 @@ replacement and its compatibility checks.
 ## Deployment Identity
 
 Comparison generations identify only the comparison JSON and snapshot inventory.
-The separate `deploymentId` identifies the entire installed artifact, including
-shell pages, navigation metadata, public files, CSS, client/navigation modules,
-fonts, provider files, ownership inventory, and alias-to-file mappings. An export
-with unchanged comparisons but changed deployment content must get a different
-deployment identity. Identical content and aliases retain the same identity,
-independent of file/alias insertion order or the output directory.
+The separate `deploymentId` identifies every non-marker file and every
+alias-to-file mapping in the installed artifact, including shell pages,
+navigation metadata, public files, CSS, client/navigation modules, fonts and
+provider files. The ownership marker is excluded from the hash input because it
+is derived from those finalized file paths and bytes. An export with unchanged
+comparisons but changed deployment content must get a different deployment
+identity. Identical content and aliases retain the same identity and therefore
+the same derived marker, independent of file/alias insertion order or the output
+directory.
 
-Finalize identity after the provider adapter and ownership inventory are complete.
+Finalize identity after the provider adapter and non-marker inventory are complete.
 Only exporter-owned shell roots may carry the stamped descriptor. Require every
 such shell page to retain its original canonical path, id map, comparison URL,
 and one valid root descriptor; adapters cannot remove or rewrite that contract.
@@ -308,11 +311,14 @@ placeholder before installation. This prevents self-reference without changing
 delivery descriptor v2, ownership v2, upload v1 or the review schema.
 
 Stamp the resulting identity into those owned root descriptors and the owned
-catalogue field, changing no other bytes.
-No adapter or inventory mutation may follow finalization.
-Every owned root's staging placeholder is replaced before installation. This avoids a
-self-referential hash while covering every deployed byte except the derived
-identity field itself. The comparison generation keeps its separate URL/hash.
+catalogue field, changing no other non-marker bytes. Then compute the ownership
+entries from the exact finalized bytes and add the marker through the same
+collision-checked inventory. No adapter or non-marker inventory mutation may
+follow identity finalization. Every owned root's staging placeholder is replaced
+before the marker is built and before installation. This avoids both identity
+and marker self-reference: the identity calculation determines the finalized
+bytes, and the marker is a pure function of their paths and bytes. The
+comparison generation keeps its separate URL/hash.
 
 In-shell navigation requires both deployment identity and comparison URL to
 match; otherwise it performs a full document load before adopting any new view.
