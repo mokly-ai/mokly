@@ -638,7 +638,7 @@ evidence bound to the current request.
     example and all five packed-consumer stages also passed.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
@@ -1154,3 +1154,24 @@ are retained under `.context/test-timings/m7/`.
 - Residual risk remains limited to those three user-deferred decisions. The
   Milestone 8 split itself passed focused tests, format, lint, typecheck, the
   prepared unit suite and the complete unit/browser gate.
+
+### Milestone 9 review — 2026-09-26
+
+- Reviewed the complete pushed `origin/main...26e7984` diff using
+  [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md),
+  focusing on `26e7984` (`fix(viewer): bind live Usage to current request`).
+  The review was read-only.
+- The Medium A → B → A finding is fixed by `26e7984`. Only
+  `commitViewerEvidence` changes the store's source, and it rebinds the
+  workspace to the same request. Staying on a screen or component therefore
+  never loses Ready after a live refresh. The first request is still seeded
+  from the initial descriptor, and the complete gate's 121 hydration routes
+  passed without a Loading flash.
+- No new findings. The two Low findings recorded in the Milestone 8 review
+  (the descriptor object/JSON pair and the preview's second complete-catalogue
+  validation) remain deferred for the user's decision.
+- `origin/main` has since gained `3699c56` (#119, the mokly-cloud logo). This
+  branch does not include it, so the plain `git diff origin/main` audit lists
+  that commit's new `tests/brand_logo.test.tsx` as a deletion. The merge-base
+  diff (`origin/main...HEAD`) contains no deletions. Integrate `main` before
+  the PR merges.
