@@ -13,8 +13,16 @@
   dependency directory becomes comparison evidence instead of listing every
   matching entry in Changes; owned paths and exact declared files keep their
   reasons. Milestones 1–9 are complete on the navigation path plan's branch
-  and findings 3–6 are fixed; findings 2, 7, and 8 await the user's
-  decision, and the plan stays Active until PR #118 merges.
+  and findings 3–6 are fixed; finding 2 moves to
+  [Configurable Changes Listing](./configurable-changes-listing.md), findings 7
+  and 8 await the user's decision, and the plan stays Active until PR #118
+  merges.
+- [Configurable Changes Listing](./configurable-changes-listing.md) — settings
+  under `review.changes` decide which invisible change kinds (component data,
+  component structure, declared files, shared files) list an entry in Changes;
+  all default to not listed, metadata stays listed, and every reason is still
+  recorded as evidence. Planned for a new PR after PR #118 merges; the
+  settings UI comes later.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
   standalone Auto/Light/Dark control for interface and previews, and
   host-owned theme with independent previews when embedded. Dark neutrals align

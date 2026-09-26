@@ -1,7 +1,8 @@
 # Path-Only Evidence Stays Out Of Changes
 
-Status: Milestones 1–9 are complete and findings 3–6 are fixed; findings 2,
-7, and 8 await the user's decision. The plan stays Active until PR #118 merges. Created
+Status: Milestones 1–9 are complete and findings 3–6 are fixed; finding 2 is
+superseded by [Configurable Changes Listing](./configurable-changes-listing.md),
+and findings 7 and 8 await the user's decision. The plan stays Active until PR #118 merges. Created
 2026-09-25 with the user's consent (option B of
 finding 1 raised while reviewing the PR #118 preview). Implemented on the
 `calummoore/halifax-v2` branch alongside
@@ -245,7 +246,9 @@ Tags: ui
 
 Findings 1 and 2 came from the PR #118 preview: 1 is this plan (option B);
 2 (a listed screen whose views look unchanged does not say why it is listed)
-awaits the user's choice of option. Findings 3–6 come from the review of
+is superseded: the user chose configurable listing settings instead, planned
+in [Configurable Changes Listing](./configurable-changes-listing.md), whose
+`sharedFiles` setting will replace this plan's hard-coded path-only rule. Findings 3–6 come from the review of
 `49a23bd`; the user chose the recommended options and Milestones 5–8 fixed
 them.
 
