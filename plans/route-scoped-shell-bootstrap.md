@@ -545,9 +545,9 @@ the delivered behavior.
     passed; zero failures, skips or cancellations in either suite. Repository,
     package, Rust, typecheck, example and all five packed-consumer smoke stages
     also passed.
-- [ ] After checks pass, `git add -A`, commit with Conventional Commits, and
+- [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
@@ -963,3 +963,59 @@ work dominates capture. The capture-heavy preview paths, page loads,
 navigations and hydration inventory show the intended reduction. Every measured
 test command passed without retries or skips. Raw JSON, timing events and logs
 are retained under `.context/test-timings/m7/`.
+
+### Milestone 7 review — 2026-09-26
+
+- Reviewed the complete pushed `origin/main...47b0b96` diff using
+  [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
+  The review was read-only; no implementation was changed.
+- No new findings. The three previously deferred findings remain the complete
+  final review result:
+
+1. **Medium — Returning A → B → A can expose A's stale initial private
+   workspace while B's scoped catalogue is still installed.**
+   `packages/viewer/src/shell/use_workspace_data.ts:49` accepts the initial
+   workspace whenever its entry matches the current route, without binding it
+   to the live request that now owns evidence. Doing nothing can show old
+   `Used by`, `Affected`, counts, or instance details as Ready during a held or
+   failed return read instead of the required Loading/Failed state.
+   - **Option A:** make request-bound `live.workspace` the sole private
+     workspace authority for live routes; retain the initial fallback only for
+     static/non-live shells and add held/failed A → B → A browser coverage.
+   - **Option B:** consume or clear initial workspace context after the first
+     live route/source transition.
+   - **Option C:** retain route-only initial matching and accept the temporary
+     cross-revision presentation.
+   - **Recommendation:** Option A. It repairs ownership at the capability-store
+     boundary, and the round-trip regression prevents equivalent unbound
+     fallbacks from returning.
+
+2. **Low — The server-rendered capability object and embedded JSON can
+   disagree.** `packages/viewer/src/standalone/document.tsx:30` accepts
+   `capabilityDescriptor` and `capabilityDescriptorJson` independently. Doing
+   nothing lets a future caller render one workspace while hydration reads a
+   different source, producing a difficult hydration or revision mismatch.
+   - **Option A:** introduce one paired serialized-descriptor value/factory and
+     add a type/runtime regression that independent values cannot be supplied.
+   - **Option B:** pass only the JSON and parse it once inside the document.
+   - **Option C:** retain both props and rely on callers to synchronize them.
+   - **Recommendation:** Option A. A cohesive boundary prevents this mismatch
+     class without restoring render-time serialization.
+
+3. **Low — Repository preview validates the same complete catalogue twice.**
+   `scripts/preview/catalogue.mjs:157` validates before scoped capture, then
+   `src/export/deployment.ts:28` validates the same model during finalization.
+   Doing nothing preserves correct output but repeats the largest complete
+   read and adds avoidable build work as catalogues grow.
+   - **Option A:** carry validated proof and canonical bytes into finalization,
+     verify staged bytes against that proof, and add a real call-count test.
+   - **Option B:** delay the only validation until finalization, weakening the
+     capture boundary.
+   - **Option C:** retain both validations and their cost.
+   - **Recommendation:** Option A. It preserves post-adapter tamper protection
+     while structurally enforcing one complete validation per preview build.
+
+- Residual risk is limited to those three user-deferred decisions. Controlled
+  measurements, the complete gate, normalized artifact comparisons, strict
+  reader/capture guardrails, packed consumers, and the expanded hydration
+  inventory all passed.
