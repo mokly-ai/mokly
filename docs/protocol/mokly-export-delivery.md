@@ -44,9 +44,10 @@ cookies, authorization headers or credentials are used; clients fetch with
 revalidation and comparison no-store policies apply; see the
 [catalogue fetch rules](./mokly-catalogue.md#serve-and-fetch-rules).
 Historical HTML beneath an advertised generation's `snapshots/before/`
-directory is fetched and validated by the viewer rather than loaded as the
-frame URL. It therefore needs the same CORS and `nosniff` headers and must be
-served with a `text/html` MIME type.
+directory and current HTML beneath its `snapshots/after/` directory are fetched
+and validated by the viewer rather than loaded as the frame URL, for removed
+previews and comparison panes alike. They therefore need the same CORS and
+`nosniff` headers and must be served with a `text/html` MIME type.
 
 The default iframe sandbox stays `allow-same-origin`. Cross-origin hosts must
 explicitly use the [postMessage adapter](./mokly-frame-adapter.md), a distinct
@@ -55,8 +56,10 @@ real `frameOrigin`, and `sandbox="allow-same-origin allow-scripts"`. Opaque
 `mokly-host` parameter. This exception enables document scripts on the isolated
 origin; it adds no script permission locally, nor forms, popups, downloads or
 top-navigation permission. The adapter policy applies to current documents;
-removed historical previews use viewer-owned, script-disabled `srcdoc` frames.
-Comparison panes keep their existing sandbox and direct snapshot URLs.
+removed historical previews and comparison panes use viewer-owned,
+script-disabled `srcdoc` frames under the
+[removed previews](./mokly-removed-previews.md) and
+[comparison pane](./mokly-comparison-panes.md) contracts.
 
 ## Artifact Routes
 
@@ -263,8 +266,9 @@ The removed-content request lifecycle is part of `react-shell.js`; it reuses the
 same typed review and removed-page validators as the rest of the viewer. Static
 requests are limited to preview descriptors in the accepted public catalogue
 and their referenced historical documents beneath that advertised generation's
-`snapshots/before/`; live requests use the selected on-demand route and its
-resulting generation. There is no parallel vanilla Browse or preview runtime.
+`snapshots/before/`, plus the pane documents beneath its `snapshots/before/` and
+`snapshots/after/` once a comparison is selected; live requests use the
+selected on-demand route and its resulting generation. There is no parallel vanilla Browse or preview runtime.
 
 The Node-only server renderer and the embedding-only scoped stylesheet are
 excluded from the standalone browser inventory. Standalone `shell.css` and font

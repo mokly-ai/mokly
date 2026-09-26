@@ -204,7 +204,9 @@ ready. Its URL must be on the configured source origin beneath
 `snapshots/before/` of the generation established by the accepted comparison or
 page-preview response. The GET carries the mount's abort signal and uses the
 comparison credential rule: `credentials: "omit"` for pinned delivery and
-`credentials: "same-origin"` for live delivery.
+`credentials: "same-origin"` for live delivery. The same presentation pipeline
+serves [comparison panes](./mokly-comparison-panes.md), whose loaders also
+accept `snapshots/after/`; a removed preview never does.
 
 Accept a response only when its final URL is the requested snapshot address
 or that address with only its final `.html` suffix removed, the
@@ -252,8 +254,9 @@ apply. Space keeps its scrolling default. If a later load is not the recorded
 presentation document, the parent reapplies the accepted `srcdoc` and guard.
 
 These edits exist only in the in-memory presentation. Captured snapshot files,
-packaged artifacts, comparison bytes, and comparison-pane documents stay
-byte-identical.
+packaged artifacts, comparison bytes, and comparison-pane files stay
+byte-identical; comparison panes present those files through the same
+in-memory edits.
 
 The served-then-loading sequence is an accepted first-paint tradeoff: while the
 browser module downloads, the stage can briefly show the honest unavailable

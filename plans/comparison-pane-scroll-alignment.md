@@ -149,7 +149,7 @@ Summary: define the pane presentation, the shared scroller, the read-only
 rule, the fetch set and the acceptance proofs in the specs and package docs so
 the following milestones have a complete contract, and register the plan.
 
-- [ ] Add `docs/protocol/mokly-comparison-panes.md` (about 250 lines) as the
+- [x] Add `docs/protocol/mokly-comparison-panes.md` (about 250 lines) as the
       pane contract: viewer-owned presentation reused from removed previews
       for `snapshots/before/` and `snapshots/after/` documents of the accepted
       generation with the same acceptance rules, credential rule, base and
@@ -164,58 +164,58 @@ the following milestones have a complete contract, and register the plan.
       both layers of a stack share one offset at all times; loading, failure,
       retry, refresh and renewal states with the existing copy; and the
       acceptance list every later milestone must prove.
-- [ ] In [`mokly-changes.md`](../docs/protocol/mokly-changes.md), replace the
+- [x] In [`mokly-changes.md`](../docs/protocol/mokly-changes.md), replace the
       Overlay and Difference sentences and the "matching dimensions" sentence
       with a summary that links to the pane contract and states the scroll
       alignment invariant, qualify the "byte-unmodified, script-disabled"
       statement so files stay unmodified while the presentation carries the
       documented edits, and add the long-overlay mockup to the design
       references.
-- [ ] In [`mokly-selected-comparisons.md`](../docs/protocol/mokly-selected-comparisons.md),
+- [x] In [`mokly-selected-comparisons.md`](../docs/protocol/mokly-selected-comparisons.md),
       replace "Frames retain their script-disabled sandbox" with the viewer-owned
       presentation and link the pane contract.
-- [ ] In [`mokly-export-delivery.md`](../docs/protocol/mokly-export-delivery.md),
+- [x] In [`mokly-export-delivery.md`](../docs/protocol/mokly-export-delivery.md),
       extend the fetched-not-framed statement to current HTML beneath
       `snapshots/after/`, replace "Comparison panes keep their existing sandbox
       and direct snapshot URLs" with the presentation rule, and update the
       pinned-delivery sentence near the end that names `snapshots/before/`.
-- [ ] In [`mokly-navigation.md`](../docs/protocol/mokly-navigation.md), replace
+- [x] In [`mokly-navigation.md`](../docs/protocol/mokly-navigation.md), replace
       both statements that comparison panes retain their existing sandbox or
       stricter sandbox with the read-only rule, including guard-owned anchors.
-- [ ] In [`mokly-frame-adapter.md`](../docs/protocol/mokly-frame-adapter.md),
+- [x] In [`mokly-frame-adapter.md`](../docs/protocol/mokly-frame-adapter.md),
       state that comparison panes use the viewer-owned presentation, never enter
       either adapter, and gain only same-origin measurement and the guard.
-- [ ] In [`mokly-viewer.md`](../docs/protocol/mokly-viewer.md), extend the
+- [x] In [`mokly-viewer.md`](../docs/protocol/mokly-viewer.md), extend the
       hydration boundary to comparison presentations and the network-activity
       sentence to `snapshots/after/` documents fetched for a selected
       comparison; in [`mokly-runtime.md`](../docs/protocol/mokly-runtime.md)
       and [`mokly-catalogue.md`](../docs/protocol/mokly-catalogue.md), update the
       sentences that describe comparisons as directly framed script-disabled
       documents beneath `snapshots/before/`.
-- [ ] In [`mokly-removed-previews.md`](../docs/protocol/mokly-removed-previews.md),
+- [x] In [`mokly-removed-previews.md`](../docs/protocol/mokly-removed-previews.md),
       note that the presentation pipeline is shared with comparison panes and
       that removed previews still accept only `snapshots/before/`.
-- [ ] In [`mokly-shell-design.md`](../docs/protocol/mokly-shell-design.md),
+- [x] In [`mokly-shell-design.md`](../docs/protocol/mokly-shell-design.md),
       add the `design-changes-overlay-long` row at
       `design/review/controls/overlay-long.html`, describe the single-chrome
       stacked structure for Overlay and Difference, and keep the comparison
       family statements consistent; update
       [`mokly-design-links.md`](../docs/protocol/mokly-design-links.md) where it
       enumerates the family.
-- [ ] Update the user guide
+- [x] Update the user guide
       [`docs/guides/catalogue/changes.md`](../docs/guides/catalogue/changes.md):
       Overlay and Difference scroll as one, Side by side scrolls together, and
       links inside a comparison do not navigate.
-- [ ] Update [`packages/viewer/README.md`](../packages/viewer/README.md)
+- [x] Update [`packages/viewer/README.md`](../packages/viewer/README.md)
       (embedded hosts: comparison documents are fetched and presented at the
       host origin, so the CORS and CSP requirements stated for previews apply
       to comparisons), [`packages/viewer/src/previews/README.md`](../packages/viewer/src/previews/README.md)
       and [`packages/viewer/src/shell/README.md`](../packages/viewer/src/shell/README.md)
       to describe the shared presentation loader and the aligned pane modules
       planned in Milestones 3 and 4.
-- [ ] Add the new contract to the [protocol index](../docs/protocol/README.md)
+- [x] Add the new contract to the [protocol index](../docs/protocol/README.md)
       and this plan to the active list in [`plans/README.md`](./README.md).
-- [ ] Validate the changed Markdown with `npm run format:check` and review the
+- [x] Validate the changed Markdown with `npm run format:check` and review the
       diff; documentation-only work does not require `cargo xtask check`.
 - [ ] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use

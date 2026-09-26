@@ -386,10 +386,13 @@ an HTTP(S) origin with correct MIME types and without an SPA fallback.
   `sameOriginAdapter()` explicitly.
 - **Cross origin:** configure `postMessageAdapter` with the artifact's exact,
   nonopaque origin. Allow the embedding application's exact origin with CORS on
-  every advertised catalogue, preview, font, stylesheet, client and historical
-  comparison resource. Wildcard CORS and credentialed requests are not used.
-- **Content Security Policy:** removed historical documents are fetched and
-  rendered in script-disabled `srcdoc` frames at the host origin. Restrictive
+  every advertised catalogue, preview, font, stylesheet, client and comparison
+  generation resource, including the snapshot HTML the viewer fetches for
+  removed previews and comparison panes. Wildcard CORS and credentialed
+  requests are not used.
+- **Content Security Policy:** removed historical documents and comparison pane
+  documents are fetched and rendered in script-disabled `srcdoc` frames at the
+  host origin. Restrictive
   policies must allow the artifact origin for the documented resource types and
   permit their generated inline styles; this does not grant script execution.
 - **Isolation:** the cross-origin adapter pins both origins and a per-session

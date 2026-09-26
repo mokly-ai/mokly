@@ -141,8 +141,10 @@ prevents Mokly from taking over product or asset navigation accidentally.
 Generated documents in both output modes keep their relative artifact `href`
 values. They must remain navigable when opened directly or copied without the
 Browse shell. Comparison snapshot trees copy the same portable documents and do
-not promote their marked links into Browse routes; link activation inside a
-comparison pane retains the existing sandbox behavior.
+not promote their marked links into Browse routes. Inside a comparison pane the
+viewer's read-only guard cancels every link and form activation and scrolls a
+same-document anchor itself, as the
+[comparison pane contract](./mokly-comparison-panes.md) defines.
 
 ## Browse Presentation
 
@@ -204,7 +206,8 @@ frames. Consumer-authored `_top`, `_parent`, named, `<base target>`, and
 `formtarget` values therefore cannot replace the shell even when they live in
 nested content the adapter cannot inspect. Trusted parent code is the only
 outer-navigation authority. Portable and comparison documents retain their original
-bytes and comparisons keep its stricter sandbox.
+bytes; comparison panes are presented as viewer-owned, script-disabled
+documents whose navigation the parent guard cancels.
 
 In served Browse, the `/id/<id>` redirect preserves the optional
 request-visible `fragment` query on

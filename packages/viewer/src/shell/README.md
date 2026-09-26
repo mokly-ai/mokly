@@ -92,7 +92,12 @@ the resolved historical record and route, never a colliding current-id lookup.
 from validated catalogue records. Embedded bootstrap and workspace JSON use
 canonical key ordering so their validated client projections retain the exact
 server bytes during hydration. `comparison_views.tsx` renders React-owned frame
-chrome around the snapshots from validated comparison metadata. The CLI
+chrome around the snapshots from validated comparison metadata; the
+[comparison pane contract](../../../../docs/protocol/mokly-comparison-panes.md)
+defines the viewer-owned, document-sized panes that scroll inside one shared
+chrome, which the
+[comparison pane scroll alignment plan](../../../../plans/comparison-pane-scroll-alignment.md)
+delivers in its Milestone 4. The CLI
 supplies its private live capabilities through typed server context. Standalone
 full-document composition lives in `src/standalone`: its bootstrap contains
 the validated public catalogue and shell delivery state for Serve. Static pages

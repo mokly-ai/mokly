@@ -64,6 +64,14 @@ npx tsx --test tests/client_removed_previews.test.ts tests/removed_preview_shell
 npx playwright test tests/browser/removed_previews.spec.ts tests/browser/removed_preview_views.spec.ts tests/browser/removed_previews_static.spec.ts tests/browser/removed_previews_viewer.spec.ts
 ```
 
+The [comparison pane contract](../../../../docs/protocol/mokly-comparison-panes.md)
+reuses this pipeline for the Before and Current panes of a comparison, whose
+loaders also accept `snapshots/after/`; the
+[comparison pane scroll alignment plan](../../../../plans/comparison-pane-scroll-alignment.md)
+delivers that generalization of `presentation.ts` and `request.ts` in its
+Milestone 3 while removed previews keep accepting `snapshots/before/` only.
+
 Related boundaries: [the Browse client](../client/README.md), the
-[shared shell](../shell/README.md), and the
-[selected comparison contract](../../../../docs/protocol/mokly-selected-comparisons.md).
+[shared shell](../shell/README.md), the
+[selected comparison contract](../../../../docs/protocol/mokly-selected-comparisons.md),
+and the [comparison pane contract](../../../../docs/protocol/mokly-comparison-panes.md).

@@ -80,6 +80,7 @@ contract until their standalone screens are implemented.
 | `design-browse-changed-views`         | `design/browse/variants/changed-views.html`                     | Change confined to the views that are not shown            |
 | `design-changes-current`              | `design/review/controls/current.html`                           | Current screen in Changes                                  |
 | `design-changes-overlay`              | `design/review/controls/overlay.html`                           | On-demand overlay comparison                               |
+| `design-changes-overlay-long`         | `design/review/controls/overlay-long.html`                      | Long screen overlay scrolled inside one shared chrome      |
 | `design-review-changed`               | `design/review/outcomes/changed.html`                           | Changed screen, side-by-side compare                       |
 | `design-review-added`                 | `design/review/outcomes/added.html`                             | Added screen current preview without comparison controls   |
 | `design-review-removed`               | `design/review/outcomes/removed.html`                           | Removed badge and previous version without comparisons     |
@@ -184,7 +185,8 @@ Additional owning groups keep each new page at no more than five screens:
 
 `design-browse-screen`, `design-browse-details-screen` and the whole Welcome
 comparison family — `design-changes-current`, `design-changes-overlay`,
-`design-review-changed` and `design-review-difference` — also render in both
+`design-changes-overlay-long`, `design-review-changed` and
+`design-review-difference` — also render in both
 schemes, so the outer Appearance control shows the selected Welcome, the
 light-only Details subject and every comparison mode under either appearance at
 their own routes. A comparison family publishes the same schemes for every
@@ -580,14 +582,20 @@ presentation, including its secondary details and the evidence spacing shared
 by the mockup card and the shell, is owned by
 [CSS evidence in the shell](./mokly-css-evidence-shell.md).
 Before and current
-snapshots remain in script-disabled iframes. Overlay composites the current
-pane at 50% opacity; Difference uses CSS difference blending. Missing panes for
+snapshots remain script-disabled documents under the
+[comparison pane contract](./mokly-comparison-panes.md). Overlay and
+Difference stack both versions inside one device chrome whose viewport is the
+only scroll container: Overlay composites the current layer at 50% opacity and
+Difference uses CSS difference blending, and the long-overlay depiction shows
+that chrome scrolled part-way with both layers at one offset. Side by side
+keeps one chrome per version. Missing panes for
 eligible Removed component variants remain side by side for readability in every mode. No pixel percentages are
 shown. Baseline, affected files, and excluded content belong in secondary
 comparison details. Loading and failure states keep the catalogue available.
 
 The canonical Current and Overlay designs live at
-`design/review/controls/current.html` and `design/review/controls/overlay.html`;
+`design/review/controls/current.html`, `design/review/controls/overlay.html`
+and `design/review/controls/overlay-long.html`;
 their mobile and desktop components share the catalogue shell. Existing design
 routes keep their identifiers, while outcome and impact screens depict Changes.
 See [the complete behavior](./mokly-changes.md).

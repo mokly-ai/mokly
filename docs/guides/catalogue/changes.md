@@ -38,6 +38,12 @@ rather than rebuilding the catalogue. Changing the viewport, the scheme or the
 comparison mode renews the snapshots before using them, and an expired
 comparison is reacquired for you.
 
+Overlay and Difference show both versions inside one frame that scrolls as one,
+so the two can never drift apart, and Side by side scrolls its two frames
+together. Links and forms inside a comparison do nothing, and an anchor scrolls
+within the same version, so compare a linked screen through the catalogue,
+where it has its own comparison.
+
 ## Variants and views
 
 A variant of a screen is its own row in Changes and counts on its own. When

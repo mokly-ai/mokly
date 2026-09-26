@@ -206,7 +206,8 @@ Browse holds one Appearance setting, so every artboard that draws a top bar
 draws the depicted Appearance selector in it, which has no authored
 transitions. `design-browse-screen`, `design-browse-details-screen`, the Welcome comparison
 family (`design-changes-current`, `design-changes-overlay`,
-`design-review-changed`, `design-review-difference`) and the appearance entries
+`design-changes-overlay-long`, `design-review-changed`,
+`design-review-difference`) and the appearance entries
 render in Light and in Dark instead, and the outer Appearance control moves
 between those two generated files at the same route. A link out of a dark
 fragment resolves to the target's dark fragment wherever one exists, and every

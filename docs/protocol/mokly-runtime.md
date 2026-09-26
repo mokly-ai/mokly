@@ -37,7 +37,9 @@ package extraction (Milestone 5) are implemented as recorded in the
 tree shared by standalone Serve, static export and embedded hosts. Standalone
 documents render the complete shell on the server and hydrate it in the browser;
 embedded hosts mount the same components with host-owned selection and slots.
-Consumer frames and comparisons remain static HTML in script-disabled sandboxes.
+Consumer frames remain static HTML in script-disabled sandboxes; comparison
+panes present their static snapshot HTML as viewer-owned, script-disabled
+documents under the [comparison pane contract](./mokly-comparison-panes.md).
 Selecting a removed page or screen captures and renders its pinned previous
 version in that shared tree through the lifecycle implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md).
@@ -266,7 +268,9 @@ consumer-authored `href`, `<base target>`, `target`, and `formtarget` values
 otherwise remain portable and sandbox-confined. Consumer scripts, forms,
 popups, downloads, and top navigation remain forbidden in this default mode. The
 explicit cross-origin host exception is confined to the frame-adapter contract.
-Review panes retain their stricter sandbox and byte-unmodified documents.
+Comparison panes keep byte-unmodified snapshot files and are presented without
+script permission under the
+[comparison pane contract](./mokly-comparison-panes.md).
 
 The top-level disclosures use `section:pages` and `section:components` as their
 rendered and persisted identities. A collection projected into a section uses
