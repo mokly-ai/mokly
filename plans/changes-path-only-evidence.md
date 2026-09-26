@@ -2,7 +2,8 @@
 
 Status: Milestones 1–9 are complete and findings 3–6 are fixed; finding 2 is
 superseded by [Configurable Changes Listing](./configurable-changes-listing.md),
-and Milestones 10–11 fixed findings 7 and 8; their review runs after the push. The plan stays Active until PR #118 merges. Created
+Milestones 10–11 fixed findings 7 and 8, and findings 9–11 await the user's
+decision. The plan stays Active until PR #118 merges. Created
 2026-09-25 with the user's consent (option B of
 finding 1 raised while reviewing the PR #118 preview). Implemented on the
 `calummoore/halifax-v2` branch alongside
@@ -281,11 +282,12 @@ The user asked to fix findings 7 and 8 with the recommended options.
 - [x] Mark findings 7 and 8 fixed in the review-findings list.
 - [x] Run `cargo xtask check`; fix anything it reports until it passes.
 - [x] Commit and push.
-- [ ] Review the complete local diff against `origin/main` using
+- [x] Review the complete local diff against `origin/main` using
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       after the push; report each finding with a number, severity, plain
       explanation, impact of doing nothing, lettered options, and a
-      recommendation, without changing the implementation.
+      recommendation, without changing the implementation. An independent
+      reviewer ran against `c3c67b6`; findings 9–11 await the user's decision.
 
 ## Review findings
 
@@ -350,6 +352,28 @@ them.
    reasons, and the CSS tests already assert them. Recommended: add added and
    removed entries with glob and declared-directory evidence to the invariant
    fixture. Fixed in Milestone 11.
+
+9. Medium (pre-existing, since the component explorer and viewer package
+   work): components pair by id but Changes entries are identified by route.
+   Removing component A and adding component B at A's former route yields
+   two Changes entries on one route; the viewer's result decoder rejects
+   them as a duplicate route (`packages/viewer/src/review/result_validation.ts`)
+   and source validation looks component changes up by route
+   (`src/review/component_result_sources.ts`), so the comparison fails.
+   Recommended: a separate plan for one Changes identity rule across
+   producer, decoder, and viewer (id for components, route for screens and
+   flows), including how the viewer shows a removed and an added component
+   that share a route, with route-reuse tests.
+10. Medium (plan text): [Configurable Changes Listing](./configurable-changes-listing.md)
+    says flows are listed only through listed screens, which would hide a
+    flow's own edits such as a title change. Recommended: only screen-propagated
+    flow listing needs a listed screen; a flow's own reasons follow the
+    settings like any entry; add a listing test matrix of direct and
+    propagated reasons for each entry kind.
+11. Low (plan text): the same plan says a changed view document is always
+    listed, but a consumer whose view changes only because a component it
+    uses changed is affected-only today. Recommended: limit "always listed" to
+    an entry's own rendered reasons and test affected-only views.
 
 ## Post-merge follow-up (non-blocking)
 
