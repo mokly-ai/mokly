@@ -705,9 +705,14 @@ Update the contracts for the 2026-09-26 decisions. Docs only.
 
 ## Milestone 15: Verify, deliver and review the fixes
 
-- [ ] Run `cargo xtask check` and require a 100% pass rate.
-- [ ] Inspect `git diff --name-status origin/main` and its deletions.
-- [ ] Run `git add -A`, commit with a Conventional Commit, and push the branch.
+- [x] Merge `origin/main` at `3699c566` (#119, mokly-cloud logo). The merge had
+      no conflicts and keeps all of #119's files.
+- [x] Run `cargo xtask check` and require a 100% pass rate. On the merged
+      branch it passed 2,507 unit tests, 783 browser tests and 10 Rust tests.
+- [x] Inspect `git diff --name-status origin/main` and its deletions. The four
+      deletions are plan-approved: the example style collector, the old
+      dependency validator and path matcher, and the old style-collector test.
+- [x] Run `git add -A`, commit with a Conventional Commit, and push the branch.
 - [ ] After the push, review the complete diff against `origin/main` using
       `docs/implementation-review-prompt.md`. Report numbered findings with
       severity, impact, lettered options and a recommendation, without
