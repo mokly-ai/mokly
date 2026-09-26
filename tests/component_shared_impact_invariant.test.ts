@@ -23,17 +23,47 @@ const changedPaths = [
   "mockups/unused.css",
   "src/tokens/pane.ts",
   "src/tokens/home.ts",
+  "src/one-side/removed-screen/child.ts",
+  "src/one-side/added-screen/child.ts",
+  "src/one-side/removed-component/child.ts",
+  "src/one-side/added-component/child.ts",
 ];
 
 test("entry sharedImpact matches the documented old set across globs, declarations, ownership and CSS scope", async (t) => {
   const { before, after, result } = await pathEvidenceFixture(t, {
-    beforeSource: mixedSource("src/shared/before"),
-    afterSource: mixedSource("src/shared/after"),
+    beforeSource: singleSideSource(mixedSource("src/shared/before"), "removed"),
+    afterSource: singleSideSource(mixedSource("src/shared/after"), "added"),
     changedPaths,
     sharedGlobs: globs,
   });
 
   const pairs = manifestPairs(before.manifest, after.manifest);
+  for (const side of ["removed", "added"] as const)
+    for (const kind of ["screen", "component"] as const) {
+      const pair = pairs.find(
+        (item) => (item.after ?? item.before)?.id === `${side}-${kind}`,
+      );
+      assert.ok(pair);
+      assert.equal(pair.before === undefined, side === "added");
+      assert.equal(pair.after === undefined, side === "removed");
+      const expected = documentedEntryImpact(
+        before.manifest,
+        after.manifest,
+        pair,
+      );
+      assert.ok(expected.includes("src/components/unowned.mokly.tsx"));
+      assert.ok(expected.includes(`src/one-side/${side}-${kind}/child.ts`));
+      const actual =
+        kind === "screen"
+          ? result.screens.find((entry) => entry.id === `${side}-${kind}`)
+          : result.components.find((entry) => entry.id === `${side}-${kind}`);
+      assert.ok(actual);
+      assert.deepEqual(
+        actual.sharedImpact,
+        expected,
+        pairKey((pair.after ?? pair.before)!),
+      );
+    }
   for (const [kind, actual] of [
     ["screen", result.screens.map((entry) => entry.sharedImpact)],
     ["component", result.components.map((entry) => entry.sharedImpact)],
@@ -71,6 +101,35 @@ function mixedSource(directory: string): string {
     "notes.md",
     "src/tokens/home.ts",
   ]);
+}
+
+function singleSideSource(source: string, side: "removed" | "added"): string {
+  const componentId = `${side}-component`;
+  const screenId = `${side}-screen`;
+  return source
+    .replace(
+      "export const mockups = [",
+      `const oneSide = defineComponent({
+  ...metadata, id: "${componentId}", title: "One-sided component",
+  description: "Only this side declares its shared folder",
+  route: "components/${componentId}.html", navPath: ["Fixture"],
+  dependencies: ["src/one-side/${componentId}"],
+  propSchema: { kind: "object", properties: {} },
+  render: () => <span>One side</span>,
+  variants: [{ id: "default", title: "Default", props: {} }]
+});
+export const mockups = [oneSide.entry,`,
+    )
+    .replace(
+      "\n];",
+      `,\n  defineScreen({
+  ...metadata, id: "${screenId}", title: "One-sided screen",
+  description: "Only this side declares its shared folder",
+  route: "screens/${screenId}.html", navPath: ["Fixture"],
+  dependencies: ["src/one-side/${screenId}"],
+  mobile: <main>One side</main>, desktop: <main>One side</main>
+})\n];`,
+    );
 }
 
 type RoutedEntry = Exclude<Manifest["entries"][number], { kind: "page" }>;

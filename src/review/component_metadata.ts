@@ -21,18 +21,6 @@ export const address = (entry: RoutedEntry): ReviewEntryAddress => ({
 export function entryPairKey(entry: RoutedEntry): string {
   return `${entry.kind}:${entry.kind === "component" ? entry.id : entry.route}`;
 }
-/** Paths of the dependency reasons an entry's view comparisons retained. */
-export function retainedDependencyPaths(
-  compared: readonly { reasons: readonly EntryChangeReason[] }[],
-): ReadonlySet<string> {
-  return new Set(
-    compared.flatMap((comparison) =>
-      comparison.reasons.flatMap((reason) =>
-        reason.kind === "dependency" ? [reason.path] : [],
-      ),
-    ),
-  );
-}
 export const lexical = (a: string, b: string): number =>
   a < b ? -1 : a > b ? 1 : 0;
 export function entryPairs(

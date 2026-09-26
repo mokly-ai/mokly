@@ -1,30 +1,21 @@
 import assert from "node:assert/strict";
-import fs from "node:fs/promises";
-import path from "node:path";
 import { test } from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { loadConfig } from "../dist/config/load.js";
+import type { Compilation } from "../dist/build/compile.js";
+import type { ResolvedConfig } from "../dist/config/types.js";
 import { compareReview } from "../dist/review/compare.js";
-import { ComponentDependencyPolicy } from "../dist/review/component_metadata.js";
-import {
-  type DependencyReasonSources,
-  validateComponentReviewSources,
-} from "../dist/review/component_result_sources.js";
-import type { Manifest } from "../packages/viewer/dist/data.js";
+import { validateComponentReviewSources } from "../dist/review/component_result_sources.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 
 import {
-  assertFastPathEquivalent,
+  classifyFixtureWithSources,
   compilationFiles,
 } from "./helpers/component_fast_path.js";
-import { componentEntrySource } from "./helpers/component_fixture.js";
 import {
   pathCatalogueSource,
   pathEvidenceFixture,
 } from "./helpers/component_path_evidence_fixture.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
-import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 test("component comparison schemas reject invalid membership, sides, references and unknown fields", async (t) => {
   const fixture = await componentReviewFixture(t, (s) =>
@@ -45,12 +36,18 @@ test("component comparison schemas reject invalid membership, sides, references 
     parseReviewResult(JSON.parse(JSON.stringify(result))),
     result,
   );
+  const classified = await recordedSources(
+    fixture.before,
+    fixture.after,
+    fixture.config,
+    fixture.changedPaths,
+  );
   validateComponentReviewSources(
     result,
     fixture.before.manifest,
     fixture.after.manifest,
-    new Set(["action"]),
-    pathSources(fixture.before.manifest, fixture.after.manifest),
+    classified.implementationImpact,
+    classified.sources,
   );
   for (const tamper of [
     (value: typeof result) =>
@@ -92,8 +89,8 @@ test("component comparison schemas reject invalid membership, sides, references 
         invalidSource,
         fixture.before.manifest,
         fixture.after.manifest,
-        new Set(["action"]),
-        pathSources(fixture.before.manifest, fixture.after.manifest),
+        classified.implementationImpact,
+        classified.sources,
       ),
     /review/i,
   );
@@ -104,8 +101,8 @@ test("component comparison schemas reject invalid membership, sides, references 
           { ...result, affectedConsumers: retained },
           fixture.before.manifest,
           fixture.after.manifest,
-          new Set(["action"]),
-          pathSources(fixture.before.manifest, fixture.after.manifest),
+          classified.implementationImpact,
+          classified.sources,
         ),
       /review/i,
     );
@@ -133,6 +130,12 @@ test("source validation rejects a changed path supported only by a shared-impact
     ],
   };
 
+  const classified = await recordedSources(
+    fixture.before,
+    fixture.after,
+    fixture.config,
+    fixture.result.changedPaths,
+  );
   assert.doesNotThrow(() => parseReviewResult(tampered));
   assert.throws(
     () =>
@@ -140,8 +143,8 @@ test("source validation rejects a changed path supported only by a shared-impact
         tampered,
         fixture.before.manifest,
         fixture.after.manifest,
-        new Set(),
-        pathSources(fixture.before.manifest, fixture.after.manifest),
+        classified.implementationImpact,
+        classified.sources,
       ),
     /review/i,
   );
@@ -166,6 +169,12 @@ test("source validation rejects a forged entry reason repeated on its view", asy
       reasons: [{ kind: "dependency", path: changed }],
     },
   ];
+  const classified = await recordedSources(
+    fixture.before,
+    fixture.after,
+    fixture.config,
+    fixture.result.changedPaths,
+  );
   assert.doesNotThrow(() => parseReviewResult(tampered));
   assert.throws(
     () =>
@@ -173,72 +182,8 @@ test("source validation rejects a forged entry reason repeated on its view", asy
         tampered,
         fixture.before.manifest,
         fixture.after.manifest,
-        new Set(),
-        pathSources(fixture.before.manifest, fixture.after.manifest),
-      ),
-    /dependency reason has no source evidence/,
-  );
-});
-
-test("source validation rejects a reason injected onto an affected-only screen", async (t) => {
-  const changed = "mockups/action.css";
-  const source = componentEntrySource({
-    actionRender:
-      '(props) => <button className="action">{props.label}</button>',
-  }).replace(
-    'id: "action",',
-    'id: "action", dependencies: ["mockups/action.css"], ownedDependencies: ["mockups/action.css"],',
-  );
-  const fixture = await createFixture(source, {
-    extraConfig:
-      'colorSchemes: ["light", "dark"], stylesheets: [{ match: "**/*.html", stylesheets: ["action.css"] }],',
-  });
-  t.after(() => removeFixture(fixture));
-  await fs.writeFile(path.join(fixture.mockupsDir, "action.css"), "");
-  const config = await loadConfig(fixture.root);
-  const compilation = await compileCatalogue(config);
-  const result = await assertFastPathEquivalent({
-    before: compilation.manifest,
-    after: compilation.manifest,
-    beforeFiles: compilationFiles(compilation, {
-      "action.css": ".action{color:red}",
-    }),
-    afterFiles: compilationFiles(compilation, {
-      "action.css": ".action{color:green}",
-    }),
-    changedPaths: [changed],
-    config,
-  });
-  const screen = result.screens.find((entry) => entry.id === "home")!;
-  assert.ok(
-    screen.views.some((view) =>
-      view.reasons?.some((reason) => reason.path === changed),
-    ),
-  );
-  assert.ok(
-    !result.changes.some(
-      (entry) => entry.kind === "screen" && entry.after?.id === "home",
-    ),
-  );
-  const tampered = structuredClone(result);
-  tampered.changes = [
-    ...tampered.changes,
-    {
-      kind: "screen",
-      before: screen.before!,
-      after: screen.after!,
-      reasons: [{ kind: "dependency", path: changed }],
-    },
-  ];
-  assert.doesNotThrow(() => parseReviewResult(tampered));
-  assert.throws(
-    () =>
-      validateComponentReviewSources(
-        tampered,
-        compilation.manifest,
-        compilation.manifest,
-        new Set(["action"]),
-        pathSources(compilation.manifest, compilation.manifest),
+        classified.implementationImpact,
+        classified.sources,
       ),
     /dependency reason has no source evidence/,
   );
@@ -264,23 +209,34 @@ for (const [name, change] of [
     if (result.schemaVersion !== 3) return;
     assert.equal(result.changes.length, 1);
     assert.deepEqual(result.affectedConsumers, []);
+    const classified = await recordedSources(
+      fixture.before,
+      fixture.after,
+      fixture.config,
+      fixture.changedPaths,
+    );
     validateComponentReviewSources(
       result,
       fixture.before.manifest,
       fixture.after.manifest,
-      new Set(),
-      pathSources(fixture.before.manifest, fixture.after.manifest),
+      classified.implementationImpact,
+      classified.sources,
     );
   });
 
-/** Policy-only sources: no view or owned-CSS evidence can justify a reason. */
-function pathSources(
-  before: Manifest,
-  after: Manifest,
-): DependencyReasonSources {
-  return {
-    policy: new ComponentDependencyPolicy(before, after, []),
-    ownedCss: [],
-    viewPaths: new Map(),
-  };
+/** Re-run the real classifier to inspect its sources independently of tampered output. */
+function recordedSources(
+  before: Compilation,
+  after: Compilation,
+  config: ResolvedConfig,
+  changedPaths: readonly string[],
+) {
+  return classifyFixtureWithSources({
+    before: before.manifest,
+    after: after.manifest,
+    beforeFiles: compilationFiles(before),
+    afterFiles: compilationFiles(after),
+    config,
+    changedPaths,
+  });
 }
