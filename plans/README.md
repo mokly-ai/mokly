@@ -70,12 +70,14 @@
   — publish consumes the release PR's validated CI evidence for the same
   tree instead of re-running the complete gate, with the complete gate as
   the fail-closed fallback.
-- [Id-Derived Routes](./id-derived-routes.md) — every route derives from
-  kind and id (`screens/<id>.html`, `pages/<id>.html`,
+- [Id-Derived Routes And Unified Variants](./id-derived-routes.md) — every
+  route derives from kind and id (`screens/<id>.html`, `pages/<id>.html`,
   `user-flows/<id>.html`, `components/<id>.html`); authored `route`,
-  `slug`, `segment`, and `path` go away, removed entries key by id, and
-  the static export writes each shell once without the
-  `id/<id>/index.html` alias. Planned for a new PR after PR #118 merges.
+  `slug`, `segment`, and `path` go away; component variants become routed
+  entries with global ids like screen variants; removed entries key by
+  id; and the static export writes each shell once without the
+  `id/<id>/index.html` alias. No backwards compatibility. Planned for a
+  new PR after PR #118 merges.
 
 ## Completed
 
